@@ -8,7 +8,7 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ## Current Status: Phase 0 - Planning ✅
 
-**Status**: Nearly Complete  
+**Status**: Complete  
 **Duration**: Completed  
 **Goal**: Define architecture, modules, and answer key design questions
 
@@ -43,81 +43,393 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 1: Foundation (Estimated: 2-3 months)
+## Phase 1: Local Prototype / Proof of Concept (Estimated: 4-8 weeks)
 
-**Goal**: Set up development infrastructure and core services
+## Phase 1: Local Prototype / Proof of Concept (Estimated: 4-8 weeks)
 
-### 1.1 Development Environment Setup
-- [ ] Choose and set up version control workflow
-- [ ] Configure CI/CD pipeline (GitHub Actions)
-- [ ] Set up development database
-- [ ] Configure linting and code formatting
-- [ ] Set up testing framework
-- [ ] Create development environment documentation
+**Goal**: Create a working local prototype to demonstrate core game mechanics to friends
 
-### 1.2 Core Infrastructure
-- [ ] Database schema design
-- [ ] Database migrations setup
-- [ ] API framework setup
-- [ ] Authentication system implementation
-- [ ] Basic API gateway
-- [ ] Error handling and logging
-- [ ] Security scanning integration
+**Why This Phase**: Before investing time in production infrastructure, authentication, and polish, we need to validate the core game concept and mechanics. This prototype will run entirely on your laptop using Docker and will focus on proving the battle simulation system works and is fun.
 
-### 1.3 Authentication Module
-- [ ] User registration
-- [ ] Login/logout functionality
-- [ ] JWT token management
-- [ ] Password reset flow
-- [ ] Email verification
-- [ ] Basic security measures (rate limiting, etc.)
+### 1.1 Development Environment Setup (Week 1)
 
-### 1.4 Testing & Quality
-- [ ] Unit test framework
-- [ ] Integration test setup
-- [ ] Code coverage tracking
-- [ ] Security testing setup (SAST)
+- [ ] Initialize Node.js + TypeScript project
+- [ ] Set up Docker Compose for local services (PostgreSQL, Redis)
+- [ ] Configure ESLint, Prettier for code quality
+- [ ] Set up basic folder structure (backend, frontend, shared)
+- [ ] Install core dependencies (Express/Fastify, React, TypeORM/Prisma)
+- [ ] Create development documentation (README with setup instructions)
 
 **Deliverables**:
-- Working authentication system
-- Basic API infrastructure
-- Test infrastructure in place
+- Working local development environment
+- Docker containers running
+- Hot-reload working for both frontend and backend
+
+### 1.2 Minimal Database Schema (Week 1)
+
+Focus on the absolute minimum needed for the prototype:
+
+- [ ] **Users Table** (very basic - just id, username, password_hash)
+- [ ] **Robots Table** (id, user_id, name, stats: attack, defense, speed, health)
+- [ ] **Battles Table** (id, robot1_id, robot2_id, winner_id, battle_log, created_at)
+- [ ] **Components Table** (id, name, type, stat_modifiers) - for weapons/armor
+- [ ] Set up database migrations
+- [ ] Create seed data for testing (5-10 pre-configured robots)
+
+**Deliverables**:
+- Working database schema
+- Seed data that creates test robots
+- Basic ORM models
+
+### 1.3 Battle Simulation Engine (Week 2-3) - **CORE FEATURE**
+
+This is the heart of the prototype - prove the battle system works:
+
+- [ ] **Battle Simulation Algorithm**
+  - Turn-based simulation (even though results shown after)
+  - Damage calculation: `damage = max(0, attacker.attack - defender.defense)`
+  - Speed determines action order
+  - Health tracking
+  - Victory condition: opponent health = 0
+  
+- [ ] **Battle Processor**
+  - Function that takes two robots and simulates battle
+  - Generate detailed battle log (turn-by-turn)
+  - Determine winner
+  - Store battle results in database
+  
+- [ ] **Manual Battle Trigger** (for testing)
+  - CLI command or simple endpoint to run battles
+  - Can specify which robots fight
+  - Outputs battle log to console/file
+
+- [ ] **Batch Battle Processing**
+  - Function to process multiple queued battles
+  - Simple scheduler (cron or manual trigger for prototype)
+
+**Deliverables**:
+- Working battle simulation engine
+- Can run battles and see detailed logs
+- Deterministic results (same inputs = same outputs)
+- At least 5 different test scenarios validated
+
+### 1.4 Simple REST API (Week 2)
+
+Minimal API to support the prototype UI:
+
+- [ ] **Robot Endpoints**
+  - `GET /api/robots` - List all robots
+  - `GET /api/robots/:id` - Get robot details
+  - `POST /api/robots` - Create new robot (simplified)
+  - `PUT /api/robots/:id` - Update robot configuration
+
+- [ ] **Battle Endpoints**
+  - `POST /api/battles` - Schedule a battle between two robots
+  - `GET /api/battles` - List battles (with results)
+  - `GET /api/battles/:id` - Get battle details with log
+
+- [ ] **Simple Authentication** (or skip for prototype)
+  - Just hardcode a test user, or
+  - Very basic username/password (no security needed yet)
+
+**Deliverables**:
+- Working API that frontend can call
+- Postman/REST Client collection for testing
+- Basic error handling
+
+### 1.5 Minimal Web UI (Week 3-4)
+
+Simple React interface to interact with the game:
+
+**Page 1: Robot List**
+- [ ] Display all available robots in a grid/list
+- [ ] Show robot stats (attack, defense, speed, health)
+- [ ] Button to create new robot (simple form)
+- [ ] Button to edit robot stats
+
+**Page 2: Battle Setup**
+- [ ] Select two robots to fight
+- [ ] Button to "Schedule Battle" (which runs immediately for prototype)
+- [ ] Show battle is processing
+
+**Page 3: Battle Results**
+- [ ] List of all battles (most recent first)
+- [ ] Click to view detailed battle log
+- [ ] Show turn-by-turn actions
+- [ ] Highlight winner
+- [ ] Basic styling (doesn't need to be pretty)
+
+**Page 4: Robot Creator (Simple)**
+- [ ] Form to set robot name
+- [ ] Sliders or inputs for stats (attack, defense, speed)
+- [ ] Points system (e.g., 100 points to distribute)
+- [ ] Select one weapon, one armor from preset options
+
+**Deliverables**:
+- Working web interface
+- Can create robots
+- Can schedule battles
+- Can view battle results
+- Responsive enough to work on laptop and phone browser
+
+### 1.6 Robot Component System (Week 4)
+
+Add basic customization:
+
+- [ ] **Weapons** (5-10 preset weapons)
+  - Sword: +10 attack
+  - Laser: +15 attack, -5 defense
+  - Hammer: +8 attack, -2 speed
+  - etc.
+
+- [ ] **Armor** (5-10 preset armor types)
+  - Heavy: +15 defense, -5 speed
+  - Light: +5 defense, +3 speed
+  - Shield: +10 defense
+  - etc.
+
+- [ ] **Chassis** (3-5 types)
+  - Tank: High health, low speed
+  - Scout: Low health, high speed
+  - Balanced: Medium all stats
+
+- [ ] Integrate components into battle simulation
+- [ ] Update UI to show equipped components
+
+**Deliverables**:
+- Robots can equip weapons and armor
+- Components affect battle outcomes
+- Different builds create different strategies
+
+### 1.7 Testing & Refinement (Week 4)
+
+- [ ] Run multiple battle simulations to test balance
+- [ ] Fix bugs discovered during testing
+- [ ] Adjust damage formulas if needed
+- [ ] Add battle log replay visualization (if time permits)
+- [ ] Performance test: can it handle 100 battles in a batch?
+
+**Deliverables**:
+- Stable prototype
+- Known issues documented
+- Battle balance roughly working
+
+### 1.8 Demo Preparation (End of Week 4)
+
+- [ ] Create 10-15 interesting pre-configured robots with different builds
+- [ ] Pre-run some interesting battles for demonstration
+- [ ] Write quick-start guide for friends
+- [ ] Ensure Docker setup works on fresh machine
+- [ ] Create a "demo script" showing off features
+
+**Deliverables**:
+- Working prototype ready to show friends
+- Easy setup process documented
+- Interesting demo content pre-loaded
+
+---
+
+## What's NOT in Phase 1 Prototype
+
+To keep scope minimal and deliverable:
+
+**Authentication & Security**
+- ❌ No proper user authentication (hardcoded test user is fine)
+- ❌ No password hashing
+- ❌ No JWT tokens
+- ❌ No rate limiting
+- ❌ No input validation (beyond basic)
+
+**Production Features**
+- ❌ No deployment to AWS
+- ❌ No CI/CD pipeline
+- ❌ No automated testing (manual testing is fine)
+- ❌ No logging infrastructure
+- ❌ No monitoring
+
+**Advanced Game Features**
+- ❌ No matchmaking system
+- ❌ No ranking/leaderboards  
+- ❌ No currency or economy
+- ❌ No achievements
+- ❌ No social features
+- ❌ No guild system
+- ❌ No tournaments
+- ❌ No multiple battle modes
+
+**UI Polish**
+- ❌ No fancy animations
+- ❌ No professional design
+- ❌ No accessibility features
+- ❌ No loading states (basic is fine)
+- ❌ No error recovery
+
+**Data Persistence**
+- ❌ No database backups
+- ❌ No migrations rollback
+- ❌ No data validation
+
+---
+
+## Phase 1 Success Criteria
+
+The prototype is successful if you can demonstrate:
+
+1. ✅ **Core Concept**: Friend can create a robot and understand the stat system
+2. ✅ **Battle System**: Can schedule a battle and see interesting results
+3. ✅ **Strategy**: Different robot builds lead to different outcomes
+4. ✅ **Feedback Loop**: Can adjust robot based on battle results and retry
+5. ✅ **Fun Factor**: Friends find it interesting and want to play more battles
+6. ✅ **Technical Viability**: System can process battles quickly and reliably
+
+### Questions to Answer During Phase 1
+
+**Game Mechanics**:
+- Is the battle simulation interesting to watch/read?
+- Are the stat ranges balanced?
+- Do different builds feel meaningfully different?
+- Is it fun to tinker with robot configurations?
+- What's missing that would make it more engaging?
+
+**Technical**:
+- Can the battle engine handle batch processing?
+- Is the architecture scalable to Phase 2?
+- Are there performance bottlenecks?
+- What technical debt are we creating?
+
+**UX**:
+- Is the robot creation process intuitive?
+- Is the battle log readable and interesting?
+- What UI improvements are most critical?
+
+---
+
+## Phase 1 Deliverables Summary
+
+**Code**:
+- Node.js backend with battle simulation engine
+- React frontend with 4 basic pages
+- PostgreSQL database with minimal schema
+- Docker Compose setup for local development
+
+**Documentation Updates**:
+- Battle simulation algorithm specification
+- Component stat tables and formulas
+- Setup and run instructions
+- Known issues and limitations
+
+**Demo Assets**:
+- 10-15 pre-configured robots
+- Sample battle logs
+- Demo script for showing friends
+
+---
+
+## Phase 1 Timeline
+
+| Week | Focus | Deliverable |
+|------|-------|-------------|
+| Week 1 | Setup & Schema | Dev environment + database |
+| Week 2 | Battle Engine + API | Working simulation |
+| Week 3 | Basic UI | Can create robots and view battles |
+| Week 4 | Components + Polish | Complete prototype ready to demo |
+
+**Total Duration**: 4-8 weeks (depending on available time per week)
+
+---
+
+## After Phase 1: Lessons Learned
+
+At the end of Phase 1, we will:
+1. Document all lessons learned
+2. Update game design based on playtesting feedback
+3. Refine battle mechanics and balance
+4. Update architecture decisions if needed
+5. Plan Phase 2 based on what worked/didn't work
+6. Decide if we need to pivot or continue as planned
+
+---
+
+**Phase 2 Preview**: Once prototype is validated, Phase 2 will focus on making it production-ready with proper authentication, deployment to AWS, real user accounts, and the matchmaking system.
+
+---
+
+## Phase 2: Foundation & Infrastructure (Estimated: 2-3 months)
+
+**Goal**: Make the prototype production-ready with proper infrastructure and security
+
+### 2.1 Development Environment Enhancement
+- [ ] Configure CI/CD pipeline (GitHub Actions)
+- [ ] Set up automated testing framework
+- [ ] Configure code coverage tracking
+- [ ] Security scanning integration (SAST)
+- [ ] Set up staging environment
+
+### 2.2 Authentication & Security
+- [ ] Proper user registration system
+- [ ] Secure login/logout with JWT
+- [ ] Password hashing (bcrypt)
+- [ ] Password reset flow
+- [ ] Email verification
+- [ ] Rate limiting
+- [ ] Input validation and sanitization
+- [ ] CSRF protection
+
+### 2.3 Database & Data Layer
+- [ ] Expand database schema for production
+- [ ] Add database indexes for performance
+- [ ] Set up database backups
+- [ ] Implement data validation
+- [ ] Add audit logging
+- [ ] Connection pooling optimization
+
+### 2.4 Testing Infrastructure
+- [ ] Unit tests for battle engine
+- [ ] Integration tests for API
+- [ ] End-to-end tests for critical flows
+- [ ] Load testing setup
+- [ ] Automated test runs in CI/CD
+
+**Deliverables**:
+- Production-ready authentication system
+- Comprehensive test coverage
+- Security hardened application
 - CI/CD pipeline operational
 
 ---
 
-## Phase 2: Core Game Mechanics (Estimated: 3-4 months)
+## Phase 3: Core Game Mechanics (Estimated: 3-4 months)
 
-**Goal**: Implement core game functionality
+**Goal**: Expand game features based on Phase 1 learnings
 
-### 2.1 Player Module
+### 3.1 Player Module
 - [ ] Player profile system
 - [ ] Player statistics tracking
 - [ ] Achievement system (basic)
 - [ ] Player inventory
 - [ ] Currency management
 
-### 2.2 Robot Module
+### 3.2 Robot Module
 - [ ] Robot creation system
 - [ ] Robot stats and attributes
 - [ ] Robot component system
 - [ ] Robot upgrade mechanics
 - [ ] Robot storage/management
 
-### 2.3 Stable Module
+### 3.3 Stable Module
 - [ ] Stable creation
 - [ ] Robot organization
 - [ ] Team composition
 - [ ] Loadout management
 
-### 2.4 Game Engine (Core)
+### 3.4 Game Engine (Enhanced)
 - [ ] Battle rules definition
 - [ ] Turn/action processing
 - [ ] Game state management
 - [ ] Resource management
 - [ ] Leveling system
 
-### 2.5 Battle Module (Basic)
+### 3.5 Battle Module (Enhanced)
 - [ ] Battle initialization
 - [ ] Combat simulation
 - [ ] Damage calculation
@@ -131,32 +443,32 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 3: Web UI (Estimated: 2-3 months)
+## Phase 4: Web UI (Estimated: 2-3 months)
 
-**Goal**: Create web-based user interface
+**Goal**: Create polished web-based user interface
 
-### 3.1 UI Foundation
+### 4.1 UI Foundation
 - [ ] React app setup
 - [ ] Component library creation
 - [ ] Routing setup
 - [ ] State management
 - [ ] API client integration
 
-### 3.2 Core Pages
+### 4.2 Core Pages
 - [ ] Landing page
 - [ ] Registration/login pages
 - [ ] Player dashboard
 - [ ] Robot creation/management
 - [ ] Stable management
 
-### 3.3 Battle UI
+### 4.3 Battle UI
 - [ ] Battle arena visualization
 - [ ] Battle controls
 - [ ] Real-time battle updates (if applicable)
 - [ ] Battle results screen
 - [ ] Battle history
 
-### 3.4 Polish
+### 4.4 Polish
 - [ ] Responsive design
 - [ ] Loading states
 - [ ] Error handling UI
@@ -170,30 +482,30 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 4: Multiplayer & Advanced Features (Estimated: 2-3 months)
+## Phase 5: Multiplayer & Advanced Features (Estimated: 2-3 months)
 
 **Goal**: Add multiplayer and social features
 
-### 4.1 Matchmaking Module
+### 5.1 Matchmaking Module
 - [ ] Matchmaking queue system
 - [ ] Skill-based matching
 - [ ] Match creation
 - [ ] Bot opponents (if needed)
 
-### 4.2 Real-time Features
+### 5.2 Real-time Features
 - [ ] WebSocket integration
 - [ ] Live battle updates
 - [ ] Real-time notifications
 - [ ] Online presence
 
-### 4.3 Social Features
+### 5.3 Social Features
 - [ ] Friend system
 - [ ] In-game chat
 - [ ] Leaderboards
 - [ ] Replay sharing
 - [ ] Spectator mode (stretch goal)
 
-### 4.4 Advanced Game Modes
+### 5.4 Advanced Game Modes
 - [ ] Ranked battles
 - [ ] Tournaments
 - [ ] Special events
@@ -207,11 +519,11 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 5: Beta Launch (Estimated: 1 month)
+## Phase 6: Beta Launch (Estimated: 1 month)
 
 **Goal**: Launch to limited audience for testing
 
-### 5.1 Pre-Launch
+### 6.1 Pre-Launch
 - [ ] Security audit
 - [ ] Load testing
 - [ ] Bug fixes from testing
@@ -219,14 +531,14 @@ This document outlines the development roadmap for Armoured Souls, from planning
 - [ ] Terms of Service / Privacy Policy
 - [ ] Marketing materials
 
-### 5.2 Beta Program
+### 6.2 Beta Program
 - [ ] Limited user invitations
 - [ ] Feedback collection system
 - [ ] Monitoring and analytics
 - [ ] Bug tracking
 - [ ] Performance monitoring
 
-### 5.3 Iteration
+### 6.3 Iteration
 - [ ] Address critical feedback
 - [ ] Fix major bugs
 - [ ] Performance optimization
@@ -239,25 +551,25 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 6: Official Launch (Estimated: 1 month)
+## Phase 7: Official Launch (Estimated: 1 month)
 
 **Goal**: Full public launch
 
-### 6.1 Launch Preparation
+### 7.1 Launch Preparation
 - [ ] Final security review
 - [ ] Scalability testing
 - [ ] Final bug fixes
 - [ ] Marketing campaign
 - [ ] Support system ready
 
-### 6.2 Launch
+### 7.2 Launch
 - [ ] Open registration
 - [ ] Marketing push
 - [ ] Community management
 - [ ] 24/7 monitoring
 - [ ] Rapid response to issues
 
-### 6.3 Post-Launch
+### 7.3 Post-Launch
 - [ ] Gather user feedback
 - [ ] Monitor metrics (DAU, retention, etc.)
 - [ ] Quick iteration on issues
@@ -270,16 +582,16 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 7: Mobile Development (Estimated: 4-6 months)
+## Phase 8: Mobile Development (Estimated: 4-6 months)
 
 **Goal**: Launch iOS and Android apps
 
-### 7.1 Mobile Strategy Finalization
+### 8.1 Mobile Strategy Finalization
 - [ ] Confirm React Native vs alternatives
 - [ ] Set up monorepo structure
 - [ ] Refactor web code for sharing
 
-### 7.2 Mobile Development
+### 8.2 Mobile Development
 - [ ] React Native setup
 - [ ] Shared code integration
 - [ ] Mobile-specific UI
@@ -287,19 +599,19 @@ This document outlines the development roadmap for Armoured Souls, from planning
 - [ ] Push notifications
 - [ ] Deep linking
 
-### 7.3 iOS Development
+### 8.3 iOS Development
 - [ ] iOS-specific features
 - [ ] TestFlight beta
 - [ ] App Store submission
 - [ ] App Store optimization
 
-### 7.4 Android Development
+### 8.4 Android Development
 - [ ] Android-specific features
 - [ ] Play Console beta
 - [ ] Play Store submission
 - [ ] Play Store optimization
 
-### 7.5 Mobile Testing & Launch
+### 8.5 Mobile Testing & Launch
 - [ ] Beta testing
 - [ ] Bug fixes
 - [ ] Performance optimization
@@ -312,31 +624,31 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 8: Post-Launch & Growth (Ongoing)
+## Phase 9: Post-Launch & Growth (Ongoing)
 
 **Goal**: Maintain, improve, and grow the game
 
-### 8.1 Continuous Improvement
+### 9.1 Continuous Improvement
 - [ ] Regular content updates
 - [ ] New features based on feedback
 - [ ] Balance updates
 - [ ] Bug fixes
 - [ ] Performance improvements
 
-### 8.2 Growth Features
+### 9.2 Growth Features
 - [ ] Guilds/clans
 - [ ] Guild wars
 - [ ] Advanced social features
 - [ ] More game modes
 - [ ] Seasonal content
 
-### 8.3 Monetization (if applicable)
+### 9.3 Monetization (if applicable)
 - [ ] Monetization strategy implementation
 - [ ] In-app purchases
 - [ ] Premium features
 - [ ] Payment integration
 
-### 8.4 Analytics & Optimization
+### 9.4 Analytics & Optimization
 - [ ] User behavior analysis
 - [ ] A/B testing
 - [ ] Retention optimization
@@ -348,7 +660,9 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 | Milestone | Target Date | Status |
 |-----------|-------------|--------|
-| Planning Complete | TBD | 🟡 In Progress |
+| Planning Complete | Complete | ✅ Done |
+| Local Prototype Ready | TBD | 🟡 In Progress |
+| Prototype Validated by Friends | TBD | ⚪ Not Started |
 | Development Environment Ready | TBD | ⚪ Not Started |
 | Authentication Working | TBD | ⚪ Not Started |
 | Core Game Mechanics Complete | TBD | ⚪ Not Started |
@@ -363,26 +677,31 @@ This document outlines the development roadmap for Armoured Souls, from planning
 ## Dependencies & Risks
 
 ### Critical Path Items
-1. Design decisions (battle mechanics, tech stack)
-2. Authentication system (blocks all other features)
-3. Core game engine (blocks battle system)
-4. Web UI (blocks user testing)
+1. ✅ Design decisions (battle mechanics, tech stack) - COMPLETE
+2. **Phase 1 Prototype** - Validates core game concept
+3. Battle simulation engine - Proves the game is fun
+4. Friends' feedback - Validates if we continue or pivot
+5. Authentication system (Phase 2) - Blocks production deployment
+6. Web UI polish (Phase 4) - Blocks public launch
 
 ### Known Risks
-1. **Technology Stack Choice**: Choosing wrong tech could slow development
-   - Mitigation: Thorough evaluation, proof of concepts
+1. **Game Concept Validation**: Core gameplay might not be fun
+   - Mitigation: **Phase 1 prototype validates this early with minimal investment**
 
-2. **Scope Creep**: Adding too many features before launch
-   - Mitigation: Strict MVP definition, phased approach
+2. **Technology Stack Choice**: Choosing wrong tech could slow development
+   - Mitigation: Prototype in Phase 1 validates tech choices
 
-3. **Performance at Scale**: System may not handle 1000+ concurrent users
-   - Mitigation: Load testing early, scalable architecture
+3. **Scope Creep**: Adding too many features before validation
+   - Mitigation: **Strict Phase 1 scope - prove core concept first**
 
-4. **Mobile Platform Differences**: iOS/Android specific issues
-   - Mitigation: React Native for code sharing, platform-specific testing
+4. **Performance at Scale**: System may not handle 1000+ concurrent users
+   - Mitigation: Load testing in Phase 2, scalable architecture from start
 
-5. **Security Vulnerabilities**: Potential for exploits
-   - Mitigation: Security-first design, regular audits, automated scanning
+5. **Mobile Platform Differences**: iOS/Android specific issues
+   - Mitigation: React Native for code sharing, platform-specific testing (Phase 8)
+
+6. **Security Vulnerabilities**: Potential for exploits
+   - Mitigation: Security-first design, regular audits (Phase 2+), automated scanning
 
 ---
 
@@ -422,23 +741,25 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ## Next Actions
 
-**Immediate (This Week)**:
-1. Review and answer key questions in QUESTIONS.md
-2. Make technology stack decisions
-3. Define MVP scope precisely
-4. Create detailed Phase 1 timeline
+**Immediate (This Week)** - Phase 1 Start:
+1. ✅ Planning complete
+2. Set up local development environment (Docker, Node.js, PostgreSQL)
+3. Initialize project structure
+4. Create minimal database schema
+5. Begin battle simulation engine
 
-**Short-term (This Month)**:
-1. Set up development environment
-2. Begin Phase 1 implementation
-3. Recruit additional team members if needed
-4. Create detailed design mockups
+**Short-term (Next 2 Weeks)** - Phase 1 Core:
+1. Complete battle simulation engine
+2. Build basic REST API
+3. Create simple React UI
+4. Implement robot creation and configuration
 
-**Medium-term (Next Quarter)**:
-1. Complete Phase 1 & 2
-2. Begin Phase 3 (Web UI)
-3. Conduct user research
-4. Plan beta launch
+**Medium-term (Weeks 3-4)** - Phase 1 Completion:
+1. Add component system (weapons, armor)
+2. Polish prototype for demo
+3. Test with friends and gather feedback
+4. Document lessons learned
+5. Decide: Continue to Phase 2 or pivot based on feedback
 
 ---
 
@@ -451,6 +772,6 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-**Last Updated**: [Date TBD]  
-**Version**: 1.0  
-**Status**: Draft
+**Last Updated**: January 21, 2026  
+**Version**: 2.0  
+**Status**: Phase 1 (Local Prototype) Ready to Start
