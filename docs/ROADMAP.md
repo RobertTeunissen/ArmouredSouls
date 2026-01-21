@@ -8,8 +8,8 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ## Current Status: Phase 0 - Planning ✅
 
-**Status**: In Progress  
-**Duration**: Ongoing  
+**Status**: Nearly Complete  
+**Duration**: Completed  
 **Goal**: Define architecture, modules, and answer key design questions
 
 ### Completed
@@ -19,14 +19,27 @@ This document outlines the development roadmap for Armoured Souls, from planning
 - ✅ Security strategy documented
 - ✅ Testing strategy defined
 - ✅ Portability strategy outlined
-- ✅ Key questions identified
+- ✅ Key questions answered
+- ✅ Technology stack finalized: Node.js + TypeScript + React + PostgreSQL
+- ✅ MVP scope defined: User management, robot management, stable management, 1v1 matches
+- ✅ Game design documented: Scheduled battle system inspired by Football Manager
+- ✅ Development approach: Local first → AWS serverless
+- ✅ Team composition defined: 2-person team (Robert + AI)
 
-### Next Steps
-- Answer key design questions (see QUESTIONS.md)
-- Finalize technology stack
-- Define MVP scope
-- Create detailed timelines
-- Assign responsibilities
+### Key Decisions Made
+- **Battle System**: Scheduled batch processing (not real-time, not turn-based)
+- **Target Audience**: Casual players, 15-30 min/day engagement
+- **Monetization**: Free-to-play with optional in-game currency purchases
+- **Platform Priority**: Web first, mobile later (iOS before Android)
+- **Hosting**: AWS with serverless architecture, scale-to-zero capability
+- **Game Mechanics**: Football Manager-style - configure robots, view battle outcomes
+
+### Ready for Phase 1
+- ✅ All critical design questions answered
+- ✅ Technology stack selected
+- ✅ MVP scope clearly defined
+- ✅ Timeline approach: ASAP based on available development time
+- ✅ Team roles assigned
 
 ---
 

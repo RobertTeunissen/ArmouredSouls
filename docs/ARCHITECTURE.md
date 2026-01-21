@@ -69,27 +69,29 @@ Armoured Souls follows a modular, microservices-inspired architecture designed f
 - End-to-end tests for critical user flows
 - Load testing for scalability validation
 
-## Technology Stack (Proposed)
+## Technology Stack (Selected)
 
 ### Backend
-- **Language**: Node.js (TypeScript) or Python
-- **Framework**: Express/Fastify or FastAPI
-- **Database**: PostgreSQL (primary), Redis (cache)
-- **Authentication**: JWT, OAuth 2.0
+- **Language**: Node.js with TypeScript (best for web-to-mobile code sharing)
+- **Framework**: Express or Fastify (TBD based on performance needs)
+- **Database**: PostgreSQL (primary), Redis (cache and sessions)
+- **Authentication**: JWT, OAuth 2.0 (Google, Facebook, Apple)
 - **API Documentation**: OpenAPI/Swagger
+- **Hosting**: AWS with serverless architecture where possible
 
 ### Frontend
 - **Web**: React + TypeScript
-- **Mobile**: React Native (for portability) or native Swift/Kotlin
-- **State Management**: Redux/Zustand
-- **UI Library**: Material-UI or Tailwind CSS
+- **Mobile**: React Native (70-80% code reuse from web)
+- **State Management**: Redux Toolkit or Zustand
+- **UI Library**: Material-UI or Tailwind CSS (TBD)
 
 ### DevOps
 - **CI/CD**: GitHub Actions
 - **Container**: Docker
-- **Orchestration**: Kubernetes (future)
-- **Monitoring**: Prometheus + Grafana
-- **Logging**: ELK Stack or similar
+- **Hosting**: AWS (managed services preferred)
+- **Serverless**: Lambda, API Gateway, DynamoDB where applicable
+- **Monitoring**: AWS CloudWatch, Prometheus + Grafana
+- **Logging**: CloudWatch Logs or ELK Stack
 
 ### Testing
 - **Unit**: Jest/Vitest
@@ -97,14 +99,28 @@ Armoured Souls follows a modular, microservices-inspired architecture designed f
 - **Load**: k6 or Apache JMeter
 - **Security**: OWASP ZAP, Snyk
 
-## Key Design Decisions to Make
+## Key Design Decisions (Finalized)
 
-1. **Backend Language**: Node.js vs Python vs Go vs Rust?
-2. **Database**: PostgreSQL vs MongoDB vs hybrid?
-3. **Real-time**: WebSockets vs Server-Sent Events vs long polling?
-4. **Mobile Strategy**: React Native vs Flutter vs Native?
-5. **Hosting**: AWS vs Azure vs GCP vs self-hosted?
-6. **Game Engine**: Custom vs existing framework?
+1. **Backend Language**: ✅ Node.js with TypeScript (enables React Native code sharing)
+2. **Database**: ✅ PostgreSQL (relational data) + Redis (caching, sessions)
+3. **Real-time**: ❌ Not needed (scheduled batch battle processing)
+4. **Mobile Strategy**: ✅ React Native after web MVP (iOS first, then Android)
+5. **Hosting**: ✅ AWS with serverless architecture, scale-to-zero capability
+6. **Game Engine**: ✅ Custom server-side simulation engine (deterministic, batch processing)
+
+## Development Approach
+
+### Local Development First
+- Initial development on local machine (laptop)
+- Test with small group of friends
+- No immediate hosting contract required
+- Docker for local database and services
+
+### Migration Path to Cloud
+1. **Phase 1**: Local development with Docker Compose
+2. **Phase 2**: Deploy to AWS (single region, minimal services)
+3. **Phase 3**: Scale horizontally as user base grows
+4. **Phase 4**: Add redundancy and multi-region support
 
 ## Scalability Considerations
 
@@ -144,6 +160,87 @@ Armoured Souls follows a modular, microservices-inspired architecture designed f
 - Encryption in transit (TLS)
 - PII data handling compliance (GDPR, CCPA)
 - Regular backups with encryption
+
+## Battle Simulation Architecture
+
+### Scheduled Battle Processing
+
+Armoured Souls uses a **scheduled batch processing** model for battles, inspired by Football Manager mechanics.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Battle Flow                               │
+│                                                              │
+│  1. Player Configuration Phase (Continuous)                  │
+│     ├─ Players set up robots                                │
+│     ├─ Select weapons and strategies                        │
+│     ├─ Configure conditional triggers                       │
+│     └─ Join matchmaking queues                              │
+│                                                              │
+│  2. Battle Scheduling (Automated)                           │
+│     ├─ Matchmaking pairs players                            │
+│     ├─ Schedule battles for next processing window          │
+│     └─ Lock configurations before processing                │
+│                                                              │
+│  3. Batch Processing (Scheduled Times)                      │
+│     ├─ Server processes all scheduled battles               │
+│     ├─ Simulation engine runs deterministically             │
+│     ├─ Generate battle logs and replays                     │
+│     └─ Calculate rewards and stats                          │
+│                                                              │
+│  4. Results Distribution (Immediate after processing)       │
+│     ├─ Update player rankings and stats                     │
+│     ├─ Notify players of results                            │
+│     ├─ Make replays available                               │
+│     └─ Distribute rewards                                   │
+│                                                              │
+│  5. Next Cycle Begins                                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Battle Simulation Engine
+
+**Server-Authoritative**:
+- All battle logic runs on server
+- Client never computes battle outcomes
+- Prevents cheating and ensures consistency
+
+**Deterministic**:
+- Same inputs always produce same outputs
+- Enables accurate replay generation
+- Supports debugging and balance testing
+
+**Batch Processing**:
+- Process thousands of battles simultaneously
+- Scheduled at fixed times (e.g., daily at 8 PM, multiple times per day)
+- Optimized for throughput over latency
+
+**Input Variables**:
+- Robot statistics (attack, defense, speed, armor, health)
+- Weapon configurations
+- Strategic settings
+- Conditional triggers (future feature)
+
+**Output**:
+- Complete battle log
+- Replay data
+- Winner determination
+- Statistics (damage dealt/received, actions taken)
+- Rewards (currency, fame, experience)
+
+### Processing Schedule Examples
+
+**Casual Schedule** (1-2 times per day):
+- Morning processing: 8:00 AM server time
+- Evening processing: 8:00 PM server time
+
+**Active Schedule** (4-6 times per day):
+- Every 4-6 hours around the clock
+- Allows players in different timezones to participate
+
+**Tournament Schedule**:
+- Custom schedules for multi-day tournaments
+- Round progression with defined intervals
 
 ## Monitoring & Observability
 

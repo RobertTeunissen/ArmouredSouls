@@ -119,20 +119,20 @@ ArmouredSouls/
 
 ## ❓ Critical Questions Requiring Answers
 
-Before moving to implementation, these questions need answers:
+All critical questions have been answered! See GAME_DESIGN.md for comprehensive game design decisions.
 
-### 🔴 Immediate Priority
+### ✅ Decisions Made
 
-1. **Battle Mechanics**: Real-time or turn-based?
-2. **Target Launch Date**: What's the timeline?
-3. **Team Composition**: Who's available? What skills?
-4. **Budget**: Infrastructure and tool budget?
-5. **Monetization**: Launch with or post-launch?
-6. **MVP Scope**: Minimal test vs fuller experience?
-7. **Tech Stack Preferences**: Any strong preferences?
-8. **Target Audience**: Age range, casual vs hardcore, geography?
+1. **Battle Mechanics**: ✅ Scheduled batch processing (Football Manager-style)
+2. **Target Launch Date**: ✅ ASAP (timeline-driven)
+3. **Team Composition**: ✅ 2-person team (Robert + AI)
+4. **Budget**: ✅ Minimal cost, serverless, scale-to-zero
+5. **Monetization**: ✅ Post-launch, in-game currency purchases
+6. **MVP Scope**: ✅ User management, robots, stable, 1v1 battles
+7. **Tech Stack**: ✅ Node.js + TypeScript + React + PostgreSQL
+8. **Target Audience**: ✅ Casual players, 15-30 min/day
 
-See `docs/QUESTIONS.md` for complete list of 50+ planning questions.
+See `docs/QUESTIONS.md` for remaining open questions.
 
 ---
 
@@ -290,14 +290,20 @@ This project commits to:
 **For Robert (Project Owner):**
 
 1. ✅ **Review** all created documentation
-2. ⏳ **Answer** the 8 immediate priority questions in QUESTIONS.md
-3. ⏳ **Decide** on technology stack preferences
-4. ⏳ **Define** MVP scope (which features are must-have vs nice-to-have)
-5. ⏳ **Set** a target launch date (even if tentative)
-6. ⏳ **Identify** team resources (if any) or confirm solo development
-7. ⏳ **Approve** this scaffolding or request modifications
+2. ✅ **Answer** the immediate priority questions - COMPLETED!
+3. ✅ **Decide** on technology stack - FINALIZED: Node.js + TypeScript + React
+4. ✅ **Define** MVP scope - DEFINED: User management, robots, stable, 1v1 battles
+5. ✅ **Set** target launch date - DEFINED: ASAP based on available time
+6. ✅ **Identify** team resources - CONFIRMED: 2-person team
+7. ✅ **Approve** scaffolding - APPROVED with answers provided
 
-**Next Milestone**: Once questions are answered, we can proceed to Phase 1 (Foundation) and begin actual implementation.
+**Next Milestone**: Begin Phase 1 (Foundation) - Set up local development environment and start building authentication system.
+
+**Immediate Next Steps**:
+1. Set up local development environment (Node.js, PostgreSQL, Docker)
+2. Initialize project structure with chosen tech stack
+3. Begin implementing authentication module
+4. Create initial database schema for users and robots
 
 ---
 

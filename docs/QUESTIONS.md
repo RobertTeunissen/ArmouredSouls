@@ -1,370 +1,630 @@
 # Armoured Souls - Planning Questions
 
-This document contains key questions that need to be answered to refine our development roadmap and make informed architectural decisions.
+This document contains remaining questions that need to be answered to refine our development roadmap and make informed implementation decisions.
+
+**Note**: Core design questions have been answered and documented in GAME_DESIGN.md. This document contains follow-up questions and implementation details.
 
 ---
 
-## Game Design Questions
+## Battle Simulation Engine
 
-### Core Gameplay
+### Deterministic Simulation
 
-1. **Battle Mechanics**
-   - Will battles be turn-based or real-time? --> Neither. We'll have input variables (the various stats), planned battles and outcomes. At a specific time we'll run the scheduled matches and process the outcomes and present them to the players. 
-   - How long should a typical battle last? (30 seconds? 5 minutes? 30 minutes?) --> Some battles will take longer based on the statistics. Doesn't matter, we'll process them at a specific time and present the results to the players.
-   - Will players actively control battles or just set up their robots beforehand? --> They will set up their robots and pick their weapons. They do not control the actual outcome. A comparable game would be the Football Manager series (soccer management). You have input variables and the outcome is presented. 
-   - Should there be manual intervention during battles (e.g., special abilities)? --> Might be a feature to add later, but I don't want players to intervent during the battle. I want to run all the battles and then proceed to then next phase. One thing we could look at is "My robot will trigger his mega-ultra-destructive BFG9000 during the 7th turn / after 3 min into the battle / when he is badly damaged"
+1. **Random Number Generation**
+   - How do we handle randomness in battles while maintaining determinism?
+   - Use seeded RNG based on battle ID + timestamp?
+   - What's the balance between randomness and predictability?
 
-2. **Robot Customization**
-   - How deep should customization go? (visual only? stats? abilities?) --> This kind of depends on what you can do. We need a framework on which we can expand. 
-   - How many components can a robot have? (chassis, weapons, armor, engine, etc.) --> We need to make it complex to make it interesting, but not overwhelming
-   - Can players design robots from scratch or choose from templates? --> I would say both. They might be visually driven (humanoid) or functionality driven (sturdy but slow)
-   - How do we balance customization freedom with game balance? --> Through testing and many, many, simulation matches run before launch. Players will find a way to exploit stuff, we'll need to adapt.
+2. **Battle Duration Calculation**
+   - What factors determine battle length?
+   - Is there a minimum/maximum battle duration?
+   - How do we prevent infinite battles?
 
-3. **Progression System**
-   - What does player progression look like? (XP levels? ranking? unlocks?) --> Tied to the monetary system, but quite likely also tied to another currency like "fame" 
-   - How do robots improve? (leveling? upgrades? evolution?) --> Spending money on upgrades
-   - What resources do players collect? (currency? materials? energy?) --> Currency and quite possibly fame.
-   - How quickly should players progress? (casual friendly? grind-heavy?) --> Casual friendly, one login per day and 15-30 min per day would be optimal. Maybe we need to implement some Pay to Win features to cover the costs for hosting to get additional money or fame.
+3. **Victory Conditions**
+   - Robot destroyed (health = 0)?
+   - Surrender mechanism?
+   - Timeout/draw conditions?
+   - Tactical retreat implementation?
 
-4. **Stable Management**
-   - How many robots can a player have in their stable? --> Not sure. More than one. 
-   - Can players trade or sell robots? --> Yes this would be cool. And weapons. Maybe even blueprints. Buying / selling sounds easier to implement than trading. 
-   - Are there stable management costs (maintenance, storage)? --> I would say that there is a small fee to be incurred when a robot has fought and is (badly) damaged. This would also give the player the change to "fight to the death" or "bail out when badly damaged" as a strategy for a fight you beforehand know you can't win.
-   - Can players specialize stables (PvP, PvE, specific tactics)? --> Yes. It should be a valid strategy to create multiple crappy robots or have one mega good one and both strategies should be effective. Or someone who is only making money by designing and then selling weapons. There should be many ways to get fame / feel like you "win" the game. 
+4. **Damage Calculation**
+   - Formula for damage: Attack - Defense?
+   - Critical hits and their probability?
+   - Armor penetration mechanics?
+   - Status effects (stun, slow, burn)?
 
-5. **Game Modes**
-   - What game modes will we launch with? 
-     - PvP ranked battles? --> PvP (ranked) battles should be most important. Let's start with 1v1, but maybe 2v2, 5v5 or even 11v11 might be interesting. Or "last man standing"
-     - PvE campaigns/missions? - PvE might be sparring matches (less fame, less costs to repair). 
-     - Tournaments? - Tournaments should be an important aspect spanning multiple days/weeks
-     - Guild/clan wars? - Not in the first launch, but with mass matches this could be fun.
-     - Story mode? - Not in the first launch. Maybe some small story mode to "get started" and explain the game.
-   - Which modes are MVP (launch) vs post-launch?
+5. **Action Resolution Order**
+   - Speed-based (faster robots act first)?
+   - Simultaneous actions?
+   - Turn-based within the simulation?
 
-6. **Social Features**
-   - Guilds/clans? --> Yes
-   - Friend system? --> Yes
-   - In-game chat? --> Yes
-   - Spectator mode? --> Yes, see the results of others 
-   - Replay sharing? --> Yes
-   - Leaderboards (global? regional? friends?) --> Yes. Many. Achievements. Rankings. League system. "Fastest robot", "Most dominant victory". Fame! Records!
+### Conditional Triggers (Future Feature)
 
----
+1. **Trigger Conditions**
+   - Turn number (e.g., "turn 7")
+   - Time-based (e.g., "after 3 minutes")
+   - Health-based (e.g., "when health < 30%")
+   - Situational (e.g., "when enemy uses special ability")
 
-## Technical Architecture Questions
+2. **Trigger Actions**
+   - Activate special weapon
+   - Change strategy/stance
+   - Use consumable item
+   - Attempt retreat
 
-### Backend Technology
-
-1. **Language & Framework**
-   - Node.js (JavaScript/TypeScript) - Fast development, large ecosystem
-   - Python (FastAPI) - Great for data science, AI integration
-   - Go - High performance, efficient concurrency
-   - Rust - Maximum performance, memory safety
-   - **Which aligns best with team skills and project needs?** --> There is no team. It's just you and me. 
-
-2. **Database Strategy**
-   - Primary database: PostgreSQL (relational) vs MongoDB (document)?
-   - Do we need both for different use cases?
-   - What's our data model complexity? (relational heavy? document-friendly?)
-   - Caching layer: Redis (definitely) but what else?
-
-3. **Real-Time Communication**
-   - WebSockets for live battles?
-   - Server-Sent Events for updates?
-   - Long polling as fallback?
-   - How many concurrent battles do we expect?
-
-4. **Game Engine**
-   - Build custom battle simulation engine?
-   - Use existing framework (Phaser.js, PixiJS)?
-   - Server-side simulation vs client-side?
-   - Deterministic vs non-deterministic?
-  
---> In order to decide on the technology questions, I need to clarify more to give you some input. I think we'll eventually host this on AWS. But for now, I want to run this on my laptop and show it to some friends to test. I have no hosting contract yet. How are we going to achieve that? Or can you honestly tell me this is not the way to go?
+3. **Trigger Limits**
+   - How many triggers per battle?
+   - Cooldowns between trigger activations?
+   - Cost to use triggers?
 
 ---
 
-### Scalability & Infrastructure
+## Robot Component System
 
-1. **Initial Scale**
-   - How many players at launch? (100? 1000? 10,000?) --> Let's make it scalable and aim for the moon. 
-   - How many concurrent users? (10%? 50% of total?) --> Not that many. I hope to aim for 15-30 min of time for each player each day.
-   - What's our growth projection? (double every month? year?) --> Don't know yet.
+### Component Types
 
-2. **Hosting Strategy**
-   - Cloud provider: AWS vs Azure vs GCP vs DigitalOcean? --> Most likely AWS
-   - Serverless vs traditional servers? --> Serverless if possible to keep costs in check and make it scalable.
-   - Managed services vs self-managed? --> Managed as far as we can go.
-   - Multi-region from day one or start with one? --> Start with one. 
+1. **Chassis**
+   - What stats does chassis affect? (health, size, weight, defense?)
+   - Size categories: Small, Medium, Large, Huge?
+   - Weight impact on speed?
+   - Slot limitations based on chassis?
 
-3. **Cost Considerations**
-   - What's the budget for infrastructure? --> As low as we can. That's one of the reasons for serverless. Scale to zero should also be a possibility.
-   - How does cost scale with users?  
-   - Where can we optimize costs?
-   - Free tier vs paid tiers? 
+2. **Weapons**
+   - Primary and secondary weapon slots?
+   - Weapon categories: Melee, Ranged, Energy, Explosive?
+   - Weapon stats: Damage, speed, range, accuracy, ammo?
+   - Can weapons break or degrade?
 
----
+3. **Armor**
+   - Physical armor vs energy shield?
+   - Coverage zones (front, side, rear, top)?
+   - Armor rating system?
+   - Weight vs protection tradeoff?
 
-## Security & Compliance Questions
+4. **Engine/Power**
+   - Speed vs power tradeoff?
+   - Energy capacity for special abilities?
+   - Fuel/energy consumption?
 
-1. **User Authentication**
-   - Email/password (required)? --> Yes
-   - Social login (Google, Facebook, Apple)? --> Yes, but no "random" e-mail adresses. 
-   - Guest accounts allowed? --> No
-   - Two-factor authentication from start? --> No, feature for later.
+5. **Modules/Special Systems**
+   - Utility modules: Repair, sensor, stealth?
+   - Offensive modules: Targeting computer, weapon mods?
+   - Defensive modules: Active protection, countermeasures?
+   - How many module slots?
 
-2. **Data Privacy**
-   - What user data do we collect? --> As few as possible to comply with GDPR and others
-   - Which regions will we target? (affects GDPR, CCPA compliance) --> Global
-   - How do we handle user data deletion? --> Follow the strictest guidelines (probably EU?)
-   - Age restrictions? (COPPA compliance if <13 years old) --> Sounds good.
+### Component Balancing
 
-3. **Payment Processing**
-   - Will we have in-app purchases at launch? --> To be decided later
-   - Payment provider: Stripe vs PayPal vs others? --> To be decided later
-   - What will players buy? (cosmetics? power? convenience?) --> Current plan is in game currency or fame. 
-   - Subscription model vs one-time purchases? --> One time purchase, micro-transactions.
+1. **Stat Ranges**
+   - What's the minimum and maximum for each stat?
+   - Linear or exponential scaling?
+   - Diminishing returns at high values?
 
-4. **Cheating Prevention**
-   - What are the biggest cheating risks? --> Many multiple accounts to set up matches?
-   - Server-authoritative or client-authoritative? 
-   - How do we detect and prevent cheating? --> IPs?
-   - What's our ban/suspension policy? --> Don't know yet
+2. **Weight and Capacity**
+   - Total weight limit per robot?
+   - Over-weight penalties?
+   - Capacity for weapons/modules?
 
----
-
-## Mobile Strategy Questions
-
-1. **Mobile Priority**
-   - How important is mobile vs web? --> Not very, let's get a working prototype first. The architecture should cater for an expansion. 
-   - When do we want mobile apps? (6 months? 1 year? later?) --> Mobile browsing before Mobile native app
-   - iOS and Android simultaneously or one first? --> iOS first
-
-2. **Development Approach**
-   - React Native (code sharing with web)? 
-   - Flutter (better performance, less sharing)?
-   - Native (best experience, most work)?
-
---> I don't care. You are the expert here
-
-3. **Mobile-Specific Features**
-   - Push notifications essential? --> We're probably going to process matches daily (or multiple times a day when we're very succesful)
-   - Offline play needed? --> No
-   - Device-specific features (gyroscope, camera)? --> Not planned currently.
-  
---
-
-## Business Model Questions
-
-1. **Monetization Strategy**
-   - Free-to-play with in-app purchases? --> Yes
-   - Premium game (upfront cost)? --> No
-   - Subscription model? --> No
-   - Ad-supported? --> Maybe
-   - Hybrid approach? --> Yes, in app purchases a possibility
-
-2. **What Can Players Buy?**
-   - Cosmetic items only (fair, not pay-to-win)? --> Yes but not only
-   - Time savers (speed up progress)? --> No
-   - Power increases (pay-to-win)? --> No, currency. Pay for currency.
-   - Battle passes / season passes? --> Maybe to get access to special tournaments / leagues.
-   - Premium currency? --> Not planned currently.
-
-3. **Launch Strategy**
-   - Free during beta/early access? --> Yes start free to play
-   - Soft launch in select regions? --> Doesn't matter.
-   - Global launch from day one? --> Yes.
+3. **Cost Balancing**
+   - How is component cost calculated?
+   - Rarity tiers: Common, Uncommon, Rare, Epic, Legendary?
+   - Maintenance cost scaling?
 
 ---
 
-## Team & Resources Questions
+## Progression and Economy
+
+### Currency System
+
+1. **Currency Types**
+   - Single currency or multiple?
+   - "Credits" for purchases?
+   - "Fame" as prestige currency?
+   - Premium currency for monetization?
+
+2. **Currency Earning**
+   - Base rewards per battle?
+   - Bonus for wins vs participation?
+   - Achievement rewards?
+   - Daily login bonuses?
+   - Tournament prizes?
+
+3. **Currency Spending**
+   - Component purchases?
+   - Robot repairs?
+   - Upgrades?
+   - Marketplace fees?
+   - Tournament entry fees?
+
+4. **Economy Balance**
+   - Average earnings per day for active player?
+   - Cost of a new robot?
+   - Cost of high-end components?
+   - Inflation prevention strategy?
+
+### Fame System
+
+1. **Fame Earning**
+   - Fame per victory?
+   - Bonus fame for impressive victories?
+   - Fame from achievements?
+   - Fame decay over time?
+
+2. **Fame Benefits**
+   - Unlock new components?
+   - Access to special tournaments?
+   - Cosmetic items?
+   - Leaderboard position?
+
+### Progression Pacing
+
+1. **New Player Experience**
+   - Starting currency amount?
+   - Starter robot provided?
+   - How quickly can they get second robot?
+   - Tutorial rewards?
+
+2. **Mid-Game**
+   - Average time to competitive robot?
+   - Progression milestones?
+   - Unlock gates?
+
+3. **End-Game**
+   - What's the ceiling for progression?
+   - Ongoing goals for maxed players?
+   - Prestige/reset systems?
+
+---
+
+## Trading and Marketplace
+
+### Implementation Details
+
+1. **Marketplace Type**
+   - Player-to-player auction house?
+   - System-based store with dynamic prices?
+   - Hybrid approach?
+
+2. **Transaction Mechanics**
+   - Listing fees?
+   - Transaction taxes?
+   - Escrow system?
+   - Trade verification?
+
+3. **Tradeable Items**
+   - Complete robots?
+   - Components?
+   - Blueprints?
+   - Cosmetics?
+   - Currency (player-to-player trading)?
+
+4. **Price Discovery**
+   - Player-set prices?
+   - Suggested pricing?
+   - Price history tracking?
+   - Market manipulation prevention?
+
+5. **Blueprint System**
+   - How do blueprints work?
+   - One-time use or infinite?
+   - Blueprint rarity?
+   - Blueprint creation mechanics?
+
+---
+
+## Matchmaking System
+
+### 1v1 Matchmaking
+
+1. **Matching Criteria**
+   - Skill-based (ELO/MMR)?
+   - Robot power level?
+   - Player level?
+   - Win/loss record?
+   - Fame tier?
+
+2. **Queue System**
+   - Single queue or multiple (ranked, casual, practice)?
+   - Queue times - immediate or batched?
+   - Can you select specific opponents?
+
+3. **Fair Matching**
+   - Maximum rating difference?
+   - Widening search over time?
+   - New player protection?
+   - Smurf account prevention?
+
+4. **Opt-in vs Opt-out**
+   - Do players automatically enter queues?
+   - Manual match creation?
+   - Friend challenges?
+
+### Team Battles (Future)
 
 1. **Team Composition**
-   - How many developers? --> Me and you. Keep it simple.
-   - Frontend vs backend vs full-stack? --> You.
-   - Do we have designers? --> Me and you.
-   - Do we have DevOps expertise? --> Yes.
-   - Game designer on team? --> You.
+   - 2v2, 5v5, 11v11 mechanics?
+   - Can one player control multiple robots?
+   - Team formation strategies?
 
-2. **Timeline**
-   - What's our target launch date? --> ASAP whenever we have time.
-   - Are we building MVP first or full vision? --> MVP first.
-   - What's MVP scope? (minimum features to launch) --> user management, robot management, stable management, 1v1 matches 
-   - What can wait for post-launch? --> Other stuff 
-
-3. **Skills & Tools**
-   - What technologies is the team already familiar with? --> I'm familiar with a lot of things but I'm not a developer. I have you.
-   - What are we willing to learn? --> Everything.
-   - Do we have preferences that should influence tech stack? --> Not really. 
+2. **Team Matchmaking**
+   - Pre-made teams vs random?
+   - Team MMR calculation?
+   - Role selection?
 
 ---
 
-## User Experience Questions
+## Tournament System
 
-1. **Target Audience**
-   - Hardcore gamers vs casual players? --> Casual, 15-30 min per day. Login each day.
-   - Age range? --> 15-100
-   - Geographic focus? --> No
-   - Mobile-first or desktop-first users? --> Both? 
+### Tournament Structure
 
-2. **Onboarding**
-   - How quickly should players understand the game? --> Very quickly. Create a robot, enlisted in battle. 
-   - Tutorial required? --> It is handy.
-   - How much complexity upfront? --> Easy to learn, hard to master.
-   - Guided experience vs exploration? --> Both if possible. Many ways to play the game.
+1. **Tournament Types**
+   - Single elimination?
+   - Double elimination?
+   - Round robin?
+   - Swiss system?
 
-3. **Session Length**
-   - Quick sessions (5 minutes) or long sessions (30+ minutes)? --> Relatively quick: 5-20 min?
-   - Async gameplay (play when you want) vs real-time (scheduled)? --> Scheduled.
-   - How much daily time commitment expected? --> 15-30 min per day.
+2. **Tournament Duration**
+   - Single-day tournaments?
+   - Multi-day (week-long)?
+   - Multi-week seasons?
+
+3. **Tournament Entry**
+   - Entry fee?
+   - Fame requirement?
+   - Invitation-only?
+   - Open to all?
+
+4. **Tournament Brackets**
+   - Fixed size (8, 16, 32, 64 players)?
+   - Dynamic based on registrations?
+   - Seeding system?
+
+5. **Rewards**
+   - Prize pool distribution (winner takes all vs graduated)?
+   - Unique rewards?
+   - Titles/badges?
+   - Fame multipliers?
 
 ---
 
-## Art & Visual Design Questions
+## Social Features Priority
 
-1. **Art Style**
-   - Realistic vs stylized?
-   - 2D vs 3D?
+### Guild System
+
+1. **Guild Structure**
+   - Guild size limits?
+   - Leadership hierarchy (leader, officers, members)?
+   - Guild ranks?
+
+2. **Guild Features**
+   - Guild chat?
+   - Guild warehouse/shared resources?
+   - Guild-specific tournaments?
+   - Guild vs Guild wars?
+
+3. **Guild Benefits**
+   - Experience bonuses?
+   - Shared blueprints?
+   - Guild-exclusive items?
+
+### Friend System
+
+1. **Friend Features**
+   - Friend requests and acceptance?
+   - Friend list size limit?
+   - Online status visibility?
+   - Friend-only battles?
+
+2. **Friend Benefits**
+   - Practice battles?
+   - Gift system?
+   - Referral bonuses?
+
+### Leaderboards
+
+1. **Leaderboard Types**
+   - Global rankings?
+   - Regional rankings?
+   - Friend rankings?
+   - Specialized rankings (fastest robot, most victories, etc.)?
+   - Seasonal vs all-time?
+
+2. **Leaderboard Updates**
+   - Real-time or periodic?
+   - Reset schedules?
+   - Historical tracking?
+
+---
+
+## Technical Implementation Questions
+
+### Local Development Setup
+
+1. **Development Stack**
+   - Docker Compose for local services?
+   - PostgreSQL version?
+   - Redis version?
+   - Node.js version (LTS)?
+
+2. **Development Database**
+   - Seed data for testing?
+   - Migration strategy?
+   - Test data generation?
+
+3. **Local Battle Processing**
+   - How to test scheduled processing locally?
+   - Cron simulation?
+   - Manual trigger for development?
+
+### AWS Migration Strategy
+
+1. **Initial AWS Services**
+   - Elastic Beanstalk vs ECS vs Lambda?
+   - RDS for PostgreSQL?
+   - ElastiCache for Redis?
+   - S3 for assets?
+
+2. **Serverless Architecture**
+   - Which services should be Lambda functions?
+   - API Gateway setup?
+   - DynamoDB vs RDS for certain data?
+   - Cold start mitigation?
+
+3. **Cost Management**
+   - Free tier utilization?
+   - Reserved instances vs on-demand?
+   - Auto-scaling policies?
+   - Budget alerts?
+
+4. **Deployment Pipeline**
+   - GitHub Actions to AWS?
+   - Infrastructure as Code (Terraform, CloudFormation)?
+   - Staging environment?
+   - Blue-green deployments?
+
+---
+
+## Data Schema Questions
+
+### Database Design
+
+1. **User Data**
+   - User profile fields?
+   - Authentication data storage?
+   - User preferences?
+   - Social connections?
+
+2. **Robot Data**
+   - Robot entity structure?
+   - Component relationships?
+   - Configuration snapshots for battles?
+   - Historical robot states?
+
+3. **Battle Data**
+   - Battle records storage?
+   - Replay data format (JSON, binary)?
+   - Replay retention period?
+   - Battle statistics aggregation?
+
+4. **Indexes and Performance**
+   - Key indexes for common queries?
+   - Denormalization strategy?
+   - Read replicas needed?
+
+---
+
+## Art and Visual Design (Still Open)
+
+### Visual Style
+
+1. **Art Direction**
+   - 2D sprites vs 3D models?
    - Pixel art vs high-res?
-   - Dark/gritty vs colorful/friendly?
+   - Realistic vs stylized?
+   - Dark/gritty vs colorful?
 
-2. **Asset Creation**
-   - Who creates art assets?
-   - Custom art vs asset store?
-   - Placeholder art in MVP?
-
-3. **Performance Impact**
-   - How detailed can graphics be while maintaining performance?
+2. **Robot Visualization**
+   - How detailed should robots look?
+   - Customization visibility (can you see equipped weapons)?
    - Animation complexity?
-   - Effects and particles?
+   - Battle visualization style?
+
+3. **UI Design**
+   - Clean minimal vs information-dense?
+   - Color scheme?
+   - Accessibility considerations?
+   - Mobile-responsive design patterns?
+
+### Asset Creation
+
+1. **Asset Sources**
+   - Custom art commission?
+   - Asset store purchases?
+   - AI-generated art?
+   - Community submissions?
+
+2. **MVP Assets**
+   - Placeholder graphics acceptable?
+   - Minimum asset requirements?
+   - Asset pipeline (creation, review, integration)?
 
 ---
 
-## Legal & Administrative Questions
+## Testing Strategy Details
 
-1. **Company Structure**
-   - Is there a legal entity?
-   - Intellectual property ownership?
-   - Contracts for contributors?
+### Battle Simulation Testing
 
-2. **Terms of Service**
-   - Who writes ToS and Privacy Policy?
-   - User agreement requirements?
-   - Age restrictions?
+1. **Unit Tests**
+   - Test individual damage calculations?
+   - Test action resolution?
+   - Test victory conditions?
+   - Mock random number generation?
 
-3. **Content Moderation**
-   - User-generated content allowed?
-   - Moderation strategy?
-   - Reporting system?
+2. **Integration Tests**
+   - Full battle simulation tests?
+   - Performance tests (1000 battles/second)?
+   - Load testing (10,000 concurrent battles)?
 
----
-
-## Analytics & Metrics Questions
-
-1. **Key Metrics to Track**
-   - Daily Active Users (DAU)?
-   - Retention (Day 1, Day 7, Day 30)?
-   - Session length?
-   - Battle completion rate?
-   - Conversion rate (free to paid)?
-
-2. **Analytics Tools**
-   - Google Analytics?
-   - Mixpanel, Amplitude?
-   - Custom analytics?
-   - Privacy-compliant tracking?
-
-3. **A/B Testing**
-   - Will we A/B test features?
-   - What should we test first?
-   - Tools for experimentation?
+3. **Balance Testing**
+   - Automated simulation of thousands of battles?
+   - Statistical analysis of outcomes?
+   - Dominant strategy detection?
+   - Balance adjustment process?
 
 ---
 
-## Risk & Contingency Questions
+## Analytics and Metrics
 
-1. **Technical Risks**
-   - What's the biggest technical challenge?
-   - Backup plans if primary tech choice fails?
-   - Scalability concerns?
+### Data Collection
 
-2. **Market Risks**
-   - What if users don't engage?
-   - Competitor analysis done?
-   - Unique value proposition clear?
+1. **Player Metrics**
+   - What player actions to track?
+   - Session duration tracking?
+   - Conversion funnel analysis?
+   - Retention cohorts?
 
-3. **Resource Risks**
-   - What if we run out of budget?
-   - What if key team members leave?
-   - Can we reduce scope if needed?
+2. **Battle Metrics**
+   - Average battle duration?
+   - Most used components?
+   - Win rates by robot type?
+   - Balance indicators?
 
----
+3. **Economy Metrics**
+   - Currency flow analysis?
+   - Inflation tracking?
+   - Trading volume?
+   - Monetization conversion rates?
 
-## Prioritization Framework
+### Analytics Tools
 
-For each feature/decision, let's consider:
-1. **Impact**: How much does it improve the game? (High/Medium/Low)
-2. **Effort**: How much work is required? (High/Medium/Low)
-3. **Risk**: What could go wrong? (High/Medium/Low)
-4. **Priority**: MVP vs Post-Launch vs Future
-
-### Priority Matrix
-```
-High Impact + Low Effort + Low Risk = DO FIRST (MVP)
-High Impact + High Effort + Low Risk = DO EARLY (Post-MVP)
-High Impact + High Effort + High Risk = RESEARCH FIRST
-Low Impact + Any Effort + Any Risk = DEFER
-```
+1. **Implementation**
+   - Custom analytics vs third-party?
+   - Real-time vs batch processing?
+   - Data warehouse?
+   - Visualization dashboards?
 
 ---
 
-## Next Steps
+## Content Moderation
 
-Once we answer these questions, we can:
-1. Finalize technology stack
-2. Define MVP scope precisely
-3. Create detailed project timeline
-4. Assign responsibilities
-5. Set up development environment
-6. Begin iterative development
+### User-Generated Content
 
----
+1. **What Can Players Create?**
+   - Custom robot names?
+   - Profile descriptions?
+   - Guild names and descriptions?
+   - Chat messages?
 
-## Decision Log
+2. **Moderation Strategy**
+   - Automated filtering (profanity)?
+   - Report system?
+   - Moderator review?
+   - Appeals process?
 
-As we answer these questions, we'll document decisions here:
-
-| Date | Question | Decision | Rationale |
-|------|----------|----------|-----------|
-| TBD | Backend Language | TBD | TBD |
-| TBD | Database | TBD | TBD |
-| TBD | Mobile Strategy | TBD | TBD |
-| ... | ... | ... | ... |
-
----
-
-## Questions for Robert
-
-**Immediate Priority Questions** (need answers to proceed):
-
-1. What's your vision for battle gameplay - real-time or turn-based?
-2. Do you have a target launch date in mind?
-3. What's the team size and skill set?
-4. Do you have a budget allocated for infrastructure and tools?
-5. Is monetization planned for launch or post-launch?
-6. What's the scope of MVP - minimal features to test concept or fuller experience?
-7. Any strong preferences on technology stack (programming languages, frameworks)?
-8. Target audience - age range, casual vs hardcore, geographic focus?
-
-**Follow-up Questions** (can be answered as we progress):
-
-1. Detailed game mechanics and rules
-2. Art style and visual direction
-3. Social features priority
-4. Mobile timeline
-5. Content moderation needs
-6. Analytics requirements
+3. **Moderation Tools**
+   - Admin dashboard?
+   - Chat logs?
+   - User history?
+   - Ban/mute capabilities?
 
 ---
 
-Let's discuss these questions and start making decisions to move forward with a clear plan!
+## Legal and Administrative
+
+### Terms and Policies
+
+1. **Documentation**
+   - Who drafts Terms of Service?
+   - Privacy Policy requirements?
+   - Cookie policy?
+   - Age verification method?
+
+2. **Compliance**
+   - GDPR compliance checklist?
+   - COPPA compliance (if allowing under 13)?
+   - Regional restrictions?
+   - Data residency requirements?
+
+3. **Intellectual Property**
+   - Trademark registration?
+   - Copyright for game assets?
+   - User content ownership?
+
+---
+
+## Launch Strategy Details
+
+### Beta Testing
+
+1. **Beta Scope**
+   - How many beta testers?
+   - Open beta or closed?
+   - Beta duration?
+   - Beta player rewards?
+
+2. **Beta Objectives**
+   - What to test during beta?
+   - Success criteria?
+   - Feedback collection method?
+
+3. **Beta to Launch Transition**
+   - Wipe or keep progress?
+   - Founder rewards?
+   - Early access period?
+
+### Marketing
+
+1. **Initial Marketing**
+   - Marketing budget?
+   - Target channels (Reddit, Discord, etc.)?
+   - Press outreach?
+   - Influencer partnerships?
+
+2. **Community Building**
+   - Discord server setup?
+   - Social media presence?
+   - Dev blogs/updates?
+   - Community feedback loops?
+
+---
+
+## Prioritization
+
+For each remaining question, consider:
+- **Impact**: How critical is this decision?
+- **Timeline**: When do we need to decide?
+- **Dependencies**: What blocks on this decision?
+
+### High Priority (Need answers before Phase 1)
+- Local development setup specifics
+- Database schema basics
+- Battle simulation core mechanics
+- Component system fundamentals
+
+### Medium Priority (Need answers during Phase 1-2)
+- Matchmaking details
+- Economy balancing
+- Trading system mechanics
+- Tournament structure
+
+### Low Priority (Can decide during/after MVP)
+- Art style
+- Advanced features
+- Marketing strategy
+- Legal entity formation
+
+---
+
+## Next Actions
+
+1. Review open questions
+2. Answer high-priority questions
+3. Create detailed specification documents for:
+   - Battle simulation algorithm
+   - Component system
+   - Economy and progression
+   - Database schema
+4. Begin Phase 1 implementation
+
+---
+
+**Last Updated**: January 2026
+**Status**: Core questions answered, implementation details remain
