@@ -22,6 +22,9 @@ The following inconsistencies were discovered during documentation review and ne
 - **Question**: Has the backend framework been decided? Should we update ARCHITECTURE.md to reflect Express or Fastify as the chosen framework?
 - **Impact**: Blocks Phase 1 initialization
 
+--> Update all related documents to reflect "FINALIZED: Node.js + TypeScript + React" and assess what the impact would be on other parts of the documents. 
+--> Make a choice for Express vs Fastify based on the requirements you have captured so far and update all relevant documentation.
+
 ### 2. Real-time Features vs Batch Processing
 **Status**: ⚠️ NEEDS CLARIFICATION  
 **Documents**: ARCHITECTURE.md vs MODULE_STRUCTURE.md vs PORTABILITY.md
@@ -30,6 +33,8 @@ The following inconsistencies were discovered during documentation review and ne
 - **Conflict**: MODULE_STRUCTURE.md mentions "WebSockets for real-time updates" and PORTABILITY.md references "Web Push API"
 - **Question**: Are real-time features needed for notifications/updates, or is everything truly async/scheduled? What specifically needs real-time vs what can be polled?
 - **Impact**: Affects architecture decisions and technology choices
+
+--> The scheduled batch processing relates to the processing of matches. You can decide whether you need Websockets or "Web Push API" for making sure all components work and multiple platforms (eg. iOS and browser) can access the same data at the same time. Update the relevant documentation to remove inconsistency.
 
 ### 3. Phase Numbering and Structure
 **Status**: ⚠️ NEEDS CLARIFICATION  
@@ -40,6 +45,8 @@ The following inconsistencies were discovered during documentation review and ne
 - **Question**: Should we use different terminology (e.g., "Module Phases" vs "Project Phases") or consolidate to one phasing system?
 - **Impact**: Could cause confusion in planning and communication
 
+--> Consolidate into one phasing system, keep it consistent. Also make sure you refer to other documents rather than duplicate, otherwise we need to do a review like this every day. There should be ONE document stating the phases and what we need to do, but the MODULE_STRUCTURE.md should reflect what is currently in place and what is not and this should be reflected in your instructions for every query. Make sure you incorporate this. 
+
 ### 4. Database Migration Tool
 **Status**: ⚠️ NEEDS CLARIFICATION  
 **Documents**: MODULE_STRUCTURE.md
@@ -48,6 +55,8 @@ The following inconsistencies were discovered during documentation review and ne
 - **Conflict**: Using Node.js/TypeScript stack, should use TypeORM or Prisma migrations
 - **Question**: Which ORM and migration tool will be used? TypeORM or Prisma?
 - **Impact**: Affects Phase 1 database setup
+
+--> Pick the most logical one and update the relevant documentation.
 
 ### 5. Battle Processing Schedule for MVP
 **Status**: 🟡 NEEDS SPECIFICATION  
@@ -60,6 +69,9 @@ The following inconsistencies were discovered during documentation review and ne
   - Manual trigger for prototype?
 - **Impact**: Affects prototype implementation and testing
 
+--> In the later stages, we should be able to schedule this: regular matches on a set time, tournament matches on a set time. Maybe even let users set times for sparring / test matches.
+--> For the prototype: we'll trigger scheduled matches manually. 
+
 ### 6. Authentication Approach for Prototype
 **Status**: 🟡 CLARIFICATION HELPFUL  
 **Documents**: PHASE1_PLAN.md vs GAME_DESIGN.md vs SECURITY.md
@@ -70,6 +82,8 @@ The following inconsistencies were discovered during documentation review and ne
   - Or truly hardcode a single test user to save time?
   - Or implement OAuth from the start?
 - **Impact**: Affects Phase 1 scope and development time
+
+--> Prototype: Test the flow. This is crucial. I want to be able to test with different users, and I want you to test automatically as well with every commit (this is a new rule that should be reflecte in your instructions). There will also be an admin user with elevated rights. This needs to be in place for the prototype.
 
 ### 7. Documentation Dates Inconsistent
 **Status**: ⚠️ NEEDS UPDATE  
@@ -82,6 +96,8 @@ The following inconsistencies were discovered during documentation review and ne
 - **Question**: Should we standardize all documentation dates to January 24, 2026?
 - **Impact**: Minor - documentation clarity only
 
+--> Standardize all documentation dates in the format "January 24, 2026" and keep it updated. "January 21, 2026" for the roadmap is probably accurate, "January 2024" surely isn't. 
+
 ### 8. Current Project Status
 **Status**: ⚠️ NEEDS ALIGNMENT  
 **Documents**: SUMMARY.md vs ROADMAP.md
@@ -91,6 +107,8 @@ The following inconsistencies were discovered during documentation review and ne
 - **Question**: What is the actual current status? Are we truly ready for Phase 1, or are there pending decisions?
 - **Impact**: Affects whether we can start implementation
 
+--> That's why we're doing this review. This is due to capturing the same information in multiple documents. SUMMARY.md is only useful if the information is accurate. Is this document really relevant or should the information be integrated in other documents?
+
 ### 9. UI Component Library Choice
 **Status**: 🟡 NEEDS DECISION  
 **Documents**: ARCHITECTURE.md, PORTABILITY.md
@@ -98,6 +116,8 @@ The following inconsistencies were discovered during documentation review and ne
 - **Issue**: ARCHITECTURE.md (Line 86) lists "Material-UI or Tailwind CSS (TBD)"
 - **Question**: Has this been decided for the prototype? Or should prototype use basic HTML/CSS?
 - **Impact**: Affects Phase 1 UI implementation approach
+
+--> Is has not been decided. You can make the choice based on the current requirements. Make sure this is reflected in the relevant documentation.
 
 ### 10. Monorepo Structure Timeline
 **Status**: 🟡 NEEDS CLARIFICATION  
@@ -109,6 +129,8 @@ The following inconsistencies were discovered during documentation review and ne
   - Phase 2 (before mobile)?
   - Phase 6 (when starting mobile)?
 - **Impact**: Affects initial project structure decisions
+
+--> This doesn't really matter. It'll be a long time before we enter Phase 2. What I DO want is to make sure we have an isolated code base for the prototype. Maybe in a seperate directory? You figure out what is best. 
 
 ---
 
@@ -131,6 +153,8 @@ The following inconsistencies were discovered during documentation review and ne
 
 ### ⚪ LOW - Cosmetic/Documentation only
 1. Documentation Dates Inconsistent (#7)
+
+--> Everything should have been answered. 
 
 ---
 
@@ -592,6 +616,8 @@ The following have been answered and documented:
 6. 🟢 **UI Library**: Material-UI, Tailwind, or bare-bones?
 7. 🟢 **Real-time Strategy**: WebSockets for notifications, or pure batch?
 
+--> Stop making summaries of summaries. This is already covered above. Remove this section.
+
 ---
 
 ## Questions for Robert
@@ -603,6 +629,8 @@ Before proceeding with Phase 1 implementation, please provide guidance on:
 - **ORM/Migrations**: Should we use TypeORM or Prisma? I recommend **Prisma** (better TypeScript support, easier migrations).
 - **Ready for Phase 1?**: Confirm we have everything needed to start implementation.
 
+--> Answered. Again, this is double/triple. Don't do this. 
+
 ### 2. High Priority (Should Answer)
 - **Battle Schedule**: For the prototype, should battles run:
   - On-demand/manual trigger (simplest for testing)?
@@ -612,11 +640,15 @@ Before proceeding with Phase 1 implementation, please provide guidance on:
   - Hardcode a single test user (fastest)?
   - Implement basic username/password (tests the flow)?
   - Implement OAuth from start (more work but production-ready)?
+ 
+--> Answered. Again, this is double/triple. Don't do this. 
 
 ### 3. Clarifications Helpful
 - **Real-time Features**: Are notifications/updates truly batch-only, or do we need WebSockets for anything?
 - **Phase Naming**: Should we rename "Module Phases" to avoid confusion with "Project Phases"?
 - **UI Component Library**: Should prototype use a component library (faster, prettier) or basic HTML/CSS (simpler, no dependencies)?
+
+--> Answered. Again, this is double/triple. Don't do this. 
 
 ---
 
@@ -627,27 +659,42 @@ Beyond the inconsistencies found, here are additional clarifications that would 
 ### Development Process
 1. **Time Commitment**: How many hours per week can you dedicate to this project?
    - Affects whether 4-8 week timeline is realistic
+  
+--> This really doesn't matter. It's you and me. You're always available, I work on it when I can. Not for you to worry about. Remove all the references to timelines. Keep the roadmap in versions instead. 
+
 2. **Development Style**: Do you prefer:
    - Pair programming style (work together in real-time)?
    - Async style (I build, you review)?
    - Hybrid?
+  
+--> We go for Async. You build, I review. 
 
 ### Prototype Testing
 3. **Friend Group Size**: How many friends will test the prototype?
    - Affects whether we need multiple simultaneous battles
+  
+--> Probably a total of 6 people. So 6 accounts (logins) where they can click around, but still all local on my machine. 
+
 4. **Feedback Goals**: What's the main question you want answered?
    - "Is the core concept fun?"
    - "Are the mechanics balanced?"
    - "Is the UI intuitive?"
    - All of the above?
+  
+--> All of the above and more. The testers will have different focuses. For them it's probably mainly the UI, for me it's to balance the gameplay / robot stats / currency system / battle mechanics.
 
 ### Technical Preferences
 5. **Learning vs Speed**: Would you rather:
    - Use familiar tools to move faster?
    - Learn new tools that might be better long-term?
+
+--> I always prefer long term. So go slower if this means it makes the migration to AWS easier, for example. 
+
 6. **IDE/Editor**: What development environment do you use?
    - VS Code, WebStorm, other?
    - Helps ensure setup instructions are clear
+  
+--> I have you in GitHub Copilot, I have VS Code and I have Kiro. Setup instructions in order to start testing from my side would be useful.
 
 ### Scope Flexibility
 7. **Must-Have for Demo**: What absolutely must work for the prototype demo?
@@ -655,10 +702,15 @@ Beyond the inconsistencies found, here are additional clarifications that would 
    - Battle simulation?
    - Battle results viewing?
    - All of the above?
+  
+--> All of the above and (simple) user management, stable management, robot upgrading (so currency system)
+
 8. **Nice-to-Have**: What can we skip if we run short on time?
    - Battle replay visualization?
    - Robot comparison tools?
    - Battle history?
+  
+--> We'll make everything text based, no fancy animations in the prototype. So no visualizations, no comparisons. Battle history is integral, keep that in the prototype.
 
 ---
 
@@ -669,20 +721,28 @@ Beyond the inconsistencies found, here are additional clarifications that would 
    - Decide: TypeORM or Prisma → Recommend **Prisma**
    - Confirm: Ready to start Phase 1
 
+--> I already asked you to pick above. Go ahead. Confirmed. 
+
 2. **Answer High Priority Questions** (This Week)
    - Battle processing schedule for prototype
    - Authentication approach for prototype
+  
+--> Already answered. 
 
 3. **Begin Phase 1 Implementation** (Next Week)
    - Set up development environment
    - Initialize project with chosen stack
    - Create database schema
    - Begin battle engine development
+  
+--> Yes we can proceed after we have all documentation cleaned and confirmed. 
 
 4. **Iterate on Questions During Development**
    - Answer remaining questions as they become relevant
    - Update documentation with decisions made
    - Keep QUESTIONS.md current
+  
+--> Yes, keep QUESTIONS.md current, but this applies to ALL documentation. 
 
 ---
 
