@@ -1,5 +1,7 @@
 # Armoured Souls - Architecture Overview
 
+**Last Updated**: January 24, 2026
+
 ## System Architecture
 
 ### High-Level Design
@@ -52,8 +54,8 @@ Armoured Souls follows a modular, microservices-inspired architecture designed f
 
 ### 3. API-First Design
 - RESTful API as the primary interface
-- WebSocket support for real-time features (battles, chat)
-- GraphQL consideration for complex data queries
+- WebSocket support for real-time notifications and updates (to ensure cross-platform data synchronization)
+- GraphQL consideration for complex data queries (future evaluation)
 
 ### 4. Security by Design
 - All communication over HTTPS/WSS
@@ -69,11 +71,12 @@ Armoured Souls follows a modular, microservices-inspired architecture designed f
 - End-to-end tests for critical user flows
 - Load testing for scalability validation
 
-## Technology Stack (Selected)
+## Technology Stack (Finalized)
 
 ### Backend
 - **Language**: Node.js with TypeScript (best for web-to-mobile code sharing)
-- **Framework**: Express or Fastify (TBD based on performance needs)
+- **Framework**: Express (chosen for simplicity, larger ecosystem, and extensive middleware support)
+- **ORM**: Prisma (TypeScript-first ORM with excellent migration tooling)
 - **Database**: PostgreSQL (primary), Redis (cache and sessions)
 - **Authentication**: JWT, OAuth 2.0 (Google, Facebook, Apple)
 - **API Documentation**: OpenAPI/Swagger
@@ -83,10 +86,10 @@ Armoured Souls follows a modular, microservices-inspired architecture designed f
 - **Web**: React + TypeScript
 - **Mobile**: React Native (70-80% code reuse from web)
 - **State Management**: Redux Toolkit or Zustand
-- **UI Library**: Material-UI or Tailwind CSS (TBD)
+- **UI Library**: Tailwind CSS (utility-first, lightweight, excellent for rapid prototyping)
 
 ### DevOps
-- **CI/CD**: GitHub Actions
+- **CI/CD**: GitHub Actions (with automated testing on every commit)
 - **Container**: Docker
 - **Hosting**: AWS (managed services preferred)
 - **Serverless**: Lambda, API Gateway, DynamoDB where applicable
@@ -102,11 +105,14 @@ Armoured Souls follows a modular, microservices-inspired architecture designed f
 ## Key Design Decisions (Finalized)
 
 1. **Backend Language**: ✅ Node.js with TypeScript (enables React Native code sharing)
-2. **Database**: ✅ PostgreSQL (relational data) + Redis (caching, sessions)
-3. **Real-time**: ❌ Not needed (scheduled batch battle processing)
-4. **Mobile Strategy**: ✅ React Native after web MVP (iOS first, then Android)
-5. **Hosting**: ✅ AWS with serverless architecture, scale-to-zero capability
-6. **Game Engine**: ✅ Custom server-side simulation engine (deterministic, batch processing)
+2. **Backend Framework**: ✅ Express (simplicity, ecosystem, middleware support)
+3. **ORM/Migrations**: ✅ Prisma (TypeScript-first, excellent DX, powerful migrations)
+4. **Database**: ✅ PostgreSQL (relational data) + Redis (caching, sessions)
+5. **Real-time**: ✅ WebSockets/Web Push API for notifications and cross-platform synchronization; batch processing for battle simulation
+6. **Mobile Strategy**: ✅ React Native after web MVP (iOS first, then Android)
+7. **Hosting**: ✅ AWS with serverless architecture, scale-to-zero capability
+8. **Game Engine**: ✅ Custom server-side simulation engine (deterministic, batch processing)
+9. **UI Library**: ✅ Tailwind CSS (utility-first, rapid development)
 
 ## Development Approach
 

@@ -1,11 +1,14 @@
 # Phase 1: Local Prototype - Detailed Plan
 
+**Last Updated**: January 24, 2026
+
 ## Overview
 
 **Goal**: Build a minimal working prototype of Armoured Souls running locally to validate the core game concept with friends.
 
-**Duration**: 4-8 weeks  
 **Team**: 2 people (Robert + AI)  
+**Development Style**: Async (AI builds, Robert reviews)  
+**Testing**: 6 user accounts for local testing  
 **Target**: Demo-ready prototype to show friends
 
 ---
@@ -26,108 +29,141 @@ The prototype should demonstrate:
 
 ### Must Have (Critical for Demo)
 
-1. **Robot Creator**
+1. **User Management** (NEW for prototype)
+   - Basic username/password authentication
+   - 6 test user accounts
+   - Admin user with elevated rights
+   - Login/logout functionality
+
+2. **Robot Creator**
    - Create robot with name
    - Distribute stat points (attack, defense, speed, health)
    - Select chassis type
    - Equip weapon and armor
    - Save robot to database
 
-2. **Battle Simulator**
+3. **Robot Upgrading** (NEW for prototype)
+   - Simple currency system
+   - Spend currency to upgrade robot stats
+   - Track currency balance per user
+
+4. **Stable Management** (NEW for prototype)
+   - View all robots owned by user
+   - Organize robot collection
+   - Select robots for battles
+
+5. **Battle Simulator**
    - Input: Two robots
    - Process: Turn-based simulation
    - Output: Winner + detailed battle log
    - Shows damage dealt, health remaining, actions taken
+   - Manual trigger for battles (no automated scheduling)
 
-3. **Component Library**
+6. **Component Library**
    - 5-10 weapons with different stats
    - 5-10 armor pieces with different stats  
    - 3-5 chassis types
    - Components modify robot effectiveness
 
-4. **Simple UI**
+7. **Simple UI** (Text-based, no animations)
+   - Login page
    - Robot list page
    - Robot creation page
+   - Robot upgrade page
+   - Stable management page
    - Battle setup page
    - Battle results page with log
 
-5. **Battle History**
+8. **Battle History**
    - Store all battles in database
    - View past battles
    - See win/loss record per robot
 
-### Nice to Have (If Time Permits)
-
-1. **Battle Replay Visualization**
-   - Animated display of battle log
-   - Visual representation of health bars
-   - Turn-by-turn playback
-
-2. **Robot Comparison**
-   - Side-by-side stat comparison
-   - Win rate vs specific opponents
-   - Suggested counters
-
-3. **Quick Battle Mode**
-   - Auto-select random opponent
-   - Best of 3 matches
-   - Tournament bracket
-
 ### Explicitly NOT in Prototype
 
-- ❌ User accounts and authentication
-- ❌ Multiple users (single user/local only)
+- ❌ OAuth/social login (basic username/password only)
 - ❌ Matchmaking or queues
-- ❌ Currency or economy
-- ❌ Achievements or progression
-- ❌ Social features
+- ❌ Automated battle scheduling (manual trigger only)
+- ❌ Achievements or complex progression
+- ❌ Social features (friends, guilds, chat)
 - ❌ Deployment to cloud
 - ❌ Mobile support
 - ❌ Professional UI/UX design
 - ❌ Animations or visual effects
+- ❌ Battle replay visualizations
+- ❌ Robot comparison tools
 
 ---
 
 ## Technical Architecture (Simplified)
 
+**Project Structure**: Isolated prototype in `/prototype` directory
+
+```
+ArmouredSouls/
+├── docs/                 # Project documentation
+├── prototype/            # Phase 1 isolated prototype codebase
+│   ├── backend/          # Node.js + Express + Prisma
+│   ├── frontend/         # React + Tailwind CSS
+│   └── docker-compose.yml
+└── modules/              # Future production codebase (Phase 2+)
+```
+
+**Architecture Diagram**:
+
 ```
 ┌─────────────────────────────────────────┐
-│         React Frontend (Port 3000)      │
+│    React + Tailwind CSS (Port 3000)     │
 │                                         │
-│  • Robot List                           │
-│  • Robot Creator                        │
+│  • Login/Logout                         │
+│  • User Management                      │
+│  • Robot List & Creator                 │
+│  • Robot Upgrading                      │
+│  • Stable Management                    │
 │  • Battle Setup                         │
-│  • Battle Results                       │
+│  • Battle Results & History             │
 └─────────────────┬───────────────────────┘
                   │ HTTP/REST
 ┌─────────────────▼───────────────────────┐
-│      Node.js Backend (Port 3001)        │
+│  Node.js + Express Backend (Port 3001)  │
 │                                         │
-│  • REST API (Express/Fastify)           │
+│  • REST API (Express)                   │
+│  • Authentication (JWT + bcrypt)        │
 │  • Battle Simulation Engine             │
-│  • Database ORM (Prisma/TypeORM)        │
+│  • Database ORM (Prisma)                │
 └─────────────────┬───────────────────────┘
                   │
 ┌─────────────────▼───────────────────────┐
 │      PostgreSQL (Port 5432)             │
 │      via Docker Compose                 │
 │                                         │
-│  • Users (minimal)                      │
+│  • Users (username, password_hash, role)│
 │  • Robots                               │
 │  • Components                           │
 │  • Battles                              │
+│  • Currency balances                    │
 └─────────────────────────────────────────┘
 ```
+
+**Technology Stack**:
+- **Backend**: Express (finalized)
+- **ORM**: Prisma (finalized)
+- **Frontend**: React + Tailwind CSS (finalized)
+- **Database**: PostgreSQL + Docker
+- **Testing**: Automated tests on every commit (CI/CD via GitHub Actions)
 
 ---
 
 ## Database Schema (Minimal)
 
-### Users Table (Very Basic)
+### Users Table
 ```sql
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(20) DEFAULT 'user', -- 'user' or 'admin'
+  currency INTEGER DEFAULT 1000, -- Starting currency
   created_at TIMESTAMP DEFAULT NOW()
 );
 ```
