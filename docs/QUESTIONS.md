@@ -28,12 +28,58 @@ The following decisions were made during documentation review and have been impl
 
 ## 🔄 OPEN QUESTIONS
 
+### Phase 1 Setup - Technical Questions
+
+1. **Stat Point Distribution System**
+   - **Question**: How many total stat points should a player have to distribute when creating a robot? What are the min/max values for each stat (attack, defense, speed, health)?
+   - **Context**: Need to balance flexibility vs preventing extreme builds
+   - **Status**: Awaiting decision
+   - **Reference**: PHASE1_PLAN.md mentions stat distribution but not specifics
+
+2. **Robot Upgrade Costs**
+   - **Question**: How much currency should it cost to upgrade each stat point? Should costs increase with each upgrade?
+   - **Context**: Currency system balance - starting currency is 1000
+   - **Status**: Awaiting decision
+   - **Reference**: PHASE1_PLAN.md mentions upgrade system
+
+3. **Battle Rewards**
+   - **Question**: How much currency/fame should be rewarded for winning/losing battles?
+   - **Context**: Need to balance progression pace with starting currency and upgrade costs
+   - **Status**: Awaiting decision
+   - **Reference**: PHASE1_PLAN.md mentions currency earned through battles
+
+### Phase 1 Setup - Functional Questions
+
+4. **Robot Limit per User**
+   - **Question**: How many robots should each user be able to create in their stable?
+   - **Context**: "Multiple robots per player" mentioned but no specific limit
+   - **Status**: Awaiting decision
+   - **Reference**: PHASE1_PLAN.md and GAME_DESIGN.md mention multiple robots
+
+5. **Component Cost**
+   - **Question**: Should components (weapons, armor, chassis) cost currency to equip, or are they freely available in Phase 1?
+   - **Context**: Simplicity vs economy simulation
+   - **Status**: Awaiting decision
+   - **Reference**: PHASE1_PLAN.md has component library but doesn't mention costs
+
+6. **Battle Selection**
+   - **Question**: In Phase 1, can users battle their own robots against each other, or only against other users' robots?
+   - **Context**: Testing convenience vs realistic gameplay
+   - **Status**: Awaiting decision
+   - **Reference**: PHASE1_PLAN.md mentions manual battle trigger
+
 ### Battle Simulation Details
 
-1. **Random Number Generation Seed**
+7. **Random Number Generation Seed**
    - **Question**: Confirm seed generation method (battle ID + timestamp)?
    - **Status**: Good enough for Phase 1, can refine during testing
    - **Reference**: PHASE1_PLAN.md mentions seeded RNG
+
+8. **Critical Hit and Miss Mechanics**
+   - **Question**: Confirm percentages - 10% crit chance, 5% miss chance? Should these be configurable per component?
+   - **Context**: PHASE1_PLAN.md suggests these mechanics for interest
+   - **Status**: Awaiting decision
+   - **Reference**: PHASE1_PLAN.md battle algorithm section
 
 ---
 

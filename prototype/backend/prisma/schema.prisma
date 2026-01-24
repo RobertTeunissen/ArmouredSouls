@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique @db.VarChar(50)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  role         String   @default("user") @db.VarChar(20)
+  currency     Int      @default(1000)
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  robots       Robot[]
+  
+  @@map("users")
+}
+
+model Robot {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  name        String   @db.VarChar(100)
+  chassisId   Int?     @map("chassis_id")
+  weaponId    Int?     @map("weapon_id")
+  armorId     Int?     @map("armor_id")
+  
+  baseAttack  Int      @map("base_attack")
+  baseDefense Int      @map("base_defense")
+  baseSpeed   Int      @map("base_speed")
+  baseHealth  Int      @map("base_health")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  user        User      @relation(fields: [userId], references: [id])
+  chassis     Component? @relation("RobotChassis", fields: [chassisId], references: [id])
+  weapon      Component? @relation("RobotWeapon", fields: [weaponId], references: [id])
+  armor       Component? @relation("RobotArmor", fields: [armorId], references: [id])
+  
+  battlesAsRobot1 Battle[] @relation("Robot1Battles")
+  battlesAsRobot2 Battle[] @relation("Robot2Battles")
+  battlesWon      Battle[] @relation("WinnerBattles")
+  
+  @@map("robots")
+}
+
+model Component {
+  id              Int      @id @default(autoincrement())
+  name            String   @db.VarChar(100)
+  type            String   @db.VarChar(20)
+  description     String?  @db.Text
+  
+  attackModifier  Int      @default(0) @map("attack_modifier")
+  defenseModifier Int      @default(0) @map("defense_modifier")
+  speedModifier   Int      @default(0) @map("speed_modifier")
+  healthModifier  Int      @default(0) @map("health_modifier")
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  robotsChassis   Robot[]  @relation("RobotChassis")
+  robotsWeapon    Robot[]  @relation("RobotWeapon")
+  robotsArmor     Robot[]  @relation("RobotArmor")
+  
+  @@map("components")
+}
+
+model Battle {
+  id               Int      @id @default(autoincrement())
+  robot1Id         Int      @map("robot1_id")
+  robot2Id         Int      @map("robot2_id")
+  winnerId         Int?     @map("winner_id")
+  
+  battleLog        Json     @map("battle_log")
+  
+  turnsTaken       Int?     @map("turns_taken")
+  robot1DamageDealt Int?    @map("robot1_damage_dealt")
+  robot2DamageDealt Int?    @map("robot2_damage_dealt")
+  
+  createdAt        DateTime @default(now()) @map("created_at")
+  
+  robot1           Robot    @relation("Robot1Battles", fields: [robot1Id], references: [id])
+  robot2           Robot    @relation("Robot2Battles", fields: [robot2Id], references: [id])
+  winner           Robot?   @relation("WinnerBattles", fields: [winnerId], references: [id])
+  
+  @@map("battles")
+}

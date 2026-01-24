@@ -1,0 +1,170 @@
+# Armoured Souls - Phase 1 Prototype
+
+This is the Phase 1 local prototype for Armoured Souls. The prototype is designed to run entirely on your local machine for testing and development.
+
+## 🏗️ Project Structure
+
+```
+prototype/
+├── backend/           # Express + Prisma backend
+│   ├── src/          # TypeScript source code
+│   ├── prisma/       # Database schema and migrations
+│   └── package.json  # Backend dependencies
+├── frontend/         # React + Vite + Tailwind frontend
+│   ├── src/         # React components
+│   └── package.json # Frontend dependencies
+└── docker-compose.yml # PostgreSQL database
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Node.js** 20+ (https://nodejs.org/)
+- **Docker** and **Docker Compose** (https://www.docker.com/)
+- **Git** (for version control)
+
+### Installation
+
+1. **Start the database**
+   ```bash
+   cd prototype
+   docker-compose up -d
+   ```
+
+2. **Set up the backend**
+   ```bash
+   cd backend
+   
+   # Copy environment file
+   cp .env.example .env
+   
+   # Install dependencies
+   npm install
+   
+   # Generate Prisma client
+   npm run prisma:generate
+   
+   # Run database migrations
+   npm run prisma:migrate
+   
+   # Seed the database with sample data
+   npx tsx prisma/seed.ts
+   ```
+
+3. **Set up the frontend**
+   ```bash
+   cd ../frontend
+   
+   # Install dependencies
+   npm install
+   ```
+
+4. **Start the development servers**
+   
+   In one terminal (backend):
+   ```bash
+   cd backend
+   npm run dev
+   ```
+   
+   In another terminal (frontend):
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+5. **Open your browser**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:3001
+
+## 📦 Tech Stack
+
+### Backend
+- **Express** - Web framework
+- **Prisma** - Database ORM
+- **PostgreSQL** - Database
+- **TypeScript** - Type safety
+- **bcrypt** - Password hashing
+- **jsonwebtoken** - Authentication
+
+### Frontend
+- **React** - UI framework
+- **Vite** - Build tool
+- **Tailwind CSS** - Styling
+- **TypeScript** - Type safety
+- **React Router** - Routing
+
+### Database
+- **PostgreSQL 16** - Running in Docker
+
+## 🔧 Development
+
+### Database Management
+
+```bash
+# View database in Prisma Studio
+npm run prisma:studio
+
+# Create a new migration
+npm run prisma:migrate
+
+# Reset database (WARNING: deletes all data)
+npx prisma migrate reset
+```
+
+### Test Users
+
+The seed script creates 6 test users:
+
+| Username | Password | Role |
+|----------|----------|------|
+| admin | admin123 | admin |
+| player1 | password123 | user |
+| player2 | password123 | user |
+| player3 | password123 | user |
+| player4 | password123 | user |
+| player5 | password123 | user |
+
+## 📝 Next Steps
+
+This basic setup provides:
+- ✅ Backend server with Express
+- ✅ Frontend with React + Tailwind
+- ✅ PostgreSQL database with Prisma
+- ✅ Database schema for users, robots, components, and battles
+- ✅ Seed data with test users and sample components
+
+Still to implement (see PHASE1_PLAN.md for details):
+- [ ] Authentication endpoints (login/logout)
+- [ ] Robot CRUD endpoints
+- [ ] Battle simulation engine
+- [ ] Frontend pages (login, robot creator, battle simulator, etc.)
+- [ ] Currency and upgrade system
+- [ ] Battle history
+
+## 🐛 Troubleshooting
+
+**Database connection fails:**
+- Check Docker is running: `docker ps`
+- Restart database: `docker-compose restart`
+
+**Port already in use:**
+- Backend (3001): Change PORT in `.env`
+- Frontend (3000): Change port in `vite.config.ts`
+- Database (5432): Change port mapping in `docker-compose.yml`
+
+**Prisma errors:**
+- Regenerate client: `npm run prisma:generate`
+- Check DATABASE_URL in `.env`
+
+## 📚 Documentation
+
+See the main `/docs` directory for:
+- [PHASE1_PLAN.md](/docs/PHASE1_PLAN.md) - Detailed Phase 1 plan
+- [GAME_DESIGN.md](/docs/GAME_DESIGN.md) - Game design decisions
+- [ARCHITECTURE.md](/docs/ARCHITECTURE.md) - System architecture
+
+## 🤝 Contributing
+
+This is a prototype - see [CONTRIBUTING.md](/CONTRIBUTING.md) for development guidelines.
