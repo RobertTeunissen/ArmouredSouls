@@ -15,7 +15,9 @@ model User {
   username     String   @unique @db.VarChar(50)
   passwordHash String   @map("password_hash") @db.VarChar(255)
   role         String   @default("user") @db.VarChar(20)
-  currency     Int      @default(1000)
+  currency     Int      @default(1000000)
+  elo          Int      @default(1200)
+  fame         Int      @default(0)
   createdAt    DateTime @default(now()) @map("created_at")
   
   robots       Robot[]
@@ -27,21 +29,45 @@ model Robot {
   id          Int      @id @default(autoincrement())
   userId      Int      @map("user_id")
   name        String   @db.VarChar(100)
-  chassisId   Int?     @map("chassis_id")
   weaponId    Int?     @map("weapon_id")
-  armorId     Int?     @map("armor_id")
   
-  baseAttack  Int      @map("base_attack")
-  baseDefense Int      @map("base_defense")
-  baseSpeed   Int      @map("base_speed")
-  baseHealth  Int      @map("base_health")
+  // Combat Attributes (8)
+  attackPower      Int      @default(1) @map("attack_power")
+  accuracy         Int      @default(1)
+  criticalStrike   Int      @default(1) @map("critical_strike")
+  defenseRating    Int      @default(1) @map("defense_rating")
+  evasion          Int      @default(1)
+  counterAttack    Int      @default(1) @map("counter_attack")
+  armorPenetration Int      @default(1) @map("armor_penetration")
+  damageResistance Int      @default(1) @map("damage_resistance")
+  
+  // Technical Attributes (6)
+  weaponHandling   Int      @default(1) @map("weapon_handling")
+  energyEfficiency Int      @default(1) @map("energy_efficiency")
+  targetingSystems Int      @default(1) @map("targeting_systems")
+  heatManagement   Int      @default(1) @map("heat_management")
+  shieldOperations Int      @default(1) @map("shield_operations")
+  reloadSpeed      Int      @default(1) @map("reload_speed")
+  
+  // Physical Attributes (6)
+  hullIntegrity      Int      @default(1) @map("hull_integrity")
+  speed              Int      @default(1)
+  agility            Int      @default(1)
+  strength           Int      @default(1)
+  stamina            Int      @default(1)
+  structuralStability Int     @default(1) @map("structural_stability")
+  
+  // Mental Attributes (5)
+  tacticalAwareness  Int      @default(1) @map("tactical_awareness")
+  composure          Int      @default(1)
+  adaptability       Int      @default(1)
+  aggression         Int      @default(1)
+  combatIntelligence Int      @default(1) @map("combat_intelligence")
   
   createdAt   DateTime @default(now()) @map("created_at")
   
   user        User      @relation(fields: [userId], references: [id])
-  chassis     Component? @relation("RobotChassis", fields: [chassisId], references: [id])
-  weapon      Component? @relation("RobotWeapon", fields: [weaponId], references: [id])
-  armor       Component? @relation("RobotArmor", fields: [armorId], references: [id])
+  weapon      Weapon?   @relation(fields: [weaponId], references: [id])
   
   battlesAsRobot1 Battle[] @relation("Robot1Battles")
   battlesAsRobot2 Battle[] @relation("Robot2Battles")
@@ -50,24 +76,35 @@ model Robot {
   @@map("robots")
 }
 
-model Component {
+model Weapon {
   id              Int      @id @default(autoincrement())
   name            String   @db.VarChar(100)
-  type            String   @db.VarChar(20)
+  weaponType      String   @db.VarChar(20) @map("weapon_type") // 'energy', 'ballistic', 'melee', 'explosive'
   description     String?  @db.Text
+  baseDamage      Int      @map("base_damage")
+  cost            Int      // Cost in Credits to purchase
   
-  attackModifier  Int      @default(0) @map("attack_modifier")
-  defenseModifier Int      @default(0) @map("defense_modifier")
-  speedModifier   Int      @default(0) @map("speed_modifier")
-  healthModifier  Int      @default(0) @map("health_modifier")
+  // Attribute Bonuses (can be negative for penalties)
+  attackPowerBonus      Int      @default(0) @map("attack_power_bonus")
+  accuracyBonus         Int      @default(0) @map("accuracy_bonus")
+  criticalStrikeBonus   Int      @default(0) @map("critical_strike_bonus")
+  armorPenetrationBonus Int      @default(0) @map("armor_penetration_bonus")
+  weaponHandlingBonus   Int      @default(0) @map("weapon_handling_bonus")
+  energyEfficiencyBonus Int      @default(0) @map("energy_efficiency_bonus")
+  targetingSystemsBonus Int      @default(0) @map("targeting_systems_bonus")
+  heatManagementBonus   Int      @default(0) @map("heat_management_bonus")
+  reloadSpeedBonus      Int      @default(0) @map("reload_speed_bonus")
+  strengthBonus         Int      @default(0) @map("strength_bonus")
+  counterAttackBonus    Int      @default(0) @map("counter_attack_bonus")
+  agilityBonus          Int      @default(0) @map("agility_bonus")
+  speedBonus            Int      @default(0) @map("speed_bonus")
+  tacticalAwarenessBonus Int     @default(0) @map("tactical_awareness_bonus")
   
   createdAt       DateTime @default(now()) @map("created_at")
   
-  robotsChassis   Robot[]  @relation("RobotChassis")
-  robotsWeapon    Robot[]  @relation("RobotWeapon")
-  robotsArmor     Robot[]  @relation("RobotArmor")
+  robots          Robot[]
   
-  @@map("components")
+  @@map("weapons")
 }
 
 model Battle {
@@ -81,6 +118,12 @@ model Battle {
   turnsTaken       Int?     @map("turns_taken")
   robot1DamageDealt Int?    @map("robot1_damage_dealt")
   robot2DamageDealt Int?    @map("robot2_damage_dealt")
+  
+  // Battle rewards and costs
+  winnerReward     Int?     @map("winner_reward")
+  loserReward      Int?     @map("loser_reward")
+  robot1RepairCost Int?     @map("robot1_repair_cost")
+  robot2RepairCost Int?     @map("robot2_repair_cost")
   
   createdAt        DateTime @default(now()) @map("created_at")
   

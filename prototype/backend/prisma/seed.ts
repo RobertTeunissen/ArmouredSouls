@@ -6,108 +6,153 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Create sample components (chassis, weapons, armor)
-  console.log('Creating components...');
+  // Create weapons
+  console.log('Creating weapons...');
   
-  // Chassis
-  const chassis = await Promise.all([
-    prisma.component.create({
-      data: {
-        name: 'Tank',
-        type: 'chassis',
-        description: 'Heavy and durable chassis',
-        healthModifier: 50,
-        speedModifier: -5,
-        defenseModifier: 10,
-        attackModifier: 0,
-      },
-    }),
-    prisma.component.create({
-      data: {
-        name: 'Scout',
-        type: 'chassis',
-        description: 'Fast and agile chassis',
-        healthModifier: 0,
-        speedModifier: 10,
-        defenseModifier: -5,
-        attackModifier: 5,
-      },
-    }),
-    prisma.component.create({
-      data: {
-        name: 'Balanced',
-        type: 'chassis',
-        description: 'Well-rounded chassis',
-        healthModifier: 20,
-        speedModifier: 0,
-        defenseModifier: 0,
-        attackModifier: 0,
-      },
-    }),
-  ]);
-
-  // Weapons
-  const weapons = await Promise.all([
-    prisma.component.create({
+  // Energy Weapons
+  const energyWeapons = await Promise.all([
+    prisma.weapon.create({
       data: {
         name: 'Laser Rifle',
-        type: 'weapon',
-        description: 'Standard energy weapon',
-        attackModifier: 15,
+        weaponType: 'energy',
+        description: 'Standard energy weapon with good accuracy',
+        baseDamage: 20,
+        cost: 150000,
+        accuracyBonus: 3,
+        energyEfficiencyBonus: 5,
+        targetingSystemsBonus: 2,
       },
     }),
-    prisma.component.create({
+    prisma.weapon.create({
       data: {
         name: 'Plasma Cannon',
-        type: 'weapon',
-        description: 'High damage, heavy',
-        attackModifier: 25,
+        weaponType: 'energy',
+        description: 'High damage plasma weapon, generates heat',
+        baseDamage: 35,
+        cost: 300000,
+        attackPowerBonus: 5,
+        heatManagementBonus: -3,
+        criticalStrikeBonus: 4,
       },
     }),
-    prisma.component.create({
+    prisma.weapon.create({
+      data: {
+        name: 'Ion Beam',
+        weaponType: 'energy',
+        description: 'Efficient energy weapon with armor penetration',
+        baseDamage: 25,
+        cost: 400000,
+        energyEfficiencyBonus: 8,
+        armorPenetrationBonus: 6,
+        reloadSpeedBonus: 4,
+      },
+    }),
+  ]);
+
+  // Ballistic Weapons
+  const ballisticWeapons = await Promise.all([
+    prisma.weapon.create({
       data: {
         name: 'Machine Gun',
-        type: 'weapon',
-        description: 'Rapid fire',
-        attackModifier: 10,
+        weaponType: 'ballistic',
+        description: 'Rapid-fire ballistic weapon',
+        baseDamage: 15,
+        cost: 100000,
+        attackPowerBonus: 2,
+        reloadSpeedBonus: 6,
+        weaponHandlingBonus: 3,
+      },
+    }),
+    prisma.weapon.create({
+      data: {
+        name: 'Railgun',
+        weaponType: 'ballistic',
+        description: 'High-velocity penetrating weapon',
+        baseDamage: 40,
+        cost: 350000,
+        armorPenetrationBonus: 10,
+        accuracyBonus: 5,
+        reloadSpeedBonus: -2,
+      },
+    }),
+    prisma.weapon.create({
+      data: {
+        name: 'Shotgun',
+        weaponType: 'ballistic',
+        description: 'Close-range devastating weapon',
+        baseDamage: 30,
+        cost: 120000,
+        attackPowerBonus: 4,
+        accuracyBonus: -3,
+        criticalStrikeBonus: 5,
       },
     }),
   ]);
 
-  // Armor
-  const armor = await Promise.all([
-    prisma.component.create({
+  // Melee Weapons
+  const meleeWeapons = await Promise.all([
+    prisma.weapon.create({
       data: {
-        name: 'Heavy Plate',
-        type: 'armor',
-        description: 'Maximum protection',
-        defenseModifier: 20,
-        speedModifier: -5,
+        name: 'Power Sword',
+        weaponType: 'melee',
+        description: 'Energized melee weapon for close combat',
+        baseDamage: 28,
+        cost: 180000,
+        strengthBonus: 6,
+        counterAttackBonus: 5,
+        agilityBonus: 3,
       },
     }),
-    prisma.component.create({
+    prisma.weapon.create({
       data: {
-        name: 'Light Armor',
-        type: 'armor',
-        description: 'Basic protection',
-        defenseModifier: 10,
-        speedModifier: 0,
-      },
-    }),
-    prisma.component.create({
-      data: {
-        name: 'Energy Shield',
-        type: 'armor',
-        description: 'Advanced defensive system',
-        defenseModifier: 15,
-        speedModifier: 2,
+        name: 'Hammer',
+        weaponType: 'melee',
+        description: 'Heavy crushing weapon',
+        baseDamage: 35,
+        cost: 200000,
+        strengthBonus: 8,
+        attackPowerBonus: 6,
+        speedBonus: -2,
       },
     }),
   ]);
 
-  console.log(`✅ Created ${chassis.length} chassis, ${weapons.length} weapons, ${armor.length} armor`);
+  // Explosive Weapons
+  const explosiveWeapons = await Promise.all([
+    prisma.weapon.create({
+      data: {
+        name: 'Rocket Launcher',
+        weaponType: 'explosive',
+        description: 'High-damage area weapon',
+        baseDamage: 45,
+        cost: 320000,
+        attackPowerBonus: 7,
+        criticalStrikeBonus: 6,
+        reloadSpeedBonus: -4,
+      },
+    }),
+    prisma.weapon.create({
+      data: {
+        name: 'Grenade Launcher',
+        weaponType: 'explosive',
+        description: 'Tactical explosive weapon',
+        baseDamage: 32,
+        cost: 250000,
+        attackPowerBonus: 5,
+        tacticalAwarenessBonus: 4,
+        reloadSpeedBonus: -2,
+      },
+    }),
+  ]);
 
-  // Create test users
+  const totalWeapons = energyWeapons.length + ballisticWeapons.length + meleeWeapons.length + explosiveWeapons.length;
+  console.log(`✅ Created ${totalWeapons} weapons`);
+  console.log(`   - ${energyWeapons.length} energy weapons`);
+  console.log(`   - ${ballisticWeapons.length} ballistic weapons`);
+  console.log(`   - ${meleeWeapons.length} melee weapons`);
+  console.log(`   - ${explosiveWeapons.length} explosive weapons`);
+
+  // Create test users with new currency system
   console.log('Creating test users...');
   const hashedPassword = await bcrypt.hash('password123', 10);
 
@@ -117,51 +162,68 @@ async function main() {
         username: 'admin',
         passwordHash: await bcrypt.hash('admin123', 10),
         role: 'admin',
-        currency: 10000,
+        currency: 10000000, // 10 million for admin
+        elo: 1200,
+        fame: 0,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player1',
         passwordHash: hashedPassword,
-        currency: 1000,
+        currency: 1000000, // 1 million starting balance
+        elo: 1200,
+        fame: 0,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player2',
         passwordHash: hashedPassword,
-        currency: 1000,
+        currency: 1000000,
+        elo: 1200,
+        fame: 0,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player3',
         passwordHash: hashedPassword,
-        currency: 1000,
+        currency: 1000000,
+        elo: 1200,
+        fame: 0,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player4',
         passwordHash: hashedPassword,
-        currency: 1000,
+        currency: 1000000,
+        elo: 1200,
+        fame: 0,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player5',
         passwordHash: hashedPassword,
-        currency: 1000,
+        currency: 1000000,
+        elo: 1200,
+        fame: 0,
       },
     }),
   ]);
 
   console.log(`✅ Created ${users.length} users`);
-  console.log('   - admin/admin123 (admin role)');
-  console.log('   - player1-5/password123 (regular users)');
+  console.log('   - admin/admin123 (admin role, ₡10,000,000)');
+  console.log('   - player1-5/password123 (regular users, ₡1,000,000 each)');
 
   console.log('✅ Database seeded successfully!');
+  console.log('');
+  console.log('💰 Currency: Credits (₡)');
+  console.log('🤖 Robot frame cost: ₡500,000');
+  console.log('⚔️  Weapon costs: ₡100,000 - ₡400,000');
+  console.log('📈 Upgrade formula: (level + 1) × 1,000 Credits');
 }
 
 main()

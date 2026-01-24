@@ -98,6 +98,12 @@ prototype/
 ### Database
 - **PostgreSQL 16** - Running in Docker
 
+### Game Design
+- **25 Robot Attributes** - Combat, Technical, Physical, Mental
+- **Credits (₡)** - In-game currency
+- **ELO Ranking** - Matchmaking system
+- **Weapon System** - Purchasable weapons with attribute bonuses
+
 ## 🔧 Development
 
 ### Database Management
@@ -117,14 +123,23 @@ npx prisma migrate reset
 
 The seed script creates 6 test users:
 
-| Username | Password | Role |
-|----------|----------|------|
-| admin | admin123 | admin |
-| player1 | password123 | user |
-| player2 | password123 | user |
-| player3 | password123 | user |
-| player4 | password123 | user |
-| player5 | password123 | user |
+| Username | Password | Role | Currency |
+|----------|----------|------|----------|
+| admin | admin123 | admin | ₡10,000,000 |
+| player1 | password123 | user | ₡1,000,000 |
+| player2 | password123 | user | ₡1,000,000 |
+| player3 | password123 | user | ₡1,000,000 |
+| player4 | password123 | user | ₡1,000,000 |
+| player5 | password123 | user | ₡1,000,000 |
+
+### Game Economy
+
+- **Starting Balance**: ₡1,000,000 Credits
+- **Robot Frame**: ₡500,000 (bare metal, all 25 attributes at level 1)
+- **Weapons**: ₡100,000 - ₡400,000 (required for battles)
+- **Upgrade Cost**: (level + 1) × 1,000 Credits per attribute
+  - Example: Level 1→2 costs ₡2,000
+  - Example: Level 10→11 costs ₡11,000
 
 ## 📝 Next Steps
 
@@ -132,16 +147,21 @@ This basic setup provides:
 - ✅ Backend server with Express
 - ✅ Frontend with React + Tailwind
 - ✅ PostgreSQL database with Prisma
-- ✅ Database schema for users, robots, components, and battles
-- ✅ Seed data with test users and sample components
+- ✅ Database schema for users, robots, weapons, and battles
+- ✅ 25-attribute robot system (Combat, Technical, Physical, Mental)
+- ✅ Credits (₡) currency system
+- ✅ Seed data with test users and 11 sample weapons
+- ✅ ELO ranking system
+- ✅ Comprehensive game design documentation
 
-Still to implement (see PHASE1_PLAN.md for details):
+Still to implement (see PHASE1_PLAN.md and ROBOT_ATTRIBUTES.md for details):
 - [ ] Authentication endpoints (login/logout)
-- [ ] Robot CRUD endpoints
-- [ ] Battle simulation engine
-- [ ] Frontend pages (login, robot creator, battle simulator, etc.)
-- [ ] Currency and upgrade system
-- [ ] Battle history
+- [ ] Robot CRUD endpoints with 25 attributes
+- [ ] Weapon purchase system
+- [ ] Battle simulation engine with attribute formulas
+- [ ] Frontend pages (login, robot creator, weapon shop, battle simulator, etc.)
+- [ ] Repair cost and battle reward calculations
+- [ ] Battle history with ELO tracking
 
 ## 🐛 Troubleshooting
 

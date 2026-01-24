@@ -52,13 +52,15 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 ## 📚 Documentation
 
 - [**Setup Guide**](docs/SETUP.md) - Get the Phase 1 prototype running locally
+- [**Robot Attributes System**](docs/ROBOT_ATTRIBUTES.md) - Complete attribute system, currency, weapons, and economy
 - [Phase 1 Plan](docs/PHASE1_PLAN.md) - Detailed plan for local prototype development
+- [Game Design Document](docs/GAME_DESIGN.md) - High-level game design and vision
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design and technical architecture
 - [Module Structure](docs/MODULE_STRUCTURE.md) - Breakdown of system modules and components
 - [Security Strategy](docs/SECURITY.md) - Security requirements and implementation approach
 - [Testing Strategy](docs/TESTING_STRATEGY.md) - Automated testing approach and standards
 - [Portability Strategy](docs/PORTABILITY.md) - Cross-platform development strategy
-- [Planning Questions](docs/QUESTIONS.md) - Key questions to refine our roadmap
+- [Planning Questions](docs/QUESTIONS.md) - Key questions and decisions
 
 ## 🗂️ Repository Structure
 

@@ -266,29 +266,40 @@ The seed script creates:
 ### Users
 | Username | Password | Role | Currency |
 |----------|----------|------|----------|
-| admin | admin123 | admin | 10,000 |
-| player1 | password123 | user | 1,000 |
-| player2 | password123 | user | 1,000 |
-| player3 | password123 | user | 1,000 |
-| player4 | password123 | user | 1,000 |
-| player5 | password123 | user | 1,000 |
+| admin | admin123 | admin | ₡10,000,000 |
+| player1 | password123 | user | ₡1,000,000 |
+| player2 | password123 | user | ₡1,000,000 |
+| player3 | password123 | user | ₡1,000,000 |
+| player4 | password123 | user | ₡1,000,000 |
+| player5 | password123 | user | ₡1,000,000 |
 
-### Components
+### Weapons (11 Total)
 
-**Chassis:**
-- Tank (Health +50, Speed -5, Defense +10)
-- Scout (Speed +10, Defense -5, Attack +5)
-- Balanced (Health +20)
+**Energy Weapons:**
+- Laser Rifle (₡150,000) - Accuracy +3, Energy Efficiency +5, Targeting +2
+- Plasma Cannon (₡300,000) - Attack +5, Crit +4, Heat Management -3
+- Ion Beam (₡400,000) - Energy Efficiency +8, Armor Pen +6, Reload +4
 
-**Weapons:**
-- Laser Rifle (Attack +15)
-- Plasma Cannon (Attack +25)
-- Machine Gun (Attack +10)
+**Ballistic Weapons:**
+- Machine Gun (₡100,000) - Attack +2, Reload +6, Weapon Handling +3
+- Railgun (₡350,000) - Armor Pen +10, Accuracy +5, Reload -2
+- Shotgun (₡120,000) - Attack +4, Crit +5, Accuracy -3
 
-**Armor:**
-- Heavy Plate (Defense +20, Speed -5)
-- Light Armor (Defense +10)
-- Energy Shield (Defense +15, Speed +2)
+**Melee Weapons:**
+- Power Sword (₡180,000) - Strength +6, Counter +5, Agility +3
+- Hammer (₡200,000) - Strength +8, Attack +6, Speed -2
+
+**Explosive Weapons:**
+- Rocket Launcher (₡320,000) - Attack +7, Crit +6, Reload -4
+- Grenade Launcher (₡250,000) - Attack +5, Tactical +4, Reload -2
+
+### Robot Attributes
+
+Each robot starts with 25 attributes at level 1:
+- **Combat** (8): Attack Power, Accuracy, Critical Strike, Defense Rating, Evasion, Counter Attack, Armor Penetration, Damage Resistance
+- **Technical** (6): Weapon Handling, Energy Efficiency, Targeting Systems, Heat Management, Shield Operations, Reload Speed
+- **Physical** (6): Hull Integrity, Speed, Agility, Strength, Stamina, Structural Stability
+- **Mental** (5): Tactical Awareness, Composure, Adaptability, Aggression, Combat Intelligence
 
 ## 🚀 Next Steps
 
@@ -300,14 +311,21 @@ Now that you have the basic setup running:
    - Database: `backend/prisma/schema.prisma`
 
 2. **Review the documentation**
+   - [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md) - Complete attribute system and economy
    - [PHASE1_PLAN.md](PHASE1_PLAN.md) - Development plan
    - [GAME_DESIGN.md](GAME_DESIGN.md) - Game design decisions
-   - [QUESTIONS.md](QUESTIONS.md) - Open questions
 
-3. **Start building features**
+3. **Understand the game economy**
+   - Starting balance: ₡1,000,000 Credits
+   - Robot frame: ₡500,000
+   - Weapons: ₡100,000 - ₡400,000
+   - Upgrades: (level + 1) × 1,000 Credits
+
+4. **Start building features**
    - Authentication system
-   - Robot creator
-   - Battle simulator
+   - Robot creator with 25 attributes
+   - Weapon shop
+   - Battle simulator with formula-based combat
    - UI pages
 
 ## 📚 Additional Resources
