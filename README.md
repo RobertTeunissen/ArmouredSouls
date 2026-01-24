@@ -2,6 +2,35 @@
 
 A next-generation strategy simulation game where thousands of players manage their own "stable" of battle robots in a persistent online world.
 
+## 🚀 Quick Start
+
+To run the Phase 1 prototype locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/RobertTeunissen/ArmouredSouls.git
+cd ArmouredSouls/prototype
+
+# Start the database
+docker-compose up -d
+
+# Set up and start the backend
+cd backend
+cp .env.example .env
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npx tsx prisma/seed.ts
+npm run dev
+
+# In a new terminal, set up and start the frontend
+cd ../frontend
+npm install
+npm run dev
+```
+
+📖 For detailed setup instructions, see the [Setup Guide](docs/SETUP.md).
+
 ## 🎮 Project Vision
 
 Armoured Souls is designed to be a highly scalable, secure, and portable multiplayer strategy game. Players will build, customize, and manage teams of battle robots, competing in various game modes and tournaments.
@@ -15,13 +44,15 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 
 ## 📋 Project Status
 
-**Current Phase**: Planning & Architecture  
-**Status**: Setting up project scaffolding and documentation
+**Current Phase**: Phase 1 - Local Prototype  
+**Status**: Basic setup complete, ready for feature development
 
-> ⚠️ **Note**: This project is in the planning phase. We are currently focusing on architecture, documentation, and module design before diving into implementation.
+> ✅ **Progress**: The prototype foundation is in place with backend (Express + Prisma), frontend (React + Tailwind), and database (PostgreSQL) configured and ready to use.
 
 ## 📚 Documentation
 
+- [**Setup Guide**](docs/SETUP.md) - Get the Phase 1 prototype running locally
+- [Phase 1 Plan](docs/PHASE1_PLAN.md) - Detailed plan for local prototype development
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design and technical architecture
 - [Module Structure](docs/MODULE_STRUCTURE.md) - Breakdown of system modules and components
 - [Security Strategy](docs/SECURITY.md) - Security requirements and implementation approach
@@ -34,25 +65,30 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 ```
 ArmouredSouls/
 ├── docs/               # Project documentation
-├── modules/            # Future module implementations
-│   ├── auth/          # Authentication & authorization
-│   ├── game-engine/   # Core game logic
-│   ├── database/      # Data persistence layer
-│   ├── api/           # RESTful API layer
-│   └── ui/            # User interface components
-└── tests/             # Test suites
+├── prototype/          # Phase 1 local prototype (ACTIVE)
+│   ├── backend/        # Express + Prisma backend
+│   ├── frontend/       # React + Tailwind frontend
+│   └── docker-compose.yml
+└── modules/            # Future production codebase (Phase 2+)
+    ├── auth/           # Authentication & authorization
+    ├── game-engine/    # Core game logic
+    ├── database/       # Data persistence layer
+    ├── api/            # RESTful API layer
+    └── ui/             # User interface components
 ```
 
 ## 🚀 Development Phases
 
-### Phase 1: Planning (Current)
-- Architecture design
-- Module specification
-- Technology stack selection
-- Security planning
-- Testing strategy
+### Phase 1: Local Prototype (Current - In Progress)
+- ✅ Basic project structure and configuration
+- ✅ Database schema (Users, Robots, Components, Battles)
+- ✅ Development environment setup
+- 🚧 Authentication system
+- 🚧 Robot creation and management
+- 🚧 Battle simulation engine
+- 🚧 Basic UI pages
 
-### Phase 2: Foundation
+### Phase 2: Foundation (Upcoming)
 - Core infrastructure setup
 - Authentication system
 - Database schema
