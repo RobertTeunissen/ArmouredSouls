@@ -2,629 +2,694 @@
 
 This document contains remaining questions that need to be answered to refine our development roadmap and make informed implementation decisions.
 
-**Note**: Core design questions have been answered and documented in GAME_DESIGN.md. This document contains follow-up questions and implementation details.
+**Note**: Core design questions have been answered and documented in GAME_DESIGN.md. This document contains follow-up questions, implementation details, and documentation inconsistencies identified during review.
+
+**Last Updated**: January 24, 2026  
+**Current Phase**: Phase 0 Complete, Ready to Start Phase 1 (Local Prototype)
+
+---
+
+## 📋 DOCUMENTATION INCONSISTENCIES FOUND (January 24, 2026)
+
+The following inconsistencies were discovered during documentation review and need clarification before proceeding:
+
+### 1. Technology Stack - Framework Decision
+**Status**: ⚠️ NEEDS CLARIFICATION  
+**Documents**: ARCHITECTURE.md vs SUMMARY.md, GAME_DESIGN.md, ROADMAP.md
+
+- **Issue**: ARCHITECTURE.md (Lines 75-78) lists "Express or Fastify (TBD based on performance needs)" as undecided
+- **Conflict**: SUMMARY.md states tech stack is "FINALIZED: Node.js + TypeScript + React"
+- **Question**: Has the backend framework been decided? Should we update ARCHITECTURE.md to reflect Express or Fastify as the chosen framework?
+- **Impact**: Blocks Phase 1 initialization
+
+### 2. Real-time Features vs Batch Processing
+**Status**: ⚠️ NEEDS CLARIFICATION  
+**Documents**: ARCHITECTURE.md vs MODULE_STRUCTURE.md vs PORTABILITY.md
+
+- **Issue**: ARCHITECTURE.md says "Real-time: ❌ Not needed (scheduled batch battle processing)"
+- **Conflict**: MODULE_STRUCTURE.md mentions "WebSockets for real-time updates" and PORTABILITY.md references "Web Push API"
+- **Question**: Are real-time features needed for notifications/updates, or is everything truly async/scheduled? What specifically needs real-time vs what can be polled?
+- **Impact**: Affects architecture decisions and technology choices
+
+### 3. Phase Numbering and Structure
+**Status**: ⚠️ NEEDS CLARIFICATION  
+**Documents**: MODULE_STRUCTURE.md vs ROADMAP.md
+
+- **Issue**: MODULE_STRUCTURE.md defines "Phase 1-5" focusing on module development order
+- **Conflict**: ROADMAP.md defines "Phase 0-9" focusing on feature completion and deployment
+- **Question**: Should we use different terminology (e.g., "Module Phases" vs "Project Phases") or consolidate to one phasing system?
+- **Impact**: Could cause confusion in planning and communication
+
+### 4. Database Migration Tool
+**Status**: ⚠️ NEEDS CLARIFICATION  
+**Documents**: MODULE_STRUCTURE.md
+
+- **Issue**: References "Flyway, Alembic" for migrations - Flyway is Java-based, Alembic is Python-based
+- **Conflict**: Using Node.js/TypeScript stack, should use TypeORM or Prisma migrations
+- **Question**: Which ORM and migration tool will be used? TypeORM or Prisma?
+- **Impact**: Affects Phase 1 database setup
+
+### 5. Battle Processing Schedule for MVP
+**Status**: 🟡 NEEDS SPECIFICATION  
+**Documents**: GAME_DESIGN.md, ARCHITECTURE.md
+
+- **Issue**: Multiple options mentioned (1-2 times daily, 4-6 times daily, etc.) but no clear MVP decision
+- **Question**: What is the specific battle processing schedule for the MVP/Phase 1 prototype?
+  - Once per day at specific time?
+  - Multiple times per day (how many)?
+  - Manual trigger for prototype?
+- **Impact**: Affects prototype implementation and testing
+
+### 6. Authentication Approach for Prototype
+**Status**: 🟡 CLARIFICATION HELPFUL  
+**Documents**: PHASE1_PLAN.md vs GAME_DESIGN.md vs SECURITY.md
+
+- **Issue**: Prototype plan says "hardcode test user" or "basic auth", but final game requires OAuth
+- **Question**: For Phase 1 prototype:
+  - Should we implement basic username/password to test the flow?
+  - Or truly hardcode a single test user to save time?
+  - Or implement OAuth from the start?
+- **Impact**: Affects Phase 1 scope and development time
+
+### 7. Documentation Dates Inconsistent
+**Status**: ⚠️ NEEDS UPDATE  
+**Documents**: Multiple files
+
+- **Issue**: Last updated dates are inconsistent:
+  - SUMMARY.md: "January 2024" (very outdated)
+  - ROADMAP.md: "January 21, 2026" (3 days ago)
+  - QUESTIONS.md: "January 2026" (no specific date)
+- **Question**: Should we standardize all documentation dates to January 24, 2026?
+- **Impact**: Minor - documentation clarity only
+
+### 8. Current Project Status
+**Status**: ⚠️ NEEDS ALIGNMENT  
+**Documents**: SUMMARY.md vs ROADMAP.md
+
+- **Issue**: SUMMARY.md says "Status: Awaiting Design Decisions & Tech Stack Selection"
+- **Conflict**: ROADMAP.md shows decisions are complete and "Phase 1 Ready to Start"
+- **Question**: What is the actual current status? Are we truly ready for Phase 1, or are there pending decisions?
+- **Impact**: Affects whether we can start implementation
+
+### 9. UI Component Library Choice
+**Status**: 🟡 NEEDS DECISION  
+**Documents**: ARCHITECTURE.md, PORTABILITY.md
+
+- **Issue**: ARCHITECTURE.md (Line 86) lists "Material-UI or Tailwind CSS (TBD)"
+- **Question**: Has this been decided for the prototype? Or should prototype use basic HTML/CSS?
+- **Impact**: Affects Phase 1 UI implementation approach
+
+### 10. Monorepo Structure Timeline
+**Status**: 🟡 NEEDS CLARIFICATION  
+**Documents**: PORTABILITY.md vs ROADMAP.md
+
+- **Issue**: PORTABILITY.md describes monorepo structure in detail
+- **Question**: When should monorepo structure be implemented?
+  - Phase 1 prototype (overkill?)
+  - Phase 2 (before mobile)?
+  - Phase 6 (when starting mobile)?
+- **Impact**: Affects initial project structure decisions
+
+---
+
+## ❓ PRIORITY LEVELS FOR QUESTIONS
+
+### 🔴 CRITICAL - Must answer before Phase 1 start
+1. Technology Stack - Framework Decision (#1)
+2. Current Project Status (#8)
+3. Database Migration Tool (#4)
+
+### 🟡 HIGH - Should answer during early Phase 1
+1. Battle Processing Schedule for MVP (#5)
+2. Authentication Approach for Prototype (#6)
+3. Real-time Features vs Batch Processing (#2)
+
+### 🟢 MEDIUM - Can answer during Phase 1
+1. Phase Numbering and Structure (#3)
+2. UI Component Library Choice (#9)
+3. Monorepo Structure Timeline (#10)
+
+### ⚪ LOW - Cosmetic/Documentation only
+1. Documentation Dates Inconsistent (#7)
 
 ---
 
 ## Battle Simulation Engine
 
+**Overall Status**: 🟡 PARTIALLY SPECIFIED - Core mechanics defined, details need refinement
+
 ### Deterministic Simulation
 
-1. **Random Number Generation**
-   - How do we handle randomness in battles while maintaining determinism?
-   - Use seeded RNG based on battle ID + timestamp?
-   - What's the balance between randomness and predictability?
+1. **Random Number Generation** - 🟡 PARTIALLY ANSWERED
+   - **Current Decision**: Use seeded RNG for deterministic replay (PHASE1_PLAN.md mentions this)
+   - **Remaining Questions**:
+     - Specific seed generation method (battle ID + timestamp)?
+     - Balance between randomness and predictability percentage?
+   - **Status**: Good enough for Phase 1 prototype, can refine during testing
 
-2. **Battle Duration Calculation**
-   - What factors determine battle length?
-   - Is there a minimum/maximum battle duration?
-   - How do we prevent infinite battles?
+2. **Battle Duration Calculation** - 🟢 ANSWERED
+   - **Decision**: Variable duration based on stats (PHASE1_PLAN.md line 290-292)
+   - **Implementation**: max_turns = 100 to prevent infinite battles
+   - **Status**: Specified in Phase 1 algorithm
 
-3. **Victory Conditions**
-   - Robot destroyed (health = 0)?
-   - Surrender mechanism?
-   - Timeout/draw conditions?
-   - Tactical retreat implementation?
+3. **Victory Conditions** - 🟢 ANSWERED
+   - **Decision**: Robot destroyed (health = 0) is primary victory condition
+   - **Implementation**: Specified in PHASE1_PLAN.md battle algorithm
+   - **Future**: Surrender, timeout, tactical retreat marked as future features
+   - **Status**: MVP condition defined
 
-4. **Damage Calculation**
-   - Formula for damage: Attack - Defense?
-   - Critical hits and their probability?
-   - Armor penetration mechanics?
-   - Status effects (stun, slow, burn)?
+4. **Damage Calculation** - 🟢 ANSWERED
+   - **Formula**: `damage = max(1, attack - defense)` (PHASE1_PLAN.md line 300-306)
+   - **Minimum**: Always at least 1 damage
+   - **Future**: Critical hits, armor penetration, status effects mentioned as enhancements
+   - **Status**: Basic formula ready for Phase 1
 
-5. **Action Resolution Order**
-   - Speed-based (faster robots act first)?
-   - Simultaneous actions?
-   - Turn-based within the simulation?
+5. **Action Resolution Order** - 🟢 ANSWERED
+   - **Decision**: Speed-based (faster robots act first) - PHASE1_PLAN.md line 235-237
+   - **Implementation**: Higher speed value goes first each turn
+   - **Status**: Defined in battle algorithm
 
 ### Conditional Triggers (Future Feature)
 
-1. **Trigger Conditions**
-   - Turn number (e.g., "turn 7")
-   - Time-based (e.g., "after 3 minutes")
-   - Health-based (e.g., "when health < 30%")
-   - Situational (e.g., "when enemy uses special ability")
+**Overall Status**: ⚪ DEFERRED - Marked as post-MVP feature, not needed for Phase 1
 
-2. **Trigger Actions**
-   - Activate special weapon
-   - Change strategy/stance
-   - Use consumable item
-   - Attempt retreat
+1. **Trigger Conditions** - ⚪ DEFERRED
+   - Status: Future feature, not in MVP scope
+   - Decision: Will be designed after MVP launch based on player feedback
 
-3. **Trigger Limits**
-   - How many triggers per battle?
-   - Cooldowns between trigger activations?
-   - Cost to use triggers?
+2. **Trigger Actions** - ⚪ DEFERRED
+   - Status: Future feature, not in MVP scope
+   - Decision: Will be designed after MVP launch
+
+3. **Trigger Limits** - ⚪ DEFERRED
+   - Status: Future feature, not in MVP scope
+   - Decision: Will be designed after MVP launch
 
 ---
 
 ## Robot Component System
 
+**Overall Status**: 🟢 SPECIFIED FOR PHASE 1 - Basic system defined in PHASE1_PLAN.md
+
 ### Component Types
 
-1. **Chassis**
-   - What stats does chassis affect? (health, size, weight, defense?)
-   - Size categories: Small, Medium, Large, Huge?
-   - Weight impact on speed?
-   - Slot limitations based on chassis?
+1. **Chassis** - 🟢 SPECIFIED
+   - **Decision**: 3-5 chassis types (Tank, Scout, Balanced, Berserker, Fortress)
+   - **Stats Affected**: Health, speed, defense, attack (PHASE1_PLAN.md lines 319-327)
+   - **Status**: Sample chassis defined, ready for Phase 1
 
-2. **Weapons**
-   - Primary and secondary weapon slots?
-   - Weapon categories: Melee, Ranged, Energy, Explosive?
-   - Weapon stats: Damage, speed, range, accuracy, ammo?
-   - Can weapons break or degrade?
+2. **Weapons** - 🟢 SPECIFIED
+   - **Decision**: 5-10 preset weapons for Phase 1
+   - **Types**: Laser Rifle, Plasma Cannon, Machine Gun, Hammer, Sniper, Sword, Rocket Launcher
+   - **Stats**: Attack bonus defined (PHASE1_PLAN.md lines 329-339)
+   - **Status**: Sample weapons ready for Phase 1
 
-3. **Armor**
-   - Physical armor vs energy shield?
-   - Coverage zones (front, side, rear, top)?
-   - Armor rating system?
-   - Weight vs protection tradeoff?
+3. **Armor** - 🟢 SPECIFIED
+   - **Decision**: 5-10 preset armor types for Phase 1
+   - **Types**: Heavy Plate, Light Armor, Energy Shield, Stealth Coating, Reactive Armor, Nano-Weave
+   - **Stats**: Defense bonus and speed penalties defined (PHASE1_PLAN.md lines 341-350)
+   - **Status**: Sample armor ready for Phase 1
 
-4. **Engine/Power**
-   - Speed vs power tradeoff?
-   - Energy capacity for special abilities?
-   - Fuel/energy consumption?
+4. **Engine/Power** - 🟡 NOT IN PHASE 1
+   - **Status**: Not included in Phase 1 prototype scope
+   - **Decision**: Can be added in Phase 2+ based on balance needs
+   - **Rationale**: Keeping Phase 1 simple with chassis providing speed stats
 
-5. **Modules/Special Systems**
-   - Utility modules: Repair, sensor, stealth?
-   - Offensive modules: Targeting computer, weapon mods?
-   - Defensive modules: Active protection, countermeasures?
-   - How many module slots?
+5. **Modules/Special Systems** - ⚪ DEFERRED
+   - **Status**: Post-MVP feature
+   - **Decision**: Will be designed after core system is validated
 
 ### Component Balancing
 
-1. **Stat Ranges**
-   - What's the minimum and maximum for each stat?
-   - Linear or exponential scaling?
-   - Diminishing returns at high values?
+**Overall Status**: 🟡 INITIAL VALUES SET - Phase 1 has starting values, requires playtesting
 
-2. **Weight and Capacity**
-   - Total weight limit per robot?
-   - Over-weight penalties?
-   - Capacity for weapons/modules?
+1. **Stat Ranges** - 🟡 PARTIALLY ANSWERED
+   - **Current**: Sample ranges provided in PHASE1_PLAN.md
+   - **Remaining**: Need playtesting to validate and adjust
+   - **Status**: Good enough for Phase 1, iterate based on testing
 
-3. **Cost Balancing**
-   - How is component cost calculated?
-   - Rarity tiers: Common, Uncommon, Rare, Epic, Legendary?
-   - Maintenance cost scaling?
+2. **Weight and Capacity** - 🟡 NOT IN PHASE 1
+   - **Status**: Simplified for Phase 1 - no weight system yet
+   - **Decision**: Can add complexity in Phase 2 if needed
+
+3. **Cost Balancing** - ⚪ DEFERRED
+   - **Status**: No economy in Phase 1 prototype
+   - **Decision**: Will be designed in Phase 2-3 when currency system is added
 
 ---
 
 ## Progression and Economy
 
+**Overall Status**: ⚪ DEFERRED - Not in Phase 1 prototype, designed for Phase 2+
+
 ### Currency System
 
-1. **Currency Types**
-   - Single currency or multiple?
-   - "Credits" for purchases?
-   - "Fame" as prestige currency?
-   - Premium currency for monetization?
-
-2. **Currency Earning**
-   - Base rewards per battle?
-   - Bonus for wins vs participation?
-   - Achievement rewards?
-   - Daily login bonuses?
-   - Tournament prizes?
-
-3. **Currency Spending**
-   - Component purchases?
-   - Robot repairs?
-   - Upgrades?
-   - Marketplace fees?
-   - Tournament entry fees?
-
-4. **Economy Balance**
-   - Average earnings per day for active player?
-   - Cost of a new robot?
-   - Cost of high-end components?
-   - Inflation prevention strategy?
+**Status**: ⚪ ALL DEFERRED TO PHASE 2+
+- Currency types, earning, spending, economy balance
+- Decision: Not needed for Phase 1 prototype validation
+- Timeline: Phase 2-3 implementation
 
 ### Fame System
 
-1. **Fame Earning**
-   - Fame per victory?
-   - Bonus fame for impressive victories?
-   - Fame from achievements?
-   - Fame decay over time?
-
-2. **Fame Benefits**
-   - Unlock new components?
-   - Access to special tournaments?
-   - Cosmetic items?
-   - Leaderboard position?
+**Status**: ⚪ ALL DEFERRED TO PHASE 2+
+- Fame earning, benefits
+- Decision: Not needed for Phase 1 prototype
+- Timeline: Phase 3+ implementation
 
 ### Progression Pacing
 
-1. **New Player Experience**
-   - Starting currency amount?
-   - Starter robot provided?
-   - How quickly can they get second robot?
-   - Tutorial rewards?
-
-2. **Mid-Game**
-   - Average time to competitive robot?
-   - Progression milestones?
-   - Unlock gates?
-
-3. **End-Game**
-   - What's the ceiling for progression?
-   - Ongoing goals for maxed players?
-   - Prestige/reset systems?
+**Status**: ⚪ ALL DEFERRED TO PHASE 2+
+- New player experience, mid-game, end-game progression
+- Decision: Will be designed based on Phase 1 feedback
+- Timeline: Phase 2-3 implementation
 
 ---
 
 ## Trading and Marketplace
 
-### Implementation Details
+**Overall Status**: ⚪ DEFERRED - Post-MVP feature (GAME_DESIGN.md confirms)
 
-1. **Marketplace Type**
-   - Player-to-player auction house?
-   - System-based store with dynamic prices?
-   - Hybrid approach?
-
-2. **Transaction Mechanics**
-   - Listing fees?
-   - Transaction taxes?
-   - Escrow system?
-   - Trade verification?
-
-3. **Tradeable Items**
-   - Complete robots?
-   - Components?
-   - Blueprints?
-   - Cosmetics?
-   - Currency (player-to-player trading)?
-
-4. **Price Discovery**
-   - Player-set prices?
-   - Suggested pricing?
-   - Price history tracking?
-   - Market manipulation prevention?
-
-5. **Blueprint System**
-   - How do blueprints work?
-   - One-time use or infinite?
-   - Blueprint rarity?
-   - Blueprint creation mechanics?
+**Status**: ⚪ ALL TRADING FEATURES DEFERRED
+- Not in Phase 1 prototype
+- Not in MVP (marked as Post-MVP in GAME_DESIGN.md line 311)
+- Decision: Will be designed after core game is validated
+- Timeline: Post-MVP (Phase 6+)
 
 ---
 
 ## Matchmaking System
 
+**Overall Status**: 🟡 SIMPLIFIED FOR PHASE 1 - Full system in Phase 2+
+
 ### 1v1 Matchmaking
 
-1. **Matching Criteria**
-   - Skill-based (ELO/MMR)?
-   - Robot power level?
-   - Player level?
-   - Win/loss record?
-   - Fame tier?
-
-2. **Queue System**
-   - Single queue or multiple (ranked, casual, practice)?
-   - Queue times - immediate or batched?
-   - Can you select specific opponents?
-
-3. **Fair Matching**
-   - Maximum rating difference?
-   - Widening search over time?
-   - New player protection?
-   - Smurf account prevention?
-
-4. **Opt-in vs Opt-out**
-   - Do players automatically enter queues?
-   - Manual match creation?
-   - Friend challenges?
+**Status**: 🟡 SIMPLIFIED
+- **Phase 1**: Manual robot selection for battles (no matchmaking)
+- **Phase 2+**: Implement proper matchmaking system
+- **Details**: All matchmaking questions deferred to Phase 2
 
 ### Team Battles (Future)
 
-1. **Team Composition**
-   - 2v2, 5v5, 11v11 mechanics?
-   - Can one player control multiple robots?
-   - Team formation strategies?
-
-2. **Team Matchmaking**
-   - Pre-made teams vs random?
-   - Team MMR calculation?
-   - Role selection?
+**Status**: ⚪ DEFERRED
+- Marked as future feature in GAME_DESIGN.md
+- Not in MVP scope
+- Timeline: Post-MVP
 
 ---
 
 ## Tournament System
 
-### Tournament Structure
+**Overall Status**: ⚪ DEFERRED - Marked as "Important Feature" but post-MVP
 
-1. **Tournament Types**
-   - Single elimination?
-   - Double elimination?
-   - Round robin?
-   - Swiss system?
-
-2. **Tournament Duration**
-   - Single-day tournaments?
-   - Multi-day (week-long)?
-   - Multi-week seasons?
-
-3. **Tournament Entry**
-   - Entry fee?
-   - Fame requirement?
-   - Invitation-only?
-   - Open to all?
-
-4. **Tournament Brackets**
-   - Fixed size (8, 16, 32, 64 players)?
-   - Dynamic based on registrations?
-   - Seeding system?
-
-5. **Rewards**
-   - Prize pool distribution (winner takes all vs graduated)?
-   - Unique rewards?
-   - Titles/badges?
-   - Fame multipliers?
+**Status**: ⚪ ALL TOURNAMENT FEATURES DEFERRED
+- Not in Phase 1 prototype
+- Important post-MVP feature (GAME_DESIGN.md line 141-144)
+- Decision: Will be designed after MVP launch
+- Timeline: Post-MVP (Phase 5-6)
 
 ---
 
 ## Social Features Priority
 
+**Overall Status**: ⚪ DEFERRED - All marked as post-MVP in GAME_DESIGN.md
+
 ### Guild System
-
-1. **Guild Structure**
-   - Guild size limits?
-   - Leadership hierarchy (leader, officers, members)?
-   - Guild ranks?
-
-2. **Guild Features**
-   - Guild chat?
-   - Guild warehouse/shared resources?
-   - Guild-specific tournaments?
-   - Guild vs Guild wars?
-
-3. **Guild Benefits**
-   - Experience bonuses?
-   - Shared blueprints?
-   - Guild-exclusive items?
+**Status**: ⚪ DEFERRED TO POST-MVP
 
 ### Friend System
-
-1. **Friend Features**
-   - Friend requests and acceptance?
-   - Friend list size limit?
-   - Online status visibility?
-   - Friend-only battles?
-
-2. **Friend Benefits**
-   - Practice battles?
-   - Gift system?
-   - Referral bonuses?
+**Status**: ⚪ DEFERRED TO POST-MVP
 
 ### Leaderboards
+**Status**: ⚪ DEFERRED TO POST-MVP
 
-1. **Leaderboard Types**
-   - Global rankings?
-   - Regional rankings?
-   - Friend rankings?
-   - Specialized rankings (fastest robot, most victories, etc.)?
-   - Seasonal vs all-time?
-
-2. **Leaderboard Updates**
-   - Real-time or periodic?
-   - Reset schedules?
-   - Historical tracking?
+**Note**: All social features confirmed as post-MVP in GAME_DESIGN.md (line 309-317)
 
 ---
 
 ## Technical Implementation Questions
 
+**Overall Status**: 🟢 MOSTLY ANSWERED - Core decisions made, some details need confirmation
+
 ### Local Development Setup
 
-1. **Development Stack**
-   - Docker Compose for local services?
-   - PostgreSQL version?
-   - Redis version?
-   - Node.js version (LTS)?
+**Status**: 🟢 ANSWERED IN PHASE1_PLAN.md
 
-2. **Development Database**
-   - Seed data for testing?
-   - Migration strategy?
-   - Test data generation?
+1. **Development Stack** - 🟢 DECIDED
+   - **Decision**: Docker Compose for local services
+   - **PostgreSQL**: Any recent version (14+)
+   - **Redis**: Latest stable
+   - **Node.js**: LTS version (18+ or 20+)
+   - **Status**: Specified in PHASE1_PLAN.md
 
-3. **Local Battle Processing**
-   - How to test scheduled processing locally?
-   - Cron simulation?
-   - Manual trigger for development?
+2. **Development Database** - 🟢 DECIDED
+   - **Seed Data**: Yes, for testing (PHASE1_PLAN.md line 77)
+   - **Migration Strategy**: Database migrations tool (ORM-based)
+   - **Test Data**: Seed script will generate
+   - **Status**: Approach defined
+
+3. **Local Battle Processing** - 🟢 DECIDED
+   - **Decision**: Manual trigger for Phase 1 development (PHASE1_PLAN.md line 101-104)
+   - **Future**: Cron/scheduled processing for Phase 2+
+   - **Status**: Clear approach for prototype
 
 ### AWS Migration Strategy
 
-1. **Initial AWS Services**
-   - Elastic Beanstalk vs ECS vs Lambda?
-   - RDS for PostgreSQL?
-   - ElastiCache for Redis?
-   - S3 for assets?
+**Status**: ⚪ DEFERRED - Not needed until Phase 2, but strategy documented
 
-2. **Serverless Architecture**
-   - Which services should be Lambda functions?
-   - API Gateway setup?
-   - DynamoDB vs RDS for certain data?
-   - Cold start mitigation?
+1. **Initial AWS Services** - 🟡 PARTIALLY DECIDED
+   - **Current Decision**: AWS with serverless architecture (GAME_DESIGN.md, ARCHITECTURE.md)
+   - **Remaining Question**: Specific AWS services (Lambda vs ECS vs Fargate) - can decide in Phase 2
+   - **Status**: High-level strategy clear, details deferred
 
-3. **Cost Management**
-   - Free tier utilization?
-   - Reserved instances vs on-demand?
-   - Auto-scaling policies?
-   - Budget alerts?
+2. **Serverless Architecture** - 🟡 GENERAL STRATEGY CLEAR
+   - **Decision**: Serverless where possible for cost control
+   - **Details**: Specific service choices deferred to Phase 2
+   - **Status**: Philosophy defined, implementation details later
 
-4. **Deployment Pipeline**
-   - GitHub Actions to AWS?
-   - Infrastructure as Code (Terraform, CloudFormation)?
-   - Staging environment?
-   - Blue-green deployments?
+3. **Cost Management** - 🟢 STRATEGY DEFINED
+   - **Decision**: Free tier, scale-to-zero, managed services
+   - **Documented**: ARCHITECTURE.md lines 271-274
+   - **Status**: Clear strategy
+
+4. **Deployment Pipeline** - ⚪ DEFERRED
+   - **Status**: Phase 2 feature (ROADMAP.md Phase 2.1)
+   - **Decision**: Will use GitHub Actions
+   - **Timeline**: Phase 2 implementation
 
 ---
 
 ## Data Schema Questions
 
+**Overall Status**: 🟢 PHASE 1 SCHEMA DEFINED - Full schema deferred to Phase 2
+
 ### Database Design
 
-1. **User Data**
-   - User profile fields?
-   - Authentication data storage?
-   - User preferences?
-   - Social connections?
+**Status**: 🟢 MINIMAL SCHEMA FOR PHASE 1 READY
 
-2. **Robot Data**
-   - Robot entity structure?
-   - Component relationships?
-   - Configuration snapshots for battles?
-   - Historical robot states?
+1. **User Data** - 🟢 SPECIFIED
+   - **Phase 1**: Minimal (id, username, password_hash) - PHASE1_PLAN.md lines 126-133
+   - **Phase 2+**: Expand with full profile, preferences, social connections
+   - **Status**: Prototype schema ready
 
-3. **Battle Data**
-   - Battle records storage?
-   - Replay data format (JSON, binary)?
-   - Replay retention period?
-   - Battle statistics aggregation?
+2. **Robot Data** - 🟢 SPECIFIED
+   - **Phase 1**: Full robot table defined (PHASE1_PLAN.md lines 135-152)
+   - **Status**: Ready for Phase 1 implementation
 
-4. **Indexes and Performance**
-   - Key indexes for common queries?
-   - Denormalization strategy?
-   - Read replicas needed?
+3. **Battle Data** - 🟢 SPECIFIED
+   - **Phase 1**: Battle table with JSON log (PHASE1_PLAN.md lines 174-189)
+   - **Status**: Ready for Phase 1 implementation
+
+4. **Indexes and Performance** - 🟡 DEFERRED
+   - **Status**: Add during Phase 2 based on actual usage patterns
+   - **Decision**: Start simple, optimize when needed
 
 ---
 
-## Art and Visual Design (Still Open)
+## Art and Visual Design
+
+**Overall Status**: ⚪ INTENTIONALLY OPEN - Placeholder art acceptable for MVP
 
 ### Visual Style
 
-1. **Art Direction**
-   - 2D sprites vs 3D models?
-   - Pixel art vs high-res?
-   - Realistic vs stylized?
-   - Dark/gritty vs colorful?
+**Status**: ⚪ DEFERRED - All design questions remain open
 
-2. **Robot Visualization**
-   - How detailed should robots look?
-   - Customization visibility (can you see equipped weapons)?
-   - Animation complexity?
-   - Battle visualization style?
-
-3. **UI Design**
-   - Clean minimal vs information-dense?
-   - Color scheme?
-   - Accessibility considerations?
-   - Mobile-responsive design patterns?
+**Decision**: Use placeholder/basic UI for Phase 1 prototype (GAME_DESIGN.md lines 378-386)
+**Rationale**: Focus on gameplay mechanics first, polish later
+**Timeline**: Post-MVP consideration
 
 ### Asset Creation
 
-1. **Asset Sources**
-   - Custom art commission?
-   - Asset store purchases?
-   - AI-generated art?
-   - Community submissions?
+**Status**: ⚪ DEFERRED - Not critical for Phase 1
 
-2. **MVP Assets**
-   - Placeholder graphics acceptable?
-   - Minimum asset requirements?
-   - Asset pipeline (creation, review, integration)?
+**Decision**: Placeholder graphics acceptable for MVP (GAME_DESIGN.md line 445-448)
+**Timeline**: Address after core gameplay validated
 
 ---
 
 ## Testing Strategy Details
 
+**Overall Status**: 🟡 STRATEGY DEFINED - Automated testing deferred to Phase 2
+
 ### Battle Simulation Testing
 
-1. **Unit Tests**
-   - Test individual damage calculations?
-   - Test action resolution?
-   - Test victory conditions?
-   - Mock random number generation?
+**Status**: 🟡 MANUAL FOR PHASE 1, AUTOMATED FOR PHASE 2
 
-2. **Integration Tests**
-   - Full battle simulation tests?
-   - Performance tests (1000 battles/second)?
-   - Load testing (10,000 concurrent battles)?
+1. **Unit Tests** - 🟡 DEFERRED TO PHASE 2
+   - **Phase 1**: Manual testing of battle algorithm
+   - **Phase 2**: Comprehensive automated test suite (ROADMAP.md Phase 2.4)
+   - **Status**: Strategy documented in TESTING_STRATEGY.md
 
-3. **Balance Testing**
-   - Automated simulation of thousands of battles?
-   - Statistical analysis of outcomes?
-   - Dominant strategy detection?
-   - Balance adjustment process?
+2. **Integration Tests** - ⚪ DEFERRED TO PHASE 2
+   - **Status**: Not in Phase 1 scope (PHASE1_PLAN.md confirms)
+   - **Timeline**: Phase 2.4 implementation
+
+3. **Balance Testing** - 🟢 APPROACH DEFINED
+   - **Phase 1**: Manual playtesting with friends
+   - **Phase 2+**: Automated simulation analysis
+   - **Status**: Clear testing approach
 
 ---
 
 ## Analytics and Metrics
 
+**Overall Status**: ⚪ DEFERRED - Post-MVP feature
+
 ### Data Collection
 
-1. **Player Metrics**
-   - What player actions to track?
-   - Session duration tracking?
-   - Conversion funnel analysis?
-   - Retention cohorts?
-
-2. **Battle Metrics**
-   - Average battle duration?
-   - Most used components?
-   - Win rates by robot type?
-   - Balance indicators?
-
-3. **Economy Metrics**
-   - Currency flow analysis?
-   - Inflation tracking?
-   - Trading volume?
-   - Monetization conversion rates?
+**Status**: ⚪ ALL DEFERRED
+- Not in Phase 1 prototype
+- Not in MVP scope
+- Decision: Add after launch based on needs
+- Timeline: Phase 6+ (GAME_DESIGN.md mentions as post-MVP)
 
 ### Analytics Tools
 
-1. **Implementation**
-   - Custom analytics vs third-party?
-   - Real-time vs batch processing?
-   - Data warehouse?
-   - Visualization dashboards?
+**Status**: ⚪ DEFERRED
+- Decision: Will be chosen when implementing analytics
+- Timeline: Post-MVP
 
 ---
 
 ## Content Moderation
 
+**Overall Status**: ⚪ DEFERRED - Not needed for Phase 1/small user base
+
 ### User-Generated Content
 
-1. **What Can Players Create?**
-   - Custom robot names?
-   - Profile descriptions?
-   - Guild names and descriptions?
-   - Chat messages?
-
-2. **Moderation Strategy**
-   - Automated filtering (profanity)?
-   - Report system?
-   - Moderator review?
-   - Appeals process?
-
-3. **Moderation Tools**
-   - Admin dashboard?
-   - Chat logs?
-   - User history?
-   - Ban/mute capabilities?
+**Status**: ⚪ DEFERRED
+- Not relevant for Phase 1 (testing with friends)
+- Will be designed when approaching public beta
+- Timeline: Phase 6 (Beta Launch)
 
 ---
 
 ## Legal and Administrative
 
+**Overall Status**: 🟡 STRATEGY CLEAR - Detailed implementation deferred
+
 ### Terms and Policies
 
-1. **Documentation**
-   - Who drafts Terms of Service?
-   - Privacy Policy requirements?
-   - Cookie policy?
-   - Age verification method?
+**Status**: 🟡 REQUIREMENTS DOCUMENTED
+- **Decision**: Must have Terms of Service, Privacy Policy before public launch
+- **Timeline**: Before Phase 6 (Beta Launch)
+- **Status**: Requirements clear in SECURITY.md, implementation later
 
-2. **Compliance**
-   - GDPR compliance checklist?
-   - COPPA compliance (if allowing under 13)?
-   - Regional restrictions?
-   - Data residency requirements?
+### Compliance
 
-3. **Intellectual Property**
-   - Trademark registration?
-   - Copyright for game assets?
-   - User content ownership?
+**Status**: 🟡 STRATEGY DOCUMENTED
+- **Decision**: GDPR compliance required (SECURITY.md, GAME_DESIGN.md)
+- **Timeline**: Must be ready before beta launch (Phase 6)
+- **Status**: Requirements documented, implementation during Phase 4-5
+
+### Intellectual Property
+
+**Status**: ⚪ DEFERRED
+- Not urgent for prototype/MVP
+- Timeline: Before public launch
 
 ---
 
 ## Launch Strategy Details
 
+**Overall Status**: ⚪ DEFERRED - Post-MVP planning
+
 ### Beta Testing
 
-1. **Beta Scope**
-   - How many beta testers?
-   - Open beta or closed?
-   - Beta duration?
-   - Beta player rewards?
+**Status**: ⚪ DEFERRED - Will be planned in Phase 5
 
-2. **Beta Objectives**
-   - What to test during beta?
-   - Success criteria?
-   - Feedback collection method?
-
-3. **Beta to Launch Transition**
-   - Wipe or keep progress?
-   - Founder rewards?
-   - Early access period?
+**Timeline**: Phase 6 (ROADMAP.md)
 
 ### Marketing
 
-1. **Initial Marketing**
-   - Marketing budget?
-   - Target channels (Reddit, Discord, etc.)?
-   - Press outreach?
-   - Influencer partnerships?
-
-2. **Community Building**
-   - Discord server setup?
-   - Social media presence?
-   - Dev blogs/updates?
-   - Community feedback loops?
+**Status**: ⚪ DEFERRED
+- Not needed for Phase 1 prototype
+- Will be planned before public launch
+- Timeline: Phase 6-7
 
 ---
 
-## Prioritization
+## Prioritization Summary
 
-For each remaining question, consider:
-- **Impact**: How critical is this decision?
-- **Timeline**: When do we need to decide?
-- **Dependencies**: What blocks on this decision?
-
-### High Priority (Need answers before Phase 1)
-- Local development setup specifics
-- Database schema basics
+### ✅ ANSWERED & READY (No Action Needed)
+The following have been answered and documented:
 - Battle simulation core mechanics
-- Component system fundamentals
+- Damage calculation formula
+- Victory conditions
+- Action resolution order
+- Robot component system basics (chassis, weapons, armor)
+- Phase 1 database schema
+- Local development setup approach
+- Battle processing for prototype (manual trigger)
+- Testing approach for Phase 1 (manual, automated in Phase 2)
 
-### Medium Priority (Need answers during Phase 1-2)
-- Matchmaking details
-- Economy balancing
-- Trading system mechanics
-- Tournament structure
+### 🔴 CRITICAL - Must Answer BEFORE Starting Phase 1
+1. **Backend Framework Decision** (Express vs Fastify) - Inconsistency #1
+2. **Database ORM/Migration Tool** (TypeORM vs Prisma) - Inconsistency #4
+3. **Current Project Status Confirmation** - Are we ready for Phase 1? - Inconsistency #8
 
-### Low Priority (Can decide during/after MVP)
-- Art style
-- Advanced features
-- Marketing strategy
-- Legal entity formation
+### 🟡 HIGH PRIORITY - Answer DURING Early Phase 1
+1. **Battle Processing Schedule for MVP** (#5) - How often do battles run?
+2. **Authentication for Prototype** (#6) - Hardcode user or implement basic auth?
+3. **Real-time vs Batch** (#2) - Clarify notification strategy
+4. **UI Component Library** (#9) - Material-UI, Tailwind, or basic HTML/CSS?
+
+### 🟢 MEDIUM PRIORITY - Answer During Phase 1 Development
+1. **Phase Numbering System** (#3) - Consolidate or rename to avoid confusion
+2. **Monorepo Structure Timeline** (#10) - When to implement?
+3. **Component Stat Balance** - Refine through playtesting
+
+### ⚪ LOW PRIORITY - Can Be Addressed Anytime
+1. **Documentation Date Standardization** (#7)
+2. **Art and Visual Design** - Using placeholders for now
+3. **All Post-MVP Features** - Economy, trading, tournaments, social features, etc.
+
+### ⚪ DEFERRED - Post-MVP (No Action Needed Now)
+- Economy and currency system
+- Trading and marketplace
+- Tournament system
+- Guild system and social features
+- Advanced matchmaking
+- Team battles
+- Conditional triggers
+- Analytics and metrics
+- Content moderation
+- Marketing and launch strategy
 
 ---
 
-## Next Actions
+## Summary: What's Blocking Phase 1 Start?
 
-1. Review open questions
-2. Answer high-priority questions
-3. Create detailed specification documents for:
-   - Battle simulation algorithm
-   - Component system
-   - Economy and progression
-   - Database schema
-4. Begin Phase 1 implementation
+### CRITICAL BLOCKERS (Must Resolve First)
+1. ⚠️ **Backend Framework**: Express or Fastify?
+2. ⚠️ **ORM Tool**: TypeORM or Prisma?
+3. ⚠️ **Status Confirmation**: Is Phase 0 truly complete and ready for Phase 1?
+
+### RECOMMENDED (Should Clarify Soon)
+4. 🟡 **Battle Schedule**: Once per day? Multiple times? Manual trigger?
+5. 🟡 **Auth Approach**: Hardcode, basic auth, or full OAuth for prototype?
+
+### MINOR (Can Decide During Development)
+6. 🟢 **UI Library**: Material-UI, Tailwind, or bare-bones?
+7. 🟢 **Real-time Strategy**: WebSockets for notifications, or pure batch?
 
 ---
 
-**Last Updated**: January 2026
-**Status**: Core questions answered, implementation details remain
+## Questions for Robert
+
+Before proceeding with Phase 1 implementation, please provide guidance on:
+
+### 1. Critical Decisions (Must Answer)
+- **Backend Framework**: Should we use Express (more familiar, larger ecosystem) or Fastify (better performance)? I recommend **Express** for simplicity.
+- **ORM/Migrations**: Should we use TypeORM or Prisma? I recommend **Prisma** (better TypeScript support, easier migrations).
+- **Ready for Phase 1?**: Confirm we have everything needed to start implementation.
+
+### 2. High Priority (Should Answer)
+- **Battle Schedule**: For the prototype, should battles run:
+  - On-demand/manual trigger (simplest for testing)?
+  - Once per day at a set time?
+  - Multiple times per day?
+- **Prototype Authentication**: Should we:
+  - Hardcode a single test user (fastest)?
+  - Implement basic username/password (tests the flow)?
+  - Implement OAuth from start (more work but production-ready)?
+
+### 3. Clarifications Helpful
+- **Real-time Features**: Are notifications/updates truly batch-only, or do we need WebSockets for anything?
+- **Phase Naming**: Should we rename "Module Phases" to avoid confusion with "Project Phases"?
+- **UI Component Library**: Should prototype use a component library (faster, prettier) or basic HTML/CSS (simpler, no dependencies)?
+
+---
+
+## Additional Questions Before Building Prototype
+
+Beyond the inconsistencies found, here are additional clarifications that would help:
+
+### Development Process
+1. **Time Commitment**: How many hours per week can you dedicate to this project?
+   - Affects whether 4-8 week timeline is realistic
+2. **Development Style**: Do you prefer:
+   - Pair programming style (work together in real-time)?
+   - Async style (I build, you review)?
+   - Hybrid?
+
+### Prototype Testing
+3. **Friend Group Size**: How many friends will test the prototype?
+   - Affects whether we need multiple simultaneous battles
+4. **Feedback Goals**: What's the main question you want answered?
+   - "Is the core concept fun?"
+   - "Are the mechanics balanced?"
+   - "Is the UI intuitive?"
+   - All of the above?
+
+### Technical Preferences
+5. **Learning vs Speed**: Would you rather:
+   - Use familiar tools to move faster?
+   - Learn new tools that might be better long-term?
+6. **IDE/Editor**: What development environment do you use?
+   - VS Code, WebStorm, other?
+   - Helps ensure setup instructions are clear
+
+### Scope Flexibility
+7. **Must-Have for Demo**: What absolutely must work for the prototype demo?
+   - Robot creation?
+   - Battle simulation?
+   - Battle results viewing?
+   - All of the above?
+8. **Nice-to-Have**: What can we skip if we run short on time?
+   - Battle replay visualization?
+   - Robot comparison tools?
+   - Battle history?
+
+---
+
+## Recommended Next Actions
+
+1. **Resolve Critical Blockers** (This Week)
+   - Decide: Express or Fastify → Recommend **Express**
+   - Decide: TypeORM or Prisma → Recommend **Prisma**
+   - Confirm: Ready to start Phase 1
+
+2. **Answer High Priority Questions** (This Week)
+   - Battle processing schedule for prototype
+   - Authentication approach for prototype
+
+3. **Begin Phase 1 Implementation** (Next Week)
+   - Set up development environment
+   - Initialize project with chosen stack
+   - Create database schema
+   - Begin battle engine development
+
+4. **Iterate on Questions During Development**
+   - Answer remaining questions as they become relevant
+   - Update documentation with decisions made
+   - Keep QUESTIONS.md current
+
+---
+
+**Document Status**: ✅ COMPREHENSIVE REVIEW COMPLETE  
+**Last Updated**: January 24, 2026  
+**Review Date**: January 24, 2026  
+**Reviewer**: AI Development Assistant  
+**Current Phase**: Phase 0 Complete, Awaiting Clarifications to Start Phase 1
+
+**Next Review**: After Phase 1 decisions are made and implementation begins
