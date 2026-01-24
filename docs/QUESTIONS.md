@@ -11,10 +11,6 @@ This document tracks remaining open questions and decisions needed for the proje
 
 The following decisions were made during documentation review and have been implemented in the relevant documentation:
 
-## ✅ RECENT DECISIONS (January 24, 2026)
-
-The following decisions were made during documentation review and have been implemented in the relevant documentation:
-
 1. **Backend Framework**: Express (chosen for simplicity and larger ecosystem) - See ARCHITECTURE.md
 2. **ORM/Migrations**: Prisma (better TypeScript support, easier migrations) - See ARCHITECTURE.md, MODULE_STRUCTURE.md
 3. **Real-time Features**: WebSockets/Web Push API for notifications across platforms; batch processing for battle computation - See ARCHITECTURE.md
