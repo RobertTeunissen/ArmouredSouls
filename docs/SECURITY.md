@@ -1,5 +1,7 @@
 # Armoured Souls - Security Strategy
 
+**Last Updated**: January 24, 2026
+
 ## Security First Approach
 
 Security is a core principle of Armoured Souls. This document outlines our comprehensive security strategy across all layers of the application.

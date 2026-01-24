@@ -1,10 +1,12 @@
 # Armoured Souls - Testing Strategy
 
+**Last Updated**: January 24, 2026
+
 ## Testing Philosophy
 
 **Test-Driven Development (TDD)**: Write tests before implementation when possible.  
 **Comprehensive Coverage**: Aim for >80% code coverage, 100% for critical paths.  
-**Automated Testing**: All tests automated in CI/CD pipeline.  
+**Automated Testing**: All tests automated in CI/CD pipeline, running on every commit.  
 **Fast Feedback**: Quick test execution for rapid development cycles.
 
 ---

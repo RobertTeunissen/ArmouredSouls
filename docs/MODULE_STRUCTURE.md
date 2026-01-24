@@ -1,8 +1,12 @@
 # Armoured Souls - Module Structure
 
+**Last Updated**: January 24, 2026
+
 ## Overview
 
 This document breaks down the Armoured Souls system into logical modules, each with specific responsibilities. This modular approach enables independent development, testing, and scaling of components.
+
+**Note**: For project phases and development timeline, see ROADMAP.md. This document focuses on module organization and current implementation status.
 
 ## Module Hierarchy
 
@@ -233,7 +237,7 @@ ArmouredSouls/
 **Technologies**:
 - PostgreSQL (primary database)
 - Redis (caching layer)
-- Database migrations tool (e.g., Flyway, Alembic)
+- Prisma (TypeScript ORM with schema migrations)
 
 **Dependencies**:
 - None (foundational module)
@@ -418,28 +422,30 @@ ArmouredSouls/
 
 ## Module Development Priority
 
-### Phase 1 (Foundation)
-1. Database
-2. Auth
-3. API (basic)
+**Note**: This section describes the logical module development order. For the actual project phases and implementation timeline, refer to ROADMAP.md which contains the authoritative Phase 0-9 structure.
 
-### Phase 2 (Core Features)
+### Module Foundation
+1. Database (Prisma + PostgreSQL)
+2. Auth (JWT + basic username/password for prototype)
+3. API (Express-based REST API)
+
+### Core Game Features
 4. Player
 5. Robot
 6. Stable
 
-### Phase 3 (Gameplay)
+### Gameplay Systems
 7. Game Engine
 8. Battle
-9. Matchmaking
+9. Matchmaking (simplified for prototype)
 
-### Phase 4 (User Experience)
-10. UI (Web)
-11. Notifications
+### User Experience
+10. UI (Web with React + Tailwind CSS)
+11. Notifications (WebSockets/Web Push)
 
-### Phase 5 (Enhancement)
+### Advanced Features
 12. Admin
-13. UI (Mobile)
+13. UI (Mobile - React Native, post-MVP)
 
 ## Inter-Module Communication
 
@@ -448,9 +454,9 @@ ArmouredSouls/
 - Direct function calls within same process
 
 ### Asynchronous Communication
-- Message queue for non-blocking operations
-- Event bus for loosely coupled events
-- WebSockets for real-time updates
+- Message queue for non-blocking operations (future)
+- Event bus for loosely coupled events (future)
+- WebSockets for real-time notifications and cross-platform data synchronization
 
 ## Module Testing Strategy
 

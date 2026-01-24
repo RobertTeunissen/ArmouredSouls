@@ -1,5 +1,7 @@
 # Armoured Souls - Portability Strategy
 
+**Last Updated**: January 24, 2026
+
 ## Overview
 
 Armoured Souls is designed from the ground up to be portable across web, iOS, and Android platforms. This document outlines our strategy for achieving true cross-platform compatibility while maintaining code quality and performance.

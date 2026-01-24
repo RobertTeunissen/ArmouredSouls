@@ -6,10 +6,20 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
+# Armoured Souls - Development Roadmap
+
+**Last Updated**: January 24, 2026
+
+## Overview
+
+This document outlines the development roadmap for Armoured Souls, from planning through launch and beyond. The project is organized into distinct phases (0-9), with each phase representing a major milestone. Timeline estimates have been removed in favor of a version-based approach - phases complete when ready, not by arbitrary dates.
+
+---
+
 ## Current Status: Phase 0 - Planning ✅
 
 **Status**: Complete  
-**Duration**: Completed  
+**Completed**: January 24, 2026  
 **Goal**: Define architecture, modules, and answer key design questions
 
 ### Completed
@@ -19,120 +29,74 @@ This document outlines the development roadmap for Armoured Souls, from planning
 - ✅ Security strategy documented
 - ✅ Testing strategy defined
 - ✅ Portability strategy outlined
-- ✅ Key questions answered
-- ✅ Technology stack finalized: Node.js + TypeScript + React + PostgreSQL
-- ✅ MVP scope defined: User management, robot management, stable management, 1v1 matches
+- ✅ All critical questions answered and documented
+- ✅ Technology stack finalized:
+  - Backend: Node.js + TypeScript + Express + Prisma
+  - Frontend: React + Tailwind CSS
+  - Database: PostgreSQL + Redis
+- ✅ MVP scope defined: User management, robot management, stable management, robot upgrading, 1v1 matches
 - ✅ Game design documented: Scheduled battle system inspired by Football Manager
 - ✅ Development approach: Local first → AWS serverless
-- ✅ Team composition defined: 2-person team (Robert + AI)
+- ✅ Team composition: 2-person team (Robert + AI, async development style)
 
 ### Key Decisions Made
-- **Battle System**: Scheduled batch processing (not real-time, not turn-based)
+- **Battle System**: Scheduled batch processing for battles; WebSockets/Web Push for notifications
 - **Target Audience**: Casual players, 15-30 min/day engagement
 - **Monetization**: Free-to-play with optional in-game currency purchases
 - **Platform Priority**: Web first, mobile later (iOS before Android)
 - **Hosting**: AWS with serverless architecture, scale-to-zero capability
 - **Game Mechanics**: Football Manager-style - configure robots, view battle outcomes
+- **Development Style**: Async (AI builds, Robert reviews)
+- **Prototype Testing**: 6 user accounts for local testing
 
 ### Ready for Phase 1
 - ✅ All critical design questions answered
-- ✅ Technology stack selected
+- ✅ Technology stack finalized (Express, Prisma, Tailwind CSS)
 - ✅ MVP scope clearly defined
-- ✅ Timeline approach: ASAP based on available development time
-- ✅ Team roles assigned
+- ✅ Development style and workflow established
+- ✅ Prototype requirements documented
 
 ---
 
-## Phase 1: Local Prototype / Proof of Concept (Estimated: 4-8 weeks)
-
-## Phase 1: Local Prototype / Proof of Concept (Estimated: 4-8 weeks)
+## Phase 1: Local Prototype / Proof of Concept
 
 **Goal**: Create a working local prototype to demonstrate core game mechanics to friends
 
-**Why This Phase**: Before investing time in production infrastructure, authentication, and polish, we need to validate the core game concept and mechanics. This prototype will run entirely on your laptop using Docker and will focus on proving the battle simulation system works and is fun.
+**Status**: Ready to begin  
+**Detailed Plan**: See PHASE1_PLAN.md for complete specifications
 
-### 1.1 Development Environment Setup (Week 1)
+### Scope Summary
+- User management (6 test accounts + admin)
+- Robot creation and upgrading  
+- Stable management
+- Battle simulation (manual trigger)
+- Battle history
+- Simple currency system
+- Text-based UI (React + Tailwind CSS)
 
-- [ ] Initialize Node.js + TypeScript project
-- [ ] Set up Docker Compose for local services (PostgreSQL, Redis)
-- [ ] Configure ESLint, Prettier for code quality
-- [ ] Set up basic folder structure (backend, frontend, shared)
-- [ ] Install core dependencies (Express/Fastify, React, TypeORM/Prisma)
-- [ ] Create development documentation (README with setup instructions)
+### Technology Stack
+- Backend: Express + Prisma + PostgreSQL
+- Frontend: React + Tailwind CSS
+- Testing: Automated on every commit
+- Structure: Isolated `/prototype` directory
 
-**Deliverables**:
-- Working local development environment
-- Docker containers running
-- Hot-reload working for both frontend and backend
+### Success Criteria
+- Core gameplay loop works
+- 6 friends can test simultaneously
+- Battle mechanics are fun and balanced
+- Technical foundation validates architectural decisions
 
-### 1.2 Minimal Database Schema (Week 1)
+**Detailed Requirements**: See PHASE1_PLAN.md
 
-Focus on the absolute minimum needed for the prototype:
+---
 
-- [ ] **Users Table** (very basic - just id, username, password_hash)
-- [ ] **Robots Table** (id, user_id, name, stats: attack, defense, speed, health)
-- [ ] **Battles Table** (id, robot1_id, robot2_id, winner_id, battle_log, created_at)
-- [ ] **Components Table** (id, name, type, stat_modifiers) - for weapons/armor
-- [ ] Set up database migrations
-- [ ] Create seed data for testing (5-10 pre-configured robots)
+## Phase 2: Foundation & Infrastructure
 
-**Deliverables**:
-- Working database schema
-- Seed data that creates test robots
-- Basic ORM models
+**Goal**: Make the prototype production-ready with proper infrastructure and security
 
-### 1.3 Battle Simulation Engine (Week 2-3) - **CORE FEATURE**
+**Prerequisites**: Phase 1 prototype validated by testing
 
-This is the heart of the prototype - prove the battle system works:
-
-- [ ] **Battle Simulation Algorithm**
-  - Turn-based simulation (even though results shown after)
-  - Damage calculation: `damage = max(0, attacker.attack - defender.defense)`
-  - Speed determines action order
-  - Health tracking
-  - Victory condition: opponent health = 0
-  
-- [ ] **Battle Processor**
-  - Function that takes two robots and simulates battle
-  - Generate detailed battle log (turn-by-turn)
-  - Determine winner
-  - Store battle results in database
-  
-- [ ] **Manual Battle Trigger** (for testing)
-  - CLI command or simple endpoint to run battles
-  - Can specify which robots fight
-  - Outputs battle log to console/file
-
-- [ ] **Batch Battle Processing**
-  - Function to process multiple queued battles
-  - Simple scheduler (cron or manual trigger for prototype)
-
-**Deliverables**:
-- Working battle simulation engine
-- Can run battles and see detailed logs
-- Deterministic results (same inputs = same outputs)
-- At least 5 different test scenarios validated
-
-### 1.4 Simple REST API (Week 2)
-
-Minimal API to support the prototype UI:
-
-- [ ] **Robot Endpoints**
-  - `GET /api/robots` - List all robots
-  - `GET /api/robots/:id` - Get robot details
-  - `POST /api/robots` - Create new robot (simplified)
-  - `PUT /api/robots/:id` - Update robot configuration
-
-- [ ] **Battle Endpoints**
-  - `POST /api/battles` - Schedule a battle between two robots
-  - `GET /api/battles` - List battles (with results)
-  - `GET /api/battles/:id` - Get battle details with log
-
-- [ ] **Simple Authentication** (or skip for prototype)
-  - Just hardcode a test user, or
-  - Very basic username/password (no security needed yet)
-
-**Deliverables**:
+### Scope
 - Working API that frontend can call
 - Postman/REST Client collection for testing
 - Basic error handling

@@ -1,5 +1,7 @@
 # Armoured Souls - Game Design Document
 
+**Last Updated**: January 24, 2026
+
 ## Overview
 
 This document captures the core game design decisions for Armoured Souls, a strategy-based robot battle management game inspired by Football Manager mechanics.
