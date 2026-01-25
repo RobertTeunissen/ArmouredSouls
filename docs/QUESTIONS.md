@@ -53,15 +53,15 @@ This document tracks remaining open questions, decisions needed for the project,
 ### Implementation Decisions Needed
 
 5. **Phase 1 Scope Confirmation**
-   - [ ] Confirm Phase 1a (core prototype with turn-based) is the immediate focus
-   - [ ] Decide if Phase 1b (enhanced features) should be included in Phase 1
+   - [ ] Confirm Phase 1a (core prototype with time-based combat) is the immediate focus
+   - [ ] Decide if Phase 1b (weapon & equipment system) should be included in Phase 1
    - [ ] Decide if Phase 1c (stable system) should be deferred to Phase 2
-   - [ ] Approve starting with turn-based combat (migrate to time-based in Phase 2)
+   - [ ] Review updated ROADMAP.md implementation priorities
 
-6. **Migration Strategy**
-   - [ ] Approve database migration approach outlined in ROADMAP.md
-   - [ ] Confirm seed data needs to be updated with new attribute names
-   - [ ] Decide if we need data migration script or fresh start for prototype
+6. **Database Setup**
+   - [ ] Approve database schema from DATABASE_SCHEMA.md (authoritative source)
+   - [ ] Confirm seed data approach for prototype
+   - [ ] No migration needed - fresh start for prototype
 
 ### Testing & Validation
 
@@ -84,20 +84,21 @@ This document tracks remaining open questions, decisions needed for the project,
 
 Major design evolution completed addressing all feedback:
 
-26. **Weapon-Neutral Attributes**: Renamed 8 attributes to work for all weapon types - See ROBOT_ATTRIBUTES.md
-27. **Robot State Tracking**: Added currentHP, currentShield, elo, wins, losses, fame, yield threshold, etc. - See ROBOT_ATTRIBUTES.md
-28. **Loadout System**: 4 configurations (Weapon+Shield, Two-Handed, Dual-Wield, Single) with bonuses/penalties - See ROBOT_ATTRIBUTES.md
+26. **Weapon-Neutral Attributes**: 23 attributes work for all weapon types (Combat Power, Targeting Systems, etc.) - See ROBOT_ATTRIBUTES.md
+27. **Robot State Tracking**: currentHP, currentShield, elo, wins, losses, fame, yield threshold, etc. - See DATABASE_SCHEMA.md
+28. **Loadout System**: 4 configurations (Weapon+Shield, Two-Handed, Dual-Wield, Single) with percentage-based bonuses - See ROBOT_ATTRIBUTES.md
 29. **Battle Stances**: Pre-battle settings (Offensive/Defensive/Balanced) affect combat behavior - See ROBOT_ATTRIBUTES.md
-30. **Yield Threshold**: Players set surrender HP %, destroyed robots (0% HP) cost 2.5x repairs - See ROBOT_ATTRIBUTES.md
-31. **Time-Based Combat**: Designed as Phase 2 enhancement, Phase 1 uses turn-based - See ROBOT_ATTRIBUTES.md
-32. **Shield Mechanics**: Separate HP pool from robot HP, regenerates during battle - See ROBOT_ATTRIBUTES.md
-33. **Damage Types**: Energy (+20% vs shields), Melee (Hydraulic Systems bonus), Ballistic (penetration), Explosive (area) - See ROBOT_ATTRIBUTES.md
-34. **HP Calculation**: Formula-based: `max_hp = hullIntegrity × 10` - See ROBOT_ATTRIBUTES.md
-35. **Critical Mechanics**: Only rolls after hit confirmed, 2.5x for two-handed weapons - See ROBOT_ATTRIBUTES.md
-36. **Shield Equipment**: New Shield model added for defensive builds - See ROBOT_ATTRIBUTES.md
-37. **Stable System**: Complete facility upgrade system, prestige, coaches - See STABLE_SYSTEM.md
-38. **Database Schema**: Full implementation spec added to ROBOT_ATTRIBUTES.md
-39. **Implementation Phases**: Consolidated into ROADMAP.md (Phase 1a/1b/1c)
+30. **Yield Threshold**: Players set surrender HP %, destroyed robots (0% HP) have repair_cost_multiplier 2.0x - See ROBOT_ATTRIBUTES.md
+31. **Time-Based Combat**: Exclusive combat system (turn-based removed from all plans) - See ROBOT_ATTRIBUTES.md
+32. **Energy Shield Mechanics**: Separate HP pool from robot HP, regenerates during battle (HP does not) - See ROBOT_ATTRIBUTES.md
+33. **Shield Nomenclature**: "Energy Shield" (HP pool) vs "Shield" weapon (physical equipment) - See ROBOT_ATTRIBUTES.md
+34. **HP Calculation**: Formula-based: `max_hp = hullIntegrity × 10`, `max_shield = shieldCapacity × 2` - See ROBOT_ATTRIBUTES.md
+35. **Critical Mechanics**: Only rolls after hit confirmed, randomness added (±10%), 2.5x for two-handed - See ROBOT_ATTRIBUTES.md
+36. **Shield Equipment**: Shield weapons use weaponType="shield" in Weapon model - See DATABASE_SCHEMA.md
+37. **Stable System**: 11 facility types, 10 levels each, prestige-gated unlocks, daily income/expense system - See STABLE_SYSTEM.md
+38. **Database Schema**: DATABASE_SCHEMA.md is authoritative source for all models - See DATABASE_SCHEMA.md
+39. **Implementation Phases**: Phase 1a (time-based core), 1b (weapons), 1c (stable system) - See ROADMAP.md
+40. **League System**: Per-robot (not stable), supports multiple Bronze leagues via leagueId - See DATABASE_SCHEMA.md
 40. **Documentation Cleanup**: Removed ROBOT_ATTRIBUTES_OLD.md, consolidating DESIGN_CHANGES_V2.md content
 
 ---

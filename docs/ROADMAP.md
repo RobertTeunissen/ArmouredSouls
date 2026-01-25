@@ -90,62 +90,56 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ### Implementation Priority
 
-**Phase 1a - Core Prototype (Turn-Based):**
-1. Update database schema with renamed attributes (see ROBOT_ATTRIBUTES.md "Database Schema Implementation")
+**Phase 1a - Core Prototype (Time-Based Combat):**
+1. Update database schema (see DATABASE_SCHEMA.md for authoritative source)
 2. Add robot state tracking fields (currentHP, currentShield, elo, wins, losses, etc.)
 3. Implement loadout system (4 configurations: weapon+shield, two-handed, dual-wield, single)
-4. Add yield threshold logic (player sets HP %, destroyedpenalty = 2.5x repair cost)
-5. Implement turn-based combat with all formulas (see ROBOT_ATTRIBUTES.md)
-6. Update repair cost formula with destruction multiplier
+4. Add yield threshold logic (player sets HP %, repair_cost_multiplier = 2.0x for destroyed robots)
+5. Implement time-based combat with all formulas (see ROBOT_ATTRIBUTES.md)
+6. Update repair cost formula with repair_cost_multiplier
 7. Update HP calculation: `max_hp = hullIntegrity × 10`
+8. Add stance system (offensive/defensive/balanced pre-battle settings)
+9. Implement energy shields as separate HP pool with regeneration
 
-**Phase 1b - Enhanced Features:**
-1. Add stance system (offensive/defensive/balanced pre-battle settings)
-2. Implement shield as separate HP pool with regeneration
-3. Add Shield model and equipment
-4. Update weapon system with new properties (cooldown, handsRequired, specialProperty)
-5. Test and balance all combat formulas
+**Phase 1b - Weapon & Equipment System:**
+1. Add Shield weapon type and equipment
+2. Update weapon system with all properties (cooldown, handsRequired, specialProperty, attribute bonuses)
+3. Implement weapon crafting system (requires Workshop Level 3)
+4. Test and balance all combat formulas
 
-**Phase 1c - Stable System (Optional for Phase 1):**
-1. Add stable-level tracking (prestige, leagueTier, totalBattles, totalWins)
-2. Implement Facility model for stable upgrades
-3. Add facility upgrade mechanics (see STABLE_SYSTEM.md)
-4. Coach hiring system
-5. Prestige milestones and unlocks
+**Phase 1c - Stable System:**
+1. Add stable-level tracking (prestige, totalBattles, totalWins, highestELO)
+2. Implement Facility model for stable upgrades (11 facility types)
+3. Add facility upgrade mechanics (10 levels per facility, see STABLE_SYSTEM.md)
+4. Implement daily income/expense system with revenue streams
+5. Coach hiring system (Coaching Staff facility)
+6. Prestige milestones and unlocks
 
-### Database Migration Path
+### Database Setup (No Migration Needed)
 
-1. **Backup current database**
-2. **Update schema.prisma** with new attribute names and fields
-3. **Generate migration**: `npx prisma migrate dev --name weapon_neutral_attributes`
-4. **Data migration script** (if existing data):
-   - Map old attribute names to new names
-   - Set currentHP = hullIntegrity × 10
-   - Set currentShield = shieldCapacity × 2
-   - Initialize all new fields with appropriate defaults
-5. **Update seed data** with new attribute names and loadout/stance fields
-6. **Test migration** on development database first
+Since this is a prototype with no existing data:
 
-### Breaking Changes from Design Evolution
+1. **Copy complete schema** from DATABASE_SCHEMA.md to `prisma/schema.prisma`
+2. **Generate database**: `npx prisma migrate dev --name init`
+3. **Run seed script**: `npx prisma db seed`
 
-**Attribute Renames** (all occurrences must be updated):
-- firepower → combatPower
-- targetingComputer → targetingSystems
-- criticalCircuits → criticalSystems
-- armorPiercing → penetration
-- weaponStability → weaponControl
-- firingRate → attackSpeed
-- shieldGenerator → shieldCapacity
-- hydraulicPower → hydraulicSystems
+See DATABASE_SCHEMA.md for the authoritative, complete schema definition.
 
-**New Required Fields**:
-- Robot: currentHP, currentShield, loadout, stance, yieldThreshold
-- Weapon: cooldown, handsRequired, damageType
-- User: prestige, leagueTier (for stable system)
+### Key Schema Notes
 
-**New Models**:
-- Shield (equipment type)
-- Facility (stable upgrades)
+**Current Attribute Names** (never use old names):
+- combatPower, targetingSystems, criticalSystems, penetration, weaponControl, attackSpeed, shieldCapacity, hydraulicSystems
+- See ROBOT_ATTRIBUTES.md for all 23 attributes
+
+**Key Fields**:
+- Robot: currentHP, currentShield, loadout, stance, yieldThreshold, currentLeague, leagueId, fame
+- Weapon: weaponType includes "shield" for shield weapons (separate from energy shields)
+- User: prestige (never spent), totalBattles, totalWins, highestELO
+- Facility: facilityType, level (0-10), maxLevel (10)
+
+**Models**:
+- User, Robot, Weapon, Battle, Facility
+- Shield weapons are Weapon type with weaponType="shield"
 
 ---
 
@@ -676,6 +670,40 @@ At the end of Phase 1, we will:
 - [ ] A/B testing
 - [ ] Retention optimization
 - [ ] Conversion optimization
+
+---
+
+## Future Ideas & Enhancements
+
+Features and systems to consider for future development. These are not yet planned for specific phases.
+
+### Advanced Combat Mechanics
+- **Range System**: Multiple range bands (short/medium/long) beyond just melee vs ranged
+  - Different weapons perform better at different ranges
+  - Positioning mechanics with range advantages
+  - See ROBOT_ATTRIBUTES.md for melee/ranged distinction currently implemented
+
+- **Status Effects System**: 
+  - Stun, slow, buff, debuff mechanics
+  - Duration-based effects
+  - Cleanse/dispel abilities
+  - Currently not implemented - combat is direct damage only
+
+### Stable Enhancements (From STABLE_SYSTEM.md)
+- **Stable vs Stable Wars**: Team battles between stables
+- **Alliances**: Form alliances with other stables for shared bonuses
+- **Stable Customization**: Custom logos, colors, banners
+- **Staff Management**: Hire technicians, analysts, scouts
+- **Sponsorships**: Stable sponsors provide Credits/bonuses in exchange for performance
+- **Stable Rankings**: Global leaderboards for stables
+- **Legacy System**: Retired robot bonuses, historical achievements
+- **Training Programs**: Long-term attribute development options
+
+### Additional Game Modes
+- Arena battles (2v2, 3v3) with team coordination
+- Tournaments with bracket systems
+- Special events and challenges
+- Seasonal leagues
 
 ---
 

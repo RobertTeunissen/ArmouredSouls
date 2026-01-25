@@ -54,9 +54,9 @@ The prototype should demonstrate:
 
 5. **Battle Simulator**
    - Input: Two robots
-   - Process: Turn-based simulation
-   - Output: Winner + detailed battle log
-   - Shows damage dealt, health remaining, actions taken
+   - Process: Time-based combat simulation
+   - Output: Winner + detailed battle log with timestamps
+   - Shows damage dealt, health remaining, actions taken with time progression
    - Manual trigger for battles (no automated scheduling)
 
 6. **Component Library**
@@ -234,119 +234,150 @@ CREATE TABLE battles (
 interface Robot {
   id: number;
   name: string;
-  attack: number;  // Final attack (base + modifiers)
-  defense: number; // Final defense (base + modifiers)
-  speed: number;   // Determines turn order
-  health: number;  // Current health
-  maxHealth: number; // Starting health
+  // See ROBOT_ATTRIBUTES.md for complete 23 attributes
+  combatPower: number;
+  targetingSystems: number;
+  attackSpeed: number;
+  gyroStabilizers: number;  // Determines reaction time for simultaneous attacks
+  // ... (all 23 attributes)
+  currentHP: number;
+  maxHP: number;
+  currentShield: number;
+  maxShield: number;
+  loadout: string;  // "weapon_shield", "two_handed", "dual_wield", "single"
+  stance: string;   // "offensive", "defensive", "balanced"
+  yieldThreshold: number; // 0-50 (percentage)
 }
 
 interface BattleLog {
-  turns: Turn[];
+  events: BattleEvent[];
   winner: number; // Robot ID
-  totalTurns: number;
+  durationSeconds: number;
 }
 
-interface Turn {
-  turnNumber: number;
-  attacker: string; // Robot name
-  defender: string; // Robot name
-  damageDealt: number;
-  defenderHealthAfter: number;
-  action: string; // e.g., "Laser strikes for 25 damage"
+interface BattleEvent {
+  timestamp: number;      // Seconds from battle start
+  type: string;           // "attack", "shield_regen", "yield", "destroyed"
+  attacker?: string;      // Robot name
+  defender?: string;      // Robot name
+  damageDealt?: number;
+  shieldDamage?: number;
+  hpDamage?: number;
+  defenderHPAfter?: number;
+  defenderShieldAfter?: number;
+  isCritical?: boolean;
+  wasHit?: boolean;       // false if missed
+  description: string;    // Human-readable event
 }
 
 function simulateBattle(robot1: Robot, robot2: Robot): BattleLog {
-  const log: BattleLog = { turns: [], winner: 0, totalTurns: 0 };
+  const log: BattleLog = { events: [], winner: 0, durationSeconds: 0 };
   
-  let currentHealth1 = robot1.maxHealth;
-  let currentHealth2 = robot2.maxHealth;
+  let currentHP1 = robot1.maxHP;
+  let currentHP2 = robot2.maxHP;
+  let currentShield1 = robot1.maxShield;
+  let currentShield2 = robot2.maxShield;
   
-  let turnNumber = 0;
-  const maxTurns = 100; // Prevent infinite battles
+  let time = 0;  // Current battle time in seconds
+  const maxDuration = 300; // 5 minute max battle
   
-  while (currentHealth1 > 0 && currentHealth2 > 0 && turnNumber < maxTurns) {
-    turnNumber++;
-    
-    // Determine who attacks first (higher speed)
-    const firstAttacker = robot1.speed >= robot2.speed ? robot1 : robot2;
-    const firstDefender = robot1.speed >= robot2.speed ? robot2 : robot1;
-    
-    // First attacker's turn
-    const damage1 = calculateDamage(firstAttacker.attack, firstDefender.defense);
-    if (firstAttacker === robot1) {
-      currentHealth2 -= damage1;
-    } else {
-      currentHealth1 -= damage1;
-    }
-    
-    log.turns.push({
-      turnNumber,
-      attacker: firstAttacker.name,
-      defender: firstDefender.name,
-      damageDealt: damage1,
-      defenderHealthAfter: firstAttacker === robot1 ? currentHealth2 : currentHealth1,
-      action: `${firstAttacker.name} attacks ${firstDefender.name} for ${damage1} damage`
-    });
-    
-    // Check if defender is defeated
-    if ((firstAttacker === robot1 && currentHealth2 <= 0) || 
-        (firstAttacker === robot2 && currentHealth1 <= 0)) {
-      log.winner = firstAttacker.id;
-      log.totalTurns = turnNumber;
-      return log;
-    }
-    
-    // Second attacker's turn (if they survived)
-    const damage2 = calculateDamage(firstDefender.attack, firstAttacker.defense);
-    if (firstDefender === robot1) {
-      currentHealth2 -= damage2;
-    } else {
-      currentHealth1 -= damage2;
-    }
-    
-    log.turns.push({
-      turnNumber,
-      attacker: firstDefender.name,
-      defender: firstAttacker.name,
-      damageDealt: damage2,
-      defenderHealthAfter: firstDefender === robot1 ? currentHealth2 : currentHealth1,
-      action: `${firstDefender.name} attacks ${firstAttacker.name} for ${damage2} damage`
-    });
-    
-    // Check winner
-    if (currentHealth1 <= 0) {
+  // Calculate attack cooldowns (see ROBOT_ATTRIBUTES.md for formulas)
+  let cooldown1 = calculateAttackCooldown(robot1);
+  let cooldown2 = calculateAttackCooldown(robot2);
+  let nextAttack1 = cooldown1;
+  let nextAttack2 = cooldown2;
+  
+  while (currentHP1 > 0 && currentHP2 > 0 && time < maxDuration) {
+    // Check yield thresholds
+    if (currentHP1 / robot1.maxHP * 100 < robot1.yieldThreshold) {
+      log.events.push({
+        timestamp: time,
+        type: "yield",
+        description: `${robot1.name} yields at ${currentHP1} HP`
+      });
       log.winner = robot2.id;
-      log.totalTurns = turnNumber;
+      log.durationSeconds = time;
       return log;
     }
-    if (currentHealth2 <= 0) {
+    if (currentHP2 / robot2.maxHP * 100 < robot2.yieldThreshold) {
+      log.events.push({
+        timestamp: time,
+        type: "yield",
+        description: `${robot2.name} yields at ${currentHP2} HP`
+      });
       log.winner = robot1.id;
-      log.totalTurns = turnNumber;
+      log.durationSeconds = time;
       return log;
     }
+    
+    // Determine next event (attack or shield regen)
+    const nextEvent = Math.min(nextAttack1, nextAttack2, time + 1);
+    time = nextEvent;
+    
+    // Process attacks (see ROBOT_ATTRIBUTES.md for complete damage formulas)
+    if (time >= nextAttack1 && time >= nextAttack2) {
+      // Simultaneous attacks - use Gyro Stabilizers to determine order
+      const robot1First = robot1.gyroStabilizers >= robot2.gyroStabilizers;
+      if (robot1First) {
+        processAttack(robot1, robot2, time, log, currentShield2, currentHP2);
+        if (currentHP2 > 0) {
+          processAttack(robot2, robot1, time, log, currentShield1, currentHP1);
+        }
+      } else {
+        processAttack(robot2, robot1, time, log, currentShield1, currentHP1);
+        if (currentHP1 > 0) {
+          processAttack(robot1, robot2, time, log, currentShield2, currentHP2);
+        }
+      }
+      nextAttack1 = time + cooldown1;
+      nextAttack2 = time + cooldown2;
+    } else if (time >= nextAttack1) {
+      processAttack(robot1, robot2, time, log, currentShield2, currentHP2);
+      nextAttack1 = time + cooldown1;
+    } else if (time >= nextAttack2) {
+      processAttack(robot2, robot1, time, log, currentShield1, currentHP1);
+      nextAttack2 = time + cooldown2;
+    }
+    
+    // Shield regeneration (every second)
+    currentShield1 = Math.min(currentShield1 + calculateShieldRegen(robot1), robot1.maxShield);
+    currentShield2 = Math.min(currentShield2 + calculateShieldRegen(robot2), robot2.maxShield);
   }
   
-  // If we hit max turns, higher health wins
-  log.winner = currentHealth1 > currentHealth2 ? robot1.id : robot2.id;
-  log.totalTurns = maxTurns;
+  // Determine winner
+  if (currentHP1 > 0) {
+    log.winner = robot1.id;
+  } else {
+    log.winner = robot2.id;
+  }
+  log.durationSeconds = time;
   return log;
 }
 
-function calculateDamage(attack: number, defense: number): number {
-  // Simple formula: damage = max(1, attack - defense)
-  // Always deal at least 1 damage
-  const damage = attack - defense;
-  return Math.max(1, damage);
+// Helper function to calculate attack cooldown
+function calculateAttackCooldown(robot: Robot): number {
+  const baseWeaponCooldown = 4; // seconds (from weapon)
+  return baseWeaponCooldown / (1 + robot.attackSpeed / 50);
+}
+
+// Helper function to calculate shield regeneration
+function calculateShieldRegen(robot: Robot): number {
+  return robot.powerCore * 0.15; // per second
+}
+
+// See ROBOT_ATTRIBUTES.md for complete damage calculation formulas
+function calculateDamage(robot: Robot, target: Robot): number {
+  // This is simplified - see ROBOT_ATTRIBUTES.md for full formulas including:
+  // - Hit chance calculation with randomness
+  // - Critical hit mechanics
+  // - Energy shield vs HP damage
+  // - Penetration vs defense
+  // - Loadout and stance modifiers
+  return 0; // Placeholder
 }
 ```
 
-### Enhancements for Interest
-
-Add some randomness while keeping determinism:
-- Critical hits (10% chance, 2x damage)
-- Miss chance (5% chance, 0 damage)
-- Use seeded random based on battle ID + turn number
+**Note**: The battle simulation above is a high-level outline. For complete combat formulas including hit chance, critical hits, energy shields, penetration, and all attribute interactions, see **ROBOT_ATTRIBUTES.md**.
 
 ---
 

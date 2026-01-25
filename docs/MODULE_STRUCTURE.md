@@ -162,11 +162,10 @@ ArmouredSouls/
 
 **Responsibilities**:
 - Battle initialization
-- Turn-based combat simulation
-- Damage calculation
-- Status effect processing
+- Time-based combat simulation
+- Damage calculation (hit chance, critical hits, shields, penetration)
 - Battle outcome determination
-- Battle replay generation
+- Battle log generation (timestamped events)
 
 **Key Entities**:
 - Battle
