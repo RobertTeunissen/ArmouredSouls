@@ -37,8 +37,10 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 5. **Weapon Control** - Handling and effectiveness with equipped weapons (replaces "Weapon Stability")
 6. **Attack Speed** - Time between attacks for all weapon types (replaces "Firing Rate")
 
+--> Old names are not relevant. Make sure they are updated to the current names everywhere. In all documentation, in all files. 
+
 **Design Notes:**
-- All attributes now weapon-neutral - apply to both melee and ranged
+- All attributes weapon-neutral - apply to both melee and ranged
 - "Combat Power" affects base damage regardless of weapon type
 - "Targeting Systems" helps both ranged accuracy and melee precision
 - Specialization comes from weapon choice and loadout, not attributes
@@ -89,8 +91,10 @@ These are tracked per robot but not upgraded directly:
 ### Combat State
 - **Current HP**: Health remaining (max determined by Hull Integrity)
 - **Current Shield**: Shield HP remaining (max determined by Shield Capacity)
-- **Damage Taken**: Total damage in current battle
+- **Damage Taken**: Total damage in current/last battle
 - **Status Effects**: Stunned, slowed, buffed, etc.
+
+--> We haven't defined anything for status effects yet. Stunning / slowing / buffs have not been defined. Remove here and put it on an ideas list on ROADMAP.md 
 
 ### Robot Identity
 - **Name**: Player-chosen robot name (max 50 characters)
@@ -103,10 +107,12 @@ These are tracked per robot but not upgraded directly:
 - **Wins**: Victory count
 - **Losses**: Defeat count
 - **Win Rate**: Calculated from wins/losses
-- **Damage Dealt**: Total lifetime damage
-- **Damage Taken**: Total lifetime damage received
-- **Kills**: Opponents defeated
+- **Damage Dealt**: Total lifetime damage 
+- **Damage Taken**: Total lifetime damage received 
+- **Kills**: Opponents reduced to 0 HP (total loss)
 - **Assists**: Team battle assists
+
+--> Do we need to capture match history / results on a robot level?
 
 ### Economic State
 - **Repair Cost**: Current cost to fully repair (based on damage + attribute total)
@@ -119,6 +125,8 @@ These are tracked per robot but not upgraded directly:
 - **League Points**: Points in current league (for promotion/demotion)
 - **Fame**: Individual robot reputation (earned from victories)
 - **Titles**: Earned achievements (e.g., "Champion", "Undefeated")
+
+--> While the names of the leagues are fine for now, we need to capture an ID as well since in the future there might be multiple Bronze leagues
 
 ---
 
@@ -139,6 +147,8 @@ Robots are bipedal humanoids with two arms. Loadout determines how weapons/shiel
   - Cannot use two-handed weapons
 - **Best For**: Tank builds, defensive strategies
 
+--> I'm not sure about the percentages. This sounds exploitable. Why not a +x to certain attributes? Explain your theory to me why this would be better. Don't just take everything I say for granted but bring arguments.
+
 **2. Two-Handed Weapon**
 - **Equipment**: One two-handed weapon (both hands)
 - **Bonuses**:
@@ -149,6 +159,8 @@ Robots are bipedal humanoids with two arms. Loadout determines how weapons/shiel
   - -10% to Evasion Thrusters (less mobility)
   - No shield available
 - **Best For**: Glass cannon builds, high burst damage
+
+--> Same here, explain your reasoning
 
 **3. Dual-Wield (Two Weapons)**
 - **Equipment**: Two one-handed weapons (one in each hand)
@@ -162,6 +174,8 @@ Robots are bipedal humanoids with two arms. Loadout determines how weapons/shiel
   - No shield available
 - **Best For**: Speed builds, sustained DPS
 
+--> Same here, explain your reasoning
+
 **4. Single Weapon (No Shield)**
 - **Equipment**: One weapon (left or right hand), other hand free
 - **Bonuses**:
@@ -172,6 +186,8 @@ Robots are bipedal humanoids with two arms. Loadout determines how weapons/shiel
   - No specific bonuses like other loadouts
 - **Best For**: Balanced builds, flexible strategies
 
+--> Same here, explain your reasoning
+
 ### Loadout Implementation
 
 - Players choose loadout before battle (saved in robot configuration)
@@ -180,6 +196,8 @@ Robots are bipedal humanoids with two arms. Loadout determines how weapons/shiel
   - "Two-handed" tag: Requires Two-Handed loadout
   - "Shield-compatible": Works with Weapon + Shield
   - "Dual-wield": Works with Dual-Wield (need 2 copies)
+ 
+--> This is available from the start, robots can be upgraded to be specialised in a category.
 
 ---
 
@@ -198,6 +216,10 @@ Before battle, players set their robot's stance preference (not an attribute, a 
   - -10% to Evasion Thrusters
   - Robot seeks optimal attack opportunities
   - Less likely to yield early
+ 
+--> Again, why percentages?
+--> When to yield is programmed by the user, based on a percentage of HP left. Not part of the stances, but seperate.
+--> Both the (current) stance and the yield percentage are changeable, but not upgradeable robot attributes. This should be reflected in the database design.
 
 **2. Defensive Stance**
 - **Behavior**: Prioritize survival, cautious positioning
@@ -209,6 +231,8 @@ Before battle, players set their robot's stance preference (not an attribute, a 
   - -10% to Attack Speed
   - Robot focuses on blocking and countering
   - More likely to yield when HP low
+ 
+--> Again, why percentages?
 
 **3. Balanced Stance**
 - **Behavior**: Adaptive based on situation
@@ -216,13 +240,15 @@ Before battle, players set their robot's stance preference (not an attribute, a 
   - No stat modifiers
   - Robot uses Combat Algorithms to decide when to attack/defend
   - Yield based on exact threshold setting
-
+ 
 ### Stance & AI Interaction
 
 - **Combat Algorithms** determines how well the robot executes its stance
 - **Threat Analysis** helps identify best attack/defense opportunities
 - **Adaptive AI** adjusts stance effectiveness based on opponent behavior
 - **Logic Cores** manages stance under low HP conditions
+
+--> How does this impact the battle? I need this to be reflected in the formula's then.
 
 ---
 
@@ -236,6 +262,8 @@ Players set a **Yield Threshold** (% of max HP) where their robot surrenders.
 - Range: 0% to 50%
 - Default: 10%
 - Configurable per robot before each battle
+
+--> There might be cases when a robot is on 12% of his HP and then gets hit by a massive blow which reduces it to 0 HP (or below), resulting in a total loss / kill / lost match. 
 
 **Yield Behavior:**
 - When robot HP drops below threshold, robot attempts to surrender
@@ -254,6 +282,8 @@ Players set a **Yield Threshold** (% of max HP) where their robot surrenders.
 - **Low Logic Cores** (<15): Robot follows threshold rigidly
   - Always yields at exact threshold
   - No adaptive decision-making
+ 
+--> How is this relfected in the formula's? I'd rather see a linear approach, not a threshold for 30+ or 15+. 
 
 ### Repair Cost Scaling
 
@@ -290,6 +320,9 @@ else:
 - No critical multiplier
 - Final cost = ₡23,000 × 0.60 = **₡13,800**
 
+--> Set the critical multiplier for 100% damage at 2x, >90% damage at 1.5x
+--> Change name as to repair_cost_multiplier or something similar as a critical can also refer to damage dealt.
+
 **Strategic Implications:**
 - **Aggressive players**: Set low threshold (5-10%), risk high repair costs
 - **Conservative players**: Set high threshold (30-40%), pay less but lose more
@@ -300,6 +333,8 @@ else:
 ## Combat System: Time-Based vs Turn-Based
 
 The system is designed to support both modes. **Recommended: Time-Based** for more dynamic gameplay.
+
+--> No. We're not going to do both. Only Time-Based. Remove sections about turn-based. Make sure ALL you read through all docs and change anything that refers to turn based.
 
 ### Time-Based Combat (Recommended)
 
@@ -351,6 +386,8 @@ if opportunity_score >= attack_threshold:
 - Need to handle simultaneous attacks
 - Animation/visual feedback more complex
 
+--> When attacks seem to be simulateous, use an attribute to determine who goes first (e.g. Gyro Stabilizers for reaction time)
+
 ### Turn-Based Combat (Simpler Alternative)
 
 **Initiative Order:**
@@ -382,6 +419,8 @@ total_attacks = base_attacks + bonus_attacks
 **Phase 1 Prototype**: Start with turn-based for simplicity
 **Phase 2+**: Migrate to time-based for better gameplay
 
+--> No, remove turn based. Changing the flow makes things more complex.
+
 ---
 
 ## Combat Formulas
@@ -401,6 +440,8 @@ gyro_penalty = defender.gyro_stabilizers / 5
 hit_chance = base_hit_chance + targeting_bonus + stance_bonus - evasion_penalty - gyro_penalty
 hit_chance = clamp(hit_chance, 10%, 95%)
 ```
+
+--> I want some randomness in here. Start with -10/+10% random number for each attack. Keep min and max hit chances the same.
 
 ### Critical Hit Mechanics
 
@@ -422,6 +463,8 @@ crit_chance = clamp(crit_chance, 0%, 50%)
 
 is_critical = random() < crit_chance
 ```
+
+--> I want some randomness in here. Start with -10/+10% random number for each attack. Keep min and max crit chances the same.
 
 **Critical Impact:**
 ```
@@ -548,6 +591,8 @@ if stance == DEFENSIVE:
 - When shields break, there's no penalty except vulnerability
 - Energy weapons may be more effective vs shields (future enhancement)
 
+--> Explain how shields vs HP work. Shield depleted first, then HP? Or both? What about penetration?
+
 ### Counter Attack
 
 **Counter Chance:**
@@ -585,6 +630,8 @@ if current_hp > (max_hp * 0.20):
     current_hp += hp_regen_per_second
     current_hp = min(current_hp, max_hp)
 ```
+
+--> Power Core regenerated both the shields as well as the HP? We decided not to let HP regenerate (does not sounds like something a robot would do)
 
 ### AI Decision Quality
 
@@ -715,6 +762,8 @@ if in_formation:
 - **Range**: Medium
 - **Characteristics**: High damage, slow reload, can hit multiple targets
 - **Examples**: Rocket Launcher, Grenade Launcher
+
+--> Wait. You're not introducing ranges. We've only talked about melee and ranged so far. This massively increased complexity in the battles. This should go on the ROADMAP.md as an idea and being removed here. 
 
 ### Weapon Attributes
 
@@ -987,6 +1036,8 @@ Example:
 4. Status effects system
 5. Replay system
 
+--> You told me all implementation things would go in the ROADMAP.md. What are they doing here? 
+
 ---
 
 ## Database Schema Implementation
@@ -1016,6 +1067,8 @@ model User {
 }
 ```
 
+--> I told you that one file should be the base for all documentation regarding a topic. I don't want to see a "add these fields" comment. I want to see "these are all the fields". If it doesn't exist anywhere, put it in the most logical place. 
+
 ### Robot Model Updates
 
 **Rename existing attributes** (weapon-neutral names):
@@ -1027,6 +1080,8 @@ model User {
 - `firingRate` → `attackSpeed`
 - `shieldGenerator` → `shieldCapacity`
 - `hydraulicPower` → `hydraulicSystems`
+
+--> I don't want to see old names. Only current ones. I want you to update ALL documentation referring to the old names and only use the current.
 
 **Add new state tracking fields**:
 
@@ -1056,6 +1111,9 @@ model Robot {
   shieldId        Int?     // NEW: For shield equipment
 }
 ```
+
+--> I told you that one file should be the base for all documentation regarding a topic. I don't want to see a "add these fields" comment. I want to see "these are all the fields". If it doesn't exist anywhere, put it in the most logical place. 
+
 
 ### Weapon Model Updates
 
@@ -1094,6 +1152,9 @@ model Weapon {
 }
 ```
 
+--> I told you that one file should be the base for all documentation regarding a topic. I don't want to see a "add these fields" comment. I want to see "these are all the fields". If it doesn't exist anywhere, put it in the most logical place. 
+--> If a bonus affects something in combat, I expect this is in the formula. Review and update.
+
 ### NEW: Shield Model
 
 ```typescript
@@ -1109,6 +1170,9 @@ model Shield {
   robots          Robot[]
 }
 ```
+
+--> I assume you are referring to a weapon type Shield, not an Energy Shield. This is just a specification of a weapon, so add it in the total list.
+--> shieldBonus would refer to an EnergyShield? Make sure all documentation regarding Energy Shields have the name "Energy" in it to differentiate from the weapon type "Shield".
 
 ### NEW: Facility Model (for Stable upgrades)
 
@@ -1126,12 +1190,16 @@ model Facility {
 }
 ```
 
+--> This is something that does not belong in this file as it has nothing to do with a ROBOT_ATTRIBUTE but should go somewhere else. Place is somewhere logical.
+
 ### Battle Model Updates
 
 Already has necessary fields:
 - `battleLog` (Json)
 - `winnerReward`, `loserReward` (Int?)
 - `robot1RepairCost`, `robot2RepairCost` (Int?)
+
+--> Where can I find this in the documentation? We don't have a specialised doc for the battle model. We don't have a specialised doc for the database. How can I know these fields already exist?
 
 ### Migration Notes
 
@@ -1140,6 +1208,8 @@ Already has necessary fields:
 2. Weapon bonus field names changed - requires data migration for existing weapons
 3. New required fields on Robot (currentHP, currentShield) - set to max values based on attributes
 4. Users need new fields - can be added with defaults
+
+--> There is no migration. There are no existing robots. Just update everything and remove this section.
 
 **Migration Strategy:**
 1. Create backup of database before migration
@@ -1152,6 +1222,8 @@ Already has necessary fields:
    - Initialize all new Int fields with defaults
 5. Update seed data with new attribute names
 6. Test on development database first
+
+--> You know I haven't tested anything. We're working on documentation. Create comprehensive documentation.
 
 **See also**: ROADMAP.md for implementation phases
 
