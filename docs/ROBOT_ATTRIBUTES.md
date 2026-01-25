@@ -989,6 +989,174 @@ Example:
 
 ---
 
+## Database Schema Implementation
+
+### User Model Updates
+
+Add these fields to the User model:
+
+```typescript
+model User {
+  // Existing fields
+  username     String   @unique
+  passwordHash String
+  role         String   @default("user")
+  currency     Int      @default(1000000)  // Updated default
+  elo          Int      @default(1200)
+  fame         Int      @default(0)
+  
+  // NEW FIELDS for Stable System
+  prestige     Int      @default(0)
+  leagueTier   String   @default("bronze")
+  totalBattles Int      @default(0)
+  totalWins    Int      @default(0)
+  highestELO   Int      @default(1200)
+  
+  robots       Robot[]
+}
+```
+
+### Robot Model Updates
+
+**Rename existing attributes** (weapon-neutral names):
+- `firepower` → `combatPower`
+- `targetingComputer` → `targetingSystems`
+- `criticalCircuits` → `criticalSystems`
+- `armorPiercing` → `penetration`
+- `weaponStability` → `weaponControl`
+- `firingRate` → `attackSpeed`
+- `shieldGenerator` → `shieldCapacity`
+- `hydraulicPower` → `hydraulicSystems`
+
+**Add new state tracking fields**:
+
+```typescript
+model Robot {
+  // Existing 23 renamed attributes...
+  
+  // NEW: State Tracking
+  currentHP       Int
+  currentShield   Int
+  damageTaken     Int      @default(0)
+  elo             Int      @default(1200)
+  totalBattles    Int      @default(0)
+  wins            Int      @default(0)
+  losses          Int      @default(0)
+  damageDealtLifetime    Int      @default(0)
+  damageTakenLifetime    Int      @default(0)
+  fame            Int      @default(0)
+  leaguePoints    Int      @default(0)
+  yieldThreshold  Int      @default(10)  // Percentage (0-50)
+  
+  // NEW: Loadout Configuration
+  loadout         String   @default("single")    // "weapon_shield", "two_handed", "dual_wield", "single"
+  stance          String   @default("balanced")  // "offensive", "defensive", "balanced"
+  
+  weaponId        Int?
+  shieldId        Int?     // NEW: For shield equipment
+}
+```
+
+### Weapon Model Updates
+
+**Rename attribute bonus fields** to match new attribute names:
+
+```typescript
+model Weapon {
+  id              Int      @id @default(autoincrement())
+  name            String
+  weaponType      String   // 'energy', 'ballistic', 'melee', 'explosive'
+  baseDamage      Int
+  cost            Int      // Purchase cost in Credits
+  
+  // NEW FIELDS
+  cooldown        Int      // Seconds between attacks (for time-based combat)
+  handsRequired   String   // "one", "two", "dual"
+  damageType      String   // Same as weaponType, clarifies damage calculation
+  specialProperty String?  // Optional special effects
+  
+  // RENAMED Attribute Bonuses (must match Robot attributes)
+  combatPowerBonus        Int      @default(0)
+  targetingSystemsBonus   Int      @default(0)
+  criticalSystemsBonus    Int      @default(0)
+  penetrationBonus        Int      @default(0)
+  weaponControlBonus      Int      @default(0)
+  attackSpeedBonus        Int      @default(0)
+  armorPlatingBonus       Int      @default(0)
+  shieldCapacityBonus     Int      @default(0)
+  evasionThrustersBonus   Int      @default(0)
+  counterProtocolsBonus   Int      @default(0)
+  servoMotorsBonus        Int      @default(0)
+  gyroStabilizersBonus    Int      @default(0)
+  hydraulicSystemsBonus   Int      @default(0)
+  powerCoreBonus          Int      @default(0)
+  threatAnalysisBonus     Int      @default(0)
+}
+```
+
+### NEW: Shield Model
+
+```typescript
+model Shield {
+  id              Int      @id @default(autoincrement())
+  name            String
+  cost            Int      // Purchase cost in Credits
+  shieldBonus     Int      // Added to max shield HP
+  armorBonus      Int      // Bonus to armor plating
+  counterBonus    Int      // Bonus to counter protocols
+  specialProperty String?  // Optional special effects
+  
+  robots          Robot[]
+}
+```
+
+### NEW: Facility Model (for Stable upgrades)
+
+```typescript
+model Facility {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  facilityType String   // "repair_bay", "training", "workshop", "research", "medical"
+  level        Int      @default(0)
+  maxLevel     Int      @default(4)
+  
+  user         User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, facilityType])
+}
+```
+
+### Battle Model Updates
+
+Already has necessary fields:
+- `battleLog` (Json)
+- `winnerReward`, `loserReward` (Int?)
+- `robot1RepairCost`, `robot2RepairCost` (Int?)
+
+### Migration Notes
+
+**Breaking Changes:**
+1. All attribute names changed - requires data migration for existing robots
+2. Weapon bonus field names changed - requires data migration for existing weapons
+3. New required fields on Robot (currentHP, currentShield) - set to max values based on attributes
+4. Users need new fields - can be added with defaults
+
+**Migration Strategy:**
+1. Create backup of database before migration
+2. Update schema.prisma with new field names
+3. Run Prisma migration to generate SQL
+4. Write data migration script to:
+   - Rename columns (Prisma handles this)
+   - Set currentHP = hullIntegrity × 10
+   - Set currentShield = shieldCapacity × 2
+   - Initialize all new Int fields with defaults
+5. Update seed data with new attribute names
+6. Test on development database first
+
+**See also**: ROADMAP.md for implementation phases
+
+---
+
 **This revised system provides:**
 - ✅ Weapon-neutral core attributes
 - ✅ Melee vs ranged differentiation through weapons and hydraulics
@@ -1003,3 +1171,4 @@ Example:
 - ✅ Comprehensive weapon system
 - ✅ HP calculation based on Hull Integrity
 - ✅ Strategic depth with multiple viable builds
+- ✅ Database schema fully specified

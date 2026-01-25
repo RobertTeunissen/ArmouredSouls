@@ -88,6 +88,65 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 **Detailed Requirements**: See PHASE1_PLAN.md
 
+### Implementation Priority
+
+**Phase 1a - Core Prototype (Turn-Based):**
+1. Update database schema with renamed attributes (see ROBOT_ATTRIBUTES.md "Database Schema Implementation")
+2. Add robot state tracking fields (currentHP, currentShield, elo, wins, losses, etc.)
+3. Implement loadout system (4 configurations: weapon+shield, two-handed, dual-wield, single)
+4. Add yield threshold logic (player sets HP %, destroyedpenalty = 2.5x repair cost)
+5. Implement turn-based combat with all formulas (see ROBOT_ATTRIBUTES.md)
+6. Update repair cost formula with destruction multiplier
+7. Update HP calculation: `max_hp = hullIntegrity × 10`
+
+**Phase 1b - Enhanced Features:**
+1. Add stance system (offensive/defensive/balanced pre-battle settings)
+2. Implement shield as separate HP pool with regeneration
+3. Add Shield model and equipment
+4. Update weapon system with new properties (cooldown, handsRequired, specialProperty)
+5. Test and balance all combat formulas
+
+**Phase 1c - Stable System (Optional for Phase 1):**
+1. Add stable-level tracking (prestige, leagueTier, totalBattles, totalWins)
+2. Implement Facility model for stable upgrades
+3. Add facility upgrade mechanics (see STABLE_SYSTEM.md)
+4. Coach hiring system
+5. Prestige milestones and unlocks
+
+### Database Migration Path
+
+1. **Backup current database**
+2. **Update schema.prisma** with new attribute names and fields
+3. **Generate migration**: `npx prisma migrate dev --name weapon_neutral_attributes`
+4. **Data migration script** (if existing data):
+   - Map old attribute names to new names
+   - Set currentHP = hullIntegrity × 10
+   - Set currentShield = shieldCapacity × 2
+   - Initialize all new fields with appropriate defaults
+5. **Update seed data** with new attribute names and loadout/stance fields
+6. **Test migration** on development database first
+
+### Breaking Changes from Design Evolution
+
+**Attribute Renames** (all occurrences must be updated):
+- firepower → combatPower
+- targetingComputer → targetingSystems
+- criticalCircuits → criticalSystems
+- armorPiercing → penetration
+- weaponStability → weaponControl
+- firingRate → attackSpeed
+- shieldGenerator → shieldCapacity
+- hydraulicPower → hydraulicSystems
+
+**New Required Fields**:
+- Robot: currentHP, currentShield, loadout, stance, yieldThreshold
+- Weapon: cooldown, handsRequired, damageType
+- User: prestige, leagueTier (for stable system)
+
+**New Models**:
+- Shield (equipment type)
+- Facility (stable upgrades)
+
 ---
 
 ## Phase 2: Foundation & Infrastructure

@@ -1,49 +1,112 @@
-# Armoured Souls - Planning Questions
+# Armoured Souls - Planning Questions & Action Items
 
-This document tracks remaining open questions and decisions needed for the project. All answered questions have been removed to avoid redundancy - refer to the respective documentation files for implemented decisions.
+This document tracks remaining open questions, decisions needed for the project, and Robert's review tasks. All answered questions have been removed to avoid redundancy - refer to the respective documentation files for implemented decisions.
 
-**Last Updated**: January 24, 2026  
-**Current Phase**: Phase 1 - Local Prototype (Basic Setup Complete)
+**Last Updated**: January 25, 2026  
+**Current Phase**: Phase 1 - Local Prototype (Design Complete, Implementation Pending)
 
 ---
 
-## ✅ RECENT DECISIONS (January 24, 2026)
+## 📋 ROBERT'S ACTION ITEMS (Review Tasks)
 
-The following decisions were made during documentation review and have been implemented in the relevant documentation:
+### Documentation Review
 
-1. **Backend Framework**: Express (chosen for simplicity and larger ecosystem) - See ARCHITECTURE.md
-2. **ORM/Migrations**: Prisma (better TypeScript support, easier migrations) - See ARCHITECTURE.md, MODULE_STRUCTURE.md
-3. **Real-time Features**: WebSockets/Web Push API for notifications across platforms; batch processing for battle computation - See ARCHITECTURE.md
-4. **Phase Structure**: Consolidated to single system in ROADMAP.md (Phase 0-9); MODULE_STRUCTURE.md references ROADMAP.md
-5. **Battle Schedule (Prototype)**: Manual trigger for Phase 1, scheduled processing in later phases - See PHASE1_PLAN.md
-6. **Authentication (Prototype)**: Basic username/password with admin user to test the flow - See PHASE1_PLAN.md
-7. **Documentation Dates**: Standardized to January 24, 2026 across all documents
-8. **UI Component Library**: Tailwind CSS (lightweight, utility-first, good for prototyping) - See ARCHITECTURE.md
-9. **Project Structure**: Isolated prototype codebase in `/prototype` directory - See PHASE1_PLAN.md
-10. **Development Style**: Async - AI builds, Robert reviews
-11. **Prototype Testing**: 6 test user accounts for local testing
-12. **Prototype Scope**: Robot creation, battle simulation, results viewing, user management, stable management, robot upgrading (currency system), battle history - all text-based, no animations
-13. **Currency System**: Credits (₡) as currency name, starting balance of ₡1,000,000 - See ROBOT_ATTRIBUTES.md
-14. **Attribute System**: 23 robot-themed attributes grouped into Weapons Systems (6), Defensive Systems (5), Chassis & Mobility (5), AI Processing (4), Team Coordination (3) - See ROBOT_ATTRIBUTES.md
-15. **Upgrade Costs**: Formula-based: (level + 1) × 1,000 Credits (e.g., 1→2 costs ₡2,000) - See ROBOT_ATTRIBUTES.md
-16. **Robot Frame Cost**: ₡500,000 for bare metal robot with all attributes at 1 - See ROBOT_ATTRIBUTES.md
-17. **Weapon System**: Weapons cost ₡100,000-₡400,000 and provide attribute bonuses, required for battles - See ROBOT_ATTRIBUTES.md
-18. **Battle Mechanics**: Hit chance, critical hits, and miss chance based on attribute formulas - See ROBOT_ATTRIBUTES.md
-19. **Repair Costs**: Based on total attribute sum × damage percentage - See ROBOT_ATTRIBUTES.md
-20. **Battle Rewards**: ELO-based system with league multipliers, covers repair costs 90% of time - See ROBOT_ATTRIBUTES.md
-21. **ELO System**: Standard ELO with K-factor 32, starting at 1200 - See ROBOT_ATTRIBUTES.md
-22. **RNG Seed**: Battle ID + timestamp (sufficient for Phase 1) - See ROBOT_ATTRIBUTES.md
-23. **Team Dynamics**: Added Team Coordination attributes (Sync Protocols, Support Systems, Formation Tactics) for arena/multi-robot battles - See ROBOT_ATTRIBUTES.md
-24. **AI Focus**: Renamed "Mental" to "AI Processing" emphasizing autonomous intelligence - See ROBOT_ATTRIBUTES.md
-25. **Robot-Themed Names**: All attributes reference robot parts (Servo Motors, Hydraulic Power, Armor Plating, etc.) - See ROBOT_ATTRIBUTES.md
+**Priority: Complete these reviews before implementation starts**
+
+1. **Review ROBOT_ATTRIBUTES.md (Complete)**
+   - [ ] Review new Database Schema Implementation section
+   - [ ] Verify all 23 attributes are correct with weapon-neutral names
+   - [ ] Confirm loadout system (4 configurations) matches vision
+   - [ ] Review stance system (offensive/defensive/balanced)
+   - [ ] Approve yield threshold mechanics (0-50% HP, 2.5x destruction penalty)
+   - [ ] Validate time-based vs turn-based combat discussion
+   - [ ] Check shield mechanics (separate HP pool, regeneration)
+   - [ ] Review damage type system (Energy/Ballistic/Melee/Explosive)
+   - [ ] Approve HP formula: `max_hp = hullIntegrity × 10`
+   - [ ] Verify all combat formulas are balanced
+
+2. **Review STABLE_SYSTEM.md**
+   - [ ] Approve stable resources (Credits, Prestige, League Tier)
+   - [ ] Review 5 facility upgrade paths and costs
+   - [ ] Check prestige milestones and unlocks
+   - [ ] Approve coach system and bonuses
+   - [ ] Verify roster management (2-10 robot slots)
+   - [ ] Review weapon storage system
+   - [ ] Check economic balance (facility ROI calculations)
+
+3. **Review ROADMAP.md Updates**
+   - [ ] Verify Phase 1 implementation priorities are correct
+   - [ ] Approve database migration path
+   - [ ] Review breaking changes from design evolution
+   - [ ] Confirm Phase 1a/1b/1c split makes sense
+   - [ ] Check that stable system is properly marked as Phase 1c (optional)
+
+4. **Review Prisma Schema Updates Needed**
+   - [ ] Location: `/prototype/backend/prisma/schema.prisma`
+   - [ ] Approve attribute renames (8 attributes being renamed)
+   - [ ] Confirm new Robot fields (state tracking, loadout, stance)
+   - [ ] Verify new Weapon fields (cooldown, handsRequired, damageType)
+   - [ ] Approve new Shield model
+   - [ ] Approve new Facility model
+   - [ ] Check User model updates for stable system
+
+### Implementation Decisions Needed
+
+5. **Phase 1 Scope Confirmation**
+   - [ ] Confirm Phase 1a (core prototype with turn-based) is the immediate focus
+   - [ ] Decide if Phase 1b (enhanced features) should be included in Phase 1
+   - [ ] Decide if Phase 1c (stable system) should be deferred to Phase 2
+   - [ ] Approve starting with turn-based combat (migrate to time-based in Phase 2)
+
+6. **Migration Strategy**
+   - [ ] Approve database migration approach outlined in ROADMAP.md
+   - [ ] Confirm seed data needs to be updated with new attribute names
+   - [ ] Decide if we need data migration script or fresh start for prototype
+
+### Testing & Validation
+
+7. **Game Balance Review** (after initial implementation)
+   - [ ] Test various robot builds (tank, glass cannon, speed demon, etc.)
+   - [ ] Verify combat formulas produce interesting battles
+   - [ ] Check repair costs are balanced with battle rewards
+   - [ ] Validate yield threshold creates meaningful strategic choice
+   - [ ] Test loadout bonuses/penalties feel significant
+
+8. **Documentation Completeness**
+   - [ ] Confirm all design questions from previous iterations are resolved
+   - [ ] Verify no duplicate information between documents
+   - [ ] Check all cross-references between documents are correct
+   - [ ] Ensure PHASE1_PLAN.md aligns with updated ROADMAP.md
+
+---
+
+## ✅ RECENT DECISIONS (January 25, 2026)
+
+Major design evolution completed addressing all feedback:
+
+26. **Weapon-Neutral Attributes**: Renamed 8 attributes to work for all weapon types - See ROBOT_ATTRIBUTES.md
+27. **Robot State Tracking**: Added currentHP, currentShield, elo, wins, losses, fame, yield threshold, etc. - See ROBOT_ATTRIBUTES.md
+28. **Loadout System**: 4 configurations (Weapon+Shield, Two-Handed, Dual-Wield, Single) with bonuses/penalties - See ROBOT_ATTRIBUTES.md
+29. **Battle Stances**: Pre-battle settings (Offensive/Defensive/Balanced) affect combat behavior - See ROBOT_ATTRIBUTES.md
+30. **Yield Threshold**: Players set surrender HP %, destroyed robots (0% HP) cost 2.5x repairs - See ROBOT_ATTRIBUTES.md
+31. **Time-Based Combat**: Designed as Phase 2 enhancement, Phase 1 uses turn-based - See ROBOT_ATTRIBUTES.md
+32. **Shield Mechanics**: Separate HP pool from robot HP, regenerates during battle - See ROBOT_ATTRIBUTES.md
+33. **Damage Types**: Energy (+20% vs shields), Melee (Hydraulic Systems bonus), Ballistic (penetration), Explosive (area) - See ROBOT_ATTRIBUTES.md
+34. **HP Calculation**: Formula-based: `max_hp = hullIntegrity × 10` - See ROBOT_ATTRIBUTES.md
+35. **Critical Mechanics**: Only rolls after hit confirmed, 2.5x for two-handed weapons - See ROBOT_ATTRIBUTES.md
+36. **Shield Equipment**: New Shield model added for defensive builds - See ROBOT_ATTRIBUTES.md
+37. **Stable System**: Complete facility upgrade system, prestige, coaches - See STABLE_SYSTEM.md
+38. **Database Schema**: Full implementation spec added to ROBOT_ATTRIBUTES.md
+39. **Implementation Phases**: Consolidated into ROADMAP.md (Phase 1a/1b/1c)
+40. **Documentation Cleanup**: Removed ROBOT_ATTRIBUTES_OLD.md, consolidating DESIGN_CHANGES_V2.md content
 
 ---
 
 ## 🔄 OPEN QUESTIONS
 
-**All Phase 1 setup questions have been answered and documented in ROBOT_ATTRIBUTES.md**
+**All Phase 1 design questions have been answered and documented.**
 
-No open questions at this time. All design decisions for Phase 1 have been finalized.
+Awaiting Robert's review of documentation updates before proceeding with implementation.
 
 ---
 
