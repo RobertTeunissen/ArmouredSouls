@@ -5,7 +5,7 @@
 
 ## Overview
 
-A **Stable** is the player's collection and management system for their robots. Each user has one stable where they manage Credits, Fame/Prestige, upgrades, and their robot roster.
+A **Stable** is the player's collection and management system for their robots. Each user has one stable where they manage Credits, Prestige, upgrades, and their robot roster.
 
 ---
 
@@ -31,6 +31,8 @@ A **Stable** is the player's collection and management system for their robots. 
 - Affects: Battle rewards, matchmaking, tournament access
 - Promotion/demotion based on ELO and win rate
 
+--> Leagues are for robots and not for Stables. Move this to the relevant documentation about robots. 
+
 ### Stable Statistics
 
 **Total Battles** - Lifetime battle count across all robots
@@ -38,7 +40,8 @@ A **Stable** is the player's collection and management system for their robots. 
 **Highest ELO** - Best ELO achieved by any robot
 **Championship Titles** - Tournament victories
 **Active Robots** - Current roster size
-**Retired Robots** - Historical robot count
+
+--> For everything you need to decide whether to capture the information / statistics on a stable level or a robot level and then aggregate the view on the stable. This decision might also have impact on the overall statistics / rankings. 
 
 ---
 
@@ -60,6 +63,8 @@ Players can invest Credits in stable-wide upgrades that benefit all robots.
 - **Level 3** (₡1,500,000): Reduce attribute upgrade costs by 15%, +5% EXP gain
 - **Max Level** (₡3,000,000): Reduce attribute upgrade costs by 20%, +10% EXP gain, unlock special training programs
 
+--> We have never discussed EXP. What are you talking about? 
+
 **3. Weapons Workshop**
 - **Level 1** (₡250,000): 10% discount on weapon purchases
 - **Level 2** (₡600,000): 15% discount, unlock weapon modifications
@@ -78,12 +83,20 @@ Players can invest Credits in stable-wide upgrades that benefit all robots.
 - **Level 3** (₡1,600,000): Reduce critical damage repair costs by 50%, prevent permanent damage
 - **Max Level** (₡3,500,000): Eliminate critical damage penalties, emergency field repairs in battle
 
+--> New Facility Upgrade: upgrade to advance a certain (group of) robot attributes to a certain level? So an upgrade to be able to advance all your robots Combat Systems to 10+, 20+ or whatever. 
+--> New Facility Upgrade: A new stable can hold 1 robot. Create an upgrade system for more robots. 
+--> New Facility Upgrade: add several upgrades to create additional streams of income like merchandising, live streaming views (people watching the matches), etc
+--> I would like to have more levels implemented. Upgrade to 10 for each facility upgrade, we'll balance the costs later.
+--> Certain upgrades require a prestige amount before they can be unlocked. Prestige is never spent. 
+
 ### Roster Management
 
 **Robot Slots**
 - **Starting slots**: 2 (can build 2 robots initially with ₡1M)
 - **Slot upgrades**: ₡300,000 per additional slot
 - **Maximum slots**: 10 robots per stable
+
+--> I just decided to make this a facility upgrade. Incorporate this. 
 
 **Storage**
 - **Weapon Storage**: Store weapons not currently equipped
@@ -94,6 +107,8 @@ Players can invest Credits in stable-wide upgrades that benefit all robots.
   - Starting: 1 preset per robot
   - Upgrade: +2 presets for ₡200,000 (from Research Lab Level 2)
   - Maximum: 5 presets per robot
+ 
+--> Storage will also be a facility (upgrade).
 
 ### Coaching & Support
 
@@ -104,6 +119,8 @@ Players can invest Credits in stable-wide upgrades that benefit all robots.
 - **Team Coach** (₡750,000): +5% team coordination bonuses (arena battles)
 
 Only one coach can be active at a time. Switching coaches costs ₡100,000.
+
+--> Coaches will also be a facility (upgrade).
 
 ---
 
@@ -144,10 +161,17 @@ Only one coach can be active at a time. Switching coaches costs ₡100,000.
 - **25,000 Prestige**: Access to Champion tournaments, hall of fame listing
 - **50,000 Prestige**: Access to World Championship, custom arena design
 
+--> Should also unlock certain facility upgrades. 
+--> Change this in a facility upgrade like "Booking Office"
+
 **Passive Bonuses:**
 - **5,000+ Prestige**: +5% Credits from all battles
 - **10,000+ Prestige**: +10% Credits from all battles, +1 free repair per day
 - **25,000+ Prestige**: +15% Credits from all battles, +2 free repairs per day, VIP matchmaking
+
+--> Change this to a system where we present the user an income sheet daily, with all the earnings / revenue streams and the costs of operations. 
+--> Higher prestige (stable level) and higher fame (robot level) will affect certain revenue streams (like merchandise and live streaming income).
+--> Facilities will cost money to operate, as do repairs on robots.
 
 ---
 
@@ -158,8 +182,8 @@ Only one coach can be active at a time. Switching coaches costs ₡100,000.
 - Current Prestige & Prestige Rank
 - Active Robots (with HP status, ELO)
 - Recent Battle Results
-- Facility Upgrade Status
-- Current League Tier
+- Facility Upgrade Status (per facility)
+- Current League Tier (per robot)
 
 ### Robots Tab
 - List all robots with:
@@ -170,6 +194,7 @@ Only one coach can be active at a time. Switching coaches costs ₡100,000.
   - Battle readiness status
   - Quick repair button
   - Equip/modify button
+  - Upgrade button
 
 ### Facilities Tab
 - View all stable upgrades
@@ -223,6 +248,8 @@ Only one coach can be active at a time. Switching coaches costs ₡100,000.
 - Can afford: 1 robot (₡500K) + medium weapon (₡200K) + some upgrades (₡300K)
 - Or: 2 robots (₡1M) with no weapons (very weak, but viable strategy)
 
+--> 2 robots at the start is not feasbile anymore with the proposed facility changes. Either we make the robots cheaper or change the starting money. 
+
 **Stable Investment Payoff:**
 - Repair Bay Level 1: Pays for itself after ~40 battles
 - Training Facility Level 1: Pays for itself after upgrading ~400 attribute levels
@@ -246,6 +273,8 @@ Only one coach can be active at a time. Switching coaches costs ₡100,000.
 - **Stable Rankings**: Global leaderboards for stables
 - **Legacy System**: Retired robot bonuses, historical achievements
 - **Training Programs**: Long-term attribute development options
+
+--> Don't put this here, move to ROADMAP.md in the ideas section. This is a design document, not a phasing or implementation document. 
 
 ---
 
