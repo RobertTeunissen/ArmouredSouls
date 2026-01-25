@@ -7,146 +7,58 @@ This document tracks remaining open questions, decisions needed for the project,
 
 ---
 
-## 🔄 LATEST CHANGES (January 25, 2026)
-
-**Changes Made Based on Robert's Feedback:**
-
-1. ✅ **Logic Cores Enhancement** (ROBOT_ATTRIBUTES.md)
-   - Logic Cores now provides positive bonuses above 30 (not just capped at zero)
-   - Formula: Each point above 30 adds +0.5% accuracy and damage when HP < 30%
-   - Logic Cores 50 provides +10% accuracy and +10% damage when damaged
-   - Design Rationale: Makes Logic Cores worth investing in beyond penalty negation
-
-2. ✅ **Attribute Academy Split** (STABLE_SYSTEM.md, DATABASE_SCHEMA.md)
-   - Split single "Attribute Academy" into 4 separate facilities:
-     - **Combat Training Academy** - Combat Systems (6 attributes)
-     - **Defense Training Academy** - Defensive Systems (5 attributes)
-     - **Mobility Training Academy** - Chassis & Mobility (5 attributes)
-     - **AI Training Academy** - AI Processing + Team Coordination (7 attributes)
-   - Costs reduced: ₡400K-₡3M per academy (vs ₡1M-₡8M for single facility)
-   - Total facilities increased: 11 → 14
-
-3. ✅ **Prestige vs Fame Discussion Added** (ROADMAP.md)
-   - Added to "Future Ideas & Enhancements" → "Design Discussions Needed"
-   - Questions documented: Interaction, earning methods, unlocks, economic balance
-   - Status: Requires detailed design discussion
-
-4. ✅ **Tournament System Discussion Added** (ROADMAP.md)
-   - Added to "Future Ideas & Enhancements" → "Design Discussions Needed"
-   - Questions documented: Types, entry requirements, structure, rewards, rankings, scheduling
-   - Status: Requires comprehensive design specification
-
-**Next Steps:**
-- Robert to review ROADMAP.md with updated discussions
-- Consider if ROBOT_ATTRIBUTES.md should be split into multiple documents:
-  - Current: 1,049 lines, 32KB (substantial but manageable)
-  - Possible split: Combat Mechanics, Loadout Systems, Weapon Catalog
-  - Decision: Robert to determine if split is needed for readability
-
----
-
 ## 📋 ROBERT'S ACTION ITEMS (Review Tasks)
 
 ### Documentation Review
 
 **Priority: Complete these reviews before implementation starts**
 
-1. **Review ROBOT_ATTRIBUTES.md (Updated - Review Logic Cores Change)**
-   - [ ] **NEW**: Approve Logic Cores positive bonuses (above 30 provides +0.5% per point when HP < 30%)
-   - [ ] Review new Database Schema Implementation section
-   - [ ] Verify all 23 attributes are correct with weapon-neutral names
-   - [ ] Confirm loadout system (4 configurations) matches vision
-   - [ ] Review stance system (offensive/defensive/balanced)
-   - [ ] Approve yield threshold mechanics (0-50% HP, 2.0x/1.5x repair penalties)
-   - [ ] Validate time-based combat (all turn-based references removed)
-   - [ ] Check energy shield mechanics (separate HP pool, regenerates via Power Core)
-   - [ ] Review damage type system (Energy/Ballistic/Melee/Explosive)
-   - [ ] Approve HP formula: `max_hp = hullIntegrity × 10`
-   - [ ] Verify all combat formulas are balanced
-
-2. **Review STABLE_SYSTEM.md (Updated - Review Changes)**
-   - [ ] Approve 14 total facilities (increased from 11)
-   - [ ] Review 4 separate Training Academies (split from single Attribute Academy):
-     - Combat Training Academy (Combat Systems, 6 attrs)
-     - Defense Training Academy (Defensive Systems, 5 attrs)
-     - Mobility Training Academy (Chassis & Mobility, 5 attrs)
-     - AI Training Academy (AI Processing + Team Coordination, 7 attrs)
-   - [ ] Approve reduced costs for academies (₡400K-₡3M each vs ₡1M-₡8M for single)
-   - [ ] Review prestige milestones and unlocks
-   - [ ] Approve coach system and bonuses
-   - [ ] Verify roster management (2-10 robot slots)
-   - [ ] Review weapon storage system
-   - [ ] Check economic balance (facility ROI calculations)
-
-3. **Review ROADMAP.md Updates (Updated - Review Design Discussions)**
-   - [ ] **NEW**: Review "Design Discussions Needed" section:
-     - Prestige vs Fame system interaction
-     - Tournament system comprehensive design
-   - [ ] Verify Phase 1 implementation priorities are correct
+1. **Review ROADMAP.md (Pending)**
+   - [ ] Verify Phase 1 implementation priorities are correct (1a: Core, 1b: Weapons, 1c: Stable)
    - [ ] Approve database migration path
    - [ ] Review breaking changes from design evolution
    - [ ] Confirm Phase 1a/1b/1c split makes sense
    - [ ] Check that stable system is properly marked as Phase 1c (optional)
+   - [ ] Review "Design Discussions Needed" section:
+     - Prestige vs Fame system interaction
+     - Tournament system comprehensive design
 
-4. **Review Prisma Schema Updates Needed**
+2. **Review Prisma Schema Updates Needed**
    - [ ] Location: `/prototype/backend/prisma/schema.prisma`
    - [ ] Approve attribute renames (8 attributes being renamed)
    - [ ] Confirm new Robot fields (state tracking, loadout, stance)
    - [ ] Verify new Weapon fields (cooldown, handsRequired, damageType)
-   - [ ] Approve new Shield model
-   - [ ] Approve new Facility model
+   - [ ] Approve new Shield model handling (Weapon model with weaponType="shield")
+   - [ ] Approve new Facility model (14 types including 4 Training Academies)
    - [ ] Check User model updates for stable system
 
 ### Implementation Decisions Needed
 
-5. **Phase 1 Scope Confirmation**
+3. **Phase 1 Scope Confirmation**
    - [ ] Confirm Phase 1a (core prototype with time-based combat) is the immediate focus
    - [ ] Decide if Phase 1b (weapon & equipment system) should be included in Phase 1
    - [ ] Decide if Phase 1c (stable system) should be deferred to Phase 2
    - [ ] Review updated ROADMAP.md implementation priorities
 
-6. **Database Setup**
+4. **Database Setup**
    - [ ] Approve database schema from DATABASE_SCHEMA.md (authoritative source)
    - [ ] Confirm seed data approach for prototype
    - [ ] No migration needed - fresh start for prototype
 
 ### Testing & Validation
 
-7. **Game Balance Review** (after initial implementation)
+5. **Game Balance Review** (after initial implementation)
    - [ ] Test various robot builds (tank, glass cannon, speed demon, etc.)
    - [ ] Verify combat formulas produce interesting battles
    - [ ] Check repair costs are balanced with battle rewards
    - [ ] Validate yield threshold creates meaningful strategic choice
    - [ ] Test loadout bonuses/penalties feel significant
 
-8. **Documentation Completeness**
+6. **Documentation Completeness**
    - [ ] Confirm all design questions from previous iterations are resolved
    - [ ] Verify no duplicate information between documents
    - [ ] Check all cross-references between documents are correct
    - [ ] Ensure PHASE1_PLAN.md aligns with updated ROADMAP.md
-
----
-
-## ✅ RECENT DECISIONS (January 25, 2026)
-
-Major design evolution completed addressing all feedback:
-
-26. **Weapon-Neutral Attributes**: 23 attributes work for all weapon types (Combat Power, Targeting Systems, etc.) - See ROBOT_ATTRIBUTES.md
-27. **Robot State Tracking**: currentHP, currentShield, elo, wins, losses, fame, yield threshold, etc. - See DATABASE_SCHEMA.md
-28. **Loadout System**: 4 configurations (Weapon+Shield, Two-Handed, Dual-Wield, Single) with percentage-based bonuses - See ROBOT_ATTRIBUTES.md
-29. **Battle Stances**: Pre-battle settings (Offensive/Defensive/Balanced) affect combat behavior - See ROBOT_ATTRIBUTES.md
-30. **Yield Threshold**: Players set surrender HP %, destroyed robots (0% HP) have repair_cost_multiplier 2.0x - See ROBOT_ATTRIBUTES.md
-31. **Time-Based Combat**: Exclusive combat system (turn-based removed from all plans) - See ROBOT_ATTRIBUTES.md
-32. **Energy Shield Mechanics**: Separate HP pool from robot HP, regenerates during battle (HP does not) - See ROBOT_ATTRIBUTES.md
-33. **Shield Nomenclature**: "Energy Shield" (HP pool) vs "Shield" weapon (physical equipment) - See ROBOT_ATTRIBUTES.md
-34. **HP Calculation**: Formula-based: `max_hp = hullIntegrity × 10`, `max_shield = shieldCapacity × 2` - See ROBOT_ATTRIBUTES.md
-35. **Critical Mechanics**: Only rolls after hit confirmed, randomness added (±10%), 2.5x for two-handed - See ROBOT_ATTRIBUTES.md
-36. **Shield Equipment**: Shield weapons use weaponType="shield" in Weapon model - See DATABASE_SCHEMA.md
-37. **Stable System**: 11 facility types, 10 levels each, prestige-gated unlocks, daily income/expense system - See STABLE_SYSTEM.md
-38. **Database Schema**: DATABASE_SCHEMA.md is authoritative source for all models - See DATABASE_SCHEMA.md
-39. **Implementation Phases**: Phase 1a (time-based core), 1b (weapons), 1c (stable system) - See ROADMAP.md
-40. **League System**: Per-robot (not stable), supports multiple Bronze leagues via leagueId - See DATABASE_SCHEMA.md
-40. **Documentation Cleanup**: Removed ROBOT_ATTRIBUTES_OLD.md, consolidating DESIGN_CHANGES_V2.md content
 
 ---
 
@@ -155,6 +67,12 @@ Major design evolution completed addressing all feedback:
 **All Phase 1 design questions have been answered and documented.**
 
 Awaiting Robert's review of documentation updates before proceeding with implementation.
+
+See respective documentation files for all design decisions:
+- **ROBOT_ATTRIBUTES.md**: Combat system, attributes, formulas
+- **STABLE_SYSTEM.md**: Facilities, prestige, economy
+- **DATABASE_SCHEMA.md**: Complete schema specifications
+- **ROADMAP.md**: Implementation phases and priorities
 
 ---
 

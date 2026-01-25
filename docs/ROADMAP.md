@@ -90,6 +90,8 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ### Implementation Priority
 
+**Module Development Strategy**: See MODULE_STRUCTURE.md for complete module organization and dependencies.
+
 **Phase 1a - Core Prototype (Time-Based Combat):**
 1. Update database schema (see DATABASE_SCHEMA.md for authoritative source)
 2. Add robot state tracking fields (currentHP, currentShield, elo, wins, losses, etc.)
