@@ -1,6 +1,6 @@
 # Armoured Souls - Module Structure
 
-**Last Updated**: January 24, 2026
+**Last Updated**: January 25, 2026
 
 ## Overview
 
@@ -128,20 +128,21 @@ ArmouredSouls/
 
 ### 4. Robot Module (`robot`)
 
-**Purpose**: Robot creation, customization, and management.
+**Purpose**: Robot creation, customization, and state management.
 
 **Responsibilities**:
-- Robot creation and configuration
-- Robot stats and attributes
-- Robot upgrade system
-- Robot inventory (weapons, armor, modules)
-- Robot templates and blueprints
+- Robot creation with 23 weapon-neutral attributes (Combat, Defensive, Mobility, AI, Team)
+- Robot configuration (loadout, stance, yield threshold)
+- Attribute upgrade system (level 1-50)
+- Equipment management (weapon, secondWeapon for dual-wield, shield)
+- Robot state tracking (currentHP, currentShield, ELO, wins, losses, fame)
+- Per-robot league management (currentLeague, leagueId)
 
 **Key Entities**:
-- Robot
-- RobotComponent (weapon, armor, engine, etc.)
-- RobotBlueprint
-- RobotStats
+- Robot (with 23 attributes + state + configuration)
+- Weapon (13 weapons + 2 shields with cooldown, damage type, attribute bonuses)
+- Loadout (weapon_shield, two_handed, dual_wield, single)
+- BattleStance (offensive, defensive, balanced)
 
 **APIs**:
 - `POST /robot/create` - Create new robot
@@ -158,21 +159,23 @@ ArmouredSouls/
 
 ### 5. Battle Module (`battle`)
 
-**Purpose**: Battle simulation and combat mechanics.
+**Purpose**: Time-based battle simulation and combat mechanics.
 
 **Responsibilities**:
-- Battle initialization
-- Turn-based combat simulation
-- Damage calculation
-- Status effect processing
-- Battle outcome determination
-- Battle replay generation
+- Battle initialization with loadout and stance configuration
+- Time-based combat simulation (attack cooldowns, AI decision-making)
+- Damage calculation with formulas (hit chance, critical hits, energy shields, penetration)
+- Yield threshold detection (player-configurable surrender points)
+- Battle outcome determination with repair cost multipliers (1.0x/1.5x/2.0x)
+- Battle log generation with timestamped events
+- Robot state updates (HP, shield, damage taken, ELO, wins/losses)
 
 **Key Entities**:
-- Battle
-- BattleParticipant
-- BattleAction
-- BattleLog
+- Battle (with comprehensive tracking)
+- BattleParticipant (robot state at battle start)
+- BattleAction (timestamped events in time-based system)
+- BattleLog (JSON with full simulation)
+- BattleOutcome (winnerReward, loserReward, repair costs, multipliers, yield flags)
 
 **APIs**:
 - `POST /battle/start` - Start new battle
@@ -190,29 +193,49 @@ ArmouredSouls/
 
 ### 6. Stable Module (`stable`)
 
-**Purpose**: Manage player's collection of robots (the "stable").
+**Purpose**: Manage player's stable with 14 facility types and progression systems.
 
 **Responsibilities**:
-- Stable creation and management
-- Robot organization
-- Stable capacity limits
-- Team composition
-- Preset loadouts
+- Stable management (prestige, totalBattles, totalWins, highestELO)
+- Robot roster management (1 free slot, expandable to 10 via Roster Expansion facility)
+- Facility upgrades (14 types, 10 levels each, prestige-gated)
+- Daily income and expense tracking (revenue streams + facility maintenance)
+- Coach system (Offensive, Defensive, Tactical, Team coaches provide stable-wide bonuses)
+- Weapon storage (expandable via Storage Facility)
+- Prestige milestones and unlocks
 
 **Key Entities**:
-- Stable
-- Team
-- Loadout
+- User (stable-level: prestige, currency, totalBattles, totalWins)
+- Facility (14 types including 4 Training Academies)
+- Coach (provides stable-wide attribute bonuses)
+- Revenue Streams (merchandising, streaming, sponsorships)
+
+**14 Facility Types**:
+1. Repair Bay (repair discounts)
+2. Training Facility (upgrade discounts)
+3. Weapons Workshop (weapon discounts, crafting)
+4. Research Lab (analytics, loadout presets)
+5. Medical Bay (critical damage reduction)
+6. Roster Expansion (robot slots 1→10)
+7. Storage Facility (weapon storage 10→100)
+8. Coaching Staff (hire coaches)
+9. Booking Office (tournament unlocks)
+10. Combat Training Academy (Combat Systems caps)
+11. Defense Training Academy (Defensive Systems caps)
+12. Mobility Training Academy (Chassis & Mobility caps)
+13. AI Training Academy (AI + Team caps)
+14. Income Generator (additional revenue)
 
 **APIs**:
-- `GET /stable/{playerId}` - Get player stable
-- `POST /stable/{playerId}/team` - Create team
-- `PUT /stable/{playerId}/team/{teamId}` - Update team
-- `GET /stable/{playerId}/teams` - Get all teams
+- `GET /stable/{playerId}` - Get stable details with facilities
+- `POST /stable/{playerId}/facility/upgrade` - Upgrade facility
+- `POST /stable/{playerId}/coach/hire` - Hire coach
+- `GET /stable/{playerId}/economics` - Get daily income/expense report
 
 **Dependencies**:
-- Robot module
-- Player module
+- Robot module (roster)
+- Player module (currency, prestige)
+- Database module (Facility model)
 
 ---
 
@@ -420,32 +443,40 @@ ArmouredSouls/
     └─────────────┘
 ```
 
-## Module Development Priority
+## Module Development Strategy
 
-**Note**: This section describes the logical module development order. For the actual project phases and implementation timeline, refer to ROADMAP.md which contains the authoritative Phase 0-9 structure.
+**Note**: For the complete implementation timeline and phase breakdown (Phase 0-9), refer to **ROADMAP.md** which contains the authoritative development plan. This section provides a logical overview of module dependencies.
 
-### Module Foundation
-1. Database (Prisma + PostgreSQL)
-2. Auth (JWT + basic username/password for prototype)
-3. API (Express-based REST API)
+### Development Layers
 
-### Core Game Features
-4. Player
-5. Robot
-6. Stable
+The modules are organized in layers, where each layer depends on the layers below it:
 
-### Gameplay Systems
-7. Game Engine
-8. Battle
-9. Matchmaking (simplified for prototype)
+**Layer 1: Foundation** (No dependencies)
+- Database (Prisma + PostgreSQL)
 
-### User Experience
-10. UI (Web with React + Tailwind CSS)
-11. Notifications (WebSockets/Web Push)
+**Layer 2: Core Infrastructure** (Depends on Layer 1)
+- Auth (JWT + username/password)
+- API (Express-based REST)
 
-### Advanced Features
-12. Admin
-13. UI (Mobile - React Native, post-MVP)
+**Layer 3: Game Entities** (Depends on Layers 1-2)
+- Player (user profiles, stats)
+- Robot (23 attributes, state tracking)
+- Stable (14 facilities, prestige system)
+
+**Layer 4: Game Logic** (Depends on Layers 1-3)
+- Game Engine (rules, validation)
+- Battle (time-based combat simulation)
+
+**Layer 5: User Experience** (Depends on Layers 1-4)
+- UI (React + Tailwind CSS for web)
+- Notifications (WebSockets/Web Push)
+
+**Layer 6: Advanced Features** (Post-MVP)
+- Matchmaking
+- Admin tools
+- UI (Mobile - React Native)
+
+**Implementation Priority**: See ROADMAP.md Phase 1 for actual development priorities and detailed breakdown (Phase 1a: Core, 1b: Weapons, 1c: Stable)
 
 ## Inter-Module Communication
 

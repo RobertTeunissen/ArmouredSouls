@@ -1,13 +1,5 @@
 # Armoured Souls - Development Roadmap
 
-## Overview
-
-This document outlines the development roadmap for Armoured Souls, from planning through launch and beyond.
-
----
-
-# Armoured Souls - Development Roadmap
-
 **Last Updated**: January 24, 2026
 
 ## Overview
@@ -60,33 +52,289 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ## Phase 1: Local Prototype / Proof of Concept
 
-**Goal**: Create a working local prototype to demonstrate core game mechanics to friends
+**Goal**: Build a minimal working prototype running locally to validate the core game concept
 
 **Status**: Ready to begin  
-**Detailed Plan**: See PHASE1_PLAN.md for complete specifications
+**Team**: 2 people (Robert + AI), async development style  
+**Testing**: 6 user accounts for local testing  
+**Target**: Working game loop - Login → Setup Stable → Create Robot → Battle
 
-### Scope Summary
-- User management (6 test accounts + admin)
-- Robot creation and upgrading  
-- Stable management
-- Battle simulation (manual trigger)
-- Battle history
-- Simple currency system
-- Text-based UI (React + Tailwind CSS)
+### Implementation Strategy: Bottom-Up, Iterative
 
-### Technology Stack
-- Backend: Express + Prisma + PostgreSQL
-- Frontend: React + Tailwind CSS
-- Testing: Automated on every commit
-- Structure: Isolated `/prototype` directory
+Since there's a **1-to-1 relationship between User and Stable**, the logical development order is:
 
-### Success Criteria
-- Core gameplay loop works
-- 6 friends can test simultaneously
-- Battle mechanics are fun and balanced
-- Technical foundation validates architectural decisions
+1. **User/Stable Setup** → Get authentication and stable management working first
+2. **Robot Creation** → Build robot with attributes and equipment
+3. **Battle System** → Enable battles between robots
 
-**Detailed Requirements**: See PHASE1_PLAN.md
+This ensures all database components are in place before implementing battles.
+
+### Phase 1 Milestones
+
+**Milestone 1: User Can Login and See Initial Setup** ✅ PRIORITY
+- [ ] User authentication (login/logout)
+- [ ] User profile view
+- [ ] Display stable info (empty at start, ₡2,000,000 to spend)
+- [ ] Display Credits (₡) balance
+
+**Milestone 2: User Can Complete Stable Setup** ✅ PRIORITY
+- [ ] View available facility upgrades (14 facility types)
+- [ ] Purchase facility upgrades with Credits
+- [ ] See updated facility levels
+- [ ] Track Credits spending
+
+**Milestone 3: User Can Create First Robot** ✅ PRIORITY
+- [ ] Create robot with name
+- [ ] Distribute 23 attributes (all start at level 1)
+- [ ] Upgrade robot attributes with Credits
+- [ ] Select weapon from available weapons
+- [ ] Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
+- [ ] Save robot to database
+- [ ] View robot in stable
+
+**Milestone 4: Matchmaking in Place** ✅ PRIORITY
+- [ ] Manual robot selection for battle (select 2 robots)
+- [ ] Simple matchmaking UI (pick opponent's robot)
+- [ ] Validate both robots have weapons equipped
+- [ ] Queue battle for execution
+
+**Milestone 5: Matches Can Be Triggered Manually** ✅ PRIORITY
+- [ ] Manual battle trigger button
+- [ ] Execute battle simulation (time-based combat)
+- [ ] Calculate battle outcome
+- [ ] Apply repair costs (1.0x/1.5x/2.0x multipliers)
+- [ ] Update robot HP/shield/ELO/stats
+- [ ] Display battle log with timestamps
+- [ ] Store battle in database
+- [ ] **TEST GAME BALANCE** - Run multiple battles to validate formulas
+
+### Explicit Scope Limitations
+
+**NOT in Phase 1**:
+- ❌ Automated matchmaking algorithms
+- ❌ Automated battle scheduling (only manual trigger)
+- ❌ Battle queues or asynchronous battles
+- ❌ Achievements or progression systems
+- ❌ Social features (friends, chat, guilds)
+- ❌ Cloud deployment (local only)
+- ❌ Mobile support
+- ❌ Polished UI/UX (functional only)
+- ❌ Animations or visual effects
+- ❌ Advanced analytics or statistics
+- ❌ Tournament system
+- ❌ Team battles (2v2, 3v3+)
+
+### Technical Architecture (Simplified)
+
+**Project Structure**: Isolated prototype in `/prototype` directory
+
+```
+ArmouredSouls/
+├── docs/                 # Project documentation
+├── prototype/            # Phase 1 isolated prototype codebase
+│   ├── backend/          # Node.js + Express + Prisma
+│   ├── frontend/         # React + Tailwind CSS
+│   └── docker-compose.yml
+└── modules/              # Future production codebase (Phase 2+)
+```
+
+**Architecture Diagram**:
+
+```
+┌─────────────────────────────────────────┐
+│    React + Tailwind CSS (Port 3000)     │
+│                                         │
+│  • Login/Logout                         │
+│  • User Management                      │
+│  • Robot List & Creator                 │
+│  • Robot Upgrading                      │
+│  • Stable Management                    │
+│  • Battle Setup                         │
+│  • Battle Results & History             │
+└─────────────────┬───────────────────────┘
+                  │ HTTP/REST
+┌─────────────────▼───────────────────────┐
+│  Node.js + Express Backend (Port 3001)  │
+│                                         │
+│  • REST API (Express)                   │
+│  • Authentication (JWT + bcrypt)        │
+│  • Battle Simulation Engine             │
+│  • Database ORM (Prisma)                │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────▼───────────────────────┐
+│      PostgreSQL (Port 5432)             │
+│      via Docker Compose                 │
+│                                         │
+│  • Users (username, password_hash, role)│
+│  • Robots                               │
+│  • Components                           │
+│  • Battles                              │
+│  • Currency balances                    │
+└─────────────────────────────────────────┘
+```
+
+**Technology Stack**:
+- **Backend**: Express (finalized)
+- **ORM**: Prisma (finalized)
+- **Frontend**: React + Tailwind CSS (finalized)
+- **Database**: PostgreSQL + Docker
+- **Testing**: Automated tests on every commit (CI/CD via GitHub Actions)
+
+### Battle Simulation Algorithm
+
+**Note**: The battle simulation uses time-based combat with 23 robot attributes. For complete combat formulas including hit chance, critical hits, energy shields, penetration, and all attribute interactions, see **ROBOT_ATTRIBUTES.md**.
+
+Key aspects:
+- Time-based turn processing (measured in seconds)
+- Attack cooldowns based on weapon and attackSpeed attribute
+- Simultaneous attacks resolved using gyroStabilizers
+- Energy shields as separate HP pool with regeneration
+- Yield threshold (robots can surrender to avoid destruction)
+- Comprehensive battle log with timestamps
+
+For detailed implementation, see ROBOT_ATTRIBUTES.md.
+
+### Sample Components
+
+**Chassis Types**:
+
+| Name | Health | Speed | Defense | Attack |
+|------|--------|-------|---------|--------|
+| Tank | +50 | -5 | +10 | +0 |
+| Scout | +0 | +10 | -5 | +5 |
+| Balanced | +20 | +0 | +0 | +0 |
+| Berserker | +10 | +5 | -10 | +15 |
+| Fortress | +100 | -10 | +20 | -5 |
+
+**Weapons**:
+
+| Name | Attack Bonus | Description |
+|------|-------------|-------------|
+| Laser Rifle | +15 | Standard energy weapon |
+| Plasma Cannon | +25 | High damage, heavy |
+| Machine Gun | +10 | Rapid fire |
+| Hammer | +20 | Melee weapon |
+| Sniper Laser | +30 | Precision weapon |
+| Sword | +12 | Basic melee |
+| Rocket Launcher | +35 | Maximum damage |
+
+**Armor**:
+
+| Name | Defense Bonus | Speed Penalty |
+|------|--------------|---------------|
+| Heavy Plate | +20 | -5 |
+| Light Armor | +10 | +0 |
+| Energy Shield | +15 | +2 |
+| Stealth Coating | +5 | +5 |
+| Reactive Armor | +25 | -8 |
+| Nano-Weave | +12 | +3 |
+
+### Development Workflow: Iterative, Bottom-Up
+
+**Iteration 1: User/Stable Foundation** (Milestone 1-2)
+- Set up development environment (Docker, Node.js, PostgreSQL)
+- Implement user authentication (login/logout with JWT)
+- Create User and Facility database tables
+- Build stable management UI (view facilities, purchase upgrades)
+- Implement Credits system and spending
+- **Validation**: User can login, see ₡2,000,000, upgrade facilities
+
+**Iteration 2: Robot Creation** (Milestone 3)
+- Create Robot and Weapon database tables
+- Implement robot creation API
+- Build robot attribute upgrade system (23 attributes)
+- Add weapon selection and loadout configuration
+- Create robot management UI
+- **Validation**: User can create robot, upgrade stats, equip weapon, save to database
+
+**Iteration 3: Battle System** (Milestone 4-5)
+- Create Battle database table
+- Implement battle simulation engine (time-based combat, all formulas)
+- Build manual matchmaking UI (select 2 robots)
+- Add manual battle trigger
+- Calculate repair costs and update robot state
+- Display battle log with timestamps
+- **Validation**: User can trigger battle, see results, robots update correctly
+
+**Iteration 4: Game Balance Testing** (Milestone 5 continued)
+- Run 50+ test battles with different robot configurations
+- Validate formulas produce interesting outcomes
+- Adjust balance if needed (documented in ROBOT_ATTRIBUTES.md)
+- Test edge cases (destroyed robots, high damage, yield threshold)
+- **Validation**: Battles feel fair, interesting, and strategic
+
+**Total Duration**: 2-6 weeks (depending on available time per week)
+
+### Success Metrics for Phase 1
+
+**Milestone Completion**:
+- ✅ All 5 milestones completed
+- ✅ User can complete full game loop (login → setup → create robot → battle)
+- ✅ All database components working correctly
+
+**Technical Success**:
+- ✅ Battle simulation completes in <100ms
+- ✅ Can process 100 battles in <10 seconds
+- ✅ Zero crashes during testing
+- ✅ Database persists correctly between sessions
+- ✅ UI functional on laptop screen
+
+**Game Design Success**:
+- ✅ At least 3 different viable robot builds (Tank, Glass Cannon, Balanced)
+- ✅ Battle outcomes feel logical given robot stats
+- ✅ Battle logs show interesting combat progression
+- ✅ Repair costs make economic sense
+- ✅ Credits economy balanced (can afford upgrades without grinding)
+
+**Validation Criteria**:
+- Can create 6 different robots with distinct strategies
+- Can run 20+ battles without issues
+- Game balance tested (no dominant strategy)
+- All formulas from ROBOT_ATTRIBUTES.md work correctly
+- Ready to show to friends for feedback
+
+### Risk Management
+
+**Technical Risks**:
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Battle engine too slow | Low | Medium | Profile early, optimize algorithm |
+| Database issues | Low | High | Use proven ORM, test thoroughly |
+| UI bugs | Medium | Low | Focus on functionality over polish |
+| Docker problems | Medium | Medium | Document setup well, test on multiple machines |
+
+**Schedule Risks**:
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Scope creep | High | High | **Strict feature list, no additions** |
+| Over-engineering | Medium | Medium | Keep it simple, refactor in Phase 2 |
+| Time estimates wrong | Medium | Low | Buffer week built into 4-8 week estimate |
+
+**Game Design Risks**:
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Not fun | Medium | High | **Get feedback early and often** |
+| Too complex | Medium | Medium | Simplify if friends are confused |
+| Too simple | Low | Medium | Easy to add depth in Phase 2 |
+
+### Database Setup
+
+**Important**: The authoritative database schema is in **DATABASE_SCHEMA.md**. Do not duplicate schema definitions.
+
+Since this is a prototype with no existing data:
+
+1. Copy complete schema from **DATABASE_SCHEMA.md** to `prisma/schema.prisma`
+2. Generate database: `npx prisma migrate dev --name init`
+3. Run seed script: `npx prisma db seed`
+
+Key points:
+- See **ROBOT_ATTRIBUTES.md** for all 23 robot attributes (combatPower, targetingSystems, etc.)
+- See **STABLE_SYSTEM.md** for facility types and upgrade mechanics
+- See **DATABASE_SCHEMA.md** for complete schema with all tables, fields, and relationships
 
 ---
 
@@ -94,242 +342,44 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 **Goal**: Make the prototype production-ready with proper infrastructure and security
 
-**Prerequisites**: Phase 1 prototype validated by testing
+**Prerequisites**: Phase 1 prototype validated by friends' feedback
 
-### Scope
-- Working API that frontend can call
-- Postman/REST Client collection for testing
-- Basic error handling
+### Decision Point: Continue, Pivot, or Stop
 
-### 1.5 Minimal Web UI (Week 3-4)
+Based on Phase 1 feedback, we will choose one of three paths:
 
-Simple React interface to interact with the game:
+**Path A: Continue** (Feedback is positive)
+- Proceed with Phase 2 (Foundation & Infrastructure)
+- Implement production authentication
+- Deploy to AWS
+- Add matchmaking and automated scheduling
+- Refactor prototype code into modules/ structure
 
-**Page 1: Robot List**
-- [ ] Display all available robots in a grid/list
-- [ ] Show robot stats (attack, defense, speed, health)
-- [ ] Button to create new robot (simple form)
-- [ ] Button to edit robot stats
+**Path B: Pivot** (Feedback reveals issues)
+- Revisit game mechanics based on feedback
+- Adjust battle system
+- Simplify or add complexity as needed
+- Run another prototype iteration
+- Document changes and re-test
 
-**Page 2: Battle Setup**
-- [ ] Select two robots to fight
-- [ ] Button to "Schedule Battle" (which runs immediately for prototype)
-- [ ] Show battle is processing
+**Path C: Stop** (Feedback is negative)
+- Document learnings and insights
+- Archive project
+- Consider different game concept
+- Share lessons learned
 
-**Page 3: Battle Results**
-- [ ] List of all battles (most recent first)
-- [ ] Click to view detailed battle log
-- [ ] Show turn-by-turn actions
-- [ ] Highlight winner
-- [ ] Basic styling (doesn't need to be pretty)
+**The goal of Phase 1 is to fail fast or validate fast. Either outcome is valuable!**
 
-**Page 4: Robot Creator (Simple)**
-- [ ] Form to set robot name
-- [ ] Sliders or inputs for stats (attack, defense, speed)
-- [ ] Points system (e.g., 100 points to distribute)
-- [ ] Select one weapon, one armor from preset options
+### Phase 2 Scope (If Continuing)
 
-**Deliverables**:
-- Working web interface
-- Can create robots
-- Can schedule battles
-- Can view battle results
-- Responsive enough to work on laptop and phone browser
-
-### 1.6 Robot Component System (Week 4)
-
-Add basic customization:
-
-- [ ] **Weapons** (5-10 preset weapons)
-  - Sword: +10 attack
-  - Laser: +15 attack, -5 defense
-  - Hammer: +8 attack, -2 speed
-  - etc.
-
-- [ ] **Armor** (5-10 preset armor types)
-  - Heavy: +15 defense, -5 speed
-  - Light: +5 defense, +3 speed
-  - Shield: +10 defense
-  - etc.
-
-- [ ] **Chassis** (3-5 types)
-  - Tank: High health, low speed
-  - Scout: Low health, high speed
-  - Balanced: Medium all stats
-
-- [ ] Integrate components into battle simulation
-- [ ] Update UI to show equipped components
-
-**Deliverables**:
-- Robots can equip weapons and armor
-- Components affect battle outcomes
-- Different builds create different strategies
-
-### 1.7 Testing & Refinement (Week 4)
-
-- [ ] Run multiple battle simulations to test balance
-- [ ] Fix bugs discovered during testing
-- [ ] Adjust damage formulas if needed
-- [ ] Add battle log replay visualization (if time permits)
-- [ ] Performance test: can it handle 100 battles in a batch?
-
-**Deliverables**:
-- Stable prototype
-- Known issues documented
-- Battle balance roughly working
-
-### 1.8 Demo Preparation (End of Week 4)
-
-- [ ] Create 10-15 interesting pre-configured robots with different builds
-- [ ] Pre-run some interesting battles for demonstration
-- [ ] Write quick-start guide for friends
-- [ ] Ensure Docker setup works on fresh machine
-- [ ] Create a "demo script" showing off features
-
-**Deliverables**:
-- Working prototype ready to show friends
-- Easy setup process documented
-- Interesting demo content pre-loaded
-
----
-
-## What's NOT in Phase 1 Prototype
-
-To keep scope minimal and deliverable:
-
-**Authentication & Security**
-- ❌ No proper user authentication (hardcoded test user is fine)
-- ❌ No password hashing
-- ❌ No JWT tokens
-- ❌ No rate limiting
-- ❌ No input validation (beyond basic)
-
-**Production Features**
-- ❌ No deployment to AWS
-- ❌ No CI/CD pipeline
-- ❌ No automated testing (manual testing is fine)
-- ❌ No logging infrastructure
-- ❌ No monitoring
-
-**Advanced Game Features**
-- ❌ No matchmaking system
-- ❌ No ranking/leaderboards  
-- ❌ No currency or economy
-- ❌ No achievements
-- ❌ No social features
-- ❌ No guild system
-- ❌ No tournaments
-- ❌ No multiple battle modes
-
-**UI Polish**
-- ❌ No fancy animations
-- ❌ No professional design
-- ❌ No accessibility features
-- ❌ No loading states (basic is fine)
-- ❌ No error recovery
-
-**Data Persistence**
-- ❌ No database backups
-- ❌ No migrations rollback
-- ❌ No data validation
-
----
-
-## Phase 1 Success Criteria
-
-The prototype is successful if you can demonstrate:
-
-1. ✅ **Core Concept**: Friend can create a robot and understand the stat system
-2. ✅ **Battle System**: Can schedule a battle and see interesting results
-3. ✅ **Strategy**: Different robot builds lead to different outcomes
-4. ✅ **Feedback Loop**: Can adjust robot based on battle results and retry
-5. ✅ **Fun Factor**: Friends find it interesting and want to play more battles
-6. ✅ **Technical Viability**: System can process battles quickly and reliably
-
-### Questions to Answer During Phase 1
-
-**Game Mechanics**:
-- Is the battle simulation interesting to watch/read?
-- Are the stat ranges balanced?
-- Do different builds feel meaningfully different?
-- Is it fun to tinker with robot configurations?
-- What's missing that would make it more engaging?
-
-**Technical**:
-- Can the battle engine handle batch processing?
-- Is the architecture scalable to Phase 2?
-- Are there performance bottlenecks?
-- What technical debt are we creating?
-
-**UX**:
-- Is the robot creation process intuitive?
-- Is the battle log readable and interesting?
-- What UI improvements are most critical?
-
----
-
-## Phase 1 Deliverables Summary
-
-**Code**:
-- Node.js backend with battle simulation engine
-- React frontend with 4 basic pages
-- PostgreSQL database with minimal schema
-- Docker Compose setup for local development
-
-**Documentation Updates**:
-- Battle simulation algorithm specification
-- Component stat tables and formulas
-- Setup and run instructions
-- Known issues and limitations
-
-**Demo Assets**:
-- 10-15 pre-configured robots
-- Sample battle logs
-- Demo script for showing friends
-
----
-
-## Phase 1 Timeline
-
-| Week | Focus | Deliverable |
-|------|-------|-------------|
-| Week 1 | Setup & Schema | Dev environment + database |
-| Week 2 | Battle Engine + API | Working simulation |
-| Week 3 | Basic UI | Can create robots and view battles |
-| Week 4 | Components + Polish | Complete prototype ready to demo |
-
-**Total Duration**: 4-8 weeks (depending on available time per week)
-
----
-
-## After Phase 1: Lessons Learned
-
-At the end of Phase 1, we will:
-1. Document all lessons learned
-2. Update game design based on playtesting feedback
-3. Refine battle mechanics and balance
-4. Update architecture decisions if needed
-5. Plan Phase 2 based on what worked/didn't work
-6. Decide if we need to pivot or continue as planned
-
----
-
-**Phase 2 Preview**: Once prototype is validated, Phase 2 will focus on making it production-ready with proper authentication, deployment to AWS, real user accounts, and the matchmaking system.
-
----
-
-## Phase 2: Foundation & Infrastructure (Estimated: 2-3 months)
-
-**Goal**: Make the prototype production-ready with proper infrastructure and security
-
-### 2.1 Development Environment Enhancement
+**2.1 Development Environment Enhancement**
 - [ ] Configure CI/CD pipeline (GitHub Actions)
 - [ ] Set up automated testing framework
 - [ ] Configure code coverage tracking
 - [ ] Security scanning integration (SAST)
 - [ ] Set up staging environment
 
-### 2.2 Authentication & Security
+**2.2 Authentication & Security**
 - [ ] Proper user registration system
 - [ ] Secure login/logout with JWT
 - [ ] Password hashing (bcrypt)
@@ -339,7 +389,7 @@ At the end of Phase 1, we will:
 - [ ] Input validation and sanitization
 - [ ] CSRF protection
 
-### 2.3 Database & Data Layer
+**2.3 Database & Data Layer**
 - [ ] Expand database schema for production
 - [ ] Add database indexes for performance
 - [ ] Set up database backups
@@ -347,22 +397,36 @@ At the end of Phase 1, we will:
 - [ ] Add audit logging
 - [ ] Connection pooling optimization
 
-### 2.4 Testing Infrastructure
+**2.4 Testing Infrastructure**
 - [ ] Unit tests for battle engine
 - [ ] Integration tests for API
 - [ ] End-to-end tests for critical flows
 - [ ] Load testing setup
 - [ ] Automated test runs in CI/CD
 
+**2.5 Module Restructuring**
+- [ ] Refactor prototype code into proper module structure
+- [ ] Separate concerns (see MODULE_STRUCTURE.md)
+- [ ] Implement clean interfaces between modules
+- [ ] Move from /prototype to /modules directory
+
+**2.6 AWS Deployment Preparation**
+- [ ] Set up AWS account and infrastructure
+- [ ] Configure serverless architecture
+- [ ] Set up database hosting
+- [ ] Configure CDN for static assets
+- [ ] Set up monitoring and logging
+
 **Deliverables**:
 - Production-ready authentication system
 - Comprehensive test coverage
 - Security hardened application
 - CI/CD pipeline operational
+- Deployed to staging environment
 
 ---
 
-## Phase 3: Core Game Mechanics (Estimated: 3-4 months)
+## Phase 3: Core Game Mechanics
 
 **Goal**: Expand game features based on Phase 1 learnings
 
@@ -617,6 +681,64 @@ At the end of Phase 1, we will:
 - [ ] A/B testing
 - [ ] Retention optimization
 - [ ] Conversion optimization
+
+---
+
+## Future Ideas & Enhancements
+
+Features and systems to consider for future development. These are not yet planned for specific phases.
+
+### Design Discussions Needed
+
+- **Prestige vs Fame System**:
+  - **Current**: Prestige (stable-level) and Fame (robot-level) are separate
+  - **To Discuss**: 
+    - How do prestige and fame interact?
+    - Should prestige be earned only from tournaments or also from battles?
+    - Should fame contribute to prestige in any way?
+    - Do they unlock different types of content?
+    - Economic balance between the two systems
+  - **Status**: Requires detailed design discussion
+
+- **Tournament System Design**:
+  - **Current**: Tournaments mentioned but not fully detailed
+  - **To Discuss**:
+    - Tournament types (local, regional, championship, world)
+    - Entry requirements (Credits cost, prestige threshold, ELO rating?)
+    - Tournament structure (single elimination, Swiss, round-robin)
+    - Reward structure (Credits, prestige, fame, exclusive items)
+    - How tournaments affect robot/stable rankings
+    - Tournament frequency and scheduling
+    - Special tournament rules and formats
+  - **Status**: Requires comprehensive design specification
+
+### Advanced Combat Mechanics
+- **Range System**: Multiple range bands (short/medium/long) beyond just melee vs ranged
+  - Different weapons perform better at different ranges
+  - Positioning mechanics with range advantages
+  - See ROBOT_ATTRIBUTES.md for melee/ranged distinction currently implemented
+
+- **Status Effects System**: 
+  - Stun, slow, buff, debuff mechanics
+  - Duration-based effects
+  - Cleanse/dispel abilities
+  - Currently not implemented - combat is direct damage only
+
+### Stable Enhancements (From STABLE_SYSTEM.md)
+- **Stable vs Stable Wars**: Team battles between stables
+- **Alliances**: Form alliances with other stables for shared bonuses
+- **Stable Customization**: Custom logos, colors, banners
+- **Staff Management**: Hire technicians, analysts, scouts
+- **Sponsorships**: Stable sponsors provide Credits/bonuses in exchange for performance
+- **Stable Rankings**: Global leaderboards for stables
+- **Legacy System**: Retired robot bonuses, historical achievements
+- **Training Programs**: Long-term attribute development options
+
+### Additional Game Modes
+- Arena battles (2v2, 3v3) with team coordination
+- Tournaments with bracket systems (see Design Discussions above)
+- Special events and challenges
+- Seasonal leagues
 
 ---
 
