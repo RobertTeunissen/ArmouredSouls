@@ -67,8 +67,8 @@ function CreateRobotPage() {
 
       // Navigate to the newly created robot
       navigate(`/robots/${data.robot.id}`);
-    } catch (err: any) {
-      setError(err.message || 'Failed to create robot');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create robot');
       console.error(err);
     } finally {
       setLoading(false);

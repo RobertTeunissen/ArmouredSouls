@@ -162,10 +162,10 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
     }
 
     // Get current level
-    const currentLevel = (robot as any)[attribute];
+    const currentLevel = robot[attribute as keyof typeof robot] as number;
 
-    if (currentLevel >= MAX_ATTRIBUTE_LEVEL) {
-      return res.status(400).json({ error: 'Attribute is already at maximum level' });
+    if (typeof currentLevel !== 'number' || currentLevel >= MAX_ATTRIBUTE_LEVEL) {
+      return res.status(400).json({ error: 'Attribute is already at maximum level or invalid' });
     }
 
     // Calculate upgrade cost: (current_level + 1) × 1,000

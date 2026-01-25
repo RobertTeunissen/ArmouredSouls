@@ -188,8 +188,8 @@ function RobotDetailPage() {
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to upgrade attribute');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upgrade attribute');
       console.error(err);
     }
   };
@@ -228,8 +228,8 @@ function RobotDetailPage() {
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to equip weapon');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to equip weapon');
       console.error(err);
     }
   };
@@ -360,7 +360,7 @@ function RobotDetailPage() {
             <h3 className="text-xl font-semibold mb-4">{category}</h3>
             <div className="space-y-3">
               {attributes.map(({ key, label }) => {
-                const currentLevel = (robot as any)[key];
+                const currentLevel = robot[key as keyof Robot] as number;
                 const upgradeCost = (currentLevel + 1) * 1000;
                 const canUpgrade = currentLevel < MAX_ATTRIBUTE_LEVEL;
                 const canAfford = currency >= upgradeCost;
