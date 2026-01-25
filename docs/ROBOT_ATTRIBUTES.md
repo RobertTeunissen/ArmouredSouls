@@ -1,11 +1,11 @@
 # Robot Attributes System
 
 **Last Updated**: January 25, 2026  
-**Status**: Revised - Robot-Themed with Team Dynamics
+**Status**: Revised - Complete Combat System with Loadouts and Time-Based Mechanics
 
 ## Overview
 
-Armoured Souls uses a comprehensive attribute system with **23 core attributes** organized into 5 logical categories. All attributes are robot-themed (referencing mechanical parts and systems) and have specific effects in combat formulas. The system supports both solo (1v1) and team (arena) battles.
+Armoured Souls uses a comprehensive attribute system with **23 core attributes** plus additional robot state tracking. All attributes are robot-themed and have specific effects in combat. The system supports weapon-type specialization (melee vs ranged), loadout configurations (shield, two-handed, dual-wield), battle stances, and can operate with either turn-based or real-time combat.
 
 ---
 
@@ -26,48 +26,42 @@ Armoured Souls uses a comprehensive attribute system with **23 core attributes**
 
 All robots start with each attribute at level 1. Players spend Credits to upgrade attributes.
 
---> Also define other robot attributes outside of the core attributes. This has impact on the data that needs to be captured. Things like: current HP / damage taken / costs to fully repair / current fame / current leage / name of the robot. Be as thorough as possible. 
---> Start a new document on Stable level and start capturing the same requirements. A Stable is on user level, so current credits are tracked there, but used to upgrade an individual robots. Are there upgrades / things to be bought on Stable level? Do some suggestions. Also think about fame on stable level (or prestige?).
+### 🔴 Combat Systems (6)
 
+**Offensive and defensive combat capabilities (weapon-neutral)**
 
-### 🔴 Weapons Systems (6)
+1. **Combat Power** - Base damage multiplier for all weapon types (replaces "Firepower")
+2. **Targeting Systems** - Hit chance and precision for all attacks (replaces "Targeting Computer")
+3. **Critical Systems** - Chance to deal critical damage with any weapon (replaces "Critical Circuits")
+4. **Penetration** - Bypasses armor and shields for all attack types (replaces "Armor Piercing")
+5. **Weapon Control** - Handling and effectiveness with equipped weapons (replaces "Weapon Stability")
+6. **Attack Speed** - Time between attacks for all weapon types (replaces "Firing Rate")
 
-**Primary offensive capabilities and weapon operation**
-
-1. **Firepower** - Raw damage output from weapon systems
-2. **Targeting Computer** - Hit chance and target acquisition accuracy
-3. **Critical Circuits** - Chance to deal critical damage (overclocked systems)
-4. **Armor Piercing** - Penetrates enemy plating and shields
-5. **Weapon Stability** - Weapon handling and recoil management
-6. **Firing Rate** - Speed between attacks (reload/recharge time)
-
---> The attribute naming is now geared towards ranged weapons while we also have melee weapons defined below. We need more neutral names for this to reflect it. 
---> Think of a way to incorporate the different types of weapons in our system so that different attributes influence the effectiveness of melee vs ranged weapons and update this in the battle system. 
---> For now all robots will be bipeds (humanoid) and have two legs to move around (thematically) and two arms to hold items. I want an upgrade that enables robots to be more effective with one weapon + shield, two handed weapons (and either ranged or melee) or two weapons (in ranged and/or melee). This also needs to be reflected in the battle system.  
+**Design Notes:**
+- All attributes now weapon-neutral - apply to both melee and ranged
+- "Combat Power" affects base damage regardless of weapon type
+- "Targeting Systems" helps both ranged accuracy and melee precision
+- Specialization comes from weapon choice and loadout, not attributes
 
 ### 🔵 Defensive Systems (5)
 
 **Armor, shields, and damage mitigation**
 
-7. **Armor Plating** - Physical damage reduction from attacks
-8. **Shield Generator** - Energy shield effectiveness and capacity
+7. **Armor Plating** - Physical damage reduction from all sources
+8. **Shield Capacity** - Energy shield HP pool (separate from robot HP)
 9. **Evasion Thrusters** - Chance to dodge incoming attacks
 10. **Damage Dampeners** - Reduces critical hit damage taken
-11. **Counter Protocols** - Chance to strike back when hit
-
---> What is the impact of having a setting where the user can set whether a robots first instinct is to go more on the offense or more on the defense (+ countering abilities)? This is not an attribute but a setting, but it does affect the battle system.
+11. **Counter Protocols** - Chance to strike back when hit (works with stance setting)
 
 ### 🟢 Chassis & Mobility (5)
 
 **Core mechanical structure and movement capabilities**
 
 12. **Hull Integrity** - Maximum health points (structural HP)
-13. **Servo Motors** - Movement speed and turn order
+13. **Servo Motors** - Movement speed and positioning
 14. **Gyro Stabilizers** - Balance, dodging ability, and reaction time
-15. **Hydraulic Power** - Melee damage and physical strength
-16. **Power Core** - Sustained combat performance (stamina/energy reserves)
-
---> Instead of a turn order, how much more difficult is it to implement a system where a robot can place an attack every x seconds? And what it is adaptive, so a weapon is ready for an attack, but it waits for the right opportunity to strike (because of it's mobility and ai processing capabilities?). Explore this and incorporate if feasible.
+15. **Hydraulic Systems** - Physical force for melee impact and carry capacity
+16. **Power Core** - Energy generation for shields and sustained combat
 
 ### 🟡 AI Processing (4)
 
@@ -75,14 +69,12 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 
 17. **Combat Algorithms** - Battle strategy and decision quality
 18. **Threat Analysis** - Target priority and positioning
-19. **Adaptive AI** - Learns and responds to opponent tactics
-20. **Logic Cores** - Performance under pressure (low HP situations)
-
---> We talked about a setting where the user can define when his robot will yield (as a % of HP). This should be because the repair costs will increase (dramatically) when a robot is totalled. This gives the players are risk appetite. It also ties into the attribute you coined "Logic Cores". Work out how this interacts. 
+19. **Adaptive AI** - Learns opponent patterns and adapts tactics
+20. **Logic Cores** - Performance under pressure and yield threshold management
 
 ### 🟣 Team Coordination (3)
 
-**Attributes for multi-robot arena battles (minimal impact in 1v1)**
+**Attributes for multi-robot arena battles (2v2, 3v3, etc.)**
 
 21. **Sync Protocols** - Coordination with allied robots
 22. **Support Systems** - Ability to assist/buff teammates
@@ -90,152 +82,597 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 
 ---
 
-## Attribute Interactions
+## Robot State Attributes
 
-### Combat Formulas (1v1 Battles)
+These are tracked per robot but not upgraded directly:
 
-**Hit Chance:**
+### Combat State
+- **Current HP**: Health remaining (max determined by Hull Integrity)
+- **Current Shield**: Shield HP remaining (max determined by Shield Capacity)
+- **Damage Taken**: Total damage in current battle
+- **Status Effects**: Stunned, slowed, buffed, etc.
+
+### Robot Identity
+- **Name**: Player-chosen robot name (max 50 characters)
+- **Frame ID**: Robot chassis/appearance identifier
+- **Paint Job**: Cosmetic customization (unlocked via prestige)
+
+### Performance Tracking
+- **ELO Rating**: Individual robot skill rating (starting 1200)
+- **Total Battles**: Lifetime battle count
+- **Wins**: Victory count
+- **Losses**: Defeat count
+- **Win Rate**: Calculated from wins/losses
+- **Damage Dealt**: Total lifetime damage
+- **Damage Taken**: Total lifetime damage received
+- **Kills**: Opponents defeated
+- **Assists**: Team battle assists
+
+### Economic State
+- **Repair Cost**: Current cost to fully repair (based on damage + attribute total)
+- **Battle Readiness**: Percentage (100% = full HP, 0% = critically damaged)
+- **Yield Threshold**: Player-set HP % where robot surrenders (default 10%)
+- **Total Repairs Paid**: Lifetime repair costs
+
+### League & Fame
+- **Current League**: Bronze/Silver/Gold/Platinum/Diamond/Champion
+- **League Points**: Points in current league (for promotion/demotion)
+- **Fame**: Individual robot reputation (earned from victories)
+- **Titles**: Earned achievements (e.g., "Champion", "Undefeated")
+
+---
+
+## Loadout System
+
+Robots are bipedal humanoids with two arms. Loadout determines how weapons/shields are equipped.
+
+### Loadout Configurations
+
+**1. Weapon + Shield**
+- **Equipment**: One weapon (left or right hand) + Shield (other hand)
+- **Bonuses**:
+  - +20% to Shield Capacity
+  - +15% to Armor Plating
+  - +10% to Counter Protocols (shield can block and counter)
+- **Penalties**:
+  - -15% to Attack Speed (shield weight)
+  - Cannot use two-handed weapons
+- **Best For**: Tank builds, defensive strategies
+
+**2. Two-Handed Weapon**
+- **Equipment**: One two-handed weapon (both hands)
+- **Bonuses**:
+  - +25% to Combat Power
+  - +20% to Critical Systems
+  - +1.5x critical damage multiplier (instead of 2.0x)
+- **Penalties**:
+  - -10% to Evasion Thrusters (less mobility)
+  - No shield available
+- **Best For**: Glass cannon builds, high burst damage
+
+**3. Dual-Wield (Two Weapons)**
+- **Equipment**: Two one-handed weapons (one in each hand)
+- **Bonuses**:
+  - +30% to Attack Speed
+  - Can alternate attacks between weapons
+  - +15% to Weapon Control
+- **Penalties**:
+  - -20% to Penetration (less force per strike)
+  - -10% to Combat Power
+  - No shield available
+- **Best For**: Speed builds, sustained DPS
+
+**4. Single Weapon (No Shield)**
+- **Equipment**: One weapon (left or right hand), other hand free
+- **Bonuses**:
+  - +10% to all attributes (balanced stance)
+  - +15% to Gyro Stabilizers
+  - No penalties
+- **Penalties**:
+  - No specific bonuses like other loadouts
+- **Best For**: Balanced builds, flexible strategies
+
+### Loadout Implementation
+
+- Players choose loadout before battle (saved in robot configuration)
+- Loadout can be changed between battles (not during)
+- Some weapons are locked to specific loadouts:
+  - "Two-handed" tag: Requires Two-Handed loadout
+  - "Shield-compatible": Works with Weapon + Shield
+  - "Dual-wield": Works with Dual-Wield (need 2 copies)
+
+---
+
+## Battle Stance Setting
+
+Before battle, players set their robot's stance preference (not an attribute, a setting).
+
+### Stance Options
+
+**1. Offensive Stance**
+- **Behavior**: Prioritize attacks, aggressive positioning
+- **Effects**:
+  - +15% to Combat Power
+  - +10% to Attack Speed
+  - -10% to Counter Protocols
+  - -10% to Evasion Thrusters
+  - Robot seeks optimal attack opportunities
+  - Less likely to yield early
+
+**2. Defensive Stance**
+- **Behavior**: Prioritize survival, cautious positioning
+- **Effects**:
+  - +15% to Armor Plating
+  - +15% to Counter Protocols
+  - +20% to shield regeneration (if equipped)
+  - -10% to Combat Power
+  - -10% to Attack Speed
+  - Robot focuses on blocking and countering
+  - More likely to yield when HP low
+
+**3. Balanced Stance**
+- **Behavior**: Adaptive based on situation
+- **Effects**:
+  - No stat modifiers
+  - Robot uses Combat Algorithms to decide when to attack/defend
+  - Yield based on exact threshold setting
+
+### Stance & AI Interaction
+
+- **Combat Algorithms** determines how well the robot executes its stance
+- **Threat Analysis** helps identify best attack/defense opportunities
+- **Adaptive AI** adjusts stance effectiveness based on opponent behavior
+- **Logic Cores** manages stance under low HP conditions
+
+---
+
+## Yield Threshold System
+
+Players set a **Yield Threshold** (% of max HP) where their robot surrenders.
+
+### How It Works
+
+**Yield Threshold Setting:**
+- Range: 0% to 50%
+- Default: 10%
+- Configurable per robot before each battle
+
+**Yield Behavior:**
+- When robot HP drops below threshold, robot attempts to surrender
+- Surrender is not instant - opponent can land one more attack
+- If surrendered successfully:
+  - Battle ends (opponent wins)
+  - Reduced repair costs (see below)
+- If robot is destroyed (0% HP) before yielding:
+  - Full repair costs apply
+
+**Logic Cores Integration:**
+- **High Logic Cores** (30+): Robot makes smarter yield decisions
+  - May fight longer if winning
+  - Yields earlier if hopelessly outmatched
+  - Factors in shield status, opponent HP
+- **Low Logic Cores** (<15): Robot follows threshold rigidly
+  - Always yields at exact threshold
+  - No adaptive decision-making
+
+### Repair Cost Scaling
+
+**Formula:**
+```
+base_repair = (sum_of_all_23_attributes × 100)
+damage_multiplier = current_damage_percentage
+
+if robot_destroyed (HP = 0):
+    critical_multiplier = 2.5
+    final_repair = base_repair × damage_multiplier × critical_multiplier
+elif robot_yielded (HP > 0):
+    final_repair = base_repair × damage_multiplier
+else:
+    final_repair = base_repair × damage_multiplier
+```
+
+**Example:**
+- Robot with 230 total attribute points (avg 10 each)
+- Base repair = 230 × 100 = ₡23,000
+
+**Scenario 1: Destroyed (0% HP)**
+- Damage = 100%
+- Critical multiplier = 2.5x
+- Final cost = ₡23,000 × 1.0 × 2.5 = **₡57,500**
+
+**Scenario 2: Yielded at 15% HP**
+- Damage = 85%
+- No critical multiplier
+- Final cost = ₡23,000 × 0.85 = **₡19,550**
+
+**Scenario 3: Victory at 40% HP**
+- Damage = 60%
+- No critical multiplier
+- Final cost = ₡23,000 × 0.60 = **₡13,800**
+
+**Strategic Implications:**
+- **Aggressive players**: Set low threshold (5-10%), risk high repair costs
+- **Conservative players**: Set high threshold (30-40%), pay less but lose more
+- **Balanced players**: Adjust based on robot build and opponent
+
+---
+
+## Combat System: Time-Based vs Turn-Based
+
+The system is designed to support both modes. **Recommended: Time-Based** for more dynamic gameplay.
+
+### Time-Based Combat (Recommended)
+
+**Attack Timing:**
+```
+attack_cooldown_seconds = base_cooldown / (1 + attack_speed / 50)
+base_cooldown = weapon.cooldown (typically 3-5 seconds)
+
+Example:
+- Weapon with 4 second cooldown
+- Robot with Attack Speed 30
+- Cooldown = 4 / (1 + 30/50) = 4 / 1.6 = 2.5 seconds
+```
+
+**Opportunity System:**
+```
+// Robot doesn't attack immediately when cooldown ready
+// AI waits for optimal moment based on:
+
+opportunity_score = base_opportunity
+
+// Positioning bonus
+if positioning_advantage:
+    opportunity_score += threat_analysis / 10
+
+// Enemy vulnerability
+if enemy_recovering:
+    opportunity_score += combat_algorithms / 15
+
+// Defensive consideration (defensive stance)
+if defensive_stance and taking_damage:
+    opportunity_score -= 20
+
+// Attack when opportunity score > threshold
+attack_threshold = 50 + (adaptive_ai / 5)
+if opportunity_score >= attack_threshold:
+    execute_attack()
+```
+
+**Advantages:**
+- More dynamic and engaging
+- Rewards positioning and timing
+- Better utilizes AI attributes
+- Allows for simultaneous team actions
+- More realistic combat flow
+
+**Implementation Complexity:**
+- Medium (requires game clock and event scheduling)
+- Need to handle simultaneous attacks
+- Animation/visual feedback more complex
+
+### Turn-Based Combat (Simpler Alternative)
+
+**Initiative Order:**
+```
+initiative = servo_motors + (gyro_stabilizers / 2) + random(0, 10)
+// Robots attack in initiative order each turn
+```
+
+**Attacks Per Turn:**
+```
+base_attacks = 1
+bonus_attacks = floor(attack_speed / 30)
+total_attacks = base_attacks + bonus_attacks
+```
+
+**Advantages:**
+- Simpler to implement
+- Easier to understand
+- Clear action sequence
+- Better for initial prototype
+
+**Disadvantages:**
+- Less dynamic
+- Harder to show positioning/timing benefits
+- Team battles feel less fluid
+
+### Recommendation
+
+**Phase 1 Prototype**: Start with turn-based for simplicity
+**Phase 2+**: Migrate to time-based for better gameplay
+
+---
+
+## Combat Formulas
+
+### Hit Chance
 ```
 base_hit_chance = 70%
-hit_chance = base_hit_chance + (attacker.targeting_computer / 2) - (defender.evasion_thrusters / 3)
+
+// Attacker bonuses
+targeting_bonus = attacker.targeting_systems / 2
+stance_bonus = (attacker.stance == offensive) ? 5% : 0%
+
+// Defender penalties
+evasion_penalty = defender.evasion_thrusters / 3
+gyro_penalty = defender.gyro_stabilizers / 5
+
+hit_chance = base_hit_chance + targeting_bonus + stance_bonus - evasion_penalty - gyro_penalty
 hit_chance = clamp(hit_chance, 10%, 95%)
 ```
 
-**Critical Hit Chance:**
+### Critical Hit Mechanics
+
+**Critical rolls happen AFTER hit is confirmed:**
 ```
-base_crit_chance = 5%
-crit_chance = base_crit_chance + (attacker.critical_circuits / 8) + (attacker.targeting_computer / 25)
+// Step 1: Check if attack hits
+if random() > hit_chance:
+    return MISS
+
+// Step 2: Check for critical (only if hit confirmed)
+base_crit = 5%
+crit_chance = base_crit + (attacker.critical_systems / 8) + (attacker.targeting_systems / 25)
+
+// Loadout bonuses
+if loadout == TWO_HANDED:
+    crit_chance += 10%
+
 crit_chance = clamp(crit_chance, 0%, 50%)
+
+is_critical = random() < crit_chance
 ```
 
---> Are these tracked seperately from the hit? What if there is a critical hit but the hit is a miss? How does this work? 
---> What is the impact of a critical hit? 
-
-**Miss Chance:**
+**Critical Impact:**
 ```
-miss_chance = 100% - hit_chance
-```
-
-**Damage Calculation:**
-```
-// Base damage from firepower and weapon
-base_damage = attacker.firepower + weapon.base_damage
-
-// Weapon handling modifier
-weapon_modifier = 1 + (attacker.weapon_stability / 100)
-modified_damage = base_damage * weapon_modifier
-
-// Melee bonus (for melee weapons only)
-if weapon.type == 'melee':
-    modified_damage += attacker.hydraulic_power * 0.5
-
---> If Hydraulic Power is for melee weapons only, is Firepower for ranged weapons only? Both these stats should also have other purposes otherwise players will not invest in them (ie. neglect them if they go the melee / ranged route).
---> Think about the type of damage that can be inflicted. Ranged might be armor piercing, but melee might have other benefits?
-
-// Armor and shield defense
-armor_reduction = defender.armor_plating * (1 - attacker.armor_piercing / 100)
-shield_reduction = defender.shield_generator * 0.8
-total_defense = armor_reduction + shield_reduction
-
---> Is there a way / weapon to impact shield_reduction? Do we need to track shield? Do you first damage the shield and then HP? Or do you deal damage when you break through the shield and is it still up?
-
-// Final damage calculation
-final_damage = max(1, modified_damage - total_defense)
-
-// Critical hit multiplier
-if critical_hit:
-    crit_multiplier = 2.0 - (defender.damage_dampeners / 100)
+if is_critical:
+    // Base multiplier
+    crit_multiplier = 2.0
+    
+    // Loadout modifications
+    if attacker.loadout == TWO_HANDED:
+        crit_multiplier = 2.5
+    
+    // Defender resistance
+    crit_multiplier -= (defender.damage_dampeners / 100)
+    crit_multiplier = max(crit_multiplier, 1.2)  // Minimum 20% bonus
+    
     final_damage *= crit_multiplier
+```
 
---> Can is the critical hit multiplier affected by the type of weapons (two handed has a higher multiplier?)
+### Damage Calculation
 
-// Counter attack (if defender survives and roll succeeds)
-counter_chance = defender.counter_protocols / 100
+**Base Damage:**
+```
+// Weapon base damage
+base_damage = weapon.base_damage
+
+// Combat Power applies to ALL weapon types
+combat_power_mult = 1 + (attacker.combat_power / 100)
+base_damage *= combat_power_mult
+
+// Loadout modifiers
+if attacker.loadout == TWO_HANDED:
+    base_damage *= 1.25
+elif attacker.loadout == DUAL_WIELD:
+    base_damage *= 0.90
+```
+
+**Weapon-Specific Bonuses:**
+```
+// Melee weapons benefit from hydraulic systems
+if weapon.type == 'melee':
+    melee_bonus = attacker.hydraulic_systems * 0.4
+    base_damage += melee_bonus
+    
+    // Melee also benefits from close positioning
+    if close_range:
+        base_damage *= 1.15
+
+// Ranged weapons benefit from positioning
+if weapon.type in ['ballistic', 'energy', 'explosive']:
+    if optimal_range:
+        base_damage *= 1.10
+```
+
+**Weapon Control:**
+```
+control_mult = 1 + (attacker.weapon_control / 100)
+modified_damage = base_damage * control_mult
+```
+
+**Penetration vs Defense:**
+```
+// Armor reduction
+armor_reduction = defender.armor_plating * (1 - attacker.penetration / 150)
+
+// Shield handling (separate pool)
+if defender.current_shield > 0:
+    // Shields take damage first
+    shield_damage = modified_damage * 0.7  // Shields absorb 70% effectiveness
+    
+    // Apply penetration to shields too
+    shield_penetration = shield_damage * (1 + attacker.penetration / 200)
+    
+    damage_to_shield = min(shield_penetration, defender.current_shield)
+    defender.current_shield -= damage_to_shield
+    
+    // Remaining damage "bleeds through" at reduced rate
+    if shield_penetration > defender.current_shield:
+        overflow = (shield_penetration - defender.current_shield) * 0.3
+        damage_to_hp = max(1, overflow - armor_reduction)
+    else:
+        damage_to_hp = 0
+else:
+    // No shield, damage goes to HP
+    damage_to_hp = max(1, modified_damage - armor_reduction)
+```
+
+**Critical Application:**
+```
+if is_critical:
+    damage_to_hp *= crit_multiplier
+```
+
+**Final Damage:**
+```
+// Apply to defender
+defender.current_hp -= damage_to_hp
+
+// Track for repair costs
+defender.damage_taken += damage_to_hp
+```
+
+### Shield Mechanics
+
+**Shield Capacity:**
+```
+max_shield = shield_capacity_attribute * 2
+
+// Loadout bonus
+if loadout == WEAPON_AND_SHIELD:
+    max_shield *= 1.20
+
+// Power Core provides shield regeneration
+shield_regen_per_second = power_core * 0.15
+
+// Defensive stance bonus
+if stance == DEFENSIVE:
+    shield_regen_per_second *= 1.20
+```
+
+**Shield vs HP:**
+- Shields are a separate HP pool
+- Shields regenerate during battle (HP does not)
+- Shield damage doesn't affect repair costs
+- When shields break, there's no penalty except vulnerability
+- Energy weapons may be more effective vs shields (future enhancement)
+
+### Counter Attack
+
+**Counter Chance:**
+```
+base_counter = counter_protocols / 100
+
+// Stance modifier
+if stance == DEFENSIVE:
+    base_counter *= 1.15
+
+// Loadout modifier
+if loadout == WEAPON_AND_SHIELD:
+    base_counter *= 1.10
+
+counter_chance = clamp(base_counter, 0%, 40%)
+```
+
+**Counter Trigger:**
+```
+// After defender is hit (and survives)
 if random() < counter_chance:
-    trigger_counter_attack()
+    // Counter attack at 70% normal damage
+    execute_counter_attack(damage = normal_damage * 0.7)
 ```
 
-**Turn Order (Initiative):**
+### HP Regeneration
+
+**Power Core Regeneration:**
 ```
-initiative = robot.servo_motors + (robot.gyro_stabilizers / 2) + random(0, 10)
-// Faster robots attack first
+// Regenerates HP, not shields (shields have own regen)
+hp_regen_per_second = power_core * 0.15
+
+// Only regenerates if not at critical HP
+if current_hp > (max_hp * 0.20):
+    current_hp += hp_regen_per_second
+    current_hp = min(current_hp, max_hp)
 ```
 
---> What if we abandon a turn system? How much more difficult are the calculations? (see comments above)
+### AI Decision Quality
 
-**Attack Speed (Attacks per Turn):**
+**Combat Algorithms:**
 ```
-base_attacks = 1
-bonus_attacks = floor(attacker.firing_rate / 30)
-total_attacks = base_attacks + bonus_attacks
-// At firing_rate 30+, robot gets 2 attacks per turn
-// At firing_rate 60+, robot gets 3 attacks per turn
-```
-
---> What if we calculate "one possible attack per x seconds"
-
-**Performance Under Pressure:**
-```
-// When HP < 30%, Logic Cores affect performance
-if current_hp < (max_hp * 0.3):
-    accuracy_penalty = max(0, 20 - logic_cores)
-    damage_penalty = max(0, 15 - logic_cores)
-    // Higher Logic Cores = less penalty when damaged
-```
-
-**Health Regeneration (Sustained Combat):**
-```
-// Power Core provides passive HP regeneration per turn
-regen_per_turn = power_core * 0.2
-// Helps in longer battles
-```
-
---> Regenerate HP or shield? How does this work?
-
-**Combat Decision Quality:**
-```
-// Combat Algorithms affect target selection and ability usage
 decision_quality = combat_algorithms / 10
-// Better decisions = optimal ability timing, better target priority
+
+// Affects:
+// - Target selection in multi-target scenarios
+// - Ability timing
+// - When to use special attacks
+// - Resource management (energy/shields)
+
+if decision_quality >= 5:
+    // Good decisions - prioritize low HP targets
+    // Use abilities at optimal times
+elif decision_quality >= 3:
+    // Average decisions - sometimes suboptimal
+elif decision_quality < 3:
+    // Poor decisions - often attacks wrong target
 ```
 
---> How does this impact the attack? I don't see this in the to hit formula.
-
-**Tactical Positioning:**
+**Threat Analysis:**
 ```
-// Threat Analysis improves positioning bonus
 positioning_bonus = threat_analysis / 20
-// Applied to accuracy and evasion when in advantageous position
+
+// Applies to:
+hit_chance += positioning_bonus
+damage *= (1 + positioning_bonus / 100)
+evasion += positioning_bonus
+
+// Robot positions optimally based on this stat
 ```
 
---> How does this impact the attack? I don't see this in the to hit formula.
-
-**Adaptation:**
+**Adaptive AI:**
 ```
-// Adaptive AI learns opponent patterns
-after_turn_3:
-    learning_bonus = adaptive_ai / 15
-    // Increases hit chance and reduces damage taken as battle progresses
+// After turn 3 (or 5 seconds in time-based)
+learning_bonus = adaptive_ai / 15
+
+// Applies to:
+hit_chance += learning_bonus
+damage_reduction += learning_bonus / 2
+critical_chance += learning_bonus / 3
+
+// Robot "learns" opponent patterns
 ```
 
---> How does this impact the attack? I don't see this in the to hit formula.
+**Logic Cores (Low HP Performance):**
+```
+if current_hp < (max_hp * 0.30):
+    // Base penalties when damaged
+    base_accuracy_penalty = 20
+    base_damage_penalty = 15
+    
+    // Logic Cores reduce penalties
+    accuracy_penalty = max(0, base_accuracy_penalty - logic_cores)
+    damage_penalty = max(0, base_damage_penalty - logic_cores)
+    
+    hit_chance -= accuracy_penalty
+    damage *= (1 - damage_penalty / 100)
+    
+// Also affects yield decisions (see Yield Threshold section)
+```
 
-### Team Battle Formulas (Arena/Multi-Robot)
+---
+
+## Team Battle Formulas (2v2, 3v3, etc.)
 
 **Team Coordination Bonus:**
 ```
-// When 2+ allied robots are adjacent
-coordination_multiplier = 1 + (average_sync_protocols / 50)
-damage_output *= coordination_multiplier
-```
+// When 2+ allied robots are within range
+avg_sync = average(all_allied_robots.sync_protocols)
+coordination_mult = 1 + (avg_sync / 50)
 
---> Change to "when allied robots". 2v2 should be possible.
+damage_output *= coordination_mult
+defense_rating *= (1 + avg_sync / 100)
+```
 
 **Support Buff:**
 ```
 // Support Systems can buff adjacent allies
 buff_amount = support_systems * 0.3
-// Applied to ally's armor or damage for 1 turn
+duration = 5 seconds (or 2 turns)
+
+// Applied to ally's armor or damage
+ally.armor_plating += buff_amount
+// or
+ally.combat_power += buff_amount
 ```
 
 **Formation Bonus:**
@@ -244,368 +681,325 @@ buff_amount = support_systems * 0.3
 if in_formation:
     defense_bonus = formation_tactics / 10
     accuracy_bonus = formation_tactics / 15
-```
-
-**Team Synergy:**
-```
-// Average of all team members' Sync Protocols
-team_synergy = average(all_robots.sync_protocols)
-all_robots.accuracy += team_synergy / 20
-all_robots.armor_plating += team_synergy / 25
+    
+    armor_plating += defense_bonus
+    hit_chance += accuracy_bonus
 ```
 
 ---
 
 ## Weapon System
 
-Weapons are purchased items that enhance robot attributes and provide damage bonuses.
+### Weapon Types & Properties
+
+**Energy Weapons:**
+- **Damage Type**: Energy (more effective vs shields)
+- **Range**: Medium-Long
+- **Characteristics**: Precise, consistent damage
+- **Examples**: Laser Rifle, Plasma Cannon, Ion Beam
+
+**Ballistic Weapons:**
+- **Damage Type**: Kinetic (standard vs armor)
+- **Range**: Short-Long
+- **Characteristics**: Variable damage, high penetration
+- **Examples**: Machine Gun, Railgun, Shotgun
+
+**Melee Weapons:**
+- **Damage Type**: Impact (benefits from hydraulic systems)
+- **Range**: Close
+- **Characteristics**: High burst damage, positioning-dependent
+- **Examples**: Power Sword, Hammer, Plasma Blade
+
+**Explosive Weapons:**
+- **Damage Type**: Blast (area effect in team battles)
+- **Range**: Medium
+- **Characteristics**: High damage, slow reload, can hit multiple targets
+- **Examples**: Rocket Launcher, Grenade Launcher
 
 ### Weapon Attributes
 
 Each weapon has:
 1. **Base Damage** - Raw damage value
-2. **Cost** - Credits to purchase
-3. **Attribute Bonuses** - Enhances specific robot attributes
-4. **Weapon Type** - Category (Energy, Ballistic, Melee, Explosive)
+2. **Cooldown** - Time between attacks (for time-based) or attacks per turn
+3. **Cost** - Credits to purchase
+4. **Type** - Energy/Ballistic/Melee/Explosive
+5. **Hands Required** - One-handed, Two-handed, or Dual-wield compatible
+6. **Attribute Bonuses** - Enhances specific robot attributes
+7. **Special Properties** - Unique effects
 
---> Update weapon types based on the comments above about melee vs ranged and the use of arms. Also incorporate shields.
-
-### Sample Weapons (Updated with New Attributes)
-
---> We should define how the system works. The samples are to explain. It's good to have samples in the system from the start, but the players will be able to design their own weapons (and upgrade them maybe?)
+### Sample Weapons
 
 #### Energy Weapons
 
-**Laser Rifle** (₡150,000)
-- Base Damage: +20
+**Laser Rifle** (₡150,000) - One-handed
+- Base Damage: 20
+- Cooldown: 3 seconds
 - Attribute Bonuses:
-  - Targeting Computer: +3
-  - Weapon Stability: +4
-  - Firing Rate: +2
- 
---> How does the cost calculation work?
---> Define the amount of HP a robot has based on his attributes
+  - Targeting Systems: +3
+  - Weapon Control: +4
+  - Attack Speed: +2
+- Special: +15% accuracy bonus
 
-**Plasma Cannon** (₡300,000)
-- Base Damage: +35
+**Plasma Cannon** (₡300,000) - Two-handed
+- Base Damage: 40
+- Cooldown: 5 seconds
 - Attribute Bonuses:
-  - Firepower: +5
-  - Critical Circuits: +4
-  - Power Core: -3 (energy drain penalty)
+  - Combat Power: +5
+  - Critical Systems: +4
+  - Power Core: -3 (energy drain)
+- Special: +20% vs shields
 
-**Ion Beam** (₡400,000)
-- Base Damage: +25
+**Ion Beam** (₡400,000) - Two-handed
+- Base Damage: 30
+- Cooldown: 4 seconds
 - Attribute Bonuses:
-  - Armor Piercing: +6
-  - Shield Generator: +4
-  - Firing Rate: +5
+  - Penetration: +8
+  - Shield Capacity: +4
+  - Attack Speed: +3
+- Special: Disables enemy shields for 2 seconds on crit
 
 #### Ballistic Weapons
 
-**Machine Gun** (₡100,000)
-- Base Damage: +15
+**Machine Gun** (₡100,000) - One-handed, Dual-wield compatible
+- Base Damage: 12
+- Cooldown: 2 seconds
 - Attribute Bonuses:
-  - Firepower: +2
-  - Firing Rate: +8
-  - Weapon Stability: +3
+  - Combat Power: +2
+  - Attack Speed: +6
+  - Weapon Control: +3
+- Special: Can fire burst (3 shots at 40% damage each)
 
-**Railgun** (₡350,000)
-- Base Damage: +40
+**Railgun** (₡350,000) - Two-handed
+- Base Damage: 50
+- Cooldown: 6 seconds
 - Attribute Bonuses:
-  - Armor Piercing: +10
-  - Targeting Computer: +5
-  - Firing Rate: -3 (slow reload penalty)
+  - Penetration: +12
+  - Targeting Systems: +5
+  - Attack Speed: -3
+- Special: Ignores 50% of armor
 
-**Shotgun** (₡120,000)
-- Base Damage: +30
+**Shotgun** (₡120,000) - Two-handed
+- Base Damage: 35
+- Cooldown: 4 seconds
 - Attribute Bonuses:
-  - Firepower: +4
-  - Critical Circuits: +5
-  - Targeting Computer: -3 (close range penalty)
+  - Combat Power: +4
+  - Critical Systems: +5
+  - Targeting Systems: -3
+- Special: +30% damage at close range
 
 #### Melee Weapons
 
-**Power Sword** (₡180,000)
-- Base Damage: +28
+**Power Sword** (₡180,000) - One-handed
+- Base Damage: 28
+- Cooldown: 3 seconds
 - Attribute Bonuses:
-  - Hydraulic Power: +6
+  - Hydraulic Systems: +6
   - Counter Protocols: +5
   - Gyro Stabilizers: +3
+- Special: +25% counter damage
 
-**Hammer** (₡200,000)
-- Base Damage: +35
+**Hammer** (₡200,000) - Two-handed
+- Base Damage: 42
+- Cooldown: 5 seconds
 - Attribute Bonuses:
-  - Hydraulic Power: +8
-  - Firepower: +6
-  - Servo Motors: -2 (weight penalty)
+  - Hydraulic Systems: +8
+  - Combat Power: +6
+  - Servo Motors: -2
+- Special: 30% chance to stun for 1 second
+
+**Plasma Blade** (₡250,000) - One-handed, Dual-wield compatible
+- Base Damage: 24
+- Cooldown: 2.5 seconds
+- Attribute Bonuses:
+  - Hydraulic Systems: +4
+  - Attack Speed: +5
+  - Critical Systems: +3
+- Special: Burns through shields (70% effective vs shields)
 
 #### Explosive Weapons
 
-**Rocket Launcher** (₡320,000)
-- Base Damage: +45
+**Rocket Launcher** (₡320,000) - Two-handed
+- Base Damage: 55
+- Cooldown: 7 seconds
 - Attribute Bonuses:
-  - Firepower: +7
-  - Critical Circuits: +6
-  - Firing Rate: -4 (slow reload)
+  - Combat Power: +7
+  - Critical Systems: +6
+  - Attack Speed: -4
+- Special: Hits all enemies in 3m radius (team battles)
 
-**Grenade Launcher** (₡250,000)
-- Base Damage: +32
+**Grenade Launcher** (₡250,000) - Two-handed
+- Base Damage: 38
+- Cooldown: 5 seconds
 - Attribute Bonuses:
-  - Firepower: +5
+  - Combat Power: +5
   - Threat Analysis: +4
-  - Firing Rate: -2
+  - Attack Speed: -2
+- Special: Creates smoke cloud reducing enemy accuracy
+
+#### Shields
+
+**Combat Shield** (₡100,000)
+- Shield Bonus: +100 max shield
+- Attribute Bonuses:
+  - Armor Plating: +8
+  - Counter Protocols: +6
+  - Evasion Thrusters: -2
+- Special: Can block projectiles (25% chance to negate ranged attack)
+
+**Energy Barrier** (₡200,000)
+- Shield Bonus: +150 max shield
+- Attribute Bonuses:
+  - Shield Capacity: +10
+  - Power Core: +4
+  - Servo Motors: -3
+- Special: Reflects 20% of energy weapon damage
+
+### Weapon Crafting System
+
+**Design Costs:**
+- Base weapon template: ₡500,000
+- Stat customization: ₡50,000 per attribute point
+- Special properties: ₡200,000 per property
+
+**Requirements:**
+- Unlock Weapons Workshop Level 3 (stable upgrade)
+- Have 10+ battles with similar weapon types
+- Minimum 5,000 prestige
+
+**Customization Options:**
+- Choose base damage (within range)
+- Choose cooldown (within range)
+- Allocate bonus attribute points (limited budget)
+- Select one special property from list
+
+---
+
+## HP Calculation
+
+**Base HP from Hull Integrity:**
+```
+base_hp = hull_integrity * 10
+
+Example:
+- Hull Integrity 1: 10 HP
+- Hull Integrity 10: 100 HP
+- Hull Integrity 25: 250 HP
+- Hull Integrity 50: 500 HP
+```
+
+**Recommended Starting HP:**
+- New robot (all attributes at 1): 10 HP
+- After first ₡350K upgrades: ~100-150 HP
+- Mid-game robot: 200-300 HP
+- End-game robot: 400-600 HP
+
+**Shield HP (separate pool):**
+```
+base_shield = shield_capacity * 2
+
+Example:
+- Shield Capacity 1: 2 shield HP
+- Shield Capacity 20: 40 shield HP
+- Shield Capacity 40: 80 shield HP
+```
 
 ---
 
 ## Strategy Implications
 
-### Build Archetypes
+### Build Archetypes (Updated)
 
-**Tank Build:**
-- High: Hull Integrity, Armor Plating, Shield Generator, Damage Dampeners
-- Low: Servo Motors, Firing Rate
-- Weapon: Heavy weapons with raw firepower
-- Strategy: Absorb damage while dealing consistent hits
+**Tank Build** - Weapon + Shield loadout
+- High: Hull Integrity, Armor Plating, Shield Capacity
+- Medium: Counter Protocols, Hydraulic Systems
+- Low: Attack Speed, Servo Motors
+- Weapon: Combat Shield + Power Sword or Hammer
+- Stance: Defensive
+- Strategy: Absorb damage, counter attack, outlast opponent
 
-**Glass Cannon:**
-- High: Firepower, Critical Circuits, Armor Piercing
+**Glass Cannon** - Two-Handed loadout
+- High: Combat Power, Critical Systems, Penetration
+- Medium: Targeting Systems, Weapon Control
 - Low: Hull Integrity, Armor Plating
-- Weapon: High-damage plasma or explosive weapons
+- Weapon: Plasma Cannon or Railgun (two-handed)
+- Stance: Offensive
 - Strategy: Eliminate opponent before taking damage
 
-**Speed Demon:**
-- High: Servo Motors, Gyro Stabilizers, Evasion Thrusters, Firing Rate
-- Low: Armor Plating, Hull Integrity
-- Weapon: Fast-firing weapons like Machine Gun
-- Strategy: Multiple attacks per turn, dodge enemy fire
+**Speed Demon** - Dual-Wield loadout
+- High: Attack Speed, Servo Motors, Gyro Stabilizers
+- Medium: Weapon Control, Combat Power
+- Low: Hull Integrity, Armor Plating
+- Weapons: Dual Machine Guns or Dual Plasma Blades
+- Stance: Offensive
+- Strategy: Multiple fast attacks, overwhelm with DPS
 
-**Counter Striker:**
+**Counter Striker** - Weapon + Shield loadout
 - High: Counter Protocols, Armor Plating, Logic Cores
-- Moderate: All combat stats
-- Weapon: Melee weapons for counter damage
-- Strategy: Punish opponent's attacks with counters
+- Medium: All combat stats
+- Weapon: Combat Shield + Power Sword
+- Stance: Defensive
+- Strategy: Tank damage, punish with counters
 
-**Tactical AI:**
+**Melee Specialist** - Two-Handed or Single melee
+- High: Hydraulic Systems, Servo Motors, Gyro Stabilizers
+- Medium: Hull Integrity, Combat Power
+- Weapon: Hammer (two-handed) or Power Sword (single)
+- Stance: Offensive
+- Strategy: Close distance quickly, devastating melee strikes
+
+**Sniper** - Two-Handed ranged
+- High: Targeting Systems, Penetration, Critical Systems
+- Medium: Combat Power, Weapon Control
+- Weapon: Railgun (two-handed)
+- Stance: Balanced
+- Strategy: High-accuracy shots, armor penetration
+
+**Tactical AI** - Any loadout
 - High: Combat Algorithms, Threat Analysis, Adaptive AI
 - Moderate: All combat stats
 - Weapon: Versatile weapons
-- Strategy: Optimal decision-making wins battles
-
-**Team Coordinator (Arena):**
-- High: Sync Protocols, Support Systems, Formation Tactics
-- Moderate: Combat and defensive stats
-- Weapon: Support-oriented weapons
-- Strategy: Enable team synergy and coordinate attacks
+- Stance: Balanced
+- Strategy: Optimal decision-making, adapt to opponent
 
 ---
 
-## Progression System
+## Implementation Priority
 
-### Upgrade Paths
+**Phase 1 (Prototype):**
+1. Core 23 attributes
+2. Robot state tracking (HP, shield, damage)
+3. Loadout system (all 4 configurations)
+4. Turn-based combat with all formulas
+5. Yield threshold system
+6. Basic weapons (11 initial weapons)
 
-Players can specialize or generalize:
+**Phase 2 (Enhancement):**
+1. Stance settings (offensive/defensive/balanced)
+2. Time-based combat system
+3. Shield mechanics (separate HP pool)
+4. Advanced AI behaviors
+5. More weapons and shields
 
-**Specialist Strategy:**
-- Focus 80% of Credits on 5-7 key attributes
-- Creates strong advantage in specific scenarios
-- Vulnerable to counter-strategies
-
-**Generalist Strategy:**
-- Distribute Credits evenly across 15-18 attributes
-- No major weaknesses
-- No exceptional strengths
-
-**Hybrid Strategy:**
-- 60% on core 8-10 attributes, 40% on supporting attributes
-- Balanced with slight specialization
-- Recommended for new players
-
-### Upgrade Cost Examples
-
-Starting from all attributes at 1 with ₡1,000,000:
-
-**Budget Allocation Example (Single Robot):**
-- Robot Frame: ₡500,000
-- Basic Weapon: ₡150,000
-- Remaining for upgrades: ₡350,000
-
-**Sample Upgrade Plan (Speed Demon):**
-- Servo Motors 1→15: ₡120,000
-- Firing Rate 1→15: ₡120,000
-- Gyro Stabilizers 1→10: ₡55,000
-- Evasion Thrusters 1→8: ₡36,000
-- Machine Gun: ₡100,000
-- **Total**: ₡931,000 (within budget)
-
----
-
-## Battle Economy
-
-### Repair Costs
-
-**Formula:**
-```
-total_attributes = sum(all_23_attributes)
-base_repair_cost = total_attributes × 100
-damage_multiplier = (max_hp - current_hp) / max_hp
-final_repair_cost = base_repair_cost × damage_multiplier
-```
-
-**Example:**
-- Robot with total attributes = 230 (average 10 per attribute)
-- Max HP = 100, Current HP = 30 (70% damage)
-- Base repair = 230 × 100 = ₡23,000
-- Final repair = 23,000 × 0.70 = ₡16,100
-
-### Battle Rewards
-
-**Formula:**
-```
-base_reward = 50,000 Credits
-league_multiplier = 1.0 + (league_tier × 0.2)
-elo_difference_bonus = (opponent_elo - your_elo) × 10
-win_multiplier = winner ? 1.0 : 0.4
-
-total_reward = (base_reward × league_multiplier + elo_difference_bonus) × win_multiplier
-```
-
-**Examples:**
-
-**Normal League, Equal ELO, Win:**
-- Base: ₡50,000 × 1.0 = ₡50,000
-- ELO bonus: 0
-- Win: ₡50,000 × 1.0 = **₡50,000**
-
-**Normal League, Equal ELO, Loss:**
-- Base: ₡50,000 × 1.0 = ₡50,000
-- ELO bonus: 0
-- Loss: ₡50,000 × 0.4 = **₡20,000**
-
-**Higher League (Tier 2), Beat Higher ELO (+50), Win:**
-- Base: ₡50,000 × 1.4 = ₡70,000
-- ELO bonus: 50 × 10 = ₡500
-- Win: (70,000 + 500) × 1.0 = **₡70,500**
-
-### Economy Balance
-
-- Average repair cost (50% damage): ~₡11,000 - ₡16,000
-- Win reward (normal league): ₡50,000
-- Loss reward (normal league): ₡20,000
-- **Net profit per win**: ~₡34,000 - ₡39,000
-- **Net profit per loss**: ~₡4,000 - ₡9,000 (covers repairs 90% of time)
-
----
-
-## ELO System
-
-**Standard ELO Implementation:**
-- Starting ELO: 1200
-- K-factor: 32 (high volatility for new players)
-- Formula: Standard chess ELO
-
-```
-expected_score = 1 / (1 + 10^((opponent_elo - your_elo) / 400))
-new_elo = old_elo + K × (actual_score - expected_score)
-```
-
-**Fame System:**
-- Win: +10 fame × ELO multiplier
-- Loss: +3 fame × ELO multiplier
-- ELO multiplier: `1 + max(0, (opponent_elo - your_elo) / 1000)`
-
----
-
-## Attribute Purpose Summary
-
-Every attribute has a clear mechanical purpose:
-
-**Weapons Systems:**
-1. Firepower → Base damage calculation
-2. Targeting Computer → Hit chance, crit chance
-3. Critical Circuits → Crit chance
-4. Armor Piercing → Bypasses enemy armor
-5. Weapon Stability → Damage multiplier
-6. Firing Rate → Attacks per turn
-
-**Defensive Systems:**
-7. Armor Plating → Physical damage reduction
-8. Shield Generator → Energy damage reduction
-9. Evasion Thrusters → Dodge chance
-10. Damage Dampeners → Crit damage reduction
-11. Counter Protocols → Counter-attack chance
-
-**Chassis & Mobility:**
-12. Hull Integrity → Maximum HP
-13. Servo Motors → Initiative, speed
-14. Gyro Stabilizers → Initiative, dodge
-15. Hydraulic Power → Melee damage bonus
-16. Power Core → HP regeneration per turn
-
-**AI Processing:**
-17. Combat Algorithms → Decision quality
-18. Threat Analysis → Positioning bonus
-19. Adaptive AI → Learning bonus (turn 3+)
-20. Logic Cores → Low HP performance
-
-**Team Coordination:**
-21. Sync Protocols → Team damage multiplier
-22. Support Systems → Ally buffs
-23. Formation Tactics → Formation bonuses
-
---> Update this section based on comments.
-
----
-
-## Implementation Notes
-
-### Database Changes Needed
-
-1. **Robot Model**: Update from 25 to 23 attributes with new names
-2. **Weapon Model**: Update bonus fields to match new attribute names
-3. **User Model**: Already has currency (₡1,000,000) and ELO
-4. **Battle Model**: Already has reward/cost tracking
-
-### Seed Data Updates
-
-1. Update 11 weapons with new attribute bonus names
-2. Keep starting balance at ₡1,000,000
-3. Keep robot frame cost at ₡500,000
-
-### Formula Implementation
-
-1. Implement all combat formulas in battle simulator
-2. Add team battle formulas (for future arena mode)
-3. Add attribute bonus calculations for weapons
-4. Create repair cost calculator
-5. Implement reward calculator with ELO integration
-6. Add ELO ranking system
-
---> Update based on comments.
-
----
-
-## Future Enhancements (Post-Phase 1)
-
-- **Skill Trees**: Unlock special abilities at certain attribute levels
-- **Synergy Bonuses**: Combinations of high attributes unlock bonuses
-- **Attribute Caps**: Soft/hard caps at certain levels
-- **Diminishing Returns**: Higher levels cost exponentially more
-- **Attribute Respec**: Allow resetting attributes for a fee
-- **Hidden Attributes**: Consistency, clutch performance, etc.
-- **Conditional Bonuses**: Attributes that activate in specific scenarios
-- **Team Formations**: Predefined formations that enhance team bonuses
-
---> Update this based on comments.
+**Phase 3 (Advanced):**
+1. Weapon crafting system
+2. Team battle formulas
+3. Advanced positioning mechanics
+4. Status effects system
+5. Replay system
 
 ---
 
 **This revised system provides:**
-- ✅ 23 robot-themed attributes (flexible, not strict 25)
-- ✅ Clear mechanical grouping (5 categories)
-- ✅ Robot part names (servos, hydraulics, plating, circuits, etc.)
-- ✅ AI-focused category (AI Processing, not "Mental")
-- ✅ Team coordination attributes for arena battles
-- ✅ ALL attributes have formula effects
-- ✅ Multiple viable build archetypes
-- ✅ Strategic weapon choice matters
-- ✅ Supports both 1v1 and team gameplay
+- ✅ Weapon-neutral core attributes
+- ✅ Melee vs ranged differentiation through weapons and hydraulics
+- ✅ Loadout system (shield, two-handed, dual-wield)
+- ✅ Stance settings (offensive/defensive/balanced)
+- ✅ Time-based combat option (recommended)
+- ✅ Yield threshold with repair cost scaling
+- ✅ Critical hit mechanics (only on successful hits)
+- ✅ Shield as separate HP pool with regeneration
+- ✅ ALL attributes have clear purposes
+- ✅ Complete robot state tracking
+- ✅ Comprehensive weapon system
+- ✅ HP calculation based on Hull Integrity
+- ✅ Strategic depth with multiple viable builds
