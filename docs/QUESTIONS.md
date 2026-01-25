@@ -24,7 +24,7 @@ The following decisions were made during documentation review and have been impl
 11. **Prototype Testing**: 6 test user accounts for local testing
 12. **Prototype Scope**: Robot creation, battle simulation, results viewing, user management, stable management, robot upgrading (currency system), battle history - all text-based, no animations
 13. **Currency System**: Credits (₡) as currency name, starting balance of ₡1,000,000 - See ROBOT_ATTRIBUTES.md
-14. **Attribute System**: 25 attributes grouped into Combat (8), Technical (6), Physical (6), Mental (5) - See ROBOT_ATTRIBUTES.md
+14. **Attribute System**: 23 robot-themed attributes grouped into Weapons Systems (6), Defensive Systems (5), Chassis & Mobility (5), AI Processing (4), Team Coordination (3) - See ROBOT_ATTRIBUTES.md
 15. **Upgrade Costs**: Formula-based: (level + 1) × 1,000 Credits (e.g., 1→2 costs ₡2,000) - See ROBOT_ATTRIBUTES.md
 16. **Robot Frame Cost**: ₡500,000 for bare metal robot with all attributes at 1 - See ROBOT_ATTRIBUTES.md
 17. **Weapon System**: Weapons cost ₡100,000-₡400,000 and provide attribute bonuses, required for battles - See ROBOT_ATTRIBUTES.md
@@ -33,6 +33,9 @@ The following decisions were made during documentation review and have been impl
 20. **Battle Rewards**: ELO-based system with league multipliers, covers repair costs 90% of time - See ROBOT_ATTRIBUTES.md
 21. **ELO System**: Standard ELO with K-factor 32, starting at 1200 - See ROBOT_ATTRIBUTES.md
 22. **RNG Seed**: Battle ID + timestamp (sufficient for Phase 1) - See ROBOT_ATTRIBUTES.md
+23. **Team Dynamics**: Added Team Coordination attributes (Sync Protocols, Support Systems, Formation Tactics) for arena/multi-robot battles - See ROBOT_ATTRIBUTES.md
+24. **AI Focus**: Renamed "Mental" to "AI Processing" emphasizing autonomous intelligence - See ROBOT_ATTRIBUTES.md
+25. **Robot-Themed Names**: All attributes reference robot parts (Servo Motors, Hydraulic Power, Armor Plating, etc.) - See ROBOT_ATTRIBUTES.md
 
 ---
 

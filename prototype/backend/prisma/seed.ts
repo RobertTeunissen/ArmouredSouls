@@ -18,9 +18,9 @@ async function main() {
         description: 'Standard energy weapon with good accuracy',
         baseDamage: 20,
         cost: 150000,
-        accuracyBonus: 3,
-        energyEfficiencyBonus: 5,
-        targetingSystemsBonus: 2,
+        targetingComputerBonus: 3,
+        weaponStabilityBonus: 4,
+        firingRateBonus: 2,
       },
     }),
     prisma.weapon.create({
@@ -30,9 +30,9 @@ async function main() {
         description: 'High damage plasma weapon, generates heat',
         baseDamage: 35,
         cost: 300000,
-        attackPowerBonus: 5,
-        heatManagementBonus: -3,
-        criticalStrikeBonus: 4,
+        firepowerBonus: 5,
+        criticalCircuitsBonus: 4,
+        powerCoreBonus: -3,
       },
     }),
     prisma.weapon.create({
@@ -42,9 +42,9 @@ async function main() {
         description: 'Efficient energy weapon with armor penetration',
         baseDamage: 25,
         cost: 400000,
-        energyEfficiencyBonus: 8,
-        armorPenetrationBonus: 6,
-        reloadSpeedBonus: 4,
+        armorPiercingBonus: 6,
+        shieldGeneratorBonus: 4,
+        firingRateBonus: 5,
       },
     }),
   ]);
@@ -58,9 +58,9 @@ async function main() {
         description: 'Rapid-fire ballistic weapon',
         baseDamage: 15,
         cost: 100000,
-        attackPowerBonus: 2,
-        reloadSpeedBonus: 6,
-        weaponHandlingBonus: 3,
+        firepowerBonus: 2,
+        firingRateBonus: 8,
+        weaponStabilityBonus: 3,
       },
     }),
     prisma.weapon.create({
@@ -70,9 +70,9 @@ async function main() {
         description: 'High-velocity penetrating weapon',
         baseDamage: 40,
         cost: 350000,
-        armorPenetrationBonus: 10,
-        accuracyBonus: 5,
-        reloadSpeedBonus: -2,
+        armorPiercingBonus: 10,
+        targetingComputerBonus: 5,
+        firingRateBonus: -3,
       },
     }),
     prisma.weapon.create({
@@ -82,9 +82,9 @@ async function main() {
         description: 'Close-range devastating weapon',
         baseDamage: 30,
         cost: 120000,
-        attackPowerBonus: 4,
-        accuracyBonus: -3,
-        criticalStrikeBonus: 5,
+        firepowerBonus: 4,
+        criticalCircuitsBonus: 5,
+        targetingComputerBonus: -3,
       },
     }),
   ]);
@@ -98,9 +98,9 @@ async function main() {
         description: 'Energized melee weapon for close combat',
         baseDamage: 28,
         cost: 180000,
-        strengthBonus: 6,
-        counterAttackBonus: 5,
-        agilityBonus: 3,
+        hydraulicPowerBonus: 6,
+        counterProtocolsBonus: 5,
+        gyroStabilizersBonus: 3,
       },
     }),
     prisma.weapon.create({
@@ -110,9 +110,9 @@ async function main() {
         description: 'Heavy crushing weapon',
         baseDamage: 35,
         cost: 200000,
-        strengthBonus: 8,
-        attackPowerBonus: 6,
-        speedBonus: -2,
+        hydraulicPowerBonus: 8,
+        firepowerBonus: 6,
+        servoMotorsBonus: -2,
       },
     }),
   ]);
@@ -126,9 +126,9 @@ async function main() {
         description: 'High-damage area weapon',
         baseDamage: 45,
         cost: 320000,
-        attackPowerBonus: 7,
-        criticalStrikeBonus: 6,
-        reloadSpeedBonus: -4,
+        firepowerBonus: 7,
+        criticalCircuitsBonus: 6,
+        firingRateBonus: -4,
       },
     }),
     prisma.weapon.create({
@@ -138,9 +138,9 @@ async function main() {
         description: 'Tactical explosive weapon',
         baseDamage: 32,
         cost: 250000,
-        attackPowerBonus: 5,
-        tacticalAwarenessBonus: 4,
-        reloadSpeedBonus: -2,
+        firepowerBonus: 5,
+        threatAnalysisBonus: 4,
+        firingRateBonus: -2,
       },
     }),
   ]);
@@ -224,6 +224,8 @@ async function main() {
   console.log('🤖 Robot frame cost: ₡500,000');
   console.log('⚔️  Weapon costs: ₡100,000 - ₡400,000');
   console.log('📈 Upgrade formula: (level + 1) × 1,000 Credits');
+  console.log('');
+  console.log('🔧 Attributes: 23 total (Weapons Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination)');
 }
 
 main()
