@@ -52,89 +52,77 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ## Phase 1: Local Prototype / Proof of Concept
 
-**Goal**: Build a minimal working prototype running locally to validate the core game concept with friends
+**Goal**: Build a minimal working prototype running locally to validate the core game concept
 
 **Status**: Ready to begin  
 **Team**: 2 people (Robert + AI), async development style  
 **Testing**: 6 user accounts for local testing  
-**Target**: Demo-ready prototype to show friends
+**Target**: Working game loop - Login → Setup Stable → Create Robot → Battle
 
-### What Makes This Prototype Successful?
+### Implementation Strategy: Bottom-Up, Iterative
 
-The prototype should demonstrate:
-1. ✅ Robot creation with stat customization
-2. ✅ Component system (weapons, armor) affecting gameplay
-3. ✅ Battle simulation that produces interesting outcomes
-4. ✅ Battle logs that are engaging to read
-5. ✅ Different strategies lead to different results
-6. ✅ Friends want to play more battles after seeing it
+Since there's a **1-to-1 relationship between User and Stable**, the logical development order is:
 
-### Core Features for Prototype
+1. **User/Stable Setup** → Get authentication and stable management working first
+2. **Robot Creation** → Build robot with attributes and equipment
+3. **Battle System** → Enable battles between robots
 
-**Must Have (Critical for Demo)**:
+This ensures all database components are in place before implementing battles.
 
-1. **User Management** (NEW for prototype)
-   - Basic username/password authentication
-   - 6 test user accounts
-   - Admin user with elevated rights
-   - Login/logout functionality
+### Phase 1 Milestones
 
-2. **Robot Creator**
-   - Create robot with name
-   - Distribute stat points (attack, defense, speed, health)
-   - Select chassis type
-   - Equip weapon and armor
-   - Save robot to database
+**Milestone 1: User Can Login and See Initial Setup** ✅ PRIORITY
+- [ ] User authentication (login/logout)
+- [ ] User profile view
+- [ ] Display stable info (empty at start, ₡2,000,000 to spend)
+- [ ] Display Credits (₡) balance
 
-3. **Robot Upgrading** (NEW for prototype)
-   - Simple currency system
-   - Spend currency to upgrade robot stats
-   - Track currency balance per user
+**Milestone 2: User Can Complete Stable Setup** ✅ PRIORITY
+- [ ] View available facility upgrades (14 facility types)
+- [ ] Purchase facility upgrades with Credits
+- [ ] See updated facility levels
+- [ ] Track Credits spending
 
-4. **Stable Management** (NEW for prototype)
-   - View all robots owned by user
-   - Organize robot collection
-   - Select robots for battles
+**Milestone 3: User Can Create First Robot** ✅ PRIORITY
+- [ ] Create robot with name
+- [ ] Distribute 23 attributes (all start at level 1)
+- [ ] Upgrade robot attributes with Credits
+- [ ] Select weapon from available weapons
+- [ ] Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
+- [ ] Save robot to database
+- [ ] View robot in stable
 
-5. **Battle Simulator**
-   - Input: Two robots
-   - Process: Time-based combat simulation
-   - Output: Winner + detailed battle log with timestamps
-   - Shows damage dealt, health remaining, actions taken with time progression
-   - Manual trigger for battles (no automated scheduling)
+**Milestone 4: Matchmaking in Place** ✅ PRIORITY
+- [ ] Manual robot selection for battle (select 2 robots)
+- [ ] Simple matchmaking UI (pick opponent's robot)
+- [ ] Validate both robots have weapons equipped
+- [ ] Queue battle for execution
 
-6. **Component Library**
-   - 5-10 weapons with different stats
-   - 5-10 armor pieces with different stats  
-   - 3-5 chassis types
-   - Components modify robot effectiveness
+**Milestone 5: Matches Can Be Triggered Manually** ✅ PRIORITY
+- [ ] Manual battle trigger button
+- [ ] Execute battle simulation (time-based combat)
+- [ ] Calculate battle outcome
+- [ ] Apply repair costs (1.0x/1.5x/2.0x multipliers)
+- [ ] Update robot HP/shield/ELO/stats
+- [ ] Display battle log with timestamps
+- [ ] Store battle in database
+- [ ] **TEST GAME BALANCE** - Run multiple battles to validate formulas
 
-7. **Simple UI** (Text-based, no animations)
-   - Login page
-   - Robot list page
-   - Robot creation page
-   - Robot upgrade page
-   - Stable management page
-   - Battle setup page
-   - Battle results page with log
+### Explicit Scope Limitations
 
-8. **Battle History**
-   - Store all battles in database
-   - View past battles
-   - See win/loss record per robot
-
-**Explicitly NOT in Prototype**:
-- ❌ OAuth/social login (basic username/password only)
-- ❌ Matchmaking or queues
-- ❌ Automated battle scheduling (manual trigger only)
-- ❌ Achievements or complex progression
-- ❌ Social features (friends, guilds, chat)
-- ❌ Deployment to cloud
+**NOT in Phase 1**:
+- ❌ Automated matchmaking algorithms
+- ❌ Automated battle scheduling (only manual trigger)
+- ❌ Battle queues or asynchronous battles
+- ❌ Achievements or progression systems
+- ❌ Social features (friends, chat, guilds)
+- ❌ Cloud deployment (local only)
 - ❌ Mobile support
-- ❌ Professional UI/UX design
+- ❌ Polished UI/UX (functional only)
 - ❌ Animations or visual effects
-- ❌ Battle replay visualizations
-- ❌ Robot comparison tools
+- ❌ Advanced analytics or statistics
+- ❌ Tournament system
+- ❌ Team battles (2v2, 3v3+)
 
 ### Technical Architecture (Simplified)
 
@@ -242,49 +230,69 @@ For detailed implementation, see ROBOT_ATTRIBUTES.md.
 | Reactive Armor | +25 | -8 |
 | Nano-Weave | +12 | +3 |
 
-### Development Workflow
+### Development Workflow: Iterative, Bottom-Up
 
-**Week 1: Foundation**
-- Days 1-2: Environment Setup (Node.js, Docker, PostgreSQL, project structure)
-- Days 3-4: Database & ORM (schema, Prisma setup, seed data)
-- Days 5-7: Battle Engine (core simulation, testing, CLI tool)
+**Iteration 1: User/Stable Foundation** (Milestone 1-2)
+- Set up development environment (Docker, Node.js, PostgreSQL)
+- Implement user authentication (login/logout with JWT)
+- Create User and Facility database tables
+- Build stable management UI (view facilities, purchase upgrades)
+- Implement Credits system and spending
+- **Validation**: User can login, see ₡2,000,000, upgrade facilities
 
-**Week 2: API & Components**
-- Days 8-10: REST API (Express setup, robot CRUD, battle endpoints)
-- Days 11-14: Component System (component endpoints, integration, testing)
+**Iteration 2: Robot Creation** (Milestone 3)
+- Create Robot and Weapon database tables
+- Implement robot creation API
+- Build robot attribute upgrade system (23 attributes)
+- Add weapon selection and loadout configuration
+- Create robot management UI
+- **Validation**: User can create robot, upgrade stats, equip weapon, save to database
 
-**Week 3: UI Foundation**
-- Days 15-17: React Setup (initialization, routing, layout, API connection)
-- Days 18-21: Core Pages (robot list, creation form, battle setup, results viewer)
+**Iteration 3: Battle System** (Milestone 4-5)
+- Create Battle database table
+- Implement battle simulation engine (time-based combat, all formulas)
+- Build manual matchmaking UI (select 2 robots)
+- Add manual battle trigger
+- Calculate repair costs and update robot state
+- Display battle log with timestamps
+- **Validation**: User can trigger battle, see results, robots update correctly
 
-**Week 4: Polish & Demo Prep**
-- Days 22-24: Testing & Refinement (end-to-end tests, bug fixes, balancing)
-- Days 25-28: Demo Preparation (preset robots, sample battles, documentation)
+**Iteration 4: Game Balance Testing** (Milestone 5 continued)
+- Run 50+ test battles with different robot configurations
+- Validate formulas produce interesting outcomes
+- Adjust balance if needed (documented in ROBOT_ATTRIBUTES.md)
+- Test edge cases (destroyed robots, high damage, yield threshold)
+- **Validation**: Battles feel fair, interesting, and strategic
 
-**Total Duration**: 4-8 weeks (depending on available time per week)
+**Total Duration**: 2-6 weeks (depending on available time per week)
 
-### Success Metrics for Prototype
+### Success Metrics for Phase 1
+
+**Milestone Completion**:
+- ✅ All 5 milestones completed
+- ✅ User can complete full game loop (login → setup → create robot → battle)
+- ✅ All database components working correctly
 
 **Technical Success**:
 - ✅ Battle simulation completes in <100ms
 - ✅ Can process 100 battles in <10 seconds
-- ✅ Zero crashes during demo
-- ✅ Database persists correctly
-- ✅ UI responsive on laptop screen
+- ✅ Zero crashes during testing
+- ✅ Database persists correctly between sessions
+- ✅ UI functional on laptop screen
 
 **Game Design Success**:
-- ✅ At least 3 different viable strategies
-- ✅ Battle outcomes feel logical given stats
-- ✅ Battle logs are interesting to read
-- ✅ Friends understand how to create robots
-- ✅ Friends want to try more battles
+- ✅ At least 3 different viable robot builds (Tank, Glass Cannon, Balanced)
+- ✅ Battle outcomes feel logical given robot stats
+- ✅ Battle logs show interesting combat progression
+- ✅ Repair costs make economic sense
+- ✅ Credits economy balanced (can afford upgrades without grinding)
 
-**Feedback Goals**:
-- What did friends like most?
-- What was confusing?
-- What would make it more fun?
-- Would they play this regularly?
-- What features are they asking for?
+**Validation Criteria**:
+- Can create 6 different robots with distinct strategies
+- Can run 20+ battles without issues
+- Game balance tested (no dominant strategy)
+- All formulas from ROBOT_ATTRIBUTES.md work correctly
+- Ready to show to friends for feedback
 
 ### Risk Management
 
