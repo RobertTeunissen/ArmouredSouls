@@ -1,6 +1,6 @@
 # Armoured Souls - Module Structure
 
-**Last Updated**: January 24, 2026
+**Last Updated**: January 25, 2026
 
 ## Overview
 
