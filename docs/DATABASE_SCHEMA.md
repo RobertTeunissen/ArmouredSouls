@@ -262,9 +262,10 @@ model Battle {
 ```
 
 **Notes**:
-- `battleLog` contains full turn-by-turn data for replay/analysis
-- Destroyed robots (0 HP) incur 2.5x repair cost multiplier
-- Yielded robots (surrendered above 0 HP) pay normal repair costs
+- `battleLog` contains time-based combat simulation data with timestamped events
+- Destroyed robots (0 HP) incur 2.0x repair cost multiplier
+- Heavily damaged robots (HP < 10%) incur 1.5x repair cost multiplier
+- Yielded robots (surrendered above 10% HP) pay normal repair costs
 - ELO tracking allows for historical analysis
 
 ---

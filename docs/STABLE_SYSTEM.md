@@ -278,10 +278,13 @@ Example:
 ```
 streaming_income = base_streaming × (1 + (total_battles / 1000)) × (1 + (total_fame / 5000))
 
+// total_battles = aggregate of all robot battles in stable
+// total_fame = sum of fame values from all robots in stable
+
 Example:
 - Income Generator Level 5: ₡6,000/day base
-- Total battles: 500
-- Total fame (sum of all robots): 10,000
+- Total battles: 500 (across all robots)
+- Total fame: 10,000 (sum of all robot fame values)
 - Streaming = ₡6,000 × (1 + 0.5) × (1 + 2.0) = ₡6,000 × 1.5 × 3.0 = ₡27,000/day
 ```
 

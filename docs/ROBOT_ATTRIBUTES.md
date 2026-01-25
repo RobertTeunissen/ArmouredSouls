@@ -90,7 +90,11 @@ These are tracked per robot but not upgraded directly. See DATABASE_SCHEMA.md fo
 
 ### Combat State
 - **Current HP**: Health remaining (max determined by Hull Integrity)
+  - **Critical: Robot HP does NOT regenerate during or between battles**
+  - Damage to HP persists until repaired with Credits
 - **Current Shield**: Energy shield HP remaining (max determined by Shield Capacity)
+  - Energy shields DO regenerate during battle (powered by Power Core)
+  - Energy shields reset to max after battle ends
 - **Damage Taken**: Total damage in current/last battle
 
 ### Robot Identity
