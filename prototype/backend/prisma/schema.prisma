@@ -18,11 +18,27 @@ model User {
   currency     Int      @default(1000000)
   elo          Int      @default(1200)
   fame         Int      @default(0)
+  prestige     Int      @default(0)
   createdAt    DateTime @default(now()) @map("created_at")
   
   robots       Robot[]
+  facilities   Facility[]
   
   @@map("users")
+}
+
+model Facility {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  facilityType String   @map("facility_type") @db.VarChar(50)
+  level        Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  user         User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, facilityType])
+  @@map("facilities")
 }
 
 model Robot {
