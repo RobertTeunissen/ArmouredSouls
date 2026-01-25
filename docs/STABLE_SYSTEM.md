@@ -59,6 +59,23 @@ Statistics are captured at both stable-level and robot-level for comprehensive t
 
 Players invest Credits in facility upgrades that provide stable-wide benefits. All facilities have **10 levels** (Level 0 = not purchased, Levels 1-10 = upgrades). Some facility levels require prestige thresholds to unlock.
 
+### Complete Facility List (14 Total)
+
+1. **Repair Bay** - Repair cost discounts
+2. **Training Facility** - Attribute upgrade discounts
+3. **Weapons Workshop** - Weapon purchase discounts, crafting
+4. **Research Lab** - Analytics, loadout presets
+5. **Medical Bay** - Critical damage cost reduction
+6. **Roster Expansion** - Robot roster slots (1→10)
+7. **Storage Facility** - Weapon storage capacity
+8. **Coaching Staff** - Hire coaches for stable-wide bonuses
+9. **Booking Office** - Tournament and prestige event access
+10. **Combat Training Academy** - Combat Systems attribute caps
+11. **Defense Training Academy** - Defensive Systems attribute caps
+12. **Mobility Training Academy** - Chassis & Mobility attribute caps
+13. **AI Training Academy** - AI Processing + Team Coordination attribute caps
+14. **Income Generator** - Additional revenue streams
+
 ### Facility Upgrades
 
 **1. Repair Bay** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
@@ -175,20 +192,59 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - **Level 9** (₡4,500,000, requires 45,000 prestige): Enhanced tournament rewards (+40%)
 - **Level 10** (₡5,000,000, requires 50,000 prestige): Access to World Championship, custom arena design
 
-**10. Attribute Academy** (Operating Cost: ₡2,500/day at Level 1, +₡1,250/day per level)
-- **Level 0**: All robot attributes capped at level 10
-- **Level 1** (₡1,000,000): Unlock attribute cap to level 15 for Combat Systems group
-- **Level 2** (₡1,500,000): Unlock attribute cap to level 15 for Defensive Systems group
-- **Level 3** (₡2,000,000, requires 3,000 prestige): Unlock attribute cap to level 15 for Chassis & Mobility group
-- **Level 4** (₡2,500,000): Unlock attribute cap to level 20 for Combat Systems group
-- **Level 5** (₡3,000,000): Unlock attribute cap to level 20 for Defensive Systems group
-- **Level 6** (₡3,500,000, requires 7,500 prestige): Unlock attribute cap to level 20 for Chassis & Mobility group
-- **Level 7** (₡4,000,000): Unlock attribute cap to level 25 for AI Processing group
-- **Level 8** (₡5,000,000, requires 15,000 prestige): Unlock attribute cap to level 30 for all groups
-- **Level 9** (₡6,000,000): Unlock attribute cap to level 40 for all groups
-- **Level 10** (₡8,000,000, requires 25,000 prestige): Unlock attribute cap to level 50 for all groups (maximum)
+**10. Combat Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
+- **Level 0**: Combat Systems attributes (6) capped at level 10
+- **Level 1** (₡400,000): Unlock Combat Systems cap to level 15
+- **Level 2** (₡600,000): Unlock Combat Systems cap to level 20
+- **Level 3** (₡800,000, requires 2,000 prestige): Unlock Combat Systems cap to level 25
+- **Level 4** (₡1,000,000): Unlock Combat Systems cap to level 30
+- **Level 5** (₡1,200,000, requires 4,000 prestige): Unlock Combat Systems cap to level 35
+- **Level 6** (₡1,400,000): Unlock Combat Systems cap to level 40
+- **Level 7** (₡1,600,000, requires 7,000 prestige): Unlock Combat Systems cap to level 42
+- **Level 8** (₡1,800,000): Unlock Combat Systems cap to level 45
+- **Level 9** (₡2,000,000, requires 10,000 prestige): Unlock Combat Systems cap to level 48
+- **Level 10** (₡2,500,000, requires 15,000 prestige): Unlock Combat Systems cap to level 50 (maximum)
 
-**11. Income Generator** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
+**11. Defense Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
+- **Level 0**: Defensive Systems attributes (5) capped at level 10
+- **Level 1** (₡400,000): Unlock Defensive Systems cap to level 15
+- **Level 2** (₡600,000): Unlock Defensive Systems cap to level 20
+- **Level 3** (₡800,000, requires 2,000 prestige): Unlock Defensive Systems cap to level 25
+- **Level 4** (₡1,000,000): Unlock Defensive Systems cap to level 30
+- **Level 5** (₡1,200,000, requires 4,000 prestige): Unlock Defensive Systems cap to level 35
+- **Level 6** (₡1,400,000): Unlock Defensive Systems cap to level 40
+- **Level 7** (₡1,600,000, requires 7,000 prestige): Unlock Defensive Systems cap to level 42
+- **Level 8** (₡1,800,000): Unlock Defensive Systems cap to level 45
+- **Level 9** (₡2,000,000, requires 10,000 prestige): Unlock Defensive Systems cap to level 48
+- **Level 10** (₡2,500,000, requires 15,000 prestige): Unlock Defensive Systems cap to level 50 (maximum)
+
+**12. Mobility Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
+- **Level 0**: Chassis & Mobility attributes (5) capped at level 10
+- **Level 1** (₡400,000): Unlock Chassis & Mobility cap to level 15
+- **Level 2** (₡600,000): Unlock Chassis & Mobility cap to level 20
+- **Level 3** (₡800,000, requires 2,000 prestige): Unlock Chassis & Mobility cap to level 25
+- **Level 4** (₡1,000,000): Unlock Chassis & Mobility cap to level 30
+- **Level 5** (₡1,200,000, requires 4,000 prestige): Unlock Chassis & Mobility cap to level 35
+- **Level 6** (₡1,400,000): Unlock Chassis & Mobility cap to level 40
+- **Level 7** (₡1,600,000, requires 7,000 prestige): Unlock Chassis & Mobility cap to level 42
+- **Level 8** (₡1,800,000): Unlock Chassis & Mobility cap to level 45
+- **Level 9** (₡2,000,000, requires 10,000 prestige): Unlock Chassis & Mobility cap to level 48
+- **Level 10** (₡2,500,000, requires 15,000 prestige): Unlock Chassis & Mobility cap to level 50 (maximum)
+
+**13. AI Training Academy** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
+- **Level 0**: AI Processing + Team Coordination attributes (7) capped at level 10
+- **Level 1** (₡500,000): Unlock AI & Team cap to level 15
+- **Level 2** (₡750,000): Unlock AI & Team cap to level 20
+- **Level 3** (₡1,000,000, requires 2,000 prestige): Unlock AI & Team cap to level 25
+- **Level 4** (₡1,250,000): Unlock AI & Team cap to level 30
+- **Level 5** (₡1,500,000, requires 4,000 prestige): Unlock AI & Team cap to level 35
+- **Level 6** (₡1,750,000): Unlock AI & Team cap to level 40
+- **Level 7** (₡2,000,000, requires 7,000 prestige): Unlock AI & Team cap to level 42
+- **Level 8** (₡2,250,000): Unlock AI & Team cap to level 45
+- **Level 9** (₡2,500,000, requires 10,000 prestige): Unlock AI & Team cap to level 48
+- **Level 10** (₡3,000,000, requires 15,000 prestige): Unlock AI & Team cap to level 50 (maximum)
+
+**14. Income Generator** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
 - **Level 0**: No additional income streams
 - **Level 1** (₡800,000): Unlock Merchandising (₡5,000/day base, scales with prestige)
 - **Level 2** (₡1,200,000): Improve Merchandising (₡8,000/day base)
@@ -328,7 +384,10 @@ OPERATING COSTS:
   Research Lab (Lvl 2):    ₡3,000
   Roster Expansion (4 robots): ₡1,500
   Coaching Staff (active): ₡3,000
-  Attribute Academy (Lvl 3): ₡5,000
+  Combat Academy (Lvl 3):  ₡1,600
+  Defense Academy (Lvl 2): ₡1,200
+  Mobility Academy (Lvl 2): ₡1,200
+  AI Academy (Lvl 1):      ₡1,000
   Income Generator (Lvl 5): ₡3,500
   ─────────────────────────────────
   Total Operating Costs:   ₡26,000
@@ -416,7 +475,7 @@ CURRENT BALANCE:           ₡1,847,000
 6. Participate in Silver/Gold tournaments
 
 ### Late Game (₡20M+ total earned)
-1. Max out critical facilities (Repair Bay, Medical Bay, Attribute Academy)
+1. Max out critical facilities (Repair Bay, Medical Bay, all 4 Training Academies)
 2. Build specialized arena teams
 3. Invest in prestige-locked content (high-tier tournaments)
 4. Compete in high-tier tournaments (Diamond/Champion)
@@ -461,7 +520,7 @@ CURRENT BALANCE:           ₡1,847,000
 
 **This stable system provides:**
 - ✅ Clear resource management (Credits, Prestige)
-- ✅ Meaningful long-term investments (11 facility types, 10 levels each)
+- ✅ Meaningful long-term investments (14 facility types, 10 levels each)
 - ✅ Progression goals (prestige milestones unlock facilities)
 - ✅ Strategic choices (which facilities to upgrade first, operating cost trade-offs)
 - ✅ Roster management (1-10 robot slots via facility)

@@ -293,7 +293,7 @@ model Facility {
 }
 ```
 
-**Facility Types**:
+**Facility Types** (14 total):
 - `"repair_bay"` - Reduces repair costs
 - `"training_facility"` - Reduces attribute upgrade costs
 - `"weapons_workshop"` - Weapon discounts and crafting
@@ -303,7 +303,10 @@ model Facility {
 - `"storage_facility"` - Weapon storage capacity
 - `"coaching_staff"` - Hire coaches for stable-wide bonuses
 - `"booking_office"` - Unlocks tournaments and prestige content
-- `"attribute_academy"` - Unlocks higher attribute level caps
+- `"combat_training_academy"` - Unlocks Combat Systems attribute caps (6 attributes)
+- `"defense_training_academy"` - Unlocks Defensive Systems attribute caps (5 attributes)
+- `"mobility_training_academy"` - Unlocks Chassis & Mobility attribute caps (5 attributes)
+- `"ai_training_academy"` - Unlocks AI Processing + Team Coordination attribute caps (7 attributes)
 - `"income_generator"` - Additional revenue streams (merchandising, streaming)
 
 **Notes**:

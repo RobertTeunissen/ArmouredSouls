@@ -328,7 +328,7 @@ damage_reduction += learning_bonus / 2
 
 **Logic Cores Integration:**
 
-Logic Cores improves decision-making under low HP conditions using a **linear approach**:
+Logic Cores improves decision-making under low HP conditions and provides **positive benefits at high levels**:
 
 ```
 // When HP drops below 30%
@@ -337,19 +337,31 @@ if current_hp < (max_hp * 0.30):
     base_accuracy_penalty = 20
     base_damage_penalty = 15
     
-    // Logic Cores linearly reduces penalties
-    accuracy_penalty = max(0, base_accuracy_penalty - (logic_cores * 0.67))
-    damage_penalty = max(0, base_damage_penalty - (logic_cores * 0.5))
+    // Logic Cores provides both penalty reduction AND bonuses at high levels
+    // Formula: penalty reduction + bonus for high Logic Cores
+    accuracy_adjustment = base_accuracy_penalty - (logic_cores * 0.67)
+    damage_adjustment = base_damage_penalty - (logic_cores * 0.5)
     
-    hit_chance -= accuracy_penalty
-    damage *= (1 - damage_penalty / 100)
+    // Apply adjustment (negative = penalty, positive = bonus)
+    hit_chance -= accuracy_adjustment
+    damage *= (1 + damage_adjustment / 100)
+    
+    // Additional bonus at very high Logic Cores (above 30)
+    if logic_cores > 30:
+        // Each point above 30 provides extra composure bonus
+        composure_bonus = (logic_cores - 30) * 0.5
+        hit_chance += composure_bonus
+        damage *= (1 + composure_bonus / 100)
 
 // Examples:
-// Logic Cores 1: -19.33% accuracy, -14.5% damage (minimal help)
+// Logic Cores 1: -19.33% accuracy, -14.5% damage (minimal help, still heavy penalties)
 // Logic Cores 15: -9.95% accuracy, -7.5% damage (moderate help)
 // Logic Cores 30: +0% accuracy, +0% damage (no penalty, fully composed)
-// Logic Cores 50: +0% accuracy, +0% damage (no penalty, capped at zero)
+// Logic Cores 40: +5% accuracy, +5% damage (bonus from composure, performs better when damaged)
+// Logic Cores 50: +10% accuracy, +10% damage (significant bonus, ice-cold under pressure)
 ```
+
+**Design Rationale:** High Logic Cores robots not only avoid penalties but actually perform BETTER when damaged, representing AI that becomes hyper-focused and efficient in critical situations. This makes Logic Cores worth investing in beyond just penalty negation.
 
 ### Repair Cost Scaling
 

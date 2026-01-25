@@ -7,34 +7,81 @@ This document tracks remaining open questions, decisions needed for the project,
 
 ---
 
+## 🔄 LATEST CHANGES (January 25, 2026)
+
+**Changes Made Based on Robert's Feedback:**
+
+1. ✅ **Logic Cores Enhancement** (ROBOT_ATTRIBUTES.md)
+   - Logic Cores now provides positive bonuses above 30 (not just capped at zero)
+   - Formula: Each point above 30 adds +0.5% accuracy and damage when HP < 30%
+   - Logic Cores 50 provides +10% accuracy and +10% damage when damaged
+   - Design Rationale: Makes Logic Cores worth investing in beyond penalty negation
+
+2. ✅ **Attribute Academy Split** (STABLE_SYSTEM.md, DATABASE_SCHEMA.md)
+   - Split single "Attribute Academy" into 4 separate facilities:
+     - **Combat Training Academy** - Combat Systems (6 attributes)
+     - **Defense Training Academy** - Defensive Systems (5 attributes)
+     - **Mobility Training Academy** - Chassis & Mobility (5 attributes)
+     - **AI Training Academy** - AI Processing + Team Coordination (7 attributes)
+   - Costs reduced: ₡400K-₡3M per academy (vs ₡1M-₡8M for single facility)
+   - Total facilities increased: 11 → 14
+
+3. ✅ **Prestige vs Fame Discussion Added** (ROADMAP.md)
+   - Added to "Future Ideas & Enhancements" → "Design Discussions Needed"
+   - Questions documented: Interaction, earning methods, unlocks, economic balance
+   - Status: Requires detailed design discussion
+
+4. ✅ **Tournament System Discussion Added** (ROADMAP.md)
+   - Added to "Future Ideas & Enhancements" → "Design Discussions Needed"
+   - Questions documented: Types, entry requirements, structure, rewards, rankings, scheduling
+   - Status: Requires comprehensive design specification
+
+**Next Steps:**
+- Robert to review ROADMAP.md with updated discussions
+- Consider if ROBOT_ATTRIBUTES.md should be split into multiple documents:
+  - Current: 1,049 lines, 32KB (substantial but manageable)
+  - Possible split: Combat Mechanics, Loadout Systems, Weapon Catalog
+  - Decision: Robert to determine if split is needed for readability
+
+---
+
 ## 📋 ROBERT'S ACTION ITEMS (Review Tasks)
 
 ### Documentation Review
 
 **Priority: Complete these reviews before implementation starts**
 
-1. **Review ROBOT_ATTRIBUTES.md (Complete)**
+1. **Review ROBOT_ATTRIBUTES.md (Updated - Review Logic Cores Change)**
+   - [ ] **NEW**: Approve Logic Cores positive bonuses (above 30 provides +0.5% per point when HP < 30%)
    - [ ] Review new Database Schema Implementation section
    - [ ] Verify all 23 attributes are correct with weapon-neutral names
    - [ ] Confirm loadout system (4 configurations) matches vision
    - [ ] Review stance system (offensive/defensive/balanced)
-   - [ ] Approve yield threshold mechanics (0-50% HP, 2.5x destruction penalty)
-   - [ ] Validate time-based vs turn-based combat discussion
-   - [ ] Check shield mechanics (separate HP pool, regeneration)
+   - [ ] Approve yield threshold mechanics (0-50% HP, 2.0x/1.5x repair penalties)
+   - [ ] Validate time-based combat (all turn-based references removed)
+   - [ ] Check energy shield mechanics (separate HP pool, regenerates via Power Core)
    - [ ] Review damage type system (Energy/Ballistic/Melee/Explosive)
    - [ ] Approve HP formula: `max_hp = hullIntegrity × 10`
    - [ ] Verify all combat formulas are balanced
 
-2. **Review STABLE_SYSTEM.md**
-   - [ ] Approve stable resources (Credits, Prestige, League Tier)
-   - [ ] Review 5 facility upgrade paths and costs
-   - [ ] Check prestige milestones and unlocks
+2. **Review STABLE_SYSTEM.md (Updated - Review Changes)**
+   - [ ] Approve 14 total facilities (increased from 11)
+   - [ ] Review 4 separate Training Academies (split from single Attribute Academy):
+     - Combat Training Academy (Combat Systems, 6 attrs)
+     - Defense Training Academy (Defensive Systems, 5 attrs)
+     - Mobility Training Academy (Chassis & Mobility, 5 attrs)
+     - AI Training Academy (AI Processing + Team Coordination, 7 attrs)
+   - [ ] Approve reduced costs for academies (₡400K-₡3M each vs ₡1M-₡8M for single)
+   - [ ] Review prestige milestones and unlocks
    - [ ] Approve coach system and bonuses
    - [ ] Verify roster management (2-10 robot slots)
    - [ ] Review weapon storage system
    - [ ] Check economic balance (facility ROI calculations)
 
-3. **Review ROADMAP.md Updates**
+3. **Review ROADMAP.md Updates (Updated - Review Design Discussions)**
+   - [ ] **NEW**: Review "Design Discussions Needed" section:
+     - Prestige vs Fame system interaction
+     - Tournament system comprehensive design
    - [ ] Verify Phase 1 implementation priorities are correct
    - [ ] Approve database migration path
    - [ ] Review breaking changes from design evolution

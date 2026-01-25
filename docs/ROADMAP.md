@@ -677,6 +677,30 @@ At the end of Phase 1, we will:
 
 Features and systems to consider for future development. These are not yet planned for specific phases.
 
+### Design Discussions Needed
+
+- **Prestige vs Fame System**:
+  - **Current**: Prestige (stable-level) and Fame (robot-level) are separate
+  - **To Discuss**: 
+    - How do prestige and fame interact?
+    - Should prestige be earned only from tournaments or also from battles?
+    - Should fame contribute to prestige in any way?
+    - Do they unlock different types of content?
+    - Economic balance between the two systems
+  - **Status**: Requires detailed design discussion
+
+- **Tournament System Design**:
+  - **Current**: Tournaments mentioned but not fully detailed
+  - **To Discuss**:
+    - Tournament types (local, regional, championship, world)
+    - Entry requirements (Credits cost, prestige threshold, ELO rating?)
+    - Tournament structure (single elimination, Swiss, round-robin)
+    - Reward structure (Credits, prestige, fame, exclusive items)
+    - How tournaments affect robot/stable rankings
+    - Tournament frequency and scheduling
+    - Special tournament rules and formats
+  - **Status**: Requires comprehensive design specification
+
 ### Advanced Combat Mechanics
 - **Range System**: Multiple range bands (short/medium/long) beyond just melee vs ranged
   - Different weapons perform better at different ranges
@@ -701,7 +725,7 @@ Features and systems to consider for future development. These are not yet plann
 
 ### Additional Game Modes
 - Arena battles (2v2, 3v3) with team coordination
-- Tournaments with bracket systems
+- Tournaments with bracket systems (see Design Discussions above)
 - Special events and challenges
 - Seasonal leagues
 
