@@ -1,0 +1,293 @@
+import express, { Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
+
+const router = express.Router();
+const prisma = new PrismaClient();
+
+const ROBOT_CREATION_COST = 500000;
+const MAX_ATTRIBUTE_LEVEL = 50;
+
+// Get all robots for the authenticated user
+router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    const robots = await prisma.robot.findMany({
+      where: { userId },
+      include: {
+        weapon: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(robots);
+  } catch (error) {
+    console.error('Robot list error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Create a new robot
+router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { name } = req.body;
+
+    // Validate robot name
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ error: 'Robot name is required' });
+    }
+
+    if (name.length < 1 || name.length > 100) {
+      return res.status(400).json({ error: 'Robot name must be between 1 and 100 characters' });
+    }
+
+    // Get user's current currency
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has enough currency
+    if (user.currency < ROBOT_CREATION_COST) {
+      return res.status(400).json({ error: 'Insufficient credits' });
+    }
+
+    // Create robot in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Deduct currency
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: { currency: user.currency - ROBOT_CREATION_COST },
+      });
+
+      // Create robot with all attributes at level 1 (defaults in schema)
+      const robot = await tx.robot.create({
+        data: {
+          userId,
+          name,
+        },
+        include: {
+          weapon: true,
+        },
+      });
+
+      return { user: updatedUser, robot };
+    });
+
+    res.status(201).json({
+      robot: result.robot,
+      currency: result.user.currency,
+      message: 'Robot created successfully',
+    });
+  } catch (error) {
+    console.error('Robot creation error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get a specific robot by ID
+router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    const robot = await prisma.robot.findFirst({
+      where: {
+        id: robotId,
+        userId, // Ensure user owns this robot
+      },
+      include: {
+        weapon: true,
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    res.json(robot);
+  } catch (error) {
+    console.error('Robot fetch error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Upgrade a robot attribute
+router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+    const { attribute } = req.body;
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    if (!attribute || typeof attribute !== 'string') {
+      return res.status(400).json({ error: 'Attribute name is required' });
+    }
+
+    // Get robot
+    const robot = await prisma.robot.findFirst({
+      where: {
+        id: robotId,
+        userId, // Ensure user owns this robot
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Validate attribute exists
+    const validAttributes = [
+      'firepower', 'targetingComputer', 'criticalCircuits', 'armorPiercing', 'weaponStability', 'firingRate',
+      'armorPlating', 'shieldGenerator', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
+      'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicPower', 'powerCore',
+      'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
+      'syncProtocols', 'supportSystems', 'formationTactics',
+    ];
+
+    if (!validAttributes.includes(attribute)) {
+      return res.status(400).json({ error: 'Invalid attribute name' });
+    }
+
+    // Get current level
+    const currentLevel = (robot as any)[attribute];
+
+    if (currentLevel >= MAX_ATTRIBUTE_LEVEL) {
+      return res.status(400).json({ error: 'Attribute is already at maximum level' });
+    }
+
+    // Calculate upgrade cost: (current_level + 1) × 1,000
+    const upgradeCost = (currentLevel + 1) * 1000;
+
+    // Get user's current currency
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has enough currency
+    if (user.currency < upgradeCost) {
+      return res.status(400).json({ error: 'Insufficient credits' });
+    }
+
+    // Perform upgrade in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Deduct currency
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: { currency: user.currency - upgradeCost },
+      });
+
+      // Upgrade attribute
+      const updatedRobot = await tx.robot.update({
+        where: { id: robotId },
+        data: {
+          [attribute]: currentLevel + 1,
+        },
+        include: {
+          weapon: true,
+        },
+      });
+
+      return { user: updatedUser, robot: updatedRobot };
+    });
+
+    res.json({
+      robot: result.robot,
+      currency: result.user.currency,
+      message: 'Attribute upgraded successfully',
+    });
+  } catch (error) {
+    console.error('Robot upgrade error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Equip a weapon to a robot
+router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+    const { weaponId } = req.body;
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Get robot
+    const robot = await prisma.robot.findFirst({
+      where: {
+        id: robotId,
+        userId, // Ensure user owns this robot
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // If weaponId is null, unequip weapon
+    if (weaponId === null) {
+      const updatedRobot = await prisma.robot.update({
+        where: { id: robotId },
+        data: { weaponId: null },
+        include: {
+          weapon: true,
+        },
+      });
+
+      return res.json({
+        robot: updatedRobot,
+        message: 'Weapon unequipped successfully',
+      });
+    }
+
+    // Validate weapon exists
+    const weaponIdNum = parseInt(weaponId);
+    if (isNaN(weaponIdNum)) {
+      return res.status(400).json({ error: 'Invalid weapon ID' });
+    }
+
+    const weapon = await prisma.weapon.findUnique({
+      where: { id: weaponIdNum },
+    });
+
+    if (!weapon) {
+      return res.status(404).json({ error: 'Weapon not found' });
+    }
+
+    // Equip weapon to robot
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: { weaponId: weaponIdNum },
+      include: {
+        weapon: true,
+      },
+    });
+
+    res.json({
+      robot: updatedRobot,
+      message: 'Weapon equipped successfully',
+    });
+  } catch (error) {
+    console.error('Robot weapon equip error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+export default router;

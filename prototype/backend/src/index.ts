@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import facilityRoutes from './routes/facility';
+import robotRoutes from './routes/robots';
+import weaponRoutes from './routes/weapons';
 
 dotenv.config();
 
@@ -21,6 +23,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/facilities', facilityRoutes);
+app.use('/api/robots', robotRoutes);
+app.use('/api/weapons', weaponRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);

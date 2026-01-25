@@ -4,6 +4,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import FacilitiesPage from './pages/FacilitiesPage';
+import RobotsPage from './pages/RobotsPage';
+import CreateRobotPage from './pages/CreateRobotPage';
+import RobotDetailPage from './pages/RobotDetailPage';
 
 function App() {
   return (
@@ -24,6 +27,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <FacilitiesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/robots"
+            element={
+              <ProtectedRoute>
+                <RobotsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/robots/create"
+            element={
+              <ProtectedRoute>
+                <CreateRobotPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/robots/:id"
+            element={
+              <ProtectedRoute>
+                <RobotDetailPage />
               </ProtectedRoute>
             }
           />
