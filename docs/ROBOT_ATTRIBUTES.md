@@ -26,6 +26,10 @@ Armoured Souls uses a comprehensive attribute system with **23 core attributes**
 
 All robots start with each attribute at level 1. Players spend Credits to upgrade attributes.
 
+--> Also define other robot attributes outside of the core attributes. This has impact on the data that needs to be captured. Things like: current HP / damage taken / costs to fully repair / current fame / current leage / name of the robot. Be as thorough as possible. 
+--> Start a new document on Stable level and start capturing the same requirements. A Stable is on user level, so current credits are tracked there, but used to upgrade an individual robots. Are there upgrades / things to be bought on Stable level? Do some suggestions. Also think about fame on stable level (or prestige?).
+
+
 ### 🔴 Weapons Systems (6)
 
 **Primary offensive capabilities and weapon operation**
@@ -37,6 +41,10 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 5. **Weapon Stability** - Weapon handling and recoil management
 6. **Firing Rate** - Speed between attacks (reload/recharge time)
 
+--> The attribute naming is now geared towards ranged weapons while we also have melee weapons defined below. We need more neutral names for this to reflect it. 
+--> Think of a way to incorporate the different types of weapons in our system so that different attributes influence the effectiveness of melee vs ranged weapons and update this in the battle system. 
+--> For now all robots will be bipeds (humanoid) and have two legs to move around (thematically) and two arms to hold items. I want an upgrade that enables robots to be more effective with one weapon + shield, two handed weapons (and either ranged or melee) or two weapons (in ranged and/or melee). This also needs to be reflected in the battle system.  
+
 ### 🔵 Defensive Systems (5)
 
 **Armor, shields, and damage mitigation**
@@ -46,6 +54,8 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 9. **Evasion Thrusters** - Chance to dodge incoming attacks
 10. **Damage Dampeners** - Reduces critical hit damage taken
 11. **Counter Protocols** - Chance to strike back when hit
+
+--> What is the impact of having a setting where the user can set whether a robots first instinct is to go more on the offense or more on the defense (+ countering abilities)? This is not an attribute but a setting, but it does affect the battle system.
 
 ### 🟢 Chassis & Mobility (5)
 
@@ -57,6 +67,8 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 15. **Hydraulic Power** - Melee damage and physical strength
 16. **Power Core** - Sustained combat performance (stamina/energy reserves)
 
+--> Instead of a turn order, how much more difficult is it to implement a system where a robot can place an attack every x seconds? And what it is adaptive, so a weapon is ready for an attack, but it waits for the right opportunity to strike (because of it's mobility and ai processing capabilities?). Explore this and incorporate if feasible.
+
 ### 🟡 AI Processing (4)
 
 **Autonomous intelligence and combat decision-making**
@@ -65,6 +77,8 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 18. **Threat Analysis** - Target priority and positioning
 19. **Adaptive AI** - Learns and responds to opponent tactics
 20. **Logic Cores** - Performance under pressure (low HP situations)
+
+--> We talked about a setting where the user can define when his robot will yield (as a % of HP). This should be because the repair costs will increase (dramatically) when a robot is totalled. This gives the players are risk appetite. It also ties into the attribute you coined "Logic Cores". Work out how this interacts. 
 
 ### 🟣 Team Coordination (3)
 
@@ -94,6 +108,9 @@ crit_chance = base_crit_chance + (attacker.critical_circuits / 8) + (attacker.ta
 crit_chance = clamp(crit_chance, 0%, 50%)
 ```
 
+--> Are these tracked seperately from the hit? What if there is a critical hit but the hit is a miss? How does this work? 
+--> What is the impact of a critical hit? 
+
 **Miss Chance:**
 ```
 miss_chance = 100% - hit_chance
@@ -112,10 +129,15 @@ modified_damage = base_damage * weapon_modifier
 if weapon.type == 'melee':
     modified_damage += attacker.hydraulic_power * 0.5
 
+--> If Hydraulic Power is for melee weapons only, is Firepower for ranged weapons only? Both these stats should also have other purposes otherwise players will not invest in them (ie. neglect them if they go the melee / ranged route).
+--> Think about the type of damage that can be inflicted. Ranged might be armor piercing, but melee might have other benefits?
+
 // Armor and shield defense
 armor_reduction = defender.armor_plating * (1 - attacker.armor_piercing / 100)
 shield_reduction = defender.shield_generator * 0.8
 total_defense = armor_reduction + shield_reduction
+
+--> Is there a way / weapon to impact shield_reduction? Do we need to track shield? Do you first damage the shield and then HP? Or do you deal damage when you break through the shield and is it still up?
 
 // Final damage calculation
 final_damage = max(1, modified_damage - total_defense)
@@ -124,6 +146,8 @@ final_damage = max(1, modified_damage - total_defense)
 if critical_hit:
     crit_multiplier = 2.0 - (defender.damage_dampeners / 100)
     final_damage *= crit_multiplier
+
+--> Can is the critical hit multiplier affected by the type of weapons (two handed has a higher multiplier?)
 
 // Counter attack (if defender survives and roll succeeds)
 counter_chance = defender.counter_protocols / 100
@@ -137,6 +161,8 @@ initiative = robot.servo_motors + (robot.gyro_stabilizers / 2) + random(0, 10)
 // Faster robots attack first
 ```
 
+--> What if we abandon a turn system? How much more difficult are the calculations? (see comments above)
+
 **Attack Speed (Attacks per Turn):**
 ```
 base_attacks = 1
@@ -145,6 +171,8 @@ total_attacks = base_attacks + bonus_attacks
 // At firing_rate 30+, robot gets 2 attacks per turn
 // At firing_rate 60+, robot gets 3 attacks per turn
 ```
+
+--> What if we calculate "one possible attack per x seconds"
 
 **Performance Under Pressure:**
 ```
@@ -162,6 +190,8 @@ regen_per_turn = power_core * 0.2
 // Helps in longer battles
 ```
 
+--> Regenerate HP or shield? How does this work?
+
 **Combat Decision Quality:**
 ```
 // Combat Algorithms affect target selection and ability usage
@@ -169,12 +199,16 @@ decision_quality = combat_algorithms / 10
 // Better decisions = optimal ability timing, better target priority
 ```
 
+--> How does this impact the attack? I don't see this in the to hit formula.
+
 **Tactical Positioning:**
 ```
 // Threat Analysis improves positioning bonus
 positioning_bonus = threat_analysis / 20
 // Applied to accuracy and evasion when in advantageous position
 ```
+
+--> How does this impact the attack? I don't see this in the to hit formula.
 
 **Adaptation:**
 ```
@@ -184,6 +218,8 @@ after_turn_3:
     // Increases hit chance and reduces damage taken as battle progresses
 ```
 
+--> How does this impact the attack? I don't see this in the to hit formula.
+
 ### Team Battle Formulas (Arena/Multi-Robot)
 
 **Team Coordination Bonus:**
@@ -192,6 +228,8 @@ after_turn_3:
 coordination_multiplier = 1 + (average_sync_protocols / 50)
 damage_output *= coordination_multiplier
 ```
+
+--> Change to "when allied robots". 2v2 should be possible.
 
 **Support Buff:**
 ```
@@ -230,7 +268,11 @@ Each weapon has:
 3. **Attribute Bonuses** - Enhances specific robot attributes
 4. **Weapon Type** - Category (Energy, Ballistic, Melee, Explosive)
 
+--> Update weapon types based on the comments above about melee vs ranged and the use of arms. Also incorporate shields.
+
 ### Sample Weapons (Updated with New Attributes)
+
+--> We should define how the system works. The samples are to explain. It's good to have samples in the system from the start, but the players will be able to design their own weapons (and upgrade them maybe?)
 
 #### Energy Weapons
 
@@ -240,6 +282,9 @@ Each weapon has:
   - Targeting Computer: +3
   - Weapon Stability: +4
   - Firing Rate: +2
+ 
+--> How does the cost calculation work?
+--> Define the amount of HP a robot has based on his attributes
 
 **Plasma Cannon** (₡300,000)
 - Base Damage: +35
@@ -507,6 +552,8 @@ Every attribute has a clear mechanical purpose:
 22. Support Systems → Ally buffs
 23. Formation Tactics → Formation bonuses
 
+--> Update this section based on comments.
+
 ---
 
 ## Implementation Notes
@@ -533,6 +580,8 @@ Every attribute has a clear mechanical purpose:
 5. Implement reward calculator with ELO integration
 6. Add ELO ranking system
 
+--> Update based on comments.
+
 ---
 
 ## Future Enhancements (Post-Phase 1)
@@ -545,6 +594,8 @@ Every attribute has a clear mechanical purpose:
 - **Hidden Attributes**: Consistency, clutch performance, etc.
 - **Conditional Bonuses**: Attributes that activate in specific scenarios
 - **Team Formations**: Predefined formations that enhance team bonuses
+
+--> Update this based on comments.
 
 ---
 
