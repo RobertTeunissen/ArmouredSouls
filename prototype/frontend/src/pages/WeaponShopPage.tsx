@@ -10,6 +10,22 @@ interface Weapon {
   description: string;
   baseDamage: number;
   cost: number;
+  // Attribute bonuses
+  combatPowerBonus: number;
+  targetingSystemsBonus: number;
+  criticalSystemsBonus: number;
+  penetrationBonus: number;
+  weaponControlBonus: number;
+  attackSpeedBonus: number;
+  armorPlatingBonus: number;
+  shieldCapacityBonus: number;
+  evasionThrustersBonus: number;
+  counterProtocolsBonus: number;
+  servoMotorsBonus: number;
+  gyroStabilizersBonus: number;
+  hydraulicSystemsBonus: number;
+  powerCoreBonus: number;
+  threatAnalysisBonus: number;
 }
 
 function WeaponShopPage() {
@@ -72,6 +88,61 @@ function WeaponShopPage() {
     }
   };
 
+  const calculateCooldown = (weaponType: string, baseDamage: number): string => {
+    const baseCooldowns: { [key: string]: number } = {
+      'melee': 2.0,
+      'ballistic': 3.0,
+      'energy': 2.5,
+      'explosive': 4.0,
+    };
+    const damageScaling: { [key: string]: number } = {
+      'melee': 15,
+      'ballistic': 20,
+      'energy': 18,
+      'explosive': 25,
+    };
+    const baseCooldown = baseCooldowns[weaponType] || 3.0;
+    const scaling = damageScaling[weaponType] || 20;
+    return (baseCooldown + (baseDamage / scaling)).toFixed(1);
+  };
+
+  const getAttributeBonuses = (weapon: Weapon): string[] => {
+    const bonuses: string[] = [];
+    const attrs = [
+      { key: 'combatPowerBonus', label: 'Combat Power' },
+      { key: 'targetingSystemsBonus', label: 'Targeting' },
+      { key: 'criticalSystemsBonus', label: 'Critical' },
+      { key: 'penetrationBonus', label: 'Penetration' },
+      { key: 'weaponControlBonus', label: 'Control' },
+      { key: 'attackSpeedBonus', label: 'Attack Speed' },
+      { key: 'armorPlatingBonus', label: 'Armor' },
+      { key: 'shieldCapacityBonus', label: 'Shield' },
+      { key: 'evasionThrustersBonus', label: 'Evasion' },
+      { key: 'counterProtocolsBonus', label: 'Counter' },
+      { key: 'servoMotorsBonus', label: 'Servos' },
+      { key: 'gyroStabilizersBonus', label: 'Gyro' },
+      { key: 'hydraulicSystemsBonus', label: 'Hydraulics' },
+      { key: 'powerCoreBonus', label: 'Power' },
+      { key: 'threatAnalysisBonus', label: 'Threat Analysis' },
+    ];
+
+    attrs.forEach(({ key, label }) => {
+      const value = weapon[key as keyof Weapon] as number;
+      if (value !== 0) {
+        bonuses.push(`${label}: ${value > 0 ? '+' : ''}${value}`);
+      }
+    });
+
+    return bonuses;
+  };
+
+  const groupedWeapons = {
+    energy: weapons.filter(w => w.weaponType === 'energy'),
+    ballistic: weapons.filter(w => w.weaponType === 'ballistic'),
+    melee: weapons.filter(w => w.weaponType === 'melee'),
+    explosive: weapons.filter(w => w.weaponType === 'explosive'),
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Navigation />
@@ -79,7 +150,7 @@ function WeaponShopPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Weapon Shop</h1>
-          <p className="text-gray-400">Purchase weapons to equip your robots</p>
+          <p className="text-gray-400">Purchase weapons to equip your robots. Weapons provide attribute bonuses and combat capabilities.</p>
         </div>
 
         {loading && (
@@ -95,47 +166,78 @@ function WeaponShopPage() {
         )}
 
         {!loading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {weapons.map((weapon) => (
-              <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold">{weapon.name}</h3>
-                  <span className={`text-sm font-semibold uppercase ${getTypeColor(weapon.weaponType)}`}>
-                    {weapon.weaponType}
-                  </span>
-                </div>
+          <>
+            {Object.entries(groupedWeapons).map(([type, weaponList]) => (
+              weaponList.length > 0 && (
+                <div key={type} className="mb-8">
+                  <h2 className={`text-2xl font-bold mb-4 ${getTypeColor(type)} capitalize`}>
+                    {type} Weapons
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {weaponList.map((weapon) => {
+                      const bonuses = getAttributeBonuses(weapon);
+                      return (
+                        <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg">
+                          <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-xl font-semibold">{weapon.name}</h3>
+                            <span className={`text-sm font-semibold uppercase ${getTypeColor(weapon.weaponType)}`}>
+                              {weapon.weaponType}
+                            </span>
+                          </div>
 
-                <p className="text-gray-400 text-sm mb-4">{weapon.description}</p>
+                          <p className="text-gray-400 text-sm mb-4">{weapon.description}</p>
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Base Damage:</span>
-                    <span className="font-semibold">{weapon.baseDamage}</span>
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-400">Base Damage:</span>
+                              <span className="font-semibold">{weapon.baseDamage}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-400">Cooldown:</span>
+                              <span className="font-semibold">{calculateCooldown(weapon.weaponType, weapon.baseDamage)}s</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-400">Cost:</span>
+                              <span className="font-semibold text-green-400">₡{weapon.cost.toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          {bonuses.length > 0 && (
+                            <div className="mb-4 p-3 bg-gray-700 rounded">
+                              <div className="text-xs text-gray-400 mb-2">Attribute Bonuses:</div>
+                              <div className="flex flex-wrap gap-1">
+                                {bonuses.map((bonus, idx) => (
+                                  <span key={idx} className="text-xs bg-gray-600 px-2 py-1 rounded">
+                                    {bonus}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => handlePurchase(weapon.id, weapon.cost)}
+                            disabled={purchasing === weapon.id || !!(user && user.currency < weapon.cost)}
+                            className={`w-full py-2 rounded transition-colors ${
+                              user && user.currency < weapon.cost
+                                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                : purchasing === weapon.id
+                                ? 'bg-gray-700 text-gray-400'
+                                : 'bg-blue-600 hover:bg-blue-700'
+                            }`}
+                          >
+                            {purchasing === weapon.id ? 'Purchasing...' : 
+                             user && user.currency < weapon.cost ? 'Insufficient Credits' : 
+                             'Purchase'}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Cost:</span>
-                    <span className="font-semibold text-green-400">₡{weapon.cost.toLocaleString()}</span>
-                  </div>
                 </div>
-
-                <button
-                  onClick={() => handlePurchase(weapon.id, weapon.cost)}
-                  disabled={purchasing === weapon.id || !!(user && user.currency < weapon.cost)}
-                  className={`w-full py-2 rounded transition-colors ${
-                    user && user.currency < weapon.cost
-                      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                      : purchasing === weapon.id
-                      ? 'bg-gray-700 text-gray-400'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  {purchasing === weapon.id ? 'Purchasing...' : 
-                   user && user.currency < weapon.cost ? 'Insufficient Credits' : 
-                   'Purchase'}
-                </button>
-              </div>
+              )
             ))}
-          </div>
+          </>
         )}
       </div>
     </div>

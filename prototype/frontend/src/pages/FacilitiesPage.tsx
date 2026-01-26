@@ -13,6 +13,7 @@ interface Facility {
   currentLevel: number;
   upgradeCost: number;
   canUpgrade: boolean;
+  implemented: boolean;
 }
 
 function FacilitiesPage() {
@@ -80,13 +81,20 @@ function FacilitiesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {facilities.map((facility) => (
-              <div key={facility.type} className="bg-gray-800 p-6 rounded-lg">
+              <div key={facility.type} className="bg-gray-800 p-6 rounded-lg relative">
+                {!facility.implemented && (
+                  <div className="absolute top-4 right-4">
+                    <span className="bg-yellow-600 text-xs px-2 py-1 rounded">
+                      Effect not yet implemented
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-start mb-4">
-                  <div>
+                  <div className="pr-4">
                     <h3 className="text-2xl font-semibold mb-2">{facility.name}</h3>
                     <p className="text-gray-400 text-sm">{facility.description}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <div className="text-sm text-gray-400">Level</div>
                     <div className="text-2xl font-bold">
                       {facility.currentLevel}/{facility.maxLevel}

@@ -7,8 +7,11 @@ interface Robot {
   id: number;
   name: string;
   elo: number;
-  weaponInventoryId: number | null;
-  weaponInventory: WeaponInventory | null;
+  mainWeaponId: number | null;
+  offhandWeaponId: number | null;
+  loadoutType: string;
+  mainWeapon: WeaponInventory | null;
+  offhandWeapon: WeaponInventory | null;
   combatPower: number;
   targetingSystems: number;
   criticalSystems: number;
@@ -46,6 +49,21 @@ interface Weapon {
   description: string | null;
   baseDamage: number;
   cost: number;
+  combatPowerBonus: number;
+  targetingSystemsBonus: number;
+  criticalSystemsBonus: number;
+  penetrationBonus: number;
+  weaponControlBonus: number;
+  attackSpeedBonus: number;
+  armorPlatingBonus: number;
+  shieldCapacityBonus: number;
+  evasionThrustersBonus: number;
+  counterProtocolsBonus: number;
+  servoMotorsBonus: number;
+  gyroStabilizersBonus: number;
+  hydraulicSystemsBonus: number;
+  powerCoreBonus: number;
+  threatAnalysisBonus: number;
 }
 
 function RobotDetailPage() {

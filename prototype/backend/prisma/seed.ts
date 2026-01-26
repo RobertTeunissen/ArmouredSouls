@@ -163,6 +163,7 @@ async function main() {
         passwordHash: await bcrypt.hash('admin123', 10),
         role: 'admin',
         currency: 10000000, // 10 million for admin
+        stableName: 'Admin Battle Stable',
       },
     }),
     prisma.user.create({
@@ -170,6 +171,7 @@ async function main() {
         username: 'player1',
         passwordHash: hashedPassword,
         currency: 2000000, // 2 million starting balance
+        stableName: 'Steel Warriors',
       },
     }),
     prisma.user.create({
@@ -177,6 +179,7 @@ async function main() {
         username: 'player2',
         passwordHash: hashedPassword,
         currency: 2000000,
+        stableName: 'Titan Forge',
       },
     }),
     prisma.user.create({
@@ -184,6 +187,7 @@ async function main() {
         username: 'player3',
         passwordHash: hashedPassword,
         currency: 2000000,
+        stableName: 'Iron Legion',
       },
     }),
     prisma.user.create({
@@ -191,6 +195,7 @@ async function main() {
         username: 'player4',
         passwordHash: hashedPassword,
         currency: 2000000,
+        stableName: 'Mech Dynasty',
       },
     }),
     prisma.user.create({
@@ -198,6 +203,7 @@ async function main() {
         username: 'player5',
         passwordHash: hashedPassword,
         currency: 2000000,
+        stableName: 'Thunder Bots',
       },
     }),
   ]);
