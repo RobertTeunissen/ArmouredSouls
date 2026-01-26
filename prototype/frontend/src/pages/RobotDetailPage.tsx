@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import { calculateAttributeBonus, getAttributeDisplay } from '../utils/robotStats';
 
 interface Robot {
   id: number;
@@ -237,7 +238,7 @@ function RobotDetailPage() {
     }
   };
 
-  const handleWeaponChange = async (weaponInventoryId: string) => {
+  const handleWeaponChange = async (weaponInventoryId: string, slot: 'main' | 'offhand' = 'main') => {
     if (!robot) return;
 
     setError('');
@@ -245,13 +246,21 @@ function RobotDetailPage() {
 
     try {
       const token = localStorage.getItem('token');
+      const bodyData: any = {};
+      
+      if (slot === 'main') {
+        bodyData.mainWeaponId = weaponInventoryId === '' ? null : parseInt(weaponInventoryId);
+      } else {
+        bodyData.offhandWeaponId = weaponInventoryId === '' ? null : parseInt(weaponInventoryId);
+      }
+
       const response = await fetch(`http://localhost:3001/api/robots/${id}/weapon`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ weaponInventoryId: weaponInventoryId === '' ? null : parseInt(weaponInventoryId) }),
+        body: JSON.stringify(bodyData),
       });
 
       if (response.status === 401) {
@@ -268,6 +277,14 @@ function RobotDetailPage() {
 
       setRobot(data.robot);
       setSuccessMessage(weaponInventoryId === '' ? 'Weapon unequipped!' : 'Weapon equipped successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to equip weapon');
+      console.error(err);
+    }
+  };
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -342,12 +359,15 @@ function RobotDetailPage() {
 
         {/* Weapon Selection */}
         <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h3 className="text-xl font-semibold mb-4">Equipped Weapon</h3>
-          <div className="flex items-center gap-4">
+          <h3 className="text-xl font-semibold mb-4">Weapon Loadout</h3>
+          
+          {/* Main Weapon */}
+          <div className="mb-4">
+            <label className="block text-sm text-gray-400 mb-2">Main Weapon</label>
             <select
-              value={robot.weaponInventoryId || ''}
-              onChange={(e) => handleWeaponChange(e.target.value)}
-              className="flex-1 bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              value={robot.mainWeaponId || ''}
+              onChange={(e) => handleWeaponChange(e.target.value, 'main')}
+              className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
             >
               <option value="">No Weapon</option>
               {weapons.map((weaponInv) => (
@@ -356,16 +376,55 @@ function RobotDetailPage() {
                 </option>
               ))}
             </select>
-          </div>
-          {robot.weaponInventory && (
-            <div className="mt-4 bg-gray-700 p-4 rounded">
-              <p className="text-sm text-gray-300">{robot.weaponInventory.weapon.description}</p>
-              <div className="mt-2 flex gap-4 text-sm">
-                <span>Type: <span className="font-semibold capitalize">{robot.weaponInventory.weapon.weaponType}</span></span>
-                <span>Damage: <span className="font-semibold">{robot.weaponInventory.weapon.baseDamage}</span></span>
+            {robot.mainWeapon && (
+              <div className="mt-2 bg-gray-700 p-3 rounded text-sm">
+                <p className="text-gray-300">{robot.mainWeapon.weapon.description}</p>
+                <div className="mt-1 flex gap-4">
+                  <span>Type: <span className="font-semibold capitalize">{robot.mainWeapon.weapon.weaponType}</span></span>
+                  <span>Damage: <span className="font-semibold">{robot.mainWeapon.weapon.baseDamage}</span></span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Offhand Weapon */}
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Offhand Weapon (Optional)</label>
+            <select
+              value={robot.offhandWeaponId || ''}
+              onChange={(e) => handleWeaponChange(e.target.value, 'offhand')}
+              className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+            >
+              <option value="">No Weapon</option>
+              {weapons.map((weaponInv) => (
+                <option key={weaponInv.id} value={weaponInv.id}>
+                  {weaponInv.weapon.name} ({weaponInv.weapon.weaponType}) - Damage: {weaponInv.weapon.baseDamage}
+                </option>
+              ))}
+            </select>
+            {robot.offhandWeapon && (
+              <div className="mt-2 bg-gray-700 p-3 rounded text-sm">
+                <p className="text-gray-300">{robot.offhandWeapon.weapon.description}</p>
+                <div className="mt-1 flex gap-4">
+                  <span>Type: <span className="font-semibold capitalize">{robot.offhandWeapon.weapon.weaponType}</span></span>
+                  <span>Damage: <span className="font-semibold">{robot.offhandWeapon.weapon.baseDamage}</span></span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Loadout Type Info */}
+          <div className="mt-4 p-3 bg-blue-900 bg-opacity-30 rounded border border-blue-700">
+            <p className="text-sm text-blue-200">
+              <strong>Loadout Type:</strong> <span className="capitalize">{robot.loadoutType}</span>
+            </p>
+            <p className="text-xs text-blue-300 mt-1">
+              {robot.loadoutType === 'single' && 'One weapon for balanced combat'}
+              {robot.loadoutType === 'dual-wield' && 'Two weapons for increased attack speed'}
+              {robot.loadoutType === 'weapon+shield' && 'Weapon and shield for defensive play'}
+              {robot.loadoutType === 'two-handed' && 'Two-handed weapon for maximum damage'}
+            </p>
+          </div>
         </div>
 
         {/* Attributes */}
@@ -381,12 +440,26 @@ function RobotDetailPage() {
                 const canUpgrade = currentLevel < MAX_ATTRIBUTE_LEVEL;
                 const canAfford = currency >= upgradeCost;
 
+                // Calculate weapon bonuses
+                const bonus = calculateAttributeBonus(key, robot.mainWeapon, robot.offhandWeapon);
+                const attrDisplay = getAttributeDisplay(currentLevel, bonus);
+
                 return (
                   <div key={key} className="bg-gray-700 p-4 rounded flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
                         <span className="font-semibold">{label}</span>
-                        <span className="text-blue-400 font-bold">Level {currentLevel}</span>
+                        <span className={`font-bold ${attrDisplay.hasBonus ? 'text-green-400' : 'text-blue-400'}`}>
+                          {attrDisplay.hasBonus ? (
+                            <>
+                              <span className="text-blue-400">Level {currentLevel}</span>
+                              <span className="text-green-400"> (+{bonus} from weapons)</span>
+                              <span className="text-gray-400"> = {attrDisplay.total}</span>
+                            </>
+                          ) : (
+                            <>Level {currentLevel}</>
+                          )}
+                        </span>
                       </div>
                       {canUpgrade && (
                         <div className="text-sm text-gray-400 mt-1">
