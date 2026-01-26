@@ -1,51 +1,50 @@
-# Phase 1 Setup Guide
+# Armoured Souls - Setup Guide
 
-**Last Updated**: January 24, 2026
+**Last Updated**: January 26, 2026  
+**Platform**: VS Code on macOS (also works on Windows/Linux)
 
-This guide will help you set up the Phase 1 local prototype of Armoured Souls on your machine.
+Complete setup guide for running the Phase 1 prototype locally, including database reset instructions for testing new versions.
+
+---
 
 ## ✅ Prerequisites
 
-Before you begin, ensure you have the following installed:
+Install these once:
 
-1. **Node.js 20+**
-   - Download: https://nodejs.org/
-   - Verify: `node --version`
+1. **Node.js 20+** - [Download](https://nodejs.org/)
+   ```bash
+   node --version  # Should show v20.x or higher
+   ```
 
-2. **Docker Desktop**
-   - Download: https://www.docker.com/products/docker-desktop
-   - Verify: `docker --version` and `docker-compose --version`
+2. **Docker Desktop** - [Download](https://www.docker.com/products/docker-desktop)
+   ```bash
+   docker --version
+   docker compose version
+   ```
 
-3. **Git**
-   - Download: https://git-scm.com/
-   - Verify: `git --version`
+3. **VS Code** (recommended) - [Download](https://code.visualstudio.com/)
 
-4. **Code Editor** (recommended)
-   - VS Code: https://code.visualstudio.com/
+---
 
-## 📥 Installation
+## 🚀 Initial Setup (First Time Only)
 
-### Step 1: Clone the Repository
-
+### 1. Clone and Navigate
 ```bash
 git clone https://github.com/RobertTeunissen/ArmouredSouls.git
 cd ArmouredSouls/prototype
 ```
 
-### Step 2: Start the Database
-
+### 2. Start Database
 ```bash
-# Start PostgreSQL in Docker
-docker-compose up -d
-
-# Verify it's running
-docker ps
+docker compose up -d
 ```
 
-You should see a container named `armouredsouls-db` running.
+Verify it's running:
+```bash
+docker ps  # Should show 'armouredsouls-db' container
+```
 
-### Step 3: Set Up the Backend
-
+### 3. Setup Backend
 ```bash
 cd backend
 
@@ -55,296 +54,312 @@ cp .env.example .env
 # Install dependencies
 npm install
 
-# Generate Prisma client
+# Setup database
 npm run prisma:generate
-
-# Run database migrations
 npm run prisma:migrate
-
-# Seed the database with sample data
 npx tsx prisma/seed.ts
 ```
 
-Expected output:
-```
-🌱 Seeding database...
-Creating components...
-✅ Created 3 chassis, 3 weapons, 3 armor
-Creating test users...
-✅ Created 6 users
-   - admin/admin123 (admin role)
-   - player1-5/password123 (regular users)
-✅ Database seeded successfully!
-```
-
-### Step 4: Set Up the Frontend
-
+### 4. Setup Frontend
 ```bash
 cd ../frontend
-
-# Install dependencies
 npm install
 ```
 
-### Step 5: Start the Development Servers
+---
 
-Open two terminal windows/tabs:
+## 🎮 Running the Application
 
-**Terminal 1 - Backend:**
+**Open 2 terminals in VS Code** (Terminal → Split Terminal):
+
+### Terminal 1 - Backend:
 ```bash
-cd ArmouredSouls/prototype/backend
+cd prototype/backend
 npm run dev
 ```
+✅ Should show: `🚀 Backend server running on http://localhost:3001`
 
-Expected output:
-```
-🚀 Backend server running on http://localhost:3001
-```
-
-**Terminal 2 - Frontend:**
+### Terminal 2 - Frontend:
 ```bash
-cd ArmouredSouls/prototype/frontend
+cd prototype/frontend
 npm run dev
 ```
+✅ Should show: `➜ Local: http://localhost:3000/`
 
-Expected output:
+### Access the Application
+Open browser to: **http://localhost:3000**
+
+Test accounts:
+- `player1` / `password123` (₡2,000,000)
+- `admin` / `admin123` (₡10,000,000)
+
+---
+
+## 🔄 Testing a New Version (Reset Everything)
+
+When you need to test a fresh build or reset everything:
+
+### Quick Reset (Recommended)
+```bash
+# Stop all servers (Ctrl+C in both terminals)
+
+# Navigate to prototype directory
+cd ArmouredSouls/prototype
+
+# Pull latest changes
+git pull
+
+# Reset database
+cd backend
+npx prisma migrate reset --force
+
+# Restart servers
+npm run dev  # In terminal 1
+
+cd ../frontend
+npm run dev  # In terminal 2
 ```
-VITE v5.0.11  ready in 500 ms
 
-➜  Local:   http://localhost:3000/
-➜  Network: use --host to expose
+### Full Clean Reset (If Having Issues)
+```bash
+# Stop all servers (Ctrl+C in both terminals)
+
+# Navigate to prototype directory
+cd ArmouredSouls/prototype
+
+# Stop and remove database
+docker compose down -v
+
+# Pull latest changes
+git pull
+
+# Clean backend
+cd backend
+rm -rf node_modules package-lock.json dist
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npx tsx prisma/seed.ts
+
+# Clean frontend
+cd ../frontend
+rm -rf node_modules package-lock.json dist
+npm install
+
+# Restart database
+cd ..
+docker compose up -d
+
+# Start servers
+cd backend && npm run dev  # Terminal 1
+cd frontend && npm run dev  # Terminal 2
 ```
 
-### Step 6: Verify Installation
+---
 
-1. Open your browser to http://localhost:3000
-2. You should see the Armoured Souls homepage
-3. Status should show "Armoured Souls API is running"
+## 🛠️ Common Commands
 
-## 🔧 Development Tools
-
-### Prisma Studio (Database GUI)
-
-View and edit your database visually:
-
+### Database Management
 ```bash
 cd backend
+
+# View database (opens http://localhost:5555)
 npm run prisma:studio
-```
-
-Opens at http://localhost:5555
-
-### Database Commands
-
-```bash
-# View database
-npm run prisma:studio
-
-# Create a new migration
-npm run prisma:migrate
-
-# Generate Prisma client (after schema changes)
-npm run prisma:generate
 
 # Reset database (WARNING: deletes all data)
 npx prisma migrate reset
+
+# Create new migration (after schema changes)
+npm run prisma:migrate
+
+# Regenerate Prisma client
+npm run prisma:generate
 ```
 
-### Restart Services
-
-**Restart Database:**
+### Server Management
 ```bash
-docker-compose restart
+# Check if database is running
+docker ps
+
+# Restart database
+docker compose restart
+
+# Stop database
+docker compose down
+
+# View database logs
+docker compose logs -f
 ```
 
-**Restart Backend:**
-- Press `Ctrl+C` in the backend terminal
-- Run `npm run dev` again
+### Build Commands
+```bash
+# Backend
+cd backend
+npm run build  # Compiles TypeScript to dist/
 
-**Restart Frontend:**
-- Press `Ctrl+C` in the frontend terminal
-- Run `npm run dev` again
+# Frontend
+cd frontend
+npm run build  # Builds to dist/
+```
+
+---
 
 ## 🐛 Troubleshooting
 
-### Database Won't Start
+### Database Won't Connect
+**Issue**: Backend can't connect to database
 
-**Problem**: `docker-compose up -d` fails
+**Fix**:
+```bash
+# Check database is running
+docker ps
 
-**Solutions**:
-1. Check Docker is running:
-   ```bash
-   docker ps
-   ```
-2. Check if port 5432 is already in use:
-   ```bash
-   # On macOS/Linux
-   lsof -i :5432
-   
-   # On Windows
-   netstat -ano | findstr :5432
-   ```
-3. Change the port in `docker-compose.yml`:
-   ```yaml
-   ports:
-     - "5433:5432"  # Use 5433 instead
-   ```
-   Then update `DATABASE_URL` in `backend/.env` to use port 5433
+# If not running, start it
+cd prototype
+docker compose up -d
 
-### Backend Won't Start
-
-**Problem**: Port 3001 already in use
-
-**Solution**: Change port in `backend/.env`:
-```
-PORT=3002
+# Check backend .env file has correct DATABASE_URL
+cat backend/.env | grep DATABASE_URL
+# Should show: DATABASE_URL="******localhost:5432/armouredsouls"
 ```
 
-**Problem**: Database connection fails
+### Port Already in Use
+**Issue**: "Port 3000/3001 already in use"
 
-**Solutions**:
-1. Verify database is running: `docker ps`
-2. Check `DATABASE_URL` in `backend/.env`
-3. Restart database: `docker-compose restart`
+**Fix**:
+```bash
+# Find and kill process using port
+lsof -ti:3001 | xargs kill -9  # For backend
+lsof -ti:3000 | xargs kill -9  # For frontend
 
-**Problem**: Prisma errors
+# Or change ports in:
+# Backend: edit backend/.env → PORT=3002
+# Frontend: Vite will prompt to use different port automatically
+```
 
-**Solutions**:
-1. Regenerate Prisma client:
-   ```bash
-   npm run prisma:generate
-   ```
-2. Run migrations again:
-   ```bash
-   npm run prisma:migrate
-   ```
+### Prisma Errors
+**Issue**: "Prisma Client not generated" or migration errors
 
-### Frontend Won't Start
+**Fix**:
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:migrate
+```
 
-**Problem**: Port 3000 already in use
+### Node Modules Issues
+**Issue**: Dependencies not installing or outdated
 
-**Solution**: Frontend will prompt you to use a different port (usually 3001). Say yes.
+**Fix**:
+```bash
+# Backend
+cd backend
+rm -rf node_modules package-lock.json
+npm install
 
-**Problem**: Can't connect to backend
+# Frontend
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
 
-**Solutions**:
-1. Verify backend is running on port 3001
-2. Check browser console for CORS errors
-3. If backend is on a different port, update `vite.config.ts`:
-   ```typescript
-   proxy: {
-     '/api': {
-       target: 'http://localhost:3002', // Update port
-       changeOrigin: true,
-     },
-   }
-   ```
+### "Cannot find module" Errors
+**Issue**: TypeScript can't find modules
 
-### npm install Fails
+**Fix**:
+```bash
+# Rebuild everything
+cd backend
+npm run build
 
-**Problem**: Dependency installation errors
-
-**Solutions**:
-1. Clear npm cache:
-   ```bash
-   npm cache clean --force
-   ```
-2. Delete `node_modules` and `package-lock.json`:
-   ```bash
-   rm -rf node_modules package-lock.json
-   npm install
-   ```
-3. Update npm:
-   ```bash
-   npm install -g npm@latest
-   ```
-
-## 📊 Test Data
-
-The seed script creates:
-
-### Users
-| Username | Password | Role | Currency |
-|----------|----------|------|----------|
-| admin | admin123 | admin | ₡10,000,000 |
-| player1 | password123 | user | ₡1,000,000 |
-| player2 | password123 | user | ₡1,000,000 |
-| player3 | password123 | user | ₡1,000,000 |
-| player4 | password123 | user | ₡1,000,000 |
-| player5 | password123 | user | ₡1,000,000 |
-
-### Weapons (11 Total)
-
-**Energy Weapons:**
-- Laser Rifle (₡150,000) - Accuracy +3, Energy Efficiency +5, Targeting +2
-- Plasma Cannon (₡300,000) - Attack +5, Crit +4, Heat Management -3
-- Ion Beam (₡400,000) - Energy Efficiency +8, Armor Pen +6, Reload +4
-
-**Ballistic Weapons:**
-- Machine Gun (₡100,000) - Attack +2, Reload +6, Weapon Handling +3
-- Railgun (₡350,000) - Armor Pen +10, Accuracy +5, Reload -2
-- Shotgun (₡120,000) - Attack +4, Crit +5, Accuracy -3
-
-**Melee Weapons:**
-- Power Sword (₡180,000) - Strength +6, Counter +5, Agility +3
-- Hammer (₡200,000) - Strength +8, Attack +6, Speed -2
-
-**Explosive Weapons:**
-- Rocket Launcher (₡320,000) - Attack +7, Crit +6, Reload -4
-- Grenade Launcher (₡250,000) - Attack +5, Tactical +4, Reload -2
-
-### Robot Attributes
-
-Each robot starts with 25 attributes at level 1:
-- **Combat** (8): Attack Power, Accuracy, Critical Strike, Defense Rating, Evasion, Counter Attack, Armor Penetration, Damage Resistance
-- **Technical** (6): Weapon Handling, Energy Efficiency, Targeting Systems, Heat Management, Shield Operations, Reload Speed
-- **Physical** (6): Hull Integrity, Speed, Agility, Strength, Stamina, Structural Stability
-- **Mental** (5): Tactical Awareness, Composure, Adaptability, Aggression, Combat Intelligence
-
-## 🚀 Next Steps
-
-Now that you have the basic setup running:
-
-1. **Explore the code structure**
-   - Backend: `backend/src/index.ts`
-   - Frontend: `frontend/src/App.tsx`
-   - Database: `backend/prisma/schema.prisma`
-
-2. **Review the documentation**
-   - [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md) - Complete attribute system and economy
-   - [PHASE1_PLAN.md](PHASE1_PLAN.md) - Development plan
-   - [GAME_DESIGN.md](GAME_DESIGN.md) - Game design decisions
-
-3. **Understand the game economy**
-   - Starting balance: ₡1,000,000 Credits
-   - Robot frame: ₡500,000
-   - Weapons: ₡100,000 - ₡400,000
-   - Upgrades: (level + 1) × 1,000 Credits
-
-4. **Start building features**
-   - Authentication system
-   - Robot creator with 25 attributes
-   - Weapon shop
-   - Battle simulator with formula-based combat
-   - UI pages
-
-## 📚 Additional Resources
-
-- **Prisma Docs**: https://www.prisma.io/docs
-- **Express Docs**: https://expressjs.com/
-- **React Docs**: https://react.dev/
-- **Tailwind CSS**: https://tailwindcss.com/docs
-- **Vite Docs**: https://vitejs.dev/
-
-## 🆘 Getting Help
-
-If you encounter issues not covered in this guide:
-
-1. Check the [QUESTIONS.md](QUESTIONS.md) for known issues
-2. Review error messages carefully
-3. Search for similar issues online
-4. Document the issue for future reference
+cd ../frontend
+npm run build
+```
 
 ---
+
+## 📊 Seed Data Reference
+
+### Test Users
+| Username | Password | Role | Starting Credits |
+|----------|----------|------|------------------|
+| admin | admin123 | admin | ₡10,000,000 |
+| player1 | password123 | user | ₡2,000,000 |
+| player2 | password123 | user | ₡2,000,000 |
+| player3-5 | password123 | user | ₡2,000,000 each |
+
+### Weapons (10 Total)
+- **Energy**: Laser Rifle (₡150k), Plasma Cannon (₡300k), Ion Beam (₡400k)
+- **Ballistic**: Machine Gun (₡100k), Shotgun (₡120k), Railgun (₡350k)
+- **Melee**: Power Sword (₡180k), Hammer (₡200k)
+- **Explosive**: Grenade Launcher (₡250k), Rocket Launcher (₡320k)
+
+### Economy
+- Robot frame: ₡500,000
+- Attribute upgrade: (level + 1) × 1,000 Credits
+- 23 attributes per robot (Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination)
+
+---
+
+## 📝 VS Code Tips
+
+### Recommended Extensions
+- **Prisma** - Syntax highlighting for Prisma schema
+- **ESLint** - JavaScript/TypeScript linting
+- **Tailwind CSS IntelliSense** - Tailwind autocomplete
+
+### Workspace Setup
+1. Open `ArmouredSouls` folder in VS Code
+2. Use split terminal: Terminal → Split Terminal
+3. Save workspace: File → Save Workspace As...
+
+### Debug Configuration
+VS Code launch.json for debugging:
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/prototype/backend"
+    }
+  ]
+}
+```
+
+---
+
+## 🆘 Quick Help
+
+**Fresh start everything:**
+```bash
+cd ArmouredSouls/prototype
+docker compose down -v
+cd backend && npx prisma migrate reset --force
+```
+
+**Check everything is running:**
+```bash
+docker ps                    # Database should be running
+curl http://localhost:3001/api/health  # Backend check
+open http://localhost:3000   # Frontend (opens browser)
+```
+
+**View logs:**
+```bash
+docker compose logs -f       # Database logs
+# Backend/frontend logs are in the terminals
+```
+
+---
+
+For more details, see:
+- [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete schema reference
+- [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md) - Attribute system details
+- [STABLE_SYSTEM.md](STABLE_SYSTEM.md) - Facility and economy system
 
 **Happy coding! 🤖⚔️**
