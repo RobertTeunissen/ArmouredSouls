@@ -98,12 +98,6 @@ prototype/
 ### Database
 - **PostgreSQL 16** - Running in Docker
 
-### Game Design
-- **25 Robot Attributes** - Combat, Technical, Physical, Mental
-- **Credits (₡)** - In-game currency
-- **ELO Ranking** - Matchmaking system
-- **Weapon System** - Purchasable weapons with attribute bonuses
-
 ## 🔧 Development
 
 ### Database Management
@@ -126,20 +120,11 @@ The seed script creates 6 test users:
 | Username | Password | Role | Currency |
 |----------|----------|------|----------|
 | admin | admin123 | admin | ₡10,000,000 |
-| player1 | password123 | user | ₡1,000,000 |
-| player2 | password123 | user | ₡1,000,000 |
-| player3 | password123 | user | ₡1,000,000 |
-| player4 | password123 | user | ₡1,000,000 |
-| player5 | password123 | user | ₡1,000,000 |
-
-### Game Economy
-
-- **Starting Balance**: ₡1,000,000 Credits
-- **Robot Frame**: ₡500,000 (bare metal, all 25 attributes at level 1)
-- **Weapons**: ₡100,000 - ₡400,000 (required for battles)
-- **Upgrade Cost**: (level + 1) × 1,000 Credits per attribute
-  - Example: Level 1→2 costs ₡2,000
-  - Example: Level 10→11 costs ₡11,000
+| player1 | password123 | user | ₡2,000,000 |
+| player2 | password123 | user | ₡2,000,000 |
+| player3 | password123 | user | ₡2,000,000 |
+| player4 | password123 | user | ₡2,000,000 |
+| player5 | password123 | user | ₡2,000,000 |
 
 ## 📝 Next Steps
 
