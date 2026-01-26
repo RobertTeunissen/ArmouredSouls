@@ -33,6 +33,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
 });
 
 // Set stable name (first-time setup)
+// TODO: Add rate limiting before production deployment
 router.put('/stable-name', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
