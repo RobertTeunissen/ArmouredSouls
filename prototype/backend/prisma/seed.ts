@@ -18,9 +18,9 @@ async function main() {
         description: 'Standard energy weapon with good accuracy',
         baseDamage: 20,
         cost: 150000,
-        targetingComputerBonus: 3,
-        weaponStabilityBonus: 4,
-        firingRateBonus: 2,
+        targetingSystemsBonus: 3,
+        weaponControlBonus: 4,
+        attackSpeedBonus: 2,
       },
     }),
     prisma.weapon.create({
@@ -30,8 +30,8 @@ async function main() {
         description: 'High damage plasma weapon, generates heat',
         baseDamage: 35,
         cost: 300000,
-        firepowerBonus: 5,
-        criticalCircuitsBonus: 4,
+        combatPowerBonus: 5,
+        criticalSystemsBonus: 4,
         powerCoreBonus: -3,
       },
     }),
@@ -42,9 +42,9 @@ async function main() {
         description: 'Efficient energy weapon with armor penetration',
         baseDamage: 25,
         cost: 400000,
-        armorPiercingBonus: 6,
-        shieldGeneratorBonus: 4,
-        firingRateBonus: 5,
+        penetrationBonus: 6,
+        shieldCapacityBonus: 4,
+        attackSpeedBonus: 5,
       },
     }),
   ]);
@@ -58,9 +58,9 @@ async function main() {
         description: 'Rapid-fire ballistic weapon',
         baseDamage: 15,
         cost: 100000,
-        firepowerBonus: 2,
-        firingRateBonus: 8,
-        weaponStabilityBonus: 3,
+        combatPowerBonus: 2,
+        attackSpeedBonus: 8,
+        weaponControlBonus: 3,
       },
     }),
     prisma.weapon.create({
@@ -70,9 +70,9 @@ async function main() {
         description: 'High-velocity penetrating weapon',
         baseDamage: 40,
         cost: 350000,
-        armorPiercingBonus: 10,
-        targetingComputerBonus: 5,
-        firingRateBonus: -3,
+        penetrationBonus: 10,
+        targetingSystemsBonus: 5,
+        attackSpeedBonus: -3,
       },
     }),
     prisma.weapon.create({
@@ -82,9 +82,9 @@ async function main() {
         description: 'Close-range devastating weapon',
         baseDamage: 30,
         cost: 120000,
-        firepowerBonus: 4,
-        criticalCircuitsBonus: 5,
-        targetingComputerBonus: -3,
+        combatPowerBonus: 4,
+        criticalSystemsBonus: 5,
+        targetingSystemsBonus: -3,
       },
     }),
   ]);
@@ -98,7 +98,7 @@ async function main() {
         description: 'Energized melee weapon for close combat',
         baseDamage: 28,
         cost: 180000,
-        hydraulicPowerBonus: 6,
+        hydraulicSystemsBonus: 6,
         counterProtocolsBonus: 5,
         gyroStabilizersBonus: 3,
       },
@@ -110,8 +110,8 @@ async function main() {
         description: 'Heavy crushing weapon',
         baseDamage: 35,
         cost: 200000,
-        hydraulicPowerBonus: 8,
-        firepowerBonus: 6,
+        hydraulicSystemsBonus: 8,
+        combatPowerBonus: 6,
         servoMotorsBonus: -2,
       },
     }),
@@ -126,9 +126,9 @@ async function main() {
         description: 'High-damage area weapon',
         baseDamage: 45,
         cost: 320000,
-        firepowerBonus: 7,
-        criticalCircuitsBonus: 6,
-        firingRateBonus: -4,
+        combatPowerBonus: 7,
+        criticalSystemsBonus: 6,
+        attackSpeedBonus: -4,
       },
     }),
     prisma.weapon.create({
@@ -138,9 +138,9 @@ async function main() {
         description: 'Tactical explosive weapon',
         baseDamage: 32,
         cost: 250000,
-        firepowerBonus: 5,
+        combatPowerBonus: 5,
         threatAnalysisBonus: 4,
-        firingRateBonus: -2,
+        attackSpeedBonus: -2,
       },
     }),
   ]);
@@ -163,69 +163,58 @@ async function main() {
         passwordHash: await bcrypt.hash('admin123', 10),
         role: 'admin',
         currency: 10000000, // 10 million for admin
-        elo: 1200,
-        fame: 0,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player1',
         passwordHash: hashedPassword,
-        currency: 1000000, // 1 million starting balance
-        elo: 1200,
-        fame: 0,
+        currency: 2000000, // 2 million starting balance
       },
     }),
     prisma.user.create({
       data: {
         username: 'player2',
         passwordHash: hashedPassword,
-        currency: 1000000,
-        elo: 1200,
-        fame: 0,
+        currency: 2000000,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player3',
         passwordHash: hashedPassword,
-        currency: 1000000,
-        elo: 1200,
-        fame: 0,
+        currency: 2000000,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player4',
         passwordHash: hashedPassword,
-        currency: 1000000,
-        elo: 1200,
-        fame: 0,
+        currency: 2000000,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player5',
         passwordHash: hashedPassword,
-        currency: 1000000,
-        elo: 1200,
-        fame: 0,
+        currency: 2000000,
       },
     }),
   ]);
 
   console.log(`✅ Created ${users.length} users`);
   console.log('   - admin/admin123 (admin role, ₡10,000,000)');
-  console.log('   - player1-5/password123 (regular users, ₡1,000,000 each)');
+  console.log('   - player1-5/password123 (regular users, ₡2,000,000 each)');
 
   console.log('✅ Database seeded successfully!');
   console.log('');
   console.log('💰 Currency: Credits (₡)');
+  console.log('👤 Starting balance: ₡2,000,000');
   console.log('🤖 Robot frame cost: ₡500,000');
   console.log('⚔️  Weapon costs: ₡100,000 - ₡400,000');
   console.log('📈 Upgrade formula: (level + 1) × 1,000 Credits');
   console.log('');
-  console.log('🔧 Attributes: 23 total (Weapons Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination)');
+  console.log('🔧 Attributes: 23 total (Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination)');
 }
 
 main()

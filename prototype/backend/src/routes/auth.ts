@@ -50,8 +50,7 @@ router.post('/login', async (req: Request, res: Response) => {
         username: user.username,
         role: user.role,
         currency: user.currency,
-        elo: user.elo,
-        fame: user.fame,
+        prestige: user.prestige,
       },
     });
   } catch (error) {

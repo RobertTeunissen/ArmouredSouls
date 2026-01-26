@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Navigation from '../components/Navigation';
 
 interface Facility {
   type: string;
@@ -16,8 +16,7 @@ interface Facility {
 }
 
 function FacilitiesPage() {
-  const { user, logout, refreshUser } = useAuth();
-  const navigate = useNavigate();
+  const { user, refreshUser } = useAuth();
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<string | null>(null);
@@ -57,48 +56,13 @@ function FacilitiesPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   if (!user) {
     return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-6">
-            <h1 className="text-2xl font-bold cursor-pointer" onClick={() => navigate('/dashboard')}>
-              Armoured Souls
-            </h1>
-            <div className="flex space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Dashboard
-              </button>
-              <button className="text-white font-semibold">
-                Facilities
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-green-400 font-semibold">
-              ₡{user.currency.toLocaleString()}
-            </div>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold mb-6">Stable Facilities</h2>

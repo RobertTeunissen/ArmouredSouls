@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Navigation from '../components/Navigation';
 
 function CreateRobotPage() {
   const [name, setName] = useState('');
@@ -75,42 +76,11 @@ function CreateRobotPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   const canAfford = currency >= ROBOT_CREATION_COST;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold cursor-pointer" onClick={() => navigate('/dashboard')}>
-            Armoured Souls
-          </h1>
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => navigate('/robots')}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
-            >
-              My Robots
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">

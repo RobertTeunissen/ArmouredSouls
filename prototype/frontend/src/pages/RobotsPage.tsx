@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Navigation from '../components/Navigation';
 
 interface Robot {
   id: number;
   name: string;
-  weaponId: number | null;
-  weapon: {
-    name: string;
-    weaponType: string;
+  elo: number;
+  weaponInventoryId: number | null;
+  weaponInventory: {
+    weapon: {
+      name: string;
+      weaponType: string;
+    };
   } | null;
   createdAt: string;
 }
@@ -53,11 +57,6 @@ function RobotsPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
@@ -68,43 +67,25 @@ function RobotsPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold cursor-pointer" onClick={() => navigate('/dashboard')}>
-            Armoured Souls
-          </h1>
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => navigate('/facilities')}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
-            >
-              Facilities
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">My Robots</h2>
-          <button
-            onClick={() => navigate('/robots/create')}
-            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg transition-colors font-semibold"
-          >
-            + Create New Robot
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate('/weapon-shop')}
+              className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg transition-colors font-semibold"
+            >
+              🛒 Weapon Shop
+            </button>
+            <button
+              onClick={() => navigate('/robots/create')}
+              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg transition-colors font-semibold"
+            >
+              + Create New Robot
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -139,15 +120,19 @@ function RobotsPage() {
                     <span className="font-semibold">#{robot.id}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-gray-400">ELO:</span>
+                    <span className="font-semibold">{robot.elo}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-400">Weapon:</span>
                     <span className="font-semibold">
-                      {robot.weapon ? robot.weapon.name : 'None'}
+                      {robot.weaponInventory ? robot.weaponInventory.weapon.name : 'None'}
                     </span>
                   </div>
-                  {robot.weapon && (
+                  {robot.weaponInventory && (
                     <div className="flex justify-between">
                       <span className="text-gray-400">Weapon Type:</span>
-                      <span className="font-semibold capitalize">{robot.weapon.weaponType}</span>
+                      <span className="font-semibold capitalize">{robot.weaponInventory.weapon.weaponType}</span>
                     </div>
                   )}
                   <div className="flex justify-between">

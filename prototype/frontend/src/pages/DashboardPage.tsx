@@ -1,14 +1,25 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import Navigation from '../components/Navigation';
 
 function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [robotCount, setRobotCount] = useState(0);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  useEffect(() => {
+    const fetchRobots = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/robots');
+        setRobotCount(response.data.length);
+      } catch (error) {
+        console.error('Failed to fetch robots:', error);
+      }
+    };
+    fetchRobots();
+  }, []);
 
   if (!user) {
     return null;
@@ -16,17 +27,7 @@ function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Armoured Souls</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
+      <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -43,12 +44,8 @@ function DashboardPage() {
                 <span className="font-semibold capitalize">{user.role}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">ELO Rating:</span>
-                <span className="font-semibold">{user.elo}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Fame:</span>
-                <span className="font-semibold">{user.fame}</span>
+                <span className="text-gray-400">Prestige:</span>
+                <span className="font-semibold">{user.prestige}</span>
               </div>
             </div>
           </div>
@@ -69,8 +66,17 @@ function DashboardPage() {
         <div className="bg-gray-800 p-6 rounded-lg mb-8">
           <h2 className="text-2xl font-semibold mb-4">Your Stable</h2>
           <div className="text-center py-8 text-gray-400">
-            <p className="mb-4">Your stable is empty. Start by upgrading facilities or creating robots!</p>
-            <p className="text-sm">You have ₡{user.currency.toLocaleString()} to spend on upgrades and robots.</p>
+            {robotCount === 0 ? (
+              <>
+                <p className="mb-4">Your stable is empty. Start by upgrading facilities or creating robots!</p>
+                <p className="text-sm">You have ₡{user.currency.toLocaleString()} to spend on upgrades and robots.</p>
+              </>
+            ) : (
+              <>
+                <p className="mb-4 text-2xl font-bold text-white">{robotCount} Robot{robotCount !== 1 ? 's' : ''}</p>
+                <p className="text-sm">You have {robotCount} robot{robotCount !== 1 ? 's' : ''} in your stable.</p>
+              </>
+            )}
           </div>
         </div>
 
@@ -87,8 +93,12 @@ function DashboardPage() {
             onClick={() => navigate('/robots')}
             className="bg-green-600 hover:bg-green-700 p-6 rounded-lg transition-colors"
           >
-            <h3 className="text-xl font-semibold mb-2">Create Robot</h3>
-            <p className="text-sm text-gray-300">Build your first battle robot</p>
+            <h3 className="text-xl font-semibold mb-2">
+              {robotCount === 0 ? 'Create Robot' : 'Manage Robots'}
+            </h3>
+            <p className="text-sm text-gray-300">
+              {robotCount === 0 ? 'Build your first battle robot' : 'View and upgrade your robots'}
+            </p>
           </button>
           <button className="bg-purple-600 hover:bg-purple-700 p-6 rounded-lg transition-colors opacity-50 cursor-not-allowed">
             <h3 className="text-xl font-semibold mb-2">Battle Arena</h3>

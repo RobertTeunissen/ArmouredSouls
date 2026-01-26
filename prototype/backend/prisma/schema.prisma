@@ -15,14 +15,13 @@ model User {
   username     String   @unique @db.VarChar(50)
   passwordHash String   @map("password_hash") @db.VarChar(255)
   role         String   @default("user") @db.VarChar(20)
-  currency     Int      @default(1000000)
-  elo          Int      @default(1200)
-  fame         Int      @default(0)
+  currency     Int      @default(2000000)  // Starting balance: ₡2,000,000
   prestige     Int      @default(0)
   createdAt    DateTime @default(now()) @map("created_at")
   
-  robots       Robot[]
-  facilities   Facility[]
+  robots          Robot[]
+  facilities      Facility[]
+  weaponInventory WeaponInventory[]
   
   @@map("users")
 }
@@ -42,54 +41,68 @@ model Facility {
 }
 
 model Robot {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  name        String   @db.VarChar(100)
-  weaponId    Int?     @map("weapon_id")
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @map("user_id")
+  name                String   @db.VarChar(100)
+  weaponInventoryId   Int?     @map("weapon_inventory_id")  // Link to user's weapon inventory
+  elo                 Int      @default(1200)  // ELO is robot-level, not user-level
   
-  // Weapons Systems (6)
-  firepower         Int      @default(1)
-  targetingComputer Int      @default(1) @map("targeting_computer")
-  criticalCircuits  Int      @default(1) @map("critical_circuits")
-  armorPiercing     Int      @default(1) @map("armor_piercing")
-  weaponStability   Int      @default(1) @map("weapon_stability")
-  firingRate        Int      @default(1) @map("firing_rate")
+  // Combat Systems (6 attributes)
+  combatPower         Int      @default(1) @map("combat_power")
+  targetingSystems    Int      @default(1) @map("targeting_systems")
+  criticalSystems     Int      @default(1) @map("critical_systems")
+  penetration         Int      @default(1)
+  weaponControl       Int      @default(1) @map("weapon_control")
+  attackSpeed         Int      @default(1) @map("attack_speed")
   
-  // Defensive Systems (5)
-  armorPlating      Int      @default(1) @map("armor_plating")
-  shieldGenerator   Int      @default(1) @map("shield_generator")
-  evasionThrusters  Int      @default(1) @map("evasion_thrusters")
-  damageDampeners   Int      @default(1) @map("damage_dampeners")
-  counterProtocols  Int      @default(1) @map("counter_protocols")
+  // Defensive Systems (5 attributes)
+  armorPlating        Int      @default(1) @map("armor_plating")
+  shieldCapacity      Int      @default(1) @map("shield_capacity")
+  evasionThrusters    Int      @default(1) @map("evasion_thrusters")
+  damageDampeners     Int      @default(1) @map("damage_dampeners")
+  counterProtocols    Int      @default(1) @map("counter_protocols")
   
-  // Chassis & Mobility (5)
-  hullIntegrity     Int      @default(1) @map("hull_integrity")
-  servoMotors       Int      @default(1) @map("servo_motors")
-  gyroStabilizers   Int      @default(1) @map("gyro_stabilizers")
-  hydraulicPower    Int      @default(1) @map("hydraulic_power")
-  powerCore         Int      @default(1) @map("power_core")
+  // Chassis & Mobility (5 attributes)
+  hullIntegrity       Int      @default(1) @map("hull_integrity")
+  servoMotors         Int      @default(1) @map("servo_motors")
+  gyroStabilizers     Int      @default(1) @map("gyro_stabilizers")
+  hydraulicSystems    Int      @default(1) @map("hydraulic_systems")
+  powerCore           Int      @default(1) @map("power_core")
   
-  // AI Processing (4)
-  combatAlgorithms  Int      @default(1) @map("combat_algorithms")
-  threatAnalysis    Int      @default(1) @map("threat_analysis")
-  adaptiveAI        Int      @default(1) @map("adaptive_ai")
-  logicCores        Int      @default(1) @map("logic_cores")
+  // AI Processing (4 attributes)
+  combatAlgorithms    Int      @default(1) @map("combat_algorithms")
+  threatAnalysis      Int      @default(1) @map("threat_analysis")
+  adaptiveAI          Int      @default(1) @map("adaptive_ai")
+  logicCores          Int      @default(1) @map("logic_cores")
   
-  // Team Coordination (3)
-  syncProtocols     Int      @default(1) @map("sync_protocols")
-  supportSystems    Int      @default(1) @map("support_systems")
-  formationTactics  Int      @default(1) @map("formation_tactics")
+  // Team Coordination (3 attributes)
+  syncProtocols       Int      @default(1) @map("sync_protocols")
+  supportSystems      Int      @default(1) @map("support_systems")
+  formationTactics    Int      @default(1) @map("formation_tactics")
   
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt           DateTime @default(now()) @map("created_at")
   
-  user        User      @relation(fields: [userId], references: [id])
-  weapon      Weapon?   @relation(fields: [weaponId], references: [id])
+  user                User             @relation(fields: [userId], references: [id])
+  weaponInventory     WeaponInventory? @relation(fields: [weaponInventoryId], references: [id])
   
-  battlesAsRobot1 Battle[] @relation("Robot1Battles")
-  battlesAsRobot2 Battle[] @relation("Robot2Battles")
-  battlesWon      Battle[] @relation("WinnerBattles")
+  battlesAsRobot1     Battle[] @relation("Robot1Battles")
+  battlesAsRobot2     Battle[] @relation("Robot2Battles")
+  battlesWon          Battle[] @relation("WinnerBattles")
   
   @@map("robots")
+}
+
+model WeaponInventory {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  weaponId    Int      @map("weapon_id")
+  purchasedAt DateTime @default(now()) @map("purchased_at")
+  
+  user        User     @relation(fields: [userId], references: [id])
+  weapon      Weapon   @relation(fields: [weaponId], references: [id])
+  robots      Robot[]  // Weapons can be equipped to robots
+  
+  @@map("weapon_inventory")
 }
 
 model Weapon {
@@ -100,26 +113,26 @@ model Weapon {
   baseDamage      Int      @map("base_damage")
   cost            Int      // Cost in Credits to purchase
   
-  // Attribute Bonuses (can be negative for penalties)
-  firepowerBonus          Int      @default(0) @map("firepower_bonus")
-  targetingComputerBonus  Int      @default(0) @map("targeting_computer_bonus")
-  criticalCircuitsBonus   Int      @default(0) @map("critical_circuits_bonus")
-  armorPiercingBonus      Int      @default(0) @map("armor_piercing_bonus")
-  weaponStabilityBonus    Int      @default(0) @map("weapon_stability_bonus")
-  firingRateBonus         Int      @default(0) @map("firing_rate_bonus")
+  // Attribute Bonuses (can be negative for penalties) - updated to match new attribute names
+  combatPowerBonus        Int      @default(0) @map("combat_power_bonus")
+  targetingSystemsBonus   Int      @default(0) @map("targeting_systems_bonus")
+  criticalSystemsBonus    Int      @default(0) @map("critical_systems_bonus")
+  penetrationBonus        Int      @default(0) @map("penetration_bonus")
+  weaponControlBonus      Int      @default(0) @map("weapon_control_bonus")
+  attackSpeedBonus        Int      @default(0) @map("attack_speed_bonus")
   armorPlatingBonus       Int      @default(0) @map("armor_plating_bonus")
-  shieldGeneratorBonus    Int      @default(0) @map("shield_generator_bonus")
+  shieldCapacityBonus     Int      @default(0) @map("shield_capacity_bonus")
   evasionThrustersBonus   Int      @default(0) @map("evasion_thrusters_bonus")
   counterProtocolsBonus   Int      @default(0) @map("counter_protocols_bonus")
   servoMotorsBonus        Int      @default(0) @map("servo_motors_bonus")
   gyroStabilizersBonus    Int      @default(0) @map("gyro_stabilizers_bonus")
-  hydraulicPowerBonus     Int      @default(0) @map("hydraulic_power_bonus")
+  hydraulicSystemsBonus   Int      @default(0) @map("hydraulic_systems_bonus")
   powerCoreBonus          Int      @default(0) @map("power_core_bonus")
   threatAnalysisBonus     Int      @default(0) @map("threat_analysis_bonus")
   
   createdAt       DateTime @default(now()) @map("created_at")
   
-  robots          Robot[]
+  inventory       WeaponInventory[]
   
   @@map("weapons")
 }

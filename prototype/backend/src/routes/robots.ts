@@ -8,6 +8,32 @@ const prisma = new PrismaClient();
 const ROBOT_CREATION_COST = 500000;
 const MAX_ATTRIBUTE_LEVEL = 50;
 
+// Get all robots from all users
+router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robots = await prisma.robot.findMany({
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+        weaponInventory: {
+          include: {
+            weapon: true,
+          },
+        },
+      },
+      orderBy: { elo: 'desc' },
+    });
+
+    res.json(robots);
+  } catch (error) {
+    console.error('All robots list error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get all robots for the authenticated user
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -16,7 +42,11 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     const robots = await prisma.robot.findMany({
       where: { userId },
       include: {
-        weapon: true,
+        weaponInventory: {
+          include: {
+            weapon: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -72,7 +102,11 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
           name,
         },
         include: {
-          weapon: true,
+          weaponInventory: {
+            include: {
+              weapon: true,
+            },
+          },
         },
       });
 
@@ -106,7 +140,11 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
         userId, // Ensure user owns this robot
       },
       include: {
-        weapon: true,
+        weaponInventory: {
+          include: {
+            weapon: true,
+          },
+        },
       },
     });
 
@@ -150,9 +188,9 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
 
     // Validate attribute exists
     const validAttributes = [
-      'firepower', 'targetingComputer', 'criticalCircuits', 'armorPiercing', 'weaponStability', 'firingRate',
-      'armorPlating', 'shieldGenerator', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
-      'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicPower', 'powerCore',
+      'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
+      'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
+      'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
       'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
       'syncProtocols', 'supportSystems', 'formationTactics',
     ];
@@ -169,16 +207,26 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
     }
 
     // Calculate upgrade cost: (current_level + 1) × 1,000
-    const upgradeCost = (currentLevel + 1) * 1000;
+    const baseCost = (currentLevel + 1) * 1000;
 
-    // Get user's current currency
+    // Get user's current currency and Training Facility level
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        facilities: {
+          where: { facilityType: 'training' },
+        },
+      },
     });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    // Apply Training Facility discount
+    const trainingLevel = user.facilities[0]?.level || 0;
+    const discountPercent = trainingLevel * 5; // 5% per level
+    const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
     // Check if user has enough currency
     if (user.currency < upgradeCost) {
@@ -200,7 +248,11 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
           [attribute]: currentLevel + 1,
         },
         include: {
-          weapon: true,
+          weaponInventory: {
+            include: {
+              weapon: true,
+            },
+          },
         },
       });
 
@@ -218,12 +270,12 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
   }
 });
 
-// Equip a weapon to a robot
+// Equip a weapon to a robot (from user's weapon inventory)
 router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const robotId = parseInt(req.params.id);
-    const { weaponId } = req.body;
+    const { weaponInventoryId } = req.body;
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -241,13 +293,17 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
       return res.status(404).json({ error: 'Robot not found' });
     }
 
-    // If weaponId is null, unequip weapon
-    if (weaponId === null) {
+    // If weaponInventoryId is null, unequip weapon
+    if (weaponInventoryId === null) {
       const updatedRobot = await prisma.robot.update({
         where: { id: robotId },
-        data: { weaponId: null },
+        data: { weaponInventoryId: null },
         include: {
-          weapon: true,
+          weaponInventory: {
+            include: {
+              weapon: true,
+            },
+          },
         },
       });
 
@@ -257,26 +313,36 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
       });
     }
 
-    // Validate weapon exists
-    const weaponIdNum = parseInt(weaponId);
-    if (isNaN(weaponIdNum)) {
-      return res.status(400).json({ error: 'Invalid weapon ID' });
+    // Validate weapon inventory exists and belongs to user
+    const weaponInvIdNum = parseInt(weaponInventoryId);
+    if (isNaN(weaponInvIdNum)) {
+      return res.status(400).json({ error: 'Invalid weapon inventory ID' });
     }
 
-    const weapon = await prisma.weapon.findUnique({
-      where: { id: weaponIdNum },
+    const weaponInv = await prisma.weaponInventory.findFirst({
+      where: {
+        id: weaponInvIdNum,
+        userId, // Ensure user owns this weapon
+      },
+      include: {
+        weapon: true,
+      },
     });
 
-    if (!weapon) {
-      return res.status(404).json({ error: 'Weapon not found' });
+    if (!weaponInv) {
+      return res.status(404).json({ error: 'Weapon not found in your inventory' });
     }
 
     // Equip weapon to robot
     const updatedRobot = await prisma.robot.update({
       where: { id: robotId },
-      data: { weaponId: weaponIdNum },
+      data: { weaponInventoryId: weaponInvIdNum },
       include: {
-        weapon: true,
+        weaponInventory: {
+          include: {
+            weapon: true,
+          },
+        },
       },
     });
 

@@ -7,6 +7,8 @@ import FacilitiesPage from './pages/FacilitiesPage';
 import RobotsPage from './pages/RobotsPage';
 import CreateRobotPage from './pages/CreateRobotPage';
 import RobotDetailPage from './pages/RobotDetailPage';
+import AllRobotsPage from './pages/AllRobotsPage';
+import WeaponShopPage from './pages/WeaponShopPage';
 
 function App() {
   return (
@@ -51,6 +53,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <RobotDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/all-robots"
+            element={
+              <ProtectedRoute>
+                <AllRobotsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/weapon-shop"
+            element={
+              <ProtectedRoute>
+                <WeaponShopPage />
               </ProtectedRoute>
             }
           />

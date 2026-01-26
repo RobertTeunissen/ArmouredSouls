@@ -1,27 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Navigation from '../components/Navigation';
 
 interface Robot {
   id: number;
   name: string;
-  weaponId: number | null;
-  weapon: Weapon | null;
-  firepower: number;
-  targetingComputer: number;
-  criticalCircuits: number;
-  armorPiercing: number;
-  weaponStability: number;
-  firingRate: number;
+  elo: number;
+  weaponInventoryId: number | null;
+  weaponInventory: WeaponInventory | null;
+  combatPower: number;
+  targetingSystems: number;
+  criticalSystems: number;
+  penetration: number;
+  weaponControl: number;
+  attackSpeed: number;
   armorPlating: number;
-  shieldGenerator: number;
+  shieldCapacity: number;
   evasionThrusters: number;
   damageDampeners: number;
   counterProtocols: number;
   hullIntegrity: number;
   servoMotors: number;
   gyroStabilizers: number;
-  hydraulicPower: number;
+  hydraulicSystems: number;
   powerCore: number;
   combatAlgorithms: number;
   threatAnalysis: number;
@@ -30,6 +32,11 @@ interface Robot {
   syncProtocols: number;
   supportSystems: number;
   formationTactics: number;
+}
+
+interface WeaponInventory {
+  id: number;
+  weapon: Weapon;
 }
 
 interface Weapon {
@@ -44,8 +51,9 @@ interface Weapon {
 function RobotDetailPage() {
   const { id } = useParams();
   const [robot, setRobot] = useState<Robot | null>(null);
-  const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [weapons, setWeapons] = useState<WeaponInventory[]>([]);
   const [currency, setCurrency] = useState(0);
+  const [trainingLevel, setTrainingLevel] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -55,17 +63,17 @@ function RobotDetailPage() {
   const MAX_ATTRIBUTE_LEVEL = 50;
 
   const attributeCategories = {
-    'Weapon Systems': [
-      { key: 'firepower', label: 'Firepower' },
-      { key: 'targetingComputer', label: 'Targeting Computer' },
-      { key: 'criticalCircuits', label: 'Critical Circuits' },
-      { key: 'armorPiercing', label: 'Armor Piercing' },
-      { key: 'weaponStability', label: 'Weapon Stability' },
-      { key: 'firingRate', label: 'Firing Rate' },
+    'Combat Systems': [
+      { key: 'combatPower', label: 'Combat Power' },
+      { key: 'targetingSystems', label: 'Targeting Systems' },
+      { key: 'criticalSystems', label: 'Critical Systems' },
+      { key: 'penetration', label: 'Penetration' },
+      { key: 'weaponControl', label: 'Weapon Control' },
+      { key: 'attackSpeed', label: 'Attack Speed' },
     ],
     'Defensive Systems': [
       { key: 'armorPlating', label: 'Armor Plating' },
-      { key: 'shieldGenerator', label: 'Shield Generator' },
+      { key: 'shieldCapacity', label: 'Shield Capacity' },
       { key: 'evasionThrusters', label: 'Evasion Thrusters' },
       { key: 'damageDampeners', label: 'Damage Dampeners' },
       { key: 'counterProtocols', label: 'Counter Protocols' },
@@ -74,7 +82,7 @@ function RobotDetailPage() {
       { key: 'hullIntegrity', label: 'Hull Integrity' },
       { key: 'servoMotors', label: 'Servo Motors' },
       { key: 'gyroStabilizers', label: 'Gyro Stabilizers' },
-      { key: 'hydraulicPower', label: 'Hydraulic Power' },
+      { key: 'hydraulicSystems', label: 'Hydraulic Systems' },
       { key: 'powerCore', label: 'Power Core' },
     ],
     'AI Processing': [
@@ -124,8 +132,8 @@ function RobotDetailPage() {
       const robotData = await robotResponse.json();
       setRobot(robotData);
 
-      // Fetch available weapons
-      const weaponsResponse = await fetch('http://localhost:3001/api/weapons', {
+      // Fetch weapon inventory
+      const weaponsResponse = await fetch('http://localhost:3001/api/weapon-inventory', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -134,6 +142,21 @@ function RobotDetailPage() {
       if (weaponsResponse.ok) {
         const weaponsData = await weaponsResponse.json();
         setWeapons(weaponsData);
+      }
+
+      // Fetch training facility level
+      const buildingsResponse = await fetch('http://localhost:3001/api/buildings', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (buildingsResponse.ok) {
+        const buildings = await buildingsResponse.json();
+        const trainingFacility = buildings.find((b: any) => b.name === 'Training Facility');
+        if (trainingFacility) {
+          setTrainingLevel(trainingFacility.level);
+        }
       }
     } catch (err) {
       setError('Failed to load robot details');
@@ -149,7 +172,9 @@ function RobotDetailPage() {
     setError('');
     setSuccessMessage('');
 
-    const upgradeCost = (currentLevel + 1) * 1000;
+    const baseCost = (currentLevel + 1) * 1000;
+    const discountPercent = trainingLevel * 5;
+    const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
     if (currency < upgradeCost) {
       setError('Insufficient credits for this upgrade');
@@ -194,7 +219,7 @@ function RobotDetailPage() {
     }
   };
 
-  const handleWeaponChange = async (weaponId: string) => {
+  const handleWeaponChange = async (weaponInventoryId: string) => {
     if (!robot) return;
 
     setError('');
@@ -208,7 +233,7 @@ function RobotDetailPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ weaponId: weaponId === '' ? null : parseInt(weaponId) }),
+        body: JSON.stringify({ weaponInventoryId: weaponInventoryId === '' ? null : parseInt(weaponInventoryId) }),
       });
 
       if (response.status === 401) {
@@ -224,7 +249,7 @@ function RobotDetailPage() {
       }
 
       setRobot(data.robot);
-      setSuccessMessage(weaponId === '' ? 'Weapon unequipped!' : 'Weapon equipped successfully!');
+      setSuccessMessage(weaponInventoryId === '' ? 'Weapon unequipped!' : 'Weapon equipped successfully!');
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -234,10 +259,7 @@ function RobotDetailPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+
 
   if (loading) {
     return (
@@ -265,33 +287,7 @@ function RobotDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold cursor-pointer" onClick={() => navigate('/dashboard')}>
-            Armoured Souls
-          </h1>
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => navigate('/robots')}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
-            >
-              My Robots
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
@@ -331,24 +327,24 @@ function RobotDetailPage() {
           <h3 className="text-xl font-semibold mb-4">Equipped Weapon</h3>
           <div className="flex items-center gap-4">
             <select
-              value={robot.weaponId || ''}
+              value={robot.weaponInventoryId || ''}
               onChange={(e) => handleWeaponChange(e.target.value)}
               className="flex-1 bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
             >
               <option value="">No Weapon</option>
-              {weapons.map((weapon) => (
-                <option key={weapon.id} value={weapon.id}>
-                  {weapon.name} ({weapon.weaponType}) - Damage: {weapon.baseDamage}
+              {weapons.map((weaponInv) => (
+                <option key={weaponInv.id} value={weaponInv.id}>
+                  {weaponInv.weapon.name} ({weaponInv.weapon.weaponType}) - Damage: {weaponInv.weapon.baseDamage}
                 </option>
               ))}
             </select>
           </div>
-          {robot.weapon && (
+          {robot.weaponInventory && (
             <div className="mt-4 bg-gray-700 p-4 rounded">
-              <p className="text-sm text-gray-300">{robot.weapon.description}</p>
+              <p className="text-sm text-gray-300">{robot.weaponInventory.weapon.description}</p>
               <div className="mt-2 flex gap-4 text-sm">
-                <span>Type: <span className="font-semibold capitalize">{robot.weapon.weaponType}</span></span>
-                <span>Damage: <span className="font-semibold">{robot.weapon.baseDamage}</span></span>
+                <span>Type: <span className="font-semibold capitalize">{robot.weaponInventory.weapon.weaponType}</span></span>
+                <span>Damage: <span className="font-semibold">{robot.weaponInventory.weapon.baseDamage}</span></span>
               </div>
             </div>
           )}
@@ -361,7 +357,9 @@ function RobotDetailPage() {
             <div className="space-y-3">
               {attributes.map(({ key, label }) => {
                 const currentLevel = robot[key as keyof Robot] as number;
-                const upgradeCost = (currentLevel + 1) * 1000;
+                const baseCost = (currentLevel + 1) * 1000;
+                const discountPercent = trainingLevel * 5;
+                const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
                 const canUpgrade = currentLevel < MAX_ATTRIBUTE_LEVEL;
                 const canAfford = currency >= upgradeCost;
 
@@ -374,7 +372,14 @@ function RobotDetailPage() {
                       </div>
                       {canUpgrade && (
                         <div className="text-sm text-gray-400 mt-1">
-                          Upgrade Cost: ₡{upgradeCost.toLocaleString()}
+                          {discountPercent > 0 ? (
+                            <>
+                              <span className="line-through mr-2">₡{baseCost.toLocaleString()}</span>
+                              <span className="text-green-400">₡{upgradeCost.toLocaleString()} ({discountPercent}% off)</span>
+                            </>
+                          ) : (
+                            <>Upgrade Cost: ₡{upgradeCost.toLocaleString()}</>
+                          )}
                         </div>
                       )}
                     </div>

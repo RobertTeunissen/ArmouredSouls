@@ -6,8 +6,7 @@ interface User {
   username: string;
   role: string;
   currency: number;
-  elo: number;
-  fame: number;
+  prestige: number;
 }
 
 interface AuthContextType {

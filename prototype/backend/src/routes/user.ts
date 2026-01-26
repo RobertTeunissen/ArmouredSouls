@@ -15,8 +15,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
         username: true,
         role: true,
         currency: true,
-        elo: true,
-        fame: true,
+        prestige: true,
         createdAt: true,
       },
     });
