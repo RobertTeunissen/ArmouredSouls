@@ -34,11 +34,11 @@ export function calculateAttributeBonus(
   
   const bonusKey = `${attributeKey}Bonus` as keyof Weapon;
   
-  if (mainWeapon?.weapon[bonusKey]) {
+  if (mainWeapon?.weapon[bonusKey] !== undefined) {
     bonus += mainWeapon.weapon[bonusKey] as number;
   }
   
-  if (offhandWeapon?.weapon[bonusKey]) {
+  if (offhandWeapon?.weapon[bonusKey] !== undefined) {
     bonus += offhandWeapon.weapon[bonusKey] as number;
   }
   

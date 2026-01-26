@@ -285,14 +285,6 @@ function RobotDetailPage() {
       console.error(err);
     }
   };
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to equip weapon');
-      console.error(err);
-    }
-  };
 
 
 

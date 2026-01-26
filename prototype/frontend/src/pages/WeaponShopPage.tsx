@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 
 interface Weapon {
   id: number;
@@ -88,45 +89,10 @@ function WeaponShopPage() {
     }
   };
 
-  const calculateCooldown = (weaponType: string, baseDamage: number): string => {
-    const baseCooldowns: { [key: string]: number } = {
-      'melee': 2.0,
-      'ballistic': 3.0,
-      'energy': 2.5,
-      'explosive': 4.0,
-    };
-    const damageScaling: { [key: string]: number } = {
-      'melee': 15,
-      'ballistic': 20,
-      'energy': 18,
-      'explosive': 25,
-    };
-    const baseCooldown = baseCooldowns[weaponType] || 3.0;
-    const scaling = damageScaling[weaponType] || 20;
-    return (baseCooldown + (baseDamage / scaling)).toFixed(1);
-  };
-
   const getAttributeBonuses = (weapon: Weapon): string[] => {
     const bonuses: string[] = [];
-    const attrs = [
-      { key: 'combatPowerBonus', label: 'Combat Power' },
-      { key: 'targetingSystemsBonus', label: 'Targeting' },
-      { key: 'criticalSystemsBonus', label: 'Critical' },
-      { key: 'penetrationBonus', label: 'Penetration' },
-      { key: 'weaponControlBonus', label: 'Control' },
-      { key: 'attackSpeedBonus', label: 'Attack Speed' },
-      { key: 'armorPlatingBonus', label: 'Armor' },
-      { key: 'shieldCapacityBonus', label: 'Shield' },
-      { key: 'evasionThrustersBonus', label: 'Evasion' },
-      { key: 'counterProtocolsBonus', label: 'Counter' },
-      { key: 'servoMotorsBonus', label: 'Servos' },
-      { key: 'gyroStabilizersBonus', label: 'Gyro' },
-      { key: 'hydraulicSystemsBonus', label: 'Hydraulics' },
-      { key: 'powerCoreBonus', label: 'Power' },
-      { key: 'threatAnalysisBonus', label: 'Threat Analysis' },
-    ];
 
-    attrs.forEach(({ key, label }) => {
+    ATTRIBUTE_LABELS.forEach(({ key, label }) => {
       const value = weapon[key as keyof Weapon] as number;
       if (value !== 0) {
         bonuses.push(`${label}: ${value > 0 ? '+' : ''}${value}`);
@@ -194,7 +160,7 @@ function WeaponShopPage() {
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-400">Cooldown:</span>
-                              <span className="font-semibold">{calculateCooldown(weapon.weaponType, weapon.baseDamage)}s</span>
+                              <span className="font-semibold">{calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage)}s</span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-400">Cost:</span>
