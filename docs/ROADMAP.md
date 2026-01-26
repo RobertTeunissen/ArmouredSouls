@@ -72,10 +72,10 @@ This ensures all database components are in place before implementing battles.
 ### Phase 1 Milestones
 
 **Milestone 1: User Can Login and See Initial Setup** ✅ PRIORITY
-- [ ] User authentication (login/logout)
-- [ ] User profile view
-- [ ] Display stable info (empty at start, ₡2,000,000 to spend)
-- [ ] Display Credits (₡) balance
+- ✅ User authentication (login/logout)
+- ✅ User profile view
+- ✅ Display stable info (empty at start, ₡2,000,000 to spend)
+- ✅ Display Credits (₡) balance
 
 **Milestone 2: User Can Complete Stable Setup** ✅ PRIORITY
 - [ ] View available facility upgrades (14 facility types)
@@ -83,14 +83,25 @@ This ensures all database components are in place before implementing battles.
 - [ ] See updated facility levels
 - [ ] Track Credits spending
 
+--> This is not working yet. There are only 4 facility types visible, not 14.
+--> Facilities can only be upgraded to level 5, not higher.
+--> When buying a facility the credit spending works, but the effect of the facility is not applied: buying the Training Facility doesn't provide a Robot upgrade discount and I am able to create multiple robots without buying the Roster Expansion facility. Make sure all 14 facilities have their intended effects applied. For the ones that have no use yet (we haven't implemented the repair funcitonality yet, so I cannot test the Repair Bay), mark them as "effect not yet implemented" in the browser. Also make sure you have them marked in this ROADMAP.md at the appropriate place so you don't forget.
+--> Stables should also have a name. This is a new requirement. Update this in STABLE_SYSTEM.md and DATABASE_SCHEMA.md and implement something a flow so that this is the first thing a user does when logging in for the first time. 
+
 **Milestone 3: User Can Create First Robot** ✅ PRIORITY
-- [ ] Create robot with name
-- [ ] Distribute 23 attributes (all start at level 1)
-- [ ] Upgrade robot attributes with Credits
-- [ ] Select weapon from available weapons
+- ✅ Create robot with name
+- ✅ Distribute 23 attributes (all start at level 1)
+- ✅ Upgrade robot attributes with Credits
+- ✅ Select weapon from available weapons
 - [ ] Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
-- [ ] Save robot to database
+- ✅ Save robot to database
 - [ ] View robot in stable
+
+--> There now is a Weapon Shop where the starting Weapons have been made available. Confirmed working. Players buy a weapon. This places it in the inventory. Users assign a weapon to a robot. They can buy the same weapon multiple times. Confirmed working. Make sure the documentation reflects this (ROBOT_ATTRIBUTES.md)
+--> What does not work is the loadout configuration. I cannot see the weapon type in the shop and I can only assign one weapon to each robot, no full loadout configuration.
+--> I want to see what the effect is of the weapon I buy. It currently only shows base damage and costs, but the cooldown and attribute changes are important for my buy decision.
+--> I want to see what the effect of a weapon is when it is equipped. Present the 23 attributes in the robot view as a stat block and clearly show the effects of equipping the weapon (reason weapons are quite expensive is that this is a way to get your effective stats above the maximum enforced by your training academy facilities). 
+--> Robots are not shows on the dashboard. Provide them in a table view (include their fighting record / ELO) and make their name clickable so you can see the details of the robot page with one click
 
 **Milestone 4: Matchmaking in Place** ✅ PRIORITY
 - [ ] Manual robot selection for battle (select 2 robots)
