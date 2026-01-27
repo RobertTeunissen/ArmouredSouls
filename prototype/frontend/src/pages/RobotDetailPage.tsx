@@ -73,6 +73,12 @@ function RobotDetailPage() {
   const [weapons, setWeapons] = useState<WeaponInventory[]>([]);
   const [currency, setCurrency] = useState(0);
   const [trainingLevel, setTrainingLevel] = useState(0);
+  const [academyLevels, setAcademyLevels] = useState({
+    combat: 0,
+    defense: 0,
+    mobility: 0,
+    ai: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -82,39 +88,54 @@ function RobotDetailPage() {
   const MAX_ATTRIBUTE_LEVEL = 50;
 
   const attributeCategories = {
-    'Combat Systems': [
-      { key: 'combatPower', label: 'Combat Power' },
-      { key: 'targetingSystems', label: 'Targeting Systems' },
-      { key: 'criticalSystems', label: 'Critical Systems' },
-      { key: 'penetration', label: 'Penetration' },
-      { key: 'weaponControl', label: 'Weapon Control' },
-      { key: 'attackSpeed', label: 'Attack Speed' },
-    ],
-    'Defensive Systems': [
-      { key: 'armorPlating', label: 'Armor Plating' },
-      { key: 'shieldCapacity', label: 'Shield Capacity' },
-      { key: 'evasionThrusters', label: 'Evasion Thrusters' },
-      { key: 'damageDampeners', label: 'Damage Dampeners' },
-      { key: 'counterProtocols', label: 'Counter Protocols' },
-    ],
-    'Chassis & Mobility': [
-      { key: 'hullIntegrity', label: 'Hull Integrity' },
-      { key: 'servoMotors', label: 'Servo Motors' },
-      { key: 'gyroStabilizers', label: 'Gyro Stabilizers' },
-      { key: 'hydraulicSystems', label: 'Hydraulic Systems' },
-      { key: 'powerCore', label: 'Power Core' },
-    ],
-    'AI Processing': [
-      { key: 'combatAlgorithms', label: 'Combat Algorithms' },
-      { key: 'threatAnalysis', label: 'Threat Analysis' },
-      { key: 'adaptiveAI', label: 'Adaptive AI' },
-      { key: 'logicCores', label: 'Logic Cores' },
-    ],
-    'Team Coordination': [
-      { key: 'syncProtocols', label: 'Sync Protocols' },
-      { key: 'supportSystems', label: 'Support Systems' },
-      { key: 'formationTactics', label: 'Formation Tactics' },
-    ],
+    'Combat Systems': {
+      academy: 'combat',
+      attributes: [
+        { key: 'combatPower', label: 'Combat Power' },
+        { key: 'targetingSystems', label: 'Targeting Systems' },
+        { key: 'criticalSystems', label: 'Critical Systems' },
+        { key: 'penetration', label: 'Penetration' },
+        { key: 'weaponControl', label: 'Weapon Control' },
+        { key: 'attackSpeed', label: 'Attack Speed' },
+      ],
+    },
+    'Defensive Systems': {
+      academy: 'defense',
+      attributes: [
+        { key: 'armorPlating', label: 'Armor Plating' },
+        { key: 'shieldCapacity', label: 'Shield Capacity' },
+        { key: 'evasionThrusters', label: 'Evasion Thrusters' },
+        { key: 'damageDampeners', label: 'Damage Dampeners' },
+        { key: 'counterProtocols', label: 'Counter Protocols' },
+      ],
+    },
+    'Chassis & Mobility': {
+      academy: 'mobility',
+      attributes: [
+        { key: 'hullIntegrity', label: 'Hull Integrity' },
+        { key: 'servoMotors', label: 'Servo Motors' },
+        { key: 'gyroStabilizers', label: 'Gyro Stabilizers' },
+        { key: 'hydraulicSystems', label: 'Hydraulic Systems' },
+        { key: 'powerCore', label: 'Power Core' },
+      ],
+    },
+    'AI Processing': {
+      academy: 'ai',
+      attributes: [
+        { key: 'combatAlgorithms', label: 'Combat Algorithms' },
+        { key: 'threatAnalysis', label: 'Threat Analysis' },
+        { key: 'adaptiveAI', label: 'Adaptive AI' },
+        { key: 'logicCores', label: 'Logic Cores' },
+      ],
+    },
+    'Team Coordination': {
+      academy: 'ai',
+      attributes: [
+        { key: 'syncProtocols', label: 'Sync Protocols' },
+        { key: 'supportSystems', label: 'Support Systems' },
+        { key: 'formationTactics', label: 'Formation Tactics' },
+      ],
+    },
   };
 
   useEffect(() => {
@@ -176,6 +197,19 @@ function RobotDetailPage() {
         if (trainingFacility) {
           setTrainingLevel(trainingFacility.level);
         }
+
+        // Fetch academy levels for attribute caps
+        const combatAcademy = facilities.find((f: any) => f.facilityType === 'combat_training_academy');
+        const defenseAcademy = facilities.find((f: any) => f.facilityType === 'defense_training_academy');
+        const mobilityAcademy = facilities.find((f: any) => f.facilityType === 'mobility_training_academy');
+        const aiAcademy = facilities.find((f: any) => f.facilityType === 'ai_training_academy');
+
+        setAcademyLevels({
+          combat: combatAcademy?.level || 0,
+          defense: defenseAcademy?.level || 0,
+          mobility: mobilityAcademy?.level || 0,
+          ai: aiAcademy?.level || 0,
+        });
       }
     } catch (err) {
       setError('Failed to load robot details');
@@ -470,73 +504,101 @@ function RobotDetailPage() {
         </div>
 
         {/* Attributes */}
-        {Object.entries(attributeCategories).map(([category, attributes]) => (
-          <div key={category} className="bg-gray-800 p-6 rounded-lg mb-6">
-            <h3 className="text-xl font-semibold mb-4">{category}</h3>
-            <div className="space-y-3">
-              {attributes.map(({ key, label }) => {
-                const currentLevel = robot[key as keyof Robot] as number;
-                const baseCost = (currentLevel + 1) * 1000;
-                const discountPercent = trainingLevel * 5;
-                const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
-                const canUpgrade = currentLevel < MAX_ATTRIBUTE_LEVEL;
-                const canAfford = currency >= upgradeCost;
+        {Object.entries(attributeCategories).map(([category, config]) => {
+          const academyType = config.academy as keyof typeof academyLevels;
+          const academyLevel = academyLevels[academyType];
+          const attributeCap = 50 + (academyLevel * 5);
 
-                // Calculate weapon bonuses
-                const bonus = calculateAttributeBonus(key, robot.mainWeapon, robot.offhandWeapon);
-                const attrDisplay = getAttributeDisplay(currentLevel, bonus);
+          return (
+            <div key={category} className="bg-gray-800 p-6 rounded-lg mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">{category}</h3>
+                <div className="text-sm">
+                  <span className="text-gray-400">Attribute Cap: </span>
+                  <span className="text-blue-400 font-semibold">{attributeCap}</span>
+                  {academyLevel === 0 && (
+                    <span className="ml-2 text-xs text-yellow-400">
+                      (Upgrade {category === 'Combat Systems' ? 'Combat' : 
+                               category === 'Defensive Systems' ? 'Defense' : 
+                               category === 'Chassis & Mobility' ? 'Mobility' : 
+                               'AI'} Training Academy to increase)
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-3">
+                {config.attributes.map(({ key, label }) => {
+                  const currentLevel = robot[key as keyof Robot] as number;
+                  const baseCost = (currentLevel + 1) * 1000;
+                  const discountPercent = trainingLevel * 5;
+                  const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
+                  const canUpgrade = currentLevel < MAX_ATTRIBUTE_LEVEL && currentLevel < attributeCap;
+                  const canAfford = currency >= upgradeCost;
+                  const atCap = currentLevel >= attributeCap;
 
-                return (
-                  <div key={key} className="bg-gray-700 p-4 rounded flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold">{label}</span>
-                        <span className={`font-bold ${attrDisplay.hasBonus ? 'text-green-400' : 'text-blue-400'}`}>
-                          {attrDisplay.hasBonus ? (
-                            <>
-                              <span className="text-blue-400">Level {currentLevel}</span>
-                              <span className="text-green-400"> (+{bonus} from weapons)</span>
-                              <span className="text-gray-400"> = {attrDisplay.total}</span>
-                            </>
-                          ) : (
-                            <>Level {currentLevel}</>
-                          )}
-                        </span>
-                      </div>
-                      {canUpgrade && (
-                        <div className="text-sm text-gray-400 mt-1">
-                          {discountPercent > 0 ? (
-                            <>
-                              <span className="line-through mr-2">₡{baseCost.toLocaleString()}</span>
-                              <span className="text-green-400">₡{upgradeCost.toLocaleString()} ({discountPercent}% off)</span>
-                            </>
-                          ) : (
-                            <>Upgrade Cost: ₡{upgradeCost.toLocaleString()}</>
+                  // Calculate weapon bonuses
+                  const bonus = calculateAttributeBonus(key, robot.mainWeapon, robot.offhandWeapon);
+                  const attrDisplay = getAttributeDisplay(currentLevel, bonus);
+
+                  return (
+                    <div key={key} className="bg-gray-700 p-4 rounded flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold">{label}</span>
+                          <span className={`font-bold ${attrDisplay.hasBonus ? 'text-green-400' : 'text-blue-400'}`}>
+                            {attrDisplay.hasBonus ? (
+                              <>
+                                <span className="text-blue-400">Level {currentLevel}</span>
+                                <span className="text-green-400"> (+{bonus} from weapons)</span>
+                                <span className="text-gray-400"> = {attrDisplay.total}</span>
+                              </>
+                            ) : (
+                              <>Level {currentLevel}</>
+                            )}
+                          </span>
+                          {atCap && currentLevel < MAX_ATTRIBUTE_LEVEL && (
+                            <span className="text-xs bg-yellow-900 text-yellow-300 px-2 py-1 rounded">
+                              Academy Cap Reached
+                            </span>
                           )}
                         </div>
-                      )}
+                        {canUpgrade && !atCap && (
+                          <div className="text-sm text-gray-400 mt-1">
+                            {discountPercent > 0 ? (
+                              <>
+                                <span className="line-through mr-2">₡{baseCost.toLocaleString()}</span>
+                                <span className="text-green-400">₡{upgradeCost.toLocaleString()} ({discountPercent}% off)</span>
+                              </>
+                            ) : (
+                              <>Upgrade Cost: ₡{upgradeCost.toLocaleString()}</>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleUpgrade(key, currentLevel)}
+                        disabled={!canUpgrade || !canAfford || atCap}
+                        className={`px-4 py-2 rounded font-semibold transition-colors ${
+                          canUpgrade && canAfford && !atCap
+                            ? 'bg-blue-600 hover:bg-blue-700'
+                            : 'bg-gray-600 cursor-not-allowed'
+                        }`}
+                      >
+                        {atCap && currentLevel < MAX_ATTRIBUTE_LEVEL
+                          ? 'Upgrade Academy'
+                          : !canUpgrade
+                          ? 'Max Level'
+                          : !canAfford
+                          ? 'Not Enough Credits'
+                          : `Upgrade (₡${upgradeCost.toLocaleString()})`}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleUpgrade(key, currentLevel)}
-                      disabled={!canUpgrade || !canAfford}
-                      className={`px-4 py-2 rounded font-semibold transition-colors ${
-                        canUpgrade && canAfford
-                          ? 'bg-blue-600 hover:bg-blue-700'
-                          : 'bg-gray-600 cursor-not-allowed'
-                      }`}
-                    >
-                      {!canUpgrade
-                        ? 'Max Level'
-                        : !canAfford
-                        ? 'Not Enough Credits'
-                        : `Upgrade (₡${upgradeCost.toLocaleString()})`}
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
