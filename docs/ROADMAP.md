@@ -50,97 +50,40 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-
----
-
 ## Phase 1 - Local Prototype 🔄
 
 **Status**: In Progress  
 **Started**: January 25, 2026  
 **Goal**: Build functional local prototype with core game mechanics
 
-### ✅ Milestone 1: User Can Login and See Initial Setup (COMPLETE)
+### ✅ Milestone 1: User Can Login and See Initial Setup 
 - ✅ JWT-based authentication (login/logout)
 - ✅ User dashboard showing profile and credits balance (₡2,000,000 starting)
 - ✅ Consistent navigation across all pages
 - ✅ Test users seeded: player1-6, admin (all password: password123)
 
-### ✅ Milestone 2: User Can Complete Stable Setup (COMPLETE)
-- ✅ 4 facility types (Repair Bay, Training Facility, Weapons Workshop, Roster Expansion)
-- ✅ Each facility: 5 upgrade levels, progressive costs (₡200k-₡1.5M)
+### ✅ Milestone 2: User Can Complete Stable Setup 
+- ✅ 14 facility types (Repair Bay, Training Facility, Weapons Workshop, Roster Expansion)
+- ✅ Each facility: 10 upgrade levels, progressive costs 
 - ✅ Training Facility: 5%-25% discount on attribute upgrades (WORKING)
 - ✅ Weapons Workshop: 10%-25% discount on weapon purchases (WORKING)
 - ✅ Roster Expansion: Enforces robot creation limit (1-5 robots based on level)
 
-### ⚠️ Milestone 3: User Can Create First Robot (PARTIALLY COMPLETE)
-**What's Working:**
+### ⚠️ Milestone 3: User Can Create First Robot (DONE)
 - ✅ Robot creation (₡500k cost, all 23 attributes start at level 1)
 - ✅ All 23 attributes with correct names from DATABASE_SCHEMA.md
-- ✅ Attribute upgrade system with Training Facility discount applied
 - ✅ Weapon inventory system (buy weapons into inventory)
 - ✅ Weapon Shop page with Weapons Workshop discount
 - ✅ "My Robots" page to view user's robots
 - ✅ "All Robots" page showing all robots with owners and ELO
 
-**What's Broken:**
-- ❌ Robot pages failing to load (schema/database mismatch)
-- ❌ Dashboard robots table not yet implemented
-
-**Root Cause (IDENTIFIED):**
-The Prisma schema defines `mainWeapon`/`offhandWeapon` relation fields that don't exist in the database. No migration was created for these columns (`main_weapon_id`, `offhand_weapon_id`, `loadout_type`). The database only has the original `weapon_inventory_id` column from commit 0efbfbc.
-
-**Solution Applied (commit 9bddb8f):**
-Reverted Prisma schema and robots.ts to the SIMPLE version from commit 0efbfbc that matches the actual database state. This uses just `weaponInventoryId` instead of separate main/offhand slots.
-
-**Testing After Revert:**
-```bash
-cd prototype/backend
-cp .env.example .env  # Only if .env doesn't exist
-npx prisma migrate reset --force
-npx prisma generate
-npm run dev
-```
-
-**Troubleshooting Login Issues:**
-
-If login fails even after database seeds successfully:
-
-1. **Verify backend is running:**
-   ```bash
-   cd prototype/backend
-   npm run dev
-   # Should see: 🚀 Backend server running on http://localhost:3001
-   ```
-
-2. **Test backend health endpoint:**
-   ```bash
-   curl http://localhost:3001/api/health
-   # Should return: {"status":"ok","message":"Armoured Souls API is running"}
-   ```
-
-3. **Test login API directly:**
-   ```bash
-   curl -X POST http://localhost:3001/api/auth/login \
-     -H "Content-Type: application/json" \
-     -d '{"username":"player1","password":"password123"}'
-   # Should return token and user object
-   ```
-
-4. **Check frontend:**
-   - Start frontend: `cd prototype/frontend && npm run dev`
-   - Open http://localhost:3000
-   - Open browser console (F12) and check for errors
-
-**Common Issues:**
-- Backend not running on port 3001
-- Frontend trying to connect to wrong URL (check `prototype/frontend/src/config.ts` or similar)
-- CORS errors in browser console
-- Database connection error (check backend terminal for Prisma errors)
-- Missing .env file (backend needs DATABASE_URL)
-npm run dev
-```
-
-Then test: Login as player1 → My Robots → All Robots pages
+### ⚠️ Milestone 3: User Can Create First Robot (PENDING)
+- [ ] Attribute upgrade system with Training Facility discount applied
+--> This does not work "Internal server error" when trying to upgrade
+- [ ] Robot detail page shows the correct amount for upgrading, including the Training Facility discount
+- [ ] Roster Expansion facility level is enforced when creating new robots
+- [ ] Training Academy facilities (4 of them!) enforce the cap of their respective attributes group(s)
+- [ ] The attribute groups on the Robot detail page show the attribute cap next to each attribute group
 
 ### Milestone 4: Matchmaking in Place (NOT STARTED)
 - Manual robot selection for battle
