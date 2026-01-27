@@ -85,7 +85,7 @@ This ensures all database components are in place before implementing battles.
 - ✅ All 14 facilities implemented with levels 1-10
 - ✅ Roster Expansion enforces robot creation limit
 - ✅ Unimplemented facility effects marked in UI
-- ✅ Training Facility discount applies to upgrades **FIXED (commit fe736c3)**
+- ✅ Training Facility discount applies to upgrades **FIXED in commit fe736c3**
 - ✅ Stable naming system implemented (first login requirement) 
 
 **Fixes Applied (commit fe736c3):**
@@ -97,11 +97,17 @@ This ensures all database components are in place before implementing battles.
 - ✅ Distribute 23 attributes (all start at level 1)
 - ✅ Upgrade robot attributes with Credits
 - ✅ Save robot to database
-- ✅ View robot in stable (My Robots page) **FIXED in new commit**
-- ✅ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED in new commit**
+- ❌ View robot in stable (My Robots page) **FIXED in commit f24ff94**
+
+--> NOT FIXED. Still seeing "Failed to load robots"
+
+- ❌ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED in commit f24ff94**
+
+--> NOT FIXED. Still seeing "Failed to load robots"
+
 - ❌ Dashboard shows owned robots in a table with ELO and fighting record
 
---> PARTIALLY FIXED in new commit. "My Robots" page and "All Robots" page now work (API endpoints corrected). Dashboard robot table still needs fixing.
+--> NOT FIXED YET (you did not claim to have this fixed, but it's on the to-do). 
 
 - [ ] The Robot page shows the upgrade prices with the applied discounts from the Training Facility.
 - [ ] The Robot page clusters the attributes per group and shows the current attribute cap based on the Training Academy for this attribute group.
@@ -118,13 +124,22 @@ This ensures all database components are in place before implementing battles.
 - Fixed AllRobotsPage API endpoint: `/api/all/robots` → `/api/robots/all/robots`
 
 **Milestone 4: Weapon System** 
-- ✅ Buy weapon in the Weapon Shop **FIXED in new commit**
+- ✅ Buy weapon in the Weapon Shop **FIXED in commit f24ff94**
 - ✅ Weapon shop shows cooldown and attribute bonuses
 - ✅ Weapon Workshop Facility effect implemented and working (applying discounts on weapon purchases)
 - ✅ Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
-- ✅ Select weapon from available weapons
+
+--> While this works, I would expect the input to change after a new loadout is selected. If I select "Two-Handed Weapon", I expect to see a selection box with ONLY the Two-Handed Weapons I have avaialble. Currently the boxes show "Main Weapon" and "Off-hand Weapon". 
+
+- ❌ Select weapon from available weapons based on the currently selected load-out
+
+--> This is not working after the latest commmit (f24ff94). Weapons can be bought, but not selected. Combine this with the comment above.
+
 - ✅ Weapon inventory system documented
-- ✅ Robot detail page shows stat block with equipped weapon bonuses
+- ❌ Robot detail page shows stat block with equipped weapon bonuses
+
+--> NOT FIXED. No stat block shown on Robot detail page.
+
 - [ ] Owned weapons visible in Tab "Storage", including stat blocks and how much storage is left.
 - [ ] Storage Facility is applying it's effects correctly on Storage.
 
