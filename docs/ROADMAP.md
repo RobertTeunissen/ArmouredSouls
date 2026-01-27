@@ -97,7 +97,7 @@ This ensures all database components are in place before implementing battles.
 - ✅ Distribute 23 attributes (all start at level 1)
 - ✅ Upgrade robot attributes with Credits
 - ✅ Save robot to database
-- ✅ View robot in stable (My Robots page) **FIXED with migration 20260127154500**
+- ⚠️ View robot in stable (My Robots page) **MIGRATION CONFLICT - See "Database Migration Issue" below**
 
 --> FIXED! Migration created to add missing main_weapon_id, offhand_weapon_id, and loadout_type columns.
 
@@ -208,26 +208,65 @@ PUT  /api/robots/:id/weapon - Equip weapon to robot
 - Eliminates code duplication between frontend and backend
 - Consistent discount formulas across Training Facility and Weapons Workshop 
 
-**ROOT CAUSE FIXED (commit TBD):**
-✅ Created migration `20260127154500_add_robot_weapon_slots` to add missing columns:
-- Adds `main_weapon_id` column to robots table
-- Adds `offhand_weapon_id` column to robots table  
-- Adds `loadout_type` column to robots table (default: 'single')
-- Adds foreign key constraints linking to weapon_inventory table
+### 🚨 Database Migration Issue (Commit 153220b → ROLLED BACK)
 
-This resolves the schema/database mismatch that caused "Failed to load robots" errors.
+**Problem Identified:**
+Migration `20260127154500_add_robot_weapon_slots` conflicts with an existing local migration `20260127122708_prototype2` that already added the same columns (`main_weapon_id`, `offhand_weapon_id`, `loadout_type`) to the robots table.
 
-**Testing Instructions:**
+**Error:**
+```
+Database error: column "main_weapon_id" of relation "robots" already exists
+```
+
+**Root Cause:**
+The user's local database contains a migration that doesn't exist in the repository. This created a mismatch where:
+1. User's database HAS the columns (added by `20260127122708_prototype2`)
+2. Repository migrations DON'T include this migration
+3. New migration tries to add columns that already exist
+
+**Solution:**
+Migration `20260127154500_add_robot_weapon_slots` has been REMOVED from the repository.
+
+**For User to Fix:**
+
+Run this command to completely reset the database and apply only the repository migrations:
+
 ```bash
 cd prototype/backend
-npx prisma migrate reset --force  # Applies new migration
+
+# Option 1: Full reset (RECOMMENDED)
+npx prisma migrate reset --force
+
+# Option 2: If above fails, manual reset
+docker compose down
+docker volume rm prototype_postgres_data
+docker compose up -d
+npx prisma migrate deploy
+npx prisma db seed
+
+# Then start backend
 npm run dev
 ```
 
-Then test:
-- My Robots page - Should now load robot list ✅
-- All Robots page - Should now show all robots with owners ✅
-- Robot detail page - Should show equipped weapons ✅
+This will:
+1. Drop the entire database
+2. Recreate it from scratch
+3. Apply ONLY the 4 official migrations:
+   - `20260125213123_` - Initial schema
+   - `20260125213329_add_facilities` - Facilities table
+   - `20260126181101_update_schema_to_match_docs` - Rename attributes, add WeaponInventory
+   - `20260127000000_add_loadout_type_to_weapons` - Add loadoutType to weapons
+4. Run seed script to create test data
+
+**Current Status:**
+- ⚠️ Robot pages still broken due to schema/database mismatch
+- ⚠️ User needs to reset database completely to sync with repository
+- ⚠️ Waiting for user to run reset before continuing
+
+**Next Steps:**
+Once database is reset, we need to investigate WHY the schema expects `main_weapon_id`/`offhand_weapon_id` when no migration adds them. This may require either:
+1. Creating a new migration to add these columns (properly this time)
+2. OR removing these fields from the Prisma schema if they're not needed yet
 
 **Phase 1 Cleanup Milestone (End of Phase 1):**
 - [ ] Consolidate all migrations into a single base migration
