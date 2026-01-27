@@ -97,31 +97,91 @@ This ensures all database components are in place before implementing battles.
 - ✅ Distribute 23 attributes (all start at level 1)
 - ✅ Upgrade robot attributes with Credits
 - ✅ Save robot to database
-- ❌ View robot in stable (My Robots page) **FIXED in commit f24ff94**
+- ❌ View robot in stable (My Robots page) 
 
---> NOT FIXED. Still seeing "Failed to load robots"
+--> ROOT CAUSE IDENTIFIED: Schema/database mismatch. The Prisma schema has `mainWeaponId`/`offhandWeaponId` fields but the database doesn't have these columns. Migrations are incomplete.
 
-- ❌ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED in commit f24ff94**
+- ❌ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO
 
---> NOT FIXED. Still seeing "Failed to load robots"
+--> SAME ROOT CAUSE: Backend code tries to include `mainWeapon`/`offhandWeapon` relations but database doesn't have the foreign key columns.
 
 - ❌ Dashboard shows owned robots in a table with ELO and fighting record
 
---> NOT FIXED YET (you did not claim to have this fixed, but it's on the to-do). 
+--> NOT YET IMPLEMENTED
 
 - [ ] The Robot page shows the upgrade prices with the applied discounts from the Training Facility.
 - [ ] The Robot page clusters the attributes per group and shows the current attribute cap based on the Training Academy for this attribute group.
 - [ ] The robot attribute upgrade cap from the Training Academy facilities are being enforced when upgrading robots.
+
+**CRITICAL ISSUE - Schema/Database Mismatch:**
+
+The Prisma schema in `prisma/schema.prisma` defines fields that don't exist in the database:
+1. `Robot.mainWeaponId` (`main_weapon_id` column) - NOT IN DATABASE
+2. `Robot.offhandWeaponId` (`offhand_weapon_id` column) - NOT IN DATABASE  
+3. `Robot.loadoutType` (`loadout_type` column) - NOT IN DATABASE
+4. `User.stableName` (`stable_name` column) - NOT IN DATABASE (removed from schema to fix seed)
+
+**What migrations exist:**
+- `20260125213123_` - Initial schema
+- `20260125213329_add_facilities` - Adds facilities
+- `20260126181101_update_schema_to_match_docs` - Renames attributes, adds `weaponInventory` table
+- `20260127000000_add_loadout_type_to_weapons` - Adds `loadoutType` to WEAPONS (not robots)
+
+**What's missing:**
+- Migration to add `main_weapon_id`, `offhand_weapon_id`, `loadout_type` columns to `robots` table
+- Migration to add `stable_name` column to `users` table
+
+**Temporary Fix Applied (new commit):**
+- Removed `stableName` field from User schema to match database
+- Fixed robot routes to use correct include syntax (mainWeapon/offhandWeapon instead of weaponInventory)
+- BUT: Database still missing columns, so includes will fail
+
+**Proper Fix Needed:**
+Create migrations for the missing columns OR revert schema to match database state.
+
+**API Endpoint Documentation (VERIFIED):**
+
+Backend routes in `src/index.ts`:
+```
+/api/auth        - authRoutes
+/api/user        - userRoutes  
+/api/facilities  - facilityRoutes
+/api/robots      - robotRoutes
+/api/weapons     - weaponRoutes
+/api/weapon-inventory - weaponInventoryRoutes
+```
+
+Robot endpoints in `src/routes/robots.ts`:
+```
+GET  /api/robots/all/robots - All robots from all users (for leaderboard)
+GET  /api/robots            - Current user's robots only
+POST /api/robots            - Create new robot
+GET  /api/robots/:id        - Get specific robot by ID
+PUT  /api/robots/:id/upgrade - Upgrade robot attribute
+PUT  /api/robots/:id/weapon - Equip weapon to robot
+```
+
+**Current Status:**
+- Weapon Shop: ✅ FIXED (API endpoints corrected)
+- My Robots: ❌ BROKEN (database missing mainWeaponId column)
+- All Robots: ❌ BROKEN (database missing mainWeaponId column)
+- Dashboard: ❌ NOT IMPLEMENTED (robots table display)
 
 **Fixes Applied (commit fe736c3):**
 - Fixed AllRobotsPage API endpoint: `/api/robots/user` → `/api/robots`
 - Fixed dashboard robot count query to properly check for robots
 - Fixed "My Robots" page to display robot list correctly
 
-**NEW Fixes Applied (new commit):**
+**Fixes Applied (commit f24ff94):**
 - Fixed WeaponShopPage API endpoint: `/api/buildings` → `/api/facilities`
 - Fixed WeaponShopPage facility type: `weaponsWorkshop` → `weapons_workshop`
 - Fixed AllRobotsPage API endpoint: `/api/all/robots` → `/api/robots/all/robots`
+
+**Fixes Applied (NEW COMMIT - schema sync):**
+- Removed `stableName` from User schema (no migration exists for it)
+- Fixed robot route includes to use mainWeapon/offhandWeapon (but columns don't exist in DB yet)
+- Documented schema/database mismatch as ROOT CAUSE
+- Created comprehensive API endpoint documentation
 
 **Milestone 4: Weapon System** 
 - ✅ Buy weapon in the Weapon Shop **FIXED in commit f24ff94**

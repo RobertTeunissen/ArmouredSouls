@@ -19,7 +19,12 @@ router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Respo
             username: true,
           },
         },
-        weaponInventory: {
+        mainWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+        offhandWeapon: {
           include: {
             weapon: true,
           },
@@ -43,7 +48,12 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     const robots = await prisma.robot.findMany({
       where: { userId },
       include: {
-        weaponInventory: {
+        mainWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+        offhandWeapon: {
           include: {
             weapon: true,
           },

@@ -17,7 +17,6 @@ model User {
   role         String   @default("user") @db.VarChar(20)
   currency     Int      @default(2000000)  // Starting balance: ₡2,000,000
   prestige     Int      @default(0)
-  stableName   String?  @map("stable_name") @db.VarChar(100)
   createdAt    DateTime @default(now()) @map("created_at")
   
   robots          Robot[]
