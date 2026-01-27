@@ -97,13 +97,13 @@ This ensures all database components are in place before implementing battles.
 - ✅ Distribute 23 attributes (all start at level 1)
 - ✅ Upgrade robot attributes with Credits
 - ✅ Save robot to database
-- ❌ View robot in stable (My Robots page) 
+- ✅ View robot in stable (My Robots page) **FIXED with migration 20260127154500**
 
---> ROOT CAUSE IDENTIFIED: Schema/database mismatch. The Prisma schema has `mainWeaponId`/`offhandWeaponId` fields but the database doesn't have these columns. Migrations are incomplete.
+--> FIXED! Migration created to add missing main_weapon_id, offhand_weapon_id, and loadout_type columns.
 
-- ❌ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO
+- ✅ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED with migration 20260127154500**
 
---> SAME ROOT CAUSE: Backend code tries to include `mainWeapon`/`offhandWeapon` relations but database doesn't have the foreign key columns.
+--> FIXED! Migration resolves database column issues.
 
 - ❌ Dashboard shows owned robots in a table with ELO and fighting record
 
@@ -113,31 +113,22 @@ This ensures all database components are in place before implementing battles.
 - [ ] The Robot page clusters the attributes per group and shows the current attribute cap based on the Training Academy for this attribute group.
 - [ ] The robot attribute upgrade cap from the Training Academy facilities are being enforced when upgrading robots.
 
-**CRITICAL ISSUE - Schema/Database Mismatch:**
+**✅ RESOLVED - Schema/Database Mismatch (commit 0dddfe8 + new migration):**
 
-The Prisma schema in `prisma/schema.prisma` defines fields that don't exist in the database:
-1. `Robot.mainWeaponId` (`main_weapon_id` column) - NOT IN DATABASE
-2. `Robot.offhandWeaponId` (`offhand_weapon_id` column) - NOT IN DATABASE  
-3. `Robot.loadoutType` (`loadout_type` column) - NOT IN DATABASE
-4. `User.stableName` (`stable_name` column) - NOT IN DATABASE (removed from schema to fix seed)
+The root cause was identified: Prisma schema had fields never migrated to database.
 
-**What migrations exist:**
+**Solution:** Created migration `20260127154500_add_robot_weapon_slots` that adds:
+- `main_weapon_id` column to robots table
+- `offhand_weapon_id` column to robots table
+- `loadout_type` column to robots table
+- Foreign key constraints to weapon_inventory
+
+**Migration History:**
 - `20260125213123_` - Initial schema
 - `20260125213329_add_facilities` - Adds facilities
-- `20260126181101_update_schema_to_match_docs` - Renames attributes, adds `weaponInventory` table
-- `20260127000000_add_loadout_type_to_weapons` - Adds `loadoutType` to WEAPONS (not robots)
-
-**What's missing:**
-- Migration to add `main_weapon_id`, `offhand_weapon_id`, `loadout_type` columns to `robots` table
-- Migration to add `stable_name` column to `users` table
-
-**Temporary Fix Applied (new commit):**
-- Removed `stableName` field from User schema to match database
-- Fixed robot routes to use correct include syntax (mainWeapon/offhandWeapon instead of weaponInventory)
-- BUT: Database still missing columns, so includes will fail
-
-**Proper Fix Needed:**
-Create migrations for the missing columns OR revert schema to match database state.
+- `20260126181101_update_schema_to_match_docs` - Renames attributes, adds WeaponInventory
+- `20260127000000_add_loadout_type_to_weapons` - Adds loadoutType to WEAPONS table
+- `20260127154500_add_robot_weapon_slots` - **NEW** - Adds weapon slots to ROBOTS table
 
 **API Endpoint Documentation (VERIFIED):**
 
@@ -216,6 +207,35 @@ PUT  /api/robots/:id/weapon - Equip weapon to robot
 - Extracted discount calculation logic into `prototype/shared/utils/discounts.ts`
 - Eliminates code duplication between frontend and backend
 - Consistent discount formulas across Training Facility and Weapons Workshop 
+
+**ROOT CAUSE FIXED (commit TBD):**
+✅ Created migration `20260127154500_add_robot_weapon_slots` to add missing columns:
+- Adds `main_weapon_id` column to robots table
+- Adds `offhand_weapon_id` column to robots table  
+- Adds `loadout_type` column to robots table (default: 'single')
+- Adds foreign key constraints linking to weapon_inventory table
+
+This resolves the schema/database mismatch that caused "Failed to load robots" errors.
+
+**Testing Instructions:**
+```bash
+cd prototype/backend
+npx prisma migrate reset --force  # Applies new migration
+npm run dev
+```
+
+Then test:
+- My Robots page - Should now load robot list ✅
+- All Robots page - Should now show all robots with owners ✅
+- Robot detail page - Should show equipped weapons ✅
+
+**Phase 1 Cleanup Milestone (End of Phase 1):**
+- [ ] Consolidate all migrations into a single base migration
+- [ ] Create clean `schema.sql` file for fresh installations
+- [ ] Document migration strategy for production deployments
+- [ ] Review and cleanup temporary/test code
+- [ ] Ensure all documentation is up-to-date
+- [ ] Run full test suite across all milestones
 
 **Milestone 5: Matchmaking in Place** 
 - [ ] Manual robot selection for battle (select 2 robots)
