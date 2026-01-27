@@ -97,9 +97,19 @@ This ensures all database components are in place before implementing battles.
 - ✅ Distribute 23 attributes (all start at level 1)
 - ✅ Upgrade robot attributes with Credits
 - ✅ Save robot to database
-- ✅ View robot in stable
-- ✅ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED (commit fe736c3)**
-- ✅ Dashboard shows owned robots in a table with ELO and fighting record **FIXED (commit fe736c3)**
+- ❌ View robot in stable
+
+--> NOT FIXED. "My Robots" page shows "Failed to load robots"
+
+- ❌ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED (commit fe736c3)**
+
+--> NOT FIXED. All Robots page shows "Failed to load robots"
+
+- ❌ Dashboard shows owned robots in a table with ELO and fighting record **FIXED (commit fe736c3)**
+
+--> NOT FIXED. Dashboard shows "Your stable is empty. Start by upgrading facilities or creating robots!"
+
+- [ ] The Robot page shows the upgrade prices with the applied discounts from the Training Facility 
 
 **Fixes Applied (commit fe736c3):**
 - Fixed AllRobotsPage API endpoint: `/api/robots/user` → `/api/robots`
@@ -107,7 +117,7 @@ This ensures all database components are in place before implementing battles.
 - Fixed "My Robots" page to display robot list correctly
 
 **Milestone 4: Weapon System** 
-- ✅ Buy weapon in the Weapon Shop
+- ❌ Buy weapon in the Weapon Shop
 - ✅ Weapon shop shows cooldown and attribute bonuses
 - ✅ Weapon Workshop Facility effect implemented and working (applying discounts on weapon purchases) **FIXED (commit fe736c3)**
 - ✅ Select loadout configuration (weapon+shield, two-handed, dual-wield, single) **FIXED (commit fe736c3)**
@@ -117,12 +127,16 @@ This ensures all database components are in place before implementing battles.
 - [ ] Owned weapons visible in Tab "Storage", including stat blocks and how much storage is left.
 - [ ] Storage Facility is applying it's effects correctly on Storage.
 
+--> NOT FIXED. Weapon Shop is broken after commit fe736c3: "Failed to load weapons". Unable to test whether other functionality is still working. 
+
 **Fixes Applied (commit fe736c3):**
 - Implemented Weapon Workshop discount (10%-55% based on level 1-10)
 - Added `loadoutType` field to Weapon schema and seed data (all 10 weapons now have loadout types)
 - Added loadout type display in weapon shop (shows weapon+shield, two-handed, etc.)
 - Added loadout selection dropdown in robot detail page
 - Migration created: `20260127000000_add_loadout_type_to_weapons`
+
+--> NOT FIXED. Weapon Shop is broken after commit fe736c3: "Failed to load weapons". Unable to test whether other functionality is still working. 
 
 **Shared Utilities (commit acefc7e):**
 - Extracted discount calculation logic into `prototype/shared/utils/discounts.ts`
