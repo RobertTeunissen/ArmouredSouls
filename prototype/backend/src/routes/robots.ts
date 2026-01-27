@@ -41,7 +41,7 @@ router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Respo
 
 // Get all robots for the authenticated user
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try:
+  try {
     const userId = req.user!.userId;
 
     const robots = await prisma.robot.findMany({
