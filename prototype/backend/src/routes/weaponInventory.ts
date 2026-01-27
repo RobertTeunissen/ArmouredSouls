@@ -1,6 +1,7 @@
 import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -68,8 +69,8 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 
     // Apply Weapon Workshop discount
     const weaponWorkshopLevel = user.facilities[0]?.level || 0;
-    const discountPercent = weaponWorkshopLevel * 5 + (weaponWorkshopLevel > 0 ? 5 : 0); // 10% at level 1, 15% at level 2, etc.
-    const finalCost = Math.floor(weapon.cost * (1 - discountPercent / 100));
+    const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
+    const finalCost = applyDiscount(weapon.cost, discountPercent);
 
     // Check if user has enough currency
     if (user.currency < finalCost) {

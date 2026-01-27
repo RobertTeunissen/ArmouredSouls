@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
+import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 
 interface Weapon {
   id: number;
@@ -67,8 +68,8 @@ function WeaponShopPage() {
   }, []);
 
   const calculateDiscountedPrice = (basePrice: number): number => {
-    const discountPercent = weaponWorkshopLevel * 5 + (weaponWorkshopLevel > 0 ? 5 : 0);
-    return Math.floor(basePrice * (1 - discountPercent / 100));
+    const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
+    return applyDiscount(basePrice, discountPercent);
   };
 
   const handlePurchase = async (weaponId: number, basePrice: number) => {
@@ -195,9 +196,9 @@ function WeaponShopPage() {
                                 {hasDiscount && (
                                   <span className="text-xs text-gray-500 line-through">₡{weapon.cost.toLocaleString()}</span>
                                 )}
-                                <span className={`font-semibold ${hasDiscount ? 'text-green-400' : 'text-green-400'}`}>
+                                <span className="font-semibold text-green-400">
                                   ₡{discountedPrice.toLocaleString()}
-                                  {hasDiscount && <span className="text-xs ml-1">({weaponWorkshopLevel * 5 + 5}% off)</span>}
+                                  {hasDiscount && <span className="text-xs ml-1">({calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}% off)</span>}
                                 </span>
                               </div>
                             </div>
