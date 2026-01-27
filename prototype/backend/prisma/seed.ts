@@ -171,7 +171,7 @@ async function main() {
         name: 'Plasma Blade',
         weaponType: 'melee',
         baseDamage: 24,
-        cooldown: 2.5,
+        cooldown: 3,  // Changed from 2.5 to 3 (schema uses Int)
         cost: 250000,
         handsRequired: 'one',
         damageType: 'melee',

@@ -36,7 +36,6 @@ model User {
   weaponInventory WeaponInventory[]
   battles         Battle[] @relation("UserBattles")
   
-  @@index([username])
   @@map("users")
 }
 

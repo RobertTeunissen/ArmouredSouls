@@ -79,8 +79,8 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Robot name is required' });
     }
 
-    if (name.length < 1 || name.length > 100) {
-      return res.status(400).json({ error: 'Robot name must be between 1 and 100 characters' });
+    if (name.length < 1 || name.length > 50) {
+      return res.status(400).json({ error: 'Robot name must be between 1 and 50 characters' });
     }
 
     // Get user's current currency
