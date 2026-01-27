@@ -327,6 +327,46 @@ cd ../frontend
 npm run build
 ```
 
+**Troubleshooting Login Issues:**
+
+If login fails even after database seeds successfully:
+
+1. **Verify backend is running:**
+   ```bash
+   cd prototype/backend
+   npm run dev
+   # Should see: 🚀 Backend server running on http://localhost:3001
+   ```
+
+2. **Test backend health endpoint:**
+   ```bash
+   curl http://localhost:3001/api/health
+   # Should return: {"status":"ok","message":"Armoured Souls API is running"}
+   ```
+
+3. **Test login API directly:**
+   ```bash
+   curl -X POST http://localhost:3001/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"player1","password":"password123"}'
+   # Should return token and user object
+   ```
+
+4. **Check frontend:**
+   - Start frontend: `cd prototype/frontend && npm run dev`
+   - Open http://localhost:3000
+   - Open browser console (F12) and check for errors
+
+
+**Common Issues:**
+- Backend not running on port 3001
+- Frontend trying to connect to wrong URL (check `prototype/frontend/src/config.ts` or similar)
+- CORS errors in browser console
+- Database connection error (check backend terminal for Prisma errors)
+- Missing .env file (backend needs DATABASE_URL)
+npm run dev
+```
+
 ---
 
 ## 📊 Seed Data Reference
