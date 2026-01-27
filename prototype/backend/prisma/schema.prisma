@@ -114,6 +114,7 @@ model Weapon {
   id              Int      @id @default(autoincrement())
   name            String   @db.VarChar(100)
   weaponType      String   @db.VarChar(20) @map("weapon_type") // 'energy', 'ballistic', 'melee', 'explosive'
+  loadoutType     String   @default("single") @map("loadout_type") @db.VarChar(20) // 'single', 'two-handed', 'dual-wield'
   description     String?  @db.Text
   baseDamage      Int      @map("base_damage")
   cost            Int      // Cost in Credits to purchase

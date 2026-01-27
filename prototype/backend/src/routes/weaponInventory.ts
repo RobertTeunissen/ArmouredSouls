@@ -52,30 +52,40 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
       return res.status(404).json({ error: 'Weapon not found' });
     }
 
-    // Get user's current currency
+    // Get user's current currency and Weapon Workshop level
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        facilities: {
+          where: { facilityType: 'weapons_workshop' },
+        },
+      },
     });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Apply Weapon Workshop discount
+    const weaponWorkshopLevel = user.facilities[0]?.level || 0;
+    const discountPercent = weaponWorkshopLevel * 5 + (weaponWorkshopLevel > 0 ? 5 : 0); // 10% at level 1, 15% at level 2, etc.
+    const finalCost = Math.floor(weapon.cost * (1 - discountPercent / 100));
+
     // Check if user has enough currency
-    if (user.currency < weapon.cost) {
+    if (user.currency < finalCost) {
       return res.status(400).json({ 
         error: 'Insufficient credits',
-        required: weapon.cost,
+        required: finalCost,
         available: user.currency,
       });
     }
 
     // Purchase weapon in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Deduct currency
+      // Deduct currency (with discount applied)
       const updatedUser = await tx.user.update({
         where: { id: userId },
-        data: { currency: user.currency - weapon.cost },
+        data: { currency: user.currency - finalCost },
       });
 
       // Add weapon to inventory

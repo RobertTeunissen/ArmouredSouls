@@ -242,7 +242,7 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
       where: { id: userId },
       include: {
         facilities: {
-          where: { facilityType: 'training' },
+          where: { facilityType: 'training_facility' },
         },
       },
     });

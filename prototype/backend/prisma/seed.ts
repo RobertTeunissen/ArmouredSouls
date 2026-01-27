@@ -15,6 +15,7 @@ async function main() {
       data: {
         name: 'Laser Rifle',
         weaponType: 'energy',
+        loadoutType: 'single',
         description: 'Standard energy weapon with good accuracy',
         baseDamage: 20,
         cost: 150000,
@@ -27,6 +28,7 @@ async function main() {
       data: {
         name: 'Plasma Cannon',
         weaponType: 'energy',
+        loadoutType: 'two-handed',
         description: 'High damage plasma weapon, generates heat',
         baseDamage: 35,
         cost: 300000,
@@ -39,6 +41,7 @@ async function main() {
       data: {
         name: 'Ion Beam',
         weaponType: 'energy',
+        loadoutType: 'single',
         description: 'Efficient energy weapon with armor penetration',
         baseDamage: 25,
         cost: 400000,
@@ -55,6 +58,7 @@ async function main() {
       data: {
         name: 'Machine Gun',
         weaponType: 'ballistic',
+        loadoutType: 'dual-wield',
         description: 'Rapid-fire ballistic weapon',
         baseDamage: 15,
         cost: 100000,
@@ -67,6 +71,7 @@ async function main() {
       data: {
         name: 'Railgun',
         weaponType: 'ballistic',
+        loadoutType: 'two-handed',
         description: 'High-velocity penetrating weapon',
         baseDamage: 40,
         cost: 350000,
@@ -79,6 +84,7 @@ async function main() {
       data: {
         name: 'Shotgun',
         weaponType: 'ballistic',
+        loadoutType: 'single',
         description: 'Close-range devastating weapon',
         baseDamage: 30,
         cost: 120000,
@@ -95,6 +101,7 @@ async function main() {
       data: {
         name: 'Power Sword',
         weaponType: 'melee',
+        loadoutType: 'single',
         description: 'Energized melee weapon for close combat',
         baseDamage: 28,
         cost: 180000,
@@ -107,6 +114,7 @@ async function main() {
       data: {
         name: 'Hammer',
         weaponType: 'melee',
+        loadoutType: 'two-handed',
         description: 'Heavy crushing weapon',
         baseDamage: 35,
         cost: 200000,
@@ -123,6 +131,7 @@ async function main() {
       data: {
         name: 'Rocket Launcher',
         weaponType: 'explosive',
+        loadoutType: 'two-handed',
         description: 'High-damage area weapon',
         baseDamage: 45,
         cost: 320000,
@@ -135,6 +144,7 @@ async function main() {
       data: {
         name: 'Grenade Launcher',
         weaponType: 'explosive',
+        loadoutType: 'single',
         description: 'Tactical explosive weapon',
         baseDamage: 32,
         cost: 250000,

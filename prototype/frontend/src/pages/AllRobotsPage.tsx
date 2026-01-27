@@ -19,7 +19,7 @@ function AllRobotsPage() {
   useEffect(() => {
     const fetchAllRobots = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/robots/all/robots');
+        const response = await axios.get('http://localhost:3001/api/all/robots');
         setRobots(response.data);
       } catch (err) {
         console.error('Failed to fetch robots:', err);

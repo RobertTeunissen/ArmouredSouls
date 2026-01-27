@@ -8,6 +8,7 @@ interface Weapon {
   id: number;
   name: string;
   weaponType: string;
+  loadoutType: string;
   description: string;
   baseDamage: number;
   cost: number;
@@ -29,33 +30,53 @@ interface Weapon {
   threatAnalysisBonus: number;
 }
 
+interface Facility {
+  id: number;
+  facilityType: string;
+  level: number;
+}
+
 function WeaponShopPage() {
   const { user, refreshUser } = useAuth();
   const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [weaponWorkshopLevel, setWeaponWorkshopLevel] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [purchasing, setPurchasing] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchWeapons = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/weapons');
-        setWeapons(response.data);
+        // Fetch weapons
+        const weaponsResponse = await axios.get('http://localhost:3001/api/weapons');
+        setWeapons(weaponsResponse.data);
+
+        // Fetch facilities to get Weapon Workshop level
+        const facilitiesResponse = await axios.get('http://localhost:3001/api/buildings');
+        const weaponWorkshop = facilitiesResponse.data.find((f: Facility) => f.facilityType === 'weapons_workshop');
+        setWeaponWorkshopLevel(weaponWorkshop?.level || 0);
       } catch (err) {
-        console.error('Failed to fetch weapons:', err);
+        console.error('Failed to fetch data:', err);
         setError('Failed to load weapons');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchWeapons();
+    fetchData();
   }, []);
 
-  const handlePurchase = async (weaponId: number, cost: number) => {
+  const calculateDiscountedPrice = (basePrice: number): number => {
+    const discountPercent = weaponWorkshopLevel * 5 + (weaponWorkshopLevel > 0 ? 5 : 0);
+    return Math.floor(basePrice * (1 - discountPercent / 100));
+  };
+
+  const handlePurchase = async (weaponId: number, basePrice: number) => {
     if (!user) return;
 
-    if (user.currency < cost) {
+    const finalCost = calculateDiscountedPrice(basePrice);
+
+    if (user.currency < finalCost) {
       alert('Insufficient credits!');
       return;
     }
@@ -142,6 +163,8 @@ function WeaponShopPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {weaponList.map((weapon) => {
                       const bonuses = getAttributeBonuses(weapon);
+                      const discountedPrice = calculateDiscountedPrice(weapon.cost);
+                      const hasDiscount = weaponWorkshopLevel > 0;
                       return (
                         <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg">
                           <div className="flex justify-between items-start mb-4">
@@ -155,6 +178,10 @@ function WeaponShopPage() {
 
                           <div className="space-y-2 mb-4">
                             <div className="flex justify-between text-sm">
+                              <span className="text-gray-400">Loadout Type:</span>
+                              <span className="font-semibold capitalize">{weapon.loadoutType}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
                               <span className="text-gray-400">Base Damage:</span>
                               <span className="font-semibold">{weapon.baseDamage}</span>
                             </div>
@@ -164,7 +191,15 @@ function WeaponShopPage() {
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-400">Cost:</span>
-                              <span className="font-semibold text-green-400">₡{weapon.cost.toLocaleString()}</span>
+                              <div className="flex flex-col items-end">
+                                {hasDiscount && (
+                                  <span className="text-xs text-gray-500 line-through">₡{weapon.cost.toLocaleString()}</span>
+                                )}
+                                <span className={`font-semibold ${hasDiscount ? 'text-green-400' : 'text-green-400'}`}>
+                                  ₡{discountedPrice.toLocaleString()}
+                                  {hasDiscount && <span className="text-xs ml-1">({weaponWorkshopLevel * 5 + 5}% off)</span>}
+                                </span>
+                              </div>
                             </div>
                           </div>
 
@@ -183,9 +218,9 @@ function WeaponShopPage() {
 
                           <button
                             onClick={() => handlePurchase(weapon.id, weapon.cost)}
-                            disabled={purchasing === weapon.id || !!(user && user.currency < weapon.cost)}
+                            disabled={purchasing === weapon.id || !!(user && user.currency < discountedPrice)}
                             className={`w-full py-2 rounded transition-colors ${
-                              user && user.currency < weapon.cost
+                              user && user.currency < discountedPrice
                                 ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                 : purchasing === weapon.id
                                 ? 'bg-gray-700 text-gray-400'
@@ -193,7 +228,7 @@ function WeaponShopPage() {
                             }`}
                           >
                             {purchasing === weapon.id ? 'Purchasing...' : 
-                             user && user.currency < weapon.cost ? 'Insufficient Credits' : 
+                             user && user.currency < discountedPrice ? 'Insufficient Credits' : 
                              'Purchase'}
                           </button>
                         </div>

@@ -286,6 +286,46 @@ function RobotDetailPage() {
     }
   };
 
+  const handleLoadoutChange = async (newLoadoutType: string) => {
+    if (!robot) return;
+
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/api/robots/${id}/weapon`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ loadoutType: newLoadoutType }),
+      });
+
+      if (response.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to change loadout type');
+      }
+
+      setRobot(data.robot);
+      setSuccessMessage(`Loadout changed to ${newLoadoutType}!`);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change loadout type');
+      console.error(err);
+    }
+  };
+
 
 
   if (loading) {
@@ -353,6 +393,29 @@ function RobotDetailPage() {
         <div className="bg-gray-800 p-6 rounded-lg mb-6">
           <h3 className="text-xl font-semibold mb-4">Weapon Loadout</h3>
           
+          {/* Loadout Type Selection */}
+          <div className="mb-6">
+            <label className="block text-sm text-gray-400 mb-2">Loadout Type</label>
+            <select
+              value={robot.loadoutType}
+              onChange={(e) => handleLoadoutChange(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+            >
+              <option value="single">Single Weapon</option>
+              <option value="dual-wield">Dual Wield (Two Weapons)</option>
+              <option value="weapon+shield">Weapon + Shield</option>
+              <option value="two-handed">Two-Handed Weapon</option>
+            </select>
+            <div className="mt-2 p-3 bg-blue-900 bg-opacity-30 rounded border border-blue-700">
+              <p className="text-xs text-blue-300">
+                {robot.loadoutType === 'single' && 'One weapon for balanced combat'}
+                {robot.loadoutType === 'dual-wield' && 'Two weapons for increased attack speed'}
+                {robot.loadoutType === 'weapon+shield' && 'Weapon and shield for defensive play'}
+                {robot.loadoutType === 'two-handed' && 'Two-handed weapon for maximum damage'}
+              </p>
+            </div>
+          </div>
+
           {/* Main Weapon */}
           <div className="mb-4">
             <label className="block text-sm text-gray-400 mb-2">Main Weapon</label>
@@ -403,19 +466,6 @@ function RobotDetailPage() {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Loadout Type Info */}
-          <div className="mt-4 p-3 bg-blue-900 bg-opacity-30 rounded border border-blue-700">
-            <p className="text-sm text-blue-200">
-              <strong>Loadout Type:</strong> <span className="capitalize">{robot.loadoutType}</span>
-            </p>
-            <p className="text-xs text-blue-300 mt-1">
-              {robot.loadoutType === 'single' && 'One weapon for balanced combat'}
-              {robot.loadoutType === 'dual-wield' && 'Two weapons for increased attack speed'}
-              {robot.loadoutType === 'weapon+shield' && 'Weapon and shield for defensive play'}
-              {robot.loadoutType === 'two-handed' && 'Two-handed weapon for maximum damage'}
-            </p>
           </div>
         </div>
 

@@ -68,7 +68,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '50% discount on weapon purchases',
       '55% discount on weapon purchases, unlock legendary weapon crafting',
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     type: 'research_lab',
