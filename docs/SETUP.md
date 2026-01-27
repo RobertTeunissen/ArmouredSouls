@@ -1,9 +1,60 @@
 # Armoured Souls - Setup Guide
 
-**Last Updated**: January 26, 2026  
+**Last Updated**: January 27, 2026  
 **Platform**: VS Code on macOS (also works on Windows/Linux)
 
 Complete setup guide for running the Phase 1 prototype locally, including database reset instructions for testing new versions.
+
+---
+
+## ⚠️ CRITICAL: Fix Stale Local Migrations FIRST
+
+**If you're seeing errors like**: `Migration '20260127122708_prototype2' failed to apply` or `relation "robots" does not exist`
+
+**YOU HAVE STALE LOCAL MIGRATIONS!** The repository now has only ONE comprehensive migration, but your local folder still has old deleted migrations.
+
+### Check If You Have This Issue
+
+```bash
+cd ArmouredSouls/prototype/backend
+ls prisma/migrations/
+```
+
+If you see **anything other than** `20260127201247_complete_future_state_schema`, follow these steps:
+
+### Fix Steps (Do This Before Anything Else!)
+
+```bash
+# 1. Navigate to backend
+cd ArmouredSouls/prototype/backend
+
+# 2. DELETE your local migrations folder completely
+rm -rf prisma/migrations
+
+# 3. Pull ONLY the migrations folder from repository
+git checkout origin/copilot/start-phase-1-milestones -- prisma/migrations
+
+# 4. Verify you now have ONLY ONE migration
+ls prisma/migrations/
+# Should show ONLY: 20260127201247_complete_future_state_schema
+
+# 5. Now drop database and start fresh
+cd ..  # Back to prototype folder
+docker compose down -v
+docker compose up -d
+sleep 15  # Wait for PostgreSQL to start
+
+# 6. Apply the ONE new migration
+cd backend
+npx prisma migrate deploy
+npx prisma db seed
+npx prisma generate
+
+# 7. Start backend
+npm run dev
+```
+
+**Why This Happens**: Git pull doesn't automatically delete local files that were removed from the repository. You must manually delete old migrations and checkout fresh ones from git.
 
 ---
 
