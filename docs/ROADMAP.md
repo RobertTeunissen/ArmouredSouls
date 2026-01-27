@@ -109,7 +109,9 @@ This ensures all database components are in place before implementing battles.
 
 --> NOT FIXED. Dashboard shows "Your stable is empty. Start by upgrading facilities or creating robots!"
 
-- [ ] The Robot page shows the upgrade prices with the applied discounts from the Training Facility 
+- [ ] The Robot page shows the upgrade prices with the applied discounts from the Training Facility.
+- [ ] The Robot page clusters the attributes per group and shows the current attribute cap based on the Training Academy for this attribute group.
+- [ ] The robot attribute upgrade cap from the Training Academy facilities are being enforced when upgrading robots.
 
 **Fixes Applied (commit fe736c3):**
 - Fixed AllRobotsPage API endpoint: `/api/robots/user` → `/api/robots`
