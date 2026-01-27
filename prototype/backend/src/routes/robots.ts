@@ -18,7 +18,12 @@ router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Respo
             username: true,
           },
         },
-        weaponInventory: {
+        mainWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+        offhandWeapon: {
           include: {
             weapon: true,
           },
@@ -36,13 +41,18 @@ router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Respo
 
 // Get all robots for the authenticated user
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
+  try:
     const userId = req.user!.userId;
 
     const robots = await prisma.robot.findMany({
       where: { userId },
       include: {
-        weaponInventory: {
+        mainWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+        offhandWeapon: {
           include: {
             weapon: true,
           },
@@ -96,13 +106,28 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       });
 
       // Create robot with all attributes at level 1 (defaults in schema)
+      // Initialize HP and Shield based on formulas: maxHP = hullIntegrity × 10, maxShield = shieldCapacity × 2
+      const hullIntegrity = 1; // Default level
+      const shieldCapacity = 1; // Default level
+      const maxHP = hullIntegrity * 10;
+      const maxShield = shieldCapacity * 2;
+      
       const robot = await tx.robot.create({
         data: {
           userId,
           name,
+          currentHP: maxHP,
+          maxHP: maxHP,
+          currentShield: maxShield,
+          maxShield: maxShield,
         },
         include: {
-          weaponInventory: {
+          mainWeapon: {
+            include: {
+              weapon: true,
+            },
+          },
+          offhandWeapon: {
             include: {
               weapon: true,
             },
@@ -140,7 +165,12 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
         userId, // Ensure user owns this robot
       },
       include: {
-        weaponInventory: {
+        mainWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+        offhandWeapon: {
           include: {
             weapon: true,
           },
