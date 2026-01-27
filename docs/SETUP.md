@@ -259,49 +259,136 @@ npm run build  # Builds to dist/
 
 ### 🔧 Migration Conflicts (IMPORTANT!)
 
-**Issue**: Error when running `npx prisma migrate reset --force`:
+**Issue**: You see errors like:
 ```
 Error: P3018
-A migration failed to apply...
 Migration name: 20260127122708_prototype2
 Database error: ERROR: relation "robots" does not exist
 ```
+OR
+```
+2 migrations found in prisma/migrations
+```
+(when there should only be 1)
 
-**Cause**: Your local database has old migration history that conflicts with the new comprehensive migration.
+**Root Cause**: Your local database's `_prisma_migrations` table still has records of old migrations that were deleted from the repository when we consolidated to ONE comprehensive migration.
 
-**Fix** (Complete Database Reset):
+---
+
+### ✅ SOLUTION: Nuclear Database Reset
+
+This is the **ONLY** way to reliably fix migration conflicts:
+
 ```bash
-# Navigate to backend
+# Step 1: Stop backend server if running (Ctrl+C)
+
+# Step 2: Navigate to backend directory
 cd prototype/backend
 
-# Stop backend if running (Ctrl+C)
+# Step 3: IMPORTANT - Pull latest code to ensure old migrations are gone!
+git pull origin copilot/start-phase-1-milestones
 
-# Completely drop and recreate database
+# Step 4: Verify only 1 migration exists
+ls -la prisma/migrations/
+# Should ONLY show: 20260127201247_complete_future_state_schema
+# If you see other migrations, DELETE them manually!
+
+# Step 5: Stop Docker and REMOVE the database volume
 docker compose down
 docker volume rm prototype_postgres_data
+
+# Step 6: Start Docker (creates fresh database with no history)
 docker compose up -d
 
-# Wait for postgres to start
-sleep 10
+# Step 7: Wait for PostgreSQL to be ready (IMPORTANT!)
+echo "Waiting for PostgreSQL to start..."
+sleep 15
 
-# Apply new migration and seed
+# Step 8: Apply the ONE comprehensive migration
 npx prisma migrate deploy
+
+# Step 9: Seed the database with test data
 npx prisma db seed
 
-# Regenerate Prisma Client
+# Step 10: Regenerate Prisma Client
 npx prisma generate
 
-# Start backend
+# Step 11: Start backend
 npm run dev
 ```
 
-**Alternative** (If docker volume rm fails):
+---
+
+### ⚠️ Critical Steps Explained
+
+1. **Pull latest code** - Old migration folders might still exist on your local machine
+2. **Remove docker volume** - `docker compose down` alone doesn't clear the `_prisma_migrations` table!
+3. **Wait 15 seconds** - PostgreSQL needs time to initialize before accepting connections
+4. **Use `migrate deploy`** not `migrate reset` - Deploy applies migrations without trying to reset first
+
+---
+
+### 🔍 Verification
+
+After running the commands above, verify everything worked:
+
 ```bash
-# Connect to postgres and drop database manually
-docker compose exec postgres psql -U postgres -c "DROP DATABASE armouredsouls;"
+# Check migrations directory (should show ONLY 1 folder)
+ls -la prototype/backend/prisma/migrations/
+# Output: 20260127201247_complete_future_state_schema
+
+# Open Prisma Studio to inspect database
+cd prototype/backend
+npx prisma studio
+# Open http://localhost:5555
+# Should see tables: User, Robot, Weapon, WeaponInventory, Facility, Battle
+# Users table should have 6 test users
+# Weapons table should have 10 weapons
+
+# Test backend starts successfully
+npm run dev
+# Should see: "🚀 Backend server running on http://localhost:3001"
+
+# Test login API
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"player1","password":"password123"}'
+# Should return user object with token
+```
+
+---
+
+### 🆘 Alternative Methods (If Above Fails)
+
+**Method 2: If `docker volume rm` fails**
+```bash
+# Find exact volume name
+docker volume ls | grep postgres
+
+# Try removing with exact name
+docker volume rm backend_postgres_data
+# OR
+docker volume rm armouredsouls_postgres_data
+# (Use the exact name from docker volume ls)
+
+# If still fails, force remove:
+docker volume rm -f prototype_postgres_data
+```
+
+**Method 3: Manual database drop**
+```bash
+# Stop docker
+docker compose down
+
+# Start docker
+docker compose up -d
+sleep 15
+
+# Drop and recreate database manually
+docker compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS armouredsouls;"
 docker compose exec postgres psql -U postgres -c "CREATE DATABASE armouredsouls;"
 
-# Then apply migrations
+# Apply migration
 cd backend
 npx prisma migrate deploy
 npx prisma db seed
@@ -309,7 +396,32 @@ npx prisma generate
 npm run dev
 ```
 
-**Why this works**: Removing the docker volume deletes ALL database data including the migration history. The fresh database has no prior migrations, so the new comprehensive migration applies cleanly.
+**Method 4: Nuclear Docker reset (LAST RESORT)**
+```bash
+# WARNING: This removes ALL Docker data, not just this project!
+docker compose down
+docker system prune -a --volumes
+# Type 'y' to confirm
+
+# Then restart everything:
+cd prototype
+docker compose up -d
+sleep 15
+cd backend
+npx prisma migrate deploy
+npx prisma db seed
+npx prisma generate
+npm run dev
+```
+
+---
+
+### 💡 Why This Works
+
+- **Removing the docker volume** deletes the `_prisma_migrations` table that stores migration history
+- **Fresh PostgreSQL** starts with no knowledge of old migrations
+- **`migrate deploy`** applies only the ONE comprehensive migration that exists in the repository
+- **No conflicts** because the database has no prior migration history to conflict with
 
 ---
 
