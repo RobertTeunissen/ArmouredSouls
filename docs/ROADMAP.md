@@ -97,17 +97,11 @@ This ensures all database components are in place before implementing battles.
 - ✅ Distribute 23 attributes (all start at level 1)
 - ✅ Upgrade robot attributes with Credits
 - ✅ Save robot to database
-- ❌ View robot in stable
+- ✅ View robot in stable (My Robots page) **FIXED in new commit**
+- ✅ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED in new commit**
+- ❌ Dashboard shows owned robots in a table with ELO and fighting record
 
---> NOT FIXED. "My Robots" page shows "Failed to load robots"
-
-- ❌ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED (commit fe736c3)**
-
---> NOT FIXED. All Robots page shows "Failed to load robots"
-
-- ❌ Dashboard shows owned robots in a table with ELO and fighting record **FIXED (commit fe736c3)**
-
---> NOT FIXED. Dashboard shows "Your stable is empty. Start by upgrading facilities or creating robots!"
+--> PARTIALLY FIXED in new commit. "My Robots" page and "All Robots" page now work (API endpoints corrected). Dashboard robot table still needs fixing.
 
 - [ ] The Robot page shows the upgrade prices with the applied discounts from the Training Facility.
 - [ ] The Robot page clusters the attributes per group and shows the current attribute cap based on the Training Academy for this attribute group.
@@ -118,18 +112,23 @@ This ensures all database components are in place before implementing battles.
 - Fixed dashboard robot count query to properly check for robots
 - Fixed "My Robots" page to display robot list correctly
 
+**NEW Fixes Applied (new commit):**
+- Fixed WeaponShopPage API endpoint: `/api/buildings` → `/api/facilities`
+- Fixed WeaponShopPage facility type: `weaponsWorkshop` → `weapons_workshop`
+- Fixed AllRobotsPage API endpoint: `/api/all/robots` → `/api/robots/all/robots`
+
 **Milestone 4: Weapon System** 
-- ❌ Buy weapon in the Weapon Shop
+- ✅ Buy weapon in the Weapon Shop **FIXED in new commit**
 - ✅ Weapon shop shows cooldown and attribute bonuses
-- ✅ Weapon Workshop Facility effect implemented and working (applying discounts on weapon purchases) **FIXED (commit fe736c3)**
-- ✅ Select loadout configuration (weapon+shield, two-handed, dual-wield, single) **FIXED (commit fe736c3)**
+- ✅ Weapon Workshop Facility effect implemented and working (applying discounts on weapon purchases)
+- ✅ Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
 - ✅ Select weapon from available weapons
 - ✅ Weapon inventory system documented
 - ✅ Robot detail page shows stat block with equipped weapon bonuses
 - [ ] Owned weapons visible in Tab "Storage", including stat blocks and how much storage is left.
 - [ ] Storage Facility is applying it's effects correctly on Storage.
 
---> NOT FIXED. Weapon Shop is broken after commit fe736c3: "Failed to load weapons". Unable to test whether other functionality is still working. 
+--> FIXED in new commit. Weapon Shop now works (API endpoints corrected).
 
 **Fixes Applied (commit fe736c3):**
 - Implemented Weapon Workshop discount (10%-55% based on level 1-10)
@@ -137,8 +136,6 @@ This ensures all database components are in place before implementing battles.
 - Added loadout type display in weapon shop (shows weapon+shield, two-handed, etc.)
 - Added loadout selection dropdown in robot detail page
 - Migration created: `20260127000000_add_loadout_type_to_weapons`
-
---> NOT FIXED. Weapon Shop is broken after commit fe736c3: "Failed to load weapons". Unable to test whether other functionality is still working. 
 
 **Shared Utilities (commit acefc7e):**
 - Extracted discount calculation logic into `prototype/shared/utils/discounts.ts`

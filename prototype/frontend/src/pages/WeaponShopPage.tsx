@@ -53,7 +53,7 @@ function WeaponShopPage() {
         setWeapons(weaponsResponse.data);
 
         // Fetch facilities to get Weapon Workshop level
-        const facilitiesResponse = await axios.get('http://localhost:3001/api/buildings');
+        const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities');
         const weaponWorkshop = facilitiesResponse.data.find((f: Facility) => f.facilityType === 'weapons_workshop');
         setWeaponWorkshopLevel(weaponWorkshop?.level || 0);
       } catch (err) {
