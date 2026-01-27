@@ -16,7 +16,6 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
         role: true,
         currency: true,
         prestige: true,
-        stableName: true,
         createdAt: true,
       },
     });
@@ -32,40 +31,6 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
   }
 });
 
-// Set stable name (first-time setup)
-// TODO: Add rate limiting before production deployment
-router.put('/stable-name', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const { stableName } = req.body;
-
-    if (!stableName || typeof stableName !== 'string') {
-      return res.status(400).json({ error: 'Stable name is required' });
-    }
-
-    if (stableName.length < 1 || stableName.length > 100) {
-      return res.status(400).json({ error: 'Stable name must be between 1 and 100 characters' });
-    }
-
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: { stableName },
-      select: {
-        id: true,
-        username: true,
-        role: true,
-        currency: true,
-        prestige: true,
-        stableName: true,
-        createdAt: true,
-      },
-    });
-
-    res.json(user);
-  } catch (error) {
-    console.error('Stable name update error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+// Stable name endpoint removed - feature not yet implemented
 
 export default router;
