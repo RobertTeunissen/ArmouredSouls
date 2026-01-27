@@ -120,6 +120,57 @@ cd ../frontend
 npm run dev  # In terminal 2
 ```
 
+### Testing New Version with Database Changes (EXACT STEPS)
+
+**Use these steps when there are schema changes (new migrations):**
+
+```bash
+# Step 1: Stop ALL running servers
+# Press Ctrl+C in backend terminal (Terminal 1)
+# Press Ctrl+C in frontend terminal (Terminal 2)
+
+# Step 2: Navigate to repository root
+cd /path/to/ArmouredSouls
+
+# Step 3: Pull latest changes from branch
+git pull origin copilot/start-phase-1-milestones
+
+# Step 4: Navigate to backend
+cd prototype/backend
+
+# Step 5: Reset database with new migrations
+# This will:
+# - Drop the database
+# - Run all migrations (including new ones)
+# - Run the seed script
+npx prisma migrate reset --force
+
+# Step 6: Start backend server (Terminal 1)
+npm run dev
+
+# Step 7: In NEW terminal, start frontend (Terminal 2)
+cd prototype/frontend
+npm run dev
+
+# Step 8: Test in browser
+# Open http://localhost:3000
+# Login as player1 / password123
+```
+
+**What happens during `npx prisma migrate reset --force`:**
+1. Drops the entire database
+2. Recreates the database
+3. Runs ALL migrations in order (including the new `20260127000000_add_loadout_type_to_weapons`)
+4. Runs `prisma/seed.ts` to populate with test data
+
+**No need to:**
+- ❌ Stop Docker database (`docker compose down`)
+- ❌ Manually run `prisma:generate`
+- ❌ Manually run `prisma:migrate`  
+- ❌ Manually run seed script
+
+**The `migrate reset` command does it all automatically!**
+
 ### Full Clean Reset (If Having Issues)
 ```bash
 # Stop all servers (Ctrl+C in both terminals)

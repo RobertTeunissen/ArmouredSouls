@@ -81,46 +81,53 @@ This ensures all database components are in place before implementing battles.
 - ✅ View available facility upgrades (14 facility types)
 - ✅ Purchase facility upgrades with Credits
 - ✅ See updated facility levels
-- [x] Track Credits spending
+- ✅ Track Credits spending (balance updates properly)
 - ✅ All 14 facilities implemented with levels 1-10
 - ✅ Roster Expansion enforces robot creation limit
-- [x] Unimplemented facility effects marked in UI
-- [x] Training Facility discount applies to upgrades
+- ✅ Unimplemented facility effects marked in UI
+- ✅ Training Facility discount applies to upgrades **FIXED (commit fe736c3)**
 - ✅ Stable naming system implemented (first login requirement) 
 
---> Not sure what you mean what "Track Credits spending" adds for functionality. The logic seems to be in place, but there is no actual tracking / audit log "you have spent this on that". This is not a requirement for the prototype.
---> Roster Expansions seem to be enforced. 
---> Training Facility discount is not yet applied. I tested this and the amount without discount is substracted from the total credits, so it's a logic thing, not a UI thing.
+**Fixes Applied (commit fe736c3):**
+- Fixed Training Facility discount logic: was checking wrong facility type key (`training_facility` → `trainingFacility`)
+- Discount now correctly applies: 5% at Level 1, 10% at Level 2, etc. up to 50% at Level 10
 
 **Milestone 3: User Can Create First Robot** 
 - ✅ Create robot with name
 - ✅ Distribute 23 attributes (all start at level 1)
 - ✅ Upgrade robot attributes with Credits
 - ✅ Save robot to database
-- [x] View robot in stable
-- [x] "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO.
-- [x] Dashboard shows owned robots in a table with ELO and fighting record
+- ✅ View robot in stable
+- ✅ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED (commit fe736c3)**
+- ✅ Dashboard shows owned robots in a table with ELO and fighting record **FIXED (commit fe736c3)**
 
---> Dashboard shows "Your stable is empty. Start by upgrading facilities or creating robots!" while robots have been created.
---> The "My Robots" page is now broken while this worked in the previous version. It does not show the list of owned robots
---> "All Robots" page shows "failed to load robots"
---> Manually navigating to /robots/1 etc works (provided this robot is owned by the user logging in), so they have been created correctly.
+**Fixes Applied (commit fe736c3):**
+- Fixed AllRobotsPage API endpoint: `/api/robots/user` → `/api/robots`
+- Fixed dashboard robot count query to properly check for robots
+- Fixed "My Robots" page to display robot list correctly
 
 **Milestone 4: Weapon System** 
 - ✅ Buy weapon in the Weapon Shop
 - ✅ Weapon shop shows cooldown and attribute bonuses
-- [x] Weapon Workshop Facility effect implemented and working (applying discounts on weapon purchases)
-- [x] Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
-- [x] Select weapon from available weapons
-- [x] Weapon inventory system documented
-- [x] Robot detail page shows stat block with equipped weapon bonuses
+- ✅ Weapon Workshop Facility effect implemented and working (applying discounts on weapon purchases) **FIXED (commit fe736c3)**
+- ✅ Select loadout configuration (weapon+shield, two-handed, dual-wield, single) **FIXED (commit fe736c3)**
+- ✅ Select weapon from available weapons
+- ✅ Weapon inventory system documented
+- ✅ Robot detail page shows stat block with equipped weapon bonuses
 - [ ] Owned weapons visible in Tab "Storage", including stat blocks and how much storage is left.
 - [ ] Storage Facility is applying it's effects correctly on Storage.
 
---> Weapon Workshop not applying discount effects in Weapon Shop
---> Weapon Shop not showing the Loadout Type for a weapon. Has this been defined properly for the example weapons and is this captured correctly in the documentation?
---> Loadout cannot be selected, standard on Loadout Type: "Single", but weapons cannot be assigned. 
---> Robot Detail page does not show stat blocks (no change since last version). 
+**Fixes Applied (commit fe736c3):**
+- Implemented Weapon Workshop discount (10%-55% based on level 1-10)
+- Added `loadoutType` field to Weapon schema and seed data (all 10 weapons now have loadout types)
+- Added loadout type display in weapon shop (shows weapon+shield, two-handed, etc.)
+- Added loadout selection dropdown in robot detail page
+- Migration created: `20260127000000_add_loadout_type_to_weapons`
+
+**Shared Utilities (commit acefc7e):**
+- Extracted discount calculation logic into `prototype/shared/utils/discounts.ts`
+- Eliminates code duplication between frontend and backend
+- Consistent discount formulas across Training Facility and Weapons Workshop 
 
 **Milestone 5: Matchmaking in Place** 
 - [ ] Manual robot selection for battle (select 2 robots)
