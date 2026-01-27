@@ -50,497 +50,133 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 1: Local Prototype / Proof of Concept
-
-**Goal**: Build a minimal working prototype running locally to validate the core game concept
-
-**Status**: In progress  
-**Team**: 2 people (Robert + AI), async development style  
-**Testing**: 6 user accounts for local testing  
-**Target**: Working game loop - Login → Setup Stable → Create Robot → Battle
-
-### Implementation Strategy: Bottom-Up, Iterative
-
-Since there's a **1-to-1 relationship between User and Stable**, the logical development order is:
-
-1. **User/Stable Setup** → Get authentication and stable management working first
-2. **Robot Creation** → Build robot with attributes and equipment
-3. **Battle System** → Enable battles between robots
-
-This ensures all database components are in place before implementing battles.
-
-### Phase 1 Milestones
-
-**Milestone 1: User Can Login and See Initial Setup** 
-- ✅ User authentication (login/logout)
-- ✅ User profile view
-- ✅ Display stable info (empty at start, ₡2,000,000 to spend)
-- ✅ Display Credits (₡) balance
-
-**Milestone 2: User Can Complete Stable Setup** 
-- ✅ View available facility upgrades (14 facility types)
-- ✅ Purchase facility upgrades with Credits
-- ✅ See updated facility levels
-- ✅ Track Credits spending (balance updates properly)
-- ✅ All 14 facilities implemented with levels 1-10
-- ✅ Roster Expansion enforces robot creation limit
-- ✅ Unimplemented facility effects marked in UI
-- ✅ Training Facility discount applies to upgrades **FIXED in commit fe736c3**
-- ✅ Stable naming system implemented (first login requirement) 
-
-**Fixes Applied (commit fe736c3):**
-- Fixed Training Facility discount logic: was checking wrong facility type key (`training_facility` → `trainingFacility`)
-- Discount now correctly applies: 5% at Level 1, 10% at Level 2, etc. up to 50% at Level 10
-
-**Milestone 3: User Can Create First Robot** 
-- ✅ Create robot with name
-- ✅ Distribute 23 attributes (all start at level 1)
-- ✅ Upgrade robot attributes with Credits
-- ✅ Save robot to database
-- ⚠️ View robot in stable (My Robots page) **MIGRATION CONFLICT - See "Database Migration Issue" below**
-
---> FIXED! Migration created to add missing main_weapon_id, offhand_weapon_id, and loadout_type columns.
-
-- ✅ "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO **FIXED with migration 20260127154500**
-
---> FIXED! Migration resolves database column issues.
-
-- ❌ Dashboard shows owned robots in a table with ELO and fighting record
-
---> NOT YET IMPLEMENTED
-
-- [ ] The Robot page shows the upgrade prices with the applied discounts from the Training Facility.
-- [ ] The Robot page clusters the attributes per group and shows the current attribute cap based on the Training Academy for this attribute group.
-- [ ] The robot attribute upgrade cap from the Training Academy facilities are being enforced when upgrading robots.
-
-**✅ RESOLVED - Schema/Database Mismatch (commit 0dddfe8 + new migration):**
-
-The root cause was identified: Prisma schema had fields never migrated to database.
-
-**Solution:** Created migration `20260127154500_add_robot_weapon_slots` that adds:
-- `main_weapon_id` column to robots table
-- `offhand_weapon_id` column to robots table
-- `loadout_type` column to robots table
-- Foreign key constraints to weapon_inventory
-
-**Migration History:**
-- `20260125213123_` - Initial schema
-- `20260125213329_add_facilities` - Adds facilities
-- `20260126181101_update_schema_to_match_docs` - Renames attributes, adds WeaponInventory
-- `20260127000000_add_loadout_type_to_weapons` - Adds loadoutType to WEAPONS table
-- `20260127154500_add_robot_weapon_slots` - **NEW** - Adds weapon slots to ROBOTS table
-
-**API Endpoint Documentation (VERIFIED):**
-
-Backend routes in `src/index.ts`:
-```
-/api/auth        - authRoutes
-/api/user        - userRoutes  
-/api/facilities  - facilityRoutes
-/api/robots      - robotRoutes
-/api/weapons     - weaponRoutes
-/api/weapon-inventory - weaponInventoryRoutes
-```
-
-Robot endpoints in `src/routes/robots.ts`:
-```
-GET  /api/robots/all/robots - All robots from all users (for leaderboard)
-GET  /api/robots            - Current user's robots only
-POST /api/robots            - Create new robot
-GET  /api/robots/:id        - Get specific robot by ID
-PUT  /api/robots/:id/upgrade - Upgrade robot attribute
-PUT  /api/robots/:id/weapon - Equip weapon to robot
-```
-
-**Current Status:**
-- Weapon Shop: ✅ FIXED (API endpoints corrected)
-- My Robots: ❌ BROKEN (database missing mainWeaponId column)
-- All Robots: ❌ BROKEN (database missing mainWeaponId column)
-- Dashboard: ❌ NOT IMPLEMENTED (robots table display)
-
-**Fixes Applied (commit fe736c3):**
-- Fixed AllRobotsPage API endpoint: `/api/robots/user` → `/api/robots`
-- Fixed dashboard robot count query to properly check for robots
-- Fixed "My Robots" page to display robot list correctly
-
-**Fixes Applied (commit f24ff94):**
-- Fixed WeaponShopPage API endpoint: `/api/buildings` → `/api/facilities`
-- Fixed WeaponShopPage facility type: `weaponsWorkshop` → `weapons_workshop`
-- Fixed AllRobotsPage API endpoint: `/api/all/robots` → `/api/robots/all/robots`
-
-**Fixes Applied (NEW COMMIT - schema sync):**
-- Removed `stableName` from User schema (no migration exists for it)
-- Fixed robot route includes to use mainWeapon/offhandWeapon (but columns don't exist in DB yet)
-- Documented schema/database mismatch as ROOT CAUSE
-- Created comprehensive API endpoint documentation
-
-**Milestone 4: Weapon System** 
-- ✅ Buy weapon in the Weapon Shop **FIXED in commit f24ff94**
-- ✅ Weapon shop shows cooldown and attribute bonuses
-- ✅ Weapon Workshop Facility effect implemented and working (applying discounts on weapon purchases)
-- ✅ Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
-
---> While this works, I would expect the input to change after a new loadout is selected. If I select "Two-Handed Weapon", I expect to see a selection box with ONLY the Two-Handed Weapons I have avaialble. Currently the boxes show "Main Weapon" and "Off-hand Weapon". 
-
-- ❌ Select weapon from available weapons based on the currently selected load-out
-
---> This is not working after the latest commmit (f24ff94). Weapons can be bought, but not selected. Combine this with the comment above.
-
-- ✅ Weapon inventory system documented
-- ❌ Robot detail page shows stat block with equipped weapon bonuses
-
---> NOT FIXED. No stat block shown on Robot detail page.
-
-- [ ] Owned weapons visible in Tab "Storage", including stat blocks and how much storage is left.
-- [ ] Storage Facility is applying it's effects correctly on Storage.
-
---> FIXED in new commit. Weapon Shop now works (API endpoints corrected).
-
-**Fixes Applied (commit fe736c3):**
-- Implemented Weapon Workshop discount (10%-55% based on level 1-10)
-- Added `loadoutType` field to Weapon schema and seed data (all 10 weapons now have loadout types)
-- Added loadout type display in weapon shop (shows weapon+shield, two-handed, etc.)
-- Added loadout selection dropdown in robot detail page
-- Migration created: `20260127000000_add_loadout_type_to_weapons`
-
-**Shared Utilities (commit acefc7e):**
-- Extracted discount calculation logic into `prototype/shared/utils/discounts.ts`
-- Eliminates code duplication between frontend and backend
-- Consistent discount formulas across Training Facility and Weapons Workshop 
-
-### 🚨 Database Migration Issue (Commit 153220b → ROLLED BACK)
-
-**Problem Identified:**
-Migration `20260127154500_add_robot_weapon_slots` conflicts with an existing local migration `20260127122708_prototype2` that already added the same columns (`main_weapon_id`, `offhand_weapon_id`, `loadout_type`) to the robots table.
-
-**Error:**
-```
-Database error: column "main_weapon_id" of relation "robots" already exists
-```
-
-**Root Cause:**
-The user's local database contains a migration that doesn't exist in the repository. This created a mismatch where:
-1. User's database HAS the columns (added by `20260127122708_prototype2`)
-2. Repository migrations DON'T include this migration
-3. New migration tries to add columns that already exist
-
-**Solution:**
-Migration `20260127154500_add_robot_weapon_slots` has been REMOVED from the repository (commit 91e5287).
-
-### 🚨 Login Failure: Missing .env File (Commit 91e5287)
-
-**Problem Identified:**
-After running database reset, login fails with "Internal server error". Backend logs show:
-```
-error: Environment variable not found: DATABASE_URL.
-```
-
-**Root Cause:**
-The `.env` file is missing from `prototype/backend/`. Without this file, the backend cannot connect to the database, causing all API requests to fail with internal server errors.
-
-**Solution:**
-
-**Step 1: Create .env file**
-```bash
-cd prototype/backend
-cp .env.example .env
-```
-
-**Step 2: Reset database and start servers**
-```bash
-# Full reset (RECOMMENDED)
-npx prisma migrate reset --force
-
-# Start backend (Terminal 1)
-npm run dev
-
-# Start frontend (Terminal 2 - in new terminal)
-cd ../frontend
-npm run dev
-```
-
-**What This Does:**
-1. Creates `.env` file with correct DATABASE_URL and JWT_SECRET
-2. Drops the entire database
-3. Recreates it from scratch
-4. Applies ONLY the 4 official migrations:
-   - `20260125213123_` - Initial schema
-   - `20260125213329_add_facilities` - Facilities table
-   - `20260126181101_update_schema_to_match_docs` - Rename attributes, add WeaponInventory
-   - `20260127000000_add_loadout_type_to_weapons` - Add loadoutType to weapons
-5. Runs seed script to create 6 test users with hashed passwords
-6. Starts backend on http://localhost:3001
-7. Starts frontend on http://localhost:3000
-
-**Test Login:**
-- Open http://localhost:3000
-- Login with: `player1` / `password123`
-- Should redirect to dashboard
-
-**Current Status:**
-- ⚠️ Robot pages still broken due to schema/database mismatch
-- ⚠️ User needs to reset database completely to sync with repository
-- ⚠️ Waiting for user to run reset before continuing
-
-**Next Steps:**
-Once database is reset, we need to investigate WHY the schema expects `main_weapon_id`/`offhand_weapon_id` when no migration adds them. This may require either:
-1. Creating a new migration to add these columns (properly this time)
-2. OR removing these fields from the Prisma schema if they're not needed yet
-
-**Phase 1 Cleanup Milestone (End of Phase 1):**
-- [ ] Consolidate all migrations into a single base migration
-- [ ] Create clean `schema.sql` file for fresh installations
-- [ ] Document migration strategy for production deployments
-- [ ] Review and cleanup temporary/test code
-- [ ] Ensure all documentation is up-to-date
-- [ ] Run full test suite across all milestones
-
-**Milestone 5: Matchmaking in Place** 
-- [ ] Manual robot selection for battle (select 2 robots)
-- [ ] Simple matchmaking UI (pick opponent's robot)
-- [ ] Validate both robots have weapons equipped
-- [ ] Queue battle for execution
-
-**Milestone 6: Matches Can Be Triggered Manually** 
-- [ ] Manual battle trigger button
-- [ ] Execute battle simulation (time-based combat)
-- [ ] Calculate battle outcome
-- [ ] Apply repair costs (1.0x/1.5x/2.0x multipliers)
-- [ ] Update robot HP/shield/ELO/stats
-- [ ] Display battle log with timestamps
-- [ ] Store battle in database
-- [ ] **TEST GAME BALANCE** - Run multiple battles to validate formulas
-
-### Explicit Scope Limitations
-
-**NOT in Phase 1**:
-- ❌ Automated matchmaking algorithms
-- ❌ Automated battle scheduling (only manual trigger)
-- ❌ Battle queues or asynchronous battles
-- ❌ Achievements or progression systems
-- ❌ Social features (friends, chat, guilds)
-- ❌ Cloud deployment (local only)
-- ❌ Mobile support
-- ❌ Polished UI/UX (functional only)
-- ❌ Animations or visual effects
-- ❌ Advanced analytics or statistics
-- ❌ Tournament system
-- ❌ Team battles (2v2, 3v3+)
-
-### Technical Architecture (Simplified)
-
-**Project Structure**: Isolated prototype in `/prototype` directory
-
-```
-ArmouredSouls/
-├── docs/                 # Project documentation
-├── prototype/            # Phase 1 isolated prototype codebase
-│   ├── backend/          # Node.js + Express + Prisma
-│   ├── frontend/         # React + Tailwind CSS
-│   └── docker-compose.yml
-└── modules/              # Future production codebase (Phase 2+)
-```
-
-**Architecture Diagram**:
-
-```
-┌─────────────────────────────────────────┐
-│    React + Tailwind CSS (Port 3000)     │
-│                                         │
-│  • Login/Logout                         │
-│  • User Management                      │
-│  • Robot List & Creator                 │
-│  • Robot Upgrading                      │
-│  • Stable Management                    │
-│  • Battle Setup                         │
-│  • Battle Results & History             │
-└─────────────────┬───────────────────────┘
-                  │ HTTP/REST
-┌─────────────────▼───────────────────────┐
-│  Node.js + Express Backend (Port 3001)  │
-│                                         │
-│  • REST API (Express)                   │
-│  • Authentication (JWT + bcrypt)        │
-│  • Battle Simulation Engine             │
-│  • Database ORM (Prisma)                │
-└─────────────────┬───────────────────────┘
-                  │
-┌─────────────────▼───────────────────────┐
-│      PostgreSQL (Port 5432)             │
-│      via Docker Compose                 │
-│                                         │
-│  • Users (username, password_hash, role)│
-│  • Robots                               │
-│  • Components                           │
-│  • Battles                              │
-│  • Currency balances                    │
-└─────────────────────────────────────────┘
-```
-
-**Technology Stack**:
-- **Backend**: Express (finalized)
-- **ORM**: Prisma (finalized)
-- **Frontend**: React + Tailwind CSS (finalized)
-- **Database**: PostgreSQL + Docker
-- **Testing**: Automated tests on every commit (CI/CD via GitHub Actions)
-
-### Battle Simulation Algorithm
-
-**Note**: The battle simulation uses time-based combat with 23 robot attributes. For complete combat formulas including hit chance, critical hits, energy shields, penetration, and all attribute interactions, see **ROBOT_ATTRIBUTES.md**.
-
-Key aspects:
-- Time-based turn processing (measured in seconds)
-- Attack cooldowns based on weapon and attackSpeed attribute
-- Simultaneous attacks resolved using gyroStabilizers
-- Energy shields as separate HP pool with regeneration
-- Yield threshold (robots can surrender to avoid destruction)
-- Comprehensive battle log with timestamps
-
-For detailed implementation, see ROBOT_ATTRIBUTES.md.
-
-### Sample Components
-
-**Chassis Types**:
-
-| Name | Health | Speed | Defense | Attack |
-|------|--------|-------|---------|--------|
-| Tank | +50 | -5 | +10 | +0 |
-| Scout | +0 | +10 | -5 | +5 |
-| Balanced | +20 | +0 | +0 | +0 |
-| Berserker | +10 | +5 | -10 | +15 |
-| Fortress | +100 | -10 | +20 | -5 |
-
-**Weapons**:
-
-| Name | Attack Bonus | Description |
-|------|-------------|-------------|
-| Laser Rifle | +15 | Standard energy weapon |
-| Plasma Cannon | +25 | High damage, heavy |
-| Machine Gun | +10 | Rapid fire |
-| Hammer | +20 | Melee weapon |
-| Sniper Laser | +30 | Precision weapon |
-| Sword | +12 | Basic melee |
-| Rocket Launcher | +35 | Maximum damage |
-
-**Armor**:
-
-| Name | Defense Bonus | Speed Penalty |
-|------|--------------|---------------|
-| Heavy Plate | +20 | -5 |
-| Light Armor | +10 | +0 |
-| Energy Shield | +15 | +2 |
-| Stealth Coating | +5 | +5 |
-| Reactive Armor | +25 | -8 |
-| Nano-Weave | +12 | +3 |
-
-### Development Workflow: Iterative, Bottom-Up
-
-**Iteration 1: User/Stable Foundation** (Milestone 1-2)
-- Set up development environment (Docker, Node.js, PostgreSQL)
-- Implement user authentication (login/logout with JWT)
-- Create User and Facility database tables
-- Build stable management UI (view facilities, purchase upgrades)
-- Implement Credits system and spending
-- **Validation**: User can login, see ₡2,000,000, upgrade facilities
-
-**Iteration 2: Robot Creation** (Milestone 3)
-- Create Robot and Weapon database tables
-- Implement robot creation API
-- Build robot attribute upgrade system (23 attributes)
-- Add weapon selection and loadout configuration
-- Create robot management UI
-- **Validation**: User can create robot, upgrade stats, equip weapon, save to database
-
-**Iteration 3: Battle System** (Milestone 4-5)
-- Create Battle database table
-- Implement battle simulation engine (time-based combat, all formulas)
-- Build manual matchmaking UI (select 2 robots)
-- Add manual battle trigger
-- Calculate repair costs and update robot state
-- Display battle log with timestamps
-- **Validation**: User can trigger battle, see results, robots update correctly
-
-**Iteration 4: Game Balance Testing** (Milestone 5 continued)
-- Run 50+ test battles with different robot configurations
-- Validate formulas produce interesting outcomes
-- Adjust balance if needed (documented in ROBOT_ATTRIBUTES.md)
-- Test edge cases (destroyed robots, high damage, yield threshold)
-- **Validation**: Battles feel fair, interesting, and strategic
-
-**Total Duration**: 2-6 weeks (depending on available time per week)
-
-### Success Metrics for Phase 1
-
-**Milestone Completion**:
-- ✅ All 5 milestones completed
-- ✅ User can complete full game loop (login → setup → create robot → battle)
-- ✅ All database components working correctly
-
-**Technical Success**:
-- ✅ Battle simulation completes in <100ms
-- ✅ Can process 100 battles in <10 seconds
-- ✅ Zero crashes during testing
-- ✅ Database persists correctly between sessions
-- ✅ UI functional on laptop screen
-
-**Game Design Success**:
-- ✅ At least 3 different viable robot builds (Tank, Glass Cannon, Balanced)
-- ✅ Battle outcomes feel logical given robot stats
-- ✅ Battle logs show interesting combat progression
-- ✅ Repair costs make economic sense
-- ✅ Credits economy balanced (can afford upgrades without grinding)
-
-**Validation Criteria**:
-- Can create 6 different robots with distinct strategies
-- Can run 20+ battles without issues
-- Game balance tested (no dominant strategy)
-- All formulas from ROBOT_ATTRIBUTES.md work correctly
-- Ready to show to friends for feedback
-
-### Risk Management
-
-**Technical Risks**:
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Battle engine too slow | Low | Medium | Profile early, optimize algorithm |
-| Database issues | Low | High | Use proven ORM, test thoroughly |
-| UI bugs | Medium | Low | Focus on functionality over polish |
-| Docker problems | Medium | Medium | Document setup well, test on multiple machines |
-
-**Schedule Risks**:
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Scope creep | High | High | **Strict feature list, no additions** |
-| Over-engineering | Medium | Medium | Keep it simple, refactor in Phase 2 |
-| Time estimates wrong | Medium | Low | Buffer week built into 4-8 week estimate |
-
-**Game Design Risks**:
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Not fun | Medium | High | **Get feedback early and often** |
-| Too complex | Medium | Medium | Simplify if friends are confused |
-| Too simple | Low | Medium | Easy to add depth in Phase 2 |
-
-### Database Setup
-
-**Important**: The authoritative database schema is in **DATABASE_SCHEMA.md**. Do not duplicate schema definitions.
-
-Since this is a prototype with no existing data:
-
-1. Copy complete schema from **DATABASE_SCHEMA.md** to `prisma/schema.prisma`
-2. Generate database: `npx prisma migrate dev --name init`
-3. Run seed script: `npx prisma db seed`
-
-Key points:
-- See **ROBOT_ATTRIBUTES.md** for all 23 robot attributes (combatPower, targetingSystems, etc.)
-- See **STABLE_SYSTEM.md** for facility types and upgrade mechanics
-- See **DATABASE_SCHEMA.md** for complete schema with all tables, fields, and relationships
 
 ---
 
+## Phase 1 - Local Prototype 🔄
+
+**Status**: In Progress  
+**Started**: January 25, 2026  
+**Goal**: Build functional local prototype with core game mechanics
+
+### ✅ Milestone 1: User Can Login and See Initial Setup (COMPLETE)
+- ✅ JWT-based authentication (login/logout)
+- ✅ User dashboard showing profile and credits balance (₡2,000,000 starting)
+- ✅ Consistent navigation across all pages
+- ✅ Test users seeded: player1-6, admin (all password: password123)
+
+### ✅ Milestone 2: User Can Complete Stable Setup (COMPLETE)
+- ✅ 4 facility types (Repair Bay, Training Facility, Weapons Workshop, Roster Expansion)
+- ✅ Each facility: 5 upgrade levels, progressive costs (₡200k-₡1.5M)
+- ✅ Training Facility: 5%-25% discount on attribute upgrades (WORKING)
+- ✅ Weapons Workshop: 10%-25% discount on weapon purchases (WORKING)
+- ✅ Roster Expansion: Enforces robot creation limit (1-5 robots based on level)
+
+### ⚠️ Milestone 3: User Can Create First Robot (PARTIALLY COMPLETE)
+**What's Working:**
+- ✅ Robot creation (₡500k cost, all 23 attributes start at level 1)
+- ✅ All 23 attributes with correct names from DATABASE_SCHEMA.md
+- ✅ Attribute upgrade system with Training Facility discount applied
+- ✅ Weapon inventory system (buy weapons into inventory)
+- ✅ Weapon Shop page with Weapons Workshop discount
+- ✅ "My Robots" page to view user's robots
+- ✅ "All Robots" page showing all robots with owners and ELO
+
+**What's Broken:**
+- ❌ Robot pages failing to load (schema/database mismatch)
+- ❌ Dashboard robots table not yet implemented
+
+**Root Cause (IDENTIFIED):**
+The Prisma schema defines `mainWeapon`/`offhandWeapon` relation fields that don't exist in the database. No migration was created for these columns (`main_weapon_id`, `offhand_weapon_id`, `loadout_type`). The database only has the original `weapon_inventory_id` column from commit 0efbfbc.
+
+**Solution Applied (commit 9bddb8f):**
+Reverted Prisma schema and robots.ts to the SIMPLE version from commit 0efbfbc that matches the actual database state. This uses just `weaponInventoryId` instead of separate main/offhand slots.
+
+**Testing After Revert:**
+```bash
+cd prototype/backend
+cp .env.example .env  # Only if .env doesn't exist
+npx prisma migrate reset --force
+npx prisma generate
+npm run dev
+```
+
+Then test: Login as player1 → My Robots → All Robots pages
+
+### Milestone 4: Matchmaking in Place (NOT STARTED)
+- Manual robot selection for battle
+- Simple matchmaking UI
+- Battle queue system
+
+### Milestone 5: Matches Can Be Triggered Manually (NOT STARTED)
+- Manual battle trigger
+- Battle simulation execution
+- Battle outcome calculation
+- Stats/ELO updates
+
+### Current Database State
+**Official Migrations (4):**
+1. `20260125213123_` - Initial schema
+2. `20260125213329_add_facilities` - Adds facilities table
+3. `20260126181101_update_schema_to_match_docs` - Renames 23 robot attributes, adds WeaponInventory table
+4. `20260127000000_add_loadout_type_to_weapons` - Adds loadoutType to weapons table
+
+**Schema State After Revert:**
+- User: currency, prestige, relationships
+- Robot: 23 attributes + simple `weaponInventoryId` field
+- WeaponInventory: User's owned weapons
+- Weapon: 10 seeded weapons with bonuses
+- Facility: 4 types, 5 levels each
+
+### API Endpoints (VERIFIED)
+```
+Authentication:
+POST /api/auth/login   - Login with username/password
+POST /api/auth/logout  - Logout
+
+User:
+GET  /api/user         - Get current user info
+
+Robots:
+GET  /api/robots/all/robots - All robots (leaderboard)
+GET  /api/robots            - Current user's robots
+POST /api/robots            - Create new robot
+GET  /api/robots/:id        - Get specific robot
+PUT  /api/robots/:id/upgrade - Upgrade robot attribute
+PUT  /api/robots/:id/weapon - Equip weapon to robot
+
+Facilities:
+GET  /api/facilities         - Get user's facilities
+POST /api/facilities/upgrade - Upgrade a facility
+
+Weapons:
+GET  /api/weapons                       - List all weapons
+GET  /api/weapon-inventory              - User's weapon inventory
+POST /api/weapon-inventory/purchase     - Purchase weapon into inventory
+```
+
+### Environment Setup
+**Required:** `.env` file in `prototype/backend/`
+
+The `.env` file is NOT tracked in git (it's in `.gitignore`). Copy from template:
+```bash
+cp prototype/backend/.env.example prototype/backend/.env
+```
+
+Contains `DATABASE_URL` for Prisma connection to PostgreSQL.
+
+### Next Steps
+1. Test reverted schema works (robot pages load correctly)
+2. If working, continue with Milestones 4-5 (matchmaking, battle simulation)
+3. Later: Properly implement dual weapon slots with migration
+
+### Phase 1 Cleanup Milestone (End of Phase 1)
+- Consolidate all migrations into single base migration
+- Create clean schema.sql for fresh installations
+- Document migration strategy for production
+- Review and cleanup temporary/test code
+- Ensure all documentation up-to-date
+- Run full test suite
 ## Phase 2: Foundation & Infrastructure
 
 **Goal**: Make the prototype production-ready with proper infrastructure and security
