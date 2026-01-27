@@ -1,6 +1,6 @@
 # Armoured Souls - Development Roadmap
 
-**Last Updated**: January 24, 2026
+**Last Updated**: January 27, 2026
 
 ## Overview
 

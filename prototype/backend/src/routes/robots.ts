@@ -1,7 +1,6 @@
 import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { getRosterLimit } from '../config/facilities';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -19,12 +18,7 @@ router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Respo
             username: true,
           },
         },
-        mainWeapon: {
-          include: {
-            weapon: true,
-          },
-        },
-        offhandWeapon: {
+        weaponInventory: {
           include: {
             weapon: true,
           },
@@ -48,12 +42,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     const robots = await prisma.robot.findMany({
       where: { userId },
       include: {
-        mainWeapon: {
-          include: {
-            weapon: true,
-          },
-        },
-        offhandWeapon: {
+        weaponInventory: {
           include: {
             weapon: true,
           },
@@ -84,30 +73,13 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Robot name must be between 1 and 100 characters' });
     }
 
-    // Get user's current currency and facilities
+    // Get user's current currency
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        facilities: {
-          where: { facilityType: 'roster_expansion' },
-        },
-        robots: true, // Get current robots to check count
-      },
     });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Check roster expansion limit
-    const rosterExpansionLevel = user.facilities[0]?.level || 0;
-    const maxRobots = getRosterLimit(rosterExpansionLevel);
-    const currentRobotCount = user.robots.length;
-
-    if (currentRobotCount >= maxRobots) {
-      return res.status(400).json({ 
-        error: `Roster limit reached. You have ${currentRobotCount} robot(s) and can have a maximum of ${maxRobots}. Upgrade your Roster Expansion facility to create more robots.` 
-      });
     }
 
     // Check if user has enough currency
@@ -130,12 +102,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
           name,
         },
         include: {
-          mainWeapon: {
-            include: {
-              weapon: true,
-            },
-          },
-          offhandWeapon: {
+          weaponInventory: {
             include: {
               weapon: true,
             },
@@ -173,12 +140,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
         userId, // Ensure user owns this robot
       },
       include: {
-        mainWeapon: {
-          include: {
-            weapon: true,
-          },
-        },
-        offhandWeapon: {
+        weaponInventory: {
           include: {
             weapon: true,
           },
@@ -252,7 +214,7 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
       where: { id: userId },
       include: {
         facilities: {
-          where: { facilityType: 'training_facility' },
+          where: { facilityType: 'training' },
         },
       },
     });
@@ -286,12 +248,7 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
           [attribute]: currentLevel + 1,
         },
         include: {
-          mainWeapon: {
-            include: {
-              weapon: true,
-            },
-          },
-          offhandWeapon: {
+          weaponInventory: {
             include: {
               weapon: true,
             },
@@ -313,12 +270,12 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
   }
 });
 
-// Equip weapons to a robot (from user's weapon inventory)
+// Equip a weapon to a robot (from user's weapon inventory)
 router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const robotId = parseInt(req.params.id);
-    const { mainWeaponId, offhandWeaponId, loadoutType } = req.body;
+    const { weaponInventoryId } = req.body;
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -336,82 +293,52 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
       return res.status(404).json({ error: 'Robot not found' });
     }
 
-    // Validate loadout type if provided
-    const validLoadoutTypes = ['single', 'weapon+shield', 'two-handed', 'dual-wield'];
-    if (loadoutType && !validLoadoutTypes.includes(loadoutType)) {
-      return res.status(400).json({ error: 'Invalid loadout type' });
-    }
-
-    // Prepare update data
-    const updateData: any = {};
-    
-    if (loadoutType !== undefined) {
-      updateData.loadoutType = loadoutType;
-    }
-
-    // Handle main weapon
-    if (mainWeaponId !== undefined) {
-      if (mainWeaponId === null) {
-        updateData.mainWeaponId = null;
-      } else {
-        const mainWeaponIdNum = parseInt(mainWeaponId);
-        if (isNaN(mainWeaponIdNum)) {
-          return res.status(400).json({ error: 'Invalid main weapon ID' });
-        }
-
-        // Validate weapon belongs to user
-        const weaponInv = await prisma.weaponInventory.findFirst({
-          where: {
-            id: mainWeaponIdNum,
-            userId,
-          },
-        });
-
-        if (!weaponInv) {
-          return res.status(404).json({ error: 'Main weapon not found in your inventory' });
-        }
-
-        updateData.mainWeaponId = mainWeaponIdNum;
-      }
-    }
-
-    // Handle offhand weapon
-    if (offhandWeaponId !== undefined) {
-      if (offhandWeaponId === null) {
-        updateData.offhandWeaponId = null;
-      } else {
-        const offhandWeaponIdNum = parseInt(offhandWeaponId);
-        if (isNaN(offhandWeaponIdNum)) {
-          return res.status(400).json({ error: 'Invalid offhand weapon ID' });
-        }
-
-        // Validate weapon belongs to user
-        const weaponInv = await prisma.weaponInventory.findFirst({
-          where: {
-            id: offhandWeaponIdNum,
-            userId,
-          },
-        });
-
-        if (!weaponInv) {
-          return res.status(404).json({ error: 'Offhand weapon not found in your inventory' });
-        }
-
-        updateData.offhandWeaponId = offhandWeaponIdNum;
-      }
-    }
-
-    // Update robot
-    const updatedRobot = await prisma.robot.update({
-      where: { id: robotId },
-      data: updateData,
-      include: {
-        mainWeapon: {
-          include: {
-            weapon: true,
+    // If weaponInventoryId is null, unequip weapon
+    if (weaponInventoryId === null) {
+      const updatedRobot = await prisma.robot.update({
+        where: { id: robotId },
+        data: { weaponInventoryId: null },
+        include: {
+          weaponInventory: {
+            include: {
+              weapon: true,
+            },
           },
         },
-        offhandWeapon: {
+      });
+
+      return res.json({
+        robot: updatedRobot,
+        message: 'Weapon unequipped successfully',
+      });
+    }
+
+    // Validate weapon inventory exists and belongs to user
+    const weaponInvIdNum = parseInt(weaponInventoryId);
+    if (isNaN(weaponInvIdNum)) {
+      return res.status(400).json({ error: 'Invalid weapon inventory ID' });
+    }
+
+    const weaponInv = await prisma.weaponInventory.findFirst({
+      where: {
+        id: weaponInvIdNum,
+        userId, // Ensure user owns this weapon
+      },
+      include: {
+        weapon: true,
+      },
+    });
+
+    if (!weaponInv) {
+      return res.status(404).json({ error: 'Weapon not found in your inventory' });
+    }
+
+    // Equip weapon to robot
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: { weaponInventoryId: weaponInvIdNum },
+      include: {
+        weaponInventory: {
           include: {
             weapon: true,
           },
@@ -421,7 +348,7 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
 
     res.json({
       robot: updatedRobot,
-      message: 'Weapon loadout updated successfully',
+      message: 'Weapon equipped successfully',
     });
   } catch (error) {
     console.error('Robot weapon equip error:', error);

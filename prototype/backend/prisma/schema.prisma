@@ -41,13 +41,11 @@ model Facility {
 }
 
 model Robot {
-  id                    Int      @id @default(autoincrement())
-  userId                Int      @map("user_id")
-  name                  String   @db.VarChar(100)
-  mainWeaponId          Int?     @map("main_weapon_id")  // Primary weapon slot
-  offhandWeaponId       Int?     @map("offhand_weapon_id")  // Secondary weapon slot (for dual-wield or shield)
-  loadoutType           String   @default("single") @map("loadout_type") @db.VarChar(20)  // 'single', 'weapon+shield', 'two-handed', 'dual-wield'
-  elo                   Int      @default(1200)  // ELO is robot-level, not user-level
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @map("user_id")
+  name                String   @db.VarChar(100)
+  weaponInventoryId   Int?     @map("weapon_inventory_id")  // Link to user's weapon inventory
+  elo                 Int      @default(1200)  // ELO is robot-level, not user-level
   
   // Combat Systems (6 attributes)
   combatPower         Int      @default(1) @map("combat_power")
@@ -85,8 +83,7 @@ model Robot {
   createdAt           DateTime @default(now()) @map("created_at")
   
   user                User             @relation(fields: [userId], references: [id])
-  mainWeapon          WeaponInventory? @relation("MainWeapon", fields: [mainWeaponId], references: [id])
-  offhandWeapon       WeaponInventory? @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
+  weaponInventory     WeaponInventory? @relation(fields: [weaponInventoryId], references: [id])
   
   battlesAsRobot1     Battle[] @relation("Robot1Battles")
   battlesAsRobot2     Battle[] @relation("Robot2Battles")
@@ -101,10 +98,9 @@ model WeaponInventory {
   weaponId    Int      @map("weapon_id")
   purchasedAt DateTime @default(now()) @map("purchased_at")
   
-  user              User     @relation(fields: [userId], references: [id])
-  weapon            Weapon   @relation(fields: [weaponId], references: [id])
-  robotsMainWeapon  Robot[]  @relation("MainWeapon")  // Robots using this as main weapon
-  robotsOffhand     Robot[]  @relation("OffhandWeapon")  // Robots using this as offhand
+  user        User     @relation(fields: [userId], references: [id])
+  weapon      Weapon   @relation(fields: [weaponId], references: [id])
+  robots      Robot[]  // Weapons can be equipped to robots
   
   @@map("weapon_inventory")
 }
@@ -113,7 +109,6 @@ model Weapon {
   id              Int      @id @default(autoincrement())
   name            String   @db.VarChar(100)
   weaponType      String   @db.VarChar(20) @map("weapon_type") // 'energy', 'ballistic', 'melee', 'explosive'
-  loadoutType     String   @default("single") @map("loadout_type") @db.VarChar(20) // 'single', 'two-handed', 'dual-wield'
   description     String?  @db.Text
   baseDamage      Int      @map("base_damage")
   cost            Int      // Cost in Credits to purchase
