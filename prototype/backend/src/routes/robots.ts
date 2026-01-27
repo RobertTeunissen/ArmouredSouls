@@ -8,6 +8,37 @@ const prisma = new PrismaClient();
 const ROBOT_CREATION_COST = 500000;
 const MAX_ATTRIBUTE_LEVEL = 50;
 
+// Map attribute to its group and corresponding training academy
+const attributeToAcademy: { [key: string]: string } = {
+  // Combat Systems
+  'combatPower': 'combat_training_academy',
+  'targetingSystems': 'combat_training_academy',
+  'criticalSystems': 'combat_training_academy',
+  'penetration': 'combat_training_academy',
+  'weaponControl': 'combat_training_academy',
+  'attackSpeed': 'combat_training_academy',
+  // Defensive Systems
+  'armorPlating': 'defense_training_academy',
+  'shieldCapacity': 'defense_training_academy',
+  'evasionThrusters': 'defense_training_academy',
+  'damageDampeners': 'defense_training_academy',
+  'counterProtocols': 'defense_training_academy',
+  // Chassis & Mobility
+  'hullIntegrity': 'mobility_training_academy',
+  'servoMotors': 'mobility_training_academy',
+  'gyroStabilizers': 'mobility_training_academy',
+  'hydraulicSystems': 'mobility_training_academy',
+  'powerCore': 'mobility_training_academy',
+  // AI Processing + Team Coordination
+  'combatAlgorithms': 'ai_training_academy',
+  'threatAnalysis': 'ai_training_academy',
+  'adaptiveAI': 'ai_training_academy',
+  'logicCores': 'ai_training_academy',
+  'syncProtocols': 'ai_training_academy',
+  'supportSystems': 'ai_training_academy',
+  'formationTactics': 'ai_training_academy',
+};
+
 // Get all robots from all users
 router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -86,6 +117,11 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     // Get user's current currency
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        facilities: {
+          where: { facilityType: 'roster_expansion' },
+        },
+      },
     });
 
     if (!user) {
@@ -95,6 +131,21 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     // Check if user has enough currency
     if (user.currency < ROBOT_CREATION_COST) {
       return res.status(400).json({ error: 'Insufficient credits' });
+    }
+
+    // Check Roster Expansion limit
+    // Level 0 = 1 robot, Level 1 = 2 robots, ..., Level 9 = 10 robots
+    const rosterLevel = user.facilities[0]?.level || 0;
+    const maxRobots = rosterLevel + 1;
+    
+    const currentRobotCount = await prisma.robot.count({
+      where: { userId },
+    });
+
+    if (currentRobotCount >= maxRobots) {
+      return res.status(400).json({ 
+        error: `Robot limit reached. Upgrade Roster Expansion facility to create more robots. Current limit: ${maxRobots}` 
+      });
     }
 
     // Create robot in a transaction
@@ -244,7 +295,7 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
       where: { id: userId },
       include: {
         facilities: {
-          where: { facilityType: 'training' },
+          where: { facilityType: 'training_facility' },
         },
       },
     });
@@ -257,6 +308,25 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
     const trainingLevel = user.facilities[0]?.level || 0;
     const discountPercent = trainingLevel * 5; // 5% per level
     const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
+
+    // Check Training Academy cap for this attribute
+    const academyType = attributeToAcademy[attribute];
+    const academy = await prisma.facility.findFirst({
+      where: {
+        userId,
+        facilityType: academyType,
+      },
+    });
+
+    const academyLevel = academy?.level || 0;
+    const attributeCap = 50 + (academyLevel * 5); // Base cap 50, +5 per academy level
+    const newLevel = currentLevel + 1;
+
+    if (newLevel > attributeCap) {
+      return res.status(400).json({ 
+        error: `Attribute cap reached. Upgrade ${academyType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} to increase cap. Current cap: ${attributeCap}` 
+      });
+    }
 
     // Check if user has enough currency
     if (user.currency < upgradeCost) {

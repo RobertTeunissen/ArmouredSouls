@@ -164,15 +164,15 @@ function RobotDetailPage() {
       }
 
       // Fetch training facility level
-      const buildingsResponse = await fetch('http://localhost:3001/api/buildings', {
+      const facilitiesResponse = await fetch('http://localhost:3001/api/facilities', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (buildingsResponse.ok) {
-        const buildings = await buildingsResponse.json();
-        const trainingFacility = buildings.find((b: any) => b.name === 'Training Facility');
+      if (facilitiesResponse.ok) {
+        const facilities = await facilitiesResponse.json();
+        const trainingFacility = facilities.find((f: any) => f.facilityType === 'training_facility');
         if (trainingFacility) {
           setTrainingLevel(trainingFacility.level);
         }
