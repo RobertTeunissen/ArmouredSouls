@@ -225,38 +225,57 @@ The user's local database contains a migration that doesn't exist in the reposit
 3. New migration tries to add columns that already exist
 
 **Solution:**
-Migration `20260127154500_add_robot_weapon_slots` has been REMOVED from the repository.
+Migration `20260127154500_add_robot_weapon_slots` has been REMOVED from the repository (commit 91e5287).
 
-**For User to Fix:**
+### 🚨 Login Failure: Missing .env File (Commit 91e5287)
 
-Run this command to completely reset the database and apply only the repository migrations:
+**Problem Identified:**
+After running database reset, login fails with "Internal server error". Backend logs show:
+```
+error: Environment variable not found: DATABASE_URL.
+```
 
+**Root Cause:**
+The `.env` file is missing from `prototype/backend/`. Without this file, the backend cannot connect to the database, causing all API requests to fail with internal server errors.
+
+**Solution:**
+
+**Step 1: Create .env file**
 ```bash
 cd prototype/backend
+cp .env.example .env
+```
 
-# Option 1: Full reset (RECOMMENDED)
+**Step 2: Reset database and start servers**
+```bash
+# Full reset (RECOMMENDED)
 npx prisma migrate reset --force
 
-# Option 2: If above fails, manual reset
-docker compose down
-docker volume rm prototype_postgres_data
-docker compose up -d
-npx prisma migrate deploy
-npx prisma db seed
+# Start backend (Terminal 1)
+npm run dev
 
-# Then start backend
+# Start frontend (Terminal 2 - in new terminal)
+cd ../frontend
 npm run dev
 ```
 
-This will:
-1. Drop the entire database
-2. Recreate it from scratch
-3. Apply ONLY the 4 official migrations:
+**What This Does:**
+1. Creates `.env` file with correct DATABASE_URL and JWT_SECRET
+2. Drops the entire database
+3. Recreates it from scratch
+4. Applies ONLY the 4 official migrations:
    - `20260125213123_` - Initial schema
    - `20260125213329_add_facilities` - Facilities table
    - `20260126181101_update_schema_to_match_docs` - Rename attributes, add WeaponInventory
    - `20260127000000_add_loadout_type_to_weapons` - Add loadoutType to weapons
-4. Run seed script to create test data
+5. Runs seed script to create 6 test users with hashed passwords
+6. Starts backend on http://localhost:3001
+7. Starts frontend on http://localhost:3000
+
+**Test Login:**
+- Open http://localhost:3000
+- Login with: `player1` / `password123`
+- Should redirect to dashboard
 
 **Current Status:**
 - ⚠️ Robot pages still broken due to schema/database mismatch
