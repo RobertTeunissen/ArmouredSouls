@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
-import StableNameModal from '../components/StableNameModal';
 
 interface Robot {
   id: number;
@@ -15,18 +14,13 @@ interface Robot {
 }
 
 function DashboardPage() {
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [robots, setRobots] = useState<Robot[]>([]);
-  const [showStableNameModal, setShowStableNameModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      // Check if user needs to set stable name
-      if (!user.stableName) {
-        setShowStableNameModal(true);
-      }
       fetchRobots();
     }
   }, [user]);
@@ -40,11 +34,6 @@ function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleStableNameComplete = async () => {
-    await refreshUser();
-    setShowStableNameModal(false);
   };
 
   const calculateStats = (robot: Robot) => {
@@ -63,8 +52,6 @@ function DashboardPage() {
     <div className="min-h-screen bg-gray-900 text-white">
       <Navigation />
 
-      {showStableNameModal && <StableNameModal onComplete={handleStableNameComplete} />}
-
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* User Profile */}
@@ -75,12 +62,6 @@ function DashboardPage() {
                 <span className="text-gray-400">Username:</span>
                 <span className="font-semibold">{user.username}</span>
               </div>
-              {user.stableName && (
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Stable:</span>
-                  <span className="font-semibold text-blue-400">{user.stableName}</span>
-                </div>
-              )}
               <div className="flex justify-between">
                 <span className="text-gray-400">Role:</span>
                 <span className="font-semibold capitalize">{user.role}</span>
