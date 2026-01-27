@@ -8,7 +8,7 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Current Status: Phase 0 - Planning ✅
+## Phase 0 - Planning ✅
 
 **Status**: Complete  
 **Completed**: January 24, 2026  
@@ -54,7 +54,7 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 **Goal**: Build a minimal working prototype running locally to validate the core game concept
 
-**Status**: Ready to begin  
+**Status**: In progress  
 **Team**: 2 people (Robert + AI), async development style  
 **Testing**: 6 user accounts for local testing  
 **Target**: Working game loop - Login → Setup Stable → Create Robot → Battle
@@ -71,43 +71,64 @@ This ensures all database components are in place before implementing battles.
 
 ### Phase 1 Milestones
 
-**Milestone 1: User Can Login and See Initial Setup** ✅ PRIORITY
+**Milestone 1: User Can Login and See Initial Setup** 
 - ✅ User authentication (login/logout)
 - ✅ User profile view
 - ✅ Display stable info (empty at start, ₡2,000,000 to spend)
 - ✅ Display Credits (₡) balance
 
-**Milestone 2: User Can Complete Stable Setup** ✅ PRIORITY
-- [x] View available facility upgrades (14 facility types)
-- [x] Purchase facility upgrades with Credits
-- [x] See updated facility levels
+**Milestone 2: User Can Complete Stable Setup** 
+- ✅ View available facility upgrades (14 facility types)
+- ✅ Purchase facility upgrades with Credits
+- ✅ See updated facility levels
 - [x] Track Credits spending
-- [x] All 14 facilities implemented with levels 1-10
-- [x] Roster Expansion enforces robot creation limit
+- ✅ All 14 facilities implemented with levels 1-10
+- ✅ Roster Expansion enforces robot creation limit
 - [x] Unimplemented facility effects marked in UI
 - [x] Training Facility discount applies to upgrades
-- [x] Stable naming system implemented (first login requirement) 
+- ✅ Stable naming system implemented (first login requirement) 
 
-**Milestone 3: User Can Create First Robot** ✅ PRIORITY
-- [x] Create robot with name
-- [x] Distribute 23 attributes (all start at level 1)
-- [x] Upgrade robot attributes with Credits
-- [x] Select weapon from available weapons
-- [x] Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
-- [x] Save robot to database
+--> Not sure what you mean what "Track Credits spending" adds for functionality. The logic seems to be in place, but there is no actual tracking / audit log "you have spent this on that". This is not a requirement for the prototype.
+--> Roster Expansions seem to be enforced. 
+--> Training Facility discount is not yet applied. I tested this and the amount without discount is substracted from the total credits, so it's a logic thing, not a UI thing.
+
+**Milestone 3: User Can Create First Robot** 
+- ✅ Create robot with name
+- ✅ Distribute 23 attributes (all start at level 1)
+- ✅ Upgrade robot attributes with Credits
+- ✅ Save robot to database
 - [x] View robot in stable
-- [x] Weapon shop shows cooldown and attribute bonuses
+- [x] "All Robots" page shows overview of all robots with their owner (stable), fighting record and ELO.
+- [x] Dashboard shows owned robots in a table with ELO and fighting record
+
+--> Dashboard shows "Your stable is empty. Start by upgrading facilities or creating robots!" while robots have been created.
+--> The "My Robots" page is now broken while this worked in the previous version. It does not show the list of owned robots
+--> "All Robots" page shows "failed to load robots"
+--> Manually navigating to /robots/1 etc works (provided this robot is owned by the user logging in), so they have been created correctly.
+
+**Milestone 4: Weapon System** 
+- ✅ Buy weapon in the Weapon Shop
+- ✅ Weapon shop shows cooldown and attribute bonuses
+- [x] Weapon Workshop Facility effect implemented and working (applying discounts on weapon purchases)
+- [x] Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
+- [x] Select weapon from available weapons
 - [x] Weapon inventory system documented
 - [x] Robot detail page shows stat block with equipped weapon bonuses
-- [x] Dashboard shows robots table with ELO and fighting record
+- [ ] Owned weapons visible in Tab "Storage", including stat blocks and how much storage is left.
+- [ ] Storage Facility is applying it's effects correctly on Storage.
 
-**Milestone 4: Matchmaking in Place** ✅ PRIORITY
+--> Weapon Workshop not applying discount effects in Weapon Shop
+--> Weapon Shop not showing the Loadout Type for a weapon. Has this been defined properly for the example weapons and is this captured correctly in the documentation?
+--> Loadout cannot be selected, standard on Loadout Type: "Single", but weapons cannot be assigned. 
+--> Robot Detail page does not show stat blocks (no change since last version). 
+
+**Milestone 5: Matchmaking in Place** 
 - [ ] Manual robot selection for battle (select 2 robots)
 - [ ] Simple matchmaking UI (pick opponent's robot)
 - [ ] Validate both robots have weapons equipped
 - [ ] Queue battle for execution
 
-**Milestone 5: Matches Can Be Triggered Manually** ✅ PRIORITY
+**Milestone 6: Matches Can Be Triggered Manually** 
 - [ ] Manual battle trigger button
 - [ ] Execute battle simulation (time-based combat)
 - [ ] Calculate battle outcome
