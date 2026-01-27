@@ -257,6 +257,62 @@ npm run build  # Builds to dist/
 
 ## 🐛 Troubleshooting
 
+### 🔧 Migration Conflicts (IMPORTANT!)
+
+**Issue**: Error when running `npx prisma migrate reset --force`:
+```
+Error: P3018
+A migration failed to apply...
+Migration name: 20260127122708_prototype2
+Database error: ERROR: relation "robots" does not exist
+```
+
+**Cause**: Your local database has old migration history that conflicts with the new comprehensive migration.
+
+**Fix** (Complete Database Reset):
+```bash
+# Navigate to backend
+cd prototype/backend
+
+# Stop backend if running (Ctrl+C)
+
+# Completely drop and recreate database
+docker compose down
+docker volume rm prototype_postgres_data
+docker compose up -d
+
+# Wait for postgres to start
+sleep 10
+
+# Apply new migration and seed
+npx prisma migrate deploy
+npx prisma db seed
+
+# Regenerate Prisma Client
+npx prisma generate
+
+# Start backend
+npm run dev
+```
+
+**Alternative** (If docker volume rm fails):
+```bash
+# Connect to postgres and drop database manually
+docker compose exec postgres psql -U postgres -c "DROP DATABASE armouredsouls;"
+docker compose exec postgres psql -U postgres -c "CREATE DATABASE armouredsouls;"
+
+# Then apply migrations
+cd backend
+npx prisma migrate deploy
+npx prisma db seed
+npx prisma generate
+npm run dev
+```
+
+**Why this works**: Removing the docker volume deletes ALL database data including the migration history. The fresh database has no prior migrations, so the new comprehensive migration applies cleanly.
+
+---
+
 ### Database Won't Connect
 **Issue**: Backend can't connect to database
 
