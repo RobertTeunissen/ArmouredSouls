@@ -87,6 +87,15 @@ function RobotDetailPage() {
 
   const MAX_ATTRIBUTE_LEVEL = 50;
 
+  // Get cap for academy level (from STABLE_SYSTEM.md)
+  const getCapForLevel = (level: number): number => {
+    const capMap: { [key: number]: number } = {
+      0: 10, 1: 15, 2: 20, 3: 25, 4: 30,
+      5: 35, 6: 40, 7: 42, 8: 45, 9: 48, 10: 50
+    };
+    return capMap[level] || 10;
+  };
+
   const attributeCategories = {
     'Combat Systems': {
       academy: 'combat_training_academy',
@@ -515,7 +524,7 @@ function RobotDetailPage() {
         {Object.entries(attributeCategories).map(([category, config]) => {
           const academyType = config.academy as keyof typeof academyLevels;
           const academyLevel = academyLevels[academyType];
-          const attributeCap = 50 + (academyLevel * 5);
+          const attributeCap = getCapForLevel(academyLevel);
 
           return (
             <div key={category} className="bg-gray-800 p-6 rounded-lg mb-6">

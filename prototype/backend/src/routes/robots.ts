@@ -309,10 +309,18 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
     const discountPercent = trainingLevel * 5; // 5% per level
     const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
+    // Get cap for academy level (from STABLE_SYSTEM.md)
+    const getCapForLevel = (level: number): number => {
+      const capMap: { [key: number]: number } = {
+        0: 10, 1: 15, 2: 20, 3: 25, 4: 30,
+        5: 35, 6: 40, 7: 42, 8: 45, 9: 48, 10: 50
+      };
+      return capMap[level] || 10;
+    };
+
     // Check Training Academy cap for this attribute
-    // Base cap is 50 from ROBOT_ATTRIBUTES.md, increased by +5 per academy level
     const academyType = attributeToAcademy[attribute];
-    let attributeCap = 50; // Base cap without any academy
+    let attributeCap = 10; // Base cap without any academy (Level 0)
     let academyName = 'Training Academy';
 
     if (academyType) {
@@ -324,7 +332,7 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
       });
 
       const academyLevel = academy?.level || 0;
-      attributeCap = 50 + (academyLevel * 5); // Increase cap with academy level
+      attributeCap = getCapForLevel(academyLevel);
       
       // Format academy name for error message
       academyName = academyType
@@ -335,7 +343,7 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
 
     const newLevel = currentLevel + 1;
 
-    // Enforce cap for ALL attributes (base 50, or increased by academy)
+    // Enforce cap for ALL attributes (base 10, or increased by academy)
     if (newLevel > attributeCap) {
       return res.status(400).json({ 
         error: `Attribute cap of ${attributeCap} reached. Upgrade ${academyName} to increase cap.` 
