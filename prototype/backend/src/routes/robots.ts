@@ -310,21 +310,35 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
     const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
     // Check Training Academy cap for this attribute
+    // Base cap is 50 from ROBOT_ATTRIBUTES.md, increased by +5 per academy level
     const academyType = attributeToAcademy[attribute];
-    const academy = await prisma.facility.findFirst({
-      where: {
-        userId,
-        facilityType: academyType,
-      },
-    });
+    let attributeCap = 50; // Base cap without any academy
+    let academyName = 'Training Academy';
 
-    const academyLevel = academy?.level || 0;
-    const attributeCap = 50 + (academyLevel * 5); // Base cap 50, +5 per academy level
+    if (academyType) {
+      const academy = await prisma.facility.findFirst({
+        where: {
+          userId,
+          facilityType: academyType,
+        },
+      });
+
+      const academyLevel = academy?.level || 0;
+      attributeCap = 50 + (academyLevel * 5); // Increase cap with academy level
+      
+      // Format academy name for error message
+      academyName = academyType
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+
     const newLevel = currentLevel + 1;
 
+    // Enforce cap for ALL attributes (base 50, or increased by academy)
     if (newLevel > attributeCap) {
       return res.status(400).json({ 
-        error: `Attribute cap reached. Upgrade ${academyType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} to increase cap. Current cap: ${attributeCap}` 
+        error: `Attribute cap of ${attributeCap} reached. Upgrade ${academyName} to increase cap.` 
       });
     }
 

@@ -140,6 +140,19 @@ function RobotDetailPage() {
 
   useEffect(() => {
     fetchRobotAndWeapons();
+
+    // Re-fetch when page becomes visible (e.g., returning from Facilities page)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchRobotAndWeapons();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [id]);
 
   useEffect(() => {
@@ -193,12 +206,12 @@ function RobotDetailPage() {
 
       if (facilitiesResponse.ok) {
         const facilities = await facilitiesResponse.json();
+        
+        // Always set training level (even if 0)
         const trainingFacility = facilities.find((f: any) => f.facilityType === 'training_facility');
-        if (trainingFacility) {
-          setTrainingLevel(trainingFacility.level);
-        }
+        setTrainingLevel(trainingFacility?.level || 0);
 
-        // Fetch academy levels for attribute caps
+        // Always set academy levels (even if 0)
         setAcademyLevels({
           combat_training_academy: facilities.find((f: any) => f.facilityType === 'combat_training_academy')?.level || 0,
           defense_training_academy: facilities.find((f: any) => f.facilityType === 'defense_training_academy')?.level || 0,
