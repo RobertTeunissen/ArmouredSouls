@@ -79,11 +79,15 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ### ⚠️ Milestone 3: User Can Create First Robot (PENDING)
 - [ ] Attribute upgrade system with Training Facility discount applied
---> This does not work "Internal server error" when trying to upgrade
+--> NOT FIXED in commit 5c63366. This does not work; "Internal server error" when trying to upgrade
 - [ ] Robot detail page shows the correct amount for upgrading, including the Training Facility discount
-- [ ] Roster Expansion facility level is enforced when creating new robots
+--> NOT FIXED in commit 5c63366. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active. 
+- ✅ Roster Expansion facility level is enforced when creating new robots (fixed in commit 5c63366)
 - [ ] Training Academy facilities (4 of them!) enforce the cap of their respective attributes group(s)
-- [ ] The attribute groups on the Robot detail page show the attribute cap next to each attribute group
+--> CANNOT TEST since upgrading bots is not working after commit 5c63366
+- [ ] The attribute groups on the Robot detail page show the attribute cap based on facility upgrades next to each attribute group
+--> NOT FIXED in commit 5c63366. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
+
 
 ### Milestone 4: Matchmaking in Place (NOT STARTED)
 - Manual robot selection for battle
