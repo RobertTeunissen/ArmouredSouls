@@ -4,32 +4,36 @@ A next-generation strategy simulation game where thousands of players manage the
 
 ## 🚀 Quick Start
 
+**→ See [Complete Setup Guide](docs/SETUP.md) for detailed instructions**
+
 To run the Phase 1 prototype locally:
 
 ```bash
-# Clone the repository
+# Clone and navigate
 git clone https://github.com/RobertTeunissen/ArmouredSouls.git
 cd ArmouredSouls/prototype
 
-# Start the database
-docker-compose up -d
+# Start database
+docker compose up -d
 
-# Set up and start the backend
+# Setup backend
 cd backend
 cp .env.example .env
 npm install
 npm run prisma:generate
 npm run prisma:migrate
 npx tsx prisma/seed.ts
-npm run dev
+npm run dev  # Terminal 1
 
-# In a new terminal, set up and start the frontend
+# Setup frontend (in new terminal)
 cd ../frontend
 npm install
-npm run dev
+npm run dev  # Terminal 2
 ```
 
-📖 For detailed setup instructions, see the [Setup Guide](docs/SETUP.md).
+Open http://localhost:3000 - Login with `player1` / `password123`
+
+📖 **For testing new versions and database reset:** See [SETUP.md](docs/SETUP.md)
 
 ## 🎮 Project Vision
 

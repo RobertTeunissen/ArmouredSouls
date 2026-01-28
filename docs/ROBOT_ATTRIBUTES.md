@@ -178,6 +178,35 @@ Loadouts use **percentage-based bonuses** rather than flat attribute bonuses for
 
 ### Loadout Configurations
 
+## Weapon Inventory System
+
+**Phase 1 Implementation**: Players purchase weapons from the Weapon Shop and they are added to their inventory. Each weapon purchase creates a separate inventory item, allowing multiple copies of the same weapon.
+
+### How It Works
+
+1. **Purchase**: Players buy weapons from the Weapon Shop using Credits (₡)
+2. **Storage**: Weapons go into the user's inventory (not robot-specific)
+3. **Equipment**: Players assign weapons from inventory to robots via the robot detail page
+4. **Loadout Types**: Robots support different loadout configurations:
+   - **Single**: One main weapon slot
+   - **Weapon + Shield**: Main weapon + offhand weapon (shield)
+   - **Two-Handed**: One two-handed weapon (uses both slots)
+   - **Dual-Wield**: Main weapon + offhand weapon (both offensive)
+
+### Weapon Assignment
+
+- Weapons can be equipped to multiple robots simultaneously
+- Each weapon in inventory can only be used once (buy multiple copies for multiple robots)
+- Robots can unequip weapons to free them for other robots
+- Loadout type determines which slots are available
+
+### Storage Capacity
+
+- Default storage: 10 weapons
+- Storage Facility upgrades increase capacity (Level 1: 20, Level 10: 125 maximum)
+
+###Load Configurations for Battle
+
 **1. Weapon + Shield**
 - **Equipment**: One weapon (left or right hand) + Shield weapon (other hand)
 - **Bonuses**:

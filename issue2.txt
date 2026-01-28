@@ -1,0 +1,131 @@
+## Problem
+
+Attribute cap display shows theoretical maximum (50) instead of the current cap based on Training Academy facility level.
+
+## Steps to Reproduce
+
+1. Login with player1/password123
+2. Create a robot "Test Bot"
+3. View robot detail page
+4. **BUG**: Combat Systems shows "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)"
+5. This shows the **theoretical maximum** (Level 10 academy cap)
+6. Should show **current cap: 10** (Level 0 academy cap)
+
+## Expected Behavior
+
+With **no academies** upgraded (Level 0), attribute cap should display:
+- **"Attribute Cap: 10"** (not 50)
+
+After upgrading **Combat Training Academy to Level 1**, cap should display:
+- **"Attribute Cap: 15"** (not 50)
+
+## Actual Behavior
+
+Always shows **"Attribute Cap: 50"** regardless of academy level.
+
+## Root Cause
+
+The `academyLevels` state is not being populated correctly when facilities are fetched.
+
+**File**: `prototype/frontend/src/pages/RobotDetailPage.tsx`
+**Lines**: 200-211 (academy levels state setter)
+
+```typescript
+// Always set academy levels (even if 0)
+setAcademyLevels({
+  combat_training_academy: facilities.find(...)?.level || 0,
+  defense_training_academy: facilities.find(...)?.level || 0,
+  mobility_training_academy: facilities.find(...)?.level || 0,
+  ai_training_academy: facilities.find(...)?.level || 0,
+});
+```
+
+Despite this code, the state is showing wrong values in the UI.
+
+## Impact
+
+- Users see incorrect attribute caps
+- Misleading information about current capabilities
+- Users don't understand they need to upgrade academies
+- Reduces incentive to upgrade Training Academy facilities
+
+## Training Academy Cap Progression
+
+From **STABLE_SYSTEM.md** (lines 196-245):
+
+```
+Level 0: Cap 10
+Level 1: Cap 15
+Level 2: Cap 20
+Level 3: Cap 25
+Level 4: Cap 30
+Level 5: Cap 35
+Level 6: Cap 40
+Level 7: Cap 42
+Level 8: Cap 45
+Level 9: Cap 48
+Level 10: Cap 50 (maximum)
+```
+
+## Four Training Academies
+
+1. **Combat Training Academy** → Combat Systems (6 attributes)
+   - combatPower, penetration, targetingSystems, criticalSystems, weaponControl, attackSpeed
+
+2. **Defense Training Academy** → Defensive Systems (5 attributes)
+   - hullIntegrity, armorPlating, shieldCapacity, damageDampeners, counterProtocols
+
+3. **Mobility Training Academy** → Chassis & Mobility (5 attributes)
+   - servoMotors, hydraulicSystems, gyroStabilizers, powerCore, evasionThrusters
+
+4. **AI Training Academy** → AI Processing + Team Coordination (7 attributes)
+   - combatAlgorithms, adaptiveAI, logicCores, syncProtocols, supportSystems, formationTactics, elo
+
+## Code References
+
+**Cap Display** (`RobotDetailPage.tsx` lines 524-526):
+```typescript
+const attributeCap = getCapForLevel(academyLevel);
+// Should display: 10, 15, 20, 25, 30, 35, 40, 42, 45, 48, or 50
+```
+
+**Cap Mapping Function** (`RobotDetailPage.tsx` lines 88-98):
+```typescript
+const getCapForLevel = (level: number): number => {
+  const capMap: { [key: number]: number } = {
+    0: 10, 1: 15, 2: 20, 3: 25, 4: 30,
+    5: 35, 6: 40, 7: 42, 8: 45, 9: 48, 10: 50
+  };
+  return capMap[level] || 10;
+};
+```
+
+## Attempted Fixes
+
+- Commit 5c63366: Added cap display logic (showed 50)
+- Commit f607702: Fixed state keys (still shows 50)
+- Commit c378ead: Added visibility listener (still shows 50)
+- Commit c11692c: Fixed cap mapping function (still shows 50)
+
+## Debugging Steps
+
+1. Add console.log to see `academyLevels` state values
+2. Verify facilities are being fetched correctly
+3. Check if `facilityType` matches between backend and frontend
+4. Verify `getCapForLevel()` is being called with correct level
+5. Test with actual academy upgrades to see if values change
+
+## Related Documentation
+
+- **STABLE_SYSTEM.md** lines 196-245 (Training Academy specifications)
+- **MILESTONE_3_VERIFICATION.md** Test #3 (Academy cap display test)
+
+## Acceptance Criteria
+
+- [ ] Cap shows 10 when no academy upgraded (Level 0)
+- [ ] Cap shows 15 when academy is Level 1
+- [ ] Cap shows correct value for all 10 levels
+- [ ] All 4 academies display correct caps for their groups
+- [ ] Cap updates immediately after upgrading academy
+- [ ] Cap updates when navigating back from Facilities page
+- [ ] Helper text shows academy name to upgrade

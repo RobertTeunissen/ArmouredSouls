@@ -1,6 +1,6 @@
 # Armoured Souls - Development Roadmap
 
-**Last Updated**: January 24, 2026
+**Last Updated**: January 27, 2026
 
 ## Overview
 
@@ -8,7 +8,7 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Current Status: Phase 0 - Planning ✅
+## Phase 0 - Planning ✅
 
 **Status**: Complete  
 **Completed**: January 24, 2026  
@@ -50,294 +50,130 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 1: Local Prototype / Proof of Concept
+## Phase 1 - Local Prototype 🔄
 
-**Goal**: Build a minimal working prototype running locally to validate the core game concept
+**Status**: In Progress  
+**Started**: January 25, 2026  
+**Goal**: Build functional local prototype with core game mechanics
 
-**Status**: Ready to begin  
-**Team**: 2 people (Robert + AI), async development style  
-**Testing**: 6 user accounts for local testing  
-**Target**: Working game loop - Login → Setup Stable → Create Robot → Battle
+### ✅ Milestone 1: User Can Login and See Initial Setup 
+- ✅ JWT-based authentication (login/logout)
+- ✅ User dashboard showing profile and credits balance (₡2,000,000 starting)
+- ✅ Consistent navigation across all pages
+- ✅ Test users seeded: player1-6, admin (all password: password123)
 
-### Implementation Strategy: Bottom-Up, Iterative
+### ✅ Milestone 2: User Can Complete Stable Setup 
+- ✅ 14 facility types (Repair Bay, Training Facility, Weapons Workshop, Roster Expansion)
+- ✅ Each facility: 10 upgrade levels, progressive costs 
+- ✅ Training Facility: 5%-25% discount on attribute upgrades (WORKING)
+- ✅ Weapons Workshop: 10%-25% discount on weapon purchases (WORKING)
+- ✅ Roster Expansion: Enforces robot creation limit (1-5 robots based on level)
 
-Since there's a **1-to-1 relationship between User and Stable**, the logical development order is:
+### ⚠️ Milestone 3: User Can Create First Robot (DONE)
+- ✅ Robot creation (₡500k cost, all 23 attributes start at level 1)
+- ✅ All 23 attributes with correct names from DATABASE_SCHEMA.md
+- ✅ Weapon inventory system (buy weapons into inventory)
+- ✅ Weapon Shop page with Weapons Workshop discount
+- ✅ "My Robots" page to view user's robots
+- ✅ "All Robots" page showing all robots with owners and ELO
 
-1. **User/Stable Setup** → Get authentication and stable management working first
-2. **Robot Creation** → Build robot with attributes and equipment
-3. **Battle System** → Enable battles between robots
+### ⚠️ Milestone 3: User Can Create First Robot (PENDING)
+- ✅ Attribute upgrade system with Training Facility discount applied (fixed in commit f607702)
+- [ ] Robot detail page shows the correct amount for upgrading, including the Training Facility discount
+--> NOT FIXED in commit 5c63366. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
+--> NOT FIXED in commit f607702. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
+--> NOT FIXED in commit c378ead. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
+- ✅ Roster Expansion facility level is enforced when creating new robots (fixed in commit 5c63366)
+- [ ] Training Academy facilities (4 of them!) enforce the cap of their respective attributes group(s)
+--> NOT FIXED in commit f607702. Can still upgrade robot attributes to levels above 10 without buying a Training Academy
+--> NOT FIXED in commit c378ead. Incorrectly implemented, the page shows and enforces a cap of 50, while STABLE_SYSTEM.md states that the cap should be 10 at level 0 and increase with 5 per level.
+- [ ] The attribute groups on the Robot detail page show the attribute cap based on facility upgrades next to each attribute group
+--> NOT FIXED in commit 5c63366. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
+--> NOT FIXED in commit f607702. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
+--> NOT FIXED in commit c378ead. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities (see STABLE_SYSTEM.md).
 
-This ensures all database components are in place before implementing battles.
+Read carefully! 
+Facility = a stable upgrade
+Training Facility = specific facility that reduces costs for upgrading robot attributes
+Combat Training Academy = specific facility that increases Combat Systems attribute caps
+Defense Training Academy = specific facility that increases Defensive Systems attribute caps
 
-### Phase 1 Milestones
+This might be the root of your confusion on how to implement this. Should we rename them?
 
-**Milestone 1: User Can Login and See Initial Setup** ✅ PRIORITY
-- [ ] User authentication (login/logout)
-- [ ] User profile view
-- [ ] Display stable info (empty at start, ₡2,000,000 to spend)
-- [ ] Display Credits (₡) balance
+### Milestone 4: Matchmaking in Place (NOT STARTED)
+- Manual robot selection for battle
+- Simple matchmaking UI
+- Battle queue system
 
-**Milestone 2: User Can Complete Stable Setup** ✅ PRIORITY
-- [ ] View available facility upgrades (14 facility types)
-- [ ] Purchase facility upgrades with Credits
-- [ ] See updated facility levels
-- [ ] Track Credits spending
+### Milestone 5: Matches Can Be Triggered Manually (NOT STARTED)
+- Manual battle trigger
+- Battle simulation execution
+- Battle outcome calculation
+- Stats/ELO updates
 
-**Milestone 3: User Can Create First Robot** ✅ PRIORITY
-- [ ] Create robot with name
-- [ ] Distribute 23 attributes (all start at level 1)
-- [ ] Upgrade robot attributes with Credits
-- [ ] Select weapon from available weapons
-- [ ] Select loadout configuration (weapon+shield, two-handed, dual-wield, single)
-- [ ] Save robot to database
-- [ ] View robot in stable
+### Current Database State
+**Official Migrations (4):**
+1. `20260125213123_` - Initial schema
+2. `20260125213329_add_facilities` - Adds facilities table
+3. `20260126181101_update_schema_to_match_docs` - Renames 23 robot attributes, adds WeaponInventory table
+4. `20260127000000_add_loadout_type_to_weapons` - Adds loadoutType to weapons table
 
-**Milestone 4: Matchmaking in Place** ✅ PRIORITY
-- [ ] Manual robot selection for battle (select 2 robots)
-- [ ] Simple matchmaking UI (pick opponent's robot)
-- [ ] Validate both robots have weapons equipped
-- [ ] Queue battle for execution
+**Schema State After Revert:**
+- User: currency, prestige, relationships
+- Robot: 23 attributes + simple `weaponInventoryId` field
+- WeaponInventory: User's owned weapons
+- Weapon: 10 seeded weapons with bonuses
+- Facility: 4 types, 5 levels each
 
-**Milestone 5: Matches Can Be Triggered Manually** ✅ PRIORITY
-- [ ] Manual battle trigger button
-- [ ] Execute battle simulation (time-based combat)
-- [ ] Calculate battle outcome
-- [ ] Apply repair costs (1.0x/1.5x/2.0x multipliers)
-- [ ] Update robot HP/shield/ELO/stats
-- [ ] Display battle log with timestamps
-- [ ] Store battle in database
-- [ ] **TEST GAME BALANCE** - Run multiple battles to validate formulas
-
-### Explicit Scope Limitations
-
-**NOT in Phase 1**:
-- ❌ Automated matchmaking algorithms
-- ❌ Automated battle scheduling (only manual trigger)
-- ❌ Battle queues or asynchronous battles
-- ❌ Achievements or progression systems
-- ❌ Social features (friends, chat, guilds)
-- ❌ Cloud deployment (local only)
-- ❌ Mobile support
-- ❌ Polished UI/UX (functional only)
-- ❌ Animations or visual effects
-- ❌ Advanced analytics or statistics
-- ❌ Tournament system
-- ❌ Team battles (2v2, 3v3+)
-
-### Technical Architecture (Simplified)
-
-**Project Structure**: Isolated prototype in `/prototype` directory
-
+### API Endpoints (VERIFIED)
 ```
-ArmouredSouls/
-├── docs/                 # Project documentation
-├── prototype/            # Phase 1 isolated prototype codebase
-│   ├── backend/          # Node.js + Express + Prisma
-│   ├── frontend/         # React + Tailwind CSS
-│   └── docker-compose.yml
-└── modules/              # Future production codebase (Phase 2+)
-```
+Authentication:
+POST /api/auth/login   - Login with username/password
+POST /api/auth/logout  - Logout
 
-**Architecture Diagram**:
+User:
+GET  /api/user         - Get current user info
 
-```
-┌─────────────────────────────────────────┐
-│    React + Tailwind CSS (Port 3000)     │
-│                                         │
-│  • Login/Logout                         │
-│  • User Management                      │
-│  • Robot List & Creator                 │
-│  • Robot Upgrading                      │
-│  • Stable Management                    │
-│  • Battle Setup                         │
-│  • Battle Results & History             │
-└─────────────────┬───────────────────────┘
-                  │ HTTP/REST
-┌─────────────────▼───────────────────────┐
-│  Node.js + Express Backend (Port 3001)  │
-│                                         │
-│  • REST API (Express)                   │
-│  • Authentication (JWT + bcrypt)        │
-│  • Battle Simulation Engine             │
-│  • Database ORM (Prisma)                │
-└─────────────────┬───────────────────────┘
-                  │
-┌─────────────────▼───────────────────────┐
-│      PostgreSQL (Port 5432)             │
-│      via Docker Compose                 │
-│                                         │
-│  • Users (username, password_hash, role)│
-│  • Robots                               │
-│  • Components                           │
-│  • Battles                              │
-│  • Currency balances                    │
-└─────────────────────────────────────────┘
+Robots:
+GET  /api/robots/all/robots - All robots (leaderboard)
+GET  /api/robots            - Current user's robots
+POST /api/robots            - Create new robot
+GET  /api/robots/:id        - Get specific robot
+PUT  /api/robots/:id/upgrade - Upgrade robot attribute
+PUT  /api/robots/:id/weapon - Equip weapon to robot
+
+Facilities:
+GET  /api/facilities         - Get user's facilities
+POST /api/facilities/upgrade - Upgrade a facility
+
+Weapons:
+GET  /api/weapons                       - List all weapons
+GET  /api/weapon-inventory              - User's weapon inventory
+POST /api/weapon-inventory/purchase     - Purchase weapon into inventory
 ```
 
-**Technology Stack**:
-- **Backend**: Express (finalized)
-- **ORM**: Prisma (finalized)
-- **Frontend**: React + Tailwind CSS (finalized)
-- **Database**: PostgreSQL + Docker
-- **Testing**: Automated tests on every commit (CI/CD via GitHub Actions)
+### Environment Setup
+**Required:** `.env` file in `prototype/backend/`
 
-### Battle Simulation Algorithm
+The `.env` file is NOT tracked in git (it's in `.gitignore`). Copy from template:
+```bash
+cp prototype/backend/.env.example prototype/backend/.env
+```
 
-**Note**: The battle simulation uses time-based combat with 23 robot attributes. For complete combat formulas including hit chance, critical hits, energy shields, penetration, and all attribute interactions, see **ROBOT_ATTRIBUTES.md**.
+Contains `DATABASE_URL` for Prisma connection to PostgreSQL.
 
-Key aspects:
-- Time-based turn processing (measured in seconds)
-- Attack cooldowns based on weapon and attackSpeed attribute
-- Simultaneous attacks resolved using gyroStabilizers
-- Energy shields as separate HP pool with regeneration
-- Yield threshold (robots can surrender to avoid destruction)
-- Comprehensive battle log with timestamps
+### Next Steps
+1. Test reverted schema works (robot pages load correctly)
+2. If working, continue with Milestones 4-5 (matchmaking, battle simulation)
+3. Later: Properly implement dual weapon slots with migration
 
-For detailed implementation, see ROBOT_ATTRIBUTES.md.
-
-### Sample Components
-
-**Chassis Types**:
-
-| Name | Health | Speed | Defense | Attack |
-|------|--------|-------|---------|--------|
-| Tank | +50 | -5 | +10 | +0 |
-| Scout | +0 | +10 | -5 | +5 |
-| Balanced | +20 | +0 | +0 | +0 |
-| Berserker | +10 | +5 | -10 | +15 |
-| Fortress | +100 | -10 | +20 | -5 |
-
-**Weapons**:
-
-| Name | Attack Bonus | Description |
-|------|-------------|-------------|
-| Laser Rifle | +15 | Standard energy weapon |
-| Plasma Cannon | +25 | High damage, heavy |
-| Machine Gun | +10 | Rapid fire |
-| Hammer | +20 | Melee weapon |
-| Sniper Laser | +30 | Precision weapon |
-| Sword | +12 | Basic melee |
-| Rocket Launcher | +35 | Maximum damage |
-
-**Armor**:
-
-| Name | Defense Bonus | Speed Penalty |
-|------|--------------|---------------|
-| Heavy Plate | +20 | -5 |
-| Light Armor | +10 | +0 |
-| Energy Shield | +15 | +2 |
-| Stealth Coating | +5 | +5 |
-| Reactive Armor | +25 | -8 |
-| Nano-Weave | +12 | +3 |
-
-### Development Workflow: Iterative, Bottom-Up
-
-**Iteration 1: User/Stable Foundation** (Milestone 1-2)
-- Set up development environment (Docker, Node.js, PostgreSQL)
-- Implement user authentication (login/logout with JWT)
-- Create User and Facility database tables
-- Build stable management UI (view facilities, purchase upgrades)
-- Implement Credits system and spending
-- **Validation**: User can login, see ₡2,000,000, upgrade facilities
-
-**Iteration 2: Robot Creation** (Milestone 3)
-- Create Robot and Weapon database tables
-- Implement robot creation API
-- Build robot attribute upgrade system (23 attributes)
-- Add weapon selection and loadout configuration
-- Create robot management UI
-- **Validation**: User can create robot, upgrade stats, equip weapon, save to database
-
-**Iteration 3: Battle System** (Milestone 4-5)
-- Create Battle database table
-- Implement battle simulation engine (time-based combat, all formulas)
-- Build manual matchmaking UI (select 2 robots)
-- Add manual battle trigger
-- Calculate repair costs and update robot state
-- Display battle log with timestamps
-- **Validation**: User can trigger battle, see results, robots update correctly
-
-**Iteration 4: Game Balance Testing** (Milestone 5 continued)
-- Run 50+ test battles with different robot configurations
-- Validate formulas produce interesting outcomes
-- Adjust balance if needed (documented in ROBOT_ATTRIBUTES.md)
-- Test edge cases (destroyed robots, high damage, yield threshold)
-- **Validation**: Battles feel fair, interesting, and strategic
-
-**Total Duration**: 2-6 weeks (depending on available time per week)
-
-### Success Metrics for Phase 1
-
-**Milestone Completion**:
-- ✅ All 5 milestones completed
-- ✅ User can complete full game loop (login → setup → create robot → battle)
-- ✅ All database components working correctly
-
-**Technical Success**:
-- ✅ Battle simulation completes in <100ms
-- ✅ Can process 100 battles in <10 seconds
-- ✅ Zero crashes during testing
-- ✅ Database persists correctly between sessions
-- ✅ UI functional on laptop screen
-
-**Game Design Success**:
-- ✅ At least 3 different viable robot builds (Tank, Glass Cannon, Balanced)
-- ✅ Battle outcomes feel logical given robot stats
-- ✅ Battle logs show interesting combat progression
-- ✅ Repair costs make economic sense
-- ✅ Credits economy balanced (can afford upgrades without grinding)
-
-**Validation Criteria**:
-- Can create 6 different robots with distinct strategies
-- Can run 20+ battles without issues
-- Game balance tested (no dominant strategy)
-- All formulas from ROBOT_ATTRIBUTES.md work correctly
-- Ready to show to friends for feedback
-
-### Risk Management
-
-**Technical Risks**:
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Battle engine too slow | Low | Medium | Profile early, optimize algorithm |
-| Database issues | Low | High | Use proven ORM, test thoroughly |
-| UI bugs | Medium | Low | Focus on functionality over polish |
-| Docker problems | Medium | Medium | Document setup well, test on multiple machines |
-
-**Schedule Risks**:
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Scope creep | High | High | **Strict feature list, no additions** |
-| Over-engineering | Medium | Medium | Keep it simple, refactor in Phase 2 |
-| Time estimates wrong | Medium | Low | Buffer week built into 4-8 week estimate |
-
-**Game Design Risks**:
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Not fun | Medium | High | **Get feedback early and often** |
-| Too complex | Medium | Medium | Simplify if friends are confused |
-| Too simple | Low | Medium | Easy to add depth in Phase 2 |
-
-### Database Setup
-
-**Important**: The authoritative database schema is in **DATABASE_SCHEMA.md**. Do not duplicate schema definitions.
-
-Since this is a prototype with no existing data:
-
-1. Copy complete schema from **DATABASE_SCHEMA.md** to `prisma/schema.prisma`
-2. Generate database: `npx prisma migrate dev --name init`
-3. Run seed script: `npx prisma db seed`
-
-Key points:
-- See **ROBOT_ATTRIBUTES.md** for all 23 robot attributes (combatPower, targetingSystems, etc.)
-- See **STABLE_SYSTEM.md** for facility types and upgrade mechanics
-- See **DATABASE_SCHEMA.md** for complete schema with all tables, fields, and relationships
-
----
-
+### Phase 1 Cleanup Milestone (End of Phase 1)
+- Consolidate all migrations into single base migration
+- Create clean schema.sql for fresh installations
+- Document migration strategy for production
+- Review and cleanup temporary/test code
+- Ensure all documentation up-to-date
+- Run full test suite
 ## Phase 2: Foundation & Infrastructure
 
 **Goal**: Make the prototype production-ready with proper infrastructure and security
