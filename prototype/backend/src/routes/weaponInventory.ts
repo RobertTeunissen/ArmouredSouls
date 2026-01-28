@@ -1,7 +1,16 @@
 import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
+// import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
+
+// Temporary stub implementations
+const calculateWeaponWorkshopDiscount = (level: number): number => {
+  return level * 5; // 5% per level
+};
+
+const applyDiscount = (cost: number, discountPercent: number): number => {
+  return Math.floor(cost * (1 - discountPercent / 100));
+};
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -15,7 +24,13 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       where: { userId },
       include: {
         weapon: true,
-        robots: {
+        robotsMain: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        robotsOffhand: {
           select: {
             id: true,
             name: true,
@@ -145,14 +160,15 @@ router.get('/:id/available', authenticateToken, async (req: AuthRequest, res: Re
       select: {
         id: true,
         name: true,
-        weaponInventoryId: true,
+        mainWeaponId: true,
+        offhandWeaponId: true,
       },
     });
 
     res.json({
       weapon: weaponInv.weapon,
       robots,
-      currentlyEquippedTo: robots.find(r => r.weaponInventoryId === inventoryId)?.id || null,
+      currentlyEquippedTo: robots.find(r => r.mainWeaponId === inventoryId || r.offhandWeaponId === inventoryId)?.id || null,
     });
   } catch (error) {
     console.error('Available robots error:', error);
