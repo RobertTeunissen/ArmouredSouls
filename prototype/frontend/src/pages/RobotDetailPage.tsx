@@ -74,10 +74,10 @@ function RobotDetailPage() {
   const [currency, setCurrency] = useState(0);
   const [trainingLevel, setTrainingLevel] = useState(0);
   const [academyLevels, setAcademyLevels] = useState({
-    combat: 0,
-    defense: 0,
-    mobility: 0,
-    ai: 0,
+    combat_training_academy: 0,
+    defense_training_academy: 0,
+    mobility_training_academy: 0,
+    ai_training_academy: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -89,7 +89,7 @@ function RobotDetailPage() {
 
   const attributeCategories = {
     'Combat Systems': {
-      academy: 'combat',
+      academy: 'combat_training_academy',
       attributes: [
         { key: 'combatPower', label: 'Combat Power' },
         { key: 'targetingSystems', label: 'Targeting Systems' },
@@ -100,7 +100,7 @@ function RobotDetailPage() {
       ],
     },
     'Defensive Systems': {
-      academy: 'defense',
+      academy: 'defense_training_academy',
       attributes: [
         { key: 'armorPlating', label: 'Armor Plating' },
         { key: 'shieldCapacity', label: 'Shield Capacity' },
@@ -110,7 +110,7 @@ function RobotDetailPage() {
       ],
     },
     'Chassis & Mobility': {
-      academy: 'mobility',
+      academy: 'mobility_training_academy',
       attributes: [
         { key: 'hullIntegrity', label: 'Hull Integrity' },
         { key: 'servoMotors', label: 'Servo Motors' },
@@ -120,7 +120,7 @@ function RobotDetailPage() {
       ],
     },
     'AI Processing': {
-      academy: 'ai',
+      academy: 'ai_training_academy',
       attributes: [
         { key: 'combatAlgorithms', label: 'Combat Algorithms' },
         { key: 'threatAnalysis', label: 'Threat Analysis' },
@@ -129,7 +129,7 @@ function RobotDetailPage() {
       ],
     },
     'Team Coordination': {
-      academy: 'ai',
+      academy: 'ai_training_academy',
       attributes: [
         { key: 'syncProtocols', label: 'Sync Protocols' },
         { key: 'supportSystems', label: 'Support Systems' },
@@ -199,16 +199,11 @@ function RobotDetailPage() {
         }
 
         // Fetch academy levels for attribute caps
-        const combatAcademy = facilities.find((f: any) => f.facilityType === 'combat_training_academy');
-        const defenseAcademy = facilities.find((f: any) => f.facilityType === 'defense_training_academy');
-        const mobilityAcademy = facilities.find((f: any) => f.facilityType === 'mobility_training_academy');
-        const aiAcademy = facilities.find((f: any) => f.facilityType === 'ai_training_academy');
-
         setAcademyLevels({
-          combat: combatAcademy?.level || 0,
-          defense: defenseAcademy?.level || 0,
-          mobility: mobilityAcademy?.level || 0,
-          ai: aiAcademy?.level || 0,
+          combat_training_academy: facilities.find((f: any) => f.facilityType === 'combat_training_academy')?.level || 0,
+          defense_training_academy: facilities.find((f: any) => f.facilityType === 'defense_training_academy')?.level || 0,
+          mobility_training_academy: facilities.find((f: any) => f.facilityType === 'mobility_training_academy')?.level || 0,
+          ai_training_academy: facilities.find((f: any) => f.facilityType === 'ai_training_academy')?.level || 0,
         });
       }
     } catch (err) {

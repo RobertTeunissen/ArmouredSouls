@@ -348,7 +348,12 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
           [attribute]: currentLevel + 1,
         },
         include: {
-          weaponInventory: {
+          mainWeapon: {
+            include: {
+              weapon: true,
+            },
+          },
+          offhandWeapon: {
             include: {
               weapon: true,
             },
