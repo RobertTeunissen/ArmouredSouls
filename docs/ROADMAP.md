@@ -78,16 +78,24 @@ This document outlines the development roadmap for Armoured Souls, from planning
 - ✅ "All Robots" page showing all robots with owners and ELO
 
 ### ⚠️ Milestone 3: User Can Create First Robot (PENDING)
-- [ ] Attribute upgrade system with Training Facility discount applied
---> NOT FIXED in commit 5c63366. This does not work; "Internal server error" when trying to upgrade
+- ✅ Attribute upgrade system with Training Facility discount applied (fixed in commit f607702)
 - [ ] Robot detail page shows the correct amount for upgrading, including the Training Facility discount
---> NOT FIXED in commit 5c63366. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active. 
+--> NOT FIXED in commit 5c63366. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
+--> NOT FIXED in commit f607702. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
 - ✅ Roster Expansion facility level is enforced when creating new robots (fixed in commit 5c63366)
 - [ ] Training Academy facilities (4 of them!) enforce the cap of their respective attributes group(s)
---> CANNOT TEST since upgrading bots is not working after commit 5c63366
+--> NOT FIXED in commit f607702. Can still upgrade robot attributes to levels above 10 without buying a Training Academy
 - [ ] The attribute groups on the Robot detail page show the attribute cap based on facility upgrades next to each attribute group
 --> NOT FIXED in commit 5c63366. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
+--> NOT FIXED in commit f607702. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
 
+Read carefully! 
+Facility = a stable upgrade
+Training Facility = specific facility that reduces costs for upgrading robot attributes
+Combat Training Academy = specific facility that increases Combat Systems attribute caps
+Defense Training Academy = specific facility that increases Defensive Systems attribute caps
+
+This might be the root of your confusion on how to implement this. Should we rename them?
 
 ### Milestone 4: Matchmaking in Place (NOT STARTED)
 - Manual robot selection for battle
