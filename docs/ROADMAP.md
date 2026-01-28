@@ -82,12 +82,15 @@ This document outlines the development roadmap for Armoured Souls, from planning
 - [ ] Robot detail page shows the correct amount for upgrading, including the Training Facility discount
 --> NOT FIXED in commit 5c63366. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
 --> NOT FIXED in commit f607702. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
+--> NOT FIXED in commit c378ead. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
 - ✅ Roster Expansion facility level is enforced when creating new robots (fixed in commit 5c63366)
 - [ ] Training Academy facilities (4 of them!) enforce the cap of their respective attributes group(s)
 --> NOT FIXED in commit f607702. Can still upgrade robot attributes to levels above 10 without buying a Training Academy
+--> NOT FIXED in commit c378ead. Incorrectly implemented, the page shows and enforces a cap of 50, while STABLE_SYSTEM.md states that the cap should be 10 at level 0 and increase with 5 per level.
 - [ ] The attribute groups on the Robot detail page show the attribute cap based on facility upgrades next to each attribute group
 --> NOT FIXED in commit 5c63366. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
 --> NOT FIXED in commit f607702. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
+--> NOT FIXED in commit c378ead. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities (see STABLE_SYSTEM.md).
 
 Read carefully! 
 Facility = a stable upgrade
