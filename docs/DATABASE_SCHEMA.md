@@ -474,7 +474,7 @@ model Battle {
 
 ## Complete Weapon Catalog (Seed Data)
 
-All 10 weapons from ROBOT_ATTRIBUTES.md with complete specifications:
+All 10 weapons from [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) with complete specifications for database seeding:
 
 ### Energy Weapons
 
