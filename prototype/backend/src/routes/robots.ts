@@ -1,6 +1,8 @@
 import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable } from '../utils/weaponValidation';
+import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -398,22 +400,29 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
   }
 });
 
-// Equip a weapon to a robot (from user's weapon inventory)
-router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+// Equip main weapon
+router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const robotId = parseInt(req.params.id);
-    const { weaponInventoryId, slot = 'main' } = req.body; // slot can be 'main' or 'offhand'
+    const { weaponInventoryId } = req.body;
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
     }
 
-    // Get robot
+    if (!weaponInventoryId || isNaN(parseInt(weaponInventoryId))) {
+      return res.status(400).json({ error: 'Valid weapon inventory ID is required' });
+    }
+
+    const weaponInvIdNum = parseInt(weaponInventoryId);
+
+    // Get robot with current weapons
     const robot = await prisma.robot.findFirst({
-      where: {
-        id: robotId,
-        userId, // Ensure user owns this robot
+      where: { id: robotId, userId },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
       },
     });
 
@@ -421,48 +430,13 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
       return res.status(404).json({ error: 'Robot not found' });
     }
 
-    // If weaponInventoryId is null, unequip weapon
-    if (weaponInventoryId === null) {
-      const updateData = slot === 'offhand' 
-        ? { offhandWeaponId: null } 
-        : { mainWeaponId: null };
-      
-      const updatedRobot = await prisma.robot.update({
-        where: { id: robotId },
-        data: updateData,
-        include: {
-          mainWeapon: {
-            include: {
-              weapon: true,
-            },
-          },
-          offhandWeapon: {
-            include: {
-              weapon: true,
-            },
-          },
-        },
-      });
-
-      return res.json({
-        robot: updatedRobot,
-        message: 'Weapon unequipped successfully',
-      });
-    }
-
-    // Validate weapon inventory exists and belongs to user
-    const weaponInvIdNum = parseInt(weaponInventoryId);
-    if (isNaN(weaponInvIdNum)) {
-      return res.status(400).json({ error: 'Invalid weapon inventory ID' });
-    }
-
+    // Get weapon to equip
     const weaponInv = await prisma.weaponInventory.findFirst({
-      where: {
-        id: weaponInvIdNum,
-        userId, // Ensure user owns this weapon
-      },
-      include: {
+      where: { id: weaponInvIdNum, userId },
+      include: { 
         weapon: true,
+        robotsMain: { select: { id: true, name: true } },
+        robotsOffhand: { select: { id: true, name: true } },
       },
     });
 
@@ -470,34 +444,398 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
       return res.status(404).json({ error: 'Weapon not found in your inventory' });
     }
 
-    // Equip weapon to robot
-    const updateData = slot === 'offhand'
-      ? { offhandWeaponId: weaponInvIdNum }
-      : { mainWeaponId: weaponInvIdNum };
+    // Check if weapon is equipped to another robot
+    const equippedToOther = weaponInv.robotsMain.concat(weaponInv.robotsOffhand)
+      .find(r => r.id !== robotId);
     
+    if (equippedToOther) {
+      return res.status(400).json({ 
+        error: `Weapon is already equipped to ${equippedToOther.name}`,
+      });
+    }
+
+    // Validate weapon can be equipped in main slot
+    const validation = canEquipToSlot(weaponInv.weapon, 'main', robot.loadoutType);
+    if (!validation.canEquip) {
+      return res.status(400).json({ 
+        error: validation.reason,
+      });
+    }
+
+    // Update robot with new weapon and recalculate stats
     const updatedRobot = await prisma.robot.update({
       where: { id: robotId },
-      data: updateData,
+      data: { mainWeaponId: weaponInvIdNum },
       include: {
-        mainWeapon: {
-          include: {
-            weapon: true,
-          },
-        },
-        offhandWeapon: {
-          include: {
-            weapon: true,
-          },
-        },
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    // Recalculate max HP and Shield
+    const maxHP = calculateMaxHP(updatedRobot);
+    const maxShield = calculateMaxShield(updatedRobot);
+
+    // Update HP and Shield if they increased (don't decrease current values)
+    const finalRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: {
+        maxHP,
+        maxShield,
+        currentHP: Math.min(updatedRobot.currentHP, maxHP),
+        currentShield: Math.min(updatedRobot.currentShield, maxShield),
+      },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
       },
     });
 
     res.json({
-      robot: updatedRobot,
-      message: 'Weapon equipped successfully',
+      robot: finalRobot,
+      message: 'Main weapon equipped successfully',
     });
   } catch (error) {
-    console.error('Robot weapon equip error:', error);
+    console.error('Main weapon equip error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Equip offhand weapon
+router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+    const { weaponInventoryId } = req.body;
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    if (!weaponInventoryId || isNaN(parseInt(weaponInventoryId))) {
+      return res.status(400).json({ error: 'Valid weapon inventory ID is required' });
+    }
+
+    const weaponInvIdNum = parseInt(weaponInventoryId);
+
+    // Get robot with current weapons
+    const robot = await prisma.robot.findFirst({
+      where: { id: robotId, userId },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Check if offhand slot is available for this loadout
+    if (!isSlotAvailable('offhand', robot.loadoutType)) {
+      return res.status(400).json({ 
+        error: `Offhand slot not available for ${robot.loadoutType} loadout`,
+      });
+    }
+
+    // Get weapon to equip
+    const weaponInv = await prisma.weaponInventory.findFirst({
+      where: { id: weaponInvIdNum, userId },
+      include: { 
+        weapon: true,
+        robotsMain: { select: { id: true, name: true } },
+        robotsOffhand: { select: { id: true, name: true } },
+      },
+    });
+
+    if (!weaponInv) {
+      return res.status(404).json({ error: 'Weapon not found in your inventory' });
+    }
+
+    // Check if weapon is equipped to another robot
+    const equippedToOther = weaponInv.robotsMain.concat(weaponInv.robotsOffhand)
+      .find(r => r.id !== robotId);
+    
+    if (equippedToOther) {
+      return res.status(400).json({ 
+        error: `Weapon is already equipped to ${equippedToOther.name}`,
+      });
+    }
+
+    // Validate weapon can be equipped in offhand slot
+    const slotValidation = canEquipToSlot(weaponInv.weapon, 'offhand', robot.loadoutType);
+    if (!slotValidation.canEquip) {
+      return res.status(400).json({ 
+        error: slotValidation.reason,
+      });
+    }
+
+    // Validate offhand equipment requirements
+    const offhandValidation = validateOffhandEquipment(
+      weaponInv.weapon,
+      robot.mainWeaponId !== null,
+      robot.loadoutType
+    );
+    if (!offhandValidation.valid) {
+      return res.status(400).json({ 
+        error: offhandValidation.reason,
+      });
+    }
+
+    // Update robot with new weapon and recalculate stats
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: { offhandWeaponId: weaponInvIdNum },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    // Recalculate max HP and Shield
+    const maxHP = calculateMaxHP(updatedRobot);
+    const maxShield = calculateMaxShield(updatedRobot);
+
+    // Update HP and Shield
+    const finalRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: {
+        maxHP,
+        maxShield,
+        currentHP: Math.min(updatedRobot.currentHP, maxHP),
+        currentShield: Math.min(updatedRobot.currentShield, maxShield),
+      },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    res.json({
+      robot: finalRobot,
+      message: 'Offhand weapon equipped successfully',
+    });
+  } catch (error) {
+    console.error('Offhand weapon equip error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Unequip main weapon
+router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Get robot
+    const robot = await prisma.robot.findFirst({
+      where: { id: robotId, userId },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    if (!robot.mainWeaponId) {
+      return res.status(400).json({ error: 'No main weapon equipped' });
+    }
+
+    // Update robot and recalculate stats
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: { mainWeaponId: null },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    // Recalculate max HP and Shield
+    const maxHP = calculateMaxHP(updatedRobot);
+    const maxShield = calculateMaxShield(updatedRobot);
+
+    // Update HP and Shield
+    const finalRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: {
+        maxHP,
+        maxShield,
+        currentHP: Math.min(updatedRobot.currentHP, maxHP),
+        currentShield: Math.min(updatedRobot.currentShield, maxShield),
+      },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    res.json({
+      robot: finalRobot,
+      message: 'Main weapon unequipped successfully',
+    });
+  } catch (error) {
+    console.error('Main weapon unequip error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Unequip offhand weapon
+router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Get robot
+    const robot = await prisma.robot.findFirst({
+      where: { id: robotId, userId },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    if (!robot.offhandWeaponId) {
+      return res.status(400).json({ error: 'No offhand weapon equipped' });
+    }
+
+    // Update robot and recalculate stats
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: { offhandWeaponId: null },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    // Recalculate max HP and Shield
+    const maxHP = calculateMaxHP(updatedRobot);
+    const maxShield = calculateMaxShield(updatedRobot);
+
+    // Update HP and Shield
+    const finalRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: {
+        maxHP,
+        maxShield,
+        currentHP: Math.min(updatedRobot.currentHP, maxHP),
+        currentShield: Math.min(updatedRobot.currentShield, maxShield),
+      },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    res.json({
+      robot: finalRobot,
+      message: 'Offhand weapon unequipped successfully',
+    });
+  } catch (error) {
+    console.error('Offhand weapon unequip error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Change loadout type
+router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+    const { loadoutType } = req.body;
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Validate loadout type
+    const validLoadouts = ['single', 'weapon_shield', 'two_handed', 'dual_wield'];
+    if (!loadoutType || !validLoadouts.includes(loadoutType)) {
+      return res.status(400).json({ 
+        error: 'Invalid loadout type. Must be one of: single, weapon_shield, two_handed, dual_wield',
+      });
+    }
+
+    // Get robot with current weapons
+    const robot = await prisma.robot.findFirst({
+      where: { id: robotId, userId },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Check if current weapons are compatible with new loadout
+    const { canChangeLoadout } = await import('../utils/weaponValidation');
+    const validation = canChangeLoadout(
+      loadoutType,
+      robot.mainWeapon?.weapon || null,
+      robot.offhandWeapon?.weapon || null
+    );
+
+    if (!validation.canChange) {
+      return res.status(400).json({ 
+        error: 'Cannot change loadout type',
+        conflicts: validation.conflicts,
+        message: 'Please unequip incompatible weapons before changing loadout type',
+      });
+    }
+
+    // Update loadout type and recalculate stats
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: { loadoutType },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    // Recalculate max HP and Shield with new loadout bonuses
+    const maxHP = calculateMaxHP(updatedRobot);
+    const maxShield = calculateMaxShield(updatedRobot);
+
+    // Update HP and Shield
+    const finalRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: {
+        maxHP,
+        maxShield,
+        currentHP: Math.min(updatedRobot.currentHP, maxHP),
+        currentShield: Math.min(updatedRobot.currentShield, maxShield),
+      },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    res.json({
+      robot: finalRobot,
+      message: `Loadout type changed to ${loadoutType}`,
+    });
+  } catch (error) {
+    console.error('Loadout type change error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
