@@ -68,9 +68,10 @@ This PRD defines the requirements for implementing a fully functional weapon loa
 
 - ❌ Battle simulation engine (separate epic)
 - ❌ Weapon crafting system (future phase)
-- ❌ Storage capacity limits enforcement (future enhancement)
 - ❌ Weapon modifications/upgrades (future phase)
 - ❌ Advanced weapon properties (damage type effectiveness, special abilities)
+
+**Note**: Storage capacity enforcement was originally listed as out of scope but has been moved into Phase 1 based on product owner decision.
 
 ---
 
@@ -218,7 +219,14 @@ Body: { loadoutType: "single" | "weapon_shield" | "two_handed" | "dual_wield" }
    - "weapon_shield": One-handed weapon in main, shield-type weapon in offhand
    - "two_handed": Two-handed weapon in main slot, nothing in offhand
    - "dual_wield": One-handed weapon in main, one-handed weapon in offhand
-4. **Weapon Type Restrictions**: Shield-type weapons can ONLY go in offhand slot with weapon_shield loadout
+4. **Weapon Type Restrictions**: 
+   - Shield-type weapons can ONLY go in offhand slot with weapon_shield loadout
+   - Main weapon must be equipped when an offhand shield is equipped (configuration cannot be incomplete)
+5. **Storage Capacity**: 
+   - Check total weapons owned (equipped + unequipped) against storage limit
+   - Storage capacity = 5 + (Storage Facility Level × 5)
+   - Maximum capacity: 55 weapons (Storage Facility Level 10)
+   - This validation applies to weapon purchases, not equipment changes
 
 ### FR-2: Stat Calculation System
 
@@ -571,20 +579,28 @@ Shield Capacity
 **Priority: MUST HAVE**
 
 Tasks:
+- [ ] Create `prototype/frontend/src/utils/robotStats.ts` utility file (currently missing but imported)
 - [ ] Create `/utils/robotCalculations.ts` with stat calculation functions
 - [ ] Create `/utils/weaponValidation.ts` with validation logic
+- [ ] Verify and fix Weapon Workshop discount formula in backend (should be `level × 5`)
+- [ ] Implement storage capacity enforcement in weapon purchase API
+- [ ] Add storage capacity calculation: `5 + (Storage Facility Level × 5)`
 - [ ] Implement `PUT /api/robots/:id/equip-main-weapon` endpoint
 - [ ] Implement `PUT /api/robots/:id/equip-offhand-weapon` endpoint
 - [ ] Implement `DELETE /api/robots/:id/unequip-main-weapon` endpoint
 - [ ] Implement `DELETE /api/robots/:id/unequip-offhand-weapon` endpoint
 - [ ] Implement `PUT /api/robots/:id/loadout-type` endpoint
+- [ ] Add shield restriction validation (offhand only, requires main weapon)
+- [ ] Add HP/Shield initialization in robot creation API
 - [ ] Write unit tests for stat calculations
 - [ ] Write integration tests for weapon equipping API
 
 Acceptance Criteria:
 - All API endpoints functional and tested
+- Storage capacity enforcement prevents purchases beyond limit
 - Stat calculations accurate per ROBOT_ATTRIBUTES.md formulas
-- Validation rules enforced correctly
+- Validation rules enforced correctly (shields, loadout compatibility)
+- Robot HP/Shield properly initialized on creation
 - API returns proper error messages for invalid operations
 
 ### Phase 2: Frontend Weapon Equipment UI (3-5 days)
@@ -595,15 +611,21 @@ Tasks:
 - [ ] Create `WeaponSlot` component
 - [ ] Create `WeaponSelectionModal` component
 - [ ] Enhance `RobotDetailPage` with loadout and weapon sections
+- [ ] Implement weapon filtering based on selected loadout type
 - [ ] Implement stat display showing base + weapon + loadout + effective
 - [ ] Add real-time stat updates when weapons/loadout changes
+- [ ] Display remaining weapon storage capacity in WeaponShopPage
+- [ ] Add duplicate weapon purchase confirmation dialog
 - [ ] Add loading states and error handling
 - [ ] Write component tests
 
 Acceptance Criteria:
 - Users can select loadout type via intuitive UI
+- Weapon selection modal shows only compatible weapons for selected loadout
 - Users can equip/unequip weapons to main and offhand slots
 - Stats display correctly with breakdowns
+- Storage capacity is visible to users
+- Users are warned when buying duplicate weapons
 - Error messages are clear and actionable
 - UI is responsive and works on mobile
 
@@ -844,78 +866,104 @@ Effective Penetration: 10 * 0.80 = 8
 ### Prerequisites (Before Starting Implementation)
 
 **Issue 1: Weapon Seed Data Missing**
-- **Status**: Needs verification
+- **Status**: ✅ RESOLVED
 - **Issue**: The 10 weapons defined in WEAPONS_AND_LOADOUT.md may not be seeded in the database
-- **Action**: Create weapon seed data in `prototype/backend/prisma/seed.ts` matching weapon specifications
-- **Priority**: BLOCKER - Required before any testing can begin
-
---> The 10 initial weapons are loaded into the database in the current version. 
+- **Resolution**: The 10 initial weapons are confirmed to be loaded into the database in the current version
+- **Action**: No action required - weapons are already seeded
+- **Priority**: COMPLETE
 
 **Issue 2: Weapon Workshop Discount Formula Discrepancy**
-- **Status**: Bug identified
-- **Current**: `level * 5` (would give 5%, 10%, 15%... up to 50% at level 10)
-- **Expected**: Level-based array [0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
-- **Action**: Fix in `prototype/backend/src/routes/weaponInventory.ts` and shared utility
-- **Priority**: HIGH - Affects game economy
-
---> 5% discount per level of the Weapon Workshop is the most straightforward solution. Both the application and the documentation should reflect this. This is a bug that needs to be verified and corrected.
+- **Status**: ✅ DECISION MADE
+- **Current**: `level * 5` (gives 5%, 10%, 15%... up to 50% at level 10)
+- **Decision**: Use simple formula: **Discount % = Weapons Workshop Level × 5**
+- **Action**: 
+  1. ✅ Documentation updated in WEAPONS_AND_LOADOUT.md and STABLE_SYSTEM.md
+  2. ⚠️ Verify backend implementation in `prototype/backend/src/routes/weaponInventory.ts` matches this formula
+  3. ⚠️ Update frontend display in WeaponShopPage.tsx if needed
+- **Priority**: HIGH - Both application and documentation now reflect this simple formula
 
 **Issue 3: robotStats Utility Existence**
-- **Status**: Needs verification
-- **Issue**: `RobotDetailPage.tsx` imports `../utils/robotStats` but file existence not confirmed
-- **Action**: If missing, create as part of Phase 1. If exists, verify it handles weapon bonuses correctly
-- **Priority**: HIGH - Required for Phase 2
-
---> This file is missing in the repo. If it is needed, a requirements needs to be added.
+- **Status**: ✅ CONFIRMED MISSING
+- **Issue**: `RobotDetailPage.tsx` imports `../utils/robotStats` but file doesn't exist in repo
+- **Decision**: File is needed and must be created as part of Phase 1 implementation
+- **Action**: Add requirement to create `prototype/frontend/src/utils/robotStats.ts` in Phase 1
+- **Priority**: HIGH - Required for Phase 2 frontend work
 
 ### Implementation Clarifications
 
 **Question 1: Loadout Type Selection UI**
+- **Status**: ✅ PARTIALLY IMPLEMENTED
 - **Context**: Database supports loadout types but UI implementation unclear
-- **Question**: Is loadout type selector currently in the UI?
-- **Recommendation**: Include in Phase 2 (Frontend) as specified in PRD
-
---> A selector is currently present in the UI, but it doesn't load the weapons (which are confirmed to be in the database). 
---> Based on the loadout selected, the correct set of available weapons needs to be presented
+- **Answer**: A selector is currently present in the UI, but it doesn't load the weapons (which are confirmed to be in the database)
+- **Action Required**: Based on the loadout selected, the correct set of available weapons needs to be presented
+- **Priority**: HIGH - Include in Phase 2 (Frontend) as specified in PRD
 
 **Question 2: Storage Capacity Enforcement**
-- **Context**: Docs specify 10-weapon default capacity with expansion via Storage Facility
-- **Question**: Enforce in MVP or defer to later phase?
-- **Recommendation**: Defer to Phase 3 or post-MVP (noted in "Non-Goals" section)
-
---> Yes. Let's decrease this from 10 to 5 weapons without Storage Facility. Add 5 for each level of Storage Facility bought. So level 5 should be (5x5)+10 = space for 35 weapons in storage. 
---> Storage in this context means "total weapons owned by the stable". This refers to either equipped or unequipped weapons. This simplifies the system since it makes sure this is never a problem where a player wants to swap weapons and there is no place in storage. Make sure that this is reflected in the documentation as well as this PRD. 
+- **Status**: ✅ DECISION MADE - ENFORCE IN MVP
+- **Context**: Docs specify weapon storage capacity with expansion via Storage Facility
+- **Decision**: 
+  - Default capacity: **5 weapons** (without Storage Facility)
+  - Add 5 weapon slots per Storage Facility level
+  - Formula: **Storage Capacity = 5 + (Storage Facility Level × 5)**
+  - Level 10 maximum: **55 weapons**
+  - **Storage Definition**: Total weapons owned by the stable (both equipped AND unequipped)
+- **Rationale**: This simplifies the system by ensuring there's never a problem where a player wants to swap weapons and there's no space in storage
+- **Action**: 
+  1. ✅ Documentation updated in WEAPONS_AND_LOADOUT.md and STABLE_SYSTEM.md
+  2. ⚠️ Move storage capacity enforcement to **Phase 1 (Backend API)** - was previously deferred
+  3. Add storage capacity check to weapon purchase API
+  4. Display remaining weapon slots in UI (Phase 2)
+- **Priority**: HIGH - Must be implemented in Phase 1
 
 **Question 3: "Any" Loadout Type**
+- **Status**: ✅ DECISION MADE
 - **Context**: Weapon schema has loadoutType field, docs show specific loadouts
-- **Question**: Should weapons support "any" loadout type for universal weapons?
-- **Recommendation**: Yes, use "any" for weapons compatible with all loadout types
-
---> Yes. There should be weapons that can be equipped in main hand AND off hand (if the stable owns 2 weapons with the same name/ID). 
---> Yes. These can be equipped single weapon load-out, in both slots for the 2-weapon loaded, in the main hand for weapon + shield, but not in the 2-handed loadout. 
+- **Decision**: Yes, weapons should support flexible loadout compatibility:
+  - Weapons can be equipped in **main hand AND off hand** (if the stable owns 2 copies with the same name/ID)
+  - One-handed weapons (not two-handed, not shields) can be equipped:
+    - Single weapon loadout (main slot)
+    - Both slots for dual-wield loadout
+    - Main hand for weapon + shield loadout
+    - NOT in two-handed loadout
+- **Action**: Implement loadout compatibility validation that allows one-handed weapons in multiple slots
+- **Priority**: MEDIUM - Part of Phase 1 validation logic
 
 **Question 4: Shield Equipment Restriction**
+- **Status**: ✅ DECISION MADE
 - **Context**: Shields should only go in offhand with weapon_shield loadout
-- **Question**: Block shields from main weapon slot entirely, or only validate on loadout?
-- **Recommendation**: Block shields from main weapon slot at API level - they are defensive equipment only
-
---> Shields can only be selected as off-hand weapon. A primary weapon also needs to be equipped, otherwise configuration is not complete (not fully equipped).
+- **Decision**: 
+  - Shields can **only** be selected as off-hand weapon
+  - A primary weapon also needs to be equipped, otherwise configuration is not complete (not fully equipped)
+  - Block shields from main weapon slot at API level
+- **Action**: 
+  1. Add validation to prevent shield equipment in main weapon slot
+  2. Add validation to ensure main weapon is equipped when offhand shield is equipped
+  3. Display appropriate error messages in UI
+- **Priority**: HIGH - Part of Phase 1 validation logic
 
 **Question 5: HP/Shield Initialization**
+- **Status**: ✅ DECISION MADE
 - **Context**: Robots have currentHP/currentShield fields
-- **Question**: How are these initialized on robot creation?
-- **Recommendation**: Add to robot creation API: `currentHP = maxHP, currentShield = maxShield`
-
---> Yes, apply your recommendation. 
---> currentHP is persistent until repaired after a battle (set to maxHP once credits have been spent), currentShield = maxShield after a battle.
+- **Decision**: 
+  - **On robot creation**: `currentHP = maxHP`, `currentShield = maxShield`
+  - **After battle**: `currentShield = maxShield` (shields regenerate)
+  - **currentHP persistence**: Remains at battle-damaged value until repaired
+  - **After repair**: `currentHP = maxHP` (once credits have been spent)
+- **Action**: 
+  1. Add initialization logic in robot creation API
+  2. Add post-battle logic for shield reset
+  3. Add repair logic to restore HP to max
+- **Priority**: MEDIUM - Part of Phase 1 robot management
 
 **Question 6: Multiple Weapon Purchase Warning**
+- **Status**: ✅ APPROVED
 - **Context**: Users can buy multiple copies of same weapon
-- **Question**: Should we warn users when buying a duplicate?
-- **Recommendation**: Add in Phase 4 (Polish) - nice-to-have UX improvement
-
---> Yes. This is a nice UX feature.
---> Also display how many weapon space there is left in storage. 
+- **Decision**: Yes, this is a nice UX feature. Also display how many weapon spaces are left in storage.
+- **Action**: 
+  1. Add confirmation dialog when purchasing a weapon the user already owns
+  2. Display remaining storage capacity in weapon shop UI
+  3. Display storage capacity in weapon inventory UI
+- **Priority**: MEDIUM - Add in Phase 2 (Frontend UI) alongside other purchase flow enhancements 
 
 ### Database Schema Verification
 
