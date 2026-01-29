@@ -114,6 +114,8 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - **Level 9** (₡3,000,000, requires 10,000 prestige): 50% discount on weapon purchases
 - **Level 10** (₡4,000,000): 55% discount on weapon purchases, unlock legendary weapon crafting
 
+**For complete weapon details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+
 **4. Research Lab** (Operating Cost: ₡2,000/day at Level 1, +₡1,000/day per level)
 - **Level 1** (₡400,000): Unlock advanced battle analytics
 - **Level 2** (₡800,000): Unlock loadout presets (save 3 configurations per robot)
@@ -163,6 +165,8 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - **Level 8** (₡1,300,000): 90 weapons storage
 - **Level 9** (₡1,500,000): 100 weapons storage
 - **Level 10** (₡2,000,000): 125 weapons storage (maximum)
+
+**For weapon inventory management details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 
 **8. Coaching Staff** (Operating Cost: ₡3,000/day when coach active)
 - **Level 0**: No coach available
@@ -443,6 +447,8 @@ CURRENT BALANCE:           ₡1,847,000
 - Design custom weapons (if unlocked)
 - Modify weapons (if unlocked)
 
+**For complete weapon system details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+
 ### Statistics Tab
 - Overall stable statistics (aggregated)
 - Individual robot statistics
@@ -512,9 +518,10 @@ CURRENT BALANCE:           ₡1,847,000
 
 ## See Also
 
-- **DATABASE_SCHEMA.md** - Authoritative source for User and Facility models
-- **ROBOT_ATTRIBUTES.md** - Robot attribute system and combat mechanics
-- **ROADMAP.md** - Implementation phases and future enhancements
+- **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)** - Complete weapon system, loadout configurations, and weapon catalog
+- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Authoritative source for User and Facility models
+- **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)** - Robot attribute system and combat mechanics
+- **[ROADMAP.md](ROADMAP.md)** - Implementation phases and future enhancements
 
 ---
 
