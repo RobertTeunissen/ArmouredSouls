@@ -14,11 +14,12 @@ if [ ! -f "prisma/schema.prisma" ]; then
 fi
 
 # Check for incorrect output line in generator block
-if grep -A5 "generator client" prisma/schema.prisma | grep -q "output.*="; then
+# Look for actual output configuration (not comments)
+if grep -A5 "generator client" prisma/schema.prisma | grep -E "^\s*output\s*=" > /dev/null; then
     echo "❌ PROBLEM FOUND: Your schema.prisma has an 'output' line in the generator block"
     echo ""
     echo "Your generator block:"
-    grep -A5 "generator client" prisma/schema.prisma | head -6
+    grep -A5 "generator client" prisma/schema.prisma | head -7
     echo ""
     echo "This is INCORRECT. The repository version should NOT have an output line."
     echo ""
@@ -37,7 +38,7 @@ else
     echo "✅ schema.prisma generator block is correct (no output line)"
     echo ""
     echo "Your generator block:"
-    grep -A5 "generator client" prisma/schema.prisma | head -4
+    grep -A3 "generator client" prisma/schema.prisma | head -4
     echo ""
 fi
 
