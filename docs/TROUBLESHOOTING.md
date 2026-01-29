@@ -27,7 +27,7 @@ cd prototype/backend
 head -10 prisma/schema.prisma
 ```
 
-If you see something like this on line 6:
+If you see an `output` line in the `generator client` block:
 ```prisma
 generator client {
   provider = "prisma-client-js"
@@ -38,12 +38,7 @@ generator client {
 **You MUST fix this first!** Replace your local schema.prisma with the correct version from the repository:
 
 ```bash
-# Option 1: Pull the correct file from git
-git checkout HEAD -- prisma/schema.prisma
-
-# Option 2: Verify the file matches the repository
-git diff prisma/schema.prisma
-# If you see differences, reset to repository version:
+# Restore the correct file from git (recommended)
 git restore prisma/schema.prisma
 
 # Verify the fix:
@@ -127,12 +122,12 @@ Generating client into .../node_modules/@prisma/client is not allowed.
 
 Suggestion:
 In .../prisma/schema.prisma replace:
-6 output   = "../node_modules/@prisma/client"
+output   = "../node_modules/@prisma/client"
 with
-6 output   = "../node_modules/.prisma/client"
+output   = "../node_modules/.prisma/client"
 ```
 
-**Root Cause**: Your local `schema.prisma` file has been modified and contains an `output` line that doesn't exist in the repository version.
+**Root Cause**: Your local `schema.prisma` file has been modified and contains an `output` line in the `generator client` block that doesn't exist in the repository version.
 
 **Solution**:
 
@@ -144,9 +139,6 @@ bash scripts/check-schema.sh
 
 # If the script reports a problem, restore the correct version:
 git restore prisma/schema.prisma
-
-# Or use checkout:
-git checkout HEAD -- prisma/schema.prisma
 
 # Verify the fix:
 bash scripts/check-schema.sh

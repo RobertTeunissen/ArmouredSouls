@@ -14,11 +14,11 @@ if [ ! -f "prisma/schema.prisma" ]; then
 fi
 
 # Check for incorrect output line in generator block
-if grep -A2 "generator client" prisma/schema.prisma | grep -q "output.*="; then
+if grep -A5 "generator client" prisma/schema.prisma | grep -q "output.*="; then
     echo "❌ PROBLEM FOUND: Your schema.prisma has an 'output' line in the generator block"
     echo ""
     echo "Your generator block:"
-    grep -A3 "generator client" prisma/schema.prisma | head -4
+    grep -A5 "generator client" prisma/schema.prisma | head -6
     echo ""
     echo "This is INCORRECT. The repository version should NOT have an output line."
     echo ""
@@ -37,11 +37,12 @@ else
     echo "✅ schema.prisma generator block is correct (no output line)"
     echo ""
     echo "Your generator block:"
-    grep -A3 "generator client" prisma/schema.prisma | head -4
+    grep -A5 "generator client" prisma/schema.prisma | head -4
     echo ""
 fi
 
 # Check if file differs from repository
+EXIT_CODE=0
 if command -v git &> /dev/null; then
     if git diff --quiet HEAD -- prisma/schema.prisma 2>/dev/null; then
         echo "✅ schema.prisma matches the repository version"
@@ -53,8 +54,16 @@ if command -v git &> /dev/null; then
         echo ""
         echo "To restore repository version:"
         echo "  git restore prisma/schema.prisma"
+        echo ""
+        EXIT_CODE=1
     fi
 fi
 
 echo ""
-echo "✅ Schema verification complete!"
+if [ $EXIT_CODE -eq 0 ]; then
+    echo "✅ Schema verification complete!"
+else
+    echo "⚠️  Schema verification complete with warnings - see above"
+fi
+
+exit $EXIT_CODE
