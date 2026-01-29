@@ -1,11 +1,11 @@
-# Weapons & Load-out System
+# Weapons & Loadout System
 
 **Last Updated**: January 29, 2026  
 **Status**: Design Document
 
 ## Overview
 
-This document details the complete weapons and load-out system for Armoured Souls. It covers weapon ownership, inventory management, loadout configurations, weapon types, and the complete weapon catalog.
+This document details the complete weapons and loadout system for Armoured Souls. It covers weapon ownership, inventory management, loadout configurations, weapon types, and the complete weapon catalog.
 
 **Related Documentation:**
 - [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md) - Robot attributes and combat mechanics
@@ -455,7 +455,7 @@ Key relationships:
 
 ---
 
-**This weapons & load-out system provides:**
+**This weapons & loadout system provides:**
 - ✅ Clear weapon ownership model (stable-level, not robot-specific)
 - ✅ Flexible inventory management (multiple copies, storage limits)
 - ✅ Strategic loadout choices (4 distinct configurations with trade-offs)
