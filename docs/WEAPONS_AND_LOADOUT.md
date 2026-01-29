@@ -40,7 +40,7 @@ This document details the complete weapons and loadout system for Armoured Souls
 
 ## Weapon Inventory System
 
-**Phase 1 Implementation**: Players purchase weapons from the Weapon Shop and they are added to their inventory. Each weapon purchase creates a separate inventory item, allowing multiple copies of the same weapon.
+**Phase 1 Implementation**: Players purchase weapons from the Weapon Shop and they are added to their inventory. Each weapon purchase creates a separate inventory item, allowing owning multiple copies of the same weapon.
 
 ### How It Works
 
@@ -63,27 +63,13 @@ This document details the complete weapons and loadout system for Armoured Souls
 
 ### Storage Capacity
 
-The **Storage Facility** (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#7-storage-facility)) determines weapon storage capacity:
-
-- **Level 0**: 10 weapons storage (default, free)
-- **Level 1** (₡150,000): 20 weapons storage
-- **Level 2** (₡300,000): 30 weapons storage
-- **Level 3** (₡450,000): 40 weapons storage
-- **Level 4** (₡600,000): 50 weapons storage
-- **Level 5** (₡750,000): 60 weapons storage
-- **Level 6** (₡900,000): 70 weapons storage
-- **Level 7** (₡1,100,000): 80 weapons storage
-- **Level 8** (₡1,300,000): 90 weapons storage
-- **Level 9** (₡1,500,000): 100 weapons storage
-- **Level 10** (₡2,000,000): 125 weapons storage (maximum)
-
-**Operating Cost**: ₡500/day at Level 1, +₡250/day per level
+The **Storage Facility** (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#7-storage-facility)) determines weapon storage capacity.
 
 ---
 
 ## Loadout System
 
-Robots are bipedal humanoids with two arms. Loadout determines how weapons/shields are equipped.
+Robots are bipedal humanoids with two arms. Loadout determines how weapons/shields are equipped and are set on robot level.
 
 ### Design Rationale: Why Percentage-Based Bonuses?
 
@@ -206,33 +192,13 @@ Each weapon has:
 7. **Attribute Bonuses** - Modifies specific robot attributes when equipped
 8. **Special Properties** - Unique effects
 
-**Complete weapon attribute bonus list** (all must match Robot attribute names in [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)):
-- combatPowerBonus
-- targetingSystemsBonus
-- criticalSystemsBonus
-- penetrationBonus
-- weaponControlBonus
-- attackSpeedBonus
-- armorPlatingBonus
-- shieldCapacityBonus
-- evasionThrustersBonus
-- damageDampenersBonus
-- counterProtocolsBonus
-- hullIntegrityBonus
-- servoMotorsBonus
-- gyroStabilizersBonus
-- hydraulicSystemsBonus
-- powerCoreBonus
-- combatAlgorithmsBonus
-- threatAnalysisBonus
-- adaptiveAIBonus
-- logicCoresBonus
-
-All bonuses default to 0 and can be positive or negative for trade-offs.
+**Complete weapon attribute bonus list** 
+- Must match Robot attribute names in [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)):
+- All bonuses default to 0 and can be positive or negative for trade-offs which impacts costs.
 
 ---
 
-## Complete Weapon Catalog
+## Initial Weapon Catalog
 
 ### Energy Weapons
 

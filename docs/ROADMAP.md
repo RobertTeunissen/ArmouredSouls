@@ -76,29 +76,11 @@ This document outlines the development roadmap for Armoured Souls, from planning
 - ✅ Weapon Shop page with Weapons Workshop discount
 - ✅ "My Robots" page to view user's robots
 - ✅ "All Robots" page showing all robots with owners and ELO
-
-### ⚠️ Milestone 3: User Can Create First Robot (PENDING)
 - ✅ Attribute upgrade system with Training Facility discount applied (fixed in commit f607702)
-- [ ] Robot detail page shows the correct amount for upgrading, including the Training Facility discount
---> NOT FIXED in commit 5c63366. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
---> NOT FIXED in commit f607702. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
---> NOT FIXED in commit c378ead. Page still shows 2000 credits for upgrading from 1 to 2 while Level 1 Training Academy is active.
+- ✅ Robot detail page shows the correct amount for upgrading, including the Training Facility discount
 - ✅ Roster Expansion facility level is enforced when creating new robots (fixed in commit 5c63366)
-- [ ] Training Academy facilities (4 of them!) enforce the cap of their respective attributes group(s)
---> NOT FIXED in commit f607702. Can still upgrade robot attributes to levels above 10 without buying a Training Academy
---> NOT FIXED in commit c378ead. Incorrectly implemented, the page shows and enforces a cap of 50, while STABLE_SYSTEM.md states that the cap should be 10 at level 0 and increase with 5 per level.
-- [ ] The attribute groups on the Robot detail page show the attribute cap based on facility upgrades next to each attribute group
---> NOT FIXED in commit 5c63366. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
---> NOT FIXED in commit f607702. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities.
---> NOT FIXED in commit c378ead. For Combat Systems, the page shows: "Attribute Cap: 50 (Upgrade Combat Training Academy to increase)". This is the theoretical maximum, not the current maximum based on upgraded facilities (see STABLE_SYSTEM.md).
-
-Read carefully! 
-Facility = a stable upgrade
-Training Facility = specific facility that reduces costs for upgrading robot attributes
-Combat Training Academy = specific facility that increases Combat Systems attribute caps
-Defense Training Academy = specific facility that increases Defensive Systems attribute caps
-
-This might be the root of your confusion on how to implement this. Should we rename them?
+- ✅ Training Academy facilities (4 of them!) enforce the cap of their respective attributes group(s)
+- ✅ The attribute groups on the Robot detail page show the attribute cap based on facility upgrades next to each attribute group
 
 ### Milestone 4: Matchmaking in Place (NOT STARTED)
 - Manual robot selection for battle
@@ -111,62 +93,6 @@ This might be the root of your confusion on how to implement this. Should we ren
 - Battle outcome calculation
 - Stats/ELO updates
 
-### Current Database State
-**Official Migrations (4):**
-1. `20260125213123_` - Initial schema
-2. `20260125213329_add_facilities` - Adds facilities table
-3. `20260126181101_update_schema_to_match_docs` - Renames 23 robot attributes, adds WeaponInventory table
-4. `20260127000000_add_loadout_type_to_weapons` - Adds loadoutType to weapons table
-
-**Schema State After Revert:**
-- User: currency, prestige, relationships
-- Robot: 23 attributes + simple `weaponInventoryId` field
-- WeaponInventory: User's owned weapons
-- Weapon: 10 seeded weapons with bonuses
-- Facility: 4 types, 5 levels each
-
-### API Endpoints (VERIFIED)
-```
-Authentication:
-POST /api/auth/login   - Login with username/password
-POST /api/auth/logout  - Logout
-
-User:
-GET  /api/user         - Get current user info
-
-Robots:
-GET  /api/robots/all/robots - All robots (leaderboard)
-GET  /api/robots            - Current user's robots
-POST /api/robots            - Create new robot
-GET  /api/robots/:id        - Get specific robot
-PUT  /api/robots/:id/upgrade - Upgrade robot attribute
-PUT  /api/robots/:id/weapon - Equip weapon to robot
-
-Facilities:
-GET  /api/facilities         - Get user's facilities
-POST /api/facilities/upgrade - Upgrade a facility
-
-Weapons:
-GET  /api/weapons                       - List all weapons
-GET  /api/weapon-inventory              - User's weapon inventory
-POST /api/weapon-inventory/purchase     - Purchase weapon into inventory
-```
-
-### Environment Setup
-**Required:** `.env` file in `prototype/backend/`
-
-The `.env` file is NOT tracked in git (it's in `.gitignore`). Copy from template:
-```bash
-cp prototype/backend/.env.example prototype/backend/.env
-```
-
-Contains `DATABASE_URL` for Prisma connection to PostgreSQL.
-
-### Next Steps
-1. Test reverted schema works (robot pages load correctly)
-2. If working, continue with Milestones 4-5 (matchmaking, battle simulation)
-3. Later: Properly implement dual weapon slots with migration
-
 ### Phase 1 Cleanup Milestone (End of Phase 1)
 - Consolidate all migrations into single base migration
 - Create clean schema.sql for fresh installations
@@ -174,10 +100,10 @@ Contains `DATABASE_URL` for Prisma connection to PostgreSQL.
 - Review and cleanup temporary/test code
 - Ensure all documentation up-to-date
 - Run full test suite
+
 ## Phase 2: Foundation & Infrastructure
 
 **Goal**: Make the prototype production-ready with proper infrastructure and security
-
 **Prerequisites**: Phase 1 prototype validated by friends' feedback
 
 ### Decision Point: Continue, Pivot, or Stop
@@ -553,6 +479,7 @@ Features and systems to consider for future development. These are not yet plann
   - Different weapons perform better at different ranges
   - Positioning mechanics with range advantages
   - See ROBOT_ATTRIBUTES.md for melee/ranged distinction currently implemented
+  - Robots can be upgraded to specialise in a specific loadout 
 
 - **Status Effects System**: 
   - Stun, slow, buff, debuff mechanics

@@ -1,6 +1,6 @@
 # Robot Attributes System
 
-**Last Updated**: January 25, 2026  
+**Last Updated**: January 29, 2026  
 **Status**: Design Document - Complete Time-Based Combat System
 
 ## Overview
@@ -32,7 +32,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 
 **Offensive and defensive combat capabilities (weapon-neutral)**
 
-1. **Combat Power** - Base damage multiplier for all weapon types
+1. **Combat Power** - Base damage multiplier for all weapons
 2. **Targeting Systems** - Hit chance and precision for all attacks
 3. **Critical Systems** - Chance to deal critical damage with any weapon
 4. **Penetration** - Bypasses armor and shields for all attack types
@@ -40,8 +40,8 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 6. **Attack Speed** - Time between attacks for all weapon types
 
 **Design Notes:**
-- All attributes are weapon-neutral - apply to both melee and ranged
-- Combat Power affects base damage regardless of weapon type
+- All attributes are weapon-neutral - apply to all loadouts and weapon types
+- Combat Power affects base damage regardless of weapons
 - Targeting Systems helps both ranged accuracy and melee precision
 - Specialization comes from weapon choice and loadout, not attributes
 
@@ -93,7 +93,7 @@ These are tracked per robot but not upgraded directly. See DATABASE_SCHEMA.md fo
   - **Critical: Robot HP does NOT regenerate during or between battles**
   - Damage to HP persists until repaired with Credits
 - **Current Shield**: Energy shield HP remaining (max determined by Shield Capacity)
-  - Energy shields DO regenerate during battle (powered by Power Core)
+  - Energy shields DO regenerate during battle (based on Power Core attribute)
   - Energy shields reset to max after battle ends
 - **Damage Taken**: Total damage in current/last battle
 
@@ -127,7 +127,7 @@ These are tracked per robot but not upgraded directly. See DATABASE_SCHEMA.md fo
 
 ## Player Configuration Settings
 
-These are player-controlled settings, **NOT upgradeable attributes**. They can be changed between battles but not during battle.
+These are player-controlled robot settings, **NOT upgradeable attributes**. They can be changed between battles but not during battle.
 
 ### Yield Threshold
 - Range: 0% to 50%
@@ -137,7 +137,7 @@ These are player-controlled settings, **NOT upgradeable attributes**. They can b
 ### Loadout
 - Options: "weapon_shield", "two_handed", "dual_wield", "single"
 - Determines how weapons/shields are equipped
-- See Loadout System section below
+- See [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)
 
 ### Stance
 - Options: "offensive", "defensive", "balanced"
@@ -160,15 +160,6 @@ Robots are bipedal humanoids with two arms. The loadout system determines how we
 - Weapon crafting system
 
 **See: [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
-
-### Quick Reference: Loadout Types
-
-1. **Weapon + Shield** - Tank builds (+20% Shield Capacity, +15% Armor Plating, -15% Attack Speed)
-2. **Two-Handed Weapon** - High damage (+25% Combat Power, +20% Critical Systems, 2.5x crit multiplier)
-3. **Dual-Wield** - Speed builds (+30% Attack Speed, +15% Weapon Control, -20% Penetration)
-4. **Single Weapon** - Balanced (+10% Gyro Stabilizers, +5% Servo Motors)
-
-Players choose loadout before battle and can change it between battles. Some weapons require specific loadout types (e.g., two-handed weapons cannot be used with shields).
 
 ---
 
@@ -684,7 +675,7 @@ if in_formation:
 
 ## Weapon System
 
-The complete weapon system includes weapon types, properties, attribute bonuses, and the full catalog of 10 weapons across 4 categories (Energy, Ballistic, Melee, Shield).
+The complete weapon system includes weapon types, properties, attribute bonuses, and the initial catalog of 10 weapons across 4 categories (Energy, Ballistic, Melee, Shield).
 
 **For complete details on:**
 - Weapon types and properties (Energy, Ballistic, Melee, Shield)
@@ -695,22 +686,6 @@ The complete weapon system includes weapon types, properties, attribute bonuses,
 - Weapon inventory management and storage
 
 **See: [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
-
-### Quick Reference: Weapon Categories
-
-**Energy Weapons** (effective vs energy shields, +20%)
-- Laser Rifle (₡150K), Plasma Cannon (₡300K), Ion Beam (₡400K)
-
-**Ballistic Weapons** (high penetration, variable damage)
-- Machine Gun (₡100K), Railgun (₡350K), Shotgun (₡120K)
-
-**Melee Weapons** (benefits from Hydraulic Systems)
-- Power Sword (₡180K), Hammer (₡200K), Plasma Blade (₡250K)
-
-**Shield Weapons** (defensive bonuses, enable counters)
-- Combat Shield (₡100K), Energy Barrier (₡200K)
-
-**Note**: Advanced range mechanics (short/medium/long range bands) are planned for future releases. See ROADMAP.md for details.
 
 ---
 

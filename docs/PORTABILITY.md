@@ -22,7 +22,6 @@ Armoured Souls is designed from the ground up to be portable across web, iOS, an
 
 ### Phase 1: Web (MVP)
 **Priority**: High (Launch platform)  
-**Timeline**: Months 1-6
 
 **Technology Stack**:
 - **Framework**: React 18+ with TypeScript
@@ -48,7 +47,6 @@ Armoured Souls is designed from the ground up to be portable across web, iOS, an
 
 ### Phase 2: Mobile (iOS & Android)
 **Priority**: Medium (Post-MVP)  
-**Timeline**: Months 7-12
 
 ---
 

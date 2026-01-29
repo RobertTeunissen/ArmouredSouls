@@ -451,7 +451,6 @@ By contributing to Armoured Souls, you agree that your contributions will be lic
 
 ## Questions?
 
-- Check [QUESTIONS.md](docs/QUESTIONS.md) for planning questions
 - Review [ARCHITECTURE.md](docs/ARCHITECTURE.md) for technical details
 - Open a discussion on GitHub
 - Reach out to maintainers
