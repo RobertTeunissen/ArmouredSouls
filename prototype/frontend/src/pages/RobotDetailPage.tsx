@@ -225,15 +225,15 @@ function RobotDetailPage() {
         const facilities = await facilitiesResponse.json();
         
         // Always set training level (even if 0)
-        const trainingFacility = facilities.find((f: any) => f.facilityType === 'training_facility');
-        setTrainingLevel(trainingFacility?.level || 0);
+        const trainingFacility = facilities.find((f: any) => f.type === 'training_facility');
+        setTrainingLevel(trainingFacility?.currentLevel || 0);
 
         // Always set academy levels (even if 0)
         setAcademyLevels({
-          combat_training_academy: facilities.find((f: any) => f.facilityType === 'combat_training_academy')?.level || 0,
-          defense_training_academy: facilities.find((f: any) => f.facilityType === 'defense_training_academy')?.level || 0,
-          mobility_training_academy: facilities.find((f: any) => f.facilityType === 'mobility_training_academy')?.level || 0,
-          ai_training_academy: facilities.find((f: any) => f.facilityType === 'ai_training_academy')?.level || 0,
+          combat_training_academy: facilities.find((f: any) => f.type === 'combat_training_academy')?.currentLevel || 0,
+          defense_training_academy: facilities.find((f: any) => f.type === 'defense_training_academy')?.currentLevel || 0,
+          mobility_training_academy: facilities.find((f: any) => f.type === 'mobility_training_academy')?.currentLevel || 0,
+          ai_training_academy: facilities.find((f: any) => f.type === 'ai_training_academy')?.currentLevel || 0,
         });
       }
     } catch (err) {
