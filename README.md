@@ -36,6 +36,8 @@ Open http://localhost:3000 - Login with `player1` / `password123`
 📖 **For testing new versions and database reset:** See [SETUP.md](docs/SETUP.md)
 🔧 **Having installation issues?** → [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
+⚠️ **If `prisma generate` fails**: Your local `schema.prisma` may be corrupted. Run: `git restore prototype/backend/prisma/schema.prisma` then try again. See [troubleshooting guide](docs/TROUBLESHOOTING.md) for details.
+
 ## 🎮 Project Vision
 
 Armoured Souls is designed to be a highly scalable, secure, and portable multiplayer strategy game. Players will build, customize, and manage teams of battle robots, competing in various game modes and tournaments.

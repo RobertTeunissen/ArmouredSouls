@@ -8,10 +8,58 @@ This error occurs when Prisma's client generation tries to write to a restricted
 - Upgrading/downgrading Prisma versions
 - Corrupted node_modules
 - Interrupted installations
+- **Your local schema.prisma file has an incorrect `output` configuration**
+
+#### ⚠️ CRITICAL FIRST STEP: Verify Your schema.prisma File
+
+**Before doing anything else**, check if your `schema.prisma` has an incorrect `output` line:
+
+```bash
+# Quick automated check - run from backend directory
+cd prototype/backend
+bash scripts/check-schema.sh
+```
+
+Or check manually:
+```bash
+# From the backend directory
+cd prototype/backend
+head -10 prisma/schema.prisma
+```
+
+If you see something like this on line 6:
+```prisma
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client"  // ❌ THIS LINE SHOULD NOT EXIST
+}
+```
+
+**You MUST fix this first!** Replace your local schema.prisma with the correct version from the repository:
+
+```bash
+# Option 1: Pull the correct file from git
+git checkout HEAD -- prisma/schema.prisma
+
+# Option 2: Verify the file matches the repository
+git diff prisma/schema.prisma
+# If you see differences, reset to repository version:
+git restore prisma/schema.prisma
+
+# Verify the fix:
+bash scripts/check-schema.sh
+```
+
+The correct `generator client` block should look like this (NO output line):
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+```
 
 #### Solution: Complete Clean Installation
 
-Follow these steps **in order** to fix your installation:
+**After fixing schema.prisma**, follow these steps **in order**:
 
 ```bash
 # 1. Navigate to the backend directory
@@ -57,7 +105,8 @@ This will check all aspects of your installation and confirm everything is worki
 
 #### Common Mistakes to Avoid
 
-1. **Typo in package name**: When running `npm install` commands, make sure you type `prisma` not `prizma` or other misspellings
+1. **Incorrect schema.prisma file**: Your local file may have an extra `output` line that shouldn't exist. Always verify with `git diff prisma/schema.prisma` and restore from repository if different.
+2. **Typo in package name**: When running `npm install` commands, make sure you type `prisma` not `prizma` or other misspellings
    ```bash
    # Wrong:
    npm i --save-dev prizma@latest
@@ -65,9 +114,62 @@ This will check all aspects of your installation and confirm everything is worki
    # Correct:
    npm i --save-dev prisma@latest
    ```
-2. **Don't manually edit schema.prisma output path**: The default configuration is correct
-3. **Always use exact commands**: Don't skip the `rm -rf` step - it's crucial
-4. **Check your .env file**: Ensure `DATABASE_URL` is correctly configured
+3. **Don't manually add output path to schema.prisma**: The default configuration is correct - no `output` line needed
+4. **Always use exact commands**: Don't skip the `rm -rf` step - it's crucial
+5. **Check your .env file**: Ensure `DATABASE_URL` is correctly configured
+
+### Problem: Schema.prisma Has Incorrect Output Configuration
+
+**Symptom**: Even after clean installation, `npx prisma generate` fails with:
+```
+Error: 
+Generating client into .../node_modules/@prisma/client is not allowed.
+
+Suggestion:
+In .../prisma/schema.prisma replace:
+6 output   = "../node_modules/@prisma/client"
+with
+6 output   = "../node_modules/.prisma/client"
+```
+
+**Root Cause**: Your local `schema.prisma` file has been modified and contains an `output` line that doesn't exist in the repository version.
+
+**Solution**:
+
+```bash
+cd prototype/backend
+
+# Quick check to diagnose the issue:
+bash scripts/check-schema.sh
+
+# If the script reports a problem, restore the correct version:
+git restore prisma/schema.prisma
+
+# Or use checkout:
+git checkout HEAD -- prisma/schema.prisma
+
+# Verify the fix:
+bash scripts/check-schema.sh
+
+# Now generate the Prisma client:
+npx prisma generate
+```
+
+The correct `generator client` block should be:
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+```
+
+**Do NOT add an `output` line!** Prisma will use the correct default location automatically.
+
+**Why did this happen?** 
+- You may have manually added the `output` line while troubleshooting
+- An older version of Prisma or a migration tool may have added it
+- Following outdated documentation or Stack Overflow answers
+
+**The fix**: Always use `git restore prisma/schema.prisma` to get the correct version from the repository.
 
 ### Problem: Database Connection Issues
 
