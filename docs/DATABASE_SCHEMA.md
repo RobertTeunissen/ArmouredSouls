@@ -221,6 +221,8 @@ repairCost = base_repair × damage_percentage × multiplier
 
 Represents weapon types available for purchase. Players buy weapons into inventory.
 
+**For complete weapon details and specifications, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+
 ```prisma
 model Weapon {
   id              Int      @id @default(autoincrement())
@@ -289,6 +291,8 @@ model Weapon {
 ## WeaponInventory Model
 
 Represents individual weapon instances owned by users. Players buy weapons into inventory, then equip them to robots.
+
+**For weapon ownership rules and inventory management, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 
 ```prisma
 model WeaponInventory {
@@ -470,7 +474,7 @@ model Battle {
 
 ## Complete Weapon Catalog (Seed Data)
 
-All 10 weapons from ROBOT_ATTRIBUTES.md with complete specifications:
+All 10 weapons from [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) with complete specifications for database seeding:
 
 ### Energy Weapons
 
@@ -750,8 +754,8 @@ These features are documented but not yet in the schema:
 
 ## References
 
-- **ROBOT_ATTRIBUTES.md**: Complete attribute system, combat formulas, weapon specifications
-- **STABLE_SYSTEM.md**: 14 facilities, prestige system, daily income/expenses
-- **DATABASE_SCHEMA.md**: Original schema document (may be outdated)
-- **ROADMAP.md**: Implementation phases and priorities
+- **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Complete weapon system, loadout configurations, weapon catalog
+- **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Complete attribute system, combat formulas
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: 14 facilities, prestige system, daily income/expenses
+- **[ROADMAP.md](ROADMAP.md)**: Implementation phases and priorities
 
