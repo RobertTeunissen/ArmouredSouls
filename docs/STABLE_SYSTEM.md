@@ -103,16 +103,19 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - **Level 10** (₡4,500,000): 50% discount on attribute upgrade costs, unlock special training programs
 
 **3. Weapons Workshop** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
-- **Level 1** (₡250,000): 10% discount on weapon purchases
-- **Level 2** (₡500,000): 15% discount on weapon purchases
-- **Level 3** (₡750,000): 20% discount on weapon purchases, unlock weapon modifications
-- **Level 4** (₡1,000,000, requires 1,500 prestige): 25% discount on weapon purchases
-- **Level 5** (₡1,300,000): 30% discount on weapon purchases
-- **Level 6** (₡1,600,000): 35% discount on weapon purchases, unlock custom weapon design
-- **Level 7** (₡2,000,000, requires 5,000 prestige): 40% discount on weapon purchases
-- **Level 8** (₡2,500,000): 45% discount on weapon purchases
-- **Level 9** (₡3,000,000, requires 10,000 prestige): 50% discount on weapon purchases
-- **Level 10** (₡4,000,000): 55% discount on weapon purchases, unlock legendary weapon crafting
+- **Level 0**: No discount
+- **Level 1** (₡250,000): 5% discount on weapon purchases
+- **Level 2** (₡500,000): 10% discount on weapon purchases
+- **Level 3** (₡750,000): 15% discount on weapon purchases, unlock weapon modifications
+- **Level 4** (₡1,000,000, requires 1,500 prestige): 20% discount on weapon purchases
+- **Level 5** (₡1,300,000): 25% discount on weapon purchases
+- **Level 6** (₡1,600,000): 30% discount on weapon purchases, unlock custom weapon design
+- **Level 7** (₡2,000,000, requires 5,000 prestige): 35% discount on weapon purchases
+- **Level 8** (₡2,500,000): 40% discount on weapon purchases
+- **Level 9** (₡3,000,000, requires 10,000 prestige): 45% discount on weapon purchases
+- **Level 10** (₡4,000,000): 50% discount on weapon purchases, unlock legendary weapon crafting
+
+**Discount Formula**: Discount % = Weapons Workshop Level × 5
 
 **For complete weapon details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 
@@ -154,17 +157,21 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - **Level 10**: N/A (Level 9 is maximum)
 
 **7. Storage Facility** (Operating Cost: ₡500/day at Level 1, +₡250/day per level)
-- **Level 0**: 10 weapons storage (free)
-- **Level 1** (₡150,000): 20 weapons storage
-- **Level 2** (₡300,000): 30 weapons storage
-- **Level 3** (₡450,000): 40 weapons storage
-- **Level 4** (₡600,000): 50 weapons storage
-- **Level 5** (₡750,000): 60 weapons storage
-- **Level 6** (₡900,000): 70 weapons storage
-- **Level 7** (₡1,100,000): 80 weapons storage
-- **Level 8** (₡1,300,000): 90 weapons storage
-- **Level 9** (₡1,500,000): 100 weapons storage
-- **Level 10** (₡2,000,000): 125 weapons storage (maximum)
+- **Level 0**: 5 weapons storage (free, base capacity)
+- **Level 1** (₡150,000): 10 weapons storage (5 base + 5)
+- **Level 2** (₡300,000): 15 weapons storage (5 base + 10)
+- **Level 3** (₡450,000): 20 weapons storage (5 base + 15)
+- **Level 4** (₡600,000): 25 weapons storage (5 base + 20)
+- **Level 5** (₡750,000): 30 weapons storage (5 base + 25)
+- **Level 6** (₡900,000): 35 weapons storage (5 base + 30)
+- **Level 7** (₡1,100,000): 40 weapons storage (5 base + 35)
+- **Level 8** (₡1,300,000): 45 weapons storage (5 base + 40)
+- **Level 9** (₡1,500,000): 50 weapons storage (5 base + 45)
+- **Level 10** (₡2,000,000): 55 weapons storage (5 base + 50, maximum)
+
+**Formula**: Storage Capacity = 5 + (Storage Facility Level × 5)
+
+**Storage Definition**: Storage capacity refers to the **total number of weapons owned by the stable**, including both equipped and unequipped weapons. This simplifies weapon management by ensuring there's never a situation where a player cannot swap weapons due to storage constraints.
 
 **For weapon inventory management details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 

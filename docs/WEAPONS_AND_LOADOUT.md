@@ -31,10 +31,12 @@ This document details the complete weapons and loadout system for Armoured Souls
 - **Important**: A weapon can never be equipped to multiple robots simultaneously (each robot needs its own copy)
 
 **Storage Management:**
-- Default storage capacity: **10 weapons**
+- Default storage capacity: **5 weapons** (Storage Facility Level 0)
 - Storage can be expanded via the **Storage Facility** upgrade (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md))
-- Maximum storage capacity: **125 weapons** (Storage Facility Level 10)
+- Storage capacity formula: **5 + (Storage Facility Level × 5)**
+- Maximum storage capacity: **55 weapons** (Storage Facility Level 10)
 - Storage limit is per stable (not per robot)
+- **Storage Definition**: Total number of weapons owned by the stable, including both **equipped and unequipped** weapons. This simplifies the system by ensuring players can always swap weapons without storage constraints.
 
 ---
 
@@ -146,10 +148,22 @@ Loadouts use **percentage-based bonuses** rather than flat attribute bonuses for
 - Players choose loadout before battle (saved in robot configuration)
 - Loadout can be changed between battles (not during)
 - Available from the start - robots can be upgraded to specialize in a category
-- Some weapons are locked to specific loadouts:
-  - "Two-handed" tag: Requires Two-Handed loadout
-  - "Shield-compatible": Works with Weapon + Shield
-  - "Dual-wield compatible": Works with Dual-Wield (need 2 copies)
+
+**Weapon Compatibility Rules:**
+- **One-handed weapons** (not shields):
+  - Can be equipped in main hand OR off hand
+  - Compatible with: Single, Weapon + Shield (main only), Dual-Wield (both slots)
+  - NOT compatible with: Two-Handed loadout
+  - Players can own multiple copies and equip the same weapon to both main and offhand slots (for Dual-Wield)
+- **Two-handed weapons**:
+  - Require Two-Handed loadout
+  - Occupy both weapon slots
+  - NOT compatible with: Single, Weapon + Shield, Dual-Wield
+- **Shield weapons**:
+  - Can ONLY be equipped in offhand slot
+  - Require Weapon + Shield loadout
+  - Main weapon must also be equipped (configuration incomplete without main weapon)
+  - NOT compatible with: Single, Two-Handed, Dual-Wield
 
 ---
 
@@ -361,21 +375,24 @@ The **Weapons Workshop** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#3-wea
 ### Cost Optimization
 
 **Weapons Workshop Discounts** (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#3-weapons-workshop)):
-- Level 1: 10% discount on weapon purchases
-- Level 2: 15% discount
-- Level 3: 20% discount + weapon modifications
-- Level 4: 25% discount (requires 1,500 prestige)
-- Level 5: 30% discount
-- Level 6: 35% discount + custom weapon design
-- Level 7: 40% discount (requires 5,000 prestige)
-- Level 8: 45% discount
-- Level 9: 50% discount (requires 10,000 prestige)
-- Level 10: 55% discount + legendary weapon crafting
+- Level 0: No discount
+- Level 1: 5% discount on weapon purchases
+- Level 2: 10% discount
+- Level 3: 15% discount + weapon modifications
+- Level 4: 20% discount (requires 1,500 prestige)
+- Level 5: 25% discount
+- Level 6: 30% discount + custom weapon design
+- Level 7: 35% discount (requires 5,000 prestige)
+- Level 8: 40% discount
+- Level 9: 45% discount (requires 10,000 prestige)
+- Level 10: 50% discount + legendary weapon crafting
+
+**Discount Formula**: Discount % = Weapons Workshop Level × 5
 
 **Example Cost Calculation:**
 - Plasma Cannon base cost: ₡300,000
-- With Weapons Workshop Level 5 (30% discount): ₡210,000
-- With Weapons Workshop Level 10 (55% discount): ₡135,000
+- With Weapons Workshop Level 5 (25% discount): ₡225,000
+- With Weapons Workshop Level 10 (50% discount): ₡150,000
 
 ### Economy Guidelines
 
