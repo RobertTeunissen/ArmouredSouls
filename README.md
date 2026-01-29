@@ -61,6 +61,7 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 - [**Setup Guide**](docs/SETUP.md) - Get the Phase 1 prototype running locally
 - [**Troubleshooting**](docs/TROUBLESHOOTING.md) - Fix installation and database issues
 - [**Robot Attributes System**](docs/ROBOT_ATTRIBUTES.md) - Complete attribute system, currency, weapons, and economy
+- [**PRD: Weapon Loadout System**](docs/PRD_WEAPON_LOADOUT.md) - Implementation requirements for working weapon loadout feature
 - [Phase 1 Plan](docs/PHASE1_PLAN.md) - Detailed plan for local prototype development
 - [Game Design Document](docs/GAME_DESIGN.md) - High-level game design and vision
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design and technical architecture
