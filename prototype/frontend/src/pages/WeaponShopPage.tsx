@@ -37,10 +37,17 @@ interface Facility {
   level: number;
 }
 
+interface StorageStatus {
+  currentCount: number;
+  maxCapacity: number;
+  percentUsed: number;
+}
+
 function WeaponShopPage() {
   const { user, refreshUser } = useAuth();
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [weaponWorkshopLevel, setWeaponWorkshopLevel] = useState(0);
+  const [storageStatus, setStorageStatus] = useState<StorageStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [purchasing, setPurchasing] = useState<number | null>(null);
@@ -56,6 +63,10 @@ function WeaponShopPage() {
         const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities');
         const weaponWorkshop = facilitiesResponse.data.find((f: Facility) => f.facilityType === 'weapons_workshop');
         setWeaponWorkshopLevel(weaponWorkshop?.level || 0);
+
+        // Fetch storage status
+        const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
+        setStorageStatus(storageResponse.data);
       } catch (err) {
         console.error('Failed to fetch data:', err);
         setError('Failed to load weapons');
@@ -82,6 +93,12 @@ function WeaponShopPage() {
       return;
     }
 
+    // Check storage capacity
+    if (storageStatus && storageStatus.currentCount >= storageStatus.maxCapacity) {
+      alert('Storage capacity full! Upgrade your Weapon Workshop to increase capacity.');
+      return;
+    }
+
     if (!confirm('Are you sure you want to purchase this weapon?')) {
       return;
     }
@@ -92,6 +109,11 @@ function WeaponShopPage() {
         weaponId,
       });
       await refreshUser();
+      
+      // Refresh storage status after purchase
+      const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
+      setStorageStatus(storageResponse.data);
+      
       alert('Weapon purchased successfully!');
     } catch (err: any) {
       console.error('Purchase failed:', err);
@@ -140,6 +162,43 @@ function WeaponShopPage() {
           <h1 className="text-3xl font-bold mb-2">Weapon Shop</h1>
           <p className="text-gray-400">Purchase weapons to equip your robots. Weapons provide attribute bonuses and combat capabilities.</p>
         </div>
+
+        {/* Storage Capacity */}
+        {storageStatus && (
+          <div className="bg-gray-800 p-6 rounded-lg mb-6">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-xl font-semibold">Storage Capacity</h3>
+              <span className="text-lg font-bold">
+                {storageStatus.currentCount} / {storageStatus.maxCapacity}
+              </span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-4 mb-2">
+              <div
+                className={`h-4 rounded-full transition-all ${
+                  storageStatus.percentUsed >= 100
+                    ? 'bg-red-500'
+                    : storageStatus.percentUsed >= 80
+                    ? 'bg-yellow-500'
+                    : 'bg-blue-500'
+                }`}
+                style={{ width: `${Math.min(storageStatus.percentUsed, 100)}%` }}
+              />
+            </div>
+            <div className="text-sm text-gray-400">
+              {storageStatus.percentUsed >= 100 ? (
+                <span className="text-red-400 font-semibold">
+                  ⚠️ Storage full! Upgrade Weapon Workshop to increase capacity or manage your inventory.
+                </span>
+              ) : storageStatus.percentUsed >= 80 ? (
+                <span className="text-yellow-400">
+                  Running low on storage space. Consider upgrading Weapon Workshop.
+                </span>
+              ) : (
+                `${(100 - storageStatus.percentUsed).toFixed(1)}% storage available`
+              )}
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className="text-center py-12 text-gray-400">
@@ -219,18 +278,28 @@ function WeaponShopPage() {
 
                           <button
                             onClick={() => handlePurchase(weapon.id, weapon.cost)}
-                            disabled={purchasing === weapon.id || !!(user && user.currency < discountedPrice)}
+                            disabled={
+                              purchasing === weapon.id ||
+                              !!(user && user.currency < discountedPrice) ||
+                              !!(storageStatus && storageStatus.currentCount >= storageStatus.maxCapacity)
+                            }
                             className={`w-full py-2 rounded transition-colors ${
-                              user && user.currency < discountedPrice
+                              storageStatus && storageStatus.currentCount >= storageStatus.maxCapacity
+                                ? 'bg-red-900 text-red-300 cursor-not-allowed'
+                                : user && user.currency < discountedPrice
                                 ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                 : purchasing === weapon.id
                                 ? 'bg-gray-700 text-gray-400'
                                 : 'bg-blue-600 hover:bg-blue-700'
                             }`}
                           >
-                            {purchasing === weapon.id ? 'Purchasing...' : 
-                             user && user.currency < discountedPrice ? 'Insufficient Credits' : 
-                             'Purchase'}
+                            {storageStatus && storageStatus.currentCount >= storageStatus.maxCapacity
+                              ? 'Storage Full'
+                              : purchasing === weapon.id
+                              ? 'Purchasing...'
+                              : user && user.currency < discountedPrice
+                              ? 'Insufficient Credits'
+                              : 'Purchase'}
                           </button>
                         </div>
                       );
