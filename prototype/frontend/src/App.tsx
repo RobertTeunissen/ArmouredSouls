@@ -9,6 +9,7 @@ import CreateRobotPage from './pages/CreateRobotPage';
 import RobotDetailPage from './pages/RobotDetailPage';
 import AllRobotsPage from './pages/AllRobotsPage';
 import WeaponShopPage from './pages/WeaponShopPage';
+import WeaponInventoryPage from './pages/WeaponInventoryPage';
 
 function App() {
   return (
@@ -69,6 +70,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <WeaponShopPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/weapon-inventory"
+            element={
+              <ProtectedRoute>
+                <WeaponInventoryPage />
               </ProtectedRoute>
             }
           />

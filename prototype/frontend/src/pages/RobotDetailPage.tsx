@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import LoadoutSelector from '../components/LoadoutSelector';
+import WeaponSlot from '../components/WeaponSlot';
+import WeaponSelectionModal from '../components/WeaponSelectionModal';
+import StatComparison from '../components/StatComparison';
 import { calculateAttributeBonus, getAttributeDisplay } from '../utils/robotStats';
 
 interface Robot {
@@ -83,6 +88,8 @@ function RobotDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showWeaponModal, setShowWeaponModal] = useState(false);
+  const [weaponSlotToEquip, setWeaponSlotToEquip] = useState<'main' | 'offhand'>('main');
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
 
@@ -297,92 +304,55 @@ function RobotDetailPage() {
     }
   };
 
-  const handleWeaponChange = async (weaponInventoryId: string, slot: 'main' | 'offhand' = 'main') => {
+  const handleEquipWeapon = async (weaponInventoryId: number) => {
     if (!robot) return;
 
     setError('');
     setSuccessMessage('');
 
     try {
-      const token = localStorage.getItem('token');
-      const bodyData: any = {};
-      
-      if (slot === 'main') {
-        bodyData.mainWeaponId = weaponInventoryId === '' ? null : parseInt(weaponInventoryId);
-      } else {
-        bodyData.offhandWeaponId = weaponInventoryId === '' ? null : parseInt(weaponInventoryId);
-      }
+      const endpoint =
+        weaponSlotToEquip === 'main'
+          ? `http://localhost:3001/api/robots/${id}/equip-main-weapon`
+          : `http://localhost:3001/api/robots/${id}/equip-offhand-weapon`;
 
-      const response = await fetch(`http://localhost:3001/api/robots/${id}/weapon`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(bodyData),
-      });
-
-      if (response.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to equip weapon');
-      }
-
-      setRobot(data.robot);
-      setSuccessMessage(weaponInventoryId === '' ? 'Weapon unequipped!' : 'Weapon equipped successfully!');
-      
-      // Clear success message after 3 seconds
+      const response = await axios.put(endpoint, { weaponInventoryId });
+      setRobot(response.data.robot);
+      setSuccessMessage('Weapon equipped successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to equip weapon');
-      console.error(err);
+    } catch (err: any) {
+      console.error('Failed to equip weapon:', err);
+      setError(err.response?.data?.error || 'Failed to equip weapon');
     }
   };
 
-  const handleLoadoutChange = async (newLoadoutType: string) => {
+  const handleUnequipWeapon = async (slot: 'main' | 'offhand') => {
     if (!robot) return;
 
     setError('');
     setSuccessMessage('');
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/robots/${id}/weapon`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ loadoutType: newLoadoutType }),
-      });
+      const endpoint =
+        slot === 'main'
+          ? `http://localhost:3001/api/robots/${id}/unequip-main-weapon`
+          : `http://localhost:3001/api/robots/${id}/unequip-offhand-weapon`;
 
-      if (response.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to change loadout type');
-      }
-
-      setRobot(data.robot);
-      setSuccessMessage(`Loadout changed to ${newLoadoutType}!`);
-      
-      // Clear success message after 3 seconds
+      const response = await axios.delete(endpoint);
+      setRobot(response.data.robot);
+      setSuccessMessage('Weapon unequipped!');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to change loadout type');
-      console.error(err);
+    } catch (err: any) {
+      console.error('Failed to unequip weapon:', err);
+      setError(err.response?.data?.error || 'Failed to unequip weapon');
     }
+  };
+
+  const handleLoadoutChange = (newLoadout: string) => {
+    if (!robot) return;
+    fetchRobotAndWeapons(); // Refresh to get updated robot data
+    setSuccessMessage(`Loadout changed to ${newLoadout}!`);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
 
@@ -462,85 +432,69 @@ function RobotDetailPage() {
           </div>
         )}
 
-        {/* Weapon Selection */}
+        {/* Weapon Loadout */}
         <div className="bg-gray-800 p-6 rounded-lg mb-6">
           <h3 className="text-xl font-semibold mb-4">Weapon Loadout</h3>
           
-          {/* Loadout Type Selection */}
+          {/* Loadout Type Selector */}
           <div className="mb-6">
-            <label className="block text-sm text-gray-400 mb-2">Loadout Type</label>
-            <select
-              value={robot.loadoutType}
-              onChange={(e) => handleLoadoutChange(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-            >
-              <option value="single">Single Weapon</option>
-              <option value="dual-wield">Dual Wield (Two Weapons)</option>
-              <option value="weapon+shield">Weapon + Shield</option>
-              <option value="two-handed">Two-Handed Weapon</option>
-            </select>
-            <div className="mt-2 p-3 bg-blue-900 bg-opacity-30 rounded border border-blue-700">
-              <p className="text-xs text-blue-300">
-                {robot.loadoutType === 'single' && 'One weapon for balanced combat'}
-                {robot.loadoutType === 'dual-wield' && 'Two weapons for increased attack speed'}
-                {robot.loadoutType === 'weapon+shield' && 'Weapon and shield for defensive play'}
-                {robot.loadoutType === 'two-handed' && 'Two-handed weapon for maximum damage'}
-              </p>
-            </div>
+            <LoadoutSelector
+              robotId={robot.id}
+              currentLoadout={robot.loadoutType}
+              onLoadoutChange={handleLoadoutChange}
+            />
           </div>
 
-          {/* Main Weapon */}
-          <div className="mb-4">
-            <label className="block text-sm text-gray-400 mb-2">Main Weapon</label>
-            <select
-              value={robot.mainWeaponId || ''}
-              onChange={(e) => handleWeaponChange(e.target.value, 'main')}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-            >
-              <option value="">No Weapon</option>
-              {weapons.map((weaponInv) => (
-                <option key={weaponInv.id} value={weaponInv.id}>
-                  {weaponInv.weapon.name} ({weaponInv.weapon.weaponType}) - Damage: {weaponInv.weapon.baseDamage}
-                </option>
-              ))}
-            </select>
-            {robot.mainWeapon && (
-              <div className="mt-2 bg-gray-700 p-3 rounded text-sm">
-                <p className="text-gray-300">{robot.mainWeapon.weapon.description}</p>
-                <div className="mt-1 flex gap-4">
-                  <span>Type: <span className="font-semibold capitalize">{robot.mainWeapon.weapon.weaponType}</span></span>
-                  <span>Damage: <span className="font-semibold">{robot.mainWeapon.weapon.baseDamage}</span></span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Offhand Weapon */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">Offhand Weapon (Optional)</label>
-            <select
-              value={robot.offhandWeaponId || ''}
-              onChange={(e) => handleWeaponChange(e.target.value, 'offhand')}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-            >
-              <option value="">No Weapon</option>
-              {weapons.map((weaponInv) => (
-                <option key={weaponInv.id} value={weaponInv.id}>
-                  {weaponInv.weapon.name} ({weaponInv.weapon.weaponType}) - Damage: {weaponInv.weapon.baseDamage}
-                </option>
-              ))}
-            </select>
-            {robot.offhandWeapon && (
-              <div className="mt-2 bg-gray-700 p-3 rounded text-sm">
-                <p className="text-gray-300">{robot.offhandWeapon.weapon.description}</p>
-                <div className="mt-1 flex gap-4">
-                  <span>Type: <span className="font-semibold capitalize">{robot.offhandWeapon.weapon.weaponType}</span></span>
-                  <span>Damage: <span className="font-semibold">{robot.offhandWeapon.weapon.baseDamage}</span></span>
-                </div>
-              </div>
+          {/* Weapon Slots */}
+          <div className="space-y-4">
+            <WeaponSlot
+              label="Main Weapon"
+              weapon={robot.mainWeapon}
+              onEquip={() => {
+                setWeaponSlotToEquip('main');
+                setShowWeaponModal(true);
+              }}
+              onUnequip={() => handleUnequipWeapon('main')}
+            />
+            
+            {/* Only show offhand slot for weapon_shield and dual_wield loadouts */}
+            {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
+              <WeaponSlot
+                label="Offhand Weapon"
+                weapon={robot.offhandWeapon}
+                onEquip={() => {
+                  setWeaponSlotToEquip('offhand');
+                  setShowWeaponModal(true);
+                }}
+                onUnequip={() => handleUnequipWeapon('offhand')}
+              />
             )}
           </div>
         </div>
+
+        {/* Effective Stats Display */}
+        <div className="bg-gray-800 p-6 rounded-lg mb-6">
+          <h3 className="text-xl font-semibold mb-4">Effective Stats (Modified by Weapons & Loadout)</h3>
+          <StatComparison
+            robot={robot}
+            attributes={Object.values(attributeCategories).flatMap((cat) => cat.attributes)}
+            showOnlyModified={true}
+          />
+        </div>
+
+        {/* Weapon Selection Modal */}
+        <WeaponSelectionModal
+          isOpen={showWeaponModal}
+          onClose={() => setShowWeaponModal(false)}
+          onSelect={handleEquipWeapon}
+          weapons={weapons}
+          currentWeaponId={
+            weaponSlotToEquip === 'main' ? robot.mainWeaponId : robot.offhandWeaponId
+          }
+          title={`Select ${weaponSlotToEquip === 'main' ? 'Main' : 'Offhand'} Weapon`}
+          slot={weaponSlotToEquip}
+          robotLoadoutType={robot.loadoutType}
+        />
 
         {/* Attributes */}
         {Object.entries(attributeCategories).map(([category, config]) => {
@@ -577,7 +531,8 @@ function RobotDetailPage() {
 
                   // Calculate weapon bonuses
                   const bonus = calculateAttributeBonus(key, robot.mainWeapon, robot.offhandWeapon);
-                  const attrDisplay = getAttributeDisplay(currentLevel, bonus);
+                  const loadoutBonus = 0; // No loadout bonus in attribute training section
+                  const attrDisplay = getAttributeDisplay(currentLevel, bonus, loadoutBonus);
 
                   return (
                     <div key={key} className="bg-gray-700 p-4 rounded flex items-center justify-between">
@@ -589,7 +544,7 @@ function RobotDetailPage() {
                               <>
                                 <span className="text-blue-400">Level {currentLevel}</span>
                                 <span className="text-green-400"> (+{bonus} from weapons)</span>
-                                <span className="text-gray-400"> = {attrDisplay.total}</span>
+                                <span className="text-gray-400"> = {attrDisplay.effective}</span>
                               </>
                             ) : (
                               <>Level {currentLevel}</>

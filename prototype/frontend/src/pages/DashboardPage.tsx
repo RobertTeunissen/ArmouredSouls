@@ -17,7 +17,7 @@ function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [robots, setRobots] = useState<Robot[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -31,9 +31,10 @@ function DashboardPage() {
       setRobots(response.data);
     } catch (error) {
       console.error('Failed to fetch robots:', error);
-    } finally {
-      setLoading(false);
     }
+    // finally {
+    //   setLoading(false);
+    // }
   };
 
   const calculateStats = (robot: Robot) => {

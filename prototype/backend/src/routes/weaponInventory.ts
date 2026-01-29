@@ -1,6 +1,7 @@
 import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
 // import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 
 // Temporary stub implementations
@@ -68,12 +69,16 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
       return res.status(404).json({ error: 'Weapon not found' });
     }
 
-    // Get user's current currency and Weapon Workshop level
+    // Get user's current currency, Weapon Workshop level, and Storage Facility level
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
         facilities: {
-          where: { facilityType: 'weapons_workshop' },
+          where: { 
+            facilityType: { 
+              in: ['weapons_workshop', 'storage_facility'] 
+            } 
+          },
         },
       },
     });
@@ -82,8 +87,30 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Get Storage Facility level
+    const storageFacility = user.facilities.find(f => f.facilityType === 'storage_facility');
+    const storageFacilityLevel = storageFacility?.level || 0;
+
+    // Check storage capacity before purchase
+    const currentWeaponCount = await prisma.weaponInventory.count({
+      where: { userId },
+    });
+
+    const maxCapacity = calculateStorageCapacity(storageFacilityLevel);
+
+    if (currentWeaponCount >= maxCapacity) {
+      const storageStatus = getStorageStatus(currentWeaponCount, storageFacilityLevel);
+      return res.status(400).json({ 
+        error: 'Storage capacity full',
+        currentWeapons: storageStatus.currentWeapons,
+        maxCapacity: storageStatus.maxCapacity,
+        message: 'Upgrade Storage Facility to increase capacity',
+      });
+    }
+
     // Apply Weapon Workshop discount
-    const weaponWorkshopLevel = user.facilities[0]?.level || 0;
+    const weaponWorkshop = user.facilities.find(f => f.facilityType === 'weapons_workshop');
+    const weaponWorkshopLevel = weaponWorkshop?.level || 0;
     const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
     const finalCost = applyDiscount(weapon.cost, discountPercent);
 
@@ -172,6 +199,37 @@ router.get('/:id/available', authenticateToken, async (req: AuthRequest, res: Re
     });
   } catch (error) {
     console.error('Available robots error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get storage capacity status
+router.get('/storage-status', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    // Get Storage Facility level
+    const storageFacility = await prisma.facility.findUnique({
+      where: { 
+        userId_facilityType: {
+          userId,
+          facilityType: 'storage_facility',
+        },
+      },
+    });
+
+    const storageFacilityLevel = storageFacility?.level || 0;
+
+    // Count current weapons
+    const currentWeaponCount = await prisma.weaponInventory.count({
+      where: { userId },
+    });
+
+    const storageStatus = getStorageStatus(currentWeaponCount, storageFacilityLevel);
+
+    res.json(storageStatus);
+  } catch (error) {
+    console.error('Storage status error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
