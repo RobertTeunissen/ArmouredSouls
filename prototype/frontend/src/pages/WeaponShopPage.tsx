@@ -38,9 +38,11 @@ interface Facility {
 }
 
 interface StorageStatus {
-  currentCount: number;
+  currentWeapons: number;
   maxCapacity: number;
-  percentUsed: number;
+  remainingSlots: number;
+  isFull: boolean;
+  percentageFull: number;
 }
 
 function WeaponShopPage() {
@@ -94,8 +96,8 @@ function WeaponShopPage() {
     }
 
     // Check storage capacity
-    if (storageStatus && storageStatus.currentCount >= storageStatus.maxCapacity) {
-      alert('Storage capacity full! Upgrade your Weapon Workshop to increase capacity.');
+    if (storageStatus && storageStatus.isFull) {
+      alert('Storage capacity full! Upgrade Storage Facility to increase capacity.');
       return;
     }
 
@@ -147,10 +149,30 @@ function WeaponShopPage() {
   };
 
   const groupedWeapons = {
-    energy: weapons.filter(w => w.weaponType === 'energy'),
-    ballistic: weapons.filter(w => w.weaponType === 'ballistic'),
-    melee: weapons.filter(w => w.weaponType === 'melee'),
-    explosive: weapons.filter(w => w.weaponType === 'explosive'),
+    shield: weapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
+    two_handed: weapons.filter(w => w.loadoutType === 'two_handed'),
+    dual_wield: weapons.filter(w => w.loadoutType === 'dual_wield'),
+    any: weapons.filter(w => w.loadoutType === 'any'),
+  };
+
+  const getLoadoutTypeLabel = (loadoutType: string) => {
+    switch (loadoutType) {
+      case 'shield': return 'Shield';
+      case 'two_handed': return 'Two-Handed';
+      case 'dual_wield': return 'Dual Wield';
+      case 'any': return 'Any Loadout';
+      default: return loadoutType;
+    }
+  };
+
+  const getLoadoutTypeColor = (loadoutType: string) => {
+    switch (loadoutType) {
+      case 'shield': return 'text-cyan-400';
+      case 'two_handed': return 'text-purple-400';
+      case 'dual_wield': return 'text-yellow-400';
+      case 'any': return 'text-green-400';
+      default: return 'text-gray-400';
+    }
   };
 
   return (
@@ -169,32 +191,32 @@ function WeaponShopPage() {
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-semibold">Storage Capacity</h3>
               <span className="text-lg font-bold">
-                {storageStatus.currentCount} / {storageStatus.maxCapacity}
+                {storageStatus.currentWeapons} / {storageStatus.maxCapacity}
               </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-4 mb-2">
               <div
                 className={`h-4 rounded-full transition-all ${
-                  storageStatus.percentUsed >= 100
+                  storageStatus.isFull
                     ? 'bg-red-500'
-                    : storageStatus.percentUsed >= 80
+                    : storageStatus.percentageFull >= 80
                     ? 'bg-yellow-500'
                     : 'bg-blue-500'
                 }`}
-                style={{ width: `${Math.min(storageStatus.percentUsed, 100)}%` }}
+                style={{ width: `${Math.min(storageStatus.percentageFull, 100)}%` }}
               />
             </div>
             <div className="text-sm text-gray-400">
-              {storageStatus.percentUsed >= 100 ? (
+              {storageStatus.isFull ? (
                 <span className="text-red-400 font-semibold">
-                  ⚠️ Storage full! Upgrade Weapon Workshop to increase capacity or manage your inventory.
+                  ⚠️ Storage full! Upgrade Storage Facility to increase capacity.
                 </span>
-              ) : storageStatus.percentUsed >= 80 ? (
+              ) : storageStatus.percentageFull >= 80 ? (
                 <span className="text-yellow-400">
-                  Running low on storage space. Consider upgrading Weapon Workshop.
+                  Running low on storage space. {storageStatus.remainingSlots} slot(s) remaining.
                 </span>
               ) : (
-                `${(100 - storageStatus.percentUsed).toFixed(1)}% storage available`
+                `${storageStatus.remainingSlots} slot(s) available`
               )}
             </div>
           </div>
@@ -214,11 +236,11 @@ function WeaponShopPage() {
 
         {!loading && !error && (
           <>
-            {Object.entries(groupedWeapons).map(([type, weaponList]) => (
+            {Object.entries(groupedWeapons).map(([loadoutType, weaponList]) => (
               weaponList.length > 0 && (
-                <div key={type} className="mb-8">
-                  <h2 className={`text-2xl font-bold mb-4 ${getTypeColor(type)} capitalize`}>
-                    {type} Weapons
+                <div key={loadoutType} className="mb-8">
+                  <h2 className={`text-2xl font-bold mb-4 ${getLoadoutTypeColor(loadoutType)}`}>
+                    {getLoadoutTypeLabel(loadoutType)}
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {weaponList.map((weapon) => {
@@ -239,7 +261,7 @@ function WeaponShopPage() {
                           <div className="space-y-2 mb-4">
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-400">Loadout Type:</span>
-                              <span className="font-semibold capitalize">{weapon.loadoutType}</span>
+                              <span className="font-semibold capitalize">{weapon.loadoutType.replace('_', ' ')}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-400">Base Damage:</span>
@@ -281,10 +303,10 @@ function WeaponShopPage() {
                             disabled={
                               purchasing === weapon.id ||
                               !!(user && user.currency < discountedPrice) ||
-                              !!(storageStatus && storageStatus.currentCount >= storageStatus.maxCapacity)
+                              !!(storageStatus && storageStatus.isFull)
                             }
                             className={`w-full py-2 rounded transition-colors ${
-                              storageStatus && storageStatus.currentCount >= storageStatus.maxCapacity
+                              storageStatus && storageStatus.isFull
                                 ? 'bg-red-900 text-red-300 cursor-not-allowed'
                                 : user && user.currency < discountedPrice
                                 ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
@@ -293,7 +315,7 @@ function WeaponShopPage() {
                                 : 'bg-blue-600 hover:bg-blue-700'
                             }`}
                           >
-                            {storageStatus && storageStatus.currentCount >= storageStatus.maxCapacity
+                            {storageStatus && storageStatus.isFull
                               ? 'Storage Full'
                               : purchasing === weapon.id
                               ? 'Purchasing...'

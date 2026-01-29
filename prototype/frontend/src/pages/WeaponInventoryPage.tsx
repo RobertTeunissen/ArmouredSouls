@@ -6,6 +6,7 @@ interface Weapon {
   id: number;
   name: string;
   weaponType: string;
+  loadoutType: string;
   description: string | null;
   baseDamage: number;
   cost: number;
@@ -29,13 +30,15 @@ interface Weapon {
 interface WeaponInventory {
   id: number;
   weapon: Weapon;
-  acquiredAt: string;
+  purchasedAt: string;
 }
 
 interface StorageStatus {
-  currentCount: number;
+  currentWeapons: number;
   maxCapacity: number;
-  percentUsed: number;
+  remainingSlots: number;
+  isFull: boolean;
+  percentageFull: number;
 }
 
 function WeaponInventoryPage() {
@@ -43,8 +46,8 @@ function WeaponInventoryPage() {
   const [storageStatus, setStorageStatus] = useState<StorageStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [sortBy, setSortBy] = useState<'name' | 'type' | 'damage' | 'acquired'>('acquired');
+  const [loadoutFilter, setLoadoutFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<'name' | 'loadout' | 'damage' | 'acquired'>('acquired');
 
   useEffect(() => {
     fetchInventory();
@@ -112,26 +115,26 @@ function WeaponInventoryPage() {
   };
 
   const filteredWeapons = weapons.filter((inv) => {
-    if (typeFilter === 'all') return true;
-    return inv.weapon.weaponType === typeFilter;
+    if (loadoutFilter === 'all') return true;
+    return inv.weapon.loadoutType === loadoutFilter;
   });
 
   const sortedWeapons = [...filteredWeapons].sort((a, b) => {
     switch (sortBy) {
       case 'name':
         return a.weapon.name.localeCompare(b.weapon.name);
-      case 'type':
-        return a.weapon.weaponType.localeCompare(b.weapon.weaponType);
+      case 'loadout':
+        return a.weapon.loadoutType.localeCompare(b.weapon.loadoutType);
       case 'damage':
         return b.weapon.baseDamage - a.weapon.baseDamage;
       case 'acquired':
-        return new Date(b.acquiredAt).getTime() - new Date(a.acquiredAt).getTime();
+        return new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime();
       default:
         return 0;
     }
   });
 
-  const availableTypes = Array.from(new Set(weapons.map((inv) => inv.weapon.weaponType)));
+  const availableLoadouts = Array.from(new Set(weapons.map((inv) => inv.weapon.loadoutType)));
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -151,32 +154,32 @@ function WeaponInventoryPage() {
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-semibold">Storage Capacity</h3>
               <span className="text-lg font-bold">
-                {storageStatus.currentCount} / {storageStatus.maxCapacity}
+                {storageStatus.currentWeapons} / {storageStatus.maxCapacity}
               </span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-4 mb-2">
               <div
                 className={`h-4 rounded-full transition-all ${
-                  storageStatus.percentUsed >= 100
+                  storageStatus.isFull
                     ? 'bg-red-500'
-                    : storageStatus.percentUsed >= 80
+                    : storageStatus.percentageFull >= 80
                     ? 'bg-yellow-500'
                     : 'bg-blue-500'
                 }`}
-                style={{ width: `${Math.min(storageStatus.percentUsed, 100)}%` }}
+                style={{ width: `${Math.min(storageStatus.percentageFull, 100)}%` }}
               />
             </div>
             <div className="text-sm text-gray-400">
-              {storageStatus.percentUsed >= 100 ? (
+              {storageStatus.isFull ? (
                 <span className="text-red-400 font-semibold">
-                  Storage full! Upgrade Weapon Workshop to increase capacity.
+                  Storage full! Upgrade Storage Facility to increase capacity.
                 </span>
-              ) : storageStatus.percentUsed >= 80 ? (
+              ) : storageStatus.percentageFull >= 80 ? (
                 <span className="text-yellow-400">
-                  Running low on storage space. Consider upgrading Weapon Workshop.
+                  Running low on storage space. {storageStatus.remainingSlots} slot(s) remaining.
                 </span>
               ) : (
-                `${(100 - storageStatus.percentUsed).toFixed(1)}% storage available`
+                `${storageStatus.remainingSlots} slot(s) available`
               )}
             </div>
           </div>
@@ -192,17 +195,17 @@ function WeaponInventoryPage() {
         <div className="bg-gray-800 p-4 rounded-lg mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm text-gray-400 mb-2">Filter by Type</label>
+              <label className="block text-sm text-gray-400 mb-2">Filter by Loadout Type</label>
               <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+                value={loadoutFilter}
+                onChange={(e) => setLoadoutFilter(e.target.value)}
                 className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
               >
-                <option value="all">All Types ({weapons.length})</option>
-                {availableTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)} (
-                    {weapons.filter((w) => w.weapon.weaponType === type).length})
+                <option value="all">All Loadout Types ({weapons.length})</option>
+                {availableLoadouts.map((loadout) => (
+                  <option key={loadout} value={loadout}>
+                    {loadout.replace('_', ' ').charAt(0).toUpperCase() + loadout.replace('_', ' ').slice(1)} (
+                    {weapons.filter((w) => w.weapon.loadoutType === loadout).length})
                   </option>
                 ))}
               </select>
@@ -216,7 +219,7 @@ function WeaponInventoryPage() {
               >
                 <option value="acquired">Recently Acquired</option>
                 <option value="name">Name (A-Z)</option>
-                <option value="type">Type</option>
+                <option value="loadout">Loadout Type</option>
                 <option value="damage">Damage (High to Low)</option>
               </select>
             </div>
@@ -266,6 +269,10 @@ function WeaponInventoryPage() {
 
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Loadout Type:</span>
+                      <span className="font-semibold capitalize">{inv.weapon.loadoutType.replace('_', ' ')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
                       <span className="text-gray-400">Base Damage:</span>
                       <span className="font-semibold">{inv.weapon.baseDamage}</span>
                     </div>
@@ -278,7 +285,7 @@ function WeaponInventoryPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-400">Acquired:</span>
                       <span className="font-semibold">
-                        {new Date(inv.acquiredAt).toLocaleDateString()}
+                        {new Date(inv.purchasedAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>

@@ -4,6 +4,8 @@ interface Weapon {
   id: number;
   name: string;
   weaponType: string;
+  handsRequired: string;
+  loadoutType: string;
   description: string | null;
   baseDamage: number;
   cost: number;
@@ -36,6 +38,8 @@ interface WeaponSelectionModalProps {
   weapons: WeaponInventory[];
   currentWeaponId?: number | null;
   title?: string;
+  slot?: 'main' | 'offhand';
+  robotLoadoutType?: string;
 }
 
 function WeaponSelectionModal({
@@ -45,6 +49,8 @@ function WeaponSelectionModal({
   weapons,
   currentWeaponId,
   title = 'Select Weapon',
+  slot = 'main',
+  robotLoadoutType = 'single',
 }: WeaponSelectionModalProps) {
   const [filter, setFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -57,6 +63,38 @@ function WeaponSelectionModal({
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  // Helper function to check if weapon is compatible with slot and loadout
+  const isWeaponCompatible = (weapon: Weapon): boolean => {
+    // Shield weapons can only go in offhand slot
+    if (weapon.handsRequired === 'shield') {
+      if (slot !== 'offhand') return false;
+      if (robotLoadoutType !== 'weapon_shield') return false;
+      return true;
+    }
+
+    // Two-handed weapons can only go in main slot
+    if (weapon.handsRequired === 'two') {
+      if (slot !== 'main') return false;
+      if (robotLoadoutType !== 'two_handed') return false;
+      return true;
+    }
+
+    // One-handed weapons
+    if (weapon.handsRequired === 'one') {
+      if (slot === 'main') {
+        // Can't use one-handed in main slot with two_handed loadout
+        if (robotLoadoutType === 'two_handed') return false;
+        return true;
+      } else {
+        // Offhand slot: Only dual_wield loadout can use one-handed weapons
+        if (robotLoadoutType !== 'dual_wield') return false;
+        return true;
+      }
+    }
+
+    return false;
+  };
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -103,7 +141,8 @@ function WeaponSelectionModal({
   const filteredWeapons = weapons.filter((inv) => {
     const matchesName = inv.weapon.name.toLowerCase().includes(filter.toLowerCase());
     const matchesType = typeFilter === 'all' || inv.weapon.weaponType === typeFilter;
-    return matchesName && matchesType;
+    const isCompatible = isWeaponCompatible(inv.weapon);
+    return matchesName && matchesType && isCompatible;
   });
 
   const availableTypes = Array.from(new Set(weapons.map((inv) => inv.weapon.weaponType)));

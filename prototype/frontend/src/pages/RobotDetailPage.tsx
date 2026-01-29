@@ -456,15 +456,19 @@ function RobotDetailPage() {
               }}
               onUnequip={() => handleUnequipWeapon('main')}
             />
-            <WeaponSlot
-              label="Offhand Weapon"
-              weapon={robot.offhandWeapon}
-              onEquip={() => {
-                setWeaponSlotToEquip('offhand');
-                setShowWeaponModal(true);
-              }}
-              onUnequip={() => handleUnequipWeapon('offhand')}
-            />
+            
+            {/* Only show offhand slot for weapon_shield and dual_wield loadouts */}
+            {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
+              <WeaponSlot
+                label="Offhand Weapon"
+                weapon={robot.offhandWeapon}
+                onEquip={() => {
+                  setWeaponSlotToEquip('offhand');
+                  setShowWeaponModal(true);
+                }}
+                onUnequip={() => handleUnequipWeapon('offhand')}
+              />
+            )}
           </div>
         </div>
 
@@ -488,6 +492,8 @@ function RobotDetailPage() {
             weaponSlotToEquip === 'main' ? robot.mainWeaponId : robot.offhandWeaponId
           }
           title={`Select ${weaponSlotToEquip === 'main' ? 'Main' : 'Offhand'} Weapon`}
+          slot={weaponSlotToEquip}
+          robotLoadoutType={robot.loadoutType}
         />
 
         {/* Attributes */}
