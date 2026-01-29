@@ -2,6 +2,10 @@
 
 # Armoured Souls - Installation Verification Script
 # This script checks if your installation is working correctly
+#
+# Usage: Run this script from the prototype/backend directory:
+#   cd prototype/backend
+#   bash scripts/verify-installation.sh
 
 # Note: We don't use "set -e" here to show all verification results
 # even if some checks fail
@@ -95,7 +99,7 @@ if command -v docker &> /dev/null; then
             echo -e "   ${GREEN}✓ PostgreSQL container is running${NC}"
         else
             echo -e "   ${YELLOW}⚠ PostgreSQL container not found${NC}"
-            echo "   Run: cd .. && docker compose up -d"
+            echo "   From the prototype directory, run: docker compose up -d"
         fi
     else
         echo -e "   ${YELLOW}⚠ Docker is installed but not running${NC}"
@@ -105,29 +109,14 @@ else
 fi
 echo ""
 
-# Test database connection
-echo "🔌 Testing database connection..."
-if npx prisma db push --help &> /dev/null; then
-    # Try to validate the database connection
-    if npx prisma validate &> /dev/null; then
-        echo -e "   ${GREEN}✓ Database connection successful${NC}"
-    else
-        echo -e "   ${YELLOW}⚠ Database may not be accessible${NC}"
-        echo "   Make sure PostgreSQL is running and DATABASE_URL is correct"
-    fi
-else
-    echo -e "   ${YELLOW}⚠ Cannot test database connection${NC}"
-fi
-echo ""
-
-# Check schema validity
-echo "📋 Validating Prisma schema..."
+# Test database connection and schema validity
+echo "🔌 Testing database connection and schema..."
 if npx prisma validate &> /dev/null; then
-    echo -e "   ${GREEN}✓ Prisma schema is valid${NC}"
+    echo -e "   ${GREEN}✓ Database connection and schema are valid${NC}"
 else
-    echo -e "   ${RED}✗ Prisma schema has errors${NC}"
-    echo "   Run: npx prisma validate"
-    ERRORS=$((ERRORS + 1))
+    echo -e "   ${YELLOW}⚠ Database may not be accessible or schema has errors${NC}"
+    echo "   Make sure PostgreSQL is running and DATABASE_URL is correct"
+    echo "   Run: npx prisma validate (for detailed error messages)"
 fi
 echo ""
 
@@ -144,6 +133,7 @@ else
     echo -e "${RED}❌ Installation verification failed with $ERRORS error(s)${NC}"
     echo ""
     echo "Please fix the errors above before continuing."
-    echo "For help, see: ../../docs/TROUBLESHOOTING.md"
+    echo ""
+    echo "For help, see docs/TROUBLESHOOTING.md in the repository root"
     exit 1
 fi

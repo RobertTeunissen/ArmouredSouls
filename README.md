@@ -33,7 +33,7 @@ npm run dev  # Terminal 2
 
 Open http://localhost:3000 - Login with `player1` / `password123`
 
-📖 **For testing new versions and database reset:** See [SETUP.md](docs/SETUP.md)  
+📖 **For testing new versions and database reset:** See [SETUP.md](docs/SETUP.md)
 🔧 **Having installation issues?** → [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## 🎮 Project Vision

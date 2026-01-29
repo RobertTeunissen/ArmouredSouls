@@ -57,10 +57,10 @@ This will check all aspects of your installation and confirm everything is worki
 
 #### Common Mistakes to Avoid
 
-1. **Typo in package name**: When running `npm install` commands, make sure you type `prisma` not `prima`
+1. **Typo in package name**: When running `npm install` commands, make sure you type `prisma` not `prizma` or other misspellings
    ```bash
    # Wrong:
-   npm i --save-dev prima@latest
+   npm i --save-dev prizma@latest
    
    # Correct:
    npm i --save-dev prisma@latest
