@@ -45,6 +45,16 @@ Prisma schema loaded from prisma/schema.prisma
 ✔ Generated Prisma Client (v5.20.0) to ./node_modules/@prisma/client in XXXms
 ```
 
+#### Verify Your Installation
+
+After fixing the issue, run the verification script:
+```bash
+cd prototype/backend
+bash scripts/verify-installation.sh
+```
+
+This will check all aspects of your installation and confirm everything is working.
+
 #### Common Mistakes to Avoid
 
 1. **Typo in package name**: Make sure you type `prisma` not `prima`
