@@ -148,10 +148,22 @@ Loadouts use **percentage-based bonuses** rather than flat attribute bonuses for
 - Players choose loadout before battle (saved in robot configuration)
 - Loadout can be changed between battles (not during)
 - Available from the start - robots can be upgraded to specialize in a category
-- Some weapons are locked to specific loadouts:
-  - "Two-handed" tag: Requires Two-Handed loadout
-  - "Shield-compatible": Works with Weapon + Shield
-  - "Dual-wield compatible": Works with Dual-Wield (need 2 copies)
+
+**Weapon Compatibility Rules:**
+- **One-handed weapons** (not shields):
+  - Can be equipped in main hand OR off hand
+  - Compatible with: Single, Weapon + Shield (main only), Dual-Wield (both slots)
+  - NOT compatible with: Two-Handed loadout
+  - Players can own multiple copies and equip the same weapon to both main and offhand slots (for Dual-Wield)
+- **Two-handed weapons**:
+  - Require Two-Handed loadout
+  - Occupy both weapon slots
+  - NOT compatible with: Single, Weapon + Shield, Dual-Wield
+- **Shield weapons**:
+  - Can ONLY be equipped in offhand slot
+  - Require Weapon + Shield loadout
+  - Main weapon must also be equipped (configuration incomplete without main weapon)
+  - NOT compatible with: Single, Two-Handed, Dual-Wield
 
 ---
 

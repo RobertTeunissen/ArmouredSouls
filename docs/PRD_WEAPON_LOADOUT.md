@@ -148,6 +148,7 @@ Acceptance Criteria:
 - Each weapon shows: name, type, equipped status, and which robot is using it
 - I can click on a weapon to see full details and equip options
 - I can filter by weapon type or equipped status
+- I can see my current storage capacity usage (e.g., "28/35 weapons")
 ```
 
 **US-6: View Effective Stats with Loadout**
@@ -162,6 +163,20 @@ Acceptance Criteria:
 - Positive bonuses shown in green, negative in red
 - Tooltip or expandable section explains stat calculation
 - Stats update in real-time when weapons or loadout changes
+```
+
+**US-7: Storage Capacity Management**
+```
+As a player
+I want to see my weapon storage capacity and be prevented from exceeding it
+So that I can manage my weapon inventory and know when to upgrade storage
+
+Acceptance Criteria:
+- Weapon shop displays remaining storage capacity (e.g., "5 slots remaining")
+- Purchase button is disabled when storage is full
+- Clear error message when attempting to purchase with full storage
+- Weapon inventory page shows total capacity and current usage
+- If purchasing duplicate weapon, show confirmation dialog with storage info
 ```
 
 ---
@@ -794,19 +809,24 @@ Acceptance Criteria:
 
 ### B. Weapon Compatibility Matrix
 
-| Weapon Type | Hands Required | Compatible Loadouts |
-|-------------|----------------|---------------------|
-| Laser Rifle | One | Single, Weapon+Shield, Dual-Wield |
-| Machine Gun | One | Single, Weapon+Shield, Dual-Wield |
-| Power Sword | One | Single, Weapon+Shield, Dual-Wield |
-| Plasma Blade | One | Single, Weapon+Shield, Dual-Wield |
-| Combat Shield | Shield | Weapon+Shield (offhand only) |
-| Energy Barrier | Shield | Weapon+Shield (offhand only) |
-| Plasma Cannon | Two | Two-Handed |
-| Ion Beam | Two | Two-Handed |
-| Railgun | Two | Two-Handed |
-| Shotgun | Two | Two-Handed |
-| Hammer | Two | Two-Handed |
+| Weapon Type | Hands Required | Compatible Loadouts | Notes |
+|-------------|----------------|---------------------|-------|
+| Laser Rifle | One | Single, Weapon+Shield, Dual-Wield | Can equip in main or offhand |
+| Machine Gun | One | Single, Weapon+Shield, Dual-Wield | Can equip in main or offhand |
+| Power Sword | One | Single, Weapon+Shield, Dual-Wield | Can equip in main or offhand |
+| Plasma Blade | One | Single, Weapon+Shield, Dual-Wield | Can equip in main or offhand |
+| Combat Shield | Shield | Weapon+Shield (offhand only) | Requires main weapon equipped |
+| Energy Barrier | Shield | Weapon+Shield (offhand only) | Requires main weapon equipped |
+| Plasma Cannon | Two | Two-Handed | Occupies both slots |
+| Ion Beam | Two | Two-Handed | Occupies both slots |
+| Railgun | Two | Two-Handed | Occupies both slots |
+| Shotgun | Two | Two-Handed | Occupies both slots |
+| Hammer | Two | Two-Handed | Occupies both slots |
+
+**Compatibility Rules:**
+- One-handed weapons: Can be used in multiple loadouts and slots. Players can own 2 copies of the same weapon and equip both for Dual-Wield
+- Shield weapons: Offhand only, must have main weapon equipped
+- Two-handed weapons: Exclusive to Two-Handed loadout
 
 ### C. Example Stat Calculations
 
