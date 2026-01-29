@@ -839,16 +839,6 @@ Effective Penetration: 10 * 0.80 = 8
 
 ---
 
-## Approval & Sign-Off
-
-**Product Owner**: _________________ Date: _______
-
-**Tech Lead**: _________________ Date: _______
-
-**QA Lead**: _________________ Date: _______
-
----
-
 ## Addendum: Questions & Clarifications for Implementation
 
 ### Prerequisites (Before Starting Implementation)
@@ -859,6 +849,8 @@ Effective Penetration: 10 * 0.80 = 8
 - **Action**: Create weapon seed data in `prototype/backend/prisma/seed.ts` matching weapon specifications
 - **Priority**: BLOCKER - Required before any testing can begin
 
+--> The 10 initial weapons are loaded into the database in the current version. 
+
 **Issue 2: Weapon Workshop Discount Formula Discrepancy**
 - **Status**: Bug identified
 - **Current**: `level * 5` (would give 5%, 10%, 15%... up to 50% at level 10)
@@ -866,11 +858,15 @@ Effective Penetration: 10 * 0.80 = 8
 - **Action**: Fix in `prototype/backend/src/routes/weaponInventory.ts` and shared utility
 - **Priority**: HIGH - Affects game economy
 
+--> 5% discount per level of the Weapon Workshop is the most straightforward solution. Both the application and the documentation should reflect this. This is a bug that needs to be verified and corrected.
+
 **Issue 3: robotStats Utility Existence**
 - **Status**: Needs verification
 - **Issue**: `RobotDetailPage.tsx` imports `../utils/robotStats` but file existence not confirmed
 - **Action**: If missing, create as part of Phase 1. If exists, verify it handles weapon bonuses correctly
 - **Priority**: HIGH - Required for Phase 2
+
+--> This file is missing in the repo. If it is needed, a requirements needs to be added.
 
 ### Implementation Clarifications
 
@@ -879,30 +875,47 @@ Effective Penetration: 10 * 0.80 = 8
 - **Question**: Is loadout type selector currently in the UI?
 - **Recommendation**: Include in Phase 2 (Frontend) as specified in PRD
 
+--> A selector is currently present in the UI, but it doesn't load the weapons (which are confirmed to be in the database). 
+--> Based on the loadout selected, the correct set of available weapons needs to be presented
+
 **Question 2: Storage Capacity Enforcement**
 - **Context**: Docs specify 10-weapon default capacity with expansion via Storage Facility
 - **Question**: Enforce in MVP or defer to later phase?
 - **Recommendation**: Defer to Phase 3 or post-MVP (noted in "Non-Goals" section)
+
+--> Yes. Let's decrease this from 10 to 5 weapons without Storage Facility. Add 5 for each level of Storage Facility bought. So level 5 should be (5x5)+10 = space for 35 weapons in storage. 
+--> Storage in this context means "total weapons owned by the stable". This refers to either equipped or unequipped weapons. This simplifies the system since it makes sure this is never a problem where a player wants to swap weapons and there is no place in storage. Make sure that this is reflected in the documentation as well as this PRD. 
 
 **Question 3: "Any" Loadout Type**
 - **Context**: Weapon schema has loadoutType field, docs show specific loadouts
 - **Question**: Should weapons support "any" loadout type for universal weapons?
 - **Recommendation**: Yes, use "any" for weapons compatible with all loadout types
 
+--> Yes. There should be weapons that can be equipped in main hand AND off hand (if the stable owns 2 weapons with the same name/ID). 
+--> Yes. These can be equipped single weapon load-out, in both slots for the 2-weapon loaded, in the main hand for weapon + shield, but not in the 2-handed loadout. 
+
 **Question 4: Shield Equipment Restriction**
 - **Context**: Shields should only go in offhand with weapon_shield loadout
 - **Question**: Block shields from main weapon slot entirely, or only validate on loadout?
 - **Recommendation**: Block shields from main weapon slot at API level - they are defensive equipment only
+
+--> Shields can only be selected as off-hand weapon. A primary weapon also needs to be equipped, otherwise configuration is not complete (not fully equipped).
 
 **Question 5: HP/Shield Initialization**
 - **Context**: Robots have currentHP/currentShield fields
 - **Question**: How are these initialized on robot creation?
 - **Recommendation**: Add to robot creation API: `currentHP = maxHP, currentShield = maxShield`
 
+--> Yes, apply your recommendation. 
+--> currentHP is persistent until repaired after a battle (set to maxHP once credits have been spent), currentShield = maxShield after a battle.
+
 **Question 6: Multiple Weapon Purchase Warning**
 - **Context**: Users can buy multiple copies of same weapon
 - **Question**: Should we warn users when buying a duplicate?
 - **Recommendation**: Add in Phase 4 (Polish) - nice-to-have UX improvement
+
+--> Yes. This is a nice UX feature.
+--> Also display how many weapon space there is left in storage. 
 
 ### Database Schema Verification
 
