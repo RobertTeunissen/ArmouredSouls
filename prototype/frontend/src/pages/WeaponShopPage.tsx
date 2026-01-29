@@ -33,8 +33,10 @@ interface Weapon {
 
 interface Facility {
   id: number;
+  type: string;
   facilityType: string;
   level: number;
+  currentLevel: number;
 }
 
 interface StorageStatus {
@@ -63,8 +65,8 @@ function WeaponShopPage() {
 
         // Fetch facilities to get Weapon Workshop level
         const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities');
-        const weaponWorkshop = facilitiesResponse.data.find((f: Facility) => f.facilityType === 'weapons_workshop');
-        setWeaponWorkshopLevel(weaponWorkshop?.level || 0);
+        const weaponWorkshop = facilitiesResponse.data.find((f: Facility) => f.type === 'weapons_workshop');
+        setWeaponWorkshopLevel(weaponWorkshop?.currentLevel || 0);
 
         // Fetch storage status
         const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
@@ -151,16 +153,14 @@ function WeaponShopPage() {
   const groupedWeapons = {
     shield: weapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
     two_handed: weapons.filter(w => w.loadoutType === 'two_handed'),
-    dual_wield: weapons.filter(w => w.loadoutType === 'dual_wield'),
-    any: weapons.filter(w => w.loadoutType === 'any'),
+    one_handed: weapons.filter(w => w.loadoutType === 'single'),
   };
 
   const getLoadoutTypeLabel = (loadoutType: string) => {
     switch (loadoutType) {
       case 'shield': return 'Shield';
       case 'two_handed': return 'Two-Handed';
-      case 'dual_wield': return 'Dual Wield';
-      case 'any': return 'Any Loadout';
+      case 'one_handed': return 'One-Handed (Single, Dual Wield, or with Shield)';
       default: return loadoutType;
     }
   };
@@ -169,8 +169,7 @@ function WeaponShopPage() {
     switch (loadoutType) {
       case 'shield': return 'text-cyan-400';
       case 'two_handed': return 'text-purple-400';
-      case 'dual_wield': return 'text-yellow-400';
-      case 'any': return 'text-green-400';
+      case 'one_handed': return 'text-green-400';
       default: return 'text-gray-400';
     }
   };
