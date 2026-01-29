@@ -42,7 +42,7 @@ After running `npx prisma generate`, you should see:
 Environment variables loaded from .env
 Prisma schema loaded from prisma/schema.prisma
 
-✔ Generated Prisma Client (v5.20.0) to ./node_modules/@prisma/client in XXXms
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in XXXms
 ```
 
 #### Verify Your Installation
@@ -57,7 +57,14 @@ This will check all aspects of your installation and confirm everything is worki
 
 #### Common Mistakes to Avoid
 
-1. **Typo in package name**: Make sure you type `prisma` not `prima`
+1. **Typo in package name**: When running `npm install` commands, make sure you type `prisma` not `prima`
+   ```bash
+   # Wrong:
+   npm i --save-dev prima@latest
+   
+   # Correct:
+   npm i --save-dev prisma@latest
+   ```
 2. **Don't manually edit schema.prisma output path**: The default configuration is correct
 3. **Always use exact commands**: Don't skip the `rm -rf` step - it's crucial
 4. **Check your .env file**: Ensure `DATABASE_URL` is correctly configured
@@ -69,7 +76,7 @@ If you see errors about connecting to the database:
 ```bash
 # 1. Ensure Docker containers are running
 cd prototype
-docker-compose up -d
+docker compose up -d  # or "docker-compose" for older Docker versions
 
 # 2. Wait a few seconds for PostgreSQL to start
 sleep 5
@@ -121,7 +128,7 @@ npx prisma migrate reset --force
 ```bash
 # 1. Start database
 cd prototype
-docker-compose up -d
+docker compose up -d  # or "docker-compose" for older Docker versions
 
 # 2. Install and setup backend
 cd backend
