@@ -207,7 +207,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Combat Systems cap to level 48',
       'Combat Systems cap to level 50 (maximum)',
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     type: 'defense_training_academy',
@@ -227,7 +227,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Defensive Systems cap to level 48',
       'Defensive Systems cap to level 50 (maximum)',
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     type: 'mobility_training_academy',
@@ -247,7 +247,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Chassis & Mobility cap to level 48',
       'Chassis & Mobility cap to level 50 (maximum)',
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     type: 'ai_training_academy',
@@ -267,7 +267,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'AI & Team cap to level 48',
       'AI & Team cap to level 50 (maximum)',
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     type: 'income_generator',

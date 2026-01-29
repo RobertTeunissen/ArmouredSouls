@@ -338,7 +338,8 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
       academyName = academyType
         .split('_')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+        .join(' ')
+        .replace('Ai ', 'AI '); // Fix AI capitalization
     }
 
     const newLevel = currentLevel + 1;
@@ -402,7 +403,7 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
   try {
     const userId = req.user!.userId;
     const robotId = parseInt(req.params.id);
-    const { weaponInventoryId } = req.body;
+    const { weaponInventoryId, slot = 'main' } = req.body; // slot can be 'main' or 'offhand'
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -422,11 +423,20 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
 
     // If weaponInventoryId is null, unequip weapon
     if (weaponInventoryId === null) {
+      const updateData = slot === 'offhand' 
+        ? { offhandWeaponId: null } 
+        : { mainWeaponId: null };
+      
       const updatedRobot = await prisma.robot.update({
         where: { id: robotId },
-        data: { weaponInventoryId: null },
+        data: updateData,
         include: {
-          weaponInventory: {
+          mainWeapon: {
+            include: {
+              weapon: true,
+            },
+          },
+          offhandWeapon: {
             include: {
               weapon: true,
             },
@@ -461,11 +471,20 @@ router.put('/:id/weapon', authenticateToken, async (req: AuthRequest, res: Respo
     }
 
     // Equip weapon to robot
+    const updateData = slot === 'offhand'
+      ? { offhandWeaponId: weaponInvIdNum }
+      : { mainWeaponId: weaponInvIdNum };
+    
     const updatedRobot = await prisma.robot.update({
       where: { id: robotId },
-      data: { weaponInventoryId: weaponInvIdNum },
+      data: updateData,
       include: {
-        weaponInventory: {
+        mainWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+        offhandWeapon: {
           include: {
             weapon: true,
           },

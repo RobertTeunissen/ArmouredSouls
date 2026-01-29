@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { calculateAttributeBonus, getAttributeDisplay } from '../utils/robotStats';
@@ -69,6 +69,7 @@ interface Weapon {
 
 function RobotDetailPage() {
   const { id } = useParams();
+  const location = useLocation();
   const [robot, setRobot] = useState<Robot | null>(null);
   const [weapons, setWeapons] = useState<WeaponInventory[]>([]);
   const [currency, setCurrency] = useState(0);
@@ -157,12 +158,19 @@ function RobotDetailPage() {
       }
     };
 
+    // Re-fetch when window regains focus (e.g., clicking back to this tab/window)
+    const handleFocus = () => {
+      fetchRobotAndWeapons();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
     };
-  }, [id]);
+  }, [id, location]); // Re-fetch when route location changes
 
   useEffect(() => {
     if (user) {
@@ -217,15 +225,15 @@ function RobotDetailPage() {
         const facilities = await facilitiesResponse.json();
         
         // Always set training level (even if 0)
-        const trainingFacility = facilities.find((f: any) => f.facilityType === 'training_facility');
-        setTrainingLevel(trainingFacility?.level || 0);
+        const trainingFacility = facilities.find((f: any) => f.type === 'training_facility');
+        setTrainingLevel(trainingFacility?.currentLevel || 0);
 
         // Always set academy levels (even if 0)
         setAcademyLevels({
-          combat_training_academy: facilities.find((f: any) => f.facilityType === 'combat_training_academy')?.level || 0,
-          defense_training_academy: facilities.find((f: any) => f.facilityType === 'defense_training_academy')?.level || 0,
-          mobility_training_academy: facilities.find((f: any) => f.facilityType === 'mobility_training_academy')?.level || 0,
-          ai_training_academy: facilities.find((f: any) => f.facilityType === 'ai_training_academy')?.level || 0,
+          combat_training_academy: facilities.find((f: any) => f.type === 'combat_training_academy')?.currentLevel || 0,
+          defense_training_academy: facilities.find((f: any) => f.type === 'defense_training_academy')?.currentLevel || 0,
+          mobility_training_academy: facilities.find((f: any) => f.type === 'mobility_training_academy')?.currentLevel || 0,
+          ai_training_academy: facilities.find((f: any) => f.type === 'ai_training_academy')?.currentLevel || 0,
         });
       }
     } catch (err) {
@@ -409,13 +417,27 @@ function RobotDetailPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <button
-            onClick={() => navigate('/robots')}
-            className="text-blue-400 hover:text-blue-300 mb-4"
-          >
-            ← Back to Robots
-          </button>
-          <h2 className="text-3xl font-bold">{robot.name}</h2>
+          <div className="flex justify-between items-start">
+            <div>
+              <button
+                onClick={() => navigate('/robots')}
+                className="text-blue-400 hover:text-blue-300 mb-4"
+              >
+                ← Back to Robots
+              </button>
+              <h2 className="text-3xl font-bold">{robot.name}</h2>
+            </div>
+            <button
+              onClick={() => {
+                setLoading(true);
+                fetchRobotAndWeapons();
+              }}
+              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-sm"
+              title="Refresh robot data and academy levels"
+            >
+              🔄 Refresh
+            </button>
+          </div>
         </div>
 
         {/* Currency Balance */}
