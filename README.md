@@ -34,6 +34,9 @@ npm run dev  # Terminal 2
 Open http://localhost:3000 - Login with `player1` / `password123`
 
 📖 **For testing new versions and database reset:** See [SETUP.md](docs/SETUP.md)
+🔧 **Having installation issues?** → [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+
+⚠️ **If `prisma generate` fails**: Your local `schema.prisma` may be corrupted. Run: `git restore prototype/backend/prisma/schema.prisma` then try again. See [troubleshooting guide](docs/TROUBLESHOOTING.md) for details.
 
 ## 🎮 Project Vision
 
@@ -56,6 +59,7 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 ## 📚 Documentation
 
 - [**Setup Guide**](docs/SETUP.md) - Get the Phase 1 prototype running locally
+- [**Troubleshooting**](docs/TROUBLESHOOTING.md) - Fix installation and database issues
 - [**Robot Attributes System**](docs/ROBOT_ATTRIBUTES.md) - Complete attribute system, currency, weapons, and economy
 - [Phase 1 Plan](docs/PHASE1_PLAN.md) - Detailed plan for local prototype development
 - [Game Design Document](docs/GAME_DESIGN.md) - High-level game design and vision

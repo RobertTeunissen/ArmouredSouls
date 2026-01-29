@@ -1,0 +1,256 @@
+# Troubleshooting Guide
+
+## Installation Issues
+
+### Problem: "Generating client into node_modules/@prisma/client is not allowed"
+
+This error occurs when Prisma's client generation tries to write to a restricted location. This commonly happens after:
+- Upgrading/downgrading Prisma versions
+- Corrupted node_modules
+- Interrupted installations
+- **Your local schema.prisma file has an incorrect `output` configuration**
+
+#### ⚠️ CRITICAL FIRST STEP: Verify Your schema.prisma File
+
+**Before doing anything else**, check if your `schema.prisma` has an incorrect `output` line:
+
+```bash
+# Quick automated check - run from backend directory
+cd prototype/backend
+bash scripts/check-schema.sh
+```
+
+Or check manually:
+```bash
+# From the backend directory
+cd prototype/backend
+head -10 prisma/schema.prisma
+```
+
+If you see an `output` line in the `generator client` block:
+```prisma
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client"  // ❌ THIS LINE SHOULD NOT EXIST
+}
+```
+
+**You MUST fix this first!** Replace your local schema.prisma with the correct version from the repository:
+
+```bash
+# Restore the correct file from git (recommended)
+git restore prisma/schema.prisma
+
+# Verify the fix:
+bash scripts/check-schema.sh
+```
+
+The correct `generator client` block should look like this (NO output line):
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+```
+
+#### Solution: Complete Clean Installation
+
+**After fixing schema.prisma**, follow these steps **in order**:
+
+```bash
+# 1. Navigate to the backend directory
+cd prototype/backend
+
+# 2. Remove all generated and installed files
+rm -rf node_modules package-lock.json
+rm -rf node_modules/.prisma
+rm -rf node_modules/@prisma
+
+# 3. Install dependencies (this may take a few minutes)
+npm install
+
+# 4. Generate Prisma Client
+npx prisma generate
+
+# 5. Reset and seed the database (if needed)
+npx prisma migrate reset --force
+
+# 6. Start the development server
+npm run dev
+```
+
+#### Expected Output
+
+After running `npx prisma generate`, you should see:
+```
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in XXXms
+```
+
+#### Verify Your Installation
+
+After fixing the issue, run the verification script:
+```bash
+cd prototype/backend
+bash scripts/verify-installation.sh
+```
+
+This will check all aspects of your installation and confirm everything is working.
+
+#### Common Mistakes to Avoid
+
+1. **Incorrect schema.prisma file**: Your local file may have an extra `output` line that shouldn't exist. Always verify with `git diff prisma/schema.prisma` and restore from repository if different.
+2. **Typo in package name**: When running `npm install` commands, make sure you type `prisma` not `prizma` or other misspellings
+   ```bash
+   # Wrong:
+   npm i --save-dev prizma@latest
+   
+   # Correct:
+   npm i --save-dev prisma@latest
+   ```
+3. **Don't manually add output path to schema.prisma**: The default configuration is correct - no `output` line needed
+4. **Always use exact commands**: Don't skip the `rm -rf` step - it's crucial
+5. **Check your .env file**: Ensure `DATABASE_URL` is correctly configured
+
+### Problem: Schema.prisma Has Incorrect Output Configuration
+
+**Symptom**: Even after clean installation, `npx prisma generate` fails with:
+```
+Error: 
+Generating client into .../node_modules/@prisma/client is not allowed.
+
+Suggestion:
+In .../prisma/schema.prisma replace:
+output   = "../node_modules/@prisma/client"
+with
+output   = "../node_modules/.prisma/client"
+```
+
+**Root Cause**: Your local `schema.prisma` file has been modified and contains an `output` line in the `generator client` block that doesn't exist in the repository version.
+
+**Solution**:
+
+```bash
+cd prototype/backend
+
+# Quick check to diagnose the issue:
+bash scripts/check-schema.sh
+
+# If the script reports a problem, restore the correct version:
+git restore prisma/schema.prisma
+
+# Verify the fix:
+bash scripts/check-schema.sh
+
+# Now generate the Prisma client:
+npx prisma generate
+```
+
+The correct `generator client` block should be:
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+```
+
+**Do NOT add an `output` line!** Prisma will use the correct default location automatically.
+
+**Why did this happen?** 
+- You may have manually added the `output` line while troubleshooting
+- An older version of Prisma or a migration tool may have added it
+- Following outdated documentation or Stack Overflow answers
+
+**The fix**: Always use `git restore prisma/schema.prisma` to get the correct version from the repository.
+
+### Problem: Database Connection Issues
+
+If you see errors about connecting to the database:
+
+```bash
+# 1. Ensure Docker containers are running
+cd prototype
+docker compose up -d  # or "docker-compose" for older Docker versions
+
+# 2. Wait a few seconds for PostgreSQL to start
+sleep 5
+
+# 3. Verify the connection
+cd backend
+npx prisma db push
+```
+
+### Problem: "Cannot convert undefined or null to object" during prisma generate
+
+This error typically means:
+- Your Prisma schema has a syntax error
+- Environment variables are not loaded correctly
+
+**Solution:**
+
+```bash
+# 1. Verify your .env file exists and has DATABASE_URL
+cat .env | grep DATABASE_URL
+
+# 2. If missing, copy from example
+cp .env.example .env
+
+# 3. Edit .env with your database credentials
+nano .env
+```
+
+### Problem: Login Not Working After Prisma Upgrade
+
+If you can't log in after a Prisma upgrade/downgrade:
+
+```bash
+# The database schema and client are out of sync
+# Run a complete reset:
+
+cd prototype/backend
+npx prisma migrate reset --force
+```
+
+**Warning:** This will delete all data in your database and reseed it with default values.
+
+---
+
+## Development Workflow
+
+### Starting Fresh
+
+```bash
+# 1. Start database
+cd prototype
+docker compose up -d  # or "docker-compose" for older Docker versions
+
+# 2. Install and setup backend
+cd backend
+npm install
+npx prisma generate
+npx prisma migrate dev
+npm run dev
+```
+
+### After Pulling New Changes
+
+```bash
+cd prototype/backend
+
+# If schema.prisma changed:
+npx prisma generate
+npx prisma migrate dev
+
+# If dependencies changed:
+npm install
+```
+
+---
+
+## Getting Help
+
+If you're still experiencing issues after following this guide:
+
+1. Check the [GitHub Issues](https://github.com/RobertTeunissen/ArmouredSouls/issues)
+2. Include the **full terminal output** when asking for help
+3. Mention which steps you've already tried

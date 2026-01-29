@@ -308,6 +308,8 @@ npm run build  # Builds to dist/
 
 ## 🐛 Troubleshooting
 
+> **📘 For installation issues, Prisma errors, and common problems, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)**
+
 ### 🔧 Migration Conflicts (IMPORTANT!)
 
 **Issue**: You see errors like:
