@@ -849,6 +849,70 @@ Effective Penetration: 10 * 0.80 = 8
 
 ---
 
+## Addendum: Questions & Clarifications for Implementation
+
+### Prerequisites (Before Starting Implementation)
+
+**Issue 1: Weapon Seed Data Missing**
+- **Status**: Needs verification
+- **Issue**: The 10 weapons defined in WEAPONS_AND_LOADOUT.md may not be seeded in the database
+- **Action**: Create weapon seed data in `prototype/backend/prisma/seed.ts` matching weapon specifications
+- **Priority**: BLOCKER - Required before any testing can begin
+
+**Issue 2: Weapon Workshop Discount Formula Discrepancy**
+- **Status**: Bug identified
+- **Current**: `level * 5` (would give 5%, 10%, 15%... up to 50% at level 10)
+- **Expected**: Level-based array [0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
+- **Action**: Fix in `prototype/backend/src/routes/weaponInventory.ts` and shared utility
+- **Priority**: HIGH - Affects game economy
+
+**Issue 3: robotStats Utility Existence**
+- **Status**: Needs verification
+- **Issue**: `RobotDetailPage.tsx` imports `../utils/robotStats` but file existence not confirmed
+- **Action**: If missing, create as part of Phase 1. If exists, verify it handles weapon bonuses correctly
+- **Priority**: HIGH - Required for Phase 2
+
+### Implementation Clarifications
+
+**Question 1: Loadout Type Selection UI**
+- **Context**: Database supports loadout types but UI implementation unclear
+- **Question**: Is loadout type selector currently in the UI?
+- **Recommendation**: Include in Phase 2 (Frontend) as specified in PRD
+
+**Question 2: Storage Capacity Enforcement**
+- **Context**: Docs specify 10-weapon default capacity with expansion via Storage Facility
+- **Question**: Enforce in MVP or defer to later phase?
+- **Recommendation**: Defer to Phase 3 or post-MVP (noted in "Non-Goals" section)
+
+**Question 3: "Any" Loadout Type**
+- **Context**: Weapon schema has loadoutType field, docs show specific loadouts
+- **Question**: Should weapons support "any" loadout type for universal weapons?
+- **Recommendation**: Yes, use "any" for weapons compatible with all loadout types
+
+**Question 4: Shield Equipment Restriction**
+- **Context**: Shields should only go in offhand with weapon_shield loadout
+- **Question**: Block shields from main weapon slot entirely, or only validate on loadout?
+- **Recommendation**: Block shields from main weapon slot at API level - they are defensive equipment only
+
+**Question 5: HP/Shield Initialization**
+- **Context**: Robots have currentHP/currentShield fields
+- **Question**: How are these initialized on robot creation?
+- **Recommendation**: Add to robot creation API: `currentHP = maxHP, currentShield = maxShield`
+
+**Question 6: Multiple Weapon Purchase Warning**
+- **Context**: Users can buy multiple copies of same weapon
+- **Question**: Should we warn users when buying a duplicate?
+- **Recommendation**: Add in Phase 4 (Polish) - nice-to-have UX improvement
+
+### Database Schema Verification
+
+✅ **Verified**: All 23 robot attributes have corresponding bonus fields in Weapon model  
+✅ **Verified**: Robot.mainWeaponId and Robot.offhandWeaponId foreign keys exist  
+✅ **Verified**: Robot.loadoutType field exists with proper default  
+✅ **Verified**: WeaponInventory table properly links users, weapons, and robots
+
+---
+
 **Document Version**: 1.0  
 **Last Reviewed**: January 29, 2026  
 **Next Review**: After Phase 1 completion
