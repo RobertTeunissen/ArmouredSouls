@@ -15,6 +15,20 @@ const BASE_REWARD_WIN = 1000;
 const BASE_REWARD_LOSS = 300;
 const BASE_REWARD_DRAW = 500;
 
+// Battle simulation constants
+const WINNER_DAMAGE_PERCENT = 0.15; // Winners lose 15% HP
+const LOSER_DAMAGE_PERCENT = 0.40; // Losers lose 40% HP
+const BYE_BATTLE_DAMAGE_PERCENT = 0.08; // Bye battles: 8% HP loss
+const MIN_BATTLE_DURATION = 20; // Minimum battle duration in seconds
+const BATTLE_DURATION_VARIANCE = 25; // Random variance added to duration
+const BYE_BATTLE_DURATION = 15; // Fixed duration for bye battles
+
+// Economic constants
+const REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
+
+// Bye-robot identifier
+const BYE_ROBOT_NAME = 'Bye Robot';
+
 export interface BattleResult {
   battleId: number;
   winnerId: number | null;
@@ -85,14 +99,14 @@ function simulateBattle(robot1: Robot, robot2: Robot): BattleResult {
   
   // Calculate damage dealt (loser takes more damage)
   const baseDamage = 30; // Base damage percentage
-  const robot1DamageTaken = robot1Wins ? Math.floor(robot1.maxHP * 0.15) : Math.floor(robot1.maxHP * 0.40);
-  const robot2DamageTaken = robot1Wins ? Math.floor(robot2.maxHP * 0.40) : Math.floor(robot2.maxHP * 0.15);
+  const robot1DamageTaken = robot1Wins ? Math.floor(robot1.maxHP * WINNER_DAMAGE_PERCENT) : Math.floor(robot1.maxHP * LOSER_DAMAGE_PERCENT);
+  const robot2DamageTaken = robot1Wins ? Math.floor(robot2.maxHP * LOSER_DAMAGE_PERCENT) : Math.floor(robot2.maxHP * WINNER_DAMAGE_PERCENT);
   
   const robot1FinalHP = Math.max(0, robot1.currentHP - robot1DamageTaken);
   const robot2FinalHP = Math.max(0, robot2.currentHP - robot2DamageTaken);
   
-  // Battle duration (random between 20-45 seconds)
-  const durationSeconds = 20 + Math.floor(Math.random() * 25);
+  // Battle duration (random between MIN_BATTLE_DURATION and MIN_BATTLE_DURATION + BATTLE_DURATION_VARIANCE seconds)
+  const durationSeconds = MIN_BATTLE_DURATION + Math.floor(Math.random() * BATTLE_DURATION_VARIANCE);
   
   return {
     battleId: 0, // Will be set after creating battle record
@@ -111,8 +125,8 @@ function simulateBattle(robot1: Robot, robot2: Robot): BattleResult {
  * Simulate a bye-robot battle (player always wins easily)
  */
 function simulateByeBattle(playerRobot: Robot, byeRobot: Robot): BattleResult {
-  // Player wins with minimal damage (5-10% HP)
-  const playerDamage = Math.floor(playerRobot.maxHP * 0.08); // 8% damage
+  // Player wins with minimal damage (BYE_BATTLE_DAMAGE_PERCENT HP)
+  const playerDamage = Math.floor(playerRobot.maxHP * BYE_BATTLE_DAMAGE_PERCENT);
   const playerFinalHP = Math.max(0, playerRobot.currentHP - playerDamage);
   
   // Bye-robot loses badly
@@ -126,7 +140,7 @@ function simulateByeBattle(playerRobot: Robot, byeRobot: Robot): BattleResult {
     robot2FinalHP: byeRobotFinalHP,
     robot1Damage: playerDamage,
     robot2Damage: byeRobotDamage,
-    durationSeconds: 15, // Quick battle
+    durationSeconds: BYE_BATTLE_DURATION,
     isDraw: false,
     isByeMatch: true,
   };
@@ -188,8 +202,8 @@ async function createBattleRecord(
       // Economic data
       winnerReward: isRobot1Winner ? robot1Reward : robot2Reward,
       loserReward: isRobot1Winner ? robot2Reward : robot1Reward,
-      robot1RepairCost: Math.floor(result.robot1Damage * 50), // 50 credits per HP
-      robot2RepairCost: Math.floor(result.robot2Damage * 50),
+      robot1RepairCost: Math.floor(result.robot1Damage * REPAIR_COST_PER_HP),
+      robot2RepairCost: Math.floor(result.robot2Damage * REPAIR_COST_PER_HP),
       
       // Final state
       robot1FinalHP: result.robot1FinalHP,
@@ -284,17 +298,17 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
   }
   
   // Check if this is a bye-robot match
-  const isByeMatch = robot1.name === 'Bye Robot' || robot2.name === 'Bye Robot';
+  const isByeMatch = robot1.name === BYE_ROBOT_NAME || robot2.name === BYE_ROBOT_NAME;
   
   // Simulate battle
   let result: BattleResult;
   if (isByeMatch) {
-    const playerRobot = robot1.name === 'Bye Robot' ? robot2 : robot1;
-    const byeRobot = robot1.name === 'Bye Robot' ? robot1 : robot2;
+    const playerRobot = robot1.name === BYE_ROBOT_NAME ? robot2 : robot1;
+    const byeRobot = robot1.name === BYE_ROBOT_NAME ? robot1 : robot2;
     result = simulateByeBattle(playerRobot, byeRobot);
     
     // Adjust result to match robot order
-    if (robot1.name === 'Bye Robot') {
+    if (robot1.name === BYE_ROBOT_NAME) {
       // Swap the results since bye-robot is robot1
       const temp = result.robot1FinalHP;
       result.robot1FinalHP = result.robot2FinalHP;

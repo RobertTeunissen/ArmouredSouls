@@ -3,6 +3,33 @@ import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+// Default robot attributes (all set to 1.00)
+const DEFAULT_ROBOT_ATTRIBUTES = {
+  combatPower: 1.0,
+  targetingSystems: 1.0,
+  criticalSystems: 1.0,
+  penetration: 1.0,
+  weaponControl: 1.0,
+  attackSpeed: 1.0,
+  armorPlating: 1.0,
+  shieldCapacity: 1.0,
+  evasionThrusters: 1.0,
+  damageDampeners: 1.0,
+  counterProtocols: 1.0,
+  hullIntegrity: 1.0,
+  servoMotors: 1.0,
+  gyroStabilizers: 1.0,
+  hydraulicSystems: 1.0,
+  powerCore: 1.0,
+  combatAlgorithms: 1.0,
+  threatAnalysis: 1.0,
+  adaptiveAI: 1.0,
+  logicCores: 1.0,
+  syncProtocols: 1.0,
+  supportSystems: 1.0,
+  formationTactics: 1.0,
+};
+
 // Robot name generator for test data
 const prefixes = [
   'Iron', 'Steel', 'Titanium', 'Cyber', 'Plasma', 'Quantum',
@@ -262,8 +289,12 @@ async function main() {
   console.log('   - 1 shield weapon (Combat Shield)');
   console.log('   - 1 practice weapon (Practice Sword - FREE)');
 
-  // Store the Practice Sword ID for later use
-  const practiceSword = weapons[10]; // Last weapon in array
+  // Find the Practice Sword weapon by name for later use
+  const practiceSword = weapons.find((weapon) => weapon.name === 'Practice Sword');
+  
+  if (!practiceSword) {
+    throw new Error('Practice Sword weapon not found in seeded weapons array');
+  }
 
   // Create test users
   console.log('Creating test users (admin + player1-5 + 100 test users)...');
@@ -370,30 +401,8 @@ async function main() {
         name: robotName,
         frameId: 1,
         
-        // All 23 attributes set to 1.00
-        combatPower: 1.00,
-        targetingSystems: 1.00,
-        criticalSystems: 1.00,
-        penetration: 1.00,
-        weaponControl: 1.00,
-        attackSpeed: 1.00,
-        armorPlating: 1.00,
-        shieldCapacity: 1.00,
-        evasionThrusters: 1.00,
-        damageDampeners: 1.00,
-        counterProtocols: 1.00,
-        hullIntegrity: 1.00,
-        servoMotors: 1.00,
-        gyroStabilizers: 1.00,
-        hydraulicSystems: 1.00,
-        powerCore: 1.00,
-        combatAlgorithms: 1.00,
-        threatAnalysis: 1.00,
-        adaptiveAI: 1.00,
-        logicCores: 1.00,
-        syncProtocols: 1.00,
-        supportSystems: 1.00,
-        formationTactics: 1.00,
+        // All 23 attributes set to 1.00 via shared defaults
+        ...DEFAULT_ROBOT_ATTRIBUTES,
         
         // Combat state (HP formula: hullIntegrity × 10 = 1.00 × 10 = 10)
         currentHP: 10,
@@ -453,30 +462,8 @@ async function main() {
       name: 'Bye Robot',
       frameId: 1,
       
-      // All attributes set to 1.00 (minimal stats)
-      combatPower: 1.00,
-      targetingSystems: 1.00,
-      criticalSystems: 1.00,
-      penetration: 1.00,
-      weaponControl: 1.00,
-      attackSpeed: 1.00,
-      armorPlating: 1.00,
-      shieldCapacity: 1.00,
-      evasionThrusters: 1.00,
-      damageDampeners: 1.00,
-      counterProtocols: 1.00,
-      hullIntegrity: 1.00,
-      servoMotors: 1.00,
-      gyroStabilizers: 1.00,
-      hydraulicSystems: 1.00,
-      powerCore: 1.00,
-      combatAlgorithms: 1.00,
-      threatAnalysis: 1.00,
-      adaptiveAI: 1.00,
-      logicCores: 1.00,
-      syncProtocols: 1.00,
-      supportSystems: 1.00,
-      formationTactics: 1.00,
+      // All attributes set to 1.00 via shared defaults
+      ...DEFAULT_ROBOT_ATTRIBUTES,
       
       // Combat state
       currentHP: 10,

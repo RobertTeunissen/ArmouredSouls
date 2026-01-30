@@ -307,10 +307,22 @@ describe('League Instance Service', () => {
 
       await rebalanceInstances('champion');
 
-      // Verify rebalancing occurred
+      // Verify rebalancing occurred while respecting MAX_ROBOTS_PER_INSTANCE
       const instances = await getInstancesForTier('champion');
-      expect(instances).toHaveLength(1); // Should consolidate to 1 instance (100 robots)
+      const totalRobots = instances.reduce(
+        (sum, instance) => sum + instance.currentRobots,
+        0,
+      );
+      expect(totalRobots).toBe(100);
+      
+      // With 100 robots and MAX_ROBOTS_PER_INSTANCE=100, should have exactly 1 instance
+      expect(instances).toHaveLength(1);
       expect(instances[0].currentRobots).toBe(100);
+      
+      // Verify no instance exceeds the limit
+      instances.forEach((instance) => {
+        expect(instance.currentRobots).toBeLessThanOrEqual(100);
+      });
 
       // Clean up
       await prisma.robot.deleteMany({ where: { userId: user.id } });

@@ -9,6 +9,9 @@ export const ELO_MATCH_FALLBACK = 300; // Maximum ELO difference for fallback ma
 export const RECENT_OPPONENT_LIMIT = 5; // Number of recent opponents to track
 export const BATTLE_READINESS_HP_THRESHOLD = 0.75; // 75% HP required
 
+// Bye-robot identifier
+export const BYE_ROBOT_NAME = 'Bye Robot';
+
 export interface BattleReadinessCheck {
   isReady: boolean;
   reasons: string[];
@@ -172,7 +175,7 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
     where: {
       leagueId,
       NOT: {
-        name: 'Bye Robot', // Exclude bye-robot from queue
+        name: BYE_ROBOT_NAME, // Exclude bye-robot from queue
       },
     },
     orderBy: [
@@ -264,7 +267,7 @@ async function pairRobots(robots: Robot[]): Promise<MatchPair[]> {
   if (availableRobots.length === 1) {
     const lastRobot = availableRobots[0];
     const byeRobot = await prisma.robot.findFirst({
-      where: { name: 'Bye Robot' },
+      where: { name: BYE_ROBOT_NAME },
     });
     
     if (byeRobot) {
@@ -277,7 +280,7 @@ async function pairRobots(robots: Robot[]): Promise<MatchPair[]> {
       
       console.log(`[Matchmaking] Bye-match created for ${lastRobot.name}`);
     } else {
-      console.warn(`[Matchmaking] No Bye Robot found for ${lastRobot.name}`);
+      console.warn(`[Matchmaking] No ${BYE_ROBOT_NAME} found for ${lastRobot.name}`);
     }
   }
   
