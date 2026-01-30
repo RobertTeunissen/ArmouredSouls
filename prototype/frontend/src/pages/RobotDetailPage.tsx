@@ -7,6 +7,8 @@ import LoadoutSelector from '../components/LoadoutSelector';
 import WeaponSlot from '../components/WeaponSlot';
 import WeaponSelectionModal from '../components/WeaponSelectionModal';
 import StatComparison from '../components/StatComparison';
+import StanceSelector from '../components/StanceSelector';
+import YieldThresholdSlider from '../components/YieldThresholdSlider';
 import { calculateAttributeBonus, getAttributeDisplay } from '../utils/robotStats';
 
 interface Robot {
@@ -16,6 +18,8 @@ interface Robot {
   mainWeaponId: number | null;
   offhandWeaponId: number | null;
   loadoutType: string;
+  stance: string;
+  yieldThreshold: number;
   mainWeapon: WeaponInventory | null;
   offhandWeapon: WeaponInventory | null;
   combatPower: number;
@@ -469,6 +473,39 @@ function RobotDetailPage() {
                 onUnequip={() => handleUnequipWeapon('offhand')}
               />
             )}
+          </div>
+        </div>
+
+        {/* Battle Configuration */}
+        <div className="bg-gray-800 p-6 rounded-lg mb-6">
+          <h2 className="text-2xl font-semibold mb-6">⚔️ Battle Configuration</h2>
+          
+          {/* Stance Selector */}
+          <div className="mb-6">
+            <StanceSelector
+              robotId={robot.id}
+              currentStance={robot.stance}
+              onStanceChange={(newStance) => {
+                setRobot({ ...robot, stance: newStance });
+                setSuccessMessage(`Stance updated to ${newStance}`);
+                setTimeout(() => setSuccessMessage(''), 3000);
+              }}
+            />
+          </div>
+
+          {/* Yield Threshold */}
+          <div className="mt-6">
+            <YieldThresholdSlider
+              robotId={robot.id}
+              currentThreshold={robot.yieldThreshold}
+              robotAttributes={robot}
+              repairBayLevel={0} // TODO: Get from user's facilities
+              onThresholdChange={(newThreshold) => {
+                setRobot({ ...robot, yieldThreshold: newThreshold });
+                setSuccessMessage(`Yield threshold updated to ${newThreshold}%`);
+                setTimeout(() => setSuccessMessage(''), 3000);
+              }}
+            />
           </div>
         </div>
 
