@@ -1,6 +1,6 @@
 # Robot Attributes System
 
-**Last Updated**: January 29, 2026  
+**Last Updated**: January 30, 2026  
 **Status**: Design Document - Complete Time-Based Combat System
 
 ## Overview
@@ -92,9 +92,11 @@ These are tracked per robot but not upgraded directly. See DATABASE_SCHEMA.md fo
 - **Current HP**: Health remaining (max determined by Hull Integrity)
   - **Critical: Robot HP does NOT regenerate during or between battles**
   - Damage to HP persists until repaired with Credits
+  - **Initialization**: New robots start with `currentHP = maxHP` (full health)
 - **Current Shield**: Energy shield HP remaining (max determined by Shield Capacity)
   - Energy shields DO regenerate during battle (based on Power Core attribute)
   - Energy shields reset to max after battle ends
+  - **Initialization**: New robots start with `currentShield = maxShield` (full shields)
 - **Damage Taken**: Total damage in current/last battle
 
 ### Robot Identity
@@ -160,6 +162,32 @@ Robots are bipedal humanoids with two arms. The loadout system determines how we
 - Weapon crafting system
 
 **See: [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+
+### Loadout Bonuses Quick Reference
+
+For quick reference, the four loadout types provide the following bonuses/penalties:
+
+**1. Weapon + Shield** (`weapon_shield`)
+- **Bonuses**: +20% Shield Capacity, +15% Armor Plating, +10% Counter Protocols
+- **Penalties**: -15% Attack Speed
+- **Best For**: Defensive tank builds
+
+**2. Two-Handed** (`two_handed`)
+- **Bonuses**: +25% Combat Power, +20% Critical Systems
+- **Penalties**: -10% Evasion Thrusters
+- **Best For**: High-damage glass cannon builds
+
+**3. Dual-Wield** (`dual_wield`)
+- **Bonuses**: +30% Attack Speed, +15% Weapon Control
+- **Penalties**: -20% Penetration, -10% Combat Power
+- **Best For**: Rapid-attack DPS builds
+
+**4. Single** (`single`)
+- **Bonuses**: +10% Gyro Stabilizers, +5% Servo Motors
+- **Penalties**: None
+- **Best For**: Balanced, flexible builds
+
+**Note**: Percentage-based bonuses scale proportionally with robot power level, ensuring meaningful choices at all stages of progression.
 
 ---
 
@@ -307,6 +335,51 @@ elif robot_heavily_damaged (HP < 10%):
     final_repair = base_repair × damage_percentage × repair_cost_multiplier
 else:
     final_repair = base_repair × damage_percentage
+```
+
+**Medical Bay Facility Interaction:**
+
+The **Medical Bay** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#5-medical-bay)) provides an **additional reduction** to the critical damage multiplier:
+
+```
+// Medical Bay reduces critical damage multiplier (0 HP only)
+if robot_destroyed (HP = 0) AND medical_bay_level > 0:
+    medical_bay_reduction = medical_bay_level × 0.1  // 10% per level
+    effective_multiplier = 2.0 × (1 - medical_bay_reduction)
+    
+    // Examples:
+    // Level 1: 2.0 × (1 - 0.1) = 1.8x multiplier (10% reduction)
+    // Level 5: 2.0 × (1 - 0.5) = 1.0x multiplier (50% reduction, normal cost)
+    // Level 10: 2.0 × (1 - 1.0) = 0.0x penalty eliminated
+
+    final_repair = base_repair × damage_percentage × effective_multiplier
+```
+
+**Repair Bay Facility Interaction:**
+
+The **Repair Bay** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#1-repair-bay)) provides a **discount** on ALL repair costs (applied after multipliers):
+
+```
+// Repair Bay provides discount on final repair cost
+repair_bay_discount = repair_bay_level × 0.05  // 5% per level, max 50%
+final_cost = final_repair × (1 - repair_bay_discount)
+```
+
+**Combined Example:**
+- Robot with 230 total attributes: base_repair = ₡23,000
+- Destroyed (0 HP, 100% damage)
+- Medical Bay Level 5 (50% reduction on 2.0x multiplier)
+- Repair Bay Level 5 (25% discount on all repairs)
+
+```
+Step 1: Base calculation
+  final_repair = ₡23,000 × 1.0 × 1.0 = ₡23,000  // Medical Bay reduces 2.0x to 1.0x
+
+Step 2: Apply Repair Bay discount
+  final_cost = ₡23,000 × (1 - 0.25) = ₡17,250
+
+Without facilities: ₡46,000
+With both facilities: ₡17,250 (62.5% total savings)
 ```
 
 **Example:**
@@ -574,7 +647,7 @@ defender.damage_taken += damage_to_hp
 max_shield = shield_capacity_attribute * 2
 
 // Loadout bonus
-if loadout == WEAPON_AND_SHIELD:
+if loadout == "weapon_shield":
     max_shield *= 1.20
 
 // Power Core provides energy shield regeneration
@@ -605,7 +678,7 @@ if stance == DEFENSIVE:
     base_counter *= 1.15
 
 // Loadout modifier
-if loadout == WEAPON_AND_SHIELD:
+if loadout == "weapon_shield":
     base_counter *= 1.10
 
 counter_chance = clamp(base_counter, 0%, 40%)
@@ -633,6 +706,57 @@ defender.current_shield = min(defender.current_shield, max_shield)
 ```
 
 **Note**: Robot HP does NOT regenerate during or between battles. Damage to HP persists until repaired with Credits.
+
+---
+
+## Effective Stat Calculation
+
+**How Weapon Bonuses, Loadout Modifiers, Stance Modifiers, and Facility Bonuses Combine**
+
+The effective value of each attribute is calculated by combining multiple modifier sources:
+
+```
+effective_attribute = (base_attribute + weapon_bonuses_total) × (1 + loadout_modifier% + stance_modifier% + facility_bonus%)
+```
+
+**Step-by-Step Calculation:**
+
+1. **Base Attribute**: Robot's current attribute level (1-50)
+2. **Weapon Bonuses**: Sum of bonuses from all equipped weapons (additive)
+3. **Percentage Modifiers**: Loadout + Stance + Facility bonuses (additive with each other, then multiplicative with base)
+
+**Example Calculation:**
+
+```
+Attribute: Combat Power
+Base: 20
+Main Weapon: Plasma Cannon (+5 Combat Power)
+Offhand: None
+Loadout: Two-Handed (+25%)
+Stance: Offensive (+15%)
+Facility: Offensive Coach Level 4 (+5%)
+
+Step 1: Add weapon bonuses
+  subtotal = 20 + 5 = 25
+
+Step 2: Sum percentage modifiers
+  total_modifier = 25% + 15% + 5% = 45%
+
+Step 3: Apply multiplicative bonus
+  effective_combat_power = 25 × (1 + 0.45) = 25 × 1.45 = 36.25 → 36 (rounded)
+```
+
+**Important Notes:**
+- Weapon bonuses are **additive** (flat values added to base)
+- Percentage modifiers are **additive with each other**, then **multiplicative with base**
+- Facility bonuses (coaches) only apply when active
+- Negative modifiers work the same way (e.g., -15% Attack Speed)
+
+**Why This Design?**
+- Ensures percentage bonuses remain meaningful at all power levels
+- Prevents exponential scaling from stacking multiplicative bonuses
+- Creates clear, predictable stat calculations
+- Maintains balance across different builds and stages of progression
 
 ---
 
@@ -783,6 +907,8 @@ Example:
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)** - Complete weapon system, loadout configurations, and weapon catalog
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Authoritative source for all database models, fields, and relationships
 - **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Facility upgrades, prestige system, and stable management
+- **[PRD_BATTLE_STANCES_AND_YIELD.md](PRD_BATTLE_STANCES_AND_YIELD.md)** - Product requirements for battle stance and yield threshold implementation
+- **[PRD_WEAPON_LOADOUT.md](PRD_WEAPON_LOADOUT.md)** - Product requirements for weapon loadout system implementation
 - **[ROADMAP.md](ROADMAP.md)** - Implementation phases, priorities, and future enhancements
 
 ---

@@ -1,6 +1,6 @@
 # Stable System
 
-**Last Updated**: January 25, 2026  
+**Last Updated**: January 30, 2026  
 **Status**: Design Document
 
 ## Overview
@@ -192,6 +192,22 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - **Level 10** (₡3,500,000): Master Coach (combine two coach bonuses at 75% effectiveness)
 
 **Note**: Only one coach can be active at a time. Switching coaches costs ₡100,000.
+
+**Bonus Stacking**: Coaching Staff bonuses are **additive** with Loadout and Stance percentage modifiers. See [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md#effective-stat-calculation) for the complete formula:
+```
+effective_attribute = (base + weapon_bonuses) × (1 + loadout% + stance% + coach%)
+
+Example:
+  Combat Power base: 20
+  Weapon bonuses: +5
+  Two-Handed loadout: +25%
+  Offensive stance: +15%
+  Offensive Coach (Level 8): +7%
+  
+  effective = (20 + 5) × (1 + 0.25 + 0.15 + 0.07)
+           = 25 × 1.47
+           = 36.75 → 37 (rounded)
+```
 
 **9. Booking Office** (Operating Cost: None - generates prestige instead)
 - **Level 0**: Bronze league access only
@@ -531,6 +547,8 @@ CURRENT BALANCE:           ₡1,847,000
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)** - Complete weapon system, loadout configurations, and weapon catalog
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Authoritative source for User and Facility models
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)** - Robot attribute system and combat mechanics
+- **[PRD_BATTLE_STANCES_AND_YIELD.md](PRD_BATTLE_STANCES_AND_YIELD.md)** - Product requirements for battle stance and yield threshold implementation
+- **[PRD_WEAPON_LOADOUT.md](PRD_WEAPON_LOADOUT.md)** - Product requirements for weapon loadout system implementation
 - **[ROADMAP.md](ROADMAP.md)** - Implementation phases and future enhancements
 
 ---
