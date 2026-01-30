@@ -7,6 +7,7 @@ import facilityRoutes from './routes/facility';
 import robotRoutes from './routes/robots';
 import weaponRoutes from './routes/weapons';
 import weaponInventoryRoutes from './routes/weaponInventory';
+import adminRoutes from './routes/admin';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/facilities', facilityRoutes);
 app.use('/api/robots', robotRoutes);
 app.use('/api/weapons', weaponRoutes);
 app.use('/api/weapon-inventory', weaponInventoryRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
