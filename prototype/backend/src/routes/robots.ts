@@ -282,15 +282,19 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
       return res.status(400).json({ error: 'Invalid attribute name' });
     }
 
-    // Get current level
-    const currentLevel = robot[attribute as keyof typeof robot] as number;
+    // Get current level (convert Decimal to number)
+    const currentLevelValue = robot[attribute as keyof typeof robot];
+    const currentLevel = typeof currentLevelValue === 'number' 
+      ? currentLevelValue 
+      : (currentLevelValue as any).toNumber();
 
     if (typeof currentLevel !== 'number' || currentLevel >= MAX_ATTRIBUTE_LEVEL) {
       return res.status(400).json({ error: 'Attribute is already at maximum level or invalid' });
     }
 
-    // Calculate upgrade cost: (current_level + 1) × 1,000
-    const baseCost = (currentLevel + 1) * 1000;
+    // Calculate upgrade cost based on floor of current level: (floor(current_level) + 1) × 1,000
+    // This means 25.50 upgrades to 26.50 for the same cost as 25 to 26
+    const baseCost = (Math.floor(currentLevel) + 1) * 1000;
 
     // Get user's current currency and Training Facility level
     const user = await prisma.user.findUnique({
@@ -344,7 +348,7 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
         .replace('Ai ', 'AI '); // Fix AI capitalization
     }
 
-    const newLevel = currentLevel + 1;
+    const newLevel = Math.floor(currentLevel) + 1;
 
     // Enforce cap for ALL attributes (base 10, or increased by academy)
     if (newLevel > attributeCap) {
@@ -366,11 +370,11 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
         data: { currency: user.currency - upgradeCost },
       });
 
-      // Upgrade attribute
+      // Upgrade attribute (increment by 1, preserving decimal part from bonuses)
       const updatedRobot = await tx.robot.update({
         where: { id: robotId },
         data: {
-          [attribute]: currentLevel + 1,
+          [attribute]: Math.floor(currentLevel) + 1,
         },
         include: {
           mainWeapon: {
