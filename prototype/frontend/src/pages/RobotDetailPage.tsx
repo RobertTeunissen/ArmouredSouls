@@ -529,37 +529,40 @@ function RobotDetailPage() {
                 </div>
               </div>
 
-              {/* Weapon Loadout */}
+              {/* Weapon Loadout and Equipment */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4">Weapon Loadout</h3>
-                <div className="mb-4">
-                  <LoadoutSelector
-                    robotId={robot.id}
-                    currentLoadout={robot.loadoutType}
-                    onLoadoutChange={handleLoadoutChange}
-                  />
-                </div>
-                <div className="space-y-4">
-                  <WeaponSlot
-                    label="Main Weapon"
-                    weapon={robot.mainWeapon}
-                    onEquip={() => {
-                      setWeaponSlotToEquip('main');
-                      setShowWeaponModal(true);
-                    }}
-                    onUnequip={() => handleUnequipWeapon('main')}
-                  />
-                  {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
+                {/* Loadout Type Selector */}
+                <LoadoutSelector
+                  robotId={robot.id}
+                  currentLoadout={robot.loadoutType}
+                  onLoadoutChange={handleLoadoutChange}
+                />
+                
+                {/* Weapon Slots */}
+                <div className="mt-4">
+                  <h4 className="text-md font-semibold mb-3">Equipped Weapons</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <WeaponSlot
-                      label="Offhand Weapon"
-                      weapon={robot.offhandWeapon}
+                      label="Main Weapon"
+                      weapon={robot.mainWeapon}
                       onEquip={() => {
-                        setWeaponSlotToEquip('offhand');
+                        setWeaponSlotToEquip('main');
                         setShowWeaponModal(true);
                       }}
-                      onUnequip={() => handleUnequipWeapon('offhand')}
+                      onUnequip={() => handleUnequipWeapon('main')}
                     />
-                  )}
+                    {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
+                      <WeaponSlot
+                        label="Offhand Weapon"
+                        weapon={robot.offhandWeapon}
+                        onEquip={() => {
+                          setWeaponSlotToEquip('offhand');
+                          setShowWeaponModal(true);
+                        }}
+                        onUnequip={() => handleUnequipWeapon('offhand')}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 

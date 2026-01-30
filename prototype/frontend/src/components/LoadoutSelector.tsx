@@ -44,7 +44,12 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-3">Loadout Type</h3>
+      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+        Weapon Loadout
+        <span className="text-sm text-gray-400 font-normal">
+          (Loadout bonuses applied in combat)
+        </span>
+      </h3>
       
       {error && (
         <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
@@ -52,7 +57,7 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {LOADOUT_TYPES.map((loadoutType) => {
           const bonuses = LOADOUT_BONUSES[loadoutType];
           const isSelected = currentLoadout === loadoutType;
@@ -60,54 +65,43 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
           return (
             <div
               key={loadoutType}
-              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+              className={`border rounded-lg p-3 cursor-pointer transition-all ${
                 isSelected
-                  ? 'border-blue-500 bg-blue-900 bg-opacity-30'
-                  : 'border-gray-600 bg-gray-700 hover:border-gray-500'
-              }`}
+                  ? 'border-blue-500 bg-blue-900 bg-opacity-30 ring-2 ring-blue-500'
+                  : 'border-gray-600 bg-gray-700 hover:border-gray-500 hover:bg-gray-650'
+              } ${loading ? 'opacity-50 cursor-wait' : ''}`}
               onClick={() => !loading && handleChange(loadoutType)}
             >
-              <div className="flex items-start gap-3">
-                <input
-                  type="radio"
-                  name="loadout"
-                  checked={isSelected}
-                  onChange={() => handleChange(loadoutType)}
-                  disabled={loading}
-                  className="mt-1 cursor-pointer"
-                />
-                <div className="flex-1">
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-semibold text-lg">{formatLoadoutName(loadoutType)}</h4>
-                    {loading && currentLoadout !== loadoutType && (
-                      <span className="text-xs text-gray-400">Loading...</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-400 mb-2">
-                    {getLoadoutDescription(loadoutType)}
-                  </p>
-
-                  {bonuses && Object.keys(bonuses).length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(bonuses).map(([attr, value]) => {
-                        const { text, isPositive } = formatBonus(value);
-                        return (
-                          <span
-                            key={attr}
-                            className={`text-xs px-2 py-1 rounded ${
-                              isPositive
-                                ? 'bg-green-900 text-green-300'
-                                : 'bg-red-900 text-red-300'
-                            }`}
-                          >
-                            {attr.replace(/([A-Z])/g, ' $1').trim()}: {text}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+              <div className="mb-2">
+                <h4 className="font-bold text-base">
+                  {formatLoadoutName(loadoutType)}
+                </h4>
+                {isSelected && (
+                  <span className="text-xs text-blue-400">✓ Active</span>
+                )}
               </div>
+
+              <p className="text-xs text-gray-400 mb-2">
+                {getLoadoutDescription(loadoutType)}
+              </p>
+
+              {bonuses && Object.keys(bonuses).length > 0 && (
+                <div className="space-y-1">
+                  {Object.entries(bonuses).map(([attr, value]) => {
+                    const bonus = formatBonus(value);
+                    return (
+                      <div key={attr} className="flex justify-between text-xs">
+                        <span className="text-gray-400 capitalize">
+                          {attr.replace(/([A-Z])/g, ' $1').trim()}:
+                        </span>
+                        <span className={bonus.isPositive ? 'text-green-400' : 'text-red-400'}>
+                          {bonus.text}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
