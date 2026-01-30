@@ -1,7 +1,7 @@
 # PRD Review Comments - Status Summary
 
 **Date**: January 30, 2026  
-**Status**: ✅ All Comments Processed - Awaiting Owner Decisions  
+**Status**: ✅ Decisions Received - Updating Documentation  
 **Branch**: copilot/add-matchmaking-feature
 
 ---
@@ -77,27 +77,21 @@ All recommendations provided based on:
 - Implementation feasibility
 - Owner's suggestions in comments
 
-### Key Recommendations
+## Owner Decisions vs Original Recommendations
 
-**Game Mechanics**
-- ✅ Draws via max battle time (60 sec)
-- ✅ 10% promotion/demotion (owner suggested)
-- ✅ Rotating sit-out for odd robots
-
-**Technical**
-- ✅ Single league instance per tier (Phase 1)
-- ✅ Add battleType field to Battle model
-- ✅ Soft deprioritization of recent opponents
-
-**UI/UX**
-- ✅ Show all leagues with player highlights
-- ✅ Dashboard shows last 5 matches
-- ✅ Battle readiness warnings on multiple pages
-
-**Testing**
-- ✅ API + simple admin page
-- ✅ Allow negative balance during testing
-- ✅ 100 test users with Practice Sword
+| Decision | Original Recommendation | Owner Decision | Status |
+|----------|------------------------|----------------|--------|
+| Draw Mechanics | Max battle time (60 sec) | Max battle time (adjustable) | ✅ Approved with note |
+| League Size | Single instance (Phase 1) | 100 per instance, auto-balance | ⚠️ More complex |
+| Promotion % | 10% | 10% | ✅ Approved |
+| Admin Portal | API + simple page | Separate dashboard/portal | ⚠️ Different approach |
+| Odd Robots | Rotating sit-out | Bye-robot (ELO 1000) | ⚠️ Different approach |
+| Recent Opponents | Soft deprioritize | Soft deprioritize | ✅ Approved |
+| Same-Stable | Deprioritize | Strongly deprioritize | ✅ Approved |
+| Battle Type | Add battleType field | Add for tournaments | ✅ Approved |
+| Battle Readiness | Include weapon checks | All weapons required | ✅ Approved |
+| Warnings | Multiple pages | All pages | ✅ Approved |
+| Timing | 24-hour adjustment | 24-hour adjustment | ✅ Approved |
 
 ---
 
@@ -185,11 +179,49 @@ Once decisions are provided, the following will be updated:
 
 ---
 
+## Owner Decisions Received
+
+**Date Received**: January 30, 2026  
+**Status**: All 19 questions answered ✅
+
+### Key Decisions Summary
+
+**Critical Decisions:**
+1. **Draw Mechanics**: Max battle time (adjustable, ~60 seconds)
+2. **League Size**: 100 robots per instance with auto-balancing
+3. **Promotion/Demotion**: 10%
+4. **Admin Portal**: Separate admin dashboard/portal
+5. **Odd Robots**: Bye-robot (ELO 1000, full rewards compensation)
+
+**UI/UX:**
+- Promotion/Demotion badges for league matches ✅
+- Last 5 matches per robot, grouped ✅
+- Separate tab on robot detail for match history ✅
+- All 6 league tiers in tabs, highlight player's ✅
+- Flexible player robot highlighting ✅
+
+**Matchmaking Logic:**
+- Soft deprioritize recent opponents ✅
+- Strongly deprioritize same-stable in leagues ✅
+- All weapons required for battle readiness ✅
+- Warnings on all pages ✅
+
+**Testing:**
+- Practice Sword: 3sec cooldown, free ✅
+- 100 test robots with creative names ✅
+- Auto-repair with costs and discounts ✅
+
+**Battle Log:**
+- Action-by-action with timestamps ✅
+- Textual combat descriptions ✅
+- Full draft of combat messages requested ✅
+
 ## Current State
 
 ✅ **Complete**: Analysis and question formulation  
-⏳ **Pending**: Owner decisions on 19 questions  
-⏳ **Blocked**: PRD updates (waiting on decisions)  
+✅ **Complete**: Owner decisions received  
+🔄 **In Progress**: Updating documentation with decisions  
+⏳ **Next**: Update PRD and create implementation plan  
 ⏳ **Blocked**: Implementation (waiting on PRD finalization)
 
 ---

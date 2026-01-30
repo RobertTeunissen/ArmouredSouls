@@ -1,280 +1,412 @@
-# Matchmaking PRD - Decision Checklist
+# Matchmaking PRD - Decisions Record
 
 **Date**: January 30, 2026  
-**Status**: Awaiting Owner Decisions  
-**Full Questions**: See [MATCHMAKING_QUESTIONS.md](MATCHMAKING_QUESTIONS.md)
+**Status**: ✅ All Decisions Received  
+**Note**: This document consolidates all questions and decisions. MATCHMAKING_QUESTIONS.md is archived as detailed reference.
 
 ---
 
-## Quick Decision Form
+## Decision Summary
+
+All 19 questions have been answered by the owner. Key decisions documented below with full context.
 
 ### Critical Decisions (Must Answer)
 
 **1. Draw Mechanics**
-- [ ] Option A: Draws when both robots hit 0 HP simultaneously
-- [ ] Option B: Draws when battle exceeds max time (60 seconds)
-- [ ] Option C: Draws when both robots yield at same threshold
-- [ ] Option D: No draws - always have winner (coin flip if needed)
-- [ ] My decision: ___________________________________________
+**DECISION**: Option B - Max battle time approach (adjustable, ~60 seconds)
 
---> Option B is a good plan but we might need to adjust the max time
---> Option A and C should not happen. One always hits the other, one yields before the other?
+**Owner Notes**:
+- Option B is a good plan but we might need to adjust the max time
+- Option A (simultaneous 0 HP) and C (simultaneous yield) should not happen - one always hits first, one yields before the other
+
+**Impact**: 
+- Prevents infinite battles
+- Allows tuning for gameplay balance
+- Battle simulation must track elapsed time
+- Draw occurs when max time reached without winner
 
 **2. League Instance Size (Phase 1)**
-- [ ] Single instance per tier (bronze_1, silver_1, etc.) - Simplest
-- [ ] Multiple instances with max size: _____ robots per instance
-- [ ] My decision: ___________________________________________
+**DECISION**: Multiple instances with 100 robots per instance, auto-balancing system
 
---> Multiple instances with max size 100 robots per instance (100 bronze_1, 100 bronze_2). When one league is full (100 robots that might not all be battle ready), open the next one. 
---> When robots start to get promoted, make sure underlying leagues stay balanced. Example:
+**Owner Notes**:
+- 100 robots per instance (e.g., bronze_1, bronze_2, etc.)
+- When one league is full (100 robots, not all battle-ready), open next instance
+- Balance underlying leagues when promotions occur
 
-Day 5: 250 robots, bronze_1 (100), bronze_2 (100), bronze_3 (50) --> Top 10% eligible robots get promoted to silver_1 (which does not yet exist this day)
-Day 6: 250 robots (assume no new robots), bronze_1 (90), bronze_2 (90), bronze_3 (45), silver_1 (25). Any new robots created will start in bronze_3 to balance the leagues.
+**Example Scenario**:
+```
+Day 5: 250 robots total
+- bronze_1 (100), bronze_2 (100), bronze_3 (50)
+- Top 10% promoted to silver_1 (25 robots)
 
-Other idea: when bronze_1 and bronze_2 are full, bronze_3 is added and all robots from bronze_x league are equally distributed in the 3 leagues. So when robot 201 is added, bronze_3 is created and we get bronze_1 (67x), bronze_2 (67x) and bronze_3 (67x). Every time a new robot enters the league tier, the system checks where the most free spots are.  
+Day 6: 250 robots total (no new robots)
+- bronze_1 (90), bronze_2 (90), bronze_3 (45), silver_1 (25)
+- New robots start in bronze_3 to balance leagues
+```
+
+**Alternative Approach (Owner's idea)**:
+When bronze_1 and bronze_2 are full and robot 201 is added:
+- Create bronze_3
+- Redistribute all robots equally: bronze_1 (67), bronze_2 (67), bronze_3 (67)
+- Every new robot entry checks for most free spots
+
+**Impact**:
+- More complex than single instance per tier
+- Requires league balancing algorithm
+- Matchmaking prefers same instance (bronze_1 vs bronze_1)
+- Fallback to adjacent instances if needed  
 
 **3. Promotion/Demotion Percentage**
-- [ ] Keep 20% (original proposal)
-- [ ] Change to 10% (slower progression, more stable)
-- [ ] Other percentage: _____
-- [ ] My decision: ___________________________________________
+**DECISION**: 10%
 
---> 10%
+**Impact**:
+- Slower league progression (more stable)
+- Top 10% promoted, Bottom 10% demoted
+- Requires minimum 5 battles to be eligible
+- More competitive at each tier
 
 **4. Admin Testing Portal**
-- [ ] API endpoints only (test via Postman/curl)
-- [ ] API + simple admin page in main app
-- [ ] Separate admin dashboard/portal
-- [ ] CLI tool for local testing
-- [ ] My decision: ___________________________________________
+**DECISION**: Separate admin dashboard/portal
 
-Seperate admin dashboard/portal
+**Impact**:
+- Dedicated admin interface separate from main app
+- More comprehensive testing tools
+- Can include bulk operations, analytics, system monitoring
+- Requires separate UI implementation
+- Not accessible to regular users
 
 **5. Odd Number of Robots**
-- [ ] Robot sits out this cycle (rotates who sits out)
-- [ ] Gets "bye" match (auto-win with minimal rewards)
-- [ ] Matched with adjacent league instance
-- [ ] Matched with bye-robot (dummy opponent)
-- [ ] My decision: ___________________________________________
+**DECISION**: Matched with bye-robot (ELO 1000, low stats, full rewards)
 
---> Matched with bye-robot, ELO 1000, and low stats. Full rewards in compensation for low ELO gains.
+**Owner Notes**:
+- Bye-robot has ELO 1000 and low stats
+- Full rewards in compensation for low ELO gains
+- Ensures no robot sits out completely
+
+**Impact**:
+- Creates dummy opponent for matchmaking
+- Robot always gets to fight (no sitting out)
+- Low ELO opponent means small ELO gain
+- Compensated with full battle rewards (credits)
+- Bye-robot needs to be implemented in database
 
 ---
 
 ### UI/UX Decisions
 
 **6. Battle Result - League Changes**
-- [ ] Show "Promoted!" or "Demoted" badge on battle result
-- [ ] Only for league matches (add battleType field)
-- [ ] My decision: ___________________________________________
 
---> Yes badges for leagues are nice!
+**DECISION**: Yes, show "Promoted!" or "Demoted" badges for league matches
+
+**Owner Notes**: "Yes badges for leagues are nice!"
+
+**Impact**:
+- Add visual badges to battle results
+- Only display for league matches (requires battleType field)
+- Clear feedback on league progression
+- Motivational element for players
+
+---
 
 **7. Dashboard - Last 5 Matches**
-- [ ] Per robot (expandable for each)
-- [ ] Aggregated across all robots (mixed)
-- [ ] User selects which robot to view
-- [ ] My decision: ___________________________________________
 
---> Last 5 matches per robot, grouped per robot. 
+**DECISION**: Last 5 matches per robot, grouped per robot
+
+**Impact**:
+- Dashboard organizes matches by robot
+- Each robot shows its last 5 matches
+- Expandable/collapsible sections per robot
+- Clear overview of all robot activity
+
+---
 
 **8. Robot Detail Page - Match History**
-- [ ] Same format as Battle History page (paginated)
-- [ ] Separate tab on robot detail
-- [ ] Show _____ matches by default
-- [ ] My decision: ___________________________________________
 
---> Seperate tab on robot detail
+**DECISION**: Separate tab on robot detail page
+
+**Impact**:
+- New "Match History" tab on robot detail page
+- Full paginated match history for that robot
+- Same format as main Battle History page
+- Keeps robot detail page organized
+
+---
 
 **18. League Standings - Show All Leagues**
-- [ ] Yes, show all 6 tiers in tabs
-- [ ] Highlight/expand player's tiers
-- [ ] Show top _____ robots per league by default
-- [ ] My decision: ___________________________________________
 
---> All 6 tiers in tabs
---> Highlight leagues a player has active robots
+**DECISION**: Show all 6 tiers in tabs, highlight leagues with player's active robots
+
+**Owner Notes**: 
+- All 6 tiers in tabs
+- Highlight leagues a player has active robots
+
+**Impact**:
+- Main league page shows Bronze, Silver, Gold, Platinum, Diamond, Champion tabs
+- Tabs with player's robots are highlighted/emphasized
+- Shows full competitive landscape
+- Easy to see all tiers
+
+---
 
 **19. Highlight Player's Robots**
-- [ ] Background color highlight
-- [ ] Bold robot name
-- [ ] Icon/badge next to name
-- [ ] Separate section at top
-- [ ] Combination: ___________________________________________
-- [ ] My decision: ___________________________________________
 
---> Whatever you want.
+**DECISION**: Flexible - "Whatever you want"
+
+**Recommendation**: Combination approach
+- Bold robot name
+- Background color highlight (subtle)
+- Icon badge next to name
+
+**Impact**:
+- Clear visual distinction in league standings
+- Multiple cues for easy identification
+- Professional appearance
 
 ---
 
 ### Matchmaking Logic
 
 **9. Recent Opponent Avoidance**
-- [ ] Hard rule: Never match last 5 opponents
-- [ ] Soft rule: Deprioritize recent opponents (try others first)
-- [ ] Weighted: Penalty score for recent opponents
-- [ ] My decision: ___________________________________________
 
---> Soft rule. Deprioritize
+**DECISION**: Soft rule - Deprioritize recent opponents
+
+**Impact**:
+- Algorithm tries to avoid last 5 opponents first
+- If no other options, can match with recent opponent
+- Prevents deadlocks in small leagues
+- Adds variety to matchups
+
+---
 
 **11. Same-Stable Matching**
-- [ ] League: Strongly deprioritize (but allow as last resort)
-- [ ] Tournament: No restriction
-- [ ] Add battleType field to Battle model: [ ] Yes [ ] No
-- [ ] My decision: ___________________________________________
 
---> League: Strongly deprioritize (but allow as last resort)
---> Tournament: No restriction (not as part of this PRD, but capture the requirement)
+**DECISION**: 
+- League: Strongly deprioritize (but allow as last resort)
+- Tournament: No restriction (captured for future PRD)
+
+**Owner Notes**: "League: Strongly deprioritize (but allow as last resort). Tournament: No restriction (not as part of this PRD, but capture the requirement)"
+
+**Impact**:
+- Matchmaking algorithm heavily penalizes same-stable in leagues
+- Only matches same-stable if absolutely no other option
+- Tournament system (future) will have no same-stable restriction
+- Requires battleType field in Battle model
+
+---
 
 **12. Battle Readiness - Weapon Check**
-- [ ] Yes, check mainWeaponId IS NOT NULL
-- [ ] For dual-wield: Also check offhandWeaponId
-- [ ] For weapon+shield: Require both weapon AND shield
-- [ ] Formula: (HP ≥ 75%) AND (weapon equipped) AND (loadout valid)
-- [ ] My decision: ___________________________________________
 
---> All weapons need to be in order. So both for dual wield and weapon+shield.
+**DECISION**: All weapons must be equipped for loadout to be valid
+
+**Owner Notes**: "All weapons need to be in order. So both for dual wield and weapon+shield."
+
+**Battle Readiness Formula**:
+```typescript
+battleReadiness = 
+  (currentHP / maxHP >= 0.75) && 
+  (mainWeaponId !== null) && 
+  (loadoutType === 'single' ? true :
+   loadoutType === 'dual_wield' ? offhandWeaponId !== null :
+   loadoutType === 'weapon_shield' ? (offhandWeaponId !== null && isShield(offhand)) :
+   loadoutType === 'two_handed' ? true : false)
+```
+
+**Impact**:
+- Single weapon: mainWeapon required
+- Dual-wield: mainWeapon AND offhandWeapon required
+- Weapon+shield: mainWeapon AND shield required
+- Two-handed: mainWeapon required
+- More strict validation prevents incomplete loadouts
+
+---
 
 **13. Battle Readiness Warnings**
-- [ ] Robot list page (icon/badge)
-- [ ] Robot detail page (banner at top)
-- [ ] Dashboard (notification area)
-- [ ] All of the above
-- [ ] My decision: ___________________________________________
 
---> All of the above. It's important.
+**DECISION**: All of the above - "It's important"
+
+**Display Warnings On**:
+- Robot list page (icon/badge next to non-ready robots)
+- Robot detail page (banner at top)
+- Dashboard (notification area)
+
+**Impact**:
+- Multiple touchpoints ensure players see warnings
+- Prevents accidental non-participation
+- Clear visual feedback on robot status
 
 ---
 
 ### Scheduling & Timing
 
 **14. Matchmaking Timing Sequence**
+
+**DECISION**: Approved
+
+**Daily Flow**:
 ```
-Proposed Flow:
-1. Execute battles (8:00 PM)
+1. Execute battles (e.g., 8:00 PM)
 2. Calculate rewards & update stats
 3. Rebalance leagues (promotion/demotion)
 4. Run matchmaking for next day (schedule for tomorrow 8:00 PM)
 5. Players have 24 hours to adjust strategy
 ```
-- [ ] Approve this flow
-- [ ] Modify: ___________________________________________
-- [ ] Player adjustment time needed: _____ hours
-- [ ] My decision: ___________________________________________
 
---> Approved. Go for this flow. 
+**Impact**:
+- Clear, predictable schedule
+- Players have full day to prepare
+- No rushing to adjust before battles
+- Matchmaking happens immediately after rebalancing
 
 ---
 
 ### Testing Infrastructure
 
 **15. Practice Sword Specifications**
+
+**DECISION**: 
 - Name: "Practice Sword"
 - Base Damage: 5
-- Cooldown: _____ seconds (suggest 3)
-- Cost: ₡_____ (suggest ₡1,000 or free)
+- Cooldown: 3 seconds
+- Cost: Free (₡0)
 - Weapon Type: melee
 - Hands Required: one
 - All attribute bonuses: 0
-- [ ] Approve / Modify: ___________________________________________
 
---> 3 second cooldown
---> Costs: free
+**Impact**:
+- Baseline weapon for testing
+- Zero cost ensures all test users can equip
+- Simple stats for balance testing
+- Suitable for new players too
+
+---
 
 **16. 100 Test Users/Robots**
-- Usernames: test_user_001 to test_user_100 - [ ] Approve / Change: _____
-- Passwords: All "testpass123" - [ ] Approve / Change: _____
-- Robot names: "Test Bot 001" format - [ ] Approve / Change: _____
-- All attributes = 1 - [ ] Approve / Change: _____
-- Loadout: Single weapon - [ ] Approve
-- Weapon: Practice Sword - [ ] Approve
-- Starting credits: ₡2,000,000 - [ ] Approve / Change: _____
-- League: All Bronze - [ ] Approve / Change: _____
 
---> All fine except the Robot Names. Give them random creative names within the theme of the game. 
+**DECISION**: All specifications approved EXCEPT robot names
+
+**Specifications**:
+- Usernames: test_user_001 to test_user_100 ✅
+- Passwords: All "testpass123" ✅
+- Robot names: **Random creative names within game theme** ⚠️
+- All attributes = 1 ✅
+- Loadout: Single weapon ✅
+- Weapon: Practice Sword ✅
+- Starting credits: ₡2,000,000 ✅
+- League: All Bronze ✅
+
+**Owner Notes**: "Give them random creative names within the theme of the game"
+
+**Impact**:
+- Need to generate 100 thematic robot names
+- Examples: "Iron Gladiator", "Steel Sentinel", "Plasma Knight", "Cyber Warrior", etc.
+- More realistic test data
+- Better testing experience
+
+---
 
 **17. Bulk Cycle Auto-Repair**
-- [ ] Force repair all robots to 100% before each cycle
-- [ ] Deduct repair costs (allow negative balance for testing)
-- [ ] Apply Repair Bay facility discount
-- [ ] Log all repairs for analysis
-- [ ] My decision: ___________________________________________
 
---> Force repair for all robots to 100% for each cycle
---> Deduct repair costs
---> Apply discounts
+**DECISION**: 
+- Force repair all robots to 100% HP before each cycle ✅
+- Deduct repair costs ✅
+- Apply Repair Bay facility discounts ✅
+- Log repairs for analysis (implicit) ✅
 
----
-
-### Additional Details Needed
-
-**2. Detailed Battle Log Structure**
-```
-What to show in detailed view?
-- [ ] Turn-by-turn combat log
-- [ ] Damage breakdown per turn
-- [ ] Critical hits and special events
-- [ ] Stance information
-- [ ] Yield/surrender events
-- [ ] Final stats comparison
-- [ ] Timeline visualization
-- [ ] Other: ___________________________________________
-```
-
---> Basically all of the above and more you can think of.
---> Not turn-by-turn but action by actions combat log, with timestaps
---> Textual representations of what happens: 
-"Robot X hits Robot Y with his Practice Sword for x damage. y damage is absorbed by Robot Y's energy shield."
-"Robot Y counters Robot X's attack but missed with his Laser Gun."
-"Robot X is badly damaged and signals he wants to yield"
-
-Provide a full draft of possible interactions and messages during combat.
+**Impact**:
+- Realistic cost simulation during testing
+- Tests repair cost mechanics
+- Tests facility discount system
+- Ensures all robots battle-ready for testing
 
 ---
 
-## Summary of My Recommendations
+### Additional Details
 
-Based on game design principles and Phase 1 scope:
+**Detailed Battle Log Structure**
 
-1. ✅ **Draws**: Max battle time (60 sec) approach
-2. ✅ **League Size**: Single instance per tier for Phase 1
-3. ✅ **Promotion %**: 10% (slower, more stable)
-4. ✅ **Admin Tools**: API + simple admin page
-5. ✅ **Odd Robots**: Rotating sit-out with priority next cycle
-6. ✅ **Recent Opponents**: Soft deprioritization
-7. ✅ **Battle Type**: Add battleType field
-8. ✅ **Battle Readiness**: Include weapon checks + show warnings
-9. ✅ **Timing**: 24-hour adjustment period after matchmaking
-10. ✅ **Auto-Repair**: Allow negative balance during testing
+**DECISION**: Action-by-action combat log with timestamps and textual descriptions
 
-**Do you agree with these recommendations?**
-- [ ] Yes, approve all recommendations
-- [ ] No, see my specific answers above
+**Owner Notes**: 
+- "Basically all of the above and more you can think of"
+- "Not turn-by-turn but action by action combat log, with timestamps"
+- Textual representations of what happens
+
+**Required Elements**:
+- ✅ Action-by-action combat log (not turn-based)
+- ✅ Timestamps for each action
+- ✅ Damage breakdown per action
+- ✅ Critical hits and special events
+- ✅ Stance information
+- ✅ Yield/surrender events
+- ✅ Final stats comparison
+- ✅ Timeline visualization (optional)
+
+**Example Combat Messages** (Owner provided):
+- "Robot X hits Robot Y with his Practice Sword for x damage. y damage is absorbed by Robot Y's energy shield."
+- "Robot Y counters Robot X's attack but missed with his Laser Gun."
+- "Robot X is badly damaged and signals he wants to yield"
+
+**Request**: Full draft of possible interactions and messages during combat needed
+
+**Impact**:
+- Battle log stored as JSON with detailed events
+- Each event has timestamp, type, actors, results
+- Rich combat narrative for players
+- Enables detailed post-battle analysis
+- Foundation for future replay system
 
 ---
 
-## How to Respond
+## Implementation Requirements
 
-**Option 1: Quick Approval**
-If you agree with all my recommendations, simply reply:
-```
-APPROVE ALL RECOMMENDATIONS
-```
+Based on owner decisions, the following must be implemented:
 
-**Option 2: Specific Answers**
-Fill out the checkboxes above and reply with your decisions.
+### Database Changes
+1. **battleType field** in Battle model: 'league' | 'tournament' | 'friendly'
+2. **Bye-robot** implementation (special robot entity for odd matchups)
+3. **League instance management** (bronze_1, bronze_2, etc. with 100-robot cap)
+4. **Practice Sword** weapon entry (free, 3sec cooldown, 5 damage)
 
-**Option 3: Detailed Discussion**
-Reply with question numbers you want to discuss further.
+### Matchmaking Algorithm
+1. **League instance preference** (match within same instance first)
+2. **Auto-balancing** when promotions occur
+3. **Soft deprioritize** recent opponents (last 5 matches)
+4. **Strongly deprioritize** same-stable in leagues
+5. **Bye-robot matching** for odd numbers (ELO 1000)
+
+### Battle Readiness
+1. **Weapon validation** for all loadout types
+2. **HP threshold** check (≥75%)
+3. **Warnings** on: robot list, robot detail, dashboard
+
+### UI Components
+1. **Dashboard**: Last 5 matches per robot, grouped
+2. **Robot Detail**: Separate "Match History" tab
+3. **League Standings**: All 6 tiers in tabs, highlight player's leagues
+4. **Battle Results**: Promotion/Demotion badges for league matches
+5. **Player Robots**: Visual highlighting in standings (bold + background + icon)
+
+### Testing Infrastructure
+1. **Admin Dashboard**: Separate portal for testing
+2. **100 Test Users**: With creative robot names
+3. **Bulk Cycle Trigger**: Up to 100 cycles with auto-repair
+4. **Practice Sword**: Free weapon for testing
+
+### Battle Log System
+1. **Action-by-action** logging with timestamps
+2. **Textual descriptions** of combat events
+3. **Full draft of combat messages** required
+4. **JSON structure** for battle_log field
 
 ---
 
-**Once decisions are confirmed, I will**:
-1. Update PRD_MATCHMAKING.md with all decisions
-2. Update database schema specifications
-3. Update UI/UX specifications
-4. Add testing requirements section
-5. Create implementation tickets
+## Next Steps
 
---> Yes please, do all this. 
+✅ All decisions received and documented  
+🔄 Currently updating PRD_MATCHMAKING.md  
+⏳ Will update QUICK_REFERENCE_MATCHMAKING.md  
+⏳ Will create detailed implementation plan  
+⏳ Will draft combat message catalog
+
+**Status**: Ready to finalize PRD and begin implementation planning 
 

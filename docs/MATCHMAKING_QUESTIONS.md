@@ -1,8 +1,18 @@
 # Matchmaking PRD - Clarifying Questions
 
 **Date**: January 30, 2026  
-**Status**: Awaiting Answers  
+**Status**: ⚠️ ARCHIVED - See MATCHMAKING_DECISIONS.md  
 **Context**: Questions based on PRD_MATCHMAKING.md review comments
+
+---
+
+## ⚠️ IMPORTANT NOTE
+
+This document has been **archived** as it contains significant overlap with MATCHMAKING_DECISIONS.md.
+
+**For current status and all decisions, see**: [MATCHMAKING_DECISIONS.md](MATCHMAKING_DECISIONS.md)
+
+This document is kept for historical reference and detailed context only.
 
 ---
 
