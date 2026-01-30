@@ -10,7 +10,7 @@ import StanceSelector from '../components/StanceSelector';
 import YieldThresholdSlider from '../components/YieldThresholdSlider';
 import PerformanceStats from '../components/PerformanceStats';
 import EffectiveStatsTable from '../components/EffectiveStatsTable';
-import CompactAttributeRow from '../components/CompactAttributeRow';
+import CompactUpgradeSection from '../components/CompactUpgradeSection';
 
 interface Robot {
   id: number;
@@ -505,7 +505,7 @@ function RobotDetailPage() {
               </h2>
 
               {/* Current State Display */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-700 p-4 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-700 p-4 rounded-lg">
                 <div>
                   <div className="text-gray-400 text-sm">Current HP</div>
                   <div className="text-xl font-semibold">
@@ -513,6 +513,18 @@ function RobotDetailPage() {
                     <span className="text-sm text-gray-400 ml-2">
                       ({Math.round((robot.currentHP / robot.maxHP) * 100)}%)
                     </span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Max HP = Hull Integrity × 10
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm">Energy Shield</div>
+                  <div className="text-xl font-semibold">
+                    {robot.maxShield}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Shield Capacity × 2
                   </div>
                 </div>
                 <div>
@@ -601,54 +613,25 @@ function RobotDetailPage() {
             </div>
 
             {/* Upgrade Robot Section */}
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-                ⬆️ Upgrade Robot
-              </h2>
-
-              {Object.entries(attributeCategories).map(([category, config]) => {
+            <CompactUpgradeSection
+              categories={Object.entries(attributeCategories).map(([category, config]) => {
                 const academyType = config.academy as keyof typeof academyLevels;
                 const academyLevel = academyLevels[academyType];
                 const attributeCap = getCapForLevel(academyLevel);
-
-                return (
-                  <div key={category} className="mb-6 last:mb-0">
-                    {/* Category Header */}
-                    <div className="flex justify-between items-center mb-3 bg-gray-700 p-3 rounded">
-                      <h3 className="text-lg font-semibold text-blue-400">{category}</h3>
-                      <div className="text-sm">
-                        <span className="text-gray-400">Cap: </span>
-                        <span className="text-white font-semibold">{attributeCap}/50</span>
-                        {academyLevel < 10 && (
-                          <button
-                            onClick={() => navigate('/facilities')}
-                            className="ml-3 text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
-                          >
-                            Upgrade Academy
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Attributes */}
-                    <div className="space-y-2">
-                      {config.attributes.map(({ key, label }) => (
-                        <CompactAttributeRow
-                          key={key}
-                          attributeKey={key}
-                          label={label}
-                          robot={robot}
-                          cap={attributeCap}
-                          trainingLevel={trainingLevel}
-                          currency={currency}
-                          onUpgrade={handleUpgrade}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
+                
+                return {
+                  category,
+                  attributes: config.attributes,
+                  cap: attributeCap,
+                  academyLevel,
+                };
               })}
-            </div>
+              robot={robot}
+              trainingLevel={trainingLevel}
+              currency={currency}
+              onUpgrade={handleUpgrade}
+              onNavigateToFacilities={() => navigate('/facilities')}
+            />
           </>
         ) : (
           /* Non-Owner View */
