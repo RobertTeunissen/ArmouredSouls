@@ -208,8 +208,11 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     const robotId = parseInt(req.params.id);
 
     if (isNaN(robotId)) {
+      console.log(`Invalid robot ID received: ${req.params.id}`);
       return res.status(400).json({ error: 'Invalid robot ID' });
     }
+
+    console.log(`Fetching robot with ID: ${robotId}`);
 
     const robot = await prisma.robot.findUnique({
       where: {
@@ -230,9 +233,11 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     });
 
     if (!robot) {
+      console.log(`Robot not found with ID: ${robotId}`);
       return res.status(404).json({ error: 'Robot not found' });
     }
 
+    console.log(`Successfully fetched robot: ${robot.name} (ID: ${robot.id})`);
     res.json(robot);
   } catch (error) {
     console.error('Robot fetch error:', error);

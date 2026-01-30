@@ -216,6 +216,7 @@ function RobotDetailPage() {
       const token = localStorage.getItem('token');
 
       // Fetch robot details
+      console.log(`Fetching robot with ID: ${id}`);
       const robotResponse = await fetch(`http://localhost:3001/api/robots/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -223,16 +224,27 @@ function RobotDetailPage() {
       });
 
       if (robotResponse.status === 401) {
+        console.log('Authentication failed, redirecting to login');
         logout();
         navigate('/login');
         return;
       }
 
+      if (robotResponse.status === 404) {
+        console.log(`Robot not found with ID: ${id}`);
+        setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
+        setLoading(false);
+        return;
+      }
+
       if (!robotResponse.ok) {
-        throw new Error('Failed to fetch robot');
+        const errorData = await robotResponse.json().catch(() => ({}));
+        console.error('Failed to fetch robot:', robotResponse.status, errorData);
+        throw new Error(errorData.error || 'Failed to fetch robot');
       }
 
       const robotData = await robotResponse.json();
+      console.log('Robot data received:', robotData.name);
       setRobot(robotData);
 
       // Fetch weapon inventory
