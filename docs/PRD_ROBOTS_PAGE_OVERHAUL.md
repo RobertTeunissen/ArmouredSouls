@@ -133,6 +133,7 @@ Acceptance Criteria:
 - Academy cap information displayed per category, not per attribute
 - Upgrade costs shown only once (not repeated for each attribute)
 - More compact layout with less vertical spacing
+- Visible to all users, not just robot owner
 ```
 
 **US-3: Performance & Statistics Section**
@@ -276,21 +277,21 @@ Acceptance Criteria:
 
 ┌─────────────────────────────────────────────────────────────┐
 │ 🏆 PERFORMANCE & STATISTICS                                 │
-│ ├─ Combat Record: 45W-23L (66.2% win rate)                │
-│ ├─ ELO Rating: 1450 (+15 last battle)                     │
-│ ├─ Damage Stats: 125,430 dealt / 89,220 taken            │
-│ ├─ Current State: 850/1000 HP (85% readiness)            │
-│ └─ Economic: ₡45,000 lifetime repairs                     │
+│ ├─ Combat Record: 45W-23L (66.2% win rate)                  │
+│ ├─ ELO Rating: 1450 (+15 last battle)                       │
+│ ├─ Damage Stats: 125,430 dealt / 89,220 taken               │
+│ ├─ Current State: 850/1000 HP (85% readiness)               │
+│ └─ Economic: ₡45,000 lifetime repairs                       │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
 │ ⬆️ UPGRADE ROBOT                                            │
-│ ├─ Combat Systems (Cap: 35)          [Upgrade Academy]    │
-│ │  └─ [Compact attribute list with inline upgrade buttons]│
-│ ├─ Defensive Systems (Cap: 35)       [Upgrade Academy]    │
-│ ├─ Chassis & Mobility (Cap: 30)      [Upgrade Academy]    │
-│ ├─ AI Processing (Cap: 25)           [Upgrade Academy]    │
-│ └─ Team Coordination (Cap: 25)       [Upgrade Academy]    │
+│ ├─ Combat Systems (Cap: 35)          [Upgrade Academy]      │
+│ │  └─ [Compact attribute list with inline upgrade buttons]  │
+│ ├─ Defensive Systems (Cap: 35)       [Upgrade Academy]      │
+│ ├─ Chassis & Mobility (Cap: 30)      [Upgrade Academy]      │
+│ ├─ AI Processing (Cap: 25)           [Upgrade Academy]      │
+│ └─ Team Coordination (Cap: 25)       [Upgrade Academy]      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
