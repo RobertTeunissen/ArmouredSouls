@@ -87,7 +87,12 @@ function YieldThresholdSlider({
       'formationTactics',
     ];
 
-    return attributes.reduce((sum, attr) => sum + (robotAttributes[attr] || 0), 0);
+    return attributes.reduce((sum, attr) => {
+      const value = robotAttributes[attr] || 0;
+      // Convert to number in case it's a string from Decimal serialization
+      const numValue = typeof value === 'string' ? parseFloat(value) : value;
+      return sum + numValue;
+    }, 0);
   };
 
   const calculateRepairCost = (damagePercent: number, hpPercent: number): number => {
@@ -124,10 +129,10 @@ function YieldThresholdSlider({
 
   // Calculate repair cost scenarios
   const scenarios = [
-    { label: '✅ Victory', damage: 60, hp: 40, emoji: '✅' },
+    { label: '✅ Victory (40% HP)', damage: 60, hp: 40, emoji: '✅' },
     { label: `⚠️ Yield at ${threshold}%`, damage: 100 - threshold, hp: threshold, emoji: '⚠️' },
-    { label: '⚠️ Heavy Damage (5%)', damage: 95, hp: 5, emoji: '⚠️' },
-    { label: '❌ Destroyed (0%)', damage: 100, hp: 0, emoji: '❌' },
+    { label: '💔 Heavy Damage (5% HP)', damage: 95, hp: 5, emoji: '💔' },
+    { label: '❌ Destroyed (0% HP)', damage: 100, hp: 0, emoji: '❌' },
   ];
 
   return (
@@ -135,7 +140,7 @@ function YieldThresholdSlider({
       <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
         🏳️ Yield Threshold
         <span className="text-sm text-gray-400 font-normal">
-          (HP % where robot surrenders)
+          (HP % where robot will try to surrender)
         </span>
       </h3>
 

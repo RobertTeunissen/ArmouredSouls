@@ -1,6 +1,21 @@
 // Robot stat calculations including weapon bonuses, loadout modifiers, and stance modifiers
 
-import { Robot, WeaponInventory, Weapon } from '@prisma/client';
+import { Robot, WeaponInventory, Weapon, Prisma } from '@prisma/client';
+
+/**
+ * Convert Prisma Decimal to JavaScript number for calculations
+ */
+function toNumber(value: number | Prisma.Decimal): number {
+  if (typeof value === 'number') return value;
+  return value.toNumber();
+}
+
+/**
+ * Round to 2 decimal places
+ */
+function roundToTwo(value: number): number {
+  return Math.round(value * 100) / 100;
+}
 
 // Stance modifiers (percentage bonuses/penalties)
 export const STANCE_MODIFIERS = {
@@ -95,12 +110,14 @@ export function calculateEffectiveStats(robot: RobotWithWeapons): Record<string,
   const effectiveStats: Record<string, number> = {};
 
   attributes.forEach((attr) => {
-    const baseValue = robot[attr as keyof Robot] as number;
+    // Convert Prisma Decimal to JavaScript number
+    const baseValue = toNumber(robot[attr as keyof Robot] as number | Prisma.Decimal);
     const weaponBonus = getWeaponBonus(robot, attr);
     const loadoutMultiplier = (loadoutBonuses[attr as keyof typeof loadoutBonuses] || 0) + 1;
 
     // Formula: (base + weaponBonus) × loadoutMultiplier
-    effectiveStats[attr] = Math.floor((baseValue + weaponBonus) * loadoutMultiplier);
+    // Round to 2 decimal places for precision
+    effectiveStats[attr] = roundToTwo((baseValue + weaponBonus) * loadoutMultiplier);
   });
 
   return effectiveStats;
@@ -183,7 +200,8 @@ export function calculateEffectiveStatsWithStance(robot: RobotWithWeapons): Reco
     
     if (effectiveStatsWithStance[attr] !== undefined && typeof modifier === 'number') {
       const multiplier = 1 + modifier;
-      effectiveStatsWithStance[attr] = Math.floor(effectiveStatsWithStance[attr] * multiplier);
+      // Round to 2 decimal places for precision
+      effectiveStatsWithStance[attr] = roundToTwo(effectiveStatsWithStance[attr] * multiplier);
     }
   });
   
@@ -249,29 +267,29 @@ export function calculateRepairCost(
  * Calculate sum of all 23 robot attributes
  */
 export function calculateAttributeSum(robot: Robot): number {
-  return (
-    robot.combatPower +
-    robot.targetingSystems +
-    robot.criticalSystems +
-    robot.penetration +
-    robot.weaponControl +
-    robot.attackSpeed +
-    robot.armorPlating +
-    robot.shieldCapacity +
-    robot.evasionThrusters +
-    robot.damageDampeners +
-    robot.counterProtocols +
-    robot.hullIntegrity +
-    robot.servoMotors +
-    robot.gyroStabilizers +
-    robot.hydraulicSystems +
-    robot.powerCore +
-    robot.combatAlgorithms +
-    robot.threatAnalysis +
-    robot.adaptiveAI +
-    robot.logicCores +
-    robot.syncProtocols +
-    robot.supportSystems +
-    robot.formationTactics
+  return roundToTwo(
+    toNumber(robot.combatPower) +
+    toNumber(robot.targetingSystems) +
+    toNumber(robot.criticalSystems) +
+    toNumber(robot.penetration) +
+    toNumber(robot.weaponControl) +
+    toNumber(robot.attackSpeed) +
+    toNumber(robot.armorPlating) +
+    toNumber(robot.shieldCapacity) +
+    toNumber(robot.evasionThrusters) +
+    toNumber(robot.damageDampeners) +
+    toNumber(robot.counterProtocols) +
+    toNumber(robot.hullIntegrity) +
+    toNumber(robot.servoMotors) +
+    toNumber(robot.gyroStabilizers) +
+    toNumber(robot.hydraulicSystems) +
+    toNumber(robot.powerCore) +
+    toNumber(robot.combatAlgorithms) +
+    toNumber(robot.threatAnalysis) +
+    toNumber(robot.adaptiveAI) +
+    toNumber(robot.logicCores) +
+    toNumber(robot.syncProtocols) +
+    toNumber(robot.supportSystems) +
+    toNumber(robot.formationTactics)
   );
 }

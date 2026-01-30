@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
 
@@ -15,6 +16,7 @@ function AllRobotsPage() {
   const [robots, setRobots] = useState<Robot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAllRobots = async () => {
@@ -60,7 +62,11 @@ function AllRobotsPage() {
         {!loading && !error && robots.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {robots.map((robot) => (
-              <div key={robot.id} className="bg-gray-800 p-6 rounded-lg hover:bg-gray-750 transition-colors">
+              <div 
+                key={robot.id} 
+                onClick={() => navigate(`/robots/${robot.id}`)}
+                className="bg-gray-800 p-6 rounded-lg hover:bg-gray-750 transition-colors cursor-pointer"
+              >
                 <h3 className="text-xl font-semibold mb-2">{robot.name}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">

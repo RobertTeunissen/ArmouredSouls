@@ -6,15 +6,20 @@ import Navigation from '../components/Navigation';
 import LoadoutSelector from '../components/LoadoutSelector';
 import WeaponSlot from '../components/WeaponSlot';
 import WeaponSelectionModal from '../components/WeaponSelectionModal';
-import StatComparison from '../components/StatComparison';
 import StanceSelector from '../components/StanceSelector';
 import YieldThresholdSlider from '../components/YieldThresholdSlider';
-import { calculateAttributeBonus, getAttributeDisplay } from '../utils/robotStats';
+import PerformanceStats from '../components/PerformanceStats';
+import EffectiveStatsTable from '../components/EffectiveStatsTable';
+import CompactUpgradeSection from '../components/CompactUpgradeSection';
 
 interface Robot {
   id: number;
   name: string;
+  userId: number;
   elo: number;
+  currentLeague: string;
+  leaguePoints: number;
+  fame: number;
   mainWeaponId: number | null;
   offhandWeaponId: number | null;
   loadoutType: string;
@@ -22,6 +27,7 @@ interface Robot {
   yieldThreshold: number;
   mainWeapon: WeaponInventory | null;
   offhandWeapon: WeaponInventory | null;
+  // 23 Core Attributes
   combatPower: number;
   targetingSystems: number;
   criticalSystems: number;
@@ -45,6 +51,22 @@ interface Robot {
   syncProtocols: number;
   supportSystems: number;
   formationTactics: number;
+  // Combat State
+  currentHP: number;
+  maxHP: number;
+  currentShield: number;
+  maxShield: number;
+  battleReadiness: number;
+  repairCost: number;
+  // Performance Tracking
+  totalBattles: number;
+  wins: number;
+  losses: number;
+  damageDealtLifetime: number;
+  damageTakenLifetime: number;
+  kills: number;
+  totalRepairsPaid: number;
+  titles: string | null;
 }
 
 interface WeaponInventory {
@@ -160,24 +182,51 @@ function RobotDetailPage() {
   };
 
   useEffect(() => {
-    fetchRobotAndWeapons();
+    let isFetching = false;
+    let fetchTimeout: NodeJS.Timeout | null = null;
+
+    const debouncedFetch = () => {
+      // Clear any pending fetch
+      if (fetchTimeout) {
+        clearTimeout(fetchTimeout);
+      }
+
+      // Prevent multiple simultaneous fetches
+      if (isFetching) {
+        return;
+      }
+
+      // Debounce: wait 100ms to see if another event fires
+      fetchTimeout = setTimeout(() => {
+        isFetching = true;
+        fetchRobotAndWeapons().finally(() => {
+          isFetching = false;
+        });
+      }, 100);
+    };
+
+    // Initial fetch on mount
+    debouncedFetch();
 
     // Re-fetch when page becomes visible (e.g., returning from Facilities page)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        fetchRobotAndWeapons();
+        debouncedFetch();
       }
     };
 
     // Re-fetch when window regains focus (e.g., clicking back to this tab/window)
     const handleFocus = () => {
-      fetchRobotAndWeapons();
+      debouncedFetch();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     
     return () => {
+      if (fetchTimeout) {
+        clearTimeout(fetchTimeout);
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
@@ -194,6 +243,7 @@ function RobotDetailPage() {
       const token = localStorage.getItem('token');
 
       // Fetch robot details
+      console.log(`Fetching robot with ID: ${id}`);
       const robotResponse = await fetch(`http://localhost:3001/api/robots/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -201,16 +251,27 @@ function RobotDetailPage() {
       });
 
       if (robotResponse.status === 401) {
+        console.log('Authentication failed, redirecting to login');
         logout();
         navigate('/login');
         return;
       }
 
+      if (robotResponse.status === 404) {
+        console.log(`Robot not found with ID: ${id}`);
+        setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
+        setLoading(false);
+        return;
+      }
+
       if (!robotResponse.ok) {
-        throw new Error('Failed to fetch robot');
+        const errorData = await robotResponse.json().catch(() => ({}));
+        console.error('Failed to fetch robot:', robotResponse.status, errorData);
+        throw new Error(errorData.error || 'Failed to fetch robot');
       }
 
       const robotData = await robotResponse.json();
+      console.log('Robot data received:', robotData.name);
       setRobot(robotData);
 
       // Fetch weapon inventory
@@ -385,45 +446,77 @@ function RobotDetailPage() {
     );
   }
 
+  // Check if user owns this robot
+  const isOwner = user && robot.userId === user.id;
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Robot Header - Visible to All Users */}
         <div className="mb-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <button
-                onClick={() => navigate('/robots')}
-                className="text-blue-400 hover:text-blue-300 mb-4"
-              >
-                ← Back to Robots
-              </button>
-              <h2 className="text-3xl font-bold">{robot.name}</h2>
-            </div>
+          <div className="flex justify-between items-start mb-4">
+            <button
+              onClick={() => navigate('/robots')}
+              className="text-blue-400 hover:text-blue-300"
+            >
+              ← Back to Robots
+            </button>
             <button
               onClick={() => {
                 setLoading(true);
                 fetchRobotAndWeapons();
               }}
               className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-sm"
-              title="Refresh robot data and academy levels"
+              title="Refresh robot data"
             >
               🔄 Refresh
             </button>
           </div>
-        </div>
-
-        {/* Currency Balance */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">Credits Balance</h3>
-            <div className="text-3xl font-bold text-green-400">
-              ₡{currency.toLocaleString()}
+          
+          {/* Robot Header Card */}
+          <div className="bg-gray-800 p-6 rounded-lg">
+            <div className="flex items-start gap-6">
+              {/* Image Placeholder */}
+              <div className="w-48 h-48 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="text-center">
+                  <div className="text-6xl mb-2">🤖</div>
+                  <div className="text-gray-400 text-sm">Frame #{robot.frameId || 1}</div>
+                </div>
+              </div>
+              
+              {/* Robot Info */}
+              <div className="flex-1">
+                <h1 className="text-4xl font-bold mb-4">{robot.name}</h1>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-400">ELO Rating:</span>
+                    <span className="ml-2 text-white font-semibold">{robot.elo}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">League:</span>
+                    <span className="ml-2 text-white font-semibold capitalize">{robot.currentLeague}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Win Rate:</span>
+                    <span className="ml-2 text-white font-semibold">
+                      {robot.totalBattles > 0 
+                        ? ((robot.wins / robot.totalBattles) * 100).toFixed(1) 
+                        : '0.0'}%
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Total Battles:</span>
+                    <span className="ml-2 text-white font-semibold">{robot.totalBattles}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Error and Success Messages */}
         {error && (
           <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-6">
             {error}
@@ -436,200 +529,179 @@ function RobotDetailPage() {
           </div>
         )}
 
-        {/* Weapon Loadout */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h3 className="text-xl font-semibold mb-4">Weapon Loadout</h3>
-          
-          {/* Loadout Type Selector */}
-          <div className="mb-6">
-            <LoadoutSelector
-              robotId={robot.id}
-              currentLoadout={robot.loadoutType}
-              onLoadoutChange={handleLoadoutChange}
-            />
-          </div>
-
-          {/* Weapon Slots */}
-          <div className="space-y-4">
-            <WeaponSlot
-              label="Main Weapon"
-              weapon={robot.mainWeapon}
-              onEquip={() => {
-                setWeaponSlotToEquip('main');
-                setShowWeaponModal(true);
-              }}
-              onUnequip={() => handleUnequipWeapon('main')}
-            />
-            
-            {/* Only show offhand slot for weapon_shield and dual_wield loadouts */}
-            {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
-              <WeaponSlot
-                label="Offhand Weapon"
-                weapon={robot.offhandWeapon}
-                onEquip={() => {
-                  setWeaponSlotToEquip('offhand');
-                  setShowWeaponModal(true);
-                }}
-                onUnequip={() => handleUnequipWeapon('offhand')}
-              />
-            )}
-          </div>
+        {/* Performance & Statistics - Visible to All Users */}
+        <div className="mb-6">
+          <PerformanceStats robot={robot} />
         </div>
 
-        {/* Battle Configuration */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h2 className="text-2xl font-semibold mb-6">⚔️ Battle Configuration</h2>
-          
-          {/* Stance Selector */}
-          <div className="mb-6">
-            <StanceSelector
-              robotId={robot.id}
-              currentStance={robot.stance}
-              onStanceChange={(newStance) => {
-                setRobot({ ...robot, stance: newStance });
-                setSuccessMessage(`Stance updated to ${newStance}`);
-                setTimeout(() => setSuccessMessage(''), 3000);
-              }}
-            />
-          </div>
+        {/* Owner-Only Sections */}
+        {isOwner ? (
+          <>
+            {/* Battle Configuration Section */}
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
+                ⚔️ Battle Configuration
+              </h2>
 
-          {/* Yield Threshold */}
-          <div className="mt-6">
-            <YieldThresholdSlider
-              robotId={robot.id}
-              currentThreshold={robot.yieldThreshold}
-              robotAttributes={robot}
-              repairBayLevel={0} // TODO: Get from user's facilities
-              onThresholdChange={(newThreshold) => {
-                setRobot({ ...robot, yieldThreshold: newThreshold });
-                setSuccessMessage(`Yield threshold updated to ${newThreshold}%`);
-                setTimeout(() => setSuccessMessage(''), 3000);
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Effective Stats Display */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h3 className="text-xl font-semibold mb-4">Effective Stats (Modified by Weapons & Loadout)</h3>
-          <StatComparison
-            robot={robot}
-            attributes={Object.values(attributeCategories).flatMap((cat) => cat.attributes)}
-            showOnlyModified={true}
-          />
-        </div>
-
-        {/* Weapon Selection Modal */}
-        <WeaponSelectionModal
-          isOpen={showWeaponModal}
-          onClose={() => setShowWeaponModal(false)}
-          onSelect={handleEquipWeapon}
-          weapons={weapons}
-          currentWeaponId={
-            weaponSlotToEquip === 'main' ? robot.mainWeaponId : robot.offhandWeaponId
-          }
-          title={`Select ${weaponSlotToEquip === 'main' ? 'Main' : 'Offhand'} Weapon`}
-          slot={weaponSlotToEquip}
-          robotLoadoutType={robot.loadoutType}
-        />
-
-        {/* Attributes */}
-        {Object.entries(attributeCategories).map(([category, config]) => {
-          const academyType = config.academy as keyof typeof academyLevels;
-          const academyLevel = academyLevels[academyType];
-          const attributeCap = getCapForLevel(academyLevel);
-
-          return (
-            <div key={category} className="bg-gray-800 p-6 rounded-lg mb-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">{category}</h3>
-                <div className="text-sm">
-                  <span className="text-gray-400">Attribute Cap: </span>
-                  <span className="text-blue-400 font-semibold">{attributeCap}</span>
-                  {academyLevel === 0 && (
-                    <span className="ml-2 text-xs text-yellow-400">
-                      (Upgrade {category === 'Combat Systems' ? 'Combat' : 
-                               category === 'Defensive Systems' ? 'Defense' : 
-                               category === 'Chassis & Mobility' ? 'Mobility' : 
-                               'AI'} Training Academy to increase)
+              {/* Current State Display */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-700 p-4 rounded-lg">
+                <div>
+                  <div className="text-gray-400 text-sm">Current HP</div>
+                  <div className="text-xl font-semibold">
+                    {robot.currentHP} / {robot.maxHP}
+                    <span className="text-sm text-gray-400 ml-2">
+                      ({Math.round((robot.currentHP / robot.maxHP) * 100)}%)
                     </span>
-                  )}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Max HP = Hull Integrity × 10
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm">Energy Shield</div>
+                  <div className="text-xl font-semibold">
+                    {robot.maxShield}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Shield Capacity × 2
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm">Battle Readiness</div>
+                  <div className="text-xl font-semibold">
+                    {robot.battleReadiness}%
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm">Repair Cost</div>
+                  <div className="text-xl font-semibold text-yellow-400">
+                    ₡{robot.repairCost.toLocaleString()}
+                  </div>
                 </div>
               </div>
-              <div className="space-y-3">
-                {config.attributes.map(({ key, label }) => {
-                  const currentLevel = robot[key as keyof Robot] as number;
-                  const baseCost = (currentLevel + 1) * 1000;
-                  const discountPercent = trainingLevel * 5;
-                  const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
-                  const canUpgrade = currentLevel < MAX_ATTRIBUTE_LEVEL && currentLevel < attributeCap;
-                  const canAfford = currency >= upgradeCost;
-                  const atCap = currentLevel >= attributeCap;
 
-                  // Calculate weapon bonuses
-                  const bonus = calculateAttributeBonus(key, robot.mainWeapon, robot.offhandWeapon);
-                  const loadoutBonus = 0; // No loadout bonus in attribute training section
-                  const attrDisplay = getAttributeDisplay(currentLevel, bonus, loadoutBonus);
+              {/* Weapon Loadout and Equipment */}
+              <div className="mb-6">
+                {/* Loadout Type Selector */}
+                <LoadoutSelector
+                  robotId={robot.id}
+                  currentLoadout={robot.loadoutType}
+                  onLoadoutChange={handleLoadoutChange}
+                />
+                
+                {/* Weapon Slots */}
+                <div className="mt-4">
+                  <h4 className="text-md font-semibold mb-3">Equipped Weapons</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <WeaponSlot
+                      label="Main Weapon"
+                      weapon={robot.mainWeapon}
+                      onEquip={() => {
+                        setWeaponSlotToEquip('main');
+                        setShowWeaponModal(true);
+                      }}
+                      onUnequip={() => handleUnequipWeapon('main')}
+                    />
+                    {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
+                      <WeaponSlot
+                        label="Offhand Weapon"
+                        weapon={robot.offhandWeapon}
+                        onEquip={() => {
+                          setWeaponSlotToEquip('offhand');
+                          setShowWeaponModal(true);
+                        }}
+                        onUnequip={() => handleUnequipWeapon('offhand')}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                  return (
-                    <div key={key} className="bg-gray-700 p-4 rounded flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold">{label}</span>
-                          <span className={`font-bold ${attrDisplay.hasBonus ? 'text-green-400' : 'text-blue-400'}`}>
-                            {attrDisplay.hasBonus ? (
-                              <>
-                                <span className="text-blue-400">Level {currentLevel}</span>
-                                <span className="text-green-400"> (+{bonus} from weapons)</span>
-                                <span className="text-gray-400"> = {attrDisplay.effective}</span>
-                              </>
-                            ) : (
-                              <>Level {currentLevel}</>
-                            )}
-                          </span>
-                          {atCap && currentLevel < MAX_ATTRIBUTE_LEVEL && (
-                            <span className="text-xs bg-yellow-900 text-yellow-300 px-2 py-1 rounded">
-                              Academy Cap Reached
-                            </span>
-                          )}
-                        </div>
-                        {canUpgrade && !atCap && (
-                          <div className="text-sm text-gray-400 mt-1">
-                            {discountPercent > 0 ? (
-                              <>
-                                <span className="line-through mr-2">₡{baseCost.toLocaleString()}</span>
-                                <span className="text-green-400">₡{upgradeCost.toLocaleString()} ({discountPercent}% off)</span>
-                              </>
-                            ) : (
-                              <>Upgrade Cost: ₡{upgradeCost.toLocaleString()}</>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleUpgrade(key, currentLevel)}
-                        disabled={!canUpgrade || !canAfford || atCap}
-                        className={`px-4 py-2 rounded font-semibold transition-colors ${
-                          canUpgrade && canAfford && !atCap
-                            ? 'bg-blue-600 hover:bg-blue-700'
-                            : 'bg-gray-600 cursor-not-allowed'
-                        }`}
-                      >
-                        {atCap && currentLevel < MAX_ATTRIBUTE_LEVEL
-                          ? 'Upgrade Academy'
-                          : !canUpgrade
-                          ? 'Max Level'
-                          : !canAfford
-                          ? 'Not Enough Credits'
-                          : `Upgrade (₡${upgradeCost.toLocaleString()})`}
-                      </button>
-                    </div>
-                  );
-                })}
+              {/* Battle Stance */}
+              <div className="mb-6">
+                <StanceSelector
+                  robotId={robot.id}
+                  currentStance={robot.stance}
+                  onStanceChange={(newStance) => {
+                    setRobot({ ...robot, stance: newStance });
+                    setSuccessMessage(`Stance updated to ${newStance}`);
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }}
+                />
+              </div>
+
+              {/* Yield Threshold */}
+              <div>
+                <YieldThresholdSlider
+                  robotId={robot.id}
+                  currentThreshold={robot.yieldThreshold}
+                  robotAttributes={robot}
+                  repairBayLevel={0}
+                  onThresholdChange={(newThreshold) => {
+                    setRobot({ ...robot, yieldThreshold: newThreshold });
+                    setSuccessMessage(`Yield threshold updated to ${newThreshold}%`);
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }}
+                />
               </div>
             </div>
-          );
-        })}
+
+            {/* Effective Stats Overview */}
+            <div className="mb-6">
+              <EffectiveStatsTable robot={robot} />
+            </div>
+
+            {/* Upgrade Robot Section */}
+            <CompactUpgradeSection
+              categories={Object.entries(attributeCategories).map(([category, config]) => {
+                const academyType = config.academy as keyof typeof academyLevels;
+                const academyLevel = academyLevels[academyType];
+                const attributeCap = getCapForLevel(academyLevel);
+                
+                return {
+                  category,
+                  attributes: config.attributes,
+                  cap: attributeCap,
+                  academyLevel,
+                };
+              })}
+              robot={robot}
+              trainingLevel={trainingLevel}
+              currency={currency}
+              onUpgrade={handleUpgrade}
+              onNavigateToFacilities={() => navigate('/facilities')}
+            />
+          </>
+        ) : (
+          /* Non-Owner View */
+          <div className="bg-gray-800 p-6 rounded-lg text-center">
+            <p className="text-gray-400 text-lg">
+              You can only view battle configuration and upgrades for your own robots.
+            </p>
+            <button
+              onClick={() => navigate('/robots')}
+              className="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded"
+            >
+              View My Robots
+            </button>
+          </div>
+        )}
+
+        {/* Weapon Selection Modal */}
+        {isOwner && (
+          <WeaponSelectionModal
+            isOpen={showWeaponModal}
+            onClose={() => setShowWeaponModal(false)}
+            onSelect={handleEquipWeapon}
+            weapons={weapons}
+            currentWeaponId={
+              weaponSlotToEquip === 'main' ? robot.mainWeaponId : robot.offhandWeaponId
+            }
+            title={`Select ${weaponSlotToEquip === 'main' ? 'Main' : 'Offhand'} Weapon`}
+            slot={weaponSlotToEquip}
+            robotLoadoutType={robot.loadoutType}
+          />
+        )}
       </div>
     </div>
   );
