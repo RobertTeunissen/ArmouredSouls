@@ -182,24 +182,51 @@ function RobotDetailPage() {
   };
 
   useEffect(() => {
-    fetchRobotAndWeapons();
+    let isFetching = false;
+    let fetchTimeout: NodeJS.Timeout | null = null;
+
+    const debouncedFetch = () => {
+      // Clear any pending fetch
+      if (fetchTimeout) {
+        clearTimeout(fetchTimeout);
+      }
+
+      // Prevent multiple simultaneous fetches
+      if (isFetching) {
+        return;
+      }
+
+      // Debounce: wait 100ms to see if another event fires
+      fetchTimeout = setTimeout(() => {
+        isFetching = true;
+        fetchRobotAndWeapons().finally(() => {
+          isFetching = false;
+        });
+      }, 100);
+    };
+
+    // Initial fetch on mount
+    debouncedFetch();
 
     // Re-fetch when page becomes visible (e.g., returning from Facilities page)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        fetchRobotAndWeapons();
+        debouncedFetch();
       }
     };
 
     // Re-fetch when window regains focus (e.g., clicking back to this tab/window)
     const handleFocus = () => {
-      fetchRobotAndWeapons();
+      debouncedFetch();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     
     return () => {
+      if (fetchTimeout) {
+        clearTimeout(fetchTimeout);
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
