@@ -11,146 +11,146 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
-  username        String   @unique @db.VarChar(50)
-  passwordHash    String   @map("password_hash") @db.VarChar(255)
-  role            String   @default("user") @db.VarChar(20)  // "user", "admin"
-  
+  id           Int    @id @default(autoincrement())
+  username     String @unique @db.VarChar(50)
+  passwordHash String @map("password_hash") @db.VarChar(255)
+  role         String @default("user") @db.VarChar(20) // "user", "admin"
+
   // ===== RESOURCES =====
-  currency        Int      @default(2000000)    // Credits (₡) - Starting: ₡2,000,000
-  prestige        Int      @default(0)          // Stable reputation (earned, never spent)
-  
+  currency Int @default(2000000) // Credits (₡) - Starting: ₡2,000,000
+  prestige Int @default(0) // Stable reputation (earned, never spent)
+
   // ===== STABLE STATISTICS (Aggregated from robots) =====
-  totalBattles    Int      @default(0) @map("total_battles")          // Lifetime battle count across all robots
-  totalWins       Int      @default(0) @map("total_wins")             // Victory count across all robots
-  highestELO      Int      @default(1200) @map("highest_elo")         // Best ELO achieved by any robot in stable
-  championshipTitles Int   @default(0) @map("championship_titles")    // Tournament victories
-  
+  totalBattles       Int @default(0) @map("total_battles") // Lifetime battle count across all robots
+  totalWins          Int @default(0) @map("total_wins") // Victory count across all robots
+  highestELO         Int @default(1200) @map("highest_elo") // Best ELO achieved by any robot in stable
+  championshipTitles Int @default(0) @map("championship_titles") // Tournament victories
+
   // ===== TIMESTAMPS =====
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // ===== RELATIONS =====
   robots          Robot[]
   facilities      Facility[]
   weaponInventory WeaponInventory[]
-  battles         Battle[] @relation("UserBattles")
-  
+  battles         Battle[]          @relation("UserBattles")
+
   @@map("users")
 }
 
 model Facility {
-  id              Int      @id @default(autoincrement())
-  userId          Int      @map("user_id")
-  facilityType    String   @map("facility_type") @db.VarChar(50)     // See 14 facility types in doc
-  level           Int      @default(0)          // Current level (0-10, where 0 = not purchased)
-  maxLevel        Int      @default(10) @map("max_level")         // Maximum level (10 for most, 9 for Roster Expansion)
-  
+  id           Int    @id @default(autoincrement())
+  userId       Int    @map("user_id")
+  facilityType String @map("facility_type") @db.VarChar(50) // See 14 facility types in doc
+  level        Int    @default(0) // Current level (0-10, where 0 = not purchased)
+  maxLevel     Int    @default(10) @map("max_level") // Maximum level (10 for most, 9 for Roster Expansion)
+
   // ===== COACHING STAFF SPECIFIC =====
-  activeCoach     String?  @map("active_coach") @db.VarChar(50)     // For coaching_staff: active coach type
-  
+  activeCoach String? @map("active_coach") @db.VarChar(50) // For coaching_staff: active coach type
+
   // ===== TIMESTAMPS =====
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // ===== RELATIONS =====
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, facilityType])
   @@index([userId])
   @@map("facilities")
 }
 
 model Robot {
-  id              Int      @id @default(autoincrement())
-  userId          Int      @map("user_id")
-  name            String   @db.VarChar(50)
-  frameId         Int      @default(1) @map("frame_id")          // Chassis appearance ID
-  paintJob        String?  @map("paint_job") @db.VarChar(100)   // Cosmetic customization
-  
-  // ===== 23 CORE ATTRIBUTES (Range: 1-50) =====
-  
+  id       Int     @id @default(autoincrement())
+  userId   Int     @map("user_id")
+  name     String  @db.VarChar(50)
+  frameId  Int     @default(1) @map("frame_id") // Chassis appearance ID
+  paintJob String? @map("paint_job") @db.VarChar(100) // Cosmetic customization
+
+  // ===== 23 CORE ATTRIBUTES (Range: 1.00-50.00, precision 2 decimals) =====
+
   // Combat Systems (6 attributes)
-  combatPower         Int  @default(1) @map("combat_power")          // Base damage multiplier (all weapons)
-  targetingSystems    Int  @default(1) @map("targeting_systems")     // Hit chance, accuracy
-  criticalSystems     Int  @default(1) @map("critical_systems")      // Critical hit chance
-  penetration         Int  @default(1)                                // Bypasses armor/shields
-  weaponControl       Int  @default(1) @map("weapon_control")        // Weapon handling, damage multiplier
-  attackSpeed         Int  @default(1) @map("attack_speed")          // Cooldown reduction
-  
+  combatPower      Decimal @default(1.00) @map("combat_power") @db.Decimal(5, 2) // Base damage multiplier (all weapons)
+  targetingSystems Decimal @default(1.00) @map("targeting_systems") @db.Decimal(5, 2) // Hit chance, accuracy
+  criticalSystems  Decimal @default(1.00) @map("critical_systems") @db.Decimal(5, 2) // Critical hit chance
+  penetration      Decimal @default(1.00) @db.Decimal(5, 2) // Bypasses armor/shields
+  weaponControl    Decimal @default(1.00) @map("weapon_control") @db.Decimal(5, 2) // Weapon handling, damage multiplier
+  attackSpeed      Decimal @default(1.00) @map("attack_speed") @db.Decimal(5, 2) // Cooldown reduction
+
   // Defensive Systems (5 attributes)
-  armorPlating        Int  @default(1) @map("armor_plating")         // Physical damage reduction
-  shieldCapacity      Int  @default(1) @map("shield_capacity")       // Max energy shield HP
-  evasionThrusters    Int  @default(1) @map("evasion_thrusters")     // Dodge chance
-  damageDampeners     Int  @default(1) @map("damage_dampeners")      // Critical damage reduction
-  counterProtocols    Int  @default(1) @map("counter_protocols")     // Counter-attack chance
-  
+  armorPlating     Decimal @default(1.00) @map("armor_plating") @db.Decimal(5, 2) // Physical damage reduction
+  shieldCapacity   Decimal @default(1.00) @map("shield_capacity") @db.Decimal(5, 2) // Max energy shield HP
+  evasionThrusters Decimal @default(1.00) @map("evasion_thrusters") @db.Decimal(5, 2) // Dodge chance
+  damageDampeners  Decimal @default(1.00) @map("damage_dampeners") @db.Decimal(5, 2) // Critical damage reduction
+  counterProtocols Decimal @default(1.00) @map("counter_protocols") @db.Decimal(5, 2) // Counter-attack chance
+
   // Chassis & Mobility (5 attributes)
-  hullIntegrity       Int  @default(1) @map("hull_integrity")        // Max HP (×10 formula)
-  servoMotors         Int  @default(1) @map("servo_motors")          // Movement speed, positioning
-  gyroStabilizers     Int  @default(1) @map("gyro_stabilizers")      // Balance, reaction time
-  hydraulicSystems    Int  @default(1) @map("hydraulic_systems")     // Melee damage bonus, force
-  powerCore           Int  @default(1) @map("power_core")            // Energy shield regen rate
-  
+  hullIntegrity    Decimal @default(1.00) @map("hull_integrity") @db.Decimal(5, 2) // Max HP (×10 formula)
+  servoMotors      Decimal @default(1.00) @map("servo_motors") @db.Decimal(5, 2) // Movement speed, positioning
+  gyroStabilizers  Decimal @default(1.00) @map("gyro_stabilizers") @db.Decimal(5, 2) // Balance, reaction time
+  hydraulicSystems Decimal @default(1.00) @map("hydraulic_systems") @db.Decimal(5, 2) // Melee damage bonus, force
+  powerCore        Decimal @default(1.00) @map("power_core") @db.Decimal(5, 2) // Energy shield regen rate
+
   // AI Processing (4 attributes)
-  combatAlgorithms    Int  @default(1) @map("combat_algorithms")     // Decision quality
-  threatAnalysis      Int  @default(1) @map("threat_analysis")       // Target priority, positioning
-  adaptiveAI          Int  @default(1) @map("adaptive_ai")           // Learning over time
-  logicCores          Int  @default(1) @map("logic_cores")           // Performance under pressure
-  
+  combatAlgorithms Decimal @default(1.00) @map("combat_algorithms") @db.Decimal(5, 2) // Decision quality
+  threatAnalysis   Decimal @default(1.00) @map("threat_analysis") @db.Decimal(5, 2) // Target priority, positioning
+  adaptiveAI       Decimal @default(1.00) @map("adaptive_ai") @db.Decimal(5, 2) // Learning over time
+  logicCores       Decimal @default(1.00) @map("logic_cores") @db.Decimal(5, 2) // Performance under pressure
+
   // Team Coordination (3 attributes) - for 2v2, 3v3+ arena battles
-  syncProtocols       Int  @default(1) @map("sync_protocols")        // Team damage multipliers
-  supportSystems      Int  @default(1) @map("support_systems")       // Buff adjacent allies
-  formationTactics    Int  @default(1) @map("formation_tactics")     // Formation bonuses
-  
+  syncProtocols    Decimal @default(1.00) @map("sync_protocols") @db.Decimal(5, 2) // Team damage multipliers
+  supportSystems   Decimal @default(1.00) @map("support_systems") @db.Decimal(5, 2) // Buff adjacent allies
+  formationTactics Decimal @default(1.00) @map("formation_tactics") @db.Decimal(5, 2) // Formation bonuses
+
   // ===== COMBAT STATE =====
-  currentHP           Int  @map("current_hp")                        // Current health (max = hullIntegrity × 10)
-  maxHP               Int  @map("max_hp")                            // Max HP (calculated: hullIntegrity × 10)
-  currentShield       Int  @map("current_shield")                    // Current energy shield HP
-  maxShield           Int  @map("max_shield")                        // Max shield (calculated: shieldCapacity × 2)
-  damageTaken         Int  @default(0) @map("damage_taken")          // Damage since last repair
-  
+  currentHP     Int @map("current_hp") // Current health (max = hullIntegrity × 10)
+  maxHP         Int @map("max_hp") // Max HP (calculated: hullIntegrity × 10)
+  currentShield Int @map("current_shield") // Current energy shield HP
+  maxShield     Int @map("max_shield") // Max shield (calculated: shieldCapacity × 2)
+  damageTaken   Int @default(0) @map("damage_taken") // Damage since last repair
+
   // ===== PERFORMANCE TRACKING =====
-  elo                 Int  @default(1200)                             // Individual skill rating
-  totalBattles        Int  @default(0) @map("total_battles")         // Lifetime battle count
-  wins                Int  @default(0)                                // Victory count
-  losses              Int  @default(0)                                // Defeat count
-  damageDealtLifetime Int  @default(0) @map("damage_dealt_lifetime") // Total damage output
-  damageTakenLifetime Int  @default(0) @map("damage_taken_lifetime") // Total damage received
-  kills               Int  @default(0)                                // Opponents destroyed (0 HP)
-  
+  elo                 Int @default(1200) // Individual skill rating
+  totalBattles        Int @default(0) @map("total_battles") // Lifetime battle count
+  wins                Int @default(0) // Victory count
+  losses              Int @default(0) // Defeat count
+  damageDealtLifetime Int @default(0) @map("damage_dealt_lifetime") // Total damage output
+  damageTakenLifetime Int @default(0) @map("damage_taken_lifetime") // Total damage received
+  kills               Int @default(0) // Opponents destroyed (0 HP)
+
   // ===== LEAGUE & FAME =====
-  currentLeague       String  @default("bronze") @map("current_league") @db.VarChar(20)     // bronze/silver/gold/platinum/diamond/champion
-  leagueId            String  @default("bronze_1") @map("league_id") @db.VarChar(30)       // Specific league instance (supports multiple Bronze leagues)
-  leaguePoints        Int     @default(0) @map("league_points")                             // Points for promotion/demotion
-  fame                Int     @default(0)                                                   // Individual robot reputation
-  titles              String? @db.Text                                                       // Comma-separated achievements
-  
+  currentLeague String  @default("bronze") @map("current_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
+  leagueId      String  @default("bronze_1") @map("league_id") @db.VarChar(30) // Specific league instance (supports multiple Bronze leagues)
+  leaguePoints  Int     @default(0) @map("league_points") // Points for promotion/demotion
+  fame          Int     @default(0) // Individual robot reputation
+  titles        String? @db.Text // Comma-separated achievements
+
   // ===== ECONOMIC STATE =====
-  repairCost          Int  @default(0) @map("repair_cost")          // Cost to fully repair (formula-based)
-  battleReadiness     Int  @default(100) @map("battle_readiness")   // Percentage (100% = full HP, 0% = critical)
-  totalRepairsPaid    Int  @default(0) @map("total_repairs_paid")   // Lifetime repair costs
-  
+  repairCost       Int @default(0) @map("repair_cost") // Cost to fully repair (formula-based)
+  battleReadiness  Int @default(100) @map("battle_readiness") // Percentage (100% = full HP, 0% = critical)
+  totalRepairsPaid Int @default(0) @map("total_repairs_paid") // Lifetime repair costs
+
   // ===== PLAYER CONFIGURATION (Settings, NOT upgradeable attributes) =====
-  yieldThreshold      Int  @default(10) @map("yield_threshold")     // HP % where robot surrenders (0-50%)
-  loadoutType         String  @default("single") @map("loadout_type") @db.VarChar(20)  // "single", "weapon_shield", "two_handed", "dual_wield"
-  stance              String  @default("balanced") @db.VarChar(20)   // "offensive", "defensive", "balanced"
-  
+  yieldThreshold Int    @default(10) @map("yield_threshold") // HP % where robot surrenders (0-50%)
+  loadoutType    String @default("single") @map("loadout_type") @db.VarChar(20) // "single", "weapon_shield", "two_handed", "dual_wield"
+  stance         String @default("balanced") @db.VarChar(20) // "offensive", "defensive", "balanced"
+
   // ===== EQUIPMENT (Weapon Inventory System) =====
-  mainWeaponId        Int?  @map("main_weapon_id")                  // Primary weapon (all loadouts)
-  offhandWeaponId     Int?  @map("offhand_weapon_id")               // Secondary weapon (dual-wield, weapon+shield)
-  
+  mainWeaponId    Int? @map("main_weapon_id") // Primary weapon (all loadouts)
+  offhandWeaponId Int? @map("offhand_weapon_id") // Secondary weapon (dual-wield, weapon+shield)
+
   // ===== TIMESTAMPS =====
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   // ===== RELATIONS =====
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mainWeapon          WeaponInventory?  @relation("MainWeapon", fields: [mainWeaponId], references: [id])
-  offhandWeapon       WeaponInventory?  @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
-  battlesAsRobot1     Battle[] @relation("Robot1")
-  battlesAsRobot2     Battle[] @relation("Robot2")
-  
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mainWeapon      WeaponInventory? @relation("MainWeapon", fields: [mainWeaponId], references: [id])
+  offhandWeapon   WeaponInventory? @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
+  battlesAsRobot1 Battle[]         @relation("Robot1")
+  battlesAsRobot2 Battle[]         @relation("Robot2")
+
   @@index([userId])
   @@index([elo])
   @@index([currentLeague])
@@ -158,131 +158,131 @@ model Robot {
 }
 
 model WeaponInventory {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  weaponId    Int      @map("weapon_id")
-  
+  id       Int @id @default(autoincrement())
+  userId   Int @map("user_id")
+  weaponId Int @map("weapon_id")
+
   // Custom name (optional, for named weapons)
-  customName  String?  @map("custom_name") @db.VarChar(100)
-  
+  customName String? @map("custom_name") @db.VarChar(100)
+
   // ===== TIMESTAMPS =====
   purchasedAt DateTime @default(now()) @map("purchased_at")
-  
+
   // ===== RELATIONS =====
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  weapon      Weapon   @relation(fields: [weaponId], references: [id])
-  robotsMain      Robot[]  @relation("MainWeapon")
-  robotsOffhand   Robot[]  @relation("OffhandWeapon")
-  
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weapon        Weapon  @relation(fields: [weaponId], references: [id])
+  robotsMain    Robot[] @relation("MainWeapon")
+  robotsOffhand Robot[] @relation("OffhandWeapon")
+
   @@index([userId])
   @@index([weaponId])
   @@map("weapon_inventory")
 }
 
 model Weapon {
-  id              Int      @id @default(autoincrement())
-  name            String   @db.VarChar(100)
-  weaponType      String   @map("weapon_type") @db.VarChar(20)    // "energy", "ballistic", "melee", "shield"
-  baseDamage      Int      @map("base_damage")                     // Base damage value
-  cooldown        Int                                              // Seconds between attacks (time-based combat)
-  cost            Int                                              // Purchase cost in Credits
-  handsRequired   String   @map("hands_required") @db.VarChar(10)  // "one", "two", "shield"
-  damageType      String   @map("damage_type") @db.VarChar(20)    // "energy", "ballistic", "melee", "explosive"
-  loadoutType     String   @map("loadout_type") @db.VarChar(20)   // "single", "weapon_shield", "two_handed", "dual_wield", "any"
-  specialProperty String?  @map("special_property") @db.Text      // Special effects description
-  description     String?  @db.Text                                // Flavor text
-  
+  id              Int     @id @default(autoincrement())
+  name            String  @db.VarChar(100)
+  weaponType      String  @map("weapon_type") @db.VarChar(20) // "energy", "ballistic", "melee", "shield"
+  baseDamage      Int     @map("base_damage") // Base damage value
+  cooldown        Int // Seconds between attacks (time-based combat)
+  cost            Int // Purchase cost in Credits
+  handsRequired   String  @map("hands_required") @db.VarChar(10) // "one", "two", "shield"
+  damageType      String  @map("damage_type") @db.VarChar(20) // "energy", "ballistic", "melee", "explosive"
+  loadoutType     String  @map("loadout_type") @db.VarChar(20) // "single", "weapon_shield", "two_handed", "dual_wield", "any"
+  specialProperty String? @map("special_property") @db.Text // Special effects description
+  description     String? @db.Text // Flavor text
+
   // ===== ATTRIBUTE BONUSES (Can be positive or negative) =====
   // Combat Systems
-  combatPowerBonus        Int  @default(0) @map("combat_power_bonus")
-  targetingSystemsBonus   Int  @default(0) @map("targeting_systems_bonus")
-  criticalSystemsBonus    Int  @default(0) @map("critical_systems_bonus")
-  penetrationBonus        Int  @default(0) @map("penetration_bonus")
-  weaponControlBonus      Int  @default(0) @map("weapon_control_bonus")
-  attackSpeedBonus        Int  @default(0) @map("attack_speed_bonus")
-  
+  combatPowerBonus      Int @default(0) @map("combat_power_bonus")
+  targetingSystemsBonus Int @default(0) @map("targeting_systems_bonus")
+  criticalSystemsBonus  Int @default(0) @map("critical_systems_bonus")
+  penetrationBonus      Int @default(0) @map("penetration_bonus")
+  weaponControlBonus    Int @default(0) @map("weapon_control_bonus")
+  attackSpeedBonus      Int @default(0) @map("attack_speed_bonus")
+
   // Defensive Systems
-  armorPlatingBonus       Int  @default(0) @map("armor_plating_bonus")
-  shieldCapacityBonus     Int  @default(0) @map("shield_capacity_bonus")
-  evasionThrustersBonus   Int  @default(0) @map("evasion_thrusters_bonus")
-  damageDampenersBonus    Int  @default(0) @map("damage_dampeners_bonus")
-  counterProtocolsBonus   Int  @default(0) @map("counter_protocols_bonus")
-  
+  armorPlatingBonus     Int @default(0) @map("armor_plating_bonus")
+  shieldCapacityBonus   Int @default(0) @map("shield_capacity_bonus")
+  evasionThrustersBonus Int @default(0) @map("evasion_thrusters_bonus")
+  damageDampenersBonus  Int @default(0) @map("damage_dampeners_bonus")
+  counterProtocolsBonus Int @default(0) @map("counter_protocols_bonus")
+
   // Chassis & Mobility
-  hullIntegrityBonus      Int  @default(0) @map("hull_integrity_bonus")
-  servoMotorsBonus        Int  @default(0) @map("servo_motors_bonus")
-  gyroStabilizersBonus    Int  @default(0) @map("gyro_stabilizers_bonus")
-  hydraulicSystemsBonus   Int  @default(0) @map("hydraulic_systems_bonus")
-  powerCoreBonus          Int  @default(0) @map("power_core_bonus")
-  
+  hullIntegrityBonus    Int @default(0) @map("hull_integrity_bonus")
+  servoMotorsBonus      Int @default(0) @map("servo_motors_bonus")
+  gyroStabilizersBonus  Int @default(0) @map("gyro_stabilizers_bonus")
+  hydraulicSystemsBonus Int @default(0) @map("hydraulic_systems_bonus")
+  powerCoreBonus        Int @default(0) @map("power_core_bonus")
+
   // AI Processing
-  combatAlgorithmsBonus   Int  @default(0) @map("combat_algorithms_bonus")
-  threatAnalysisBonus     Int  @default(0) @map("threat_analysis_bonus")
-  adaptiveAIBonus         Int  @default(0) @map("adaptive_ai_bonus")
-  logicCoresBonus         Int  @default(0) @map("logic_cores_bonus")
-  
+  combatAlgorithmsBonus Int @default(0) @map("combat_algorithms_bonus")
+  threatAnalysisBonus   Int @default(0) @map("threat_analysis_bonus")
+  adaptiveAIBonus       Int @default(0) @map("adaptive_ai_bonus")
+  logicCoresBonus       Int @default(0) @map("logic_cores_bonus")
+
   // Team Coordination
-  syncProtocolsBonus      Int  @default(0) @map("sync_protocols_bonus")
-  supportSystemsBonus     Int  @default(0) @map("support_systems_bonus")
-  formationTacticsBonus   Int  @default(0) @map("formation_tactics_bonus")
-  
+  syncProtocolsBonus    Int @default(0) @map("sync_protocols_bonus")
+  supportSystemsBonus   Int @default(0) @map("support_systems_bonus")
+  formationTacticsBonus Int @default(0) @map("formation_tactics_bonus")
+
   // ===== TIMESTAMPS =====
-  createdAt       DateTime @default(now()) @map("created_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+
   // ===== RELATIONS =====
   weaponInventory WeaponInventory[]
-  
+
   @@map("weapons")
 }
 
 model Battle {
-  id              Int      @id @default(autoincrement())
-  userId          Int      @map("user_id")                        // Owner of this battle record
-  robot1Id        Int      @map("robot1_id")                      // First combatant
-  robot2Id        Int      @map("robot2_id")                      // Second combatant
-  winnerId        Int?     @map("winner_id")                      // Winner's robot ID (null if draw)
-  battleType      String   @map("battle_type") @db.VarChar(20)   // "1v1", "2v2", "3v3", "tournament"
-  leagueType      String   @map("league_type") @db.VarChar(20)   // "bronze", "silver", "gold", etc.
-  
+  id         Int    @id @default(autoincrement())
+  userId     Int    @map("user_id") // Owner of this battle record
+  robot1Id   Int    @map("robot1_id") // First combatant
+  robot2Id   Int    @map("robot2_id") // Second combatant
+  winnerId   Int?   @map("winner_id") // Winner's robot ID (null if draw)
+  battleType String @map("battle_type") @db.VarChar(20) // "1v1", "2v2", "3v3", "tournament"
+  leagueType String @map("league_type") @db.VarChar(20) // "bronze", "silver", "gold", etc.
+
   // ===== TIME-BASED COMBAT DATA =====
-  battleLog       Json     @map("battle_log")                    // Complete time-based combat simulation (events with timestamps)
-  durationSeconds Int      @map("duration_seconds")              // Battle length in seconds
-  
+  battleLog       Json @map("battle_log") // Complete time-based combat simulation (events with timestamps)
+  durationSeconds Int  @map("duration_seconds") // Battle length in seconds
+
   // ===== ECONOMIC DATA =====
-  winnerReward    Int?     @map("winner_reward")                 // Credits awarded to winner
-  loserReward     Int?     @map("loser_reward")                  // Credits awarded to loser (can earn on loss)
-  robot1RepairCost Int?    @map("robot1_repair_cost")            // Repair cost for robot 1
-  robot2RepairCost Int?    @map("robot2_repair_cost")            // Repair cost for robot 2
-  
+  winnerReward     Int? @map("winner_reward") // Credits awarded to winner
+  loserReward      Int? @map("loser_reward") // Credits awarded to loser (can earn on loss)
+  robot1RepairCost Int? @map("robot1_repair_cost") // Repair cost for robot 1
+  robot2RepairCost Int? @map("robot2_repair_cost") // Repair cost for robot 2
+
   // ===== FINAL STATE =====
-  robot1FinalHP   Int      @map("robot1_final_hp")               // Ending HP
-  robot2FinalHP   Int      @map("robot2_final_hp")               // Ending HP
-  robot1FinalShield Int    @map("robot1_final_shield")           // Ending energy shield HP
-  robot2FinalShield Int    @map("robot2_final_shield")           // Ending energy shield HP
-  robot1Yielded   Boolean  @default(false) @map("robot1_yielded") // Did robot 1 surrender?
-  robot2Yielded   Boolean  @default(false) @map("robot2_yielded") // Did robot 2 surrender?
-  robot1Destroyed Boolean  @default(false) @map("robot1_destroyed") // Did robot 1 reach 0 HP?
-  robot2Destroyed Boolean  @default(false) @map("robot2_destroyed") // Did robot 2 reach 0 HP?
-  
+  robot1FinalHP     Int     @map("robot1_final_hp") // Ending HP
+  robot2FinalHP     Int     @map("robot2_final_hp") // Ending HP
+  robot1FinalShield Int     @map("robot1_final_shield") // Ending energy shield HP
+  robot2FinalShield Int     @map("robot2_final_shield") // Ending energy shield HP
+  robot1Yielded     Boolean @default(false) @map("robot1_yielded") // Did robot 1 surrender?
+  robot2Yielded     Boolean @default(false) @map("robot2_yielded") // Did robot 2 surrender?
+  robot1Destroyed   Boolean @default(false) @map("robot1_destroyed") // Did robot 1 reach 0 HP?
+  robot2Destroyed   Boolean @default(false) @map("robot2_destroyed") // Did robot 2 reach 0 HP?
+
   // ===== DAMAGE TRACKING =====
-  robot1DamageDealt Int    @map("robot1_damage_dealt")           // Total damage dealt by robot 1
-  robot2DamageDealt Int    @map("robot2_damage_dealt")           // Total damage dealt by robot 2
-  
+  robot1DamageDealt Int @map("robot1_damage_dealt") // Total damage dealt by robot 1
+  robot2DamageDealt Int @map("robot2_damage_dealt") // Total damage dealt by robot 2
+
   // ===== ELO TRACKING =====
-  robot1ELOBefore Int      @map("robot1_elo_before")             // ELO before battle
-  robot2ELOBefore Int      @map("robot2_elo_before")             // ELO before battle
-  robot1ELOAfter  Int      @map("robot1_elo_after")              // ELO after battle
-  robot2ELOAfter  Int      @map("robot2_elo_after")              // ELO after battle
-  eloChange       Int      @map("elo_change")                     // ELO delta (winner's perspective)
-  
+  robot1ELOBefore Int @map("robot1_elo_before") // ELO before battle
+  robot2ELOBefore Int @map("robot2_elo_before") // ELO before battle
+  robot1ELOAfter  Int @map("robot1_elo_after") // ELO after battle
+  robot2ELOAfter  Int @map("robot2_elo_after") // ELO after battle
+  eloChange       Int @map("elo_change") // ELO delta (winner's perspective)
+
   // ===== TIMESTAMPS =====
-  createdAt       DateTime @default(now()) @map("created_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+
   // ===== RELATIONS =====
-  user            User   @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
-  robot1          Robot  @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2          Robot  @relation("Robot2", fields: [robot2Id], references: [id])
-  
+  user   User  @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
+  robot1 Robot @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2 Robot @relation("Robot2", fields: [robot2Id], references: [id])
+
   @@index([userId])
   @@index([robot1Id])
   @@index([robot2Id])
