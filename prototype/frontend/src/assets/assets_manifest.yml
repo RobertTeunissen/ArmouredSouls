@@ -1,0 +1,17 @@
+assets:
+  - filename: "icon1.svg"
+    type: "icon"
+    size: ""
+    prompt: "Generate a sleek modern icon"
+    provenance: ""
+  - filename: "icon2.svg"
+    type: "icon"
+    size: ""
+    prompt: "Generate a combat power icon"
+    provenance: ""
+  - filename: "icon3.svg"
+    type: "icon"
+    size: ""
+    prompt: "Generate a dashboard icon"
+    provenance: ""
+# Add entries for all required assets
