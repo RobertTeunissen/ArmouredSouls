@@ -266,8 +266,9 @@ async function main() {
   const practiceSword = weapons[10]; // Last weapon in array
 
   // Create test users
-  console.log('Creating test users (admin + 100 test users)...');
-  const hashedPassword = await bcrypt.hash('testpass123', 10);
+  console.log('Creating test users (admin + player1-5 + 100 test users)...');
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  const testHashedPassword = await bcrypt.hash('testpass123', 10);
 
   // Create admin user
   const adminUser = await prisma.user.create({
@@ -282,11 +283,53 @@ async function main() {
 
   console.log('✅ Created admin user');
 
+  // Create player users for manual testing
+  console.log('Creating player1-5 users for manual testing...');
+  const playerUsers = await Promise.all([
+    prisma.user.create({
+      data: {
+        username: 'player1',
+        passwordHash: hashedPassword,
+        currency: 2000000, // ₡2 million starting balance
+      },
+    }),
+    prisma.user.create({
+      data: {
+        username: 'player2',
+        passwordHash: hashedPassword,
+        currency: 2000000,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        username: 'player3',
+        passwordHash: hashedPassword,
+        currency: 2000000,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        username: 'player4',
+        passwordHash: hashedPassword,
+        currency: 2000000,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        username: 'player5',
+        passwordHash: hashedPassword,
+        currency: 2000000,
+      },
+    }),
+  ]);
+
+  console.log('✅ Created player1-5 users (password: password123)');
+
   // Create Bye-Robot special user (id will be determined by database)
   const byeUser = await prisma.user.create({
     data: {
       username: 'bye_robot_user',
-      passwordHash: hashedPassword,
+      passwordHash: testHashedPassword,
       currency: 0,
       prestige: 0,
       role: 'user',
@@ -307,7 +350,7 @@ async function main() {
     const user = await prisma.user.create({
       data: {
         username,
-        passwordHash: hashedPassword,
+        passwordHash: testHashedPassword,
         currency: 100000, // ₡100,000 starting balance
       },
     });
@@ -467,6 +510,7 @@ async function main() {
   // Keep original users for reference
   const users = [
     adminUser,
+    ...playerUsers,
     ...testUsersWithRobots.map(t => t.user)
   ];
 
@@ -477,8 +521,9 @@ async function main() {
   console.log('');
   console.log('📊 System Overview:');
   console.log('   💰 Currency: Credits (₡)');
-  console.log('   👤 Admin: ₡10,000,000');
-  console.log('   👤 Test users: ₡100,000 each');
+  console.log('   👤 Admin: ₡10,000,000 (username: admin, password: admin123)');
+  console.log('   👤 Player users: ₡2,000,000 each (player1-5, password: password123)');
+  console.log('   👤 Test users: ₡100,000 each (test_user_001-100, password: testpass123)');
   console.log('   🤖 Robots: 100 test robots + 1 bye-robot');
   console.log('   ⚔️  Practice Sword: FREE (equipped on all test robots)');
   console.log('   🏆 League: All robots start in Bronze (bronze_1)');
@@ -507,6 +552,11 @@ async function main() {
   console.log(`   - 100 test robots with creative names (e.g., "${testUsersWithRobots[0].robot.name}")`);
   console.log(`   - Bye-Robot ID: ${byeRobot.id} for odd-number matching`);
   console.log('   - All robots battle-ready with Practice Sword equipped');
+  console.log('');
+  console.log('🔐 Login Credentials:');
+  console.log('   - Admin: admin / admin123');
+  console.log('   - Players: player1-5 / password123 (for manual testing)');
+  console.log('   - Test users: test_user_001-100 / testpass123');
   console.log('');
 }
 
