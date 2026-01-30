@@ -52,6 +52,8 @@ Max HP = HI × 10   | Shield Capacity × 2|                  |
 **Before**: `₡4K (-5%)`  
 **After**: `₡4K` (hover for discount info)
 
+--> This is not correct since the ACTUAL costs are 4k * 0.95 = ₡3800. I want you to display the costs including the discount. 
+
 ---
 
 ### 4. ✅ Upgrade Section Made More Compact
@@ -132,6 +134,23 @@ npm run dev
 # - Your own robot from "My Robots"
 # - Another user's robot from "All Robots"
 ```
+
+--> This actually works as intended right now. Maybe it was due to the fact that I didn't stop/start my frontend and backend before testing the last version. What I do find interesting is that for every click I do, the robot ID is fetched twice (?)
+
+Successfully fetched robot: Henk (ID: 1)
+Fetching robot with ID: 1
+Successfully fetched robot: Henk (ID: 1)
+Fetching robot with ID: 2
+Successfully fetched robot: Morning Yoga (ID: 2)
+Fetching robot with ID: 2
+Successfully fetched robot: Morning Yoga (ID: 2)
+
+--> Also tested with a robot that is not in the database by manually going to /robots/3
+
+Fetching robot with ID: 3
+Robot not found with ID: 3
+Fetching robot with ID: 3
+Robot not found with ID: 3
 
 ---
 
