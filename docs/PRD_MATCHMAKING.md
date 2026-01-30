@@ -1,9 +1,13 @@
 # Product Requirements Document: Matchmaking System
 
 **Last Updated**: January 30, 2026  
-**Status**: Implementation Ready  
+**Status**: ✅ All Decisions Finalized - Ready for Implementation  
 **Owner**: Robert Teunissen  
-**Epic**: Matchmaking and Battle Scheduling System Implementation
+**Epic**: Matchmaking and Battle Scheduling System Implementation  
+**Related Documents**: 
+- [MATCHMAKING_DECISIONS.md](MATCHMAKING_DECISIONS.md) - All owner decisions
+- [MATCHMAKING_IMPLEMENTATION.md](MATCHMAKING_IMPLEMENTATION.md) - Technical specifications
+- [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) - Battle log message catalog
 
 ---
 
@@ -85,10 +89,13 @@ The scheduled batch model allows:
 
 - Matchmaking successfully pairs robots within ±150 ELO range (with fallbacks)
 - Battles execute on schedule without errors
-- League rebalancing occurs correctly (promotion/demotion thresholds)
+- League rebalancing occurs correctly (10% promotion, 10% demotion)
+- League instances balanced (max 100 robots per instance)
 - Players can view upcoming matches and recent battle history
 - "First day" initialization seeds initial matches successfully
 - No matchmaking deadlocks or infinite loops
+- Battle readiness warnings display on all pages
+- Bye-robot matches awarded correctly for odd numbers
 
 ### Non-Goals (Out of Scope for This PRD)
 
@@ -164,11 +171,11 @@ The scheduled batch model allows:
 - If still no match, pair with closest available opponent in league
 - Never match robot against itself
 - Never match robot against same opponent twice in same batch
-- Prevent robots from same stable fighting each other (optional - discuss)
+- Soft deprioritize same-stable matchups (strongly in leagues, allow as last resort)
+- Soft deprioritize recent opponents (last 5 matches)
+- Odd-numbered robots matched with bye-robot (ELO 1000, full rewards)
 
---> Decrease likelyhood of an opponent from the last 5 league matches
---> Preventing robots from the same stable fighting achother cannot be a hard requirement. In tournaments the amount of opponents available decrease in every round.
---> What happens if there is an uneven amount of robots in the league? With 15 robots in the league we get 7 matches (7x2). What happens to the 15th robot?
+**Design Decision**: Soft deprioritization prevents deadlocks in small leagues while maintaining fairness. Recent opponent tracking adds variety to matchups.
 
 **US-5: League-Based Matchmaking**
 - **As the** matchmaking system
@@ -177,13 +184,16 @@ The scheduled batch model allows:
 
 **Acceptance Criteria:**
 - Bronze robots only matched with Bronze robots
-- Silver robots only matched with Silver robots
+- Silver robots only matched with Silver robots  
 - (Same for Gold, Platinum, Diamond, Champion)
 - Robots in promotion/demotion zones prioritized for matches
-- Support multiple league instances (bronze_1, bronze_2, etc.) for scalability
+- Support multiple league instances (bronze_1, bronze_2, etc.)
+- Maximum 100 robots per instance
+- Matchmaking prefers same instance (bronze_1 vs bronze_1)
+- Falls back to adjacent instances if needed
+- Auto-balancing when instances become imbalanced after promotions
 
---> Preferred to have robots from a league (e.g. bronze_1) fight eachother to get familiarity within the league. Only when there is no suitable opponent, search in bronze_2.
---> Has it been defined how many robots are in the same league? E.g. how big is bronze_1? And when does the system decide it is full and opens up bronze_2?
+**Design Decision**: 100 robots per instance with auto-balancing. When bronze_1 reaches 100, bronze_2 opens. New robots placed in instance with most free spots. After promotions/demotions, system balances instances if deviation >20 robots.
 
 **US-6: Matchmaking Queue Management**
 - **As the** matchmaking system
@@ -192,13 +202,19 @@ The scheduled batch model allows:
 
 **Acceptance Criteria:**
 - Queue includes all robots with battleReadiness ≥ 75%
+- Battle readiness checks:
+  - HP ≥ 75% of maximum
+  - All required weapons equipped based on loadout type:
+    - Single weapon: mainWeapon required
+    - Dual-wield: mainWeapon AND offhandWeapon required
+    - Weapon+shield: mainWeapon AND shield required
+    - Two-handed: two-handed mainWeapon required
 - Exclude robots currently scheduled for a match
 - Exclude robots that have yielded/been destroyed until repaired
 - Queue sorted by: Priority (league points) → ELO → Random tiebreaker
 - Queue refreshes before each matchmaking cycle
 
---> Users need to be warned about their robots not being battle ready.
---> battleReadiness is based on HP, but robots that do not have weapons equipped are also considered NOT battle ready (since they cannot win).
+**Battle Readiness Warnings**: Display on robot list page (icon/badge), robot detail page (banner at top), and dashboard (notification area). Multiple touchpoints ensure players see warnings.
 
 ### Epic: Battle Scheduling
 
@@ -209,13 +225,17 @@ The scheduled batch model allows:
 
 **Acceptance Criteria:**
 - Battles scheduled to run at specific times (e.g., 8 AM, 2 PM, 8 PM server time)
-- Matchmaking occurs 1 hour before scheduled battle time
+- Daily cycle sequence:
+  1. Execute battles at scheduled time (e.g., 8:00 PM)
+  2. Calculate rewards & update stats
+  3. Rebalance leagues (promotion/demotion)
+  4. Run matchmaking for next day (schedule for tomorrow 8:00 PM)
+  5. Players have 24 hours to adjust strategy
 - All scheduled battles execute simultaneously when batch time arrives
 - Battle results posted immediately after completion
-- Next matchmaking cycle begins after results processing
+- Next matchmaking cycle begins after league rebalancing
 
---> We cannot let matchmaking occur 1 hour before battle time, this does not give players enough time to log in and adjust their strategy. 
---> Matchmaking happens directly after matches have been completed and robots have been promoted/demoted into new leagues.
+**Design Decision**: 24-hour adjustment period gives players ample time to view matchups and configure robots. Matchmaking runs after rebalancing ensures robots are in correct leagues.
 
 **US-8: Manual Battle Trigger (Prototype Phase)**
 - **As a** developer testing the prototype
@@ -223,17 +243,29 @@ The scheduled batch model allows:
 - **So that** I can test matchmaking without waiting for scheduled times
 
 **Acceptance Criteria:**
-- Admin endpoint: POST /api/admin/trigger-matchmaking
-- Admin endpoint: POST /api/admin/trigger-battles
-- Admin endpoint: POST /api/admin/trigger-league-rebalance
+- Separate admin dashboard/portal (not embedded in main app)
+- Admin endpoints:
+  - POST /api/admin/matchmaking/run - Trigger matchmaking
+  - POST /api/admin/battles/run - Execute battles
+  - POST /api/admin/leagues/rebalance - Rebalance leagues
+  - POST /api/admin/cycles/bulk - Run multiple cycles (up to 100)
+- Bulk cycle functionality:
+  - Auto-repair all robots to 100% HP before each cycle
+  - Deduct repair costs from user credits
+  - Apply Repair Bay facility discounts
+  - Log all repairs for analysis
 - Endpoints protected by admin role authentication
 - Logs all actions for debugging
 - Returns summary of actions taken (matches created, battles processed, etc.)
 
---> How are we going to implement this trigger? Do we need a separate portal for this?
---> I want to be able to trigger many (up to 100?) cycles at once to do attribute balance testing
---> When "skipping time" by triggering multiple cycles, robots need to be made battle ready (auto force repair - do use the normal mechanic for costs so I can also test the use the Repair Bay facility)
---> I need 100 additional users and robots pregenerated in order to do appropriate testing. All users own 1 robot, all robots have all attibitues set to 1, single weapon loadout and a weapon equipped that is called "Practice Sword" that has no attribute bonuses and has base damage 5. This is a new weapon that needs to be added to the database.
+**Design Decision**: Separate admin dashboard provides comprehensive testing tools without cluttering main app. Bulk cycle execution enables rapid balance testing with realistic cost simulation.
+
+**Test Data Requirements**:
+- 100 test users (test_user_001 to test_user_100, password: testpass123)
+- 100 test robots (1 per user, creative thematic names)
+- All attributes set to 1
+- Single weapon loadout
+- Practice Sword equipped (new weapon: base damage 5, 3sec cooldown, free, no bonuses)
 
 ### Epic: League Progression
 
@@ -244,12 +276,15 @@ The scheduled batch model allows:
 
 **Acceptance Criteria:**
 - League rebalancing runs after battles complete
-- Promotion threshold: Top X% of robots in league (or specific league points threshold)
-- Demotion threshold: Bottom Y% of robots in league (or specific league points threshold)
+- Promotion threshold: Top 10% of robots in league (minimum 5 battles)
+- Demotion threshold: Bottom 10% of robots in league (minimum 5 battles)
 - Champion league has no promotion (highest tier)
 - Bronze league has no demotion (lowest tier)
 - League points reset after promotion/demotion
 - ELO carries over between leagues
+- Instance balancing after promotions/demotions if deviation >20 robots
+
+**Design Decision**: 10% promotion/demotion provides slower, more stable league progression. Robots need minimum 5 battles to be eligible, preventing premature tier changes.
 
 **US-10: League Points Calculation**
 - **As the** game system
@@ -259,12 +294,12 @@ The scheduled batch model allows:
 **Acceptance Criteria:**
 - Win: +3 league points
 - Loss: -1 league point (can't go below 0)
-- Draw: +1 league point
-- Bonus: +1 point for winning against higher ELO opponent
+- Draw: +1 league point (occurs when battle exceeds max time, ~60 seconds)
+- Bonus: +1 point for winning against higher ELO opponent (>200 difference)
 - Penalty: -1 additional point for losing to much lower ELO opponent (>300 difference)
 - League points displayed on robot detail page
 
---> Again, do we allow draws? Is this possible?
+**Draw Mechanics**: Battles end in draw when maximum battle time reached. Prevents infinite stalemates. Time limit adjustable for balance.
 
 ### Epic: First Day Initialization
 
@@ -355,14 +390,33 @@ model Robot {
 }
 ```
 
-**Battle Model - Add Relation:**
+**Battle Model - Add battleType and Relation:**
 ```prisma
 model Battle {
   // ... existing fields ...
   
+  battleType      String   @map("battle_type") @db.VarChar(20)  // "league", "tournament", "friendly"
   scheduledMatch  ScheduledMatch[]
 }
 ```
+
+**Robot Model - Update leagueId for instances:**
+```prisma
+model Robot {
+  // ... existing fields ...
+  
+  currentLeague   String  @default("bronze") @db.VarChar(20)     // bronze/silver/gold/etc.
+  leagueId        String  @default("bronze_1") @db.VarChar(30)   // Specific instance: bronze_1, bronze_2
+  
+  // ... relations ...
+  scheduledMatchesAsRobot1  ScheduledMatch[] @relation("ScheduledRobot1")
+  scheduledMatchesAsRobot2  ScheduledMatch[] @relation("ScheduledRobot2")
+  
+  @@index([currentLeague, leagueId])
+}
+```
+
+**Bye-Robot Entry**: Special robot (id: -1) for odd-numbered matchmaking with ELO 1000, minimal stats, not owned by any user.
 
 ### API Endpoints
 
@@ -753,112 +807,333 @@ async function initializeFirstDay(): Promise<void> {
 │  🔴 13   Bronze Bot       player1    1280    2   3-11     │
 │  🔴 14   Old Fighter     player3    1250    1   2-12      │
 │                                                           │
-│  🟢 Promotion Zone  |  🔴 Demotion Zone                    │
+│  🟢 Promotion Zone (Top 10%)  |  🔴 Demotion Zone (Bottom 10%)  │
 │                                                           │
 └───────────────────────────────────────────────────────────┘
 ```
+
+**Notes**: 
+- All 6 league tiers shown in tabs
+- Player's leagues highlighted (where they have active robots)
+- Player's own robots: Bold name + background highlight + icon badge (🎯)
+- Promotion zone: Green (🟢) - Top 10%
+- Demotion zone: Red (🔴) - Bottom 10%
+
+### Dashboard - Last 5 Matches per Robot
+
+**Layout:**
+```
+┌───────────────────────────────────────────────────────────┐
+│  MY ROBOTS & RECENT MATCHES                               │
+├───────────────────────────────────────────────────────────┤
+│  🤖 BattleBot Alpha ▼                    [Robot Details]  │
+│     Recent Matches:                                       │
+│     ✅ Won vs Iron Crusher      +15 ELO    2 hours ago   │
+│     ❌ Lost vs Plasma Titan     -12 ELO    1 day ago     │
+│     ✅ Won vs Thunder Bolt      +18 ELO    2 days ago    │
+│     🤝 Draw vs Steel Guard       +5 ELO    3 days ago    │
+│     ✅ Won vs Bronze Warrior    +14 ELO    4 days ago    │
+│  ──────────────────────────────────────────────────────── │
+│  🤖 Steel Destroyer ▼                    [Robot Details]  │
+│     Recent Matches:                                       │
+│     ✅ Won vs Lightning Core    +16 ELO    1 hour ago    │
+│     ✅ Won vs Battle Master     +15 ELO    1 day ago     │
+│     ... (3 more matches)                                  │
+└───────────────────────────────────────────────────────────┘
+```
+
+**Features**:
+- Grouped per robot (expandable/collapsible)
+- Last 5 matches per robot
+- Click match to view detailed battle log
+- Visual indicators: Win ✅, Loss ❌, Draw 🤝
+
+### Robot Detail Page - Match History Tab
+
+**New Tab Structure:**
+```
+ROBOT DETAIL PAGE
+[Overview] [Attributes] [Loadout] [Match History] ← NEW TAB
+```
+
+**Match History Tab Content**:
+- Full paginated battle history for this robot
+- Same format as main Battle History page
+- Filters: date range, result type (win/loss/draw)
+- Shows 20 matches per page
+- Click any match to see detailed battle log
+
+### Battle Result Display - Promotion/Demotion Badges
+
+**For League Matches:**
+```
+┌─────────────────────────────────────────────────┐
+│  ✅ VICTORY                 January 30, 2:00 PM │
+│  BattleBot Alpha  vs  Iron Crusher              │
+│  Battle Type: League Match                      │
+│  ELO: 1250 → 1265 (+15)                        │
+│  Damage: 120 dealt, 45 taken                    │
+│  League: Bronze  |  Reward: ₡12,500             │
+│  🏆 PROMOTED TO SILVER!                         │  ← Badge
+│  [View Detailed Battle Log]                     │
+└─────────────────────────────────────────────────┘
+```
+
+**Badge Types**:
+- 🏆 PROMOTED TO [TIER]! (green)
+- ⬇️ DEMOTED TO [TIER] (red)
+- No badge if no tier change
+- Only shown for league matches (not tournaments)
+
+### Battle Readiness Warnings
+
+**Robot List Page**:
+```
+MY ROBOTS
+├─ BattleBot Alpha  ✅ Ready for Battle
+├─ Steel Destroyer  ⚠️ Not Ready (Low HP - 45%)      ← Warning badge
+└─ Iron Crusher     ⚠️ Not Ready (No Weapon Equipped) ← Warning badge
+```
+
+**Robot Detail Page - Banner**:
+```
+┌─────────────────────────────────────────────────────┐
+│  ⚠️ WARNING: Robot Not Battle Ready                 │
+│  Issues:                                            │
+│  • HP below 75% (current: 45%) - Repair needed     │
+│  • No main weapon equipped - Equip weapon          │
+│  [Repair Now ₡15,000] [Go to Weapons]              │
+└─────────────────────────────────────────────────────┘
+```
+
+**Dashboard - Notifications**:
+```
+NOTIFICATIONS
+⚠️ 2 robots not battle ready and will miss next matchmaking
+   → Steel Destroyer (HP: 45%, needs repair)
+   → Iron Crusher (No weapon equipped)
+[View Robots] [Repair All ₡25,000]
+```
+
+---
+
+## Battle Log System
+
+### Action-by-Action Combat Log
+
+Battle logs use action-by-action format with timestamps and textual descriptions. See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for complete message catalog.
+
+**Event Categories**:
+1. Battle initialization (start, stances)
+2. Attack actions (hit, miss, critical, counter)
+3. Shield events (break, regeneration, absorption)
+4. Special weapon properties (armor piercing, burst fire, etc.)
+5. Yield/surrender events
+6. Destruction/KO events
+7. Battle status updates
+8. Draw conditions (max time reached)
+9. Victory types (dominant, close, by yield, by destruction)
+10. Battle statistics summary
+
+**Example Battle Log Entry**:
+```
+[2.5s] ⚡ BattleBot Alpha's Laser Rifle penetrates Iron Crusher's shield! 
+       30 shield damage, 15 hull damage!
+       
+[5.0s] 💥 Iron Crusher strikes BattleBot Alpha with Power Sword for 28 damage!
+
+[7.5s] ❌ BattleBot Alpha's counter with Laser Rifle fails to connect!
+
+[45.2s] 🏳️ Iron Crusher yields! Battle ends with BattleBot Alpha victorious!
+```
+
+**Battle Log JSON Structure**:
+```json
+{
+  "battleId": 123,
+  "events": [
+    {
+      "timestamp": 2.5,
+      "type": "attack",
+      "attacker": "robot1",
+      "defender": "robot2",
+      "weapon": "Laser Rifle",
+      "damage": 45,
+      "shieldDamage": 30,
+      "hpDamage": 15,
+      "critical": false,
+      "message": "⚡ BattleBot Alpha's Laser Rifle penetrates..."
+    }
+  ]
+}
+```
+
+See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for 100+ message templates and complete implementation details.
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Database & Models ✅ (Mostly Complete)
+**NOTE**: Updated estimates based on finalized decisions. See [MATCHMAKING_IMPLEMENTATION.md](MATCHMAKING_IMPLEMENTATION.md) for detailed technical specifications.
 
-**Status**: Database schema already exists, minor additions needed
+### Phase 1: Database & Core Models (6 hours)
+
+**Status**: Database schema exists, additions needed
 
 **Tasks:**
 - [x] Robot model with ELO, league fields (already exists)
 - [x] Battle model with complete tracking (already exists)
+- [ ] Add battleType field to Battle model
+- [ ] Update Robot leagueId handling for instances
 - [ ] Add ScheduledMatch model to schema
 - [ ] Add robot relations for scheduled matches
-- [ ] Run Prisma migration
-- [ ] Update seed script to test matchmaking
+- [ ] Create Bye-Robot entry (id: -1, ELO 1000)
+- [ ] Add Practice Sword weapon (free, 3sec cooldown, 5 damage)
+- [ ] Generate 100 test users with creative robot names
+- [ ] Run Prisma migrations
+- [ ] Update seed script
 
-**Estimated Effort**: 4 hours
+**Estimated Effort**: 6 hours (was 4)
 
-### Phase 2: Matchmaking Algorithm
+### Phase 2: League Instance System (10 hours)
 
 **Tasks:**
-- [ ] Implement queue building logic
-- [ ] Implement pairing algorithm (ELO-based)
-- [ ] Create scheduled matches in database
-- [ ] Add unit tests for matchmaking logic
-- [ ] Handle edge cases (odd number of robots, no opponents)
+- [ ] Implement instance creation logic (max 100 per instance)
+- [ ] Robot placement algorithm (find instance with most free spots)
+- [ ] Promotion/demotion balancing across instances
+- [ ] Instance preference in matchmaking (same instance first)
+- [ ] Auto-balancing when deviation >20 robots
+- [ ] Unit tests for instance management
+
+**Estimated Effort**: 10 hours
+
+### Phase 3: Matchmaking Algorithm (8 hours)
+
+**Tasks:**
+- [ ] Build queue with comprehensive battle readiness checks (HP + weapons)
+- [ ] ELO-based pairing within league instances
+- [ ] Recent opponent tracking (last 5 matches)
+- [ ] Same-stable deprioritization logic
+- [ ] Bye-robot matching for odd numbers
+- [ ] Unit tests for pairing algorithm
 
 **Estimated Effort**: 8 hours
 
-### Phase 3: Battle Execution Coordination
+### Phase 4: Battle Readiness System (5 hours)
 
 **Tasks:**
-- [ ] Create battle orchestrator service
-- [ ] Implement battle execution from scheduled matches
-- [ ] Update robot stats after battles (ELO, league points, damage)
-- [ ] Calculate and award rewards (credits, fame)
-- [ ] Mark scheduled matches as completed
-- [ ] Link completed battles to scheduled matches
+- [ ] Comprehensive weapon validation by loadout type
+- [ ] HP threshold checks (≥75%)
+- [ ] API endpoints for readiness status
+- [ ] Warning system implementation
+- [ ] Display warnings on robot list, detail, dashboard
+- [ ] Unit tests
+
+**Estimated Effort**: 5 hours
+
+### Phase 5: Battle Execution (6 hours)
+
+**Tasks:**
+- [ ] Battle orchestrator service
+- [ ] Execute from scheduled matches
+- [ ] Bye-robot battle simulation (predictable, easy win)
+- [ ] Update robot stats (ELO, league points, damage)
+- [ ] Award rewards (with bye-match compensation)
+- [ ] Integration tests
 
 **Estimated Effort**: 6 hours
 
-### Phase 4: League Rebalancing
+### Phase 6: League Rebalancing (6 hours)
 
 **Tasks:**
-- [ ] Implement league rebalancing algorithm
-- [ ] Calculate promotion/demotion thresholds
-- [ ] Update robot leagues and reset league points
-- [ ] Add logging for rebalancing actions
-- [ ] Test edge cases (small leagues, no eligible robots)
+- [ ] Promotion/demotion algorithm (10% thresholds)
+- [ ] Instance balancing after tier changes
+- [ ] League point reset
+- [ ] Minimum 5 battles eligibility check
+- [ ] Edge case handling
+- [ ] Tests
 
 **Estimated Effort**: 6 hours
 
-### Phase 5: Admin Endpoints (Prototype)
+### Phase 7: Admin Dashboard (12 hours)
 
 **Tasks:**
-- [ ] Create admin middleware for role checking
-- [ ] Implement POST /api/admin/matchmaking/run
-- [ ] Implement POST /api/admin/battles/run
-- [ ] Implement POST /api/admin/leagues/rebalance
-- [ ] Implement POST /api/admin/schedule/run-daily-cycle
-- [ ] Add request logging and error handling
+- [ ] Separate admin portal setup
+- [ ] Authentication and authorization
+- [ ] Matchmaking trigger UI
+- [ ] Battle execution UI
+- [ ] Bulk cycle execution (up to 100 cycles)
+- [ ] Auto-repair controls and monitoring
+- [ ] System monitoring dashboard
+- [ ] API endpoint implementation
 
-**Estimated Effort**: 4 hours
+**Estimated Effort**: 12 hours (was 4 - separate portal is more complex)
 
-### Phase 6: Public API Endpoints
+### Phase 8: Public API Endpoints (6 hours)
 
 **Tasks:**
 - [ ] Implement GET /api/matches/upcoming
 - [ ] Implement GET /api/matches/history (with pagination)
-- [ ] Implement GET /api/leagues/:leagueType/standings
+- [ ] Implement GET /api/leagues/:tier/standings (with instance support)
 - [ ] Implement GET /api/robots/:id/matches
+- [ ] Battle readiness endpoints
 - [ ] Add input validation and error handling
 - [ ] Write integration tests for all endpoints
 
 **Estimated Effort**: 6 hours
 
-### Phase 7: Frontend UI
+### Phase 9: Frontend UI (14 hours)
 
 **Tasks:**
-- [ ] Create UpcomingMatches component (dashboard)
-- [ ] Create BattleHistory page with pagination
-- [ ] Create LeagueStandings page with tabs
-- [ ] Add match details modal/page
-- [ ] Update robot detail page to show upcoming matches
+- [ ] Dashboard: Last 5 matches per robot (grouped, expandable)
+- [ ] Dashboard: Upcoming matches section
+- [ ] Robot Detail: New Match History tab
+- [ ] BattleHistory page with pagination and filters
+- [ ] LeagueStandings page: All 6 tiers in tabs
+- [ ] LeagueStandings: Player robot highlighting (bold + background + icon)
+- [ ] Battle results: Promotion/Demotion badges
+- [ ] Battle readiness: Warnings on all pages
+- [ ] Battle detail: Action-by-action log display
 - [ ] Add loading states and error handling
 
-**Estimated Effort**: 10 hours
+**Estimated Effort**: 14 hours (was 10 - more UI components)
 
-### Phase 8: Testing & Edge Cases
+### Phase 10: Battle Log System (6 hours)
+
+**Tasks:**
+- [ ] Implement combat message generation (see COMBAT_MESSAGES.md)
+- [ ] Action-by-action logging with timestamps
+- [ ] Textual descriptions for all event types
+- [ ] JSON structure implementation
+- [ ] Message selection algorithm
+- [ ] Detail view UI for battle logs
+
+**Estimated Effort**: 6 hours (new phase)
+
+### Phase 11: Testing & Polish (8 hours)
 
 **Tasks:**
 - [ ] Test first day initialization
 - [ ] Test matchmaking with various robot counts
-- [ ] Test league rebalancing edge cases
+- [ ] Test league instance balancing scenarios
+- [ ] Test bye-robot matching
 - [ ] Test scheduled match execution
-- [ ] Load test with 100+ robots
+- [ ] Load test with 100 test users
 - [ ] Integration test complete daily cycle
+- [ ] Edge case testing
+- [ ] UI polish
 
-**Estimated Effort**: 6 hours
+**Estimated Effort**: 8 hours (was 6)
 
-### Total Estimated Effort: 50 hours
+### Total Estimated Effort: 87 hours (was 50 hours)
+
+**Increase Reasons**:
+- League instance complexity (+15 hours)
+- Separate admin dashboard (+8 hours)
+- Battle log system (+6 hours)
+- Bye-robot system (+4 hours)
+- Enhanced battle readiness (+3 hours)
+- Additional testing (+1 hour)
 
 ---
 
@@ -867,17 +1142,32 @@ async function initializeFirstDay(): Promise<void> {
 ### Matchmaking Edge Cases
 
 1. **Odd Number of Robots in Queue**
-   - Solution: One robot sits out this cycle (lowest priority/ELO)
-   - Alternative: Create bye match (robot automatically wins vs dummy)
+   - **Solution**: Match with bye-robot (special robot id: -1, ELO 1000)
+   - Bye-robot has minimal stats, predictable behavior
+   - Player robot gets easy win
+   - Full battle rewards awarded (compensates for low ELO gain)
+   - Bye-robot never gains/loses ELO
 
 2. **No Suitable Opponent**
-   - Solution: Robot waits for next cycle
+   - **Solution**: Robot waits for next cycle, priority increases
    - Log unmatched robots for monitoring
+   - Expand ELO range on subsequent attempts
 
 3. **Same Owner Matching**
-   - Decision needed: Should robots from same stable fight each other?
-   - Current recommendation: Allow it, but deprioritize
-   - Rationale: Small player base in prototype phase
+   - **Decision**: Strongly deprioritize in leagues (allow as last resort)
+   - Tournament mode (future): No restriction
+   - Rationale: Small player base in prototype, tournaments need flexibility
+
+4. **Recent Opponent Matching**
+   - **Solution**: Soft deprioritize last 5 opponents
+   - Track recent matches in matchmaking queue
+   - Try other opponents first, allow if no alternatives
+
+5. **League Instance Imbalance**
+   - **Solution**: Auto-balance when deviation >20 robots
+   - Redistribute robots proportionally
+   - Run after each promotion/demotion cycle
+   - New robots placed in instance with most free spots
 
 4. **Robots Scheduled But Not Battle-Ready**
    - Solution: Cancel scheduled match if robot HP drops below 50%
@@ -932,40 +1222,85 @@ async function initializeFirstDay(): Promise<void> {
 
 ---
 
-## Open Questions & Decisions Needed
+## Confirmed Decisions
 
-### Critical Decisions
+All decisions have been finalized based on owner review. See [MATCHMAKING_DECISIONS.md](MATCHMAKING_DECISIONS.md) for complete decision record.
 
-**Q1: Should robots from the same stable fight each other?**
-- **Option A**: No, prevent same-owner matchups entirely
-  - Pro: Avoids collusion/fixing
-  - Con: Reduces available opponents in small player base
-- **Option B**: Allow but deprioritize same-owner matchups
-  - Pro: More flexible matchmaking
-  - Con: Could feel weird for players
-- **Recommendation**: Option B (allow but deprioritize) for prototype phase
+### Core Design Decisions
 
-**Q2: How many battles per day per robot?**
-- **Option A**: 1 battle per day (simple, manageable)
-- **Option B**: 2-3 battles per day (more engagement)
+**D1: Robots from Same Stable**
+- **Decision**: Strongly deprioritize in leagues (allow as last resort)
+- **Tournament mode** (future): No restriction
+- **Rationale**: Flexible matchmaking for small player base, tournaments need less restriction
+
+**D2: Battles Per Day Per Robot**
+- **Decision**: 1 battle per day per robot
+- **Rationale**: Simple, manageable for Phase 1, easy to balance
+
+**D3: League Promotion/Demotion Percentage**
+- **Decision**: 10% promoted, 10% demoted
+- **Minimum eligibility**: 5 battles completed
+- **Rationale**: Slower, more stable progression
+
+**D4: League Instance Size**
+- **Decision**: Maximum 100 robots per instance
+- **Auto-balancing**: When deviation >20 robots after promotions
+- **Rationale**: Manageable size, promotes familiarity within instance
+
+**D5: Draw Mechanics**
+- **Decision**: Battles end in draw when max time reached (~60 seconds, adjustable)
+- **League points**: +1 for draw
+- **Rationale**: Prevents infinite stalemates, time limit tunable for balance
+
+**D6: Odd Robot Handling**
+- **Decision**: Match with bye-robot (special robot, ELO 1000)
+- **Rewards**: Full rewards to compensate for low ELO gain
+- **Rationale**: Every robot gets to fight, no sitting out
+
+**D7: Recent Opponent Avoidance**
+- **Decision**: Soft deprioritize last 5 opponents
+- **Rationale**: Adds match variety, avoids deadlocks
+
+**D8: Battle Readiness**
+- **Decision**: HP ≥75% AND all required weapons equipped
+- **Warnings**: Display on robot list, detail page, and dashboard
+- **Rationale**: Prevents incomplete loadouts, ensures fair fights
+
+**D9: Matchmaking Timing**
+- **Decision**: 24-hour cycle (matchmaking after battles → 24h adjustment → battles)
+- **Rationale**: Ample time for strategy adjustment
+
+**D10: Admin Portal**
+- **Decision**: Separate admin dashboard (not embedded in main app)
+- **Bulk testing**: Up to 100 cycles with auto-repair
+- **Rationale**: Comprehensive testing tools, doesn't clutter main app
+
+**D11: Battle Log Format**
+- **Decision**: Action-by-action with timestamps and textual descriptions
+- **Message catalog**: 100+ templates (see COMBAT_MESSAGES.md)
+- **Rationale**: Rich combat narrative, enables detailed post-battle analysis
+
+**D12: Test Data**
+- **Decision**: 100 test users with creative thematic robot names
+- **Practice Sword**: Free weapon, 3sec cooldown, 5 damage, no bonuses
+- **Rationale**: Realistic test environment with baseline weapon
+
+### Resolved Questions
 - **Option C**: Dynamic based on league tier (champion = 1/day, bronze = 3/day)
-- **Recommendation**: Option A (1 battle per day) for prototype phase
+### Resolved Questions
 
-**Q3: What happens to unmatched robots?**
-- **Option A**: Wait for next cycle (simpler)
-- **Option B**: Create "bye" match (robot auto-wins with minimal rewards)
-- **Recommendation**: Option A (wait) for prototype phase
+All critical questions have been answered and documented:
+- Same-stable matching: Strongly deprioritize ✅
+- Battles per day: 1 per robot ✅
+- Unmatched robots: Bye-robot system ✅
+- League instances: 100 per instance with auto-balancing ✅
+- Scheduled times: Flexible admin triggers for prototype ✅
+- Draw mechanics: Max battle time ✅
+- Promotion/demotion: 10% thresholds ✅
+- Battle readiness: HP + weapons ✅
+- Battle log: Action-by-action textual ✅
 
-**Q4: League instance management**
-- **Question**: How do we handle multiple league instances (bronze_1, bronze_2)?
-- **Current approach**: All robots in "bronze_1", "silver_1", etc. (single instance per tier)
-- **Future enhancement**: Split leagues when population exceeds threshold (e.g., 50 robots)
-- **Recommendation**: Single instance per tier for Phase 1 prototype
-
-**Q5: Scheduled times for prototype**
-- **Question**: What time(s) should battles run during prototype testing?
-- **Recommendation**: Flexible manual triggers via admin endpoints
-- **Future**: Implement cron-style scheduling (e.g., 8 AM, 2 PM, 8 PM server time)
+See [MATCHMAKING_DECISIONS.md](MATCHMAKING_DECISIONS.md) for complete decision record with context and rationale.
 
 ### Nice-to-Have Features (Out of Scope for Phase 1)
 
