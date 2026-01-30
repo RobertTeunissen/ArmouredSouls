@@ -113,7 +113,7 @@ The scheduled batch model allows:
 
 **Acceptance Criteria:**
 - Dashboard shows "Upcoming Matches" section with list of scheduled matches
-- Each match shows: Robot name, Opponent robot name, Opponent ELO, League, Scheduled time
+- Each match shows: Robot name, Opponent robot name, Opponent ELO, League, Scheduled day and time
 - If no matches scheduled yet, show "Waiting for matchmaking..." message
 - Matches are sorted by scheduled time (soonest first)
 
@@ -129,6 +129,13 @@ The scheduled batch model allows:
 - Filter by robot, league, date range
 - Pagination for large battle histories (20 results per page)
 
+--> Do you have a design for what a detailed battle log would look like?
+--> Battle Result: Draw? Has it been defined this is possible? If so, how?
+--> Battle Result: Show also show league change if applicable. This is not the case in Tournaments. I know Tournaments are for another PRD but we need to take it into account.
+--> Battle Result: Should show the type of battle (League Match / Tournament / etc). Implications for database?
+--> Dashboard should display the last 5 matches an owned robot has fought with links to detailed results
+--> Robot detail page should display the entire match history in "battle result format".
+
 **US-3: View League Standings**
 - **As a** player competing in leagues
 - **I want to** see current standings in my robots' leagues
@@ -140,6 +147,9 @@ The scheduled batch model allows:
 - Show promotion zone (top X robots) and demotion zone (bottom Y robots) highlighted
 - Separate tab/section for each league tier
 - Update after each battle batch completes
+
+--> A player also needs to know how he stacks up with other players; not only show the leagues he is in, but all leagues that are in the system.
+--> Player should easily identity his own robots when checking the league standings.
 
 ### Epic: Matchmaking Algorithm
 
@@ -156,6 +166,10 @@ The scheduled batch model allows:
 - Never match robot against same opponent twice in same batch
 - Prevent robots from same stable fighting each other (optional - discuss)
 
+--> Decrease likelyhood of an opponent from the last 5 league matches
+--> Preventing robots from the same stable fighting achother cannot be a hard requirement. In tournaments the amount of opponents available decrease in every round.
+--> What happens if there is an uneven amount of robots in the league? With 15 robots in the league we get 7 matches (7x2). What happens to the 15th robot?
+
 **US-5: League-Based Matchmaking**
 - **As the** matchmaking system
 - **I need to** respect league boundaries when pairing robots
@@ -168,17 +182,23 @@ The scheduled batch model allows:
 - Robots in promotion/demotion zones prioritized for matches
 - Support multiple league instances (bronze_1, bronze_2, etc.) for scalability
 
+--> Preferred to have robots from a league (e.g. bronze_1) fight eachother to get familiarity within the league. Only when there is no suitable opponent, search in bronze_2.
+--> Has it been defined how many robots are in the same league? E.g. how big is bronze_1? And when does the system decide it is full and opens up bronze_2?
+
 **US-6: Matchmaking Queue Management**
 - **As the** matchmaking system
 - **I need to** track which robots are eligible for matchmaking
 - **So that** I can pair them efficiently
 
 **Acceptance Criteria:**
-- Queue includes all robots with battleReadiness ≥ 50%
+- Queue includes all robots with battleReadiness ≥ 75%
 - Exclude robots currently scheduled for a match
 - Exclude robots that have yielded/been destroyed until repaired
 - Queue sorted by: Priority (league points) → ELO → Random tiebreaker
 - Queue refreshes before each matchmaking cycle
+
+--> Users need to be warned about their robots not being battle ready.
+--> battleReadiness is based on HP, but robots that do not have weapons equipped are also considered NOT battle ready (since they cannot win).
 
 ### Epic: Battle Scheduling
 
@@ -194,6 +214,9 @@ The scheduled batch model allows:
 - Battle results posted immediately after completion
 - Next matchmaking cycle begins after results processing
 
+--> We cannot let matchmaking occur 1 hour before battle time, this does not give players enough time to log in and adjust their strategy. 
+--> Matchmaking happens directly after matches have been completed and robots have been promoted/demoted into new leagues.
+
 **US-8: Manual Battle Trigger (Prototype Phase)**
 - **As a** developer testing the prototype
 - **I want to** manually trigger battle processing
@@ -206,6 +229,11 @@ The scheduled batch model allows:
 - Endpoints protected by admin role authentication
 - Logs all actions for debugging
 - Returns summary of actions taken (matches created, battles processed, etc.)
+
+--> How are we going to implement this trigger? Do we need a separate portal for this?
+--> I want to be able to trigger many (up to 100?) cycles at once to do attribute balance testing
+--> When "skipping time" by triggering multiple cycles, robots need to be made battle ready (auto force repair - do use the normal mechanic for costs so I can also test the use the Repair Bay facility)
+--> I need 100 additional users and robots pregenerated in order to do appropriate testing. All users own 1 robot, all robots have all attibitues set to 1, single weapon loadout and a weapon equipped that is called "Practice Sword" that has no attribute bonuses and has base damage 5. This is a new weapon that needs to be added to the database.
 
 ### Epic: League Progression
 
@@ -235,6 +263,8 @@ The scheduled batch model allows:
 - Bonus: +1 point for winning against higher ELO opponent
 - Penalty: -1 additional point for losing to much lower ELO opponent (>300 difference)
 - League points displayed on robot detail page
+
+--> Again, do we allow draws? Is this possible?
 
 ### Epic: First Day Initialization
 
@@ -647,24 +677,24 @@ async function initializeFirstDay(): Promise<void> {
 **Layout:**
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  UPCOMING MATCHES                                          │
-│  Next battle cycle: January 31, 8:00 PM (in 4h 15m)      │
+│  UPCOMING MATCHES                                         │
+│  Next battle cycle: January 31, 8:00 PM (in 4h 15m)       │
 ├───────────────────────────────────────────────────────────┤
-│                                                            │
+│                                                           │
 │  Your Robot          vs      Opponent         League      │
 │  ──────────────────────────────────────────────────────── │
-│  BattleBot Alpha     vs      Iron Crusher     Bronze      │
+│  BattleBot Alpha     vs      Iron Crusher     Bronze 1    │
 │  ELO: 1250                   ELO: 1280                    │
 │  Stance: Offensive           Owner: player3               │
-│                                                            │
+│                                                           │
 │  ──────────────────────────────────────────────────────── │
-│  Steel Destroyer     vs      Thunder Bolt     Silver      │
+│  Steel Destroyer     vs      Thunder Bolt     Silver 5    │
 │  ELO: 1450                   ELO: 1420                    │
 │  Stance: Balanced            Owner: player5               │
-│                                                            │
+│                                                           │
 │  ──────────────────────────────────────────────────────── │
-│  [No more upcoming matches]                                │
-│                                                            │
+│  [No more upcoming matches]                               │
+│                                                           │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -674,30 +704,30 @@ async function initializeFirstDay(): Promise<void> {
 ```
 ┌───────────────────────────────────────────────────────────┐
 │  BATTLE HISTORY                          [Filter ▼]       │
-│                                                            │
+│                                                           │
 │  Showing 20 of 142 battles                                │
 ├───────────────────────────────────────────────────────────┤
-│                                                            │
+│                                                           │
 │  ✅ VICTORY                            January 30, 2:00 PM│
 │  BattleBot Alpha  vs  Iron Crusher                        │
 │  ELO: 1250 → 1265 (+15)                                   │
 │  Damage: 120 dealt, 45 taken                              │
 │  League: Bronze  |  Reward: ₡12,500                       │
-│  [View Details]                                            │
-│                                                            │
+│  [View Details]                                           │
+│                                                           │
 │  ──────────────────────────────────────────────────────── │
-│                                                            │
+│                                                           │
 │  ❌ DEFEAT                             January 30, 8:00 AM│
 │  Steel Destroyer  vs  Plasma Titan                        │
 │  ELO: 1450 → 1438 (-12)                                   │
 │  Damage: 80 dealt, 150 taken                              │
 │  League: Silver  |  Reward: ₡3,500                        │
-│  [View Details]                                            │
-│                                                            │
+│  [View Details]                                           │
+│                                                           │
 │  ──────────────────────────────────────────────────────── │
-│                                                            │
+│                                                           │
 │  [< Previous]  Page 1 of 8  [Next >]                      │
-│                                                            │
+│                                                           │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -706,25 +736,25 @@ async function initializeFirstDay(): Promise<void> {
 **Layout:**
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  LEAGUE STANDINGS                                          │
+│  LEAGUE STANDINGS                                         │
 │  [Bronze] [Silver] [Gold] [Platinum] [Diamond] [Champion] │
 ├───────────────────────────────────────────────────────────┤
-│  SILVER LEAGUE                                             │
-│                                                            │
+│  SILVER LEAGUE                                            │
+│                                                           │
 │  Rank  Robot Name        Owner      ELO    LP   W-L       │
 │  ──────────────────────────────────────────────────────── │
 │  🟢 1   Plasma Titan     player2    1510   18   12-3      │
 │  🟢 2   Thunder Bolt     player5    1480   15   10-4      │
 │  🟢 3   Steel Destroyer  player1    1450   14   9-5       │
-│   4   Lightning Core   player4    1425   12   8-6       │
-│   5   Battle Master    player3    1405   10   7-7       │
-│   ...                                                      │
-│  12   Iron Wall        player6    1320    4   4-10      │
-│  🔴 13   Bronze Bot       player1    1280    2   3-11      │
+│   4   Lightning Core   player4    1425   12   8-6         │
+│   5   Battle Master    player3    1405   10   7-7         │
+│   ...                                                     │
+│  12   Iron Wall        player6    1320    4   4-10        │
+│  🔴 13   Bronze Bot       player1    1280    2   3-11     │
 │  🔴 14   Old Fighter     player3    1250    1   2-12      │
-│                                                            │
+│                                                           │
 │  🟢 Promotion Zone  |  🔴 Demotion Zone                    │
-│                                                            │
+│                                                           │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -1166,6 +1196,8 @@ New ELO (B) = 1300 + 32 * (1 - 0.64) = 1312
 - Percentage approach: Bottom 20% of league
 
 **Recommendation:** Use percentage approach (20%) for Phase 1 to auto-balance leagues.
+
+--> 10% sounds more reasonable, otherwise you're switching leagues too often.
 
 ### Appendix C: Matchmaking Priority
 
