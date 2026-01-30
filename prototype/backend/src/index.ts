@@ -8,6 +8,8 @@ import robotRoutes from './routes/robots';
 import weaponRoutes from './routes/weapons';
 import weaponInventoryRoutes from './routes/weaponInventory';
 import adminRoutes from './routes/admin';
+import matchesRoutes from './routes/matches';
+import leaguesRoutes from './routes/leagues';
 
 dotenv.config();
 
@@ -29,6 +31,8 @@ app.use('/api/robots', robotRoutes);
 app.use('/api/weapons', weaponRoutes);
 app.use('/api/weapon-inventory', weaponInventoryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/matches', matchesRoutes);
+app.use('/api/leagues', leaguesRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);

@@ -958,4 +958,216 @@ router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest,
   }
 });
 
+/**
+ * GET /api/robots/:id/matches
+ * Get paginated match history for a specific robot
+ */
+router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robotId = parseInt(req.params.id);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 20));
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Verify robot exists
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+      select: { id: true, name: true, userId: true },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Get total count
+    const total = await prisma.battle.count({
+      where: {
+        OR: [
+          { robot1Id: robotId },
+          { robot2Id: robotId },
+        ],
+      },
+    });
+
+    // Get battles with pagination
+    const battles = await prisma.battle.findMany({
+      where: {
+        OR: [
+          { robot1Id: robotId },
+          { robot2Id: robotId },
+        ],
+      },
+      include: {
+        robot1: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        robot2: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: (page - 1) * perPage,
+      take: perPage,
+    });
+
+    // Format response
+    const formattedBattles = battles.map(battle => {
+      const isRobot1 = battle.robot1Id === robotId;
+      const thisRobot = isRobot1 ? battle.robot1 : battle.robot2;
+      const opponent = isRobot1 ? battle.robot2 : battle.robot1;
+      const won = battle.winnerId === robotId;
+
+      return {
+        battleId: battle.id,
+        createdAt: battle.createdAt,
+        leagueType: battle.leagueType,
+        result: {
+          won,
+          isDraw: battle.winnerId === null,
+          duration: battle.durationSeconds,
+        },
+        thisRobot: {
+          finalHP: isRobot1 ? battle.robot1FinalHP : battle.robot2FinalHP,
+          damageDealt: isRobot1 ? battle.robot1DamageDealt : battle.robot2DamageDealt,
+          eloBefore: isRobot1 ? battle.robot1ELOBefore : battle.robot2ELOBefore,
+          eloAfter: isRobot1 ? battle.robot1ELOAfter : battle.robot2ELOAfter,
+        },
+        opponent: {
+          id: opponent.id,
+          name: opponent.name,
+          owner: opponent.user.username,
+          finalHP: isRobot1 ? battle.robot2FinalHP : battle.robot1FinalHP,
+          damageDealt: isRobot1 ? battle.robot2DamageDealt : battle.robot1DamageDealt,
+        },
+      };
+    });
+
+    res.json({
+      data: formattedBattles,
+      pagination: {
+        page,
+        perPage,
+        total,
+        totalPages: Math.ceil(total / perPage),
+      },
+      robot: {
+        id: robot.id,
+        name: robot.name,
+      },
+    });
+  } catch (error) {
+    console.error('Robot matches error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/robots/:id/upcoming
+ * Get upcoming scheduled matches for a specific robot
+ */
+router.get('/:id/upcoming', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robotId = parseInt(req.params.id);
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Verify robot exists
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+      select: { id: true, name: true, userId: true },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Get scheduled matches
+    const matches = await prisma.scheduledMatch.findMany({
+      where: {
+        status: 'scheduled',
+        OR: [
+          { robot1Id: robotId },
+          { robot2Id: robotId },
+        ],
+      },
+      include: {
+        robot1: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        robot2: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        scheduledFor: 'asc',
+      },
+    });
+
+    // Format response
+    const formattedMatches = matches.map(match => {
+      const isRobot1 = match.robot1Id === robotId;
+      const opponent = isRobot1 ? match.robot2 : match.robot1;
+
+      return {
+        matchId: match.id,
+        scheduledFor: match.scheduledFor,
+        leagueType: match.leagueType,
+        opponent: {
+          id: opponent.id,
+          name: opponent.name,
+          elo: opponent.elo,
+          owner: opponent.user.username,
+        },
+      };
+    });
+
+    res.json({
+      matches: formattedMatches,
+      total: formattedMatches.length,
+      robot: {
+        id: robot.id,
+        name: robot.name,
+      },
+    });
+  } catch (error) {
+    console.error('Robot upcoming matches error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
