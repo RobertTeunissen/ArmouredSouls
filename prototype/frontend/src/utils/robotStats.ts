@@ -85,6 +85,25 @@ export const LOADOUT_BONUSES: { [key: string]: { [key: string]: number } } = {
   },
 };
 
+// Stance modifiers (matching backend)
+export const STANCE_MODIFIERS: { [key: string]: { [key: string]: number } } = {
+  offensive: {
+    combatPower: 0.15,         // +15%
+    attackSpeed: 0.10,         // +10%
+    counterProtocols: -0.10,   // -10%
+    evasionThrusters: -0.10,   // -10%
+  },
+  defensive: {
+    armorPlating: 0.15,        // +15%
+    counterProtocols: 0.15,    // +15%
+    combatPower: -0.10,        // -10%
+    attackSpeed: -0.10,        // -10%
+  },
+  balanced: {
+    // No modifiers - base stats only
+  },
+};
+
 /**
  * Calculate total bonus for an attribute from equipped weapons
  */
@@ -115,6 +134,15 @@ export function getLoadoutBonus(loadoutType: string, attribute: string): number 
   const bonuses = LOADOUT_BONUSES[loadoutType];
   if (!bonuses) return 0;
   return bonuses[attribute] || 0;
+}
+
+/**
+ * Get stance modifier for an attribute
+ */
+export function getStanceModifier(stance: string, attribute: string): number {
+  const modifiers = STANCE_MODIFIERS[stance];
+  if (!modifiers) return 0;
+  return modifiers[attribute] || 0;
 }
 
 /**
