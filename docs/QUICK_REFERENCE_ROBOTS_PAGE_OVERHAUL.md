@@ -65,11 +65,15 @@ This guide provides a fast reference for implementing the Robots page overhaul a
   - 23 rows (one per attribute), grouped by category
   - Color coding: green for positive, red for negative
   - Decimal formatting (2 places)
+     
+--> Decimal formatting display only where applicable. Base attributes and Weapons only have integer effects. 
 
 - [ ] **Create `PerformanceStats.tsx`**
   - Display: battles, wins, losses, win rate, ELO, damage stats
   - Read-only, visible to all users
   - Shows current HP, battle readiness, repair costs
+     
+--> No. This is going to be an overview that is accessible to all users. I want current HP, battle readiness and current repair costs in the Battle Configuration.
 
 - [ ] **Create `CompactAttributeRow.tsx`**
   - Single-line attribute display: `Name: Base (Bonus) = Effective [Upgrade ₡XXK]`
@@ -85,6 +89,9 @@ This guide provides a fast reference for implementing the Robots page overhaul a
     4. 🏆 Performance & Statistics (new section)
     5. ⬆️ Upgrade Robot (compact layout)
   - Integrate new components
+     
+--> Robot Header and Performance & Statistics should be accessible by all users that are logged in, the other sections only for the owner.
+--> Define what should be visible in the Robot Header, this is not captured anywhere.
 
 - [ ] **Update Utility Functions**
   - Add `formatAttribute(value): string` → returns `value.toFixed(2)`
@@ -171,7 +178,7 @@ Result: (25 + 5) × 1.15 × 1.15 = 39.67
 
 ```
 ┌─ Robot Header ──────────────────────────────────────┐
-│ [Image 300x300]  Name | ELO | League               │
+│ [Image 300x300]  Name | ELO | League                │
 └─────────────────────────────────────────────────────┘
 
 ┌─ ⚔️ BATTLE CONFIGURATION ───────────────────────────┐
@@ -180,14 +187,14 @@ Result: (25 + 5) × 1.15 × 1.15 = 39.67
 │ • Yield Threshold (slider)                          │
 └─────────────────────────────────────────────────────┘
 
-┌─ 📊 EFFECTIVE STATS OVERVIEW ──────────────────────┐
+┌─ 📊 EFFECTIVE STATS OVERVIEW ────────────────────-──┐
 │ Comprehensive table with all 23 attributes          │
-│ Columns: Attribute | Base | Weapons | Loadout |    │
+│ Columns: Attribute | Base | Weapons | Loadout |     │
 │          Stance | Total                             │
 └─────────────────────────────────────────────────────┘
 
-┌─ 🏆 PERFORMANCE & STATISTICS ──────────────────────┐
-│ Combat Record | Rankings | Damage Stats            │
+┌─ 🏆 PERFORMANCE & STATISTICS ────────────────-──────┐
+│ Combat Record | Rankings | Damage Stats             │
 │ Current State | Economic | Titles                   │
 └─────────────────────────────────────────────────────┘
 
