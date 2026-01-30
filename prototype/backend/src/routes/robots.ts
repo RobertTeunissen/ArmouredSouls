@@ -202,20 +202,18 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Get a specific robot by ID
+// Get a specific robot by ID (any logged-in user can view any robot)
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user!.userId;
     const robotId = parseInt(req.params.id);
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
     }
 
-    const robot = await prisma.robot.findFirst({
+    const robot = await prisma.robot.findUnique({
       where: {
         id: robotId,
-        userId, // Ensure user owns this robot
       },
       include: {
         mainWeapon: {

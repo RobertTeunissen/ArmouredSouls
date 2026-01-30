@@ -86,8 +86,8 @@ function CompactAttributeRow({
             : !canAfford
             ? `Need ${formatCost(upgradeCost - currency)} more`
             : discountPercent > 0
-            ? `Upgrade (${discountPercent}% off)`
-            : 'Upgrade attribute'
+            ? `Upgrade for ${formatCost(upgradeCost)} (${discountPercent}% Training Facility discount applied)`
+            : `Upgrade for ${formatCost(upgradeCost)}`
         }
       >
         {atCap && currentLevel < 50
@@ -96,7 +96,9 @@ function CompactAttributeRow({
           ? 'Max Level'
           : !canAfford
           ? 'Not Enough Credits'
-          : `Upgrade ${formatCost(upgradeCost)}`}
+          : discountPercent > 0
+          ? `${formatCost(upgradeCost)} (-${discountPercent}%)`
+          : formatCost(upgradeCost)}
       </button>
     </div>
   );

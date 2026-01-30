@@ -84,15 +84,18 @@ const attributeCategories = {
 function EffectiveStatsTable({ robot }: EffectiveStatsTableProps) {
   const getEffectiveStat = (attributeKey: string) => {
     const baseValue = robot[attributeKey] as number;
+    // Convert string to number if it's a Decimal from the API
+    const numericBase = typeof baseValue === 'string' ? parseFloat(baseValue) : baseValue;
+    
     const weaponBonus = calculateAttributeBonus(attributeKey, robot.mainWeapon, robot.offhandWeapon);
     const loadoutBonus = getLoadoutBonus(robot.loadoutType, attributeKey);
     const stanceBonus = getStanceModifier(robot.stance, attributeKey);
 
     // Calculate effective value: (base + weapon) × (1 + loadout) × (1 + stance)
-    const effectiveValue = (baseValue + weaponBonus) * (1 + loadoutBonus) * (1 + stanceBonus);
+    const effectiveValue = (numericBase + weaponBonus) * (1 + loadoutBonus) * (1 + stanceBonus);
 
     return {
-      base: Math.floor(baseValue), // Base is always integer
+      base: Math.floor(numericBase), // Base is always integer
       weapon: weaponBonus, // Weapon bonuses are integers
       loadout: loadoutBonus,
       stance: stanceBonus,
