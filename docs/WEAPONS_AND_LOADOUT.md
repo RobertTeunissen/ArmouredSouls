@@ -1,6 +1,6 @@
 # Weapons & Loadout System
 
-**Last Updated**: January 29, 2026  
+**Last Updated**: January 30, 2026  
 **Status**: Design Document
 
 ## Overview
@@ -192,6 +192,16 @@ Loadouts use **percentage-based bonuses** rather than flat attribute bonuses for
 - **Examples**: Combat Shield, Energy Barrier
 - **Note**: "Shield" refers to physical shield equipment for loadout, NOT energy shields
 
+**Important: Energy Shield vs Shield Weapon**
+- **Energy Shields**: Separate HP pool that all robots have (powered by Shield Capacity attribute)
+  - Absorbs damage at 70% effectiveness (see [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md#penetration-vs-defense))
+  - Regenerates during battle based on Power Core attribute
+  - Resets to full after battle
+- **Shield Weapons**: Physical equipment that can be equipped in offhand slot
+  - Requires "Weapon + Shield" loadout configuration
+  - Provides attribute bonuses (Armor Plating, Counter Protocols, Shield Capacity)
+  - Enables additional defensive abilities
+
 **Note**: Advanced range mechanics (short/medium/long range bands) are planned for future releases. See [ROADMAP.md](ROADMAP.md) for details. Currently, the system uses melee vs ranged distinction only.
 
 ### Weapon Attributes
@@ -367,6 +377,12 @@ The **Weapons Workshop** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#3-wea
 
 ### Purchase Process
 
+**UI Navigation:**
+- Weapon Shop accessible via main navigation menu or stable interface
+- In Phase 1 prototype: Direct "Weapon Shop" page in frontend
+- Future versions: May be integrated into stable "Workshop Tab" (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md) line 454)
+
+**Purchase Steps:**
 1. **Browse Weapon Shop**: View all available weapons from catalog
 2. **Check Storage**: Ensure storage capacity is available
 3. **Purchase**: Spend Credits (₡) to add weapon to inventory
