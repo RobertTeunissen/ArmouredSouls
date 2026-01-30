@@ -408,7 +408,7 @@ function RobotDetailPage() {
   }
 
   // Check if user owns this robot
-  const isOwner = user && robot.userId === user.userId;
+  const isOwner = user && robot.userId === user.id;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
