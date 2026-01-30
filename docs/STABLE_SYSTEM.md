@@ -79,16 +79,19 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 ### Facility Upgrades
 
 **1. Repair Bay** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
-- **Level 1** (₡200,000): 10% discount on repair costs
-- **Level 2** (₡400,000): 15% discount on repair costs
-- **Level 3** (₡600,000): 20% discount on repair costs
-- **Level 4** (₡800,000, requires 1,000 prestige): 25% discount on repair costs
-- **Level 5** (₡1,000,000): 30% discount on repair costs
-- **Level 6** (₡1,200,000): 35% discount on repair costs
-- **Level 7** (₡1,500,000, requires 5,000 prestige): 40% discount on repair costs
-- **Level 8** (₡2,000,000): 45% discount on repair costs
-- **Level 9** (₡2,500,000, requires 10,000 prestige): 50% discount on repair costs
-- **Level 10** (₡3,000,000): 55% discount on repair costs, automatic minor repairs
+- **Level 0**: No discount
+- **Level 1** (₡200,000): 5% discount on repair costs
+- **Level 2** (₡400,000): 10% discount on repair costs
+- **Level 3** (₡600,000): 15% discount on repair costs
+- **Level 4** (₡800,000, requires 1,000 prestige): 20% discount on repair costs
+- **Level 5** (₡1,000,000): 25% discount on repair costs
+- **Level 6** (₡1,200,000): 30% discount on repair costs
+- **Level 7** (₡1,500,000, requires 5,000 prestige): 35% discount on repair costs
+- **Level 8** (₡2,000,000): 40% discount on repair costs
+- **Level 9** (₡2,500,000, requires 10,000 prestige): 45% discount on repair costs
+- **Level 10** (₡3,000,000): 50% discount on repair costs, automatic minor repairs
+
+**Discount Formula**: Discount % = Repair Bay Level × 5
 
 **2. Training Facility** (Operating Cost: ₡1,500/day at Level 1, +₡750/day per level)
 - **Level 1** (₡300,000): 5% discount on attribute upgrade costs

@@ -30,6 +30,7 @@ This PRD defines the requirements for implementing the Battle Stance and Yield T
 - ✅ Yield Threshold mechanics fully specified (0-50% range with repair cost scaling)
 - ✅ Logic Cores attribute integration with yield system
 - ✅ Stance modifiers defined (+15% Combat Power, +10% Attack Speed for Offensive, etc.)
+- ✅ Repair Bay facility system (5% repair cost discount per level, max 50% at level 10)
 
 **What's Missing:**
 - ❌ Stance selection UI on robot detail/configuration page
@@ -47,6 +48,7 @@ This PRD defines the requirements for implementing the Battle Stance and Yield T
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Complete stance and yield threshold specifications (lines 166-340)
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Database structure with stance and yieldThreshold fields
 - **[GAME_DESIGN.md](GAME_DESIGN.md)**: Overall game design philosophy and combat principles
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Facility system including Repair Bay mechanics and discount formula
 
 ### Why These Features Matter
 
@@ -152,6 +154,8 @@ Acceptance Criteria:
 - Visual indicator shows risk level (green/yellow/red) for threshold
 - Tooltip explains 2.0x multiplier for total destruction
 - Calculator factors in my robot's total attribute points
+- Calculator applies Repair Bay discount if facility is upgraded (5% per level)
+- Display shows both base cost and discounted cost when Repair Bay is active
 - Clear explanation that yielding prevents destruction multiplier
 ```
 
@@ -267,7 +271,7 @@ Calculate estimated repair costs for different HP scenarios based on yield thres
 baseRepairCost = sumOfAllAttributes * 100
 
 // Scenario calculations
-function calculateRepairCost(damagePercent, hpPercent) {
+function calculateRepairCost(damagePercent, hpPercent, repairBayLevel = 0) {
   let multiplier = 1.0;
   
   if (hpPercent === 0) {
@@ -278,15 +282,28 @@ function calculateRepairCost(damagePercent, hpPercent) {
     multiplier = 1.5;
   }
   
-  return baseRepairCost * (damagePercent / 100) * multiplier;
+  // Calculate base repair cost
+  const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
+  
+  // Apply Repair Bay discount (5% per level, max 50% at level 10)
+  const repairBayDiscount = Math.min(repairBayLevel * 5, 50) / 100;
+  const finalCost = rawCost * (1 - repairBayDiscount);
+  
+  return finalCost;
 }
 
-// Examples for display
+// Examples for display (assuming no Repair Bay)
 - At 100% damage (destroyed): baseRepairCost × 1.0 × 2.0
 - At 95% damage (5% HP): baseRepairCost × 0.95 × 1.5
 - At 85% damage (15% HP): baseRepairCost × 0.85 × 1.0
 - At 60% damage (40% HP): baseRepairCost × 0.60 × 1.0
+
+// Examples with Repair Bay Level 5 (25% discount)
+- At 100% damage (destroyed): baseRepairCost × 1.0 × 2.0 × 0.75 = ₡34,500 (vs ₡46,000)
+- At 85% damage (15% HP): baseRepairCost × 0.85 × 1.0 × 0.75 = ₡14,662 (vs ₡19,550)
 ```
+
+**Note**: The Repair Bay discount is applied AFTER the damage and destruction multipliers are calculated. This means the discount reduces the final repair bill, making it valuable for all damage scenarios.
 
 ### FR-5: Default Values
 
@@ -555,15 +572,19 @@ model Robot {
 
 3. **Repair Cost Preview Table**
 ```
-┌────────────────────────────────────────┐
-│  Repair Cost Scenarios                 │
-│  (Based on your robot's attributes)    │
-├────────────────────────────────────────┤
-│  ✅ Victory (40% HP)      ₡13,800      │
-│  ⚠️  Yield at 15% HP      ₡19,550      │
-│  ⚠️  Heavily Damaged (5%) ₡32,775      │
-│  ❌ Destroyed (0% HP)     ₡46,000      │
-└────────────────────────────────────────┘
+┌────────────────────────────────────────────────────┐
+│  Repair Cost Scenarios                             │
+│  (Based on your robot's attributes)                │
+│  Repair Bay Level 5 Active: 25% discount           │
+├────────────────────────────────────────────────────┤
+│  ✅ Victory (40% HP)      ₡10,350 (was ₡13,800)   │
+│  ⚠️  Yield at 15% HP      ₡14,662 (was ₡19,550)   │
+│  ⚠️  Heavily Damaged (5%) ₡24,581 (was ₡32,775)   │
+│  ❌ Destroyed (0% HP)     ₡34,500 (was ₡46,000)   │
+└────────────────────────────────────────────────────┘
+
+Note: If no Repair Bay is built, show costs without discount.
+If Repair Bay exists, show discounted cost with original in parentheses.
 ```
 
 4. **Warning Messages** (conditional)
@@ -618,9 +639,10 @@ model Robot {
 │  [━━━━━●━━━━━━━━━━] 0% ──────────── 50%             │
 │                                                       │
 │  Repair Cost Preview:                                │
-│  - Victory (40% HP): ₡13,800                         │
-│  - Yield at 15%: ₡19,550                             │
-│  - Destroyed: ₡46,000                                │
+│  Repair Bay Level 5: 25% discount                   │
+│  - Victory (40% HP): ₡10,350 (was ₡13,800)          │
+│  - Yield at 15%: ₡14,662 (was ₡19,550)              │
+│  - Destroyed: ₡34,500 (was ₡46,000)                 │
 │                                                       │
 ├──────────────────────────────────────────────────────┤
 │                                                       │
@@ -736,23 +758,44 @@ describe('Stance Modifier Calculations', () => {
 describe('Repair Cost Calculations', () => {
   it('should calculate 2x multiplier for total destruction', () => {
     const baseRepair = 23000;  // 230 total attributes
-    const cost = calculateRepairCost(baseRepair, 100, 0); // 100% damage, 0% HP
+    const cost = calculateRepairCost(baseRepair, 100, 0); // 100% damage, 0% HP, no Repair Bay
     
     expect(cost).toBe(46000);  // 23000 * 1.0 * 2.0
   });
   
   it('should calculate 1.5x multiplier for heavy damage', () => {
     const baseRepair = 23000;
-    const cost = calculateRepairCost(baseRepair, 95, 5); // 95% damage, 5% HP
+    const cost = calculateRepairCost(baseRepair, 95, 5); // 95% damage, 5% HP, no Repair Bay
     
     expect(cost).toBe(32775);  // 23000 * 0.95 * 1.5
   });
   
   it('should calculate no multiplier for normal yield', () => {
     const baseRepair = 23000;
-    const cost = calculateRepairCost(baseRepair, 85, 15); // 85% damage, 15% HP
+    const cost = calculateRepairCost(baseRepair, 85, 15); // 85% damage, 15% HP, no Repair Bay
     
     expect(cost).toBe(19550);  // 23000 * 0.85 * 1.0
+  });
+  
+  it('should apply Repair Bay discount correctly', () => {
+    const baseRepair = 23000;
+    const cost = calculateRepairCost(baseRepair, 100, 0, 5); // 100% damage, 0% HP, Repair Bay Level 5
+    
+    expect(cost).toBe(34500);  // 23000 * 1.0 * 2.0 * 0.75 (25% discount)
+  });
+  
+  it('should cap Repair Bay discount at 50%', () => {
+    const baseRepair = 23000;
+    const cost = calculateRepairCost(baseRepair, 100, 0, 10); // Repair Bay Level 10
+    
+    expect(cost).toBe(23000);  // 23000 * 1.0 * 2.0 * 0.5 (50% discount max)
+  });
+  
+  it('should apply Repair Bay discount after damage multipliers', () => {
+    const baseRepair = 23000;
+    const costLevel5 = calculateRepairCost(baseRepair, 85, 15, 5); // Repair Bay Level 5
+    
+    expect(costLevel5).toBe(14662.5);  // 23000 * 0.85 * 1.0 * 0.75
   });
 });
 ```
@@ -1108,15 +1151,15 @@ describe('Battle Configuration Integration', () => {
 
 ❓ **Q: Should we show historical performance data by stance?**  
 **Discussion:** Would help players optimize, but adds complexity. Defer to post-launch?  
-**Recommendation:** Defer to Phase 2. Track data in background for future feature.
+**Decision:** ✅ **APPROVED** - Defer to Phase 2. Track data in background for future feature. Historical tracking must be implemented to support future analytics.
 
 ❓ **Q: Should there be stance-specific achievements?**  
 **Discussion:** "Win 10 battles with Offensive stance", etc. Good for engagement.  
-**Recommendation:** Add after core system is stable, during gamification phase.
+**Decision:** ✅ **APPROVED** - Add after core system is stable, during gamification phase (not Phase 1). Track stance usage data to support future achievements.
 
 ❓ **Q: Should team battles (2v2+) require coordinated stances?**  
 **Discussion:** Could add tactical depth, but may be too complex for initial launch.  
-**Recommendation:** Defer until team battle system is implemented in Phase 2.
+**Decision:** ✅ **APPROVED** - Defer until team battle system is implemented in Phase 2 (not Phase 1). Nice team feature for future development.
 
 ---
 
@@ -1243,6 +1286,14 @@ analytics.track('battle_config_opened', {
 });
 ```
 
+**Note on Analytics Display:**  
+The analytics tracking implementation is defined for Phase 1, but the display/viewing interface for this data is out of scope for this PRD. Analytics data will be tracked in the background to support future features:
+- Historical performance data by stance (Phase 2)
+- Stance-specific achievements (post-Phase 1 gamification)
+- Admin portal or analytics dashboard (future enhancement)
+
+For Phase 1, analytics events will be logged but not displayed to players. The display mechanism will be defined in a separate PRD for an admin/analytics interface.
+
 ---
 
 ## Glossary
@@ -1254,6 +1305,8 @@ analytics.track('battle_config_opened', {
 **Effective Stats:** The actual combat statistics after applying stance modifiers and other bonuses to base attributes.
 
 **Repair Cost Multiplier:** A penalty multiplier applied to repair costs when a robot is destroyed (2.0x) or heavily damaged <10% HP (1.5x).
+
+**Repair Bay:** A stable facility that provides repair cost discounts. Discount formula: Level × 5% (max 50% at Level 10). The discount applies after damage and destruction multipliers are calculated.
 
 **Logic Cores:** A robot attribute that reduces penalties when HP is low, making robots more effective under pressure.
 
@@ -1292,12 +1345,18 @@ elif hpPercent < 10:
 else:
     multiplier = 1.0    // Normal damage
 
-finalRepairCost = baseRepairCost × (damagePercent / 100) × multiplier
+rawCost = baseRepairCost × (damagePercent / 100) × multiplier
+
+// Apply Repair Bay discount
+repairBayDiscount = Math.min(repairBayLevel × 5, 50) / 100
+finalRepairCost = rawCost × (1 - repairBayDiscount)
 ```
 
 ### Example Repair Cost Calculations
 
-**Robot with 230 total attribute points:**
+**Robot with 230 total attribute points (Base Repair Cost: ₡23,000):**
+
+**Without Repair Bay:**
 
 | Scenario              | Damage % | HP % | Multiplier | Base Cost | Final Cost |
 |-----------------------|----------|------|------------|-----------|------------|
@@ -1305,6 +1364,26 @@ finalRepairCost = baseRepairCost × (damagePercent / 100) × multiplier
 | Yield at 15%          | 85%      | 15%  | 1.0x       | ₡23,000   | ₡19,550    |
 | Heavily Damaged (5%)  | 95%      | 5%   | 1.5x       | ₡23,000   | ₡32,775    |
 | Total Destruction     | 100%     | 0%   | 2.0x       | ₡23,000   | ₡46,000    |
+
+**With Repair Bay Level 5 (25% discount):**
+
+| Scenario              | Damage % | HP % | Multiplier | Raw Cost  | Discount | Final Cost |
+|-----------------------|----------|------|------------|-----------|----------|------------|
+| Victory               | 60%      | 40%  | 1.0x       | ₡13,800   | -25%     | ₡10,350    |
+| Yield at 15%          | 85%      | 15%  | 1.0x       | ₡19,550   | -25%     | ₡14,663    |
+| Heavily Damaged (5%)  | 95%      | 5%   | 1.5x       | ₡32,775   | -25%     | ₡24,581    |
+| Total Destruction     | 100%     | 0%   | 2.0x       | ₡46,000   | -25%     | ₡34,500    |
+
+**With Repair Bay Level 10 (50% discount - maximum):**
+
+| Scenario              | Damage % | HP % | Multiplier | Raw Cost  | Discount | Final Cost |
+|-----------------------|----------|------|------------|-----------|----------|------------|
+| Victory               | 60%      | 40%  | 1.0x       | ₡13,800   | -50%     | ₡6,900     |
+| Yield at 15%          | 85%      | 15%  | 1.0x       | ₡19,550   | -50%     | ₡9,775     |
+| Heavily Damaged (5%)  | 95%      | 5%   | 1.5x       | ₡32,775   | -50%     | ₡16,388    |
+| Total Destruction     | 100%     | 0%   | 2.0x       | ₡46,000   | -50%     | ₡23,000    |
+
+**Key Takeaway:** Repair Bay discount applies AFTER damage and destruction multipliers, making it valuable for all scenarios. Higher Repair Bay levels provide significant cost savings, especially for frequent battles or high-damage scenarios.
 
 ---
 
