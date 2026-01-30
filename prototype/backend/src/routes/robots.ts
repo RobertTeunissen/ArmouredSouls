@@ -840,4 +840,115 @@ router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res:
   }
 });
 
+// Update robot stance (offensive, defensive, balanced)
+router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robotId = parseInt(req.params.id);
+    const { stance } = req.body;
+
+    // Validate stance value
+    if (!stance || typeof stance !== 'string') {
+      return res.status(400).json({ error: 'Stance is required and must be a string' });
+    }
+
+    const normalizedStance = stance.toLowerCase();
+    if (!['offensive', 'defensive', 'balanced'].includes(normalizedStance)) {
+      return res.status(400).json({ 
+        error: 'Invalid stance. Must be one of: offensive, defensive, balanced',
+        code: 'INVALID_STANCE',
+      });
+    }
+
+    // Check if robot exists and belongs to user
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    if (robot.userId !== req.user!.userId) {
+      return res.status(403).json({ error: 'Not authorized to modify this robot' });
+    }
+
+    // Update stance
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: { stance: normalizedStance },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    res.json({
+      ...updatedRobot,
+      message: `Stance updated to ${normalizedStance}`,
+    });
+  } catch (error) {
+    console.error('Stance update error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update robot yield threshold (0-50)
+router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robotId = parseInt(req.params.id);
+    const { yieldThreshold } = req.body;
+
+    // Validate yield threshold
+    if (yieldThreshold === undefined || yieldThreshold === null) {
+      return res.status(400).json({ error: 'Yield threshold is required' });
+    }
+
+    const threshold = Number(yieldThreshold);
+    if (isNaN(threshold)) {
+      return res.status(400).json({ 
+        error: 'Yield threshold must be a number',
+        code: 'INVALID_YIELD_THRESHOLD',
+      });
+    }
+
+    if (threshold < 0 || threshold > 50) {
+      return res.status(400).json({ 
+        error: 'Yield threshold must be between 0 and 50',
+        code: 'INVALID_YIELD_THRESHOLD',
+      });
+    }
+
+    // Check if robot exists and belongs to user
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    if (robot.userId !== req.user!.userId) {
+      return res.status(403).json({ error: 'Not authorized to modify this robot' });
+    }
+
+    // Update yield threshold
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: { yieldThreshold: threshold },
+      include: {
+        mainWeapon: { include: { weapon: true } },
+        offhandWeapon: { include: { weapon: true } },
+      },
+    });
+
+    res.json({
+      ...updatedRobot,
+      message: `Yield threshold updated to ${threshold}%`,
+    });
+  } catch (error) {
+    console.error('Yield threshold update error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

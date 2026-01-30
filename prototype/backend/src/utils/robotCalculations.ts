@@ -1,6 +1,26 @@
-// Robot stat calculations including weapon bonuses and loadout modifiers
+// Robot stat calculations including weapon bonuses, loadout modifiers, and stance modifiers
 
 import { Robot, WeaponInventory, Weapon } from '@prisma/client';
+
+// Stance modifiers (percentage bonuses/penalties)
+export const STANCE_MODIFIERS = {
+  offensive: {
+    combatPower: 0.15,         // +15%
+    attackSpeed: 0.10,         // +10%
+    counterProtocols: -0.10,   // -10%
+    evasionThrusters: -0.10,   // -10%
+  },
+  defensive: {
+    armorPlating: 0.15,        // +15%
+    counterProtocols: 0.15,    // +15%
+    shieldRegen: 0.20,         // +20% (applied to powerCore for shield regeneration)
+    combatPower: -0.10,        // -10%
+    attackSpeed: -0.10,        // -10%
+  },
+  balanced: {
+    // No modifiers - base stats only
+  },
+};
 
 // Loadout bonus multipliers (percentage bonuses/penalties)
 export const LOADOUT_BONUSES = {
@@ -137,4 +157,121 @@ export function getLoadoutModifiedAttributes(loadoutType: string): string[] {
   const bonuses = LOADOUT_BONUSES[loadoutType as keyof typeof LOADOUT_BONUSES];
   if (!bonuses) return [];
   return Object.keys(bonuses);
+}
+
+/**
+ * Calculate effective stats including stance modifiers
+ * Stance modifiers are applied after loadout modifiers
+ */
+export function calculateEffectiveStatsWithStance(robot: RobotWithWeapons): Record<string, number> {
+  // First get base effective stats with weapons and loadout
+  const baseEffectiveStats = calculateEffectiveStats(robot);
+  
+  // Apply stance modifiers
+  const stance = robot.stance as keyof typeof STANCE_MODIFIERS;
+  const stanceModifiers = STANCE_MODIFIERS[stance] || STANCE_MODIFIERS.balanced;
+  
+  const effectiveStatsWithStance: Record<string, number> = { ...baseEffectiveStats };
+  
+  // Apply stance modifiers to relevant attributes
+  Object.entries(stanceModifiers).forEach(([attr, modifier]) => {
+    if (attr === 'shieldRegen') {
+      // shieldRegen is a special case - it modifies powerCore for regeneration calculations
+      // For now, we store it separately but don't modify the powerCore attribute directly
+      return;
+    }
+    
+    if (effectiveStatsWithStance[attr] !== undefined && typeof modifier === 'number') {
+      const multiplier = 1 + modifier;
+      effectiveStatsWithStance[attr] = Math.floor(effectiveStatsWithStance[attr] * multiplier);
+    }
+  });
+  
+  return effectiveStatsWithStance;
+}
+
+/**
+ * Get the stance modifier for a specific attribute
+ */
+export function getStanceModifier(stance: string, attribute: string): number {
+  const modifiers = STANCE_MODIFIERS[stance as keyof typeof STANCE_MODIFIERS];
+  if (!modifiers) return 0;
+  return modifiers[attribute as keyof typeof modifiers] || 0;
+}
+
+/**
+ * Validate stance value
+ */
+export function isValidStance(stance: string): boolean {
+  return ['offensive', 'defensive', 'balanced'].includes(stance.toLowerCase());
+}
+
+/**
+ * Validate yield threshold value (must be integer 0-50)
+ */
+export function isValidYieldThreshold(threshold: number): boolean {
+  return typeof threshold === 'number' && !isNaN(threshold) && isFinite(threshold) && threshold >= 0 && threshold <= 50;
+}
+
+/**
+ * Calculate repair cost based on damage, HP, and optional Repair Bay level
+ * Formula: baseRepairCost × (damagePercent / 100) × multiplier × (1 - repairBayDiscount)
+ */
+export function calculateRepairCost(
+  sumOfAllAttributes: number,
+  damagePercent: number,
+  hpPercent: number,
+  repairBayLevel: number = 0
+): number {
+  const baseRepairCost = sumOfAllAttributes * 100;
+  
+  // Determine multiplier based on HP percentage
+  let multiplier = 1.0;
+  if (hpPercent === 0) {
+    // Total destruction
+    multiplier = 2.0;
+  } else if (hpPercent < 10) {
+    // Heavily damaged
+    multiplier = 1.5;
+  }
+  
+  // Calculate raw cost
+  const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
+  
+  // Apply Repair Bay discount (5% per level, max 50% at level 10)
+  const repairBayDiscount = Math.min(repairBayLevel * 5, 50) / 100;
+  const finalCost = rawCost * (1 - repairBayDiscount);
+  
+  return Math.round(finalCost);
+}
+
+/**
+ * Calculate sum of all 23 robot attributes
+ */
+export function calculateAttributeSum(robot: Robot): number {
+  return (
+    robot.combatPower +
+    robot.targetingSystems +
+    robot.criticalSystems +
+    robot.penetration +
+    robot.weaponControl +
+    robot.attackSpeed +
+    robot.armorPlating +
+    robot.shieldCapacity +
+    robot.evasionThrusters +
+    robot.damageDampeners +
+    robot.counterProtocols +
+    robot.hullIntegrity +
+    robot.servoMotors +
+    robot.gyroStabilizers +
+    robot.hydraulicSystems +
+    robot.powerCore +
+    robot.combatAlgorithms +
+    robot.threatAnalysis +
+    robot.adaptiveAI +
+    robot.logicCores +
+    robot.syncProtocols +
+    robot.supportSystems +
+    robot.formationTactics
+  );
 }
