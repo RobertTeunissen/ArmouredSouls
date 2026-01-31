@@ -59,7 +59,7 @@ The admin user is automatically created when you run `npm run seed`.
    - **Auto-Repair**: Click "🔧 Auto-Repair All Robots" to restore all HP
    - **Bulk Cycles**: Run 1-100 complete cycles automatically
 
-**Note**: The **⚡ Admin** navigation link is only visible to users with the admin role. Regular players (player1-5, test1-100) will NOT see this link.
+**Note**: The **⚡ Admin** navigation link is only visible to users with the admin role. Regular players (player1-5, test_user_001-100) will NOT see this link.
 
 ### Method 2: Via API/curl (Direct API Testing)
 
@@ -601,10 +601,10 @@ The seed script creates multiple test accounts:
 - **Robots**: 1 robot each (customizable names)
 
 ### Test Accounts (for matchmaking)
-- **Usernames**: `test1` to `test100`
-- **Password**: `test123` (same for all)
-- **Role**: player
-- **Currency**: ₡50,000 each
+- **Usernames**: `test_user_001` to `test_user_100`
+- **Password**: `testpass123` (same for all)
+- **Role**: user
+- **Currency**: ₡100,000 each
 - **Robots**: 1 robot each with creative names
 
 ### Special Account

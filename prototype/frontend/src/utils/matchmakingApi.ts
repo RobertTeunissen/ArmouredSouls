@@ -103,7 +103,7 @@ export interface PaginatedResponse<T> {
 // API Functions
 export const getUpcomingMatches = async (): Promise<ScheduledMatch[]> => {
   const response = await axios.get(`${API_BASE_URL}/matches/upcoming`);
-  return response.data;
+  return response.data.matches || [];  // Extract matches array from response
 };
 
 export const getMatchHistory = async (
