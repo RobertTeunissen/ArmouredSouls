@@ -1,4 +1,5 @@
 import { PrismaClient, Robot, ScheduledMatch, Battle } from '@prisma/client';
+import { CombatMessageGenerator } from './combatMessageGenerator';
 
 const prisma = new PrismaClient();
 
@@ -179,6 +180,25 @@ async function createBattleRecord(
   const robot1Reward = isRobot1Winner ? BASE_REWARD_WIN : BASE_REWARD_LOSS;
   const robot2Reward = isRobot1Winner ? BASE_REWARD_LOSS : BASE_REWARD_WIN;
   
+  // Generate battle log with combat messages
+  const battleLog = CombatMessageGenerator.generateBattleLog({
+    robot1Name: robot1.name,
+    robot2Name: robot2.name,
+    robot1ELOBefore,
+    robot2ELOBefore,
+    robot1ELOAfter,
+    robot2ELOAfter,
+    winnerName: isRobot1Winner ? robot1.name : robot2.name,
+    loserName: isRobot1Winner ? robot2.name : robot1.name,
+    winnerFinalHP: isRobot1Winner ? result.robot1FinalHP : result.robot2FinalHP,
+    winnerMaxHP: 10, // Simplified
+    loserFinalHP: isRobot1Winner ? result.robot2FinalHP : result.robot1FinalHP,
+    robot1DamageDealt: result.robot2Damage,
+    robot2DamageDealt: result.robot1Damage,
+    leagueType: scheduledMatch.leagueType,
+    durationSeconds: result.durationSeconds,
+  });
+  
   // Create battle record
   const battle = await prisma.battle.create({
     data: {
@@ -189,12 +209,9 @@ async function createBattleRecord(
       battleType: 'league', // Phase 1 only has league battles
       leagueType: scheduledMatch.leagueType,
       
-      // Battle log (simplified for Phase 1)
+      // Battle log with combat messages
       battleLog: {
-        events: [
-          { time: 0, action: 'Battle started' },
-          { time: result.durationSeconds, action: 'Battle ended' }
-        ],
+        events: battleLog,
         isByeMatch: result.isByeMatch
       },
       durationSeconds: result.durationSeconds,

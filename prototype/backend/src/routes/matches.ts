@@ -222,4 +222,90 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
   }
 });
 
+/**
+ * GET /api/matches/battles/:id/log
+ * Get detailed battle log with combat messages for a specific battle
+ */
+router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const battleId = parseInt(req.params.id);
+
+    // Get battle with full details
+    const battle = await prisma.battle.findUnique({
+      where: { id: battleId },
+      include: {
+        robot1: {
+          include: {
+            user: {
+              select: { id: true, username: true },
+            },
+          },
+        },
+        robot2: {
+          include: {
+            user: {
+              select: { id: true, username: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!battle) {
+      return res.status(404).json({ error: 'Battle not found' });
+    }
+
+    // Get user's robots to verify access
+    const userRobots = await prisma.robot.findMany({
+      where: { userId: req.user.userId },
+      select: { id: true },
+    });
+
+    const robotIds = userRobots.map(r => r.id);
+
+    // Verify user has access to this battle
+    if (!robotIds.includes(battle.robot1Id) && !robotIds.includes(battle.robot2Id)) {
+      return res.status(403).json({ error: 'Access denied to battle data' });
+    }
+
+    // Format battle log response
+    res.json({
+      battleId: battle.id,
+      createdAt: battle.createdAt,
+      leagueType: battle.leagueType,
+      duration: battle.durationSeconds,
+      robot1: {
+        id: battle.robot1.id,
+        name: battle.robot1.name,
+        owner: battle.robot1.user.username,
+        eloBefore: battle.robot1ELOBefore,
+        eloAfter: battle.robot1ELOAfter,
+        finalHP: battle.robot1FinalHP,
+        damageDealt: battle.robot1DamageDealt,
+      },
+      robot2: {
+        id: battle.robot2.id,
+        name: battle.robot2.name,
+        owner: battle.robot2.user.username,
+        eloBefore: battle.robot2ELOBefore,
+        eloAfter: battle.robot2ELOAfter,
+        finalHP: battle.robot2FinalHP,
+        damageDealt: battle.robot2DamageDealt,
+      },
+      winner: battle.winnerId === battle.robot1Id ? 'robot1' : battle.winnerId === battle.robot2Id ? 'robot2' : null,
+      battleLog: battle.battleLog,
+    });
+  } catch (error) {
+    console.error('[Matches API] Error fetching battle log:', error);
+    res.status(500).json({
+      error: 'Failed to fetch battle log',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
 export default router;
