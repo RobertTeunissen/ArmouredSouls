@@ -30,6 +30,13 @@ function DashboardPage() {
   const fetchRobots = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      // If no token, don't make the API call
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
       const response = await axios.get('http://localhost:3001/api/robots', {
         headers: {
           'Authorization': `Bearer ${token}`,
