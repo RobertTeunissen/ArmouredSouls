@@ -112,7 +112,11 @@ function RecentMatches() {
           const outcomeColor = getOutcomeColor(outcome);
           
           return (
-            <div key={battle.id} className="bg-gray-700 p-3 rounded border border-gray-600">
+            <div 
+              key={battle.id} 
+              className="bg-gray-700 p-3 rounded border border-gray-600 cursor-pointer hover:bg-gray-600 transition-colors"
+              onClick={() => navigate(`/battle/${battle.id}`)}
+            >
               <div className="flex justify-between items-start mb-2">
                 <span className={`text-sm font-bold ${outcomeColor}`}>
                   {getOutcomeText(outcome)}

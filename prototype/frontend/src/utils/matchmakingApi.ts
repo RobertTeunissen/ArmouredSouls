@@ -214,3 +214,47 @@ export const formatDuration = (seconds: number): string => {
   const remainingSeconds = seconds % 60;
   return `${minutes}m ${remainingSeconds}s`;
 };
+
+// Battle Log Types
+export interface BattleLogEvent {
+  timestamp: number;
+  type: string;
+  message: string;
+  [key: string]: any;
+}
+
+export interface BattleLogResponse {
+  battleId: number;
+  createdAt: string;
+  leagueType: string;
+  duration: number;
+  robot1: {
+    id: number;
+    name: string;
+    owner: string;
+    eloBefore: number;
+    eloAfter: number;
+    finalHP: number;
+    damageDealt: number;
+  };
+  robot2: {
+    id: number;
+    name: string;
+    owner: string;
+    eloBefore: number;
+    eloAfter: number;
+    finalHP: number;
+    damageDealt: number;
+  };
+  winner: 'robot1' | 'robot2' | null;
+  battleLog: {
+    events: BattleLogEvent[];
+  };
+}
+
+export const getBattleLog = async (battleId: number): Promise<BattleLogResponse> => {
+  const response = await axios.get(`${API_BASE_URL}/matches/battles/${battleId}/log`, {
+    headers: getAuthHeaders()
+  });
+  return response.data;
+};

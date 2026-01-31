@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import {
   getMatchHistory,
@@ -13,6 +14,7 @@ import {
 
 function BattleHistoryPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [battles, setBattles] = useState<BattleHistory[]>([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -207,6 +209,16 @@ function BattleHistoryPage() {
                         <div className="opacity-75 mb-1">Battle ID</div>
                         <div className="font-semibold">#{battle.id}</div>
                       </div>
+                    </div>
+
+                    {/* View Details Button */}
+                    <div className="mt-4 pt-4 border-t border-opacity-25">
+                      <button
+                        onClick={() => navigate(`/battle/${battle.id}`)}
+                        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                      >
+                        View Detailed Battle Report
+                      </button>
                     </div>
                   </div>
                 );
