@@ -43,8 +43,8 @@ function UpcomingMatches() {
   };
 
   const getMatchResult = (match: ScheduledMatch) => {
-    // Defensive checks to prevent crashes
-    if (!match || !match.robot1 || !match.robot2) {
+    // Defensive checks to prevent crashes - validate all required nested data
+    if (!match || !match.robot1 || !match.robot2 || !match.robot1.user || !match.robot2.user) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Invalid match data:', match);
       }
@@ -87,16 +87,20 @@ function UpcomingMatches() {
     <div className="bg-gray-800 p-6 rounded-lg">
       <h2 className="text-2xl font-semibold mb-4">Upcoming Matches</h2>
       <div className="space-y-4">
-        {matches
-          .filter((match) => getMatchResult(match) !== null)
-          .map((match) => {
-            const matchResult = getMatchResult(match)!;
-            const { myRobot, opponent } = matchResult;
-            const tierColor = getLeagueTierColor(match.leagueType);
-            const tierName = getLeagueTierName(match.leagueType);
+        {matches.map((match) => {
+          const matchResult = getMatchResult(match);
           
-            return (
-              <div key={match.id} className="bg-gray-700 p-4 rounded border border-gray-600">
+          // Skip invalid matches safely
+          if (!matchResult) {
+            return null;
+          }
+          
+          const { myRobot, opponent } = matchResult;
+          const tierColor = getLeagueTierColor(match.leagueType);
+          const tierName = getLeagueTierName(match.leagueType);
+          
+          return (
+            <div key={match.id} className="bg-gray-700 p-4 rounded border border-gray-600">
               <div className="flex justify-between items-start mb-2">
                 <span className={`text-sm font-semibold ${tierColor}`}>
                   {tierName} League
