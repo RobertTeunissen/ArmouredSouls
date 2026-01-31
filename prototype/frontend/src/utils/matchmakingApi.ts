@@ -119,7 +119,7 @@ export const getMatchHistory = async (
   pageSize: number = 10
 ): Promise<PaginatedResponse<BattleHistory>> => {
   const response = await axios.get(`${API_BASE_URL}/matches/history`, {
-    params: { page, pageSize },
+    params: { page, perPage: pageSize },
     headers: getAuthHeaders()
   });
   return response.data;
@@ -150,7 +150,7 @@ export const getRobotMatches = async (
   pageSize: number = 10
 ): Promise<PaginatedResponse<BattleHistory>> => {
   const response = await axios.get(`${API_BASE_URL}/robots/${robotId}/matches`, {
-    params: { page, pageSize },
+    params: { page, perPage: pageSize },
     headers: getAuthHeaders()
   });
   return response.data;

@@ -59,31 +59,37 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       },
     });
 
-    // Format response with opponent details
-    const formattedMatches = matches.map(match => {
-      const isRobot1User = robotIds.includes(match.robot1Id);
-      const userRobot = isRobot1User ? match.robot1 : match.robot2;
-      const opponent = isRobot1User ? match.robot2 : match.robot1;
-
-      return {
-        matchId: match.id,
-        scheduledFor: match.scheduledFor,
-        leagueType: match.leagueType,
-        userRobot: {
-          id: userRobot.id,
-          name: userRobot.name,
-          currentHP: userRobot.currentHP,
-          maxHP: userRobot.maxHP,
-          elo: userRobot.elo,
+    // Format response to match frontend ScheduledMatch interface
+    const formattedMatches = matches.map(match => ({
+      id: match.id,
+      robot1Id: match.robot1Id,
+      robot2Id: match.robot2Id,
+      leagueType: match.leagueType,
+      scheduledFor: match.scheduledFor,
+      status: match.status,
+      robot1: {
+        id: match.robot1.id,
+        name: match.robot1.name,
+        elo: match.robot1.elo,
+        currentHP: match.robot1.currentHP,
+        maxHP: match.robot1.maxHP,
+        userId: match.robot1.userId,
+        user: {
+          username: match.robot1.user.username,
         },
-        opponent: {
-          id: opponent.id,
-          name: opponent.name,
-          elo: opponent.elo,
-          owner: opponent.user.username,
+      },
+      robot2: {
+        id: match.robot2.id,
+        name: match.robot2.name,
+        elo: match.robot2.elo,
+        currentHP: match.robot2.currentHP,
+        maxHP: match.robot2.maxHP,
+        userId: match.robot2.userId,
+        user: {
+          username: match.robot2.user.username,
         },
-      };
-    });
+      },
+    }));
 
     res.json({
       matches: formattedMatches,
@@ -169,40 +175,39 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
       take: perPage,
     });
 
-    // Format response
-    const formattedBattles = battles.map(battle => {
-      const isRobot1User = robotIds.includes(battle.robot1Id);
-      const userRobot = isRobot1User ? battle.robot1 : battle.robot2;
-      const opponent = isRobot1User ? battle.robot2 : battle.robot1;
-      const userWon = battle.winnerId === userRobot.id;
-
-      return {
-        battleId: battle.id,
-        createdAt: battle.createdAt,
-        leagueType: battle.leagueType,
-        userRobot: {
-          id: userRobot.id,
-          name: userRobot.name,
-          finalHP: isRobot1User ? battle.robot1FinalHP : battle.robot2FinalHP,
-          damageDealt: isRobot1User ? battle.robot1DamageDealt : battle.robot2DamageDealt,
-          eloBefore: isRobot1User ? battle.robot1ELOBefore : battle.robot2ELOBefore,
-          eloAfter: isRobot1User ? battle.robot1ELOAfter : battle.robot2ELOAfter,
+    // Format response to match frontend BattleHistory interface
+    const formattedBattles = battles.map(battle => ({
+      id: battle.id,
+      robot1Id: battle.robot1Id,
+      robot2Id: battle.robot2Id,
+      winnerId: battle.winnerId,
+      createdAt: battle.createdAt,
+      durationSeconds: battle.durationSeconds,
+      robot1ELOBefore: battle.robot1ELOBefore,
+      robot1ELOAfter: battle.robot1ELOAfter,
+      robot2ELOBefore: battle.robot2ELOBefore,
+      robot2ELOAfter: battle.robot2ELOAfter,
+      robot1FinalHP: battle.robot1FinalHP,
+      robot2FinalHP: battle.robot2FinalHP,
+      winnerReward: battle.winnerReward,
+      loserReward: battle.loserReward,
+      robot1: {
+        id: battle.robot1.id,
+        name: battle.robot1.name,
+        userId: battle.robot1.userId,
+        user: {
+          username: battle.robot1.user.username,
         },
-        opponent: {
-          id: opponent.id,
-          name: opponent.name,
-          owner: opponent.user.username,
-          finalHP: isRobot1User ? battle.robot2FinalHP : battle.robot1FinalHP,
-          damageDealt: isRobot1User ? battle.robot2DamageDealt : battle.robot1DamageDealt,
+      },
+      robot2: {
+        id: battle.robot2.id,
+        name: battle.robot2.name,
+        userId: battle.robot2.userId,
+        user: {
+          username: battle.robot2.user.username,
         },
-        result: {
-          won: userWon,
-          isDraw: battle.winnerId === null,
-          reward: userWon ? battle.winnerReward : battle.loserReward,
-          duration: battle.durationSeconds,
-        },
-      };
-    });
+      },
+    }));
 
     res.json({
       data: formattedBattles,
