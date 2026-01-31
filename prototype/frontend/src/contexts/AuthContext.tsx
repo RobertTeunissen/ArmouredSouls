@@ -37,18 +37,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
-  // Set up axios defaults
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      refreshUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+  };
 
   const refreshUser = async () => {
-    if (!token) {
+    const currentToken = localStorage.getItem('token');
+    if (!currentToken) {
       setLoading(false);
       return;
     }
@@ -65,6 +63,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Set up axios defaults and fetch user on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      const currentToken = localStorage.getItem('token');
+      if (currentToken) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${currentToken}`;
+        setToken(currentToken);
+        await refreshUser();
+      } else {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const login = async (username: string, password: string) => {
     try {
       const response = await axios.post('http://localhost:3001/api/auth/login', {
@@ -73,23 +88,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       const { token: newToken, user: userData } = response.data;
-      setToken(newToken);
-      setUser(userData);
+      
+      // Set everything in order
       localStorage.setItem('token', newToken);
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      setToken(newToken);
+      setUser(userData);
+      setLoading(false);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         throw new Error(error.response.data.error || 'Login failed');
       }
       throw new Error('Login failed');
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
   };
 
   return (
