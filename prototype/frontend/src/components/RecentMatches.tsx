@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { getMatchHistory, BattleHistory, getBattleOutcome, getELOChange, formatDateTime } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function RecentMatches() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [matches, setMatches] = useState<BattleHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,12 @@ function RecentMatches() {
       setMatches(data.data);
       setError(null);
     } catch (err: any) {
+      // Handle 401 Unauthorized errors
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
       console.error('Failed to fetch recent matches:', err);
       setError('Failed to load recent matches');
     } finally {

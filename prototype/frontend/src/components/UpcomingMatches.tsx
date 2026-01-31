@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { getUpcomingMatches, ScheduledMatch, formatDateTime, getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function UpcomingMatches() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [matches, setMatches] = useState<ScheduledMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +22,12 @@ function UpcomingMatches() {
       setMatches(data);
       setError(null);
     } catch (err: any) {
+      // Handle 401 Unauthorized errors
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
       console.error('Failed to fetch upcoming matches:', err);
       setError('Failed to load upcoming matches');
     } finally {
