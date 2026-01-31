@@ -57,7 +57,9 @@ router.post('/matchmaking/run', authenticateToken, requireAdmin, async (req: Req
 router.post('/battles/run', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { scheduledFor } = req.body;
-    const targetTime = scheduledFor ? new Date(scheduledFor) : new Date();
+    // Only pass a date if scheduledFor is explicitly provided
+    // If not provided, pass undefined to execute ALL scheduled matches
+    const targetTime = scheduledFor ? new Date(scheduledFor) : undefined;
 
     console.log('[Admin] Executing battles...');
     const summary = await executeScheduledBattles(targetTime);
