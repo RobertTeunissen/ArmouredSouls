@@ -9,7 +9,7 @@ Ultra-quick reference for testing the matchmaking system.
 ## 🔐 Admin Login
 
 **Frontend UI:**
-- URL: http://localhost:5173/login
+- URL: http://localhost:3000/login
 - Username: `admin`
 - Password: `admin123`
 
@@ -39,7 +39,27 @@ npm run dev
 
 **URLs:**
 - Backend: http://localhost:3001
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:3000
+
+---
+
+## 🎯 Admin Portal UI
+
+**Access the Admin Portal:**
+1. Login as admin at http://localhost:3000/login
+2. After login, click the **⚡ Admin** link in the navigation (yellow, on the right side)
+3. You'll be taken to http://localhost:3000/admin
+
+**Admin Portal Features:**
+- View system statistics (robots, matches, battles)
+- Run matchmaking with one click
+- Execute battles with one click
+- Rebalance leagues with one click
+- Auto-repair all robots
+- Bulk cycle testing (run 1-100 complete cycles)
+- Real-time feedback and results
+
+**Note:** Regular users (player1-5, test1-100) will NOT see the Admin link. Only the admin user has access to the Admin portal.
 
 ---
 
@@ -151,10 +171,10 @@ node scripts/testAdminAPI.js
 
 | Page | URL | What to Check |
 |------|-----|---------------|
-| Login | http://localhost:5173/login | Admin login works |
-| Dashboard | http://localhost:5173/dashboard | Upcoming/recent matches |
-| Battle History | http://localhost:5173/battle-history | All battles with pagination |
-| League Standings | http://localhost:5173/league-standings | All 6 tiers with rankings |
+| Login | http://localhost:3000/login | Admin login works |
+| Dashboard | http://localhost:3000/dashboard | Upcoming/recent matches |
+| Battle History | http://localhost:3000/battle-history | All battles with pagination |
+| League Standings | http://localhost:3000/league-standings | All 6 tiers with rankings |
 
 ---
 

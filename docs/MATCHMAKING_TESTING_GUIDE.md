@@ -36,20 +36,30 @@ The admin user is automatically created when you run `npm run seed`.
    # Terminal 2: Start frontend
    cd prototype/frontend
    npm run dev
-   # Should start on http://localhost:5173
+   # Should start on http://localhost:3000
    ```
 
 2. **Login with admin credentials**:
-   - Open browser: http://localhost:5173
-   - Click "Login" or go to http://localhost:5173/login
+   - Open browser: http://localhost:3000
+   - Click "Login" or go to http://localhost:3000/login
    - Enter username: `admin`
    - Enter password: `admin123`
    - Click "Login"
 
-3. **You're now logged in as admin!**
-   - Admin users have full access to all features
-   - Can view all robots (not just their own)
-   - Can access admin API endpoints
+3. **Access the Admin Portal**:
+   - After login, look for the **⚡ Admin** link in the navigation bar (yellow text, right side)
+   - Click on it to go to http://localhost:3000/admin
+   - You'll see the Admin Portal with system controls
+
+4. **What You Can Do in the Admin Portal**:
+   - **View System Statistics**: See robot counts, match counts, battle stats
+   - **Run Matchmaking**: Click "🎯 Run Matchmaking" to create matches
+   - **Execute Battles**: Click "⚔️ Execute Battles" to run scheduled battles
+   - **Rebalance Leagues**: Click "📊 Rebalance Leagues" for promotions/demotions
+   - **Auto-Repair**: Click "🔧 Auto-Repair All Robots" to restore all HP
+   - **Bulk Cycles**: Run 1-100 complete cycles automatically
+
+**Note**: The **⚡ Admin** navigation link is only visible to users with the admin role. Regular players (player1-5, test1-100) will NOT see this link.
 
 ### Method 2: Via API/curl (Direct API Testing)
 
@@ -237,14 +247,14 @@ curl -X POST http://localhost:3001/api/admin/cycles/bulk \
 
 **Test Dashboard**:
 1. Login as admin (username: `admin`, password: `admin123`)
-2. Go to Dashboard: http://localhost:5173/dashboard
+2. Go to Dashboard: http://localhost:3000/dashboard
 3. Verify:
    - ✅ "Upcoming Matches" section shows scheduled matches
    - ✅ "Recent Matches" section shows last 5 battles
    - ✅ Battle readiness warnings appear if robots have low HP
 
 **Test Battle History**:
-1. Go to Battle History: http://localhost:5173/battle-history
+1. Go to Battle History: http://localhost:3000/battle-history
 2. Verify:
    - ✅ List of all battles with pagination
    - ✅ Win/loss indicators with colors (green win, red loss)
@@ -253,14 +263,73 @@ curl -X POST http://localhost:3001/api/admin/cycles/bulk \
    - ✅ Rewards shown in credits
 
 **Test League Standings**:
-1. Go to Leagues: http://localhost:5173/league-standings
+1. Go to Leagues: http://localhost:3000/league-standings
 2. Verify:
    - ✅ Tabs for all 6 tiers (Bronze, Silver, Gold, Platinum, Diamond, Champion)
    - ✅ Robot rankings with ELO, league points, W-L record
    - ✅ Your robots highlighted in the list
    - ✅ Pagination working for large leagues
 
-### Scenario 4: Test Battle Logs
+### Scenario 4: Test Admin Portal UI
+
+**Access Admin Portal**:
+1. Login as admin at http://localhost:3000/login
+2. Click the **⚡ Admin** link in navigation (yellow text, right side)
+3. You'll be on http://localhost:3000/admin
+
+**Test Admin Controls**:
+
+1. **View System Statistics**:
+   - Click "Refresh Stats" button
+   - Verify you see:
+     - ✅ Total robots count
+     - ✅ Battle-ready percentage
+     - ✅ Robots by tier (Bronze, Silver, Gold, etc.)
+     - ✅ Scheduled/completed matches
+     - ✅ Battle statistics (last 24 hours, total)
+
+2. **Test Auto-Repair**:
+   - Click "🔧 Auto-Repair All Robots"
+   - Wait for success message
+   - Verify: "Repaired X robots" appears
+   - Stats automatically refresh
+
+3. **Test Matchmaking**:
+   - Click "🎯 Run Matchmaking"
+   - Wait for success message
+   - Verify: "Created X matches" appears
+   - Scheduled matches count increases in stats
+
+4. **Test Battle Execution**:
+   - Click "⚔️ Execute Battles"
+   - Wait for success message
+   - Verify: "Total: X, Success: Y" appears
+   - Completed battles count increases
+
+5. **Test League Rebalancing**:
+   - Click "📊 Rebalance Leagues"
+   - Wait for success message
+   - Verify: "Promoted: X, Demoted: Y" appears
+
+6. **Test Bulk Cycles**:
+   - Set cycles to 3
+   - Check "Auto-repair before each cycle"
+   - Click "🚀 Run 3 Cycles"
+   - Wait for completion (may take 10-20 seconds)
+   - Verify detailed results appear:
+     - ✅ Cycles completed
+     - ✅ Total duration
+     - ✅ Average cycle duration
+     - ✅ Breakdown of each cycle (repair, matchmaking, battles, rebalancing)
+
+**Verify Regular Users Don't See Admin**:
+1. Logout from admin account
+2. Login as `player1` / `password123`
+3. Verify: NO **⚡ Admin** link in navigation
+4. Try accessing http://localhost:3000/admin directly
+5. Verify: Still can access (no role check in route), but API calls will fail with 403 Forbidden
+
+### Scenario 5: Test Battle Logs
 
 **Get battle log via API**:
 ```bash
@@ -646,7 +715,7 @@ curl -s -X POST http://localhost:3001/api/admin/cycles/bulk \
 ```bash
 # Check if everything is running
 curl http://localhost:3001/health && \
-curl http://localhost:5173 && \
+curl http://localhost:3000 && \
 echo "✅ All systems operational"
 ```
 

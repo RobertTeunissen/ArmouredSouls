@@ -12,6 +12,7 @@ import WeaponShopPage from './pages/WeaponShopPage';
 import WeaponInventoryPage from './pages/WeaponInventoryPage';
 import BattleHistoryPage from './pages/BattleHistoryPage';
 import LeagueStandingsPage from './pages/LeagueStandingsPage';
+import AdminPage from './pages/AdminPage';
 
 function App() {
   return (
@@ -96,6 +97,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <LeagueStandingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
               </ProtectedRoute>
             }
           />
