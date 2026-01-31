@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
 import { getUpcomingMatches, ScheduledMatch, formatDateTime, getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+// Constants
+const UNKNOWN_USER = 'Unknown';
 
 function UpcomingMatches() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [matches, setMatches] = useState<ScheduledMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +25,12 @@ function UpcomingMatches() {
       setMatches(data);
       setError(null);
     } catch (err: any) {
+      // Handle 401 Unauthorized errors
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
       console.error('Failed to fetch upcoming matches:', err);
       setError('Failed to load upcoming matches');
     } finally {
@@ -31,6 +43,14 @@ function UpcomingMatches() {
   };
 
   const getMatchResult = (match: ScheduledMatch) => {
+    // Defensive checks to prevent crashes - validate all required nested data
+    if (!match || !match.robot1 || !match.robot2 || !match.robot1.user || !match.robot2.user) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid match data:', match);
+      }
+      return null;
+    }
+    
     const myRobot = isMyRobot(match.robot1.userId) ? match.robot1 : match.robot2;
     const opponent = isMyRobot(match.robot1.userId) ? match.robot2 : match.robot1;
     return { myRobot, opponent };
@@ -68,7 +88,14 @@ function UpcomingMatches() {
       <h2 className="text-2xl font-semibold mb-4">Upcoming Matches</h2>
       <div className="space-y-4">
         {matches.map((match) => {
-          const { myRobot, opponent } = getMatchResult(match);
+          const matchResult = getMatchResult(match);
+          
+          // Skip invalid matches safely
+          if (!matchResult) {
+            return null;
+          }
+          
+          const { myRobot, opponent } = matchResult;
           const tierColor = getLeagueTierColor(match.leagueType);
           const tierName = getLeagueTierName(match.leagueType);
           
@@ -107,7 +134,7 @@ function UpcomingMatches() {
                     ELO: {opponent.elo}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {opponent.user.username}
+                    {opponent.user?.username || UNKNOWN_USER}
                   </div>
                 </div>
               </div>

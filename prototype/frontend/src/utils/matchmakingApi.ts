@@ -100,9 +100,17 @@ export interface PaginatedResponse<T> {
   };
 }
 
+// Helper to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
+
 // API Functions
 export const getUpcomingMatches = async (): Promise<ScheduledMatch[]> => {
-  const response = await axios.get(`${API_BASE_URL}/matches/upcoming`);
+  const response = await axios.get(`${API_BASE_URL}/matches/upcoming`, {
+    headers: getAuthHeaders()
+  });
   return response.data.matches || [];  // Extract matches array from response
 };
 
@@ -111,7 +119,8 @@ export const getMatchHistory = async (
   pageSize: number = 10
 ): Promise<PaginatedResponse<BattleHistory>> => {
   const response = await axios.get(`${API_BASE_URL}/matches/history`, {
-    params: { page, pageSize }
+    params: { page, pageSize },
+    headers: getAuthHeaders()
   });
   return response.data;
 };
@@ -122,13 +131,16 @@ export const getLeagueStandings = async (
   pageSize: number = 50
 ): Promise<PaginatedResponse<LeagueRobot>> => {
   const response = await axios.get(`${API_BASE_URL}/leagues/${tier}/standings`, {
-    params: { page, pageSize }
+    params: { page, pageSize },
+    headers: getAuthHeaders()
   });
   return response.data;
 };
 
 export const getLeagueInstances = async (tier: string): Promise<LeagueInstance[]> => {
-  const response = await axios.get(`${API_BASE_URL}/leagues/${tier}/instances`);
+  const response = await axios.get(`${API_BASE_URL}/leagues/${tier}/instances`, {
+    headers: getAuthHeaders()
+  });
   return response.data;
 };
 
@@ -138,13 +150,16 @@ export const getRobotMatches = async (
   pageSize: number = 10
 ): Promise<PaginatedResponse<BattleHistory>> => {
   const response = await axios.get(`${API_BASE_URL}/robots/${robotId}/matches`, {
-    params: { page, pageSize }
+    params: { page, pageSize },
+    headers: getAuthHeaders()
   });
   return response.data;
 };
 
 export const getRobotUpcomingMatches = async (robotId: number): Promise<ScheduledMatch[]> => {
-  const response = await axios.get(`${API_BASE_URL}/robots/${robotId}/upcoming`);
+  const response = await axios.get(`${API_BASE_URL}/robots/${robotId}/upcoming`, {
+    headers: getAuthHeaders()
+  });
   return response.data;
 };
 

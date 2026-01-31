@@ -16,7 +16,7 @@ interface Robot {
 }
 
 function DashboardPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [robots, setRobots] = useState<Robot[]>([]);
   // const [loading, setLoading] = useState(true);
@@ -29,9 +29,29 @@ function DashboardPage() {
 
   const fetchRobots = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/robots');
+      const token = localStorage.getItem('token');
+      
+      // If no token, redirect to login
+      if (!token) {
+        console.error('No authentication token found');
+        logout();
+        navigate('/login');
+        return;
+      }
+      
+      const response = await axios.get('http://localhost:3001/api/robots', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       setRobots(response.data);
     } catch (error) {
+      // Handle 401 Unauthorized errors
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
       console.error('Failed to fetch robots:', error);
     }
     // finally {
