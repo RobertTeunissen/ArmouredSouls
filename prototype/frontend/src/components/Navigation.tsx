@@ -38,6 +38,18 @@ function Navigation() {
                 My Robots
               </button>
               <button
+                onClick={() => navigate('/battle-history')}
+                className="hover:text-blue-400 transition-colors"
+              >
+                Battle History
+              </button>
+              <button
+                onClick={() => navigate('/league-standings')}
+                className="hover:text-blue-400 transition-colors"
+              >
+                Leagues
+              </button>
+              <button
                 onClick={() => navigate('/weapon-shop')}
                 className="hover:text-blue-400 transition-colors"
               >
@@ -55,6 +67,14 @@ function Navigation() {
               >
                 All Robots
               </button>
+              {user.role === 'admin' && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="hover:text-yellow-400 transition-colors font-semibold text-yellow-300"
+                >
+                  ⚡ Admin
+                </button>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-4">

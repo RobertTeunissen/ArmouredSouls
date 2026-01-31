@@ -145,15 +145,18 @@ model Robot {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // ===== RELATIONS =====
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mainWeapon      WeaponInventory? @relation("MainWeapon", fields: [mainWeaponId], references: [id])
-  offhandWeapon   WeaponInventory? @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
-  battlesAsRobot1 Battle[]         @relation("Robot1")
-  battlesAsRobot2 Battle[]         @relation("Robot2")
+  user                      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mainWeapon                WeaponInventory? @relation("MainWeapon", fields: [mainWeaponId], references: [id])
+  offhandWeapon             WeaponInventory? @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
+  battlesAsRobot1           Battle[]         @relation("Robot1")
+  battlesAsRobot2           Battle[]         @relation("Robot2")
+  scheduledMatchesAsRobot1  ScheduledMatch[] @relation("ScheduledRobot1")
+  scheduledMatchesAsRobot2  ScheduledMatch[] @relation("ScheduledRobot2")
 
   @@index([userId])
   @@index([elo])
   @@index([currentLeague])
+  @@index([currentLeague, leagueId])
   @@map("robots")
 }
 
@@ -279,13 +282,36 @@ model Battle {
   createdAt DateTime @default(now()) @map("created_at")
 
   // ===== RELATIONS =====
-  user   User  @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
-  robot1 Robot @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2 Robot @relation("Robot2", fields: [robot2Id], references: [id])
+  user           User             @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
+  robot1         Robot            @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2         Robot            @relation("Robot2", fields: [robot2Id], references: [id])
+  scheduledMatch ScheduledMatch[]
 
   @@index([userId])
   @@index([robot1Id])
   @@index([robot2Id])
   @@index([createdAt])
   @@map("battles")
+}
+
+model ScheduledMatch {
+  id           Int      @id @default(autoincrement())
+  robot1Id     Int      @map("robot1_id")
+  robot2Id     Int      @map("robot2_id")
+  leagueType   String   @map("league_type") @db.VarChar(20) // "bronze", "silver", "gold", etc.
+  scheduledFor DateTime @map("scheduled_for") // When the match should be executed
+  status       String   @default("scheduled") @db.VarChar(20) // "scheduled", "completed", "cancelled"
+  battleId     Int?     @map("battle_id") // Links to Battle after completion
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // ===== RELATIONS =====
+  robot1 Robot   @relation("ScheduledRobot1", fields: [robot1Id], references: [id])
+  robot2 Robot   @relation("ScheduledRobot2", fields: [robot2Id], references: [id])
+  battle Battle? @relation(fields: [battleId], references: [id])
+
+  @@index([robot1Id])
+  @@index([robot2Id])
+  @@index([scheduledFor, status])
+  @@index([status])
+  @@map("scheduled_matches")
 }

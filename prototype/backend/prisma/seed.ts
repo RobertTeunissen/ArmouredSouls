@@ -3,6 +3,65 @@ import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+// Default robot attributes (all set to 1.00)
+const DEFAULT_ROBOT_ATTRIBUTES = {
+  combatPower: 1.0,
+  targetingSystems: 1.0,
+  criticalSystems: 1.0,
+  penetration: 1.0,
+  weaponControl: 1.0,
+  attackSpeed: 1.0,
+  armorPlating: 1.0,
+  shieldCapacity: 1.0,
+  evasionThrusters: 1.0,
+  damageDampeners: 1.0,
+  counterProtocols: 1.0,
+  hullIntegrity: 1.0,
+  servoMotors: 1.0,
+  gyroStabilizers: 1.0,
+  hydraulicSystems: 1.0,
+  powerCore: 1.0,
+  combatAlgorithms: 1.0,
+  threatAnalysis: 1.0,
+  adaptiveAI: 1.0,
+  logicCores: 1.0,
+  syncProtocols: 1.0,
+  supportSystems: 1.0,
+  formationTactics: 1.0,
+};
+
+// Robot name generator for test data
+const prefixes = [
+  'Iron', 'Steel', 'Titanium', 'Cyber', 'Plasma', 'Quantum',
+  'Thunder', 'Lightning', 'Frost', 'Inferno', 'Shadow', 'Light',
+  'Battle', 'War', 'Combat', 'Strike', 'Guard', 'Shield',
+  'Alpha', 'Beta', 'Gamma', 'Delta', 'Omega', 'Prime',
+  'Crimson', 'Azure', 'Emerald', 'Golden', 'Silver', 'Bronze',
+  'Viper', 'Falcon', 'Dragon', 'Phoenix', 'Griffin', 'Hydra',
+  'Storm', 'Blaze', 'Frost', 'Volt', 'Nova', 'Eclipse'
+];
+
+const suffixes = [
+  'Gladiator', 'Warrior', 'Champion', 'Sentinel', 'Guardian',
+  'Striker', 'Destroyer', 'Crusher', 'Breaker', 'Reaper',
+  'Titan', 'Colossus', 'Behemoth', 'Juggernaut', 'Warlord',
+  'Knight', 'Paladin', 'Vanguard', 'Enforcer', 'Protector',
+  'Avenger', 'Hunter', 'Predator', 'Slayer', 'Annihilator',
+  'Dominator', 'Conqueror', 'Victor', 'Defender', 'Vindicator',
+  'Phantom', 'Specter', 'Wraith', 'Ghost', 'Shadow'
+];
+
+function generateRobotName(index: number): string {
+  const prefix = prefixes[index % prefixes.length];
+  const suffix = suffixes[Math.floor(index / prefixes.length) % suffixes.length];
+  const variant = Math.floor(index / (prefixes.length * suffixes.length));
+  
+  if (variant > 0) {
+    return `${prefix} ${suffix} ${variant + 1}`;
+  }
+  return `${prefix} ${suffix}`;
+}
+
 async function main() {
   console.log('🌱 Seeding database with COMPLETE future-state schema...');
 
@@ -204,6 +263,23 @@ async function main() {
         shieldCapacityBonus: 5,
       },
     }),
+    
+    // 11. Practice Sword (₡0) - FREE weapon for testing and matchmaking
+    prisma.weapon.create({
+      data: {
+        name: 'Practice Sword',
+        weaponType: 'melee',
+        baseDamage: 5,
+        cooldown: 3,
+        cost: 0, // FREE
+        handsRequired: 'one',
+        damageType: 'melee',
+        loadoutType: 'single',
+        specialProperty: 'Free starter weapon for testing',
+        description: 'Basic training weapon with minimal stats',
+        // All bonuses are 0 (default)
+      },
+    }),
   ]);
 
   console.log(`✅ Created ${weapons.length} weapons`);
@@ -211,21 +287,36 @@ async function main() {
   console.log('   - 3 ballistic weapons (Machine Gun, Railgun, Shotgun)');
   console.log('   - 3 melee weapons (Power Sword, Hammer, Plasma Blade)');
   console.log('   - 1 shield weapon (Combat Shield)');
+  console.log('   - 1 practice weapon (Practice Sword - FREE)');
+
+  // Find the Practice Sword weapon by name for later use
+  const practiceSword = weapons.find((weapon) => weapon.name === 'Practice Sword');
+  
+  if (!practiceSword) {
+    throw new Error('Practice Sword weapon not found in seeded weapons array');
+  }
 
   // Create test users
-  console.log('Creating test users...');
+  console.log('Creating test users (admin + player1-5 + 100 test users)...');
   const hashedPassword = await bcrypt.hash('password123', 10);
+  const testHashedPassword = await bcrypt.hash('testpass123', 10);
 
-  const users = await Promise.all([
-    prisma.user.create({
-      data: {
-        username: 'admin',
-        passwordHash: await bcrypt.hash('admin123', 10),
-        role: 'admin',
-        currency: 10000000, // ₡10 million for admin
-        prestige: 50000,    // Admin has high prestige
-      },
-    }),
+  // Create admin user
+  const adminUser = await prisma.user.create({
+    data: {
+      username: 'admin',
+      passwordHash: await bcrypt.hash('admin123', 10),
+      role: 'admin',
+      currency: 10000000, // ₡10 million for admin
+      prestige: 50000,    // Admin has high prestige
+    },
+  });
+
+  console.log('✅ Created admin user');
+
+  // Create player users for manual testing
+  console.log('Creating player1-5 users for manual testing...');
+  const playerUsers = await Promise.all([
     prisma.user.create({
       data: {
         username: 'player1',
@@ -263,21 +354,169 @@ async function main() {
     }),
   ]);
 
-  console.log(`✅ Created ${users.length} users`);
-  console.log('   - admin/admin123 (admin role, ₡10,000,000, 50k prestige)');
-  console.log('   - player1-5/password123 (regular users, ₡2,000,000 each)');
+  console.log('✅ Created player1-5 users (password: password123)');
+
+  // Create Bye-Robot special user (id will be determined by database)
+  const byeUser = await prisma.user.create({
+    data: {
+      username: 'bye_robot_user',
+      passwordHash: testHashedPassword,
+      currency: 0,
+      prestige: 0,
+      role: 'user',
+    },
+  });
+
+  console.log('✅ Created bye-robot user');
+
+  // Create 100 test users with robots
+  console.log('Creating 100 test users with robots...');
+  const testUsersWithRobots = [];
+  
+  for (let i = 1; i <= 100; i++) {
+    const username = `test_user_${String(i).padStart(3, '0')}`;
+    const robotName = generateRobotName(i - 1);
+    
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        username,
+        passwordHash: testHashedPassword,
+        currency: 100000, // ₡100,000 starting balance
+      },
+    });
+
+    // Create weapon inventory entry for Practice Sword
+    const weaponInventory = await prisma.weaponInventory.create({
+      data: {
+        userId: user.id,
+        weaponId: practiceSword.id,
+      },
+    });
+
+    // Create robot with Practice Sword equipped
+    const robot = await prisma.robot.create({
+      data: {
+        userId: user.id,
+        name: robotName,
+        frameId: 1,
+        
+        // All 23 attributes set to 1.00 via shared defaults
+        ...DEFAULT_ROBOT_ATTRIBUTES,
+        
+        // Combat state (HP formula: hullIntegrity × 10 = 1.00 × 10 = 10)
+        currentHP: 10,
+        maxHP: 10,
+        currentShield: 2, // shieldCapacity × 2 = 1.00 × 2 = 2
+        maxShield: 2,
+        
+        // Performance tracking
+        elo: 1200, // Starting ELO
+        
+        // League
+        currentLeague: 'bronze',
+        leagueId: 'bronze_1',
+        leaguePoints: 0,
+        
+        // Loadout
+        loadoutType: 'single',
+        mainWeaponId: weaponInventory.id,
+        
+        // Stance
+        stance: 'balanced',
+        
+        // Battle readiness
+        battleReadiness: 100,
+        yieldThreshold: 10,
+      },
+    });
+
+    testUsersWithRobots.push({ user, robot });
+    
+    if (i % 10 === 0) {
+      console.log(`   Created ${i}/100 test users with robots...`);
+    }
+  }
+
+  console.log(`✅ Created 100 test users with robots`);
+  console.log(`   - Username format: test_user_001 to test_user_100`);
+  console.log(`   - Password: testpass123`);
+  console.log(`   - All robots equipped with Practice Sword`);
+  console.log(`   - All robots in Bronze League (bronze_1)`);
+  console.log(`   - All robots have ELO 1200`);
+
+  // Create Bye-Robot (special robot for odd-number matchmaking)
+  console.log('Creating Bye-Robot...');
+  
+  // First create weapon inventory for Bye-Robot
+  const byeRobotWeapon = await prisma.weaponInventory.create({
+    data: {
+      userId: byeUser.id,
+      weaponId: practiceSword.id,
+    },
+  });
+
+  const byeRobot = await prisma.robot.create({
+    data: {
+      userId: byeUser.id,
+      name: 'Bye Robot',
+      frameId: 1,
+      
+      // All attributes set to 1.00 via shared defaults
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      
+      // Combat state
+      currentHP: 10,
+      maxHP: 10,
+      currentShield: 2,
+      maxShield: 2,
+      
+      // Performance tracking
+      elo: 1000, // Fixed ELO of 1000
+      
+      // League
+      currentLeague: 'bronze',
+      leagueId: 'bronze_bye', // Special league ID
+      leaguePoints: 0,
+      
+      // Loadout
+      loadoutType: 'single',
+      mainWeaponId: byeRobotWeapon.id,
+      
+      // Stance
+      stance: 'balanced',
+      
+      // Battle readiness
+      battleReadiness: 100,
+      yieldThreshold: 0, // Never yields
+    },
+  });
+
+  console.log(`✅ Created Bye-Robot (ELO: 1000, ID: ${byeRobot.id})`);
+
+  // Keep original users for reference
+  const users = [
+    adminUser,
+    ...playerUsers,
+    ...testUsersWithRobots.map(t => t.user)
+  ];
+
+  console.log(`✅ Total users created: ${users.length + 1} (including bye-robot user)`);
 
   console.log('');
-  console.log('✅ Database seeded successfully with complete future-state schema!');
+  console.log('✅ Database seeded successfully with matchmaking test data!');
   console.log('');
   console.log('📊 System Overview:');
   console.log('   💰 Currency: Credits (₡)');
-  console.log('   👤 Starting balance: ₡2,000,000');
-  console.log('   🤖 Robot creation cost: ₡500,000');
-  console.log('   ⚔️  Weapon costs: ₡100,000 - ₡400,000');
-  console.log('   📈 Upgrade formula: (level + 1) × 1,000 Credits');
+  console.log('   👤 Admin: ₡10,000,000 (username: admin, password: admin123)');
+  console.log('   👤 Player users: ₡2,000,000 each (player1-5, password: password123)');
+  console.log('   👤 Test users: ₡100,000 each (test_user_001-100, password: testpass123)');
+  console.log('   🤖 Robots: 100 test robots + 1 bye-robot');
+  console.log('   ⚔️  Practice Sword: FREE (equipped on all test robots)');
+  console.log('   🏆 League: All robots start in Bronze (bronze_1)');
+  console.log('   📈 ELO: Test robots at 1200, Bye-Robot at 1000');
   console.log('');
-  console.log('🤖 Robot Attributes: 23 total');
+  console.log('🤖 Robot Attributes: 23 total (all set to 1.00 for test robots)');
   console.log('   ⚡ Combat Systems (6): combatPower, targetingSystems, criticalSystems, penetration, weaponControl, attackSpeed');
   console.log('   🛡️  Defensive Systems (5): armorPlating, shieldCapacity, evasionThrusters, damageDampeners, counterProtocols');
   console.log('   🔧 Chassis & Mobility (5): hullIntegrity, servoMotors, gyroStabilizers, hydraulicSystems, powerCore');
@@ -295,6 +534,16 @@ async function main() {
   console.log('');
   console.log('📝 HP Formula: maxHP = hullIntegrity × 10');
   console.log('🛡️  Shield Formula: maxShield = shieldCapacity × 2');
+  console.log('');
+  console.log('🎯 Matchmaking Test Data:');
+  console.log(`   - 100 test robots with creative names (e.g., "${testUsersWithRobots[0].robot.name}")`);
+  console.log(`   - Bye-Robot ID: ${byeRobot.id} for odd-number matching`);
+  console.log('   - All robots battle-ready with Practice Sword equipped');
+  console.log('');
+  console.log('🔐 Login Credentials:');
+  console.log('   - Admin: admin / admin123');
+  console.log('   - Players: player1-5 / password123 (for manual testing)');
+  console.log('   - Test users: test_user_001-100 / testpass123');
   console.log('');
 }
 

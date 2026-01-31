@@ -58,9 +58,22 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 
 ## 📚 Documentation
 
+### Getting Started
 - [**Setup Guide**](docs/SETUP.md) - Get the Phase 1 prototype running locally
 - [**Troubleshooting**](docs/TROUBLESHOOTING.md) - Fix installation and database issues
 - [**Robot Attributes System**](docs/ROBOT_ATTRIBUTES.md) - Complete attribute system, currency, weapons, and economy
+
+### Testing & Admin Access
+- [**⚡ Quick Start Testing**](docs/QUICK_START_TESTING.md) - Ultra-quick testing reference ⭐ START HERE
+- [**Testing Guide**](docs/MATCHMAKING_TESTING_GUIDE.md) - Complete testing instructions with admin access
+- **Admin Login**: Username `admin`, Password `admin123`
+
+### Matchmaking System
+- [**System Guide**](docs/MATCHMAKING_SYSTEM_GUIDE.md) - Complete matchmaking documentation
+- [**PRD: Matchmaking**](docs/PRD_MATCHMAKING.md) - Product requirements and specifications
+- [**Implementation Plan**](docs/IMPLEMENTATION_PLAN_MATCHMAKING.md) - Detailed 11-phase plan
+- [**GitHub Issues (Copy-Paste)**](docs/GITHUB_ISSUES_MATCHMAKING.md) - Ready-to-use issue templates
+- [**Quick Reference**](docs/QUICK_REFERENCE_MATCHMAKING.md) - Visual guides and flow charts
 
 ### Weapon Loadout System
 - [**PRD: Weapon Loadout**](docs/PRD_WEAPON_LOADOUT.md) - Product requirements and specifications
