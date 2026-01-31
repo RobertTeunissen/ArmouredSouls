@@ -59,7 +59,7 @@ npm run dev
 - Bulk cycle testing (run 1-100 complete cycles)
 - Real-time feedback and results
 
-**Note:** Regular users (player1-5, test1-100) will NOT see the Admin link. Only the admin user has access to the Admin portal.
+**Note:** Regular users (player1-5, test_user_001-100) will NOT see the Admin link. Only the admin user has access to the Admin portal.
 
 ---
 
@@ -162,8 +162,8 @@ node scripts/testAdminAPI.js
 | Type | Username | Password | Role |
 |------|----------|----------|------|
 | Admin | `admin` | `admin123` | admin |
-| Player 1-5 | `player1` | `password123` | player |
-| Test 1-100 | `test1` | `test123` | player |
+| Player 1-5 | `player1`-`player5` | `password123` | user |
+| Test Users | `test_user_001`-`test_user_100` | `testpass123` | user |
 
 ---
 

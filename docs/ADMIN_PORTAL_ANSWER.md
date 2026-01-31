@@ -37,7 +37,7 @@ Single Portal: http://localhost:3000
 
 1. **All users login at the same URL**: http://localhost:3000/login
 2. **After login**:
-   - Regular users (player1-5, test1-100) see normal navigation
+   - Regular users (player1-5, test_user_001-100) see normal navigation
    - Admin users see everything PLUS a **⚡ Admin** link (yellow text)
 3. **Admin functionality** is unlocked by clicking the **⚡ Admin** link
 4. **Access control** is enforced via JWT role checking
