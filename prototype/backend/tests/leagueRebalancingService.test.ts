@@ -400,5 +400,83 @@ describe('League Rebalancing Service', () => {
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
+
+    it('should not promote or demote robots multiple times in same cycle', async () => {
+      // Scenario from the issue: Robot promoted from bronze to silver, 
+      // then should NOT be eligible for promotion/demotion in silver tier
+
+      const robots = [];
+      
+      // Create 100 bronze robots (to trigger promotion)
+      for (let i = 0; i < 100; i++) {
+        const weaponInv = await prisma.weaponInventory.create({
+          data: { userId: testUser.id, weaponId: practiceSword.id },
+        });
+        const robot = await prisma.robot.create({
+          data: {
+            userId: testUser.id,
+            name: `Robot ${i}`,
+            leagueId: 'bronze_1',
+            currentLeague: 'bronze',
+            currentHP: 10,
+            maxHP: 10,
+            currentShield: 2,
+            maxShield: 2,
+            elo: 1200 + i, // Varying ELO to create order
+            leaguePoints: i * 10, // 0 to 990 points
+            totalBattles: 10,
+            loadoutType: 'single',
+            mainWeaponId: weaponInv.id,
+          },
+        });
+        robots.push(robot);
+      }
+
+      // Run rebalancing
+      const summary = await rebalanceLeagues();
+
+      // 10% of 100 bronze robots = 10 promoted to silver
+      expect(summary.tierSummaries[0].promoted).toBe(10);
+      expect(summary.tierSummaries[0].demoted).toBe(0);
+
+      // Silver tier should have 0 promotions and 0 demotions
+      // because only 10 robots would be in silver (all just promoted)
+      // and they should be excluded from processing
+      expect(summary.tierSummaries[1].promoted).toBe(0);
+      expect(summary.tierSummaries[1].demoted).toBe(0);
+
+      // Verify no robot was moved twice
+      // Get all robots and check their final positions
+      const finalRobots = await prisma.robot.findMany({
+        where: {
+          id: { in: robots.map(r => r.id) },
+        },
+      });
+
+      // Count robots in each tier
+      const tierCounts = {
+        bronze: 0,
+        silver: 0,
+        gold: 0,
+      };
+
+      for (const robot of finalRobots) {
+        if (robot.currentLeague === 'bronze') tierCounts.bronze++;
+        if (robot.currentLeague === 'silver') tierCounts.silver++;
+        if (robot.currentLeague === 'gold') tierCounts.gold++;
+      }
+
+      // Expect: 90 in bronze, 10 in silver, 0 in gold
+      // (not 89 in bronze, 9 in silver, 1 in gold if double promotion occurred)
+      expect(tierCounts.bronze).toBe(90);
+      expect(tierCounts.silver).toBe(10);
+      expect(tierCounts.gold).toBe(0);
+
+      // Clean up
+      for (const robot of robots) {
+        await prisma.robot.delete({ where: { id: robot.id } });
+      }
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+    });
   });
 });

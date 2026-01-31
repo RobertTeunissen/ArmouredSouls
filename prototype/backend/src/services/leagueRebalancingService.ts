@@ -32,8 +32,10 @@ export interface FullRebalancingSummary {
 
 /**
  * Determine which robots should be promoted from a tier
+ * @param tier - The league tier to evaluate
+ * @param excludeRobotIds - Set of robot IDs to exclude (already processed in this cycle)
  */
-export async function determinePromotions(tier: LeagueTier): Promise<Robot[]> {
+export async function determinePromotions(tier: LeagueTier, excludeRobotIds: Set<number> = new Set()): Promise<Robot[]> {
   // Champion tier has no promotions
   if (tier === 'champion') {
     return [];
@@ -46,9 +48,10 @@ export async function determinePromotions(tier: LeagueTier): Promise<Robot[]> {
       totalBattles: {
         gte: MIN_BATTLES_FOR_REBALANCING,
       },
-      NOT: {
-        name: 'Bye Robot',
-      },
+      NOT: [
+        { name: 'Bye Robot' },
+        { id: { in: Array.from(excludeRobotIds) } },
+      ],
     },
     orderBy: [
       { leaguePoints: 'desc' },
@@ -78,8 +81,10 @@ export async function determinePromotions(tier: LeagueTier): Promise<Robot[]> {
 
 /**
  * Determine which robots should be demoted from a tier
+ * @param tier - The league tier to evaluate
+ * @param excludeRobotIds - Set of robot IDs to exclude (already processed in this cycle)
  */
-export async function determineDemotions(tier: LeagueTier): Promise<Robot[]> {
+export async function determineDemotions(tier: LeagueTier, excludeRobotIds: Set<number> = new Set()): Promise<Robot[]> {
   // Bronze tier has no demotions
   if (tier === 'bronze') {
     return [];
@@ -92,9 +97,10 @@ export async function determineDemotions(tier: LeagueTier): Promise<Robot[]> {
       totalBattles: {
         gte: MIN_BATTLES_FOR_REBALANCING,
       },
-      NOT: {
-        name: 'Bye Robot',
-      },
+      NOT: [
+        { name: 'Bye Robot' },
+        { id: { in: Array.from(excludeRobotIds) } },
+      ],
     },
     orderBy: [
       { leaguePoints: 'asc' },
@@ -198,8 +204,10 @@ export async function demoteRobot(robot: Robot): Promise<void> {
 
 /**
  * Rebalance a single league tier
+ * @param tier - The league tier to rebalance
+ * @param excludeRobotIds - Set of robot IDs already processed in this cycle
  */
-async function rebalanceTier(tier: LeagueTier): Promise<RebalancingSummary> {
+async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Promise<RebalancingSummary> {
   console.log(`\n[Rebalancing] Processing ${tier.toUpperCase()} league...`);
 
   // Count total robots in tier
@@ -210,12 +218,15 @@ async function rebalanceTier(tier: LeagueTier): Promise<RebalancingSummary> {
     },
   });
 
-  // Count eligible robots (≥5 battles)
+  // Count eligible robots (≥5 battles and not already processed)
   const eligibleRobots = await prisma.robot.count({
     where: {
       currentLeague: tier,
       totalBattles: { gte: MIN_BATTLES_FOR_REBALANCING },
-      NOT: { name: 'Bye Robot' },
+      NOT: [
+        { name: 'Bye Robot' },
+        { id: { in: Array.from(excludeRobotIds) } },
+      ],
     },
   });
 
@@ -236,15 +247,16 @@ async function rebalanceTier(tier: LeagueTier): Promise<RebalancingSummary> {
   }
 
   // Determine promotions
-  const toPromote = await determinePromotions(tier);
+  const toPromote = await determinePromotions(tier, excludeRobotIds);
   
   // Determine demotions
-  const toDemote = await determineDemotions(tier);
+  const toDemote = await determineDemotions(tier, excludeRobotIds);
 
   // Execute promotions
   for (const robot of toPromote) {
     try {
       await promoteRobot(robot);
+      excludeRobotIds.add(robot.id); // Mark as processed
       summary.promoted++;
     } catch (error) {
       console.error(`[Rebalancing] Error promoting robot ${robot.id}:`, error);
@@ -255,6 +267,7 @@ async function rebalanceTier(tier: LeagueTier): Promise<RebalancingSummary> {
   for (const robot of toDemote) {
     try {
       await demoteRobot(robot);
+      excludeRobotIds.add(robot.id); // Mark as processed
       summary.demoted++;
     } catch (error) {
       console.error(`[Rebalancing] Error demoting robot ${robot.id}:`, error);
@@ -289,10 +302,13 @@ export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
 
   console.log(`[Rebalancing] Total robots in system: ${fullSummary.totalRobots}`);
 
+  // Track which robots have already been processed in this cycle
+  const processedRobotIds = new Set<number>();
+
   // Process each tier (bottom to top to avoid conflicts)
   for (const tier of LEAGUE_TIERS) {
     try {
-      const summary = await rebalanceTier(tier);
+      const summary = await rebalanceTier(tier, processedRobotIds);
       fullSummary.tierSummaries.push(summary);
       fullSummary.totalPromoted += summary.promoted;
       fullSummary.totalDemoted += summary.demoted;
