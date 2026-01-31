@@ -64,26 +64,20 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
       take: perPage,
     });
 
-    // Add rank to each robot
-    const standings = robots.map((robot, index) => ({
-      rank: (page - 1) * perPage + index + 1,
-      robot: {
-        id: robot.id,
-        name: robot.name,
-        owner: robot.user.username,
-        ownerId: robot.user.id,
-      },
-      stats: {
-        leaguePoints: robot.leaguePoints,
-        elo: robot.elo,
-        wins: robot.wins,
-        losses: robot.losses,
-        totalBattles: robot.totalBattles,
-        winRate: robot.totalBattles > 0 ? ((robot.wins / robot.totalBattles) * 100).toFixed(1) : '0.0',
-      },
-      league: {
-        tier: robot.currentLeague,
-        instance: robot.leagueId,
+    // Map robots to the flat structure expected by frontend
+    const standings = robots.map((robot) => ({
+      id: robot.id,
+      name: robot.name,
+      elo: robot.elo,
+      leaguePoints: robot.leaguePoints,
+      wins: robot.wins,
+      losses: robot.losses,
+      totalBattles: robot.totalBattles,
+      currentHP: robot.currentHP,
+      maxHP: robot.maxHP,
+      userId: robot.user.id,
+      user: {
+        username: robot.user.username,
       },
     }));
 
@@ -91,13 +85,9 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
       data: standings,
       pagination: {
         page,
-        perPage,
+        pageSize: perPage,
         total,
         totalPages: Math.ceil(total / perPage),
-      },
-      league: {
-        tier,
-        instance: instance || 'all',
       },
     });
   } catch (error) {
@@ -128,17 +118,13 @@ router.get('/:tier/instances', async (req: Request, res: Response) => {
     // Get all instances for this tier
     const instances = await getInstancesForTier(tier);
 
-    res.json({
-      tier,
-      instances: instances.map(instance => ({
-        leagueId: instance.leagueId,
-        instanceNumber: instance.instanceNumber,
-        currentRobots: instance.currentRobots,
-        maxRobots: instance.maxRobots,
-        isFull: instance.isFull,
-      })),
-      total: instances.length,
-    });
+    // Return just the array of instances as expected by frontend
+    res.json(instances.map(instance => ({
+      leagueId: instance.leagueId,
+      leagueTier: tier,
+      currentRobots: instance.currentRobots,
+      maxRobots: instance.maxRobots,
+    })));
   } catch (error) {
     console.error('[Leagues API] Error fetching instances:', error);
     res.status(500).json({
