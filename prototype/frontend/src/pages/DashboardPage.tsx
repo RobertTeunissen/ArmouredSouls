@@ -31,9 +31,11 @@ function DashboardPage() {
     try {
       const token = localStorage.getItem('token');
       
-      // If no token, don't make the API call
+      // If no token, redirect to login
       if (!token) {
         console.error('No authentication token found');
+        logout();
+        navigate('/login');
         return;
       }
       
