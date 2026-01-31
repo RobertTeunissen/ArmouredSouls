@@ -4,6 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+// Constants
+const UNKNOWN_USER = 'Unknown';
+
 function UpcomingMatches() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -42,7 +45,9 @@ function UpcomingMatches() {
   const getMatchResult = (match: ScheduledMatch) => {
     // Defensive checks to prevent crashes
     if (!match || !match.robot1 || !match.robot2) {
-      console.error('Invalid match data:', match);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid match data:', match);
+      }
       return null;
     }
     
@@ -82,20 +87,16 @@ function UpcomingMatches() {
     <div className="bg-gray-800 p-6 rounded-lg">
       <h2 className="text-2xl font-semibold mb-4">Upcoming Matches</h2>
       <div className="space-y-4">
-        {matches.map((match) => {
-          const matchResult = getMatchResult(match);
+        {matches
+          .filter((match) => getMatchResult(match) !== null)
+          .map((match) => {
+            const matchResult = getMatchResult(match)!;
+            const { myRobot, opponent } = matchResult;
+            const tierColor = getLeagueTierColor(match.leagueType);
+            const tierName = getLeagueTierName(match.leagueType);
           
-          // Skip invalid matches
-          if (!matchResult) {
-            return null;
-          }
-          
-          const { myRobot, opponent } = matchResult;
-          const tierColor = getLeagueTierColor(match.leagueType);
-          const tierName = getLeagueTierName(match.leagueType);
-          
-          return (
-            <div key={match.id} className="bg-gray-700 p-4 rounded border border-gray-600">
+            return (
+              <div key={match.id} className="bg-gray-700 p-4 rounded border border-gray-600">
               <div className="flex justify-between items-start mb-2">
                 <span className={`text-sm font-semibold ${tierColor}`}>
                   {tierName} League
@@ -129,7 +130,7 @@ function UpcomingMatches() {
                     ELO: {opponent.elo}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {opponent.user?.username || 'Unknown'}
+                    {opponent.user?.username || UNKNOWN_USER}
                   </div>
                 </div>
               </div>
