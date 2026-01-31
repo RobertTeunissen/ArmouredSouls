@@ -321,7 +321,6 @@ async function main() {
       data: {
         username: 'player1',
         passwordHash: hashedPassword,
-        role: 'user', // Explicitly set role to prevent login issues
         currency: 2000000, // ₡2 million starting balance
       },
     }),
@@ -329,7 +328,6 @@ async function main() {
       data: {
         username: 'player2',
         passwordHash: hashedPassword,
-        role: 'user', // Explicitly set role to prevent login issues
         currency: 2000000,
       },
     }),
@@ -337,7 +335,6 @@ async function main() {
       data: {
         username: 'player3',
         passwordHash: hashedPassword,
-        role: 'user', // Explicitly set role to prevent login issues
         currency: 2000000,
       },
     }),
@@ -345,7 +342,6 @@ async function main() {
       data: {
         username: 'player4',
         passwordHash: hashedPassword,
-        role: 'user', // Explicitly set role to prevent login issues
         currency: 2000000,
       },
     }),
@@ -353,7 +349,6 @@ async function main() {
       data: {
         username: 'player5',
         passwordHash: hashedPassword,
-        role: 'user', // Explicitly set role to prevent login issues
         currency: 2000000,
       },
     }),
@@ -387,7 +382,6 @@ async function main() {
       data: {
         username,
         passwordHash: testHashedPassword,
-        role: 'user', // Explicitly set role to prevent login issues (issue #35)
         currency: 100000, // ₡100,000 starting balance
       },
     });
