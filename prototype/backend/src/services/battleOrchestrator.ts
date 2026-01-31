@@ -361,7 +361,9 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
 }
 
 /**
- * Execute all scheduled battles for a specific time
+ * Execute scheduled battles
+ * @param scheduledFor - Optional date filter. If provided, only executes matches scheduled for this time or earlier.
+ *                       If not provided (undefined), executes ALL scheduled matches regardless of their scheduled time.
  */
 export async function executeScheduledBattles(scheduledFor?: Date): Promise<BattleExecutionSummary> {
   // If no specific time provided, execute all scheduled matches regardless of scheduledFor time
@@ -371,10 +373,12 @@ export async function executeScheduledBattles(scheduledFor?: Date): Promise<Batt
   
   console.log(`[BattleOrchestrator] Executing battles${useTimeFilter ? ` scheduled for: ${targetTime.toISOString()}` : ' (all scheduled matches)'}`);
   
-  // Get all scheduled matches for this time (or overdue), or all if no time filter
+  // Build query to get scheduled matches
+  // Use conditional spreading to only add scheduledFor filter when a specific time is provided
   const scheduledMatches = await prisma.scheduledMatch.findMany({
     where: {
       status: 'scheduled',
+      // Only filter by scheduledFor if a specific time was provided
       ...(useTimeFilter && {
         scheduledFor: {
           lte: targetTime,
