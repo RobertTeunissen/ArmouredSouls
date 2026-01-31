@@ -10,6 +10,8 @@ import RobotDetailPage from './pages/RobotDetailPage';
 import AllRobotsPage from './pages/AllRobotsPage';
 import WeaponShopPage from './pages/WeaponShopPage';
 import WeaponInventoryPage from './pages/WeaponInventoryPage';
+import BattleHistoryPage from './pages/BattleHistoryPage';
+import LeagueStandingsPage from './pages/LeagueStandingsPage';
 
 function App() {
   return (
@@ -78,6 +80,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <WeaponInventoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/battle-history"
+            element={
+              <ProtectedRoute>
+                <BattleHistoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/league-standings"
+            element={
+              <ProtectedRoute>
+                <LeagueStandingsPage />
               </ProtectedRoute>
             }
           />

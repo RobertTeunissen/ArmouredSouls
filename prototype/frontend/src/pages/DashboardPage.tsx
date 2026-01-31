@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
+import UpcomingMatches from '../components/UpcomingMatches';
+import RecentMatches from '../components/RecentMatches';
 
 interface Robot {
   id: number;
@@ -85,6 +87,14 @@ function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Matchmaking Section */}
+        {robots.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <UpcomingMatches />
+            <RecentMatches />
+          </div>
+        )}
 
         {/* My Robots Section */}
         {robots.length > 0 && (

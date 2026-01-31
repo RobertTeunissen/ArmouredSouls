@@ -38,6 +38,18 @@ function Navigation() {
                 My Robots
               </button>
               <button
+                onClick={() => navigate('/battle-history')}
+                className="hover:text-blue-400 transition-colors"
+              >
+                Battle History
+              </button>
+              <button
+                onClick={() => navigate('/league-standings')}
+                className="hover:text-blue-400 transition-colors"
+              >
+                Leagues
+              </button>
+              <button
                 onClick={() => navigate('/weapon-shop')}
                 className="hover:text-blue-400 transition-colors"
               >
