@@ -64,6 +64,10 @@ const BASE_WEAPON_COOLDOWN = 4; // seconds
 const MAX_BATTLE_DURATION = 120; // seconds
 const SIMULATION_TICK = 0.1; // 100ms per tick
 
+// Maximum armor reduction cap (prevents armor from being too overpowered)
+// Exported for testing and reusability
+export const MAX_ARMOR_REDUCTION = 30;
+
 /**
  * Clamp a value between min and max
  */
@@ -177,6 +181,7 @@ function calculateBaseDamage(attacker: Robot, weaponBaseDamage: number): { damag
 
 /**
  * Apply damage through shields and armor
+ * Uses MAX_ARMOR_REDUCTION constant to cap armor effectiveness
  */
 function applyDamage(
   baseDamage: number,
@@ -211,12 +216,16 @@ function applyDamage(
     // Bleed-through damage at reduced rate
     if (effectiveShieldDamage > defenderState.currentShield) {
       const overflow = (effectiveShieldDamage - defenderState.currentShield) * 0.3;
-      const armorReduction = Number(defender.armorPlating) * (1 - Number(attacker.penetration) / 150);
+      // Cap armor reduction to prevent armor from being too strong
+      const rawArmorReduction = Number(defender.armorPlating) * (1 - Number(attacker.penetration) / 150);
+      const armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
       hpDamage = Math.max(1, overflow - armorReduction);
     }
   } else {
     // No shield - damage goes to HP with armor reduction
-    const armorReduction = Number(defender.armorPlating) * (1 - Number(attacker.penetration) / 150);
+    // Cap armor reduction to prevent armor from being too strong
+    const rawArmorReduction = Number(defender.armorPlating) * (1 - Number(attacker.penetration) / 150);
+    const armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
     hpDamage = Math.max(1, damage - armorReduction);
   }
   

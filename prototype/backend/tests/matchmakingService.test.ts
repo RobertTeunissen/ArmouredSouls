@@ -70,6 +70,7 @@ describe('Matchmaking Service', () => {
           maxShield: 2,
           loadoutType: 'single',
           mainWeaponId: weaponInv.id,
+          yieldThreshold: 10, // Yield at 10%, well below current 100% HP
         },
       });
 
@@ -98,12 +99,13 @@ describe('Matchmaking Service', () => {
           name: 'Low HP Robot',
           leagueId: 'bronze_1',
           currentLeague: 'bronze',
-          currentHP: 7, // 70% HP
+          currentHP: 7, // 70% HP (below 75% threshold)
           maxHP: 10,
           currentShield: 2,
           maxShield: 2,
           loadoutType: 'single',
           mainWeaponId: weaponInv.id,
+          yieldThreshold: 10,
         },
       });
 
@@ -113,6 +115,41 @@ describe('Matchmaking Service', () => {
       expect(readiness.hpCheck).toBe(false);
       expect(readiness.weaponCheck).toBe(true);
       expect(readiness.reasons.some(r => r.includes('HP too low'))).toBe(true);
+
+      await prisma.robot.delete({ where: { id: robot.id } });
+      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+    });
+
+    it('should mark robot as not ready when HP is at or below yield threshold', async () => {
+      const weaponInv = await prisma.weaponInventory.create({
+        data: {
+          userId: testUser.id,
+          weaponId: practiceSword.id,
+        },
+      });
+
+      const robot = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Yield Threshold Robot',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 8, // 80% HP (above 75% threshold)
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv.id,
+          yieldThreshold: 80, // But yield threshold is 80%, so robot would surrender immediately
+        },
+      });
+
+      const readiness = checkBattleReadiness(robot);
+
+      expect(readiness.isReady).toBe(false);
+      expect(readiness.hpCheck).toBe(false); // Should fail HP check due to yield threshold
+      expect(readiness.weaponCheck).toBe(true);
+      expect(readiness.reasons.some(r => r.includes('yield threshold'))).toBe(true);
 
       await prisma.robot.delete({ where: { id: robot.id } });
       await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });

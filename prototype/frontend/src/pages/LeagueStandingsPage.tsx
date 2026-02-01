@@ -149,7 +149,7 @@ function LeagueStandingsPage() {
                       <th className="px-4 py-3 text-left font-semibold">Owner</th>
                       <th className="px-4 py-3 text-center font-semibold">ELO</th>
                       <th className="px-4 py-3 text-center font-semibold">LP</th>
-                      <th className="px-4 py-3 text-center font-semibold">W-L</th>
+                      <th className="px-4 py-3 text-center font-semibold">W-D-L</th>
                       <th className="px-4 py-3 text-center font-semibold">Win Rate</th>
                       <th className="px-4 py-3 text-center font-semibold">HP</th>
                     </tr>
@@ -194,6 +194,8 @@ function LeagueStandingsPage() {
                           </td>
                           <td className="px-4 py-3 text-center font-mono">
                             <span className="text-green-400">{robot.wins}</span>
+                            <span className="text-gray-500"> - </span>
+                            <span className="text-yellow-400">{robot.draws}</span>
                             <span className="text-gray-500"> - </span>
                             <span className="text-red-400">{robot.losses}</span>
                           </td>

@@ -71,6 +71,7 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
       elo: robot.elo,
       leaguePoints: robot.leaguePoints,
       wins: robot.wins,
+      draws: robot.draws,
       losses: robot.losses,
       totalBattles: robot.totalBattles,
       currentHP: robot.currentHP,

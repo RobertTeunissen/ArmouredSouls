@@ -182,6 +182,79 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
 });
 
 /**
+ * POST /api/admin/recalculate-hp
+ * Recalculate HP for all robots using the new formula: 30 + (hullIntegrity × 8)
+ */
+router.post('/recalculate-hp', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    console.log('[Admin] Recalculating HP for all robots using new formula...');
+
+    // Import calculateMaxHP function
+    const { calculateMaxHP } = require('../utils/robotCalculations');
+
+    // Get all robots
+    const robots = await prisma.robot.findMany({
+      include: {
+        mainWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+        offhandWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+      },
+    });
+
+    const updates = [];
+
+    for (const robot of robots) {
+      const oldMaxHP = robot.maxHP;
+      
+      // Calculate new maxHP using the formula
+      const newMaxHP = calculateMaxHP(robot);
+      
+      // Calculate currentHP proportionally
+      const hpPercentage = robot.maxHP > 0 ? robot.currentHP / robot.maxHP : 1;
+      const newCurrentHP = Math.round(newMaxHP * hpPercentage);
+
+      // Update robot
+      await prisma.robot.update({
+        where: { id: robot.id },
+        data: {
+          maxHP: newMaxHP,
+          currentHP: Math.min(newCurrentHP, newMaxHP), // Cap at maxHP
+        },
+      });
+
+      updates.push({
+        robotId: robot.id,
+        robotName: robot.name,
+        hullIntegrity: Number(robot.hullIntegrity),
+        oldMaxHP,
+        newMaxHP,
+        change: newMaxHP - oldMaxHP,
+      });
+    }
+
+    res.json({
+      success: true,
+      robotsUpdated: robots.length,
+      updates,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Admin] HP recalculation error:', error);
+    res.status(500).json({
+      error: 'Failed to recalculate HP',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
  * POST /api/admin/cycles/bulk
  * Run multiple complete cycles (matchmaking → battles → rebalancing)
  */
@@ -505,6 +578,8 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
         id: battle.robot1.id,
         name: battle.robot1.name,
         userId: battle.robot1.userId,
+        maxHP: battle.robot1.maxHP,
+        maxShield: battle.robot1.maxShield,
         attributes: {
           combatPower: battle.robot1.combatPower,
           targetingSystems: battle.robot1.targetingSystems,
@@ -537,6 +612,8 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
         id: battle.robot2.id,
         name: battle.robot2.name,
         userId: battle.robot2.userId,
+        maxHP: battle.robot2.maxHP,
+        maxShield: battle.robot2.maxShield,
         attributes: {
           combatPower: battle.robot2.combatPower,
           targetingSystems: battle.robot2.targetingSystems,

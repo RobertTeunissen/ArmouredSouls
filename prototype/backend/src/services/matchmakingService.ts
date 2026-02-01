@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export const ELO_MATCH_IDEAL = 150; // Ideal ELO difference for a fair match
 export const ELO_MATCH_FALLBACK = 300; // Maximum ELO difference for fallback matching
 export const RECENT_OPPONENT_LIMIT = 5; // Number of recent opponents to track
-export const BATTLE_READINESS_HP_THRESHOLD = 0.75; // 75% HP required
+export const BATTLE_READINESS_HP_THRESHOLD = 0.75; // 75% HP required (ensures robot won't immediately yield)
 
 // Bye-robot identifier
 export const BYE_ROBOT_NAME = 'Bye Robot';
@@ -28,6 +28,10 @@ export interface MatchPair {
 
 /**
  * Check if a robot meets battle readiness requirements
+ * A robot is battle-ready if:
+ * 1. HP >= 75% (prevents immediate surrender)
+ * 2. HP % > yield threshold (robot won't surrender at battle start)
+ * 3. Weapons equipped for loadout type
  */
 export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
   const reasons: string[] = [];
@@ -39,6 +43,18 @@ export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
   if (!hpCheck) {
     reasons.push(`HP too low (${Math.floor(hpPercentage * 100)}%, need ${BATTLE_READINESS_HP_THRESHOLD * 100}%)`);
   }
+  
+  // Yield Threshold Check: Robot's HP must be above yield threshold
+  // Otherwise robot would surrender immediately at battle start
+  const hpPercentageValue = hpPercentage * 100;
+  const yieldCheck = hpPercentageValue > robot.yieldThreshold;
+  
+  if (!yieldCheck) {
+    reasons.push(`HP (${Math.floor(hpPercentageValue)}%) at or below yield threshold (${robot.yieldThreshold}%)`);
+  }
+  
+  // Combine HP checks - both must pass
+  const finalHpCheck = hpCheck && yieldCheck;
   
   // Weapon Check: Must have all required weapons equipped based on loadout type
   let weaponCheck = false;
@@ -72,9 +88,9 @@ export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
   }
   
   return {
-    isReady: hpCheck && weaponCheck,
+    isReady: finalHpCheck && weaponCheck,
     reasons,
-    hpCheck,
+    hpCheck: finalHpCheck,
     weaponCheck,
   };
 }

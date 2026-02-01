@@ -595,8 +595,9 @@ modified_damage = base_damage * control_mult
 
 **Penetration vs Defense:**
 ```
-// Armor reduction
+// Armor reduction with cap to prevent excessive damage mitigation
 armor_reduction = defender.armor_plating * (1 - attacker.penetration / 150)
+armor_reduction = min(armor_reduction, 30)  // Cap at 30 damage reduction
 
 // Shield handling (separate pool)
 if defender.current_shield > 0:
@@ -612,13 +613,19 @@ if defender.current_shield > 0:
     // Remaining damage "bleeds through" at reduced rate
     if shield_penetration > defender.current_shield:
         overflow = (shield_penetration - defender.current_shield) * 0.3
-        damage_to_hp = max(1, overflow - armor_reduction)
+        damage_to_hp = max(1, overflow - armor_reduction)  // armor_reduction capped at 30
     else:
         damage_to_hp = 0
 else:
     // No shield, damage goes directly to HP
-    damage_to_hp = max(1, modified_damage - armor_reduction)
+    damage_to_hp = max(1, modified_damage - armor_reduction)  // armor_reduction capped at 30
 ```
+
+**Armor Reduction Cap Rationale:**
+- Without cap: High armor (50+) with low enemy penetration could reduce damage by 50+ points
+- With cap: Maximum 30 damage reduction ensures attacks remain effective
+- Maintains armor value while preventing defensive builds from being unkillable
+- Encourages penetration builds as counterplay to high armor
 
 **Critical Application:**
 ```
@@ -817,20 +824,26 @@ The complete weapon system includes weapon types, properties, attribute bonuses,
 
 **Base HP from Hull Integrity:**
 ```
-base_hp = hull_integrity * 10
+base_hp = 30 + (hull_integrity * 8)
 
 Example:
-- Hull Integrity 1: 10 HP
-- Hull Integrity 10: 100 HP
-- Hull Integrity 25: 250 HP
-- Hull Integrity 50: 500 HP
+- Hull Integrity 1: 38 HP (30 + 8)
+- Hull Integrity 10: 110 HP (30 + 80)
+- Hull Integrity 25: 230 HP (30 + 200)
+- Hull Integrity 50: 430 HP (30 + 400)
 ```
 
+**Formula Rationale:**
+- Base HP of 30 ensures starting robots (hull=1) are viable with 38 HP instead of 10 HP
+- Multiplier of 8 (down from 10) reduces scaling at high levels
+- High-level robots (hull=50) now have 430 HP instead of 500 HP, reducing dominance
+- Mid-level robots (hull=10-25) see modest increases of 10-20 HP
+
 **Recommended HP Progression:**
-- New robot (all attributes at 1): 10 HP
-- After first ₡350K upgrades: ~100-150 HP
+- New robot (all attributes at 1): 38 HP (was 10 HP)
+- After first ₡350K upgrades: ~110-150 HP
 - Mid-game robot: 200-300 HP
-- End-game robot: 400-600 HP
+- End-game robot: 400-500 HP (reduced from 600 HP cap)
 
 **Energy Shield HP (separate pool):**
 ```

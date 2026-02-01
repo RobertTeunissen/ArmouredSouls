@@ -159,10 +159,14 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       });
 
       // Create robot with all attributes at level 1 (defaults in schema)
-      // Initialize HP and Shield based on formulas: maxHP = hullIntegrity × 10, maxShield = shieldCapacity × 2
+      // Initialize HP and Shield based on NEW formulas: 
+      // maxHP = 30 + (hullIntegrity × 8), maxShield = shieldCapacity × 2
       const hullIntegrity = 1; // Default level
       const shieldCapacity = 1; // Default level
-      const maxHP = hullIntegrity * 10;
+      
+      // Calculate initial HP using the new formula
+      // For hull=1: 30 + (1 × 8) = 38 HP
+      const maxHP = 30 + (hullIntegrity * 8);
       const maxShield = shieldCapacity * 2;
       
       const robot = await tx.robot.create({
@@ -392,6 +396,44 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
           },
         },
       });
+
+      // If hullIntegrity or shieldCapacity was upgraded, recalculate maxHP/maxShield
+      if (attribute === 'hullIntegrity' || attribute === 'shieldCapacity') {
+        const maxHP = calculateMaxHP(updatedRobot);
+        const maxShield = calculateMaxShield(updatedRobot);
+
+        // Calculate current HP/Shield proportionally to maintain same percentage
+        const hpPercentage = robot.maxHP > 0 ? robot.currentHP / robot.maxHP : 1;
+        const shieldPercentage = robot.maxShield > 0 ? robot.currentShield / robot.maxShield : 1;
+
+        const newCurrentHP = Math.round(maxHP * hpPercentage);
+        const newCurrentShield = Math.round(maxShield * shieldPercentage);
+
+        // Update robot with new HP/Shield values
+        const finalRobot = await tx.robot.update({
+          where: { id: robotId },
+          data: {
+            maxHP,
+            maxShield,
+            currentHP: Math.min(newCurrentHP, maxHP),
+            currentShield: Math.min(newCurrentShield, maxShield),
+          },
+          include: {
+            mainWeapon: {
+              include: {
+                weapon: true,
+              },
+            },
+            offhandWeapon: {
+              include: {
+                weapon: true,
+              },
+            },
+          },
+        });
+
+        return { user: updatedUser, robot: finalRobot };
+      }
 
       return { user: updatedUser, robot: updatedRobot };
     });

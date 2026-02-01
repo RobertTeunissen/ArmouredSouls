@@ -108,7 +108,7 @@ model Robot {
   counterProtocols    Int  @default(1)          // Counter-attack chance
   
   // Chassis & Mobility (5 attributes)
-  hullIntegrity       Int  @default(1)          // Max HP (×10 formula)
+  hullIntegrity       Int  @default(1)          // Max HP (30 + hull × 8 formula)
   servoMotors         Int  @default(1)          // Movement speed, positioning
   gyroStabilizers     Int  @default(1)          // Balance, reaction time
   hydraulicSystems    Int  @default(1)          // Melee damage bonus, force
@@ -126,8 +126,8 @@ model Robot {
   formationTactics    Int  @default(1)          // Formation bonuses
   
   // ===== COMBAT STATE =====
-  currentHP           Int                       // Current health (max = hullIntegrity × 10)
-  maxHP               Int                       // Max HP (calculated: hullIntegrity × 10)
+  currentHP           Int                       // Current health (max = 30 + hullIntegrity × 8)
+  maxHP               Int                       // Max HP (calculated: 30 + hullIntegrity × 8)
   currentShield       Int                       // Current energy shield HP
   maxShield           Int                       // Max shield (calculated: shieldCapacity × 2)
   damageTaken         Int  @default(0)          // Damage since last repair
@@ -196,7 +196,7 @@ Example: Level 1→2 = ₡2,000, Level 49→50 = ₡50,000
 
 **HP Calculation**:
 ```
-maxHP = hullIntegrity × 10
+maxHP = 30 + (hullIntegrity × 8)
 maxShield = shieldCapacity × 2
 ```
 
