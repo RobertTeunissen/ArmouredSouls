@@ -1,6 +1,6 @@
 # Product Requirements Document: Login Page Design Alignment
 
-**Last Updated**: February 1, 2026  
+**Last Updated**: February 1, 2026 (Revised)  
 **Status**: Ready for Implementation  
 **Owner**: Robert Teunissen  
 **Epic**: Design System Implementation - Infrastructure Pages  
@@ -32,7 +32,6 @@ This PRD defines the requirements for updating the Login page (`/login`) to alig
 - ✅ Functional login page at `/login`
 - ✅ Username/password authentication
 - ✅ Error handling and loading states
-- ✅ Test account information display
 - ✅ Basic dark theme styling
 - ✅ Responsive layout
 
@@ -50,7 +49,6 @@ This PRD defines the requirements for updating the Login page (`/login`) to alig
 - ✅ Clean, minimal layout approach
 - ✅ Center-aligned, single-column design
 - ✅ Clear form structure
-- ✅ Helpful test account information
 
 ### Design References
 
@@ -125,12 +123,6 @@ This PRD defines the requirements for updating the Login page (`/login`) to alig
 │  │  [___________________________________]    │   │
 │  │                                            │   │
 │  │  [        Login Button        ]           │   │
-│  │                                            │   │
-│  │  ──────────────────────────────────       │   │
-│  │                                            │   │
-│  │  Test Accounts:                            │   │
-│  │  • admin / admin123                        │   │
-│  │  • player1 / password123                   │   │
 │  │                                            │   │
 │  └────────────────────────────────────────────┘   │
 │                                                      │
@@ -390,26 +382,140 @@ className="w-full bg-primary hover:bg-primary-light active:bg-primary-dark
 
 ---
 
-### 11. Test Accounts Section
+## Image Assets & Requirements
 
-**Requirements**:
-- **Border Top**: 1px solid tertiary (#57606a) with 20% opacity
-- **Padding Top**: 24px
-- **Margin Top**: 24px
-- **Title**: "Test Accounts:" (text-sm, secondary color)
-- **List Items**: Text-sm, tertiary color (#57606a)
-- **Spacing**: 4px between items
+This section clearly defines all visual assets that need to be created for the login page implementation.
 
-**Tailwind Classes**:
-```jsx
-<div className="mt-6 pt-6 border-t border-tertiary/20">
-  <p className="text-sm text-secondary font-medium">Test Accounts:</p>
-  <ul className="text-sm text-tertiary mt-2 space-y-1">
-    <li>• admin / admin123</li>
-    <li>• player1 / password123</li>
-  </ul>
-</div>
+### Required Assets
+
+#### 1. Direction D Logo (PRIMARY ASSET - CRITICAL)
+
+**File Name**: `logo-d.svg`  
+**Location**: `prototype/frontend/src/assets/logos/logo-d.svg`  
+**Format**: SVG (vector, scalable)  
+**Dimensions**: 64×64px minimum, 80×80px recommended (design at 128×128px for flexibility)
+
+**Visual Description**:
+- **Type**: Minimal icon/monogram derived from Direction B logo geometry
+- **Style**: Flat or near-flat rendering (no gradients, minimal shadows)
+- **Color**: Single color - light on dark (#e6edf3 on dark background)
+- **Characteristics**:
+  - Reduced mark or monogram (not full wordmark)
+  - High contrast against dark background
+  - Texture-independent (works at any size)
+  - Geometric, angular forms (industrial precision aesthetic)
+  - Contained within square bounds
+  - Clean, professional appearance
+- **Inspiration**: Think minimal tech company logos (Stripe, Linear, Notion icons)
+- **NOT**: Anime-style, playful, organic shapes, or overly detailed
+
+**Design Guidelines** (from brand documentation):
+- Geometry should be derived from Direction B (the precision/engineering logo)
+- Represents: Confidence, professionalism, maturity, establishment
+- Message: "You are entering an established system"
+- Should feel calm, not exciting or urgent
+
+**Technical Requirements**:
+- SVG with viewBox="0 0 128 128" (or similar square)
+- Single path or simple paths
+- No embedded raster images
+- Optimized file size (<10KB)
+- Proper accessibility: `<title>` and `<desc>` tags in SVG
+
+**Usage Context**: 
+- Displayed at top center of login page, above "ARMOURED SOULS" wordmark
+- No animation except initial fade-in on page load
+- Static once loaded (no pulsing, glowing, or rotation)
+
+---
+
+#### 2. Background Pattern/Texture (OPTIONAL - ENHANCEMENT)
+
+**File Name**: `login-background-pattern.svg` OR implemented via CSS  
+**Location**: `prototype/frontend/src/assets/patterns/` (if SVG) or inline CSS  
+**Format**: SVG pattern or CSS gradient  
+
+**Visual Description**:
+- **Type**: Subtle tech grid, circuit board pattern, or radial gradient
+- **Style**: Very low contrast, non-intrusive
+- **Color**: 
+  - Base: #0a0e14 (deep space black)
+  - Pattern: Slightly lighter (#0f1419) at 10-20% opacity
+- **Characteristics**:
+  - Barely visible, almost subliminal
+  - Should NOT distract from form content
+  - Tech-inspired (grid lines, subtle geometric patterns)
+  - Can be tiled SVG pattern or CSS-based
+
+**Options**:
+
+**Option A - CSS Radial Gradient** (simplest, no asset needed):
+```css
+background: radial-gradient(circle at center, #0a0e14 0%, #000000 100%);
 ```
+
+**Option B - Subtle Grid Pattern** (SVG asset):
+- Thin grid lines (1px, #0f1419 at 15% opacity)
+- Grid spacing: 40-60px
+- Seamlessly tileable
+- File size: <5KB
+
+**Option C - Circuit Board Motif** (SVG asset):
+- Minimal circuit traces/nodes
+- Very subtle, background-only
+- Should not resemble actual circuitry (abstract geometric only)
+- File size: <10KB
+
+**Recommendation**: Start with Option A (CSS gradient) for MVP, consider SVG pattern in future polish phase.
+
+**Usage Context**:
+- Full-screen background behind login form
+- Fixed position, no scrolling parallax
+- Should enhance professional feeling without being noticeable
+
+---
+
+### Asset Creation Checklist
+
+**For Designer/Asset Creator**:
+
+- [ ] **Direction D Logo SVG** (REQUIRED)
+  - [ ] Design at 128×128px artboard
+  - [ ] Export as optimized SVG
+  - [ ] Single color: #e6edf3
+  - [ ] Test at 64px, 80px, and 128px sizes
+  - [ ] Ensure crisp rendering at all sizes
+  - [ ] Add proper SVG metadata (title, description)
+  
+- [ ] **Background Pattern** (OPTIONAL)
+  - [ ] Decide on approach: CSS gradient vs SVG pattern
+  - [ ] If SVG: Create tileable pattern at 128×128px tile
+  - [ ] Test at full-screen scale (1920×1080)
+  - [ ] Verify subtle appearance (should be barely visible)
+
+**For Developer Implementation**:
+
+- [ ] Place logo SVG in `prototype/frontend/src/assets/logos/`
+- [ ] Import logo in `LoginPage.tsx`
+- [ ] Implement with proper alt text and accessibility
+- [ ] Apply CSS gradient background (or integrate SVG pattern)
+- [ ] Test logo at different screen densities (1x, 2x, 3x)
+- [ ] Verify logo renders correctly in all supported browsers
+
+---
+
+### Visual Reference Examples
+
+**Direction D Logo Character**:
+- Similar to: Monogram logos like Stripe's icon, Notion's checkmark, Linear's triangle
+- NOT like: Detailed mascots, illustrated characters, or complex badges
+- Geometric simplicity is key
+- Should work as favicon, app icon, loading indicator
+
+**Background Subtlety**:
+- Similar to: VSCode login screen background, Figma's subtle patterns
+- NOT like: Busy wallpapers, high-contrast patterns, animated backgrounds
+- "Barely there" is the goal - should not compete with form for attention
 
 ---
 
@@ -707,7 +813,6 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', '
 - [ ] Update input field styling (colors, focus states)
 - [ ] Update button styling (primary accent color, hover states)
 - [ ] Update error message styling
-- [ ] Update test accounts section styling
 
 ### Phase 2: Motion & Interaction
 
