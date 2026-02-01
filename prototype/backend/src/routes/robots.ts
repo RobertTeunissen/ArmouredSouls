@@ -159,10 +159,14 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       });
 
       // Create robot with all attributes at level 1 (defaults in schema)
-      // Initialize HP and Shield based on formulas: maxHP = hullIntegrity × 10, maxShield = shieldCapacity × 2
+      // Initialize HP and Shield based on NEW formulas: 
+      // maxHP = 30 + (hullIntegrity × 8), maxShield = shieldCapacity × 2
       const hullIntegrity = 1; // Default level
       const shieldCapacity = 1; // Default level
-      const maxHP = hullIntegrity * 10;
+      
+      // Calculate initial HP using the new formula
+      // For hull=1: 30 + (1 × 8) = 38 HP
+      const maxHP = 30 + (hullIntegrity * 8);
       const maxShield = shieldCapacity * 2;
       
       const robot = await tx.robot.create({

@@ -555,7 +555,7 @@ function RobotDetailPage() {
                     </span>
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    Max HP = Hull Integrity × 10
+                    Max HP = 30 + (Hull Integrity × 8)
                   </div>
                 </div>
                 <div>
