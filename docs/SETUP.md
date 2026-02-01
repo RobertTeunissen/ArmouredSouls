@@ -439,7 +439,7 @@ npm run build  # Builds to dist/
 
 ## 🐛 Troubleshooting
 
-> **📘 For installation issues, Prisma errors, and common problems, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)**
+**This section covers common installation issues, Prisma errors, and database problems.**
 
 ### 🔧 Migration Conflicts (IMPORTANT!)
 
