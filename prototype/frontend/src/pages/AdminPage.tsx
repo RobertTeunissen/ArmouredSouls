@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '../components/Navigation';
+import BattleDetailsModal from '../components/BattleDetailsModal';
 import axios from 'axios';
 
 interface SystemStats {
@@ -19,6 +20,34 @@ interface SystemStats {
   };
 }
 
+interface Battle {
+  id: number;
+  robot1: { id: number; name: string };
+  robot2: { id: number; name: string };
+  winnerId: number | null;
+  winnerName: string;
+  leagueType: string;
+  durationSeconds: number;
+  robot1FinalHP: number;
+  robot2FinalHP: number;
+  robot1ELOBefore: number;
+  robot2ELOBefore: number;
+  robot1ELOAfter: number;
+  robot2ELOAfter: number;
+  createdAt: string;
+}
+
+interface BattleListResponse {
+  battles: Battle[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalBattles: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+}
+
 function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -26,6 +55,16 @@ function AdminPage() {
   const [bulkCycles, setBulkCycles] = useState(1);
   const [autoRepair, setAutoRepair] = useState(true);
   const [bulkResults, setBulkResults] = useState<any>(null);
+  
+  // Battle log state
+  const [battles, setBattles] = useState<Battle[]>([]);
+  const [battlesPagination, setBattlesPagination] = useState<any>(null);
+  const [battlesLoading, setBattlesLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [leagueFilter, setLeagueFilter] = useState('all');
+  const [selectedBattleId, setSelectedBattleId] = useState<number | null>(null);
+  const [showBattleModal, setShowBattleModal] = useState(false);
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -132,6 +171,39 @@ function AdminPage() {
       setLoading(false);
     }
   };
+
+  const fetchBattles = async (page: number = 1) => {
+    setBattlesLoading(true);
+    try {
+      const params: any = { page, limit: 20 };
+      if (searchQuery) params.search = searchQuery;
+      if (leagueFilter !== 'all') params.leagueType = leagueFilter;
+
+      const response = await axios.get<BattleListResponse>('/api/admin/battles', { params });
+      setBattles(response.data.battles);
+      setBattlesPagination(response.data.pagination);
+      setCurrentPage(page);
+    } catch (error: any) {
+      showMessage('error', error.response?.data?.error || 'Failed to fetch battles');
+    } finally {
+      setBattlesLoading(false);
+    }
+  };
+
+  const handleViewBattle = (battleId: number) => {
+    setSelectedBattleId(battleId);
+    setShowBattleModal(true);
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchBattles(1);
+  };
+
+  // Auto-load battles when component mounts
+  useEffect(() => {
+    fetchBattles(1);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -292,6 +364,175 @@ function AdminPage() {
             </div>
           )}
         </div>
+
+        {/* Battle Logs Section */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Battle Logs & Debugging</h2>
+            <button
+              onClick={() => fetchBattles(1)}
+              disabled={battlesLoading}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors text-sm"
+            >
+              {battlesLoading ? 'Loading...' : 'Refresh Battles'}
+            </button>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="mb-4 flex gap-4 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
+              <input
+                type="text"
+                placeholder="Search by robot name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full bg-gray-700 text-white px-4 py-2 rounded"
+              />
+            </div>
+            <select
+              value={leagueFilter}
+              onChange={(e) => setLeagueFilter(e.target.value)}
+              className="bg-gray-700 text-white px-4 py-2 rounded"
+            >
+              <option value="all">All Leagues</option>
+              <option value="bronze">Bronze</option>
+              <option value="silver">Silver</option>
+              <option value="gold">Gold</option>
+              <option value="platinum">Platinum</option>
+              <option value="diamond">Diamond</option>
+              <option value="champion">Champion</option>
+            </select>
+            <button
+              onClick={handleSearch}
+              disabled={battlesLoading}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+            >
+              Search
+            </button>
+          </div>
+
+          {/* Battle Table */}
+          {battles.length > 0 ? (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-700">
+                    <tr>
+                      <th className="p-3 text-left">ID</th>
+                      <th className="p-3 text-left">Robot 1</th>
+                      <th className="p-3 text-left">Robot 2</th>
+                      <th className="p-3 text-left">Winner</th>
+                      <th className="p-3 text-left">League</th>
+                      <th className="p-3 text-left">Duration</th>
+                      <th className="p-3 text-left">Date</th>
+                      <th className="p-3 text-left">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {battles.map((battle) => (
+                      <tr key={battle.id} className="border-t border-gray-700 hover:bg-gray-750">
+                        <td className="p-3">#{battle.id}</td>
+                        <td className="p-3">
+                          <div className="text-blue-400">{battle.robot1.name}</div>
+                          <div className="text-xs text-gray-400">
+                            HP: {battle.robot1FinalHP} | ELO: {battle.robot1ELOBefore} → {battle.robot1ELOAfter}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="text-purple-400">{battle.robot2.name}</div>
+                          <div className="text-xs text-gray-400">
+                            HP: {battle.robot2FinalHP} | ELO: {battle.robot2ELOBefore} → {battle.robot2ELOAfter}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={
+                              battle.winnerId === battle.robot1.id
+                                ? 'text-blue-400'
+                                : battle.winnerId === battle.robot2.id
+                                ? 'text-purple-400'
+                                : 'text-gray-400'
+                            }
+                          >
+                            {battle.winnerName === 'Draw' ? '⚖️ ' : '🏆 '}
+                            {battle.winnerName}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-1 bg-gray-700 rounded text-xs">
+                            {battle.leagueType}
+                          </span>
+                        </td>
+                        <td className="p-3">{battle.durationSeconds}s</td>
+                        <td className="p-3 text-xs text-gray-400">
+                          {new Date(battle.createdAt).toLocaleString()}
+                        </td>
+                        <td className="p-3">
+                          <button
+                            onClick={() => handleViewBattle(battle.id)}
+                            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold"
+                          >
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {battlesPagination && (
+                <div className="mt-4 flex justify-between items-center">
+                  <div className="text-sm text-gray-400">
+                    Showing {battles.length} of {battlesPagination.totalBattles} battles
+                    (Page {battlesPagination.page} of {battlesPagination.totalPages})
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => fetchBattles(currentPage - 1)}
+                      disabled={currentPage === 1 || battlesLoading}
+                      className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 px-4 py-2 rounded font-semibold transition-colors"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => fetchBattles(currentPage + 1)}
+                      disabled={!battlesPagination.hasMore || battlesLoading}
+                      className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 px-4 py-2 rounded font-semibold transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              {battlesLoading ? (
+                <div>Loading battles...</div>
+              ) : (
+                <div>
+                  <p className="mb-2">No battles found.</p>
+                  <button
+                    onClick={() => fetchBattles(1)}
+                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold"
+                  >
+                    Load Battles
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Battle Details Modal */}
+        <BattleDetailsModal
+          isOpen={showBattleModal}
+          onClose={() => setShowBattleModal(false)}
+          battleId={selectedBattleId}
+        />
       </div>
     </div>
   );
