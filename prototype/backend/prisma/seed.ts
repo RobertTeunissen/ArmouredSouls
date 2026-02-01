@@ -65,6 +65,16 @@ function generateRobotName(index: number): string {
 async function main() {
   console.log('🌱 Seeding database with COMPLETE future-state schema...');
 
+  // Clean up existing data (allows seed to be run multiple times)
+  console.log('🧹 Cleaning up existing data...');
+  await prisma.battle.deleteMany();
+  await prisma.robot.deleteMany();
+  await prisma.weapon.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.leagueInstance.deleteMany();
+  await prisma.league.deleteMany();
+  console.log('✅ Existing data cleaned up\n');
+
   // Create weapons with ALL specifications from DATABASE_SCHEMA_FUTURE_STATE.md
   console.log('Creating weapons...');
   
