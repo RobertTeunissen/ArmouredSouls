@@ -26,9 +26,8 @@ See [../docs/SETUP.md](../docs/SETUP.md) for:
 - Initial setup steps
 - Testing new versions
 - Database reset instructions
+- Troubleshooting
 - VS Code tips
-
-**Having installation issues?** → [TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -51,13 +50,6 @@ prototype/
 **Backend**: Express, Prisma, PostgreSQL, TypeScript, JWT auth  
 **Frontend**: React, Vite, Tailwind CSS, React Router  
 **Database**: PostgreSQL 16 in Docker
-
-## 🎮 Test Accounts
-
-| Username | Password | Credits |
-|----------|----------|---------|
-| player1 | password123 | ₡2,000,000 |
-| admin | admin123 | ₡10,000,000 |
 
 ---
 

@@ -34,9 +34,9 @@ npm run dev  # Terminal 2
 Open http://localhost:3000 - Login with `player1` / `password123`
 
 📖 **For testing new versions and database reset:** See [SETUP.md](docs/SETUP.md)
-🔧 **Having installation issues?** → [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+🔧 **Having installation issues?** → See the "🐛 Troubleshooting" section in [SETUP.md](docs/SETUP.md)
 
-⚠️ **If `prisma generate` fails**: Your local `schema.prisma` may be corrupted. Run: `git restore prototype/backend/prisma/schema.prisma` then try again. See [troubleshooting guide](docs/TROUBLESHOOTING.md) for details.
+⚠️ **If `prisma generate` fails**: Your local `schema.prisma` may be corrupted. Run: `git restore prototype/backend/prisma/schema.prisma` then try again. See the troubleshooting section in [SETUP.md](docs/SETUP.md) for details.
 
 ## 🎮 Project Vision
 
@@ -59,14 +59,13 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 ## 📚 Documentation
 
 ### Getting Started
-- [**Setup Guide**](docs/SETUP.md) - Get the Phase 1 prototype running locally
-- [**Troubleshooting**](docs/TROUBLESHOOTING.md) - Fix installation and database issues
+- [**Setup Guide**](docs/SETUP.md) - Complete setup, quick testing reference, and troubleshooting
 - [**Robot Attributes System**](docs/ROBOT_ATTRIBUTES.md) - Complete attribute system, currency, weapons, and economy
 
 ### Testing & Admin Access
-- [**⚡ Quick Start Testing**](docs/QUICK_START_TESTING.md) - Ultra-quick testing reference ⭐ START HERE
 - [**Testing Guide**](docs/MATCHMAKING_TESTING_GUIDE.md) - Complete testing instructions with admin access
 - **Admin Login**: Username `admin`, Password `admin123`
+- **Quick Testing**: See the "Quick Testing Reference" section in [SETUP.md](docs/SETUP.md)
 
 ### Matchmaking System
 - [**System Guide**](docs/MATCHMAKING_SYSTEM_GUIDE.md) - Complete matchmaking documentation

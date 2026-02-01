@@ -1,6 +1,6 @@
 # Armoured Souls - Setup Guide
 
-**Last Updated**: January 27, 2026  
+**Last Updated**: February 1, 2026  
 **Platform**: VS Code on macOS (also works on Windows/Linux)
 
 Complete setup guide for running the Phase 1 prototype locally, including database reset instructions for testing new versions.
@@ -11,7 +11,7 @@ Complete setup guide for running the Phase 1 prototype locally, including databa
 
 **If you're seeing errors like**: `Migration '20260127122708_prototype2' failed to apply` or `relation "robots" does not exist`
 
-**YOU HAVE STALE LOCAL MIGRATIONS!** The repository now has only ONE comprehensive migration, but your local folder still has old deleted migrations.
+**YOU HAVE STALE LOCAL MIGRATIONS!** Your local folder still has old (deleted) migrations.
 
 ### Check If You Have This Issue
 
@@ -19,9 +19,6 @@ Complete setup guide for running the Phase 1 prototype locally, including databa
 cd ArmouredSouls/prototype/backend
 ls prisma/migrations/
 ```
-
-If you see **anything other than** `20260127201247_complete_future_state_schema`, follow these steps:
-
 ### Fix Steps (Do This Before Anything Else!)
 
 ```bash
@@ -37,6 +34,22 @@ git checkout origin/copilot/start-phase-1-milestones -- prisma/migrations
 # 4. Verify you now have ONLY ONE migration
 ls prisma/migrations/
 # Should show ONLY: 20260127201247_complete_future_state_schema
+
+--> This is outdated. As of Feb 1, 2026, there are 5 migrations:
+
+```
+migrations/
+  └─ 20260127201247_complete_future_state_schema/
+    └─ migration.sql
+  └─ 20260130072527_add_stance_yield/
+    └─ migration.sql
+  └─ 20260130093500_decimal_robot_attributes/
+    └─ migration.sql
+  └─ 20260130153010_add_matchmaking_schema/
+    └─ migration.sql
+  └─ 20260201144700_add_draws_field/
+    └─ migration.sql
+```
 
 # 5. Now drop database and start fresh
 cd ..  # Back to prototype folder
@@ -55,6 +68,114 @@ npm run dev
 ```
 
 **Why This Happens**: Git pull doesn't automatically delete local files that were removed from the repository. You must manually delete old migrations and checkout fresh ones from git.
+
+---
+
+## ⚡ Quick Testing Reference
+
+**For detailed setup instructions, see the sections below. This section provides quick commands for testing the matchmaking system.**
+
+### 🔐 Admin Access
+
+**Frontend UI:**
+- URL: http://localhost:3000/login
+- Username: `admin`
+- Password: `admin123`
+
+**API Token (for curl commands):**
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin123"}' | \
+  jq -r '.token')
+
+echo $TOKEN
+```
+
+### ⚡ Quick Test Commands 
+
+**View Database State:**
+```bash
+cd prototype/backend
+node scripts/showDatabaseSummary.js
+```
+
+**Run Complete Cycle:**
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin123"}' | jq -r '.token')
+
+curl -X POST http://localhost:3001/api/admin/cycles/bulk \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"cycles": 1, "autoRepair": true}' | jq '.'
+```
+
+**Run 10 Cycles:**
+```bash
+curl -X POST http://localhost:3001/api/admin/cycles/bulk \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"cycles": 10, "autoRepair": true}' | jq '.'
+```
+
+### 📊 Admin API Quick Reference
+
+```bash
+# Get system stats
+curl http://localhost:3001/api/admin/stats \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Run matchmaking
+curl -X POST http://localhost:3001/api/admin/matchmaking/run \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Execute battles
+curl -X POST http://localhost:3001/api/admin/battles/run \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Rebalance leagues
+curl -X POST http://localhost:3001/api/admin/leagues/rebalance \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Repair all robots
+curl -X POST http://localhost:3001/api/admin/repair/all \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"deductCosts": false}' | jq '.'
+```
+
+### 🧪 Testing Scripts
+
+```bash
+cd prototype/backend
+
+# View database
+node scripts/showDatabaseSummary.js
+
+# Test matchmaking
+node scripts/testMatchmakingSimple.js
+
+# Test battles
+node scripts/testBattleExecution.js
+
+# Test rebalancing
+node scripts/testLeagueRebalancing.js
+
+# Test admin API
+node scripts/testAdminAPI.js
+```
+
+### 👥 Test Accounts Reference
+
+| Type | Username | Password | Role | Credits |
+|------|----------|----------|------|---------|
+| Admin | `admin` | `admin123` | admin | ₡10,000,000 |
+| Player 1-5 | `player1`-`player5` | `password123` | user | ₡2,000,000 |
+| Test Users | `test_user_001`-`test_user_100` | `testpass123` | user | ₡2,000,000 |
+
+--> This is not complete!
 
 ---
 
@@ -136,13 +257,6 @@ cd prototype/frontend
 npm run dev
 ```
 ✅ Should show: `➜ Local: http://localhost:3000/`
-
-### Access the Application
-Open browser to: **http://localhost:3000**
-
-Test accounts:
-- `player1` / `password123` (₡2,000,000)
-- `admin` / `admin123` (₡10,000,000)
 
 ---
 
@@ -308,7 +422,7 @@ npm run build  # Builds to dist/
 
 ## 🐛 Troubleshooting
 
-> **📘 For installation issues, Prisma errors, and common problems, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)**
+**This section covers common installation issues, Prisma errors, and database problems.**
 
 ### 🔧 Migration Conflicts (IMPORTANT!)
 
@@ -593,12 +707,11 @@ npm run dev
 ## 📊 Seed Data Reference
 
 ### Test Users
-| Username | Password | Role | Starting Credits |
-|----------|----------|------|------------------|
-| admin | admin123 | admin | ₡10,000,000 |
-| player1 | password123 | user | ₡2,000,000 |
-| player2 | password123 | user | ₡2,000,000 |
-| player3-5 | password123 | user | ₡2,000,000 each |
+| Type | Username | Password | Role | Starting Credits |
+|------|----------|----------|------|------------------|
+| Admin | admin | admin123 | admin | ₡10,000,000 |
+| Player 1-5 | player1-player5 | password123 | user | ₡2,000,000 |
+| Test Users | test_user_001-test_user_100 | testpass123 | user | ₡2,000,000 |
 
 ### Weapons (10 Total)
 - **Energy**: Laser Rifle (₡150k), Plasma Cannon (₡300k), Ion Beam (₡400k)
@@ -610,6 +723,8 @@ npm run dev
 - Robot frame: ₡500,000
 - Attribute upgrade: (level + 1) × 1,000 Credits
 - 23 attributes per robot (Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination)
+
+--> Old seed data, not up to date!
 
 ---
 
@@ -656,14 +771,14 @@ cd backend && npx prisma migrate reset --force
 
 **Check everything is running:**
 ```bash
-docker ps                    # Database should be running
+docker ps                              # Database should be running
 curl http://localhost:3001/api/health  # Backend check
-open http://localhost:3000   # Frontend (opens browser)
+open http://localhost:3000             # Frontend (opens browser)
 ```
 
 **View logs:**
 ```bash
-docker compose logs -f       # Database logs
+docker compose logs -f                 # Database logs
 # Backend/frontend logs are in the terminals
 ```
 
