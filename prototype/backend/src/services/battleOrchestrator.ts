@@ -1,5 +1,6 @@
 import { PrismaClient, Robot, ScheduledMatch, Battle } from '@prisma/client';
 import { CombatMessageGenerator } from './combatMessageGenerator';
+import { simulateBattle } from './combatSimulator';
 
 const prisma = new PrismaClient();
 
@@ -40,6 +41,7 @@ export interface BattleResult {
   durationSeconds: number;
   isDraw: boolean;
   isByeMatch: boolean;
+  combatEvents?: any[]; // Detailed combat events for admin debugging
 }
 
 export interface BattleExecutionSummary {
@@ -82,43 +84,23 @@ export function calculateELOChange(
 }
 
 /**
- * Simulate a simple battle between two robots
- * This is a simplified deterministic simulation for Phase 1
+ * Simulate a battle using the comprehensive combat simulator
+ * Uses ALL 23 robot attributes - ELO is NOT used in combat calculations
  */
-function simulateBattle(robot1: Robot, robot2: Robot): BattleResult {
-  // Simple simulation based on ELO and attributes
-  const eloDiff = robot1.elo - robot2.elo;
-  const combatPowerDiff = Number(robot1.combatPower) - Number(robot2.combatPower);
-  
-  // Calculate win probability (higher ELO = better chance)
-  const robot1Advantage = eloDiff / 400 + combatPowerDiff;
-  const robot1WinChance = 0.5 + (robot1Advantage * 0.1); // Clamp between reasonable values
-  
-  // Determine winner (deterministic based on stats)
-  const robot1Wins = robot1WinChance > 0.5;
-  const winnerId = robot1Wins ? robot1.id : robot2.id;
-  
-  // Calculate damage dealt (loser takes more damage)
-  const baseDamage = 30; // Base damage percentage
-  const robot1DamageTaken = robot1Wins ? Math.floor(robot1.maxHP * WINNER_DAMAGE_PERCENT) : Math.floor(robot1.maxHP * LOSER_DAMAGE_PERCENT);
-  const robot2DamageTaken = robot1Wins ? Math.floor(robot2.maxHP * LOSER_DAMAGE_PERCENT) : Math.floor(robot2.maxHP * WINNER_DAMAGE_PERCENT);
-  
-  const robot1FinalHP = Math.max(0, robot1.currentHP - robot1DamageTaken);
-  const robot2FinalHP = Math.max(0, robot2.currentHP - robot2DamageTaken);
-  
-  // Battle duration (random between MIN_BATTLE_DURATION and MIN_BATTLE_DURATION + BATTLE_DURATION_VARIANCE seconds)
-  const durationSeconds = MIN_BATTLE_DURATION + Math.floor(Math.random() * BATTLE_DURATION_VARIANCE);
+function simulateBattleWrapper(robot1: Robot, robot2: Robot): BattleResult {
+  const combatResult = simulateBattle(robot1, robot2);
   
   return {
     battleId: 0, // Will be set after creating battle record
-    winnerId,
-    robot1FinalHP,
-    robot2FinalHP,
-    robot1Damage: robot1DamageTaken,
-    robot2Damage: robot2DamageTaken,
-    durationSeconds,
-    isDraw: false,
+    winnerId: combatResult.winnerId,
+    robot1FinalHP: combatResult.robot1FinalHP,
+    robot2FinalHP: combatResult.robot2FinalHP,
+    robot1Damage: combatResult.robot1Damage,
+    robot2Damage: combatResult.robot2Damage,
+    durationSeconds: combatResult.durationSeconds,
+    isDraw: combatResult.isDraw,
     isByeMatch: false,
+    combatEvents: combatResult.events, // Store detailed combat events for debugging
   };
 }
 
@@ -209,10 +191,11 @@ async function createBattleRecord(
       battleType: 'league', // Phase 1 only has league battles
       leagueType: scheduledMatch.leagueType,
       
-      // Battle log with combat messages
+      // Battle log with combat messages AND detailed combat events for admin debugging
       battleLog: {
         events: battleLog,
-        isByeMatch: result.isByeMatch
+        isByeMatch: result.isByeMatch,
+        detailedCombatEvents: result.combatEvents || [], // Admin debugging: formula breakdowns, attribute usage
       },
       durationSeconds: result.durationSeconds,
       
@@ -335,7 +318,7 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
       result.robot2Damage = tempDamage;
     }
   } else {
-    result = simulateBattle(robot1, robot2);
+    result = simulateBattleWrapper(robot1, robot2);
   }
   
   // Create battle record
