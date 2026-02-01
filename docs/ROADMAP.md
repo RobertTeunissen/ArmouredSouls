@@ -100,10 +100,11 @@ Phase 1 is in progress with major core systems implemented. The prototype includ
   13. **Booking Office**: Placeholder for tournament management
   14. **Income Generator**: Placeholder for passive credit generation
  
+Note: the overview above is not up to date, more facilities are actually working. Still under review. Will be reviewed together with the UX overhaul of the Facilities page.
+ 
 **Note**: Some facility functionalities have been updated and may need documentation review in other files.
 
 - ✅ Each facility: 10 upgrade levels with progressive costs (except Roster Expansion which has 9 levels) 
-
 - ✅ Facility upgrade UI with costs and benefits displayed
 - ✅ Discount calculations working correctly in backend and frontend
 - ✅ Attribute caps enforced by Training Academy facilities
@@ -399,15 +400,16 @@ Phase 1 is in progress with major core systems implemented. The prototype includ
 
 Based on the issue requirements, the following activities remain to complete Phase 1:
 
-### 📋 Document Review (IN PROGRESS - This Issue)
+### 📋 Document Review (IN PROGRESS)
 - [ ] Review all 65+ documentation files for consistency
 - [ ] Ensure all technical decisions are documented
-- [ ] Update ROADMAP.md with achievements (this PR)
+- ✅ Update ROADMAP.md with achievements
 - [ ] Verify cross-references between documents
 - [ ] Check that all features have corresponding documentation
 
-### 🎨 UX/Design Overhaul (NOT STARTED)
+### 🎨 UX/Design Overhaul (IN PROGRESS)
 - [ ] Create comprehensive PRDs for all pages
+- ✅ Login Page
 - [ ] Design consistent visual language across all pages
 - [ ] Restructure /docs/ux_design/ directory
 - [ ] Implement new designs for all pages (currently only /login is redesigned)
