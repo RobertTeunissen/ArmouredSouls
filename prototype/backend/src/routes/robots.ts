@@ -397,6 +397,44 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
         },
       });
 
+      // If hullIntegrity or shieldCapacity was upgraded, recalculate maxHP/maxShield
+      if (attribute === 'hullIntegrity' || attribute === 'shieldCapacity') {
+        const maxHP = calculateMaxHP(updatedRobot);
+        const maxShield = calculateMaxShield(updatedRobot);
+
+        // Calculate current HP/Shield proportionally to maintain same percentage
+        const hpPercentage = robot.maxHP > 0 ? robot.currentHP / robot.maxHP : 1;
+        const shieldPercentage = robot.maxShield > 0 ? robot.currentShield / robot.maxShield : 1;
+
+        const newCurrentHP = Math.round(maxHP * hpPercentage);
+        const newCurrentShield = Math.round(maxShield * shieldPercentage);
+
+        // Update robot with new HP/Shield values
+        const finalRobot = await tx.robot.update({
+          where: { id: robotId },
+          data: {
+            maxHP,
+            maxShield,
+            currentHP: Math.min(newCurrentHP, maxHP),
+            currentShield: Math.min(newCurrentShield, maxShield),
+          },
+          include: {
+            mainWeapon: {
+              include: {
+                weapon: true,
+              },
+            },
+            offhandWeapon: {
+              include: {
+                weapon: true,
+              },
+            },
+          },
+        });
+
+        return { user: updatedUser, robot: finalRobot };
+      }
+
       return { user: updatedUser, robot: updatedRobot };
     });
 
