@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '../components/Navigation';
 import BattleDetailsModal from '../components/BattleDetailsModal';
 import axios from 'axios';
@@ -199,6 +199,11 @@ function AdminPage() {
     setCurrentPage(1);
     fetchBattles(1);
   };
+
+  // Auto-load battles when component mounts
+  useEffect(() => {
+    fetchBattles(1);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
