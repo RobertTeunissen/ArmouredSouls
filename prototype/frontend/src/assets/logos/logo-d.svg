@@ -1,0 +1,13 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Armoured Souls</title>
+  <desc>Direction D logo - Minimal icon representing the Armoured Souls brand</desc>
+  
+  <!-- Geometric shield-inspired minimal mark -->
+  <path d="M64 16L96 32V64C96 81.6731 81.6731 96 64 96C46.3269 96 32 81.6731 32 64V32L64 16Z" fill="#e6edf3" stroke="#e6edf3" stroke-width="2" stroke-linejoin="miter"/>
+  
+  <!-- Inner geometric detail - angular precision -->
+  <path d="M64 32L80 40V64C80 72.8366 72.8366 80 64 80C55.1634 80 48 72.8366 48 64V40L64 32Z" fill="#0a0e14" stroke="#e6edf3" stroke-width="1.5" stroke-linejoin="miter"/>
+  
+  <!-- Central accent mark -->
+  <path d="M64 48L72 52V64C72 68.4183 68.4183 72 64 72C59.5817 72 56 68.4183 56 64V52L64 48Z" fill="#58a6ff"/>
+</svg>

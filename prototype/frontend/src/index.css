@@ -1,12 +1,28 @@
+/* Google Fonts - Inter family for body and headers
+ * Using 'display=swap' for optimal performance (shows fallback font while loading)
+ * Weights: 400 (regular), 500 (medium), 700 (bold) - all used in design system
+ * For production: consider self-hosting these fonts to reduce external dependencies
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Inter+Tight:wght@700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reduced motion support for accessibility (WCAG 2.1 compliance) */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+  }
 }
