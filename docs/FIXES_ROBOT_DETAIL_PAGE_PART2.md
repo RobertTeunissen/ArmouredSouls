@@ -32,7 +32,7 @@ Max HP = HI × 10   | Shield Capacity × 2|                  |
 **Problem**: It wasn't clear that HP scales with Hull Integrity.
 
 **Solution**:
-- Added helper text: "Max HP = Hull Integrity × 10"
+- Added helper text: "Max HP = 30 + (Hull Integrity × 8)"
 - Makes the relationship explicit to users
 
 **Note**: The stored `maxHP` value in the database may not always reflect the current effective hull integrity (with weapon/loadout bonuses). This is a known limitation - the stored value is set at creation and upgrade but doesn't dynamically update when weapons/loadout change. Consider calculating this dynamically in the future.
@@ -202,7 +202,7 @@ interface CompactUpgradeSectionProps {
 
 ### HP Display
 - [ ] HP shows current/max with percentage
-- [ ] Helper text "Max HP = Hull Integrity × 10" is visible
+- [ ] Helper text "Max HP = 30 + (Hull Integrity × 8)" is visible
 - [ ] Values match expected calculations
 
 ### Upgrade Costs
