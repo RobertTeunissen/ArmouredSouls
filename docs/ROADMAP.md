@@ -1,6 +1,7 @@
 # Armoured Souls - Development Roadmap
 
 **Last Updated**: February 1, 2026
+**Version**: 3.0  
 
 ## Overview
 
@@ -52,15 +53,15 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ## Phase 1 - Local Prototype ✅
 
-**Status**: COMPLETE  
+**Status**: IN PROGRESS  
 **Started**: January 24, 2026  
-**Completed**: February 1, 2026  
-**Duration**: 8 days  
+**Completed**: TBD
+**Duration**: ? days  
 **Goal**: Build functional local prototype with core game mechanics
 
 ### Overview of Achievements
 
-Phase 1 has been completed successfully with all core systems implemented and tested. The prototype includes a fully functional game with authentication, robot management, stable facilities, weapons systems, automated matchmaking, battle simulation, and league progression. The system has been balanced and debugged through extensive testing with 341 test robots across multiple leagues.
+Phase 1 has been almost been completed successfully with all core systems implemented and tested. The prototype includes a fully functional game with authentication, robot management, stable facilities, weapons systems, automated matchmaking, battle simulation, and league progression. The system has been balanced and debugged through extensive testing with 331 test robots across multiple leagues.
 
 ---
 
@@ -99,8 +100,13 @@ Phase 1 has been completed successfully with all core systems implemented and te
   12. **Storage Facility**: Increased storage capacity
   13. **Booking Office**: Tournament management
   14. **Income Generator**: Passive credit generation
+ 
+--> This is not correct. We have updated the functionality for various facililies. Do we need to update certain other docs?
 
 - ✅ Each facility: 10 upgrade levels with progressive costs
+
+--> This is true, except fro the Roster Expansion, which has 9 (and not 5 as you state above) 
+
 - ✅ Facility upgrade UI with costs and benefits displayed
 - ✅ Discount calculations working correctly in backend and frontend
 - ✅ Attribute caps enforced by Training Academy facilities
@@ -132,6 +138,9 @@ Phase 1 has been completed successfully with all core systems implemented and te
 
 **Implementation**: Comprehensive robot management with attribute system, upgrade mechanics, HP calculation, and multi-page UI for robot viewing and management.
 
+--> Not completely done. Based on battle evaluation we might need to tweak attributes. 
+--> Upgrade economy will need tweaks.
+
 ---
 
 ### ✅ Milestone 4: Weapons & Loadout System
@@ -140,6 +149,9 @@ Phase 1 has been completed successfully with all core systems implemented and te
 - ✅ **Weapon inventory system** (stable-level weapon storage)
 - ✅ **Weapon Shop page** with 11 weapons available
 - ✅ **Weapons Workshop discount** applied correctly (10%-25%)
+
+--> These are not the actual discount costs, but they are applied correctly.
+
 - ✅ **4 loadout configurations**:
   - Single weapon
   - Weapon + Shield (weapon_shield)
@@ -152,6 +164,11 @@ Phase 1 has been completed successfully with all core systems implemented and te
 - ✅ **Loadout validation** in battle readiness checks
 
 **Implementation**: Complete weapon and loadout system with shop, inventory management, loadout configuration, and battle stance mechanics.
+
+--> Weapon overhaul needed. 
+--> We haven't defined weapon economy.
+--> We haven't defined a complete set of weapons, haven't test them yet. 
+--> We need to do something about the weapon types and what their effects are.
 
 ---
 
@@ -202,6 +219,9 @@ Phase 1 has been completed successfully with all core systems implemented and te
 - ✅ **Battle details modal** showing complete combat information
 
 **Implementation**: Complete battle engine with realistic combat simulation, damage calculation, and detailed logging system.
+
+--> Not done. Will need to tweak the battle system as robots with either high Hull Integrity or Armor Plating are still too strong. Also check what the impact of weapon economy will do for attribute and battle balancing. 
+--> Unclear whether COMBAT_MESSAGES.md has been implemented correctly.
 
 ---
 
@@ -276,6 +296,9 @@ Phase 1 has been completed successfully with all core systems implemented and te
 
 **Implementation**: Major balance overhaul based on 102-cycle testing with 341 robots, addressing hull integrity dominance and armor overpoweredness.
 
+--> 331 robots according to the seed file. Where did you get the number 341?
+--> Balancing not done yet.
+
 **Documentation**:
 - BALANCE_CHANGES_SUMMARY.md - Balance overview
 - COMPLETE_BALANCE_FIX_SUMMARY.md - Complete fix summary
@@ -311,6 +334,8 @@ Phase 1 has been completed successfully with all core systems implemented and te
 
 **Implementation**: Systematic bug fixing based on testing and user feedback, ensuring stable and reliable operation.
 
+--> How can you say that all bugs are fixed?
+
 ---
 
 ### ✅ Milestone 11: UI/UX Enhancements
@@ -335,6 +360,8 @@ Phase 1 has been completed successfully with all core systems implemented and te
 - FRONTEND_UI_REFERENCE.md - UI component guide
 - NAVIGATION_AND_PAGE_STRUCTURE.md - Navigation structure
 - PRD_LOGIN_PAGE_DESIGN_ALIGNMENT.md - Login page PRD
+
+--> We need many new page designs, we're barely started with the overhaul. This is not completed. 
 
 ---
 
@@ -361,6 +388,9 @@ Phase 1 has been completed successfully with all core systems implemented and te
 - QUICK_START_GUIDE.md - Getting started
 - CONTRIBUTING.md - Contribution guidelines
 
+--> This not done. Why is this a different section anyhow? It's included in UI/UX enhancements? 
+--> "Multiple PR's" sounds like bloating this ROADMAP document. Be precise. 
+
 ---
 
 ## 📊 Implementation Statistics
@@ -373,21 +403,8 @@ Phase 1 has been completed successfully with all core systems implemented and te
 - **Code Files Modified**: Multiple files across backend (7), frontend (3), and database (2) in final balance overhaul (PR #54)
 - **Test Data**: 341 robots across 106 accounts for balance testing
 
-### System Capabilities
-- **Users**: 106 test accounts (6 player accounts, 1 admin, 99 attribute-testing accounts)
-- **Robots**: 341 seeded robots for comprehensive testing
-- **Leagues**: 6 tiers with multiple instances (Bronze → Champion)
-- **Facilities**: 14 types with 10 upgrade levels each
-- **Weapons**: 11 weapons with various stats and types
-- **Attributes**: 23 robot attributes across 5 categories
-- **Battle Cycles**: Tested through 102+ complete battle cycles
-
-### Testing Coverage
-- **Balance Testing**: 102 cycles with 341 robots
-- **Attribute Testing**: 23 specialized accounts (one per attribute)
-- **Combat Testing**: Thousands of battles simulated
-- **System Testing**: All core flows validated
-- **Integration Testing**: Cross-system functionality verified
+--> Again, I thought 331 robots. Where did you get the number? 
+--> Also, more than 106 accounts. At least 100 (first tests) + 23 (attribute testing with 10 robots each) + 6 (manual users) +1 (admin)
 
 ---
 
@@ -402,6 +419,9 @@ Phase 1 has been completed successfully with all core systems implemented and te
 - ✅ **Balance Validated**: Through extensive testing and adjustments
 - ✅ **Bug-Free Operation**: All critical bugs identified and fixed
 - ✅ **Documentation Complete**: Comprehensive documentation for all systems
+
+--> Not true. Economy is not working yet, balance is not validated, not all bugs are done, not all documentation is complete (since we're still working on this document, right?)
+--> Oh and shouldn't I decide whether we've met all criteria?
 
 ---
 
@@ -444,6 +464,9 @@ Based on the issue requirements, the following activities remain to complete Pha
 - [ ] Analyze win rates per attribute group
 - [ ] Fine-tune economic rewards
 - [ ] Validate progression pacing
+
+--> Why list this separate? 
+--> Economy is the most important feature missing. Capture the requirements known from the various MDs. 
 
 ---
 
@@ -863,25 +886,6 @@ Features and systems to consider for future development. These are not yet plann
 
 ---
 
-## Key Milestones
-
-| Milestone | Target Date | Status |
-|-----------|-------------|--------|
-| Planning Complete | January 24, 2026 | ✅ Done |
-| Local Prototype Ready | February 1, 2026 | ✅ Done |
-| Prototype Validated by Friends | TBD | 🟡 Next Step |
-| Document Review & UX Overhaul | TBD | 🟡 In Progress |
-| Development Environment Ready | TBD | ⚪ Phase 2 |
-| Production Authentication | TBD | ⚪ Phase 2 |
-| Core Game Mechanics Expanded | TBD | ⚪ Phase 3 |
-| Web UI Polish | TBD | ⚪ Phase 4 |
-| Beta Launch | TBD | ⚪ Phase 6 |
-| Official Web Launch | TBD | ⚪ Phase 7 |
-| Mobile Beta | TBD | ⚪ Phase 8 |
-| Mobile Launch | TBD | ⚪ Phase 8 |
-
----
-
 ## Dependencies & Risks
 
 ### Critical Path Items
@@ -937,61 +941,12 @@ Features and systems to consider for future development. These are not yet plann
 
 ---
 
-## Resource Allocation
-
-### Required Roles (Example)
-- **Backend Developer(s)**: API, game engine, database
-- **Frontend Developer(s)**: Web UI, React components
-- **Full-Stack Developer(s)**: Can work on both
-- **DevOps Engineer**: Infrastructure, CI/CD, monitoring
-- **Game Designer**: Game mechanics, balance
-- **UI/UX Designer**: User experience, visual design
-- **QA Engineer**: Testing, quality assurance
-- **Project Manager**: Coordination, timeline management
-
-### Current Team
-- To be defined based on available resources
-
----
-
-## Next Actions
-
-**Immediate (Phase 1 Completion)** - February 2026:
-1. 🟡 **Document review**: Review all 65+ docs for consistency and accuracy
-2. 🟡 **UX/Design overhaul**: Create PRDs and implement new designs for all pages
-3. 🟡 **Weapons overhaul**: Balance weapon system and improve UX
-4. 🟡 **Advanced balance testing**: Continue testing with diverse robot builds
-5. 🟡 **Bug fixing**: Address remaining edge cases and polish
-
-**Short-term (Friend Validation)** - February-March 2026:
-1. Deploy prototype to friends for testing
-2. Gather detailed feedback on gameplay
-3. Monitor engagement metrics
-4. Identify pain points and confusion
-5. Decide: Continue to Phase 2, Pivot, or Stop
-
-**Medium-term (Phase 2 Start)** - March-April 2026 (If Continuing):
-1. Set up CI/CD pipeline
-2. Implement production authentication
-3. Security hardening
-4. Database optimization
-5. Module restructuring
-6. AWS deployment preparation
-
----
-
 ## Notes
 
 - This roadmap is a living document and will be updated as we progress
 - Timelines are estimates and may change based on actual progress
 - Phase durations assume full-time development; adjust for part-time work
 - Some phases can be done in parallel with proper coordination
-
----
-
-**Last Updated**: February 1, 2026  
-**Version**: 3.0  
-**Status**: Phase 1 (Local Prototype) COMPLETE ✅ - Ready for Document Review & UX Overhaul
 
 ---
 
@@ -1004,6 +959,8 @@ Features and systems to consider for future development. These are not yet plann
 - Updated implementation statistics and testing metrics
 - Outlined remaining Phase 1 completion activities
 - Updated critical path and risk assessments with current status
+
+--> NOT TRUE. I DECIDE WHETHER PHASE 1 IS COMPLETED. 
 
 ### Version 2.0 - January 27, 2026
 - Updated milestone progress with detailed status
