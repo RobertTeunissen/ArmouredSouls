@@ -1,6 +1,6 @@
 # Armoured Souls - Setup Guide
 
-**Last Updated**: January 27, 2026  
+**Last Updated**: February 1, 2026  
 **Platform**: VS Code on macOS (also works on Windows/Linux)
 
 Complete setup guide for running the Phase 1 prototype locally, including database reset instructions for testing new versions.
@@ -11,7 +11,7 @@ Complete setup guide for running the Phase 1 prototype locally, including databa
 
 **If you're seeing errors like**: `Migration '20260127122708_prototype2' failed to apply` or `relation "robots" does not exist`
 
-**YOU HAVE STALE LOCAL MIGRATIONS!** The repository now has only ONE comprehensive migration, but your local folder still has old deleted migrations.
+**YOU HAVE STALE LOCAL MIGRATIONS!** Your local folder still has old (deleted) migrations.
 
 ### Check If You Have This Issue
 
@@ -19,9 +19,6 @@ Complete setup guide for running the Phase 1 prototype locally, including databa
 cd ArmouredSouls/prototype/backend
 ls prisma/migrations/
 ```
-
-If you see **anything other than** `20260127201247_complete_future_state_schema`, follow these steps:
-
 ### Fix Steps (Do This Before Anything Else!)
 
 ```bash
@@ -37,6 +34,22 @@ git checkout origin/copilot/start-phase-1-milestones -- prisma/migrations
 # 4. Verify you now have ONLY ONE migration
 ls prisma/migrations/
 # Should show ONLY: 20260127201247_complete_future_state_schema
+
+--> This is outdated. As of Feb 1, 2026, there are 5 migrations:
+
+```
+migrations/
+  └─ 20260127201247_complete_future_state_schema/
+    └─ migration.sql
+  └─ 20260130072527_add_stance_yield/
+    └─ migration.sql
+  └─ 20260130093500_decimal_robot_attributes/
+    └─ migration.sql
+  └─ 20260130153010_add_matchmaking_schema/
+    └─ migration.sql
+  └─ 20260201144700_add_draws_field/
+    └─ migration.sql
+```
 
 # 5. Now drop database and start fresh
 cd ..  # Back to prototype folder
@@ -79,23 +92,7 @@ TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
 echo $TOKEN
 ```
 
-### 🎯 Admin Portal
-
-After logging in as admin:
-1. Click the **⚡ Admin** link in the navigation (yellow, on the right side)
-2. Access http://localhost:3000/admin
-
-**Admin Portal Features:**
-- View system statistics (robots, matches, battles)
-- Run matchmaking with one click
-- Execute battles with one click
-- Rebalance leagues with one click
-- Auto-repair all robots
-- Bulk cycle testing (run 1-100 complete cycles)
-
-**Note:** Only the admin user can access the Admin portal. Regular users won't see the Admin link.
-
-### ⚡ Quick Test Commands
+### ⚡ Quick Test Commands 
 
 **View Database State:**
 ```bash
@@ -178,14 +175,7 @@ node scripts/testAdminAPI.js
 | Player 1-5 | `player1`-`player5` | `password123` | user | ₡2,000,000 |
 | Test Users | `test_user_001`-`test_user_100` | `testpass123` | user | ₡2,000,000 |
 
-### 🎯 Frontend Testing Pages
-
-| Page | URL | What to Check |
-|------|-----|---------------|
-| Login | http://localhost:3000/login | Admin login works |
-| Dashboard | http://localhost:3000/dashboard | Upcoming/recent matches |
-| Battle History | http://localhost:3000/battle-history | All battles with pagination |
-| League Standings | http://localhost:3000/league-standings | All 6 tiers with rankings |
+--> This is not complete!
 
 ---
 
@@ -267,13 +257,6 @@ cd prototype/frontend
 npm run dev
 ```
 ✅ Should show: `➜ Local: http://localhost:3000/`
-
-### Access the Application
-Open browser to: **http://localhost:3000**
-
-Test accounts:
-- `player1` / `password123` (₡2,000,000)
-- `admin` / `admin123` (₡10,000,000)
 
 ---
 
@@ -741,6 +724,8 @@ npm run dev
 - Attribute upgrade: (level + 1) × 1,000 Credits
 - 23 attributes per robot (Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination)
 
+--> Old seed data, not up to date!
+
 ---
 
 ## 📝 VS Code Tips
@@ -786,14 +771,14 @@ cd backend && npx prisma migrate reset --force
 
 **Check everything is running:**
 ```bash
-docker ps                    # Database should be running
+docker ps                              # Database should be running
 curl http://localhost:3001/api/health  # Backend check
-open http://localhost:3000   # Frontend (opens browser)
+open http://localhost:3000             # Frontend (opens browser)
 ```
 
 **View logs:**
 ```bash
-docker compose logs -f       # Database logs
+docker compose logs -f                 # Database logs
 # Backend/frontend logs are in the terminals
 ```
 
