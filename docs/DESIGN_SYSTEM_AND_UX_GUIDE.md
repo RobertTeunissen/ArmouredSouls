@@ -715,7 +715,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 ### Asset Categories
 
-Based on [PRD_IMAGE_SYSTEM.md](PRD_IMAGE_SYSTEM.md), the following asset categories are defined:
+Based on the comprehensive design system, the following asset categories are defined:
 
 #### 1. Robot Identity Assets
 
@@ -1241,7 +1241,7 @@ Based on dark theme aesthetic with industrial metallic tones:
 
 ## Comprehensive Asset Specifications & Technical Details
 
-This section provides detailed technical specifications for all visual assets, including file formats, naming conventions, directory structure, and specific content requirements extracted from PRD_IMAGE_SYSTEM.md.
+This section provides detailed technical specifications for all visual assets, including file formats, naming conventions, directory structure, and specific content requirements.
 
 ### Asset Directory Structure
 

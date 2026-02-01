@@ -1,7 +1,7 @@
 # Design Documentation Alignment Verification
 
-**Last Updated**: February 1, 2026  
-**Purpose**: Verify consistency and alignment across all design documentation
+**Last Updated**: February 1, 2026 (Updated)  
+**Purpose**: Verify consistency and alignment across all design documentation; document PRD_IMAGE_SYSTEM.md consolidation
 
 ---
 
@@ -54,11 +54,12 @@ This document verifies that all design documentation for Armoured Souls is align
    - ✅ Alignment: Perfect - maps game design to UI implementation
    - ✅ Cross-References: Links to ROBOT_ATTRIBUTES, WEAPONS_AND_LOADOUT, STABLE_SYSTEM
 
-8. **PRD_IMAGE_SYSTEM.md**
-   - ✅ Status: Ready for Implementation - Visual asset specifications
-   - ✅ Defines: Image categories, sizes, formats, use cases
+8. **PRD_IMAGE_SYSTEM.md** *(Consolidated into DESIGN_SYSTEM_AND_UX_GUIDE.md)*
+   - ✅ Status: Consolidated - Visual asset specifications integrated
+   - ✅ Defines: Image categories, sizes, formats, use cases, asset inventory
    - ✅ Alignment: Perfect - technical implementation of visual strategy
    - ✅ Coverage: Robot portraits, weapon illustrations, facility assets, icons
+   - ⚠️ **Update**: All valuable content extracted and consolidated into DESIGN_SYSTEM_AND_UX_GUIDE.md to avoid duplication. PRD_IMAGE_SYSTEM.md removed.
 
 ### Supporting Documents
 
@@ -86,8 +87,8 @@ This document verifies that all design documentation for Armoured Souls is align
 
 ### Brand Identity Alignment
 
-| Concept | Brand Docs | Game Design | Frontend UI | PRD Image | Status |
-|---------|-----------|-------------|-------------|-----------|--------|
+| Concept | Brand Docs | Game Design | Frontend UI | Design System | Status |
+|---------|-----------|-------------|-------------|---------------|--------|
 | Player is Manager | ✅ Foundation | ✅ Core Concept | ✅ Management Flow | ✅ Control Context | ✅ ALIGNED |
 | Mastery & Pride | ✅ Primary Emotions | ✅ Progression | ✅ Stat Displays | ✅ Portfolio View | ✅ ALIGNED |
 | Ownership Fantasy | ✅ Identity Through Systems | ✅ Stable Management | ✅ Robot Collection | ✅ Visual Identity | ✅ ALIGNED |
@@ -232,9 +233,9 @@ Minor redundancies exist but serve different purposes:
 | FRONTEND_UI_REFERENCE.md | WEAPONS_AND_LOADOUT.md | ✅ | Correct path and content |
 | FRONTEND_UI_REFERENCE.md | STABLE_SYSTEM.md | ✅ | Correct path and content |
 | FRONTEND_UI_REFERENCE.md | GAME_DESIGN.md | ✅ | Correct path and content |
-| PRD_IMAGE_SYSTEM.md | ROBOT_ATTRIBUTES.md | ✅ | Correct path and content |
-| PRD_IMAGE_SYSTEM.md | WEAPONS_AND_LOADOUT.md | ✅ | Correct path and content |
-| PRD_IMAGE_SYSTEM.md | STABLE_SYSTEM.md | ✅ | Correct path and content |
+| ~~PRD_IMAGE_SYSTEM.md~~ | ~~ROBOT_ATTRIBUTES.md~~ | ✅ | Consolidated into Design System |
+| ~~PRD_IMAGE_SYSTEM.md~~ | ~~WEAPONS_AND_LOADOUT.md~~ | ✅ | Consolidated into Design System |
+| ~~PRD_IMAGE_SYSTEM.md~~ | ~~STABLE_SYSTEM.md~~ | ✅ | Consolidated into Design System |
 | DESIGN_SYSTEM_AND_UX_GUIDE.md | All brand docs | ✅ | Synthesizes all sources |
 
 **Result**: ✅ All cross-references valid

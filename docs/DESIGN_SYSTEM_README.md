@@ -77,10 +77,9 @@ Located in `/docs/` - These define **CONTENT** to visualize
 
 1. **GAME_DESIGN.md** - Core game concept, player fantasy
 2. **FRONTEND_UI_REFERENCE.md** - Page structure and UI mapping
-3. **PRD_IMAGE_SYSTEM.md** - Technical asset specifications
-4. **ROBOT_ATTRIBUTES.md** - 23 attributes system
-5. **STABLE_SYSTEM.md** - 14 facilities system
-6. **WEAPONS_AND_LOADOUT.md** - 10 weapons catalog
+3. **ROBOT_ATTRIBUTES.md** - 23 attributes system
+4. **STABLE_SYSTEM.md** - 14 facilities system
+5. **WEAPONS_AND_LOADOUT.md** - 10 weapons catalog
 
 **Status**: ✅ COMPLETE - Content inventory defined
 
@@ -258,12 +257,13 @@ Located in `/docs/` - These define **CONTENT** to visualize
 - **Brand Documents**: [/docs/brand/](./brand/)
 - **Game Design**: [GAME_DESIGN.md](GAME_DESIGN.md)
 - **Frontend UI**: [FRONTEND_UI_REFERENCE.md](FRONTEND_UI_REFERENCE.md)
-- **Image System PRD**: [PRD_IMAGE_SYSTEM.md](PRD_IMAGE_SYSTEM.md)
 
 ### Internal References
 - **Robot System**: [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)
 - **Stable System**: [STABLE_SYSTEM.md](STABLE_SYSTEM.md)
 - **Weapons**: [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)
+
+**Note**: Technical asset specifications are now fully integrated into DESIGN_SYSTEM_AND_UX_GUIDE.md
 
 ---
 
