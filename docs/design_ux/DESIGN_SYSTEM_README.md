@@ -47,6 +47,8 @@ This folder contains the complete design system documentation for Armoured Souls
 - Cross-reference validation
 - Implementation readiness assessment
 
+--> I have moved several docs to the docs/design_ux/ directory. Update the links
+
 ---
 
 ## 📚 Document Hierarchy
@@ -70,6 +72,8 @@ Located in `/docs/` - These define **WHAT** to implement
 3. **DESIGN_DOCUMENTATION_ALIGNMENT.md** - Consistency verification
 4. **DESIGN_SYSTEM_QUICK_REFERENCE.md** - Developer handbook
 
+--> Nope, these should be in or have been moved to /docs/design_ux/
+
 **Status**: ✅ COMPLETE - Ready for implementation
 
 ### Tier 3: Content Specifications (Game Design)
@@ -80,6 +84,9 @@ Located in `/docs/` - These define **CONTENT** to visualize
 3. **ROBOT_ATTRIBUTES.md** - 23 attributes system
 4. **STABLE_SYSTEM.md** - 14 facilities system
 5. **WEAPONS_AND_LOADOUT.md** - 10 weapons catalog
+
+--> Practice Sword also missing in WEAPONS_AND_LOADOUT.MD?
+--> Is there overlap between FRONTEND_UI_REFERENCE.md and NAVIGATION_AND_PAGE_STRUCTURE.md?
 
 **Status**: ✅ COMPLETE - Content inventory defined
 
@@ -127,6 +134,9 @@ Located in `/docs/` - These define **CONTENT** to visualize
 4. **HP/Shield Bars** (component with color coding)
 5. **Currency Icons** (₡ Credits, Prestige)
 
+--> Is this planning aligns with the DESIGN_SYSTEM_AND_UX_GUIDE.md and DESIGN_SYSEM_QUICK_REFERENCE.md?
+--> Why do we have multiple planning and phasing documents? I thought we had decided on referencing over copy/pasting.
+
 #### Phase 2 (P1) - Polish & Depth
 6. **Attribute Icons** (23 icons: 24×24px SVG)
 7. **Facility Illustrations** (14 facilities: 256×256px)
@@ -139,6 +149,8 @@ Located in `/docs/` - These define **CONTENT** to visualize
 12. **Battle-Ready Poses** (robot combat stances)
 13. **Arena Backgrounds** (atmospheric environments)
 14. **ELO/League Badges** (competitive tier icons)
+
+--> Battle system already in place! Keep up! 
 
 ---
 
@@ -154,12 +166,16 @@ Located in `/docs/` - These define **CONTENT** to visualize
 | **Weapon Shop** | B | Weapon illustrations, costs | Comparison, planning |
 | **Weapon Inventory** | B | Weapons + equipped status | Management, allocation |
 
+--> Why a Robots Page and a Robot Detail? One with S and one without?
+
 ### Progression Pages (P1)
 
 | Page | Logo | Key Visuals | Emotional Target |
 |------|------|------------|------------------|
 | **Facilities** | B | Facility illustrations, levels | Long-term investment |
 | **Create Robot** | B | Frame illustrations, blueprint | Anticipation, planning |
+
+--> Isn't updating a robot also progression? 
 
 ### Infrastructure Pages (P1)
 
@@ -173,6 +189,8 @@ Located in `/docs/` - These define **CONTENT** to visualize
 |------|------|------------|------------------|
 | **Battle Prep** | B → C | Battle-ready pose, arena | Rising stakes, focus |
 | **Battle Result** | C | Victory/defeat pose, stats | Pride or consequence |
+
+--> Not future! Check what we have!
 
 ---
 
@@ -205,6 +223,8 @@ Located in `/docs/` - These define **CONTENT** to visualize
 - [x] Quick reference available
 - [x] Code templates provided
 
+--> What does this even do? Why is this section here?
+
 ---
 
 ## 🚀 Next Steps
@@ -229,6 +249,8 @@ Located in `/docs/` - These define **CONTENT** to visualize
 3. **Review** implementations against guide
 4. **Gather** user feedback on visual improvements
 5. **Iterate** based on metrics (recognition speed, satisfaction)
+
+--> Keep with the program. There is no Team, there are no Frontend Developers. No Product Owner. It's just you and me. You know this. We have defined this. 
 
 ---
 
@@ -265,6 +287,8 @@ Located in `/docs/` - These define **CONTENT** to visualize
 
 **Note**: Technical asset specifications are now fully integrated into DESIGN_SYSTEM_AND_UX_GUIDE.md
 
+--> Why is this section here? We already have a document hierarchy in a section above.
+
 ---
 
 ## 💡 Design Philosophy Summary
@@ -284,6 +308,8 @@ Located in `/docs/` - These define **CONTENT** to visualize
 7. **Type Hierarchy** - Clear information architecture
 8. **Performance First** - Optimize everything
 
+--> Feels double. Don't we have this information elsewhere? 
+
 ---
 
 ## 🎯 Remember
@@ -295,6 +321,8 @@ Located in `/docs/` - These define **CONTENT** to visualize
 - **SVG for icons** - Always scalable and performant
 - **WebP for images** - Optimized with PNG fallback
 - **Mastery and pride** - Every design decision reinforces these
+
+--> Yes I know. Don't we have this information somewhere else?
 
 ---
 
@@ -310,6 +338,8 @@ Located in `/docs/` - These define **CONTENT** to visualize
 - User feedback requiring design changes
 - Performance optimization needs
 
+--> No. No. There is no team. You and me buddy. 
+
 ---
 
 ## ✨ Conclusion
@@ -324,3 +354,5 @@ No conflicts. No gaps that block implementation. Ready to proceed.
 
 **Version**: 1.0 (February 1, 2026)  
 **Status**: ✅ Complete and Approved for Implementation
+
+--> I decide whether it's complete and approved when I approve the PR. 
