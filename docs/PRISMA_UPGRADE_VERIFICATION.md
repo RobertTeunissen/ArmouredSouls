@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-⚠️ **IMPORTANT**: Before attempting this upgrade, ensure you understand the risks. If you encounter installation issues during or after the upgrade, refer to [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for recovery steps.
+⚠️ **IMPORTANT**: Before attempting this upgrade, ensure you understand the risks. If you encounter installation issues during or after the upgrade, refer to the troubleshooting section in [SETUP.md](./SETUP.md) for recovery steps.
 
 This upgrade spans **2 major versions** (5.x → 6.x → 7.x), which means significant breaking changes need to be carefully evaluated. Based on the codebase analysis, the Armoured Souls application uses standard Prisma features that should be compatible, but testing is critical.
 
@@ -221,7 +221,7 @@ This upgrade spans **2 major versions** (5.x → 6.x → 7.x), which means signi
 
 ## Rollback Plan
 
-⚠️ **IMPORTANT**: If you've attempted an upgrade and your installation is now broken, follow the complete recovery steps in [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) instead of just running these commands.
+⚠️ **IMPORTANT**: If you've attempted an upgrade and your installation is now broken, follow the complete recovery steps in the troubleshooting section of [SETUP.md](./SETUP.md) instead of just running these commands.
 
 If critical issues are discovered during testing:
 
@@ -238,7 +238,7 @@ If critical issues are discovered during testing:
    npm install
    ```
 
-3. **If prisma generate fails**: Follow the complete clean installation procedure in [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+3. **If prisma generate fails**: Follow the complete clean installation procedure in the troubleshooting section of [SETUP.md](./SETUP.md)
 
 4. **Restore database backup** (if database corruption occurs)
 

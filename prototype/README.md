@@ -26,9 +26,8 @@ See [../docs/SETUP.md](../docs/SETUP.md) for:
 - Initial setup steps
 - Testing new versions
 - Database reset instructions
+- Troubleshooting
 - VS Code tips
-
-**Having installation issues?** → [TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)
 
 ---
 
