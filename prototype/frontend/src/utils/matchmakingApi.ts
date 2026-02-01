@@ -73,6 +73,7 @@ export interface LeagueRobot {
   elo: number;
   leaguePoints: number;
   wins: number;
+  draws: number;
   losses: number;
   totalBattles: number;
   currentHP: number;

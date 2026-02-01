@@ -114,6 +114,7 @@ model Robot {
   elo                 Int @default(1200) // Individual skill rating
   totalBattles        Int @default(0) @map("total_battles") // Lifetime battle count
   wins                Int @default(0) // Victory count
+  draws               Int @default(0) // Draw count
   losses              Int @default(0) // Defeat count
   damageDealtLifetime Int @default(0) @map("damage_dealt_lifetime") // Total damage output
   damageTakenLifetime Int @default(0) @map("damage_taken_lifetime") // Total damage received

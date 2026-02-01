@@ -264,6 +264,7 @@ async function updateRobotStats(
       leaguePoints: Math.max(0, robot.leaguePoints + leaguePointsChange), // Min 0
       totalBattles: robot.totalBattles + 1,
       wins: isWinner ? robot.wins + 1 : robot.wins,
+      draws: isDraw ? robot.draws + 1 : robot.draws,
       losses: (!isWinner && !isDraw) ? robot.losses + 1 : robot.losses,
       damageDealtLifetime: robot.damageDealtLifetime + (isRobot1 ? battle.robot1DamageDealt : battle.robot2DamageDealt),
       damageTakenLifetime: robot.damageTakenLifetime + (isRobot1 ? battle.robot2DamageDealt : battle.robot1DamageDealt),
