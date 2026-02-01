@@ -11,6 +11,7 @@ import AllRobotsPage from './pages/AllRobotsPage';
 import WeaponShopPage from './pages/WeaponShopPage';
 import WeaponInventoryPage from './pages/WeaponInventoryPage';
 import BattleHistoryPage from './pages/BattleHistoryPage';
+import BattleDetailPage from './pages/BattleDetailPage';
 import LeagueStandingsPage from './pages/LeagueStandingsPage';
 import AdminPage from './pages/AdminPage';
 
@@ -89,6 +90,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <BattleHistoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/battle/:id"
+            element={
+              <ProtectedRoute>
+                <BattleDetailPage />
               </ProtectedRoute>
             }
           />
