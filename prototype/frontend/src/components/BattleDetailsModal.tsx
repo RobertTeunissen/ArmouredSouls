@@ -124,7 +124,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                     </h4>
                     <div className="text-sm space-y-1">
                       <p>
-                        HP: {battle.robot1FinalHP} / {battle.robot1.attributes.hullIntegrity * 10}
+                        HP: {battle.robot1FinalHP} / {battle.robot1.maxHP}
                         {battle.robot1Destroyed && (
                           <span className="ml-2 text-red-400">💀 Destroyed</span>
                         )}
@@ -161,7 +161,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                     </h4>
                     <div className="text-sm space-y-1">
                       <p>
-                        HP: {battle.robot2FinalHP} / {battle.robot2.attributes.hullIntegrity * 10}
+                        HP: {battle.robot2FinalHP} / {battle.robot2.maxHP}
                         {battle.robot2Destroyed && (
                           <span className="ml-2 text-red-400">💀 Destroyed</span>
                         )}
