@@ -9,7 +9,9 @@
 
 This folder contains the complete design system documentation for Armoured Souls. All documents are aligned, verified, and ready for implementation.
 
-**Issue Resolution**: This documentation resolves [Issue: Armoured Souls Design System & User Experience] by providing a comprehensive guide on how to improve the user flow, clear descriptions of what users should see where, and which images/types of images should reinforce the experience.
+**Issues Resolved**: 
+- ✅ **Design System & User Experience** - Comprehensive guide on improving user flow, visual requirements, and image strategy
+- ✅ **Navigation & Page Structure** - Complete navigation architecture and page structure for all phases (70+ pages)
 
 ---
 
@@ -29,6 +31,14 @@ This folder contains the complete design system documentation for Armoured Souls
 - Image requirements and visual strategy
 - Emotional design mapped to user journey
 - Complete component patterns
+
+### For Navigation Architecture
+👉 **[NAVIGATION_AND_PAGE_STRUCTURE.md](NAVIGATION_AND_PAGE_STRUCTURE.md)**
+- Complete navigation system (38KB)
+- 70 pages across all phases
+- 2026 navigation patterns (desktop + mobile)
+- User flows and logical paths
+- Progressive disclosure strategy
 
 ### For Alignment Verification
 👉 **[DESIGN_DOCUMENTATION_ALIGNMENT.md](DESIGN_DOCUMENTATION_ALIGNMENT.md)**
@@ -56,8 +66,9 @@ Located in `/docs/brand/` - These define **WHY** we design this way
 Located in `/docs/` - These define **WHAT** to implement
 
 1. **DESIGN_SYSTEM_AND_UX_GUIDE.md** - Complete implementation guide
-2. **DESIGN_DOCUMENTATION_ALIGNMENT.md** - Consistency verification
-3. **DESIGN_SYSTEM_QUICK_REFERENCE.md** - Developer handbook
+2. **NAVIGATION_AND_PAGE_STRUCTURE.md** - Navigation architecture & page inventory
+3. **DESIGN_DOCUMENTATION_ALIGNMENT.md** - Consistency verification
+4. **DESIGN_SYSTEM_QUICK_REFERENCE.md** - Developer handbook
 
 **Status**: ✅ COMPLETE - Ready for implementation
 
