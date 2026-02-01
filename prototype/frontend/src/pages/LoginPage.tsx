@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import logoD from '../assets/logos/logo-d.svg';
 
 // Shared input field styling that follows design system
-const INPUT_CLASS = `w-full px-4 py-3 bg-surface border border-tertiary rounded-lg 
-                     text-primary placeholder-tertiary
-                     focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
-                     disabled:bg-background disabled:border-tertiary/50 disabled:opacity-60
-                     transition-all duration-150 ease-out`;
+const INPUT_CLASS = 
+  'w-full px-4 py-3 bg-surface border border-tertiary rounded-lg ' +
+  'text-primary placeholder-tertiary ' +
+  'focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 ' +
+  'disabled:bg-background disabled:border-tertiary/50 disabled:opacity-60 ' +
+  'transition-all duration-150 ease-out';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
