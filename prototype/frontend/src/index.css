@@ -1,3 +1,8 @@
+/* Google Fonts - Inter family for body and headers
+ * Using 'display=swap' for optimal performance (shows fallback font while loading)
+ * Weights: 400 (regular), 500 (medium), 700 (bold) - all used in design system
+ * For production: consider self-hosting these fonts to reduce external dependencies
+ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Inter+Tight:wght@700&display=swap');
 
 @tailwind base;

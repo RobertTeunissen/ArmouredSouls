@@ -21,6 +21,8 @@ export default {
         info: '#a371f7',
       },
       fontFamily: {
+        // 'DIN Next' and 'Roboto Condensed' are premium fonts not included in this prototype
+        // They will fallback to 'Inter Tight' which is loaded via Google Fonts
         header: ['DIN Next', 'Inter Tight', 'Roboto Condensed', 'sans-serif'],
         body: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
