@@ -22,7 +22,7 @@ This document summarizes the gameplay balancing changes made to address three cr
 |-------|------------|----------|-----------------|
 | Hull Integrity dominance | Linear scaling (×10) favored high-level too much | Changed to `30 + (hull × 8)` | Starting robots viable (+280% HP), high-level reduced (-14% HP) |
 | Armor Plating overpowered | No cap allowed 50+ damage reduction | Added 30-point cap | Prevents unkillable tanks, maintains armor value |
-| Matchmaking byes | 75% HP threshold too strict | Lowered to 50% threshold | Participation rate increases from ~50% to ~90% |
+| Matchmaking byes | ~~75% HP threshold too strict~~ **No yield threshold check** | **Added yield threshold check**, kept 75% HP | Prevents immediate surrenders while maintaining battle quality |
 
 ---
 
@@ -130,62 +130,71 @@ hpDamage = Math.max(1, damage - armorReduction);
 
 ---
 
-## 3. Matchmaking Battle Readiness Threshold
+## 3. Matchmaking Battle Readiness (**CORRECTED**)
 
 ### Problem Analysis
 
-**Old Threshold**: 75% HP required to participate in matches
+**Original Issue**: Robots in Platinum League only fought ~50/102 cycles
 
-From the test data:
-- Platinum league robots only fought ~50 matches out of 102 cycles
-- This indicates ~49% participation rate
-- Many robots sitting out with 60-74% HP
+**Initial Hypothesis**: 75% HP threshold too strict, causing systematic byes
 
-**Issue**: After typical battle damage:
-- Winners lose 10-15% HP → remain eligible (85-90% HP)
-- Losers lose 35-40% HP → fall to 60-65% HP → **excluded at 75% threshold**
-- After 2-3 losses, robots excluded for multiple cycles
-- Creates systematic byes and reduces match frequency
+**Initial Solution (INCORRECT)**: Lowered to 50% HP threshold
 
-### Solution
+**User Feedback**: "50% threshold is dangerous - robots might surrender immediately based on yield threshold"
 
-**New Threshold**: 50% HP required to participate
+**Real Issue Discovered**: No check for yield threshold
+- Robot with 80% HP but 85% yield threshold would surrender at battle start
+- Robot with 55% HP and 60% yield threshold would surrender immediately
+- Created pointless battles that waste processing
+
+### Corrected Solution
+
+**Kept HP threshold at 75%** (original value)
+
+**Added yield threshold check**:
 
 **Implementation**: `prototype/backend/src/services/matchmakingService.ts`
 
 ```typescript
-export const BATTLE_READINESS_HP_THRESHOLD = 0.50; // 50% HP required (lowered from 75%)
+export const BATTLE_READINESS_HP_THRESHOLD = 0.75; // KEPT at 75%
+
+// NEW: Yield threshold check
+const hpPercentageValue = hpPercentage * 100;
+const yieldCheck = hpPercentageValue > robot.yieldThreshold;
+
+if (!yieldCheck) {
+  reasons.push(`HP at or below yield threshold`);
+}
+
+const finalHpCheck = hpCheck && yieldCheck; // Both must pass
 ```
 
 ### Impact
 
-**Participation rate analysis**:
+**Battle Readiness Requirements** (ALL must pass):
+1. ✅ HP ≥ 75% (prevents one-shot robots)
+2. ✅ HP > yield threshold (NEW - prevents immediate surrender)
+3. ✅ Weapons equipped (based on loadout type)
 
-| HP % | Old System | New System | Change |
-|------|------------|------------|--------|
-| 90-100% | ✅ Eligible | ✅ Eligible | No change |
-| 75-89% | ✅ Eligible | ✅ Eligible | No change |
-| 60-74% | ❌ Excluded | ✅ **Now eligible** | +50% more robots |
-| 50-59% | ❌ Excluded | ✅ **Now eligible** | +50% more robots |
-| 0-49% | ❌ Excluded | ❌ Excluded | No change |
+**Examples**:
+| Robot HP | Yield Threshold | Status | Reason |
+|----------|-----------------|--------|---------|
+| 80% | 10% | ✅ Battle-ready | HP above both thresholds |
+| 80% | 85% | ❌ Not ready | Would surrender immediately |
+| 70% | 10% | ❌ Not ready | Below 75% HP threshold |
+| 100% | 50% | ✅ Battle-ready | HP well above both thresholds |
 
-**Expected participation improvements**:
+**Why 50% Was Wrong**:
+- Robot with 55% HP and 60% yield → surrender immediately
+- Robot with 52% HP and 52% yield → surrender immediately
+- Creates pointless battles, wastes processing, gives free wins
 
-After 10 cycles without repair:
-- Old system: ~50-60% of robots eligible
-- New system: ~85-95% of robots eligible
-- **Result**: 40-50% fewer byes per cycle
+**Why Byes Still Occur** (with auto-repair):
+1. **Odd robot counts** (31 robots → 1 bye per cycle, unavoidable)
+2. **High yield thresholds** (robots with yield >75% excluded until repaired)
+3. **Timing** (if matchmaking runs after battles instead of after repair)
 
-After 20 cycles without repair:
-- Old system: ~30-40% of robots eligible (many sitting out)
-- New system: ~70-80% of robots eligible
-- **Result**: Maintains high participation even without frequent repairs
-
-**Strategic implications**:
-- Players can fight more battles before needing repairs
-- Reduces credit burden from constant repairs
-- Maintains competitive environment with more active robots
-- Damaged robots (50-75% HP) can still contribute meaningfully
+**With auto-repair before matchmaking**: Byes primarily due to odd counts and high yield thresholds.
 
 ---
 
@@ -200,9 +209,9 @@ After 20 cycles without repair:
 - All tests passing ✅
 
 **File**: `prototype/backend/tests/matchmakingService.test.ts`
-- Updated battle readiness tests for 50% threshold
-- Verified robots at 40% HP are correctly excluded
-- Verified robots at 50%+ HP are correctly eligible
+- Updated battle readiness tests for 75% threshold
+- Added test for yield threshold check
+- Verified robots at/below yield threshold are correctly excluded
 - All tests passing ✅
 
 ### Code Quality
@@ -246,8 +255,8 @@ When running new tests with the same 330-robot setup:
 
 ### Matchmaking Participation
 - **Before**: ~50 matches per robot in 102 cycles (~49% participation)
-- **After**: Expected ~85-95 matches per robot in 102 cycles (~85-93% participation)
-- **Reason**: 50% HP threshold allows damaged robots to continue fighting
+- **After**: Expected similar or slightly better with yield threshold check
+- **Reason**: 75% HP threshold maintained, but yield threshold check prevents pointless battles
 
 ### Overall Balance
 - Reduced power gap between starting and max-level robots
