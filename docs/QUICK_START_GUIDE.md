@@ -10,6 +10,8 @@ npm run dev
 
 That's it! Everything will work correctly.
 
+> **Note**: If you pulled an earlier version that had incorrect model names in the seed cleanup, make sure you have the latest code with the fix (commit bc9450e or later).
+
 ---
 
 ## What This Does
