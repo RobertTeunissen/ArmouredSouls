@@ -404,9 +404,9 @@ async function main() {
         // All 23 attributes set to 1.00 via shared defaults
         ...DEFAULT_ROBOT_ATTRIBUTES,
         
-        // Combat state (HP formula: hullIntegrity × 10 = 1.00 × 10 = 10)
-        currentHP: 10,
-        maxHP: 10,
+        // Combat state (NEW HP formula: 30 + (hullIntegrity × 8) = 30 + (1.00 × 8) = 38)
+        currentHP: 38,
+        maxHP: 38,
         currentShield: 2, // shieldCapacity × 2 = 1.00 × 2 = 2
         maxShield: 2,
         
@@ -514,9 +514,9 @@ async function main() {
       robotAttributes[attribute as keyof typeof DEFAULT_ROBOT_ATTRIBUTES] = 10.0;
       
       // Calculate HP and shield based on attributes
-      // HP formula: hullIntegrity × 10
+      // NEW HP formula: 30 + (hullIntegrity × 8)
       const hullIntegrityValue = robotAttributes.hullIntegrity;
-      const maxHP = Math.floor(hullIntegrityValue * 10);
+      const maxHP = Math.floor(30 + (hullIntegrityValue * 8));
       const currentHP = maxHP;
       
       // Shield formula: shieldCapacity × 2
@@ -604,9 +604,9 @@ async function main() {
       // All attributes set to 1.00 via shared defaults
       ...DEFAULT_ROBOT_ATTRIBUTES,
       
-      // Combat state
-      currentHP: 10,
-      maxHP: 10,
+      // Combat state (NEW HP formula: 30 + (hullIntegrity × 8) = 30 + (1.00 × 8) = 38)
+      currentHP: 38,
+      maxHP: 38,
       currentShield: 2,
       maxShield: 2,
       
@@ -672,7 +672,7 @@ async function main() {
   console.log('🥊 Stances: offensive, defensive, balanced');
   console.log('🏆 Leagues: bronze, silver, gold, platinum, diamond, champion');
   console.log('');
-  console.log('📝 HP Formula: maxHP = hullIntegrity × 10');
+  console.log('📝 HP Formula: maxHP = 30 + (hullIntegrity × 8)');
   console.log('🛡️  Shield Formula: maxShield = shieldCapacity × 2');
   console.log('');
   console.log('🎯 Matchmaking Test Data:');
