@@ -293,18 +293,30 @@ function getHPColor(percent) {
   /robots/
     portrait-humanoid-256.webp
     portrait-humanoid-512.webp
-    portrait-tank-256.webp
-    portrait-tank-512.webp
-
---> Do tanks exist? What does it look like? I thought we settled on bipeds with 2 arms.
   
   /weapons/
-    weapon-energy-sword-256.webp
-    weapon-energy-sword-128.webp
-    weapon-plasma-rifle-256.webp
-    weapon-plasma-rifle-128.webp
-
---> Energy Sword and Plasma Rifle are not actual defined weapons. 
+    weapon-laser-rifle-256.webp
+    weapon-laser-rifle-128.webp
+    weapon-plasma-cannon-256.webp
+    weapon-plasma-cannon-128.webp
+    weapon-ion-beam-256.webp
+    weapon-ion-beam-128.webp
+    weapon-machine-gun-256.webp
+    weapon-machine-gun-128.webp
+    weapon-railgun-256.webp
+    weapon-railgun-128.webp
+    weapon-shotgun-256.webp
+    weapon-shotgun-128.webp
+    weapon-power-sword-256.webp
+    weapon-power-sword-128.webp
+    weapon-hammer-256.webp
+    weapon-hammer-128.webp
+    weapon-plasma-blade-256.webp
+    weapon-plasma-blade-128.webp
+    weapon-combat-shield-256.webp
+    weapon-combat-shield-128.webp
+    weapon-practice-sword-256.webp
+    weapon-practice-sword-128.webp 
   
   /facilities/
     facility-repair-bay-256.webp
