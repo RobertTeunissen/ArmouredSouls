@@ -29,12 +29,13 @@ async function main() {
 
   // Clean up existing data (allows seed to be run multiple times)
   console.log('🧹 Cleaning up existing data...');
+  await prisma.scheduledMatch.deleteMany();
   await prisma.battle.deleteMany();
+  await prisma.weaponInventory.deleteMany();
   await prisma.robot.deleteMany();
+  await prisma.facility.deleteMany();
   await prisma.weapon.deleteMany();
   await prisma.user.deleteMany();
-  await prisma.leagueInstance.deleteMany();
-  await prisma.league.deleteMany();
   console.log('✅ Existing data cleaned up\n');
 
   // ... rest of seed code
@@ -45,12 +46,13 @@ async function main() {
 
 The deletion order is critical to respect foreign key constraints:
 
-1. **Battles** - References robots (must be deleted first)
-2. **Robots** - References users and weapons
-3. **Weapons** - Can be deleted after robots
-4. **Users** - Can be deleted after robots
-5. **LeagueInstances** - References leagues
-6. **Leagues** - Can be deleted last
+1. **ScheduledMatch** - References robots (must be deleted first)
+2. **Battle** - References robots
+3. **WeaponInventory** - References robots and weapons
+4. **Robot** - References users, weapons, and facilities
+5. **Facility** - References users
+6. **Weapon** - Can be deleted after weapon inventory
+7. **User** - Can be deleted last
 
 ## Usage
 
