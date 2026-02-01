@@ -142,9 +142,8 @@ Formula: `maxHP = 30 + (hullIntegrity × 8)`
 13. `FIX_SEED_HP_FORMULA.md` - Seed fix
 14. `FIX_SEED_CLEANUP.md` - Cleanup fix
 15. `FIX_BATTLE_DETAILS_HP.md` - Battle details fix
-16. `QUICK_START_GUIDE.md` - Getting started
 
-**Total**: 28 files changed
+**Total**: 27 files changed
 
 ---
 

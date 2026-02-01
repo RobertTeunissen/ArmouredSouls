@@ -363,8 +363,7 @@ Note: the overview above is not up to date, more facilities are actually working
 - ROBOT_ATTRIBUTES.md - Attribute system details
 - STABLE_SYSTEM.md - Facility system guide
 - WEAPONS_AND_LOADOUT.md - Weapon system guide
-- SETUP.md - Development setup
-- QUICK_START_GUIDE.md - Getting started 
+- SETUP.md - Complete development setup and testing guide 
 
 ---
 

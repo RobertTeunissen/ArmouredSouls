@@ -58,6 +58,137 @@ npm run dev
 
 ---
 
+## ⚡ Quick Testing Reference
+
+**For detailed setup instructions, see the sections below. This section provides quick commands for testing the matchmaking system.**
+
+### 🔐 Admin Access
+
+**Frontend UI:**
+- URL: http://localhost:3000/login
+- Username: `admin`
+- Password: `admin123`
+
+**API Token (for curl commands):**
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin123"}' | \
+  jq -r '.token')
+
+echo $TOKEN
+```
+
+### 🎯 Admin Portal
+
+After logging in as admin:
+1. Click the **⚡ Admin** link in the navigation (yellow, on the right side)
+2. Access http://localhost:3000/admin
+
+**Admin Portal Features:**
+- View system statistics (robots, matches, battles)
+- Run matchmaking with one click
+- Execute battles with one click
+- Rebalance leagues with one click
+- Auto-repair all robots
+- Bulk cycle testing (run 1-100 complete cycles)
+
+**Note:** Only the admin user can access the Admin portal. Regular users won't see the Admin link.
+
+### ⚡ Quick Test Commands
+
+**View Database State:**
+```bash
+cd prototype/backend
+node scripts/showDatabaseSummary.js
+```
+
+**Run Complete Cycle:**
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin123"}' | jq -r '.token')
+
+curl -X POST http://localhost:3001/api/admin/cycles/bulk \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"cycles": 1, "autoRepair": true}' | jq '.'
+```
+
+**Run 10 Cycles:**
+```bash
+curl -X POST http://localhost:3001/api/admin/cycles/bulk \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"cycles": 10, "autoRepair": true}' | jq '.'
+```
+
+### 📊 Admin API Quick Reference
+
+```bash
+# Get system stats
+curl http://localhost:3001/api/admin/stats \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Run matchmaking
+curl -X POST http://localhost:3001/api/admin/matchmaking/run \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Execute battles
+curl -X POST http://localhost:3001/api/admin/battles/run \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Rebalance leagues
+curl -X POST http://localhost:3001/api/admin/leagues/rebalance \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# Repair all robots
+curl -X POST http://localhost:3001/api/admin/repair/all \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"deductCosts": false}' | jq '.'
+```
+
+### 🧪 Testing Scripts
+
+```bash
+cd prototype/backend
+
+# View database
+node scripts/showDatabaseSummary.js
+
+# Test matchmaking
+node scripts/testMatchmakingSimple.js
+
+# Test battles
+node scripts/testBattleExecution.js
+
+# Test rebalancing
+node scripts/testLeagueRebalancing.js
+
+# Test admin API
+node scripts/testAdminAPI.js
+```
+
+### 👥 Test Accounts Reference
+
+| Type | Username | Password | Role | Credits |
+|------|----------|----------|------|---------|
+| Admin | `admin` | `admin123` | admin | ₡10,000,000 |
+| Player 1-5 | `player1`-`player5` | `password123` | user | ₡2,000,000 |
+| Test Users | `test_user_001`-`test_user_100` | `testpass123` | user | ₡2,000,000 |
+
+### 🎯 Frontend Testing Pages
+
+| Page | URL | What to Check |
+|------|-----|---------------|
+| Login | http://localhost:3000/login | Admin login works |
+| Dashboard | http://localhost:3000/dashboard | Upcoming/recent matches |
+| Battle History | http://localhost:3000/battle-history | All battles with pagination |
+| League Standings | http://localhost:3000/league-standings | All 6 tiers with rankings |
+
+---
+
 ## ✅ Prerequisites
 
 Install these once:
@@ -593,12 +724,11 @@ npm run dev
 ## 📊 Seed Data Reference
 
 ### Test Users
-| Username | Password | Role | Starting Credits |
-|----------|----------|------|------------------|
-| admin | admin123 | admin | ₡10,000,000 |
-| player1 | password123 | user | ₡2,000,000 |
-| player2 | password123 | user | ₡2,000,000 |
-| player3-5 | password123 | user | ₡2,000,000 each |
+| Type | Username | Password | Role | Starting Credits |
+|------|----------|----------|------|------------------|
+| Admin | admin | admin123 | admin | ₡10,000,000 |
+| Player 1-5 | player1-player5 | password123 | user | ₡2,000,000 |
+| Test Users | test_user_001-test_user_100 | testpass123 | user | ₡2,000,000 |
 
 ### Weapons (10 Total)
 - **Energy**: Laser Rifle (₡150k), Plasma Cannon (₡300k), Ion Beam (₡400k)
