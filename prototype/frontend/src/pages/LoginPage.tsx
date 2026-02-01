@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import logoD from '../assets/logos/logo-d.svg';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
@@ -26,63 +27,103 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background text-primary flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Armoured Souls</h1>
-          <p className="text-gray-400">Phase 1 - Local Prototype</p>
+          <img 
+            src={logoD} 
+            alt="Armoured Souls" 
+            className="w-20 h-20 mx-auto mb-6 animate-fade-in"
+          />
+          <h1 className="text-4xl font-bold font-header tracking-tight animate-fade-in">
+            ARMOURED SOULS
+          </h1>
         </div>
 
-        <div className="bg-gray-800 p-8 rounded-lg shadow-xl">
-          <h2 className="text-2xl font-semibold mb-6">Login</h2>
+        <div className="bg-surface-elevated border border-white/10 p-8 rounded-xl shadow-2xl animate-fade-in-delayed">
+          <h2 className="text-2xl font-bold text-primary mb-6">Login</h2>
           
           {error && (
-            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
+            <div 
+              className="bg-error/10 border border-error text-red-300 px-4 py-3 rounded-lg mb-4 animate-error-slide-in" 
+              role="alert"
+            >
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="username" className="block text-sm font-medium mb-2">
+              <label 
+                htmlFor="username" 
+                className="block text-sm font-medium text-secondary mb-2"
+              >
                 Username
               </label>
               <input
                 type="text"
                 id="username"
+                name="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-3 bg-surface border border-tertiary rounded-lg 
+                           text-primary placeholder-tertiary
+                           focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
+                           disabled:bg-background disabled:border-gray-700 disabled:opacity-60
+                           transition-all duration-150 ease-out"
+                placeholder="Enter your username"
                 required
+                aria-required="true"
+                aria-invalid={!!error}
+                disabled={loading}
               />
             </div>
 
             <div className="mb-6">
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
+              <label 
+                htmlFor="password" 
+                className="block text-sm font-medium text-secondary mb-2"
+              >
                 Password
               </label>
               <input
                 type="password"
                 id="password"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-3 bg-surface border border-tertiary rounded-lg 
+                           text-primary placeholder-tertiary
+                           focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
+                           disabled:bg-background disabled:border-gray-700 disabled:opacity-60
+                           transition-all duration-150 ease-out"
+                placeholder="Enter your password"
                 required
+                aria-required="true"
+                aria-invalid={!!error}
+                disabled={loading}
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-semibold py-2 px-4 rounded transition-colors"
+              aria-busy={loading}
+              className="w-full bg-primary hover:bg-primary-light active:bg-primary-dark 
+                         disabled:bg-primary-dark disabled:opacity-60 
+                         text-white font-medium px-6 py-3 rounded-lg 
+                         transition-all duration-150 ease-out
+                         hover:-translate-y-0.5 hover:shadow-lg
+                         focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background
+                         min-h-[48px]"
             >
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-gray-700">
-            <p className="text-sm text-gray-400">Test Accounts:</p>
-            <ul className="text-sm text-gray-400 mt-2 space-y-1">
+          <div className="mt-6 pt-6 border-t border-tertiary/30">
+            <p className="text-sm text-secondary">Test Accounts:</p>
+            <ul className="text-sm text-tertiary mt-2 space-y-1">
               <li>• admin / admin123</li>
               <li>• player1 / password123</li>
               <li>• player2 / password123</li>
