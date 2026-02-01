@@ -174,10 +174,12 @@ Prisma doesn't have a native truncate command, so we use `deleteMany()` which:
 
 The delete order follows the foreign key dependency graph:
 ```
-Battles → Robots → (Weapons, Users) → LeagueInstances → Leagues
+ScheduledMatch → Battle → WeaponInventory → Robot → (Facility, Weapon) → User
 ```
 
 If we deleted in the wrong order (e.g., Users before Robots), we'd get foreign key constraint errors.
+
+**Note**: There are no separate League or LeagueInstance models. League data is stored directly in the Robot model (currentLeague, leagueId, leaguePoints fields).
 
 ### Alternative: Transaction
 
