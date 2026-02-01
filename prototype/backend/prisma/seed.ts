@@ -445,6 +445,145 @@ async function main() {
   console.log(`   - All robots in Bronze League (bronze_1)`);
   console.log(`   - All robots have ELO 1200`);
 
+  // Create 23 attribute-focused test users for balance testing
+  console.log('Creating 23 attribute-focused test users for balance testing...');
+  
+  // Define all 23 attributes in order by category
+  const attributeList = [
+    // Combat Systems (6)
+    'combatPower',
+    'targetingSystems',
+    'criticalSystems',
+    'penetration',
+    'weaponControl',
+    'attackSpeed',
+    // Defensive Systems (5)
+    'armorPlating',
+    'shieldCapacity',
+    'evasionThrusters',
+    'damageDampeners',
+    'counterProtocols',
+    // Chassis & Mobility (5)
+    'hullIntegrity',
+    'servoMotors',
+    'gyroStabilizers',
+    'hydraulicSystems',
+    'powerCore',
+    // AI Processing (4)
+    'combatAlgorithms',
+    'threatAnalysis',
+    'adaptiveAI',
+    'logicCores',
+    // Team Coordination (3)
+    'syncProtocols',
+    'supportSystems',
+    'formationTactics',
+  ];
+
+  const attributeTestUsers = [];
+  
+  for (const attribute of attributeList) {
+    const username = `test_attr_${attribute.replace(/([A-Z])/g, '_$1').toLowerCase()}`;
+    
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        username,
+        passwordHash: testHashedPassword,
+        currency: 500000, // ₡500,000 for attribute testing
+      },
+    });
+
+    // Create Roster Expansion facility at max level (9) to enable 10 robots
+    await prisma.facility.create({
+      data: {
+        userId: user.id,
+        facilityType: 'roster_expansion',
+        level: 9, // Max level is 9 for Roster Expansion (enables 10 robots)
+        maxLevel: 9,
+      },
+    });
+
+    // Create 10 robots for this user, each with the focused attribute at 10.0
+    const robots = [];
+    for (let i = 0; i < 10; i++) {
+      const robotName = `${attribute.charAt(0).toUpperCase() + attribute.slice(1)} Bot ${i + 1}`;
+      
+      // Build attributes object with all at 1.0 except the focused one at 10.0
+      const robotAttributes = { ...DEFAULT_ROBOT_ATTRIBUTES };
+      robotAttributes[attribute as keyof typeof DEFAULT_ROBOT_ATTRIBUTES] = 10.0;
+      
+      // Calculate HP and shield based on attributes
+      // HP formula: hullIntegrity × 10
+      const hullIntegrityValue = robotAttributes.hullIntegrity;
+      const maxHP = Math.floor(hullIntegrityValue * 10);
+      const currentHP = maxHP;
+      
+      // Shield formula: shieldCapacity × 2
+      const shieldCapacityValue = robotAttributes.shieldCapacity;
+      const maxShield = Math.floor(shieldCapacityValue * 2);
+      const currentShield = maxShield;
+
+      // Create weapon inventory entry for Practice Sword
+      const weaponInventory = await prisma.weaponInventory.create({
+        data: {
+          userId: user.id,
+          weaponId: practiceSword.id,
+        },
+      });
+
+      // Create robot
+      const robot = await prisma.robot.create({
+        data: {
+          userId: user.id,
+          name: robotName,
+          frameId: 1,
+          
+          // Apply attributes with focused attribute at 10.0
+          ...robotAttributes,
+          
+          // Combat state
+          currentHP,
+          maxHP,
+          currentShield,
+          maxShield,
+          
+          // Performance tracking
+          elo: 1200, // Starting ELO
+          
+          // League
+          currentLeague: 'bronze',
+          leagueId: 'bronze_1',
+          leaguePoints: 0,
+          
+          // Loadout - single weapon with Practice Sword
+          loadoutType: 'single',
+          mainWeaponId: weaponInventory.id,
+          
+          // Stance - balanced as specified
+          stance: 'balanced',
+          
+          // Battle readiness
+          battleReadiness: 100,
+          yieldThreshold: 10,
+        },
+      });
+      
+      robots.push(robot);
+    }
+    
+    attributeTestUsers.push({ user, robots });
+    console.log(`   Created ${username} with 10 robots (focused on ${attribute})`);
+  }
+
+  console.log(`✅ Created 23 attribute-focused test users with 230 robots total`);
+  console.log(`   - Username format: test_attr_<attribute_name>`);
+  console.log(`   - Password: testpass123`);
+  console.log(`   - Each user has Roster Expansion facility at level 9 (enables 10 robots)`);
+  console.log(`   - Each user has 10 robots with focused attribute at 10.0, all others at 1.0`);
+  console.log(`   - All robots equipped with Practice Sword (single loadout)`);
+  console.log(`   - All robots in balanced stance`);
+
   // Create Bye-Robot (special robot for odd-number matchmaking)
   console.log('Creating Bye-Robot...');
   
@@ -511,7 +650,8 @@ async function main() {
   console.log('   👤 Admin: ₡10,000,000 (username: admin, password: admin123)');
   console.log('   👤 Player users: ₡2,000,000 each (player1-5, password: password123)');
   console.log('   👤 Test users: ₡100,000 each (test_user_001-100, password: testpass123)');
-  console.log('   🤖 Robots: 100 test robots + 1 bye-robot');
+  console.log('   👤 Attribute test users: ₡500,000 each (test_attr_*, password: testpass123)');
+  console.log('   🤖 Robots: 100 test robots + 230 attribute test robots + 1 bye-robot');
   console.log('   ⚔️  Practice Sword: FREE (equipped on all test robots)');
   console.log('   🏆 League: All robots start in Bronze (bronze_1)');
   console.log('   📈 ELO: Test robots at 1200, Bye-Robot at 1000');
@@ -544,6 +684,14 @@ async function main() {
   console.log('   - Admin: admin / admin123');
   console.log('   - Players: player1-5 / password123 (for manual testing)');
   console.log('   - Test users: test_user_001-100 / testpass123');
+  console.log('   - Attribute test users: test_attr_combat_power, test_attr_targeting_systems, etc. / testpass123');
+  console.log('');
+  console.log('🧪 Attribute Balance Testing:');
+  console.log('   - 23 users (one per attribute) with 10 robots each = 230 robots');
+  console.log('   - Each user focuses on ONE attribute (set to 10.0, all others at 1.0)');
+  console.log('   - Usernames clearly indicate focused attribute (e.g., test_attr_hull_integrity)');
+  console.log('   - All robots have Practice Sword, single loadout, balanced stance');
+  console.log('   - Roster Expansion facility maxed out (level 9) for each user');
   console.log('');
 }
 
