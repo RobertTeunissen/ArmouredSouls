@@ -69,7 +69,7 @@ function LoginPage() {
                 className="w-full px-4 py-3 bg-surface border border-tertiary rounded-lg 
                            text-primary placeholder-tertiary
                            focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
-                           disabled:bg-background disabled:border-gray-700 disabled:opacity-60
+                           disabled:bg-background disabled:border-tertiary/50 disabled:opacity-60
                            transition-all duration-150 ease-out"
                 placeholder="Enter your username"
                 required
@@ -95,7 +95,7 @@ function LoginPage() {
                 className="w-full px-4 py-3 bg-surface border border-tertiary rounded-lg 
                            text-primary placeholder-tertiary
                            focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
-                           disabled:bg-background disabled:border-gray-700 disabled:opacity-60
+                           disabled:bg-background disabled:border-tertiary/50 disabled:opacity-60
                            transition-all duration-150 ease-out"
                 placeholder="Enter your password"
                 required
