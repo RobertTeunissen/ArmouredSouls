@@ -179,11 +179,9 @@ function calculateBaseDamage(attacker: Robot, weaponBaseDamage: number): { damag
   };
 }
 
-// Maximum armor reduction cap (prevents armor from being too overpowered)
-const MAX_ARMOR_REDUCTION = 30;
-
 /**
  * Apply damage through shields and armor
+ * Uses MAX_ARMOR_REDUCTION constant to cap armor effectiveness
  */
 function applyDamage(
   baseDamage: number,
