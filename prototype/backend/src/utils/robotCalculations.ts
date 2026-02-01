@@ -144,10 +144,15 @@ function getWeaponBonus(robot: RobotWithWeapons, attribute: string): number {
 
 /**
  * Calculate maximum HP based on hull integrity, weapon bonuses, and loadout
+ * Formula: BASE_HP + (hullIntegrity × HP_MULTIPLIER)
+ * This gives starting robots (hull=1) a reasonable base HP while maintaining scaling
  */
+export const BASE_HP = 30; // Base HP for all robots
+export const HP_MULTIPLIER = 8; // Multiplier per hull integrity point
+
 export function calculateMaxHP(robot: RobotWithWeapons): number {
   const effectiveStats = calculateEffectiveStats(robot);
-  return effectiveStats.hullIntegrity * 10;
+  return BASE_HP + (effectiveStats.hullIntegrity * HP_MULTIPLIER);
 }
 
 /**

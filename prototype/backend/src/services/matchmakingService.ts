@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export const ELO_MATCH_IDEAL = 150; // Ideal ELO difference for a fair match
 export const ELO_MATCH_FALLBACK = 300; // Maximum ELO difference for fallback matching
 export const RECENT_OPPONENT_LIMIT = 5; // Number of recent opponents to track
-export const BATTLE_READINESS_HP_THRESHOLD = 0.75; // 75% HP required
+export const BATTLE_READINESS_HP_THRESHOLD = 0.50; // 50% HP required (lowered from 75% to reduce byes)
 
 // Bye-robot identifier
 export const BYE_ROBOT_NAME = 'Bye Robot';
