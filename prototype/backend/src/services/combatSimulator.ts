@@ -64,6 +64,10 @@ const BASE_WEAPON_COOLDOWN = 4; // seconds
 const MAX_BATTLE_DURATION = 120; // seconds
 const SIMULATION_TICK = 0.1; // 100ms per tick
 
+// Maximum armor reduction cap (prevents armor from being too overpowered)
+// Exported for testing and reusability
+export const MAX_ARMOR_REDUCTION = 30;
+
 /**
  * Clamp a value between min and max
  */
