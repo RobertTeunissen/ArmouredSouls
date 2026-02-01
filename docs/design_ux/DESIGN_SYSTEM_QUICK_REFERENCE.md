@@ -295,12 +295,16 @@ function getHPColor(percent) {
     portrait-humanoid-512.webp
     portrait-tank-256.webp
     portrait-tank-512.webp
+
+--> Do tanks exist? What does it look like? I thought we settled on bipeds with 2 arms.
   
   /weapons/
     weapon-energy-sword-256.webp
     weapon-energy-sword-128.webp
     weapon-plasma-rifle-256.webp
     weapon-plasma-rifle-128.webp
+
+--> Energy Sword and Plasma Rifle are not actual defined weapons. 
   
   /facilities/
     facility-repair-bay-256.webp
@@ -419,7 +423,7 @@ Before implementing a new page or component, verify:
 13. Arena backgrounds
 14. ELO/League badges
 
-**Start with Phase 1. Don't skip ahead.**
+**Start with Phase 1. Don't skip ahead. Update what's already there**
 
 ---
 
