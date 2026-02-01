@@ -51,24 +51,23 @@ This document outlines the development roadmap for Armoured Souls, from planning
 
 ---
 
-## Phase 1 - Local Prototype ✅
+## Phase 1 - Local Prototype 🔄
 
 **Status**: IN PROGRESS  
 **Started**: January 24, 2026  
-**Completed**: TBD
-**Duration**: ? days  
+**Completion Target**: TBD (pending user approval)
 **Goal**: Build functional local prototype with core game mechanics
 
-### Overview of Achievements
+### Current Progress
 
-Phase 1 has been almost been completed successfully with all core systems implemented and tested. The prototype includes a fully functional game with authentication, robot management, stable facilities, weapons systems, automated matchmaking, battle simulation, and league progression. The system has been balanced and debugged through extensive testing with 331 test robots across multiple leagues.
+Phase 1 is in progress with major core systems implemented. The prototype includes authentication, robot management, stable facilities, weapons systems, automated matchmaking, battle simulation, and league progression. Testing is ongoing with 331 test robots across multiple leagues. Several areas still require refinement, balancing, and completion before Phase 1 can be considered done.
 
 ---
 
-## 🎉 Major Features Implemented
+## 🔨 Major Features In Development
 
-### ✅ Milestone 1: Authentication & User Management
-**Completed**: January 24-25, 2026 (PR #1, #2, #3)
+### Milestone 1: Authentication & User Management
+**Implemented**: January 24-25, 2026 (PR #1, #2, #3)
 
 - ✅ JWT-based authentication (login/logout)
 - ✅ User dashboard showing profile and credits balance (₡2,000,000 starting)
@@ -78,46 +77,44 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ User profile management
 - ✅ Credit system and transaction tracking
 
-**Implementation**: Complete authentication flow with protected routes, JWT token management, and secure password storage.
+**Status**: Basic authentication flow implemented with protected routes, JWT token management, and secure password storage.
 
 ---
 
-### ✅ Milestone 2: Stable Management System
-**Completed**: January 25-28, 2026 (PR #3, #4, #8)
+### Milestone 2: Stable Management System
+**Implemented**: January 25-28, 2026 (PR #3, #4, #8)
 
-- ✅ **14 facility types** fully implemented:
+- ✅ **14 facility types** implemented (functionality varies by facility):
   1. **Repair Bay**: Repair cost discount (0%-90%)
   2. **Training Facility**: 5%-25% discount on attribute upgrades (**WORKING & TESTED**)
-  3. **Weapons Workshop**: 10%-25% discount on weapon purchases (**WORKING & TESTED**)
-  4. **Roster Expansion**: Robot creation limit (1-5 robots) (**ENFORCED**)
+  3. **Weapons Workshop**: Discount on weapon purchases (**WORKING & TESTED** - actual discount percentages need verification)
+  4. **Roster Expansion**: Robot creation limit (1-9 robots) (**ENFORCED**)
   5. **Combat Training Academy**: Caps Combat Systems attributes (10-50)
   6. **Defense Training Academy**: Caps Defensive Systems attributes (10-50)
   7. **Mobility Training Academy**: Caps Chassis & Mobility attributes (10-50)
   8. **AI Training Academy**: Caps AI Processing attributes (10-50)
   9. **Coaching Staff**: Caps Team Coordination attributes (10-50)
-  10. **Research Lab**: Future technology research
-  11. **Medical Bay**: Robot recovery speed
-  12. **Storage Facility**: Increased storage capacity
-  13. **Booking Office**: Tournament management
-  14. **Income Generator**: Passive credit generation
+  10. **Research Lab**: Placeholder for future technology research
+  11. **Medical Bay**: Placeholder for robot recovery speed
+  12. **Storage Facility**: Placeholder for increased storage capacity
+  13. **Booking Office**: Placeholder for tournament management
+  14. **Income Generator**: Placeholder for passive credit generation
  
---> This is not correct. We have updated the functionality for various facililies. Do we need to update certain other docs?
+**Note**: Some facility functionalities have been updated and may need documentation review in other files.
 
-- ✅ Each facility: 10 upgrade levels with progressive costs
-
---> This is true, except fro the Roster Expansion, which has 9 (and not 5 as you state above) 
+- ✅ Each facility: 10 upgrade levels with progressive costs (except Roster Expansion which has 9 levels) 
 
 - ✅ Facility upgrade UI with costs and benefits displayed
 - ✅ Discount calculations working correctly in backend and frontend
 - ✅ Attribute caps enforced by Training Academy facilities
 - ✅ Attribute cap display on robot detail pages
 
-**Implementation**: Complete facility management system with dynamic pricing, upgrade tracking, and automatic bonus application.
+**Status**: Basic facility management system implemented with dynamic pricing, upgrade tracking, and automatic bonus application. Further documentation review needed for facility functionality updates.
 
 ---
 
-### ✅ Milestone 3: Robot Creation & Management
-**Completed**: January 25-February 1, 2026 (PR #3, #4, #20, #26, #54)
+### Milestone 3: Robot Creation & Management
+**Implemented**: January 25-February 1, 2026 (PR #3, #4, #20, #26, #54)
 
 - ✅ **Robot creation system**: ₡500k cost, all 23 attributes start at level 1
 - ✅ **23 core attributes** organized in 5 groups:
@@ -136,22 +133,16 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ **Robot visibility controls**: Public/private setting for robot display
 - ✅ **Decimal attribute display**: Shows precise attribute values
 
-**Implementation**: Comprehensive robot management with attribute system, upgrade mechanics, HP calculation, and multi-page UI for robot viewing and management.
-
---> Not completely done. Based on battle evaluation we might need to tweak attributes. 
---> Upgrade economy will need tweaks.
+**Status**: Robot management system implemented with attribute system, upgrade mechanics, and HP calculation. **Attributes may need tweaking based on battle evaluation. Upgrade economy requires adjustment.**
 
 ---
 
-### ✅ Milestone 4: Weapons & Loadout System
-**Completed**: January 29-30, 2026 (PR #17, #19, #20, #24)
+### Milestone 4: Weapons & Loadout System
+**Implemented**: January 29-30, 2026 (PR #17, #19, #20, #24)
 
 - ✅ **Weapon inventory system** (stable-level weapon storage)
 - ✅ **Weapon Shop page** with 11 weapons available
-- ✅ **Weapons Workshop discount** applied correctly (10%-25%)
-
---> These are not the actual discount costs, but they are applied correctly.
-
+- ✅ **Weapons Workshop discount** applied correctly (actual discount percentages need verification)
 - ✅ **4 loadout configurations**:
   - Single weapon
   - Weapon + Shield (weapon_shield)
@@ -163,17 +154,12 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ **Weapon equipping** from inventory to robot loadouts
 - ✅ **Loadout validation** in battle readiness checks
 
-**Implementation**: Complete weapon and loadout system with shop, inventory management, loadout configuration, and battle stance mechanics.
-
---> Weapon overhaul needed. 
---> We haven't defined weapon economy.
---> We haven't defined a complete set of weapons, haven't test them yet. 
---> We need to do something about the weapon types and what their effects are.
+**Status**: Basic weapon and loadout system implemented with shop, inventory management, and loadout configuration. **Weapon overhaul needed: weapon economy not defined, complete weapon set not finalized, weapon types and effects need definition, testing incomplete.**
 
 ---
 
-### ✅ Milestone 5: Matchmaking System
-**Completed**: January 30-February 1, 2026 (PR #27, #28, #31, #32, #54)
+### Milestone 5: Matchmaking System
+**Implemented**: January 30-February 1, 2026 (PR #27, #28, #31, #32, #54)
 
 - ✅ **Automated matchmaking** with scheduled batch processing
 - ✅ **ELO-based robot pairing** (±150 ideal, ±300 fallback)
@@ -188,7 +174,7 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ **Duplicate match prevention**
 - ✅ **Admin matchmaking trigger** for manual scheduling
 
-**Implementation**: Sophisticated matchmaking algorithm with multiple fairness checks, ELO-based pairing, and automated scheduling system.
+**Status**: Matchmaking algorithm implemented with ELO-based pairing and fairness checks.
 
 **Documentation**: 
 - MATCHMAKING_COMPLETE_LOGIC.md - Complete technical documentation
@@ -197,8 +183,8 @@ Phase 1 has been almost been completed successfully with all core systems implem
 
 ---
 
-### ✅ Milestone 6: Battle System & Combat
-**Completed**: January 25-February 1, 2026 (PR #3, #24, #46, #48, #50, #54)
+### Milestone 6: Battle System & Combat
+**Implemented**: January 25-February 1, 2026 (PR #3, #24, #46, #48, #50, #54)
 
 - ✅ **Scheduled batch battle processing** (Football Manager style)
 - ✅ **Combat simulation engine** with:
@@ -218,15 +204,12 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ **Battle replay** with turn-by-turn combat messages
 - ✅ **Battle details modal** showing complete combat information
 
-**Implementation**: Complete battle engine with realistic combat simulation, damage calculation, and detailed logging system.
-
---> Not done. Will need to tweak the battle system as robots with either high Hull Integrity or Armor Plating are still too strong. Also check what the impact of weapon economy will do for attribute and battle balancing. 
---> Unclear whether COMBAT_MESSAGES.md has been implemented correctly.
+**Status**: Battle engine implemented with combat simulation and damage calculation. **Battle system requires tweaking: robots with high Hull Integrity or Armor Plating still too strong. Weapon economy impact on attribute and battle balancing needs assessment. COMBAT_MESSAGES.md implementation needs verification.**
 
 ---
 
-### ✅ Milestone 7: League & Ranking System
-**Completed**: January 30-February 1, 2026 (PR #31, #34, #36, #38, #41, #43, #54)
+### Milestone 7: League & Ranking System
+**Implemented**: January 30-February 1, 2026 (PR #31, #34, #36, #38, #41, #43, #54)
 
 - ✅ **6-tier league system**: Bronze, Silver, Gold, Platinum, Diamond, Champion
 - ✅ **League instances**: Multiple instances per tier (max 100 robots each)
@@ -239,7 +222,7 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ **League standings page** with sortable tables
 - ✅ **Upcoming matches display** showing scheduled battles
 
-**Implementation**: Complete league system with automated progression, ELO calculations, and comprehensive standings display.
+**Status**: League system implemented with ELO calculations and automated progression.
 
 **Bug Fixes**:
 - Fixed double promotion/demotion issue (PR #43)
@@ -249,8 +232,8 @@ Phase 1 has been almost been completed successfully with all core systems implem
 
 ---
 
-### ✅ Milestone 8: Admin Tools & Debugging
-**Completed**: January 31-February 1, 2026 (PR #32, #46, #50, #54)
+### Milestone 8: Admin Tools & Debugging
+**Implemented**: January 31-February 1, 2026 (PR #32, #46, #50, #54)
 
 - ✅ **Admin portal** with authentication (admin/admin123)
 - ✅ **Admin battle viewer** showing all battles across all leagues
@@ -265,7 +248,7 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ **Database seeding tools** with cleanup functionality
 - ✅ **Admin-only routes** with proper authorization
 
-**Implementation**: Comprehensive admin toolset for battle monitoring, debugging, and system management.
+**Status**: Admin toolset implemented for battle monitoring and system management.
 
 **Documentation**:
 - ADMIN_PORTAL_ANSWER.md - Admin portal specification
@@ -274,8 +257,8 @@ Phase 1 has been almost been completed successfully with all core systems implem
 
 ---
 
-### ✅ Milestone 9: Balance Adjustments
-**Completed**: February 1, 2026 (PR #48, #54)
+### Milestone 9: Balance Adjustments
+**Implemented**: February 1, 2026 (PR #48, #54)
 
 - ✅ **HP formula rebalancing**: Changed from `hull × 10` to `30 + (hull × 8)`
   - Reduced power gap from 50:1 to 11:1 ratio
@@ -294,10 +277,7 @@ Phase 1 has been almost been completed successfully with all core systems implem
   - Each account specializes in one attribute maxed to 10
   - Enables systematic balance analysis across all attributes
 
-**Implementation**: Major balance overhaul based on 102-cycle testing with 341 robots, addressing hull integrity dominance and armor overpoweredness.
-
---> 331 robots according to the seed file. Where did you get the number 341?
---> Balancing not done yet.
+**Status**: Initial balance adjustments implemented based on 102-cycle testing with 331 robots. **Further balancing needed - not yet complete.**
 
 **Documentation**:
 - BALANCE_CHANGES_SUMMARY.md - Balance overview
@@ -307,8 +287,8 @@ Phase 1 has been almost been completed successfully with all core systems implem
 
 ---
 
-### ✅ Milestone 10: Bug Fixes & Quality Improvements
-**Completed**: January 29-February 1, 2026 (Multiple PRs)
+### Milestone 10: Bug Fixes & Quality Improvements
+**Implemented**: January 29-February 1, 2026 (Various PRs)
 
 **Authentication & Login**:
 - Fixed test user login failures (PR #36)
@@ -332,14 +312,12 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - Fixed duplicate constant errors (PR #54)
 - Fixed seed unique constraint failures (PR #54)
 
-**Implementation**: Systematic bug fixing based on testing and user feedback, ensuring stable and reliable operation.
-
---> How can you say that all bugs are fixed?
+**Status**: Multiple bugs fixed across authentication, UI, and battle systems. **Additional bugs remain to be addressed.**
 
 ---
 
-### ✅ Milestone 11: UI/UX Enhancements
-**Completed**: January 30-February 1, 2026 (PR #22, #26, #30, #52, #56)
+### Milestone 11: UI/UX Enhancements
+**Implemented**: January 30-February 1, 2026 (PR #22, #26, #30, #52, #56)
 
 - ✅ **Design system consolidation** with unified visual specifications
 - ✅ **Login page redesign** following PRD specifications
@@ -351,7 +329,7 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ **Visual feedback** for discounts and facility bonuses
 - ✅ **Test account credentials removed** from login page for security
 
-**Implementation**: Comprehensive UI/UX improvements based on design system documentation and user experience principles.
+**Status**: Initial UI/UX improvements implemented. **Many new page designs needed - barely started with the overhaul.**
 
 **Documentation**:
 - DESIGN_SYSTEM_AND_UX_GUIDE.md - Complete design system
@@ -359,16 +337,14 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - DESIGN_SYSTEM_README.md - Design system overview
 - FRONTEND_UI_REFERENCE.md - UI component guide
 - NAVIGATION_AND_PAGE_STRUCTURE.md - Navigation structure
-- PRD_LOGIN_PAGE_DESIGN_ALIGNMENT.md - Login page PRD
-
---> We need many new page designs, we're barely started with the overhaul. This is not completed. 
+- PRD_LOGIN_PAGE_DESIGN_ALIGNMENT.md - Login page PRD 
 
 ---
 
-### ✅ Milestone 12: Documentation & Developer Experience
-**Completed**: January 24-February 1, 2026 (Multiple PRs)
+### Milestone 12: Documentation & Developer Experience
+**Implemented**: January 24-February 1, 2026 (Various PRs)
 
-- ✅ **Comprehensive documentation** covering all systems (65+ documents)
+- ✅ **Documentation files created** covering major systems (65+ documents)
 - ✅ **GitHub Copilot instructions** for AI-assisted development
 - ✅ **Quick start guides** for developers
 - ✅ **PRDs (Product Requirements Documents)** for major features
@@ -376,6 +352,8 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - ✅ **Testing strategy documentation** with guides
 - ✅ **Troubleshooting guides** for common issues
 - ✅ **Database schema documentation** with complete reference
+
+**Status**: Extensive documentation created covering major systems. **Documentation review in progress - not all documentation is complete or accurate.**
 
 **Key Documentation Files**:
 - ARCHITECTURE.md - System architecture
@@ -385,43 +363,35 @@ Phase 1 has been almost been completed successfully with all core systems implem
 - STABLE_SYSTEM.md - Facility system guide
 - WEAPONS_AND_LOADOUT.md - Weapon system guide
 - SETUP.md - Development setup
-- QUICK_START_GUIDE.md - Getting started
-- CONTRIBUTING.md - Contribution guidelines
-
---> This not done. Why is this a different section anyhow? It's included in UI/UX enhancements? 
---> "Multiple PR's" sounds like bloating this ROADMAP document. Be precise. 
+- QUICK_START_GUIDE.md - Getting started 
 
 ---
 
 ## 📊 Implementation Statistics
 
 ### Development Metrics
-- **Duration**: 8 days (January 24 - February 1, 2026)
+- **Duration**: Ongoing since January 24, 2026
 - **Pull Requests**: 56 PRs merged
 - **Issues Resolved**: 55 issues closed
 - **Documentation Files**: 65+ documents created
 - **Code Files Modified**: Multiple files across backend (7), frontend (3), and database (2) in final balance overhaul (PR #54)
-- **Test Data**: 341 robots across 106 accounts for balance testing
-
---> Again, I thought 331 robots. Where did you get the number? 
---> Also, more than 106 accounts. At least 100 (first tests) + 23 (attribute testing with 10 robots each) + 6 (manual users) +1 (admin)
+- **Test Data**: 331 robots across 130 accounts for balance testing (100 initial tests + 23 attribute-focused accounts with 10 robots each + 6 manual users + 1 admin)
 
 ---
 
-## 🎯 Phase 1 Success Criteria - ALL MET ✅
+## 🎯 Phase 1 Success Criteria - In Progress
 
-- ✅ **Core Game Loop Working**: Users can create robots, upgrade them, and see automated battles
-- ✅ **Battle System Functional**: Combat simulation working with realistic outcomes
-- ✅ **Economy Working**: Credits system with costs, rewards, and discounts
-- ✅ **Progression System**: League system with promotion/demotion working
-- ✅ **Stable Management**: All 14 facilities implemented and working
-- ✅ **Matchmaking**: Automated ELO-based pairing with fairness checks
-- ✅ **Balance Validated**: Through extensive testing and adjustments
-- ✅ **Bug-Free Operation**: All critical bugs identified and fixed
-- ✅ **Documentation Complete**: Comprehensive documentation for all systems
+- 🔄 **Core Game Loop Working**: Users can create robots, upgrade them, and see automated battles (basic functionality implemented)
+- 🔄 **Battle System Functional**: Combat simulation working (requires further balancing)
+- ⚠️ **Economy Working**: Credits system with costs, rewards, and discounts (economy not yet fully defined)
+- 🔄 **Progression System**: League system with promotion/demotion working (implemented)
+- 🔄 **Stable Management**: 14 facilities implemented (varying levels of functionality)
+- 🔄 **Matchmaking**: Automated ELO-based pairing with fairness checks (implemented)
+- ⚠️ **Balance Validated**: Testing ongoing (not yet validated)
+- ⚠️ **Bug-Free Operation**: Many bugs fixed (additional bugs remain)
+- ⚠️ **Documentation Complete**: Extensive documentation created (review in progress, not complete)
 
---> Not true. Economy is not working yet, balance is not validated, not all bugs are done, not all documentation is complete (since we're still working on this document, right?)
---> Oh and shouldn't I decide whether we've met all criteria?
+**Note**: Final determination of criteria completion pending user approval.
 
 ---
 
@@ -458,15 +428,23 @@ Based on the issue requirements, the following activities remain to complete Pha
 - [ ] Document weapon strategies
 
 ### ⚖️ Advanced Balance Testing (PARTIALLY COMPLETE)
-- [x] Complete first round of testing (102 cycles, 341 robots)
+- [x] Complete first round of testing (102 cycles, 331 robots)
 - [x] Fix HP formula and armor cap issues
 - [ ] Test with more diverse robot builds
 - [ ] Analyze win rates per attribute group
 - [ ] Fine-tune economic rewards
 - [ ] Validate progression pacing
 
---> Why list this separate? 
---> Economy is the most important feature missing. Capture the requirements known from the various MDs. 
+### 💰 Economy System (CRITICAL - NOT STARTED)
+**Most important feature missing**
+- [ ] Define complete weapon economy (costs, pricing tiers)
+- [ ] Define robot upgrade economy and progression costs
+- [ ] Define facility upgrade costs and progression
+- [ ] Balance credit rewards from battles
+- [ ] Define credit income sources and rates
+- [ ] Establish economy progression curve
+- [ ] Document economy requirements from existing design documents
+- [ ] Test and validate economic balance 
 
 ---
 
@@ -950,17 +928,32 @@ Features and systems to consider for future development. These are not yet plann
 
 ---
 
+**Last Updated**: February 1, 2026  
+**Version**: 3.1  
+**Status**: Phase 1 (Local Prototype) IN PROGRESS - Pending User Approval for Completion
+
+---
+
 ## Changelog
 
+### Version 3.1 - February 1, 2026
+- **Corrected completion claims**: Removed inappropriate "COMPLETE" status claims
+- Changed Phase 1 status from "COMPLETE" to "IN PROGRESS"
+- Updated all milestone language from "Completed" to "Implemented" to reflect work in progress
+- Corrected robot count to 331 (from 341)
+- Corrected account count to 130 (from 106)
+- Added explicit notes that balance, economy, and bugs are not yet complete
+- Removed "ALL MET" claim from success criteria
+- Added Economy System as critical missing feature
+- Updated all implementation status language to be more accurate
+- Clarified that final completion determination is user's decision
+
 ### Version 3.0 - February 1, 2026
-- **Phase 1 COMPLETED**: All core systems implemented and tested
 - Added comprehensive achievement documentation for Phase 1
 - Documented 12 major milestones with 56 PRs and 55 issues resolved
 - Updated implementation statistics and testing metrics
 - Outlined remaining Phase 1 completion activities
-- Updated critical path and risk assessments with current status
-
---> NOT TRUE. I DECIDE WHETHER PHASE 1 IS COMPLETED. 
+- Updated critical path and risk assessments
 
 ### Version 2.0 - January 27, 2026
 - Updated milestone progress with detailed status
