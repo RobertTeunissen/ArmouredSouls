@@ -396,7 +396,7 @@ npx prisma studio
 # Open http://localhost:5555
 # Should see tables: User, Robot, Weapon, WeaponInventory, Facility, Battle
 # Users table should have 6 test users
-# Weapons table should have 10 weapons
+# Weapons table should have 11 weapons
 
 # Test backend starts successfully
 npm run dev

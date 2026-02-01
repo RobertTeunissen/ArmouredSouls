@@ -221,7 +221,7 @@ This document maps game design concepts to UI implementation, showing where play
 **Purpose**: Browse and purchase weapons from catalog
 
 **Displays**:
-- All 10 weapons with specifications ([WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md))
+- All 11 weapons with specifications ([WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md))
 - Weapon name, type, base damage, cooldown, cost
 - Attribute bonuses preview
 - Storage capacity remaining (X/Y weapons)

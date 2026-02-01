@@ -222,9 +222,13 @@ Each weapon has:
 
 ---
 
-## Initial Weapon Catalog
+## Weapon Catalog
 
-### Energy Weapons
+### Phase 1 - Implemented Weapons (11 Total)
+
+The following weapons are currently implemented in the game database and available for purchase:
+
+#### Energy Weapons (3)
 
 **Laser Rifle** (₡150,000) - One-handed
 - Base Damage: 20
@@ -256,7 +260,7 @@ Each weapon has:
 - Special: Disables enemy energy shields for 2 seconds on crit
 - **Loadout Compatibility**: Two-Handed only
 
-### Ballistic Weapons
+#### Ballistic Weapons (3)
 
 **Machine Gun** (₡100,000) - One-handed, Dual-wield compatible
 - Base Damage: 12
@@ -288,7 +292,7 @@ Each weapon has:
 - Special: +30% damage at close range
 - **Loadout Compatibility**: Two-Handed only
 
-### Melee Weapons
+#### Melee Weapons (3)
 
 **Power Sword** (₡180,000) - One-handed
 - Base Damage: 28
@@ -320,7 +324,7 @@ Each weapon has:
 - Special: Burns through energy shields (70% effective vs shields)
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
-### Shield Weapons
+#### Shield Weapons (1)
 
 **Combat Shield** (₡100,000) - Shield type
 - Base Damage: 0 (defensive only)
@@ -333,7 +337,24 @@ Each weapon has:
 - Special: 25% chance to block ranged attacks
 - **Loadout Compatibility**: Weapon + Shield only
 
-**Energy Barrier** (₡200,000) - Shield type
+#### Practice/Starter Weapons (1)
+
+**Practice Sword** (₡0 - FREE) - One-handed starter weapon
+- Base Damage: 5
+- Cooldown: 3 seconds
+- Attribute Bonuses: None (all bonuses are 0)
+- Special: Free starter weapon for testing and matchmaking
+- Description: Basic training weapon with minimal stats, given to all new players
+- **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
+- **Note**: This weapon is automatically provided to all new robots for testing purposes and basic matchmaking eligibility
+
+---
+
+### Phase 2+ - Planned Future Weapons
+
+The following weapons are planned for future releases but not yet implemented:
+
+**Energy Barrier** (₡200,000) - Shield type *(Planned)*
 - Base Damage: 0 (defensive only)
 - Cooldown: N/A
 - Attribute Bonuses:
@@ -342,6 +363,8 @@ Each weapon has:
   - servoMotorsBonus: -3
 - Special: Reflects 20% of energy weapon damage
 - **Loadout Compatibility**: Weapon + Shield only
+
+Additional weapons will be added in future phases based on player feedback and game balance needs.
 
 ---
 
@@ -458,7 +481,7 @@ Key relationships:
 - ✅ Clear weapon ownership model (stable-level, not robot-specific)
 - ✅ Flexible inventory management (multiple copies, storage limits)
 - ✅ Strategic loadout choices (4 distinct configurations with trade-offs)
-- ✅ Diverse weapon catalog (10 weapons across 4 categories)
+- ✅ Diverse weapon catalog (11 weapons across 4 categories plus Practice weapon)
 - ✅ Progression system (purchase discounts via Weapons Workshop)
 - ✅ Economic balance (weapon costs scaled for game progression)
 - ✅ Future extensibility (weapon crafting system ready for implementation)

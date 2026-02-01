@@ -161,7 +161,7 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 
 **7. Storage Facility** (Operating Cost: ₡500/day at Level 1, +₡250/day per level)
 - **Level 0**: 5 weapons storage (free, base capacity)
-- **Level 1** (₡150,000): 10 weapons storage (5 base + 5)
+- **Level 1** (₡150,000): 10 weapon slots (5 base + 5)
 - **Level 2** (₡300,000): 15 weapons storage (5 base + 10)
 - **Level 3** (₡450,000): 20 weapons storage (5 base + 15)
 - **Level 4** (₡600,000): 25 weapons storage (5 base + 20)
