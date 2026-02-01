@@ -51,13 +51,6 @@ prototype/
 **Frontend**: React, Vite, Tailwind CSS, React Router  
 **Database**: PostgreSQL 16 in Docker
 
-## 🎮 Test Accounts
-
-| Username | Password | Credits |
-|----------|----------|---------|
-| player1 | password123 | ₡2,000,000 |
-| admin | admin123 | ₡10,000,000 |
-
 ---
 
 For complete setup, troubleshooting, and reset instructions: [../docs/SETUP.md](../docs/SETUP.md)
