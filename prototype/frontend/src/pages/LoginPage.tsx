@@ -120,15 +120,6 @@ function LoginPage() {
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-tertiary/30">
-            <p className="text-sm text-secondary">Test Accounts:</p>
-            <ul className="text-sm text-tertiary mt-2 space-y-1">
-              <li>• admin / admin123</li>
-              <li>• player1 / password123</li>
-              <li>• player2 / password123</li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>
