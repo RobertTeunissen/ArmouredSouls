@@ -38,8 +38,8 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   syncProtocols: 10,
   supportSystems: 10,
   formationTactics: 10,
-  currentHP: 100,
-  maxHP: 100,
+  currentHP: 110, // Updated to match new formula: 30 + (10 * 8) = 110
+  maxHP: 110,     // Updated to match new formula: 30 + (10 * 8) = 110
   currentShield: 20,
   maxShield: 20,
   damageTaken: 0,
@@ -270,7 +270,7 @@ describe('Robot Calculations', () => {
   });
 
   describe('calculateMaxHP', () => {
-    it('should calculate max HP based on effective hull integrity', () => {
+    it('should calculate max HP based on effective hull integrity with base HP', () => {
       const robot = createMockRobot({ 
         loadoutType: 'single',
         hullIntegrity: 10,
@@ -278,8 +278,8 @@ describe('Robot Calculations', () => {
 
       const maxHP = calculateMaxHP(robot);
 
-      // Hull integrity 10 * 10 = 100
-      expect(maxHP).toBe(100);
+      // BASE_HP (30) + (Hull integrity 10 * HP_MULTIPLIER 8) = 30 + 80 = 110
+      expect(maxHP).toBe(110);
     });
 
     it('should include weapon bonuses in HP calculation', () => {
@@ -307,8 +307,32 @@ describe('Robot Calculations', () => {
 
       const maxHP = calculateMaxHP(robotWithWeapon);
 
-      // (Hull integrity 10 + weapon 5) * 10 = 150
+      // BASE_HP (30) + ((Hull integrity 10 + weapon 5) * HP_MULTIPLIER 8) = 30 + 120 = 150
       expect(maxHP).toBe(150);
+    });
+
+    it('should calculate correct HP for starting robot with hull integrity 1', () => {
+      const robot = createMockRobot({ 
+        loadoutType: 'single',
+        hullIntegrity: 1,
+      });
+
+      const maxHP = calculateMaxHP(robot);
+
+      // BASE_HP (30) + (Hull integrity 1 * HP_MULTIPLIER 8) = 30 + 8 = 38
+      expect(maxHP).toBe(38);
+    });
+
+    it('should calculate correct HP for max level robot with hull integrity 50', () => {
+      const robot = createMockRobot({ 
+        loadoutType: 'single',
+        hullIntegrity: 50,
+      });
+
+      const maxHP = calculateMaxHP(robot);
+
+      // BASE_HP (30) + (Hull integrity 50 * HP_MULTIPLIER 8) = 30 + 400 = 430
+      expect(maxHP).toBe(430);
     });
   });
 

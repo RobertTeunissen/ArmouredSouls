@@ -50,7 +50,7 @@ describe('Matchmaking Service', () => {
   });
 
   describe('checkBattleReadiness', () => {
-    it('should mark robot as ready when HP >= 75% and weapon equipped', async () => {
+    it('should mark robot as ready when HP >= 50% and weapon equipped', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: {
           userId: testUser.id,
@@ -84,7 +84,7 @@ describe('Matchmaking Service', () => {
       await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
     });
 
-    it('should mark robot as not ready when HP < 75%', async () => {
+    it('should mark robot as not ready when HP < 50%', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: {
           userId: testUser.id,
@@ -98,7 +98,7 @@ describe('Matchmaking Service', () => {
           name: 'Low HP Robot',
           leagueId: 'bronze_1',
           currentLeague: 'bronze',
-          currentHP: 7, // 70% HP
+          currentHP: 4, // 40% HP (below 50% threshold)
           maxHP: 10,
           currentShield: 2,
           maxShield: 2,
