@@ -1239,6 +1239,420 @@ Based on dark theme aesthetic with industrial metallic tones:
 
 ---
 
+## Comprehensive Asset Specifications & Technical Details
+
+This section provides detailed technical specifications for all visual assets, including file formats, naming conventions, directory structure, and specific content requirements extracted from PRD_IMAGE_SYSTEM.md.
+
+### Asset Directory Structure
+
+```
+prototype/frontend/src/assets/
+├── brand/                  # Logo variants, currency, UI frames
+│   ├── logo-b.svg          # Direction B (precision/management)
+│   ├── logo-c.svg          # Direction C (soul/energy/battle)
+│   ├── logo-d.svg          # Direction D (minimal/infrastructure)
+│   ├── logo-icon.svg       # Icon-only mark
+│   ├── logo-white.svg      # White variant
+│   ├── currency-icon.svg   # Credits (₡) icon
+│   ├── prestige-icon.svg   # Prestige icon
+│   └── ui-*.svg            # UI frame elements (corners, dividers)
+├── robots/                 # Robot portraits
+│   ├── robot-chassis-{type}-{colorway}.webp
+│   └── (48 total: 12 chassis × 4 colorways)
+├── weapons/                # Weapon illustrations
+│   ├── weapon-{name}-full.webp     # 256×256px catalog
+│   └── weapon-{name}-thumb.webp    # 128×128px thumbnails
+├── facilities/             # Facility illustrations
+│   └── facility-{name}.webp        # 256×256px
+├── icons/                  # All SVG icons (organized by category)
+│   ├── attributes/         # 23 attribute icons
+│   │   └── ic-attr-{name}.svg
+│   ├── weapons/            # 4 weapon type icons
+│   │   └── ic-weapon-{type}.svg
+│   ├── benefits/           # 8 facility benefit icons
+│   │   └── ic-benefit-{category}.svg
+│   ├── navigation/         # 8 navigation icons
+│   │   └── ic-nav-{page}.svg
+│   ├── loadout/            # Loadout slot icons
+│   │   └── slot-{type}-{state}.svg
+│   └── silhouettes/        # 12 chassis fallback icons
+│       └── silhouette-{type}.svg
+├── backgrounds/            # Page and arena backgrounds
+│   ├── bg-arena-{variant}.webp
+│   └── bg-page-pattern.svg
+├── empty-states/           # Empty state illustrations
+│   └── empty-{state}.webp
+├── badges/                 # Rank and achievement badges
+│   └── rank-badge-{tier}-{size}.png
+└── frames/                 # Rarity frames (future)
+    └── frame-{rarity}-{size}.png
+```
+
+### File Naming Conventions
+
+**General Rules**:
+- Use kebab-case for all file names (lowercase with hyphens)
+- Be descriptive but concise
+- Include size in file name if multiple variants exist
+- Use consistent suffixes (-full, -thumb, -icon)
+
+**Format Selection**:
+- **SVG**: Icons, logos, UI elements (scalable, tiny payload)
+- **WEBP**: Photos, portraits, complex illustrations (superior compression)
+- **PNG**: Badges, overlays with transparency (when WEBP not supported)
+
+### Robot Portrait Specifications
+
+**12 Base Chassis Archetypes**:
+1. Humanoid Standard (balanced)
+2. Heavy Tank (bulky, slow)
+3. Scout Runner (light, agile)
+4. Siege Frame (artillery-focused)
+5. Berserker (close combat)
+6. Defender (shield-focused)
+7. Sniper Platform (long-range)
+8. Brawler (melee specialist)
+9. Support Unit (team coordination)
+10. Assault Class (all-rounder)
+11. Interceptor (fast striker)
+12. Juggernaut (massive, armored)
+
+**Colorway Variants** (4 per chassis = 48 total portraits):
+- **Red/Black** - Aggressive, offensive-focused
+- **Blue/Silver** - Defensive, tank-oriented
+- **Gold/Bronze** - Prestige, balanced
+- **Green/Gray** - Utility, support-oriented
+
+**Technical Specs**:
+- Format: WEBP (optimized for web)
+- Master size: 512×512px (scales down cleanly)
+- Style: Industrial sci-fi, hard-surface mech rendering
+- Angle: 3/4 view (shows depth, recognizable silhouette)
+- Background: Dark gradient matching UI theme, subtle grid/hazard pattern
+- Lighting: Consistent rim light from top-right
+
+**Responsive Usage**:
+- List view: 64×64px thumbnail
+- Card view: 128×128px or 256×256px medium
+- Detail page header: 512×512px hero
+
+**File Naming**:
+```
+robot-chassis-humanoid-red.webp
+robot-chassis-heavy-tank-blue.webp
+robot-chassis-scout-green.webp
+```
+
+### Weapon Asset Specifications
+
+**10 Weapons (Current)**:
+
+**Melee Weapons (4)**:
+1. **Plasma Blade** - Glowing energy sword, blue plasma trail
+2. **Crushing Hammer** - Heavy industrial hammer, hazard stripes
+3. **Energy Lance** - Spear-like weapon, yellow energy tip
+4. **Shock Gauntlets** - Fist weapons, electric arcs
+
+**Ranged Weapons (4)**:
+5. **Laser Rifle** - Sleek energy weapon, green sight laser
+6. **Autocannon** - Belt-fed ballistic gun, ammo belt visible
+7. **Missile Launcher** - Shoulder-mounted rocket pod, missiles loaded
+8. **Railgun** - High-tech magnetic accelerator, glowing coils
+
+**Shields (1)**:
+9. **Energy Shield Emitter** - Arm-mounted shield generator, blue energy field
+
+**Two-Handed Weapons (1)**:
+10. **Heavy Cannon** - Massive artillery piece, stabilizer legs deployed
+
+**Technical Specs**:
+- Format: WEBP
+- Catalog size: 256×256px (shop grid)
+- Thumbnail size: 128×128px (robot detail loadout)
+- Style: Consistent lighting, dark background, 3/4 angle
+- Background: Matches robot portrait aesthetic
+- Lighting: Same rim light as robots (cohesive world lighting)
+
+**File Naming**:
+```
+weapon-plasma-blade-full.webp      # 256×256px
+weapon-plasma-blade-thumb.webp     # 128×128px
+weapon-crushing-hammer-full.webp
+weapon-laser-rifle-full.webp
+```
+
+### Weapon Type Icons (SVG)
+
+**4 Categories**:
+- `ic-weapon-melee.svg` - Crossed swords icon
+- `ic-weapon-ranged.svg` - Crosshair/targeting icon
+- `ic-weapon-shield.svg` - Shield icon
+- `ic-weapon-twohanded.svg` - Large weapon icon
+
+**Specs**:
+- Format: SVG
+- Viewbox: 0 0 24 24 (for 24px base size)
+- Style: Line icons, 2px stroke
+- Color: Adaptive (primary accent or category color)
+
+### Facility Asset Specifications
+
+**14 Facilities** (all need illustrations):
+1. Training Academy
+2. Weapons Workshop
+3. Armor Plating Bay
+4. Propulsion Lab
+5. AI Processing Center
+6. Sensor Array
+7. Energy Reactor
+8. Shield Generator
+9. Medical Bay
+10. Repair Bay
+11. Research Lab
+12. Roster Expansion
+13. Storage Expansion
+14. Booking Office
+
+**Technical Specs**:
+- Format: WEBP
+- Size: 256×256px square
+- Style: Blueprint/isometric industrial buildings
+- Color scheme: Blue/gray tech aesthetic
+- Background: Dark with subtle grid
+- Visual progression: Higher levels = more complex structures (optional detail)
+
+**File Naming**:
+```
+facility-training-academy.webp
+facility-weapons-workshop.webp
+facility-armor-plating-bay.webp
+```
+
+### Attribute Icon Set (23 Icons)
+
+Organized by category with color coding:
+
+**Combat Systems (Red #f85149)** - 7 icons:
+- ic-attr-weapon-damage.svg
+- ic-attr-melee-damage.svg
+- ic-attr-ranged-damage.svg
+- ic-attr-crit-chance.svg
+- ic-attr-crit-multiplier.svg
+- ic-attr-accuracy.svg
+- ic-attr-penetration.svg
+
+**Defensive Systems (Blue #58a6ff)** - 5 icons:
+- ic-attr-armor.svg
+- ic-attr-shield-capacity.svg
+- ic-attr-shield-regen.svg
+- ic-attr-evasion.svg
+- ic-attr-damage-reduction.svg
+
+**Chassis & Mobility (Green #3fb950)** - 5 icons:
+- ic-attr-health-integrity.svg
+- ic-attr-speed.svg
+- ic-attr-agility.svg
+- ic-attr-weight-limit.svg
+- ic-attr-stability.svg
+
+**AI Processing (Yellow #d29922)** - 3 icons:
+- ic-attr-processing-speed.svg
+- ic-attr-targeting-priority.svg
+- ic-attr-scan-radius.svg
+
+**Team Coordination (Purple #a371f7)** - 3 icons:
+- ic-attr-command-range.svg
+- ic-attr-support-efficiency.svg
+- ic-attr-sync-bonus.svg
+
+**Specs**:
+- Format: SVG
+- Viewbox: 0 0 24 24 (24×24px base)
+- Style: Simple geometric icons, 2px stroke
+- Color: Category-specific (see above)
+
+### Benefit Category Icons (8 Icons)
+
+For facility upgrade benefits:
+- ic-benefit-damage.svg
+- ic-benefit-defense.svg
+- ic-benefit-speed.svg
+- ic-benefit-accuracy.svg
+- ic-benefit-health.svg
+- ic-benefit-income.svg
+- ic-benefit-capacity.svg
+- ic-benefit-discount.svg
+
+**Specs**: Same as attribute icons (24×24px SVG)
+
+### Navigation Icon Set (8 Icons)
+
+- ic-nav-dashboard.svg - Grid/dashboard icon
+- ic-nav-robots.svg - Robot head icon
+- ic-nav-weapons.svg - Sword/weapon icon
+- ic-nav-facilities.svg - Building/factory icon
+- ic-nav-battles.svg - Crossed swords icon
+- ic-nav-inventory.svg - Backpack/storage icon
+- ic-nav-profile.svg - User icon
+- ic-nav-settings.svg - Gear icon
+
+**Specs**:
+- Format: SVG
+- Viewbox: 0 0 24 24
+- Style: Line icons, 2px stroke
+- States: Default (gray), Active (primary accent), Hover (with glow)
+
+### Loadout Slot Icons
+
+Visual representation of equipment slots:
+- slot-main-empty.svg
+- slot-main-filled.svg
+- slot-offhand-empty.svg
+- slot-offhand-filled.svg
+- slot-twohanded-empty.svg
+- slot-dual-wield-left.svg
+- slot-dual-wield-right.svg
+
+**Specs**: SVG, outlined slot plates with hand labels (R/L)
+
+### Status Badges & Overlays
+
+**ELO Rank Badges** (6 tiers):
+- Bronze: 1000-1399 ELO (bronze frame, #cd7f32)
+- Silver: 1400-1799 ELO (silver frame, #c0c0c0)
+- Gold: 1800-2199 ELO (gold frame, #ffd700)
+- Platinum: 2200-2599 ELO (platinum frame, #e5e4e2)
+- Diamond: 2600+ ELO (diamond frame, #b9f2ff)
+- Champion: Top 100 (animated, #ff00ff)
+
+**Format**: PNG with transparency (32px, 64px, 128px variants)
+
+**File Naming**:
+```
+rank-badge-bronze-32.png
+rank-badge-silver-64.png
+rank-badge-champion-128.png
+```
+
+### Empty State Illustrations
+
+**5 Scenarios**:
+1. **No Robots** (`empty-no-robots.webp`)
+   - Empty hangar, "Build Your First Robot" CTA
+   - Used: RobotsPage when 0 robots
+   
+2. **No Weapons Equipped** (`empty-no-weapons-equipped.webp`)
+   - Empty weapon rack, "Equip Weapons to Boost Stats"
+   - Used: RobotDetailPage when no weapons equipped
+   
+3. **No Inventory** (`empty-no-inventory.webp`)
+   - Empty storage room, "Visit Weapon Shop" CTA
+   - Used: WeaponInventoryPage when 0 weapons owned
+   
+4. **Facility Locked** (`empty-facility-locked.webp`)
+   - Locked facility door, "Upgrade to Unlock"
+   - Used: FacilitiesPage for locked facilities (future)
+   
+5. **No Battles** (`empty-no-battles.webp`)
+   - Empty arena, "Your First Battle Awaits"
+   - Used: DashboardPage when 0 battles
+
+**Specs**:
+- Format: WEBP
+- Size: 512×256px (wide format)
+- Style: Simple line art with accent color
+- Tone: Encouraging, not negative
+
+### Background Assets
+
+**Arena Backgrounds** (3 variants):
+- bg-arena-main.webp - General arena environment
+- bg-arena-hangar.webp - Robot storage/maintenance area
+- bg-arena-grid.webp - Tech grid pattern
+
+**Specs**:
+- Format: WEBP
+- Size: 1920×1080px minimum (full viewport)
+- Usage: Full-screen background at low opacity (10-20%)
+- Style: Atmospheric, non-distracting
+
+### UI Frame Elements
+
+**Corner Brackets** (4 corners):
+- ui-corner-tl.svg (top-left)
+- ui-corner-tr.svg (top-right)
+- ui-corner-bl.svg (bottom-left)
+- ui-corner-br.svg (bottom-right)
+
+**Section Dividers**:
+- ui-divider.svg - Horizontal line with center tech ornament
+
+**Specs**: SVG, subtle sci-fi HUD aesthetic, primary accent color at 20% opacity
+
+### Performance & Optimization Guidelines
+
+**Image Optimization**:
+- WEBP compression: Quality 85 (balance size/quality)
+- SVG optimization: Run through SVGO tool
+- Progressive loading: Use srcset for responsive images
+- Lazy loading: Defer off-screen images
+
+**Performance Targets**:
+- Total asset payload: <5MB for initial load
+- Individual image: <100KB for portraits, <50KB for icons
+- Page load time increase: <500ms with full assets
+
+**Browser Support**:
+- WEBP fallback to PNG for older browsers
+- SVG supported in all modern browsers
+
+**Caching Strategy**:
+- Long-term caching for immutable assets (versioned filenames)
+- Cache-busting via build tool hash in filename
+
+### Asset Creation Workflow
+
+**For AI Generation** (Phase 1 MVP):
+1. Create detailed prompts for each asset type
+2. Generate multiple variants for selection
+3. Optimize output files (WEBP compression, SVGO)
+4. Test at multiple sizes/contexts
+5. Iterate based on consistency and brand alignment
+
+**Quality Checklist**:
+- [ ] Consistent lighting across all robot portraits
+- [ ] Same background style for portraits and weapons
+- [ ] Color palette matches design system
+- [ ] Readable at smallest usage size
+- [ ] File size optimized (<100KB for portraits)
+- [ ] Alt text provided for accessibility
+
+### Asset Inventory Summary
+
+**Total Assets Required** (Phase 1 MVP):
+
+| Category | Count | Format | Total Size Estimate |
+|----------|-------|--------|-------------------|
+| Robot Portraits | 48 | WEBP | ~2.4MB (50KB each) |
+| Weapon Illustrations | 20 | WEBP | ~1.0MB (50KB each) |
+| Facility Illustrations | 14 | WEBP | ~0.7MB (50KB each) |
+| Attribute Icons | 23 | SVG | ~46KB (2KB each) |
+| Weapon Type Icons | 4 | SVG | ~8KB |
+| Benefit Icons | 8 | SVG | ~16KB |
+| Navigation Icons | 8 | SVG | ~16KB |
+| Loadout Icons | 7 | SVG | ~14KB |
+| Silhouettes | 12 | SVG | ~24KB |
+| Logos (3 directions) | 3 | SVG | ~9KB |
+| Currency Icons | 2 | SVG | ~4KB |
+| Empty States | 5 | WEBP | ~0.25MB (50KB each) |
+| Rank Badges | 18 | PNG | ~0.36MB (20KB each) |
+| UI Frames | 5 | SVG | ~10KB |
+| **TOTAL** | **176** | — | **~4.9MB** |
+
+**Note**: Actual payload will be smaller due to lazy loading and progressive image loading. Only assets for current page are loaded initially.
+
+---
+
 ## Implementation Priority Matrix
 
 ### Priority Levels
