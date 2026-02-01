@@ -211,6 +211,10 @@ ARMOURED SOULS
   › Logout
 ```
 
+--> Does this take into account all possible future functionality? Matchmaking is not "future" as it is already in place. It is currently in a section called "Upcoming Battles" on the Dashboard. What about Tournaments? 2v2? nvn? Do we need to cater for this or can we expand on this train of thought?
+--> If we implement this, what is the inmpact on the visual hierarchy you mentioned above?
+--> Where can a user view his robots in this menu structure? How about upgrading? How about battle configuration?
+
 ---
 
 ## Component Specifications
