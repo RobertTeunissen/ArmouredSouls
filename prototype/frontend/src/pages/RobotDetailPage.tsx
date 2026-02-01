@@ -61,6 +61,7 @@ interface Robot {
   // Performance Tracking
   totalBattles: number;
   wins: number;
+  draws: number;
   losses: number;
   damageDealtLifetime: number;
   damageTakenLifetime: number;
