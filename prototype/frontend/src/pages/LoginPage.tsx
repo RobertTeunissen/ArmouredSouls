@@ -3,6 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import logoD from '../assets/logos/logo-d.svg';
 
+// Shared input field styling that follows design system
+const INPUT_CLASS = `w-full px-4 py-3 bg-surface border border-tertiary rounded-lg 
+                     text-primary placeholder-tertiary
+                     focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
+                     disabled:bg-background disabled:border-tertiary/50 disabled:opacity-60
+                     transition-all duration-150 ease-out`;
+
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -66,11 +73,7 @@ function LoginPage() {
                 name="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-surface border border-tertiary rounded-lg 
-                           text-primary placeholder-tertiary
-                           focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
-                           disabled:bg-background disabled:border-tertiary/50 disabled:opacity-60
-                           transition-all duration-150 ease-out"
+                className={INPUT_CLASS}
                 placeholder="Enter your username"
                 required
                 aria-required="true"
@@ -92,11 +95,7 @@ function LoginPage() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-surface border border-tertiary rounded-lg 
-                           text-primary placeholder-tertiary
-                           focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
-                           disabled:bg-background disabled:border-tertiary/50 disabled:opacity-60
-                           transition-all duration-150 ease-out"
+                className={INPUT_CLASS}
                 placeholder="Enter your password"
                 required
                 aria-required="true"
@@ -113,7 +112,7 @@ function LoginPage() {
                          disabled:bg-primary-dark disabled:opacity-60 
                          text-white font-medium px-6 py-3 rounded-lg 
                          transition-all duration-150 ease-out
-                         hover:-translate-y-0.5 hover:shadow-lg
+                         motion-safe:hover:-translate-y-0.5 hover:shadow-lg
                          focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background
                          min-h-[48px]"
             >
