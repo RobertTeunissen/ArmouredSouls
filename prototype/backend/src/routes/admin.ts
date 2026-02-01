@@ -360,4 +360,248 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
   }
 });
 
+/**
+ * GET /api/admin/battles
+ * Get paginated list of battles with filtering and search
+ */
+router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 per page
+    const search = req.query.search as string;
+    const leagueType = req.query.leagueType as string;
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where: any = {};
+
+    // Search by robot name
+    if (search) {
+      where.OR = [
+        {
+          robot1: {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        },
+        {
+          robot2: {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        },
+      ];
+    }
+
+    // Filter by league type
+    if (leagueType && leagueType !== 'all') {
+      where.leagueType = leagueType;
+    }
+
+    // Get total count for pagination
+    const totalBattles = await prisma.battle.count({ where });
+
+    // Get battles with related data
+    const battles = await prisma.battle.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        robot1: {
+          select: {
+            id: true,
+            name: true,
+            userId: true,
+          },
+        },
+        robot2: {
+          select: {
+            id: true,
+            name: true,
+            userId: true,
+          },
+        },
+      },
+    });
+
+    res.json({
+      battles: battles.map(battle => ({
+        id: battle.id,
+        robot1: battle.robot1,
+        robot2: battle.robot2,
+        winnerId: battle.winnerId,
+        winnerName:
+          battle.winnerId === battle.robot1.id
+            ? battle.robot1.name
+            : battle.winnerId === battle.robot2.id
+            ? battle.robot2.name
+            : 'Draw',
+        leagueType: battle.leagueType,
+        durationSeconds: battle.durationSeconds,
+        robot1FinalHP: battle.robot1FinalHP,
+        robot2FinalHP: battle.robot2FinalHP,
+        robot1ELOBefore: battle.robot1ELOBefore,
+        robot2ELOBefore: battle.robot2ELOBefore,
+        robot1ELOAfter: battle.robot1ELOAfter,
+        robot2ELOAfter: battle.robot2ELOAfter,
+        createdAt: battle.createdAt,
+      })),
+      pagination: {
+        page,
+        limit,
+        totalBattles,
+        totalPages: Math.ceil(totalBattles / limit),
+        hasMore: skip + battles.length < totalBattles,
+      },
+    });
+  } catch (error) {
+    console.error('[Admin] Battles list error:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve battles',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
+ * GET /api/admin/battles/:id
+ * Get detailed battle information including full combat log
+ */
+router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const battleId = parseInt(req.params.id);
+
+    if (isNaN(battleId)) {
+      return res.status(400).json({ error: 'Invalid battle ID' });
+    }
+
+    const battle = await prisma.battle.findUnique({
+      where: { id: battleId },
+      include: {
+        robot1: true,
+        robot2: true,
+      },
+    });
+
+    if (!battle) {
+      return res.status(404).json({ error: 'Battle not found' });
+    }
+
+    // Return complete battle data including detailed combat events
+    res.json({
+      id: battle.id,
+      battleType: battle.battleType,
+      leagueType: battle.leagueType,
+      durationSeconds: battle.durationSeconds,
+      createdAt: battle.createdAt,
+      
+      // Robot data
+      robot1: {
+        id: battle.robot1.id,
+        name: battle.robot1.name,
+        userId: battle.robot1.userId,
+        attributes: {
+          combatPower: battle.robot1.combatPower,
+          targetingSystems: battle.robot1.targetingSystems,
+          criticalSystems: battle.robot1.criticalSystems,
+          penetration: battle.robot1.penetration,
+          weaponControl: battle.robot1.weaponControl,
+          attackSpeed: battle.robot1.attackSpeed,
+          armorPlating: battle.robot1.armorPlating,
+          shieldCapacity: battle.robot1.shieldCapacity,
+          evasionThrusters: battle.robot1.evasionThrusters,
+          damageDampeners: battle.robot1.damageDampeners,
+          counterProtocols: battle.robot1.counterProtocols,
+          hullIntegrity: battle.robot1.hullIntegrity,
+          servoMotors: battle.robot1.servoMotors,
+          gyroStabilizers: battle.robot1.gyroStabilizers,
+          hydraulicSystems: battle.robot1.hydraulicSystems,
+          powerCore: battle.robot1.powerCore,
+          combatAlgorithms: battle.robot1.combatAlgorithms,
+          threatAnalysis: battle.robot1.threatAnalysis,
+          adaptiveAI: battle.robot1.adaptiveAI,
+          logicCores: battle.robot1.logicCores,
+          syncProtocols: battle.robot1.syncProtocols,
+          supportSystems: battle.robot1.supportSystems,
+          formationTactics: battle.robot1.formationTactics,
+        },
+        loadout: battle.robot1.loadoutType,
+        stance: battle.robot1.stance,
+      },
+      robot2: {
+        id: battle.robot2.id,
+        name: battle.robot2.name,
+        userId: battle.robot2.userId,
+        attributes: {
+          combatPower: battle.robot2.combatPower,
+          targetingSystems: battle.robot2.targetingSystems,
+          criticalSystems: battle.robot2.criticalSystems,
+          penetration: battle.robot2.penetration,
+          weaponControl: battle.robot2.weaponControl,
+          attackSpeed: battle.robot2.attackSpeed,
+          armorPlating: battle.robot2.armorPlating,
+          shieldCapacity: battle.robot2.shieldCapacity,
+          evasionThrusters: battle.robot2.evasionThrusters,
+          damageDampeners: battle.robot2.damageDampeners,
+          counterProtocols: battle.robot2.counterProtocols,
+          hullIntegrity: battle.robot2.hullIntegrity,
+          servoMotors: battle.robot2.servoMotors,
+          gyroStabilizers: battle.robot2.gyroStabilizers,
+          hydraulicSystems: battle.robot2.hydraulicSystems,
+          powerCore: battle.robot2.powerCore,
+          combatAlgorithms: battle.robot2.combatAlgorithms,
+          threatAnalysis: battle.robot2.threatAnalysis,
+          adaptiveAI: battle.robot2.adaptiveAI,
+          logicCores: battle.robot2.logicCores,
+          syncProtocols: battle.robot2.syncProtocols,
+          supportSystems: battle.robot2.supportSystems,
+          formationTactics: battle.robot2.formationTactics,
+        },
+        loadout: battle.robot2.loadoutType,
+        stance: battle.robot2.stance,
+      },
+      
+      // Battle results
+      winnerId: battle.winnerId,
+      robot1FinalHP: battle.robot1FinalHP,
+      robot2FinalHP: battle.robot2FinalHP,
+      robot1FinalShield: battle.robot1FinalShield,
+      robot2FinalShield: battle.robot2FinalShield,
+      robot1DamageDealt: battle.robot1DamageDealt,
+      robot2DamageDealt: battle.robot2DamageDealt,
+      robot1Yielded: battle.robot1Yielded,
+      robot2Yielded: battle.robot2Yielded,
+      robot1Destroyed: battle.robot1Destroyed,
+      robot2Destroyed: battle.robot2Destroyed,
+      
+      // ELO changes
+      robot1ELOBefore: battle.robot1ELOBefore,
+      robot2ELOBefore: battle.robot2ELOBefore,
+      robot1ELOAfter: battle.robot1ELOAfter,
+      robot2ELOAfter: battle.robot2ELOAfter,
+      eloChange: battle.eloChange,
+      
+      // Economic
+      winnerReward: battle.winnerReward,
+      loserReward: battle.loserReward,
+      robot1RepairCost: battle.robot1RepairCost,
+      robot2RepairCost: battle.robot2RepairCost,
+      
+      // Combat log with detailed events
+      battleLog: battle.battleLog,
+    });
+  } catch (error) {
+    console.error('[Admin] Battle detail error:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve battle details',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
 export default router;
