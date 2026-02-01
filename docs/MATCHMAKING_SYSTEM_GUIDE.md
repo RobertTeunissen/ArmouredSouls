@@ -53,7 +53,7 @@ The Armoured Souls matchmaking system is a comprehensive turn-based multiplayer 
 **Completed**: ELO-based pairing with quality scoring
 
 **Features:**
-- Battle readiness checks (HP ≥50%, weapons equipped)
+- Battle readiness checks (HP ≥75%, HP > yield threshold, weapons equipped)
 - ELO-based pairing (±150 ideal, ±300 fallback)
 - Recent opponent tracking (soft deprioritize last 5)
 - Same-stable deprioritization (heavy penalty)
@@ -68,7 +68,8 @@ The Armoured Souls matchmaking system is a comprehensive turn-based multiplayer 
 **Integrated**: Battle readiness validation in matchmaking service
 
 **Features:**
-- HP threshold validation (≥50%)
+- HP threshold validation (≥75%)
+- Yield threshold check (prevents immediate surrender)
 - Weapon loadout validation
 - All loadout types supported
 
@@ -485,7 +486,7 @@ Key constants can be adjusted:
 ELO_MATCH_IDEAL = 150           // Ideal ELO difference
 ELO_MATCH_FALLBACK = 300        // Maximum ELO difference
 RECENT_OPPONENT_LIMIT = 5       // Recent opponents to track
-BATTLE_READINESS_HP_THRESHOLD = 0.50  // 50% HP required (reduced from 75% to reduce byes)
+BATTLE_READINESS_HP_THRESHOLD = 0.75  // 75% HP required (ensures robot won't immediately yield)
 ```
 
 **Battle Execution (`battleOrchestrator.ts`):**
@@ -513,13 +514,14 @@ MIN_ROBOTS_FOR_REBALANCE = 10   // Minimum robots in tier
 
 ### Issue: No matches being created
 **Causes:**
-- Insufficient battle-ready robots (HP <50%)
+- Insufficient battle-ready robots (HP <75% or HP ≤ yield threshold)
 - No weapons equipped
 - All robots already scheduled
 
 **Solutions:**
 - Run auto-repair: `POST /api/admin/repair/all`
 - Check robot HP and weapons
+- Check robot yield thresholds
 - Verify scheduled matches table
 
 ### Issue: Battles not executing
