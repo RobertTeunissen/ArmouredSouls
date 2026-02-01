@@ -167,7 +167,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - No battle imagery or excitement here - this is the threshold
 - Simple, fast, functional
 
-#### Implementation Priority: **P2** (After core gameplay screens)
+#### Implementation Priority: **IMPLEMENTED**
 
 ---
 
@@ -179,15 +179,19 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 #### What Users Should See
 - **Logo**: Direction B in navigation (engineering, precise)
-- **Hero Section**: Stable name with edit capability, Credits/Prestige prominently displayed
-- **Robot Cards**: Visual grid/list of active robots with:
+- **Stable Section**: Stable name with edit capability, Credits/Prestige prominently displayed
+  - Finances with link to detail pages (Daily finance statements)
+- **Statistics Panel**: Stable-wide stats (battles, wins/draws/losses, win rate)
+- **Robot Cards**: Visual grid/list of active robots (sorted with highest League first) with:
   - Robot portrait (primary identity)
-  - Robot name
+  - Robot name (Link to Robot details for battle configuration or upgrades)
   - HP bar (with critical/warning states)
+  - Battle Readiness indicator
   - ELO rating badge
+  - Current League and League Points (Link to league)
   - Quick action buttons (View Details, Repair)
-- **Statistics Panel**: Stable-wide stats (battles, wins, win rate)
-- **Recent Activity**: Battle results timeline (future)
+  - Upcoming matches (grouped per type - only Leagues are immplemented)
+  - Recent battle results
 
 #### Visual Elements Required
 - [ ] **Robot Portraits** (256×256px, framed in cards)
@@ -274,6 +278,10 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 #### Implementation Priority: **P0** (Highest priority)
 
+--> What's the function of this page? What does it show that's not on the Dashboard Robot Cards?
+--> Currently it's mainly used to create another robot and as alternative to the Weapons Shop (which is also in the Top Bar)
+--> This could be part of a higher hierarchy showing "My Assets" (Facilities / Robots / Weapons are currently defined)?
+
 ---
 
 ### 4. Robot Detail Page
@@ -285,6 +293,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 #### What Users Should See
 - **Logo**: Direction B in navigation
 - **Hero Section**: Large robot portrait with name, frame, ELO
+- **Performance Stats**: Battles, wins, losses, damage dealt/taken
 - **Combat State Panel**:
   - Current HP / Max HP (bar + numbers)
   - Current Shield / Max Shield (bar + numbers)
@@ -305,7 +314,8 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Base stat + bonuses breakdown
   - Effective stat calculation shown
   - Color-coded by category (Combat, Defense, Chassis, AI, Team)
-- **Performance Stats**: Battles, wins, losses, damage dealt/taken
+ 
+--> Do we need to add that everyone can see the basics of every robot (as already implemented) but only owners can see everything?
 
 #### Visual Elements Required
 - [ ] **Large Robot Portrait** (512×512px, hero placement)
@@ -348,6 +358,8 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 **Route**: `/robots/create`  
 **Logo State**: Direction B (Precision)  
 **Emotional Target**: Anticipation, investment
+
+--> How do you access this page? Currently accessible via /robots or via /dashboard. 
 
 #### What Users Should See
 - **Logo**: Direction B in navigation
@@ -407,9 +419,11 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Base damage
   - Cooldown
   - Attribute bonuses (compact list)
-  - Cost (₡)
+  - Cost (₡) (with discount when applicable)
   - Purchase button (disabled if storage full or insufficient Credits)
 - **Workshop Discount Badge** (if Weapons Workshop upgraded)
+
+--> There's 11 weapons now, Practice Sword has been added. Update relevant documentation, it's in the seed. 
 
 #### Visual Elements Required
 - [ ] **Weapon Illustrations** (256×256px, detailed mechanical renderings)
@@ -423,7 +437,13 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Particle Beam - beam weapon
   - Kinetic Barrier - shield variant
   - Fusion Blade - two-handed sword
+     
+--> Many of the names are incorrect. We have a Combat Shield, Shotgun, Hammer, Plasma Cannon. These should carry the same names as the weapons in the actual database.
+
 - [ ] **Weapon Type Icons** (32×32px: Melee, Ballistic, Energy, Shield)
+
+--> I'm not happy with those namings. Currently they don't really have any effect. If we keep those icons, we need to properly define them and use them. Melee and Shield are how you use something, Ballistic is a mix, Energy how damage is dealt. Let's stick to one system. 
+
 - [ ] **Cost Badge** (₡ icon + amount)
 - [ ] **Storage Full Warning** (visual indicator)
 - [ ] **Discount Badge** (% off, if applicable)
@@ -446,6 +466,8 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - Storage capacity shown to prevent **over-purchasing frustration**
 - Direction B emphasizes **catalog browsing and comparison**
 
+--> How can a user do a quick comparison between the weapons?
+
 #### Implementation Priority: **P1** (After robot pages)
 
 ---
@@ -467,6 +489,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Specs (damage, cooldown)
   - Equipped Status: "Equipped on [Robot Name]" or "Available"
   - Quick Unequip button (if equipped)
+  - Ability to equip on a robot (if Robot loadout allows)
 
 #### Visual Elements Required
 - [ ] **Weapon Thumbnails** (same as shop, 256×256px)
@@ -491,6 +514,8 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - Equipped status must be **immediately visible**
 - Small robot portraits show **weapon allocation** without navigation
 - Direction B reinforces **systematic inventory control**
+
+--> How can a user do a quick comparison between the weapons?
 
 #### Implementation Priority: **P1** (After weapon shop)
 
@@ -560,7 +585,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 ---
 
-### 9. Battle Preparation Screen (Future)
+### 9. Battle Preparation Screen 
 
 **Route**: `/battle/prepare/:robotId`  
 **Logo State**: Direction B → C (Transition)  
@@ -576,6 +601,8 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Yield threshold
   - Effective stats preview
 - **Confirm Battle Button**: Large, decisive action
+
+--> How will a user access this page? How does he arrive here?
 
 #### Visual Elements Required
 - [ ] **Robot Portrait** (battle-ready pose, 512×512px)
@@ -603,11 +630,13 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - Opponent preview builds **anticipation without revealing too much**
 - Arena background begins **atmospheric shift** to battle context
 
-#### Implementation Priority: **P2** (Post-MVP, when battle system launches)
+#### Implementation Priority: **P2**
 
 ---
 
 ### 10. Battle Result Screen (Future)
+
+--> You seem to have difficulties with what's already there and what is future. We already have a screen: /battle-history. Here users can see there own battles for all their robots. They can also click and do a deep dive into the battle log. 
 
 **Route**: `/battles/:id/result`  
 **Logo State**: Direction C (Energized)  
@@ -661,9 +690,13 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 #### Implementation Priority: **P2** (Post-MVP, with battle system)
 
+--> Battle system is already implemented. Where did you find it is not?
+
 ---
 
 ### 11. Leaderboards / Rankings (Future)
+
+--> Leaderboards were introduced in League system. /league-standings! 
 
 **Route**: `/leaderboards`  
 **Logo State**: Direction B (Precision)  
@@ -759,6 +792,9 @@ Based on the comprehensive design system, the following asset categories are def
   - Ballistic: Dark metal with orange details
   - Energy: Chrome with cyan/purple glow
   - Shield: Translucent blue energy
+
+ --> See comment about weapon types above.
+
 - **Quantity**: 10 weapons (expandable)
 
 **2.2 Weapon Type Icons**
@@ -1365,6 +1401,8 @@ robot-chassis-scout-green.webp
 **Two-Handed Weapons (1)**:
 10. **Heavy Cannon** - Massive artillery piece, stabilizer legs deployed
 
+--> Is this canonical with the weapons defined in the system?
+
 **Technical Specs**:
 - Format: WEBP
 - Catalog size: 256×256px (shop grid)
@@ -1413,6 +1451,8 @@ weapon-laser-rifle-full.webp
 13. Storage Expansion
 14. Booking Office
 
+--> Check your namings, this is not correct. In truth we have "Storage Facility" and "Defense Training Academy" for example. 
+
 **Technical Specs**:
 - Format: WEBP
 - Size: 256×256px square
@@ -1427,6 +1467,8 @@ facility-training-academy.webp
 facility-weapons-workshop.webp
 facility-armor-plating-bay.webp
 ```
+
+--> Use real examples
 
 ### Attribute Icon Set (23 Icons)
 
@@ -1465,6 +1507,8 @@ Organized by category with color coding:
 - ic-attr-support-efficiency.svg
 - ic-attr-sync-bonus.svg
 
+--> If you are going to create attritbute icons, at least use the correct naming for the icons. Where did you get these names?
+
 **Specs**:
 - Format: SVG
 - Viewbox: 0 0 24 24 (24×24px base)
@@ -1482,6 +1526,8 @@ For facility upgrade benefits:
 - ic-benefit-income.svg
 - ic-benefit-capacity.svg
 - ic-benefit-discount.svg
+
+--> Why these? Which benefit which? And where do you want to use them?
 
 **Specs**: Same as attribute icons (24×24px SVG)
 
@@ -1524,6 +1570,8 @@ Visual representation of equipment slots:
 - Platinum: 2200-2599 ELO (platinum frame, #e5e4e2)
 - Diamond: 2600+ ELO (diamond frame, #b9f2ff)
 - Champion: Top 100 (animated, #ff00ff)
+
+--> We should not confuse ELO with Leagues. A certain ELO does not mean immediate promotion, we use League Points for this. 
 
 **Format**: PNG with transparency (32px, 64px, 128px variants)
 
@@ -1612,7 +1660,7 @@ rank-badge-champion-128.png
 
 ### Asset Creation Workflow
 
-**For AI Generation** (Phase 1 MVP):
+**For AI Generation**:
 1. Create detailed prompts for each asset type
 2. Generate multiple variants for selection
 3. Optimize output files (WEBP compression, SVGO)
@@ -1698,6 +1746,8 @@ rank-badge-champion-128.png
 | Battle Preparation | P2 | ⏳ Post-MVP - Needs battle system first |
 | Battle Result | P2 | ⏳ Post-MVP - Needs battle system first |
 | Leaderboards | P2 | ⏳ Post-MVP - Functional but not urgent |
+
+-> Not correct, all these pages are already present. 
 
 ### Development Phases
 
