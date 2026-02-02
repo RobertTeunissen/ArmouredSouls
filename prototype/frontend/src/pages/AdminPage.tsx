@@ -48,6 +48,45 @@ interface BattleListResponse {
   };
 }
 
+interface RobotStats {
+  summary: {
+    totalRobots: number;
+    robotsWithBattles: number;
+    totalBattles: number;
+    overallWinRate: number;
+    averageElo: number;
+  };
+  attributeStats: Record<string, {
+    mean: number;
+    median: number;
+    stdDev: number;
+    min: number;
+    max: number;
+    q1: number;
+    q3: number;
+    iqr: number;
+    lowerBound: number;
+    upperBound: number;
+  }>;
+  outliers: Record<string, Array<{
+    id: number;
+    name: string;
+    value: number;
+    league: string;
+    elo: number;
+    winRate: number;
+  }>>;
+  statsByLeague: Record<string, any>;
+  winRateAnalysis: Record<string, Array<{
+    quintile: number;
+    avgValue: number;
+    avgWinRate: number;
+    sampleSize: number;
+  }>>;
+  topPerformers: Record<string, any[]>;
+  bottomPerformers: Record<string, any[]>;
+}
+
 function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -65,6 +104,12 @@ function AdminPage() {
   const [leagueFilter, setLeagueFilter] = useState('all');
   const [selectedBattleId, setSelectedBattleId] = useState<number | null>(null);
   const [showBattleModal, setShowBattleModal] = useState(false);
+
+  // Robot statistics state
+  const [robotStats, setRobotStats] = useState<RobotStats | null>(null);
+  const [robotStatsLoading, setRobotStatsLoading] = useState(false);
+  const [showRobotStats, setShowRobotStats] = useState(false);
+  const [selectedAttribute, setSelectedAttribute] = useState<string>('combatPower');
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -198,6 +243,20 @@ function AdminPage() {
   const handleSearch = () => {
     setCurrentPage(1);
     fetchBattles(1);
+  };
+
+  const fetchRobotStats = async () => {
+    setRobotStatsLoading(true);
+    try {
+      const response = await axios.get('/api/admin/stats/robots');
+      setRobotStats(response.data);
+      setShowRobotStats(true);
+      showMessage('success', 'Robot statistics loaded successfully');
+    } catch (error: any) {
+      showMessage('error', error.response?.data?.error || 'Failed to fetch robot statistics');
+    } finally {
+      setRobotStatsLoading(false);
+    }
   };
 
   // Auto-load battles when component mounts
@@ -365,8 +424,290 @@ function AdminPage() {
           )}
         </div>
 
+        {/* Robot Statistics Section */}
+        <div className="bg-gray-800 rounded-lg p-6 mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">🤖 Robot Attribute Statistics</h2>
+            <button
+              onClick={fetchRobotStats}
+              disabled={robotStatsLoading}
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+            >
+              {robotStatsLoading ? 'Loading...' : showRobotStats ? 'Refresh Stats' : 'Load Statistics'}
+            </button>
+          </div>
+
+          {!showRobotStats && !robotStatsLoading && (
+            <div className="text-center py-8 text-gray-400">
+              <p className="mb-4">Click "Load Statistics" to analyze robot attributes and find outliers</p>
+              <p className="text-sm">This will show:</p>
+              <ul className="text-sm mt-2 space-y-1">
+                <li>• Statistical analysis of all 23 attributes</li>
+                <li>• Outlier detection using IQR method</li>
+                <li>• Win rate correlations</li>
+                <li>• League-based comparisons</li>
+                <li>• Top/bottom performers</li>
+              </ul>
+            </div>
+          )}
+
+          {robotStatsLoading && (
+            <div className="text-center py-8 text-gray-400">
+              <div className="animate-pulse">Loading robot statistics...</div>
+            </div>
+          )}
+
+          {showRobotStats && robotStats && (
+            <div className="space-y-6">
+              {/* Summary Stats */}
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h3 className="text-xl font-semibold mb-3">Summary</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-400">Total Robots</p>
+                    <p className="text-2xl font-bold">{robotStats.summary.totalRobots}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">With Battles</p>
+                    <p className="text-2xl font-bold">{robotStats.summary.robotsWithBattles}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Total Battles</p>
+                    <p className="text-2xl font-bold">{robotStats.summary.totalBattles}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Win Rate</p>
+                    <p className="text-2xl font-bold">{robotStats.summary.overallWinRate.toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Avg ELO</p>
+                    <p className="text-2xl font-bold">{robotStats.summary.averageElo}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attribute Selector */}
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h3 className="text-xl font-semibold mb-3">Select Attribute to Analyze</h3>
+                <select
+                  value={selectedAttribute}
+                  onChange={(e) => setSelectedAttribute(e.target.value)}
+                  className="w-full bg-gray-800 text-white px-4 py-2 rounded"
+                >
+                  <optgroup label="Combat Systems">
+                    <option value="combatPower">Combat Power</option>
+                    <option value="targetingSystems">Targeting Systems</option>
+                    <option value="criticalSystems">Critical Systems</option>
+                    <option value="penetration">Penetration</option>
+                    <option value="weaponControl">Weapon Control</option>
+                    <option value="attackSpeed">Attack Speed</option>
+                  </optgroup>
+                  <optgroup label="Defensive Systems">
+                    <option value="armorPlating">Armor Plating</option>
+                    <option value="shieldCapacity">Shield Capacity</option>
+                    <option value="evasionThrusters">Evasion Thrusters</option>
+                    <option value="damageDampeners">Damage Dampeners</option>
+                    <option value="counterProtocols">Counter Protocols</option>
+                  </optgroup>
+                  <optgroup label="Chassis & Mobility">
+                    <option value="hullIntegrity">Hull Integrity</option>
+                    <option value="servoMotors">Servo Motors</option>
+                    <option value="gyroStabilizers">Gyro Stabilizers</option>
+                    <option value="hydraulicSystems">Hydraulic Systems</option>
+                    <option value="powerCore">Power Core</option>
+                  </optgroup>
+                  <optgroup label="AI Processing">
+                    <option value="combatAlgorithms">Combat Algorithms</option>
+                    <option value="threatAnalysis">Threat Analysis</option>
+                    <option value="adaptiveAI">Adaptive AI</option>
+                    <option value="logicCores">Logic Cores</option>
+                  </optgroup>
+                  <optgroup label="Team Coordination">
+                    <option value="syncProtocols">Sync Protocols</option>
+                    <option value="supportSystems">Support Systems</option>
+                    <option value="formationTactics">Formation Tactics</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              {/* Attribute Statistics */}
+              {robotStats.attributeStats[selectedAttribute] && (
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-xl font-semibold mb-3">
+                    {selectedAttribute.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} - Statistics
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                    {Object.entries(robotStats.attributeStats[selectedAttribute]).map(([key, value]) => (
+                      <div key={key}>
+                        <p className="text-gray-400">{key.toUpperCase()}</p>
+                        <p className="text-lg font-bold">{Number(value).toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Outliers */}
+              {robotStats.outliers[selectedAttribute] && robotStats.outliers[selectedAttribute].length > 0 && (
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-xl font-semibold mb-3 text-yellow-400">
+                    ⚠️ Outliers Detected ({robotStats.outliers[selectedAttribute].length})
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-800">
+                        <tr>
+                          <th className="p-2 text-left">Robot</th>
+                          <th className="p-2 text-left">Value</th>
+                          <th className="p-2 text-left">League</th>
+                          <th className="p-2 text-left">ELO</th>
+                          <th className="p-2 text-left">Win Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {robotStats.outliers[selectedAttribute].map((outlier, idx) => (
+                          <tr key={idx} className="border-t border-gray-600">
+                            <td className="p-2">{outlier.name}</td>
+                            <td className="p-2 font-bold text-yellow-400">{outlier.value}</td>
+                            <td className="p-2">
+                              <span className="px-2 py-1 bg-gray-800 rounded text-xs">{outlier.league}</span>
+                            </td>
+                            <td className="p-2">{outlier.elo}</td>
+                            <td className="p-2">{outlier.winRate}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Win Rate Analysis */}
+              {robotStats.winRateAnalysis[selectedAttribute] && robotStats.winRateAnalysis[selectedAttribute].length > 0 && (
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-xl font-semibold mb-3">🎯 Win Rate Correlation</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-800">
+                        <tr>
+                          <th className="p-2 text-left">Quintile</th>
+                          <th className="p-2 text-left">Avg Value</th>
+                          <th className="p-2 text-left">Avg Win Rate</th>
+                          <th className="p-2 text-left">Sample Size</th>
+                          <th className="p-2 text-left">Visual</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {robotStats.winRateAnalysis[selectedAttribute].map((quintile, idx) => (
+                          <tr key={idx} className="border-t border-gray-600">
+                            <td className="p-2">Q{quintile.quintile} ({idx === 0 ? 'Bottom 20%' : idx === 4 ? 'Top 20%' : 'Middle'})</td>
+                            <td className="p-2 font-bold">{quintile.avgValue.toFixed(2)}</td>
+                            <td className="p-2 font-bold text-green-400">{quintile.avgWinRate.toFixed(1)}%</td>
+                            <td className="p-2">{quintile.sampleSize}</td>
+                            <td className="p-2">
+                              <div className="bg-gray-800 rounded h-4 overflow-hidden">
+                                <div 
+                                  className="bg-green-500 h-full"
+                                  style={{ width: `${quintile.avgWinRate}%` }}
+                                ></div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">
+                    💡 Higher win rate in top quintile = attribute strongly impacts success
+                  </p>
+                </div>
+              )}
+
+              {/* League Comparison */}
+              {robotStats.statsByLeague && Object.keys(robotStats.statsByLeague).length > 0 && (
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-xl font-semibold mb-3">🏆 League Comparison</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-800">
+                        <tr>
+                          <th className="p-2 text-left">League</th>
+                          <th className="p-2 text-left">Robots</th>
+                          <th className="p-2 text-left">Avg ELO</th>
+                          <th className="p-2 text-left">Mean {selectedAttribute}</th>
+                          <th className="p-2 text-left">Median {selectedAttribute}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'].map((league) => {
+                          const leagueData = robotStats.statsByLeague[league];
+                          if (!leagueData) return null;
+                          const attrData = leagueData.attributes[selectedAttribute];
+                          return (
+                            <tr key={league} className="border-t border-gray-600">
+                              <td className="p-2 capitalize font-semibold">{league}</td>
+                              <td className="p-2">{leagueData.count}</td>
+                              <td className="p-2">{leagueData.averageElo}</td>
+                              <td className="p-2 font-bold">{attrData?.mean?.toFixed(2) || 'N/A'}</td>
+                              <td className="p-2">{attrData?.median?.toFixed(2) || 'N/A'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Top Performers */}
+              {robotStats.topPerformers[selectedAttribute] && robotStats.topPerformers[selectedAttribute].length > 0 && (
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-xl font-semibold mb-3 text-green-400">🌟 Top 5 Performers</h3>
+                  <div className="space-y-2">
+                    {robotStats.topPerformers[selectedAttribute].map((robot: any, idx: number) => (
+                      <div key={idx} className="bg-gray-800 rounded p-3 flex justify-between items-center">
+                        <div>
+                          <span className="font-bold text-lg">#{idx + 1} {robot.name}</span>
+                          <p className="text-sm text-gray-400">
+                            {robot.league} | ELO: {robot.elo} | Win Rate: {robot.winRate}%
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-green-400">{robot.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom Performers */}
+              {robotStats.bottomPerformers[selectedAttribute] && robotStats.bottomPerformers[selectedAttribute].length > 0 && (
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-xl font-semibold mb-3 text-red-400">📉 Bottom 5 Performers</h3>
+                  <div className="space-y-2">
+                    {robotStats.bottomPerformers[selectedAttribute].map((robot: any, idx: number) => (
+                      <div key={idx} className="bg-gray-800 rounded p-3 flex justify-between items-center">
+                        <div>
+                          <span className="font-bold">{robot.name}</span>
+                          <p className="text-sm text-gray-400">
+                            {robot.league} | ELO: {robot.elo} | Win Rate: {robot.winRate}%
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-red-400">{robot.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Battle Logs Section */}
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-gray-800 rounded-lg p-6 mt-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Battle Logs & Debugging</h2>
             <button
