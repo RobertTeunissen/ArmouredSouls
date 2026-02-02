@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 
@@ -148,10 +148,21 @@ function RobotsPage() {
   const [rosterLevel, setRosterLevel] = useState(0);
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchRobots();
     fetchFacilities();
+  }, [location]); // Refetch when navigating to this page
+
+  // Refetch facilities when page becomes visible (after navigating back from facility upgrades)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchFacilities();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const fetchRobots = async () => {
