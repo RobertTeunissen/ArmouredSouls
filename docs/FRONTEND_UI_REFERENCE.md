@@ -185,19 +185,20 @@ This document maps game design concepts to UI implementation, showing where play
 
 ---
 
-### 5. All Robots Page
+### 5. League Standings Page (UPDATED)
 
-**Route**: `/all-robots`  
-**Component**: `AllRobotsPage.tsx`  
-**Purpose**: View global robot database (development/admin view)
+**Route**: `/league-standings`  
+**Component**: `LeagueStandingsPage.tsx`  
+**Purpose**: View current league rankings and robot standings
 
 **Displays**:
-- All robots in the system (not just user's)
-- Robot details across all users
-- For development and testing purposes
+- League rankings by ELO rating
+- Robot details and performance stats
+- Comprehensive leaderboard view
 
-**Why This Page?**
-- Development tool for viewing all game data
+**Note**: Replaces previous "All Robots" page with more comprehensive league system.
+
+---
 - Testing and debugging functionality
 - May evolve into leaderboard/rankings in future
 
