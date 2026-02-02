@@ -42,10 +42,41 @@ const calculateWinRate = (wins: number, totalBattles: number): string => {
   return ((wins / totalBattles) * 100).toFixed(1);
 };
 
-const getReadinessStatus = (readiness: number): { text: string; color: string } => {
-  if (readiness >= 80) return { text: 'Battle Ready', color: 'text-green-500' };
-  if (readiness >= 50) return { text: 'Damaged', color: 'text-yellow-500' };
-  return { text: 'Critical', color: 'text-red-500' };
+const calculateReadiness = (currentHP: number, maxHP: number, currentShield: number, maxShield: number): number => {
+  const hpPercent = (currentHP / maxHP) * 100;
+  const shieldPercent = maxShield > 0 ? (currentShield / maxShield) * 100 : 100;
+  return Math.round((hpPercent + shieldPercent) / 2);
+};
+
+const getReadinessStatus = (
+  currentHP: number, 
+  maxHP: number, 
+  currentShield: number, 
+  maxShield: number
+): { text: string; color: string; reason: string } => {
+  const readiness = calculateReadiness(currentHP, maxHP, currentShield, maxShield);
+  const hpPercent = (currentHP / maxHP) * 100;
+  const shieldPercent = maxShield > 0 ? (currentShield / maxShield) * 100 : 100;
+  
+  if (readiness >= 80) {
+    return { text: 'Battle Ready', color: 'text-green-500', reason: '' };
+  }
+  
+  // Determine reason for not being battle ready
+  let reason = '';
+  if (hpPercent < 80 && shieldPercent < 80) {
+    reason = 'Low HP and Shield';
+  } else if (hpPercent < 80) {
+    reason = 'Low HP';
+  } else if (shieldPercent < 80) {
+    reason = 'Low Shield';
+  }
+  
+  if (readiness >= 50) {
+    return { text: 'Damaged', color: 'text-yellow-500', reason };
+  }
+  
+  return { text: 'Critical', color: 'text-red-500', reason };
 };
 
 function RobotsPage() {
@@ -81,7 +112,9 @@ function RobotsPage() {
       }
 
       const data = await response.json();
-      setRobots(data);
+      // Sort robots by ELO (highest first)
+      const sortedData = data.sort((a: Robot, b: Robot) => b.elo - a.elo);
+      setRobots(sortedData);
     } catch (err) {
       setError('Failed to load robots');
       console.error(err);
@@ -201,7 +234,8 @@ function RobotsPage() {
                 ? Math.round((robot.currentShield / robot.maxShield) * 100)
                 : 0;
               const winRate = calculateWinRate(robot.wins, robot.totalBattles);
-              const readinessStatus = getReadinessStatus(robot.battleReadiness);
+              const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP, robot.currentShield, robot.maxShield);
+              const readinessStatus = getReadinessStatus(robot.currentHP, robot.maxHP, robot.currentShield, robot.maxShield);
 
               return (
                 <div
@@ -280,7 +314,8 @@ function RobotsPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-400">Readiness:</span>
                       <span className={`font-semibold ${readinessStatus.color}`}>
-                        {robot.battleReadiness}% │ {readinessStatus.text}
+                        {actualReadiness}% │ {readinessStatus.text}
+                        {readinessStatus.reason && ` (${readinessStatus.reason})`}
                       </span>
                     </div>
                   </div>
