@@ -159,20 +159,14 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       });
 
       // Create robot with all attributes at level 1 (defaults in schema)
-      // Initialize HP and Shield using calculateMaxHP/calculateMaxShield functions
-      const hullIntegrity = 1; // Default level
-      const shieldCapacity = 1; // Default level
+      // Calculate initial HP and Shield directly from default values
+      const hullIntegrity = 1; // Default level (Decimal 1.00 in schema)
+      const shieldCapacity = 1; // Default level (Decimal 1.00 in schema)
       
-      // Use a temporary robot object to calculate initial HP
       // Formula: maxHP = 50 + (hullIntegrity × 5), maxShield = shieldCapacity × 2
-      const tempRobot = {
-        loadoutType: 'single',
-        hullIntegrity: hullIntegrity,
-        shieldCapacity: shieldCapacity,
-      } as any;
-      
-      const maxHP = calculateMaxHP(tempRobot);
-      const maxShield = calculateMaxShield(tempRobot);
+      // Using direct calculation since all attributes are at default values
+      const maxHP = 50 + (hullIntegrity * 5); // = 55 HP
+      const maxShield = shieldCapacity * 2; // = 2 Shield
       
       const robot = await tx.robot.create({
         data: {
