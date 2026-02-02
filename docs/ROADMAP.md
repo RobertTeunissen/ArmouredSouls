@@ -814,13 +814,14 @@ Features and systems to consider for future development. These are not yet plann
 
 - **Prestige vs Fame System**:
   - **Current**: Prestige (stable-level) and Fame (robot-level) are separate
-  - **To Discuss**: 
-    - How do prestige and fame interact?
-    - Should prestige be earned only from tournaments or also from battles?
-    - Should fame contribute to prestige in any way?
-    - Do they unlock different types of content?
-    - Economic balance between the two systems
-  - **Status**: Requires detailed design discussion
+  - **Status**: ✅ **DESIGNED** - Comprehensive PRD completed (February 2, 2026)
+  - **Documentation**: See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) for complete specification
+  - **Summary**:
+    - Prestige: Stable-level permanent reputation, unlocks facilities and tournaments, earned from battles (5-75), tournaments (100-2,500), and milestones
+    - Fame: Robot-level individual reputation, affects streaming income and matchmaking quality, earned from robot victories (2-40) and performance bonuses
+    - Both systems integrated with income multipliers and unlock mechanics
+    - Implementation plan: 5 phases (backend, API, frontend, testing, analytics)
+  - **Next Steps**: Review PRD with team, prioritize implementation phases
 
 - **Tournament System Design**:
   - **Current**: Tournaments mentioned but not fully detailed

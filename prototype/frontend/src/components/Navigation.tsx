@@ -20,6 +20,8 @@ const implementedPages = new Set([
   '/battle-history',
   '/league-standings',
   '/admin',
+  '/leaderboards/fame',
+  '/leaderboards/prestige',
 ]);
 
 const allPages = {
@@ -75,6 +77,8 @@ const allPages = {
       { path: '/guild', label: 'My Guild' },
       { path: '/guild/manage', label: 'Guild Management' },
       { path: '/leaderboards', label: 'Global Leaderboards' },
+      { path: '/leaderboards/fame', label: 'Fame Leaderboard' },
+      { path: '/leaderboards/prestige', label: 'Prestige Leaderboard' },
       { path: '/chat', label: 'Chat' },
       { path: '/replays', label: 'Battle Replays' },
       { path: '/spectate', label: 'Spectator Mode' },

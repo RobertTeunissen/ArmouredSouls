@@ -13,6 +13,8 @@ import BattleHistoryPage from './pages/BattleHistoryPage';
 import BattleDetailPage from './pages/BattleDetailPage';
 import LeagueStandingsPage from './pages/LeagueStandingsPage';
 import AdminPage from './pages/AdminPage';
+import LeaderboardsFamePage from './pages/LeaderboardsFamePage';
+import LeaderboardsPrestigePage from './pages/LeaderboardsPrestigePage';
 
 function App() {
   return (
@@ -105,6 +107,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leaderboards/fame"
+            element={
+              <ProtectedRoute>
+                <LeaderboardsFamePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leaderboards/prestige"
+            element={
+              <ProtectedRoute>
+                <LeaderboardsPrestigePage />
               </ProtectedRoute>
             }
           />

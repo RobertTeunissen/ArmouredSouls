@@ -923,6 +923,7 @@ Example:
 - **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Facility upgrades, prestige system, and stable management
 - **[PRD_BATTLE_STANCES_AND_YIELD.md](PRD_BATTLE_STANCES_AND_YIELD.md)** - Product requirements for battle stance and yield threshold implementation
 - **[PRD_WEAPON_LOADOUT.md](PRD_WEAPON_LOADOUT.md)** - Product requirements for weapon loadout system implementation
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - Product requirements for prestige and fame system implementation
 - **[ROADMAP.md](ROADMAP.md)** - Implementation phases, priorities, and future enhancements
 
 ---
