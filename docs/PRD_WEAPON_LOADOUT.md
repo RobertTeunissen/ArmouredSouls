@@ -22,7 +22,7 @@ This PRD defines the requirements for implementing a fully functional weapon loa
 **What Exists:**
 - ✅ Complete database schema (Weapon, WeaponInventory, Robot models with all fields)
 - ✅ Comprehensive design documentation (WEAPONS_AND_LOADOUT.md, ROBOT_ATTRIBUTES.md)
-- ✅ 10 weapons defined with complete specifications across 4 categories
+- ✅ 11 weapons defined with complete specifications across 4 categories
 - ✅ Backend API: GET /api/weapons (list all weapons)
 - ✅ Backend API: POST /api/weapon-inventory/purchase (purchase weapon)
 - ✅ Backend API: GET /api/weapon-inventory (get user's weapon inventory)
@@ -686,7 +686,7 @@ Acceptance Criteria:
 
 **Technical:**
 - Database schema already in place (Weapon, WeaponInventory, Robot models)
-- Weapon seed data exists (10 weapons defined)
+- Weapon seed data exists (11 weapons defined)
 - Backend infrastructure (Express, Prisma) operational
 - Frontend infrastructure (React, Tailwind) operational
 
@@ -887,8 +887,8 @@ Effective Penetration: 10 * 0.80 = 8
 
 **Issue 1: Weapon Seed Data Missing**
 - **Status**: ✅ RESOLVED
-- **Issue**: The 10 weapons defined in WEAPONS_AND_LOADOUT.md may not be seeded in the database
-- **Resolution**: The 10 initial weapons are confirmed to be loaded into the database in the current version
+- **Issue**: The 11 weapons defined in WEAPONS_AND_LOADOUT.md may not be seeded in the database
+- **Resolution**: The 11 initial weapons (including Practice Sword) are confirmed to be loaded into the database in the current version
 - **Action**: No action required - weapons are already seeded
 - **Priority**: COMPLETE
 

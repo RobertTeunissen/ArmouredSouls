@@ -167,7 +167,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - No battle imagery or excitement here - this is the threshold
 - Simple, fast, functional
 
-#### Implementation Priority: **P2** (After core gameplay screens)
+#### Implementation Priority: **IMPLEMENTED**
 
 ---
 
@@ -179,15 +179,24 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 #### What Users Should See
 - **Logo**: Direction B in navigation (engineering, precise)
-- **Hero Section**: Stable name with edit capability, Credits/Prestige prominently displayed
-- **Robot Cards**: Visual grid/list of active robots with:
+- **Stable Section**: Stable name with edit capability, Credits/Prestige prominently displayed
+  - Finances with link to detail pages (Daily finance statements)
+- **Statistics Panel**: Stable-wide stats (battles, wins/draws/losses, win rate)
+- **Robot Cards**: Visual grid/list of active robots (sorted with highest League first) with:
   - Robot portrait (primary identity)
-  - Robot name
+  - Robot name (Link to Robot details for battle configuration or upgrades)
   - HP bar (with critical/warning states)
+  - Battle Readiness indicator
   - ELO rating badge
+  - Current League and League Points (Link to league)
   - Quick action buttons (View Details, Repair)
-- **Statistics Panel**: Stable-wide stats (battles, wins, win rate)
-- **Recent Activity**: Battle results timeline (future)
+  - Upcoming matches (grouped per type - only Leagues are implemented)
+- **Recent Match History Section**:
+  - Displays last 5 battles across all owned robots
+  - Each match shows: Robot name, Opponent, Result (Win/Loss/Draw), Battle type, Date
+  - Compact battle result format with robot portraits
+  - "View Details" link for each battle (opens detailed battle log)
+  - "View All Battles" link to full battle history page
 
 #### Visual Elements Required
 - [ ] **Robot Portraits** (256×256px, framed in cards)
@@ -272,6 +281,8 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - Frame badges provide **visual categorization** without reading
 - Direction B reinforces **systematic management**
 
+**Page Access**: Available via top navigation or from Dashboard. Serves as the central hub for robot management, creating new robots, and provides quick access to the Weapons Shop.
+
 #### Implementation Priority: **P0** (Highest priority)
 
 ---
@@ -282,13 +293,61 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 **Logo State**: Direction B (Precision)  
 **Emotional Target**: Mastery, strategic planning
 
+#### Section Visibility Rules
+
+The Robot Detail Page has **tiered visibility** to allow browsing other players' robots while protecting owner-only configuration:
+
+**PUBLIC SECTIONS** (visible to all logged-in users):
+1. **Robot Header**
+   - Robot name
+   - Robot image placeholder
+   - Owner name (stable name)
+   - League and tier badge
+   - ELO rating
+   - Win/Loss record
+2. **Performance & Statistics**
+   - Battles fought, wins, losses, draws
+   - Win rate percentage
+   - Total damage dealt/taken
+   - Average damage per battle
+   - Battle history (match results format)
+   - ELO history graph (future)
+
+**OWNER-ONLY SECTIONS** (visible only to robot owner):
+1. **Battle Configuration**
+   - Loadout selection (4 loadout types)
+   - Weapon equipment (main/offhand slots)
+   - Battle stance selector
+   - Yield threshold slider
+   - Current HP/Shield display with repair costs
+   - Battle readiness indicator
+   - Ready for battle checkbox
+2. **Effective Stats Overview**
+   - All 23 attributes with effective calculations
+   - Base + Weapon + Stance bonuses breakdown
+   - Compact attribute table
+3. **Upgrade Robot**
+   - Attribute upgrade buttons
+   - Upgrade costs
+   - Credit balance
+   - Facility requirement indicators
+
 #### What Users Should See
+
+**Public View** (non-owner):
 - **Logo**: Direction B in navigation
-- **Hero Section**: Large robot portrait with name, frame, ELO
+- **Robot Header**: Large portrait, name, owner, league, ELO, W/L record
+- **Performance Stats**: Battles, wins, losses, damage dealt/taken, battle history
+- **Restricted Access Message**: "This robot belongs to [Owner]. Configuration options are not available."
+
+**Owner View** (robot owner):
+- All public sections above, plus:
 - **Combat State Panel**:
   - Current HP / Max HP (bar + numbers)
   - Current Shield / Max Shield (bar + numbers)
-  - Damage Taken (last battle)
+  - Battle readiness indicator (green = ready, yellow = needs repair, red = not combat-ready)
+  - Repair costs displayed prominently
+  - Damage taken (last battle)
 - **Loadout Configuration**:
   - 4 loadout type buttons (visual icons + labels)
   - Main Weapon Slot (shows equipped weapon thumbnail + stats)
@@ -305,7 +364,11 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Base stat + bonuses breakdown
   - Effective stat calculation shown
   - Color-coded by category (Combat, Defense, Chassis, AI, Team)
-- **Performance Stats**: Battles, wins, losses, damage dealt/taken
+  - **Decimal Formatting Rules**:
+    - Base attributes: Display as integers (no decimals)
+    - Weapon bonuses: Display as integers (no decimals)
+    - Effective stats: Display with 2 decimal places when loadout/stance percentages create fractional values
+    - Example: Base 100, Weapon +20 = 120, with 10% stance bonus = 132.00
 
 #### Visual Elements Required
 - [ ] **Large Robot Portrait** (512×512px, hero placement)
@@ -348,6 +411,8 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 **Route**: `/robots/create`  
 **Logo State**: Direction B (Precision)  
 **Emotional Target**: Anticipation, investment
+
+**Page Access**: Accessible from /robots page via "Create Robot" button or from Dashboard.
 
 #### What Users Should See
 - **Logo**: Direction B in navigation
@@ -400,30 +465,35 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - **Logo**: Direction B in navigation
 - **Header**: "Weapon Shop" with Credits balance, storage capacity (X/Y)
 - **Filter Tabs**: All / Melee / Ranged / Shields / Two-Handed
-- **Weapon Cards** (10 weapons total):
+- **Weapon Cards** (11 weapons total):
   - Weapon thumbnail/illustration (primary visual)
   - Weapon name
   - Weapon type badge (Melee, Ballistic, Energy, Shield)
   - Base damage
   - Cooldown
   - Attribute bonuses (compact list)
-  - Cost (₡)
+  - Cost (₡) (with discount when applicable)
   - Purchase button (disabled if storage full or insufficient Credits)
 - **Workshop Discount Badge** (if Weapons Workshop upgraded)
+- **Practice Sword**: FREE starter weapon automatically available to all players 
 
 #### Visual Elements Required
 - [ ] **Weapon Illustrations** (256×256px, detailed mechanical renderings)
-  - Energy Sword - glowing blade
-  - Plasma Rifle - futuristic gun
-  - Ion Cannon - heavy weapon
-  - Nano Blade - sleek dagger
-  - Photon Lance - lance/spear
-  - Shield Generator - energy field
-  - Pulse Hammer - melee bludgeon
-  - Particle Beam - beam weapon
-  - Kinetic Barrier - shield variant
-  - Fusion Blade - two-handed sword
+  1. **Laser Rifle** - Energy type, precision beam weapon
+  2. **Plasma Cannon** - Energy type, heavy plasma weapon
+  3. **Ion Beam** - Energy type, sustained energy beam
+  4. **Machine Gun** - Ballistic type, rapid-fire weapon
+  5. **Railgun** - Ballistic type, high-velocity weapon
+  6. **Shotgun** - Ballistic type, spread damage weapon
+  7. **Power Sword** - Melee type, energized blade
+  8. **Hammer** - Melee type, impact weapon
+  9. **Plasma Blade** - Melee type, plasma-edged weapon
+  10. **Combat Shield** - Shield type, defensive equipment
+  11. **Practice Sword** - Melee type, basic starter weapon (FREE)
+
 - [ ] **Weapon Type Icons** (32×32px: Melee, Ballistic, Energy, Shield)
+  - **Note**: Weapon types currently exist in database but need clear mechanical differentiation. Consider refining the type system to be more consistent (e.g., damage type vs usage type). 
+
 - [ ] **Cost Badge** (₡ icon + amount)
 - [ ] **Storage Full Warning** (visual indicator)
 - [ ] **Discount Badge** (% off, if applicable)
@@ -446,6 +516,11 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - Storage capacity shown to prevent **over-purchasing frustration**
 - Direction B emphasizes **catalog browsing and comparison**
 
+**Weapon Comparison**: Users can compare weapons by viewing multiple cards side-by-side in the grid layout. Consider adding:
+- Sort/filter options (by type, damage, cost)
+- Hover state showing detailed stat breakdown
+- Compare mode allowing selection of 2-3 weapons for direct comparison
+
 #### Implementation Priority: **P1** (After robot pages)
 
 ---
@@ -467,6 +542,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Specs (damage, cooldown)
   - Equipped Status: "Equipped on [Robot Name]" or "Available"
   - Quick Unequip button (if equipped)
+  - Ability to equip on a robot (if Robot loadout allows)
 
 #### Visual Elements Required
 - [ ] **Weapon Thumbnails** (same as shop, 256×256px)
@@ -491,6 +567,12 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - Equipped status must be **immediately visible**
 - Small robot portraits show **weapon allocation** without navigation
 - Direction B reinforces **systematic inventory control**
+
+**Weapon Comparison in Inventory**: Similar to Weapon Shop, users can compare weapons they own:
+- Grid layout allows visual side-by-side comparison
+- Sort by type, damage, or equipped status
+- Click to see full details and attribute bonuses
+- Quick-equip from inventory view
 
 #### Implementation Priority: **P1** (After weapon shop)
 
@@ -560,7 +642,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 ---
 
-### 9. Battle Preparation Screen (Future)
+### 9. Battle Preparation Screen 
 
 **Route**: `/battle/prepare/:robotId`  
 **Logo State**: Direction B → C (Transition)  
@@ -576,6 +658,8 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Yield threshold
   - Effective stats preview
 - **Confirm Battle Button**: Large, decisive action
+
+**Page Access**: This is a future enhancement page. Currently, battles are handled through the matchmaking system. This page would be accessed when initiating a battle from the Robot Detail page or a dedicated battle queue interface.
 
 #### Visual Elements Required
 - [ ] **Robot Portrait** (battle-ready pose, 512×512px)
@@ -603,11 +687,94 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - Opponent preview builds **anticipation without revealing too much**
 - Arena background begins **atmospheric shift** to battle context
 
-#### Implementation Priority: **P2** (Post-MVP, when battle system launches)
+#### Implementation Priority: **P2**
 
 ---
 
-### 10. Battle Result Screen (Future)
+### 10. Battle History & Battle Detail (Implemented)
+
+**Routes**: `/battle-history` (list view), `/battle/:id` (detail view)  
+**Current Implementation**: Users can view all their robot battles and drill down into turn-by-turn battle logs.
+
+This section describes the battle result format and visual enhancements for the existing battle system.
+
+**Logo State**: Direction B (list view), Direction C (detail/result view)  
+**Emotional Target**: Pride (victory), learning (defeat), mastery
+
+#### Battle Result Format (Standardized)
+
+This format is used across:
+- Dashboard (last 5 matches)
+- Robot Detail Page (full match history)
+- Battle History Page (comprehensive view)
+
+**Compact View** (Dashboard, Lists):
+```
+┌─────────────────────────────────────────┐
+│ [Robot Portrait] MyBot vs OpponentBot   │
+│ Result: VICTORY | League Match          │
+│ ELO: +25 | ₡ +1,000                     │
+│ January 15, 2026 | View Details →       │
+└─────────────────────────────────────────┘
+```
+
+**Detailed Battle Log** (Battle Detail Page):
+
+**Battle Header**:
+- Battle type badge (League Match / Tournament / etc.)
+- Date and time
+- Battle ID (for reference)
+- Participants section:
+  - Robot portraits (256×256px)
+  - Robot names (clickable links to robot details)
+  - Owner names (stable names)
+  - Pre-battle stats: HP, Shield, ELO
+
+**Battle Result Panel**:
+- Result banner: "VICTORY" / "DEFEAT" / "DRAW"
+- Draw condition explanation: "Battle exceeded maximum time limit (60 seconds)"
+- **Winner/Loser Determination**:
+  - Winner: Robot with higher HP percentage remaining
+  - Draw: Battle exceeds ~60 seconds of simulated combat OR both robots yield simultaneously
+- **Consequences**:
+  - ELO changes (e.g., "+25 ELO" or "-18 ELO")
+  - Credits earned/spent
+  - League change indicator (if applicable)
+    - "PROMOTED to Silver League" (green badge)
+    - "DEMOTED to Bronze League" (orange badge)
+    - Not shown for Tournament battles
+  - Repair costs
+  - League points earned/lost
+
+**Turn-by-Turn Combat Log**:
+- Expandable/collapsible section
+- Each turn displays:
+  - Turn number
+  - Attacker name and portrait (64×64px)
+  - Action taken (e.g., "Strike with Plasma Sword")
+  - Damage dealt (with critical hit indicator)
+  - Defender HP remaining (bar + numbers)
+  - Special effects (stance bonuses, yield, etc.)
+- Critical hits highlighted in gold/yellow
+- Yield events highlighted in orange
+- Final blow highlighted in red (if applicable)
+
+**Battle Statistics Panel**:
+- Total damage dealt/taken
+- Critical hit count
+- Average damage per turn
+- Highest single hit
+- Battle duration (turns and simulated seconds)
+- Weapon usage breakdown
+- Stance effectiveness
+
+**Action Buttons**:
+- "Return to Dashboard"
+- "View [Robot Name] Details"
+- "Rematch" (future feature)
+- Share battle log (future feature)
+
+#### Enhanced Route (Visual Polish)
 
 **Route**: `/battles/:id/result`  
 **Logo State**: Direction C (Energized)  
@@ -615,7 +782,7 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 #### What Users Should See
 - **Logo**: Direction C (inner glow, peak emotional state)
-- **Result Banner**: "VICTORY" or "DEFEAT" (large, decisive)
+- **Result Banner**: "VICTORY" or "DEFEAT" or "DRAW" (large, decisive)
 - **Robot Portrait**: Winner's pose (if victory) or damaged state (if defeat)
 - **Battle Statistics**:
   - Damage dealt / taken
@@ -625,8 +792,9 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - **Rewards/Consequences**:
   - Credits earned/spent
   - ELO change
-  - Fame gained
+  - Fame gained (future)
   - Repair cost (if damaged)
+  - League change (if applicable)
 - **Action Buttons**: View Replay, Return to Stable, Next Battle
 
 #### Visual Elements Required
@@ -659,34 +827,66 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 - Rewards/costs provide **economic consequence**
 - **Brief emotional peak**, then return to control (back to Direction B)
 
-#### Implementation Priority: **P2** (Post-MVP, with battle system)
+#### Implementation Priority: **P2** (Visual polish for existing battle system)
+
+**Note**: Battle system is already implemented with /battle-history and detailed battle logs. Priority P2 focuses on visual enhancements and emotional storytelling.
 
 ---
 
-### 11. Leaderboards / Rankings (Future)
+### 11. League Standings (Implemented)
 
-**Route**: `/leaderboards`  
+**Route**: `/league-standings`  
+**Current Implementation**: Rankings, ELO, league tiers, and competition tracking are already implemented.
+
 **Logo State**: Direction B (Precision)  
 **Emotional Target**: Competition, aspiration
 
 #### What Users Should See
 - **Logo**: Direction B in navigation
-- **Header**: "Global Rankings" with filter tabs (ELO, Wins, Prestige, etc.)
-- **Ranking List**:
-  - Rank number
-  - Robot portrait (small thumbnail)
-  - Robot name
+- **League Navigation**: Tab-based or dropdown selector for all leagues
+  - **All leagues visible**: Players can view all leagues in the system (Bronze, Silver, Gold, Platinum, Diamond, Master)
+  - Current league highlighted or pre-selected
+  - League tier icons and names clearly displayed
+- **League Standings Table**:
+  - Rank number (with special badges for top 3: Gold, Silver, Bronze medals)
+  - Robot portrait (small thumbnail, 64×64px)
+  - Robot name (clickable link to robot detail page)
   - Owner stable name
-  - ELO / Wins / Prestige (depending on filter)
-  - Player's own rank highlighted
-- **Player Position Card**: Sticky header showing player's current rank
+  - ELO rating
+  - League points (LP)
+  - Win/Loss/Draw record
+  - Recent form indicator (last 5 battles: W/L/D icons)
+- **Zone Indicators**:
+  - Promotion zone (top 10%): Green background highlight
+  - Safe zone (middle 80%): Standard background
+  - Demotion zone (bottom 10%): Red/orange background highlight
+- **Own Robot Highlighting**:
+  - Player's own robots clearly identified with:
+    - Distinct background color (darker or accented)
+    - Border (gold or accent color)
+    - Badge or icon (e.g., star, crown, "MY ROBOT")
+    - Sticky positioning option to keep own robots visible while scrolling
+- **Player Position Summary**:
+  - Sticky header or sidebar showing player's best-ranked robot position
+  - Quick stats: "You have X robots in this league"
+  - Promotion/demotion status for owned robots
 
 #### Visual Elements Required
 - [ ] **Robot Thumbnails** (small, 64×64px)
-- [ ] **Rank Badges** (1st/2nd/3rd special, Gold/Silver/Bronze)
+- [ ] **Rank Badges** (1st/2nd/3rd special, Gold/Silver/Bronze medals)
 - [ ] **League Tier Icons** (Bronze, Silver, Gold, Platinum, Diamond, Master)
+  - Each league has distinct icon and color scheme
+  - Icons should be 32×32px for navigation tabs
+  - 48×48px for league page headers
 - [ ] **Trophy Icon** (for top players)
-- [ ] **Highlight Style** (for player's position in list)
+- [ ] **Highlight Styles** (for player's position in list):
+  - Background color: `rgba(88, 166, 255, 0.15)` (primary blue, semi-transparent)
+  - Border: `2px solid #58a6ff` (primary blue)
+  - Optional badge: "MY ROBOT" label or star icon
+- [ ] **Zone Indicators**:
+  - Promotion zone: Green left border (4px) or background tint
+  - Demotion zone: Red/orange left border (4px) or background tint
+- [ ] **Form Indicators**: W/L/D icon sequence (last 5 battles)
 
 #### Image Types & Visual Reinforcement
 1. **Robot Thumbnails**: Visual recognition in list
@@ -759,15 +959,18 @@ Based on the comprehensive design system, the following asset categories are def
   - Ballistic: Dark metal with orange details
   - Energy: Chrome with cyan/purple glow
   - Shield: Translucent blue energy
-- **Quantity**: 10 weapons (expandable)
+  - **Note**: Weapon type system needs mechanical refinement for consistency
+
+- **Quantity**: 11 weapons (including Practice Sword)
 
 **2.2 Weapon Type Icons**
 - **Purpose**: Category identification, filtering
 - **Size**: 32×32px
 - **Format**: SVG (preferred), PNG fallback
-- **Style**: Simple glyphs (sword, gun, shield, two-handed)
+- **Style**: Simple glyphs (sword, gun, energy, shield)
 - **Color**: Consistent with type palette
-- **Quantity**: 4 types
+- **Quantity**: 4 types (melee, ballistic, energy, shield)
+- **Note**: Type system exists in database; needs clear mechanical effects defined
 
 #### 3. Facility Assets
 
@@ -1345,25 +1548,26 @@ robot-chassis-scout-green.webp
 
 ### Weapon Asset Specifications
 
-**10 Weapons (Current)**:
+**11 Weapons (Current)**:
 
 **Melee Weapons (4)**:
-1. **Plasma Blade** - Glowing energy sword, blue plasma trail
-2. **Crushing Hammer** - Heavy industrial hammer, hazard stripes
-3. **Energy Lance** - Spear-like weapon, yellow energy tip
-4. **Shock Gauntlets** - Fist weapons, electric arcs
+1. **Power Sword** - Energized blade with blue glow
+2. **Hammer** - Heavy impact weapon
+3. **Plasma Blade** - Plasma-edged melee weapon
+4. **Practice Sword** - Basic training sword (FREE starter weapon)
 
-**Ranged Weapons (4)**:
-5. **Laser Rifle** - Sleek energy weapon, green sight laser
-6. **Autocannon** - Belt-fed ballistic gun, ammo belt visible
-7. **Missile Launcher** - Shoulder-mounted rocket pod, missiles loaded
-8. **Railgun** - High-tech magnetic accelerator, glowing coils
+**Ballistic Weapons (3)**:
+5. **Machine Gun** - Rapid-fire automatic weapon
+6. **Railgun** - High-velocity magnetic accelerator
+7. **Shotgun** - Spread damage weapon
 
-**Shields (1)**:
-9. **Energy Shield Emitter** - Arm-mounted shield generator, blue energy field
+**Energy Weapons (3)**:
+8. **Laser Rifle** - Precision beam weapon
+9. **Plasma Cannon** - Heavy plasma weapon
+10. **Ion Beam** - Sustained energy beam
 
-**Two-Handed Weapons (1)**:
-10. **Heavy Cannon** - Massive artillery piece, stabilizer legs deployed
+**Shield (1)**:
+11. **Combat Shield** - Defensive energy shield emitter
 
 **Technical Specs**:
 - Format: WEBP
@@ -1375,19 +1579,27 @@ robot-chassis-scout-green.webp
 
 **File Naming**:
 ```
-weapon-plasma-blade-full.webp      # 256×256px
-weapon-plasma-blade-thumb.webp     # 128×128px
-weapon-crushing-hammer-full.webp
-weapon-laser-rifle-full.webp
+weapon-laser-rifle-full.webp        # 256×256px
+weapon-laser-rifle-thumb.webp       # 128×128px
+weapon-plasma-cannon-full.webp
+weapon-ion-beam-full.webp
+weapon-machine-gun-full.webp
+weapon-railgun-full.webp
+weapon-shotgun-full.webp
+weapon-power-sword-full.webp
+weapon-hammer-full.webp
+weapon-plasma-blade-full.webp
+weapon-combat-shield-full.webp
+weapon-practice-sword-full.webp
 ```
 
 ### Weapon Type Icons (SVG)
 
 **4 Categories**:
-- `ic-weapon-melee.svg` - Crossed swords icon
-- `ic-weapon-ranged.svg` - Crosshair/targeting icon
+- `ic-weapon-melee.svg` - Sword/blade icon
+- `ic-weapon-ballistic.svg` - Gun/projectile icon
+- `ic-weapon-energy.svg` - Energy beam icon
 - `ic-weapon-shield.svg` - Shield icon
-- `ic-weapon-twohanded.svg` - Large weapon icon
 
 **Specs**:
 - Format: SVG
@@ -1397,21 +1609,21 @@ weapon-laser-rifle-full.webp
 
 ### Facility Asset Specifications
 
-**14 Facilities** (all need illustrations):
-1. Training Academy
-2. Weapons Workshop
-3. Armor Plating Bay
-4. Propulsion Lab
-5. AI Processing Center
-6. Sensor Array
-7. Energy Reactor
-8. Shield Generator
-9. Medical Bay
-10. Repair Bay
-11. Research Lab
-12. Roster Expansion
-13. Storage Expansion
-14. Booking Office
+**14 Facilities** (based on STABLE_SYSTEM.md):
+1. **Repair Bay** - Repair cost discounts
+2. **Training Facility** - Attribute upgrade discounts
+3. **Weapons Workshop** - Weapon purchase discounts
+4. **Research Lab** - Analytics and loadout presets
+5. **Medical Bay** - Critical damage cost reduction
+6. **Roster Expansion** - Additional robot slots
+7. **Storage Facility** - Weapon storage capacity
+8. **Coaching Staff** - Stable-wide bonuses
+9. **Booking Office** - Tournament access
+10. **Combat Training Academy** - Combat Systems caps
+11. **Defense Training Academy** - Defensive Systems caps
+12. **Mobility Training Academy** - Chassis & Mobility caps
+13. **AI Training Academy** - AI Processing caps
+14. **Income Generator** - Additional revenue streams
 
 **Technical Specs**:
 - Format: WEBP
@@ -1423,47 +1635,58 @@ weapon-laser-rifle-full.webp
 
 **File Naming**:
 ```
-facility-training-academy.webp
+facility-repair-bay.webp
+facility-training-facility.webp
 facility-weapons-workshop.webp
-facility-armor-plating-bay.webp
+facility-research-lab.webp
+facility-medical-bay.webp
+facility-roster-expansion.webp
+facility-storage-facility.webp
+facility-coaching-staff.webp
+facility-booking-office.webp
+facility-combat-training-academy.webp
+facility-defense-training-academy.webp
+facility-mobility-training-academy.webp
+facility-ai-training-academy.webp
+facility-income-generator.webp
 ```
 
 ### Attribute Icon Set (23 Icons)
 
-Organized by category with color coding:
+Based on ROBOT_ATTRIBUTES.md, organized by category with color coding:
 
-**Combat Systems (Red #f85149)** - 7 icons:
-- ic-attr-weapon-damage.svg
-- ic-attr-melee-damage.svg
-- ic-attr-ranged-damage.svg
-- ic-attr-crit-chance.svg
-- ic-attr-crit-multiplier.svg
-- ic-attr-accuracy.svg
+**Combat Systems (Red #f85149)** - 6 icons:
+- ic-attr-combat-power.svg
+- ic-attr-targeting-systems.svg
+- ic-attr-critical-systems.svg
 - ic-attr-penetration.svg
+- ic-attr-weapon-control.svg
+- ic-attr-attack-speed.svg
 
 **Defensive Systems (Blue #58a6ff)** - 5 icons:
-- ic-attr-armor.svg
+- ic-attr-armor-plating.svg
 - ic-attr-shield-capacity.svg
-- ic-attr-shield-regen.svg
-- ic-attr-evasion.svg
-- ic-attr-damage-reduction.svg
+- ic-attr-evasion-thrusters.svg
+- ic-attr-damage-dampeners.svg
+- ic-attr-counter-protocols.svg
 
 **Chassis & Mobility (Green #3fb950)** - 5 icons:
-- ic-attr-health-integrity.svg
-- ic-attr-speed.svg
-- ic-attr-agility.svg
-- ic-attr-weight-limit.svg
-- ic-attr-stability.svg
+- ic-attr-hull-integrity.svg
+- ic-attr-servo-motors.svg
+- ic-attr-gyro-stabilizers.svg
+- ic-attr-hydraulic-systems.svg
+- ic-attr-power-core.svg
 
-**AI Processing (Yellow #d29922)** - 3 icons:
-- ic-attr-processing-speed.svg
-- ic-attr-targeting-priority.svg
-- ic-attr-scan-radius.svg
+**AI Processing (Yellow #d29922)** - 4 icons:
+- ic-attr-combat-algorithms.svg
+- ic-attr-threat-analysis.svg
+- ic-attr-adaptive-ai.svg
+- ic-attr-logic-cores.svg
 
 **Team Coordination (Purple #a371f7)** - 3 icons:
-- ic-attr-command-range.svg
-- ic-attr-support-efficiency.svg
-- ic-attr-sync-bonus.svg
+- ic-attr-command-protocols.svg
+- ic-attr-support-matrix.svg
+- ic-attr-sync-networks.svg
 
 **Specs**:
 - Format: SVG
@@ -1471,19 +1694,9 @@ Organized by category with color coding:
 - Style: Simple geometric icons, 2px stroke
 - Color: Category-specific (see above)
 
-### Benefit Category Icons (8 Icons)
+**Note**: These icons will be used in Robot Detail pages to display all 23 attributes with their values. Consider adding tooltips explaining what each attribute does.
 
-For facility upgrade benefits:
-- ic-benefit-damage.svg
-- ic-benefit-defense.svg
-- ic-benefit-speed.svg
-- ic-benefit-accuracy.svg
-- ic-benefit-health.svg
-- ic-benefit-income.svg
-- ic-benefit-capacity.svg
-- ic-benefit-discount.svg
-
-**Specs**: Same as attribute icons (24×24px SVG)
+**Note**: These icons will be used in Robot Detail pages to display all 23 attributes with their values. Consider adding tooltips explaining what each attribute does.
 
 ### Navigation Icon Set (8 Icons)
 
@@ -1517,21 +1730,23 @@ Visual representation of equipment slots:
 
 ### Status Badges & Overlays
 
-**ELO Rank Badges** (6 tiers):
-- Bronze: 1000-1399 ELO (bronze frame, #cd7f32)
-- Silver: 1400-1799 ELO (silver frame, #c0c0c0)
-- Gold: 1800-2199 ELO (gold frame, #ffd700)
-- Platinum: 2200-2599 ELO (platinum frame, #e5e4e2)
-- Diamond: 2600+ ELO (diamond frame, #b9f2ff)
-- Champion: Top 100 (animated, #ff00ff)
+**League Tier Badges** (based on League Points, not ELO):
+- Bronze League (bronze frame, #cd7f32)
+- Silver League (silver frame, #c0c0c0)
+- Gold League (gold frame, #ffd700)
+- Platinum League (platinum frame, #e5e4e2)
+- Diamond League (diamond frame, #b9f2ff)
+- Master League (animated, #ff00ff)
+
+**Important**: League progression uses League Points earned through battles. ELO rating is separate and used for matchmaking. A high ELO does not automatically promote to higher leagues - players must earn League Points through consistent performance.
 
 **Format**: PNG with transparency (32px, 64px, 128px variants)
 
 **File Naming**:
 ```
-rank-badge-bronze-32.png
-rank-badge-silver-64.png
-rank-badge-champion-128.png
+league-badge-bronze-32.png
+league-badge-silver-64.png
+league-badge-master-128.png
 ```
 
 ### Empty State Illustrations
@@ -1612,7 +1827,7 @@ rank-badge-champion-128.png
 
 ### Asset Creation Workflow
 
-**For AI Generation** (Phase 1 MVP):
+**For AI Generation**:
 1. Create detailed prompts for each asset type
 2. Generate multiple variants for selection
 3. Optimize output files (WEBP compression, SVGO)
@@ -1698,6 +1913,8 @@ rank-badge-champion-128.png
 | Battle Preparation | P2 | ⏳ Post-MVP - Needs battle system first |
 | Battle Result | P2 | ⏳ Post-MVP - Needs battle system first |
 | Leaderboards | P2 | ⏳ Post-MVP - Functional but not urgent |
+
+-> Not correct, all these pages are already present. 
 
 ### Development Phases
 

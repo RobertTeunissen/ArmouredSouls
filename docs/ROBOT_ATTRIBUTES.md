@@ -806,7 +806,7 @@ if in_formation:
 
 ## Weapon System
 
-The complete weapon system includes weapon types, properties, attribute bonuses, and the initial catalog of 10 weapons across 4 categories (Energy, Ballistic, Melee, Shield).
+The complete weapon system includes weapon types, properties, attribute bonuses, and the initial catalog of 11 weapons across 4 categories (Energy, Ballistic, Melee, Shield, and Practice weapons).
 
 **For complete details on:**
 - Weapon types and properties (Energy, Ballistic, Melee, Shield)

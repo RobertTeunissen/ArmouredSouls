@@ -12,7 +12,7 @@
 This is the **comprehensive future-state database schema** that includes:
 - ✅ All 23 robot attributes from ROBOT_ATTRIBUTES.md
 - ✅ All 14 facilities with 10 levels from STABLE_SYSTEM.md
-- ✅ Complete weapon system with all 10 weapons and full stats
+- ✅ Complete weapon system with all 11 weapons and full stats
 - ✅ League tracking, damage tracking, repair costs, yield thresholds, stances
 - ✅ All combat state fields (current HP, shields, damage taken)
 - ✅ Loadout system (single, weapon+shield, two-handed, dual-wield)
@@ -474,7 +474,7 @@ model Battle {
 
 ## Complete Weapon Catalog (Seed Data)
 
-All 10 weapons from [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) with complete specifications for database seeding:
+All 11 weapons from [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) with complete specifications for database seeding:
 
 ### Energy Weapons
 
@@ -627,8 +627,8 @@ All 10 weapons from [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) with comple
 - **player4** / password123 (role: user, credits: ₡2,000,000, prestige: 0)
 - **player5** / password123 (role: user, credits: ₡2,000,000, prestige: 0)
 
-### Weapons (10 weapons from catalog above)
-All 10 weapons should be created in the Weapon table with complete specifications
+### Weapons (11 weapons from catalog above)
+All 11 weapons should be created in the Weapon table with complete specifications
 
 ### Facilities
 Create on-demand when user upgrades (starts at level 0 = not purchased)
@@ -675,7 +675,7 @@ Create on-demand when user upgrades (starts at level 0 = not purchased)
 1. Drop existing migrations folder
 2. Create new base migration with COMPLETE schema
 3. Run `npx prisma migrate dev --name complete_schema`
-4. Run seed script with all 10 weapons
+4. Run seed script with all 11 weapons
 
 ### Schema Updates (Prisma)
 ```bash
