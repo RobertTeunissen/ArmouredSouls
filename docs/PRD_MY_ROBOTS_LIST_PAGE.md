@@ -1,7 +1,7 @@
 # Product Requirements Document: My Robots List Page Design Alignment
 
-**Last Updated**: February 2, 2026 (Updated with v1.4 enhancements)  
-**Status**: ✅ IMPLEMENTED (with v1.4 updates)  
+**Last Updated**: February 2, 2026 (Updated with v1.5 loadout validation)  
+**Status**: ✅ IMPLEMENTED (with v1.5 updates)  
 **Owner**: Robert Teunissen  
 **Epic**: Design System Implementation - Core Management Pages  
 **Priority**: P0 (Highest priority - Core gameplay screen)
@@ -12,6 +12,7 @@
 - v1.2 (Feb 2, 2026): **IMPLEMENTATION COMPLETE** - All requirements implemented. See [IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md](IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md)
 - v1.3 (Feb 2, 2026): **BUG FIXES** - Added ELO sorting, fixed battle readiness calculation, added reason display for non-ready robots
 - v1.4 (Feb 2, 2026): **ENHANCEMENTS** - Complete battle readiness checks (weapon check), functional Repair All button, robot capacity indicator
+- v1.5 (Feb 2, 2026): **CRITICAL FIX** - Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed)
 
 ---
 
@@ -34,6 +35,8 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 - **Complete battle readiness checks including weapon equipped status** (v1.4)
 - **Robot capacity indicator showing current/max robots (X/Y format)** (v1.4)
 - **Create Robot button disabled when at capacity with tooltip explanation** (v1.4)
+- **Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed)** (v1.5)
+- **Specific reasons shown for incomplete loadouts (Missing Shield, Missing Offhand Weapon, etc.)** (v1.5)
 
 **Impact**: Establishes the central hub for robot management, reinforcing player's role as stable manager with visual pride in their robot collection.
 
@@ -335,6 +338,31 @@ Acceptance Criteria:
 - Disabled button has tooltip: "Robot limit reached (X). Upgrade Roster Expansion facility to create more robots."
 - Enabled button has tooltip: "Create a new robot"
 - Similar to weapon shop capacity indicator
+```
+
+**US-14: Complete Loadout Validation** (v1.5)
+```
+As a player
+I want battle readiness to validate my complete loadout configuration
+So that I don't send robots with incomplete loadouts into battle
+
+Acceptance Criteria:
+- Battle readiness checks loadout type AND validates required weapons
+- Loadout validation rules:
+  - single: mainWeaponId required
+  - two_handed: mainWeaponId required
+  - dual_wield: mainWeaponId AND offhandWeaponId required
+  - weapon_shield: mainWeaponId AND offhandWeaponId (must be shield type) required
+- Specific reasons shown for incomplete loadouts:
+  - "No Main Weapon" - No weapon equipped at all
+  - "Missing Offhand Weapon" - dual_wield without offhand
+  - "Missing Shield" - weapon_shield without offhand
+  - "Offhand Must Be Shield" - weapon_shield with non-shield offhand
+  - "Invalid Loadout Type" - Unknown loadout type
+- New robots without weapons show "Not Ready (No Main Weapon)"
+- Partial configurations (e.g., weapon_shield with only weapon) show "Not Ready (Missing Shield)"
+- Validation happens BEFORE HP/Shield checks
+- Aligns with matchmaking eligibility rules in MATCHMAKING_DECISIONS.md
 ```
 
 ---
@@ -1106,6 +1134,8 @@ All acceptance criteria verified:
 - ✅ **v1.4: Functional Repair All button with backend endpoint**
 - ✅ **v1.4: Robot capacity indicator (X/Y format)**
 - ✅ **v1.4: Create Robot button disabled when at capacity**
+- ✅ **v1.5: Complete loadout validation based on loadout type**
+- ✅ **v1.5: Specific reasons for incomplete loadouts**
 
 **Implementation Summary**: See [IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md](IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md) for complete details.
 
@@ -1173,6 +1203,49 @@ All acceptance criteria verified:
    - Code: RobotsPage.tsx lines 93, 139-144, 191-192, 199
    - Impact: Clear capacity management similar to weapon shop
 
+### v1.5 Changes (February 2, 2026)
+
+**Critical Fix: Complete Loadout Validation**:
+
+1. **Loadout Type Validation**
+   - Issue: Battle readiness only checked `weaponInventoryId !== null`
+   - Problem: Newly created robots showed "Battle Ready", partial loadouts not caught
+   - Examples:
+     - Robot with no weapons: Showed as ready ❌
+     - weapon_shield with only weapon: Showed as ready ❌
+   - Fix: Implemented `isLoadoutComplete()` function
+   - Code: RobotsPage.tsx lines 51-100
+   - Impact: Prevents incomplete loadouts from appearing battle ready
+
+2. **Loadout Type Rules Implemented**
+   - **single**: mainWeaponId required only
+   - **two_handed**: mainWeaponId required only
+   - **dual_wield**: mainWeaponId AND offhandWeaponId required
+   - **weapon_shield**: mainWeaponId AND offhandWeaponId (must be shield) required
+   - Validates weapon type for weapon_shield (offhand must be "shield")
+   - Returns specific reason for each incomplete case
+
+3. **Specific Reason Messages**
+   - "No Main Weapon" - No weapon equipped at all
+   - "Missing Offhand Weapon" - dual_wield without offhand
+   - "Missing Shield" - weapon_shield without offhand
+   - "Offhand Must Be Shield" - weapon_shield with non-shield offhand
+   - "Invalid Loadout Type" - Unknown loadout type
+   - Display: "Not Ready (Missing Shield)" - red color
+   - Code: RobotsPage.tsx lines 51-100, 347-356
+
+4. **Updated Robot Interface**
+   - Added `loadoutType: string` field
+   - Added `mainWeaponId` and `offhandWeaponId` fields
+   - Updated to use `mainWeapon` and `offhandWeapon` relations
+   - Removed old `weaponInventoryId` field
+   - Code: RobotsPage.tsx lines 6-37
+
+5. **Alignment with Matchmaking**
+   - Follows same validation logic as MATCHMAKING_DECISIONS.md
+   - Ensures UI matches what matchmaking scheduler enforces
+   - Prevents frustration of robots not being scheduled
+
 ---
 
 ## Appendix
@@ -1212,10 +1285,11 @@ All acceptance criteria verified:
 | 1.2 | Feb 2, 2026 | GitHub Copilot | Implementation complete - All requirements implemented |
 | 1.3 | Feb 2, 2026 | GitHub Copilot | Bug fixes: Added ELO sorting, fixed battle readiness calculation, added reason display |
 | 1.4 | Feb 2, 2026 | GitHub Copilot | Enhancements: Complete battle readiness checks (weapon), functional Repair All, robot capacity indicator |
+| 1.5 | Feb 2, 2026 | GitHub Copilot | Critical fix: Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed) |
 
 ---
 
-**Status**: ✅ IMPLEMENTED (v1.4)  
+**Status**: ✅ IMPLEMENTED (v1.5)  
 **Implementation Date**: February 2, 2026  
-**Latest Update**: v1.4 Enhancements (February 2, 2026)  
+**Latest Update**: v1.5 Critical Fix (February 2, 2026)  
 **Next Steps**: Testing with live servers, Screenshots for documentation
