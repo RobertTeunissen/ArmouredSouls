@@ -1,7 +1,7 @@
 # Product Requirements Document: My Robots List Page Design Alignment
 
-**Last Updated**: February 2, 2026 (Updated with v1.5 loadout validation)  
-**Status**: ✅ IMPLEMENTED (with v1.5 updates)  
+**Last Updated**: February 2, 2026 (Updated with v1.6 shield regeneration fix)  
+**Status**: ✅ IMPLEMENTED (with v1.6 updates)  
 **Owner**: Robert Teunissen  
 **Epic**: Design System Implementation - Core Management Pages  
 **Priority**: P0 (Highest priority - Core gameplay screen)
@@ -13,6 +13,7 @@
 - v1.3 (Feb 2, 2026): **BUG FIXES** - Added ELO sorting, fixed battle readiness calculation, added reason display for non-ready robots
 - v1.4 (Feb 2, 2026): **ENHANCEMENTS** - Complete battle readiness checks (weapon check), functional Repair All button, robot capacity indicator
 - v1.5 (Feb 2, 2026): **CRITICAL FIX** - Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed)
+- v1.6 (Feb 2, 2026): **SHIELD REGENERATION FIX** - Battle readiness no longer affected by shield capacity (shields regenerate automatically, no cost)
 
 ---
 
@@ -37,6 +38,7 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 - **Create Robot button disabled when at capacity with tooltip explanation** (v1.4)
 - **Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed)** (v1.5)
 - **Specific reasons shown for incomplete loadouts (Missing Shield, Missing Offhand Weapon, etc.)** (v1.5)
+- **Battle readiness based on HP and loadout only - shields excluded (regenerate automatically, no cost)** (v1.6)
 
 **Impact**: Establishes the central hub for robot management, reinforcing player's role as stable manager with visual pride in their robot collection.
 
@@ -363,6 +365,33 @@ Acceptance Criteria:
 - Partial configurations (e.g., weapon_shield with only weapon) show "Not Ready (Missing Shield)"
 - Validation happens BEFORE HP/Shield checks
 - Aligns with matchmaking eligibility rules in MATCHMAKING_DECISIONS.md
+```
+
+**US-15: Shield Regeneration Does Not Affect Battle Readiness** (v1.6)
+```
+As a player
+I want shield capacity changes to not affect my robot's battle readiness
+So that equipping shields with added capacity doesn't make my robots appear damaged
+
+Acceptance Criteria:
+- Battle readiness calculation based on HP and loadout only
+- Shield percentage NOT included in readiness formula
+- Rationale: Energy shields regenerate automatically between battles (no credit cost)
+- Only HP requires credits to repair, so only HP should affect readiness
+- Readiness thresholds based on HP only:
+  - ≥80% HP: "Battle Ready" (green)
+  - 50-79% HP: "Damaged (Low HP)" (yellow)  
+  - <50% HP: "Critical (Low HP)" (red)
+- "Low Shield" reason removed (shields regenerate, not a concern)
+- "Low HP and Shield" reason removed (only HP matters)
+- Shield bar still displays for information, but doesn't affect status
+- When shield capacity increases (e.g., equip shield with +100 capacity):
+  - Robot remains "Battle Ready" if HP > 80%
+  - Robot does not show as "Damaged" due to low shield percentage
+- Aligns with ROBOT_ATTRIBUTES.md:
+  - "Energy shields DO regenerate during battle"
+  - "Energy shields reset to max after battle ends"
+  - "Robot HP does NOT regenerate... Damage persists until repaired with Credits"
 ```
 
 ---
@@ -1136,6 +1165,7 @@ All acceptance criteria verified:
 - ✅ **v1.4: Create Robot button disabled when at capacity**
 - ✅ **v1.5: Complete loadout validation based on loadout type**
 - ✅ **v1.5: Specific reasons for incomplete loadouts**
+- ✅ **v1.6: Battle readiness based on HP only (shields regenerate automatically)**
 
 **Implementation Summary**: See [IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md](IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md) for complete details.
 
@@ -1246,6 +1276,60 @@ All acceptance criteria verified:
    - Ensures UI matches what matchmaking scheduler enforces
    - Prevents frustration of robots not being scheduled
 
+### v1.6 Changes (February 2, 2026)
+
+**Critical Fix: Shield Regeneration Does Not Affect Battle Readiness**:
+
+1. **Problem Identified**
+   - Issue: When shield capacity increases (e.g., equipping shield with +100 maxShield), robots showed as "Damaged" or "Not Ready"
+   - Root cause: Battle readiness formula included shield percentage
+   - Example: Shield adds +100 capacity → currentShield=200, maxShield=300 → 67% → "Damaged (Low Shield)" ❌
+   - Impact: Misleading status since shields regenerate automatically between battles (no credit cost)
+
+2. **Shield Regeneration Rules** (from ROBOT_ATTRIBUTES.md)
+   - Energy shields regenerate during battle (based on Power Core attribute)
+   - Energy shields reset to max after battle ends
+   - Shields never require credits to restore
+   - Only HP requires credits to repair
+
+3. **Battle Readiness Formula Change**
+   - **Before**: `readiness = (HP% + Shield%) / 2`
+     - Problem: Penalized robots for low shields (which regenerate free)
+     - Misleading: Robot with 80% HP + 25% Shield = 52.5% readiness = "Damaged"
+   - **After**: `readiness = HP%` only
+     - Correct: Only penalizes for HP damage (which costs credits to repair)
+     - Accurate: Robot with 80% HP (any shield) = 80% readiness = "Battle Ready"
+
+4. **Removed Misleading Reasons**
+   - ❌ Removed: "Low Shield" (shields regenerate, not a concern)
+   - ❌ Removed: "Low HP and Shield" (only HP matters for readiness)
+   - ✅ Kept: "Low HP" (accurate reason - requires credits to fix)
+
+5. **Code Changes**
+   - Updated `calculateReadiness()`: Removed shield parameters and calculation
+   - Simplified `getReadinessStatus()`: Removed shield parameters and shield checks
+   - Updated function calls: Removed shield arguments
+   - Code: RobotsPage.tsx lines 53-58, 105-138, 342-353
+
+6. **Readiness Thresholds** (HP-based only)
+   - ≥80% HP: "Battle Ready" (green)
+   - 50-79% HP: "Damaged (Low HP)" (yellow)
+   - <50% HP: "Critical (Low HP)" (red)
+   - Loadout check remains first priority
+
+7. **Shield Bar Display**
+   - Shield bar still shows current/max visually (for information)
+   - Players can see shield status
+   - But shield percentage does NOT affect battle readiness status
+   - Shields are informational only
+
+8. **Impact**
+   - ✅ Equipping shields with added capacity no longer makes robots appear damaged
+   - ✅ Battle readiness now accurately reflects what requires player action
+   - ✅ HP requires credits → affects readiness
+   - ✅ Shields regenerate free → don't affect readiness
+   - ✅ Aligns with game mechanics (ROBOT_ATTRIBUTES.md)
+
 ---
 
 ## Appendix
@@ -1286,10 +1370,11 @@ All acceptance criteria verified:
 | 1.3 | Feb 2, 2026 | GitHub Copilot | Bug fixes: Added ELO sorting, fixed battle readiness calculation, added reason display |
 | 1.4 | Feb 2, 2026 | GitHub Copilot | Enhancements: Complete battle readiness checks (weapon), functional Repair All, robot capacity indicator |
 | 1.5 | Feb 2, 2026 | GitHub Copilot | Critical fix: Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed) |
+| 1.6 | Feb 2, 2026 | GitHub Copilot | Shield regeneration fix: Battle readiness based on HP only (shields regenerate automatically, no cost) |
 
 ---
 
-**Status**: ✅ IMPLEMENTED (v1.5)  
+**Status**: ✅ IMPLEMENTED (v1.6)  
 **Implementation Date**: February 2, 2026  
-**Latest Update**: v1.5 Critical Fix (February 2, 2026)  
+**Latest Update**: v1.6 Shield Regeneration Fix (February 2, 2026)  
 **Next Steps**: Testing with live servers, Screenshots for documentation
