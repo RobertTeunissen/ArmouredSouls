@@ -1238,20 +1238,37 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
     const repairBayLevel = repairBay?.level || 0;
     const discount = repairBayLevel * 5; // 5% per level
 
-    // Get all robots that need repair (repairCost > 0)
-    const robots = await prisma.robot.findMany({
-      where: {
-        userId,
-        repairCost: { gt: 0 },
-      },
+    // Get all user's robots (we'll filter by HP damage)
+    const allRobots = await prisma.robot.findMany({
+      where: { userId },
     });
 
-    if (robots.length === 0) {
+    // Repair cost per HP point (matches frontend calculation)
+    const REPAIR_COST_PER_HP = 50;
+
+    // Filter robots that need repair and calculate costs
+    const robotsNeedingRepair = allRobots
+      .map(robot => {
+        let repairCost = 0;
+        
+        // Use backend repairCost if set, otherwise calculate from HP damage
+        if (robot.repairCost > 0) {
+          repairCost = robot.repairCost;
+        } else if (robot.currentHP < robot.maxHP) {
+          const hpDamage = robot.maxHP - robot.currentHP;
+          repairCost = hpDamage * REPAIR_COST_PER_HP;
+        }
+        
+        return { ...robot, calculatedRepairCost: repairCost };
+      })
+      .filter(robot => robot.calculatedRepairCost > 0);
+
+    if (robotsNeedingRepair.length === 0) {
       return res.status(400).json({ error: 'No robots need repair' });
     }
 
     // Calculate total cost
-    const totalBaseCost = robots.reduce((sum, robot) => sum + robot.repairCost, 0);
+    const totalBaseCost = robotsNeedingRepair.reduce((sum, robot) => sum + robot.calculatedRepairCost, 0);
     const finalCost = Math.floor(totalBaseCost * (1 - discount / 100));
 
     // Check if user has enough credits
@@ -1271,9 +1288,9 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
         data: { currency: user.currency - finalCost },
       });
 
-      // Repair all robots
+      // Repair all robots (restore HP to max, clear repairCost)
       const updatedRobots = await Promise.all(
-        robots.map(robot =>
+        robotsNeedingRepair.map(robot =>
           tx.robot.update({
             where: { id: robot.id },
             data: {
@@ -1291,12 +1308,12 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
 
     res.json({
       success: true,
-      repairedCount: robots.length,
+      repairedCount: robotsNeedingRepair.length,
       totalBaseCost,
       discount,
       finalCost,
       newCurrency: result.user.currency,
-      message: `Successfully repaired ${robots.length} robot(s) for ₡${finalCost.toLocaleString()}`,
+      message: `Successfully repaired ${robotsNeedingRepair.length} robot(s) for ₡${finalCost.toLocaleString()}`,
     });
   } catch (error) {
     console.error('Repair all robots error:', error);
