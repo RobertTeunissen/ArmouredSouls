@@ -1,7 +1,7 @@
 # Product Requirements Document: My Robots List Page Design Alignment
 
-**Last Updated**: February 2, 2026 (Updated with v1.6 shield regeneration fix)  
-**Status**: ✅ IMPLEMENTED (with v1.6 updates)  
+**Last Updated**: February 2, 2026 (Updated with v1.7 fixes)  
+**Status**: ✅ IMPLEMENTED (with v1.7 fixes)  
 **Owner**: Robert Teunissen  
 **Epic**: Design System Implementation - Core Management Pages  
 **Priority**: P0 (Highest priority - Core gameplay screen)
@@ -14,6 +14,7 @@
 - v1.4 (Feb 2, 2026): **ENHANCEMENTS** - Complete battle readiness checks (weapon check), functional Repair All button, robot capacity indicator
 - v1.5 (Feb 2, 2026): **CRITICAL FIX** - Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed)
 - v1.6 (Feb 2, 2026): **SHIELD REGENERATION FIX** - Battle readiness no longer affected by shield capacity (shields regenerate automatically, no cost)
+- v1.7 (Feb 2, 2026): **BUG FIXES** - Roster expansion capacity now updates dynamically when navigating back from facility upgrades; Added debug logging for repair cost investigation
 
 ---
 
@@ -39,6 +40,7 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 - **Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed)** (v1.5)
 - **Specific reasons shown for incomplete loadouts (Missing Shield, Missing Offhand Weapon, etc.)** (v1.5)
 - **Battle readiness based on HP and loadout only - shields excluded (regenerate automatically, no cost)** (v1.6)
+- **Roster expansion capacity updates dynamically when returning from facility upgrades** (v1.7)
 
 **Impact**: Establishes the central hub for robot management, reinforcing player's role as stable manager with visual pride in their robot collection.
 
@@ -392,6 +394,58 @@ Acceptance Criteria:
   - "Energy shields DO regenerate during battle"
   - "Energy shields reset to max after battle ends"
   - "Robot HP does NOT regenerate... Damage persists until repaired with Credits"
+```
+
+**US-16: Roster Expansion Capacity Updates Dynamically** (v1.7)
+```
+As a player
+I want the robot capacity display to update immediately when I return from upgrading Roster Expansion
+So that I can see my new capacity and create additional robots
+
+Acceptance Criteria:
+- Capacity display format: "My Robots (X/Y)" where X = current, Y = max
+- Max capacity formula: maxRobots = rosterLevel + 1
+- When user navigates to /robots page, facilities are refetched
+- When user upgrades Roster Expansion and returns to /robots:
+  - Capacity display updates immediately (e.g., from "1/1" to "1/2")
+  - Create Robot button becomes enabled if below capacity
+  - No manual page refresh required
+- Implementation uses React Router location dependency
+- Additional window focus handler for safety
+- Works for all roster levels (0, 1, 2, ... 10+)
+
+Testing Scenarios:
+- Level 0: Shows (X/1), create first robot
+- Level 1: After upgrade, shows (X/2), can create second robot
+- Level 2: After upgrade, shows (X/3), can create third robot
+```
+
+**US-17: Repair All Button Debug Logging** (v1.7)
+```
+As a developer
+I want debug logging for repair cost calculations
+So that I can diagnose why the Repair All button may appear inaccessible
+
+Acceptance Criteria:
+- Console logging when robots are fetched:
+  - Total robot count
+  - Each robot's currentHP, maxHP, and repairCost values
+- Console logging when repair costs are calculated:
+  - robotCount
+  - robotsWithRepairCost (how many have repairCost > 0)
+  - totalBaseCost
+  - discount percentage
+  - discountedCost
+  - repairBayLevel
+- Logging helps identify:
+  - Whether robots have repairCost set correctly
+  - Whether button logic is working correctly
+  - Whether issue is data or logic
+- Button behavior remains correct:
+  - Disabled when no repairs needed (repairCost = 0 for all robots)
+  - Enabled when repairs needed (repairCost > 0 for any robot)
+
+Note: New robots have repairCost = 0 (expected). Button is correctly disabled until robots take damage and need repair.
 ```
 
 ---
@@ -1330,6 +1384,80 @@ All acceptance criteria verified:
    - ✅ Shields regenerate free → don't affect readiness
    - ✅ Aligns with game mechanics (ROBOT_ATTRIBUTES.md)
 
+### v1.7 Changes (February 2, 2026)
+
+**Bug Fixes: Roster Expansion Updates & Repair All Debug Logging**:
+
+1. **Problem #1: Roster Expansion Capacity Not Updating**
+   - Issue: After upgrading Roster Expansion facility, capacity display remained at old value
+   - Example: Upgrade from Level 0 to Level 1 → still showed "My Robots (1/1)" instead of "(1/2)"
+   - Root cause: Facilities only fetched on initial component mount, not when navigating back to page
+   - Impact: Create Robot button stayed disabled even though capacity increased
+
+2. **Solution: Dynamic Facility Refetching**
+   - Added `useLocation` hook from React Router
+   - Added location dependency to useEffect → refetches facilities when navigating to page
+   - Added window focus handler as safety mechanism
+   - Code: RobotsPage.tsx lines 1-2, 151, 155-165
+
+3. **Expected Behavior After Fix**
+   - Visit /robots → Shows correct capacity for current level
+   - Upgrade Roster Expansion facility
+   - Return to /robots → **Capacity updates immediately** ✅
+   - Create button enabled if below new capacity ✅
+   - No manual refresh required ✅
+
+4. **Testing Scenarios**
+   - Level 0 → 1: "(1/1)" changes to "(1/2)", Create button enabled
+   - Level 1 → 2: "(2/2)" changes to "(2/3)", Create button enabled
+   - Level 5 → 6: "(5/6)" changes to "(5/7)", Create button enabled
+
+5. **Problem #2: Repair All Button Accessibility**
+   - User report: "Repair All button still not accessible, even with 1 robot in the stable"
+   - Investigation: Button logic is correct (disabled when no repairs needed)
+   - Hypothesis: User may have tested with new robot (repairCost = 0, expected behavior)
+
+6. **Solution: Debug Logging Added**
+   - Added console logging in `fetchRobots()`: Shows robot HP and repairCost values
+   - Added console logging in `calculateTotalRepairCost()`: Shows repair calculation details
+   - Logs help diagnose whether issue is data or logic
+   - Code: RobotsPage.tsx lines 187-197, 224-237
+
+7. **Debug Console Output**
+   ```javascript
+   Fetched robots: {
+     count: 1,
+     robots: [{ id: 123, name: "Bot", currentHP: 1000, maxHP: 1000, repairCost: 0 }]
+   }
+   
+   Repair cost calculation: {
+     robotCount: 1,
+     robotsWithRepairCost: 0,  // No robots need repair
+     totalBaseCost: 0,
+     discount: 0,
+     discountedCost: 0,
+     repairBayLevel: 0
+   }
+   ```
+
+8. **Expected Button Behavior** (Unchanged, working correctly)
+   - New robots (repairCost = 0): Button disabled ✅ CORRECT
+   - Damaged robots (repairCost > 0): Button enabled ✅ CORRECT
+   - Button only disabled when genuinely no repairs needed
+
+9. **Visual Documentation Created**
+   - Created MY_ROBOTS_PAGE_V1_7_FIXES_VISUAL.md (14KB)
+   - Visual mockups of all states
+   - Test scenarios with expected outputs
+   - Screenshot checklist
+   - Console debug output examples
+
+10. **Status**
+    - ✅ Roster expansion fix implemented and ready for testing
+    - ✅ Debug logging added for repair button investigation
+    - ⏳ Requires live testing to verify and capture screenshots
+    - ⏳ May need damage system work to set repairCost (Phase 2)
+
 ---
 
 ## Appendix
@@ -1371,10 +1499,11 @@ All acceptance criteria verified:
 | 1.4 | Feb 2, 2026 | GitHub Copilot | Enhancements: Complete battle readiness checks (weapon), functional Repair All, robot capacity indicator |
 | 1.5 | Feb 2, 2026 | GitHub Copilot | Critical fix: Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed) |
 | 1.6 | Feb 2, 2026 | GitHub Copilot | Shield regeneration fix: Battle readiness based on HP only (shields regenerate automatically, no cost) |
+| 1.7 | Feb 2, 2026 | GitHub Copilot | Bug fixes: Roster expansion capacity updates dynamically; Added debug logging for repair cost investigation |
 
 ---
 
-**Status**: ✅ IMPLEMENTED (v1.6)  
+**Status**: ✅ IMPLEMENTED (v1.7)  
 **Implementation Date**: February 2, 2026  
-**Latest Update**: v1.6 Shield Regeneration Fix (February 2, 2026)  
-**Next Steps**: Testing with live servers, Screenshots for documentation
+**Latest Update**: v1.7 Bug Fixes (February 2, 2026)  
+**Next Steps**: Live testing with servers, Screenshots for documentation verification
