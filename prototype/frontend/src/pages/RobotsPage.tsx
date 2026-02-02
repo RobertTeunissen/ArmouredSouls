@@ -19,8 +19,16 @@ interface Robot {
   totalBattles: number;
   battleReadiness: number;
   repairCost: number;
-  weaponInventoryId: number | null;
-  weaponInventory: {
+  loadoutType: string; // "single", "weapon_shield", "two_handed", "dual_wield"
+  mainWeaponId: number | null;
+  offhandWeaponId: number | null;
+  mainWeapon: {
+    weapon: {
+      name: string;
+      weaponType: string;
+    };
+  } | null;
+  offhandWeapon: {
     weapon: {
       name: string;
       weaponType: string;
@@ -48,20 +56,70 @@ const calculateReadiness = (currentHP: number, maxHP: number, currentShield: num
   return Math.round((hpPercent + shieldPercent) / 2);
 };
 
+// Check if loadout is complete based on loadout type
+const isLoadoutComplete = (
+  loadoutType: string,
+  mainWeaponId: number | null,
+  offhandWeaponId: number | null,
+  offhandWeapon: { weapon: { weaponType: string } } | null
+): { complete: boolean; reason: string } => {
+  // Main weapon always required
+  if (!mainWeaponId) {
+    return { complete: false, reason: 'No Main Weapon' };
+  }
+
+  // Check based on loadout type
+  switch (loadoutType) {
+    case 'single':
+      // Only main weapon required
+      return { complete: true, reason: '' };
+      
+    case 'two_handed':
+      // Only main weapon required (two-handed weapons use main slot)
+      return { complete: true, reason: '' };
+      
+    case 'dual_wield':
+      // Main weapon AND offhand weapon required
+      if (!offhandWeaponId) {
+        return { complete: false, reason: 'Missing Offhand Weapon' };
+      }
+      return { complete: true, reason: '' };
+      
+    case 'weapon_shield':
+      // Main weapon AND shield required
+      if (!offhandWeaponId) {
+        return { complete: false, reason: 'Missing Shield' };
+      }
+      // Verify offhand is actually a shield
+      if (offhandWeapon && offhandWeapon.weapon.weaponType !== 'shield') {
+        return { complete: false, reason: 'Offhand Must Be Shield' };
+      }
+      return { complete: true, reason: '' };
+      
+    default:
+      // Unknown loadout type - treat as incomplete
+      return { complete: false, reason: 'Invalid Loadout Type' };
+  }
+};
+
 const getReadinessStatus = (
   currentHP: number, 
   maxHP: number, 
   currentShield: number, 
   maxShield: number,
-  hasWeapon: boolean
+  loadoutType: string,
+  mainWeaponId: number | null,
+  offhandWeaponId: number | null,
+  offhandWeapon: { weapon: { weaponType: string } } | null
 ): { text: string; color: string; reason: string } => {
   const readiness = calculateReadiness(currentHP, maxHP, currentShield, maxShield);
   const hpPercent = (currentHP / maxHP) * 100;
   const shieldPercent = maxShield > 0 ? (currentShield / maxShield) * 100 : 100;
   
-  // Check for weapon first - critical for battle
-  if (!hasWeapon) {
-    return { text: 'Not Ready', color: 'text-red-500', reason: 'No Weapon Equipped' };
+  // Check loadout completeness first - critical for battle
+  const loadoutCheck = isLoadoutComplete(loadoutType, mainWeaponId, offhandWeaponId, offhandWeapon);
+  if (!loadoutCheck.complete) {
+    return { text: 'Not Ready', color: 'text-red-500', reason: loadoutCheck.reason };
   }
   
   if (readiness >= 80) {
@@ -286,8 +344,16 @@ function RobotsPage() {
                 : 0;
               const winRate = calculateWinRate(robot.wins, robot.totalBattles);
               const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP, robot.currentShield, robot.maxShield);
-              const hasWeapon = robot.weaponInventoryId !== null;
-              const readinessStatus = getReadinessStatus(robot.currentHP, robot.maxHP, robot.currentShield, robot.maxShield, hasWeapon);
+              const readinessStatus = getReadinessStatus(
+                robot.currentHP, 
+                robot.maxHP, 
+                robot.currentShield, 
+                robot.maxShield,
+                robot.loadoutType,
+                robot.mainWeaponId,
+                robot.offhandWeaponId,
+                robot.offhandWeapon
+              );
 
               return (
                 <div
@@ -360,7 +426,7 @@ function RobotsPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-400">Weapon:</span>
                       <span className="font-semibold">
-                        {robot.weaponInventory ? robot.weaponInventory.weapon.name : 'None'}
+                        {robot.mainWeapon ? robot.mainWeapon.weapon.name : 'None'}
                       </span>
                     </div>
                     <div className="flex justify-between">
