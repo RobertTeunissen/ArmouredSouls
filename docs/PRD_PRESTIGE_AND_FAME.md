@@ -1195,6 +1195,706 @@ async function checkFameMilestones(robotId: number): Promise<void> {
 
 ---
 
+## Calculation Timing & Execution
+
+### When Prestige and Fame Are Calculated
+
+**Battle Resolution Timing**:
+
+Prestige and Fame calculations occur **immediately after battle resolution** during the battle execution step. The calculations are performed server-side as part of the battle orchestrator service before battle results are written to the database.
+
+**Execution Flow**:
+```
+1. Battle Simulation Completes
+   ↓
+2. Determine Winner/Loser/Draw
+   ↓
+3. Calculate ELO Changes
+   ↓
+4. Calculate Prestige Award ← NEW
+   ↓
+5. Calculate Fame Award ← NEW
+   ↓
+6. Update Robot Stats (HP, ELO, wins/losses)
+   ↓
+7. Update User Stats (prestige) ← NEW
+   ↓
+8. Update Robot Stats (fame) ← NEW
+   ↓
+9. Check for Milestones ← NEW
+   ↓
+10. Award Milestone Prestige/Fame if triggered ← NEW
+   ↓
+11. Create Battle Record (includes prestige/fame earned)
+   ↓
+12. Return Battle Results
+```
+
+**Calculation Details**:
+
+**Prestige Calculation** (Server-Side):
+```typescript
+// Calculate prestige for winning stable
+function calculatePrestigeForBattle(winnerRobot: Robot, isDraw: boolean): number {
+  if (isDraw) return 0; // No prestige for draws
+  
+  const prestigeByLeague = {
+    bronze: 5,
+    silver: 10,
+    gold: 20,
+    platinum: 30,
+    diamond: 50,
+    champion: 75,
+  };
+  
+  return prestigeByLeague[winnerRobot.currentLeague] || 0;
+}
+
+// Award prestige to user
+await prisma.user.update({
+  where: { id: winnerRobot.userId },
+  data: {
+    prestige: { increment: prestigeEarned },
+    totalWins: { increment: 1 },
+  },
+});
+```
+
+**Fame Calculation** (Server-Side):
+```typescript
+// Calculate fame for winning robot
+function calculateFameForBattle(
+  winnerRobot: Robot, 
+  winnerFinalHP: number,
+  winnerMaxHP: number,
+  isDraw: boolean
+): number {
+  if (isDraw) return 0; // No fame for draws
+  
+  // Base fame by league
+  const fameByLeague = {
+    bronze: 2,
+    silver: 5,
+    gold: 10,
+    platinum: 15,
+    diamond: 25,
+    champion: 40,
+  };
+  
+  let baseFame = fameByLeague[winnerRobot.currentLeague] || 0;
+  
+  // Performance bonuses
+  const hpPercent = winnerFinalHP / winnerMaxHP;
+  
+  if (winnerFinalHP === winnerMaxHP) {
+    // Perfect victory (no HP damage taken)
+    baseFame *= 2.0;
+  } else if (hpPercent > 0.8) {
+    // Dominating victory (>80% HP remaining)
+    baseFame *= 1.5;
+  } else if (hpPercent < 0.2) {
+    // Comeback victory (<20% HP remaining)
+    baseFame *= 1.25;
+  }
+  
+  return Math.round(baseFame);
+}
+
+// Award fame to robot
+await prisma.robot.update({
+  where: { id: winnerRobot.id },
+  data: {
+    fame: { increment: fameEarned },
+    wins: { increment: 1 },
+  },
+});
+```
+
+**Milestone Checking** (After Battle Updates):
+```typescript
+// Check prestige milestones
+async function checkPrestigeMilestones(userId: number): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  
+  // Check win count milestones
+  if (user.totalWins === 100) {
+    await awardPrestigeMilestone(userId, 'wins_100', 50);
+  }
+  
+  // Check robot ELO milestones
+  const robots = await prisma.robot.findMany({ where: { userId } });
+  const highestElo = Math.max(...robots.map(r => r.elo));
+  
+  if (highestElo >= 1500) {
+    await checkAndAwardMilestone(userId, 'elo_1500', 50);
+  }
+}
+
+// Check fame milestones
+async function checkFameMilestones(robotId: number): Promise<void> {
+  const robot = await prisma.robot.findUnique({ where: { id: robotId } });
+  
+  // Check ELO milestones
+  if (robot.elo === 1500) {
+    await awardFameMilestone(robotId, 'elo_1500', 25);
+  }
+  
+  // Check battle count milestones
+  if (robot.totalBattles === 50) {
+    await awardFameMilestone(robotId, 'battles_50', 15);
+  }
+  
+  // Check kill count milestones
+  if (robot.kills === 10) {
+    await awardFameMilestone(robotId, 'kills_10', 20);
+  }
+}
+```
+
+**Transaction Safety**:
+
+All prestige and fame updates are performed within database transactions to ensure consistency:
+
+```typescript
+await prisma.$transaction(async (tx) => {
+  // 1. Update robot stats
+  await tx.robot.update({ ... });
+  
+  // 2. Update user prestige
+  await tx.user.update({ ... });
+  
+  // 3. Check and award milestones
+  await checkMilestones(tx, userId, robotId);
+  
+  // 4. Create battle record
+  await tx.battle.create({ ... });
+});
+```
+
+---
+
+## Admin Integration
+
+### Prestige and Fame in Admin Panel
+
+The admin panel (`/admin`) provides tools to manually trigger battles and view detailed prestige/fame calculations in battle logs.
+
+### Admin Battle Execution
+
+**Manual Battle Execution Flow**:
+
+When admin triggers battles via the "Execute Battles" button:
+
+```
+1. Admin clicks "Execute Battles"
+   ↓
+2. POST /api/admin/battles/run
+   ↓
+3. executeScheduledBattles() runs
+   ↓
+4. For each battle:
+   - Simulate combat
+   - Calculate ELO changes
+   - Calculate prestige award ← Visible in logs
+   - Calculate fame award ← Visible in logs
+   - Update database
+   - Log results with prestige/fame
+   ↓
+5. Return summary including total prestige/fame awarded
+```
+
+**Admin Battle Log Output**:
+
+When viewing battle details in admin panel, prestige and fame calculations are displayed:
+
+```typescript
+// Battle log entry structure
+{
+  battleId: 12345,
+  robot1: "Thunderstrike",
+  robot2: "Iron Sentinel",
+  winner: "Thunderstrike",
+  
+  // Combat results
+  robot1FinalHP: 180,
+  robot2FinalHP: 0,
+  durationSeconds: 45,
+  
+  // ELO changes
+  robot1ELOBefore: 1450,
+  robot1ELOAfter: 1466,
+  eloChange: +16,
+  
+  // Prestige/Fame calculations ← NEW
+  prestigeCalculation: {
+    league: "gold",
+    basePrestige: 20,
+    bonuses: [],
+    totalPrestige: 20,
+    awardedTo: "user_123 (Stable: Elite Warriors)"
+  },
+  
+  fameCalculation: {
+    league: "gold",
+    baseFame: 10,
+    hpRemaining: "90%",
+    performanceBonus: "Dominating Victory (+50%)",
+    totalFame: 15,
+    awardedTo: "robot_456 (Thunderstrike)"
+  },
+  
+  // Milestone triggers
+  milestonesTriggered: [
+    {
+      type: "prestige",
+      milestone: "wins_100",
+      bonus: 50,
+      description: "100 Total Wins"
+    }
+  ],
+  
+  // Economic
+  winnerReward: 35000,
+  loserReward: 8000,
+  robot1RepairCost: 2500,
+  robot2RepairCost: 12000
+}
+```
+
+**Admin UI Display**:
+
+In the admin battle viewer (`GET /api/admin/battles/:id`), prestige and fame are shown:
+
+```
+┌─────────────────────────────────────────────────┐
+│ Battle #12345 - Gold League                     │
+├─────────────────────────────────────────────────┤
+│ Winner: Thunderstrike (Robot ID: 456)          │
+│ Final Score: 180 HP vs 0 HP (Destroyed)        │
+│                                                 │
+│ 🏆 REPUTATION AWARDS:                           │
+│                                                 │
+│ Prestige (Stable-Level):                       │
+│ • Base Award (Gold League): +20 prestige        │
+│ • Awarded to: user_123 (Elite Warriors)        │
+│ • New Stable Prestige: 3,247 → 3,267          │
+│                                                 │
+│ Fame (Robot-Level):                            │
+│ • Base Award (Gold League): +10 fame           │
+│ • Performance Bonus: +5 fame (Dominating)      │
+│ • Total Fame: +15                              │
+│ • Awarded to: Thunderstrike (robot_456)       │
+│ • New Robot Fame: 856 → 871                    │
+│                                                 │
+│ 🎉 Milestone Triggered:                         │
+│ • 100 Total Wins: +50 prestige bonus           │
+│ • Stable Elite Warriors now has 3,317 prestige │
+└─────────────────────────────────────────────────┘
+```
+
+### Admin API Enhancements
+
+**Enhanced Battle Summary Response**:
+
+The battle execution summary includes prestige/fame totals:
+
+```typescript
+// POST /api/admin/battles/run response
+{
+  success: true,
+  summary: {
+    totalBattles: 150,
+    successfulBattles: 149,
+    failedBattles: 1,
+    byeBattles: 5,
+    
+    // NEW: Reputation awards summary
+    reputationSummary: {
+      totalPrestigeAwarded: 2340,
+      totalFameAwarded: 1825,
+      prestigeByLeague: {
+        bronze: 125,
+        silver: 380,
+        gold: 640,
+        platinum: 690,
+        diamond: 350,
+        champion: 155
+      },
+      milestones: {
+        prestigeMilestones: 3,
+        fameMilestones: 7,
+        totalBonusPrestige: 200,
+        totalBonusFame: 155
+      }
+    },
+    
+    errors: []
+  },
+  timestamp: "2026-02-02T18:45:00.000Z"
+}
+```
+
+**Console Logging**:
+
+When battles execute, prestige and fame are logged to console:
+
+```
+[BattleOrchestrator] Executing battle 12345...
+[BattleOrchestrator] Winner: Thunderstrike (robot_456)
+[BattleOrchestrator] Prestige: +20 → user_123 (Gold league win)
+[BattleOrchestrator] Fame: +15 → Thunderstrike (+5 dominating bonus)
+[BattleOrchestrator] ✅ Milestone: 100 Total Wins (+50 prestige)
+[BattleOrchestrator] Battle complete: 45 seconds
+```
+
+### Admin Bulk Cycle Integration
+
+When running bulk cycles (`POST /api/admin/cycles/bulk`), prestige/fame are tracked:
+
+```typescript
+// Bulk cycle results
+{
+  cyclesCompleted: 10,
+  results: [
+    {
+      cycle: 1,
+      battles: {
+        totalBattles: 150,
+        prestigeAwarded: 2340,
+        fameAwarded: 1825,
+        milestonesTriggered: 4
+      }
+    },
+    // ... more cycles
+  ],
+  
+  // NEW: Aggregate reputation summary
+  aggregateReputation: {
+    totalPrestigeAwarded: 23400,
+    totalFameAwarded: 18250,
+    averagePrestigePerBattle: 15.6,
+    averageFamePerBattle: 12.2,
+    totalMilestones: 42
+  }
+}
+```
+
+---
+
+## Leaderboards System
+
+### Overview
+
+Two new leaderboard pages display the top performers in prestige (stable-level) and fame (robot-level), providing community recognition and competitive goals.
+
+### Fame Leaderboard
+
+**Page**: `/leaderboards/fame`  
+**Purpose**: Showcase the most famous individual robots across all stables
+
+**Features**:
+- Rank top 100 robots by fame score
+- Display robot name, fame, tier, owner stable, ELO, win rate
+- Filter by league (all, bronze, silver, gold, platinum, diamond, champion)
+- Real-time updates (refresh on page load)
+- Highlight user's own robots
+- Click robot to view detail page
+
+**Data Source**: `GET /api/leaderboards/fame`
+
+**API Response**:
+```typescript
+{
+  leaderboard: [
+    {
+      rank: 1,
+      robotId: 456,
+      robotName: "Thunderstrike",
+      fame: 5247,
+      fameTier: "Mythical",
+      stableId: 123,
+      stableName: "Elite Warriors",
+      currentLeague: "champion",
+      elo: 2145,
+      totalBattles: 487,
+      wins: 342,
+      losses: 128,
+      draws: 17,
+      winRate: 70.2,
+      kills: 186,
+      damageDealtLifetime: 425680
+    },
+    // ... more robots
+  ],
+  pagination: {
+    page: 1,
+    limit: 100,
+    totalRobots: 3247,
+    hasMore: true
+  },
+  filters: {
+    league: "all",
+    minBattles: 10
+  },
+  userRobots: [
+    { robotId: 789, rank: 42, fame: 1856 }
+  ],
+  timestamp: "2026-02-02T18:45:00.000Z"
+}
+```
+
+**UI Mockup**:
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ 🏆 Fame Leaderboard - Top Robots                                │
+├──────────────────────────────────────────────────────────────────┤
+│ Filter: [All Leagues ▾] [Min Battles: 10]           [Refresh]   │
+├──────────────────────────────────────────────────────────────────┤
+│ #  Robot Name          Fame    Tier      Stable         ELO  W/L │
+├──────────────────────────────────────────────────────────────────┤
+│ 1  Thunderstrike      5,247  Mythical   Elite Warriors 2145 342/128│
+│ 2  Iron Sentinel      4,892  Mythical   Steel Legion   2089 318/142│
+│ 3  Plasma Reaper      4,556  Legendary  Death Dealers  2034 295/156│
+│ 4  Void Crusher       3,947  Legendary  Void Masters   1998 278/167│
+│ 5  Storm Bringer      3,821  Legendary  Thunder Gods   1976 264/181│
+│                                                                  │
+│ ... [Your Robot: "Lightning" - Rank #42, Fame: 1,856] ...      │
+│                                                                  │
+│ 98 Copper Knight        127  Famous     Bronze Stable   1456 89/78│
+│ 99 Rusty Warrior        122  Famous     Rust Bucket     1442 85/82│
+│ 100 Steel Rookie        118  Famous     Newbie Squad    1438 82/85│
+├──────────────────────────────────────────────────────────────────┤
+│ Showing 1-100 of 3,247 robots    [Load More]                    │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Prestige Leaderboard
+
+**Page**: `/leaderboards/prestige`  
+**Purpose**: Showcase the most prestigious stables/players
+
+**Features**:
+- Rank top 100 stables by prestige score
+- Display stable name, prestige, rank title, total robots, total wins, highest ELO
+- Show income multiplier benefit
+- Real-time updates
+- Highlight user's own stable
+- Click stable to view profile (future feature)
+
+**Data Source**: `GET /api/leaderboards/prestige`
+
+**API Response**:
+```typescript
+{
+  leaderboard: [
+    {
+      rank: 1,
+      userId: 123,
+      username: "ProPlayer42",
+      stableName: "Elite Warriors", // Derived from username or future stable name field
+      prestige: 52470,
+      prestigeRank: "Legendary",
+      totalRobots: 8,
+      totalBattles: 1847,
+      totalWins: 1129,
+      winRate: 61.1,
+      highestELO: 2145,
+      championshipTitles: 5,
+      battleWinningsBonus: 20, // +20% from prestige
+      merchandisingMultiplier: 6.247 // 1 + 52470/10000
+    },
+    // ... more stables
+  ],
+  pagination: {
+    page: 1,
+    limit: 100,
+    totalStables: 892,
+    hasMore: true
+  },
+  currentUser: {
+    userId: 456,
+    rank: 87,
+    prestige: 8543
+  },
+  timestamp: "2026-02-02T18:45:00.000Z"
+}
+```
+
+**UI Mockup**:
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ 🏆 Prestige Leaderboard - Top Stables                               │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                        [Refresh]      │
+├──────────────────────────────────────────────────────────────────────┤
+│ #  Stable Name        Prestige  Rank      Robots  Wins  Win%  Income│
+├──────────────────────────────────────────────────────────────────────┤
+│ 1  Elite Warriors     52,470   Legendary    8    1129  61.1%  +620% │
+│ 2  Steel Legion       48,923   Legendary    9    1087  59.8%  +589% │
+│ 3  Death Dealers      45,567   Legendary    7    1024  58.2%  +555% │
+│ 4  Void Masters       39,478   Champion     8     947  56.1%  +494% │
+│ 5  Thunder Gods       38,219   Champion     6     892  54.7%  +482% │
+│                                                                      │
+│ ... [Your Stable: "My Stable" - Rank #87, Prestige: 8,543] ...    │
+│                                                                      │
+│ 98 Bronze Warriors     1,247   Established  3     187  45.2%   +12% │
+│ 99 Copper Clan         1,189   Established  2     169  43.8%   +11% │
+│ 100 Steel Rookies      1,156   Established  2     164  42.1%   +11% │
+├──────────────────────────────────────────────────────────────────────┤
+│ Showing 1-100 of 892 stables      [Load More]                       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Navigation Integration
+
+**Location**: Social section of navigation menu
+
+**Desktop Navigation**:
+```
+Social ▾
+  ├─ My Profile
+  ├─ Friends
+  ├─ Notifications
+  ├─ Browse Guilds
+  ├─ My Guild
+  ├─ Guild Management
+  ├─ Global Leaderboards (existing - redirects to fame)
+  ├─ Fame Leaderboard (NEW - top robots)
+  ├─ Prestige Leaderboard (NEW - top stables)
+  ├─ Chat
+  ├─ Battle Replays
+  └─ Spectator Mode
+```
+
+**Mobile Drawer**:
+```
+👥 Social & Community
+  ├─ My Profile (disabled)
+  ├─ Friends (disabled)
+  ├─ Notifications (disabled)
+  ├─ Browse Guilds (disabled)
+  ├─ My Guild (disabled)
+  ├─ Guild Management (disabled)
+  ├─ Global Leaderboards (disabled)
+  ├─ Fame Leaderboard (NEW - enabled)
+  ├─ Prestige Leaderboard (NEW - enabled)
+  ├─ Chat (disabled)
+  ├─ Battle Replays (disabled)
+  └─ Spectator Mode (disabled)
+```
+
+### Backend Implementation
+
+**API Endpoints**:
+
+```typescript
+// GET /api/leaderboards/fame
+router.get('/fame', async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = Math.min(parseInt(req.query.limit as string) || 100, 100);
+  const league = req.query.league as string;
+  const minBattles = parseInt(req.query.minBattles as string) || 10;
+  
+  // Build where clause
+  const where: any = {
+    NOT: { name: 'Bye Robot' },
+    totalBattles: { gte: minBattles }
+  };
+  
+  if (league && league !== 'all') {
+    where.currentLeague = league;
+  }
+  
+  // Get top robots by fame
+  const robots = await prisma.robot.findMany({
+    where,
+    orderBy: { fame: 'desc' },
+    skip: (page - 1) * limit,
+    take: limit,
+    include: {
+      user: {
+        select: { id: true, username: true }
+      }
+    }
+  });
+  
+  // Calculate ranks and win rates
+  const leaderboard = robots.map((robot, index) => ({
+    rank: (page - 1) * limit + index + 1,
+    robotId: robot.id,
+    robotName: robot.name,
+    fame: robot.fame,
+    fameTier: getFameTier(robot.fame),
+    stableId: robot.userId,
+    stableName: robot.user.username,
+    currentLeague: robot.currentLeague,
+    elo: robot.elo,
+    totalBattles: robot.totalBattles,
+    wins: robot.wins,
+    losses: robot.losses,
+    draws: robot.draws,
+    winRate: robot.totalBattles > 0 
+      ? Number((robot.wins / robot.totalBattles * 100).toFixed(1)) 
+      : 0,
+    kills: robot.kills,
+    damageDealtLifetime: robot.damageDealtLifetime
+  }));
+  
+  res.json({ leaderboard, pagination: { ... } });
+});
+
+// GET /api/leaderboards/prestige
+router.get('/prestige', async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = Math.min(parseInt(req.query.limit as string) || 100, 100);
+  
+  // Get top users by prestige
+  const users = await prisma.user.findMany({
+    orderBy: { prestige: 'desc' },
+    skip: (page - 1) * limit,
+    take: limit,
+    include: {
+      robots: {
+        select: { 
+          elo: true,
+          totalBattles: true,
+          wins: true
+        }
+      }
+    }
+  });
+  
+  // Calculate derived stats
+  const leaderboard = users.map((user, index) => {
+    const highestELO = Math.max(...user.robots.map(r => r.elo), 0);
+    const totalBattles = user.robots.reduce((sum, r) => sum + r.totalBattles, 0);
+    const totalWins = user.robots.reduce((sum, r) => sum + r.wins, 0);
+    const winRate = totalBattles > 0 ? (totalWins / totalBattles * 100) : 0;
+    
+    return {
+      rank: (page - 1) * limit + index + 1,
+      userId: user.id,
+      username: user.username,
+      stableName: user.username, // TODO: Add stable name field
+      prestige: user.prestige,
+      prestigeRank: getPrestigeRank(user.prestige),
+      totalRobots: user.robots.length,
+      totalBattles,
+      totalWins,
+      winRate: Number(winRate.toFixed(1)),
+      highestELO,
+      championshipTitles: user.championshipTitles,
+      battleWinningsBonus: calculateBattleWinningsBonus(user.prestige),
+      merchandisingMultiplier: Number((1 + user.prestige / 10000).toFixed(3))
+    };
+  });
+  
+  res.json({ leaderboard, pagination: { ... } });
+});
+```
+
+---
+
 ## Implementation Plan
 
 ### Phase 1: Backend Foundation 
