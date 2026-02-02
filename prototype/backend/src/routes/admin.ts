@@ -684,6 +684,10 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
 /**
  * GET /api/admin/stats/robots
  * Get comprehensive statistics about robot attributes for debugging and outlier detection
+ * 
+ * Security Note: This endpoint is protected by authentication and admin-role authorization.
+ * Rate limiting not implemented as admin endpoints are used for debugging/analysis only.
+ * Future: Consider adding rate limiting for production deployments.
  */
 router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
