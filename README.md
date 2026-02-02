@@ -80,6 +80,11 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 - [**GitHub Issues (Copy-Paste)**](docs/GITHUB_ISSUES_WEAPON_LOADOUT.md) - Ready-to-use issue templates
 - [**Quick Reference**](docs/QUICK_REFERENCE_WEAPON_LOADOUT.md) - Visual guides and dependency charts
 
+### Economy System
+- [**PRD: Economy System**](docs/PRD_ECONOMY_SYSTEM.md) - Complete economic system documentation
+- [**Quick Reference**](docs/QUICK_REFERENCE_ECONOMY_SYSTEM.md) - At-a-glance costs, income, and formulas
+- [**Stable System**](docs/STABLE_SYSTEM.md) - Facility costs, prestige, and income/expense details
+
 ### General Documentation
 - [Phase 1 Plan](docs/PHASE1_PLAN.md) - Detailed plan for local prototype development
 - [Game Design Document](docs/GAME_DESIGN.md) - High-level game design and vision
