@@ -185,6 +185,19 @@ function RobotsPage() {
       }
 
       const data = await response.json();
+      
+      // Debug logging
+      console.log('Fetched robots:', {
+        count: data.length,
+        robots: data.map((r: Robot) => ({
+          id: r.id,
+          name: r.name,
+          currentHP: r.currentHP,
+          maxHP: r.maxHP,
+          repairCost: r.repairCost,
+        })),
+      });
+      
       // Sort robots by ELO (highest first)
       const sortedData = data.sort((a: Robot, b: Robot) => b.elo - a.elo);
       setRobots(sortedData);
@@ -225,6 +238,17 @@ function RobotsPage() {
     const totalBaseCost = robots.reduce((sum, robot) => sum + (robot.repairCost || 0), 0);
     const discount = repairBayLevel * 5; // 5% per level
     const discountedCost = Math.floor(totalBaseCost * (1 - discount / 100));
+    
+    // Debug logging
+    console.log('Repair cost calculation:', {
+      robotCount: robots.length,
+      robotsWithRepairCost: robots.filter(r => (r.repairCost || 0) > 0).length,
+      totalBaseCost,
+      discount,
+      discountedCost,
+      repairBayLevel,
+    });
+    
     return { totalBaseCost, discountedCost, discount };
   };
 
