@@ -1,7 +1,7 @@
 # Weapons & Loadout System
 
-**Last Updated**: January 30, 2026  
-**Status**: Design Document
+**Last Updated**: February 2, 2026  
+**Status**: Design Document - Pricing Updated with DPS-Inclusive Formula
 
 ## Overview
 
@@ -226,127 +226,146 @@ Each weapon has:
 
 ### Phase 1 - Implemented Weapons (11 Total)
 
-The following weapons are currently implemented in the game database and available for purchase:
+The following weapons are currently implemented in the game database and available for purchase. All weapons are priced using the DPS-inclusive formula detailed in [PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md).
+
+**Pricing Note**: Weapon costs now reflect both attribute bonuses and combat effectiveness (DPS = damage/cooldown). Special properties are not yet implemented in the combat system and have been removed from weapon definitions.
 
 #### Energy Weapons (3)
 
-**Laser Rifle** (₡150,000) - One-handed
-- Base Damage: 20
+**Laser Rifle** (₡195,000) - One-handed
+- Base Damage: 22
 - Cooldown: 3 seconds
+- DPS: 7.33
 - Attribute Bonuses:
-  - targetingSystemsBonus: +3
+  - targetingSystemsBonus: +5
   - weaponControlBonus: +4
-  - attackSpeedBonus: +2
-- Special: +15% accuracy bonus
+  - attackSpeedBonus: +3
+  - combatPowerBonus: +2
+- Description: Precision energy rifle with excellent accuracy
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
-**Plasma Cannon** (₡300,000) - Two-handed
-- Base Damage: 40
+**Plasma Cannon** (₡440,000) - Two-handed
+- Base Damage: 45
 - Cooldown: 5 seconds
+- DPS: 9.0
 - Attribute Bonuses:
-  - combatPowerBonus: +5
-  - criticalSystemsBonus: +4
+  - combatPowerBonus: +7
+  - criticalSystemsBonus: +6
+  - penetrationBonus: +4
   - powerCoreBonus: -3 (energy drain)
-- Special: +20% vs energy shields
+- Description: Heavy plasma weapon with devastating firepower
 - **Loadout Compatibility**: Two-Handed only
 
-**Ion Beam** (₡400,000) - Two-handed
-- Base Damage: 30
+**Ion Beam** (₡565,000) - Two-handed
+- Base Damage: 40
 - Cooldown: 4 seconds
+- DPS: 10.0 (Highest DPS in game)
 - Attribute Bonuses:
-  - penetrationBonus: +8
-  - shieldCapacityBonus: +4
-  - attackSpeedBonus: +3
-- Special: Disables enemy energy shields for 2 seconds on crit
+  - penetrationBonus: +10
+  - shieldCapacityBonus: +8
+  - attackSpeedBonus: +5
+  - targetingSystemsBonus: +4
+- Description: Focused energy beam with shield disruption
 - **Loadout Compatibility**: Two-Handed only
 
 #### Ballistic Weapons (3)
 
-**Machine Gun** (₡100,000) - One-handed, Dual-wield compatible
-- Base Damage: 12
+**Machine Gun** (₡120,000) - One-handed, Dual-wield compatible
+- Base Damage: 10
 - Cooldown: 2 seconds
+- DPS: 5.0
 - Attribute Bonuses:
-  - combatPowerBonus: +2
-  - attackSpeedBonus: +6
-  - weaponControlBonus: +3
-- Special: Can fire burst (3 shots at 40% damage each)
+  - combatPowerBonus: +3
+  - attackSpeedBonus: +5
+  - weaponControlBonus: +2
+- Description: Sustained fire support weapon
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
-**Railgun** (₡350,000) - Two-handed
-- Base Damage: 50
+**Railgun** (₡545,000) - Two-handed
+- Base Damage: 55
 - Cooldown: 6 seconds
+- DPS: 9.17
 - Attribute Bonuses:
   - penetrationBonus: +12
-  - targetingSystemsBonus: +5
-  - attackSpeedBonus: -3
-- Special: Ignores 50% of armor
+  - targetingSystemsBonus: +7
+  - combatPowerBonus: +5
+  - attackSpeedBonus: -4 (slow charge time)
+- Description: Ultra-high velocity kinetic weapon with extreme penetration
 - **Loadout Compatibility**: Two-Handed only
 
-**Shotgun** (₡120,000) - Two-handed
-- Base Damage: 35
+**Shotgun** (₡325,000) - Two-handed
+- Base Damage: 32
 - Cooldown: 4 seconds
+- DPS: 8.0
 - Attribute Bonuses:
   - combatPowerBonus: +4
-  - criticalSystemsBonus: +5
-  - targetingSystemsBonus: -3
-- Special: +30% damage at close range
+  - criticalSystemsBonus: +3
+  - targetingSystemsBonus: -2 (spread pattern)
+- Description: Close-range devastation with wide spread
 - **Loadout Compatibility**: Two-Handed only
 
 #### Melee Weapons (3)
 
-**Power Sword** (₡180,000) - One-handed
+**Power Sword** (₡280,000) - One-handed
 - Base Damage: 28
 - Cooldown: 3 seconds
+- DPS: 9.33
 - Attribute Bonuses:
-  - hydraulicSystemsBonus: +6
+  - hydraulicSystemsBonus: +7
   - counterProtocolsBonus: +5
-  - gyroStabilizersBonus: +3
-- Special: +25% counter damage
+  - gyroStabilizersBonus: +4
+  - combatPowerBonus: +3
+- Description: High-tech melee weapon with superior handling
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
-**Hammer** (₡200,000) - Two-handed
-- Base Damage: 42
+**Hammer** (₡490,000) - Two-handed
+- Base Damage: 48
 - Cooldown: 5 seconds
+- DPS: 9.6
 - Attribute Bonuses:
   - hydraulicSystemsBonus: +8
-  - combatPowerBonus: +6
-  - servoMotorsBonus: -2
-- Special: High impact force
+  - combatPowerBonus: +7
+  - criticalSystemsBonus: +4
+  - servoMotorsBonus: -3 (very heavy)
+- Description: Massive impact weapon for maximum damage
 - **Loadout Compatibility**: Two-Handed only
 
-**Plasma Blade** (₡250,000) - One-handed, Dual-wield compatible
-- Base Damage: 24
-- Cooldown: 2.5 seconds
+**Plasma Blade** (₡215,000) - One-handed, Dual-wield compatible
+- Base Damage: 20
+- Cooldown: 3 seconds (adjusted from 2.5 for integer compatibility)
+- DPS: 6.67
 - Attribute Bonuses:
-  - hydraulicSystemsBonus: +4
-  - attackSpeedBonus: +5
+  - hydraulicSystemsBonus: +5
+  - attackSpeedBonus: +4
   - criticalSystemsBonus: +3
-- Special: Burns through energy shields (70% effective vs shields)
+  - gyroStabilizersBonus: +2
+- Description: Energy-enhanced melee blade with rapid strikes
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 #### Shield Weapons (1)
 
-**Combat Shield** (₡100,000) - Shield type
+**Combat Shield** (₡80,000) - Shield type
 - Base Damage: 0 (defensive only)
 - Cooldown: N/A
+- DPS: N/A (defensive equipment)
 - Attribute Bonuses:
-  - armorPlatingBonus: +8
-  - counterProtocolsBonus: +6
-  - evasionThrustersBonus: -2
+  - armorPlatingBonus: +6
+  - counterProtocolsBonus: +3
+  - evasionThrustersBonus: -2 (heavy)
   - shieldCapacityBonus: +5 (boosts energy shield capacity)
-- Special: 25% chance to block ranged attacks
+- Description: Heavy-duty shield with counter capabilities
 - **Loadout Compatibility**: Weapon + Shield only
 
-#### Practice/Starter Weapons (1)
+#### Baseline Weapon (1)
 
-**Practice Sword** (₡0 - FREE) - One-handed starter weapon
-- Base Damage: 5
+**Practice Sword** (₡50,000) - One-handed baseline weapon
+- Base Damage: 10
 - Cooldown: 3 seconds
+- DPS: 3.33 (Baseline for pricing formula)
 - Attribute Bonuses: None (all bonuses are 0)
-- Special: Free starter weapon for testing and matchmaking
-- Description: Basic training weapon with minimal stats, given to all new players
+- Description: Basic training weapon establishing baseline cost for the weapon economy
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
-- **Note**: This weapon is automatically provided to all new robots for testing purposes and basic matchmaking eligibility
+- **Note**: This weapon serves as the baseline for the DPS-inclusive pricing formula. All other weapons are priced relative to its cost and combat effectiveness.
 
 ---
 
@@ -429,26 +448,31 @@ The **Weapons Workshop** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#3-wea
 **Discount Formula**: Discount % = Weapons Workshop Level × 5
 
 **Example Cost Calculation:**
-- Plasma Cannon base cost: ₡300,000
-- With Weapons Workshop Level 5 (25% discount): ₡225,000
-- With Weapons Workshop Level 10 (50% discount): ₡150,000
+- Plasma Cannon base cost: ₡440,000
+- With Weapons Workshop Level 5 (25% discount): ₡330,000
+- With Weapons Workshop Level 10 (50% discount): ₡220,000
 
 ### Economy Guidelines
 
 **Starting Budget**: ₡2,000,000 (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md))
-- Can afford: 1 robot (₡500K) + good weapon (₡300K) + upgrades (₡500K) + facility (₡200K) = ₡1.5M
-- Leaves ₡500K buffer for additional purchases
+- Can afford: 1 robot (₡500K) + good weapon (₡200K-₡300K) + upgrades (₡500K) + facility (₡200K) = ₡1.4M-₡1.5M
+- Leaves ₡500K-₡600K buffer for additional purchases
 
 **Weapon Investment Strategy:**
-1. **Early Game**: Buy affordable weapons (₡100K-₡150K range)
-   - Machine Gun (₡100K), Laser Rifle (₡150K)
+1. **Early Game**: Buy affordable weapons (₡50K-₡120K range)
+   - Practice Sword (₡50K), Combat Shield (₡80K), Machine Gun (₡120K)
    - Focus on robot attribute upgrades first
-2. **Mid Game**: Invest in specialized weapons (₡200K-₡300K)
-   - Power Sword (₡180K), Plasma Cannon (₡300K)
+   - Dual-wield budget weapons for ₡100K-₡200K total
+2. **Mid Game**: Invest in premium one-handed weapons (₡200K-₡300K)
+   - Plasma Blade (₡215K), Power Sword (₡280K)
+   - Or dual-wield for flexibility
    - Upgrade Weapons Workshop for discounts
-3. **Late Game**: Purchase premium weapons (₡350K-₡400K)
-   - Railgun (₡350K), Ion Beam (₡400K)
+3. **Late Game**: Purchase elite two-handed weapons (₡400K-₡600K)
+   - Plasma Cannon (₡440K), Hammer (₡490K), Railgun (₡545K), Ion Beam (₡565K)
    - Craft custom legendary weapons
+   - Consider dual-wielding premium weapons as alternative strategy
+
+**Pricing Philosophy**: All weapons now use DPS-inclusive pricing formula that factors in both attribute bonuses and combat effectiveness (damage per second). Higher DPS and faster-attacking weapons cost proportionally more. See [PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md) for complete pricing methodology.
 
 ---
 
