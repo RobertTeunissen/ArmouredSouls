@@ -146,7 +146,7 @@ function calculateCritChance(attacker: Robot): { critChance: number; breakdown: 
  * Calculate base damage before defense
  */
 function calculateBaseDamage(attacker: Robot, weaponBaseDamage: number): { damage: number; breakdown: FormulaBreakdown } {
-  const combatPowerMult = 1 + Number(attacker.combatPower) / 100;
+  const combatPowerMult = 1 + (Number(attacker.combatPower) * 1.5) / 100;
   let damage = weaponBaseDamage * combatPowerMult;
   
   // Loadout modifiers
@@ -217,14 +217,14 @@ function applyDamage(
     if (effectiveShieldDamage > defenderState.currentShield) {
       const overflow = (effectiveShieldDamage - defenderState.currentShield) * 0.3;
       // Cap armor reduction to prevent armor from being too strong
-      const rawArmorReduction = Number(defender.armorPlating) * (1 - Number(attacker.penetration) / 150);
+      const rawArmorReduction = Number(defender.armorPlating) * (1 - Number(attacker.penetration) / 100);
       const armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
       hpDamage = Math.max(1, overflow - armorReduction);
     }
   } else {
     // No shield - damage goes to HP with armor reduction
     // Cap armor reduction to prevent armor from being too strong
-    const rawArmorReduction = Number(defender.armorPlating) * (1 - Number(attacker.penetration) / 150);
+    const rawArmorReduction = Number(defender.armorPlating) * (1 - Number(attacker.penetration) / 100);
     const armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
     hpDamage = Math.max(1, damage - armorReduction);
   }

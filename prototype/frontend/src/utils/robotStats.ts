@@ -183,10 +183,11 @@ export function calculateEffectiveStats(robot: Robot): Record<string, number> {
 
 /**
  * Calculate max HP based on effective hull integrity
+ * Formula: 50 + (hullIntegrity × 5)
  */
 export function calculateMaxHP(robot: Robot): number {
   const effectiveStats = calculateEffectiveStats(robot);
-  return effectiveStats.hullIntegrity * 10;
+  return 50 + (effectiveStats.hullIntegrity * 5);
 }
 
 /**

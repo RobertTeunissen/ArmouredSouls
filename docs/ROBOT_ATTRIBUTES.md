@@ -568,8 +568,8 @@ if is_critical:
 // Weapon base damage
 base_damage = weapon.base_damage
 
-// Combat Power applies to ALL weapon types
-combat_power_mult = 1 + (attacker.combat_power / 100)
+// Combat Power applies to ALL weapon types (updated February 2026: 1.5% per point)
+combat_power_mult = 1 + (attacker.combat_power * 1.5 / 100)
 base_damage *= combat_power_mult
 
 // Loadout modifiers
@@ -595,8 +595,8 @@ modified_damage = base_damage * control_mult
 
 **Penetration vs Defense:**
 ```
-// Armor reduction with cap to prevent excessive damage mitigation
-armor_reduction = defender.armor_plating * (1 - attacker.penetration / 150)
+// Armor reduction formula (updated February 2026 for better penetration scaling)
+armor_reduction = defender.armor_plating * (1 - attacker.penetration / 100)
 armor_reduction = min(armor_reduction, 30)  // Cap at 30 damage reduction
 
 // Shield handling (separate pool)
@@ -822,27 +822,28 @@ The complete weapon system includes weapon types, properties, attribute bonuses,
 
 ## HP Calculation
 
-**Base HP from Hull Integrity:**
+**Base HP from Hull Integrity (Updated February 2026):**
 ```
-base_hp = 30 + (hull_integrity * 8)
+base_hp = 50 + (hull_integrity * 5)
 
 Example:
-- Hull Integrity 1: 38 HP (30 + 8)
-- Hull Integrity 10: 110 HP (30 + 80)
-- Hull Integrity 25: 230 HP (30 + 200)
-- Hull Integrity 50: 430 HP (30 + 400)
+- Hull Integrity 1: 55 HP (50 + 5)
+- Hull Integrity 10: 100 HP (50 + 50)
+- Hull Integrity 25: 175 HP (50 + 125)
+- Hull Integrity 50: 300 HP (50 + 250)
 ```
 
 **Formula Rationale:**
-- Base HP of 30 ensures starting robots (hull=1) are viable with 38 HP instead of 10 HP
-- Multiplier of 8 (down from 10) reduces scaling at high levels
-- High-level robots (hull=50) now have 430 HP instead of 500 HP, reducing dominance
-- Mid-level robots (hull=10-25) see modest increases of 10-20 HP
+- Base HP of 50 ensures starting robots (hull=1) have strong viability at 55 HP
+- Multiplier of 5 (down from 8) reduces scaling for better weapon progression
+- High-level robots (hull=50) now have 300 HP instead of 430 HP, enabling powerful weapons
+- Faster battles with more meaningful damage numbers
+- Better balance between offensive and defensive attributes
 
 **Recommended HP Progression:**
-- New robot (all attributes at 1): 38 HP (was 10 HP)
-- After first ₡350K upgrades: ~110-150 HP
-- Mid-game robot: 200-300 HP
+- New robot (all attributes at 1): 55 HP (was 38 HP)
+- After first ₡350K upgrades: ~100-125 HP
+- Mid-game robot: 150-200 HP
 - End-game robot: 400-500 HP (reduced from 600 HP cap)
 
 **Energy Shield HP (separate pool):**
