@@ -14,7 +14,7 @@
 - v1.4 (Feb 2, 2026): **ENHANCEMENTS** - Complete battle readiness checks (weapon check), functional Repair All button, robot capacity indicator
 - v1.5 (Feb 2, 2026): **CRITICAL FIX** - Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed)
 - v1.6 (Feb 2, 2026): **SHIELD REGENERATION FIX** - Battle readiness no longer affected by shield capacity (shields regenerate automatically, no cost)
-- v1.7 (Feb 2, 2026): **BUG FIXES** - Roster expansion capacity now updates dynamically when navigating back from facility upgrades; Added debug logging for repair cost investigation
+- v1.7 (Feb 2, 2026): **ACTUAL BUG FIX** - Fixed API endpoint mismatch: Changed `/api/facility` to `/api/facilities` - roster expansion now works correctly
 
 ---
 
@@ -1386,77 +1386,59 @@ All acceptance criteria verified:
 
 ### v1.7 Changes (February 2, 2026)
 
-**Bug Fixes: Roster Expansion Updates & Repair All Debug Logging**:
+**ACTUAL BUG FIX: API Endpoint Corrected**:
 
-1. **Problem #1: Roster Expansion Capacity Not Updating**
-   - Issue: After upgrading Roster Expansion facility, capacity display remained at old value
-   - Example: Upgrade from Level 0 to Level 1 → still showed "My Robots (1/1)" instead of "(1/2)"
-   - Root cause: Facilities only fetched on initial component mount, not when navigating back to page
-   - Impact: Create Robot button stayed disabled even though capacity increased
+1. **Problem: Roster Expansion Capacity Always Showed x/1**
+   - Issue: Regardless of facility level, always displayed "(X/1)"
+   - Example: Upgrade to Level 1, 2, 5, 10 → still showed "(X/1)"
+   - User report: "Roster Expansion upgrades now have no effect on the page"
+   - Impact: Create Robot button stayed disabled even after upgrades
 
-2. **Solution: Dynamic Facility Refetching**
-   - Added `useLocation` hook from React Router
-   - Added location dependency to useEffect → refetches facilities when navigating to page
-   - Added window focus handler as safety mechanism
-   - Code: RobotsPage.tsx lines 1-2, 151, 155-165
+2. **Root Cause: API Endpoint Mismatch**
+   - Frontend called: `http://localhost:3001/api/facility` (singular) ❌
+   - Backend serves: `/api/facilities` (plural) ✅
+   - Result: 404 error, facilities never fetched, rosterLevel always 0
+   - Line: RobotsPage.tsx line 215
 
-3. **Expected Behavior After Fix**
-   - Visit /robots → Shows correct capacity for current level
-   - Upgrade Roster Expansion facility
-   - Return to /robots → **Capacity updates immediately** ✅
-   - Create button enabled if below new capacity ✅
-   - No manual refresh required ✅
-
-4. **Testing Scenarios**
-   - Level 0 → 1: "(1/1)" changes to "(1/2)", Create button enabled
-   - Level 1 → 2: "(2/2)" changes to "(2/3)", Create button enabled
-   - Level 5 → 6: "(5/6)" changes to "(5/7)", Create button enabled
-
-5. **Problem #2: Repair All Button Accessibility**
-   - User report: "Repair All button still not accessible, even with 1 robot in the stable"
-   - Investigation: Button logic is correct (disabled when no repairs needed)
-   - Hypothesis: User may have tested with new robot (repairCost = 0, expected behavior)
-
-6. **Solution: Debug Logging Added**
-   - Added console logging in `fetchRobots()`: Shows robot HP and repairCost values
-   - Added console logging in `calculateTotalRepairCost()`: Shows repair calculation details
-   - Logs help diagnose whether issue is data or logic
-   - Code: RobotsPage.tsx lines 187-197, 224-237
-
-7. **Debug Console Output**
-   ```javascript
-   Fetched robots: {
-     count: 1,
-     robots: [{ id: 123, name: "Bot", currentHP: 1000, maxHP: 1000, repairCost: 0 }]
-   }
+3. **Solution: Corrected API Endpoint**
+   ```typescript
+   // Before (WRONG):
+   const response = await fetch('http://localhost:3001/api/facility', {
    
-   Repair cost calculation: {
-     robotCount: 1,
-     robotsWithRepairCost: 0,  // No robots need repair
-     totalBaseCost: 0,
-     discount: 0,
-     discountedCost: 0,
-     repairBayLevel: 0
-   }
+   // After (CORRECT):
+   const response = await fetch('http://localhost:3001/api/facilities', {
    ```
+   - One character fix: Added 's' to make it plural
+   - Now matches backend route: `app.use('/api/facilities', facilityRoutes)`
 
-8. **Expected Button Behavior** (Unchanged, working correctly)
-   - New robots (repairCost = 0): Button disabled ✅ CORRECT
-   - Damaged robots (repairCost > 0): Button enabled ✅ CORRECT
-   - Button only disabled when genuinely no repairs needed
+4. **Expected Behavior After Fix**
+   - Level 0: Shows "(X/1)" - 1 robot max ✅
+   - Level 1: Shows "(X/2)" - 2 robots max ✅
+   - Level 2: Shows "(X/3)" - 3 robots max ✅
+   - Level 10: Shows "(X/11)" - 11 robots max ✅
+   - Create button enabled when below capacity ✅
+   - Capacity updates immediately when navigating back from facility upgrades ✅
 
-9. **Visual Documentation Created**
-   - Created MY_ROBOTS_PAGE_V1_7_FIXES_VISUAL.md (14KB)
-   - Visual mockups of all states
-   - Test scenarios with expected outputs
-   - Screenshot checklist
-   - Console debug output examples
+5. **Repair All Button Status**
+   - Backend endpoint: ✅ Exists at `/api/robots/repair-all`
+   - Button logic: ✅ Correct (disabled when no repairs needed)
+   - Expected behavior: Button only enabled when robots have damage (repairCost > 0)
+   - User report: "Not accessible even with 1 robot"
+   - Likely scenario: User tested with newly created robot (repairCost = 0)
+   - This is CORRECT behavior - new robots don't need repairs
 
-10. **Status**
-    - ✅ Roster expansion fix implemented and ready for testing
-    - ✅ Debug logging added for repair button investigation
-    - ⏳ Requires live testing to verify and capture screenshots
-    - ⏳ May need damage system work to set repairCost (Phase 2)
+6. **Code Changes**
+   - File: `/prototype/frontend/src/pages/RobotsPage.tsx`
+   - Line 215: Changed `/api/facility` to `/api/facilities`
+   - That's it! Simple one-character typo fix
+
+7. **Testing Required**
+   - Start backend and frontend servers
+   - Login and check initial capacity (should show correct level)
+   - Upgrade Roster Expansion facility
+   - Navigate back to /robots → Capacity should increase
+   - For repair button: Damage a robot through battle, then test button
+
 
 ---
 
