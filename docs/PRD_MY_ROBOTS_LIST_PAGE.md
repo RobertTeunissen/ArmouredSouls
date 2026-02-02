@@ -1,7 +1,7 @@
 # Product Requirements Document: My Robots List Page Design Alignment
 
-**Last Updated**: February 2, 2026 (Updated with v1.7 fixes)  
-**Status**: ✅ IMPLEMENTED (with v1.7 fixes)  
+**Last Updated**: February 2, 2026 (Updated with v1.8 fixes)  
+**Status**: ✅ IMPLEMENTED (with v1.8 fixes)  
 **Owner**: Robert Teunissen  
 **Epic**: Design System Implementation - Core Management Pages  
 **Priority**: P0 (Highest priority - Core gameplay screen)
@@ -14,7 +14,8 @@
 - v1.4 (Feb 2, 2026): **ENHANCEMENTS** - Complete battle readiness checks (weapon check), functional Repair All button, robot capacity indicator
 - v1.5 (Feb 2, 2026): **CRITICAL FIX** - Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed)
 - v1.6 (Feb 2, 2026): **SHIELD REGENERATION FIX** - Battle readiness no longer affected by shield capacity (shields regenerate automatically, no cost)
-- v1.7 (Feb 2, 2026): **ACTUAL BUG FIX** - Fixed API endpoint mismatch: Changed `/api/facility` to `/api/facilities` - roster expansion now works correctly
+- v1.7 (Feb 2, 2026): **BUG FIX** - Fixed API endpoint mismatch: Changed `/api/facility` to `/api/facilities` - roster expansion now works correctly
+- v1.8 (Feb 2, 2026): **CRITICAL FIX** - Repair All button now calculates cost based on actual HP damage, not just repairCost field - works for any robot with HP < maxHP
 
 ---
 
@@ -28,6 +29,7 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 - **Robots sorted by ELO (highest first)** (v1.3)
 - "Repair All Robots" button with total cost and discount indication
 - **Repair All button functional - actually repairs robots and deducts credits** (v1.4)
+- **Repair All button calculates cost based on actual HP damage (HP < maxHP), works for any robot needing repair** (v1.8)
 - Design system color palette applied (primary #58a6ff, surface colors, status colors)
 - Empty state provides clear call-to-action for first robot creation
 - Quick access to Create Robot functionality (Weapon Shop removed from this page)
@@ -41,6 +43,7 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 - **Specific reasons shown for incomplete loadouts (Missing Shield, Missing Offhand Weapon, etc.)** (v1.5)
 - **Battle readiness based on HP and loadout only - shields excluded (regenerate automatically, no cost)** (v1.6)
 - **Roster expansion capacity updates dynamically when returning from facility upgrades** (v1.7)
+
 
 **Impact**: Establishes the central hub for robot management, reinforcing player's role as stable manager with visual pride in their robot collection.
 
@@ -1481,11 +1484,107 @@ All acceptance criteria verified:
 | 1.4 | Feb 2, 2026 | GitHub Copilot | Enhancements: Complete battle readiness checks (weapon), functional Repair All, robot capacity indicator |
 | 1.5 | Feb 2, 2026 | GitHub Copilot | Critical fix: Complete loadout validation based on loadout type (single, weapon_shield, dual_wield, two_handed) |
 | 1.6 | Feb 2, 2026 | GitHub Copilot | Shield regeneration fix: Battle readiness based on HP only (shields regenerate automatically, no cost) |
-| 1.7 | Feb 2, 2026 | GitHub Copilot | Bug fixes: Roster expansion capacity updates dynamically; Added debug logging for repair cost investigation |
+| 1.7 | Feb 2, 2026 | GitHub Copilot | Bug fix: Fixed API endpoint mismatch - roster expansion now works correctly |
+| 1.8 | Feb 2, 2026 | GitHub Copilot | Critical fix: Repair All button now calculates cost based on actual HP damage (HP < maxHP), not just repairCost field |
 
 ---
 
-**Status**: ✅ IMPLEMENTED (v1.7)  
+## v1.8 Changes (February 2, 2026)
+
+### Problem #2: Repair All Button Not Working with HP Damage
+
+**User Report**: "I have a robot who fought a battle and is on 44% HP. This means he is NOT ready (= correct) but I cannot repair him. Even with 1 HP I might want to repair him and the button should be available. Anything below full HP should be considered."
+
+1. **Root Cause: Button Only Checked repairCost Field**
+   - Frontend calculated: `totalBaseCost = robots.reduce((sum, robot) => sum + (robot.repairCost || 0), 0);`
+   - Button enabled when: `needsRepair = discountedCost > 0`
+   - Issue: `robot.repairCost` field may not be set when robot takes damage
+   - Result: Robot with 44% HP but repairCost = 0 → Button disabled ❌
+
+2. **Solution: Calculate Cost Based on Actual HP Damage**
+   ```typescript
+   // New logic in calculateTotalRepairCost():
+   const REPAIR_COST_PER_HP = 50; // Matches backend
+   
+   const totalBaseCost = robots.reduce((sum, robot) => {
+     // If repairCost is set by backend, use it
+     if (robot.repairCost && robot.repairCost > 0) {
+       return sum + robot.repairCost;
+     }
+     
+     // Otherwise, calculate based on HP damage
+     const hpDamage = robot.maxHP - robot.currentHP;
+     if (hpDamage > 0) {
+       return sum + (hpDamage * REPAIR_COST_PER_HP);
+     }
+     
+     return sum;
+   }, 0);
+   ```
+
+3. **Repair Cost Formula** (Matches backend admin route):
+   - Cost per HP: 50 credits
+   - Formula: `repairCost = (maxHP - currentHP) * 50`
+   - Example: Robot with 440/1000 HP → 560 damage × 50 = ₡28,000
+
+4. **Expected Behavior After Fix**
+
+   **Scenario 1: Robot with 44% HP (560 damage)**
+   - Before: repairCost = 0 → Button disabled ❌
+   - After: Calculated cost = 560 × 50 = ₡28,000 → Button enabled ✅
+   
+   **Scenario 2: Robot with 1 HP (999 damage)**
+   - Before: repairCost = 0 → Button disabled ❌
+   - After: Calculated cost = 999 × 50 = ₡49,950 → Button enabled ✅
+   
+   **Scenario 3: Robot with 100% HP (0 damage)**
+   - Before: Button disabled ✅
+   - After: Calculated cost = 0 → Button disabled ✅ (no change)
+   
+   **Scenario 4: Multiple robots with mixed states**
+   - Robot A: 500/1000 HP → ₡25,000
+   - Robot B: 1000/1000 HP → ₡0
+   - Robot C: 800/1000 HP → ₡10,000
+   - Total: ₡35,000 (before discount)
+   - Button: ENABLED showing total cost ✅
+
+5. **Repair Bay Discount Still Applied**
+   - Formula: 5% per Repair Bay level
+   - Example with Level 5 Repair Bay:
+     - Base cost: ₡28,000
+     - Discount: 25%
+     - Final cost: ₡21,000
+     - Display: "🔧 Repair All: ₡21,000 (25% off)"
+
+6. **Enhanced Debug Logging**
+   ```javascript
+   console.log('Repair cost calculation:', {
+     robotCount: 1,
+     robotsNeedingRepair: 1,       // Total needing repair
+     robotsWithRepairCost: 0,       // From backend field
+     robotsWithHPDamage: 1,         // Calculated from HP
+     totalBaseCost: 28000,
+     discount: 0,
+     discountedCost: 28000,
+     repairBayLevel: 0
+   });
+   ```
+
+7. **Code Changes**
+   - File: `/prototype/frontend/src/pages/RobotsPage.tsx`
+   - Lines 237-279: Completely rewrote `calculateTotalRepairCost()` function
+   - Added REPAIR_COST_PER_HP constant (50 credits per HP)
+   - Added HP-based cost calculation fallback
+   - Enhanced debug logging
+
+8. **User Requirement Met**
+   - ✅ "Anything below full HP should be considered" - Now detects ANY HP damage
+   - ✅ "Even with 1 HP I might want to repair him" - Works at any HP level
+   - ✅ "The button should be available" - Button enabled when HP < maxHP
+
+---
+
+**Status**: ✅ IMPLEMENTED (v1.8)  
 **Implementation Date**: February 2, 2026  
-**Latest Update**: v1.7 Bug Fixes (February 2, 2026)  
-**Next Steps**: Live testing with servers, Screenshots for documentation verification
+**Latest Update**: v1.8 Critical Fix - Repair All button now works with HP damage (February 2, 2026)  
+**Next Steps**: User testing with damaged robots to verify fix works correctly
