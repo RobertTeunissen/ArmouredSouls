@@ -235,14 +235,39 @@ function RobotsPage() {
   };
 
   const calculateTotalRepairCost = () => {
-    const totalBaseCost = robots.reduce((sum, robot) => sum + (robot.repairCost || 0), 0);
+    const REPAIR_COST_PER_HP = 50; // 50 credits per HP (matches backend)
+    
+    // Calculate repair cost for each robot
+    const totalBaseCost = robots.reduce((sum, robot) => {
+      // If repairCost is set by backend, use it
+      if (robot.repairCost && robot.repairCost > 0) {
+        return sum + robot.repairCost;
+      }
+      
+      // Otherwise, calculate based on HP damage
+      const hpDamage = robot.maxHP - robot.currentHP;
+      if (hpDamage > 0) {
+        return sum + (hpDamage * REPAIR_COST_PER_HP);
+      }
+      
+      return sum;
+    }, 0);
+    
     const discount = repairBayLevel * 5; // 5% per level
     const discountedCost = Math.floor(totalBaseCost * (1 - discount / 100));
     
     // Debug logging
+    const robotsNeedingRepair = robots.filter(r => {
+      const hasRepairCost = (r.repairCost || 0) > 0;
+      const hasHPDamage = r.currentHP < r.maxHP;
+      return hasRepairCost || hasHPDamage;
+    });
+    
     console.log('Repair cost calculation:', {
       robotCount: robots.length,
+      robotsNeedingRepair: robotsNeedingRepair.length,
       robotsWithRepairCost: robots.filter(r => (r.repairCost || 0) > 0).length,
+      robotsWithHPDamage: robots.filter(r => r.currentHP < r.maxHP).length,
       totalBaseCost,
       discount,
       discountedCost,
