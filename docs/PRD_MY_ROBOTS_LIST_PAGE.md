@@ -1,7 +1,7 @@
 # Product Requirements Document: My Robots List Page Design Alignment
 
-**Last Updated**: February 2, 2026 (Updated with sorting and readiness fixes)  
-**Status**: ✅ IMPLEMENTED (with v1.3 updates)  
+**Last Updated**: February 2, 2026 (Updated with v1.4 enhancements)  
+**Status**: ✅ IMPLEMENTED (with v1.4 updates)  
 **Owner**: Robert Teunissen  
 **Epic**: Design System Implementation - Core Management Pages  
 **Priority**: P0 (Highest priority - Core gameplay screen)
@@ -11,6 +11,7 @@
 - v1.1 (Feb 2, 2026): Updated with feedback - Added League Points, Draws, Repair All button; Removed Weapon Shop; Modified HP/Shield display
 - v1.2 (Feb 2, 2026): **IMPLEMENTATION COMPLETE** - All requirements implemented. See [IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md](IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md)
 - v1.3 (Feb 2, 2026): **BUG FIXES** - Added ELO sorting, fixed battle readiness calculation, added reason display for non-ready robots
+- v1.4 (Feb 2, 2026): **ENHANCEMENTS** - Complete battle readiness checks (weapon check), functional Repair All button, robot capacity indicator
 
 ---
 
@@ -23,12 +24,16 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 - Robot cards display portraits (256×256px reserved space), HP/Shield bars (percentage only), ELO, League Points, Win/Loss/Draw record
 - **Robots sorted by ELO (highest first)** (v1.3)
 - "Repair All Robots" button with total cost and discount indication
+- **Repair All button functional - actually repairs robots and deducts credits** (v1.4)
 - Design system color palette applied (primary #58a6ff, surface colors, status colors)
 - Empty state provides clear call-to-action for first robot creation
 - Quick access to Create Robot functionality (Weapon Shop removed from this page)
 - Responsive grid layout (1 column mobile, 2-3 columns desktop)
 - All status information visible at a glance for fleet management
 - **Battle Readiness calculated from actual HP/Shield values, with reason displayed when not battle ready** (v1.3)
+- **Complete battle readiness checks including weapon equipped status** (v1.4)
+- **Robot capacity indicator showing current/max robots (X/Y format)** (v1.4)
+- **Create Robot button disabled when at capacity with tooltip explanation** (v1.4)
 
 **Impact**: Establishes the central hub for robot management, reinforcing player's role as stable manager with visual pride in their robot collection.
 
@@ -276,6 +281,60 @@ Acceptance Criteria:
   - "92% │ Battle Ready"
   - "65% │ Damaged (Low HP)"
   - "45% │ Critical (Low HP and Shield)"
+```
+
+**US-11: Complete Battle Readiness Checks** (v1.4)
+```
+As a player
+I want robots to show as "Not Ready" when they lack essential equipment
+So that I don't send unprepared robots into battle
+
+Acceptance Criteria:
+- Check if weapon is equipped (weaponInventoryId not null)
+- If no weapon equipped: Status = "Not Ready", Reason = "No Weapon Equipped"
+- Weapon check takes priority over HP/Shield checks
+- Red color for "Not Ready" status
+- Display format: "Not Ready (No Weapon Equipped)"
+- Prevents confusion about battle readiness
+```
+
+**US-12: Functional Repair All Button** (v1.4)
+```
+As a player
+I want the Repair All button to actually repair my robots
+So that I can quickly prepare my entire fleet for battle
+
+Acceptance Criteria:
+- Backend endpoint: POST /api/robots/repair-all
+- Calculate total repair cost for all damaged robots
+- Apply Repair Bay discount (5% per level)
+- Check user has sufficient credits
+- Deduct credits from user account
+- Update all robots: currentHP = maxHP, currentShield = maxShield, repairCost = 0
+- Return success message with repair count and costs
+- Frontend shows confirmation dialog before repair
+- Frontend shows success message after repair
+- Frontend refreshes robots list to show updated status
+- Handle errors (insufficient credits, etc.)
+```
+
+**US-13: Robot Capacity Indicator** (v1.4)
+```
+As a player
+I want to see my current robot count versus maximum capacity
+And have the Create Robot button disabled when at capacity
+So that I understand my roster limits and know when to upgrade
+
+Acceptance Criteria:
+- Fetch Roster Expansion facility level
+- Calculate max robots: level + 1 (level 0 = 1 robot, level 1 = 2 robots, etc.)
+- Display "My Robots (X/Y)" in page header
+  - Example: "My Robots (3/5)"
+- Create Robot button disabled when robots.length >= maxRobots
+- Disabled button shows grey background
+- Disabled button has tooltip: "Robot limit reached (X). Upgrade Roster Expansion facility to create more robots."
+- Enabled button has tooltip: "Create a new robot"
+- Similar to weapon shop capacity indicator
 ```
 
 ---
@@ -1043,6 +1102,10 @@ All acceptance criteria verified:
 - ✅ **v1.3: Robots sorted by ELO (highest first)**
 - ✅ **v1.3: Battle readiness calculated from actual HP/Shield**
 - ✅ **v1.3: Reason displayed when robot not battle ready**
+- ✅ **v1.4: Complete battle readiness checks (weapon equipped)**
+- ✅ **v1.4: Functional Repair All button with backend endpoint**
+- ✅ **v1.4: Robot capacity indicator (X/Y format)**
+- ✅ **v1.4: Create Robot button disabled when at capacity**
 
 **Implementation Summary**: See [IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md](IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md) for complete details.
 
@@ -1073,6 +1136,42 @@ All acceptance criteria verified:
    - Code: Lines 51-80 in RobotsPage.tsx
    - Display: "65% │ Damaged (Low HP)"
    - Impact: Players understand what needs repair
+
+### v1.4 Changes (February 2, 2026)
+
+**Feature Enhancements**:
+
+1. **Complete Battle Readiness Checks**
+   - Issue: Robots showed "Battle Ready" without weapons equipped
+   - Fix: Added weapon check to `getReadinessStatus()`
+   - Logic: Check `weaponInventoryId !== null` before HP/Shield checks
+   - Display: "Not Ready (No Weapon Equipped)" - red color
+   - Code: Lines 51-86 in RobotsPage.tsx
+   - Impact: Prevents sending unarmed robots to battle
+
+2. **Functional Repair All Button**
+   - Issue: Button showed placeholder alert, no actual functionality
+   - Backend: Added POST `/api/robots/repair-all` endpoint
+   - Features:
+     - Calculates total cost with Repair Bay discount
+     - Checks sufficient credits
+     - Updates all damaged robots in transaction
+     - Deducts credits from user
+   - Frontend: Calls endpoint, shows confirmation, handles errors
+   - Code: 
+     - Backend: robots.ts lines 1214-1308
+     - Frontend: RobotsPage.tsx lines 154-193
+   - Impact: Fully functional repair system
+
+3. **Robot Capacity Indicator**
+   - Issue: No indication of robot capacity, Create button always enabled
+   - Fix: 
+     - Fetch Roster Expansion facility level
+     - Calculate `maxRobots = level + 1`
+     - Display "My Robots (X/Y)" in header
+     - Disable Create button when at capacity
+   - Code: RobotsPage.tsx lines 93, 139-144, 191-192, 199
+   - Impact: Clear capacity management similar to weapon shop
 
 ---
 
@@ -1112,10 +1211,11 @@ All acceptance criteria verified:
 | 1.1 | Feb 2, 2026 | Robert Teunissen | Updated with feedback: Added League Points, Draws, Repair All; Removed Weapon Shop; HP/Shield percentage only |
 | 1.2 | Feb 2, 2026 | GitHub Copilot | Implementation complete - All requirements implemented |
 | 1.3 | Feb 2, 2026 | GitHub Copilot | Bug fixes: Added ELO sorting, fixed battle readiness calculation, added reason display |
+| 1.4 | Feb 2, 2026 | GitHub Copilot | Enhancements: Complete battle readiness checks (weapon), functional Repair All, robot capacity indicator |
 
 ---
 
-**Status**: ✅ IMPLEMENTED (v1.3)  
+**Status**: ✅ IMPLEMENTED (v1.4)  
 **Implementation Date**: February 2, 2026  
-**Latest Update**: v1.3 Bug Fixes (February 2, 2026)  
+**Latest Update**: v1.4 Enhancements (February 2, 2026)  
 **Next Steps**: Testing with live servers, Screenshots for documentation
