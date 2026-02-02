@@ -1,0 +1,27 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Armoured Souls</title>
+  <desc>Direction B logo - Precision/Engineering - Management Interface</desc>
+  
+  <!-- Outer geometric shield form - engineered precision -->
+  <path d="M20 4L32 9V20C32 26.6274 26.6274 32 20 32C13.3726 32 8 26.6274 8 20V9L20 4Z" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linejoin="miter"/>
+  
+  <!-- Middle layer - technical detail -->
+  <path d="M20 10L26 12.5V20C26 23.3137 23.3137 26 20 26C16.6863 26 14 23.3137 14 20V12.5L20 10Z" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="1.5" 
+        stroke-linejoin="miter"/>
+  
+  <!-- Inner core - precision accent -->
+  <path d="M20 16L23 17.5V20C23 21.6569 21.6569 23 20 23C18.3431 23 17 21.6569 17 20V17.5L20 16Z" 
+        fill="currentColor"/>
+  
+  <!-- Technical detail marks - angular precision points -->
+  <circle cx="20" cy="7" r="1" fill="currentColor"/>
+  <circle cx="29" cy="11" r="1" fill="currentColor"/>
+  <circle cx="11" cy="11" r="1" fill="currentColor"/>
+</svg>

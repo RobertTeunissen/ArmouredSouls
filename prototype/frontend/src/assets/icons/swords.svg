@@ -1,0 +1,21 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Battles</title>
+  <!-- Crossed swords -->
+  <path d="M14.5 3L20.5 9L11 18.5L9 16.5L14.5 3Z" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linejoin="round"/>
+  <path d="M9.5 3L3.5 9L13 18.5L15 16.5L9.5 3Z" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linejoin="round"/>
+  <!-- Handles -->
+  <circle cx="20.5" cy="9" r="1.5" 
+          stroke="currentColor" 
+          stroke-width="2"/>
+  <circle cx="3.5" cy="9" r="1.5" 
+          stroke="currentColor" 
+          stroke-width="2"/>
+  <!-- Center clash point -->
+  <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+</svg>
