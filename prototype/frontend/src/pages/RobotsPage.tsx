@@ -212,7 +212,7 @@ function RobotsPage() {
   const fetchFacilities = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/facility', {
+      const response = await fetch('http://localhost:3001/api/facilities', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
