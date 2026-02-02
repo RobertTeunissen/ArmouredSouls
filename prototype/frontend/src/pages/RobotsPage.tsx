@@ -50,10 +50,12 @@ const calculateWinRate = (wins: number, totalBattles: number): string => {
   return ((wins / totalBattles) * 100).toFixed(1);
 };
 
-const calculateReadiness = (currentHP: number, maxHP: number, currentShield: number, maxShield: number): number => {
+const calculateReadiness = (currentHP: number, maxHP: number): number => {
+  // Battle readiness is based on HP only
+  // Shields regenerate automatically between battles and don't cost credits
+  // Therefore shield capacity should NOT affect battle readiness
   const hpPercent = (currentHP / maxHP) * 100;
-  const shieldPercent = maxShield > 0 ? (currentShield / maxShield) * 100 : 100;
-  return Math.round((hpPercent + shieldPercent) / 2);
+  return Math.round(hpPercent);
 };
 
 // Check if loadout is complete based on loadout type
@@ -104,17 +106,16 @@ const isLoadoutComplete = (
 
 const getReadinessStatus = (
   currentHP: number, 
-  maxHP: number, 
-  currentShield: number, 
-  maxShield: number,
+  maxHP: number,
   loadoutType: string,
   mainWeaponId: number | null,
   offhandWeaponId: number | null,
   offhandWeapon: { weapon: { weaponType: string } } | null
 ): { text: string; color: string; reason: string } => {
-  const readiness = calculateReadiness(currentHP, maxHP, currentShield, maxShield);
+  // Battle readiness is based on HP and loadout only
+  // Shields regenerate automatically and don't affect readiness
+  const readiness = calculateReadiness(currentHP, maxHP);
   const hpPercent = (currentHP / maxHP) * 100;
-  const shieldPercent = maxShield > 0 ? (currentShield / maxShield) * 100 : 100;
   
   // Check loadout completeness first - critical for battle
   const loadoutCheck = isLoadoutComplete(loadoutType, mainWeaponId, offhandWeaponId, offhandWeapon);
@@ -126,14 +127,10 @@ const getReadinessStatus = (
     return { text: 'Battle Ready', color: 'text-green-500', reason: '' };
   }
   
-  // Determine reason for not being battle ready
+  // Determine reason for not being battle ready (HP only - shields regenerate)
   let reason = '';
-  if (hpPercent < 80 && shieldPercent < 80) {
-    reason = 'Low HP and Shield';
-  } else if (hpPercent < 80) {
+  if (hpPercent < 80) {
     reason = 'Low HP';
-  } else if (shieldPercent < 80) {
-    reason = 'Low Shield';
   }
   
   if (readiness >= 50) {
@@ -343,12 +340,10 @@ function RobotsPage() {
                 ? Math.round((robot.currentShield / robot.maxShield) * 100)
                 : 0;
               const winRate = calculateWinRate(robot.wins, robot.totalBattles);
-              const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP, robot.currentShield, robot.maxShield);
+              const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP);
               const readinessStatus = getReadinessStatus(
                 robot.currentHP, 
-                robot.maxHP, 
-                robot.currentShield, 
-                robot.maxShield,
+                robot.maxHP,
                 robot.loadoutType,
                 robot.mainWeaponId,
                 robot.offhandWeaponId,
