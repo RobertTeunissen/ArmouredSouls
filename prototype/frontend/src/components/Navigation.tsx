@@ -9,6 +9,100 @@ import CartIcon from '../assets/icons/cart.svg?react';
 import MenuIcon from '../assets/icons/menu.svg?react';
 import CloseIcon from '../assets/icons/close.svg?react';
 
+// Complete page inventory - all 70 pages
+const implementedPages = new Set([
+  '/dashboard',
+  '/robots',
+  '/robots/create',
+  '/facilities',
+  '/weapon-shop',
+  '/weapon-inventory',
+  '/battle-history',
+  '/league-standings',
+  '/admin',
+]);
+
+const allPages = {
+  robots: {
+    label: 'Robots',
+    items: [
+      { path: '/robots', label: 'My Robots' },
+      { path: '/robots/create', label: 'Create Robot' },
+      { path: '/robots/compare', label: 'Compare Robots' },
+      { path: '/robots/training', label: 'Training Planner' },
+      { path: '/robots/loadouts', label: 'Loadout Presets' },
+    ]
+  },
+  battle: {
+    label: 'Battle',
+    items: [
+      { path: '/matchmaking', label: 'Matchmaking Queue' },
+      { path: '/battle-history', label: 'Battle History' },
+      { path: '/league-standings', label: 'League Standings' },
+      { path: '/practice', label: 'Practice Arena' },
+      { path: '/tournaments', label: 'Tournament Hub' },
+      { path: '/events', label: 'Events Calendar' },
+      { path: '/challenges', label: 'Daily Challenges' },
+      { path: '/team/matchmaking', label: 'Team Matchmaking' },
+      { path: '/team/history', label: 'Team Battle History' },
+      { path: '/battle-royale', label: 'Battle Royale' },
+      { path: '/guild-wars', label: 'Guild Wars' },
+      { path: '/story', label: 'Story Mode' },
+    ]
+  },
+  economy: {
+    label: 'Economy',
+    items: [
+      { path: '/weapon-shop', label: 'Weapon Shop' },
+      { path: '/weapon-inventory', label: 'Weapon Inventory' },
+      { path: '/facilities', label: 'Facilities' },
+      { path: '/marketplace', label: 'Marketplace' },
+      { path: '/marketplace/my-listings', label: 'My Listings' },
+      { path: '/marketplace/history', label: 'Transaction History' },
+      { path: '/crafting', label: 'Weapon Crafting' },
+      { path: '/blueprints', label: 'Blueprint Library' },
+      { path: '/income', label: 'Income Dashboard' },
+      { path: '/prestige-store', label: 'Prestige Store' },
+    ]
+  },
+  social: {
+    label: 'Social',
+    items: [
+      { path: '/profile', label: 'My Profile' },
+      { path: '/friends', label: 'Friends' },
+      { path: '/notifications', label: 'Notifications' },
+      { path: '/guilds', label: 'Browse Guilds' },
+      { path: '/guild', label: 'My Guild' },
+      { path: '/guild/manage', label: 'Guild Management' },
+      { path: '/leaderboards', label: 'Global Leaderboards' },
+      { path: '/chat', label: 'Chat' },
+      { path: '/replays', label: 'Battle Replays' },
+      { path: '/spectate', label: 'Spectator Mode' },
+    ]
+  },
+  customize: {
+    label: 'Customize',
+    items: [
+      { path: '/customize', label: 'Customization Hub' },
+      { path: '/customize/skins', label: 'Robot Skins' },
+      { path: '/customize/stable', label: 'Stable Customization' },
+      { path: '/customize/poses', label: 'Victory Poses' },
+      { path: '/customize/emotes', label: 'Emotes & Taunts' },
+    ]
+  },
+  analytics: {
+    label: 'Analytics',
+    items: [
+      { path: '/analytics', label: 'Analytics Dashboard' },
+      { path: '/analytics/battles', label: 'Battle Analytics' },
+      { path: '/analytics/economy', label: 'Economy Analytics' },
+      { path: '/simulator', label: 'Battle Simulator' },
+      { path: '/calculator', label: 'Build Calculator' },
+      { path: '/meta', label: 'Meta Reports' },
+    ]
+  },
+};
+
 interface NavLinkProps {
   to: string;
   children: React.ReactNode;
@@ -46,6 +140,72 @@ function NavLink({ to, children, isActive, onClick, disabled = false }: NavLinkP
     >
       {children}
     </button>
+  );
+}
+
+interface DropdownMenuProps {
+  label: string;
+  items: Array<{ path: string; label: string }>;
+  isActive: boolean;
+  checkActive: (path: string) => boolean;
+}
+
+function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button
+        className={`
+          px-3 py-2 rounded-md transition-all duration-150
+          focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-elevated
+          ${isActive 
+            ? 'text-primary bg-primary/15 border-b-2 border-primary font-semibold rounded-t-md' 
+            : 'text-secondary hover:text-primary hover:bg-white/5'
+          }
+        `}
+      >
+        {label} ▾
+      </button>
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 w-56 bg-surface-elevated border border-white/10 rounded-md shadow-xl z-50 py-2">
+          {items.map(item => {
+            const disabled = !implementedPages.has(item.path);
+            const active = checkActive(item.path);
+            
+            return (
+              <button
+                key={item.path}
+                onClick={() => {
+                  if (!disabled) {
+                    navigate(item.path);
+                    setIsOpen(false);
+                  }
+                }}
+                disabled={disabled}
+                className={`
+                  w-full px-4 py-2 text-left transition-colors text-sm
+                  ${disabled
+                    ? 'text-tertiary cursor-not-allowed opacity-60'
+                    : active
+                      ? 'text-primary bg-primary/10'
+                      : 'text-primary hover:bg-primary/5'
+                  }
+                `}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -100,16 +260,10 @@ function Navigation() {
     return currentPath.startsWith(path);
   };
 
-  const primaryNavLinks = [
-    { path: '/dashboard', label: 'Dashboard', disabled: false },
-    { path: '/robots', label: 'My Robots', disabled: false },
-    { path: '/facilities', label: 'Facilities', disabled: false },
-    { path: '/weapon-shop', label: 'Weapon Shop', disabled: false },
-    { path: '/battle-history', label: 'Battle History', disabled: false },
-    { path: '/league-standings', label: 'Leagues', disabled: false },
-    { path: '/matchmaking', label: 'Matchmaking', disabled: true },
-    { path: '/profile', label: 'Profile', disabled: true },
-  ];
+  // Check if any item in a category is active
+  const isCategoryActive = (items: Array<{ path: string; label: string }>) => {
+    return items.some(item => isActive(item.path));
+  };
 
   return (
     <>
@@ -130,16 +284,55 @@ function Navigation() {
             </button>
             
             <div className="flex gap-2 ml-4">
-              {primaryNavLinks.map(link => (
-                <NavLink 
-                  key={link.path}
-                  to={link.path} 
-                  isActive={isActive(link.path)}
-                  disabled={link.disabled}
-                >
-                  {link.label}
-                </NavLink>
-              ))}
+              <NavLink 
+                to="/dashboard" 
+                isActive={isActive('/dashboard')}
+              >
+                Dashboard
+              </NavLink>
+              
+              <DropdownMenu
+                label={allPages.robots.label}
+                items={allPages.robots.items}
+                isActive={isCategoryActive(allPages.robots.items)}
+                checkActive={isActive}
+              />
+              
+              <DropdownMenu
+                label={allPages.battle.label}
+                items={allPages.battle.items}
+                isActive={isCategoryActive(allPages.battle.items)}
+                checkActive={isActive}
+              />
+              
+              <DropdownMenu
+                label={allPages.economy.label}
+                items={allPages.economy.items}
+                isActive={isCategoryActive(allPages.economy.items)}
+                checkActive={isActive}
+              />
+              
+              <DropdownMenu
+                label={allPages.social.label}
+                items={allPages.social.items}
+                isActive={isCategoryActive(allPages.social.items)}
+                checkActive={isActive}
+              />
+              
+              <DropdownMenu
+                label={allPages.customize.label}
+                items={allPages.customize.items}
+                isActive={isCategoryActive(allPages.customize.items)}
+                checkActive={isActive}
+              />
+              
+              <DropdownMenu
+                label={allPages.analytics.label}
+                items={allPages.analytics.items}
+                isActive={isCategoryActive(allPages.analytics.items)}
+                checkActive={isActive}
+              />
+              
               {user.role === 'admin' && (
                 <NavLink 
                   to="/admin" 
@@ -262,153 +455,140 @@ function Navigation() {
                 </button>
               </div>
 
-              {/* Drawer Content */}
-              <div className="py-4">
-                {/* MANAGE STABLE Section */}
+              {/* Drawer Content - Scrollable */}
+              <div className="py-4 overflow-y-auto h-[calc(100vh-56px)]">
+                {/* ROBOTS Section */}
                 <div className="mb-6">
                   <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    🛠️ Manage Stable
+                    🤖 Robots
                   </h3>
                   <nav className="space-y-1">
-                    <DrawerMenuItem
-                      label="My Robots"
-                      onClick={() => {
-                        navigate('/robots');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/robots')}
-                    />
-                    <DrawerMenuItem
-                      label="Facilities"
-                      onClick={() => {
-                        navigate('/facilities');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/facilities')}
-                    />
-                    <DrawerMenuItem
-                      label="Weapon Shop"
-                      onClick={() => {
-                        navigate('/weapon-shop');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/weapon-shop')}
-                    />
-                    <DrawerMenuItem
-                      label="Weapon Inventory"
-                      onClick={() => {
-                        navigate('/weapon-inventory');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/weapon-inventory')}
-                    />
+                    {allPages.robots.items.map(item => (
+                      <DrawerMenuItem
+                        key={item.path}
+                        label={item.label}
+                        onClick={() => {
+                          navigate(item.path);
+                          setDrawerOpen(false);
+                        }}
+                        isActive={isActive(item.path)}
+                        disabled={!implementedPages.has(item.path)}
+                      />
+                    ))}
                   </nav>
                 </div>
 
-                {/* COMPETE Section */}
+                {/* BATTLE Section */}
                 <div className="mb-6">
                   <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    🏆 Compete
+                    ⚔️ Battle & Competition
                   </h3>
                   <nav className="space-y-1">
-                    <DrawerMenuItem
-                      label="Matchmaking"
-                      onClick={() => {
-                        navigate('/matchmaking');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/matchmaking')}
-                      disabled={true}
-                    />
-                    <DrawerMenuItem
-                      label="Battle History"
-                      onClick={() => {
-                        navigate('/battle-history');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/battle-history')}
-                    />
-                    <DrawerMenuItem
-                      label="Leagues"
-                      onClick={() => {
-                        navigate('/league-standings');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/league-standings')}
-                    />
-                    <DrawerMenuItem
-                      label="Tournaments"
-                      onClick={() => {
-                        navigate('/tournaments');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/tournaments')}
-                      disabled={true}
-                    />
-                    {user.role === 'admin' && (
+                    {allPages.battle.items.map(item => (
                       <DrawerMenuItem
-                        label="⚡ Admin"
+                        key={item.path}
+                        label={item.label}
                         onClick={() => {
-                          navigate('/admin');
+                          navigate(item.path);
                           setDrawerOpen(false);
                         }}
-                        isActive={isActive('/admin')}
+                        isActive={isActive(item.path)}
+                        disabled={!implementedPages.has(item.path)}
                       />
-                    )}
+                    ))}
+                  </nav>
+                </div>
+
+                {/* ECONOMY Section */}
+                <div className="mb-6">
+                  <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
+                    💰 Economy & Trading
+                  </h3>
+                  <nav className="space-y-1">
+                    {allPages.economy.items.map(item => (
+                      <DrawerMenuItem
+                        key={item.path}
+                        label={item.label}
+                        onClick={() => {
+                          navigate(item.path);
+                          setDrawerOpen(false);
+                        }}
+                        isActive={isActive(item.path)}
+                        disabled={!implementedPages.has(item.path)}
+                      />
+                    ))}
                   </nav>
                 </div>
 
                 {/* SOCIAL Section */}
                 <div className="mb-6">
                   <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    👥 Social
+                    👥 Social & Community
                   </h3>
                   <nav className="space-y-1">
-                    <DrawerMenuItem
-                      label="Friends"
-                      onClick={() => {
-                        navigate('/friends');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/friends')}
-                      disabled={true}
-                    />
-                    <DrawerMenuItem
-                      label="Guild"
-                      onClick={() => {
-                        navigate('/guild');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/guild')}
-                      disabled={true}
-                    />
-                    <DrawerMenuItem
-                      label="Leaderboards"
-                      onClick={() => {
-                        navigate('/leaderboards');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/leaderboards')}
-                      disabled={true}
-                    />
+                    {allPages.social.items.map(item => (
+                      <DrawerMenuItem
+                        key={item.path}
+                        label={item.label}
+                        onClick={() => {
+                          navigate(item.path);
+                          setDrawerOpen(false);
+                        }}
+                        isActive={isActive(item.path)}
+                        disabled={!implementedPages.has(item.path)}
+                      />
+                    ))}
                   </nav>
                 </div>
 
-                {/* SETTINGS Section */}
-                <div className="border-t border-white/10 pt-4">
+                {/* CUSTOMIZE Section */}
+                <div className="mb-6">
                   <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    ⚙️ Settings
+                    🎨 Customization
                   </h3>
                   <nav className="space-y-1">
-                    <DrawerMenuItem
-                      label="Profile"
-                      onClick={() => {
-                        navigate('/profile');
-                        setDrawerOpen(false);
-                      }}
-                      isActive={isActive('/profile')}
-                      disabled={true}
-                    />
+                    {allPages.customize.items.map(item => (
+                      <DrawerMenuItem
+                        key={item.path}
+                        label={item.label}
+                        onClick={() => {
+                          navigate(item.path);
+                          setDrawerOpen(false);
+                        }}
+                        isActive={isActive(item.path)}
+                        disabled={!implementedPages.has(item.path)}
+                      />
+                    ))}
+                  </nav>
+                </div>
+
+                {/* ANALYTICS Section */}
+                <div className="mb-6">
+                  <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
+                    📊 Analytics & Tools
+                  </h3>
+                  <nav className="space-y-1">
+                    {allPages.analytics.items.map(item => (
+                      <DrawerMenuItem
+                        key={item.path}
+                        label={item.label}
+                        onClick={() => {
+                          navigate(item.path);
+                          setDrawerOpen(false);
+                        }}
+                        isActive={isActive(item.path)}
+                        disabled={!implementedPages.has(item.path)}
+                      />
+                    ))}
+                  </nav>
+                </div>
+
+                {/* SETTINGS & ADMIN Section */}
+                <div className="border-t border-white/10 pt-4">
+                  <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
+                    ⚙️ Settings & Admin
+                  </h3>
+                  <nav className="space-y-1">
                     <DrawerMenuItem
                       label="Settings"
                       onClick={() => {
@@ -418,6 +598,16 @@ function Navigation() {
                       isActive={isActive('/settings')}
                       disabled={true}
                     />
+                    {user.role === 'admin' && (
+                      <DrawerMenuItem
+                        label="⚡ Admin Panel"
+                        onClick={() => {
+                          navigate('/admin');
+                          setDrawerOpen(false);
+                        }}
+                        isActive={isActive('/admin')}
+                      />
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full px-4 py-3 text-left text-error hover:bg-error/10 transition-colors"
