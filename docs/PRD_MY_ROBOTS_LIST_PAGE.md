@@ -1,10 +1,14 @@
 # Product Requirements Document: My Robots List Page Design Alignment
 
-**Last Updated**: February 2, 2026  
-**Status**: Ready for Implementation  
+**Last Updated**: February 2, 2026 (Updated with feedback)  
+**Status**: Updated - Ready for Implementation  
 **Owner**: Robert Teunissen  
 **Epic**: Design System Implementation - Core Management Pages  
 **Priority**: P0 (Highest priority - Core gameplay screen)
+
+**Revision History**:
+- v1.0 (Feb 2, 2026): Initial PRD created
+- v1.1 (Feb 2, 2026): Updated with feedback - Added League Points, Draws, Repair All button; Removed Weapon Shop; Modified HP/Shield display
 
 ---
 
@@ -14,10 +18,11 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 
 **Success Criteria**:
 - My Robots page uses Direction B logo (already in Navigation)
-- Robot cards display portraits (256×256px reserved space), HP/Shield bars, ELO, Win/Loss record
+- Robot cards display portraits (256×256px reserved space), HP/Shield bars (percentage only), ELO, League Points, Win/Loss/Draw record
+- "Repair All Robots" button with total cost and discount indication
 - Design system color palette applied (primary #58a6ff, surface colors, status colors)
 - Empty state provides clear call-to-action for first robot creation
-- Quick access to Weapon Shop and Create Robot functionality
+- Quick access to Create Robot functionality (Weapon Shop removed from this page)
 - Responsive grid layout (1 column mobile, 2-3 columns desktop)
 - All status information visible at a glance for fleet management
 
@@ -119,11 +124,14 @@ I want to see all critical information about each robot on the list page
 So that I can quickly assess my fleet's status without clicking into each robot
 
 Acceptance Criteria:
-- Each robot card displays: Name, Portrait space (256×256px), ELO, League, HP bar, Shield bar, Win/Loss record, Current weapon, Battle readiness indicator
+- Each robot card displays: Name, Portrait space (256×256px), ELO, League Points, League, HP bar (percentage only), Shield bar (percentage only), Win/Loss/Draw record, Current weapon, Battle readiness indicator
 - HP bar uses color coding: Green (70-100%), Amber (30-69%), Red (0-29%)
+- HP bar shows only percentage (e.g., "85%"), NOT raw numbers (no "850/1000")
 - Shield bar displayed below HP bar with cyan color (#58a6ff)
+- Shield bar shows only percentage (e.g., "100%"), NOT raw numbers
 - Battle readiness shows percentage (100% = full HP/Shield, 0% = critical)
-- Win/Loss displayed as "XW-YL" format with win rate percentage
+- Win/Loss/Draw displayed as "XW-YL-ZD" format with win rate percentage
+- League Points displayed near League indicator
 - All cards use design system colors (surface-elevated #252b38, borders, etc.)
 ```
 
@@ -151,7 +159,8 @@ So that I can identify my strongest performers and prioritize upgrades
 Acceptance Criteria:
 - ELO rating displayed prominently with primary color (#58a6ff)
 - Current League shown with badge or text (Bronze/Silver/Gold/etc.)
-- Win/Loss record displayed as "XW-YL (Z%)" format
+- League Points displayed (e.g., "LP: 45")
+- Win/Loss/Draw record displayed as "XW-YL-ZD (W%)" format
 - Win rate percentage calculated correctly ((wins / totalBattles) × 100)
 - Visual hierarchy emphasizes ELO as primary metric
 ```
@@ -180,7 +189,8 @@ Acceptance Criteria:
 - "View Details" button on each card navigates to /robots/:id
 - Entire card clickable to view details (with hover state)
 - "Create New Robot" button prominent at top of page
-- "Weapon Shop" button accessible at top of page
+- "Repair All Robots" button at top of page showing total cost with discount
+- Weapon Shop access removed from this page (available via navigation)
 - All buttons use design system colors (primary for main actions)
 ```
 
@@ -212,6 +222,23 @@ Acceptance Criteria:
 - Future: Visual progress bar showing capacity utilization
 ```
 
+**US-8: Repair All Robots**
+```
+As a player
+I want to repair all damaged robots with a single action
+So that I can quickly prepare my entire fleet for battle
+
+Acceptance Criteria:
+- "Repair All Robots" button displayed in page header
+- Button shows total repair cost for all damaged robots
+- Cost includes Repair Bay discount if facility is upgraded
+- Discount percentage displayed (e.g., "₡15,000 (25% off)")
+- Button disabled if no robots need repair or insufficient credits
+- Confirmation modal shows cost breakdown before repair
+- Success message confirms repairs completed
+- Robot HP/Shield bars update after repair
+```
+
 ---
 
 ## Functional Requirements
@@ -224,8 +251,8 @@ Acceptance Criteria:
 │ Navigation (Direction B logo, menu items, credits)          │
 └─────────────────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────────────────┐
-│ My Robots (X/Y)                    [🛒 Weapon Shop]         │
-│                                     [+ Create New Robot]     │
+│ My Robots (X/Y)         [🔧 Repair All: ₡X (Y% off)]       │
+│                         [+ Create New Robot]                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -252,13 +279,13 @@ Acceptance Criteria:
 ┌─────────────────────────────────────────────────────┐
 │ ┌──────────────┐  ┌─────────────────────────────┐  │
 │ │              │  │ IRON FIST                   │  │
-│ │  [Portrait]  │  │ ELO: 1450  │  Silver League │  │
-│ │  256x256px   │  │ 23W-12L (65.7%)             │  │
+│ │  [Portrait]  │  │ ELO: 1450  │  Silver │ LP: 45 │
+│ │  256x256px   │  │ 23W-12L-3D (65.7%)          │  │
 │ │              │  │                             │  │
 │ └──────────────┘  └─────────────────────────────┘  │
 │                                                     │
-│ HP:    [████████░░] 850/1000 (85%)                 │
-│ Shield:[██████████] 200/200 (100%)                 │
+│ HP:    [████████░░] 85%                            │
+│ Shield:[██████████] 100%                           │
 │                                                     │
 │ Weapon: Laser Rifle MK-II                          │
 │ Readiness: 92%  │  Battle Ready                    │
@@ -266,6 +293,8 @@ Acceptance Criteria:
 │ [ View Details → ]                                 │
 └─────────────────────────────────────────────────────┘
 ```
+
+**Note**: HP and Shield bars show ONLY percentages, not raw numbers (e.g., "85%" not "850/1000")
 
 **Component Hierarchy**:
 1. **Card Container**
@@ -346,12 +375,15 @@ Acceptance Criteria:
 - Capacity color: Secondary (#8b949e), or warning (#d29922) if at limit
 
 **Action Buttons**:
-- **Weapon Shop Button**:
-  - Icon: 🛒 (shopping cart emoji)
-  - Text: "Weapon Shop"
-  - Color: Info (#a371f7, purple) - matches "special items" theme
+- **Repair All Robots Button**:
+  - Icon: 🔧 (wrench emoji)
+  - Text: "Repair All: ₡{cost}" with discount percentage if applicable
+  - Example: "Repair All: ₡15,000 (25% off)"
+  - Color: Warning (#d29922, amber) - attention-grabbing for maintenance
   - Hover: Lighter shade
   - Position: Top-right, left of Create button
+  - Disabled if: No robots need repair OR insufficient credits
+  - Shows tooltip with breakdown on hover
   
 - **Create New Robot Button**:
   - Icon: + (plus symbol)
@@ -360,6 +392,8 @@ Acceptance Criteria:
   - Hover: Lighter shade
   - Position: Top-right, rightmost position
   - Font: Semi-bold, prominent
+
+**Note**: Weapon Shop button removed from this page (accessible via navigation menu)
 
 **Layout**:
 - Flexbox: space-between (title left, buttons right)

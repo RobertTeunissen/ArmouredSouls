@@ -2,7 +2,12 @@
 
 **Document Purpose**: Quick reference comparison between current implementation and PRD requirements  
 **Created**: February 2, 2026  
+**Updated**: February 2, 2026 (Updated with feedback)  
 **Related PRD**: [PRD_MY_ROBOTS_LIST_PAGE.md](PRD_MY_ROBOTS_LIST_PAGE.md)
+
+**Revision History**:
+- v1.0 (Feb 2, 2026): Initial comparison document
+- v1.1 (Feb 2, 2026): Updated with feedback - Added League Points, Draws, Repair All; Removed Weapon Shop; Modified HP/Shield display
 
 ---
 
@@ -35,22 +40,27 @@ This document provides a side-by-side comparison of the current RobotsPage.tsx i
 
 | Feature | Priority | Complexity | PRD Section |
 |---------|----------|------------|-------------|
-| HP status bar | P0 | Medium | FR-2, Card Component |
-| Shield status bar | P0 | Medium | FR-2, Card Component |
-| Win/Loss record | P0 | Easy | FR-2, Card Component |
+| HP status bar (% only) | P0 | Medium | FR-2, Card Component |
+| Shield status bar (% only) | P0 | Medium | FR-2, Card Component |
+| Win/Loss/Draw record | P0 | Easy | FR-2, Card Component |
 | Win rate calculation | P0 | Easy | Technical Implementation |
 | League display | P0 | Easy | FR-2, Card Component |
+| League Points display | P0 | Easy | FR-2, Card Component |
 | Battle Readiness % | P0 | Easy | FR-2, Card Component |
 | Portrait placeholder | P1 | Easy | FR-2, Portrait Section |
 | Design system colors | P0 | Easy | Design Specifications |
 | Utility functions | P0 | Easy | Technical Implementation |
 | Roster capacity (X/Y) | P2 | Easy | FR-3, Header Section |
+| Repair All button | P0 | Medium | FR-3, US-8 |
+| Repair cost calculation w/ discount | P0 | Medium | Backend + Frontend |
 
 ### 🔧 NEEDS UPDATE (Partially Implemented)
 
 | Feature | Current State | Required Change | Priority |
 |---------|---------------|-----------------|----------|
-| Button colors | Purple/green | Success/info from design system | P0 |
+| Button colors | Purple/green | Success/warning from design system | P0 |
+| Weapon Shop button | Present | Remove from this page | P0 |
+| HP/Shield display | Not shown | Show as bar + percentage only (no raw numbers) | P0 |
 | Card background | `bg-gray-800` | `surface-elevated` (#252b38) | P0 |
 | Card borders | `border-gray-700` | Design system gray (#3d444d) | P0 |
 | Hover states | `border-blue-500` | `primary` (#58a6ff) | P0 |
@@ -158,16 +168,22 @@ interface Robot {
 ```
 ┌──────────────────────────────────────────────┐
 │ ┌─────────┐  IRON FIST                      │
-│ │         │  ELO: 1450  │  Silver League    │
-│ │ [Image] │  23W-12L (65.7%)                │
+│ │         │  ELO: 1450 │ Silver │ LP: 45    │
+│ │ [Image] │  23W-12L-3D (65.7%)             │
 │ │ 256x256 │                                 │
 │ └─────────┘                                 │
 │                                              │
-│ HP:    [████████░░] 850/1000 (85%)         │
-│ Shield:[██████████] 200/200 (100%)         │
+│ HP:    [████████░░] 85%                     │
+│ Shield:[██████████] 100%                    │
 │                                              │
 │ Weapon: Laser Rifle                         │
 │ Readiness: 92%  │  Battle Ready             │
+│                                              │
+│ [ View Details → ]                          │
+└──────────────────────────────────────────────┘
+```
+
+**Note**: HP and Shield show ONLY percentages (no raw numbers like "850/1000")
 │                                              │
 │ [ View Details → ]                          │
 └──────────────────────────────────────────────┘
@@ -177,11 +193,12 @@ interface Robot {
 
 | Metric | Current | Required | Change |
 |--------|---------|----------|--------|
-| Data points per card | 5 | 11+ | +6 |
+| Data points per card | 5 | 13+ | +8 |
 | Portrait space | None | 256×256px | Add |
-| Status bars | 0 | 2 | Add |
-| Performance data | 0 | 3 | Add |
-| League context | None | Yes | Add |
+| Status bars | 0 | 2 (HP, Shield) | Add |
+| Performance data | 0 | 4 (Win/Loss/Draw, Win %, League, LP) | Add |
+| League context | None | Yes (League + Points) | Add |
+| Repair All button | None | Yes (with cost + discount) | Add |
 
 ---
 
