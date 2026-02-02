@@ -14,28 +14,35 @@ interface NavLinkProps {
   children: React.ReactNode;
   isActive: boolean;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
-function NavLink({ to, children, isActive, onClick }: NavLinkProps) {
+function NavLink({ to, children, isActive, onClick, disabled = false }: NavLinkProps) {
   const navigate = useNavigate();
   
   const handleClick = () => {
-    navigate(to);
-    onClick?.();
+    if (!disabled) {
+      navigate(to);
+      onClick?.();
+    }
   };
 
   return (
     <button
       onClick={handleClick}
+      disabled={disabled}
       className={`
         px-3 py-2 rounded-md transition-all duration-150
         focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-elevated
-        ${isActive 
-          ? 'text-primary bg-primary/15 border-b-2 border-primary font-semibold rounded-t-md' 
-          : 'text-secondary hover:text-primary hover:bg-white/5'
+        ${disabled 
+          ? 'text-tertiary cursor-not-allowed opacity-60' 
+          : isActive 
+            ? 'text-primary bg-primary/15 border-b-2 border-primary font-semibold rounded-t-md' 
+            : 'text-secondary hover:text-primary hover:bg-white/5'
         }
       `}
       aria-current={isActive ? 'page' : undefined}
+      aria-disabled={disabled}
     >
       {children}
     </button>
@@ -94,11 +101,14 @@ function Navigation() {
   };
 
   const primaryNavLinks = [
-    { path: '/dashboard', label: 'Dashboard' },
-    { path: '/robots', label: 'My Robots' },
-    { path: '/facilities', label: 'Facilities' },
-    { path: '/weapon-shop', label: 'Weapon Shop' },
-    { path: '/battle-history', label: 'Battle History' },
+    { path: '/dashboard', label: 'Dashboard', disabled: false },
+    { path: '/robots', label: 'My Robots', disabled: false },
+    { path: '/facilities', label: 'Facilities', disabled: false },
+    { path: '/weapon-shop', label: 'Weapon Shop', disabled: false },
+    { path: '/battle-history', label: 'Battle History', disabled: false },
+    { path: '/league-standings', label: 'Leagues', disabled: false },
+    { path: '/matchmaking', label: 'Matchmaking', disabled: true },
+    { path: '/profile', label: 'Profile', disabled: true },
   ];
 
   return (
@@ -125,6 +135,7 @@ function Navigation() {
                   key={link.path}
                   to={link.path} 
                   isActive={isActive(link.path)}
+                  disabled={link.disabled}
                 >
                   {link.label}
                 </NavLink>
@@ -301,6 +312,15 @@ function Navigation() {
                   </h3>
                   <nav className="space-y-1">
                     <DrawerMenuItem
+                      label="Matchmaking"
+                      onClick={() => {
+                        navigate('/matchmaking');
+                        setDrawerOpen(false);
+                      }}
+                      isActive={isActive('/matchmaking')}
+                      disabled={true}
+                    />
+                    <DrawerMenuItem
                       label="Battle History"
                       onClick={() => {
                         navigate('/battle-history');
@@ -317,12 +337,13 @@ function Navigation() {
                       isActive={isActive('/league-standings')}
                     />
                     <DrawerMenuItem
-                      label="All Robots"
+                      label="Tournaments"
                       onClick={() => {
-                        navigate('/all-robots');
+                        navigate('/tournaments');
                         setDrawerOpen(false);
                       }}
-                      isActive={isActive('/all-robots')}
+                      isActive={isActive('/tournaments')}
+                      disabled={true}
                     />
                     {user.role === 'admin' && (
                       <DrawerMenuItem
@@ -337,12 +358,66 @@ function Navigation() {
                   </nav>
                 </div>
 
+                {/* SOCIAL Section */}
+                <div className="mb-6">
+                  <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
+                    👥 Social
+                  </h3>
+                  <nav className="space-y-1">
+                    <DrawerMenuItem
+                      label="Friends"
+                      onClick={() => {
+                        navigate('/friends');
+                        setDrawerOpen(false);
+                      }}
+                      isActive={isActive('/friends')}
+                      disabled={true}
+                    />
+                    <DrawerMenuItem
+                      label="Guild"
+                      onClick={() => {
+                        navigate('/guild');
+                        setDrawerOpen(false);
+                      }}
+                      isActive={isActive('/guild')}
+                      disabled={true}
+                    />
+                    <DrawerMenuItem
+                      label="Leaderboards"
+                      onClick={() => {
+                        navigate('/leaderboards');
+                        setDrawerOpen(false);
+                      }}
+                      isActive={isActive('/leaderboards')}
+                      disabled={true}
+                    />
+                  </nav>
+                </div>
+
                 {/* SETTINGS Section */}
                 <div className="border-t border-white/10 pt-4">
                   <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
                     ⚙️ Settings
                   </h3>
                   <nav className="space-y-1">
+                    <DrawerMenuItem
+                      label="Profile"
+                      onClick={() => {
+                        navigate('/profile');
+                        setDrawerOpen(false);
+                      }}
+                      isActive={isActive('/profile')}
+                      disabled={true}
+                    />
+                    <DrawerMenuItem
+                      label="Settings"
+                      onClick={() => {
+                        navigate('/settings');
+                        setDrawerOpen(false);
+                      }}
+                      isActive={isActive('/settings')}
+                      disabled={true}
+                    />
                     <button
                       onClick={handleLogout}
                       className="w-full px-4 py-3 text-left text-error hover:bg-error/10 transition-colors"
@@ -369,19 +444,24 @@ interface DrawerMenuItemProps {
   label: string;
   onClick: () => void;
   isActive: boolean;
+  disabled?: boolean;
 }
 
-function DrawerMenuItem({ label, onClick, isActive }: DrawerMenuItemProps) {
+function DrawerMenuItem({ label, onClick, isActive, disabled = false }: DrawerMenuItemProps) {
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       className={`
         w-full px-4 py-3 text-left transition-colors
-        ${isActive 
-          ? 'text-primary bg-primary/10 border-l-2 border-primary' 
-          : 'text-primary hover:bg-primary/5'
+        ${disabled
+          ? 'text-tertiary cursor-not-allowed opacity-60'
+          : isActive 
+            ? 'text-primary bg-primary/10 border-l-2 border-primary' 
+            : 'text-primary hover:bg-primary/5'
         }
       `}
+      aria-disabled={disabled}
     >
       {label}
     </button>

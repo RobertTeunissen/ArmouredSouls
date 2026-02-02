@@ -30,7 +30,7 @@ This document defines the complete navigation architecture and page structure fo
 6. [Desktop Navigation Design](#desktop-navigation-design)
 7. [Mobile Navigation Design](#mobile-navigation-design)
 8. [Contextual Navigation](#contextual-navigation)
-9. [Phase-by-Phase Rollout](#phase-by-phase-rollout)
+9. [Feature Rollout Strategy](#phase-by-phase-rollout)
 10. [Accessibility & Keyboard Navigation](#accessibility--keyboard-navigation)
 
 ---
@@ -100,7 +100,7 @@ This document defines the complete navigation architecture and page structure fo
 
 ## Complete Page Inventory
 
-### Phase 1: MVP (Current - 14 Pages)
+### Current Implementation (13 Pages)
 
 #### Authentication & Onboarding (2 pages)
 1. **Login Page** (`/login`) - Username/password authentication
@@ -122,13 +122,12 @@ This document defines the complete navigation architecture and page structure fo
 11. **Battle Detail** (`/battle/:id`) - Single battle replay/stats
 12. **League Standings** (`/league-standings`) - Current league rankings
 
-#### Development/Admin (2 pages)
-13. **All Robots** (`/all-robots`) - Global robot database (dev tool)
-14. **Admin Panel** (`/admin`) - Admin-only tools
+#### Development/Admin (1 page)
+13. **Admin Panel** (`/admin`) - Admin-only tools
 
 ---
 
-### Phase 2: Foundation & Enhanced Features (12 NEW pages, 26 total)
+### Enhanced Features (12 NEW pages, 25 total)
 
 #### User Profile & Social (5 pages)
 15. **Profile** (`/profile`) - User profile, stable name, stats, achievements
@@ -150,7 +149,7 @@ This document defines the complete navigation architecture and page structure fo
 
 ---
 
-### Phase 3: Social & Community (10 NEW pages, 36 total)
+### Future - Social & Community: Social & Community (10 NEW pages, 36 total)
 
 #### Guilds & Clans (4 pages)
 27. **Guilds Browser** (`/guilds`) - Discover and join guilds
@@ -170,7 +169,7 @@ This document defines the complete navigation architecture and page structure fo
 
 ---
 
-### Phase 4: Tournaments & Events (8 NEW pages, 44 total)
+### Future - Tournaments: Tournaments & Events (8 NEW pages, 44 total)
 
 #### Tournaments (5 pages)
 37. **Tournament Hub** (`/tournaments`) - Browse active/upcoming tournaments
@@ -186,7 +185,7 @@ This document defines the complete navigation architecture and page structure fo
 
 ---
 
-### Phase 5: Advanced Economy & Trading (8 NEW pages, 52 total)
+### Future - Economy: Advanced Economy & Trading (8 NEW pages, 52 total)
 
 #### Marketplace (4 pages)
 45. **Marketplace** (`/marketplace`) - Player-to-player trading hub
@@ -204,7 +203,7 @@ This document defines the complete navigation architecture and page structure fo
 
 ---
 
-### Phase 6: Team Battles & Advanced Modes (6 NEW pages, 58 total)
+### Future - Team Battles: Team Battles & Advanced Modes (6 NEW pages, 58 total)
 
 #### Team Battles (3 pages)
 53. **Team Builder** (`/team/:size`) - Configure 2v2, 3v3, 5v5 teams
@@ -218,7 +217,7 @@ This document defines the complete navigation architecture and page structure fo
 
 ---
 
-### Phase 7: Cosmetics & Customization (5 NEW pages, 63 total)
+### Future - Customization: Cosmetics & Customization (5 NEW pages, 63 total)
 
 #### Visual Customization (5 pages)
 59. **Customization Hub** (`/customize`) - Access all customization options
@@ -229,7 +228,7 @@ This document defines the complete navigation architecture and page structure fo
 
 ---
 
-### Phase 8: Analytics & Advanced Tools (7 NEW pages, 70 total)
+### Future - Analytics: Analytics & Advanced Tools (7 NEW pages, 70 total)
 
 #### Performance Analytics (4 pages)
 64. **Analytics Dashboard** (`/analytics`) - Comprehensive performance metrics
@@ -836,7 +835,7 @@ Admin panel has elevated navigation:
 
 ---
 
-## Phase-by-Phase Rollout
+## Feature Rollout Strategy
 
 ### Phase 1: MVP Navigation (Current)
 
@@ -854,7 +853,7 @@ Admin panel has elevated navigation:
 
 ---
 
-### Phase 2: Enhanced Navigation
+### Next Release: Enhanced Navigation
 
 **Desktop Primary Nav** (6 items + dropdowns):
 ```
@@ -870,7 +869,7 @@ Admin panel has elevated navigation:
 
 ---
 
-### Phase 3: Social Navigation
+### Future - Social & Community: Social Navigation
 
 **Desktop Primary Nav** (7 items):
 ```
@@ -889,7 +888,7 @@ Admin panel has elevated navigation:
 
 ---
 
-### Phase 4: Tournament Navigation
+### Future - Tournaments: Tournament Navigation
 
 **Desktop Primary Nav** (7 items):
 ```
