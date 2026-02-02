@@ -38,8 +38,8 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   syncProtocols: 10,
   supportSystems: 10,
   formationTactics: 10,
-  currentHP: 110, // Updated to match new formula: 30 + (10 * 8) = 110
-  maxHP: 110,     // Updated to match new formula: 30 + (10 * 8) = 110
+  currentHP: 55, // Updated to match new formula: 50 + (1 * 5) = 55
+  maxHP: 55,     // Updated to match new formula: 50 + (1 * 5) = 55
   currentShield: 20,
   maxShield: 20,
   damageTaken: 0,
@@ -278,8 +278,8 @@ describe('Robot Calculations', () => {
 
       const maxHP = calculateMaxHP(robot);
 
-      // BASE_HP (30) + (Hull integrity 10 * HP_MULTIPLIER 8) = 30 + 80 = 110
-      expect(maxHP).toBe(110);
+      // BASE_HP (50) + (Hull integrity 10 * HP_MULTIPLIER 5) = 50 + 50 = 100
+      expect(maxHP).toBe(100);
     });
 
     it('should include weapon bonuses in HP calculation', () => {
@@ -307,8 +307,8 @@ describe('Robot Calculations', () => {
 
       const maxHP = calculateMaxHP(robotWithWeapon);
 
-      // BASE_HP (30) + ((Hull integrity 10 + weapon 5) * HP_MULTIPLIER 8) = 30 + 120 = 150
-      expect(maxHP).toBe(150);
+      // BASE_HP (50) + ((Hull integrity 10 + weapon 5) * HP_MULTIPLIER 5) = 50 + 75 = 125
+      expect(maxHP).toBe(125);
     });
 
     it('should calculate correct HP for starting robot with hull integrity 1', () => {
@@ -319,8 +319,8 @@ describe('Robot Calculations', () => {
 
       const maxHP = calculateMaxHP(robot);
 
-      // BASE_HP (30) + (Hull integrity 1 * HP_MULTIPLIER 8) = 30 + 8 = 38
-      expect(maxHP).toBe(38);
+      // BASE_HP (50) + (Hull integrity 1 * HP_MULTIPLIER 5) = 50 + 5 = 55
+      expect(maxHP).toBe(55);
     });
 
     it('should calculate correct HP for max level robot with hull integrity 50', () => {
@@ -331,8 +331,8 @@ describe('Robot Calculations', () => {
 
       const maxHP = calculateMaxHP(robot);
 
-      // BASE_HP (30) + (Hull integrity 50 * HP_MULTIPLIER 8) = 30 + 400 = 430
-      expect(maxHP).toBe(430);
+      // BASE_HP (50) + (Hull integrity 50 * HP_MULTIPLIER 5) = 50 + 250 = 300
+      expect(maxHP).toBe(300);
     });
   });
 
