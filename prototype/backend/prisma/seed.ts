@@ -81,224 +81,233 @@ async function main() {
   
   const weapons = await Promise.all([
     // ===== ENERGY WEAPONS =====
-    // 1. Laser Rifle (₡150,000)
+    // 1. Laser Rifle (₡195,000) - DPS: 7.33
     prisma.weapon.create({
       data: {
         name: 'Laser Rifle',
         weaponType: 'energy',
-        baseDamage: 20,
+        baseDamage: 22,
         cooldown: 3,
-        cost: 150000,
+        cost: 195000,
         handsRequired: 'one',
         damageType: 'energy',
         loadoutType: 'single',
-        specialProperty: '+15% accuracy bonus',
-        description: 'Standard energy weapon with good accuracy',
-        targetingSystemsBonus: 3,
+        specialProperty: null,
+        description: 'Precision energy rifle with excellent accuracy',
+        targetingSystemsBonus: 5,
         weaponControlBonus: 4,
-        attackSpeedBonus: 2,
+        attackSpeedBonus: 3,
+        combatPowerBonus: 2,
       },
     }),
     
-    // 2. Plasma Cannon (₡300,000)
+    // 2. Plasma Cannon (₡440,000) - DPS: 9.0, two-handed
     prisma.weapon.create({
       data: {
         name: 'Plasma Cannon',
         weaponType: 'energy',
-        baseDamage: 40,
+        baseDamage: 45,
         cooldown: 5,
-        cost: 300000,
+        cost: 440000,
         handsRequired: 'two',
         damageType: 'energy',
         loadoutType: 'two_handed',
-        specialProperty: '+20% vs energy shields',
-        description: 'High damage plasma weapon, generates heat',
-        combatPowerBonus: 5,
-        criticalSystemsBonus: 4,
+        specialProperty: null,
+        description: 'Heavy plasma weapon with devastating firepower',
+        combatPowerBonus: 7,
+        criticalSystemsBonus: 6,
+        penetrationBonus: 4,
         powerCoreBonus: -3,
       },
     }),
     
-    // 3. Ion Beam (₡400,000)
+    // 3. Ion Beam (₡565,000) - DPS: 10.0, two-handed (highest DPS)
     prisma.weapon.create({
       data: {
         name: 'Ion Beam',
         weaponType: 'energy',
-        baseDamage: 30,
+        baseDamage: 40,
         cooldown: 4,
-        cost: 400000,
+        cost: 565000,
         handsRequired: 'two',
         damageType: 'energy',
         loadoutType: 'two_handed',
-        specialProperty: 'Disables enemy energy shields for 2 seconds on crit',
-        description: 'Efficient energy weapon with armor penetration',
-        penetrationBonus: 8,
-        shieldCapacityBonus: 4,
-        attackSpeedBonus: 3,
+        specialProperty: null,
+        description: 'Focused energy beam with shield disruption',
+        penetrationBonus: 10,
+        shieldCapacityBonus: 8,
+        attackSpeedBonus: 5,
+        targetingSystemsBonus: 4,
       },
     }),
     
     // ===== BALLISTIC WEAPONS =====
-    // 4. Machine Gun (₡100,000)
+    // 4. Machine Gun (₡120,000) - DPS: 5.0
     prisma.weapon.create({
       data: {
         name: 'Machine Gun',
         weaponType: 'ballistic',
-        baseDamage: 12,
+        baseDamage: 10,
         cooldown: 2,
-        cost: 100000,
+        cost: 120000,
         handsRequired: 'one',
         damageType: 'ballistic',
         loadoutType: 'single',
-        specialProperty: 'Can fire burst (3 shots at 40% damage each)',
-        description: 'Rapid-fire ballistic weapon',
-        combatPowerBonus: 2,
-        attackSpeedBonus: 6,
-        weaponControlBonus: 3,
+        specialProperty: null,
+        description: 'Sustained fire support weapon',
+        combatPowerBonus: 3,
+        attackSpeedBonus: 5,
+        weaponControlBonus: 2,
       },
     }),
     
-    // 5. Railgun (₡350,000)
+    // 5. Railgun (₡545,000) - DPS: 9.17, two-handed
     prisma.weapon.create({
       data: {
         name: 'Railgun',
         weaponType: 'ballistic',
-        baseDamage: 50,
+        baseDamage: 55,
         cooldown: 6,
-        cost: 350000,
+        cost: 545000,
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
-        specialProperty: 'Ignores 50% of armor',
-        description: 'High-velocity penetrating weapon',
+        specialProperty: null,
+        description: 'Ultra-high velocity kinetic weapon with extreme penetration',
         penetrationBonus: 12,
-        targetingSystemsBonus: 5,
-        attackSpeedBonus: -3,
+        targetingSystemsBonus: 7,
+        combatPowerBonus: 5,
+        attackSpeedBonus: -4,
       },
     }),
     
-    // 6. Shotgun (₡120,000)
+    // 6. Shotgun (₡325,000) - DPS: 8.0, two-handed
     prisma.weapon.create({
       data: {
         name: 'Shotgun',
         weaponType: 'ballistic',
-        baseDamage: 35,
+        baseDamage: 32,
         cooldown: 4,
-        cost: 120000,
+        cost: 325000,
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
-        specialProperty: '+30% damage at close range',
-        description: 'Close-range devastating weapon',
+        specialProperty: null,
+        description: 'Close-range devastation with wide spread',
         combatPowerBonus: 4,
-        criticalSystemsBonus: 5,
-        targetingSystemsBonus: -3,
+        criticalSystemsBonus: 3,
+        targetingSystemsBonus: -2,
       },
     }),
     
     // ===== MELEE WEAPONS =====
-    // 7. Power Sword (₡180,000)
+    // 7. Power Sword (₡280,000) - DPS: 9.33
     prisma.weapon.create({
       data: {
         name: 'Power Sword',
         weaponType: 'melee',
         baseDamage: 28,
         cooldown: 3,
-        cost: 180000,
+        cost: 280000,
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
-        specialProperty: '+25% counter damage',
-        description: 'Energized melee weapon for close combat',
-        hydraulicSystemsBonus: 6,
+        specialProperty: null,
+        description: 'High-tech melee weapon with superior handling',
+        hydraulicSystemsBonus: 7,
         counterProtocolsBonus: 5,
-        gyroStabilizersBonus: 3,
+        gyroStabilizersBonus: 4,
+        combatPowerBonus: 3,
       },
     }),
     
-    // 8. Hammer (₡200,000)
+    // 8. Hammer (₡490,000) - DPS: 9.6, two-handed (Heavy Hammer from PRD)
     prisma.weapon.create({
       data: {
         name: 'Hammer',
         weaponType: 'melee',
-        baseDamage: 42,
+        baseDamage: 48,
         cooldown: 5,
-        cost: 200000,
+        cost: 490000,
         handsRequired: 'two',
         damageType: 'melee',
         loadoutType: 'two_handed',
-        specialProperty: 'High impact force',
-        description: 'Heavy crushing weapon',
+        specialProperty: null,
+        description: 'Massive impact weapon for maximum damage',
         hydraulicSystemsBonus: 8,
-        combatPowerBonus: 6,
-        servoMotorsBonus: -2,
+        combatPowerBonus: 7,
+        criticalSystemsBonus: 4,
+        servoMotorsBonus: -3,
       },
     }),
     
-    // 9. Plasma Blade (₡250,000)
+    // 9. Plasma Blade (₡215,000) - DPS: 8.0
     prisma.weapon.create({
       data: {
         name: 'Plasma Blade',
         weaponType: 'melee',
-        baseDamage: 24,
+        baseDamage: 20,
         cooldown: 3,  // Changed from 2.5 to 3 (schema uses Int)
-        cost: 250000,
+        cost: 215000,
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
-        specialProperty: 'Burns through energy shields (70% effective vs shields)',
-        description: 'Fast melee weapon with energy damage',
-        hydraulicSystemsBonus: 4,
-        attackSpeedBonus: 5,
+        specialProperty: null,
+        description: 'Energy-enhanced melee blade with rapid strikes',
+        hydraulicSystemsBonus: 5,
+        attackSpeedBonus: 4,
         criticalSystemsBonus: 3,
+        gyroStabilizersBonus: 2,
       },
     }),
     
     // ===== SHIELD WEAPONS =====
-    // 10. Combat Shield (₡100,000)
+    // 10. Combat Shield (₡80,000) - Defensive
     prisma.weapon.create({
       data: {
         name: 'Combat Shield',
         weaponType: 'shield',
         baseDamage: 0,
         cooldown: 0,
-        cost: 100000,
+        cost: 80000,
         handsRequired: 'shield',
         damageType: 'none',
         loadoutType: 'weapon_shield',
-        specialProperty: '25% chance to block ranged attacks',
-        description: 'Defensive shield for protection',
-        armorPlatingBonus: 8,
-        counterProtocolsBonus: 6,
+        specialProperty: null,
+        description: 'Heavy-duty shield with counter capabilities',
+        armorPlatingBonus: 6,
+        counterProtocolsBonus: 3,
         evasionThrustersBonus: -2,
         shieldCapacityBonus: 5,
       },
     }),
     
-    // 11. Practice Sword (₡0) - FREE weapon for testing and matchmaking
+    // 11. Practice Sword (₡50,000) - Baseline weapon for testing and matchmaking
     prisma.weapon.create({
       data: {
         name: 'Practice Sword',
         weaponType: 'melee',
-        baseDamage: 5,
+        baseDamage: 10,
         cooldown: 3,
-        cost: 0, // FREE
+        cost: 50000,
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
-        specialProperty: 'Free starter weapon for testing',
-        description: 'Basic training weapon with minimal stats',
+        specialProperty: null,
+        description: 'Basic training weapon establishing baseline cost',
         // All bonuses are 0 (default)
       },
     }),
   ]);
 
   console.log(`✅ Created ${weapons.length} weapons`);
-  console.log('   - 3 energy weapons (Laser Rifle, Plasma Cannon, Ion Beam)');
-  console.log('   - 3 ballistic weapons (Machine Gun, Railgun, Shotgun)');
-  console.log('   - 3 melee weapons (Power Sword, Hammer, Plasma Blade)');
-  console.log('   - 1 shield weapon (Combat Shield)');
-  console.log('   - 1 practice weapon (Practice Sword - FREE)');
+  console.log('   - 3 energy weapons (Laser Rifle ₡195K, Plasma Cannon ₡440K, Ion Beam ₡565K)');
+  console.log('   - 3 ballistic weapons (Machine Gun ₡120K, Railgun ₡545K, Shotgun ₡325K)');
+  console.log('   - 3 melee weapons (Power Sword ₡280K, Hammer ₡490K, Plasma Blade ₡215K)');
+  console.log('   - 1 shield weapon (Combat Shield ₡80K)');
+  console.log('   - 1 baseline weapon (Practice Sword ₡50K)');
+  console.log('   ✅ All weapons priced using DPS-inclusive formula');
+  console.log('   ✅ Special properties removed (not yet implemented in combat)');
 
   // Find the Practice Sword weapon by name for later use
   const practiceSword = weapons.find((weapon) => weapon.name === 'Practice Sword');
