@@ -1211,4 +1211,97 @@ router.get('/:id/upcoming', authenticateToken, async (req: AuthRequest, res: Res
   }
 });
 
+// Repair all robots
+router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    // Get user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get repair bay facility for discount
+    const repairBay = await prisma.facility.findUnique({
+      where: {
+        userId_facilityType: {
+          userId,
+          facilityType: 'repair_bay',
+        },
+      },
+    });
+
+    const repairBayLevel = repairBay?.level || 0;
+    const discount = repairBayLevel * 5; // 5% per level
+
+    // Get all robots that need repair (repairCost > 0)
+    const robots = await prisma.robot.findMany({
+      where: {
+        userId,
+        repairCost: { gt: 0 },
+      },
+    });
+
+    if (robots.length === 0) {
+      return res.status(400).json({ error: 'No robots need repair' });
+    }
+
+    // Calculate total cost
+    const totalBaseCost = robots.reduce((sum, robot) => sum + robot.repairCost, 0);
+    const finalCost = Math.floor(totalBaseCost * (1 - discount / 100));
+
+    // Check if user has enough credits
+    if (user.currency < finalCost) {
+      return res.status(400).json({ 
+        error: 'Insufficient credits',
+        required: finalCost,
+        current: user.currency,
+      });
+    }
+
+    // Perform repairs in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Deduct cost from user
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: { currency: user.currency - finalCost },
+      });
+
+      // Repair all robots
+      const updatedRobots = await Promise.all(
+        robots.map(robot =>
+          tx.robot.update({
+            where: { id: robot.id },
+            data: {
+              currentHP: robot.maxHP,
+              currentShield: robot.maxShield,
+              repairCost: 0,
+              battleReadiness: 100,
+            },
+          })
+        )
+      );
+
+      return { user: updatedUser, robots: updatedRobots };
+    });
+
+    res.json({
+      success: true,
+      repairedCount: robots.length,
+      totalBaseCost,
+      discount,
+      finalCost,
+      newCurrency: result.user.currency,
+      message: `Successfully repaired ${robots.length} robot(s) for ₡${finalCost.toLocaleString()}`,
+    });
+  } catch (error) {
+    console.error('Repair all robots error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

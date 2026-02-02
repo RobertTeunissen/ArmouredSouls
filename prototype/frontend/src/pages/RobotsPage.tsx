@@ -52,11 +52,17 @@ const getReadinessStatus = (
   currentHP: number, 
   maxHP: number, 
   currentShield: number, 
-  maxShield: number
+  maxShield: number,
+  hasWeapon: boolean
 ): { text: string; color: string; reason: string } => {
   const readiness = calculateReadiness(currentHP, maxHP, currentShield, maxShield);
   const hpPercent = (currentHP / maxHP) * 100;
   const shieldPercent = maxShield > 0 ? (currentShield / maxShield) * 100 : 100;
+  
+  // Check for weapon first - critical for battle
+  if (!hasWeapon) {
+    return { text: 'Not Ready', color: 'text-red-500', reason: 'No Weapon Equipped' };
+  }
   
   if (readiness >= 80) {
     return { text: 'Battle Ready', color: 'text-green-500', reason: '' };
@@ -84,6 +90,7 @@ function RobotsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [repairBayLevel, setRepairBayLevel] = useState(0);
+  const [rosterLevel, setRosterLevel] = useState(0);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -138,6 +145,10 @@ function RobotsPage() {
         if (repairBay) {
           setRepairBayLevel(repairBay.currentLevel || 0);
         }
+        const rosterExpansion = facilities.find((f: any) => f.type === 'roster_expansion');
+        if (rosterExpansion) {
+          setRosterLevel(rosterExpansion.currentLevel || 0);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch facilities:', err);
@@ -152,19 +163,49 @@ function RobotsPage() {
   };
 
   const handleRepairAll = async () => {
-    const { discountedCost } = calculateTotalRepairCost();
+    const { discountedCost, discount } = calculateTotalRepairCost();
     
     if (discountedCost === 0) {
       alert('No robots need repair!');
       return;
     }
 
-    if (!confirm(`Repair all robots for ₡${discountedCost.toLocaleString()}${repairBayLevel > 0 ? ` (${repairBayLevel * 5}% off)` : ''}?`)) {
+    if (!confirm(`Repair all robots for ₡${discountedCost.toLocaleString()}${discount > 0 ? ` (${discount}% off)` : ''}?`)) {
       return;
     }
 
-    // TODO: Implement repair all API endpoint
-    alert('Repair all functionality will be implemented');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/robots/repair-all', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Repair failed: ${data.error}`);
+        return;
+      }
+
+      // Show success message
+      alert(data.message);
+      
+      // Refresh robots list to show updated status
+      await fetchRobots();
+    } catch (err) {
+      console.error('Repair all error:', err);
+      alert('Failed to repair robots. Please try again.');
+    }
   };
 
   if (loading) {
@@ -177,6 +218,8 @@ function RobotsPage() {
 
   const { discountedCost, discount } = calculateTotalRepairCost();
   const needsRepair = discountedCost > 0;
+  const maxRobots = rosterLevel + 1;
+  const atCapacity = robots.length >= maxRobots;
 
   return (
     <div className="min-h-screen bg-[#0a0e14] text-white">
@@ -184,7 +227,9 @@ function RobotsPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold">My Robots</h2>
+          <h2 className="text-3xl font-bold">
+            My Robots <span className="text-gray-400 text-2xl">({robots.length}/{maxRobots})</span>
+          </h2>
           <div className="flex gap-4">
             {robots.length > 0 && (
               <button
@@ -202,7 +247,13 @@ function RobotsPage() {
             )}
             <button
               onClick={() => navigate('/robots/create')}
-              className="bg-[#3fb950] hover:bg-[#4fc960] px-6 py-3 rounded-lg transition-colors font-semibold"
+              disabled={atCapacity}
+              className={`px-6 py-3 rounded-lg transition-colors font-semibold ${
+                atCapacity
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#3fb950] hover:bg-[#4fc960] text-white'
+              }`}
+              title={atCapacity ? `Robot limit reached (${maxRobots}). Upgrade Roster Expansion facility to create more robots.` : 'Create a new robot'}
             >
               + Create New Robot
             </button>
@@ -235,7 +286,8 @@ function RobotsPage() {
                 : 0;
               const winRate = calculateWinRate(robot.wins, robot.totalBattles);
               const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP, robot.currentShield, robot.maxShield);
-              const readinessStatus = getReadinessStatus(robot.currentHP, robot.maxHP, robot.currentShield, robot.maxShield);
+              const hasWeapon = robot.weaponInventoryId !== null;
+              const readinessStatus = getReadinessStatus(robot.currentHP, robot.maxHP, robot.currentShield, robot.maxShield, hasWeapon);
 
               return (
                 <div
