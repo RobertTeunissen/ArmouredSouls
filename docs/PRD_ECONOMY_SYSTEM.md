@@ -136,6 +136,10 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
   upgrade_cost = (current_level + 1) × 1,000 × (1 - discount/100)
   ```
 
+--> Do some calculations on upgrading attributes from a new player perspective. Upgrading from 1 to 10 (hitting the first cap) costs 54k credits. For all 23 attributes, this would cost 1242k. 
+--> If I first buy a Training Facility, this would cost 300k and upgrading ALL my attributes to 10 would then cost ±1180k. This means it would take a while to get a ROI. 
+--> Advice whether to change the prices or keep them the same.
+
 ### 2. Facility Purchases & Upgrades
 
 **14 Facility Types**, each with **10 upgrade levels** (Level 0 = not purchased, Levels 1-10 = upgraded). Some levels require prestige thresholds.
@@ -186,6 +190,10 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 | Railgun | Ballistic | ₡350,000 | Two |
 | Ion Beam | Energy | ₡400,000 | Two |
 
+--> We have never defined why a Weapon has this price, did we? Why is a Shotgun 120k and a Power Sword 180k? What's the calculation behind it?
+--> We also need to think about the reasoning. Weapons are quite expensive, but they provide bonuses to maxed out stats without having to invest in an Academy. At what price is one or the other "worth" it? 
+--> Do we expect two weapon strategies more or less powerful (athey should be balanced)? Two weapons means 2x weapon bonusses, but the money cannot be used to anything else. 
+
 **Weapon Range**: ₡0 (free starter) to ₡400,000
 
 **Weapon Ownership**:
@@ -232,6 +240,8 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 - 1 special property: ₡200,000
 - **Total**: ₡1,200,000
 
+--> This makes custom weapons much much more expensive than the 11 currently defined. That should not be, they should be example weapons that you can build using the same formula. Special properties come later since we don't have that implemented in the battle system nor in the example weapons. 
+
 ### 5. Repair Costs
 
 **Base Formula**:
@@ -260,6 +270,8 @@ repair_cost_before_discounts = base_repair × damage_percentage × multiplier
    - Reduces critical damage multiplier (2.0x) by 10%-100%
    - Formula: `effective_multiplier = 2.0 × (1 - medical_bay_level × 0.1)`
    - Level 10: Eliminates critical damage penalty entirely
+  
+--> What is the expected ROI on the Repair Bay?
 
 **Final Repair Cost Formula**:
 ```
@@ -284,6 +296,8 @@ final_repair_cost = repair_before_discounts × (1 - repair_bay_discount)
 - Destroyed (HP = 0)
 - Repair Bay Level 5, Medical Bay Level 3
 
+--> This is a weird example. How can a robot take 50% and be destroyed at the same time?
+
 ```
 base_repair = 230 × 100 = ₡23,000
 damage_percentage = 50/100 = 0.5
@@ -300,7 +314,7 @@ final_repair_cost = 16,100 × (1 - 0.25) = ₡12,075
 ```
 
 **Repair Timing**:
-- Repairs must be paid after battle to restore robot to full HP
+- Repairs must be paid between battles to restore robot to full HP
 - Robot cannot participate in next battle until repaired
 - HP does NOT regenerate automatically (must pay repair cost)
 - Energy shields regenerate automatically between battles (no cost)
@@ -330,6 +344,8 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 - **Early Game** (1 robot, 2-3 facilities): ₡5,000-₡10,000/day
 - **Mid Game** (3-4 robots, 6-8 facilities): ₡20,000-₡30,000/day
 - **Late Game** (6-10 robots, 10+ facilities): ₡40,000-₡60,000/day
+
+--> Do we expect players to go for 2-3 facilities  during early game? This sets you back at least 700k probably, I feel the effects are less than upgrading your attributes for the same amount of money. If you have only 1 robot, you don't need a Storage Facility nor a Roster Expansion facility. 
 
 ### 7. Coach Switching Cost
 
@@ -361,6 +377,8 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 - Minimal upgrades (50 levels split): ~₡150,000
 - Buffer: ₡450,000
 
+--> Players will not keep a buffer. They will spend EVERYTHING (or keep a minimal buffer) to maximize their potential. How will we handle this?
+
 ---
 
 ## Revenue Streams (How Stables Earn Money)
@@ -380,11 +398,15 @@ All revenue is earned in Credits (₡). This section consolidates every way play
 | Diamond | ₡80,000 - ₡150,000 | +50 |
 | Champion | ₡150,000 - ₡300,000 | +75 |
 
+--> Prestige per win? What about fame per win? How are they connected?
+--> What is the impact of the win reward range? Provide the formula and examples.
+
 **Notes**:
 - Reward varies based on opponent strength and match quality
 - Closer matches (similar ELO) provide higher rewards
 - Loss provides 0 Credits (but still earns ELO/league points based on performance)
-- Leagues are per robot, not per stable
+
+--> If a loss provides 0 credits, how often will the stable be able to cover the costs for repair? I thought we have settled on 90% of the time (without facilities).
 
 ### 2. Prestige Bonuses (Battle Multiplier)
 
@@ -396,6 +418,10 @@ Higher stable prestige increases battle winnings:
 | 10,000+ | +10% |
 | 25,000+ | +15% |
 | 50,000+ | +20% |
+
+--> Again: prestige or fame? Is this within the boundaries of the win reward range or outside? 
+--> How long does it take to get 5000+ prestige for the average user (to notice any effect)? 
+--> This feels like a "win more" button. I have won a lot, so I win more?
 
 **Formula**:
 ```
@@ -418,6 +444,8 @@ final_battle_reward = base_reward × prestige_multiplier
 - Prestige: 12,000
 - Multiplier: +10%
 - Final reward: ₡7,500 × 1.10 = ₡8,250
+
+--> So the base is midway in the range? And there is no impact of ELO?
 
 ### 3. Merchandising Income (Income Generator Facility)
 
@@ -477,7 +505,11 @@ streaming_income = base_streaming × battle_multiplier × fame_multiplier
 - Fame multiplier: 1 + (10000/5000) = 3.0
 - Daily income: ₡6,000 × 1.5 × 3.0 = ₡27,000/day
 
+--> I feel both Merchandising and Streaming revenue should be per robot. We need to review whether the income per Income Generator level needs to be tweaked. This should be noted as part of a multi-robot strategy. 
+
 ### 5. Tournament Winnings
+
+--> Tournaments haven't been defined yet. 
 
 **Tournament Types and Rewards**:
 
@@ -495,6 +527,8 @@ streaming_income = base_streaming × battle_multiplier × fame_multiplier
 - Booking Office also provides tournament reward bonuses (+10% to +40% at high levels)
 
 ### 6. Achievement Rewards
+
+--> Achievements haven't been defined yet. 
 
 **Milestone Examples**:
 - First robot to ELO 1500: ₡50,000 + 50 prestige
@@ -574,6 +608,9 @@ Daily profit margin: 54%
 Days until bankruptcy (if income stops): 67 days
 ```
 
+--> Revenue streams are important. They should be visible per robot. One robot might be leaking money while the other is a cash cow. 
+--> Also show expenses that we created by users? Credits spent on upgrades / facilities / buying new weapons / creating new robots?
+
 ### Financial Health Indicators
 
 **Status Levels**:
@@ -651,12 +688,16 @@ Recommendations:
 - Bronze/Silver league battles: ₡5,000-₡15,000 per win
 - Expect 3-5 battles per week: ₡15,000-₡75,000/week
 
+--> League matches are every day. 
+
 **Operating Costs**:
 - Facilities: ₡2,500-₡5,000/day
 - Repairs: ₡5,000-₡15,000 per battle
 - Daily total: ~₡5,000-₡10,000/day
 
 **Net Result**: Break-even to slight profit with active play
+
+--> Your math is off. Income is per win / week. Operating costs are per day. Take into account 1 match per robot per day. Everything per day. And then I want a stable manager that runs slightly poorly (let's say 35%-50% win rate) to run a profit 90% of the days. 
 
 ### Mid Game Economics (Days 30-120)
 
@@ -715,21 +756,30 @@ Recommendations:
 1. **Repair Bay Level 1** (₡200,000):
    - Saves ~5% on repairs (₡500-₡1,000 per battle)
    - Payback: ~200-400 battles (40-80 days at 5 battles/week)
+  
+--> Always 7 battles per week. Closer to 10 if we implement tournaments. Even more if we implement teams.
 
 2. **Training Facility Level 1** (₡300,000):
    - Saves 5% on upgrades (₡50-₡500 per upgrade)
    - Payback: ~600-1,000 attribute upgrades
    - Best investment for players who upgrade frequently
+  
+--> 600 attribute upgrades? In order to do that you need to have 2 robots and upgrade all stats to 13. 
 
 3. **Income Generator Level 1** (₡800,000):
    - Generates ₡5,000/day - ₡1,000 operating cost = ₡4,000 net/day
    - Payback: 200 days (long-term investment)
    - With prestige scaling: 50-100 days (medium-term)
+  
+--> Too expensive. Only level 1 has a 200 day payback? If this is the truth we need to consider lowering the costs (and not only for the level 1). However, also check my comments at the Income Generator effects. If we apply the effects per robots and balance it better, this might be a viable strategy. 
 
 4. **Weapons Workshop Level 1** (₡250,000):
    - Saves 5% on weapons (₡5,000-₡20,000 per weapon)
    - Payback: ~10-15 weapon purchases
    - Best for players who buy many weapons
+  
+--> This depends on our revision on of the weapon cost formula.
+--> Players who buy many weapons normally also have many robots. Which means they need to upgrade their Roster Expansion. Do they still have money left for the Weapons Workshop?
 
 **General Rule**: Discount facilities pay off faster for players who use them frequently. Income facilities are long-term investments.
 
@@ -737,10 +787,9 @@ Recommendations:
 
 ## Implementation Recommendations
 
-### Phase 1: Core Economic Tracking (MVP)
+### Phase 1: Core Economic Tracking 
 
 **Priority**: High  
-**Effort**: 2-3 weeks
 
 1. **Backend Implementation**:
    - Track all costs and revenue in database
@@ -765,10 +814,9 @@ Recommendations:
    - Link to documentation for complex formulas
    - "What is this?" helper text
 
-### Phase 2: Economic Dashboard (Post-MVP)
+### Phase 2: Economic Dashboard 
 
 **Priority**: Medium  
-**Effort**: 2-3 weeks
 
 1. **Analytics & Visualization**:
    - Historical trend charts (Chart.js or Recharts)
@@ -786,10 +834,9 @@ Recommendations:
    - Negative cash flow alerts
    - Investment opportunity notifications
 
-### Phase 3: Advanced Features (Future)
+### Phase 3: Advanced Features 
 
 **Priority**: Low  
-**Effort**: Varies
 
 1. **Budget Planning**:
    - Set budgets for repairs, upgrades, weapons
