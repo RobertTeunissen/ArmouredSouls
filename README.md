@@ -80,6 +80,12 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 - [**GitHub Issues (Copy-Paste)**](docs/GITHUB_ISSUES_WEAPON_LOADOUT.md) - Ready-to-use issue templates
 - [**Quick Reference**](docs/QUICK_REFERENCE_WEAPON_LOADOUT.md) - Visual guides and dependency charts
 
+### My Robots Page (Robot Roster Management)
+- [**PRD: My Robots List Page**](docs/PRD_MY_ROBOTS_LIST_PAGE.md) - ⭐ Comprehensive PRD (v1.8.1 - Complete)
+- [**Documentation Index**](docs/MY_ROBOTS_PAGE_DOCS_INDEX.md) - Navigation hub for all My Robots page docs
+- [**Quick Start Guide**](docs/MY_ROBOTS_PAGE_README.md) - Testing instructions and feature overview
+- **Features**: Robot cards, HP/Shield bars, Battle Readiness, Repair All, Capacity management, ELO sorting
+
 ### General Documentation
 - [Phase 1 Plan](docs/PHASE1_PLAN.md) - Detailed plan for local prototype development
 - [Game Design Document](docs/GAME_DESIGN.md) - High-level game design and vision
