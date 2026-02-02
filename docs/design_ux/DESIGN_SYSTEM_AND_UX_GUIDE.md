@@ -190,8 +190,13 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - ELO rating badge
   - Current League and League Points (Link to league)
   - Quick action buttons (View Details, Repair)
-  - Upcoming matches (grouped per type - only Leagues are immplemented)
-  - Recent battle results
+  - Upcoming matches (grouped per type - only Leagues are implemented)
+- **Recent Match History Section**:
+  - Displays last 5 battles across all owned robots
+  - Each match shows: Robot name, Opponent, Result (Win/Loss/Draw), Battle type, Date
+  - Compact battle result format with robot portraits
+  - "View Details" link for each battle (opens detailed battle log)
+  - "View All Battles" link to full battle history page
 
 #### Visual Elements Required
 - [ ] **Robot Portraits** (256×256px, framed in cards)
@@ -288,14 +293,61 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 **Logo State**: Direction B (Precision)  
 **Emotional Target**: Mastery, strategic planning
 
+#### Section Visibility Rules
+
+The Robot Detail Page has **tiered visibility** to allow browsing other players' robots while protecting owner-only configuration:
+
+**PUBLIC SECTIONS** (visible to all logged-in users):
+1. **Robot Header**
+   - Robot name
+   - Robot image placeholder
+   - Owner name (stable name)
+   - League and tier badge
+   - ELO rating
+   - Win/Loss record
+2. **Performance & Statistics**
+   - Battles fought, wins, losses, draws
+   - Win rate percentage
+   - Total damage dealt/taken
+   - Average damage per battle
+   - Battle history (match results format)
+   - ELO history graph (future)
+
+**OWNER-ONLY SECTIONS** (visible only to robot owner):
+1. **Battle Configuration**
+   - Loadout selection (4 loadout types)
+   - Weapon equipment (main/offhand slots)
+   - Battle stance selector
+   - Yield threshold slider
+   - Current HP/Shield display with repair costs
+   - Battle readiness indicator
+   - Ready for battle checkbox
+2. **Effective Stats Overview**
+   - All 23 attributes with effective calculations
+   - Base + Weapon + Stance bonuses breakdown
+   - Compact attribute table
+3. **Upgrade Robot**
+   - Attribute upgrade buttons
+   - Upgrade costs
+   - Credit balance
+   - Facility requirement indicators
+
 #### What Users Should See
+
+**Public View** (non-owner):
 - **Logo**: Direction B in navigation
-- **Hero Section**: Large robot portrait with name, frame, ELO
-- **Performance Stats**: Battles, wins, losses, damage dealt/taken
+- **Robot Header**: Large portrait, name, owner, league, ELO, W/L record
+- **Performance Stats**: Battles, wins, losses, damage dealt/taken, battle history
+- **Restricted Access Message**: "This robot belongs to [Owner]. Configuration options are not available."
+
+**Owner View** (robot owner):
+- All public sections above, plus:
 - **Combat State Panel**:
   - Current HP / Max HP (bar + numbers)
   - Current Shield / Max Shield (bar + numbers)
-  - Damage Taken (last battle)
+  - Battle readiness indicator (green = ready, yellow = needs repair, red = not combat-ready)
+  - Repair costs displayed prominently
+  - Damage taken (last battle)
 - **Loadout Configuration**:
   - 4 loadout type buttons (visual icons + labels)
   - Main Weapon Slot (shows equipped weapon thumbnail + stats)
@@ -312,8 +364,11 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
   - Base stat + bonuses breakdown
   - Effective stat calculation shown
   - Color-coded by category (Combat, Defense, Chassis, AI, Team)
-
-**Visibility**: Everyone can see basic robot information (name, frame, stats), but only the owner can see and modify loadout, battle stance, yield threshold, and perform upgrades.
+  - **Decimal Formatting Rules**:
+    - Base attributes: Display as integers (no decimals)
+    - Weapon bonuses: Display as integers (no decimals)
+    - Effective stats: Display with 2 decimal places when loadout/stance percentages create fractional values
+    - Example: Base 100, Weapon +20 = 120, with 10% stance bonus = 132.00
 
 #### Visual Elements Required
 - [ ] **Large Robot Portrait** (512×512px, hero placement)
@@ -638,18 +693,96 @@ Armoured Souls uses **logo hierarchy** to signal context and stakes:
 
 ### 10. Battle History & Battle Detail (Implemented)
 
-**Routes**: `/battle-history` (list view), `/battle/:id` (detail view)
+**Routes**: `/battle-history` (list view), `/battle/:id` (detail view)  
 **Current Implementation**: Users can view all their robot battles and drill down into turn-by-turn battle logs.
 
-This section describes potential visual enhancements for the existing battle system.
+This section describes the battle result format and visual enhancements for the existing battle system.
 
-**Enhanced Route**: `/battles/:id/result`  
+**Logo State**: Direction B (list view), Direction C (detail/result view)  
+**Emotional Target**: Pride (victory), learning (defeat), mastery
+
+#### Battle Result Format (Standardized)
+
+This format is used across:
+- Dashboard (last 5 matches)
+- Robot Detail Page (full match history)
+- Battle History Page (comprehensive view)
+
+**Compact View** (Dashboard, Lists):
+```
+┌─────────────────────────────────────────┐
+│ [Robot Portrait] MyBot vs OpponentBot   │
+│ Result: VICTORY | League Match          │
+│ ELO: +25 | ₡ +1,000                     │
+│ January 15, 2026 | View Details →       │
+└─────────────────────────────────────────┘
+```
+
+**Detailed Battle Log** (Battle Detail Page):
+
+**Battle Header**:
+- Battle type badge (League Match / Tournament / etc.)
+- Date and time
+- Battle ID (for reference)
+- Participants section:
+  - Robot portraits (256×256px)
+  - Robot names (clickable links to robot details)
+  - Owner names (stable names)
+  - Pre-battle stats: HP, Shield, ELO
+
+**Battle Result Panel**:
+- Result banner: "VICTORY" / "DEFEAT" / "DRAW"
+- Draw condition explanation: "Battle exceeded maximum time limit (60 seconds)"
+- **Winner/Loser Determination**:
+  - Winner: Robot with higher HP percentage remaining
+  - Draw: Battle exceeds ~60 seconds of simulated combat OR both robots yield simultaneously
+- **Consequences**:
+  - ELO changes (e.g., "+25 ELO" or "-18 ELO")
+  - Credits earned/spent
+  - League change indicator (if applicable)
+    - "PROMOTED to Silver League" (green badge)
+    - "DEMOTED to Bronze League" (orange badge)
+    - Not shown for Tournament battles
+  - Repair costs
+  - League points earned/lost
+
+**Turn-by-Turn Combat Log**:
+- Expandable/collapsible section
+- Each turn displays:
+  - Turn number
+  - Attacker name and portrait (64×64px)
+  - Action taken (e.g., "Strike with Plasma Sword")
+  - Damage dealt (with critical hit indicator)
+  - Defender HP remaining (bar + numbers)
+  - Special effects (stance bonuses, yield, etc.)
+- Critical hits highlighted in gold/yellow
+- Yield events highlighted in orange
+- Final blow highlighted in red (if applicable)
+
+**Battle Statistics Panel**:
+- Total damage dealt/taken
+- Critical hit count
+- Average damage per turn
+- Highest single hit
+- Battle duration (turns and simulated seconds)
+- Weapon usage breakdown
+- Stance effectiveness
+
+**Action Buttons**:
+- "Return to Dashboard"
+- "View [Robot Name] Details"
+- "Rematch" (future feature)
+- Share battle log (future feature)
+
+#### Enhanced Route (Visual Polish)
+
+**Route**: `/battles/:id/result`  
 **Logo State**: Direction C (Energized)  
 **Emotional Target**: Pride (victory) or consequence (defeat)
 
 #### What Users Should See
 - **Logo**: Direction C (inner glow, peak emotional state)
-- **Result Banner**: "VICTORY" or "DEFEAT" (large, decisive)
+- **Result Banner**: "VICTORY" or "DEFEAT" or "DRAW" (large, decisive)
 - **Robot Portrait**: Winner's pose (if victory) or damaged state (if defeat)
 - **Battle Statistics**:
   - Damage dealt / taken
@@ -659,8 +792,9 @@ This section describes potential visual enhancements for the existing battle sys
 - **Rewards/Consequences**:
   - Credits earned/spent
   - ELO change
-  - Fame gained
+  - Fame gained (future)
   - Repair cost (if damaged)
+  - League change (if applicable)
 - **Action Buttons**: View Replay, Return to Stable, Next Battle
 
 #### Visual Elements Required
@@ -701,31 +835,58 @@ This section describes potential visual enhancements for the existing battle sys
 
 ### 11. League Standings (Implemented)
 
-**Route**: `/league-standings`
-**Current Implementation**: Rankings, ELO, league tiers, and competition tracking are already implemented. 
+**Route**: `/league-standings`  
+**Current Implementation**: Rankings, ELO, league tiers, and competition tracking are already implemented.
 
-**Route**: `/leaderboards`  
 **Logo State**: Direction B (Precision)  
 **Emotional Target**: Competition, aspiration
 
 #### What Users Should See
 - **Logo**: Direction B in navigation
-- **Header**: "Global Rankings" with filter tabs (ELO, Wins, Prestige, etc.)
-- **Ranking List**:
-  - Rank number
-  - Robot portrait (small thumbnail)
-  - Robot name
+- **League Navigation**: Tab-based or dropdown selector for all leagues
+  - **All leagues visible**: Players can view all leagues in the system (Bronze, Silver, Gold, Platinum, Diamond, Master)
+  - Current league highlighted or pre-selected
+  - League tier icons and names clearly displayed
+- **League Standings Table**:
+  - Rank number (with special badges for top 3: Gold, Silver, Bronze medals)
+  - Robot portrait (small thumbnail, 64×64px)
+  - Robot name (clickable link to robot detail page)
   - Owner stable name
-  - ELO / Wins / Prestige (depending on filter)
-  - Player's own rank highlighted
-- **Player Position Card**: Sticky header showing player's current rank
+  - ELO rating
+  - League points (LP)
+  - Win/Loss/Draw record
+  - Recent form indicator (last 5 battles: W/L/D icons)
+- **Zone Indicators**:
+  - Promotion zone (top 10%): Green background highlight
+  - Safe zone (middle 80%): Standard background
+  - Demotion zone (bottom 10%): Red/orange background highlight
+- **Own Robot Highlighting**:
+  - Player's own robots clearly identified with:
+    - Distinct background color (darker or accented)
+    - Border (gold or accent color)
+    - Badge or icon (e.g., star, crown, "MY ROBOT")
+    - Sticky positioning option to keep own robots visible while scrolling
+- **Player Position Summary**:
+  - Sticky header or sidebar showing player's best-ranked robot position
+  - Quick stats: "You have X robots in this league"
+  - Promotion/demotion status for owned robots
 
 #### Visual Elements Required
 - [ ] **Robot Thumbnails** (small, 64×64px)
-- [ ] **Rank Badges** (1st/2nd/3rd special, Gold/Silver/Bronze)
+- [ ] **Rank Badges** (1st/2nd/3rd special, Gold/Silver/Bronze medals)
 - [ ] **League Tier Icons** (Bronze, Silver, Gold, Platinum, Diamond, Master)
+  - Each league has distinct icon and color scheme
+  - Icons should be 32×32px for navigation tabs
+  - 48×48px for league page headers
 - [ ] **Trophy Icon** (for top players)
-- [ ] **Highlight Style** (for player's position in list)
+- [ ] **Highlight Styles** (for player's position in list):
+  - Background color: `rgba(88, 166, 255, 0.15)` (primary blue, semi-transparent)
+  - Border: `2px solid #58a6ff` (primary blue)
+  - Optional badge: "MY ROBOT" label or star icon
+- [ ] **Zone Indicators**:
+  - Promotion zone: Green left border (4px) or background tint
+  - Demotion zone: Red/orange left border (4px) or background tint
+- [ ] **Form Indicators**: W/L/D icon sequence (last 5 battles)
 
 #### Image Types & Visual Reinforcement
 1. **Robot Thumbnails**: Visual recognition in list

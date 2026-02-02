@@ -196,14 +196,17 @@ ARMOURED SOULS
 ────────────────────
 
 🛠️ MANAGE STABLE
+  › My Robots
   › Facilities
   › Weapon Shop
   › Weapon Inventory
 
 🏆 COMPETE
-  › Matchmaking (future)
+  › Matchmaking
   › Battle History
   › Leagues
+  › Tournaments (future)
+  › Team Battles (future)
 
 ⚙️ SETTINGS
   › Profile (future)
@@ -211,9 +214,13 @@ ARMOURED SOULS
   › Logout
 ```
 
---> Does this take into account all possible future functionality? Matchmaking is not "future" as it is already in place. It is currently in a section called "Upcoming Battles" on the Dashboard. What about Tournaments? 2v2? nvn? Do we need to cater for this or can we expand on this train of thought?
---> If we implement this, what is the inmpact on the visual hierarchy you mentioned above?
---> Where can a user view his robots in this menu structure? How about upgrading? How about battle configuration?
+**Navigation Flow Notes**:
+- **Matchmaking**: Currently implemented and displayed in "Upcoming Battles" section on Dashboard. Menu link provides direct access.
+- **My Robots**: Links to robots list page (`/robots`). From there, users can:
+  - Select individual robot to view detail page
+  - Robot detail page contains upgrade and battle configuration sections (owner-only access)
+- **Future Expansion**: Tournaments, 2v2, and nvn battles will be added under the COMPETE section as they're implemented
+- **Visual Hierarchy Impact**: The hamburger menu provides tertiary navigation (supplementary to tab bar). Primary navigation remains in the bottom tab bar for core flows. This menu is for less frequent actions and settings, maintaining the hierarchy discussed in earlier sections.
 
 ---
 

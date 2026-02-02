@@ -64,16 +64,16 @@ This guide provides a fast reference for implementing the Robots page overhaul a
   - Table with columns: Attribute | Base | Weapons | Loadout | Stance | Total
   - 23 rows (one per attribute), grouped by category
   - Color coding: green for positive, red for negative
-  - Decimal formatting (2 places)
-     
---> Decimal formatting display only where applicable. Base attributes and Weapons only have integer effects. 
+  - **Decimal formatting rules**:
+    - Base attributes: Display as integers (no decimals)
+    - Weapon bonuses: Display as integers (no decimals)
+    - Effective stats: Display with 2 decimal places when loadout/stance percentages create fractional values
+    - Example: Base 100, Weapon +20 = 120, with 10% stance bonus = 132.00 
 
 - [ ] **Create `PerformanceStats.tsx`**
   - Display: battles, wins, losses, win rate, ELO, damage stats
   - Read-only, visible to all users
-  - Shows current HP, battle readiness, repair costs
-     
---> No. This is going to be an overview that is accessible to all users. I want current HP, battle readiness and current repair costs in the Battle Configuration.
+  - Does NOT include HP, battle readiness, or repair costs (those belong in Battle Configuration)
 
 - [ ] **Create `CompactAttributeRow.tsx`**
   - Single-line attribute display: `Name: Base (Bonus) = Effective [Upgrade ₡XXK]`
@@ -82,16 +82,30 @@ This guide provides a fast reference for implementing the Robots page overhaul a
 
 - [ ] **Update `RobotDetailPage.tsx`**
   - Remove credit balance card (already in navigation)
-  - Restructure into sections:
-    1. Robot Header (with image placeholder)
-    2. ⚔️ Battle Configuration
-    3. 📊 Effective Stats Overview (new table)
-    4. 🏆 Performance & Statistics (new section)
-    5. ⬆️ Upgrade Robot (compact layout)
+  - Restructure into sections with **visibility rules**:
+    1. **Robot Header** (PUBLIC - visible to all logged-in users)
+       - Robot name
+       - Robot image placeholder
+       - Owner name
+       - League and tier
+       - ELO rating
+       - Win/Loss record
+    2. **⚔️ Battle Configuration** (OWNER ONLY)
+       - Current HP display (visible to all users)
+       - Battle readiness indicator (visible to all users)
+       - Repair costs (visible to all users)
+       - Loadout selection
+       - Stance selection
+       - Yield threshold
+    3. **📊 Effective Stats Overview** (OWNER ONLY)
+       - New compact table format
+    4. **🏆 Performance & Statistics** (PUBLIC - visible to all logged-in users)
+       - Battle history overview
+       - Damage statistics
+       - Performance metrics
+    5. **⬆️ Upgrade Robot** (OWNER ONLY)
+       - Compact attribute upgrade layout
   - Integrate new components
-     
---> Robot Header and Performance & Statistics should be accessible by all users that are logged in, the other sections only for the owner.
---> Define what should be visible in the Robot Header, this is not captured anywhere.
 
 - [ ] **Update Utility Functions**
   - Add `formatAttribute(value): string` → returns `value.toFixed(2)`

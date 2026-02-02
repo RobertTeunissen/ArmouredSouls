@@ -136,12 +136,32 @@ The scheduled batch model allows:
 - Filter by robot, league, date range
 - Pagination for large battle histories (20 results per page)
 
---> Do you have a design for what a detailed battle log would look like?
---> Battle Result: Draw? Has it been defined this is possible? If so, how?
---> Battle Result: Show also show league change if applicable. This is not the case in Tournaments. I know Tournaments are for another PRD but we need to take it into account.
---> Battle Result: Should show the type of battle (League Match / Tournament / etc). Implications for database?
---> Dashboard should display the last 5 matches an owned robot has fought with links to detailed results
---> Robot detail page should display the entire match history in "battle result format".
+**Detailed Battle Log Format**:
+- **Battle Header**:
+  - Battle type (League Match / Tournament / etc.)
+  - Date and time
+  - Participants (robot names, owners, portraits)
+  - League change indicator (if applicable - not shown for Tournaments)
+- **Battle Result**:
+  - Winner/Loser/Draw
+  - Draw condition: Battle exceeds maximum time limit (~60 seconds of simulated combat)
+  - ELO changes
+  - Credits earned/spent
+  - Repair costs
+- **Turn-by-Turn Combat Log**:
+  - Each turn shows: Attacker, Defender, Action, Damage, HP remaining
+  - Critical hits highlighted
+  - Special abilities/effects noted
+- **Battle Statistics**:
+  - Total damage dealt/taken
+  - Critical hit count
+  - Average damage per turn
+  - Battle duration (turns/seconds)
+
+**Battle Display Locations**:
+- **Dashboard**: Displays last 5 matches for owned robots with links to detailed battle results
+- **Robot Detail Page**: Displays entire match history for that robot in battle result format (with pagination)
+- **Battle History Page**: Comprehensive view of all battles across all owned robots
 
 **US-3: View League Standings**
 - **As a** player competing in leagues
@@ -153,10 +173,9 @@ The scheduled batch model allows:
 - Display: Rank, Robot name, Owner, ELO, League points, Win/Loss record
 - Show promotion zone (top X robots) and demotion zone (bottom Y robots) highlighted
 - Separate tab/section for each league tier
+- **All leagues visible**: Players can view all leagues in the system, not just leagues their robots are in
+- **Own robot identification**: Player's own robots are clearly highlighted (distinct background color, badge, or border)
 - Update after each battle batch completes
-
---> A player also needs to know how he stacks up with other players; not only show the leagues he is in, but all leagues that are in the system.
---> Player should easily identity his own robots when checking the league standings.
 
 ### Epic: Matchmaking Algorithm
 
@@ -1528,11 +1547,9 @@ New ELO (B) = 1300 + 32 * (1 - 0.64) = 1312
 
 **Demotion Threshold:**
 - Fixed approach: 0 league points after 10+ battles
-- Percentage approach: Bottom 20% of league
+- Percentage approach: Bottom 10% of league
 
-**Recommendation:** Use percentage approach (20%) for Phase 1 to auto-balance leagues.
-
---> 10% sounds more reasonable, otherwise you're switching leagues too often.
+**Recommendation:** Use percentage approach (10%) for Phase 1 to auto-balance leagues.
 
 ### Appendix C: Matchmaking Priority
 

@@ -517,5 +517,328 @@ module.exports = {
 
 ---
 
+## 🤖 Robot Detail Page Components
+
+### Robot Header (PUBLIC - All Users)
+
+```jsx
+<div className="bg-surface-elevated rounded-lg p-6 mb-6">
+  {/* Robot Portrait */}
+  <div className="flex items-start gap-6">
+    <img 
+      src={robot.imageUrl} 
+      alt={robot.name}
+      className="w-32 h-32 rounded-lg border-2 border-primary/30"
+    />
+    
+    {/* Robot Info */}
+    <div className="flex-1">
+      <h1 className="text-3xl font-bold mb-2">{robot.name}</h1>
+      <p className="text-secondary mb-4">Owner: {robot.owner}</p>
+      
+      {/* Stats Row */}
+      <div className="flex gap-6 items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-tertiary">League:</span>
+          <span className="badge badge-league">{robot.league}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-tertiary">ELO:</span>
+          <span className="text-primary font-bold">{robot.elo}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-tertiary">Record:</span>
+          <span className="font-medium">{robot.wins}W / {robot.losses}L</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### Section Visibility Rules
+
+```jsx
+// Check if current user owns the robot
+const isOwner = currentUser.id === robot.ownerId;
+
+// Render sections conditionally
+{isOwner && (
+  <>
+    <BattleConfiguration robot={robot} />
+    <EffectiveStatsOverview robot={robot} />
+    <UpgradeRobot robot={robot} />
+  </>
+)}
+
+// Always visible sections
+<RobotHeader robot={robot} />
+<PerformanceStatistics robot={robot} />
+```
+
+### Decimal Formatting Rules
+
+```jsx
+// Utility functions for attribute display
+function formatBaseAttribute(value) {
+  return Math.floor(value); // Always integer
+}
+
+function formatWeaponBonus(value) {
+  return Math.floor(value); // Always integer
+}
+
+function formatEffectiveStat(value) {
+  // 2 decimal places for calculated stats
+  return value.toFixed(2);
+}
+
+// Example usage
+<div className="attribute-row">
+  <span>Base: {formatBaseAttribute(100)}</span>
+  <span>Weapon: +{formatWeaponBonus(20)}</span>
+  <span>Effective: {formatEffectiveStat(132.50)}</span>
+</div>
+```
+
+---
+
+## ⚔️ Battle Result Format
+
+### Compact Battle Card (Dashboard, Lists)
+
+```jsx
+<div className="bg-surface-elevated rounded-lg p-4 border-l-4 border-success">
+  <div className="flex items-center gap-4">
+    {/* Robot Portraits */}
+    <div className="flex gap-2">
+      <img src={myRobot.portrait} className="w-12 h-12 rounded" />
+      <span className="text-tertiary self-center">vs</span>
+      <img src={opponent.portrait} className="w-12 h-12 rounded" />
+    </div>
+    
+    {/* Battle Info */}
+    <div className="flex-1">
+      <p className="font-bold text-success">VICTORY</p>
+      <p className="text-sm text-secondary">{myRobot.name} vs {opponent.name}</p>
+      <p className="text-xs text-tertiary">League Match • Jan 15, 2026</p>
+    </div>
+    
+    {/* Rewards */}
+    <div className="text-right">
+      <p className="text-success">+25 ELO</p>
+      <p className="text-sm text-secondary">+₡1,000</p>
+    </div>
+    
+    {/* Action */}
+    <button className="btn-secondary btn-sm">
+      View Details →
+    </button>
+  </div>
+</div>
+```
+
+### Battle Result Colors
+
+```jsx
+// Border and text colors based on result
+const resultStyles = {
+  victory: {
+    border: 'border-success',
+    text: 'text-success',
+    bg: 'bg-success/10'
+  },
+  defeat: {
+    border: 'border-error',
+    text: 'text-error',
+    bg: 'bg-error/10'
+  },
+  draw: {
+    border: 'border-warning',
+    text: 'text-warning',
+    bg: 'bg-warning/10'
+  }
+};
+```
+
+### Detailed Battle Log Header
+
+```jsx
+<div className="bg-surface-elevated rounded-lg p-6 mb-6">
+  {/* Battle Type Badge */}
+  <div className="flex items-center justify-between mb-4">
+    <span className="badge badge-primary">League Match</span>
+    <span className="text-sm text-tertiary">Battle #12345 • Jan 15, 2026</span>
+  </div>
+  
+  {/* Result Banner */}
+  <div className="text-center py-8 bg-success/10 rounded-lg mb-6">
+    <h1 className="text-4xl font-bold text-success mb-2">VICTORY</h1>
+    <p className="text-secondary">Battle completed in 45 seconds</p>
+  </div>
+  
+  {/* Participants */}
+  <div className="grid grid-cols-2 gap-6">
+    {/* Winner */}
+    <div className="text-center">
+      <img src={winner.portrait} className="w-48 h-48 mx-auto rounded-lg mb-4" />
+      <h3 className="text-xl font-bold">{winner.name}</h3>
+      <p className="text-secondary">{winner.owner}</p>
+      <div className="mt-2">
+        <span className="text-success font-bold">+25 ELO</span>
+        <span className="text-tertiary mx-2">•</span>
+        <span className="text-success">+₡1,000</span>
+      </div>
+    </div>
+    
+    {/* Loser */}
+    <div className="text-center opacity-70">
+      <img src={loser.portrait} className="w-48 h-48 mx-auto rounded-lg mb-4" />
+      <h3 className="text-xl font-bold">{loser.name}</h3>
+      <p className="text-secondary">{loser.owner}</p>
+      <div className="mt-2">
+        <span className="text-error font-bold">-18 ELO</span>
+        <span className="text-tertiary mx-2">•</span>
+        <span className="text-error">Repair: ₡500</span>
+      </div>
+    </div>
+  </div>
+  
+  {/* League Change (if applicable) */}
+  {leagueChange && (
+    <div className="mt-4 text-center">
+      <div className="inline-block bg-success/20 text-success px-4 py-2 rounded-lg">
+        ✨ PROMOTED to Silver League!
+      </div>
+    </div>
+  )}
+</div>
+```
+
+---
+
+## 🏆 League Standings Format
+
+### League Standings Table Row
+
+```jsx
+<div className={`
+  bg-surface-elevated rounded-lg p-4 mb-2 
+  ${isOwnRobot ? 'border-2 border-primary bg-primary/5' : ''}
+  ${isPromotionZone ? 'border-l-4 border-l-success' : ''}
+  ${isDemotionZone ? 'border-l-4 border-l-error' : ''}
+`}>
+  <div className="flex items-center gap-4">
+    {/* Rank */}
+    <div className="w-12 text-center">
+      {rank <= 3 ? (
+        <span className={`text-2xl ${getRankMedalColor(rank)}`}>
+          {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
+        </span>
+      ) : (
+        <span className="text-xl font-bold text-tertiary">#{rank}</span>
+      )}
+    </div>
+    
+    {/* Robot Portrait */}
+    <img 
+      src={robot.portrait} 
+      alt={robot.name}
+      className="w-16 h-16 rounded border border-primary/30"
+    />
+    
+    {/* Robot Info */}
+    <div className="flex-1">
+      <div className="flex items-center gap-2">
+        <h3 className="font-bold">{robot.name}</h3>
+        {isOwnRobot && (
+          <span className="badge badge-primary text-xs">MY ROBOT</span>
+        )}
+      </div>
+      <p className="text-sm text-secondary">{robot.owner}</p>
+    </div>
+    
+    {/* Stats */}
+    <div className="flex gap-6 text-center">
+      <div>
+        <p className="text-sm text-tertiary">ELO</p>
+        <p className="font-bold text-primary">{robot.elo}</p>
+      </div>
+      <div>
+        <p className="text-sm text-tertiary">LP</p>
+        <p className="font-bold">{robot.leaguePoints}</p>
+      </div>
+      <div>
+        <p className="text-sm text-tertiary">Record</p>
+        <p className="font-medium">{robot.wins}-{robot.losses}</p>
+      </div>
+    </div>
+    
+    {/* Recent Form */}
+    <div className="flex gap-1">
+      {robot.recentForm.map((result, i) => (
+        <span 
+          key={i}
+          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
+            ${result === 'W' ? 'bg-success text-black' : 
+              result === 'L' ? 'bg-error text-white' : 
+              'bg-warning text-black'}`}
+        >
+          {result}
+        </span>
+      ))}
+    </div>
+  </div>
+</div>
+```
+
+### League Navigation Tabs
+
+```jsx
+<div className="flex gap-2 mb-6 overflow-x-auto">
+  {leagues.map(league => (
+    <button
+      key={league.id}
+      className={`
+        flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
+        ${activeLeague === league.id 
+          ? 'bg-primary text-white' 
+          : 'bg-surface-elevated hover:bg-surface text-secondary'}
+      `}
+      onClick={() => setActiveLeague(league.id)}
+    >
+      <img src={league.icon} className="w-6 h-6" />
+      <span className="font-medium">{league.name}</span>
+      {hasRobotsInLeague(league.id) && (
+        <span className="badge badge-sm">{getRobotCount(league.id)}</span>
+      )}
+    </button>
+  ))}
+</div>
+```
+
+### Own Robot Highlight Styles
+
+```css
+/* Add to your CSS */
+.own-robot-row {
+  background: linear-gradient(90deg, rgba(88, 166, 255, 0.15) 0%, transparent 100%);
+  border: 2px solid #58a6ff;
+  position: relative;
+}
+
+.own-robot-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #58a6ff;
+}
+```
+
+---
+
 **Version**: 1.0 (February 1, 2026)  
 **Maintained By**: Design Team / Frontend Developers
