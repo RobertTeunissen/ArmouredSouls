@@ -27,18 +27,18 @@ const allPages = {
     label: 'Robots',
     items: [
       { path: '/robots', label: 'My Robots' },
-      { path: '/robots/create', label: 'Create Robot' },
       { path: '/robots/compare', label: 'Compare Robots' },
       { path: '/robots/training', label: 'Training Planner' },
       { path: '/robots/loadouts', label: 'Loadout Presets' },
+      { path: '/robots/create', label: 'Create Robot' },
     ]
   },
   battle: {
     label: 'Battle',
     items: [
-      { path: '/matchmaking', label: 'Matchmaking Queue' },
       { path: '/battle-history', label: 'Battle History' },
       { path: '/league-standings', label: 'League Standings' },
+      { path: '/matchmaking', label: 'Matchmaking Queue' },
       { path: '/practice', label: 'Practice Arena' },
       { path: '/tournaments', label: 'Tournament Hub' },
       { path: '/events', label: 'Events Calendar' },
@@ -50,12 +50,12 @@ const allPages = {
       { path: '/story', label: 'Story Mode' },
     ]
   },
-  economy: {
-    label: 'Economy',
+  stable: {
+    label: 'Stable',
     items: [
+      { path: '/facilities', label: 'Facilities' },
       { path: '/weapon-shop', label: 'Weapon Shop' },
       { path: '/weapon-inventory', label: 'Weapon Inventory' },
-      { path: '/facilities', label: 'Facilities' },
       { path: '/marketplace', label: 'Marketplace' },
       { path: '/marketplace/my-listings', label: 'My Listings' },
       { path: '/marketplace/history', label: 'Transaction History' },
@@ -152,13 +152,30 @@ interface DropdownMenuProps {
 
 function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [closeTimer, setCloseTimer] = useState<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
+
+  const handleMouseEnter = () => {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      setCloseTimer(null);
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Add 200ms delay before closing
+    const timer = setTimeout(() => {
+      setIsOpen(false);
+    }, 200);
+    setCloseTimer(timer);
+  };
 
   return (
     <div
       className="relative"
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <button
         className={`
@@ -174,7 +191,7 @@ function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps
       </button>
       
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-56 bg-surface-elevated border border-white/10 rounded-md shadow-xl z-50 py-2">
+        <div className="absolute top-full left-0 mt-0 w-56 bg-surface-elevated border border-white/10 rounded-md shadow-xl z-50 py-2">
           {items.map(item => {
             const disabled = !implementedPages.has(item.path);
             const active = checkActive(item.path);
@@ -186,6 +203,7 @@ function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps
                   if (!disabled) {
                     navigate(item.path);
                     setIsOpen(false);
+                    if (closeTimer) clearTimeout(closeTimer);
                   }
                 }}
                 disabled={disabled}
@@ -306,9 +324,9 @@ function Navigation() {
               />
               
               <DropdownMenu
-                label={allPages.economy.label}
-                items={allPages.economy.items}
-                isActive={isCategoryActive(allPages.economy.items)}
+                label={allPages.stable.label}
+                items={allPages.stable.items}
+                isActive={isCategoryActive(allPages.stable.items)}
                 checkActive={isActive}
               />
               
@@ -499,13 +517,13 @@ function Navigation() {
                   </nav>
                 </div>
 
-                {/* ECONOMY Section */}
+                {/* STABLE Section */}
                 <div className="mb-6">
                   <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    💰 Economy & Trading
+                    🏰 Stable Management
                   </h3>
                   <nav className="space-y-1">
-                    {allPages.economy.items.map(item => (
+                    {allPages.stable.items.map(item => (
                       <DrawerMenuItem
                         key={item.path}
                         label={item.label}
