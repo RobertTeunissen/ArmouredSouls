@@ -1,13 +1,7 @@
 # Quick Reference: Economy System
 
-**Last Updated**: February 2, 2026 (Revised after review)  
+**Last Updated**: February 2, 2026  
 **For Complete Details**: See [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md)
-
-**⚠️ Key Changes from Review**:
-- Battle frequency: 7 battles/week (1/day per robot)
-- Income Generator: Now per-robot basis
-- Repair costs: Need rebalancing for 50% win rate
-- Facility ROI: Long payback periods, better with 2-3+ robots
 
 ---
 
@@ -15,8 +9,7 @@
 
 ### Currency
 - **Credits (₡)**: Primary currency for all purchases
-- **Fame**: Robot-level reputation (individual stat)
-- **Prestige**: Stable-level reputation (account-wide, unlocks content)
+- **Prestige**: Unlock threshold (earned, never spent)
 - **Starting Balance**: ₡2,000,000
 
 ### Key Formulas
@@ -26,23 +19,21 @@
 cost = (current_level + 1) × 1,000 Credits
 ```
 
-**Repair Cost** (needs rebalancing - see PRD):
+**Repair Cost**:
 ```
-base = sum_of_attributes × 100  // May change to ×50
+base = sum_of_attributes × 100
 multiplier = 2.0 (HP=0), 1.5 (HP<10%), 1.0 (otherwise)
 final = base × damage% × multiplier × (1 - discounts)
 ```
 
-**Merchandising Income** (per robot):
+**Merchandising Income**:
 ```
-per_robot = base_rate × (1 + robot_fame/5000)
-total = sum of all robots
+daily = base_rate × (1 + prestige/10000)
 ```
 
-**Streaming Income** (per robot):
+**Streaming Income**:
 ```
-per_robot = base_rate × (1 + robot_battles/500) × (1 + robot_fame/2500)
-total = sum of all robots
+daily = base_rate × (1 + battles/1000) × (1 + fame/5000)
 ```
 
 ---
@@ -101,8 +92,8 @@ total = sum of all robots
   - Medical Bay: Reduces critical multiplier
 
 ### 5. Daily Operating Costs
-- **Early Game**: ₡2,500-₡5,000/day (1 robot, 1-2 facilities)
-- **Mid Game**: ₡15,000-₡25,000/day (3-4 robots, 4-6 facilities)
+- **Early Game**: ₡5,000-₡10,000/day (1 robot, 2-3 facilities)
+- **Mid Game**: ₡20,000-₡30,000/day (3-4 robots, 6-8 facilities)
 - **Late Game**: ₡40,000-₡60,000/day (6-10 robots, 10+ facilities)
 
 ---
@@ -111,16 +102,14 @@ total = sum of all robots
 
 ### 1. Battle Winnings
 
-| League | Win Reward | Fame/Win | Prestige/Win |
-|--------|-----------|---------|--------------|
-| Bronze | ₡5K-₡10K | +5 | +5 |
-| Silver | ₡10K-₡20K | +10 | +10 |
-| Gold | ₡20K-₡40K | +20 | +20 |
-| Platinum | ₡40K-₡80K | +30 | +30 |
-| Diamond | ₡80K-₡150K | +50 | +50 |
-| Champion | ₡150K-₡300K | +75 | +75 |
-
-**Battle Frequency**: 1 battle/day per robot (7/week)
+| League | Win Reward | Prestige/Win |
+|--------|-----------|-------------|
+| Bronze | ₡5K-₡10K | +5 |
+| Silver | ₡10K-₡20K | +10 |
+| Gold | ₡20K-₡40K | +20 |
+| Platinum | ₡40K-₡80K | +30 |
+| Diamond | ₡80K-₡150K | +50 |
+| Champion | ₡150K-₡300K | +75 |
 
 ### 2. Prestige Bonuses
 
@@ -131,23 +120,19 @@ total = sum of all robots
 | 25,000+ | +15% |
 | 50,000+ | +20% |
 
-**Time to 5K prestige**: 6-12 months regular play
-
-### 3. Passive Income (Income Generator - Per Robot)
+### 3. Passive Income (Income Generator)
 
 **Merchandising** (Level 1+):
-- Base: ₡1.5K-₡12K/day **per robot**
-- Scales with: Individual robot fame
-- Formula: `base × (1 + robot_fame/5000)`
+- Base: ₡5K-₡35K/day
+- Scales with: Prestige
+- Formula: `base × (1 + prestige/10000)`
 
 **Streaming** (Level 3+):
-- Base: ₡1K-₡7.5K/day **per robot**
-- Scales with: Robot battles + Robot fame
-- Formula: `base × (1 + robot_battles/500) × (1 + robot_fame/2500)`
+- Base: ₡3K-₡22K/day
+- Scales with: Total battles + Total fame
+- Formula: `base × (1 + battles/1000) × (1 + fame/5000)`
 
-**Note**: Multi-robot strategy essential for Income Generator viability
-
-### 4. Tournaments (Preliminary)
+### 4. Tournaments
 
 | Tournament | Prize | Prestige |
 |-----------|-------|----------|
@@ -157,7 +142,7 @@ total = sum of all robots
 | International | ₡1M-₡2M | +1,000 |
 | World Championship | ₡3M-₡5M | +2,500 |
 
-### 5. Achievements (Preliminary - One-time)
+### 5. Achievements (One-time)
 - ELO 1500: ₡50K + 50 prestige
 - ELO 1800: ₡100K + 100 prestige
 - ELO 2000: ₡200K + 200 prestige
@@ -175,14 +160,14 @@ total = sum of all robots
 **Recommended Spending**:
 - 1 Robot: ₡500K
 - 1 Good weapon: ₡150K-₡300K
-- Repair Bay Level 1: ₡200K (optional, long payback)
-- Upgrades to level 10: ₡300K-₡500K
-- Buffer: ₡500K (realistic: ₡50K-₡150K)
+- Repair Bay Level 1: ₡200K
+- Training Facility Level 1: ₡300K
+- Upgrades: ₡300K-₡500K
+- Buffer: ₡500K
 
-**Battle Frequency**: 7 battles/week  
-**Daily Income** (50% win rate): ₡4K/day (3.5 wins/week × ₡8K avg ÷ 7)  
-**Daily Costs**: ₡4.5K/day (₡1K facility + ₡3.5K repairs)  
-**Net**: -₡500/day (**89% coverage**, needs rebalancing)
+**Daily Income**: ₡15K-₡75K/week (from battles)  
+**Daily Costs**: ₡5K-₡10K/day  
+**Net**: Break-even to slight profit
 
 ### Mid Game (Days 30-120)
 **Balance**: ₡3M-₡8M
@@ -191,11 +176,11 @@ total = sum of all robots
 - Expand to 3-4 robots: ₡1.5M-₡2M
 - Upgrade facilities to L3-5: ₡2M-₡4M
 - Premium weapons: ₡800K-₡1.5M
-- Income Generator: ₡800K (NOW viable with 2-3 robots)
+- Income Generator: ₡800K
 
-**Daily Income**: ₡15K-₡30K/day (battles + passive)  
-**Daily Costs**: ₡15K-₡25K/day  
-**Net**: Profitable
+**Daily Income**: ₡40K-₡80K/day  
+**Daily Costs**: ₡20K-₡40K/day  
+**Net**: Profitable, can save for upgrades
 
 ### Late Game (Days 120+)
 **Balance**: ₡10M-₡50M
@@ -204,7 +189,7 @@ total = sum of all robots
 - Max facilities: ₡10M-₡20M
 - 6-10 robot roster: ₡3M-₡5M
 - Premium weapons: ₡3M-₡5M
-- Custom crafting: ₡305K-₡475K per weapon
+- Custom crafting: ₡1M-₡3M per weapon
 
 **Daily Income**: ₡150K-₡400K/day  
 **Daily Costs**: ₡50K-₡80K/day  
@@ -212,36 +197,30 @@ total = sum of all robots
 
 ---
 
-## Facility Investment ROI (REVISED)
+## Facility Investment ROI
 
 ### Quick Payback Analysis
 
 **Repair Bay Level 1** (₡200K):
-- Saves ~5% on repairs (₡175/battle with ₡3.5K avg)
-- Payback: **163 weeks** (single robot), **54 weeks** (3 robots)
-- **Priority**: MEDIUM (only with 2+ robots)
+- Saves ~5% on repairs (₡500-₡1,000/battle)
+- Payback: 200-400 battles (40-80 days)
+- **Priority**: HIGH (long-term savings)
 
 **Training Facility Level 1** (₡300K):
-- Saves 5% on upgrades (₡62K total for 1→10 all attributes)
-- Payback: **5 robots** doing 1→10 upgrades
-- **Priority**: LOW (not worth early game)
+- Saves 5% on upgrades (₡50-₡500/upgrade)
+- Payback: 600-1,000 upgrades
+- **Priority**: MEDIUM (depends on upgrade frequency)
 
 **Income Generator Level 1** (₡800K):
-- Generates ₡500 net/day (single robot)
-- Payback: **1,600 days** (single robot), **142 days** (3 robots)
-- **Priority**: LOW early game, HIGH with 2-3+ robots
+- Generates ₡4,000 net/day (₡5K - ₡1K operating)
+- Payback: 200 days
+- With prestige scaling: 50-100 days
+- **Priority**: HIGH (passive income)
 
 **Weapons Workshop Level 1** (₡250K):
-- Saves 5% on weapons (₡10K per ₡200K weapon avg)
-- Payback: **25 weapon purchases** (2-3 years)
-- **Priority**: VERY LOW
-
-**Key Insight**: All facilities require multi-robot strategy for reasonable payback periods.
-
-**Early Game Facility Priority**:
-1. Skip facilities OR buy 1 Academy if stuck at level 10 cap
-2. Invest in robot power (attributes + weapons) first
-3. Buy Repair Bay only when expanding to robot #2
+- Saves 5% on weapons (₡5K-₡20K/weapon)
+- Payback: 10-15 weapon purchases
+- **Priority**: LOW (unless buying many weapons)
 
 ---
 
