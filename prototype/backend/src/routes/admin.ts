@@ -681,4 +681,273 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
   }
 });
 
+/**
+ * GET /api/admin/stats/robots
+ * Get comprehensive statistics about robot attributes for debugging and outlier detection
+ */
+router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    // Get all robots (excluding bye robots)
+    const robots = await prisma.robot.findMany({
+      where: {
+        NOT: { name: 'Bye Robot' },
+      },
+      select: {
+        id: true,
+        name: true,
+        userId: true,
+        currentLeague: true,
+        elo: true,
+        totalBattles: true,
+        wins: true,
+        losses: true,
+        draws: true,
+        // Combat Systems (6 attributes)
+        combatPower: true,
+        targetingSystems: true,
+        criticalSystems: true,
+        penetration: true,
+        weaponControl: true,
+        attackSpeed: true,
+        // Defensive Systems (5 attributes)
+        armorPlating: true,
+        shieldCapacity: true,
+        evasionThrusters: true,
+        damageDampeners: true,
+        counterProtocols: true,
+        // Chassis & Mobility (5 attributes)
+        hullIntegrity: true,
+        servoMotors: true,
+        gyroStabilizers: true,
+        hydraulicSystems: true,
+        powerCore: true,
+        // AI Processing (4 attributes)
+        combatAlgorithms: true,
+        threatAnalysis: true,
+        adaptiveAI: true,
+        logicCores: true,
+        // Team Coordination (3 attributes)
+        syncProtocols: true,
+        supportSystems: true,
+        formationTactics: true,
+      },
+    });
+
+    if (robots.length === 0) {
+      return res.json({
+        message: 'No robots found',
+        totalRobots: 0,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Define all 23 attributes to analyze
+    const attributes = [
+      'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
+      'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
+      'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
+      'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
+      'syncProtocols', 'supportSystems', 'formationTactics'
+    ];
+
+    // Helper function to calculate statistics for an attribute
+    const calculateStats = (values: number[]) => {
+      if (values.length === 0) return null;
+      
+      const sorted = [...values].sort((a, b) => a - b);
+      const sum = values.reduce((acc, val) => acc + val, 0);
+      const mean = sum / values.length;
+      
+      // Calculate median
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 0
+        ? (sorted[mid - 1] + sorted[mid]) / 2
+        : sorted[mid];
+      
+      // Calculate quartiles
+      const q1Index = Math.floor(sorted.length * 0.25);
+      const q3Index = Math.floor(sorted.length * 0.75);
+      const q1 = sorted[q1Index];
+      const q3 = sorted[q3Index];
+      const iqr = q3 - q1;
+      
+      // Calculate standard deviation
+      const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
+      const stdDev = Math.sqrt(variance);
+      
+      // Identify outliers using IQR method (values beyond 1.5 * IQR from quartiles)
+      const lowerBound = q1 - 1.5 * iqr;
+      const upperBound = q3 + 1.5 * iqr;
+      
+      return {
+        mean: Number(mean.toFixed(2)),
+        median: Number(median.toFixed(2)),
+        stdDev: Number(stdDev.toFixed(2)),
+        min: sorted[0],
+        max: sorted[sorted.length - 1],
+        q1: Number(q1.toFixed(2)),
+        q3: Number(q3.toFixed(2)),
+        iqr: Number(iqr.toFixed(2)),
+        lowerBound: Number(lowerBound.toFixed(2)),
+        upperBound: Number(upperBound.toFixed(2)),
+      };
+    };
+
+    // Calculate statistics for each attribute
+    const attributeStats: any = {};
+    const outliers: any = {};
+
+    for (const attr of attributes) {
+      const values = robots.map(r => Number((r as any)[attr]));
+      const stats = calculateStats(values);
+      
+      if (stats) {
+        attributeStats[attr] = stats;
+        
+        // Find outliers for this attribute
+        const robotsWithOutliers = robots
+          .map(r => ({
+            id: r.id,
+            name: r.name,
+            value: Number((r as any)[attr]),
+            league: r.currentLeague,
+            elo: r.elo,
+            winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
+          }))
+          .filter(r => r.value < stats.lowerBound || r.value > stats.upperBound)
+          .sort((a, b) => Math.abs(b.value - stats.mean) - Math.abs(a.value - stats.mean))
+          .slice(0, 10); // Top 10 outliers
+        
+        if (robotsWithOutliers.length > 0) {
+          outliers[attr] = robotsWithOutliers;
+        }
+      }
+    }
+
+    // Calculate statistics by league tier
+    const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
+    const statsByLeague: any = {};
+
+    for (const league of leagues) {
+      const leagueRobots = robots.filter(r => r.currentLeague === league);
+      if (leagueRobots.length === 0) continue;
+
+      statsByLeague[league] = {
+        count: leagueRobots.length,
+        averageElo: Number((leagueRobots.reduce((sum, r) => sum + r.elo, 0) / leagueRobots.length).toFixed(0)),
+        attributes: {} as any,
+      };
+
+      for (const attr of attributes) {
+        const values = leagueRobots.map(r => Number((r as any)[attr]));
+        const stats = calculateStats(values);
+        if (stats) {
+          statsByLeague[league].attributes[attr] = {
+            mean: stats.mean,
+            median: stats.median,
+            min: stats.min,
+            max: stats.max,
+          };
+        }
+      }
+    }
+
+    // Calculate win rate correlations
+    // For each attribute, group robots into ranges and calculate average win rate
+    const winRateAnalysis: any = {};
+    
+    for (const attr of attributes) {
+      const robotsWithWinRate = robots
+        .filter(r => r.totalBattles >= 5) // Only consider robots with at least 5 battles
+        .map(r => ({
+          value: Number((r as any)[attr]),
+          winRate: r.wins / r.totalBattles,
+        }));
+
+      if (robotsWithWinRate.length === 0) continue;
+
+      // Sort by attribute value and divide into 5 quintiles
+      robotsWithWinRate.sort((a, b) => a.value - b.value);
+      const quintileSize = Math.floor(robotsWithWinRate.length / 5);
+      
+      const quintiles = [];
+      for (let i = 0; i < 5; i++) {
+        const start = i * quintileSize;
+        const end = i === 4 ? robotsWithWinRate.length : (i + 1) * quintileSize;
+        const quintileRobots = robotsWithWinRate.slice(start, end);
+        
+        if (quintileRobots.length > 0) {
+          const avgValue = quintileRobots.reduce((sum, r) => sum + r.value, 0) / quintileRobots.length;
+          const avgWinRate = quintileRobots.reduce((sum, r) => sum + r.winRate, 0) / quintileRobots.length;
+          
+          quintiles.push({
+            quintile: i + 1,
+            avgValue: Number(avgValue.toFixed(2)),
+            avgWinRate: Number((avgWinRate * 100).toFixed(1)),
+            sampleSize: quintileRobots.length,
+          });
+        }
+      }
+      
+      winRateAnalysis[attr] = quintiles;
+    }
+
+    // Find top and bottom performers by each attribute
+    const topPerformers: any = {};
+    const bottomPerformers: any = {};
+
+    for (const attr of attributes) {
+      const sorted = [...robots].sort((a, b) => Number((b as any)[attr]) - Number((a as any)[attr]));
+      
+      topPerformers[attr] = sorted.slice(0, 5).map(r => ({
+        id: r.id,
+        name: r.name,
+        value: Number((r as any)[attr]),
+        league: r.currentLeague,
+        elo: r.elo,
+        winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
+      }));
+
+      bottomPerformers[attr] = sorted.slice(-5).reverse().map(r => ({
+        id: r.id,
+        name: r.name,
+        value: Number((r as any)[attr]),
+        league: r.currentLeague,
+        elo: r.elo,
+        winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
+      }));
+    }
+
+    // Overall summary statistics
+    const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
+    const robotsWithBattles = robots.filter(r => r.totalBattles > 0);
+    const overallWinRate = totalBattles > 0
+      ? robots.reduce((sum, r) => sum + r.wins, 0) / totalBattles * 100
+      : 0;
+
+    res.json({
+      summary: {
+        totalRobots: robots.length,
+        robotsWithBattles: robotsWithBattles.length,
+        totalBattles,
+        overallWinRate: Number(overallWinRate.toFixed(2)),
+        averageElo: Number((robots.reduce((sum, r) => sum + r.elo, 0) / robots.length).toFixed(0)),
+      },
+      attributeStats,
+      outliers,
+      statsByLeague,
+      winRateAnalysis,
+      topPerformers,
+      bottomPerformers,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Admin] Robot stats error:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve robot statistics',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
 export default router;
