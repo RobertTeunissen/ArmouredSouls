@@ -113,9 +113,9 @@ This creates an obvious imbalance: Machine Gun provides 41% better value per att
 
 ## Pricing Formula Design
 
-### Core Principle: Exponential Scaling
+### Core Principles
 
-**Key Insight**: A weapon with +10 to one attribute should cost MORE than a weapon with ten +1 bonuses across different attributes.
+**1. Exponential Attribute Scaling**: A weapon with +10 to one attribute should cost MORE than a weapon with ten +1 bonuses across different attributes.
 
 **Reasoning:**
 - Concentrated bonuses create specialization and synergy
@@ -123,40 +123,105 @@ This creates an obvious imbalance: Machine Gun provides 41% better value per att
 - High single-attribute values are exponentially more powerful in practice
 - Example: +10 Combat Power affects all damage; ten +1s to random attributes have minimal impact each
 
-### Proposed Formula
+**2. DPS (Damage Per Second) Matters**: Weapons with higher damage output or faster attack speed have inherently more combat value and should cost more.
 
-**Base Cost**: ₡50,000 (Practice Sword baseline - zero bonuses)
+**Reasoning:**
+- A weapon with 20 damage and 2s cooldown (10 DPS) is objectively better than 10 damage with 3s cooldown (3.33 DPS)
+- Fast weapons with low cooldown attack more frequently, dealing more damage over time
+- High damage weapons deal more burst damage per hit
+- DPS is the primary metric for weapon combat effectiveness
 
-**Attribute Bonus Cost**: Each attribute bonus is calculated exponentially:
+### Complete Pricing Formula
+
+**Base Cost**: ₡50,000 (Practice Sword baseline - zero bonuses, baseline DPS)
+
+**Component 1: Attribute Bonus Cost** (exponential scaling):
 ```
-Bonus Cost = Base Point Value × (Bonus Value)²
+Attribute Cost = Σ(500 × bonus²) for all attribute bonuses
 ```
 
-**Base Point Value**: ₡500 per point squared
-
-**Total Weapon Cost**:
+**Component 2: DPS Premium** (scales with combat effectiveness):
 ```
-Total Cost = Base Cost + Σ(500 × bonus²) for all attribute bonuses
+Baseline DPS = 10 damage / 3 seconds = 3.33 DPS (Practice Sword)
+Weapon DPS = baseDamage / cooldown
+DPS Ratio = Weapon DPS / Baseline DPS
+DPS Cost = Base Cost × (DPS Ratio - 1.0) × 2.0
+
+Example:
+- Practice Sword: 10/3 = 3.33 DPS → Ratio 1.0 → No DPS premium
+- Machine Gun: 10/2 = 5.00 DPS → Ratio 1.5 → Premium: 50k × 0.5 × 2.0 = ₡50,000
+- Railgun: 55/6 = 9.17 DPS → Ratio 2.75 → Premium: 50k × 1.75 × 2.0 = ₡175,000
+```
+
+**Component 3: Hand Requirements** (multiply final cost):
+```
+One-handed: 1.0× (baseline)
+Two-handed: 1.6× (occupies both slots, competes with dual-wield)
+Shield: 0.9× (defensive, no damage output)
+```
+
+**Total Weapon Cost Formula**:
+```
+Total Cost = (Base Cost + Attribute Cost + DPS Cost) × Hand Multiplier
+
+Where:
+- Base Cost = ₡50,000
+- Attribute Cost = Σ(500 × bonus²)
+- DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 2.0
+- DPS Ratio = (baseDamage / cooldown) / 3.33
+- Hand Multiplier = 1.0 (one-handed), 1.6 (two-handed), or 0.9 (shield)
 ```
 
 ### Formula Examples
 
-**Example 1: Balanced Weapon**
-- Bonuses: +2 to five different attributes (10 total points)
-- Calculation: ₡50,000 + 5 × (500 × 2²) = ₡50,000 + 5 × 2,000 = ₡60,000
-- **Cost per total point**: ₡1,000
+**Example 1: Practice Sword (Baseline)**
+- Damage: 10, Cooldown: 3s, DPS: 3.33
+- Bonuses: None (all 0)
+- **Calculation**:
+  - Base: ₡50,000
+  - Attributes: 0
+  - DPS: 50k × (1.0 - 1.0) × 2.0 = ₡0
+  - Hand: 1.0×
+  - **Total: ₡50,000**
 
-**Example 2: Specialized Weapon**
-- Bonuses: +5 to two attributes (10 total points)
-- Calculation: ₡50,000 + 2 × (500 × 5²) = ₡50,000 + 2 × 12,500 = ₡75,000
-- **Cost per total point**: ₡2,500
+**Example 2: Low DPS Weapon with Bonuses**
+- Damage: 12, Cooldown: 3s, DPS: 4.0 (ratio 1.2)
+- Bonuses: +3 to one attribute, +2 to another (balanced)
+- **Calculation**:
+  - Base: ₡50,000
+  - Attributes: 500×3² + 500×2² = 4,500 + 2,000 = ₡6,500
+  - DPS: 50k × (1.2 - 1.0) × 2.0 = 50k × 0.4 = ₡20,000
+  - Subtotal: 50k + 6.5k + 20k = ₡76,500
+  - Hand: 1.0×
+  - **Total: ₡76,500 → ₡77,000 (rounded)**
 
-**Example 3: Highly Specialized Weapon**
-- Bonuses: +10 to one attribute (10 total points)
-- Calculation: ₡50,000 + (500 × 10²) = ₡50,000 + 50,000 = ₡100,000
-- **Cost per total point**: ₡5,000
+**Example 3: High DPS Weapon**
+- Damage: 20, Cooldown: 2s, DPS: 10.0 (ratio 3.0)
+- Bonuses: +5 to one attribute, +3 to another
+- **Calculation**:
+  - Base: ₡50,000
+  - Attributes: 500×5² + 500×3² = 12,500 + 4,500 = ₡17,000
+  - DPS: 50k × (3.0 - 1.0) × 2.0 = 50k × 4.0 = ₡200,000
+  - Subtotal: 50k + 17k + 200k = ₡267,000
+  - Hand: 1.0×
+  - **Total: ₡267,000**
 
-**Key Observation**: Same total attribute points (10) but costs vary from ₡60K to ₡100K based on concentration. This rewards balanced weapons and makes specialized weapons premium investments.
+**Example 4: Two-Handed High DPS Weapon**
+- Damage: 45, Cooldown: 5s, DPS: 9.0 (ratio 2.7)
+- Bonuses: +7 Combat Power, +6 Critical Systems
+- **Calculation**:
+  - Base: ₡50,000
+  - Attributes: 500×7² + 500×6² = 24,500 + 18,000 = ₡42,500
+  - DPS: 50k × (2.7 - 1.0) × 2.0 = 50k × 3.4 = ₡170,000
+  - Subtotal: 50k + 42.5k + 170k = ₡262,500
+  - Hand: 1.6× (two-handed)
+  - **Total: 262.5k × 1.6 = ₡420,000**
+
+**Key Observations**: 
+- DPS has massive impact on pricing - high DPS weapons are significantly more expensive
+- Attribute bonuses add moderate cost via exponential scaling
+- Two-handed multiplier applies after all other calculations
+- Weapons with similar DPS but different attribute distributions have different total costs
 
 ### Comparison: +2 vs Two +1s
 
@@ -226,14 +291,18 @@ Two-handed weapons must compete with dual-wielding, where a player can equip TWO
 
 **Damage Type Modifiers**: None (damage types will be implemented in future combat mechanics)
 
+**Shield Weapons**: Shields have no DPS component (defensive only), so their cost is Base + Attributes × 0.9
+
 ### Price Ranges
 
-Based on the formula, weapons will naturally fall into these tiers:
+Based on the complete formula with DPS factored in, weapons now fall into these tiers:
 
-- **Budget Tier** (₡50,000 - ₡100,000): Low total bonuses, spread attributes
-- **Mid Tier** (₡100,000 - ₡200,000): Moderate bonuses with some specialization
-- **Premium Tier** (₡200,000 - ₡400,000): High bonuses with significant specialization
-- **Elite Tier** (₡400,000+): Maximum specialization, concentrated bonuses
+- **Budget Tier** (₡50,000 - ₡100,000): Low DPS, minimal bonuses
+- **Mid Tier** (₡100,000 - ₡200,000): Moderate DPS, balanced bonuses
+- **Premium Tier** (₡200,000 - ₡300,000): High DPS, specialized bonuses
+- **Elite Tier** (₡400,000+): Very high DPS, maximum specialization
+
+**Key Insight**: DPS now dominates pricing. Weapons with similar attribute bonuses but higher DPS cost significantly more.
 
 ---
 
@@ -250,26 +319,31 @@ For each loadout type, we need:
 
 **Single (one-handed in main slot only)**:
 - Practice Sword (₡50K) - starter
-- Laser Pistol (₡65K) - budget
-- Assault Rifle (₡130K) - mid
-- Plasma Rifle (₡180K) - premium
+- Laser Pistol (₡75K) - budget
+- Assault Rifle (₡150K) - mid
+- Plasma Rifle (₡220K) - premium
 
 **Weapon + Shield (one-handed main + shield offhand)**:
-- Light Shield (₡45K) - budget shield
-- Combat Shield (₡110K) - premium shield
+- Light Shield (₡50K) - budget shield
+- Combat Shield (₡80K) - mid shield
+- Reactive Shield (₡90K) - premium shield
 - Can use any one-handed weapon in main slot
 
 **Two-Handed (two-handed weapon, both slots)**:
-- Shotgun (₡80K) - budget
-- Battle Axe (₡145K) - mid
-- Plasma Cannon (₡240K) - premium
-- Railgun (₡380K) - elite
+- Shotgun (₡325K) - high-burst specialist
+- Grenade Launcher (₡325K) - area damage
+- Sniper Rifle (₡425K) - precision elite
+- Battle Axe (₡430K) - melee powerhouse
+- Plasma Cannon (₡440K) - energy elite
+- Heavy Hammer (₡490K) - maximum impact
+- Railgun (₡545K) - ultra penetration
+- Ion Beam (₡565K) - supreme elite
 
 **Dual-Wield (one-handed in both slots)**:
-- Machine Pistol (₡60K) - budget
-- Machine Gun (₡95K) - budget/mid
-- Plasma Blade (₡160K) - mid/premium
-- Power Sword (₡200K) - premium
+- Machine Pistol (₡75K) - budget
+- Machine Gun (₡120K) - mid
+- Plasma Blade (₡215K) - premium
+- Power Sword (₡280K) - elite
 
 ### Weapon Type Distribution
 
@@ -297,14 +371,18 @@ Across all weapons, ensure representation of:
 - **Description**: Basic training weapon establishing baseline cost
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Pricing Calculation**: Base cost only = ₡50,000
+**Pricing Calculation**: 
+- Base: ₡50,000
+- Attributes: 0
+- DPS: 10/3 = 3.33 (ratio 1.0) → DPS Cost: ₡0
+- Total: ₡50,000
 
 ---
 
 ### Budget Tier (₡50,000 - ₡100,000)
 
 #### 2. Machine Pistol
-- **Cost**: ₡60,000
+- **Cost**: ₡75,000
 - **Type**: Ballistic
 - **Hands**: One-handed
 - **Damage**: 8
@@ -315,10 +393,14 @@ Across all weapons, ensure representation of:
 - **Description**: Rapid-fire sidearm with quick attacks
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×3² + 500×2²) = 50k + 4,500 + 2,000 = ₡56,500 → ₡60,000 (rounded)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×3² + 500×2² = ₡6,500
+- DPS: 8/2 = 4.0 (ratio 1.2) → DPS Cost: 50k × 0.2 × 2.0 = ₡20,000
+- Total: (50k + 6.5k + 20k) × 1.0 = ₡76,500 → ₡75,000
 
 #### 3. Laser Pistol
-- **Cost**: ₡65,000
+- **Cost**: ₡75,000
 - **Type**: Energy
 - **Hands**: One-handed
 - **Damage**: 12
@@ -329,10 +411,14 @@ Across all weapons, ensure representation of:
 - **Description**: Precise energy sidearm with good accuracy
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×3² + 500×2²) = 50k + 4,500 + 2,000 = ₡56,500 → ₡65,000 (rounded)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×3² + 500×2² = ₡6,500
+- DPS: 12/3 = 4.0 (ratio 1.2) → DPS Cost: 50k × 0.2 × 2.0 = ₡20,000
+- Total: (50k + 6.5k + 20k) × 1.0 = ₡76,500 → ₡75,000
 
 #### 4. Combat Knife
-- **Cost**: ₡55,000
+- **Cost**: ₡90,000
 - **Type**: Melee
 - **Hands**: One-handed
 - **Damage**: 9
@@ -343,10 +429,14 @@ Across all weapons, ensure representation of:
 - **Description**: Fast melee weapon for close combat
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×3² + 500×1²) = 50k + 4,500 + 500 = ₡55,000
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×3² + 500×1² = ₡5,000
+- DPS: 9/2 = 4.5 (ratio 1.35) → DPS Cost: 50k × 0.35 × 2.0 = ₡35,000
+- Total: (50k + 5k + 35k) × 1.0 = ₡90,000
 
 #### 5. Shotgun
-- **Cost**: ₡105,000
+- **Cost**: ₡325,000
 - **Type**: Ballistic
 - **Hands**: Two-handed
 - **Damage**: 32
@@ -358,13 +448,17 @@ Across all weapons, ensure representation of:
 - **Description**: Close-range devastation with wide spread
 - **Loadout**: Two-Handed only
 
-**Calculation**: [50k + (500×4² + 500×3² + 500×2²)] × 1.6 = [50k + 8,000 + 4,500 + 2,000] × 1.6 = 64,500 × 1.6 = ₡103,200 → ₡105,000 (rounded, two-handed multiplier)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×4² + 500×3² + 500×2² = ₡14,500
+- DPS: 32/4 = 8.0 (ratio 2.4) → DPS Cost: 50k × 1.4 × 2.0 = ₡140,000
+- Total: (50k + 14.5k + 140k) × 1.6 = ₡327,200 → ₡325,000
 
 #### 6. Light Shield
-- **Cost**: ₡45,000
+- **Cost**: ₡50,000
 - **Type**: Shield
 - **Hands**: Shield
-- **Damage**: 0
+- **Damage**: 0 (defensive)
 - **Cooldown**: N/A
 - **Bonuses**:
   - Armor Plating: +3
@@ -372,10 +466,14 @@ Across all weapons, ensure representation of:
 - **Description**: Basic defensive shield for protection
 - **Loadout**: Weapon+Shield only
 
-**Calculation**: [50k + (500×3² + 500×2²)] × 0.9 = [50k + 4,500 + 2,000] × 0.9 = 56,500 × 0.9 = ₡50,850 → ₡45,000 (rounded down, shield discount)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×3² + 500×2² = ₡6,500
+- DPS: N/A (shield, no DPS cost)
+- Total: (50k + 6.5k) × 0.9 = ₡50,850 → ₡50,000
 
 #### 7. Machine Gun
-- **Cost**: ₡95,000
+- **Cost**: ₡120,000
 - **Type**: Ballistic
 - **Hands**: One-handed
 - **Damage**: 10
@@ -387,17 +485,21 @@ Across all weapons, ensure representation of:
 - **Description**: Sustained fire support weapon
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×3² + 500×5² + 500×2²) = 50k + 4,500 + 12,500 + 2,000 = ₡69,000 → ₡95,000 (adjusted for balance)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×3² + 500×5² + 500×2² = ₡19,000
+- DPS: 10/2 = 5.0 (ratio 1.5) → DPS Cost: 50k × 0.5 × 2.0 = ₡50,000
+- Total: (50k + 19k + 50k) × 1.0 = ₡119,000 → ₡120,000
 
 ---
 
 ### Mid Tier (₡100,000 - ₡200,000)
 
 #### 8. Combat Shield
-- **Cost**: ₡110,000
+- **Cost**: ₡80,000
 - **Type**: Shield
 - **Hands**: Shield
-- **Damage**: 0
+- **Damage**: 0 (defensive)
 - **Cooldown**: N/A
 - **Bonuses**:
   - Armor Plating: +6
@@ -407,10 +509,14 @@ Across all weapons, ensure representation of:
 - **Description**: Heavy-duty shield with counter capabilities
 - **Loadout**: Weapon+Shield only
 
-**Calculation**: [50k + (500×6² + 500×5² + 500×3² + 500×2²)] × 0.9 = [50k + 18,000 + 12,500 + 4,500 + 2,000] × 0.9 = 87,000 × 0.9 = ₡78,300 → ₡110,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×6² + 500×5² + 500×3² + 500×2² = ₡37,000
+- DPS: N/A (shield, no DPS cost)
+- Total: (50k + 37k) × 0.9 = ₡78,300 → ₡80,000
 
 #### 9. Assault Rifle
-- **Cost**: ₡130,000
+- **Cost**: ₡150,000
 - **Type**: Ballistic
 - **Hands**: One-handed
 - **Damage**: 18
@@ -423,10 +529,14 @@ Across all weapons, ensure representation of:
 - **Description**: Versatile military-grade firearm
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×4² + 500×4² + 500×3² + 500×2²) = 50k + 8,000 + 8,000 + 4,500 + 2,000 = ₡72,500 → ₡130,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×4² + 500×4² + 500×3² + 500×2² = ₡22,500
+- DPS: 18/3 = 6.0 (ratio 1.8) → DPS Cost: 50k × 0.8 × 2.0 = ₡80,000
+- Total: (50k + 22.5k + 80k) × 1.0 = ₡150,000
 
 #### 10. Battle Axe
-- **Cost**: ₡135,000
+- **Cost**: ₡430,000
 - **Type**: Melee
 - **Hands**: Two-handed
 - **Damage**: 38
@@ -439,10 +549,14 @@ Across all weapons, ensure representation of:
 - **Description**: Brutal melee weapon with devastating power
 - **Loadout**: Two-Handed only
 
-**Calculation**: [50k + (500×6² + 500×4² + 500×3² + 500×2²)] × 1.6 = [50k + 18,000 + 8,000 + 4,500 + 2,000] × 1.6 = 82,500 × 1.6 = ₡132,000 → ₡135,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×6² + 500×4² + 500×3² + 500×2² = ₡32,500
+- DPS: 38/4 = 9.5 (ratio 2.85) → DPS Cost: 50k × 1.85 × 2.0 = ₡185,000
+- Total: (50k + 32.5k + 185k) × 1.6 = ₡430,000
 
 #### 11. Laser Rifle
-- **Cost**: ₡160,000
+- **Cost**: ₡195,000
 - **Type**: Energy
 - **Hands**: One-handed
 - **Damage**: 22
@@ -455,10 +569,14 @@ Across all weapons, ensure representation of:
 - **Description**: Precision energy rifle with excellent accuracy
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×5² + 500×4² + 500×3² + 500×2²) = 50k + 12,500 + 8,000 + 4,500 + 2,000 = ₡77,000 → ₡160,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×5² + 500×4² + 500×3² + 500×2² = ₡27,000
+- DPS: 22/3 = 7.33 (ratio 2.2) → DPS Cost: 50k × 1.2 × 2.0 = ₡120,000
+- Total: (50k + 27k + 120k) × 1.0 = ₡195,000
 
 #### 12. Plasma Blade
-- **Cost**: ₡160,000
+- **Cost**: ₡215,000
 - **Type**: Melee
 - **Hands**: One-handed
 - **Damage**: 20
@@ -471,10 +589,14 @@ Across all weapons, ensure representation of:
 - **Description**: Energy-enhanced melee blade with rapid strikes
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×5² + 500×4² + 500×3² + 500×2²) = 50k + 12,500 + 8,000 + 4,500 + 2,000 = ₡77,000 → ₡160,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×5² + 500×4² + 500×3² + 500×2² = ₡27,000
+- DPS: 20/2.5 = 8.0 (ratio 2.4) → DPS Cost: 50k × 1.4 × 2.0 = ₡140,000
+- Total: (50k + 27k + 140k) × 1.0 = ₡215,000
 
 #### 13. Plasma Rifle
-- **Cost**: ₡180,000
+- **Cost**: ₡220,000
 - **Type**: Energy
 - **Hands**: One-handed
 - **Damage**: 24
@@ -487,14 +609,16 @@ Across all weapons, ensure representation of:
 - **Description**: Advanced energy weapon with high damage output
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×6² + 500×4² + 500×3² + 500×2²) = 50k + 18,000 + 8,000 + 4,500 + 2,000 = ₡82,500 → ₡180,000 (adjusted)
-
----
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×6² + 500×4² + 500×3² + 500×2² = ₡32,500
+- DPS: 24/3 = 8.0 (ratio 2.4) → DPS Cost: 50k × 1.4 × 2.0 = ₡140,000
+- Total: (50k + 32.5k + 140k) × 1.0 = ₡220,000
 
 ### Premium Tier (₡200,000 - ₡400,000)
 
 #### 14. Power Sword
-- **Cost**: ₡200,000
+- **Cost**: ₡280,000
 - **Type**: Melee
 - **Hands**: One-handed
 - **Damage**: 28
@@ -507,10 +631,14 @@ Across all weapons, ensure representation of:
 - **Description**: High-tech melee weapon with superior handling
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
-**Calculation**: 50k + (500×7² + 500×5² + 500×4² + 500×3²) = 50k + 24,500 + 12,500 + 8,000 + 4,500 = ₡99,500 → ₡200,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×7² + 500×5² + 500×4² + 500×3² = ₡49,500
+- DPS: 28/3 = 9.33 (ratio 2.8) → DPS Cost: 50k × 1.8 × 2.0 = ₡180,000
+- Total: (50k + 49.5k + 180k) × 1.0 = ₡280,000
 
 #### 15. Plasma Cannon
-- **Cost**: ₡170,000
+- **Cost**: ₡440,000
 - **Type**: Energy
 - **Hands**: Two-handed
 - **Damage**: 45
@@ -523,10 +651,14 @@ Across all weapons, ensure representation of:
 - **Description**: Heavy plasma weapon with devastating firepower
 - **Loadout**: Two-Handed only
 
-**Calculation**: [50k + (500×7² + 500×6² + 500×4² + 500×3²)] × 1.6 = [50k + 24,500 + 18,000 + 8,000 + 4,500] × 1.6 = 105,000 × 1.6 = ₡168,000 → ₡170,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×7² + 500×6² + 500×4² + 500×3² = ₡55,000
+- DPS: 45/5 = 9.0 (ratio 2.7) → DPS Cost: 50k × 1.7 × 2.0 = ₡170,000
+- Total: (50k + 55k + 170k) × 1.6 = ₡440,000
 
 #### 16. Heavy Hammer
-- **Cost**: ₡190,000
+- **Cost**: ₡490,000
 - **Type**: Melee
 - **Hands**: Two-handed
 - **Damage**: 48
@@ -539,14 +671,16 @@ Across all weapons, ensure representation of:
 - **Description**: Massive impact weapon for maximum damage
 - **Loadout**: Two-Handed only
 
-**Calculation**: [50k + (500×8² + 500×7² + 500×4² + 500×3²)] × 1.6 = [50k + 32,000 + 24,500 + 8,000 + 4,500] × 1.6 = 119,000 × 1.6 = ₡190,400 → ₡190,000 (adjusted)
-
----
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×8² + 500×7² + 500×4² + 500×3² = ₡69,000
+- DPS: 48/5 = 9.6 (ratio 2.88) → DPS Cost: 50k × 1.88 × 2.0 = ₡188,000
+- Total: (50k + 69k + 188k) × 1.6 = ₡490,000
 
 ### Elite Tier (₡400,000+)
 
 #### 17. Railgun
-- **Cost**: ₡270,000
+- **Cost**: ₡545,000
 - **Type**: Ballistic
 - **Hands**: Two-handed
 - **Damage**: 55
@@ -559,10 +693,14 @@ Across all weapons, ensure representation of:
 - **Description**: Ultra-high velocity kinetic weapon with extreme penetration
 - **Loadout**: Two-Handed only
 
-**Calculation**: [50k + (500×12² + 500×7² + 500×5² + 500×4²)] × 1.6 = [50k + 72,000 + 24,500 + 12,500 + 8,000] × 1.6 = 167,000 × 1.6 = ₡267,200 → ₡270,000 (adjusted for elite tier)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×12² + 500×7² + 500×5² + 500×4² = ₡117,000
+- DPS: 55/6 = 9.17 (ratio 2.75) → DPS Cost: 50k × 1.75 × 2.0 = ₡175,000
+- Total: (50k + 117k + 175k) × 1.6 = ₡545,000
 
 #### 18. Ion Beam
-- **Cost**: ₡245,000
+- **Cost**: ₡565,000
 - **Type**: Energy
 - **Hands**: Two-handed
 - **Damage**: 40
@@ -586,7 +724,7 @@ To reach 20-25 total weapons, we can add:
 ### More One-Handed Options
 
 #### 19. Energy Blade
-- **Cost**: ₡140,000
+- **Cost**: ₡190,000
 - **Type**: Melee
 - **Hands**: One-handed
 - **Damage**: 18
@@ -597,8 +735,14 @@ To reach 20-25 total weapons, we can add:
   - Weapon Control: +3
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×5² + 500×4² + 500×3² = ₡25,000
+- DPS: 18/2.5 = 7.2 (ratio 2.16) → DPS Cost: 50k × 1.16 × 2.0 = ₡116,000
+- Total: (50k + 25k + 116k) × 1.0 = ₡191,000 → ₡190,000
+
 #### 20. Burst Rifle
-- **Cost**: ₡115,000
+- **Cost**: ₡145,000
 - **Type**: Ballistic
 - **Hands**: One-handed
 - **Damage**: 15
@@ -609,10 +753,16 @@ To reach 20-25 total weapons, we can add:
   - Critical Systems: +3
 - **Loadout**: Single, Weapon+Shield, Dual-Wield
 
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×4² + 500×3² + 500×3² = ₡17,000
+- DPS: 15/2.5 = 6.0 (ratio 1.8) → DPS Cost: 50k × 0.8 × 2.0 = ₡80,000
+- Total: (50k + 17k + 80k) × 1.0 = ₡147,000 → ₡145,000
+
 ### More Two-Handed Options
 
 #### 21. Sniper Rifle
-- **Cost**: ₡190,000
+- **Cost**: ₡425,000
 - **Type**: Ballistic
 - **Hands**: Two-handed
 - **Damage**: 50
@@ -624,10 +774,14 @@ To reach 20-25 total weapons, we can add:
   - Attack Speed: -3 (slow rate of fire)
 - **Loadout**: Two-Handed only
 
-**Calculation**: [50k + (500×8² + 500×6² + 500×5² + 500×3²)] × 1.6 = [50k + 32,000 + 18,000 + 12,500 + 4,500] × 1.6 = 117,000 × 1.6 = ₡187,200 → ₡190,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×8² + 500×6² + 500×5² + 500×3² = ₡67,000
+- DPS: 50/6 = 8.33 (ratio 2.5) → DPS Cost: 50k × 1.5 × 2.0 = ₡150,000
+- Total: (50k + 67k + 150k) × 1.6 = ₡427,200 → ₡425,000
 
 #### 22. Grenade Launcher
-- **Cost**: ₡150,000
+- **Cost**: ₡325,000
 - **Type**: Ballistic
 - **Hands**: Two-handed
 - **Damage**: 35
@@ -639,15 +793,19 @@ To reach 20-25 total weapons, we can add:
   - Targeting Systems: -3 (arc trajectory)
 - **Loadout**: Two-Handed only
 
-**Calculation**: [50k + (500×6² + 500×5² + 500×4² + 500×3²)] × 1.6 = [50k + 18,000 + 12,500 + 8,000 + 4,500] × 1.6 = 93,000 × 1.6 = ₡148,800 → ₡150,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×6² + 500×5² + 500×4² + 500×3² = ₡43,000
+- DPS: 35/5 = 7.0 (ratio 2.1) → DPS Cost: 50k × 1.1 × 2.0 = ₡110,000
+- Total: (50k + 43k + 110k) × 1.6 = ₡324,800 → ₡325,000
 
 ### Additional Shield Option
 
 #### 23. Reactive Shield
-- **Cost**: ₡165,000
+- **Cost**: ₡90,000
 - **Type**: Shield
 - **Hands**: Shield
-- **Damage**: 0
+- **Damage**: 0 (defensive)
 - **Cooldown**: N/A
 - **Bonuses**:
   - Shield Capacity: +7
@@ -657,7 +815,11 @@ To reach 20-25 total weapons, we can add:
 - **Description**: Advanced shield with energy-reactive plating
 - **Loadout**: Weapon+Shield only
 
-**Calculation**: [50k + (500×7² + 500×6² + 500×4² + 500×2²)] × 0.9 = [50k + 24,500 + 18,000 + 8,000 + 2,000] × 0.9 = 102,500 × 0.9 = ₡92,250 → ₡165,000 (adjusted)
+**Calculation**: 
+- Base: ₡50,000
+- Attributes: 500×7² + 500×6² + 500×4² + 500×2² = ₡52,500
+- DPS: N/A (shield, no DPS cost)
+- Total: (50k + 52.5k) × 0.9 = ₡92,250 → ₡90,000
 
 ---
 
@@ -667,27 +829,32 @@ To reach 20-25 total weapons, we can add:
 
 **Single (one-handed only)**:
 - Practice Sword (₡50K)
-- Combat Knife (₡55K)
-- Laser Pistol (₡65K)
-- Assault Rifle (₡130K)
-- Energy Blade (₡140K)
-- Plasma Rifle (₡180K)
+- Machine Pistol (₡75K)
+- Laser Pistol (₡75K)
+- Combat Knife (₡90K)
+- Burst Rifle (₡145K)
+- Assault Rifle (₡150K)
+- Energy Blade (₡190K)
+- Laser Rifle (₡195K)
+- Plasma Blade (₡215K)
+- Plasma Rifle (₡220K)
+- Power Sword (₡280K)
 
 **Weapon + Shield** (one-handed + shield):
 - All one-handed weapons above
-- Light Shield (₡45K)
-- Combat Shield (₡110K)
-- Reactive Shield (₡165K)
+- Light Shield (₡50K)
+- Combat Shield (₡80K)
+- Reactive Shield (₡90K)
 
 **Two-Handed**:
-- Shotgun (₡105K)
-- Battle Axe (₡135K)
-- Grenade Launcher (₡150K)
-- Plasma Cannon (₡170K)
-- Sniper Rifle (₡190K)
-- Heavy Hammer (₡190K)
-- Ion Beam (₡245K)
-- Railgun (₡270K)
+- Shotgun (₡325K)
+- Grenade Launcher (₡325K)
+- Sniper Rifle (₡425K)
+- Battle Axe (₡430K)
+- Plasma Cannon (₡440K)
+- Heavy Hammer (₡490K)
+- Railgun (₡545K)
+- Ion Beam (₡565K)
 
 **Dual-Wield** (two one-handed):
 - All one-handed weapons except shields
@@ -700,7 +867,7 @@ To reach 20-25 total weapons, we can add:
 **Ballistic Weapons** (8):
 - Machine Pistol, Machine Gun, Shotgun, Assault Rifle, Burst Rifle, Grenade Launcher, Sniper Rifle, Railgun
 
-**Melee Weapons** (5):
+**Melee Weapons** (7):
 - Practice Sword, Combat Knife, Battle Axe, Heavy Hammer, Plasma Blade, Power Sword, Energy Blade
 
 **Shield Weapons** (3):
@@ -708,13 +875,14 @@ To reach 20-25 total weapons, we can add:
 
 ### Price Distribution
 
-- **₡50K-₡100K**: 7 weapons (budget)
-- **₡100K-₡200K**: 14 weapons (mid-tier)
-- **₡200K-₡300K**: 2 weapons (premium)
+- **₡50K-₡100K**: 6 weapons (budget tier) - Practice Sword, Light Shield, Machine Pistol, Laser Pistol, Combat Shield, Reactive Shield, Combat Knife
+- **₡100K-₡200K**: 5 weapons (mid tier) - Machine Gun, Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle
+- **₡200K-₡300K**: 4 weapons (premium tier) - Plasma Blade, Plasma Rifle, Power Sword
+- **₡300K-₡600K**: 8 weapons (elite tier) - Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
 
 **Total**: 23 weapons
 
-**Total**: 23 weapons
+**Key Insight with DPS Pricing**: Two-handed weapons with high DPS now cost significantly more (₡300K-₡600K), properly reflecting their combat effectiveness. This makes dual-wielding two mid-tier one-handed weapons (2× ₡150K = ₡300K) a competitive alternative to a single elite two-handed weapon.
 
 ---
 
@@ -855,28 +1023,41 @@ function calculateWeaponCost(weapon: Weapon): number {
     attributeCost += POINT_VALUE * Math.pow(absBonus, 2);
   }
   
-  let totalCost = BASE_COST + attributeCost;
+  // Calculate DPS cost (skip for shields)
+  let dpsCost = 0;
+  if (weapon.handsRequired !== 'shield') {
+    const weaponDPS = weapon.baseDamage / weapon.cooldown;
+    const dpsRatio = weaponDPS / BASELINE_DPS;
+    dpsCost = BASE_COST * (dpsRatio - 1.0) * 2.0;
+  }
+  
+  let subtotal = BASE_COST + attributeCost + dpsCost;
   
   // Apply hand requirement modifiers
   if (weapon.handsRequired === 'two') {
-    totalCost *= 1.6;
+    subtotal *= 1.6;
   } else if (weapon.handsRequired === 'shield') {
-    totalCost *= 0.9;
+    subtotal *= 0.9;
   }
   
-  return Math.round(totalCost);
+  return Math.round(subtotal);
 }
 ```
 
 ### Validation Rules
 
-**Minimum Weapon Cost**: ₡50,000 (baseline, no bonuses)
+**Minimum Weapon Cost**: ₡50,000 (baseline, no bonuses, baseline DPS)
 
-**Maximum Weapon Cost**: No hard cap, but practically limited by attribute ranges (max +15 per attribute = very expensive)
+**Maximum Weapon Cost**: No hard cap, but practically limited by:
+- Attribute ranges (max +15 per attribute)
+- DPS limits (damage and cooldown constraints)
+- Typical range: ₡50K-₡600K
 
 **Negative Bonuses**: Counted as positive in cost calculation (trade-offs still add complexity)
 
 **Zero-Bonus Weapons**: Only Practice Sword should have all zero bonuses
+
+**Shield Weapons**: No DPS cost component, only base + attributes × 0.9
 
 ---
 
