@@ -1,7 +1,7 @@
 # Product Requirements Document: My Robots List Page Design Alignment
 
-**Last Updated**: February 2, 2026 (Implementation Complete)  
-**Status**: ✅ IMPLEMENTED  
+**Last Updated**: February 2, 2026 (Updated with sorting and readiness fixes)  
+**Status**: ✅ IMPLEMENTED (with v1.3 updates)  
 **Owner**: Robert Teunissen  
 **Epic**: Design System Implementation - Core Management Pages  
 **Priority**: P0 (Highest priority - Core gameplay screen)
@@ -10,6 +10,7 @@
 - v1.0 (Feb 2, 2026): Initial PRD created
 - v1.1 (Feb 2, 2026): Updated with feedback - Added League Points, Draws, Repair All button; Removed Weapon Shop; Modified HP/Shield display
 - v1.2 (Feb 2, 2026): **IMPLEMENTATION COMPLETE** - All requirements implemented. See [IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md](IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md)
+- v1.3 (Feb 2, 2026): **BUG FIXES** - Added ELO sorting, fixed battle readiness calculation, added reason display for non-ready robots
 
 ---
 
@@ -20,12 +21,14 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 **Success Criteria**:
 - My Robots page uses Direction B logo (already in Navigation)
 - Robot cards display portraits (256×256px reserved space), HP/Shield bars (percentage only), ELO, League Points, Win/Loss/Draw record
+- **Robots sorted by ELO (highest first)** (v1.3)
 - "Repair All Robots" button with total cost and discount indication
 - Design system color palette applied (primary #58a6ff, surface colors, status colors)
 - Empty state provides clear call-to-action for first robot creation
 - Quick access to Create Robot functionality (Weapon Shop removed from this page)
 - Responsive grid layout (1 column mobile, 2-3 columns desktop)
 - All status information visible at a glance for fleet management
+- **Battle Readiness calculated from actual HP/Shield values, with reason displayed when not battle ready** (v1.3)
 
 **Impact**: Establishes the central hub for robot management, reinforcing player's role as stable manager with visual pride in their robot collection.
 
@@ -238,6 +241,41 @@ Acceptance Criteria:
 - Confirmation modal shows cost breakdown before repair
 - Success message confirms repairs completed
 - Robot HP/Shield bars update after repair
+```
+
+**US-9: Robot Sorting by ELO** (v1.3)
+```
+As a player
+I want to see my robots sorted by ELO rating (highest first)
+So that I can quickly identify my strongest performers
+
+Acceptance Criteria:
+- Robots displayed in descending ELO order (highest ELO first)
+- Sort applied automatically after data fetch
+- Sort order consistent across page refreshes
+- No user action required for sorting
+```
+
+**US-10: Accurate Battle Readiness with Reason** (v1.3)
+```
+As a player
+I want to see accurate battle readiness based on current HP and Shield
+And understand why a robot is not battle ready
+So that I can make informed decisions about repairs
+
+Acceptance Criteria:
+- Battle readiness calculated from actual HP and Shield values
+- Formula: ((HP% + Shield%) / 2) rounded
+- Status thresholds: ≥80% = Battle Ready, 50-79% = Damaged, <50% = Critical
+- When NOT battle ready (<80%), display reason:
+  - "Low HP" when HP < 80%
+  - "Low Shield" when Shield < 80%
+  - "Low HP and Shield" when both < 80%
+- Display format: "{percentage}% │ {status} ({reason})"
+- Examples:
+  - "92% │ Battle Ready"
+  - "65% │ Damaged (Low HP)"
+  - "45% │ Critical (Low HP and Shield)"
 ```
 
 ---
@@ -989,6 +1027,7 @@ describe('GET /api/robots', () => {
 ## Success Criteria Verification
 
 **Status**: ✅ IMPLEMENTATION COMPLETE (February 2, 2026)
+**Latest Update**: v1.3 Bug Fixes (February 2, 2026)
 
 All acceptance criteria verified:
 
@@ -1001,8 +1040,39 @@ All acceptance criteria verified:
 - ⏭️ Screenshot comparison (requires live servers)
 - ✅ Code review approved (automated review passed)
 - ✅ No regressions in existing functionality (code isolated to RobotsPage)
+- ✅ **v1.3: Robots sorted by ELO (highest first)**
+- ✅ **v1.3: Battle readiness calculated from actual HP/Shield**
+- ✅ **v1.3: Reason displayed when robot not battle ready**
 
 **Implementation Summary**: See [IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md](IMPLEMENTATION_SUMMARY_MY_ROBOTS_PAGE.md) for complete details.
+
+### v1.3 Changes (February 2, 2026)
+
+**Bug Fixes & Enhancements**:
+
+1. **ELO Sorting**
+   - Issue: Robots displayed in database order (not meaningful)
+   - Fix: Sort by ELO descending after fetch
+   - Code: Line 116 in RobotsPage.tsx
+   - Impact: Strongest robots appear first
+
+2. **Battle Readiness Calculation**
+   - Issue: Used stored `battleReadiness` field from database (could be outdated)
+   - Fix: Calculate dynamically from current HP and Shield values
+   - Formula: `Math.round((hpPercent + shieldPercent) / 2)`
+   - Code: Lines 45-49 in RobotsPage.tsx
+   - Impact: Always shows current readiness status
+
+3. **Reason Display**
+   - Issue: Status text only ("Battle Ready", "Damaged", "Critical")
+   - Fix: Show specific reason when not battle ready
+   - Reasons:
+     - "Low HP" - when HP < 80%
+     - "Low Shield" - when Shield < 80%
+     - "Low HP and Shield" - when both < 80%
+   - Code: Lines 51-80 in RobotsPage.tsx
+   - Display: "65% │ Damaged (Low HP)"
+   - Impact: Players understand what needs repair
 
 ---
 
@@ -1041,9 +1111,11 @@ All acceptance criteria verified:
 | 1.0 | Feb 2, 2026 | Robert Teunissen | Initial PRD created based on design system documentation |
 | 1.1 | Feb 2, 2026 | Robert Teunissen | Updated with feedback: Added League Points, Draws, Repair All; Removed Weapon Shop; HP/Shield percentage only |
 | 1.2 | Feb 2, 2026 | GitHub Copilot | Implementation complete - All requirements implemented |
+| 1.3 | Feb 2, 2026 | GitHub Copilot | Bug fixes: Added ELO sorting, fixed battle readiness calculation, added reason display |
 
 ---
 
-**Status**: ✅ IMPLEMENTED  
+**Status**: ✅ IMPLEMENTED (v1.3)  
 **Implementation Date**: February 2, 2026  
+**Latest Update**: v1.3 Bug Fixes (February 2, 2026)  
 **Next Steps**: Testing with live servers, Screenshots for documentation
