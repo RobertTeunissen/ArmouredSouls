@@ -201,9 +201,9 @@ World Championship win:        +2,500 prestige
 **ELO Milestones** (First robot to reach):
 ```
 First robot to ELO 1500:  +50 prestige
-First robot to ELO 1800:  +100 prestige
+First robot to ELO 1750:  +100 prestige
 First robot to ELO 2000:  +200 prestige
-First robot to ELO 2200:  +300 prestige
+First robot to ELO 2250:  +300 prestige
 First robot to ELO 2500:  +500 prestige
 ```
 
@@ -227,7 +227,7 @@ Championship title earned:  +500 prestige
 **Special Achievements** (Future Expansion):
 ```
 Perfect season (20-0):        +300 prestige
-Undefeated streak (50 wins): +400 prestige
+Undefeated streak (50 wins):  +400 prestige
 Defeat higher league opponent: +25 prestige (per win)
 ```
 
@@ -449,9 +449,9 @@ Champion league win:  +40 fame
 **ELO Achievements** (per robot):
 ```
 Reach ELO 1500:  +25 fame
-Reach ELO 1800:  +50 fame
+Reach ELO 1750:  +50 fame
 Reach ELO 2000:  +100 fame
-Reach ELO 2200:  +150 fame
+Reach ELO 2250:  +150 fame
 Reach ELO 2500:  +250 fame
 ```
 
@@ -528,7 +528,7 @@ streaming = ₡10,000 × (1 + 1.0) × (1 + 2.0)
 - High-fame robots become valuable assets
 - Multiple robots with moderate fame better than one super-famous robot (multiplicative scaling)
 
-#### Matchmaking Quality
+#### Matchmaking Quality 
 
 **Famous Robot Matching** (Future Enhancement):
 - Robots with high fame (1,000+) attract more attention
@@ -1197,7 +1197,7 @@ async function checkFameMilestones(robotId: number): Promise<void> {
 
 ## Implementation Plan
 
-### Phase 1: Backend Foundation (Week 1-2)
+### Phase 1: Backend Foundation 
 
 **Tasks**:
 - [ ] Create PrestigeMilestone and FameMilestone tables
@@ -1218,7 +1218,7 @@ async function checkFameMilestones(robotId: number): Promise<void> {
 - Income multipliers calculate correctly
 - All tests pass
 
-### Phase 2: API Integration (Week 2)
+### Phase 2: API Integration 
 
 **Tasks**:
 - [ ] Create GET /api/user/prestige endpoint
@@ -1236,7 +1236,7 @@ async function checkFameMilestones(robotId: number): Promise<void> {
 - Frontend can fetch prestige/fame data
 - Integration tests pass
 
-### Phase 3: Frontend UI (Week 3)
+### Phase 3: Frontend UI 
 
 **Tasks**:
 - [ ] Create PrestigeCard component for dashboard
@@ -1257,7 +1257,7 @@ async function checkFameMilestones(robotId: number): Promise<void> {
 - Battle results show reputation earned
 - UI is polished and intuitive
 
-### Phase 4: Testing & Refinement (Week 4)
+### Phase 4: Testing & Refinement 
 
 **Tasks**:
 - [ ] End-to-end testing of prestige earning
@@ -1276,7 +1276,7 @@ async function checkFameMilestones(robotId: number): Promise<void> {
 - Milestone thresholds feel balanced
 - Documentation complete
 
-### Phase 5: Analytics & Monitoring (Ongoing)
+### Phase 5: Analytics & Monitoring 
 
 **Tasks**:
 - [ ] Track prestige distribution across player base
