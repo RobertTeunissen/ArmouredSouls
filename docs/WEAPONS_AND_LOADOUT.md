@@ -495,7 +495,8 @@ Key relationships:
 ## See Also
 
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)** - Robot attributes, combat formulas, stance system
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Stable management, facilities, prestige system
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - ⭐ **AUTHORITATIVE** - Prestige and Fame system specification
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Stable management, facilities, prestige formulas
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Complete database structure
 - **[ROADMAP.md](ROADMAP.md)** - Future enhancements and planned features
 
