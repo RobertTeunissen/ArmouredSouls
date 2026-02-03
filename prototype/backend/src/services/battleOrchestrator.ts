@@ -50,6 +50,82 @@ export interface BattleExecutionSummary {
   failedBattles: number;
   byeBattles: number;
   errors: string[];
+  reputationSummary?: {
+    totalPrestigeAwarded: number;
+    totalFameAwarded: number;
+    prestigeByLeague: Record<string, number>;
+    fameByLeague: Record<string, number>;
+  };
+}
+
+/**
+ * Calculate prestige award for a battle win
+ */
+function calculatePrestigeForBattle(winnerRobot: Robot, isDraw: boolean, isByeMatch: boolean): number {
+  if (isDraw || isByeMatch) return 0; // No prestige for draws or bye matches
+  
+  const prestigeByLeague: Record<string, number> = {
+    bronze: 5,
+    silver: 10,
+    gold: 20,
+    platinum: 30,
+    diamond: 50,
+    champion: 75,
+  };
+  
+  return prestigeByLeague[winnerRobot.currentLeague] || 0;
+}
+
+/**
+ * Calculate fame award for a battle win
+ */
+function calculateFameForBattle(
+  winnerRobot: Robot,
+  winnerFinalHP: number,
+  isDraw: boolean,
+  isByeMatch: boolean
+): number {
+  if (isDraw || isByeMatch) return 0; // No fame for draws or bye matches
+  
+  // Base fame by league
+  const fameByLeague: Record<string, number> = {
+    bronze: 2,
+    silver: 5,
+    gold: 10,
+    platinum: 15,
+    diamond: 25,
+    champion: 40,
+  };
+  
+  let baseFame = fameByLeague[winnerRobot.currentLeague] || 0;
+  
+  // Performance bonuses
+  const hpPercent = winnerFinalHP / winnerRobot.maxHP;
+  
+  if (winnerFinalHP === winnerRobot.maxHP) {
+    // Perfect victory (no HP damage taken)
+    baseFame *= 2.0;
+  } else if (hpPercent > 0.8) {
+    // Dominating victory (>80% HP remaining)
+    baseFame *= 1.5;
+  } else if (hpPercent < 0.2) {
+    // Comeback victory (<20% HP remaining)
+    baseFame *= 1.25;
+  }
+  
+  return Math.round(baseFame);
+}
+
+/**
+ * Get fame tier name based on fame value
+ */
+function getFameTier(fame: number): string {
+  if (fame < 100) return "Unknown";
+  if (fame < 500) return "Known";
+  if (fame < 1000) return "Famous";
+  if (fame < 2500) return "Renowned";
+  if (fame < 5000) return "Legendary";
+  return "Mythical";
 }
 
 /**
@@ -232,13 +308,14 @@ async function createBattleRecord(
 }
 
 /**
- * Update robot stats after battle
+ * Update robot stats after battle and award prestige/fame
  */
 async function updateRobotStats(
   robot: Robot,
   battle: Battle,
-  isRobot1: boolean
-): Promise<void> {
+  isRobot1: boolean,
+  isByeMatch: boolean
+): Promise<{ prestigeAwarded: number; fameAwarded: number }> {
   const isWinner = battle.winnerId === robot.id;
   const isDraw = battle.winnerId === null;
   
@@ -255,6 +332,27 @@ async function updateRobotStats(
     leaguePointsChange = LEAGUE_POINTS_LOSS;
   }
   
+  // Calculate prestige and fame awards
+  let prestigeAwarded = 0;
+  let fameAwarded = 0;
+  
+  if (isWinner) {
+    prestigeAwarded = calculatePrestigeForBattle(robot, isDraw, isByeMatch);
+    fameAwarded = calculateFameForBattle(robot, finalHP, isDraw, isByeMatch);
+    
+    // Award prestige to user
+    if (prestigeAwarded > 0) {
+      await prisma.user.update({
+        where: { id: robot.userId },
+        data: {
+          prestige: { increment: prestigeAwarded },
+          totalWins: { increment: 1 },
+        },
+      });
+      console.log(`[Battle] Prestige: +${prestigeAwarded} → user ${robot.userId} (${robot.currentLeague} league win)`);
+    }
+  }
+  
   // Update robot
   await prisma.robot.update({
     where: { id: robot.id },
@@ -268,8 +366,15 @@ async function updateRobotStats(
       losses: (!isWinner && !isDraw) ? robot.losses + 1 : robot.losses,
       damageDealtLifetime: robot.damageDealtLifetime + (isRobot1 ? battle.robot1DamageDealt : battle.robot2DamageDealt),
       damageTakenLifetime: robot.damageTakenLifetime + (isRobot1 ? battle.robot2DamageDealt : battle.robot1DamageDealt),
+      fame: isWinner ? { increment: fameAwarded } : undefined,
     },
   });
+  
+  if (isWinner && fameAwarded > 0) {
+    const fameTier = getFameTier(robot.fame + fameAwarded);
+    const hpPercent = (finalHP / robot.maxHP * 100).toFixed(0);
+    console.log(`[Battle] Fame: +${fameAwarded} → ${robot.name} (${hpPercent}% HP remaining, tier: ${fameTier})`);
+  }
   
   // Award credits to user
   const reward = isRobot1 
@@ -284,12 +389,14 @@ async function updateRobotStats(
       },
     });
   }
+  
+  return { prestigeAwarded, fameAwarded };
 }
 
 /**
  * Process a single scheduled battle
  */
-export async function processBattle(scheduledMatch: ScheduledMatch): Promise<BattleResult> {
+export async function processBattle(scheduledMatch: ScheduledMatch): Promise<BattleResult & { prestigeAwarded: number; fameAwarded: number }> {
   // Load both robots
   const robot1 = await prisma.robot.findUnique({ where: { id: scheduledMatch.robot1Id } });
   const robot2 = await prisma.robot.findUnique({ where: { id: scheduledMatch.robot2Id } });
@@ -326,9 +433,12 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
   const battle = await createBattleRecord(scheduledMatch, robot1, robot2, result);
   result.battleId = battle.id;
   
-  // Update robot stats
-  await updateRobotStats(robot1, battle, true);
-  await updateRobotStats(robot2, battle, false);
+  // Update robot stats and award prestige/fame
+  const stats1 = await updateRobotStats(robot1, battle, true, isByeMatch);
+  const stats2 = await updateRobotStats(robot2, battle, false, isByeMatch);
+  
+  const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
+  const totalFame = stats1.fameAwarded + stats2.fameAwarded;
   
   // Update scheduled match
   await prisma.scheduledMatch.update({
@@ -341,7 +451,11 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
   
   console.log(`[Battle] Completed: ${robot1.name} vs ${robot2.name} (Winner: ${result.winnerId ? (result.winnerId === robot1.id ? robot1.name : robot2.name) : 'Draw'})`);
   
-  return result;
+  return {
+    ...result,
+    prestigeAwarded: totalPrestige,
+    fameAwarded: totalFame,
+  };
 }
 
 /**
@@ -382,6 +496,12 @@ export async function executeScheduledBattles(scheduledFor?: Date): Promise<Batt
     failedBattles: 0,
     byeBattles: 0,
     errors: [],
+    reputationSummary: {
+      totalPrestigeAwarded: 0,
+      totalFameAwarded: 0,
+      prestigeByLeague: {},
+      fameByLeague: {},
+    },
   };
   
   // Process each battle
@@ -393,6 +513,29 @@ export async function executeScheduledBattles(scheduledFor?: Date): Promise<Batt
       if (result.isByeMatch) {
         summary.byeBattles++;
       }
+      
+      // Track reputation awards
+      if (summary.reputationSummary) {
+        summary.reputationSummary.totalPrestigeAwarded += result.prestigeAwarded;
+        summary.reputationSummary.totalFameAwarded += result.fameAwarded;
+        
+        // Track by league if there was a winner
+        if (result.prestigeAwarded > 0 || result.fameAwarded > 0) {
+          // Get winner's league
+          const robot = await prisma.robot.findUnique({ 
+            where: { id: result.winnerId || 0 },
+            select: { currentLeague: true }
+          });
+          
+          if (robot) {
+            const league = robot.currentLeague;
+            summary.reputationSummary.prestigeByLeague[league] = 
+              (summary.reputationSummary.prestigeByLeague[league] || 0) + result.prestigeAwarded;
+            summary.reputationSummary.fameByLeague[league] = 
+              (summary.reputationSummary.fameByLeague[league] || 0) + result.fameAwarded;
+          }
+        }
+      }
     } catch (error) {
       summary.failedBattles++;
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -402,6 +545,7 @@ export async function executeScheduledBattles(scheduledFor?: Date): Promise<Batt
   }
   
   console.log(`[BattleOrchestrator] Execution complete: ${summary.successfulBattles} successful, ${summary.failedBattles} failed, ${summary.byeBattles} bye-matches`);
+  console.log(`[BattleOrchestrator] Reputation: ${summary.reputationSummary?.totalPrestigeAwarded} prestige, ${summary.reputationSummary?.totalFameAwarded} fame awarded`);
   
   return summary;
 }
