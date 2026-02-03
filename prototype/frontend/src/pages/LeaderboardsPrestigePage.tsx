@@ -41,6 +41,7 @@ function LeaderboardsPrestigePage() {
   const [leaderboard, setLeaderboard] = useState<PrestigeLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [minRobots, setMinRobots] = useState(1);
 
   const fetchLeaderboard = async () => {
     try {
@@ -53,6 +54,7 @@ function LeaderboardsPrestigePage() {
           params: {
             page: 1,
             limit: 100,
+            minRobots,
           },
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -71,7 +73,7 @@ function LeaderboardsPrestigePage() {
 
   useEffect(() => {
     fetchLeaderboard();
-  }, []);
+  }, [minRobots]);
 
   const getRankColor = (rank: string) => {
     switch (rank) {
@@ -85,7 +87,7 @@ function LeaderboardsPrestigePage() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-background text-primary">
       <Navigation />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
@@ -98,14 +100,34 @@ function LeaderboardsPrestigePage() {
         </p>
       </div>
 
-      {/* Refresh Button */}
-      <div className="mb-6 flex justify-end">
-        <button
-          onClick={fetchLeaderboard}
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
-        >
-          Refresh
-        </button>
+      {/* Filters */}
+      <div className="bg-surface-elevated border border-white/10 rounded-lg p-4 mb-6">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-secondary mb-2">
+              Minimum Robots
+            </label>
+            <select
+              value={minRobots}
+              onChange={(e) => setMinRobots(parseInt(e.target.value))}
+              className="w-full bg-surface border border-white/10 rounded-md px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="1">1+ robots</option>
+              <option value="3">3+ robots</option>
+              <option value="5">5+ robots</option>
+              <option value="10">10+ robots</option>
+            </select>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              onClick={fetchLeaderboard}
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Loading State */}
@@ -284,7 +306,7 @@ function LeaderboardsPrestigePage() {
         </div>
       </div>
     </div>
-    </>
+    </div>
   );
 }
 
