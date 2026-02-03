@@ -202,8 +202,9 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
       },
       metrics: {
         daysToBankruptcy,
-        daysToBreakEven: operatingCosts.total > 0 
-          ? Math.ceil((0 - user.currency) / netPassiveIncome)
+        // Days to break even only makes sense if user has negative balance and positive net income
+        daysToBreakEven: (user.currency < 0 && netPassiveIncome > 0)
+          ? Math.ceil(Math.abs(user.currency) / netPassiveIncome)
           : null,
       },
       recommendations,
