@@ -5,9 +5,9 @@
 
 **⚠️ Key Changes from Review**:
 - Battle frequency: 7 battles/week (1/day per robot)
-- Income Generator: Now per-robot basis
+- Income Generator: **Changed to stable-level scaling** (prestige for merchandising, aggregate for streaming)
 - Repair costs: Need rebalancing for 50% win rate
-- Facility ROI: Long payback periods, better with 2-3+ robots
+- Facility ROI: Income Generator much faster with prestige scaling
 
 ---
 
@@ -33,16 +33,15 @@ multiplier = 2.0 (HP=0), 1.5 (HP<10%), 1.0 (otherwise)
 final = base × damage% × multiplier × (1 - discounts)
 ```
 
-**Merchandising Income** (per robot):
+**Merchandising Income** (stable-level):
 ```
-per_robot = base_rate × (1 + robot_fame/5000)
-total = sum of all robots
+merchandising = base_rate × (1 + stable_prestige/10000)
 ```
 
-**Streaming Income** (per robot):
+**Streaming Income** (aggregate):
 ```
-per_robot = base_rate × (1 + robot_battles/500) × (1 + robot_fame/2500)
-total = sum of all robots
+streaming = base_rate × (1 + total_battles/1000) × (1 + total_fame/5000)
+// Uses totals across ALL robots in stable
 ```
 
 ---
@@ -133,19 +132,21 @@ total = sum of all robots
 
 **Time to 5K prestige**: 6-12 months regular play
 
-### 3. Passive Income (Income Generator - Per Robot)
+### 3. Passive Income (Income Generator)
 
 **Merchandising** (Level 1+):
-- Base: ₡1.5K-₡12K/day **per robot**
-- Scales with: Individual robot fame
-- Formula: `base × (1 + robot_fame/5000)`
+- Base: ₡5K-₡35K/day
+- Scales with: **Stable prestige** (not robot fame)
+- Formula: `base × (1 + stable_prestige/10000)`
+- Example: ₡12K base + 15K prestige = ₡30K/day
 
 **Streaming** (Level 3+):
-- Base: ₡1K-₡7.5K/day **per robot**
-- Scales with: Robot battles + Robot fame
-- Formula: `base × (1 + robot_battles/500) × (1 + robot_fame/2500)`
+- Base: ₡3K-₡22K/day
+- Scales with: **Total battles + Total fame** (aggregate)
+- Formula: `base × (1 + total_battles/1000) × (1 + total_fame/5000)`
+- Example: ₡6K base + 900 battles + 9K fame = ₡31.9K/day
 
-**Note**: Multi-robot strategy essential for Income Generator viability
+**Note**: Both scale with stable-level metrics, not per-robot
 
 ### 4. Tournaments (Preliminary)
 
@@ -227,21 +228,24 @@ total = sum of all robots
 - **Priority**: LOW (not worth early game)
 
 **Income Generator Level 1** (₡800K):
-- Generates ₡500 net/day (single robot)
-- Payback: **1,600 days** (single robot), **142 days** (3 robots)
-- **Priority**: LOW early game, HIGH with 2-3+ robots
+- **Merchandising**: ₡4K net/day base (scales with prestige)
+- At 10K prestige: ₡9K net/day → **89-day payback**
+- At 50K prestige: ₡29K net/day → **28-day payback**
+- **Streaming** (Level 3+): Additional income scales with battles/fame
+- **Priority**: LOW early game, HIGH with 5K+ prestige
 
 **Weapons Workshop Level 1** (₡250K):
 - Saves 5% on weapons (₡10K per ₡200K weapon avg)
 - Payback: **25 weapon purchases** (2-3 years)
 - **Priority**: VERY LOW
 
-**Key Insight**: All facilities require multi-robot strategy for reasonable payback periods.
+**Key Insight**: Income Generator scales with prestige/aggregate stats. Discount facilities require multi-robot strategy.
 
 **Early Game Facility Priority**:
-1. Skip facilities OR buy 1 Academy if stuck at level 10 cap
-2. Invest in robot power (attributes + weapons) first
-3. Buy Repair Bay only when expanding to robot #2
+1. Skip Income Generator (needs prestige to be viable)
+2. Skip or buy 1 Academy if stuck at level 10 cap
+3. Invest in robot power (attributes + weapons) first
+4. Buy Repair Bay only when expanding to robot #2
 
 ---
 

@@ -51,11 +51,13 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 ### Design References
 
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Complete facility costs, prestige system, daily income/expense examples
-- **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Upgrade costs, repair formulas, currency definition
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: **Authoritative source** for prestige system, fame mechanics, facility costs, and daily income/expense examples
+- **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Upgrade costs, repair formulas, currency definition, and fame tracking
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Weapon prices and crafting costs
 - **[GAME_DESIGN.md](GAME_DESIGN.md)**: Overall economic philosophy and progression
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Data model for tracking resources
+
+**Note**: Where this document conflicts with STABLE_SYSTEM.md on prestige/fame mechanics, STABLE_SYSTEM.md is authoritative.
 
 ---
 
@@ -69,11 +71,20 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - Precision: Whole numbers only (no decimals)
 - Range: 0 to 999,999,999,999 (database supports up to ~2 billion)
 
-**Secondary Resource: Prestige**
+**Secondary Resource: Prestige (Stable-Level)**
 - Not a spendable currency - acts as unlock threshold
-- Earned through victories, achievements, milestones
+- Earned through victories, achievements, milestones, tournaments
 - Never decreases (only increases)
 - Used to unlock facility levels and high-tier content
+- Scales merchandising income
+- Provides battle winnings multiplier
+
+**Tertiary Resource: Fame (Robot-Level)**
+- Individual robot reputation (separate from stable prestige)
+- Earned through victories (same per-win values as prestige)
+- Tracked per robot, aggregated for stable-level calculations
+- Used in streaming revenue calculations (aggregate)
+- Displayed for competitive rankings
 
 ### Economic Philosophy
 
@@ -564,84 +575,102 @@ final_battle_reward = base_reward × prestige_multiplier
 **Requirements**:
 - Income Generator Level 1+ (unlocks merchandising)
 
-**Base Income by Level** (per robot):
-- Level 1: ₡1,500/day per robot
-- Level 2: ₡2,500/day per robot
-- Level 4: ₡4,000/day per robot
-- Level 6: ₡6,000/day per robot
-- Level 8: ₡8,500/day per robot
-- Level 10: ₡12,000/day per robot
+**Base Income by Level**:
+- Level 1: ₡5,000/day
+- Level 2: ₡8,000/day
+- Level 4: ₡12,000/day
+- Level 6: ₡18,000/day
+- Level 8: ₡25,000/day
+- Level 10: ₡35,000/day
 
 **Scaling Formula**:
 ```
-base_merchandising_per_robot = income_generator_base_rate  // Based on level
-robot_prestige_factor = 1 + (robot_fame / 5000)  // Individual robot fame
-num_robots = count of robots in stable
+base_merchandising = income_generator_base_rate  // Based on level
+prestige_multiplier = 1 + (stable_prestige / 10000)
 
-merchandising_income = sum(base_merchandising × robot_prestige_factor for each robot)
+merchandising_income = base_merchandising × prestige_multiplier
 ```
 
-**Examples**:
-*Single Robot (early game):*
-- Income Generator Level 1: ₡1,500/day per robot
-- Robot fame: 2,500
-- Fame multiplier: 1 + (2500/5000) = 1.5
-- Daily income: ₡1,500 × 1.5 = ₡2,250/day
-- Operating cost: ₡1,000/day
-- **Net**: ₡1,250/day
+**Design Rationale**: Merchandising scales with **stable prestige** (not individual robot fame) because it represents the stable's overall brand value and reputation. Higher prestige stables can charge more for merchandise and attract more fans.
 
-*Three Robots (mid game):*
-- Income Generator Level 4: ₡4,000/day per robot
-- Robot 1 fame: 5,000 (multiplier 2.0) = ₡8,000/day
-- Robot 2 fame: 3,000 (multiplier 1.6) = ₡6,400/day
-- Robot 3 fame: 1,000 (multiplier 1.2) = ₡4,800/day
-- Total daily income: ₡19,200/day
+**Examples**:
+*Early Game (Low Prestige):*
+- Income Generator Level 1: ₡5,000/day base
+- Stable prestige: 1,000
+- Prestige multiplier: 1 + (1000/10000) = 1.1
+- Daily income: ₡5,000 × 1.1 = ₡5,500/day
+- Operating cost: ₡1,000/day
+- **Net**: ₡4,500/day
+
+*Mid Game (Moderate Prestige):*
+- Income Generator Level 4: ₡12,000/day base
+- Stable prestige: 15,000
+- Prestige multiplier: 1 + (15000/10000) = 2.5
+- Daily income: ₡12,000 × 2.5 = ₡30,000/day
 - Operating cost: ₡3,000/day
-- **Net**: ₡16,200/day
+- **Net**: ₡27,000/day
+
+*Late Game (High Prestige):*
+- Income Generator Level 10: ₡35,000/day base
+- Stable prestige: 50,000
+- Prestige multiplier: 1 + (50000/10000) = 6.0
+- Daily income: ₡35,000 × 6.0 = ₡210,000/day
+- Operating cost: ₡5,500/day
+- **Net**: ₡204,500/day
 
 **Operating Cost**: ₡1,000/day at Level 1, +₡500/day per level
 
-**Design Note**: Per-robot scaling rewards multi-robot strategies and ensures each robot contributes meaningfully to stable income.
+**Design Note**: Prestige-based scaling rewards long-term player engagement and success across all robots in the stable.
 
 ### 4. Streaming Revenue (Income Generator Facility)
 
 **Requirements**:
 - Income Generator Level 3+ (unlocks streaming)
 
-**Base Income by Level** (per robot):
-- Level 3: ₡1,000/day per robot
-- Level 5: ₡2,000/day per robot
-- Level 7: ₡3,500/day per robot
-- Level 9: ₡5,000/day per robot
-- Level 10: ₡7,500/day per robot
+**Base Income by Level**:
+- Level 3: ₡3,000/day
+- Level 5: ₡6,000/day
+- Level 7: ₡10,000/day
+- Level 9: ₡15,000/day
+- Level 10: ₡22,000/day
 
 **Scaling Formula**:
 ```
-base_streaming_per_robot = income_generator_streaming_rate  // Based on level
-robot_battle_factor = 1 + (robot_battles / 500)  // Individual robot battles
-robot_fame_factor = 1 + (robot_fame / 2500)  // Individual robot fame
+base_streaming = income_generator_streaming_rate  // Based on level
+battle_multiplier = 1 + (total_battles / 1000)  // Aggregate across ALL robots
+fame_multiplier = 1 + (total_fame / 5000)  // Sum of ALL robot fame values
 
-streaming_per_robot = base_streaming × robot_battle_factor × robot_fame_factor
-streaming_income = sum(streaming_per_robot for each robot)
+streaming_income = base_streaming × battle_multiplier × fame_multiplier
 ```
 
-**Example**:
+**Design Rationale**: Streaming scales with **aggregate battle count and total fame** across all robots because viewers watch the entire stable's content. More robots = more battles = more content = higher streaming revenue.
+
+**Examples**:
 *Single Robot (early game):*
-- Income Generator Level 3: ₡1,000/day
-- Robot battles: 250
-- Robot fame: 1,250
-- Battle multiplier: 1 + (250/500) = 1.5
-- Fame multiplier: 1 + (1250/2500) = 1.5
-- Daily income: ₡1,000 × 1.5 × 1.5 = ₡2,250/day
+- Income Generator Level 3: ₡3,000/day base
+- Total battles (1 robot): 250
+- Total fame (1 robot): 1,250
+- Battle multiplier: 1 + (250/1000) = 1.25
+- Fame multiplier: 1 + (1250/5000) = 1.25
+- Daily income: ₡3,000 × 1.25 × 1.25 = ₡4,688/day
 
 *Three Robots (mid game):*
-- Income Generator Level 5: ₡2,000/day per robot
-- Robot 1: 500 battles, 5,000 fame → ₡2,000 × 2.0 × 3.0 = ₡12,000/day
-- Robot 2: 300 battles, 3,000 fame → ₡2,000 × 1.6 × 2.2 = ₡7,040/day
-- Robot 3: 100 battles, 1,000 fame → ₡2,000 × 1.2 × 1.4 = ₡3,360/day
-- **Total daily income**: ₡22,400/day
+- Income Generator Level 5: ₡6,000/day base
+- Total battles: Robot 1 (500) + Robot 2 (300) + Robot 3 (100) = 900
+- Total fame: Robot 1 (5,000) + Robot 2 (3,000) + Robot 3 (1,000) = 9,000
+- Battle multiplier: 1 + (900/1000) = 1.9
+- Fame multiplier: 1 + (9000/5000) = 2.8
+- Daily income: ₡6,000 × 1.9 × 2.8 = ₡31,920/day
 
-**Design Note**: Per-robot scaling rewards active robots and multi-robot strategies. Each robot's contribution scales with their individual performance and fame. 
+*Large Stable (late game):*
+- Income Generator Level 10: ₡22,000/day base
+- Total battles across 6 robots: 3,500
+- Total fame across 6 robots: 25,000
+- Battle multiplier: 1 + (3500/1000) = 4.5
+- Fame multiplier: 1 + (25000/5000) = 6.0
+- Daily income: ₡22,000 × 4.5 × 6.0 = ₡594,000/day
+
+**Design Note**: Aggregate scaling strongly rewards multi-robot strategies and encourages building a roster of active, famous robots. Streaming income grows exponentially with stable size and activity. 
 
 ### 5. Tournament Winnings
 
@@ -675,6 +704,105 @@ streaming_income = sum(streaming_per_robot for each robot)
 - 1,000 total wins: ₡750,000 + 500 prestige
 
 **Design Note**: Achievement rewards are one-time bonuses that encourage progression and provide economic boosts at key milestones.
+
+---
+
+## Prestige & Fame System
+
+This section consolidates the complete prestige and fame earning mechanics. For detailed implementation, see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#prestige-system).
+
+### Fame (Robot-Level Reputation)
+
+**Definition**: Individual robot reputation earned from victories and performance.
+
+**Earning Fame**:
+- Win in Bronze league: +5 fame
+- Win in Silver league: +10 fame
+- Win in Gold league: +20 fame
+- Win in Platinum league: +30 fame
+- Win in Diamond league: +50 fame
+- Win in Champion league: +75 fame
+
+**Fame Uses**:
+- Contributes to streaming revenue (aggregate across all robots)
+- Displayed on robot profile for competitive rankings
+- Used in matchmaking considerations
+- Trophy/leaderboard display
+
+**Note**: Fame is tracked per robot and aggregated for stable-level calculations (e.g., streaming revenue).
+
+### Prestige (Stable-Level Reputation)
+
+**Definition**: Account-wide reputation representing overall stable success and history. Prestige is **never spent** - only checked as unlock threshold.
+
+**Earning Prestige - Battle Performance** (per win):
+- Win in Bronze league: +5 prestige
+- Win in Silver league: +10 prestige
+- Win in Gold league: +20 prestige
+- Win in Platinum league: +30 prestige
+- Win in Diamond league: +50 prestige
+- Win in Champion league: +75 prestige
+
+**Earning Prestige - Tournament Performance**:
+- Local tournament win: +100 prestige
+- Regional tournament win: +250 prestige
+- National tournament win: +500 prestige
+- International tournament win: +1,000 prestige
+- World Championship win: +2,500 prestige
+
+**Earning Prestige - Milestones**:
+- First robot to ELO 1500: +50 prestige
+- First robot to ELO 1800: +100 prestige
+- First robot to ELO 2000: +200 prestige
+- 100 total wins (across all robots): +50 prestige
+- 500 total wins: +250 prestige
+- 1,000 total wins: +500 prestige
+
+### Prestige Benefits
+
+**1. Facility Level Unlocks**:
+Prestige unlocks higher facility levels (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for complete list). Examples:
+- Repair Bay Level 4: Requires 1,000 prestige
+- Repair Bay Level 7: Requires 5,000 prestige
+- Repair Bay Level 9: Requires 10,000 prestige
+- Research Lab Level 9: Requires 15,000 prestige
+- Booking Office Level 7: Requires 25,000 prestige
+
+**2. Income Multipliers**:
+- **Battle Winnings**: +5% to +20% (see Prestige Bonuses section above)
+- **Merchandising**: Scales with prestige (see Merchandising Income section above)
+
+**3. Content Access**:
+- Tournament access via Booking Office facility
+- Exclusive cosmetic options at high prestige levels
+- Special challenges and events
+
+### Prestige Accumulation Timeline
+
+**Realistic Path to Key Thresholds**:
+
+**5,000 Prestige** (~6-12 months):
+- Bronze/Silver: 100 wins = +500-1,000 prestige
+- Gold: 50 wins = +1,000 prestige
+- Achievements: First milestones = +500-1,000 prestige
+- Tournaments: 5-10 local/regional = +500-2,500 prestige
+
+**10,000 Prestige** (~12-18 months):
+- Continued league wins in Gold/Platinum
+- Multiple tournament victories
+- Major win milestones (500 total wins)
+- High ELO achievements
+
+**25,000 Prestige** (~2-3 years):
+- Advanced league performance (Platinum/Diamond)
+- National/International tournaments
+- 1,000+ total wins
+- Multiple high-ELO robots
+
+**50,000 Prestige** (~3-5 years):
+- Champion league performance
+- World Championship participation
+- Complete stable mastery
 
 ### 7. Potential Future Revenue Streams
 
@@ -961,11 +1089,14 @@ Recommendations:
    - **Early game**: Not cost-effective (as calculated in section 1)
    
 3. **Income Generator Level 1** (₡800,000):
-   - Generates ₡1,500/day per robot - ₡1,000 operating cost = ₡500 net/day (single robot)
-   - Payback: **1,600 days** (4.4 years) for single robot
-   - **With 3 robots** (each with 2.5K fame): ₡5,625/day net = **142 days** (4.7 months)
-   - **Revised assessment**: Viable for multi-robot strategies, not early game
-   - **Recommendation**: Purchase after expanding to 2-3 robots
+   - **Merchandising**: ₡5,000/day base - ₡1,000 operating cost = ₡4,000 net/day
+   - Scales with prestige: At 10K prestige → ₡5,000 × 2.0 = ₡10,000/day (₡9,000 net)
+   - **Base payback**: 200 days (with no prestige scaling)
+   - **Realistic payback** (moderate prestige): 89-100 days
+   - **With high prestige** (50K): 40-50 days
+   - **Streaming** (Level 3+): Additional ₡3,000-₡6,000/day base (scales with battles/fame)
+   - **Combined assessment**: Strong mid-game investment, scales well with prestige
+   - **Recommendation**: Purchase when prestige reaches 5,000-10,000 range
    
 4. **Weapons Workshop Level 1** (₡250,000):
    - Saves 5% on weapons (₡5K-₡20K per weapon)
@@ -978,13 +1109,14 @@ Recommendations:
 
 **General Rule**: 
 - **Discount facilities** require high usage frequency or multiple robots to justify
-- **Income facilities** strongly favor multi-robot strategies
+- **Income facilities** scale with stable prestige and robot activity (battles/fame aggregates)
 - **Academy facilities** provide immediate benefit (cap unlock) beyond long-term savings
 
 **Early Game Priority**:
 1. **Repair Bay** - Only if planning 2+ robots soon
 2. **One Academy** - Only if stuck at level 10 cap in key attributes
-3. **Skip other facilities** - Invest in robot power first
+3. **Skip Income Generator** - Requires prestige to be effective
+4. **Focus on robot power first** - Attributes and weapons
 
 ---
 
