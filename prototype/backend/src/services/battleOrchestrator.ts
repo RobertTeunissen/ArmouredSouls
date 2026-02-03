@@ -405,6 +405,13 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
     throw new Error(`Robots not found for match ${scheduledMatch.id}`);
   }
   
+  // Robots enter battles fully repaired (battle-ready state)
+  // This is the intended game mechanic - players should repair before battles
+  robot1.currentHP = robot1.maxHP;
+  robot1.currentShield = robot1.maxShield;
+  robot2.currentHP = robot2.maxHP;
+  robot2.currentShield = robot2.maxShield;
+  
   // Check if this is a bye-robot match
   const isByeMatch = robot1.name === BYE_ROBOT_NAME || robot2.name === BYE_ROBOT_NAME;
   

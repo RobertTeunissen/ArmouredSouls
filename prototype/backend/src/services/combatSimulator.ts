@@ -320,7 +320,7 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
   let battleEnded = false;
   let winnerId: number | null = null;
   
-  // Battle start event
+  // Battle start event with complete robot stats
   events.push({
     timestamp: 0,
     type: 'attack',
@@ -329,6 +329,23 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
     robot2HP: state2.currentHP,
     robot1Shield: state1.currentShield,
     robot2Shield: state2.currentShield,
+    formulaBreakdown: {
+      calculation: `${robot1.name}: ${state1.currentHP}HP / ${state1.maxHP}HP, ${state1.currentShield}S / ${state1.maxShield}S, Cooldown: ${state1.attackCooldown.toFixed(2)}s
+${robot2.name}: ${state2.currentHP}HP / ${state2.maxHP}HP, ${state2.currentShield}S / ${state2.maxShield}S, Cooldown: ${state2.attackCooldown.toFixed(2)}s`,
+      components: {
+        robot1_hp: state1.currentHP,
+        robot1_max_hp: state1.maxHP,
+        robot1_shield: state1.currentShield,
+        robot1_max_shield: state1.maxShield,
+        robot1_cooldown: state1.attackCooldown,
+        robot2_hp: state2.currentHP,
+        robot2_max_hp: state2.maxHP,
+        robot2_shield: state2.currentShield,
+        robot2_max_shield: state2.maxShield,
+        robot2_cooldown: state2.attackCooldown,
+      },
+      result: 0,
+    },
   });
   
   // Main combat loop
@@ -362,6 +379,15 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
         state2.totalDamageTaken += hpDamage;
         
         const totalDamage = hpDamage + shieldDamage;
+        
+        // Build multiline formula breakdown
+        const formulaParts = [
+          `Hit: ${hitBreakdown.calculation}`,
+          isCritical ? `Crit: ${critBreakdown.calculation}` : null,
+          `Damage: ${damageBreakdown.calculation}`,
+          `Apply: ${applyBreakdown.calculation}`,
+        ].filter(Boolean);
+        
         events.push({
           timestamp: Number(currentTime.toFixed(1)),
           type: isCritical ? 'critical' : 'attack',
@@ -381,8 +407,13 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
             ? `💢 CRITICAL! ${robot1.name} deals ${totalDamage.toFixed(0)} damage (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`
             : `💥 ${robot1.name} hits for ${totalDamage.toFixed(0)} damage (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`,
           formulaBreakdown: {
-            calculation: `Hit: ${hitBreakdown.calculation} | Damage: ${damageBreakdown.calculation} | Apply: ${applyBreakdown.calculation}`,
-            components: { ...hitBreakdown.components, ...damageBreakdown.components, ...applyBreakdown.components },
+            calculation: formulaParts.join('\n'),
+            components: { 
+              ...hitBreakdown.components, 
+              ...(isCritical ? critBreakdown.components : {}),
+              ...damageBreakdown.components, 
+              ...applyBreakdown.components 
+            },
             result: totalDamage,
           },
         });
@@ -392,7 +423,7 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
           const counterChance = calculateCounterChance(state2.robot);
           if (random(0, 100) < counterChance) {
             const counterDamage = baseDamage * 0.7;
-            const { hpDamage: counterHP } = applyDamage(counterDamage, state2.robot, state1.robot, state1, false);
+            const { hpDamage: counterHP, shieldDamage: counterShield, breakdown: counterBreakdown } = applyDamage(counterDamage, state2.robot, state1.robot, state1, false);
             
             state2.totalDamageDealt += counterHP;
             state1.totalDamageTaken += counterHP;
@@ -404,12 +435,22 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
               defender: robot1.name,
               damage: counterHP,
               hpDamage: counterHP,
+              shieldDamage: counterShield,
               counter: true,
               robot1HP: state1.currentHP,
               robot2HP: state2.currentHP,
               robot1Shield: state1.currentShield,
               robot2Shield: state2.currentShield,
               message: `🔄 ${robot2.name} counters for ${counterHP.toFixed(0)} damage!`,
+              formulaBreakdown: {
+                calculation: `Counter: ${counterDamage.toFixed(1)} base (70% of attack)\n${counterBreakdown.calculation}`,
+                components: {
+                  counterChance: counterChance,
+                  counterBase: counterDamage,
+                  ...counterBreakdown.components,
+                },
+                result: counterHP,
+              },
             });
           }
         }
@@ -455,6 +496,15 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
         state1.totalDamageTaken += hpDamage;
         
         const totalDamage = hpDamage + shieldDamage;
+        
+        // Build multiline formula breakdown
+        const formulaParts = [
+          `Hit: ${hitBreakdown.calculation}`,
+          isCritical ? `Crit: ${critBreakdown.calculation}` : null,
+          `Damage: ${damageBreakdown.calculation}`,
+          `Apply: ${applyBreakdown.calculation}`,
+        ].filter(Boolean);
+        
         events.push({
           timestamp: Number(currentTime.toFixed(1)),
           type: isCritical ? 'critical' : 'attack',
@@ -474,8 +524,13 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
             ? `💢 CRITICAL! ${robot2.name} deals ${totalDamage.toFixed(0)} damage (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`
             : `💥 ${robot2.name} hits for ${totalDamage.toFixed(0)} damage (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`,
           formulaBreakdown: {
-            calculation: `Hit: ${hitBreakdown.calculation} | Damage: ${damageBreakdown.calculation} | Apply: ${applyBreakdown.calculation}`,
-            components: { ...hitBreakdown.components, ...damageBreakdown.components, ...applyBreakdown.components },
+            calculation: formulaParts.join('\n'),
+            components: { 
+              ...hitBreakdown.components, 
+              ...(isCritical ? critBreakdown.components : {}),
+              ...damageBreakdown.components, 
+              ...applyBreakdown.components 
+            },
             result: totalDamage,
           },
         });
@@ -485,7 +540,7 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
           const counterChance = calculateCounterChance(state1.robot);
           if (random(0, 100) < counterChance) {
             const counterDamage = baseDamage * 0.7;
-            const { hpDamage: counterHP } = applyDamage(counterDamage, state1.robot, state2.robot, state2, false);
+            const { hpDamage: counterHP, shieldDamage: counterShield, breakdown: counterBreakdown } = applyDamage(counterDamage, state1.robot, state2.robot, state2, false);
             
             state1.totalDamageDealt += counterHP;
             state2.totalDamageTaken += counterHP;
@@ -497,12 +552,22 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
               defender: robot2.name,
               damage: counterHP,
               hpDamage: counterHP,
+              shieldDamage: counterShield,
               counter: true,
               robot1HP: state1.currentHP,
               robot2HP: state2.currentHP,
               robot1Shield: state1.currentShield,
               robot2Shield: state2.currentShield,
               message: `🔄 ${robot1.name} counters for ${counterHP.toFixed(0)} damage!`,
+              formulaBreakdown: {
+                calculation: `Counter: ${counterDamage.toFixed(1)} base (70% of attack)\n${counterBreakdown.calculation}`,
+                components: {
+                  counterChance: counterChance,
+                  counterBase: counterDamage,
+                  ...counterBreakdown.components,
+                },
+                result: counterHP,
+              },
             });
           }
         }

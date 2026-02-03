@@ -299,7 +299,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                             {/* Formula Breakdown */}
                             {expandedEvent === idx && event.formulaBreakdown && (
                               <div className="mt-3 bg-gray-900 rounded p-3">
-                                <div className="text-xs font-mono text-green-400 mb-2">
+                                <div className="text-xs font-mono text-green-400 mb-2 whitespace-pre-line">
                                   {event.formulaBreakdown.calculation}
                                 </div>
                                 <div className="grid grid-cols-3 gap-2 text-xs">
