@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import Navigation from '../components/Navigation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -104,7 +105,9 @@ function LeaderboardsFamePage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <>
+      <Navigation />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2 font-header">
@@ -299,6 +302,7 @@ function LeaderboardsFamePage() {
         </div>
       )}
     </div>
+    </>
   );
 }
 
