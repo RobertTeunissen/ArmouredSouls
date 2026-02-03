@@ -1,16 +1,23 @@
 # Combat Formulas and Battle Mechanics
 
-This document describes all combat formulas, weapon bonus applications, and battle mechanics for Armoured Souls.
+**Last Updated**: February 3, 2026  
+**Status**: Comprehensive Reference - Matches Current Implementation
+
+This document is the **authoritative source** for all combat formulas, weapon bonus applications, and battle mechanics in Armoured Souls.
 
 ## Table of Contents
 1. [Weapon Attribute Bonuses](#weapon-attribute-bonuses)
-2. [Hit Chance Calculation](#hit-chance-calculation)
-3. [Critical Hit Calculation](#critical-hit-calculation)
-4. [Damage Calculation](#damage-calculation)
-5. [Damage Application (Shield & Armor)](#damage-application)
-6. [Counter-Attack Calculation](#counter-attack-calculation)
-7. [Offhand Attack Rules](#offhand-attack-rules)
-8. [Weapon Bonus Design Considerations](#weapon-bonus-design-considerations)
+2. [Attack Speed and Cooldown Calculation](#attack-speed-and-cooldown-calculation)
+3. [Hit Chance Calculation](#hit-chance-calculation)
+4. [Critical Hit Calculation](#critical-hit-calculation)
+5. [Damage Calculation](#damage-calculation)
+6. [Damage Application (Shield & Armor)](#damage-application)
+7. [Counter-Attack Calculation](#counter-attack-calculation)
+8. [Shield Regeneration](#shield-regeneration)
+9. [Offhand Attack Rules](#offhand-attack-rules)
+10. [Weapon Bonus Design Considerations](#weapon-bonus-design-considerations)
+
+---
 
 ## Weapon Attribute Bonuses
 
@@ -65,6 +72,61 @@ Weapon Attribute Bonuses:
 Main (Machine Pistol): CombatPower +1, Targeting +2, Speed +3
 Offhand (Machine Pistol): CombatPower +1, Targeting +2, Speed +3
 ```
+
+---
+
+## Attack Speed and Cooldown Calculation
+
+### Overview
+Attack cooldown determines how frequently a robot can attack. It's calculated using the weapon's base cooldown, the robot's Attack Speed attribute, and the weapon's Attack Speed Bonus.
+
+### Formula
+```
+Effective Attack Speed = Robot Attack Speed + Weapon Attack Speed Bonus (per hand)
+Base Cooldown = Weapon Cooldown (or 4 seconds default)
+Cooldown Penalty = Base Cooldown × 1.4 (only for offhand attacks)
+Final Cooldown = Cooldown (with penalty if offhand) / (1 + Effective Attack Speed / 50)
+```
+
+### Implementation
+For each hand (main and offhand), the cooldown is calculated independently:
+```typescript
+const effectiveAttackSpeed = getEffectiveAttribute(robot, robot.attackSpeed, hand, 'attackSpeedBonus');
+const cooldownWithPenalty = hand === 'offhand' ? baseCooldown * 1.4 : baseCooldown;
+return cooldownWithPenalty / (1 + Number(effectiveAttackSpeed) / 50);
+```
+
+### Examples
+
+**Example 1: Main Hand with Weapon Bonus**
+- Robot Attack Speed: 10
+- Weapon Attack Speed Bonus: +3
+- Effective Attack Speed: 13
+- Weapon Base Cooldown: 4 seconds
+- Formula: 4 / (1 + 13/50) = 4 / 1.26 = **3.17 seconds**
+
+**Example 2: Offhand with Weapon Bonus**
+- Robot Attack Speed: 10
+- Weapon Attack Speed Bonus: +3
+- Effective Attack Speed: 13
+- Weapon Base Cooldown: 4 seconds
+- Offhand Penalty Applied: 4 × 1.4 = 5.6 seconds
+- Formula: 5.6 / (1 + 13/50) = 5.6 / 1.26 = **4.44 seconds**
+
+**Example 3: High Attack Speed**
+- Robot Attack Speed: 30
+- Weapon Attack Speed Bonus: +5
+- Effective Attack Speed: 35
+- Weapon Base Cooldown: 4 seconds
+- Formula: 4 / (1 + 35/50) = 4 / 1.7 = **2.35 seconds**
+
+### Notes
+- Each weapon's attack speed bonus only applies to its own hand
+- Offhand attacks have a 40% cooldown penalty (applied before attack speed bonuses)
+- Higher attack speed = faster attacks = shorter cooldown
+- Attack Speed bonus from weapons significantly improves DPS
+
+---
 
 ## Hit Chance Calculation
 
@@ -194,6 +256,35 @@ Counter attacks use the defender's main hand weapon for damage calculation.
 ```
 Counter: 5.00 counter_protocols / 100 × 1.0 × 1.0 = 5.0% (rolled 40.7, result: no counter)
 ```
+
+---
+
+## Shield Regeneration
+
+### Overview
+Robot HP does **NOT** regenerate during or between battles. Energy shields DO regenerate during battle based on the Power Core attribute.
+
+### Formula
+```
+Shield Regen Per Second = Power Core × 0.15
+Stance Bonus = 1.20 if defensive stance, else 1.0
+Effective Regen = Shield Regen Per Second × Stance Bonus × Delta Time
+New Shield = Min(Current Shield + Effective Regen, Max Shield)
+```
+
+### Example
+- Power Core: 20
+- Defensive Stance: Yes
+- Shield Regen: 20 × 0.15 × 1.20 = 3.6 per second
+- After 5 seconds: Shield regenerates 18 HP (up to max)
+
+### Notes
+- Energy shields regenerate continuously during battle
+- Defensive stance provides +20% shield regeneration
+- Robot HP never regenerates during battle
+- Shields reset to maximum after battle ends
+
+---
 
 ## Offhand Attack Rules
 

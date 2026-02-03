@@ -417,20 +417,32 @@ With both facilities: ₡17,250 (62.5% total savings)
 
 The system uses **time-based combat** exclusively for dynamic, engaging gameplay.
 
-### Attack Timing
+**For comprehensive combat formulas, see [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md)** - the authoritative reference for all combat calculations including:
+- Hit chance and critical hit mechanics
+- Damage calculation with weapon bonuses
+- Shield and armor interactions
+- Counter-attack mechanics
+- Attack speed and cooldown formulas
+- Offhand attack rules
 
-**Attack Cooldown:**
+### Attack Timing Overview
+
+Attack cooldown is determined by weapon cooldown and attack speed (including weapon bonuses):
+
 ```
-attack_cooldown_seconds = base_cooldown / (1 + attack_speed / 50)
-base_cooldown = weapon.cooldown (typically 3-5 seconds)
+Effective Attack Speed = Robot Attack Speed + Weapon Attack Speed Bonus
+Final Cooldown = Weapon Cooldown / (1 + Effective Attack Speed / 50)
 
 Example:
 - Weapon with 4 second cooldown
-- Robot with Attack Speed 30
-- Cooldown = 4 / (1 + 30/50) = 4 / 1.6 = 2.5 seconds
+- Robot with Attack Speed 10 + Weapon Bonus +3 = 13 effective
+- Cooldown = 4 / (1 + 13/50) = 4 / 1.26 = 3.17 seconds
 ```
 
-**Opportunity System:**
+For complete cooldown formulas including offhand penalties, see [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md#attack-speed-and-cooldown-calculation).
+
+### Opportunity System
+
 ```
 // Robot doesn't attack immediately when cooldown ready
 // AI waits for optimal moment based on:
@@ -486,233 +498,20 @@ else:
 
 ## Combat Formulas
 
-### Hit Chance
+**All combat formulas have been moved to [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for comprehensive reference.**
 
-```
-base_hit_chance = 70%
+This includes:
+- Hit chance calculation
+- Critical hit mechanics
+- Damage calculation
+- Shield and armor interactions
+- Counter-attack mechanics
+- Shield regeneration
+- Attack speed and cooldown formulas
+- Offhand attack rules
+- Weapon bonus applications
 
-// Attacker bonuses
-targeting_bonus = attacker.targeting_systems / 2
-stance_bonus = (attacker.stance == offensive) ? 5% : 0%
-
-// Defender penalties
-evasion_penalty = defender.evasion_thrusters / 3
-gyro_penalty = defender.gyro_stabilizers / 5
-
-// Calculate base hit chance
-calculated_hit = base_hit_chance + targeting_bonus + stance_bonus - evasion_penalty - gyro_penalty
-
-// Add randomness: ±10% variance per attack
-random_variance = random(-10, +10)
-hit_chance = calculated_hit + random_variance
-
-// Clamp to bounds
-hit_chance = clamp(hit_chance, 10%, 95%)
-
-// Roll for hit
-is_hit = random(0, 100) < hit_chance
-```
-
-### Critical Hit Mechanics
-
-**Critical rolls happen AFTER hit is confirmed:**
-
-```
-// Step 1: Check if attack hits
-if not is_hit:
-    return MISS
-
-// Step 2: Check for critical (only if hit confirmed)
-base_crit = 5%
-crit_chance = base_crit + (attacker.critical_systems / 8) + (attacker.targeting_systems / 25)
-
-// Loadout bonuses
-if loadout == TWO_HANDED:
-    crit_chance += 10%
-
-// Calculate base crit chance
-calculated_crit = crit_chance
-
-// Add randomness: ±10% variance per attack
-random_variance = random(-10, +10)
-crit_chance = calculated_crit + random_variance
-
-// Clamp to bounds
-crit_chance = clamp(crit_chance, 0%, 50%)
-
-// Roll for critical
-is_critical = random(0, 100) < crit_chance
-```
-
-**Critical Impact:**
-```
-if is_critical:
-    // Base multiplier
-    crit_multiplier = 2.0
-    
-    // Loadout modifications
-    if attacker.loadout == TWO_HANDED:
-        crit_multiplier = 2.5
-    
-    // Defender resistance
-    crit_multiplier -= (defender.damage_dampeners / 100)
-    crit_multiplier = max(crit_multiplier, 1.2)  // Minimum 20% bonus
-    
-    final_damage *= crit_multiplier
-```
-
-### Damage Calculation
-
-**Base Damage:**
-```
-// Weapon base damage
-base_damage = weapon.base_damage
-
-// Combat Power applies to ALL weapon types (updated February 2026: 1.5% per point)
-combat_power_mult = 1 + (attacker.combat_power * 1.5 / 100)
-base_damage *= combat_power_mult
-
-// Loadout modifiers
-if attacker.loadout == TWO_HANDED:
-    base_damage *= 1.25
-elif attacker.loadout == DUAL_WIELD:
-    base_damage *= 0.90
-```
-
-**Weapon-Specific Bonuses:**
-```
-// Melee weapons benefit from hydraulic systems
-if weapon.type == 'melee':
-    melee_bonus = attacker.hydraulic_systems * 0.4
-    base_damage += melee_bonus
-```
-
-**Weapon Control:**
-```
-control_mult = 1 + (attacker.weapon_control / 100)
-modified_damage = base_damage * control_mult
-```
-
-**Penetration vs Defense:**
-```
-// Armor reduction formula (updated February 2026 for better penetration scaling)
-armor_reduction = defender.armor_plating * (1 - attacker.penetration / 100)
-armor_reduction = min(armor_reduction, 30)  // Cap at 30 damage reduction
-
-// Shield handling (separate pool)
-if defender.current_shield > 0:
-    // Energy shields take damage first, THEN HP
-    shield_damage = modified_damage * 0.7  // Shields absorb at 70% effectiveness
-    
-    // Apply penetration to shields too
-    shield_penetration = shield_damage * (1 + attacker.penetration / 200)
-    
-    damage_to_shield = min(shield_penetration, defender.current_shield)
-    defender.current_shield -= damage_to_shield
-    
-    // Remaining damage "bleeds through" at reduced rate
-    if shield_penetration > defender.current_shield:
-        overflow = (shield_penetration - defender.current_shield) * 0.3
-        damage_to_hp = max(1, overflow - armor_reduction)  // armor_reduction capped at 30
-    else:
-        damage_to_hp = 0
-else:
-    // No shield, damage goes directly to HP
-    damage_to_hp = max(1, modified_damage - armor_reduction)  // armor_reduction capped at 30
-```
-
-**Armor Reduction Cap Rationale:**
-- Without cap: High armor (50+) with low enemy penetration could reduce damage by 50+ points
-- With cap: Maximum 30 damage reduction ensures attacks remain effective
-- Maintains armor value while preventing defensive builds from being unkillable
-- Encourages penetration builds as counterplay to high armor
-
-**Critical Application:**
-```
-if is_critical:
-    damage_to_hp *= crit_multiplier
-```
-
-**Final Damage:**
-```
-// Apply to defender
-defender.current_hp -= damage_to_hp
-
-// Track for repair costs
-defender.damage_taken += damage_to_hp
-```
-
-### Shield Mechanics
-
-**Nomenclature Clarity**:
-- **Energy Shield**: The `currentShield` HP pool that robots have (powered by Shield Capacity attribute)
-- **Shield Weapon**: Physical equipment type that robots can equip in the "weapon_shield" loadout
-
-**Energy Shield System:**
-
-```
-max_shield = shield_capacity_attribute * 2
-
-// Loadout bonus
-if loadout == "weapon_shield":
-    max_shield *= 1.20
-
-// Power Core provides energy shield regeneration
-shield_regen_per_second = power_core * 0.15
-
-// Defensive stance bonus
-if stance == DEFENSIVE:
-    shield_regen_per_second *= 1.20
-```
-
-**Energy Shield vs HP:**
-- Energy shields are a separate HP pool from robot HP
-- **Damage Order**: Energy shields deplete FIRST, then HP takes damage
-- Penetration affects both energy shields and HP (see Penetration vs Defense formula)
-- Energy shields regenerate during battle (HP does NOT regenerate - robots don't heal)
-- Energy shield damage doesn't directly affect repair costs (only HP damage does)
-- When energy shields break, there's no penalty except vulnerability
-- Energy weapons deal +20% damage vs energy shields (future enhancement)
-
-### Counter Attack
-
-**Counter Chance:**
-```
-base_counter = counter_protocols / 100
-
-// Stance modifier
-if stance == DEFENSIVE:
-    base_counter *= 1.15
-
-// Loadout modifier
-if loadout == "weapon_shield":
-    base_counter *= 1.10
-
-counter_chance = clamp(base_counter, 0%, 40%)
-```
-
-**Counter Trigger:**
-```
-// After defender is hit (and survives)
-if random(0, 100) < counter_chance:
-    // Counter attack at 70% normal damage
-    execute_counter_attack(damage = normal_damage * 0.7)
-```
-
-### Energy Shield Regeneration
-
-**Power Core Regeneration:**
-```
-// Power Core regenerates ENERGY SHIELDS, not HP
-// Robots do not heal HP during battle
-shield_regen_per_second = power_core * 0.15
-
-// Apply regeneration each second
-defender.current_shield += shield_regen_per_second
-defender.current_shield = min(defender.current_shield, max_shield)
-```
-
-**Note**: Robot HP does NOT regenerate during or between battles. Damage to HP persists until repaired with Credits.
+Please refer to COMBAT_FORMULAS.md for the authoritative, up-to-date formulas that match the current implementation.
 
 ---
 
