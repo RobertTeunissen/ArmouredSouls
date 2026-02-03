@@ -282,6 +282,74 @@ async function createBattleRecord(
     durationSeconds: result.durationSeconds,
   });
   
+  // Add financial reward details to battle log
+  const winnerPrestige = isRobot1Winner ? robot1User?.prestige || 0 : robot2User?.prestige || 0;
+  const winnerReward = isRobot1Winner ? robot1Reward : robot2Reward;
+  const loserReward = isRobot1Winner ? robot2Reward : robot1Reward;
+  const prestigeMultiplier = getPrestigeMultiplier(winnerPrestige);
+  
+  // Add reward summary to battle log
+  if (!result.isDraw && !result.isByeMatch) {
+    const baseWinReward = leagueRewards.midpoint;
+    const prestigeBonus = winnerReward - participationReward - baseWinReward;
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_summary',
+      message: `💰 Financial Rewards Summary`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_detail',
+      message: `   Winner (${isRobot1Winner ? robot1.name : robot2.name}): ₡${winnerReward.toLocaleString()}`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_breakdown',
+      message: `      • League Base (${scheduledMatch.leagueType}): ₡${baseWinReward.toLocaleString()} (range: ₡${leagueRewards.min.toLocaleString()}-₡${leagueRewards.max.toLocaleString()})`,
+    });
+    
+    if (prestigeBonus > 0) {
+      battleLog.push({
+        timestamp: result.durationSeconds,
+        type: 'reward_breakdown',
+        message: `      • Prestige Bonus (${Math.round((prestigeMultiplier - 1) * 100)}%): +₡${prestigeBonus.toLocaleString()}`,
+      });
+    }
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_breakdown',
+      message: `      • Participation: ₡${participationReward.toLocaleString()}`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_detail',
+      message: `   Loser (${isRobot1Winner ? robot2.name : robot1.name}): ₡${loserReward.toLocaleString()}`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_breakdown',
+      message: `      • Participation: ₡${participationReward.toLocaleString()}`,
+    });
+  } else if (result.isDraw) {
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_summary',
+      message: `💰 Financial Rewards Summary (Draw)`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_detail',
+      message: `   Both robots: ₡${participationReward.toLocaleString()} (participation only)`,
+    });
+  }
+  
   // Create battle record
   const battle = await prisma.battle.create({
     data: {

@@ -410,6 +410,15 @@ function AdminPage() {
                           {result.battles.summary.totalBattles} successful
                         </p>
                       )}
+                      {result.finances && (
+                        <div className="ml-2 text-yellow-400">
+                          <p>- Finances: ₡{result.finances.totalCostsDeducted.toLocaleString()} deducted</p>
+                          <p className="ml-2">• {result.finances.usersProcessed} users processed</p>
+                          {result.finances.bankruptUsers > 0 && (
+                            <p className="ml-2 text-red-400">• ⚠️ {result.finances.bankruptUsers} bankruptcies!</p>
+                          )}
+                        </div>
+                      )}
                       {result.rebalancing && (
                         <p>
                           - Rebalancing: {result.rebalancing.summary.totalPromoted} promoted, 

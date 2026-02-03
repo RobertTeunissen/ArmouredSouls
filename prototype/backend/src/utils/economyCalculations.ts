@@ -481,3 +481,145 @@ export function getParticipationReward(league: string): number {
   const baseReward = getLeagueBaseReward(league);
   return Math.round(baseReward.min * 0.3);
 }
+
+// ==================== DAILY FINANCIAL PROCESSING ====================
+
+export interface DailyFinancialSummary {
+  userId: number;
+  username: string;
+  startingBalance: number;
+  operatingCosts: {
+    total: number;
+    breakdown: Array<{ facilityType: string; facilityName: string; cost: number }>;
+  };
+  repairCosts: {
+    total: number;
+    robotsRepaired: number;
+  };
+  totalCosts: number;
+  endingBalance: number;
+  balanceChange: number;
+  isBankrupt: boolean;
+  canAffordCosts: boolean;
+}
+
+/**
+ * Process daily financial obligations for a user
+ * - Deduct operating costs
+ * - Track repair costs (repairs should be done separately)
+ * - Check for bankruptcy
+ */
+export async function processDailyFinances(userId: number): Promise<DailyFinancialSummary> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error(`User ${userId} not found`);
+  }
+
+  const startingBalance = user.currency;
+
+  // Calculate operating costs
+  const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
+
+  // Get robots needing repair
+  const robots = await prisma.robot.findMany({
+    where: {
+      userId,
+      currentHP: {
+        lt: prisma.robot.fields.maxHP,
+      },
+      NOT: {
+        name: 'Bye Robot',
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      currentHP: true,
+      maxHP: true,
+      repairCost: true,
+    },
+  });
+
+  // Calculate total repair costs (but don't actually repair - that's done separately)
+  const totalRepairCost = robots.reduce((sum, robot) => {
+    return sum + (robot.repairCost || 0);
+  }, 0);
+
+  // Total costs to deduct
+  const totalCosts = operatingCosts.total;
+
+  // Deduct operating costs from user balance
+  const canAffordCosts = user.currency >= totalCosts;
+  const newBalance = canAffordCosts ? user.currency - totalCosts : 0;
+
+  // Update user balance
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      currency: newBalance,
+    },
+  });
+
+  const isBankrupt = newBalance <= 0;
+
+  return {
+    userId: user.id,
+    username: user.username,
+    startingBalance,
+    operatingCosts,
+    repairCosts: {
+      total: totalRepairCost,
+      robotsRepaired: 0, // Not repaired in this function
+    },
+    totalCosts,
+    endingBalance: newBalance,
+    balanceChange: newBalance - startingBalance,
+    isBankrupt,
+    canAffordCosts,
+  };
+}
+
+/**
+ * Process daily finances for all users
+ */
+export async function processAllDailyFinances(): Promise<{
+  usersProcessed: number;
+  totalCostsDeducted: number;
+  bankruptUsers: number;
+  summaries: DailyFinancialSummary[];
+}> {
+  const users = await prisma.user.findMany({
+    where: {
+      role: {
+        not: 'admin', // Don't process admin accounts
+      },
+    },
+  });
+
+  const summaries: DailyFinancialSummary[] = [];
+  let totalCostsDeducted = 0;
+  let bankruptUsers = 0;
+
+  for (const user of users) {
+    try {
+      const summary = await processDailyFinances(user.id);
+      summaries.push(summary);
+      totalCostsDeducted += summary.totalCosts;
+      if (summary.isBankrupt) {
+        bankruptUsers++;
+      }
+    } catch (error) {
+      console.error(`[Daily Finances] Error processing user ${user.id}:`, error);
+    }
+  }
+
+  return {
+    usersProcessed: users.length,
+    totalCostsDeducted,
+    bankruptUsers,
+    summaries,
+  };
+}
