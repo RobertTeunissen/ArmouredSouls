@@ -1,9 +1,11 @@
 # Product Requirements Document: Prestige and Fame System
 
-**Last Updated**: February 2, 2026  
-**Status**: Draft - Implementation Planning  
+**Last Updated**: February 3, 2026  
+**Status**: Partially Implemented - Core Systems Active  
 **Owner**: Robert Teunissen  
 **Epic**: Economy System - Prestige and Fame
+
+> **⚠️ AUTHORITATIVE DOCUMENT**: This is the official specification for Prestige and Fame systems in Armoured Souls. For quick reference, see [STABLE_SYSTEM.md](STABLE_SYSTEM.md) (prestige formulas) and [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md) (fame tracking).
 
 ---
 
@@ -23,28 +25,96 @@ This PRD defines the requirements for implementing the Prestige and Fame systems
 
 ### Current State
 
-**What Exists:**
-- ✅ Database schema with `prestige` field on User model (stable-level)
-- ✅ Database schema with `fame` field on Robot model (robot-level)
-- ✅ Prestige earning formulas documented in STABLE_SYSTEM.md (battles, tournaments, milestones)
-- ✅ Prestige benefits documented in STABLE_SYSTEM.md (facility unlocks, income multipliers)
-- ✅ 14 facility types with prestige-gated levels (ranging from 1,000 to 50,000 prestige)
-- ✅ Income multiplier formulas that scale with prestige
-- ✅ Frontend displays prestige in dashboard (prototype/frontend/src/pages/DashboardPage.tsx)
-- ✅ Frontend displays fame in robot performance stats (prototype/frontend/src/components/PerformanceStats.tsx)
+#### ✅ **Fully Implemented**
 
-**What's Missing:**
-- ❌ Fame earning mechanics (not yet defined beyond database field)
-- ❌ Fame benefits system (how fame affects gameplay)
-- ❌ Prestige earning system (backend implementation for battles/tournaments)
-- ❌ UI showing prestige unlocks and progress toward next milestone
-- ❌ UI showing fame benefits and individual robot reputation
-- ❌ Backend API endpoints for prestige/fame tracking
-- ❌ Prestige leaderboard
-- ❌ Fame-based matchmaking considerations
-- ❌ Visual representation of prestige tiers/ranks
-- ❌ Educational tooltips explaining prestige vs fame
-- ❌ Achievement system integration with prestige milestones
+**Database Schema:**
+- ✅ Database schema with `prestige` field on User model (stable-level) - `prototype/backend/prisma/schema.prisma`
+- ✅ Database schema with `fame` field on Robot model (robot-level) - `prototype/backend/prisma/schema.prisma`
+
+**Backend - Prestige Earning:**
+- ✅ **Battle wins award prestige** - `prototype/backend/src/services/battleOrchestrator.ts:64-76`
+  - Bronze: +5 | Silver: +10 | Gold: +20 | Platinum: +30 | Diamond: +50 | Champion: +75
+  - Applied to User model via `updateRobotStats()` (lines 313-394)
+  - Only winners earn prestige (no prestige for draws or bye-matches)
+
+**Backend - Fame Earning:**
+- ✅ **Battle wins award fame with performance bonuses** - `prototype/backend/src/services/battleOrchestrator.ts:82-116`
+  - Base fame by league: Bronze: +2 | Silver: +5 | Gold: +10 | Platinum: +15 | Diamond: +25 | Champion: +40
+  - Perfect victory (no damage): 2x multiplier
+  - Dominating victory (>80% HP): 1.5x multiplier
+  - Comeback victory (<20% HP): 1.25x multiplier
+  - Applied to winning Robot only
+
+**Backend - Prestige Benefits:**
+- ✅ **Income multipliers calculated** - `prototype/backend/src/routes/leaderboards.ts:34-40, 186-187`
+  - Battle winnings bonus: +5% (5K prestige), +10% (10K), +15% (25K), +20% (50K)
+  - Merchandising multiplier: `1 + (prestige / 10000)` formula implemented
+
+**Backend API Endpoints:**
+- ✅ **GET `/api/leaderboards/prestige`** - Returns prestige leaderboard with rankings, income bonuses, merchandising multipliers
+- ✅ **GET `/api/leaderboards/fame`** - Returns fame leaderboard with robot rankings, fame tiers, performance stats
+
+**Frontend UI:**
+- ✅ **Prestige Leaderboard Page** - `prototype/frontend/src/pages/LeaderboardsPrestigePage.tsx`
+  - Full table with prestige, rank titles (Novice/Established/Veteran/Elite/Champion/Legendary), income bonuses
+  - Legend explaining prestige tier benefits
+- ✅ **Fame Leaderboard Page** - `prototype/frontend/src/pages/LeaderboardsFamePage.tsx`
+  - Robot rankings by fame with tier colors
+  - League and battle filters
+  - Fame tiers: Unknown/Known/Famous/Renowned/Legendary/Mythical
+- ✅ **Dashboard displays prestige** - `prototype/frontend/src/pages/DashboardPage.tsx:94`
+- ✅ **Performance Stats shows robot fame** - `prototype/frontend/src/components/PerformanceStats.tsx:86-87`
+- ✅ **Navigation menu** - Links to both prestige and fame leaderboards
+
+**Documentation:**
+- ✅ Prestige earning formulas documented in [STABLE_SYSTEM.md](STABLE_SYSTEM.md) (lines 292-330)
+- ✅ Prestige benefits documented in [STABLE_SYSTEM.md](STABLE_SYSTEM.md) (facility unlocks, income multipliers)
+- ✅ 14 facility types with prestige-gated levels (ranging from 1,000 to 50,000 prestige) defined
+
+#### 🚧 **Partially Implemented**
+
+**Prestige Benefits:**
+- ⚠️ **Income multipliers calculated but may not be applied** - Formulas exist in leaderboard endpoint but may not integrate with actual battle rewards/economic system
+- ⚠️ **Facility unlocks defined but not enforced** - Prestige requirements documented but facility upgrade system may not check prestige thresholds
+
+#### ❌ **Not Yet Implemented**
+
+**Prestige Earning - Missing Sources:**
+- ❌ **Milestone achievements system**: No backend tracking for one-time achievements
+  - ELO milestones (1500, 1750, 2000, 2250, 2500): +50, +100, +200, +300, +500 prestige
+  - Win count milestones (100/250/500/1K/2.5K/5K): +50 to +2,000 prestige
+  - Championship milestones: First tournament win, 10 tournament wins, championship titles
+- ❌ **Tournament prestige awards**: Local/Regional/National/International/World Championship (+100 to +2,500)
+- ❌ **Special achievements**: Perfect season, undefeated streaks, upset victories
+
+**Fame Earning - Missing Bonuses:**
+- ❌ **Streak bonuses**: +10 to +100 fame for consecutive win streaks (5/10/25/50 wins)
+- ❌ **Higher-tier opponent bonus**: +5 fame for beating higher league robot
+- ❌ **Robot-specific milestones**: ELO achievements, kill counts, damage milestones, battle count rewards
+
+**Fame Benefits - NOT Implemented:**
+- ❌ **Streaming revenue formula**: `base × (1 + battles/1000) × (1 + fame/5000)` not integrated with Income Generator facility
+- ❌ **Matchmaking quality**: Famous robots (1,000+ fame) not affecting match pairing or opponent quality
+- ❌ **Featured Matches section**: High-fame robot battles not highlighted
+- ❌ **Spectator prioritization**: Famous robot matches not given viewing priority
+- ❌ **Robot cosmetics**: Fame-based titles, entrance animations, custom paint jobs (1K-5K+ fame)
+- ❌ **Trading value modifier**: Fame not affecting marketplace robot valuations (Phase 2+ feature)
+
+**Prestige Benefits - Enforcement NOT Implemented:**
+- ❌ **Facility unlock gates**: System does not check prestige requirements when upgrading facilities
+- ❌ **Booking Office tournament access**: Tournament tiers not gated by prestige level
+- ❌ **Cosmetic unlocks**: Paint jobs (2.5K), weapon skins (5K), frame designs (10K), arena designs (50K) not available
+- ❌ **Hall of Fame access**: 25,000+ prestige Hall of Fame feature not built
+
+**UI Components - Missing:**
+- ❌ **Facility unlock progress UI**: No visual showing prestige requirements and progress toward next unlock
+- ❌ **Prestige achievement notifications**: No alerts when prestige milestones reached
+- ❌ **Fame achievement notifications**: No alerts for streak/performance/milestone bonuses
+- ❌ **Prestige progress bar**: No visual indication of progress toward next facility unlock or tier
+- ❌ **Detailed benefit breakdown**: UI not showing how prestige multipliers affect actual income
+- ❌ **Robot famous status indicator**: No visual badge for high-fame robots in roster/battle screens
+- ❌ **Post-battle reputation summary**: Battle results UI not showing prestige/fame earned
+- ❌ **Educational tooltips**: No in-game explanations of prestige vs. fame differences
 
 ### Design References
 
@@ -52,6 +122,47 @@ This PRD defines the requirements for implementing the Prestige and Fame systems
 - **[GAME_DESIGN.md](GAME_DESIGN.md)**: Fame as secondary progression currency (line 82)
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Individual robot fame tracking (line 126)
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Database structure for prestige and fame fields
+
+### Implementation Summary
+
+**Implementation Progress**: ~40% Complete (Core Earning Systems + Leaderboards)
+
+**Phase 1 - Core Earning ✅ COMPLETE:**
+- Battle wins award prestige (stable-level) and fame (robot-level)
+- Fame includes performance bonuses (perfect, dominating, comeback victories)
+- Database schema supports both reputation types
+- Prestige and fame leaderboard pages with full UI
+
+**Phase 2 - Benefits Calculated 🚧 PARTIAL:**
+- Income multipliers calculated (prestige)
+- Formulas exist but may not be fully integrated with economic system
+- Facility unlock gates defined but not enforced
+
+**Phase 3 - Advanced Earning ❌ NOT STARTED:**
+- Milestone achievements (ELO, win count, championships)
+- Streak bonuses for fame
+- Tournament prestige awards
+- Robot-specific fame milestones
+
+**Phase 4 - Benefits Applied ❌ NOT STARTED:**
+- Fame affecting streaming revenue
+- Fame affecting matchmaking quality
+- Prestige gates enforced on facility upgrades
+- Cosmetic unlocks (paint jobs, weapon skins, etc.)
+
+**Phase 5 - UI/UX Polish ❌ NOT STARTED:**
+- Facility unlock progress UI
+- Achievement notifications
+- Post-battle reputation summary
+- Educational tooltips
+
+**Next Implementation Steps:**
+1. Verify and test prestige/fame income multipliers apply to actual earnings
+2. Implement facility unlock gate checking (prestige requirements)
+3. Add milestone achievement tracking system
+4. Integrate fame with streaming revenue formula
+5. Build facility unlock progress UI
+6. Add post-battle reputation display
 
 ### Why These Features Matter
 

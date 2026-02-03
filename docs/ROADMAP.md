@@ -829,7 +829,7 @@ Features and systems to consider for future development. These are not yet plann
     - Tournament types (local, regional, championship, world)
     - Entry requirements (Credits cost, prestige threshold, ELO rating?)
     - Tournament structure (single elimination, Swiss, round-robin)
-    - Reward structure (Credits, prestige, fame, exclusive items)
+    - Reward structure (Credits, prestige, fame, exclusive items) - See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
     - How tournaments affect robot/stable rankings
     - Tournament frequency and scheduling
     - Special tournament rules and formats

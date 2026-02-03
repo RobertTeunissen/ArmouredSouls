@@ -1,6 +1,6 @@
 # Product Requirements Document: Economy System
 
-**Last Updated**: February 2, 2026  
+**Last Updated**: February 3, 2026  
 **Status**: Design Document  
 **Owner**: Robert Teunissen  
 **Epic**: Economy System Implementation
@@ -51,13 +51,13 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 ### Design References
 
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: **Authoritative source** for prestige system, fame mechanics, facility costs, and daily income/expense examples
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: Complete prestige and fame system specification (earning, benefits)
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Facility costs, economic formulas, daily income/expense examples
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Upgrade costs, repair formulas, currency definition, and fame tracking
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Weapon prices and crafting costs
 - **[GAME_DESIGN.md](GAME_DESIGN.md)**: Overall economic philosophy and progression
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Data model for tracking resources
-
-**Note**: Where this document conflicts with STABLE_SYSTEM.md on prestige/fame mechanics, STABLE_SYSTEM.md is authoritative.
+- **[PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md)**: Weapon economy, 23 starting weapons.
 
 ---
 
@@ -72,6 +72,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - Range: 0 to 999,999,999,999 (database supports up to ~2 billion)
 
 **Secondary Resource: Prestige (Stable-Level)**
+- **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**
 - Not a spendable currency - acts as unlock threshold
 - Earned through victories, achievements, milestones, tournaments
 - Never decreases (only increases)
@@ -80,15 +81,16 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - Provides battle winnings multiplier
 
 **Tertiary Resource: Fame (Robot-Level)**
+- **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**
 - Individual robot reputation (separate from stable prestige)
-- Earned through victories (same per-win values as prestige)
+- Earned through individual robot victories with performance bonuses
 - Tracked per robot, aggregated for stable-level calculations
 - Used in streaming revenue calculations (aggregate)
 - Displayed for competitive rankings
 
 ### Economic Philosophy
 
-1. **Multiple Paths to Success**: Players can focus on quality (one powerful robot), quantity (multiple robots), or specialization (weapon trading)
+1. **Multiple Paths to Success**: Players can focus on quality (one powerful robot), quantity (multiple robots), or specialization (weapon trading, specific tournaments, 2v2 or other team battles)
 2. **Meaningful Choices**: Every purchase should have trade-offs and alternatives
 3. **Sustainable Operations**: Players should be able to run profitable stables with proper management
 4. **Risk/Reward Balance**: Higher risks (low yield threshold, aggressive facilities) offer higher rewards
@@ -161,11 +163,12 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 - **Net cost with facility**: ₡300,000 + ₡1,179,900 = ₡1,479,900
 - **vs without facility**: ₡1,242,000
 
-**Conclusion**: Training Facility Level 1 is NOT cost-effective for early game (1→10 upgrades). It only becomes valuable when upgrading to higher levels or when upgrading multiple robots. **Recommendation**: Prioritize attribute upgrades first, purchase Training Facility later when preparing for level 15+ upgrades or when managing 2+ robots.
+**Conclusion**: Training Facility Level 1 is NOT cost-effective for early game (1→10 upgrades). It only becomes valuable when upgrading to higher levels or when upgrading multiple robots. 
+**Recommendation**: Prioritize attribute upgrades first, purchase Training Facility later when preparing for level 15+ upgrades or when managing 2+ robots.
 
 ### 2. Facility Purchases & Upgrades
 
-**14 Facility Types**, each with **10 upgrade levels** (Level 0 = not purchased, Levels 1-10 = upgraded). Some levels require prestige thresholds.
+**14 Facility Types**, most with **10 upgrade levels** (Level 0 = not purchased, Levels 1-10 = upgraded). Some levels require prestige thresholds (Roster Expansion is the only facility with 9 levels. 
 
 **Purchase Costs Summary** (Level 1 costs for each facility):
 
@@ -197,57 +200,48 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 
 ### 3. Weapon Purchases
 
-**Phase 1 Implemented Weapons** (11 total):
+**Phase 1 Implemented Weapons** (23 total):
 
-| Weapon | Type | Cost | Hands Required |
-|--------|------|------|----------------|
-| Practice Sword | Melee | ₡0 (FREE) | One |
-| Machine Gun | Ballistic | ₡100,000 | One |
-| Combat Shield | Shield | ₡100,000 | Shield |
-| Shotgun | Ballistic | ₡120,000 | Two |
-| Laser Rifle | Energy | ₡150,000 | One |
-| Power Sword | Melee | ₡180,000 | One |
-| Hammer | Melee | ₡200,000 | Two |
-| Plasma Blade | Melee | ₡250,000 | One |
-| Plasma Cannon | Energy | ₡300,000 | Two |
-| Railgun | Ballistic | ₡350,000 | Two |
-| Ion Beam | Energy | ₡400,000 | Two |
+> **For complete weapon catalog, pricing, and methodology**: See **[PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md)** - the authoritative document for weapon economy system (implemented in `prototype/backend/prisma/seed.ts`).
 
 **Weapon Pricing Methodology**:
 
-Weapon prices are based on total attribute bonuses provided:
+All weapons use an exponential pricing formula based on attribute bonuses and DPS (Damage Per Second):
 
-1. **Base Price**: ₡50,000 (starter weapon baseline)
-2. **Attribute Bonus Value**: Each +1 attribute bonus = ₡15,000-₡20,000
-3. **Special Property Premium**: +₡30,000-₡50,000 for unique effects
-4. **Hand Requirement Modifier**: Two-handed weapons typically 1.5-2x more expensive
+1. **Base Price**: ₡50,000 (Practice Sword baseline)
+2. **Exponential Scaling**: Higher attribute bonuses cost progressively more per point
+3. **DPS Premium**: Weapons with high damage and low cooldown cost more
+4. **No Special Properties**: All special properties removed (not implemented in combat system)
 
-*Examples:*
-- **Machine Gun** (₡100K): +11 attribute points × ₡9K ≈ ₡100K
-- **Power Sword** (₡180K): +14 attribute points × ₡12.9K ≈ ₡180K
-- **Railgun** (₡350K): +14 attribute points + high penetration special = ₡350K
+**Weapon Price Range**: ₡50,000 (Practice Sword) to ₡600,000+ (Elite two-handed weapons)
+
+**Key Weapon Categories**:
+- **Budget One-Handed** (₡50K-₡150K): Practice Sword, Combat Knife, Machine Gun, Laser Rifle, Shock Baton
+- **Mid-Tier One-Handed** (₡150K-₡250K): Power Sword, Plasma Blade, Gatling Gun
+- **Premium One-Handed** (₡250K-₡400K): Disruptor Beam, Ion Blade
+- **Shields** (₡100K-₡300K): Combat Shield, Energy Shield, Fortress Shield
+- **Two-Handed** (₡150K-₡600K): Shotgun, Hammer, Railgun, Plasma Cannon, Ion Beam, Devastator Cannon
 
 **Weapons vs Academy Investment**:
-- **Academy** (₡400K): Unlocks attribute cap 10→15 for 5-6 attributes in category
-  - Allows +5 levels per attribute = potential +30 total attribute points across category
-  - Permanent benefit, applies to all future robots
-- **Premium Weapon** (₡300K): Provides immediate +15-20 attribute points
+- **Academy** (₡400K-₡500K): Unlocks attribute cap 10→15 for 5-6 attributes in category
+  - Allows +5 levels per attribute = potential +25-30 total attribute points across category
+  - Permanent benefit, applies to all current and future robots
+  - Has daily operating costs (₡800-₡1,000/day)
+- **Premium Weapon** (₡300K-₡400K): Provides immediate +15-20 attribute points
   - Immediate benefit, can be swapped between robots
   - No operating cost
+  - Can be sold or traded (future feature)
 
 **Strategy Comparison**:
-- **Early Game**: Weapons provide faster power spike with lower upfront cost
-- **Mid-Late Game**: Academies provide better long-term value for multiple robots
-- **Optimal**: Mix of both - key weapons for immediate power, academies for scaling
+- **Early Game**: Budget weapons (₡50K-₡150K) provide power spike with low upfront cost
+- **Mid Game**: Mix of mid-tier weapons (₡150K-₡250K) and first academy
+- **Late Game**: Premium weapons (₡300K+) and multiple academies for attribute cap increases
+- **Optimal**: Balanced portfolio - weapons for immediate power, academies for long-term scaling
 
-**Dual Weapon vs Single Weapon**:
-- **Dual Wield** (e.g., 2× Machine Guns = ₡200K): +22 attribute points
-- **Single Two-Handed** (e.g., Railgun = ₡350K): +14 attribute points + special properties
-- **Weapon + Shield** (e.g., Power Sword + Combat Shield = ₡280K): +33 attribute points (offensive + defensive)
-
-Balance: Dual weapons provide more raw stat bonuses. Two-handed weapons provide special properties. Both strategies are viable depending on build focus. 
-
-**Weapon Range**: ₡0 (free starter) to ₡400,000
+**Loadout Strategy Examples**:
+- **Dual Wield** (e.g., 2× Gatling Guns = 2×₡200K = ₡400K): High DPS, strong offense
+- **Single Two-Handed** (e.g., Plasma Cannon = ₡400K): Balanced stats, high burst damage
+- **Weapon + Shield** (e.g., Power Sword ₡200K + Energy Shield ₡200K = ₡400K): Balanced offense + defense
 
 **Weapon Ownership**:
 - Weapons are purchased and placed in stable's weapon storage
@@ -272,6 +266,8 @@ Balance: Dual weapons provide more raw stat bonuses. Two-handed weapons provide 
 - Plasma Cannon (₡300,000) with Workshop Level 5:
   - Discount: 25%
   - Final cost: ₡300,000 × 0.75 = ₡225,000
+ 
+--> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented.
 
 ### 4. Weapon Crafting (Unlockable)
 
@@ -405,6 +401,10 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 
 **Special Cases**:
 - **Roster Expansion**: ₡500/day per robot slot beyond first (first slot is free)
+  - Level 0: 1 robot slot (free, ₡0/day operating cost)
+  - Level 1: 2 robot slots (₡500/day total - ₡500 for the 2nd slot)
+  - Level 2: 3 robot slots (₡1,000/day total - ₡500 each for 2nd and 3rd slots)
+  - Formula: `operating_cost = (current_roster_size - 1) × ₡500/day`
 - **Coaching Staff**: ₡3,000/day when coach is active (only if Coaching Staff facility purchased)
 - **Booking Office**: ₡0/day (generates prestige instead)
 
@@ -423,34 +423,49 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 
 ### 8. Total Startup Costs
 
-**Minimum Viable Stable** (₡1,500,000):
-- 1 Robot: ₡500,000
-- 1 Good weapon (e.g., Laser Rifle): ₡150,000
-- Repair Bay Level 1: ₡200,000
-- Basic attribute upgrades (50 levels): ~₡150,000
-- Buffer for repairs and operations: ₡500,000
+**Player Behavior Reality**: Most players will spend nearly all starting credits to maximize immediate robot power, keeping only minimal buffer (₡10K-₡50K) for first repairs. The game should accommodate this behavior.
 
-**Balanced Startup** (₡2,000,000 - recommended):
+**Minimum Viable Stable** (₡1,950,000 spent, ₡50K buffer):
 - 1 Robot: ₡500,000
-- 1 Premium weapon (e.g., Plasma Cannon): ₡300,000
+- 1 Budget weapon (e.g., Practice Sword or Machine Gun): ₡50,000-₡100,000
+- Repair Bay Level 1: ₡200,000
+- Basic attribute upgrades (100 levels @ avg ₡550): ~₡55,000
+- One Academy Level 1 (e.g., Combat Training): ₡400,000
+- Additional attribute upgrades (100 levels): ~₡650,000
+- **Buffer**: ₡50,000 (1-2 repairs)
+
+**Balanced Startup** (₡1,970,000 spent, ₡30K buffer - recommended):
+- 1 Robot: ₡500,000
+- 1 Mid-tier weapon (e.g., Power Sword): ₡200,000
 - Repair Bay Level 1: ₡200,000
 - Training Facility Level 1: ₡300,000
-- Moderate attribute upgrades (100 levels): ~₡350,000
-- Buffer: ₡350,000
+- Attribute upgrades focused on key stats (150 levels): ~₡770,000
+- **Buffer**: ₡30,000 (1 repair)
 
-**Aggressive Startup** (₡2,000,000 - risky):
+**Aggressive Startup** (₡1,985,000 spent, ₡15K buffer - risky):
 - 2 Robots: ₡1,000,000
-- 2 Basic weapons (e.g., Machine Guns): ₡200,000
+- 2 Budget weapons (e.g., 2× Machine Guns): ₡200,000
 - Repair Bay Level 1: ₡200,000
-- Minimal upgrades (50 levels split): ~₡150,000
-- Buffer: ₡450,000
+- Split attribute upgrades (100 levels total): ~₡585,000
+- **Buffer**: ₡15,000 (emergency only)
 
-**Note on Buffers**: Players typically minimize buffers to maximize robot power. The game should include:
-1. **Low balance warnings** (when balance < ₡100K)
-2. **Bankruptcy protection** (prevent entering battles without repair funds)
-3. **Credit loans** or **emergency funding** options for players who overextend
+**Power Maximizer** (₡1,995,000 spent, ₡5K buffer - very risky):
+- 1 Robot: ₡500,000
+- 1 Premium weapon (e.g., Plasma Cannon): ₡400,000
+- Repair Bay Level 1: ₡200,000
+- Heavy attribute investment (200 levels): ~₡895,000
+- **Buffer**: ₡5,000 (forced to win first battle or bankrupt)
 
-**Design Assumption**: Most players will maintain ₡50K-₡150K buffer minimum, not the recommended ₡500K.
+**Economic Safeguards Needed**:
+1. **Low balance warnings**: Alert when balance < ₡100K (before battle matchmaking)
+2. **Battle entry check**: Require minimum balance equal to estimated repair cost (prevent bankruptcy from battle)
+3. **Emergency credit line**: Allow players to take small loan (₡50K-₡100K) at 20% interest if they fall below ₡10K
+4. **First battle protection**: First 5 battles have reduced repair costs (50% discount) to prevent early bankruptcy
+
+**Design Note**: The ₡2M starting balance intentionally forces players to make strategic trade-offs. They cannot afford everything - they must choose between:
+- More robots vs. better weapons vs. facilities vs. attribute upgrades
+- Immediate power vs. long-term infrastructure
+- Offense-focused vs. balanced builds 
 
 ---
 
@@ -479,44 +494,76 @@ All revenue is earned in Credits (₡). This section consolidates every way play
 
 **Battle Reward Formula**:
 ```
-// Base reward determined by league tier
-base_reward = league_base + (ELO_difference_bonus)
+// Winner reward - base determined by league tier
+winner_base_reward = league_base + (ELO_difference_bonus)
 
-// ELO difference bonus
+// ELO difference bonus (for winners only)
 if opponent_ELO > your_ELO:
     ELO_bonus = (opponent_ELO - your_ELO) / 20  // Upset bonus
 else:
     ELO_bonus = 0
 
-// Final reward (before prestige multiplier)
-battle_reward = min(base_reward + ELO_bonus, league_max)
+// Final winner reward (before prestige multiplier)
+winner_reward = min(winner_base_reward + ELO_bonus, league_max)
+
+// Participation reward (both winner and loser receive this)
+participation_reward = league_base × 0.3  // 30% of league base
 
 // Example: Bronze league (₡5K-₡10K range)
-// Your ELO: 1150, Opponent ELO: 1250
-// base = ₡5,000
+// Winner: Your ELO: 1150, Opponent ELO: 1250
+// winner_base = ₡5,000
 // ELO_bonus = (1250-1150)/20 = ₡5,000
-// battle_reward = min(₡10,000, ₡10,000) = ₡10,000 (max for Bronze)
+// winner_reward = min(₡10,000, ₡10,000) = ₡10,000 (max for Bronze)
+// participation = ₡5,000 × 0.3 = ₡1,500
+// WINNER TOTAL = ₡10,000 + ₡1,500 = ₡11,500
+
+// Loser: Same battle
+// loser_reward = ₡0 (no win bonus)
+// participation = ₡1,500
+// LOSER TOTAL = ₡1,500
 ```
 
-**Loss Economics**:
-- Losses provide **₡0** Credits
-- However, system designed for **90% win-rate breakeven** (without facilities)
-- At 50% win rate: 3.5 wins/week × ₡7,500 avg = ₡26,250/week income
-- Average repair cost: 1 robot × 7 battles × ₡9K = ₡63,000/week
-- **Gap**: ₡36,750/week shortfall
-- **Design solution**: Adjust base rewards OR reduce repair costs
+**Participation Award System**:
+- **Amount**: 30% of league base reward (both winner and loser)
+- **Purpose**: Offset repair costs, especially for losers who take more damage
+- **Balance**: Ensures losing players still earn some credits to cover basic repairs
 
-**Revised Repair Cost Balance**:
-To achieve 90% breakeven at 50% win rate:
-- Target weekly income (3.5 wins): ₡26,250
-- Target weekly costs (7 repairs): ₡23,625 (90% coverage)
-- **Required**: Avg repair cost ≤ ₡3,375/battle (vs current ₡9K)
-- **Options**:
-  1. Reduce base repair formula: (attributes × 50) instead of (attributes × 100)
-  2. Increase battle rewards: Bronze ₡10K-₡20K (doubled)
-  3. Add "participation rewards": ₡2K-₡3K per battle (win or lose)
+**League-Specific Participation Rewards**:
+- Bronze league: ₡1,500 (30% of ₡5,000 base)
+- Silver league: ₡3,000 (30% of ₡10,000 base)
+- Gold league: ₡6,000 (30% of ₡20,000 base)
+- Platinum league: ₡12,000 (30% of ₡40,000 base)
+- Diamond league: ₡24,000 (30% of ₡80,000 base)
+- Champion league: ₡45,000 (30% of ₡150,000 base)
+
+**Economic Impact with Participation Awards**:
+- **Winner** (Bronze): ₡7,500 win reward + ₡1,500 participation = ₡9,000 total
+- **Loser** (Bronze): ₡0 win reward + ₡1,500 participation = ₡1,500 total
+- **At 50% win rate** (3.5 wins, 3.5 losses per week):
+  - Income: (3.5 × ₡9,000) + (3.5 × ₡1,500) = ₡31,500 + ₡5,250 = ₡36,750/week
+  - Repair costs (winner damage ~₡5K, loser damage ~₡12K): 
+    - Winners: 3.5 × ₡5,000 = ₡17,500
+    - Losers: 3.5 × ₡12,000 = ₡42,000
+    - Total: ₡59,500/week
+  - **Net**: ₡36,750 - ₡59,500 = -₡22,750/week shortfall
+  
+**Repair Cost Adjustment Needed**:
+To achieve sustainability at 50% win rate with participation awards:
+- Target: Income (₡36,750) should cover 90% of repair costs
+- Target repair costs: ₡40,833/week (₡36,750 / 0.9)
+- Current repair costs: ₡59,500/week
+- **Required reduction**: 31% lower repair costs
+
+**Recommended Solution**:
+1. **Add participation awards** (implemented above): +₡10,500/week income boost
+2. **Reduce base repair formula**: `(total_attributes × 75)` instead of `(total_attributes × 100)` = 25% cost reduction
+3. **New repair costs**: ₡44,625/week (₡59,500 × 0.75)
+4. **New economics**: ₡36,750 income covers 82% of ₡44,625 repairs
+5. **Gap**: ₡7,875/week deficit - covered by facility income streams (merchandising, streaming) or reduced operating costs 
 
 ### 2. Prestige Bonuses (Battle Multiplier)
+
+> **For complete prestige earning mechanics**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
 
 Higher stable prestige increases battle winnings:
 
@@ -572,6 +619,8 @@ final_battle_reward = base_reward × prestige_multiplier
 
 ### 3. Merchandising Income (Income Generator Facility)
 
+> **For complete prestige earning and benefits**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
+
 **Requirements**:
 - Income Generator Level 1+ (unlocks merchandising)
 
@@ -623,6 +672,8 @@ merchandising_income = base_merchandising × prestige_multiplier
 **Design Note**: Prestige-based scaling rewards long-term player engagement and success across all robots in the stable.
 
 ### 4. Streaming Revenue (Income Generator Facility)
+
+> **For complete fame earning and benefits**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
 
 **Requirements**:
 - Income Generator Level 3+ (unlocks streaming)
@@ -709,7 +760,9 @@ streaming_income = base_streaming × battle_multiplier × fame_multiplier
 
 ## Prestige & Fame System
 
-This section consolidates the complete prestige and fame earning mechanics. For detailed implementation, see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#prestige-system).
+> **For complete prestige and fame system specification**: See **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - the authoritative document for earning mechanics, benefits, and implementation status.
+
+This section provides a brief summary for economic context. For detailed implementation, see the PRD above.
 
 ### Fame (Robot-Level Reputation)
 
@@ -1325,6 +1378,7 @@ total_revenue = battle_winnings + merchandising_daily + streaming_daily + achiev
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)** - Weapon catalog with prices
 - **[GAME_DESIGN.md](GAME_DESIGN.md)** - Overall game design philosophy
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Data model for economic tracking
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: Complete prestige and fame system specification (earning, benefits)
 
 ---
 

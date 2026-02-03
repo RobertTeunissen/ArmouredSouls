@@ -1,7 +1,8 @@
 # Quick Reference: Economy System
 
 **Last Updated**: February 2, 2026 (Revised after review)  
-**For Complete Details**: See [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md)
+**For Complete Details**: See [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md)  
+**For Prestige & Fame**: See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) - **Authoritative**
 
 **⚠️ Key Changes from Review**:
 - Battle frequency: 7 battles/week (1/day per robot)
