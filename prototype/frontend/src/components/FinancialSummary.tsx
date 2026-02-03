@@ -56,7 +56,15 @@ function FinancialSummary() {
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">Financial Overview</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold">Financial Overview</h2>
+        <button
+          onClick={() => window.location.href = '/finances'}
+          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          View Full Report →
+        </button>
+      </div>
       
       <div className="space-y-4">
         {/* Current Balance */}
