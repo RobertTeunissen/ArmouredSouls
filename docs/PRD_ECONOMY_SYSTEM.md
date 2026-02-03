@@ -1,9 +1,50 @@
 # Product Requirements Document: Economy System
 
 **Last Updated**: February 3, 2026  
-**Status**: Design Document  
+**Status**: ✅ Backend Implemented | 🚧 Frontend In Progress  
 **Owner**: Robert Teunissen  
 **Epic**: Economy System Implementation
+
+## Implementation Status
+
+### ✅ Phase 1: Backend Implementation (COMPLETE)
+**Implementation Date**: February 3, 2026
+
+**Core Components:**
+- ✅ Economic calculation utilities (`economyCalculations.ts`)
+- ✅ Financial API endpoints (`/api/finances/*`)
+- ✅ Battle reward system integration
+- ✅ Repair cost enhancements
+- ✅ Comprehensive unit tests (27 tests passing)
+
+**API Endpoints:**
+- ✅ `GET /api/finances/summary` - Quick dashboard overview
+- ✅ `GET /api/finances/daily` - Comprehensive financial report
+- ✅ `GET /api/finances/operating-costs` - Detailed cost breakdown
+- ✅ `GET /api/finances/revenue-streams` - Income sources
+- ✅ `GET /api/finances/projections` - Forecasts & recommendations
+
+**Battle Rewards:**
+- ✅ League-based rewards: Bronze (₡5-10K) → Champion (₡150-300K)
+- ✅ Prestige multipliers: 5%-20% bonus on winnings
+- ✅ Participation rewards: 30% of league base for all combatants
+
+**Facility Discounts:**
+- ✅ Medical Bay: Reduces critical damage multiplier (HP=0) by 10%-100%
+- ✅ Repair Bay: 5%-50% discount on all repairs
+
+### 🚧 Phase 2: Frontend Implementation (IN PROGRESS)
+**Target Components:**
+- 🚧 Financial summary widget for dashboard
+- 🚧 Financial report page
+- 🚧 Financial health indicators
+- 🚧 Economic projections display
+
+### ❌ Phase 3: Advanced Features (NOT STARTED)
+- ❌ Historical financial tracking
+- ❌ Economic alerts and notifications
+- ❌ Tutorial/onboarding system
+- ❌ Budget planning tools
 
 ---
 
@@ -32,19 +73,35 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 ### Current State
 
-**What Exists:**
+**✅ IMPLEMENTED (Backend - February 3, 2026):**
 - ✅ Currency system (Credits - ₡) defined in ROBOT_ATTRIBUTES.md
 - ✅ Complete facility system with costs in STABLE_SYSTEM.md
 - ✅ Weapon catalog with prices in WEAPONS_AND_LOADOUT.md
 - ✅ Robot attribute upgrade costs in ROBOT_ATTRIBUTES.md
-- ✅ Repair cost formulas with multipliers
-- ✅ Daily income/expense system conceptually designed
+- ✅ Repair cost formulas with Medical Bay support
 - ✅ Database schema for all economic tracking (DATABASE_SCHEMA.md)
+- ✅ **Economic calculation utilities** (`prototype/backend/src/utils/economyCalculations.ts`)
+  - Facility operating costs (all 14 facilities)
+  - Revenue calculations (battle rewards, merchandising, streaming)
+  - Repair costs with facility discounts
+  - Financial health indicators
+- ✅ **Financial API endpoints** (`prototype/backend/src/routes/finances.ts`)
+  - `GET /api/finances/summary` - Quick dashboard overview
+  - `GET /api/finances/daily` - Comprehensive financial report
+  - `GET /api/finances/operating-costs` - Cost breakdown
+  - `GET /api/finances/revenue-streams` - Income sources
+  - `GET /api/finances/projections` - Forecasts & recommendations
+- ✅ **Battle reward system** - League-based rewards with prestige multipliers
+  - Bronze: ₡5-10K → Champion: ₡150-300K
+  - Prestige multipliers: 5%-20% bonus
+  - Participation rewards: 30% of league base
+- ✅ **Comprehensive unit tests** - 27 tests covering all economic formulas
 
-**What's Missing:**
-- ❌ Comprehensive economy documentation consolidating all sources
-- ❌ Daily financial reporting UI implementation
-- ❌ Economic dashboard showing trends and projections
+**🚧 IN PROGRESS (Frontend):**
+- 🚧 Daily financial reporting UI implementation
+- 🚧 Economic dashboard showing trends and projections
+
+**❌ NOT YET STARTED:**
 - ❌ Tutorial/onboarding explaining economic systems
 - ❌ Economic alerts (low funds, unprofitable operations, etc.)
 - ❌ Historical tracking of financial performance
