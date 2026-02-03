@@ -847,6 +847,178 @@ async function main() {
   console.log(`   - All robots equipped with Practice Sword (single loadout)`);
   console.log(`   - All robots in balanced stance`);
 
+  // Create weapon loadout test users (14 users with 10 robots each, all stats at 5.00)
+  console.log('Creating 14 weapon loadout test users...');
+  
+  // Find weapons needed for loadout testing
+  const machinePistol = weapons.find(w => w.name === 'Machine Pistol');
+  const laserPistol = weapons.find(w => w.name === 'Laser Pistol');
+  const combatKnife = weapons.find(w => w.name === 'Combat Knife');
+  const machineGun = weapons.find(w => w.name === 'Machine Gun');
+  const lightShield = weapons.find(w => w.name === 'Light Shield');
+  const shotgun = weapons.find(w => w.name === 'Shotgun');
+  const assaultRifle = weapons.find(w => w.name === 'Assault Rifle');
+  
+  if (!machinePistol || !laserPistol || !combatKnife || !machineGun || !lightShield || !shotgun || !assaultRifle) {
+    throw new Error('Required weapons not found for loadout testing');
+  }
+
+  // Attributes set to 5.00 for all loadout test robots
+  const LOADOUT_TEST_ATTRIBUTES = {
+    combatPower: 5.0,
+    targetingSystems: 5.0,
+    criticalSystems: 5.0,
+    penetration: 5.0,
+    weaponControl: 5.0,
+    attackSpeed: 5.0,
+    armorPlating: 5.0,
+    shieldCapacity: 5.0,
+    evasionThrusters: 5.0,
+    damageDampeners: 5.0,
+    counterProtocols: 5.0,
+    hullIntegrity: 5.0,
+    servoMotors: 5.0,
+    gyroStabilizers: 5.0,
+    hydraulicSystems: 5.0,
+    powerCore: 5.0,
+    combatAlgorithms: 5.0,
+    threatAnalysis: 5.0,
+    adaptiveAI: 5.0,
+    logicCores: 5.0,
+    syncProtocols: 5.0,
+    supportSystems: 5.0,
+    formationTactics: 5.0,
+  };
+
+  // Calculate HP and Shield for 5.00 attributes
+  // HP formula: 50 + (hullIntegrity × 5) = 50 + (5.00 × 5) = 75
+  // Shield formula: shieldCapacity × 2 = 5.00 × 2 = 10
+  const loadoutTestMaxHP = 75;
+  const loadoutTestMaxShield = 10;
+
+  // Define loadout configurations
+  const loadoutConfigs = [
+    // Single loadout (4 users)
+    { username: 'loadout_machine_pistol_single', loadoutType: 'single', mainWeapon: machinePistol, offhandWeapon: null, displayName: 'MP Single' },
+    { username: 'loadout_laser_pistol_single', loadoutType: 'single', mainWeapon: laserPistol, offhandWeapon: null, displayName: 'LP Single' },
+    { username: 'loadout_combat_knife_single', loadoutType: 'single', mainWeapon: combatKnife, offhandWeapon: null, displayName: 'CK Single' },
+    { username: 'loadout_machine_gun_single', loadoutType: 'single', mainWeapon: machineGun, offhandWeapon: null, displayName: 'MG Single' },
+    
+    // Weapon + Shield (4 users)
+    { username: 'loadout_machine_pistol_shield', loadoutType: 'weapon_shield', mainWeapon: machinePistol, offhandWeapon: lightShield, displayName: 'MP + Shield' },
+    { username: 'loadout_laser_pistol_shield', loadoutType: 'weapon_shield', mainWeapon: laserPistol, offhandWeapon: lightShield, displayName: 'LP + Shield' },
+    { username: 'loadout_combat_knife_shield', loadoutType: 'weapon_shield', mainWeapon: combatKnife, offhandWeapon: lightShield, displayName: 'CK + Shield' },
+    { username: 'loadout_machine_gun_shield', loadoutType: 'weapon_shield', mainWeapon: machineGun, offhandWeapon: lightShield, displayName: 'MG + Shield' },
+    
+    // Dual-Wield (4 users)
+    { username: 'loadout_machine_pistol_dual', loadoutType: 'dual_wield', mainWeapon: machinePistol, offhandWeapon: machinePistol, displayName: 'MP Dual' },
+    { username: 'loadout_laser_pistol_dual', loadoutType: 'dual_wield', mainWeapon: laserPistol, offhandWeapon: laserPistol, displayName: 'LP Dual' },
+    { username: 'loadout_combat_knife_dual', loadoutType: 'dual_wield', mainWeapon: combatKnife, offhandWeapon: combatKnife, displayName: 'CK Dual' },
+    { username: 'loadout_machine_gun_dual', loadoutType: 'dual_wield', mainWeapon: machineGun, offhandWeapon: machineGun, displayName: 'MG Dual' },
+    
+    // Two-Handed (2 users)
+    { username: 'loadout_shotgun_two_handed', loadoutType: 'two_handed', mainWeapon: shotgun, offhandWeapon: null, displayName: 'Shotgun 2H' },
+    { username: 'loadout_assault_rifle_two_handed', loadoutType: 'two_handed', mainWeapon: assaultRifle, offhandWeapon: null, displayName: 'Assault Rifle 2H' },
+  ];
+
+  const loadoutTestUsers = [];
+
+  for (const config of loadoutConfigs) {
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        username: config.username,
+        passwordHash: testHashedPassword,
+        currency: 1000000, // ₡1,000,000 for loadout testing
+      },
+    });
+
+    // Create Roster Expansion facility at max level (9) to enable 10 robots
+    await prisma.facility.create({
+      data: {
+        userId: user.id,
+        facilityType: 'roster_expansion',
+        level: 9,
+        maxLevel: 9,
+      },
+    });
+
+    // Create weapon inventory entries
+    const mainWeaponInventory = await prisma.weaponInventory.create({
+      data: {
+        userId: user.id,
+        weaponId: config.mainWeapon.id,
+      },
+    });
+
+    let offhandWeaponInventory = null;
+    if (config.offhandWeapon) {
+      offhandWeaponInventory = await prisma.weaponInventory.create({
+        data: {
+          userId: user.id,
+          weaponId: config.offhandWeapon.id,
+        },
+      });
+    }
+
+    // Create 10 robots for this user
+    const robots = [];
+    for (let i = 0; i < 10; i++) {
+      const robotName = `${config.displayName} Bot ${i + 1}`;
+
+      const robot = await prisma.robot.create({
+        data: {
+          userId: user.id,
+          name: robotName,
+          frameId: 1,
+          
+          // All 23 attributes set to 5.00
+          ...LOADOUT_TEST_ATTRIBUTES,
+          
+          // Combat state
+          currentHP: loadoutTestMaxHP,
+          maxHP: loadoutTestMaxHP,
+          currentShield: loadoutTestMaxShield,
+          maxShield: loadoutTestMaxShield,
+          
+          // Performance tracking
+          elo: 1200,
+          
+          // League
+          currentLeague: 'bronze',
+          leagueId: 'bronze_1',
+          leaguePoints: 0,
+          
+          // Loadout configuration
+          loadoutType: config.loadoutType,
+          mainWeaponId: mainWeaponInventory.id,
+          offhandWeaponId: offhandWeaponInventory ? offhandWeaponInventory.id : null,
+          
+          // Stance
+          stance: 'balanced',
+          
+          // Battle readiness
+          battleReadiness: 100,
+          yieldThreshold: 10,
+        },
+      });
+
+      robots.push(robot);
+    }
+
+    loadoutTestUsers.push({ user, robots });
+    console.log(`   Created ${config.username} with 10 robots (${config.displayName})`);
+  }
+
+  console.log(`✅ Created 14 weapon loadout test users with 140 robots total`);
+  console.log(`   - Username format: loadout_<weapon>_<type>`);
+  console.log(`   - Password: testpass123`);
+  console.log(`   - Each user has Roster Expansion facility at level 9 (enables 10 robots)`);
+  console.log(`   - All robots have ALL 23 attributes set to 5.00`);
+  console.log(`   - HP: 75 (50 + 5.00 × 5), Shield: 10 (5.00 × 2)`);
+  console.log(`   - Loadouts: 4 single, 4 weapon+shield, 4 dual-wield, 2 two-handed`);
+  console.log(`   - All robots in balanced stance with ELO 1200`);
+
   // Create Bye-Robot (special robot for odd-number matchmaking)
   console.log('Creating Bye-Robot...');
   
@@ -903,7 +1075,7 @@ async function main() {
     ...testUsersWithRobots.map(t => t.user)
   ];
 
-  console.log(`✅ Total users created: ${users.length + 1} (including bye-robot user)`);
+  console.log(`✅ Total users created: ${users.length + 1 + attributeTestUsers.length + loadoutTestUsers.length} (including bye-robot user)`);
 
   console.log('');
   console.log('✅ Database seeded successfully with matchmaking test data!');
@@ -914,7 +1086,8 @@ async function main() {
   console.log('   👤 Player users: ₡2,000,000 each (player1-5, password: password123)');
   console.log('   👤 Test users: ₡100,000 each (test_user_001-100, password: testpass123)');
   console.log('   👤 Attribute test users: ₡500,000 each (test_attr_*, password: testpass123)');
-  console.log('   🤖 Robots: 100 test robots + 230 attribute test robots + 1 bye-robot');
+  console.log('   👤 Loadout test users: ₡1,000,000 each (loadout_*, password: testpass123)');
+  console.log('   🤖 Robots: 100 test robots + 230 attribute test robots + 140 loadout test robots + 1 bye-robot');
   console.log('   ⚔️  Practice Sword: FREE (equipped on all test robots)');
   console.log('   🏆 League: All robots start in Bronze (bronze_1)');
   console.log('   📈 ELO: Test robots at 1200, Bye-Robot at 1000');
@@ -948,12 +1121,21 @@ async function main() {
   console.log('   - Players: player1-5 / password123 (for manual testing)');
   console.log('   - Test users: test_user_001-100 / testpass123');
   console.log('   - Attribute test users: test_attr_combat_power, test_attr_targeting_systems, etc. / testpass123');
+  console.log('   - Loadout test users: loadout_machine_pistol_single, loadout_laser_pistol_shield, etc. / testpass123');
   console.log('');
   console.log('🧪 Attribute Balance Testing:');
   console.log('   - 23 users (one per attribute) with 10 robots each = 230 robots');
   console.log('   - Each user focuses on ONE attribute (set to 10.0, all others at 1.0)');
   console.log('   - Usernames clearly indicate focused attribute (e.g., test_attr_hull_integrity)');
   console.log('   - All robots have Practice Sword, single loadout, balanced stance');
+  console.log('   - Roster Expansion facility maxed out (level 9) for each user');
+  console.log('');
+  console.log('⚔️  Weapon Loadout Testing:');
+  console.log('   - 14 users (testing weapon economy) with 10 robots each = 140 robots');
+  console.log('   - All robots have ALL 23 attributes set to 5.00 (HP: 75, Shield: 10)');
+  console.log('   - Loadout types: 4 single, 4 weapon+shield, 4 dual-wield, 2 two-handed');
+  console.log('   - Weapons tested: Machine Pistol, Laser Pistol, Combat Knife, Machine Gun, Light Shield, Shotgun, Assault Rifle');
+  console.log('   - Usernames: loadout_<weapon>_<type> (e.g., loadout_machine_pistol_single)');
   console.log('   - Roster Expansion facility maxed out (level 9) for each user');
   console.log('');
 }
