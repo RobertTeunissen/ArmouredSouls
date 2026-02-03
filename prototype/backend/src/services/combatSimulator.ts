@@ -114,7 +114,8 @@ function getEffectiveAttribute(
  * Calculate hit chance based on attacker and defender attributes
  */
 function calculateHitChance(attacker: RobotWithWeapons, defender: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { hitChance: number; breakdown: FormulaBreakdown } {
-  const baseHitChance = 70;
+  // Offhand attacks have reduced base hit chance (50% vs 70%)
+  const baseHitChance = attackerHand === 'offhand' ? 50 : 70;
   const effectiveTargeting = getEffectiveAttribute(attacker, attacker.targetingSystems, attackerHand, 'targetingSystemsBonus');
   const targetingBonus = effectiveTargeting / 2;
   const stanceBonus = attacker.stance === 'offensive' ? 5 : 0;
@@ -128,7 +129,7 @@ function calculateHitChance(attacker: RobotWithWeapons, defender: RobotWithWeapo
   return {
     hitChance: final,
     breakdown: {
-      calculation: `${baseHitChance} base + ${targetingBonus.toFixed(1)} targeting + ${stanceBonus} stance - ${evasionPenalty.toFixed(1)} evasion - ${gyroPenalty.toFixed(1)} gyro + ${randomVariance.toFixed(1)} variance`,
+      calculation: `${baseHitChance} base + ${targetingBonus.toFixed(1)} targeting + ${stanceBonus} stance - ${evasionPenalty.toFixed(1)} evasion - ${gyroPenalty.toFixed(1)} gyro + ${randomVariance.toFixed(1)} variance = ${final.toFixed(1)}%`,
       components: {
         base: baseHitChance,
         targeting: targetingBonus,
@@ -160,7 +161,7 @@ function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'main' | 
   return {
     critChance: final,
     breakdown: {
-      calculation: `${baseCrit} base + ${critBonus.toFixed(1)} crit_systems + ${targetingBonus.toFixed(1)} targeting + ${loadoutBonus} loadout + ${randomVariance.toFixed(1)} variance`,
+      calculation: `${baseCrit} base + ${critBonus.toFixed(1)} crit_systems + ${targetingBonus.toFixed(1)} targeting + ${loadoutBonus} loadout + ${randomVariance.toFixed(1)} variance = ${final.toFixed(1)}%`,
       components: {
         base: baseCrit,
         critSystems: critBonus,
@@ -241,7 +242,9 @@ function applyDamage(
   let shieldDamage = 0;
   let hpDamage = 0;
   let armorReduction = 0;
-  let armorFormula = '';
+  let detailedFormula = '';
+  
+  const damageAfterCrit = damage;
   
   if (defenderState.currentShield > 0) {
     // Shields absorb at 70% effectiveness
@@ -259,7 +262,9 @@ function applyDamage(
       const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
       armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
       hpDamage = Math.max(1, overflow - armorReduction);
-      armorFormula = ` (armor: ${overflow.toFixed(1)} - ${armorReduction.toFixed(1)} reduction)`;
+      detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed | Bleed: ${overflow.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
+    } else {
+      detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed, 0 HP`;
     }
   } else {
     // No shield - damage goes to HP with armor reduction
@@ -267,7 +272,7 @@ function applyDamage(
     const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
     armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
     hpDamage = Math.max(1, damage - armorReduction);
-    armorFormula = ` (armor: ${damage.toFixed(1)} - ${armorReduction.toFixed(1)} reduction)`;
+    detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | No shield | ${damageAfterCrit.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
   }
   
   defenderState.currentHP = Math.max(0, defenderState.currentHP - hpDamage);
@@ -276,13 +281,16 @@ function applyDamage(
     hpDamage,
     shieldDamage,
     breakdown: {
-      calculation: `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit → ${shieldDamage.toFixed(1)} shield, ${hpDamage.toFixed(1)} HP${armorFormula}`,
+      calculation: detailedFormula,
       components: {
         baseDamage,
         critMultiplier,
+        damageAfterCrit,
         penetration: effectivePenetration,
         armor: effectiveArmor,
         armorReduction,
+        shieldDamage,
+        hpDamage,
       },
       result: hpDamage + shieldDamage,
     },
@@ -375,6 +383,53 @@ function getWeaponStatsSummary(robot: RobotWithWeapons): string {
   }
   
   return parts.length > 0 ? parts.join(', ') : 'Unarmed';
+}
+
+/**
+ * Get weapon attribute bonuses summary for robot
+ */
+function getWeaponBonusesSummary(robot: RobotWithWeapons): string {
+  const parts: string[] = [];
+  
+  if (robot.mainWeapon?.weapon) {
+    const w = robot.mainWeapon.weapon;
+    const bonuses: string[] = [];
+    
+    // Only show non-zero bonuses
+    if (w.combatPowerBonus !== 0) bonuses.push(`CombatPower ${w.combatPowerBonus > 0 ? '+' : ''}${w.combatPowerBonus}`);
+    if (w.targetingSystemsBonus !== 0) bonuses.push(`Targeting ${w.targetingSystemsBonus > 0 ? '+' : ''}${w.targetingSystemsBonus}`);
+    if (w.criticalSystemsBonus !== 0) bonuses.push(`Crit ${w.criticalSystemsBonus > 0 ? '+' : ''}${w.criticalSystemsBonus}`);
+    if (w.penetrationBonus !== 0) bonuses.push(`Pen ${w.penetrationBonus > 0 ? '+' : ''}${w.penetrationBonus}`);
+    if (w.weaponControlBonus !== 0) bonuses.push(`Control ${w.weaponControlBonus > 0 ? '+' : ''}${w.weaponControlBonus}`);
+    if (w.attackSpeedBonus !== 0) bonuses.push(`Speed ${w.attackSpeedBonus > 0 ? '+' : ''}${w.attackSpeedBonus}`);
+    
+    if (bonuses.length > 0) {
+      parts.push(`Main (${w.name}): ${bonuses.join(', ')}`);
+    } else {
+      parts.push(`Main (${w.name}): No bonuses`);
+    }
+  }
+  
+  if (robot.offhandWeapon?.weapon) {
+    const w = robot.offhandWeapon.weapon;
+    const bonuses: string[] = [];
+    
+    // Only show non-zero bonuses
+    if (w.combatPowerBonus !== 0) bonuses.push(`CombatPower ${w.combatPowerBonus > 0 ? '+' : ''}${w.combatPowerBonus}`);
+    if (w.targetingSystemsBonus !== 0) bonuses.push(`Targeting ${w.targetingSystemsBonus > 0 ? '+' : ''}${w.targetingSystemsBonus}`);
+    if (w.criticalSystemsBonus !== 0) bonuses.push(`Crit ${w.criticalSystemsBonus > 0 ? '+' : ''}${w.criticalSystemsBonus}`);
+    if (w.penetrationBonus !== 0) bonuses.push(`Pen ${w.penetrationBonus > 0 ? '+' : ''}${w.penetrationBonus}`);
+    if (w.weaponControlBonus !== 0) bonuses.push(`Control ${w.weaponControlBonus > 0 ? '+' : ''}${w.weaponControlBonus}`);
+    if (w.attackSpeedBonus !== 0) bonuses.push(`Speed ${w.attackSpeedBonus > 0 ? '+' : ''}${w.attackSpeedBonus}`);
+    
+    if (bonuses.length > 0) {
+      parts.push(`Offhand (${w.name}): ${bonuses.join(', ')}`);
+    } else {
+      parts.push(`Offhand (${w.name}): No bonuses`);
+    }
+  }
+  
+  return parts.length > 0 ? parts.join('\n') : 'No weapons equipped';
 }
 
 /**
@@ -554,9 +609,11 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
   const mainWeapon2 = robot2.mainWeapon?.weapon;
   const offhandWeapon2 = robot2.offhandWeapon?.weapon;
   
-  const calculateCooldown = (weaponCooldown: number | undefined, attackSpeed: number) => {
+  const calculateCooldown = (weaponCooldown: number | undefined, attackSpeed: number, isOffhand: boolean = false) => {
     const baseCooldown = weaponCooldown || BASE_WEAPON_COOLDOWN;
-    return baseCooldown / (1 + Number(attackSpeed) / 50);
+    // Offhand attacks have 40% cooldown penalty (applied before attack speed bonuses)
+    const cooldownWithPenalty = isOffhand ? baseCooldown * 1.4 : baseCooldown;
+    return cooldownWithPenalty / (1 + Number(attackSpeed) / 50);
   };
   
   // Initialize combat state
@@ -568,8 +625,8 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
     maxShield: robot1.maxShield,
     lastAttackTime: 0,
     lastOffhandAttackTime: 0,
-    attackCooldown: calculateCooldown(mainWeapon1?.cooldown, robot1.attackSpeed),
-    offhandCooldown: calculateCooldown(offhandWeapon1?.cooldown, robot1.attackSpeed),
+    attackCooldown: calculateCooldown(mainWeapon1?.cooldown, robot1.attackSpeed, false),
+    offhandCooldown: calculateCooldown(offhandWeapon1?.cooldown, robot1.attackSpeed, true),
     totalDamageDealt: 0,
     totalDamageTaken: 0,
   };
@@ -582,8 +639,8 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
     maxShield: robot2.maxShield,
     lastAttackTime: 0,
     lastOffhandAttackTime: 0,
-    attackCooldown: calculateCooldown(mainWeapon2?.cooldown, robot2.attackSpeed),
-    offhandCooldown: calculateCooldown(offhandWeapon2?.cooldown, robot2.attackSpeed),
+    attackCooldown: calculateCooldown(mainWeapon2?.cooldown, robot2.attackSpeed, false),
+    offhandCooldown: calculateCooldown(offhandWeapon2?.cooldown, robot2.attackSpeed, true),
     totalDamageDealt: 0,
     totalDamageTaken: 0,
   };
@@ -596,6 +653,8 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
   // Battle start event with complete robot stats including weapons
   const weaponStats1 = getWeaponStatsSummary(robot1);
   const weaponStats2 = getWeaponStatsSummary(robot2);
+  const weaponBonuses1 = getWeaponBonusesSummary(robot1);
+  const weaponBonuses2 = getWeaponBonusesSummary(robot2);
   
   events.push({
     timestamp: 0,
@@ -608,11 +667,15 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
     formulaBreakdown: {
       calculation: `${robot1.name}: ${state1.currentHP}HP / ${state1.maxHP}HP, ${state1.currentShield}S / ${state1.maxShield}S
 Weapons: ${weaponStats1}
-Main CD: ${state1.attackCooldown.toFixed(2)}s${robot1.loadoutType === 'dual_wield' && offhandWeapon1 ? `, Offhand CD: ${state1.offhandCooldown.toFixed(2)}s` : ''}
+Main CD: ${state1.attackCooldown.toFixed(2)}s${robot1.loadoutType === 'dual_wield' && offhandWeapon1 ? `, Offhand CD: ${state1.offhandCooldown.toFixed(2)}s (40% penalty applied)` : ''}
+Weapon Attribute Bonuses:
+${weaponBonuses1}
 
 ${robot2.name}: ${state2.currentHP}HP / ${state2.maxHP}HP, ${state2.currentShield}S / ${state2.maxShield}S
 Weapons: ${weaponStats2}
-Main CD: ${state2.attackCooldown.toFixed(2)}s${robot2.loadoutType === 'dual_wield' && offhandWeapon2 ? `, Offhand CD: ${state2.offhandCooldown.toFixed(2)}s` : ''}`,
+Main CD: ${state2.attackCooldown.toFixed(2)}s${robot2.loadoutType === 'dual_wield' && offhandWeapon2 ? `, Offhand CD: ${state2.offhandCooldown.toFixed(2)}s (40% penalty applied)` : ''}
+Weapon Attribute Bonuses:
+${weaponBonuses2}`,
       components: {
         robot1_hp: state1.currentHP,
         robot1_max_hp: state1.maxHP,
