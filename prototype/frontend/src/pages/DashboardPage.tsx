@@ -5,6 +5,7 @@ import axios from 'axios';
 import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
 import RecentMatches from '../components/RecentMatches';
+import FinancialSummary from '../components/FinancialSummary';
 
 interface Robot {
   id: number;
@@ -96,16 +97,8 @@ function DashboardPage() {
             </div>
           </div>
 
-          {/* Credits Balance */}
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold mb-4">Credits Balance</h2>
-            <div className="text-center py-6">
-              <div className="text-5xl font-bold text-green-400 mb-2">
-                ₡{user.currency.toLocaleString()}
-              </div>
-              <p className="text-gray-400">Available Credits</p>
-            </div>
-          </div>
+          {/* Financial Summary */}
+          <FinancialSummary />
         </div>
 
         {/* Matchmaking Section */}
