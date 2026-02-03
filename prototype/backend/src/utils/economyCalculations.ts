@@ -345,12 +345,20 @@ export function calculateFinancialHealth(
   balance: number,
   netIncome: number
 ): 'excellent' | 'good' | 'stable' | 'warning' | 'critical' {
+  // Critical: Very low balance regardless of income
   if (balance < 50000) return 'critical';
+  
+  // Warning: Low balance with any income situation
   if (balance < 100000) return 'warning';
+  
+  // For higher balances, consider income
   if (netIncome < 0) {
+    // Negative income
     if (balance < 500000) return 'warning';
-    return 'stable';
+    return 'stable'; // Can sustain losses temporarily
   }
+  
+  // Positive income
   if (balance >= 1000000) return 'excellent';
   if (balance >= 500000) return 'good';
   return 'stable';
