@@ -1,7 +1,7 @@
 # Economy System - Implementation Summary
 
 **Implementation Date**: February 3, 2026  
-**Status**: ✅ COMPLETE (Backend + Frontend)  
+**Status**: ✅ COMPLETE (Backend + Frontend + Daily Financial System)  
 **Reference**: [PRD_ECONOMY_SYSTEM.md](./PRD_ECONOMY_SYSTEM.md)
 
 ## Quick Overview
@@ -13,16 +13,81 @@ The economy system is fully implemented and operational. Players can now:
 - Benefit from passive income (merchandising + streaming)
 - Track operating costs from facilities
 - Get economic projections and recommendations
+- **NEW**: View detailed reward calculations in battle logs
+- **NEW**: Experience daily financial cycle with operating cost deductions
+
+## Latest Enhancements (February 3, 2026)
+
+### 1. Financial Reward Details in Battle Logs
+
+Battle logs now include comprehensive reward breakdowns showing exactly how rewards are calculated:
+
+**Example Battle Log:**
+```
+💰 Financial Rewards Summary
+   Winner (RobotName): ₡12,750
+      • League Base (gold): ₡30,000 (range: ₡20,000-₡40,000)
+      • Prestige Bonus (10%): +₡3,000
+      • Participation: ₡6,000
+   Loser (OpponentName): ₡6,000
+      • Participation: ₡6,000
+```
+
+**Features:**
+- Shows league base reward with min/max range
+- Displays prestige multiplier percentage and bonus amount
+- Breaks down participation vs win rewards
+- Separate display for winner and loser
+- Special handling for draws
+
+### 2. Daily Financial System
+
+Automated daily financial processing that:
+- Deducts operating costs from all user balances
+- Tracks repair costs (for reference)
+- Detects bankruptcy scenarios
+- Provides detailed financial summaries
+
+**New Functions:**
+- `processDailyFinances(userId)` - Process one user
+- `processAllDailyFinances()` - Process all users
+
+**New Endpoint:**
+- `POST /api/admin/daily-finances/process` - Trigger daily processing
+
+**Integration:**
+Integrated into bulk cycle flow for testing:
+1. Repair robots (optional)
+2. Run matchmaking
+3. Execute battles
+4. **Process daily finances** ← NEW
+5. Rebalance leagues
+
+**Example Cycle Output:**
+```
+Cycle 3:
+- Repaired: 15 robots
+- Matches: 42 created
+- Battles: 42/42 successful
+- Finances: ₡145,000 deducted
+  • 10 users processed
+  • ⚠️ 2 bankruptcies!
+- Rebalancing: 5 promoted, 3 demoted
+```
 
 ## Implementation Files
 
-### Backend (5 files)
-1. **`prototype/backend/src/utils/economyCalculations.ts`** (480 lines)
+### Backend (5 files + 2 new enhancements)
+1. **`prototype/backend/src/utils/economyCalculations.ts`** (620+ lines)
    - All economic formulas and calculations
    - Facility operating costs
    - Revenue streams (battle rewards, passive income)
    - Repair cost formulas
    - Financial health indicators
+   - **NEW**: Daily financial processing functions
+     - `processDailyFinances(userId)` - Process single user
+     - `processAllDailyFinances()` - Batch process all users
+     - Deducts operating costs, detects bankruptcy
 
 2. **`prototype/backend/src/routes/finances.ts`** (165 lines)
    - `GET /api/finances/summary` - Quick overview
@@ -31,18 +96,27 @@ The economy system is fully implemented and operational. Players can now:
    - `GET /api/finances/revenue-streams` - Income sources
    - `GET /api/finances/projections` - Forecasts
 
-3. **`prototype/backend/src/services/battleOrchestrator.ts`** (modified)
+3. **`prototype/backend/src/services/battleOrchestrator.ts`** (enhanced)
    - League-based battle rewards
    - Prestige multipliers (5%-20%)
    - Participation rewards (30% of base)
+   - **NEW**: Detailed reward breakdown in battle logs
+     - Shows league base with min/max range
+     - Displays prestige bonus percentage and amount
+     - Breaks down winner/loser rewards separately
 
-4. **`prototype/backend/src/utils/robotCalculations.ts`** (modified)
+4. **`prototype/backend/src/routes/admin.ts`** (enhanced)
+   - **NEW**: `POST /api/admin/daily-finances/process` endpoint
+   - **NEW**: Integrated financial processing into bulk cycles
+   - Shows costs deducted, users processed, bankruptcies
+
+5. **`prototype/backend/src/utils/robotCalculations.ts`** (modified)
    - Medical Bay support for repair costs
 
-5. **`prototype/backend/tests/economyCalculations.test.ts`** (215 lines)
+6. **`prototype/backend/tests/economyCalculations.test.ts`** (215 lines)
    - 27 unit tests (all passing ✅)
 
-### Frontend (4 files)
+### Frontend (4 files + 1 enhanced)
 1. **`prototype/frontend/src/utils/financialApi.ts`** (200 lines)
    - TypeScript interfaces
    - API client functions
@@ -59,15 +133,31 @@ The economy system is fully implemented and operational. Players can now:
    - Operating costs by facility
    - Projections and recommendations
 
-4. **`prototype/frontend/src/App.tsx`** (modified)
+4. **`prototype/frontend/src/pages/AdminPage.tsx`** (enhanced)
+   - **NEW**: Displays financial data in bulk cycle results
+   - Shows costs deducted per cycle
+   - Bankruptcy alerts highlighted in red
+
+5. **`prototype/frontend/src/App.tsx`** (modified)
    - Added `/finances` route
 
 ## Key Features
 
-### Battle Rewards
+### Battle Rewards (Enhanced with Detailed Logs)
 - **League-based**: Bronze (₡5-10K) → Champion (₡150-300K)
 - **Prestige multipliers**: 5% at 5K prestige → 20% at 50K+
 - **Participation rewards**: 30% of league base for all combatants
+- **NEW**: Complete reward breakdown in battle logs:
+  - Shows league base with min/max range
+  - Displays prestige bonus percentage and amount
+  - Breaks down winner and loser rewards separately
+
+### Daily Financial System (NEW)
+- **Automated cost deduction**: Daily operating costs automatically deducted
+- **Bankruptcy detection**: Identifies users with balance ≤ 0
+- **Financial summaries**: Per-user breakdown of costs and balance changes
+- **Bulk cycle integration**: Financial processing runs in daily cycles
+- **Testing support**: Enables testing of long-term financial viability
 
 ### Passive Income
 - **Merchandising**: Scales with stable prestige
@@ -81,6 +171,7 @@ The economy system is fully implemented and operational. Players can now:
 - All 14 facilities with accurate daily cost formulas
 - Roster expansion: ₡500/day per extra robot
 - Coaching staff: ₡3,000/day when active
+- **NOW**: Automatically deducted in daily financial cycles
 
 ### Repair Costs
 - **Base formula**: `sum_of_attributes × 100`
@@ -95,6 +186,40 @@ The economy system is fully implemented and operational. Players can now:
 - **Recommendations**: AI-powered suggestions
 
 ## API Usage Examples
+
+### Process Daily Finances (NEW)
+```bash
+curl -X POST -H "Authorization: Bearer <token>" \
+  http://localhost:3001/api/admin/daily-finances/process
+```
+
+Response:
+```json
+{
+  "success": true,
+  "summary": {
+    "usersProcessed": 10,
+    "totalCostsDeducted": 145000,
+    "bankruptUsers": 2,
+    "summaries": [
+      {
+        "userId": 1,
+        "username": "player1",
+        "startingBalance": 500000,
+        "operatingCosts": {
+          "total": 15000,
+          "breakdown": [...]
+        },
+        "totalCosts": 15000,
+        "endingBalance": 485000,
+        "balanceChange": -15000,
+        "isBankrupt": false,
+        "canAffordCosts": true
+      }
+    ]
+  }
+}
+```
 
 ### Get Financial Summary
 ```bash
