@@ -5,8 +5,6 @@
 **Owner**: Robert Teunissen  
 **Epic**: Economy System Implementation
 
-> **📋 For Prestige and Fame Details**: See **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - the authoritative document for all prestige earning, fame mechanics, and reputation benefits. This document covers economic integration but PRD_PRESTIGE_AND_FAME.md is the official specification for reputation systems.
-
 ---
 
 ## Executive Summary
@@ -53,14 +51,13 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 ### Design References
 
-- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: ⭐ **AUTHORITATIVE** - Complete prestige and fame system specification (earning, benefits, implementation status)
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Facility costs, prestige formulas, and daily income/expense examples
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: Complete prestige and fame system specification (earning, benefits)
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Facility costs, economic formulas, daily income/expense examples
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Upgrade costs, repair formulas, currency definition, and fame tracking
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Weapon prices and crafting costs
 - **[GAME_DESIGN.md](GAME_DESIGN.md)**: Overall economic philosophy and progression
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Data model for tracking resources
-
-**Note**: For prestige/fame mechanics, **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** is authoritative. For facility costs and economic formulas, this document and STABLE_SYSTEM.md are aligned.
+- **[PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md)**: Weapon economy, 23 starting weapons.
 
 ---
 
@@ -75,25 +72,25 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - Range: 0 to 999,999,999,999 (database supports up to ~2 billion)
 
 **Secondary Resource: Prestige (Stable-Level)**
+- **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**
 - Not a spendable currency - acts as unlock threshold
 - Earned through victories, achievements, milestones, tournaments
 - Never decreases (only increases)
 - Used to unlock facility levels and high-tier content
 - Scales merchandising income
 - Provides battle winnings multiplier
-- **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) for complete earning mechanics and benefits**
 
 **Tertiary Resource: Fame (Robot-Level)**
+- **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**
 - Individual robot reputation (separate from stable prestige)
 - Earned through individual robot victories with performance bonuses
 - Tracked per robot, aggregated for stable-level calculations
 - Used in streaming revenue calculations (aggregate)
 - Displayed for competitive rankings
-- **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) for complete earning mechanics and benefits**
 
 ### Economic Philosophy
 
-1. **Multiple Paths to Success**: Players can focus on quality (one powerful robot), quantity (multiple robots), or specialization (weapon trading)
+1. **Multiple Paths to Success**: Players can focus on quality (one powerful robot), quantity (multiple robots), or specialization (weapon trading, specific tournaments, 2v2 or other team battles)
 2. **Meaningful Choices**: Every purchase should have trade-offs and alternatives
 3. **Sustainable Operations**: Players should be able to run profitable stables with proper management
 4. **Risk/Reward Balance**: Higher risks (low yield threshold, aggressive facilities) offer higher rewards
@@ -166,11 +163,12 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 - **Net cost with facility**: ₡300,000 + ₡1,179,900 = ₡1,479,900
 - **vs without facility**: ₡1,242,000
 
-**Conclusion**: Training Facility Level 1 is NOT cost-effective for early game (1→10 upgrades). It only becomes valuable when upgrading to higher levels or when upgrading multiple robots. **Recommendation**: Prioritize attribute upgrades first, purchase Training Facility later when preparing for level 15+ upgrades or when managing 2+ robots.
+**Conclusion**: Training Facility Level 1 is NOT cost-effective for early game (1→10 upgrades). It only becomes valuable when upgrading to higher levels or when upgrading multiple robots. 
+**Recommendation**: Prioritize attribute upgrades first, purchase Training Facility later when preparing for level 15+ upgrades or when managing 2+ robots.
 
 ### 2. Facility Purchases & Upgrades
 
-**14 Facility Types**, each with **10 upgrade levels** (Level 0 = not purchased, Levels 1-10 = upgraded). Some levels require prestige thresholds.
+**14 Facility Types**, most with **10 upgrade levels** (Level 0 = not purchased, Levels 1-10 = upgraded). Some levels require prestige thresholds (Roster Expansion is the only facility with 9 levels. 
 
 **Purchase Costs Summary** (Level 1 costs for each facility):
 
@@ -204,6 +202,9 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 
 **Phase 1 Implemented Weapons** (11 total):
 
+--> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented and has 23 weapons currently in the seed.js. 
+
+
 | Weapon | Type | Cost | Hands Required |
 |--------|------|------|----------------|
 | Practice Sword | Melee | ₡0 (FREE) | One |
@@ -218,7 +219,10 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 | Railgun | Ballistic | ₡350,000 | Two |
 | Ion Beam | Energy | ₡400,000 | Two |
 
+
 **Weapon Pricing Methodology**:
+
+--> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented.
 
 Weapon prices are based on total attribute bonuses provided:
 
@@ -227,10 +231,14 @@ Weapon prices are based on total attribute bonuses provided:
 3. **Special Property Premium**: +₡30,000-₡50,000 for unique effects
 4. **Hand Requirement Modifier**: Two-handed weapons typically 1.5-2x more expensive
 
+--> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented.
+
 *Examples:*
 - **Machine Gun** (₡100K): +11 attribute points × ₡9K ≈ ₡100K
 - **Power Sword** (₡180K): +14 attribute points × ₡12.9K ≈ ₡180K
 - **Railgun** (₡350K): +14 attribute points + high penetration special = ₡350K
+
+--> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented.
 
 **Weapons vs Academy Investment**:
 - **Academy** (₡400K): Unlocks attribute cap 10→15 for 5-6 attributes in category
@@ -239,6 +247,8 @@ Weapon prices are based on total attribute bonuses provided:
 - **Premium Weapon** (₡300K): Provides immediate +15-20 attribute points
   - Immediate benefit, can be swapped between robots
   - No operating cost
+ 
+--> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented.
 
 **Strategy Comparison**:
 - **Early Game**: Weapons provide faster power spike with lower upfront cost
@@ -253,6 +263,8 @@ Weapon prices are based on total attribute bonuses provided:
 Balance: Dual weapons provide more raw stat bonuses. Two-handed weapons provide special properties. Both strategies are viable depending on build focus. 
 
 **Weapon Range**: ₡0 (free starter) to ₡400,000
+
+--> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented.
 
 **Weapon Ownership**:
 - Weapons are purchased and placed in stable's weapon storage
@@ -277,6 +289,8 @@ Balance: Dual weapons provide more raw stat bonuses. Two-handed weapons provide 
 - Plasma Cannon (₡300,000) with Workshop Level 5:
   - Discount: 25%
   - Final cost: ₡300,000 × 0.75 = ₡225,000
+ 
+--> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented.
 
 ### 4. Weapon Crafting (Unlockable)
 
@@ -410,6 +424,9 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 
 **Special Cases**:
 - **Roster Expansion**: ₡500/day per robot slot beyond first (first slot is free)
+
+--> But still ₡500/day per level of Roster Expansion.
+
 - **Coaching Staff**: ₡3,000/day when coach is active (only if Coaching Staff facility purchased)
 - **Booking Office**: ₡0/day (generates prestige instead)
 
@@ -455,7 +472,9 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 2. **Bankruptcy protection** (prevent entering battles without repair funds)
 3. **Credit loans** or **emergency funding** options for players who overextend
 
-**Design Assumption**: Most players will maintain ₡50K-₡150K buffer minimum, not the recommended ₡500K.
+**Design Assumption**: Most players will maintain ₡5K-₡10K buffer minimum, not the recommended ₡500K.
+
+--> Come up with alternate startup costs. Players will not keep a buffer. 
 
 ---
 
@@ -520,6 +539,8 @@ To achieve 90% breakeven at 50% win rate:
   1. Reduce base repair formula: (attributes × 50) instead of (attributes × 100)
   2. Increase battle rewards: Bronze ₡10K-₡20K (doubled)
   3. Add "participation rewards": ₡2K-₡3K per battle (win or lose)
+ 
+--> Participation awards is more rewarding for players. Revise the system and add participation awards for the losing robot. Since they lose they will probably have higher repair costs as well. 
 
 ### 2. Prestige Bonuses (Battle Multiplier)
 
@@ -721,6 +742,8 @@ streaming_income = base_streaming × battle_multiplier × fame_multiplier
 ## Prestige & Fame System
 
 This section consolidates the complete prestige and fame earning mechanics. For detailed implementation, see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#prestige-system).
+
+--> No [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) provides complete prestige and fame system specification (earning, benefits)
 
 ### Fame (Robot-Level Reputation)
 
@@ -1336,6 +1359,7 @@ total_revenue = battle_winnings + merchandising_daily + streaming_daily + achiev
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)** - Weapon catalog with prices
 - **[GAME_DESIGN.md](GAME_DESIGN.md)** - Overall game design philosophy
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Data model for economic tracking
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: Complete prestige and fame system specification (earning, benefits)
 
 ---
 
