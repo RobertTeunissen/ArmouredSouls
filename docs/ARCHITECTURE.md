@@ -232,7 +232,7 @@ Armoured Souls uses a **scheduled batch processing** model for battles, inspired
 - Replay data
 - Winner determination
 - Statistics (damage dealt/received, actions taken)
-- Rewards (currency, fame, experience)
+- Rewards (currency, prestige for stable, fame for robot) - See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
 
 ### Processing Schedule Examples
 

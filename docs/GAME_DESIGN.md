@@ -88,13 +88,14 @@ This document captures the core game design decisions for Armoured Souls, a stra
 - Unlock new technologies through progression
 
 **Resource Collection**:
-- **Currency**: Earned through battles, achievements, trading
-- **Fame**: Earned through victories, rankings, achievements
+- **Currency (Credits ₡)**: Earned through battles, achievements, tournaments - See [STABLE_SYSTEM.md](STABLE_SYSTEM.md)
+- **Prestige**: Stable-level reputation, unlocks facilities and content - See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
+- **Fame**: Robot-level reputation, earned through individual victories - See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
 
 **Progression Pace**: Casual-friendly
 - Optimal engagement: One login per day, 15-30 minutes of play
 - No heavy grinding required
-- Possible Pay-to-Win features for monetization (to cover hosting costs) - players can buy currency or fame
+- Possible Pay-to-Win features for monetization (to cover hosting costs) - players can buy currency (NOT prestige or fame - reputation must be earned)
 
 ---
 
@@ -135,7 +136,7 @@ This document captures the core game design decisions for Armoured Souls, a stra
    - Future: "Last Man Standing" battle royale mode
 
 2. **PvE Sparring Matches** (Training Mode)
-   - Lower stakes (less fame, less repair costs)
+   - Lower stakes (no prestige/fame earned, reduced repair costs)
    - Practice and testing ground
    - AI opponents
 

@@ -48,7 +48,7 @@ model User {
   
   // ===== RESOURCES =====
   currency        Int      @default(2000000)    // Credits (₡) - Starting: ₡2,000,000
-  prestige        Int      @default(0)          // Stable reputation (earned, never spent)
+  prestige        Int      @default(0)          // Stable reputation (earned, never spent) - See PRD_PRESTIGE_AND_FAME.md
   
   // ===== STABLE STATISTICS (Aggregated from robots) =====
   totalBattles    Int      @default(0)          // Lifetime battle count across all robots
@@ -145,7 +145,7 @@ model Robot {
   currentLeague       String  @default("bronze") @db.VarChar(20)     // bronze/silver/gold/platinum/diamond/champion
   leagueId            String  @default("bronze_1") @db.VarChar(30)   // Specific league instance (supports multiple Bronze leagues)
   leaguePoints        Int     @default(0)                             // Points for promotion/demotion
-  fame                Int     @default(0)                             // Individual robot reputation
+  fame                Int     @default(0)                             // Individual robot reputation - See PRD_PRESTIGE_AND_FAME.md
   titles              String? @db.Text                                // Comma-separated achievements
   
   // ===== ECONOMIC STATE =====
@@ -756,6 +756,7 @@ These features are documented but not yet in the schema:
 
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Complete weapon system, loadout configurations, weapon catalog
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Complete attribute system, combat formulas
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: 14 facilities, prestige system, daily income/expenses
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: ⭐ **AUTHORITATIVE** - Prestige and Fame system specification
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: 14 facilities, prestige formulas, daily income/expenses
 - **[ROADMAP.md](ROADMAP.md)**: Implementation phases and priorities
 

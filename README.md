@@ -82,8 +82,9 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 
 ### Economy System
 - [**PRD: Economy System**](docs/PRD_ECONOMY_SYSTEM.md) - Complete economic system documentation
+- [**PRD: Prestige and Fame**](docs/PRD_PRESTIGE_AND_FAME.md) - ⭐ **Authoritative** - Dual reputation systems (stable prestige + robot fame)
 - [**Quick Reference**](docs/QUICK_REFERENCE_ECONOMY_SYSTEM.md) - At-a-glance costs, income, and formulas
-- [**Stable System**](docs/STABLE_SYSTEM.md) - Facility costs, prestige, and income/expense details
+- [**Stable System**](docs/STABLE_SYSTEM.md) - Facility costs, prestige formulas, and income/expense details
 
 ### My Robots Page (Robot Roster Management)
 - [**PRD: My Robots List Page**](docs/PRD_MY_ROBOTS_LIST_PAGE.md) - ⭐ Comprehensive PRD (v1.8.1 - Complete)
