@@ -1,7 +1,7 @@
 # Product Requirements Document: Economy System
 
 **Last Updated**: February 3, 2026  
-**Status**: ✅ IMPLEMENTED (Backend + Frontend)  
+**Status**: ✅ IMPLEMENTED (Backend + Frontend + Daily Financial System)  
 **Owner**: Robert Teunissen  
 **Epic**: Economy System Implementation
 
@@ -16,6 +16,8 @@
 - ✅ Battle reward system integration
 - ✅ Repair cost enhancements
 - ✅ Comprehensive unit tests (27 tests passing)
+- ✅ **NEW**: Daily financial processing system
+- ✅ **NEW**: Reward calculation details in battle logs
 
 **API Endpoints:**
 - ✅ `GET /api/finances/summary` - Quick dashboard overview
@@ -23,15 +25,27 @@
 - ✅ `GET /api/finances/operating-costs` - Detailed cost breakdown
 - ✅ `GET /api/finances/revenue-streams` - Income sources
 - ✅ `GET /api/finances/projections` - Forecasts & recommendations
+- ✅ **NEW**: `POST /api/admin/daily-finances/process` - Process daily operating costs for all users
 
 **Battle Rewards:**
 - ✅ League-based rewards: Bronze (₡5-10K) → Champion (₡150-300K)
 - ✅ Prestige multipliers: 5%-20% bonus on winnings
 - ✅ Participation rewards: 30% of league base for all combatants
+- ✅ **NEW**: Detailed reward breakdown shown in battle logs:
+  - League base reward with min/max range
+  - Prestige bonus percentage and amount
+  - Participation reward amount
+  - Winner and loser rewards separately
 
 **Facility Discounts:**
 - ✅ Medical Bay: Reduces critical damage multiplier (HP=0) by 10%-100%
 - ✅ Repair Bay: 5%-50% discount on all repairs
+
+**Daily Financial System:**
+- ✅ Automatic operating cost deduction
+- ✅ Bankruptcy detection
+- ✅ Per-user financial summaries
+- ✅ Integrated into bulk cycle controls
 
 ### 🚧 Phase 2: Frontend Implementation (COMPLETE ✅)
 **Implementation Date**: February 3, 2026
