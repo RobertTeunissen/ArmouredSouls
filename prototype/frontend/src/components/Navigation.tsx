@@ -76,7 +76,6 @@ const allPages = {
       { path: '/guilds', label: 'Browse Guilds' },
       { path: '/guild', label: 'My Guild' },
       { path: '/guild/manage', label: 'Guild Management' },
-      { path: '/leaderboards', label: 'Global Leaderboards' },
       { path: '/leaderboards/fame', label: 'Fame Leaderboard' },
       { path: '/leaderboards/prestige', label: 'Prestige Leaderboard' },
       { path: '/chat', label: 'Chat' },
