@@ -252,7 +252,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                   <h3 className="text-xl font-bold mb-3">
                     Combat Log ({detailedEvents.length} events)
                   </h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-2 max-h-[48rem] overflow-y-auto">
                     {detailedEvents.map((event, idx) => (
                       <div key={idx} className="bg-gray-800 rounded p-3">
                         <div

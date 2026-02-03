@@ -609,11 +609,13 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
   const mainWeapon2 = robot2.mainWeapon?.weapon;
   const offhandWeapon2 = robot2.offhandWeapon?.weapon;
   
-  const calculateCooldown = (weaponCooldown: number | undefined, attackSpeed: number, isOffhand: boolean = false) => {
+  const calculateCooldown = (robot: RobotWithWeapons, weaponCooldown: number | undefined, hand: 'main' | 'offhand') => {
     const baseCooldown = weaponCooldown || BASE_WEAPON_COOLDOWN;
     // Offhand attacks have 40% cooldown penalty (applied before attack speed bonuses)
-    const cooldownWithPenalty = isOffhand ? baseCooldown * 1.4 : baseCooldown;
-    return cooldownWithPenalty / (1 + Number(attackSpeed) / 50);
+    const cooldownWithPenalty = hand === 'offhand' ? baseCooldown * 1.4 : baseCooldown;
+    // Get effective attack speed including weapon bonus for the specific hand
+    const effectiveAttackSpeed = getEffectiveAttribute(robot, robot.attackSpeed, hand, 'attackSpeedBonus');
+    return cooldownWithPenalty / (1 + Number(effectiveAttackSpeed) / 50);
   };
   
   // Initialize combat state
@@ -625,8 +627,8 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
     maxShield: robot1.maxShield,
     lastAttackTime: 0,
     lastOffhandAttackTime: 0,
-    attackCooldown: calculateCooldown(mainWeapon1?.cooldown, robot1.attackSpeed, false),
-    offhandCooldown: calculateCooldown(offhandWeapon1?.cooldown, robot1.attackSpeed, true),
+    attackCooldown: calculateCooldown(robot1, mainWeapon1?.cooldown, 'main'),
+    offhandCooldown: calculateCooldown(robot1, offhandWeapon1?.cooldown, 'offhand'),
     totalDamageDealt: 0,
     totalDamageTaken: 0,
   };
@@ -639,8 +641,8 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
     maxShield: robot2.maxShield,
     lastAttackTime: 0,
     lastOffhandAttackTime: 0,
-    attackCooldown: calculateCooldown(mainWeapon2?.cooldown, robot2.attackSpeed, false),
-    offhandCooldown: calculateCooldown(offhandWeapon2?.cooldown, robot2.attackSpeed, true),
+    attackCooldown: calculateCooldown(robot2, mainWeapon2?.cooldown, 'main'),
+    offhandCooldown: calculateCooldown(robot2, offhandWeapon2?.cooldown, 'offhand'),
     totalDamageDealt: 0,
     totalDamageTaken: 0,
   };
