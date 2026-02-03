@@ -80,6 +80,11 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 - [**GitHub Issues (Copy-Paste)**](docs/GITHUB_ISSUES_WEAPON_LOADOUT.md) - Ready-to-use issue templates
 - [**Quick Reference**](docs/QUICK_REFERENCE_WEAPON_LOADOUT.md) - Visual guides and dependency charts
 
+### Economy System
+- [**PRD: Economy System**](docs/PRD_ECONOMY_SYSTEM.md) - Complete economic system documentation
+- [**Quick Reference**](docs/QUICK_REFERENCE_ECONOMY_SYSTEM.md) - At-a-glance costs, income, and formulas
+- [**Stable System**](docs/STABLE_SYSTEM.md) - Facility costs, prestige, and income/expense details
+
 ### My Robots Page (Robot Roster Management)
 - [**PRD: My Robots List Page**](docs/PRD_MY_ROBOTS_LIST_PAGE.md) - ⭐ Comprehensive PRD (v1.8.1 - Complete)
 - [**Documentation Index**](docs/MY_ROBOTS_PAGE_DOCS_INDEX.md) - Navigation hub for all My Robots page docs
