@@ -131,16 +131,12 @@ router.get('/prestige', async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 100);
+    const minRobots = parseInt(req.query.minRobots as string) || 1;
     const skip = (page - 1) * limit;
     
-    // Get total count
-    const totalStables = await prisma.user.count();
-    
-    // Get top users by prestige
+    // Get all users (we'll filter after counting robots)
     const users = await prisma.user.findMany({
       orderBy: { prestige: 'desc' },
-      skip,
-      take: limit,
       include: {
         robots: {
           where: {
@@ -157,36 +153,47 @@ router.get('/prestige', async (req: Request, res: Response) => {
       }
     });
     
-    // Calculate derived stats
-    const leaderboard = users.map((user, index) => {
-      const highestELO = user.robots.length > 0 
-        ? Math.max(...user.robots.map(r => r.elo), 0)
-        : 0;
-      const totalBattles = user.robots.reduce((sum, r) => sum + r.totalBattles, 0);
-      const totalWins = user.robots.reduce((sum, r) => sum + r.wins, 0);
-      const totalLosses = user.robots.reduce((sum, r) => sum + r.losses, 0);
-      const totalDraws = user.robots.reduce((sum, r) => sum + r.draws, 0);
-      const winRate = totalBattles > 0 ? (totalWins / totalBattles * 100) : 0;
-      
-      return {
-        rank: skip + index + 1,
-        userId: user.id,
-        username: user.username,
-        stableName: user.username, // TODO: Add dedicated stable name field in future
-        prestige: user.prestige,
-        prestigeRank: getPrestigeRank(user.prestige),
-        totalRobots: user.robots.length,
-        totalBattles,
-        totalWins,
-        totalLosses,
-        totalDraws,
-        winRate: Number(winRate.toFixed(1)),
-        highestELO,
-        championshipTitles: user.championshipTitles,
-        battleWinningsBonus: calculateBattleWinningsBonus(user.prestige),
-        merchandisingMultiplier: Number((1 + user.prestige / 10000).toFixed(3))
-      };
-    });
+    // Calculate derived stats and filter by minRobots
+    const allLeaderboardEntries = users
+      .map((user) => {
+        const highestELO = user.robots.length > 0 
+          ? Math.max(...user.robots.map(r => r.elo), 0)
+          : 0;
+        const totalBattles = user.robots.reduce((sum, r) => sum + r.totalBattles, 0);
+        const totalWins = user.robots.reduce((sum, r) => sum + r.wins, 0);
+        const totalLosses = user.robots.reduce((sum, r) => sum + r.losses, 0);
+        const totalDraws = user.robots.reduce((sum, r) => sum + r.draws, 0);
+        const winRate = totalBattles > 0 ? (totalWins / totalBattles * 100) : 0;
+        
+        return {
+          userId: user.id,
+          username: user.username,
+          stableName: user.username, // TODO: Add dedicated stable name field in future
+          prestige: user.prestige,
+          prestigeRank: getPrestigeRank(user.prestige),
+          totalRobots: user.robots.length,
+          totalBattles,
+          totalWins,
+          totalLosses,
+          totalDraws,
+          winRate: Number(winRate.toFixed(1)),
+          highestELO,
+          championshipTitles: user.championshipTitles,
+          battleWinningsBonus: calculateBattleWinningsBonus(user.prestige),
+          merchandisingMultiplier: Number((1 + user.prestige / 10000).toFixed(3))
+        };
+      })
+      .filter(entry => entry.totalRobots >= minRobots);
+    
+    // Apply pagination to filtered results
+    const totalStables = allLeaderboardEntries.length;
+    const paginatedEntries = allLeaderboardEntries.slice(skip, skip + limit);
+    
+    // Add ranks to paginated entries
+    const leaderboard = paginatedEntries.map((entry, index) => ({
+      rank: skip + index + 1,
+      ...entry
+    }));
     
     res.json({
       leaderboard,
@@ -195,7 +202,10 @@ router.get('/prestige', async (req: Request, res: Response) => {
         limit,
         totalStables,
         totalPages: Math.ceil(totalStables / limit),
-        hasMore: skip + users.length < totalStables,
+        hasMore: skip + paginatedEntries.length < totalStables,
+      },
+      filters: {
+        minRobots,
       },
       timestamp: new Date().toISOString(),
     });
