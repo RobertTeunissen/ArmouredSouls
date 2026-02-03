@@ -1,9 +1,11 @@
 # Product Requirements Document: Economy System
 
-**Last Updated**: February 2, 2026  
+**Last Updated**: February 3, 2026  
 **Status**: Design Document  
 **Owner**: Robert Teunissen  
 **Epic**: Economy System Implementation
+
+> **📋 For Prestige and Fame Details**: See **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - the authoritative document for all prestige earning, fame mechanics, and reputation benefits. This document covers economic integration but PRD_PRESTIGE_AND_FAME.md is the official specification for reputation systems.
 
 ---
 
@@ -51,13 +53,14 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 ### Design References
 
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: **Authoritative source** for prestige system, fame mechanics, facility costs, and daily income/expense examples
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: ⭐ **AUTHORITATIVE** - Complete prestige and fame system specification (earning, benefits, implementation status)
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Facility costs, prestige formulas, and daily income/expense examples
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Upgrade costs, repair formulas, currency definition, and fame tracking
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Weapon prices and crafting costs
 - **[GAME_DESIGN.md](GAME_DESIGN.md)**: Overall economic philosophy and progression
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Data model for tracking resources
 
-**Note**: Where this document conflicts with STABLE_SYSTEM.md on prestige/fame mechanics, STABLE_SYSTEM.md is authoritative.
+**Note**: For prestige/fame mechanics, **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** is authoritative. For facility costs and economic formulas, this document and STABLE_SYSTEM.md are aligned.
 
 ---
 
@@ -78,13 +81,15 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - Used to unlock facility levels and high-tier content
 - Scales merchandising income
 - Provides battle winnings multiplier
+- **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) for complete earning mechanics and benefits**
 
 **Tertiary Resource: Fame (Robot-Level)**
 - Individual robot reputation (separate from stable prestige)
-- Earned through victories (same per-win values as prestige)
+- Earned through individual robot victories with performance bonuses
 - Tracked per robot, aggregated for stable-level calculations
 - Used in streaming revenue calculations (aggregate)
 - Displayed for competitive rankings
+- **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) for complete earning mechanics and benefits**
 
 ### Economic Philosophy
 
@@ -518,6 +523,8 @@ To achieve 90% breakeven at 50% win rate:
 
 ### 2. Prestige Bonuses (Battle Multiplier)
 
+> **For complete prestige earning mechanics**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
+
 Higher stable prestige increases battle winnings:
 
 | Prestige Threshold | Battle Winnings Bonus |
@@ -572,6 +579,8 @@ final_battle_reward = base_reward × prestige_multiplier
 
 ### 3. Merchandising Income (Income Generator Facility)
 
+> **For complete prestige earning and benefits**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
+
 **Requirements**:
 - Income Generator Level 1+ (unlocks merchandising)
 
@@ -623,6 +632,8 @@ merchandising_income = base_merchandising × prestige_multiplier
 **Design Note**: Prestige-based scaling rewards long-term player engagement and success across all robots in the stable.
 
 ### 4. Streaming Revenue (Income Generator Facility)
+
+> **For complete fame earning and benefits**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
 
 **Requirements**:
 - Income Generator Level 3+ (unlocks streaming)
