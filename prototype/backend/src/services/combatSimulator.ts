@@ -1,4 +1,4 @@
-import { Robot } from '@prisma/client';
+import { Robot, Weapon, WeaponInventory } from '@prisma/client';
 
 /**
  * Combat Simulator - Implements time-based combat formulas from ROBOT_ATTRIBUTES.md
@@ -7,12 +7,18 @@ import { Robot } from '@prisma/client';
  * ELO is NOT used in combat calculations - it's only for matchmaking.
  */
 
+export interface RobotWithWeapons extends Robot {
+  mainWeapon?: (WeaponInventory & { weapon: Weapon }) | null;
+  offhandWeapon?: (WeaponInventory & { weapon: Weapon }) | null;
+}
+
 export interface CombatEvent {
   timestamp: number;
   type: 'attack' | 'miss' | 'critical' | 'counter' | 'shield_break' | 'shield_regen' | 'yield' | 'destroyed';
   attacker?: string;
   defender?: string;
   weapon?: string;
+  hand?: 'main' | 'offhand'; // Which hand performed the attack (for dual wield)
   damage?: number;
   shieldDamage?: number;
   hpDamage?: number;
@@ -49,13 +55,15 @@ export interface CombatResult {
 }
 
 interface RobotCombatState {
-  robot: Robot;
+  robot: RobotWithWeapons;
   currentHP: number;
   maxHP: number;
   currentShield: number;
   maxShield: number;
   lastAttackTime: number;
+  lastOffhandAttackTime: number; // For dual wield
   attackCooldown: number;
+  offhandCooldown: number; // For dual wield
   totalDamageDealt: number;
   totalDamageTaken: number;
 }
@@ -85,7 +93,7 @@ function random(min: number, max: number): number {
 /**
  * Calculate hit chance based on attacker and defender attributes
  */
-function calculateHitChance(attacker: Robot, defender: Robot): { hitChance: number; breakdown: FormulaBreakdown } {
+function calculateHitChance(attacker: RobotWithWeapons, defender: RobotWithWeapons): { hitChance: number; breakdown: FormulaBreakdown } {
   const baseHitChance = 70;
   const targetingBonus = Number(attacker.targetingSystems) / 2;
   const stanceBonus = attacker.stance === 'offensive' ? 5 : 0;
@@ -116,7 +124,7 @@ function calculateHitChance(attacker: Robot, defender: Robot): { hitChance: numb
 /**
  * Calculate critical hit chance
  */
-function calculateCritChance(attacker: Robot): { critChance: number; breakdown: FormulaBreakdown } {
+function calculateCritChance(attacker: RobotWithWeapons): { critChance: number; breakdown: FormulaBreakdown } {
   const baseCrit = 5;
   const critBonus = Number(attacker.criticalSystems) / 8;
   const targetingBonus = Number(attacker.targetingSystems) / 25;
@@ -145,7 +153,7 @@ function calculateCritChance(attacker: Robot): { critChance: number; breakdown: 
 /**
  * Calculate base damage before defense
  */
-function calculateBaseDamage(attacker: Robot, weaponBaseDamage: number): { damage: number; breakdown: FormulaBreakdown } {
+function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: number): { damage: number; breakdown: FormulaBreakdown } {
   const combatPowerMult = 1 + (Number(attacker.combatPower) * 1.5) / 100;
   let damage = weaponBaseDamage * combatPowerMult;
   
@@ -185,8 +193,8 @@ function calculateBaseDamage(attacker: Robot, weaponBaseDamage: number): { damag
  */
 function applyDamage(
   baseDamage: number,
-  attacker: Robot,
-  defender: Robot,
+  attacker: RobotWithWeapons,
+  defender: RobotWithWeapons,
   defenderState: RobotCombatState,
   isCritical: boolean
 ): { hpDamage: number; shieldDamage: number; breakdown: FormulaBreakdown } {
@@ -250,7 +258,7 @@ function applyDamage(
 /**
  * Calculate counter-attack chance
  */
-function calculateCounterChance(defender: Robot): number {
+function calculateCounterChance(defender: RobotWithWeapons): { counterChance: number; breakdown: FormulaBreakdown } {
   let baseCounter = Number(defender.counterProtocols) / 100;
   
   if (defender.stance === 'defensive') {
@@ -261,7 +269,20 @@ function calculateCounterChance(defender: Robot): number {
     baseCounter *= 1.10;
   }
   
-  return clamp(baseCounter * 100, 0, 40);
+  const finalChance = clamp(baseCounter * 100, 0, 40);
+  
+  return {
+    counterChance: finalChance,
+    breakdown: {
+      calculation: `${Number(defender.counterProtocols).toFixed(2)} counter_protocols / 100 × ${defender.stance === 'defensive' ? '1.15 defensive' : '1.0'} × ${defender.loadoutType === 'weapon_shield' ? '1.10 shield' : '1.0'} = ${finalChance.toFixed(1)}%`,
+      components: {
+        counterProtocols: Number(defender.counterProtocols),
+        stanceBonus: defender.stance === 'defensive' ? 1.15 : 1.0,
+        shieldBonus: defender.loadoutType === 'weapon_shield' ? 1.10 : 1.0,
+      },
+      result: finalChance,
+    },
+  };
 }
 
 /**
@@ -287,9 +308,221 @@ function shouldYield(state: RobotCombatState): boolean {
 }
 
 /**
+ * Get weapon info for display
+ */
+function getWeaponInfo(robot: RobotWithWeapons, hand: 'main' | 'offhand'): { name: string; baseDamage: number } {
+  const weaponInventory = hand === 'main' ? robot.mainWeapon : robot.offhandWeapon;
+  if (weaponInventory?.weapon) {
+    return {
+      name: weaponInventory.weapon.name,
+      baseDamage: weaponInventory.weapon.baseDamage,
+    };
+  }
+  return {
+    name: 'Fists',
+    baseDamage: 10, // Default unarmed damage
+  };
+}
+
+/**
+ * Get weapon stats summary for robot
+ */
+function getWeaponStatsSummary(robot: RobotWithWeapons): string {
+  const parts: string[] = [];
+  
+  if (robot.mainWeapon?.weapon) {
+    const w = robot.mainWeapon.weapon;
+    parts.push(`Main: ${w.name} (${w.baseDamage} dmg, ${w.cooldown}s CD)`);
+  }
+  
+  if (robot.offhandWeapon?.weapon) {
+    const w = robot.offhandWeapon.weapon;
+    parts.push(`Offhand: ${w.name} (${w.baseDamage} dmg, ${w.cooldown}s CD)`);
+  }
+  
+  return parts.length > 0 ? parts.join(', ') : 'Unarmed';
+}
+
+/**
+ * Perform a single attack from attacker to defender
+ */
+function performAttack(
+  attackerState: RobotCombatState,
+  defenderState: RobotCombatState,
+  attackerName: string,
+  defenderName: string,
+  currentTime: number,
+  hand: 'main' | 'offhand',
+  events: CombatEvent[]
+): void {
+  const { hitChance, breakdown: hitBreakdown } = calculateHitChance(attackerState.robot, defenderState.robot);
+  const hitRoll = random(0, 100);
+  const hit = hitRoll < hitChance;
+  
+  // Always calculate crit chance (issue #3)
+  const { critChance, breakdown: critBreakdown } = calculateCritChance(attackerState.robot);
+  const critRoll = random(0, 100);
+  const isCritical = hit && (critRoll < critChance);
+  
+  const weaponInfo = getWeaponInfo(attackerState.robot, hand);
+  const weaponDamage = weaponInfo.baseDamage;
+  
+  if (hit) {
+    const { damage: baseDamage, breakdown: damageBreakdown } = calculateBaseDamage(attackerState.robot, weaponDamage);
+    const { hpDamage, shieldDamage, breakdown: applyBreakdown } = applyDamage(
+      baseDamage,
+      attackerState.robot,
+      defenderState.robot,
+      defenderState,
+      isCritical
+    );
+    
+    attackerState.totalDamageDealt += hpDamage;
+    defenderState.totalDamageTaken += hpDamage;
+    
+    const totalDamage = hpDamage + shieldDamage;
+    
+    const handLabel = hand === 'offhand' ? ' [OFFHAND]' : '';
+    
+    // Build multiline formula breakdown with crit roll info
+    const formulaParts = [
+      `Hit: ${hitBreakdown.calculation} (rolled ${hitRoll.toFixed(1)}, result: HIT)`,
+      `Crit: ${critBreakdown.calculation} (rolled ${critRoll.toFixed(1)}, result: ${isCritical ? 'CRITICAL HIT' : 'normal'})`,
+      `Damage: ${damageBreakdown.calculation}`,
+      `Apply: ${applyBreakdown.calculation}`,
+    ];
+    
+    // Always calculate counter chance (issue #4)
+    const { counterChance, breakdown: counterBreakdown } = calculateCounterChance(defenderState.robot);
+    const counterRoll = random(0, 100);
+    const counterHappens = defenderState.currentHP > 0 && (counterRoll < counterChance);
+    
+    formulaParts.push(`Counter: ${counterBreakdown.calculation} (rolled ${counterRoll.toFixed(1)}, result: ${counterHappens ? 'COUNTER' : 'no counter'})`);
+    
+    events.push({
+      timestamp: Number(currentTime.toFixed(1)),
+      type: isCritical ? 'critical' : 'attack',
+      attacker: attackerName,
+      defender: defenderName,
+      weapon: weaponInfo.name,
+      hand,
+      damage: totalDamage,
+      shieldDamage,
+      hpDamage,
+      hit: true,
+      critical: isCritical,
+      robot1HP: attackerState.currentHP,
+      robot2HP: defenderState.currentHP,
+      robot1Shield: attackerState.currentShield,
+      robot2Shield: defenderState.currentShield,
+      message: isCritical 
+        ? `💢 CRITICAL!${handLabel} ${attackerName} deals ${totalDamage.toFixed(0)} damage with ${weaponInfo.name} (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`
+        : `💥${handLabel} ${attackerName} hits for ${totalDamage.toFixed(0)} damage with ${weaponInfo.name} (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`,
+      formulaBreakdown: {
+        calculation: formulaParts.join('\n'),
+        components: { 
+          ...hitBreakdown.components,
+          hitRoll,
+          ...critBreakdown.components,
+          critRoll,
+          ...damageBreakdown.components, 
+          ...applyBreakdown.components,
+          ...counterBreakdown.components,
+          counterRoll,
+        },
+        result: totalDamage,
+      },
+    });
+    
+    // Execute counter-attack if it happens
+    if (counterHappens) {
+      const counterDamage = baseDamage * 0.7;
+      const { hpDamage: counterHP, shieldDamage: counterShield, breakdown: counterApplyBreakdown } = applyDamage(
+        counterDamage, 
+        defenderState.robot, 
+        attackerState.robot, 
+        attackerState, 
+        false
+      );
+      
+      defenderState.totalDamageDealt += counterHP;
+      attackerState.totalDamageTaken += counterHP;
+      
+      events.push({
+        timestamp: Number(currentTime.toFixed(1)),
+        type: 'counter',
+        attacker: defenderName,
+        defender: attackerName,
+        weapon: getWeaponInfo(defenderState.robot, 'main').name,
+        damage: counterHP,
+        hpDamage: counterHP,
+        shieldDamage: counterShield,
+        counter: true,
+        robot1HP: attackerState.currentHP,
+        robot2HP: defenderState.currentHP,
+        robot1Shield: attackerState.currentShield,
+        robot2Shield: defenderState.currentShield,
+        message: `🔄 ${defenderName} counters for ${counterHP.toFixed(0)} damage!`,
+        formulaBreakdown: {
+          calculation: `Counter: ${counterDamage.toFixed(1)} base (70% of attack)\n${counterApplyBreakdown.calculation}`,
+          components: {
+            counterChance: counterChance,
+            counterBase: counterDamage,
+            ...counterApplyBreakdown.components,
+          },
+          result: counterHP,
+        },
+      });
+    }
+  } else {
+    // Miss - show hit calculation and crit roll too
+    const formulaParts = [
+      `Hit: ${hitBreakdown.calculation} (rolled ${hitRoll.toFixed(1)}, result: MISS)`,
+      `Crit: ${critBreakdown.calculation} (rolled ${critRoll.toFixed(1)}, would be: ${critRoll < critChance ? 'CRITICAL' : 'normal'})`,
+    ];
+    
+    events.push({
+      timestamp: Number(currentTime.toFixed(1)),
+      type: 'miss',
+      attacker: attackerName,
+      defender: defenderName,
+      weapon: weaponInfo.name,
+      hand,
+      hit: false,
+      robot1HP: attackerState.currentHP,
+      robot2HP: defenderState.currentHP,
+      robot1Shield: attackerState.currentShield,
+      robot2Shield: defenderState.currentShield,
+      message: `❌${hand === 'offhand' ? ' [OFFHAND]' : ''} ${attackerName} misses ${defenderName} with ${weaponInfo.name}`,
+      formulaBreakdown: {
+        calculation: formulaParts.join('\n'),
+        components: {
+          ...hitBreakdown.components,
+          hitRoll,
+          ...critBreakdown.components,
+          critRoll,
+        },
+        result: 0,
+      },
+    });
+  }
+}
+
+/**
  * Simulate a complete battle between two robots
  */
-export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
+export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapons): CombatResult {
+  // Get weapon cooldowns (use weapon cooldown if equipped, otherwise use base)
+  const mainWeapon1 = robot1.mainWeapon?.weapon;
+  const offhandWeapon1 = robot1.offhandWeapon?.weapon;
+  const mainWeapon2 = robot2.mainWeapon?.weapon;
+  const offhandWeapon2 = robot2.offhandWeapon?.weapon;
+  
+  const calculateCooldown = (weaponCooldown: number | undefined, attackSpeed: number) => {
+    const baseCooldown = weaponCooldown || BASE_WEAPON_COOLDOWN;
+    return baseCooldown / (1 + Number(attackSpeed) / 50);
+  };
+  
   // Initialize combat state
   const state1: RobotCombatState = {
     robot: robot1,
@@ -298,7 +531,9 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
     currentShield: robot1.currentShield,
     maxShield: robot1.maxShield,
     lastAttackTime: 0,
-    attackCooldown: BASE_WEAPON_COOLDOWN / (1 + Number(robot1.attackSpeed) / 50),
+    lastOffhandAttackTime: 0,
+    attackCooldown: calculateCooldown(mainWeapon1?.cooldown, robot1.attackSpeed),
+    offhandCooldown: calculateCooldown(offhandWeapon1?.cooldown, robot1.attackSpeed),
     totalDamageDealt: 0,
     totalDamageTaken: 0,
   };
@@ -310,7 +545,9 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
     currentShield: robot2.currentShield,
     maxShield: robot2.maxShield,
     lastAttackTime: 0,
-    attackCooldown: BASE_WEAPON_COOLDOWN / (1 + Number(robot2.attackSpeed) / 50),
+    lastOffhandAttackTime: 0,
+    attackCooldown: calculateCooldown(mainWeapon2?.cooldown, robot2.attackSpeed),
+    offhandCooldown: calculateCooldown(offhandWeapon2?.cooldown, robot2.attackSpeed),
     totalDamageDealt: 0,
     totalDamageTaken: 0,
   };
@@ -320,7 +557,10 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
   let battleEnded = false;
   let winnerId: number | null = null;
   
-  // Battle start event with complete robot stats
+  // Battle start event with complete robot stats including weapons
+  const weaponStats1 = getWeaponStatsSummary(robot1);
+  const weaponStats2 = getWeaponStatsSummary(robot2);
+  
   events.push({
     timestamp: 0,
     type: 'attack',
@@ -330,19 +570,26 @@ export function simulateBattle(robot1: Robot, robot2: Robot): CombatResult {
     robot1Shield: state1.currentShield,
     robot2Shield: state2.currentShield,
     formulaBreakdown: {
-      calculation: `${robot1.name}: ${state1.currentHP}HP / ${state1.maxHP}HP, ${state1.currentShield}S / ${state1.maxShield}S, Cooldown: ${state1.attackCooldown.toFixed(2)}s
-${robot2.name}: ${state2.currentHP}HP / ${state2.maxHP}HP, ${state2.currentShield}S / ${state2.maxShield}S, Cooldown: ${state2.attackCooldown.toFixed(2)}s`,
+      calculation: `${robot1.name}: ${state1.currentHP}HP / ${state1.maxHP}HP, ${state1.currentShield}S / ${state1.maxShield}S
+Weapons: ${weaponStats1}
+Main CD: ${state1.attackCooldown.toFixed(2)}s${robot1.loadoutType === 'dual_wield' && offhandWeapon1 ? `, Offhand CD: ${state1.offhandCooldown.toFixed(2)}s` : ''}
+
+${robot2.name}: ${state2.currentHP}HP / ${state2.maxHP}HP, ${state2.currentShield}S / ${state2.maxShield}S
+Weapons: ${weaponStats2}
+Main CD: ${state2.attackCooldown.toFixed(2)}s${robot2.loadoutType === 'dual_wield' && offhandWeapon2 ? `, Offhand CD: ${state2.offhandCooldown.toFixed(2)}s` : ''}`,
       components: {
         robot1_hp: state1.currentHP,
         robot1_max_hp: state1.maxHP,
         robot1_shield: state1.currentShield,
         robot1_max_shield: state1.maxShield,
-        robot1_cooldown: state1.attackCooldown,
+        robot1_main_cooldown: state1.attackCooldown,
+        robot1_offhand_cooldown: state1.offhandCooldown,
         robot2_hp: state2.currentHP,
         robot2_max_hp: state2.maxHP,
         robot2_shield: state2.currentShield,
         robot2_max_shield: state2.maxShield,
-        robot2_cooldown: state2.attackCooldown,
+        robot2_main_cooldown: state2.attackCooldown,
+        robot2_offhand_cooldown: state2.offhandCooldown,
       },
       result: 0,
     },
@@ -356,238 +603,34 @@ ${robot2.name}: ${state2.currentHP}HP / ${state2.maxHP}HP, ${state2.currentShiel
     const shield1Regen = regenerateShields(state1, SIMULATION_TICK);
     const shield2Regen = regenerateShields(state2, SIMULATION_TICK);
     
-    // Check if robot1 can attack
+    // Check if robot1 can attack with main weapon
     if (currentTime - state1.lastAttackTime >= state1.attackCooldown && state1.currentHP > 0) {
-      const { hitChance, breakdown: hitBreakdown } = calculateHitChance(state1.robot, state2.robot);
-      const hit = random(0, 100) < hitChance;
-      
-      if (hit) {
-        const { critChance, breakdown: critBreakdown } = calculateCritChance(state1.robot);
-        const isCritical = random(0, 100) < critChance;
-        
-        const weaponDamage = 20; // Base weapon damage (simplified for Phase 1)
-        const { damage: baseDamage, breakdown: damageBreakdown } = calculateBaseDamage(state1.robot, weaponDamage);
-        const { hpDamage, shieldDamage, breakdown: applyBreakdown } = applyDamage(
-          baseDamage,
-          state1.robot,
-          state2.robot,
-          state2,
-          isCritical
-        );
-        
-        state1.totalDamageDealt += hpDamage;
-        state2.totalDamageTaken += hpDamage;
-        
-        const totalDamage = hpDamage + shieldDamage;
-        
-        // Build multiline formula breakdown
-        const formulaParts = [
-          `Hit: ${hitBreakdown.calculation}`,
-          isCritical ? `Crit: ${critBreakdown.calculation}` : null,
-          `Damage: ${damageBreakdown.calculation}`,
-          `Apply: ${applyBreakdown.calculation}`,
-        ].filter(Boolean);
-        
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: isCritical ? 'critical' : 'attack',
-          attacker: robot1.name,
-          defender: robot2.name,
-          weapon: 'weapon',
-          damage: totalDamage,
-          shieldDamage,
-          hpDamage,
-          hit: true,
-          critical: isCritical,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          message: isCritical 
-            ? `💢 CRITICAL! ${robot1.name} deals ${totalDamage.toFixed(0)} damage (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`
-            : `💥 ${robot1.name} hits for ${totalDamage.toFixed(0)} damage (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`,
-          formulaBreakdown: {
-            calculation: formulaParts.join('\n'),
-            components: { 
-              ...hitBreakdown.components, 
-              ...(isCritical ? critBreakdown.components : {}),
-              ...damageBreakdown.components, 
-              ...applyBreakdown.components 
-            },
-            result: totalDamage,
-          },
-        });
-        
-        // Check for counter-attack
-        if (state2.currentHP > 0) {
-          const counterChance = calculateCounterChance(state2.robot);
-          if (random(0, 100) < counterChance) {
-            const counterDamage = baseDamage * 0.7;
-            const { hpDamage: counterHP, shieldDamage: counterShield, breakdown: counterBreakdown } = applyDamage(counterDamage, state2.robot, state1.robot, state1, false);
-            
-            state2.totalDamageDealt += counterHP;
-            state1.totalDamageTaken += counterHP;
-            
-            events.push({
-              timestamp: Number(currentTime.toFixed(1)),
-              type: 'counter',
-              attacker: robot2.name,
-              defender: robot1.name,
-              damage: counterHP,
-              hpDamage: counterHP,
-              shieldDamage: counterShield,
-              counter: true,
-              robot1HP: state1.currentHP,
-              robot2HP: state2.currentHP,
-              robot1Shield: state1.currentShield,
-              robot2Shield: state2.currentShield,
-              message: `🔄 ${robot2.name} counters for ${counterHP.toFixed(0)} damage!`,
-              formulaBreakdown: {
-                calculation: `Counter: ${counterDamage.toFixed(1)} base (70% of attack)\n${counterBreakdown.calculation}`,
-                components: {
-                  counterChance: counterChance,
-                  counterBase: counterDamage,
-                  ...counterBreakdown.components,
-                },
-                result: counterHP,
-              },
-            });
-          }
-        }
-      } else {
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: 'miss',
-          attacker: robot1.name,
-          defender: robot2.name,
-          hit: false,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          message: `❌ ${robot1.name} misses ${robot2.name}`,
-          formulaBreakdown: hitBreakdown,
-        });
-      }
-      
+      performAttack(state1, state2, robot1.name, robot2.name, currentTime, 'main', events);
       state1.lastAttackTime = currentTime;
     }
     
-    // Check if robot2 can attack
+    // Check if robot1 can attack with offhand (dual wield only)
+    if (robot1.loadoutType === 'dual_wield' && 
+        robot1.offhandWeapon?.weapon &&
+        currentTime - state1.lastOffhandAttackTime >= state1.offhandCooldown && 
+        state1.currentHP > 0) {
+      performAttack(state1, state2, robot1.name, robot2.name, currentTime, 'offhand', events);
+      state1.lastOffhandAttackTime = currentTime;
+    }
+    
+    // Check if robot2 can attack with main weapon
     if (currentTime - state2.lastAttackTime >= state2.attackCooldown && state2.currentHP > 0) {
-      const { hitChance, breakdown: hitBreakdown } = calculateHitChance(state2.robot, state1.robot);
-      const hit = random(0, 100) < hitChance;
-      
-      if (hit) {
-        const { critChance, breakdown: critBreakdown } = calculateCritChance(state2.robot);
-        const isCritical = random(0, 100) < critChance;
-        
-        const weaponDamage = 20;
-        const { damage: baseDamage, breakdown: damageBreakdown } = calculateBaseDamage(state2.robot, weaponDamage);
-        const { hpDamage, shieldDamage, breakdown: applyBreakdown } = applyDamage(
-          baseDamage,
-          state2.robot,
-          state1.robot,
-          state1,
-          isCritical
-        );
-        
-        state2.totalDamageDealt += hpDamage;
-        state1.totalDamageTaken += hpDamage;
-        
-        const totalDamage = hpDamage + shieldDamage;
-        
-        // Build multiline formula breakdown
-        const formulaParts = [
-          `Hit: ${hitBreakdown.calculation}`,
-          isCritical ? `Crit: ${critBreakdown.calculation}` : null,
-          `Damage: ${damageBreakdown.calculation}`,
-          `Apply: ${applyBreakdown.calculation}`,
-        ].filter(Boolean);
-        
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: isCritical ? 'critical' : 'attack',
-          attacker: robot2.name,
-          defender: robot1.name,
-          weapon: 'weapon',
-          damage: totalDamage,
-          shieldDamage,
-          hpDamage,
-          hit: true,
-          critical: isCritical,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          message: isCritical
-            ? `💢 CRITICAL! ${robot2.name} deals ${totalDamage.toFixed(0)} damage (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`
-            : `💥 ${robot2.name} hits for ${totalDamage.toFixed(0)} damage (${shieldDamage.toFixed(0)} shield, ${hpDamage.toFixed(0)} HP)`,
-          formulaBreakdown: {
-            calculation: formulaParts.join('\n'),
-            components: { 
-              ...hitBreakdown.components, 
-              ...(isCritical ? critBreakdown.components : {}),
-              ...damageBreakdown.components, 
-              ...applyBreakdown.components 
-            },
-            result: totalDamage,
-          },
-        });
-        
-        // Check for counter-attack
-        if (state1.currentHP > 0) {
-          const counterChance = calculateCounterChance(state1.robot);
-          if (random(0, 100) < counterChance) {
-            const counterDamage = baseDamage * 0.7;
-            const { hpDamage: counterHP, shieldDamage: counterShield, breakdown: counterBreakdown } = applyDamage(counterDamage, state1.robot, state2.robot, state2, false);
-            
-            state1.totalDamageDealt += counterHP;
-            state2.totalDamageTaken += counterHP;
-            
-            events.push({
-              timestamp: Number(currentTime.toFixed(1)),
-              type: 'counter',
-              attacker: robot1.name,
-              defender: robot2.name,
-              damage: counterHP,
-              hpDamage: counterHP,
-              shieldDamage: counterShield,
-              counter: true,
-              robot1HP: state1.currentHP,
-              robot2HP: state2.currentHP,
-              robot1Shield: state1.currentShield,
-              robot2Shield: state2.currentShield,
-              message: `🔄 ${robot1.name} counters for ${counterHP.toFixed(0)} damage!`,
-              formulaBreakdown: {
-                calculation: `Counter: ${counterDamage.toFixed(1)} base (70% of attack)\n${counterBreakdown.calculation}`,
-                components: {
-                  counterChance: counterChance,
-                  counterBase: counterDamage,
-                  ...counterBreakdown.components,
-                },
-                result: counterHP,
-              },
-            });
-          }
-        }
-      } else {
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: 'miss',
-          attacker: robot2.name,
-          defender: robot1.name,
-          hit: false,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          message: `❌ ${robot2.name} misses ${robot1.name}`,
-          formulaBreakdown: hitBreakdown,
-        });
-      }
-      
+      performAttack(state2, state1, robot2.name, robot1.name, currentTime, 'main', events);
       state2.lastAttackTime = currentTime;
+    }
+    
+    // Check if robot2 can attack with offhand (dual wield only)
+    if (robot2.loadoutType === 'dual_wield' && 
+        robot2.offhandWeapon?.weapon &&
+        currentTime - state2.lastOffhandAttackTime >= state2.offhandCooldown && 
+        state2.currentHP > 0) {
+      performAttack(state2, state1, robot2.name, robot1.name, currentTime, 'offhand', events);
+      state2.lastOffhandAttackTime = currentTime;
     }
     
     // Check battle end conditions
