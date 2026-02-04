@@ -27,6 +27,26 @@ interface SystemStats {
   battles: {
     last24Hours: number;
     total: number;
+    draws: number;
+    drawPercentage: number;
+    avgDuration: number;
+    kills: number;
+    killPercentage: number;
+  };
+  finances: {
+    totalCredits: number;
+    avgBalance: number;
+    usersAtRisk: number;
+    totalUsers: number;
+  };
+  facilities: {
+    summary: Array<{
+      type: string;
+      purchaseCount: number;
+      avgLevel: number;
+    }>;
+    totalPurchases: number;
+    mostPopular: string;
   };
 }
 
@@ -107,6 +127,44 @@ const getQuintileLabel = (quintileNumber: number): string => {
     case 5: return 'Top 20%';
     default: return `Q${quintileNumber}`;
   }
+};
+
+// Helper function to get battle outcome icon and description
+const getBattleOutcome = (battle: Battle): { icon: string; label: string; color: string } => {
+  if (battle.winnerId === null) {
+    return { icon: '⚖️', label: 'Draw', color: 'text-gray-400' };
+  }
+  
+  const winnerHP = battle.winnerId === battle.robot1.id ? battle.robot1FinalHP : battle.robot2FinalHP;
+  
+  if (winnerHP > 50) {
+    return { icon: '🏆', label: 'Clear Victory', color: 'text-green-400' };
+  } else if (winnerHP > 0) {
+    return { icon: '💪', label: 'Narrow Victory', color: 'text-yellow-400' };
+  } else {
+    return { icon: '🏆', label: 'Victory', color: 'text-blue-400' };
+  }
+};
+
+// Helper function to determine if battle is unusual (for border styling)
+const getBattleHighlight = (battle: Battle): string => {
+  // Draw - red border (rare)
+  if (battle.winnerId === null) {
+    return 'border-l-4 border-red-500';
+  }
+  
+  // Long battle - yellow border (potential balance issue)
+  if (battle.durationSeconds > 90) {
+    return 'border-l-4 border-yellow-500';
+  }
+  
+  // Large ELO swing - blue border (upset or significant match)
+  const eloSwing = Math.abs(battle.robot1ELOAfter - battle.robot1ELOBefore);
+  if (eloSwing > 50) {
+    return 'border-l-4 border-blue-500';
+  }
+  
+  return '';
 };
 
 interface CycleResult {
@@ -571,7 +629,8 @@ function AdminPage() {
             {stats && (
               <div className="bg-gray-800 rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-4">System Statistics</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Robots Section */}
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-blue-400">Robots</h3>
                     <p>Total: {stats.robots.total}</p>
@@ -585,17 +644,68 @@ function AdminPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Matches Section */}
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-green-400">Matches</h3>
                     <p>Scheduled: {stats.matches.scheduled}</p>
                     <p>Completed: {stats.matches.completed}</p>
                   </div>
+
+                  {/* Battles Section - Enhanced */}
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-purple-400">Battles</h3>
                     <p>Last 24 Hours: {stats.battles.last24Hours}</p>
                     <p>Total: {stats.battles.total}</p>
+                    <p className="mt-2 text-sm">Draws: {stats.battles.draws} ({stats.battles.drawPercentage}%)</p>
+                    <p className="text-sm">Kills: {stats.battles.kills} ({stats.battles.killPercentage}%)</p>
+                    <p className="text-sm text-gray-400 mt-1">Avg Duration: {stats.battles.avgDuration}s</p>
+                  </div>
+
+                  {/* Financial Section - New */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2 text-yellow-400">Finances</h3>
+                    <p>Total Credits: ₡{stats.finances.totalCredits.toLocaleString()}</p>
+                    <p>Avg Balance: ₡{stats.finances.avgBalance.toLocaleString()}</p>
+                    <p>Total Users: {stats.finances.totalUsers}</p>
+                    <p className={`mt-2 text-sm ${stats.finances.usersAtRisk > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                      {stats.finances.usersAtRisk > 0 ? '⚠️ ' : '✓ '}
+                      At Risk: {stats.finances.usersAtRisk}
+                    </p>
                   </div>
                 </div>
+
+                {/* Facilities Section - New (Full Width) */}
+                {stats.facilities.summary.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-gray-700">
+                    <h3 className="text-xl font-semibold mb-3 text-cyan-400">Facilities</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
+                      <div className="bg-gray-700 p-3 rounded">
+                        <p className="text-gray-400">Total Purchases</p>
+                        <p className="text-2xl font-bold">{stats.facilities.totalPurchases}</p>
+                      </div>
+                      <div className="bg-gray-700 p-3 rounded">
+                        <p className="text-gray-400">Most Popular</p>
+                        <p className="text-lg font-bold truncate" title={stats.facilities.mostPopular}>
+                          {stats.facilities.mostPopular.replace(/_/g, ' ')}
+                        </p>
+                      </div>
+                      {stats.facilities.summary.slice(0, 6).map((facility) => (
+                        <div key={facility.type} className="bg-gray-700 p-3 rounded">
+                          <p className="text-gray-400 truncate" title={facility.type}>
+                            {facility.type.replace(/_/g, ' ')}
+                          </p>
+                          <p className="font-bold">
+                            {facility.purchaseCount} purchases
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Avg level: {facility.avgLevel.toFixed(1)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -924,66 +1034,74 @@ function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {battles.map((battle) => (
-                        <tr key={battle.id} className="border-t border-gray-700 hover:bg-gray-750">
-                          <td className="p-3">#{battle.id}</td>
-                          <td className="p-3">
-                            <Link 
-                              to={`/robots/${battle.robot1.id}`} 
-                              className="text-blue-400 hover:underline"
-                              aria-label={`View robot details for ${battle.robot1.name}`}
-                            >
-                              {battle.robot1.name}
-                            </Link>
-                            <div className="text-xs text-gray-400">
-                              HP: {battle.robot1FinalHP} | ELO: {battle.robot1ELOBefore} → {battle.robot1ELOAfter}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <Link 
-                              to={`/robots/${battle.robot2.id}`} 
-                              className="text-purple-400 hover:underline"
-                              aria-label={`View robot details for ${battle.robot2.name}`}
-                            >
-                              {battle.robot2.name}
-                            </Link>
-                            <div className="text-xs text-gray-400">
-                              HP: {battle.robot2FinalHP} | ELO: {battle.robot2ELOBefore} → {battle.robot2ELOAfter}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={
-                                battle.winnerId === battle.robot1.id
-                                  ? 'text-blue-400'
-                                  : battle.winnerId === battle.robot2.id
-                                  ? 'text-purple-400'
-                                  : 'text-gray-400'
-                              }
-                            >
-                              {battle.winnerName === 'Draw' ? '⚖️ ' : '🏆 '}
-                              {battle.winnerName}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <span className="px-2 py-1 bg-gray-700 rounded text-xs">
-                              {battle.leagueType}
-                            </span>
-                          </td>
-                          <td className="p-3">{battle.durationSeconds}s</td>
-                          <td className="p-3 text-xs text-gray-400">
-                            {new Date(battle.createdAt).toLocaleString()}
-                          </td>
-                          <td className="p-3">
-                            <button
-                              onClick={() => handleViewBattle(battle.id)}
-                              className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold"
-                            >
-                              View Details
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {battles.map((battle) => {
+                        const outcome = getBattleOutcome(battle);
+                        const highlight = getBattleHighlight(battle);
+                        
+                        return (
+                          <tr 
+                            key={battle.id} 
+                            className={`border-t border-gray-700 hover:bg-gray-750 ${highlight}`}
+                          >
+                            <td className="p-3">#{battle.id}</td>
+                            <td className="p-3">
+                              <Link 
+                                to={`/robots/${battle.robot1.id}`} 
+                                className="text-blue-400 hover:underline"
+                                aria-label={`View robot details for ${battle.robot1.name}`}
+                              >
+                                {battle.robot1.name}
+                              </Link>
+                              <div className="text-xs text-gray-400">
+                                HP: {battle.robot1FinalHP} | ELO: {battle.robot1ELOBefore} → {battle.robot1ELOAfter}
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <Link 
+                                to={`/robots/${battle.robot2.id}`} 
+                                className="text-purple-400 hover:underline"
+                                aria-label={`View robot details for ${battle.robot2.name}`}
+                              >
+                                {battle.robot2.name}
+                              </Link>
+                              <div className="text-xs text-gray-400">
+                                HP: {battle.robot2FinalHP} | ELO: {battle.robot2ELOBefore} → {battle.robot2ELOAfter}
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <div className="flex flex-col">
+                                <span className={outcome.color}>
+                                  {outcome.icon} {battle.winnerName}
+                                </span>
+                                <span className="text-xs text-gray-400 mt-1">
+                                  {outcome.label}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <span className="px-2 py-1 bg-gray-700 rounded text-xs">
+                                {battle.leagueType}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className={battle.durationSeconds > 90 ? 'text-yellow-400 font-semibold' : ''}>
+                                {battle.durationSeconds}s
+                              </span>
+                            </td>
+                            <td className="p-3 text-xs text-gray-400">
+                              {new Date(battle.createdAt).toLocaleString()}
+                            </td>
+                            <td className="p-3">
+                              <button
+                                onClick={() => handleViewBattle(battle.id)}
+                                className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold"
+                              >
+                                View Details
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

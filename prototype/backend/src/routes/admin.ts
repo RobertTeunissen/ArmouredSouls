@@ -481,6 +481,68 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     // Total battles
     const totalBattles = await prisma.battle.count();
 
+    // Battle statistics - draw count and duration
+    const battles = await prisma.battle.findMany({
+      select: {
+        winnerId: true,
+        durationSeconds: true,
+        robot1FinalHP: true,
+        robot2FinalHP: true,
+      },
+    });
+
+    const drawCount = battles.filter(b => b.winnerId === null).length;
+    const drawPercentage = totalBattles > 0 ? (drawCount / totalBattles) * 100 : 0;
+    const avgDuration = battles.length > 0 
+      ? battles.reduce((sum, b) => sum + b.durationSeconds, 0) / battles.length 
+      : 0;
+
+    // Count kill outcomes (where loser has 0 HP)
+    const killCount = battles.filter(b => 
+      (b.winnerId && (b.robot1FinalHP === 0 || b.robot2FinalHP === 0))
+    ).length;
+
+    // Financial statistics
+    const users = await prisma.user.findMany({
+      select: {
+        currency: true,
+        facilities: {
+          select: {
+            facilityType: true,
+            level: true,
+          },
+        },
+      },
+    });
+
+    const totalCredits = users.reduce((sum, u) => sum + u.currency, 0);
+    const avgBalance = users.length > 0 ? totalCredits / users.length : 0;
+    
+    // Users at risk of bankruptcy (balance < 10000 - rough estimate for daily costs)
+    const bankruptcyRisk = users.filter(u => u.currency < 10000).length;
+
+    // Facility statistics
+    const facilityStats: Record<string, { count: number; totalLevel: number }> = {};
+    users.forEach(user => {
+      user.facilities.forEach(facility => {
+        if (facility.level > 0) { // Only count purchased facilities
+          if (!facilityStats[facility.facilityType]) {
+            facilityStats[facility.facilityType] = { count: 0, totalLevel: 0 };
+          }
+          facilityStats[facility.facilityType].count++;
+          facilityStats[facility.facilityType].totalLevel += facility.level;
+        }
+      });
+    });
+
+    const facilitySummary = Object.entries(facilityStats)
+      .map(([type, stats]) => ({
+        type,
+        purchaseCount: stats.count,
+        avgLevel: stats.count > 0 ? stats.totalLevel / stats.count : 0,
+      }))
+      .sort((a, b) => b.purchaseCount - a.purchaseCount);
+
     res.json({
       robots: {
         total: totalRobots,
@@ -499,6 +561,22 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
       battles: {
         last24Hours: recentBattles,
         total: totalBattles,
+        draws: drawCount,
+        drawPercentage: Math.round(drawPercentage * 10) / 10,
+        avgDuration: Math.round(avgDuration * 10) / 10,
+        kills: killCount,
+        killPercentage: totalBattles > 0 ? Math.round((killCount / totalBattles) * 1000) / 10 : 0,
+      },
+      finances: {
+        totalCredits,
+        avgBalance: Math.round(avgBalance),
+        usersAtRisk: bankruptcyRisk,
+        totalUsers: users.length,
+      },
+      facilities: {
+        summary: facilitySummary,
+        totalPurchases: facilitySummary.reduce((sum, f) => sum + f.purchaseCount, 0),
+        mostPopular: facilitySummary[0]?.type || 'None',
       },
       timestamp: new Date().toISOString(),
     });
