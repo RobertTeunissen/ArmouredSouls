@@ -26,11 +26,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   // Collapsible state with localStorage persistence
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem('weaponShopFiltersExpanded');
-    // Default to expanded on desktop (>768px), collapsed on mobile
+    // Default to collapsed to maximize screen space for weapon browsing
     if (saved !== null) {
       return saved === 'true';
     }
-    return window.innerWidth >= 768;
+    return false;
   });
 
   useEffect(() => {
