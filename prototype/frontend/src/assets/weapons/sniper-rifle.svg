@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <rect x="85" y="100" width="65" height="12" fill="#f97316" stroke="#ea580c" stroke-width="2" rx="3"/>
+  <rect x="145" y="102" width="15" height="8" fill="#9ca3af" stroke="#6b7280" stroke-width="1"/>
+  <circle cx="82" cy="106" r="4" fill="#78716c"/>
+  <circle cx="100" cy="103" r="2" fill="#4b5563"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Sniper Rifle</text>
+</svg>

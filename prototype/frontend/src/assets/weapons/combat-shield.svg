@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <path d="M100 85 Q128 90 155 85 L160 130 Q128 125 95 130 Z" fill="#0891b2" stroke="#0e7490" stroke-width="2" opacity="0.8"/>
+  <rect x="125" y="120" width="6" height="35" fill="#6b7280" stroke="#4b5563" stroke-width="1"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Combat Shield</text>
+</svg>

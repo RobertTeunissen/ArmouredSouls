@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <rect x="90" y="100" width="55" height="15" fill="#3b82f6" stroke="#2563eb" stroke-width="2" rx="3"/>
+  <rect x="140" y="103" width="12" height="9" fill="#60a5fa" stroke="#3b82f6" stroke-width="1"/>
+  <line x1="152" y1="107.5" x2="165" y2="107.5" stroke="#93c5fd" stroke-width="2"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Laser Rifle</text>
+</svg>

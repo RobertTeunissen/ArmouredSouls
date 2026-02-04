@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <path d="M105 90 Q128 95 150 90 L155 120 Q128 115 100 120 Z" fill="#06b6d4" stroke="#0891b2" stroke-width="2" opacity="0.7"/>
+  <rect x="125" y="115" width="6" height="30" fill="#9ca3af" stroke="#6b7280" stroke-width="1"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Light Shield</text>
+</svg>
