@@ -17,6 +17,7 @@
 - v1.7 (Feb 4, 2026): Documented collapsible filter panel, owned weapons indicator in table view, styled ConfirmationModal component, and attributes column sorting. Updated Technical Implementation section with new components.
 - v1.8 (Feb 4, 2026): Added "Only Owned Weapons" quick filter, replacing need for separate Weapon Inventory page. Fixed filter bugs.
 - v1.9 (Feb 4, 2026): Manual review done to reflect what's currently working and what are considered future improvements.
+- v1.10 (Feb 4, 2026): Updated requirements - filters collapsed by default, storage capacity shows different colors for equipped vs available weapons.
 
 > **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from the current 23 weapons to hundreds of weapons in future phases. It establishes patterns for discovery, comparison, filtering, and purchasing that maintain usability at any catalog size.
 
@@ -495,6 +496,8 @@ Acceptance Criteria:
 
 **UI Implementation:**
 - Filter panel at top or left sidebar
+- **Collapsed by default** to maximize screen space for weapon browsing
+- Expandable/collapsible with clear toggle button or header
 - Checkbox or toggle button groups for each category
 - Active filters shown as removable tags/chips
 - "Clear All Filters" button
@@ -791,6 +794,12 @@ Acceptance Criteria:
   - 70-90% full: Yellow
   - >90% full: Red
 - Tooltip: "Upgrade Storage Facility to increase capacity"
+
+**Weapon-Specific Capacity Indicators:**
+- Storage capacity display shows different colors for:
+  - **Equipped weapons**: Distinct color (e.g., blue or highlighted) to indicate weapons currently equipped to robots
+  - **Available weapons**: Standard color (e.g., green/yellow/red based on capacity) for weapons in inventory but not equipped
+- This visual distinction helps players quickly identify which weapons are actively in use vs. available for future loadouts
 
 **Storage Impact Preview:**
 - On weapon card: "After purchase: 19/25 storage used"
@@ -1411,7 +1420,7 @@ GET /api/weapons?loadoutType=two_handed&weaponType=melee&maxCost=200000
 WeaponShopPage/
 ├── WeaponShopHeader (credits, storage, title)
 ├── SearchBar (text search input)
-├── FilterPanel (✅ Collapsible with localStorage persistence)
+├── FilterPanel (✅ Collapsible with localStorage persistence, collapsed by default)
 │   ├── LoadoutTypeFilter
 │   ├── WeaponTypeFilter
 │   ├── PriceRangeFilter
@@ -1435,7 +1444,7 @@ WeaponShopPage/
 ```
 
 **✅ Implemented Components** (as of v1.7):
-- `FilterPanel.tsx` - Collapsible filter section with expand/collapse button
+- `FilterPanel.tsx` - Collapsible filter section with expand/collapse button, collapsed by default
 - `ActiveFiltersDisplay.tsx` - Removable filter chips
 - `SearchBar.tsx` - Text search with 300ms debouncing
 - `SortDropdown.tsx` - Sort options for card view
