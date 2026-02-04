@@ -388,6 +388,8 @@ async function createBattleRecord(
       // Damage tracking
       robot1DamageDealt: result.robot2Damage,
       robot2DamageDealt: result.robot1Damage,
+      maxSingleAttackDamage: result.maxSingleAttackDamage || 0,
+      maxSingleAttackRobotId: result.maxSingleAttackRobotId,
       
       // ELO tracking
       robot1ELOBefore,

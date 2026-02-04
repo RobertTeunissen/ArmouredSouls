@@ -52,6 +52,8 @@ export interface CombatResult {
   durationSeconds: number;
   isDraw: boolean;
   events: CombatEvent[];
+  maxSingleAttackDamage: number;
+  maxSingleAttackRobotId: number | null;
 }
 
 interface RobotCombatState {
@@ -66,6 +68,7 @@ interface RobotCombatState {
   offhandCooldown: number; // For dual wield
   totalDamageDealt: number;
   totalDamageTaken: number;
+  maxSingleAttack: number; // Track highest single attack damage
 }
 
 const BASE_WEAPON_COOLDOWN = 4; // seconds
@@ -474,6 +477,11 @@ function performAttack(
     
     const totalDamage = hpDamage + shieldDamage;
     
+    // Track max single attack damage
+    if (totalDamage > attackerState.maxSingleAttack) {
+      attackerState.maxSingleAttack = totalDamage;
+    }
+    
     const handLabel = hand === 'offhand' ? ' [OFFHAND]' : '';
     
     // Build multiline formula breakdown with crit roll info
@@ -540,6 +548,12 @@ function performAttack(
       
       defenderState.totalDamageDealt += counterHP;
       attackerState.totalDamageTaken += counterHP;
+      
+      // Track max single attack damage for counter-attacks
+      const counterTotalDamage = counterHP + counterShield;
+      if (counterTotalDamage > defenderState.maxSingleAttack) {
+        defenderState.maxSingleAttack = counterTotalDamage;
+      }
       
       events.push({
         timestamp: Number(currentTime.toFixed(1)),
@@ -633,6 +647,7 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
     offhandCooldown: calculateCooldown(robot1, offhandWeapon1?.cooldown, 'offhand'),
     totalDamageDealt: 0,
     totalDamageTaken: 0,
+    maxSingleAttack: 0,
   };
   
   const state2: RobotCombatState = {
@@ -647,6 +662,7 @@ export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapon
     offhandCooldown: calculateCooldown(robot2, offhandWeapon2?.cooldown, 'offhand'),
     totalDamageDealt: 0,
     totalDamageTaken: 0,
+    maxSingleAttack: 0,
   };
   
   const events: CombatEvent[] = [];
@@ -801,6 +817,12 @@ ${weaponBonuses2}`,
     });
   }
   
+  // Determine which robot dealt the max single attack
+  const maxSingleAttackDamage = Math.max(state1.maxSingleAttack, state2.maxSingleAttack);
+  const maxSingleAttackRobotId = state1.maxSingleAttack >= state2.maxSingleAttack 
+    ? (state1.maxSingleAttack > 0 ? robot1.id : null)
+    : (state2.maxSingleAttack > 0 ? robot2.id : null);
+  
   return {
     winnerId,
     robot1FinalHP: Math.max(0, state1.currentHP),
@@ -814,5 +836,7 @@ ${weaponBonuses2}`,
     durationSeconds: Number(currentTime.toFixed(1)),
     isDraw: winnerId === null,
     events,
+    maxSingleAttackDamage,
+    maxSingleAttackRobotId,
   };
 }

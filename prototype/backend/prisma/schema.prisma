@@ -277,6 +277,8 @@ model Battle {
   // ===== DAMAGE TRACKING =====
   robot1DamageDealt Int @map("robot1_damage_dealt") // Total damage dealt by robot 1
   robot2DamageDealt Int @map("robot2_damage_dealt") // Total damage dealt by robot 2
+  maxSingleAttackDamage Int @default(0) @map("max_single_attack_damage") // Highest single attack damage in this battle
+  maxSingleAttackRobotId Int? @map("max_single_attack_robot_id") // Robot that dealt the max single attack
 
   // ===== ELO TRACKING =====
   robot1ELOBefore Int @map("robot1_elo_before") // ELO before battle

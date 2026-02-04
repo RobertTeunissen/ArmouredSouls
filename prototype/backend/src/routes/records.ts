@@ -100,6 +100,49 @@ router.get('/', async (req: Request, res: Response) => {
       };
     }
 
+    // Most Damage in Single Attack
+    const mostDamageSingleAttackBattle = await prisma.battle.findFirst({
+      where: {
+        maxSingleAttackDamage: { gt: 0 },
+      },
+      orderBy: { maxSingleAttackDamage: 'desc' },
+      include: {
+        robot1: {
+          include: { user: { select: { username: true } } }
+        },
+        robot2: {
+          include: { user: { select: { username: true } } }
+        },
+      },
+    });
+
+    let mostDamageSingleAttackData = null;
+    if (mostDamageSingleAttackBattle) {
+      const attackerRobot = mostDamageSingleAttackBattle.maxSingleAttackRobotId === mostDamageSingleAttackBattle.robot1Id 
+        ? mostDamageSingleAttackBattle.robot1 
+        : mostDamageSingleAttackBattle.robot2;
+      const defenderRobot = mostDamageSingleAttackBattle.maxSingleAttackRobotId === mostDamageSingleAttackBattle.robot1Id 
+        ? mostDamageSingleAttackBattle.robot2 
+        : mostDamageSingleAttackBattle.robot1;
+      
+      mostDamageSingleAttackData = {
+        battleId: mostDamageSingleAttackBattle.id,
+        damage: mostDamageSingleAttackBattle.maxSingleAttackDamage,
+        attacker: {
+          id: attackerRobot.id,
+          name: attackerRobot.name,
+          username: attackerRobot.user.username,
+        },
+        defender: {
+          id: defenderRobot.id,
+          name: defenderRobot.name,
+          username: defenderRobot.user.username,
+        },
+        durationSeconds: mostDamageSingleAttackBattle.durationSeconds,
+        date: mostDamageSingleAttackBattle.createdAt,
+      };
+    }
+
     // Narrowest Victory - winner with lowest remaining HP
     const allBattlesForNarrowest = await prisma.battle.findMany({
       where: {
@@ -466,6 +509,22 @@ router.get('/', async (req: Request, res: Response) => {
           },
           durationSeconds: mostDamageData.battle?.durationSeconds,
           date: mostDamageData.battle?.createdAt,
+        } : null,
+        mostDamageSingleAttack: mostDamageSingleAttackData ? {
+          battleId: mostDamageSingleAttackData.battleId,
+          damage: mostDamageSingleAttackData.damage,
+          attacker: {
+            id: mostDamageSingleAttackData.attacker.id,
+            name: mostDamageSingleAttackData.attacker.name,
+            username: mostDamageSingleAttackData.attacker.username,
+          },
+          defender: {
+            id: mostDamageSingleAttackData.defender.id,
+            name: mostDamageSingleAttackData.defender.name,
+            username: mostDamageSingleAttackData.defender.username,
+          },
+          durationSeconds: mostDamageSingleAttackData.durationSeconds,
+          date: mostDamageSingleAttackData.date,
         } : null,
         narrowestVictory: narrowestVictory ? {
           battleId: narrowestVictory.id,
