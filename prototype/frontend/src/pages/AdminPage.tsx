@@ -754,7 +754,7 @@ function AdminPage() {
                           )}
                           {result.rebalancing && (
                             <p>
-                              - Rebalancing: {result.rebalancing.summary.totalPromoted} promoted, 
+                              - Rebalancing: {result.rebalancing.summary.totalPromoted} promoted,{' '}
                               {result.rebalancing.summary.totalDemoted} demoted
                             </p>
                           )}
@@ -1182,22 +1182,30 @@ function AdminPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {robotStats.winRateAnalysis[selectedAttribute].map((quintile, idx) => (
-                            <tr key={idx} className="border-t border-gray-600">
-                              <td className="p-2">Q{quintile.quintile} ({idx === 0 ? 'Bottom 20%' : idx === 4 ? 'Top 20%' : 'Middle'})</td>
-                              <td className="p-2 font-bold">{quintile.avgValue.toFixed(2)}</td>
-                              <td className="p-2 font-bold text-green-400">{quintile.avgWinRate.toFixed(1)}%</td>
-                              <td className="p-2">{quintile.sampleSize}</td>
-                              <td className="p-2">
-                                <div className="bg-gray-800 rounded h-4 overflow-hidden">
-                                  <div 
-                                    className="bg-green-500 h-full"
-                                    style={{ width: `${quintile.avgWinRate}%` }}
+                          {robotStats.winRateAnalysis[selectedAttribute].map((quintile, idx) => {
+                            const getQuintileLabel = (index: number): string => {
+                              if (index === 0) return 'Bottom 20%';
+                              if (index === 4) return 'Top 20%';
+                              return 'Middle';
+                            };
+                            
+                            return (
+                              <tr key={idx} className="border-t border-gray-600">
+                                <td className="p-2">Q{quintile.quintile} ({getQuintileLabel(idx)})</td>
+                                <td className="p-2 font-bold">{quintile.avgValue.toFixed(2)}</td>
+                                <td className="p-2 font-bold text-green-400">{quintile.avgWinRate.toFixed(1)}%</td>
+                                <td className="p-2">{quintile.sampleSize}</td>
+                                <td className="p-2">
+                                  <div className="bg-gray-800 rounded h-4 overflow-hidden">
+                                    <div 
+                                      className="bg-green-500 h-full"
+                                      style={{ width: `${quintile.avgWinRate}%` }}
                                   ></div>
                                 </div>
                               </td>
                             </tr>
-                          ))}
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
