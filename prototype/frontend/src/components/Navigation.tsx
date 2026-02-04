@@ -22,6 +22,7 @@ const implementedPages = new Set([
   '/leaderboards/fame',
   '/leaderboards/prestige',
   '/leaderboards/losses',
+  '/hall-of-records',
 ]);
 
 const allPages = {
@@ -78,6 +79,7 @@ const allPages = {
       { path: '/leaderboards/fame', label: 'Fame Leaderboard' },
       { path: '/leaderboards/prestige', label: 'Prestige Leaderboard' },
       { path: '/leaderboards/losses', label: 'Total Losses Leaderboard' },
+      { path: '/hall-of-records', label: 'Hall of Records' },
       { path: '/chat', label: 'Chat' },
       { path: '/replays', label: 'Battle Replays' },
       { path: '/spectate', label: 'Spectator Mode' },
