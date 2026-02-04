@@ -8,7 +8,7 @@ export const getWeaponImagePath = (weaponName: string): string => {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '');
   
-  return `/src/assets/weapons/${filename}.svg`;
+  return `/src/assets/weapons/${filename}.webp`;
 };
 
 /**
