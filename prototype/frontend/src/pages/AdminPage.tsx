@@ -16,7 +16,7 @@ interface SessionLogEntry {
 interface SystemStats {
   robots: {
     total: number;
-    byTier: Array<{ tier: string; count: number }>;
+    byTier: Array<{ league: string; count: number }>;
     battleReady: number;
     battleReadyPercentage: number;
   };
@@ -643,11 +643,10 @@ function AdminPage() {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div role="tabpanel" id="dashboard-panel" aria-labelledby="dashboard-tab" className="space-y-8">
-            {/* System Statistics */}
+            {/* Statistics Display */}
             {stats && (
               <div className="bg-gray-800 rounded-lg p-6">
-                <h2 className="text-2xl font-bold mb-4">System Statistics</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                   {/* Robots Section */}
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-blue-400">Robots</h3>
@@ -656,8 +655,8 @@ function AdminPage() {
                     <div className="mt-2">
                       <p className="text-sm text-gray-400">By Tier:</p>
                       {stats.robots.byTier.map((tier) => (
-                        <p key={tier.tier} className="text-sm ml-2">
-                          {tier.tier}: {tier.count}
+                        <p key={tier.league} className="text-sm ml-2">
+                          {tier.count}
                         </p>
                       ))}
                     </div>
@@ -704,94 +703,46 @@ function AdminPage() {
                       At Risk: {stats.finances.usersAtRisk}
                     </p>
                   </div>
-                </div>
 
-                {/* Facilities Section - New (Full Width) */}
-                {stats.facilities.summary.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-gray-700">
-                    <h3 className="text-xl font-semibold mb-3 text-cyan-400 flex items-center gap-2">
+                  {/* Facilities Section */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2 text-cyan-400 flex items-center gap-2">
                       Facilities
-                      <span className="text-xs text-gray-400 font-normal" title="Facility purchases across all users (e.g., training centers, workshops)">ℹ️</span>
+                      <span className="text-xs text-gray-400 font-normal" title="Facility purchases across all users">ℹ️</span>
                     </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
-                      <div className="bg-gray-700 p-3 rounded">
-                        <p className="text-gray-400">Total Purchases</p>
-                        <p className="text-2xl font-bold">{stats.facilities.totalPurchases}</p>
-                      </div>
-                      <div className="bg-gray-700 p-3 rounded">
-                        <p className="text-gray-400">Most Popular</p>
-                        <p className="text-lg font-bold truncate" title={stats.facilities.mostPopular}>
-                          {stats.facilities.mostPopular === 'None' || stats.facilities.summary.length === 0
-                            ? 'No facilities yet'
-                            : stats.facilities.mostPopular.replace(/_/g, ' ')}
-                        </p>
-                      </div>
-                      {stats.facilities.summary.slice(0, 6).map((facility) => (
-                        <div key={facility.type} className="bg-gray-700 p-3 rounded">
-                          <p className="text-gray-400 truncate" title={facility.type}>
-                            {facility.type.replace(/_/g, ' ')}
-                          </p>
-                          <p className="font-bold">
-                            {facility.purchaseCount} purchases
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            Avg level: {facility.avgLevel.toFixed(1)}
-                          </p>
+                    {stats.facilities.summary.length > 0 ? (
+                      <>
+                        <p>Total Purchases: {stats.facilities.totalPurchases}</p>
+                        <p>Most Popular: {stats.facilities.mostPopular === 'None' || stats.facilities.summary.length === 0
+                          ? 'No facilities yet'
+                          : stats.facilities.mostPopular.replace(/_/g, ' ')}</p>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-400">Top 3:</p>
+                          {stats.facilities.summary.slice(0, 3).map((facility, idx) => (
+                            <p key={facility.type} className="text-sm ml-2">
+                              {idx + 1}. {facility.type.replace(/_/g, ' ')}: {facility.purchaseCount}
+                            </p>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-400">No facilities purchased yet</p>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             )}
-
-            {/* Recent Session Log */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
-              {sessionLog.length > 0 ? (
-                <div className="space-y-2">
-                  {sessionLog.slice(0, 10).map((entry, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-3 rounded text-sm ${
-                        entry.type === 'success'
-                          ? 'bg-green-900 bg-opacity-30 text-green-200'
-                          : entry.type === 'error'
-                          ? 'bg-red-900 bg-opacity-30 text-red-200'
-                          : entry.type === 'warning'
-                          ? 'bg-yellow-900 bg-opacity-30 text-yellow-200'
-                          : 'bg-blue-900 bg-opacity-30 text-blue-200'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className="font-semibold">
-                          {entry.type === 'success' && '✓ '}
-                          {entry.type === 'error' && '✗ '}
-                          {entry.type === 'warning' && '⚠ '}
-                          {entry.type === 'info' && 'ℹ '}
-                          {entry.message}
-                        </span>
-                        <span className="text-xs text-gray-400 ml-2">
-                          {new Date(entry.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-400 text-center py-4">No recent activity</p>
-              )}
-            </div>
           </div>
         )}
 
         {/* Cycle Controls Tab */}
         {activeTab === 'cycles' && (
           <div role="tabpanel" id="cycles-panel" aria-labelledby="cycles-tab" className="space-y-8">
-            {/* Admin Controls */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4">Daily Cycle Controls</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Daily Cycle Controls */}
+              <div className="bg-gray-800 rounded-lg p-6">
+                <h2 className="text-2xl font-bold mb-4">Daily Cycle Controls</h2>
+                <div className="grid grid-cols-1 gap-4">
                 <button
                   onClick={repairAllRobots}
                   disabled={loading}
@@ -833,7 +784,7 @@ function AdminPage() {
             {/* Bulk Cycle Testing */}
             <div className="bg-gray-800 rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-4">Bulk Cycle Testing</h2>
-          <div className="mb-4 space-y-3">
+              <div className="mb-4 space-y-3">
             <label className="block">
               Number of Cycles (1-100):
               <input
@@ -938,9 +889,10 @@ function AdminPage() {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Full Session Log */}
-            <div className="bg-gray-800 rounded-lg p-6">
+          {/* Full Session Log */}
+          <div className="bg-gray-800 rounded-lg p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Session Log</h2>
                 <div className="flex gap-2">
