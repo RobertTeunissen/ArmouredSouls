@@ -464,7 +464,7 @@ function AdminPage() {
                       )}
                       {result.repair && <p>- Repaired: {result.repair.robotsRepaired} robots</p>}
                       {result.matchmaking && <p>- Matches: {result.matchmaking.matchesCreated} created</p>}
-                      {result.battles && (
+                      {result.battles && result.battles.summary && (
                         <p>
                           - Battles: {result.battles.summary.successfulBattles}/
                           {result.battles.summary.totalBattles} successful
