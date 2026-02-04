@@ -136,19 +136,21 @@ Acceptance Criteria:
 - Stats update immediately when loadout type changes
 ```
 
-**US-5: View Weapon Inventory**
+**US-5: View Weapon Inventory** *(Functionality moved to Weapon Shop)*
 ```
 As a player
 I want to view all weapons I own in one place
 So that I can see what I have and which robots are using them
 
 Acceptance Criteria:
-- I can navigate to a Weapon Inventory page
+- ✅ IMPLEMENTED in Weapon Shop via "Only Owned Weapons" filter
 - I see all weapons I've purchased, organized by category
 - Each weapon shows: name, type, equipped status, and which robot is using it
 - I can click on a weapon to see full details and equip options
 - I can filter by weapon type or equipped status
 - I can see my current storage capacity usage (e.g., "28/35 weapons")
+
+Note: Originally planned as separate page, but integrated into Weapon Shop for better UX.
 ```
 
 **US-6: View Effective Stats with Loadout**
@@ -388,12 +390,11 @@ Errors:
 1. `LoadoutSelector.tsx`: Dropdown/radio for selecting loadout type
 2. `WeaponSlot.tsx`: Reusable component for weapon slot display
 3. `WeaponSelectionModal.tsx`: Modal for selecting weapon to equip
-4. `WeaponInventoryPage.tsx`: Full page for viewing weapon inventory
-5. `StatComparison.tsx`: Component showing base vs effective stats
+4. `StatComparison.tsx`: Component showing base vs effective stats
 
 **Modified Components:**
 1. `RobotDetailPage.tsx`: Add loadout and weapon sections
-2. `Navigation.tsx`: Add link to Weapon Inventory page
+2. `Navigation.tsx`: ~~Add link to Weapon Inventory page~~ (Removed - functionality integrated into Weapon Shop)
 
 ### Stat Calculation Implementation
 
@@ -644,22 +645,24 @@ Acceptance Criteria:
 - Error messages are clear and actionable
 - UI is responsive and works on mobile
 
-### Phase 3: Weapon Inventory Management (2-3 days)
-**Priority: SHOULD HAVE**
+### Phase 3: Weapon Inventory Management ~~(2-3 days)~~ DEPRECATED
+**Priority: ~~SHOULD HAVE~~ REPLACED BY WEAPON SHOP INTEGRATION**
 
-Tasks:
-- [ ] Create `WeaponInventoryPage` component
-- [ ] Implement weapon filtering by type and status
-- [ ] Add weapon detail modal from inventory
-- [ ] Add "Equip to Robot" functionality from inventory page
-- [ ] Add navigation link to Weapon Inventory page
-- [ ] Visual indicators for equipped vs available weapons
+> **Note**: This phase was originally planned but has been superseded by integrating the "Only Owned Weapons" filter directly into the Weapon Shop page. This provides a better user experience by keeping all weapon browsing and management in one place.
 
-Acceptance Criteria:
-- Users can view all owned weapons in one place
-- Filtering works correctly
-- Users can see which robots are using which weapons
-- Users can initiate equipping from inventory page
+~~Tasks:~~
+- [x] ~~Create `WeaponInventoryPage` component~~ - Deprecated (removed)
+- [x] ~~Implement weapon filtering by type and status~~ - Available in Weapon Shop
+- [x] ~~Add weapon detail modal from inventory~~ - Available in Weapon Shop
+- [x] ~~Add "Equip to Robot" functionality from inventory page~~ - Available from Robot Detail page
+- [x] ~~Add navigation link to Weapon Inventory page~~ - Removed from navigation
+- [x] ~~Visual indicators for equipped vs available weapons~~ - Available in Weapon Shop
+
+Acceptance Criteria (All met via Weapon Shop):
+- ✅ Users can view all owned weapons in one place (Weapon Shop with "Only Owned" filter)
+- ✅ Filtering works correctly
+- ✅ Users can see which robots are using which weapons
+- ✅ Users can initiate equipping from Robot Detail page
 
 ### Phase 4: Polish & Edge Cases (1-2 days)
 **Priority: NICE TO HAVE**
