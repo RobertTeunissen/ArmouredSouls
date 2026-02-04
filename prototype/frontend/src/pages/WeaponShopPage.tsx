@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import ViewModeToggle from '../components/ViewModeToggle';
+import WeaponTable from '../components/WeaponTable';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 
@@ -47,6 +49,8 @@ interface StorageStatus {
   percentageFull: number;
 }
 
+type ViewMode = 'card' | 'table';
+
 function WeaponShopPage() {
   const { user, refreshUser } = useAuth();
   const [weapons, setWeapons] = useState<Weapon[]>([]);
@@ -55,6 +59,12 @@ function WeaponShopPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [purchasing, setPurchasing] = useState<number | null>(null);
+  
+  // View mode state with localStorage persistence
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('weaponShopViewMode');
+    return (saved as ViewMode) || 'card';
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,6 +91,11 @@ function WeaponShopPage() {
 
     fetchData();
   }, []);
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem('weaponShopViewMode', mode);
+  };
 
   const calculateDiscountedPrice = (basePrice: number): number => {
     const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
@@ -235,13 +250,37 @@ function WeaponShopPage() {
 
         {!loading && !error && (
           <>
-            {Object.entries(groupedWeapons).map(([loadoutType, weaponList]) => (
-              weaponList.length > 0 && (
-                <div key={loadoutType} className="mb-8">
-                  <h2 className={`text-2xl font-bold mb-4 ${getLoadoutTypeColor(loadoutType)}`}>
-                    {getLoadoutTypeLabel(loadoutType)}
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* View Mode Toggle */}
+            <div className="flex justify-end mb-6">
+              <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+            </div>
+
+            {/* Table View */}
+            {viewMode === 'table' && (
+              <div className="bg-gray-800 rounded-lg overflow-hidden">
+                <WeaponTable
+                  weapons={weapons}
+                  onPurchase={handlePurchase}
+                  calculateDiscountedPrice={calculateDiscountedPrice}
+                  userCredits={user?.currency || 0}
+                  isFull={storageStatus?.isFull || false}
+                  purchasing={purchasing}
+                  hasDiscount={weaponWorkshopLevel > 0}
+                  discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
+                />
+              </div>
+            )}
+
+            {/* Card View */}
+            {viewMode === 'card' && (
+              <>
+                {Object.entries(groupedWeapons).map(([loadoutType, weaponList]) => (
+                  weaponList.length > 0 && (
+                    <div key={loadoutType} className="mb-8">
+                      <h2 className={`text-2xl font-bold mb-4 ${getLoadoutTypeColor(loadoutType)}`}>
+                        {getLoadoutTypeLabel(loadoutType)}
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {weaponList.map((weapon) => {
                       const bonuses = getAttributeBonuses(weapon);
                       const discountedPrice = calculateDiscountedPrice(weapon.cost);
@@ -327,8 +366,10 @@ function WeaponShopPage() {
                     })}
                   </div>
                 </div>
-              )
-            ))}
+                  )
+                ))}
+              </>
+            )}
           </>
         )}
       </div>
