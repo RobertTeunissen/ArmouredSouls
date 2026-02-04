@@ -116,8 +116,8 @@ function LeaderboardsLossesPage() {
                 This metric showcases devastating combat effectiveness and finishing power.
               </p>
               <p className="mt-2">
-                <span className="font-semibold text-primary">L/L Ratio</span> (Losses Inflicted / Losses Taken) 
-                indicates how many opponents a robot destroys for every loss they suffer.
+                <span className="font-semibold text-primary">Destruction Ratio</span> shows total losses inflicted (opponents destroyed) 
+                divided by match losses taken. Higher is better - it means destroying more opponents per defeat.
               </p>
             </div>
           </div>
@@ -206,7 +206,7 @@ function LeaderboardsLossesPage() {
                     Total Losses
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    L/L Ratio
+                    Destruction Ratio
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
                     Stable
