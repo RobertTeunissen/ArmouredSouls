@@ -477,8 +477,12 @@ function AdminPage() {
 
         {/* Tab Navigation */}
         <div className="mb-6 border-b border-gray-700">
-          <div className="flex space-x-1">
+          <div className="flex space-x-1" role="tablist" aria-label="Admin sections">
             <button
+              id="dashboard-tab"
+              role="tab"
+              aria-selected={activeTab === 'dashboard'}
+              aria-controls="dashboard-panel"
               onClick={() => switchTab('dashboard')}
               className={`px-6 py-3 font-semibold transition-colors ${
                 activeTab === 'dashboard'
@@ -489,6 +493,10 @@ function AdminPage() {
               📊 Dashboard
             </button>
             <button
+              id="cycles-tab"
+              role="tab"
+              aria-selected={activeTab === 'cycles'}
+              aria-controls="cycles-panel"
               onClick={() => switchTab('cycles')}
               className={`px-6 py-3 font-semibold transition-colors ${
                 activeTab === 'cycles'
@@ -499,6 +507,10 @@ function AdminPage() {
               ⚙️ Cycle Controls
             </button>
             <button
+              id="battles-tab"
+              role="tab"
+              aria-selected={activeTab === 'battles'}
+              aria-controls="battles-panel"
               onClick={() => switchTab('battles')}
               className={`px-6 py-3 font-semibold transition-colors ${
                 activeTab === 'battles'
@@ -509,6 +521,10 @@ function AdminPage() {
               ⚔️ Battle Logs
             </button>
             <button
+              id="stats-tab"
+              role="tab"
+              aria-selected={activeTab === 'stats'}
+              aria-controls="stats-panel"
               onClick={() => switchTab('stats')}
               className={`px-6 py-3 font-semibold transition-colors ${
                 activeTab === 'stats'
@@ -523,7 +539,7 @@ function AdminPage() {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="space-y-8">
+          <div role="tabpanel" id="dashboard-panel" aria-labelledby="dashboard-tab" className="space-y-8">
             {/* System Statistics */}
             {stats && (
               <div className="bg-gray-800 rounded-lg p-6">
@@ -598,7 +614,7 @@ function AdminPage() {
 
         {/* Cycle Controls Tab */}
         {activeTab === 'cycles' && (
-          <div className="space-y-8">
+          <div role="tabpanel" id="cycles-panel" aria-labelledby="cycles-tab" className="space-y-8">
             {/* Admin Controls */}
             <div className="bg-gray-800 rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-4">Daily Cycle Controls</h2>
@@ -817,7 +833,7 @@ function AdminPage() {
 
         {/* Battle Logs Tab */}
         {activeTab === 'battles' && (
-          <div className="bg-gray-800 rounded-lg p-6">
+          <div role="tabpanel" id="battles-panel" aria-labelledby="battles-tab" className="bg-gray-800 rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Battle Logs & Debugging</h2>
               <button
@@ -888,7 +904,7 @@ function AdminPage() {
                             <Link 
                               to={`/robots/${battle.robot1.id}`} 
                               className="text-blue-400 hover:underline"
-                              aria-label={`View details for ${battle.robot1.name}`}
+                              aria-label={`View robot details for ${battle.robot1.name}`}
                             >
                               {battle.robot1.name}
                             </Link>
@@ -900,7 +916,7 @@ function AdminPage() {
                             <Link 
                               to={`/robots/${battle.robot2.id}`} 
                               className="text-purple-400 hover:underline"
-                              aria-label={`View details for ${battle.robot2.name}`}
+                              aria-label={`View robot details for ${battle.robot2.name}`}
                             >
                               {battle.robot2.name}
                             </Link>
@@ -993,7 +1009,7 @@ function AdminPage() {
 
         {/* Robot Stats Tab */}
         {activeTab === 'stats' && (
-          <div className="bg-gray-800 rounded-lg p-6">
+          <div role="tabpanel" id="stats-panel" aria-labelledby="stats-tab" className="bg-gray-800 rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">🤖 Robot Attribute Statistics</h2>
               <button
