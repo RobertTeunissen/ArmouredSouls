@@ -1211,7 +1211,7 @@ function AdminPage() {
                         <tbody>
                           {robotStats.winRateAnalysis[selectedAttribute].map((quintile, idx) => (
                             <tr key={idx} className="border-t border-gray-600">
-                              <td className="p-2">Q{quintile.quintile} ({getQuintileLabel(quintile.quintile)})</td>
+                              <td className="p-2">{getQuintileLabel(quintile.quintile)}</td>
                               <td className="p-2 font-bold">{quintile.avgValue.toFixed(2)}</td>
                               <td className="p-2 font-bold text-green-400">{quintile.avgWinRate.toFixed(1)}%</td>
                               <td className="p-2">{quintile.sampleSize}</td>
