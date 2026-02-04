@@ -72,9 +72,9 @@ const BASE_WEAPON_COOLDOWN = 4; // seconds
 const MAX_BATTLE_DURATION = 120; // seconds
 const SIMULATION_TICK = 0.1; // 100ms per tick
 
-// Maximum armor reduction cap (prevents armor from being too overpowered)
-// Exported for testing and reusability
-export const MAX_ARMOR_REDUCTION = 30;
+// Maximum armor reduction cap removed - armor now scales without limit
+// This was previously capped at 30 to prevent armor from being too overpowered
+// export const MAX_ARMOR_REDUCTION = 30;
 
 /**
  * Clamp a value between min and max
@@ -215,7 +215,7 @@ function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: numbe
 
 /**
  * Apply damage through shields and armor
- * Uses MAX_ARMOR_REDUCTION constant to cap armor effectiveness
+ * Armor reduction is no longer capped
  */
 function applyDamage(
   baseDamage: number,
@@ -260,9 +260,9 @@ function applyDamage(
     const bleedThroughDamage = Math.max(0, effectiveShieldDamage - shieldDamage);
     
     if (bleedThroughDamage > 0) {
-      // Cap armor reduction to prevent armor from being too strong
+      // Apply armor reduction (no cap)
       const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
-      armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
+      armorReduction = rawArmorReduction;
       hpDamage = Math.max(1, bleedThroughDamage - armorReduction);
       detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed | Bleed: ${bleedThroughDamage.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
     } else {
@@ -270,9 +270,9 @@ function applyDamage(
     }
   } else {
     // No shield - damage goes to HP with armor reduction
-    // Cap armor reduction to prevent armor from being too strong
+    // Apply armor reduction (no cap)
     const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
-    armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
+    armorReduction = rawArmorReduction;
     hpDamage = Math.max(1, damage - armorReduction);
     detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | No shield | ${damageAfterCrit.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
   }

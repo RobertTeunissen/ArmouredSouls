@@ -11,9 +11,9 @@ This document is the **authoritative source** for all combat formulas, weapon bo
 3. [Hit Chance Calculation](#hit-chance-calculation)
 4. [Critical Hit Calculation](#critical-hit-calculation)
 5. [Damage Calculation](#damage-calculation)
-6. [Damage Application (Shield & Armor)](#damage-application)
+6. [Damage Application (Energy Shield & Armor)](#damage-application)
 7. [Counter-Attack Calculation](#counter-attack-calculation)
-8. [Shield Regeneration](#shield-regeneration)
+8. [Energy Shield Regeneration](#energy-shield-regeneration)
 9. [Offhand Attack Rules](#offhand-attack-rules)
 10. [Weapon Bonus Design Considerations](#weapon-bonus-design-considerations)
 
@@ -35,7 +35,7 @@ Weapons can provide attribute bonuses (positive or negative) that enhance or pen
 
 - **Defensive Systems:**
   - `armorPlatingBonus` - Reduces incoming damage
-  - `shieldCapacityBonus` - Increases max shield
+  - `shieldCapacityBonus` - Increases max energy shield
   - `evasionThrustersBonus` - Makes attacks harder to land
   - `damageDampenersBonus` - Reduces critical damage multiplier
   - `counterProtocolsBonus` - Increases counter-attack chance
@@ -198,48 +198,48 @@ Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1
 
 ## Damage Application
 
-### Shield Absorption
-When defender has shields:
+### Energy Shield Absorption
+When defender has energy shields:
 ```
 Penetration Multiplier = 1 + (Attacker Penetration + Weapon Bonus) / 200
 Effective Shield Damage = Total Damage × Penetration Multiplier
-Actual Shield Damage = Min(Effective Shield Damage, Current Shield)
+Actual Shield Damage = Min(Effective Shield Damage, Current Energy Shield)
 ```
 
 ### Bleed-Through Damage
-Damage that exceeds shield capacity flows through to HP at 100%:
+Damage that exceeds energy shield capacity flows through to HP at 100%:
 ```
 Bleed-Through Damage = Max(0, Effective Shield Damage - Actual Shield Damage)
 Raw Armor Reduction = Defender Armor × (1 - (Attacker Penetration + Weapon Bonus) / 100)
-Armor Reduction = Min(Raw Armor Reduction, 30) (capped at 30)
+Armor Reduction = Raw Armor Reduction (no cap)
 HP Damage = Max(1, Bleed-Through Damage - Armor Reduction) (minimum 1 damage)
 ```
 
-### No Shield
-When defender has no shield, all damage goes to HP:
+### No Energy Shield
+When defender has no energy shield, all damage goes to HP:
 ```
 Raw Armor Reduction = Defender Armor × (1 - (Attacker Penetration + Weapon Bonus) / 100)
-Armor Reduction = Min(Raw Armor Reduction, 30) (capped at 30)
+Armor Reduction = Raw Armor Reduction (no cap)
 HP Damage = Max(1, Total Damage - Armor Reduction) (minimum 1 damage)
 ```
 
 ### Display Format
-When shield is present (example assumes 0 penetration bonus):
+When energy shield is present (example assumes 0 penetration bonus):
 ```
 Apply: 27.6 base × 1.00 crit = 27.6 | Shield: 10.0 absorbed | Bleed: 17.6 - 4.8 armor = 12.8 HP
 ```
 
-Or when shield fully absorbs damage:
+Or when energy shield fully absorbs damage:
 ```
 Apply: 12.5 base × 1.00 crit = 12.5 | Shield: 12.5 absorbed, 0 HP
 ```
 
-Or without shield:
+Or without energy shield:
 ```
 Apply: 12.5 base × 1.00 crit = 12.5 | No shield | 12.5 - 4.8 armor = 7.7 HP
 ```
 
-**Note**: The penetration multiplier is applied internally to calculate effective shield damage, but the display shows the actual damage absorbed by shields and the bleed-through amount after penetration effects.
+**Note**: The penetration multiplier is applied internally to calculate effective shield damage, but the display shows the actual damage absorbed by energy shields and the bleed-through amount after penetration effects.
 
 ## Counter-Attack Calculation
 
@@ -266,7 +266,7 @@ Counter: 5.00 counter_protocols / 100 × 1.0 × 1.0 = 5.0% (rolled 40.7, result:
 
 ---
 
-## Shield Regeneration
+## Energy Shield Regeneration
 
 ### Overview
 Robot HP does **NOT** regenerate during or between battles. Energy shields DO regenerate during battle based on the Power Core attribute.
@@ -287,9 +287,9 @@ New Shield = Min(Current Shield + Effective Regen, Max Shield)
 
 ### Notes
 - Energy shields regenerate continuously during battle
-- Defensive stance provides +20% shield regeneration
+- Defensive stance provides +20% energy shield regeneration
 - Robot HP never regenerates during battle
-- Shields reset to maximum after battle ends
+- Energy shields reset to maximum after battle ends
 
 ---
 
@@ -337,11 +337,11 @@ For dual wield loadouts:
 - Light weapons might provide evasion bonus (easier to dodge)
 - Should not make defensive stats too strong to avoid tank meta
 
-### HP and Shield Affecting Attributes
-**Question:** Should weapons affect max HP or max Shield?
+### HP and Energy Shield Affecting Attributes
+**Question:** Should weapons affect max HP or max Energy Shield?
 
-**Current Answer:** Primarily for shields, limited for HP
-- Shields (defensive weapon type) can increase max shield capacity
+**Current Answer:** Primarily for energy shields, limited for HP
+- Shields (defensive weapon type) can increase max energy shield capacity
 - Hull Integrity bonus on weapons should be rare and small
 - Energy shields are more weapon-related than hull integrity
 
@@ -350,7 +350,7 @@ For dual wield loadouts:
    - Energy weapons: targeting, crit systems
    - Ballistic weapons: combat power, penetration
    - Melee weapons: hydraulic systems, weapon control
-   - Shields: armor plating, shield capacity, counter protocols
+   - Shields: armor plating, energy shield capacity, counter protocols
 
 2. **Balance Considerations:**
    - Positive and negative bonuses create weapon trade-offs
