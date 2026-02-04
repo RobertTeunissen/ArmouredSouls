@@ -14,6 +14,7 @@
 - v1.4 (Feb 4, 2026): Phase 3 core features (Search & Sort) completed
 - v1.5 (Feb 4, 2026): Phase 2 (Comparison Mode) completed - All 4 core phases done
 - v1.6 (Feb 4, 2026): Added collapsible filters, owned indicator, detail modal, table improvements. Updated Critical Features Status. Added Chapter 7 (Weapon Card View Modes). Added Appendix B (Weapon Images Documentation).
+- v1.7 (Feb 4, 2026): Documented collapsible filter panel, owned weapons indicator in table view, styled ConfirmationModal component, and attributes column sorting. Updated Technical Implementation section with new components.
 
 > **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from the current 23 weapons to hundreds of weapons in future phases. It establishes patterns for discovery, comparison, filtering, and purchasing that maintain usability at any catalog size.
 
@@ -1403,25 +1404,41 @@ GET /api/weapons?loadoutType=two_handed&weaponType=melee&maxCost=200000
 WeaponShopPage/
 ├── WeaponShopHeader (credits, storage, title)
 ├── SearchBar (text search input)
-├── FilterPanel
+├── FilterPanel (✅ Collapsible with localStorage persistence)
 │   ├── LoadoutTypeFilter
 │   ├── WeaponTypeFilter
 │   ├── PriceRangeFilter
+│   ├── QuickFilters (Can Afford toggle)
 │   ├── AttributeFocusFilter
 │   └── ClearFiltersButton
 ├── ControlBar
-│   ├── SortControl (dropdown)
+│   ├── SortDropdown (5 sort options for card view)
 │   └── ViewModeToggle (Card/Table toggle buttons)
 ├── ActiveFiltersDisplay (removable chips)
 ├── RecommendedWeapons (top section)
 ├── WeaponDisplay (conditional rendering based on view mode)
 │   ├── WeaponGrid (card view)
-│   │   └── WeaponCard (multiple instances)
-│   └── WeaponTable (table view)
+│   │   └── WeaponCard (✅ Shows owned indicator, clickable to open detail modal)
+│   └── WeaponTable (✅ Sortable columns including attributes, shows owned indicators, clickable weapon names)
 │       └── WeaponRow (multiple instances)
-└── ComparisonPanel (if weapons selected)
-    └── WeaponComparison (modal/drawer)
+├── ComparisonBar (floating bar when weapons selected)
+├── ComparisonModal (side-by-side weapon comparison with value metrics)
+├── WeaponDetailModal (✅ Complete weapon details, accessible from card/table)
+└── ConfirmationModal (✅ Styled purchase confirmation replacing native dialogs)
 ```
+
+**✅ Implemented Components** (as of v1.7):
+- `FilterPanel.tsx` - Collapsible filter section with expand/collapse button
+- `ActiveFiltersDisplay.tsx` - Removable filter chips
+- `SearchBar.tsx` - Text search with 300ms debouncing
+- `SortDropdown.tsx` - Sort options for card view
+- `ViewModeToggle.tsx` - Card/Table view switcher
+- `WeaponTable.tsx` - Sortable table with 9 columns (including cooldown and attributes)
+- `ComparisonBar.tsx` - Floating bar showing selected weapons count
+- `ComparisonModal.tsx` - Side-by-side weapon comparison with value metrics
+- `WeaponDetailModal.tsx` - Complete weapon information modal
+- `ConfirmationModal.tsx` - Styled confirmation dialogs matching site theme
+- `weaponImages.ts` - Utility for loading weapon SVG images
 
 #### State Management
 ```typescript
