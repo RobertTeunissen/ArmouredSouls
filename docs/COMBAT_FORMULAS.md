@@ -201,32 +201,36 @@ Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1
 ### Shield Absorption
 When defender has shields:
 ```
-Shield Absorption = Damage × 0.7 (shields absorb 70% of damage)
 Penetration Multiplier = 1 + (Attacker Penetration + Weapon Bonus) / 200
-Effective Shield Damage = Shield Absorption × Penetration Multiplier
+Effective Shield Damage = Total Damage × Penetration Multiplier
 Actual Shield Damage = Min(Effective Shield Damage, Current Shield)
 ```
 
 ### Bleed-Through Damage
-If shield damage exceeds current shield:
+Damage that exceeds shield capacity flows through to HP at 100%:
 ```
-Overflow = (Effective Shield Damage - Current Shield) × 0.3 (30% bleeds through)
+Bleed-Through Damage = Max(0, Effective Shield Damage - Actual Shield Damage)
 Raw Armor Reduction = Defender Armor × (1 - (Attacker Penetration + Weapon Bonus) / 100)
 Armor Reduction = Min(Raw Armor Reduction, 30) (capped at 30)
-HP Damage = Max(1, Overflow - Armor Reduction) (minimum 1 damage)
+HP Damage = Max(1, Bleed-Through Damage - Armor Reduction) (minimum 1 damage)
 ```
 
 ### No Shield
-When defender has no shield:
+When defender has no shield, all damage goes to HP:
 ```
 Raw Armor Reduction = Defender Armor × (1 - (Attacker Penetration + Weapon Bonus) / 100)
 Armor Reduction = Min(Raw Armor Reduction, 30) (capped at 30)
-HP Damage = Max(1, Damage - Armor Reduction) (minimum 1 damage)
+HP Damage = Max(1, Total Damage - Armor Reduction) (minimum 1 damage)
 ```
 
 ### Display Format
 ```
-Apply: 12.5 base × 1.00 crit = 12.5 | Shield: 1.0 absorbed | Bleed: 2.7 - 4.8 armor = 1.0 HP
+Apply: 27.6 base × 1.00 crit = 27.6 | Shield: 10.0 absorbed | Bleed: 17.6 - 4.8 armor = 12.8 HP
+```
+
+Or when shield fully absorbs damage:
+```
+Apply: 12.5 base × 1.00 crit = 12.5 | Shield: 12.5 absorbed, 0 HP
 ```
 
 Or without shield:

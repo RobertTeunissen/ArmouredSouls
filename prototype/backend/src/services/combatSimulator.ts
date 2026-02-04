@@ -247,22 +247,24 @@ function applyDamage(
   const damageAfterCrit = damage;
   
   if (defenderState.currentShield > 0) {
-    // Shields absorb at 70% effectiveness
-    const shieldAbsorption = damage * 0.7;
+    // Shields absorb damage up to their maximum capacity
+    // The penetration multiplier allows some extra damage to "punch through" shields
     const penetrationMult = 1 + effectivePenetration / 200;
-    const effectiveShieldDamage = shieldAbsorption * penetrationMult;
+    const effectiveShieldDamage = damage * penetrationMult;
     
+    // Shield absorbs up to its current capacity
     shieldDamage = Math.min(effectiveShieldDamage, defenderState.currentShield);
     defenderState.currentShield -= shieldDamage;
     
-    // Bleed-through damage at reduced rate
-    if (effectiveShieldDamage > defenderState.currentShield) {
-      const overflow = (effectiveShieldDamage - defenderState.currentShield) * 0.3;
+    // Bleed-through damage: any damage beyond shield capacity flows through to HP
+    const bleedThroughDamage = Math.max(0, effectiveShieldDamage - shieldDamage);
+    
+    if (bleedThroughDamage > 0) {
       // Cap armor reduction to prevent armor from being too strong
       const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
       armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
-      hpDamage = Math.max(1, overflow - armorReduction);
-      detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed | Bleed: ${overflow.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
+      hpDamage = Math.max(1, bleedThroughDamage - armorReduction);
+      detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed | Bleed: ${bleedThroughDamage.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
     } else {
       detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed, 0 HP`;
     }
