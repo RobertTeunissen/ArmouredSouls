@@ -14,7 +14,8 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     filters.loadoutTypes.length > 0 ||
     filters.weaponTypes.length > 0 ||
     filters.priceRange !== null ||
-    filters.canAffordOnly;
+    filters.canAffordOnly ||
+    filters.onlyOwnedWeapons;
 
   if (!hasActiveFilters) {
     return null;
@@ -105,6 +106,22 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
             onClick={() => onRemoveFilter('canAfford')}
             className="hover:text-white transition-colors"
             aria-label="Remove can afford filter"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Only Owned Weapons Chip */}
+      {filters.onlyOwnedWeapons && (
+        <div className="flex items-center gap-1.5 bg-purple-900 text-purple-200 px-3 py-1.5 rounded-full text-sm">
+          <span>Only Owned</span>
+          <button
+            onClick={() => onRemoveFilter('onlyOwned')}
+            className="hover:text-white transition-colors"
+            aria-label="Remove only owned filter"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

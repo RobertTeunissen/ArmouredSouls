@@ -85,6 +85,7 @@ function WeaponShopPage() {
     weaponTypes: [],
     priceRange: null,
     canAffordOnly: false,
+    onlyOwnedWeapons: false,
   });
 
   // Search state
@@ -180,6 +181,8 @@ function WeaponShopPage() {
       newFilters.priceRange = null;
     } else if (filterType === 'canAfford') {
       newFilters.canAffordOnly = false;
+    } else if (filterType === 'onlyOwned') {
+      newFilters.onlyOwnedWeapons = false;
     }
     
     setFilters(newFilters);
@@ -266,6 +269,14 @@ function WeaponShopPage() {
         }
       }
 
+      // Only owned weapons filter
+      if (filters.onlyOwnedWeapons) {
+        const ownedCount = ownedWeapons.get(weapon.id) || 0;
+        if (ownedCount === 0) {
+          return false;
+        }
+      }
+
       return true;
     });
 
@@ -275,7 +286,7 @@ function WeaponShopPage() {
     }
 
     return result;
-  }, [weapons, debouncedSearchQuery, filters, user, weaponWorkshopLevel, sortBy, viewMode]);
+  }, [weapons, debouncedSearchQuery, filters, user, weaponWorkshopLevel, sortBy, viewMode, ownedWeapons]);
 
   const calculateDiscountedPrice = (basePrice: number): number => {
     const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);

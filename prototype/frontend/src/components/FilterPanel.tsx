@@ -5,6 +5,7 @@ export interface WeaponFilters {
   weaponTypes: string[];
   priceRange: { min: number; max: number } | null;
   canAffordOnly: boolean;
+  onlyOwnedWeapons: boolean;
 }
 
 interface FilterPanelProps {
@@ -57,12 +58,17 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     onFiltersChange({ ...filters, canAffordOnly: !filters.canAffordOnly });
   };
 
+  const handleOnlyOwnedToggle = () => {
+    onFiltersChange({ ...filters, onlyOwnedWeapons: !filters.onlyOwnedWeapons });
+  };
+
   const handleClearAll = () => {
     onFiltersChange({
       loadoutTypes: [],
       weaponTypes: [],
       priceRange: null,
       canAffordOnly: false,
+      onlyOwnedWeapons: false,
     });
   };
 
@@ -70,7 +76,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     filters.loadoutTypes.length > 0 ||
     filters.weaponTypes.length > 0 ||
     filters.priceRange !== null ||
-    filters.canAffordOnly;
+    filters.canAffordOnly ||
+    filters.onlyOwnedWeapons;
 
   const loadoutTypes = [
     { value: 'single', label: 'Single' },
@@ -217,16 +224,28 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
           Quick Filters
         </h3>
-        <button
-          onClick={handleCanAffordToggle}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            filters.canAffordOnly
-              ? 'bg-green-600 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          Can Afford (₡{userCredits.toLocaleString()})
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleCanAffordToggle}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              filters.canAffordOnly
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            Can Afford (₡{userCredits.toLocaleString()})
+          </button>
+          <button
+            onClick={handleOnlyOwnedToggle}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              filters.onlyOwnedWeapons
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            Only Owned Weapons
+          </button>
+        </div>
       </div>
         </div>
       )}
