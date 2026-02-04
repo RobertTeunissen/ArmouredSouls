@@ -94,6 +94,7 @@ function AdminPage() {
   const [bulkCycles, setBulkCycles] = useState(1);
   const [autoRepair, setAutoRepair] = useState(true);
   const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
+  const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(false);
   const [bulkResults, setBulkResults] = useState<any>(null);
   
   // Battle log state
@@ -222,6 +223,7 @@ function AdminPage() {
         cycles: bulkCycles,
         autoRepair,
         includeDailyFinances,
+        generateUsersPerCycle,
       });
       setBulkResults(response.data);
       showMessage(
@@ -415,6 +417,18 @@ function AdminPage() {
               />
               Include daily finances processing
             </label>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={generateUsersPerCycle}
+                onChange={(e) => setGenerateUsersPerCycle(e.target.checked)}
+                className="mr-2"
+              />
+              Generate users per cycle
+              <span className="ml-2 text-sm text-gray-400">
+                (Adds N users each cycle: cycle 1 → 1 user, cycle 2 → 2 users, etc.)
+              </span>
+            </label>
           </div>
           <button
             onClick={runBulkCycles}
@@ -428,6 +442,9 @@ function AdminPage() {
             <div className="mt-4 bg-gray-700 rounded p-4">
               <h3 className="text-xl font-semibold mb-2">Bulk Cycle Results</h3>
               <p>Cycles Completed: {bulkResults.cyclesCompleted}</p>
+              {bulkResults.totalCyclesInSystem && (
+                <p className="text-green-400">Total Cycles in System: {bulkResults.totalCyclesInSystem}</p>
+              )}
               <p>Total Duration: {bulkResults.totalDuration.toFixed(2)}s</p>
               <p>Average Cycle Duration: {bulkResults.averageCycleDuration.toFixed(2)}s</p>
               
@@ -437,9 +454,17 @@ function AdminPage() {
                   {bulkResults.results.map((result: any, idx: number) => (
                     <div key={idx} className="mb-2 p-2 bg-gray-800 rounded text-sm">
                       <p className="font-semibold">Cycle {result.cycle}:</p>
+                      {result.userGeneration && (
+                        <div className="ml-2 text-green-400">
+                          <p>- Users: {result.userGeneration.usersCreated} new users created</p>
+                          {result.userGeneration.error && (
+                            <p className="text-red-400 ml-2">• ⚠️ Error: {result.userGeneration.error}</p>
+                          )}
+                        </div>
+                      )}
                       {result.repair && <p>- Repaired: {result.repair.robotsRepaired} robots</p>}
                       {result.matchmaking && <p>- Matches: {result.matchmaking.matchesCreated} created</p>}
-                      {result.battles && (
+                      {result.battles && result.battles.summary && (
                         <p>
                           - Battles: {result.battles.summary.successfulBattles}/
                           {result.battles.summary.totalBattles} successful

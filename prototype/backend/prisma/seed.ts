@@ -74,7 +74,18 @@ async function main() {
   await prisma.facility.deleteMany();
   await prisma.weapon.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.cycleMetadata.deleteMany();
   console.log('✅ Existing data cleaned up\n');
+
+  // Initialize cycle metadata
+  console.log('Initializing cycle metadata...');
+  await prisma.cycleMetadata.create({
+    data: {
+      id: 1,
+      totalCycles: 0,
+    },
+  });
+  console.log('✅ Cycle metadata initialized\n');
 
   // Create weapons with ALL specifications from DATABASE_SCHEMA_FUTURE_STATE.md
   console.log('Creating weapons...');
