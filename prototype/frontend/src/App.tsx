@@ -14,7 +14,9 @@ import LeagueStandingsPage from './pages/LeagueStandingsPage';
 import AdminPage from './pages/AdminPage';
 import LeaderboardsFamePage from './pages/LeaderboardsFamePage';
 import LeaderboardsPrestigePage from './pages/LeaderboardsPrestigePage';
+import LeaderboardsLossesPage from './pages/LeaderboardsLossesPage';
 import FinancialReportPage from './pages/FinancialReportPage';
+import HallOfRecordsPage from './pages/HallOfRecordsPage';
 
 function App() {
   return (
@@ -119,10 +121,26 @@ function App() {
             }
           />
           <Route
+            path="/leaderboards/losses"
+            element={
+              <ProtectedRoute>
+                <LeaderboardsLossesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/finances"
             element={
               <ProtectedRoute>
                 <FinancialReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hall-of-records"
+            element={
+              <ProtectedRoute>
+                <HallOfRecordsPage />
               </ProtectedRoute>
             }
           />

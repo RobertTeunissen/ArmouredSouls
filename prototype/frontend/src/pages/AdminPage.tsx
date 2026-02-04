@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import BattleDetailsModal from '../components/BattleDetailsModal';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
 type TabType = 'dashboard' | 'cycles' | 'battles' | 'stats';
@@ -257,6 +258,7 @@ function AdminPage() {
     }
   });
 
+  const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
@@ -414,7 +416,8 @@ function AdminPage() {
         'success',
         `Daily finances processed! ${summary.usersProcessed} users, ₡${summary.totalCostsDeducted.toLocaleString()} deducted${summary.bankruptUsers > 0 ? `, ${summary.bankruptUsers} bankruptcies` : ''}`
       );
-      fetchStats();
+      // Refresh stats and user data in parallel (daily finances may affect current user's credits)
+      await Promise.all([fetchStats(), refreshUser()]);
     } catch (error: any) {
       showMessage('error', error.response?.data?.error || 'Daily finances failed');
     } finally {
@@ -502,7 +505,12 @@ function AdminPage() {
         'success',
         `Completed ${response.data.cyclesCompleted} cycles in ${response.data.totalDuration?.toFixed(2) || 0}s`
       );
-      fetchStats();
+      // Refresh stats and user data if daily finances were processed
+      if (includeDailyFinances) {
+        await Promise.all([fetchStats(), refreshUser()]);
+      } else {
+        await fetchStats();
+      }
     } catch (error: any) {
       addSessionLog('error', 'Bulk cycle run failed', error.response?.data);
       showMessage('error', error.response?.data?.error || 'Bulk cycles failed');

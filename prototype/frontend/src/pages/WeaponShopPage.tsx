@@ -64,6 +64,7 @@ function WeaponShopPage() {
   const { user, refreshUser } = useAuth();
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [ownedWeapons, setOwnedWeapons] = useState<Map<number, number>>(new Map());
+  const [equippedWeaponsCount, setEquippedWeaponsCount] = useState(0);
   const [weaponWorkshopLevel, setWeaponWorkshopLevel] = useState(0);
   const [storageStatus, setStorageStatus] = useState<StorageStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,11 +137,17 @@ function WeaponShopPage() {
         
         // Count owned weapons by weapon ID
         const ownedMap = new Map<number, number>();
+        let equippedCount = 0;
         inventory.forEach((item: any) => {
           const weaponId = item.weaponId;
           ownedMap.set(weaponId, (ownedMap.get(weaponId) || 0) + 1);
+          // Count if weapon is equipped (has robots using it)
+          if (item.robotsMain?.length > 0 || item.robotsOffhand?.length > 0) {
+            equippedCount++;
+          }
         });
         setOwnedWeapons(ownedMap);
+        setEquippedWeaponsCount(equippedCount);
 
         // Fetch facilities to get Weapon Workshop level
         const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities');
@@ -482,18 +489,53 @@ function WeaponShopPage() {
                 {storageStatus.currentWeapons} / {storageStatus.maxCapacity}
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-4 mb-2">
-              <div
-                className={`h-4 rounded-full transition-all ${
-                  storageStatus.isFull
-                    ? 'bg-red-500'
-                    : storageStatus.percentageFull >= 80
-                    ? 'bg-yellow-500'
-                    : 'bg-blue-500'
-                }`}
-                style={{ width: `${Math.min(storageStatus.percentageFull, 100)}%` }}
-              />
+            
+            {/* Dual-color progress bar showing equipped vs available */}
+            <div className="w-full bg-gray-700 rounded-full h-4 mb-2 overflow-hidden flex">
+              {/* Equipped weapons segment (blue) */}
+              {equippedWeaponsCount > 0 && (
+                <div
+                  className="h-4 bg-blue-500 transition-all"
+                  style={{ width: `${(equippedWeaponsCount / storageStatus.maxCapacity) * 100}%` }}
+                  title={`${equippedWeaponsCount} weapon(s) equipped`}
+                />
+              )}
+              {/* Available weapons segment (capacity-based color) */}
+              {storageStatus.currentWeapons - equippedWeaponsCount > 0 && (
+                <div
+                  className={`h-4 transition-all ${
+                    storageStatus.isFull
+                      ? 'bg-red-500'
+                      : storageStatus.percentageFull >= 80
+                      ? 'bg-yellow-500'
+                      : 'bg-green-500'
+                  }`}
+                  style={{ width: `${((storageStatus.currentWeapons - equippedWeaponsCount) / storageStatus.maxCapacity) * 100}%` }}
+                  title={`${storageStatus.currentWeapons - equippedWeaponsCount} weapon(s) available`}
+                />
+              )}
             </div>
+            
+            {/* Legend and status text */}
+            <div className="flex items-center justify-between gap-4 text-sm mb-2">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                  <span className="text-gray-300">Equipped: {equippedWeaponsCount}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className={`w-3 h-3 rounded ${
+                    storageStatus.isFull
+                      ? 'bg-red-500'
+                      : storageStatus.percentageFull >= 80
+                      ? 'bg-yellow-500'
+                      : 'bg-green-500'
+                  }`}></div>
+                  <span className="text-gray-300">Available: {storageStatus.currentWeapons - equippedWeaponsCount}</span>
+                </div>
+              </div>
+            </div>
+            
             <div className="text-sm text-gray-400">
               {storageStatus.isFull ? (
                 <span className="text-red-400 font-semibold">
