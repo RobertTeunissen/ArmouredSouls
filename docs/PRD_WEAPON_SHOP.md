@@ -15,6 +15,7 @@
 - v1.5 (Feb 4, 2026): Phase 2 (Comparison Mode) completed - All 4 core phases done
 - v1.6 (Feb 4, 2026): Added collapsible filters, owned indicator, detail modal, table improvements. Updated Critical Features Status. Added Chapter 7 (Weapon Card View Modes). Added Appendix B (Weapon Images Documentation).
 - v1.7 (Feb 4, 2026): Documented collapsible filter panel, owned weapons indicator in table view, styled ConfirmationModal component, and attributes column sorting. Updated Technical Implementation section with new components.
+- v1.8 (Feb 4, 2026): Added "Only Owned Weapons" quick filter, replacing need for separate Weapon Inventory page. Fixed filter bugs.
 
 > **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from the current 23 weapons to hundreds of weapons in future phases. It establishes patterns for discovery, comparison, filtering, and purchasing that maintain usability at any catalog size.
 
@@ -96,6 +97,7 @@ This PRD defines the comprehensive design requirements for the Weapon Shop page 
   - ✅ Weapon type (Melee, Ballistic, Energy, Shield)
   - ✅ Price range (Budget: <₡100K, Mid: ₡100-300K, Premium: ₡300K+, Luxury: ₡500K+)
   - ✅ "Can Afford" quick filter based on user credits
+  - ✅ "Only Owned Weapons" quick filter to show weapons in inventory (v1.8) - **Replaces need for separate Weapon Inventory page**
   - ✅ Filter panel is collapsible to save screen space
 - ✅ **Multi-criteria sorting**: Sort by name, price (asc/desc), damage, DPS (IMPLEMENTED Phase 3)
 - ✅ **Text search**: Search weapon names, descriptions, types, and loadout types (IMPLEMENTED Phase 3)
@@ -1616,6 +1618,7 @@ The existing Prisma schema fully supports all PRD requirements:
   - ✅ Weapon type filter (Melee, Ballistic, Energy, Shield)
   - ✅ Price range filter (Budget, Mid, Premium, Luxury)
   - ✅ "Can Afford" quick filter
+  - ✅ "Only Owned Weapons" quick filter (v1.8) - Shows user's weapon inventory
 - ✅ Active filters display with removable chips
   - ✅ ActiveFiltersDisplay component created
   - ✅ Color-coded filter chips
