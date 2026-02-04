@@ -322,3 +322,13 @@ model ScheduledMatch {
   @@index([status])
   @@map("scheduled_matches")
 }
+
+model CycleMetadata {
+  id           Int       @id @default(1)
+  totalCycles  Int       @default(0) @map("total_cycles")
+  lastCycleAt  DateTime? @map("last_cycle_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("cycle_metadata")
+}

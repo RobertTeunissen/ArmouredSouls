@@ -4,6 +4,7 @@ import { executeScheduledBattles } from '../services/battleOrchestrator';
 import { runMatchmaking } from '../services/matchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';
 import { processAllDailyFinances } from '../utils/economyCalculations';
+import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
@@ -286,23 +287,48 @@ router.post('/daily-finances/process', authenticateToken, requireAdmin, async (r
 /**
  * POST /api/admin/cycles/bulk
  * Run multiple complete cycles (matchmaking → battles → rebalancing)
+ * Optional: Generate new users per cycle (1 user cycle 1, 2 users cycle 2, etc.)
  */
 router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { cycles = 1, autoRepair = false, includeDailyFinances = true } = req.body;
+    const { cycles = 1, autoRepair = false, includeDailyFinances = true, generateUsersPerCycle = false } = req.body;
     const maxCycles = 100;
     const cycleCount = Math.min(Math.max(1, cycles), maxCycles);
 
-    console.log(`[Admin] Running ${cycleCount} bulk cycles (autoRepair: ${autoRepair}, includeDailyFinances: ${includeDailyFinances})...`);
+    console.log(`[Admin] Running ${cycleCount} bulk cycles (autoRepair: ${autoRepair}, includeDailyFinances: ${includeDailyFinances}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
 
+    // Get or create cycle metadata
+    let cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+    if (!cycleMetadata) {
+      cycleMetadata = await prisma.cycleMetadata.create({
+        data: { id: 1, totalCycles: 0 },
+      });
+    }
+
+    let currentCycleNumber = cycleMetadata.totalCycles;
     const cycleResults = [];
     const startTime = Date.now();
 
     for (let i = 1; i <= cycleCount; i++) {
       const cycleStart = Date.now();
-      console.log(`\n[Admin] === Cycle ${i}/${cycleCount} ===`);
+      currentCycleNumber++;
+      console.log(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
 
       try {
+        // Step 0: Generate users (if enabled)
+        let userGenerationSummary = null;
+        if (generateUsersPerCycle) {
+          try {
+            userGenerationSummary = await generateBattleReadyUsers(currentCycleNumber);
+            console.log(`[Admin] Generated ${userGenerationSummary.usersCreated} users for cycle ${currentCycleNumber}`);
+          } catch (error) {
+            console.error(`[Admin] Error generating users:`, error);
+            userGenerationSummary = {
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        }
+
         // Step 1: Auto-repair if enabled
         let repairSummary = null;
         if (autoRepair) {
@@ -347,7 +373,8 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         }
 
         cycleResults.push({
-          cycle: i,
+          cycle: currentCycleNumber,
+          userGeneration: userGenerationSummary,
           repair: repairSummary,
           matchmaking: matchmakingSummary,
           battles: battleSummary,
@@ -356,22 +383,33 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           duration: Date.now() - cycleStart,
         });
       } catch (error) {
-        console.error(`[Admin] Error in cycle ${i}:`, error);
+        console.error(`[Admin] Error in cycle ${currentCycleNumber}:`, error);
         cycleResults.push({
-          cycle: i,
+          cycle: currentCycleNumber,
           error: error instanceof Error ? error.message : String(error),
           duration: Date.now() - cycleStart,
         });
       }
     }
 
+    // Update cycle metadata with total cycles completed
+    await prisma.cycleMetadata.update({
+      where: { id: 1 },
+      data: {
+        totalCycles: currentCycleNumber,
+        lastCycleAt: new Date(),
+      },
+    });
+
     const totalDuration = Date.now() - startTime;
 
     res.json({
       success: true,
       cyclesCompleted: cycleCount,
+      totalCyclesInSystem: currentCycleNumber,
       autoRepairEnabled: autoRepair,
       includeDailyFinances,
+      generateUsersPerCycleEnabled: generateUsersPerCycle,
       totalDuration,
       averageCycleDuration: Math.round(totalDuration / cycleCount),
       results: cycleResults,
