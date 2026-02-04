@@ -68,7 +68,6 @@ interface MostDamageSingleAttack {
   damage: number;
   attacker: { id: number; name: string; username: string };
   defender: { id: number; name: string; username: string };
-  durationSeconds: number;
   date: string;
 }
 

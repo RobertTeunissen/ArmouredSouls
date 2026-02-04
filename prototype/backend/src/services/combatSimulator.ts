@@ -819,9 +819,16 @@ ${weaponBonuses2}`,
   
   // Determine which robot dealt the max single attack
   const maxSingleAttackDamage = Math.max(state1.maxSingleAttack, state2.maxSingleAttack);
-  const maxSingleAttackRobotId = state1.maxSingleAttack >= state2.maxSingleAttack 
-    ? (state1.maxSingleAttack > 0 ? robot1.id : null)
-    : (state2.maxSingleAttack > 0 ? robot2.id : null);
+  let maxSingleAttackRobotId: number | null = null;
+  
+  if (maxSingleAttackDamage > 0) {
+    // If both have equal non-zero max, favor robot1 (tie-breaker)
+    if (state1.maxSingleAttack >= state2.maxSingleAttack && state1.maxSingleAttack > 0) {
+      maxSingleAttackRobotId = robot1.id;
+    } else if (state2.maxSingleAttack > 0) {
+      maxSingleAttackRobotId = robot2.id;
+    }
+  }
   
   return {
     winnerId,

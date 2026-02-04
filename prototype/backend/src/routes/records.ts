@@ -104,6 +104,7 @@ router.get('/', async (req: Request, res: Response) => {
     const mostDamageSingleAttackBattle = await prisma.battle.findFirst({
       where: {
         maxSingleAttackDamage: { gt: 0 },
+        maxSingleAttackRobotId: { not: null },
       },
       orderBy: { maxSingleAttackDamage: 'desc' },
       include: {
@@ -117,30 +118,35 @@ router.get('/', async (req: Request, res: Response) => {
     });
 
     let mostDamageSingleAttackData = null;
-    if (mostDamageSingleAttackBattle) {
-      const attackerRobot = mostDamageSingleAttackBattle.maxSingleAttackRobotId === mostDamageSingleAttackBattle.robot1Id 
-        ? mostDamageSingleAttackBattle.robot1 
-        : mostDamageSingleAttackBattle.robot2;
-      const defenderRobot = mostDamageSingleAttackBattle.maxSingleAttackRobotId === mostDamageSingleAttackBattle.robot1Id 
-        ? mostDamageSingleAttackBattle.robot2 
-        : mostDamageSingleAttackBattle.robot1;
-      
-      mostDamageSingleAttackData = {
-        battleId: mostDamageSingleAttackBattle.id,
-        damage: mostDamageSingleAttackBattle.maxSingleAttackDamage,
-        attacker: {
-          id: attackerRobot.id,
-          name: attackerRobot.name,
-          username: attackerRobot.user.username,
-        },
-        defender: {
-          id: defenderRobot.id,
-          name: defenderRobot.name,
-          username: defenderRobot.user.username,
-        },
-        durationSeconds: mostDamageSingleAttackBattle.durationSeconds,
-        date: mostDamageSingleAttackBattle.createdAt,
-      };
+    if (mostDamageSingleAttackBattle && mostDamageSingleAttackBattle.maxSingleAttackRobotId) {
+      // Validate that maxSingleAttackRobotId matches one of the battle participants
+      if (mostDamageSingleAttackBattle.maxSingleAttackRobotId !== mostDamageSingleAttackBattle.robot1Id && 
+          mostDamageSingleAttackBattle.maxSingleAttackRobotId !== mostDamageSingleAttackBattle.robot2Id) {
+        console.error('Invalid maxSingleAttackRobotId:', mostDamageSingleAttackBattle.maxSingleAttackRobotId);
+      } else {
+        const attackerRobot = mostDamageSingleAttackBattle.maxSingleAttackRobotId === mostDamageSingleAttackBattle.robot1Id 
+          ? mostDamageSingleAttackBattle.robot1 
+          : mostDamageSingleAttackBattle.robot2;
+        const defenderRobot = mostDamageSingleAttackBattle.maxSingleAttackRobotId === mostDamageSingleAttackBattle.robot1Id 
+          ? mostDamageSingleAttackBattle.robot2 
+          : mostDamageSingleAttackBattle.robot1;
+        
+        mostDamageSingleAttackData = {
+          battleId: mostDamageSingleAttackBattle.id,
+          damage: mostDamageSingleAttackBattle.maxSingleAttackDamage,
+          attacker: {
+            id: attackerRobot.id,
+            name: attackerRobot.name,
+            username: attackerRobot.user.username,
+          },
+          defender: {
+            id: defenderRobot.id,
+            name: defenderRobot.name,
+            username: defenderRobot.user.username,
+          },
+          date: mostDamageSingleAttackBattle.createdAt,
+        };
+      }
     }
 
     // Narrowest Victory - winner with lowest remaining HP
@@ -523,7 +529,6 @@ router.get('/', async (req: Request, res: Response) => {
             name: mostDamageSingleAttackData.defender.name,
             username: mostDamageSingleAttackData.defender.username,
           },
-          durationSeconds: mostDamageSingleAttackData.durationSeconds,
           date: mostDamageSingleAttackData.date,
         } : null,
         narrowestVictory: narrowestVictory ? {
