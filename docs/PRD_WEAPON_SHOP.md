@@ -12,6 +12,8 @@
 - v1.2 (Feb 4, 2026): Implementation started - Phase 1 (View Mode Toggle) completed
 - v1.3 (Feb 4, 2026): Phase 2 (Filtering System) completed
 - v1.4 (Feb 4, 2026): Phase 3 core features (Search & Sort) completed
+- v1.5 (Feb 4, 2026): Phase 2 (Comparison Mode) completed - All 4 core phases done
+- v1.6 (Feb 4, 2026): Added collapsible filters, owned indicator, detail modal, table improvements. Updated Critical Features Status. Added Chapter 7 (Weapon Card View Modes). Added Appendix B (Weapon Images Documentation).
 
 > **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from the current 23 weapons to hundreds of weapons in future phases. It establishes patterns for discovery, comparison, filtering, and purchasing that maintain usability at any catalog size.
 
@@ -85,37 +87,37 @@ This PRD defines the comprehensive design requirements for the Weapon Shop page 
 
 #### ❌ **Not Yet Implemented**
 
-**Critical Missing Features:**
+**Critical Features Status:**
 
 **Discovery & Navigation (for 100+ weapons):**
-- ❌ **Advanced filtering system**: Filter by multiple criteria simultaneously
-  - Loadout type (Single, Weapon+Shield, Two-Handed, Dual-Wield)
-  - Weapon type (Melee, Ballistic, Energy, Shield)
-  - Price range (Budget: <₡100K, Mid: ₡100-300K, Premium: ₡300K+)
-  - Attribute focus (Offensive, Defensive, Balanced)
-  - Availability (Can afford, In stock/storage available)
-- ❌ **Multi-criteria sorting**: Sort by cost, DPS, attribute total, cost-per-attribute-point, damage, cooldown
-- ❌ **Text search**: Search weapon names and descriptions
+- ✅ **Advanced filtering system**: Filter by multiple criteria simultaneously (IMPLEMENTED Phase 1)
+  - ✅ Loadout type (Single, Weapon+Shield, Two-Handed, Dual-Wield)
+  - ✅ Weapon type (Melee, Ballistic, Energy, Shield)
+  - ✅ Price range (Budget: <₡100K, Mid: ₡100-300K, Premium: ₡300K+, Luxury: ₡500K+)
+  - ✅ "Can Afford" quick filter based on user credits
+  - ✅ Filter panel is collapsible to save screen space
+- ✅ **Multi-criteria sorting**: Sort by name, price (asc/desc), damage, DPS (IMPLEMENTED Phase 3)
+- ✅ **Text search**: Search weapon names, descriptions, types, and loadout types (IMPLEMENTED Phase 3)
 - ❌ **Smart recommendations**: "Recommended for your robots" based on current loadout gaps
 - ❌ **Recently viewed**: Track and display recently browsed weapons
 
 **Comparison & Analysis:**
-- ❌ **Comparison mode**: Select 2-3 weapons for side-by-side detailed comparison
-- ❌ **Value analysis**: Show cost-per-attribute-point, DPS-per-credit, efficiency metrics
+- ✅ **Comparison mode**: Select 2-3 weapons for side-by-side detailed comparison (IMPLEMENTED Phase 2)
+- ✅ **Value analysis**: Show cost-per-damage, DPS-per-₡1K, attributes-per-₡1K efficiency metrics (IMPLEMENTED Phase 2)
 - ❌ **Loadout preview**: "How will this weapon affect my robot's stats?" calculator
 - ❌ **Alternative suggestions**: "Similar weapons" or "Better value options"
-- ❌ **Owned indicator**: Visual badge showing "Already Own (3)" for owned weapons
+- ✅ **Owned indicator**: Visual badge showing "Already Own (X)" for owned weapons (IMPLEMENTED)
 
 **Enhanced Display:**
-- ❌ **Weapon illustrations**: 256×256px weapon artwork (design system requirement)
-- ❌ **View mode toggle**: Switch between card view and table view
-- ❌ **Card view**: Visual, detailed weapon cards (current implementation)
-- ❌ **Table view**: Compact, scannable table layout for quick overview
+- ✅ **Weapon illustrations**: 256×256px weapon artwork/placeholders (IMPLEMENTED Phase 4 - SVG placeholders ready for artwork)
+- ✅ **View mode toggle**: Switch between card view and table view (IMPLEMENTED Phase 4)
+- ✅ **Card view**: Visual, detailed weapon cards with images (IMPLEMENTED)
+- ✅ **Table view**: Compact, scannable table layout with sortable columns including cooldown (IMPLEMENTED)
+- ✅ **Weapon detail modal**: Click weapon name/image to open full detail modal (IMPLEMENTED)
 - ❌ **Compact/Detailed view toggle**: Switch between compact and detailed card sizes (card view only)
-- ❌ **Compact/Detailed view toggle**: Switch between compact grid and detailed list
 - ❌ **Attribute visualization**: Bar charts or radial charts for attribute distributions
-- ❌ **DPS calculation display**: Show calculated DPS alongside base damage
-- ❌ **Loadout compatibility badges**: Visual indicators for which loadout types can use each weapon
+- ✅ **DPS calculation display**: Show calculated DPS in table and detail views (IMPLEMENTED)
+- ✅ **Loadout compatibility**: Displayed on all weapon cards and detail modal (IMPLEMENTED)
 
 **Economic Context:**
 - ❌ **Batch purchase**: "Add to cart" system for buying multiple weapons
@@ -1154,10 +1156,122 @@ Acceptance Criteria:
 
 **Step 3: Post-Purchase**
 - Toast notification: "Weapon purchased! ₡X remaining. Visit Weapon Inventory to equip."
-- Weapon card updates: "Owned (1)" badge appears
+- Weapon card updates: "Already Own (X)" badge appears
 - Credits balance in header updates
+- Owned weapons count refreshed
 
-### 3. Empty & Error States
+### 3. Weapon Card View Modes
+
+The Weapon Shop provides three distinct viewing modes for weapons, each optimized for different use cases:
+
+#### 3.1 Card View (Default)
+
+**Purpose**: Visual browsing with full weapon details and images
+
+**Layout:**
+- Grid layout: 3 columns (desktop), 2 columns (tablet), 1 column (mobile)
+- Each card shows:
+  - Weapon image (192×192px)
+  - Weapon name (clickable to open detail modal)
+  - Weapon type and loadout type
+  - Description
+  - Base damage and cooldown
+  - DPS calculation
+  - Cost with discount indication
+  - Attribute bonuses summary
+  - Purchase button
+  - Comparison checkbox
+  - "Already Own (X)" badge if owned
+- Grouped by loadout type (shields, two-handed, one-handed)
+
+**Best For:**
+- First-time browsing
+- Visual comparison of weapons
+- Detailed information at a glance
+- Mobile-friendly browsing
+
+**Navigation:**
+- Click weapon name or image → Opens Detail Modal
+- Check "Compare" box → Adds to comparison (max 3)
+- Click "Purchase" → Buys weapon
+
+#### 3.2 Table View
+
+**Purpose**: Compact, scannable overview for quick comparisons
+
+**Layout:**
+- Single sortable table with columns:
+  1. Name (with weapon type icon, clickable)
+  2. Loadout (loadout type)
+  3. Type (weapon type)
+  4. Damage (base damage)
+  5. Cooldown (seconds)
+  6. DPS (calculated)
+  7. Cost (with discount if applicable)
+  8. Attributes (total attribute bonuses)
+  9. Action (purchase button)
+- Shows 15-20+ weapons visible at once
+- Click column headers to sort
+- Visual sort indicators (↑/↓)
+
+**Best For:**
+- Experienced users who know what they want
+- Quick stat comparisons across many weapons
+- Sorting by specific criteria (price, DPS, damage, etc.)
+- Desktop use (not ideal for mobile)
+
+**Navigation:**
+- Click weapon name → Opens Detail Modal
+- Click column header → Sorts table
+- Click "Buy" → Purchases weapon
+- No comparison checkboxes in table view (use card view for comparison)
+
+#### 3.3 Detail Modal View
+
+**Purpose**: Complete weapon information for final purchase decision
+
+**Layout:**
+- Full-screen modal overlay
+- Large weapon image (256×256px)
+- Complete weapon details:
+  - Name, type, loadout type
+  - "Already Own (X)" indicator (if owned)
+  - Full description
+  - Combat stats grid (damage, cooldown, DPS, total attributes)
+  - Complete list of all attribute bonuses
+  - Cost with discount breakdown
+  - User's current credits
+  - Purchase button with status
+- Close button (X)
+
+**Best For:**
+- Final purchase verification
+- Reviewing all weapon details before buying
+- Understanding complete attribute breakdown
+- Checking owned status
+
+**Navigation:**
+- Click "Close" → Returns to previous view (card or table)
+- Click "Purchase" → Buys weapon and closes modal
+- ESC key → Closes modal
+
+#### 3.4 View Mode Toggle
+
+**Switching Between Views:**
+- Toggle button at top of page (grid icon for card view, list icon for table view)
+- View preference saved in localStorage
+- All filters, search, and sort settings persist when switching views
+- Active filters work in both views
+
+**View Mode Recommendations:**
+- **New Users**: Start with Card View for visual exploration
+- **Shopping for Specific Stats**: Use Table View for quick sorting/scanning
+- **Final Purchase Decision**: Detail Modal for complete information
+- **Mobile Users**: Card View (table view works but less ideal)
+
+---
+
+### 4. Empty & Error States
 
 #### 3.1 No Weapons Match Filters
 
@@ -1736,6 +1850,83 @@ The existing Prisma schema fully supports all PRD requirements:
 - Shield: 3 weapons
 - Dual-Wield: 3 weapon types (6 individual weapons if paired)
 - Versatile (multiple loadout types): 5 weapons
+
+### B. Weapon Images Documentation
+
+**Image Location**: `/prototype/frontend/src/assets/weapons/`
+
+**Image Format**: SVG (256×256px viewBox), scalable vector graphics
+
+**Naming Convention**: Weapon name in lowercase with hyphens (e.g., `practice-sword.svg`)
+
+**Current Implementation Status**: ✅ All 23 weapon placeholder images created
+
+**Image List** (with usage locations):
+
+**Melee Weapons** (Red/Gray theme):
+1. `practice-sword.svg` - Practice Sword
+   - **Used in**: Card view (192×192px), Detail modal (256×256px)
+2. `combat-knife.svg` - Combat Knife
+   - **Used in**: Card view, Detail modal
+3. `energy-blade.svg` - Energy Blade (blue theme)
+   - **Used in**: Card view, Detail modal
+4. `plasma-blade.svg` - Plasma Blade (purple theme)
+   - **Used in**: Card view, Detail modal
+5. `power-sword.svg` - Power Sword
+   - **Used in**: Card view, Detail modal
+6. `battle-axe.svg` - Battle Axe
+   - **Used in**: Card view, Detail modal
+7. `heavy-hammer.svg` - Heavy Hammer
+   - **Used in**: Card view, Detail modal
+
+**Ballistic Weapons** (Orange/Gray theme):
+8. `machine-pistol.svg` - Machine Pistol
+   - **Used in**: Card view, Detail modal
+9. `machine-gun.svg` - Machine Gun
+   - **Used in**: Card view, Detail modal
+10. `burst-rifle.svg` - Burst Rifle
+    - **Used in**: Card view, Detail modal
+11. `assault-rifle.svg` - Assault Rifle
+    - **Used in**: Card view, Detail modal
+12. `shotgun.svg` - Shotgun
+    - **Used in**: Card view, Detail modal
+13. `grenade-launcher.svg` - Grenade Launcher (yellow theme)
+    - **Used in**: Card view, Detail modal
+14. `sniper-rifle.svg` - Sniper Rifle
+    - **Used in**: Card view, Detail modal
+15. `railgun.svg` - Railgun
+    - **Used in**: Card view, Detail modal
+
+**Energy Weapons** (Blue/Purple theme):
+16. `laser-pistol.svg` - Laser Pistol (blue)
+    - **Used in**: Card view, Detail modal
+17. `laser-rifle.svg` - Laser Rifle (blue)
+    - **Used in**: Card view, Detail modal
+18. `plasma-rifle.svg` - Plasma Rifle (purple)
+    - **Used in**: Card view, Detail modal
+19. `plasma-cannon.svg` - Plasma Cannon (purple)
+    - **Used in**: Card view, Detail modal
+20. `ion-beam.svg` - Ion Beam (blue)
+    - **Used in**: Card view, Detail modal
+
+**Shields** (Cyan/Blue theme):
+21. `light-shield.svg` - Light Shield
+    - **Used in**: Card view, Detail modal
+22. `combat-shield.svg` - Combat Shield
+    - **Used in**: Card view, Detail modal
+23. `reactive-shield.svg` - Reactive Shield
+    - **Used in**: Card view, Detail modal
+
+**Image Loading**:
+- Images loaded via `getWeaponImagePath()` utility function
+- Path resolution: weapon name → lowercase → hyphenated → `/src/assets/weapons/${filename}.svg`
+- Graceful fallback: If image fails to load, it's hidden (no broken image icon)
+- Example: "Practice Sword" → `practice-sword.svg` → `/src/assets/weapons/practice-sword.svg`
+
+**Future Replacement**:
+- Current: SVG placeholder images with color-coding
+- Future: Professional weapon artwork (PNG/WebP, 256×256px minimum, 512×512px for detail view)
+- Replacement process: Replace SVG files with PNG/WebP while maintaining same filenames
 
 **Price Range**:
 - Budget (<₡100K): 1 weapon (Practice Sword - starter)
