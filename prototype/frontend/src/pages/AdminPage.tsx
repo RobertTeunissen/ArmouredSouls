@@ -141,9 +141,10 @@ const getBattleOutcome = (battle: Battle): { icon: string; label: string; color:
     return { icon: '🏆', label: 'Clear Victory', color: 'text-green-400' };
   } else if (winnerHP > 0) {
     return { icon: '💪', label: 'Narrow Victory', color: 'text-yellow-400' };
-  } else {
-    return { icon: '🏆', label: 'Victory', color: 'text-blue-400' };
   }
+  
+  // Fallback for edge cases (shouldn't normally happen)
+  return { icon: '🏆', label: 'Victory', color: 'text-blue-400' };
 };
 
 // Helper function to determine if battle is unusual (for border styling)
@@ -687,7 +688,9 @@ function AdminPage() {
                       <div className="bg-gray-700 p-3 rounded">
                         <p className="text-gray-400">Most Popular</p>
                         <p className="text-lg font-bold truncate" title={stats.facilities.mostPopular}>
-                          {stats.facilities.mostPopular.replace(/_/g, ' ')}
+                          {stats.facilities.mostPopular === 'None' || stats.facilities.summary.length === 0
+                            ? 'No facilities yet'
+                            : stats.facilities.mostPopular.replace(/_/g, ' ')}
                         </p>
                       </div>
                       {stats.facilities.summary.slice(0, 6).map((facility) => (

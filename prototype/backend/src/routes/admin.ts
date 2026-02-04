@@ -10,6 +10,9 @@ import { PrismaClient } from '@prisma/client';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Configuration constants
+const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
+
 /**
  * Middleware to check if user is admin
  */
@@ -485,6 +488,8 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     const battles = await prisma.battle.findMany({
       select: {
         winnerId: true,
+        robot1Id: true,
+        robot2Id: true,
         durationSeconds: true,
         robot1FinalHP: true,
         robot2FinalHP: true,
@@ -497,10 +502,13 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
       ? battles.reduce((sum, b) => sum + b.durationSeconds, 0) / battles.length 
       : 0;
 
-    // Count kill outcomes (where loser has 0 HP)
-    const killCount = battles.filter(b => 
-      (b.winnerId && (b.robot1FinalHP === 0 || b.robot2FinalHP === 0))
-    ).length;
+    // Count kill outcomes (where loser has 0 HP - not including draws)
+    const killCount = battles.filter(b => {
+      if (!b.winnerId) return false; // Not a draw
+      // Check if the loser has 0 HP
+      const loserHP = b.winnerId === b.robot1Id ? b.robot2FinalHP : b.robot1FinalHP;
+      return loserHP === 0;
+    }).length;
 
     // Financial statistics
     const users = await prisma.user.findMany({
@@ -518,8 +526,8 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     const totalCredits = users.reduce((sum, u) => sum + u.currency, 0);
     const avgBalance = users.length > 0 ? totalCredits / users.length : 0;
     
-    // Users at risk of bankruptcy (balance < 10000 - rough estimate for daily costs)
-    const bankruptcyRisk = users.filter(u => u.currency < 10000).length;
+    // Users at risk of bankruptcy (using configured threshold)
+    const bankruptcyRisk = users.filter(u => u.currency < BANKRUPTCY_RISK_THRESHOLD).length;
 
     // Facility statistics
     const facilityStats: Record<string, { count: number; totalLevel: number }> = {};
