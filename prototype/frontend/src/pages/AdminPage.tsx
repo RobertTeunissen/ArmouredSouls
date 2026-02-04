@@ -522,8 +522,11 @@ function AdminPage() {
       const response = await axios.get('/api/admin/stats/robots');
       setRobotStats(response.data);
       setShowRobotStats(true);
+      sessionStorage.setItem('adminRobotStatsLoaded', 'true');
+      addSessionLog('success', 'Robot statistics loaded successfully');
       showMessage('success', 'Robot statistics loaded successfully');
     } catch (error: any) {
+      addSessionLog('error', 'Failed to fetch robot statistics', error.response?.data);
       showMessage('error', error.response?.data?.error || 'Failed to fetch robot statistics');
     } finally {
       setRobotStatsLoading(false);
@@ -535,6 +538,17 @@ function AdminPage() {
     fetchStats(); // Load system statistics by default
     fetchBattles(1);
   }, []);
+
+  // Auto-load robot stats when Stats tab is first viewed
+  useEffect(() => {
+    if (activeTab === 'stats' && !showRobotStats && !robotStatsLoading) {
+      const hasLoadedBefore = sessionStorage.getItem('adminRobotStatsLoaded');
+      if (!hasLoadedBefore) {
+        // Auto-load on first view
+        fetchRobotStats();
+      }
+    }
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -655,21 +669,34 @@ function AdminPage() {
 
                   {/* Battles Section - Enhanced */}
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 text-purple-400">Battles</h3>
+                    <h3 className="text-xl font-semibold mb-2 text-purple-400 flex items-center gap-2">
+                      Battles
+                      <span className="text-xs text-gray-400 font-normal" title="Battle statistics including outcomes and durations">ℹ️</span>
+                    </h3>
                     <p>Last 24 Hours: {stats.battles.last24Hours}</p>
                     <p>Total: {stats.battles.total}</p>
-                    <p className="mt-2 text-sm">Draws: {stats.battles.draws} ({stats.battles.drawPercentage}%)</p>
-                    <p className="text-sm">Kills: {stats.battles.kills} ({stats.battles.killPercentage}%)</p>
+                    <p className="mt-2 text-sm" title="Battles ending with no clear winner">
+                      Draws: {stats.battles.draws} ({stats.battles.drawPercentage}%)
+                    </p>
+                    <p className="text-sm" title="Battles where the loser was reduced to 0 HP">
+                      Kills: {stats.battles.kills} ({stats.battles.killPercentage}%)
+                    </p>
                     <p className="text-sm text-gray-400 mt-1">Avg Duration: {stats.battles.avgDuration}s</p>
                   </div>
 
                   {/* Financial Section - New */}
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 text-yellow-400">Finances</h3>
+                    <h3 className="text-xl font-semibold mb-2 text-yellow-400 flex items-center gap-2">
+                      Finances
+                      <span className="text-xs text-gray-400 font-normal" title="Total credits in system and user balance statistics">ℹ️</span>
+                    </h3>
                     <p>Total Credits: ₡{stats.finances.totalCredits.toLocaleString()}</p>
                     <p>Avg Balance: ₡{stats.finances.avgBalance.toLocaleString()}</p>
                     <p>Total Users: {stats.finances.totalUsers}</p>
-                    <p className={`mt-2 text-sm ${stats.finances.usersAtRisk > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                    <p 
+                      className={`mt-2 text-sm ${stats.finances.usersAtRisk > 0 ? 'text-red-400' : 'text-green-400'}`}
+                      title={`Users with balance below ₡10,000 (estimated 3 days of operating costs)`}
+                    >
                       {stats.finances.usersAtRisk > 0 ? '⚠️ ' : '✓ '}
                       At Risk: {stats.finances.usersAtRisk}
                     </p>
@@ -679,7 +706,10 @@ function AdminPage() {
                 {/* Facilities Section - New (Full Width) */}
                 {stats.facilities.summary.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-gray-700">
-                    <h3 className="text-xl font-semibold mb-3 text-cyan-400">Facilities</h3>
+                    <h3 className="text-xl font-semibold mb-3 text-cyan-400 flex items-center gap-2">
+                      Facilities
+                      <span className="text-xs text-gray-400 font-normal" title="Facility purchases across all users (e.g., training centers, workshops)">ℹ️</span>
+                    </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
                       <div className="bg-gray-700 p-3 rounded">
                         <p className="text-gray-400">Total Purchases</p>
@@ -1336,7 +1366,15 @@ function AdminPage() {
                         <tbody>
                           {robotStats.outliers[selectedAttribute].map((outlier, idx) => (
                             <tr key={idx} className="border-t border-gray-600">
-                              <td className="p-2">{outlier.name}</td>
+                              <td className="p-2">
+                                <Link 
+                                  to={`/robots/${outlier.id}`}
+                                  className="text-blue-400 hover:underline"
+                                  aria-label={`View robot details for ${outlier.name}`}
+                                >
+                                  {outlier.name}
+                                </Link>
+                              </td>
                               <td className="p-2 font-bold text-yellow-400">{outlier.value}</td>
                               <td className="p-2">
                                 <span className="px-2 py-1 bg-gray-800 rounded text-xs">{outlier.league}</span>
@@ -1436,7 +1474,13 @@ function AdminPage() {
                       {robotStats.topPerformers[selectedAttribute].map((robot: any, idx: number) => (
                         <div key={idx} className="bg-gray-800 rounded p-3 flex justify-between items-center">
                           <div>
-                            <span className="font-bold text-lg">#{idx + 1} {robot.name}</span>
+                            <Link 
+                              to={`/robots/${robot.id}`}
+                              className="font-bold text-lg text-green-400 hover:underline"
+                              aria-label={`View robot details for ${robot.name}`}
+                            >
+                              #{idx + 1} {robot.name}
+                            </Link>
                             <p className="text-sm text-gray-400">
                               {robot.league} | ELO: {robot.elo} | Win Rate: {robot.winRate}%
                             </p>
@@ -1458,7 +1502,13 @@ function AdminPage() {
                       {robotStats.bottomPerformers[selectedAttribute].map((robot: any, idx: number) => (
                         <div key={idx} className="bg-gray-800 rounded p-3 flex justify-between items-center">
                           <div>
-                            <span className="font-bold">{robot.name}</span>
+                            <Link 
+                              to={`/robots/${robot.id}`}
+                              className="font-bold text-red-400 hover:underline"
+                              aria-label={`View robot details for ${robot.name}`}
+                            >
+                              {robot.name}
+                            </Link>
                             <p className="text-sm text-gray-400">
                               {robot.league} | ELO: {robot.elo} | Win Rate: {robot.winRate}%
                             </p>
