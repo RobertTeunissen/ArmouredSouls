@@ -3,6 +3,7 @@ import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { executeScheduledBattles } from '../services/battleOrchestrator';
 import { runMatchmaking } from '../services/matchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';
+import { processAllDailyFinances } from '../utils/economyCalculations';
 import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
@@ -255,16 +256,44 @@ router.post('/recalculate-hp', authenticateToken, requireAdmin, async (req: Requ
 });
 
 /**
+ * POST /api/admin/daily-finances/process
+ * Process daily financial obligations (operating costs) for all users
+ */
+router.post('/daily-finances/process', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    console.log('[Admin] Processing daily finances for all users...');
+    
+    const summary = await processAllDailyFinances();
+    
+    console.log(`[Admin] Processed ${summary.usersProcessed} users, ` +
+      `deducted ₡${summary.totalCostsDeducted.toLocaleString()}, ` +
+      `${summary.bankruptUsers} bankruptcies`);
+    
+    res.json({
+      success: true,
+      summary,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Admin] Daily finances error:', error);
+    res.status(500).json({
+      error: 'Failed to process daily finances',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
  * POST /api/admin/cycles/bulk
  * Run multiple complete cycles (matchmaking → battles → rebalancing)
  */
 router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { cycles = 1, autoRepair = false } = req.body;
+    const { cycles = 1, autoRepair = false, includeDailyFinances = true } = req.body;
     const maxCycles = 100;
     const cycleCount = Math.min(Math.max(1, cycles), maxCycles);
 
-    console.log(`[Admin] Running ${cycleCount} bulk cycles (autoRepair: ${autoRepair})...`);
+    console.log(`[Admin] Running ${cycleCount} bulk cycles (autoRepair: ${autoRepair}, includeDailyFinances: ${includeDailyFinances})...`);
 
     const cycleResults = [];
     const startTime = Date.now();
@@ -305,7 +334,13 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // Step 3: Execute battles
         const battleSummary = await executeScheduledBattles(new Date());
 
-        // Step 4: Rebalance leagues (every 5 cycles or last cycle)
+        // Step 4: Process daily finances (if enabled)
+        let financeSummary = null;
+        if (includeDailyFinances) {
+          financeSummary = await processAllDailyFinances();
+        }
+
+        // Step 5: Rebalance leagues (every 5 cycles or last cycle)
         let rebalancingSummary = null;
         if (i % 5 === 0 || i === cycleCount) {
           rebalancingSummary = await rebalanceLeagues();
@@ -316,6 +351,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           repair: repairSummary,
           matchmaking: matchmakingSummary,
           battles: battleSummary,
+          finances: financeSummary,
           rebalancing: rebalancingSummary,
           duration: Date.now() - cycleStart,
         });
@@ -335,6 +371,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       success: true,
       cyclesCompleted: cycleCount,
       autoRepairEnabled: autoRepair,
+      includeDailyFinances,
       totalDuration,
       averageCycleDuration: Math.round(totalDuration / cycleCount),
       results: cycleResults,
@@ -668,6 +705,10 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
       loserReward: battle.loserReward,
       robot1RepairCost: battle.robot1RepairCost,
       robot2RepairCost: battle.robot2RepairCost,
+      robot1PrestigeAwarded: battle.robot1PrestigeAwarded,
+      robot2PrestigeAwarded: battle.robot2PrestigeAwarded,
+      robot1FameAwarded: battle.robot1FameAwarded,
+      robot2FameAwarded: battle.robot2FameAwarded,
       
       // Combat log with detailed events
       battleLog: battle.battleLog,

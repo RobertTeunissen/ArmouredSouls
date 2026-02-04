@@ -257,6 +257,12 @@ model Battle {
   loserReward      Int? @map("loser_reward") // Credits awarded to loser (can earn on loss)
   robot1RepairCost Int? @map("robot1_repair_cost") // Repair cost for robot 1
   robot2RepairCost Int? @map("robot2_repair_cost") // Repair cost for robot 2
+  
+  // Battle rewards tracking
+  robot1PrestigeAwarded Int @default(0) @map("robot1_prestige_awarded") // Prestige awarded to robot 1's user
+  robot2PrestigeAwarded Int @default(0) @map("robot2_prestige_awarded") // Prestige awarded to robot 2's user
+  robot1FameAwarded     Int @default(0) @map("robot1_fame_awarded") // Fame awarded to robot 1
+  robot2FameAwarded     Int @default(0) @map("robot2_fame_awarded") // Fame awarded to robot 2
 
   // ===== FINAL STATE =====
   robot1FinalHP     Int     @map("robot1_final_hp") // Ending HP

@@ -1,6 +1,12 @@
 import { PrismaClient, Robot, ScheduledMatch, Battle } from '@prisma/client';
 import { CombatMessageGenerator } from './combatMessageGenerator';
 import { simulateBattle } from './combatSimulator';
+import {
+  getLeagueBaseReward,
+  getParticipationReward,
+  calculateBattleWinnings,
+  getPrestigeMultiplier,
+} from '../utils/economyCalculations';
 
 const prisma = new PrismaClient();
 
@@ -11,11 +17,6 @@ const ELO_K_FACTOR = 32;
 const LEAGUE_POINTS_WIN = 3;
 const LEAGUE_POINTS_LOSS = -1;
 const LEAGUE_POINTS_DRAW = 1;
-
-// Reward calculations (in credits)
-const BASE_REWARD_WIN = 1000;
-const BASE_REWARD_LOSS = 300;
-const BASE_REWARD_DRAW = 500;
 
 // Battle simulation constants
 const WINNER_DAMAGE_PERCENT = 0.15; // Winners lose 15% HP
@@ -234,9 +235,34 @@ async function createBattleRecord(
   
   const eloChange = Math.abs(eloChanges.winnerChange);
   
-  // Calculate rewards
-  const robot1Reward = isRobot1Winner ? BASE_REWARD_WIN : BASE_REWARD_LOSS;
-  const robot2Reward = isRobot1Winner ? BASE_REWARD_LOSS : BASE_REWARD_WIN;
+  // Calculate rewards based on league tier and prestige
+  const leagueRewards = getLeagueBaseReward(scheduledMatch.leagueType);
+  const participationReward = getParticipationReward(scheduledMatch.leagueType);
+  
+  // Get users for prestige multiplier
+  const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId } });
+  const robot2User = await prisma.user.findUnique({ where: { id: robot2.userId } });
+  
+  // Winner gets midpoint of league range + participation reward, with prestige bonus
+  // Loser gets only participation reward
+  let robot1Reward = participationReward;
+  let robot2Reward = participationReward;
+  
+  if (!result.isDraw && !result.isByeMatch) {
+    if (isRobot1Winner && robot1User) {
+      const baseWinReward = leagueRewards.midpoint;
+      const winRewardWithPrestige = calculateBattleWinnings(baseWinReward, robot1User.prestige);
+      robot1Reward = winRewardWithPrestige + participationReward;
+    } else if (!isRobot1Winner && robot2User) {
+      const baseWinReward = leagueRewards.midpoint;
+      const winRewardWithPrestige = calculateBattleWinnings(baseWinReward, robot2User.prestige);
+      robot2Reward = winRewardWithPrestige + participationReward;
+    }
+  } else if (result.isDraw) {
+    // Draw: both get participation reward only (no win reward)
+    robot1Reward = participationReward;
+    robot2Reward = participationReward;
+  }
   
   // Generate battle log with combat messages
   const battleLog = CombatMessageGenerator.generateBattleLog({
@@ -256,6 +282,74 @@ async function createBattleRecord(
     leagueType: scheduledMatch.leagueType,
     durationSeconds: result.durationSeconds,
   });
+  
+  // Add financial reward details to battle log
+  const winnerPrestige = isRobot1Winner ? robot1User?.prestige || 0 : robot2User?.prestige || 0;
+  const winnerReward = isRobot1Winner ? robot1Reward : robot2Reward;
+  const loserReward = isRobot1Winner ? robot2Reward : robot1Reward;
+  const prestigeMultiplier = getPrestigeMultiplier(winnerPrestige);
+  
+  // Add reward summary to battle log
+  if (!result.isDraw && !result.isByeMatch) {
+    const baseWinReward = leagueRewards.midpoint;
+    const prestigeBonus = winnerReward - participationReward - baseWinReward;
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_summary',
+      message: `💰 Financial Rewards Summary`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_detail',
+      message: `   Winner (${isRobot1Winner ? robot1.name : robot2.name}): ₡${winnerReward.toLocaleString()}`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_breakdown',
+      message: `      • League Base (${scheduledMatch.leagueType}): ₡${baseWinReward.toLocaleString()} (range: ₡${leagueRewards.min.toLocaleString()}-₡${leagueRewards.max.toLocaleString()})`,
+    });
+    
+    if (prestigeBonus > 0) {
+      battleLog.push({
+        timestamp: result.durationSeconds,
+        type: 'reward_breakdown',
+        message: `      • Prestige Bonus (${Math.round((prestigeMultiplier - 1) * 100)}%): +₡${prestigeBonus.toLocaleString()}`,
+      });
+    }
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_breakdown',
+      message: `      • Participation: ₡${participationReward.toLocaleString()}`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_detail',
+      message: `   Loser (${isRobot1Winner ? robot2.name : robot1.name}): ₡${loserReward.toLocaleString()}`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_breakdown',
+      message: `      • Participation: ₡${participationReward.toLocaleString()}`,
+    });
+  } else if (result.isDraw) {
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_summary',
+      message: `💰 Financial Rewards Summary (Draw)`,
+    });
+    
+    battleLog.push({
+      timestamp: result.durationSeconds,
+      type: 'reward_detail',
+      message: `   Both robots: ₡${participationReward.toLocaleString()} (participation only)`,
+    });
+  }
   
   // Create battle record
   const battle = await prisma.battle.create({
@@ -376,18 +470,20 @@ async function updateRobotStats(
     console.log(`[Battle] Fame: +${fameAwarded} → ${robot.name} (${hpPercent}% HP remaining, tier: ${fameTier})`);
   }
   
-  // Award credits to user
+  // Award credits to user based on battle outcome
+  // Winner gets winnerReward, loser gets loserReward (both include participation)
   const reward = isRobot1 
-    ? (isWinner ? battle.winnerReward : battle.loserReward)
-    : (isWinner ? battle.winnerReward : battle.loserReward);
+    ? (battle.winnerId === battle.robot1Id ? battle.winnerReward : battle.loserReward)
+    : (battle.winnerId === battle.robot2Id ? battle.winnerReward : battle.loserReward);
   
-  if (reward) {
+  if (reward > 0) {
     await prisma.user.update({
       where: { id: robot.userId },
       data: {
         currency: { increment: reward }
       },
     });
+    console.log(`[Battle] Credits: +₡${reward.toLocaleString()} → user ${robot.userId} (${isWinner ? 'winner' : 'loser'})`);
   }
   
   return { prestigeAwarded, fameAwarded };
@@ -458,6 +554,17 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
   
   const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
   const totalFame = stats1.fameAwarded + stats2.fameAwarded;
+  
+  // Update battle record with prestige/fame awards for display purposes
+  await prisma.battle.update({
+    where: { id: battle.id },
+    data: {
+      robot1PrestigeAwarded: stats1.prestigeAwarded,
+      robot2PrestigeAwarded: stats2.prestigeAwarded,
+      robot1FameAwarded: stats1.fameAwarded,
+      robot2FameAwarded: stats2.fameAwarded,
+    },
+  });
   
   // Update scheduled match
   await prisma.scheduledMatch.update({

@@ -15,6 +15,7 @@ import LeagueStandingsPage from './pages/LeagueStandingsPage';
 import AdminPage from './pages/AdminPage';
 import LeaderboardsFamePage from './pages/LeaderboardsFamePage';
 import LeaderboardsPrestigePage from './pages/LeaderboardsPrestigePage';
+import FinancialReportPage from './pages/FinancialReportPage';
 
 function App() {
   return (
@@ -123,6 +124,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <LeaderboardsPrestigePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finances"
+            element={
+              <ProtectedRoute>
+                <FinancialReportPage />
               </ProtectedRoute>
             }
           />
