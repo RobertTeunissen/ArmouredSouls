@@ -1,7 +1,7 @@
 # Product Requirements Document: Weapon Shop Design
 
 **Last Updated**: February 4, 2026  
-**Status**: Implementation In Progress  
+**Status**: Implemented
 **Owner**: Robert Teunissen  
 **Epic**: Weapon Shop & Inventory System  
 **Priority**: P1 (High Priority - Core Gameplay Feature)
@@ -16,6 +16,7 @@
 - v1.6 (Feb 4, 2026): Added collapsible filters, owned indicator, detail modal, table improvements. Updated Critical Features Status. Added Chapter 7 (Weapon Card View Modes). Added Appendix B (Weapon Images Documentation).
 - v1.7 (Feb 4, 2026): Documented collapsible filter panel, owned weapons indicator in table view, styled ConfirmationModal component, and attributes column sorting. Updated Technical Implementation section with new components.
 - v1.8 (Feb 4, 2026): Added "Only Owned Weapons" quick filter, replacing need for separate Weapon Inventory page. Fixed filter bugs.
+- v1.9 (Feb 4, 2026): Manual review done to reflect what's currently working and what are considered future improvements.
 
 > **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from the current 23 weapons to hundreds of weapons in future phases. It establishes patterns for discovery, comparison, filtering, and purchasing that maintain usability at any catalog size.
 
@@ -80,10 +81,6 @@ This PRD defines the comprehensive design requirements for the Weapon Shop page 
 #### 🚧 **Partially Implemented**
 
 **Current UI Limitations:**
-- ⚠️ **Basic grid layout**: Works for 23 weapons but will not scale to 100+ weapons
-- ⚠️ **No filtering system**: Cannot filter by loadout type, weapon type, price range, or attribute focus
-- ⚠️ **No sorting options**: Cannot sort by cost, damage, DPS, or attribute totals
-- ⚠️ **Limited comparison**: Side-by-side comparison not available
 - ⚠️ **Basic search**: No text search for weapon names or descriptions
 - ⚠️ **Static display**: All weapons always visible (no pagination or infinite scroll)
 
@@ -117,7 +114,6 @@ This PRD defines the comprehensive design requirements for the Weapon Shop page 
 - ✅ **Card view**: Visual, detailed weapon cards with images (IMPLEMENTED)
 - ✅ **Table view**: Compact, scannable table layout with sortable columns including cooldown (IMPLEMENTED)
 - ✅ **Weapon detail modal**: Click weapon name/image to open full detail modal (IMPLEMENTED)
-- ❌ **Compact/Detailed view toggle**: Switch between compact and detailed card sizes (card view only)
 - ❌ **Attribute visualization**: Bar charts or radial charts for attribute distributions
 - ✅ **DPS calculation display**: Show calculated DPS in table and detail views (IMPLEMENTED)
 - ✅ **Loadout compatibility**: Displayed on all weapon cards and detail modal (IMPLEMENTED)
@@ -272,6 +268,7 @@ Acceptance Criteria:
 ```
 
 **US-5: Search Weapons by Name**
+**❌ Not yet implemented**
 ```
 As a player
 I want to search for weapons by name
@@ -443,6 +440,7 @@ Acceptance Criteria:
 ```
 
 **US-15: Mobile-Optimized Browsing**
+**🚧 Not tested yet, only web browsing confirmed**
 ```
 As a player on mobile
 I want to browse weapons comfortably on small screens
@@ -458,6 +456,8 @@ Acceptance Criteria:
 ```
 
 **US-16: Performant Large Catalog**
+**🚧 Not tested yet, system to create additional / custom weapons not currently in place**
+
 ```
 As a player browsing 100+ weapons
 I want the page to remain responsive
@@ -820,6 +820,7 @@ Acceptance Criteria:
 #### 7.1 Card Layout - Compact View
 
 **Use Case**: Default browsing mode for large catalogs.
+**Status: 🚧 Not completely implemented as described below**
 
 **Layout (256×300px card):**
 ```
@@ -860,8 +861,11 @@ Acceptance Criteria:
 #### 7.2 Card Layout - Detailed View
 
 **Use Case**: Expanded view when user wants more information without opening modal.
+**Status: 🚧 Not completely implemented as described below**
+
 
 **Layout (400×600px card):**
+
 ```
 ┌─────────────────────────────────────┐
 │     [Weapon Illustration]           │ Larger image
@@ -901,6 +905,7 @@ Acceptance Criteria:
 #### 7.3 Weapon Detail Modal
 
 **Use Case**: Full information sheet when user clicks "Info" or weapon name.
+**Status: 🚧 Not completely implemented as described below**
 
 **Layout (Modal, 800×900px):**
 ```
@@ -1607,7 +1612,7 @@ The existing Prisma schema fully supports all PRD requirements:
 
 ## Implementation Roadmap
 
-### Phase 1: Enhanced Filtering & Sorting (P0 - Weeks 1-2) - COMPLETE ✅
+### Phase 1: Enhanced Filtering & Sorting - COMPLETE ✅
 
 **Goal**: Support browsing 100+ weapons efficiently through filtering and sorting.
 
@@ -1642,7 +1647,7 @@ The existing Prisma schema fully supports all PRD requirements:
 - ✅ Active filters are clearly visible and removable
 - ✅ Mobile filter panel usable on small screens (basic responsiveness)
 
-### Phase 2: Comparison & Analysis (P1 - Weeks 3-4) - COMPLETE ✅
+### Phase 2: Comparison & Analysis - COMPLETE ✅
 
 **Goal**: Enable informed purchasing decisions.
 
@@ -1670,7 +1675,7 @@ The existing Prisma schema fully supports all PRD requirements:
 - Comparison view shows clear value differences ✅
 - Detail modal provides complete weapon information ⏸️ (deferred)
 
-### Phase 3: Search & Discovery (P1 - Weeks 5-6) - CORE FEATURES COMPLETE ✅
+### Phase 3: Search & Discovery - COMPLETE ✅
 
 **Goal**: Improve weapon discovery and recommendations.
 
@@ -1701,7 +1706,7 @@ The existing Prisma schema fully supports all PRD requirements:
 - ✅ Search integrates with filters seamlessly
 - ⏳ >50% of users use text search (pending user testing)
 
-### Phase 4: Visual Polish & Illustrations (P2 - Weeks 7-9) - IN PROGRESS
+### Phase 4: Visual Polish & Illustrations - COMPLETE ✅
 
 **Goal**: Align with design system, enhance visual appeal, and add view mode toggle.
 
@@ -1711,12 +1716,12 @@ The existing Prisma schema fully supports all PRD requirements:
   - ✅ WeaponTable component with 8 sortable columns
   - ✅ localStorage persistence for view preference
   - ⏳ URL parameter integration (deferred)
-- ⏳ **IN PROGRESS** Table view layout with sortable columns
+- ✅ Table view layout with sortable columns
   - ✅ Sortable columns (Name, Type, Loadout, Damage, DPS, Cost, Attributes, Action)
   - ✅ Click column headers to sort
   - ✅ Visual sort indicators
   - ✅ Weapon type icons in table
-- Weapon illustrations (256×256px, all 23 weapons)
+- ⏳ Weapon illustrations (256×256px, all 23 weapons)
 - ✅ Weapon type icons (32×32px: Melee, Ballistic, Energy, Shield)
   - ✅ `/icons/weapon-types/melee.svg`
   - ✅ `/icons/weapon-types/ballistic.svg`
@@ -1725,13 +1730,10 @@ The existing Prisma schema fully supports all PRD requirements:
 - ✅ View mode icons (32×32px: Grid, List)
   - ✅ `/icons/view-modes/grid.svg`
   - ✅ `/icons/view-modes/list.svg`
-- Enhanced weapon card design (refined layout, hover states)
-- Empty state illustrations and messaging
+- ⏳ Enhanced weapon card design (refined layout, hover states)
+- ⏳ Empty state illustrations and messaging
 
 **Implementation Notes:**
-- **Completed**: Core view toggle functionality with card and table views
-- **Completed**: Table view with full sorting capability
-- **Completed**: All icon assets created
 - **Remaining**: Weapon illustrations, enhanced card design, empty states
 
 **Success Criteria:**
@@ -1743,7 +1745,7 @@ The existing Prisma schema fully supports all PRD requirements:
 - Visual design matches design system color palette (mostly complete)
 - User feedback on aesthetics is positive (pending user testing)
 
-### Phase 5: Performance & Scalability (P2 - Weeks 10-11)
+### Phase 5: Performance & Scalability (P2)
 
 **Goal**: Optimize for 500+ weapon catalog.
 
@@ -1759,7 +1761,7 @@ The existing Prisma schema fully supports all PRD requirements:
 - Smooth scrolling at 60 FPS
 - No UI freezing during filtering
 
-### Phase 6: Educational Features (P3 - Future)
+### Phase 6: Educational Features (P3)
 
 **Goal**: Help new players understand weapon mechanics.
 
@@ -1874,13 +1876,9 @@ The existing Prisma schema fully supports all PRD requirements:
 ### B. Weapon Images Documentation
 
 **Image Location**: `/prototype/frontend/src/assets/weapons/`
-
 **Image Format**: SVG (256×256px viewBox), scalable vector graphics
-
 **Naming Convention**: Weapon name in lowercase with hyphens (e.g., `practice-sword.svg`)
-
 **Current Implementation Status**: ✅ All 23 weapon placeholder images created
-
 **Image List** (with usage locations):
 
 **Melee Weapons** (Red/Gray theme):
@@ -1983,21 +1981,3 @@ The existing Prisma schema fully supports all PRD requirements:
 **Icon Set** (32×32px):
 - Weapon Type: Melee (crossed swords), Ballistic (bullet), Energy (lightning), Shield (shield icon)
 - Loadout Type: Single (1 sword), Dual-Wield (2 swords), Two-Handed (large sword), Weapon+Shield (sword+shield)
-
----
-
-## Changelog
-
-**v1.0** (February 4, 2026): Initial PRD created
-- Comprehensive design for Weapon Shop page
-- Scalability requirements for 100+ weapons
-- Filtering, sorting, comparison, and search systems
-- Implementation roadmap (6 phases)
-- Success metrics and KPIs defined
-
----
-
-**Document Status**: ✅ Ready for Review  
-**Next Steps**: Review with product team, gather feedback, begin Phase 1 implementation  
-**Owner**: Robert Teunissen  
-**Last Updated**: February 4, 2026
