@@ -146,7 +146,7 @@ function RobotsPage() {
   const [error, setError] = useState('');
   const [repairBayLevel, setRepairBayLevel] = useState(0);
   const [rosterLevel, setRosterLevel] = useState(0);
-  const { logout } = useAuth();
+  const { logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -315,8 +315,8 @@ function RobotsPage() {
       // Show success message
       alert(data.message);
       
-      // Refresh robots list to show updated status
-      await fetchRobots();
+      // Refresh robots list to show updated status and user credits
+      await Promise.all([fetchRobots(), refreshUser()]);
     } catch (err) {
       console.error('Repair all error:', err);
       alert('Failed to repair robots. Please try again.');
