@@ -48,6 +48,18 @@ interface SystemStats {
     totalPurchases: number;
     mostPopular: string;
   };
+  weapons: {
+    totalBought: number;
+    equipped: number;
+  };
+  stances: Array<{
+    stance: string;
+    count: number;
+  }>;
+  loadouts: Array<{
+    type: string;
+    count: number;
+  }>;
 }
 
 interface Battle {
@@ -646,7 +658,7 @@ function AdminPage() {
             {/* Statistics Display */}
             {stats && (
               <div className="bg-gray-800 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
                   {/* Robots Section */}
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-blue-400">Robots</h3>
@@ -727,6 +739,55 @@ function AdminPage() {
                       </>
                     ) : (
                       <p className="text-sm text-gray-400">No facilities purchased yet</p>
+                    )}
+                  </div>
+
+                  {/* Weapons Section */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2 text-orange-400 flex items-center gap-2">
+                      Weapons
+                      <span className="text-xs text-gray-400 font-normal" title="Weapon purchases and equipment">ℹ️</span>
+                    </h3>
+                    <p>Total Bought: {stats.weapons.totalBought}</p>
+                    <p>Equipped: {stats.weapons.equipped}</p>
+                    <p className="text-sm text-gray-400 mt-2">
+                      {stats.weapons.totalBought > 0 
+                        ? `${Math.round((stats.weapons.equipped / stats.weapons.totalBought) * 100)}% equipped`
+                        : 'No weapons yet'}
+                    </p>
+                  </div>
+
+                  {/* Stances Section */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2 text-pink-400 flex items-center gap-2">
+                      Stances
+                      <span className="text-xs text-gray-400 font-normal" title="Combat stances used by robots">ℹ️</span>
+                    </h3>
+                    {stats.stances.length > 0 ? (
+                      stats.stances.map((s) => (
+                        <p key={s.stance} className="text-sm">
+                          {s.stance.charAt(0).toUpperCase() + s.stance.slice(1)}: {s.count}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-400">No data</p>
+                    )}
+                  </div>
+
+                  {/* Loadouts Section */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2 text-teal-400 flex items-center gap-2">
+                      Loadouts
+                      <span className="text-xs text-gray-400 font-normal" title="Equipment configurations">ℹ️</span>
+                    </h3>
+                    {stats.loadouts.length > 0 ? (
+                      stats.loadouts.map((l) => (
+                        <p key={l.type} className="text-sm">
+                          {l.type.replace(/_/g, ' ')}: {l.count}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-400">No data</p>
                     )}
                   </div>
                 </div>

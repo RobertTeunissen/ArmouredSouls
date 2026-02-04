@@ -586,6 +586,9 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
         totalPurchases: facilitySummary.reduce((sum, f) => sum + f.purchaseCount, 0),
         mostPopular: facilitySummary[0]?.type || 'None',
       },
+      weapons: await getWeaponStats(),
+      stances: await getStanceStats(),
+      loadouts: await getLoadoutStats(),
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -596,6 +599,54 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     });
   }
 });
+
+// Helper function to get weapon statistics
+async function getWeaponStats() {
+  const totalWeapons = await prisma.weapon.count();
+  const equippedWeapons = await prisma.robot.count({
+    where: {
+      NOT: { name: 'Bye Robot' },
+      mainWeaponId: { not: null },
+    },
+  });
+  
+  return {
+    totalBought: totalWeapons,
+    equipped: equippedWeapons,
+  };
+}
+
+// Helper function to get stance statistics
+async function getStanceStats() {
+  const stances = await prisma.robot.groupBy({
+    by: ['stance'],
+    where: {
+      NOT: { name: 'Bye Robot' },
+    },
+    _count: { id: true },
+  });
+  
+  return stances.map(s => ({
+    stance: s.stance,
+    count: s._count.id,
+  }));
+}
+
+// Helper function to get loadout statistics
+async function getLoadoutStats() {
+  const loadouts = await prisma.robot.groupBy({
+    by: ['loadoutType'],
+    where: {
+      NOT: { name: 'Bye Robot' },
+    },
+    _count: { id: true },
+  });
+  
+  return loadouts.map(l => ({
+    type: l.loadoutType,
+    count: l._count.id,
+  }));
+}
 
 /**
  * GET /api/admin/battles
