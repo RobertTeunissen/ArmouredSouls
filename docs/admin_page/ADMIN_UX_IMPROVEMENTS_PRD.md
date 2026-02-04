@@ -2,10 +2,16 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.0  
+**Version**: 1.1  
 **Date**: February 4, 2026  
 **Author**: GitHub Copilot  
-**Status**: Draft for Review
+**Status**: Reviewed by Robert with lost of comments
+
+---
+
+## Version History
+- v1.0 - Draft by GitHub Copilot
+- v1.1 - Review by Robert Teunissen
 
 ---
 
@@ -61,6 +67,10 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - **Impact**: Tedious for testing; easy to forget a step
 - **Current Workaround**: Bulk cycle feature exists but is less discoverable
 
+--> Both "modes" serve different purposes. Works fine but is taking up too much space on the page.
+--> You are forgetting the daily finance cycle
+--> How does the daily cycle work when we're integrating tournaments or 2v2? Prepare for this so that things do not break. 
+
 #### 3. **No Visual Feedback During Long Operations**
 - **Issue**: When running matchmaking or battles, only button text changes to "Loading..."
 - **Impact**: Unclear what's happening, how long it will take, or if it's stuck
@@ -74,36 +84,60 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
   - Battle duration
   - ELO change magnitude
   - Specific battle ID
+ 
+--> Not an issue. Not needed.
 
 #### 5. **Battle Table Information Overload**
 - **Issue**: Every row shows 8 columns with nested information (names, HP, ELO changes)
 - **Impact**: Hard to scan quickly; important info buried in details
 - **Missing**: Visual indicators for anomalies (unusually long battles, huge ELO swings, draws)
 
+--> This is fine, but overall statistics are missing (should be added to system statistics). 
+--> System Statistics are not shown by default and this is a critical piece of information.
+
 #### 6. **No Keyboard Shortcuts**
 - **Issue**: All actions require mouse clicks
 - **Impact**: Slower workflow for power users
 - **Missing**: Common actions like refresh (F5), search (Ctrl+F), run cycle (Ctrl+R)
+
+--> Not a problem.
 
 #### 7. **Robot Statistics Not Prominent Enough**
 - **Issue**: Robot stats are hidden behind a "Load Robot Statistics" button
 - **Impact**: Developers may not know this powerful debugging tool exists
 - **Missing**: Persistent visibility or quick-access shortcut
 
+--> Yes, this is important. And more statistics should be visible:
+Deepdives for battles, e.g. % ending in a draw and reasons for this, amount of kills and possible deep dives why.
+How many users bought a specific facility. 
+An extensive financial section, including the amount of managers/users that are going or presently bankrupt.   
+
 #### 8. **No Action History/Audit Log**
 - **Issue**: After running multiple operations, no record of what was done when
 - **Impact**: Hard to reproduce test scenarios or debug issues
 - **Missing**: Session log showing "Ran matchmaking at 14:32, created 45 matches"
+
+Yes! Including everything that happened during the cycle! Rebalancing, opening of bronze_4, daily finances processed and results! Come up with more usefull things.
 
 #### 9. **Bulk Cycle Results Not Persistent**
 - **Issue**: Bulk cycle results disappear if you refresh or navigate away
 - **Impact**: Can't reference results while debugging battles
 - **Missing**: Persistent display or download option
 
+--> Not really needed, but there is a bug: after completing the cycle(s), the page turns blank. This is fixed by a refresh and only a UI glitch. Data and/or processing not affected.
+
 #### 10. **No Quick Links to Related Pages**
 - **Issue**: To view a specific robot mentioned in a battle, must manually navigate to `/robots` and search
 - **Impact**: Breaks debugging flow
 - **Missing**: Click-through links from robot names to robot detail pages
+
+--> Ability to click on the robot in the Battle Logs would be nice.
+--> Why is there a 
+
+GET /api/admin/battles - Battle logs (paginated)
+GET /api/admin/battles/:id - Battle details
+
+Is there a difference between "admin battles" and "battles"? How does this work? Where is this documented?
 
 ---
 
@@ -114,6 +148,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 1. **Developers** - Testing game mechanics, verifying code changes
 2. **Game Designers** - Balancing attributes, analyzing win rates
 3. **QA Testers** - Reproducing bugs, validating fixes
+
+--> All the same person. Me myself and I. You know this. Stop.
 
 ### Common Workflows
 
@@ -130,6 +166,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 
 **Pain Points**: Too many clicks, no visibility into what happened during each step
 
+--> You are forgetting daily finances. But this is not a problem since we have workaround. See above, you're duplicating information.
+
 #### Workflow 2: Debugging a Specific Battle
 **Frequency**: Several times per day  
 **Steps**:
@@ -141,6 +179,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 6. Read combat log to understand what happened
 
 **Pain Points**: Search is slow (can't filter by date), battle table doesn't show enough context
+
+--> Not really an issue. We have no users yet. You should know this.
 
 #### Workflow 3: Analyzing Robot Balance
 **Frequency**: Weekly during balance passes  
@@ -154,6 +194,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 7. Search for each robot individually to inspect
 
 **Pain Points**: Statistics not immediately visible, no direct links to robot details
+
+--> Create different tabs on /admin? There are different purposes. One is your workflow (trigger cycles or parts of cycles), we can analyse robot attributes and access battle logs. Oh and I almost forgot the System Statistics that should not be hidden. Why not create tabs? How to make it more intuitive?
 
 #### Workflow 4: Batch Testing a Code Change
 **Frequency**: After every code change  
@@ -169,6 +211,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 
 **Pain Points**: No progress feedback during bulk cycles, results disappear if accidentally refreshed
 
+--> Not really a problem. What do you propose?
+
 ---
 
 ## Proposed UX Improvements
@@ -183,6 +227,9 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Checkbox options: "Skip auto-repair" (for testing damaged robots), "Skip rebalancing"
 - Progress indicator shows which step is currently running
 - Success message summarizes all results
+
+--> This is already in place. And also contains a Daily Finance process which you forget. It is called "Bulk Cycle Testing".
+--> As part of the cycle I'm also drafting a PRD to include automatically adding new members each cycle. Proposal is 1 member each cycle, which means we might need to track the current cycle (ie. cycle 5 add 5 users, cycle 10 add 10 uers). 
 
 **UI Mockup**:
 ```
@@ -207,6 +254,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Add time elapsed: "Running for 12 seconds..."
 - Show last 5 operations as mini-log: "✓ Matchmaking completed (34 matches) - 2s ago"
 
+--> This is nice in our normal live and daily process, but we're currently in prototype phase where we manually trigger cycles.
+
 #### 1.3 Battle Table Quick Filters
 **Problem Solved**: Faster battle discovery without typing  
 **Implementation**:
@@ -217,6 +266,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Combine with existing search and league filter
 - Show active filter count: "3 filters active [Clear All]"
 
+--> This is nice, although the Time filters will not do much while I trigger cycles manually.
+
 #### 1.4 Battle Table Visual Enhancements
 **Problem Solved**: Important information stands out more  
 **Implementation**:
@@ -225,11 +276,16 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
   - 💪 for narrow victory (HP 1-50)
   - ⚖️ for draw
   - ⏱️ icon if battle hit max duration
+ 
+--> This is a nice filter option. 
+
 - Highlight unusual battles with subtle colored borders:
   - Red border: Draw (rare, interesting)
   - Yellow border: Battle > 90 seconds (potential balance issue)
   - Blue border: Huge ELO swing (>50 points)
 - Show ELO change as delta: "+15" / "-15" instead of "1200 → 1215"
+
+--> Where? ELO is currently not shown in the table, only in the battle details. It's fine. 
 
 #### 1.5 Persistent Session Log
 **Problem Solved**: Can review what actions were taken  
@@ -247,6 +303,9 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - [Clear Log] button to reset
 - [Export Log] button to download as text file
 
+--> Forgetting finance cycle again
+--> I also want to know tier rebalancing (ie. bronze_1 split into bronze_1 & bronze_2). When is a new bronze league created? When are they merged? 
+
 ### Priority 2: Medium-Impact, Medium-Effort
 
 #### 2.1 Advanced Battle Search
@@ -262,6 +321,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - "Save Search" feature to bookmark common queries
 - URL params reflect search state (shareable links)
 
+--> Not relevant
+
 #### 2.2 Robot Name Click-Through Links
 **Problem Solved**: Seamless navigation from battles to robot details  
 **Implementation**:
@@ -270,6 +331,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Hover tooltip shows quick stats: "Level 5 | ELO 1250 | 15 wins, 10 losses"
 - Shift+click opens in current tab, Ctrl+click in new tab (standard browser behavior)
 
+--> Yes. But direct to the actual robot page, do not create new pages for this. 
+
 #### 2.3 Robot Statistics Always-Visible Panel
 **Problem Solved**: Statistics are easier to discover and use  
 **Implementation**:
@@ -277,6 +340,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - When loaded, statistics appear in a right-side panel (drawer) that overlays the page
 - Panel is closeable but state persists (can re-open without re-fetching)
 - Add "Pin Statistics" toggle to keep panel open while scrolling
+
+--> Yes!
 
 #### 2.4 Battle Details Modal Enhancements
 **Problem Solved**: Easier to understand battle outcomes  
@@ -289,6 +354,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Add "Compare Robots" button that opens side-by-side robot stats
 - Add "Report Issue" button to create GitHub issue with battle data pre-filled
 
+--> Investige differences between "admin battles" and "normal battles" (/battle/2735). They should be the same, but admin battles should show actual numbers and the battle reports only the text. Might be considered part of a different PRD.
+
 #### 2.5 Keyboard Shortcuts
 **Problem Solved**: Faster workflow for power users  
 **Implementation**:
@@ -300,6 +367,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
   - `?` - Show keyboard shortcuts help
 - Shortcuts displayed in button tooltips: "Run Full Cycle (C)"
 - Help modal shows all available shortcuts
+
+--> Not needed. 
 
 ### Priority 3: Nice-to-Have, Higher-Effort
 
@@ -315,6 +384,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Recent commands appear at the top
 - Shows keyboard shortcut next to each command
 
+--> Not needed. 
+
 #### 3.2 Real-Time Battle Stream
 **Problem Solved**: See battles as they complete (during bulk cycles)  
 **Implementation**:
@@ -323,6 +394,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Color-coded by outcome (green = expected, red = upset)
 - Auto-scrolls to bottom, with [Pause Stream] button
 - After bulk cycle completes, [View All Battles] loads them in main table
+
+--> This is a nice feature. Currently I need to switch to the terminal and watch /bachend to see the progress.
 
 #### 3.3 Comparison Mode
 **Problem Solved**: Compare two battles or robots side-by-side  
@@ -333,6 +406,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Highlights differences (different loadouts, different outcomes despite similar stats)
 - Use case: "Why did Robot A win against Robot B but lose against Robot C?"
 
+--> Marginal improvement. Not needed. 
+
 #### 3.4 Auto-Refresh Mode
 **Problem Solved**: Don't need to manually refresh during testing  
 **Implementation**:
@@ -342,6 +417,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Pauses when user is viewing battle details modal
 - Persists preference in localStorage
 
+--> This should be there. Currently when you run a cycle, available money in the navbar is not updated while a battle has been fought and daily finances are processed. This should immediately reflected in the nav bar.  
+
 #### 3.5 Dark/Light Theme Toggle
 **Problem Solved**: Accessibility and user preference  
 **Implementation**:
@@ -349,6 +426,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Add theme toggle icon in navigation bar
 - Light theme uses same layout with inverted colors
 - Persists preference across sessions
+
+--> Not during prototype phase. 
 
 #### 3.6 Battle Replay Animation
 **Problem Solved**: Visual understanding of combat flow  
@@ -361,6 +440,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
   - Combat log scrolls in sync with animation
 - Playback controls: Play/Pause, Speed (0.5x, 1x, 2x), Skip to event
 - Helps non-technical stakeholders understand battles
+
+--> Not during prototype phase. 
 
 ---
 
@@ -385,9 +466,11 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 
 ---
 
+--> Revise the entire implementation plan based on my comments above. Also take into account the /design/ux/ docs. Don't show "estimated effort"m you should know it's only you and me.  
+
 ## Implementation Plan
 
-### Phase 1: Quick Wins (Week 1)
+### Phase 1: Quick Wins 
 **Goal**: Address most painful issues with minimal code changes
 
 - [x] Auto-load battles on page mount (COMPLETED)
@@ -396,11 +479,10 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - [ ] Add battle table visual enhancements (icons, colored borders)
 - [ ] Add session log with localStorage persistence
 
-**Estimated Effort**: 8-12 hours  
 **Dependencies**: None  
 **Risk**: Low
 
-### Phase 2: Enhanced Discovery (Week 2)
+### Phase 2: Enhanced Discovery 
 **Goal**: Make information easier to find and understand
 
 - [ ] Add quick filter chips to battle table
@@ -408,11 +490,10 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - [ ] Redesign robot statistics panel (right-side drawer)
 - [ ] Add battle details modal enhancements
 
-**Estimated Effort**: 12-16 hours  
 **Dependencies**: Phase 1 completion  
 **Risk**: Low-Medium
 
-### Phase 3: Power User Features (Week 3-4)
+### Phase 3: Power User Features 
 **Goal**: Optimize workflow for frequent users
 
 - [ ] Implement keyboard shortcuts
@@ -420,7 +501,6 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - [ ] Implement advanced battle search with filters
 - [ ] Add auto-refresh mode
 
-**Estimated Effort**: 16-24 hours  
 **Dependencies**: Phase 2 completion  
 **Risk**: Medium
 
@@ -554,32 +634,31 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 
 1. **Should "Run Full Cycle" be the default action?** 
    - Consider making it the prominent CTA and moving individual steps to "Advanced Options"
+  
+--> Place them side by side to preserve space. 
 
 2. **How should we handle errors during full cycle execution?**
    - Options: Stop on first error, continue with warning, rollback changes
+  
+--> Doesn't matter. Most of the time it's stuck anyways, so why build anything for it?
 
 3. **Should session log be shared across browser tabs?**
    - Might be confusing if two tabs show different logs
    - Or helpful to see all actions regardless of which tab performed them
+  
+--> Doesn't matter. Only you and me. 
 
 4. **Do we need role-based admin permissions?**
    - Currently binary: admin or not
    - Future: Super-admin vs. Read-only admin
+  
+--> Doesn't matter. Only you and me. 
 
 5. **Should we add "Undo" functionality?**
    - e.g., "Undo League Rebalancing" or "Revert Last Cycle"
    - Complex to implement but could be valuable for testing
-
----
-
-## Approval & Sign-off
-
-| Role | Name | Status | Date |
-|------|------|--------|------|
-| Product Owner | [TBD] | Pending | - |
-| Tech Lead | [TBD] | Pending | - |
-| UX Designer | [TBD] | Pending | - |
-| Engineering Lead | [TBD] | Pending | - |
+  
+--> Too complex for the prototype phase. 
 
 ---
 
@@ -628,6 +707,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
         └── Combat log with formula breakdowns
 ```
 
+--> What about the future admin page structure?
+
 ---
 
 ## Appendix B: Competitive Analysis
@@ -645,26 +726,7 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 
 ---
 
-## Appendix C: User Feedback Quotes
-
-> "The admin page is functional but I always forget the order to run things in."  
-> — Developer A, during code review
-
-> "I wish I could just hit a button and run a full cycle instead of clicking 4 times."  
-> — Developer B, during sprint retro
-
-> "Finding a specific battle is tedious when there are thousands. Need better filters."  
-> — QA Tester, during bug report
-
-> "The robot statistics are amazing but I didn't know they existed for 2 weeks."  
-> — New Developer, during onboarding
-
-> "When I run bulk cycles, I have no idea if it's working or stuck."  
-> — Developer C, via Slack
-
----
-
-## Appendix D: Design Inspiration
+## Appendix C: Design Inspiration
 
 ### Visual References
 - **Vercel Dashboard**: Clean, action-focused, real-time logs
@@ -682,6 +744,8 @@ Based on the existing documentation (bugfix reports, mockups) and code review, t
 - Warning: `yellow-500` (#EAB308)
 - Error: `red-600` (#DC2626)
 - Text: `white` / `gray-400`
+
+--> Is this aligned with the /docs/design_ux/ guidelines? 
 
 ---
 
