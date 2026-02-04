@@ -982,6 +982,43 @@ function AdminPage() {
               </button>
             </div>
 
+            {/* Visual Indicators Legend */}
+            <div className="mb-4 p-4 bg-gray-700 rounded-lg">
+              <h3 className="text-sm font-semibold mb-2 text-gray-300">Visual Indicators:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🏆</span>
+                  <span className="text-green-400">Clear Victory</span>
+                  <span className="text-gray-400">(HP &gt; 50)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">💪</span>
+                  <span className="text-yellow-400">Narrow Victory</span>
+                  <span className="text-gray-400">(HP 1-50)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">⚖️</span>
+                  <span className="text-gray-400">Draw</span>
+                  <span className="text-gray-400">(No winner)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-1 h-4 bg-red-500"></span>
+                  <span className="text-gray-300">Draw</span>
+                  <span className="text-gray-400">(rare event)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-1 h-4 bg-yellow-500"></span>
+                  <span className="text-gray-300">Long Battle</span>
+                  <span className="text-gray-400">(&gt;90s)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-1 h-4 bg-blue-500"></span>
+                  <span className="text-gray-300">Big ELO Swing</span>
+                  <span className="text-gray-400">(&gt;50 points)</span>
+                </div>
+              </div>
+            </div>
+
             {/* Search and Filter */}
             <div className="mb-4 flex gap-4 flex-wrap">
               <div className="flex-1 min-w-[200px]">
