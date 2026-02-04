@@ -8,6 +8,8 @@ import FilterPanel, { WeaponFilters } from '../components/FilterPanel';
 import ActiveFiltersDisplay from '../components/ActiveFiltersDisplay';
 import SearchBar from '../components/SearchBar';
 import SortDropdown, { SortOption } from '../components/SortDropdown';
+import ComparisonBar from '../components/ComparisonBar';
+import ComparisonModal from '../components/ComparisonModal';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../utils/weaponImages';
@@ -88,6 +90,10 @@ function WeaponShopPage() {
     const saved = localStorage.getItem('weaponShopSortBy');
     return saved || 'name-asc';
   });
+
+  // Comparison state
+  const [selectedForComparison, setSelectedForComparison] = useState<number[]>([]);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -285,6 +291,35 @@ function WeaponShopPage() {
     }
   };
 
+  // Comparison handlers
+  const toggleComparison = (weaponId: number) => {
+    setSelectedForComparison(prev => {
+      if (prev.includes(weaponId)) {
+        return prev.filter(id => id !== weaponId);
+      } else if (prev.length < 3) {
+        return [...prev, weaponId];
+      }
+      return prev; // Already at max (3)
+    });
+  };
+
+  const handleCompare = () => {
+    if (selectedForComparison.length >= 2) {
+      setShowComparisonModal(true);
+    }
+  };
+
+  const handleClearComparison = () => {
+    setSelectedForComparison([]);
+  };
+
+  const handleRemoveFromComparison = (weaponId: number) => {
+    setSelectedForComparison(prev => prev.filter(id => id !== weaponId));
+    if (selectedForComparison.length <= 2) {
+      setShowComparisonModal(false);
+    }
+  };
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'energy': return 'text-blue-400';
@@ -459,8 +494,23 @@ function WeaponShopPage() {
                       const bonuses = getAttributeBonuses(weapon);
                       const discountedPrice = calculateDiscountedPrice(weapon.cost);
                       const hasDiscount = weaponWorkshopLevel > 0;
+                      const isSelected = selectedForComparison.includes(weapon.id);
                       return (
-                        <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg">
+                        <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg relative">
+                          {/* Comparison Checkbox */}
+                          <div className="absolute top-4 left-4 z-10">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleComparison(weapon.id)}
+                                disabled={!isSelected && selectedForComparison.length >= 3}
+                                className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800"
+                              />
+                              <span className="text-sm text-gray-400">Compare</span>
+                            </label>
+                          </div>
+                          
                           {/* Weapon Image */}
                           <div className="mb-4 flex justify-center">
                             <img 
@@ -560,6 +610,32 @@ function WeaponShopPage() {
               </>
             )}
           </>
+        )}
+
+        {/* Comparison Bar */}
+        <ComparisonBar
+          selectedCount={selectedForComparison.length}
+          onCompare={handleCompare}
+          onClear={handleClearComparison}
+        />
+
+        {/* Comparison Modal */}
+        {showComparisonModal && (
+          <ComparisonModal
+            weapons={weapons.filter(w => selectedForComparison.includes(w.id))}
+            onClose={() => setShowComparisonModal(false)}
+            onPurchase={(weaponId) => {
+              const weapon = weapons.find(w => w.id === weaponId);
+              if (weapon) {
+                handlePurchase(weaponId, weapon.cost);
+              }
+            }}
+            onRemove={handleRemoveFromComparison}
+            userCurrency={user?.currency || 0}
+            weaponWorkshopLevel={weaponWorkshopLevel}
+            storageIsFull={storageStatus?.isFull || false}
+            purchasingId={purchasing}
+          />
         )}
       </div>
     </div>
