@@ -76,8 +76,8 @@ const MAX_BATTLE_DURATION = 120; // seconds
 const SIMULATION_TICK = 0.1; // 100ms per tick
 
 // Maximum armor reduction cap (prevents armor from being too overpowered)
-// Restored at 20 (was 30, was uncapped) for better balance
-export const MAX_ARMOR_REDUCTION = 20;
+// Set at 15 for optimal balance (was 30, was uncapped, tested at 20)
+export const MAX_ARMOR_REDUCTION = 15;
 
 /**
  * Clamp a value between min and max
@@ -196,8 +196,8 @@ function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: numbe
   const controlMult = 1 + effectiveWeaponControl / 100;
   damage *= controlMult;
   
-  // Stance modifiers
-  const stanceMult = attacker.stance === 'offensive' ? 1.15 :
+  // Stance modifiers (reduced offensive bonus for balance)
+  const stanceMult = attacker.stance === 'offensive' ? 1.10 :
                      attacker.stance === 'defensive' ? 0.90 : 1.0;
   damage *= stanceMult;
   

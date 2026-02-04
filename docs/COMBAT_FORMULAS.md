@@ -186,12 +186,12 @@ Final Multiplier = Max(Base - Dampeners, 1.2)
 Combat Power Multiplier = 1 + ((Robot Combat Power + Weapon Bonus) * 1.2) / 100
 Loadout Multiplier = 1.25 (two-handed) OR 0.90 (dual wield) OR 1.0 (other)
 Weapon Control Multiplier = 1 + (Robot Weapon Control + Weapon Bonus) / 100
-Stance Multiplier = 1.15 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
+Stance Multiplier = 1.10 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
 
 Base Damage = Weapon Base Damage × Combat Power × Loadout × Weapon Control × Stance
 ```
 
-**Note**: Combat Power multiplier was reduced from 1.5 to 1.2 for better game balance.
+**Note**: Combat Power multiplier reduced from 1.5 to 1.2, and Offensive Stance from 1.15 to 1.10 for better game balance.
 
 ### Display Format
 ```
@@ -213,17 +213,17 @@ Damage that exceeds energy shield capacity flows through to HP at 100%:
 ```
 Bleed-Through Damage = Max(0, Effective Shield Damage - Actual Shield Damage)
 Raw Armor Reduction = Defender Armor × (1 - (Attacker Penetration + Weapon Bonus) / 100)
-Armor Reduction = Min(Raw Armor Reduction, 20) (capped at 20)
+Armor Reduction = Min(Raw Armor Reduction, 15) (capped at 15)
 HP Damage = Max(1, Bleed-Through Damage - Armor Reduction) (minimum 1 damage)
 ```
 
-**Note**: Armor reduction cap restored at 20 (was 30, briefly uncapped) for better balance.
+**Note**: Armor reduction cap set at 15 for optimal balance (was 30, briefly uncapped).
 
 ### No Energy Shield
 When defender has no energy shield, all damage goes to HP:
 ```
 Raw Armor Reduction = Defender Armor × (1 - (Attacker Penetration + Weapon Bonus) / 100)
-Armor Reduction = Min(Raw Armor Reduction, 20) (capped at 20)
+Armor Reduction = Min(Raw Armor Reduction, 15) (capped at 15)
 HP Damage = Max(1, Total Damage - Armor Reduction) (minimum 1 damage)
 ```
 
