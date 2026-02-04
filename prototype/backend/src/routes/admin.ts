@@ -297,7 +297,10 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
 
     console.log(`[Admin] Running ${cycleCount} bulk cycles (autoRepair: ${autoRepair}, includeDailyFinances: ${includeDailyFinances}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
 
-    // Get or create cycle metadata
+    // Get or create cycle metadata (singleton pattern)
+    // Note: This initialization is also in seed.ts. Both locations create the same
+    // record (id=1, totalCycles=0) to ensure the singleton exists regardless of
+    // whether the database was seeded or if cycles are run after a fresh migration.
     let cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
     if (!cycleMetadata) {
       cycleMetadata = await prisma.cycleMetadata.create({

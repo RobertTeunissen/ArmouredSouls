@@ -37,7 +37,7 @@ const prefixes = [
   'Alpha', 'Beta', 'Gamma', 'Delta', 'Omega', 'Prime',
   'Crimson', 'Azure', 'Emerald', 'Golden', 'Silver', 'Bronze',
   'Viper', 'Falcon', 'Dragon', 'Phoenix', 'Griffin', 'Hydra',
-  'Storm', 'Blaze', 'Frost', 'Volt', 'Nova', 'Eclipse'
+  'Storm', 'Blaze', 'Crystal', 'Volt', 'Nova', 'Eclipse'
 ];
 
 const suffixes = [
@@ -105,6 +105,9 @@ export async function generateBattleReadyUsers(count: number): Promise<{
       // Use transaction to ensure atomicity
       await prisma.$transaction(async (tx) => {
         // Create user
+        // Note: Auto-generated users use a fixed dummy password hash. These accounts are
+        // for simulation/testing purposes only and should not be used in production without
+        // implementing proper authentication or marking them as system-generated.
         const user = await tx.user.create({
           data: {
             username,

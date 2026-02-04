@@ -323,6 +323,10 @@ model ScheduledMatch {
   @@map("scheduled_matches")
 }
 
+// Singleton table for tracking global cycle state across all admin operations.
+// This table should contain exactly one record with id=1. The default(1) ensures
+// all operations reference the same row. Created during seed and auto-created
+// if missing in admin routes.
 model CycleMetadata {
   id           Int       @id @default(1)
   totalCycles  Int       @default(0) @map("total_cycles")
