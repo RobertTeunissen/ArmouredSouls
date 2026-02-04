@@ -6,6 +6,8 @@ import ViewModeToggle from '../components/ViewModeToggle';
 import WeaponTable from '../components/WeaponTable';
 import FilterPanel, { WeaponFilters } from '../components/FilterPanel';
 import ActiveFiltersDisplay from '../components/ActiveFiltersDisplay';
+import SearchBar from '../components/SearchBar';
+import SortDropdown, { SortOption } from '../components/SortDropdown';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../utils/weaponImages';
@@ -77,6 +79,24 @@ function WeaponShopPage() {
     canAffordOnly: false,
   });
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  // Sort state with localStorage persistence
+  const [sortBy, setSortBy] = useState<string>(() => {
+    const saved = localStorage.getItem('weaponShopSortBy');
+    return saved || 'name-asc';
+  });
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -128,9 +148,57 @@ function WeaponShopPage() {
     setFilters(newFilters);
   };
 
-  // Apply filters to weapons
-  const filteredWeapons = useMemo(() => {
-    return weapons.filter(weapon => {
+  const handleSortChange = (newSortBy: string) => {
+    setSortBy(newSortBy);
+    localStorage.setItem('weaponShopSortBy', newSortBy);
+  };
+
+  // Search weapons by name, description, type
+  const searchWeapons = (weapons: Weapon[], query: string): Weapon[] => {
+    if (!query.trim()) return weapons;
+    
+    const lowerQuery = query.toLowerCase();
+    return weapons.filter(weapon =>
+      weapon.name.toLowerCase().includes(lowerQuery) ||
+      weapon.description.toLowerCase().includes(lowerQuery) ||
+      weapon.weaponType.toLowerCase().includes(lowerQuery) ||
+      weapon.loadoutType.toLowerCase().replace('_', ' ').includes(lowerQuery)
+    );
+  };
+
+  // Sort weapons
+  const sortWeapons = (weapons: Weapon[], sortOption: string): Weapon[] => {
+    const sorted = [...weapons];
+    
+    switch (sortOption) {
+      case 'price-asc':
+        return sorted.sort((a, b) => 
+          calculateDiscountedPrice(a.cost) - calculateDiscountedPrice(b.cost)
+        );
+      case 'price-desc':
+        return sorted.sort((a, b) => 
+          calculateDiscountedPrice(b.cost) - calculateDiscountedPrice(a.cost)
+        );
+      case 'damage-desc':
+        return sorted.sort((a, b) => b.baseDamage - a.baseDamage);
+      case 'name-asc':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'dps-desc':
+        const getDPS = (w: Weapon) => 
+          w.baseDamage / calculateWeaponCooldown(w.weaponType, w.baseDamage);
+        return sorted.sort((a, b) => getDPS(b) - getDPS(a));
+      default:
+        return sorted;
+    }
+  };
+
+  // Apply search, filters, and sorting
+  const processedWeapons = useMemo(() => {
+    // Step 1: Search
+    let result = searchWeapons(weapons, debouncedSearchQuery);
+
+    // Step 2: Filter
+    result = result.filter(weapon => {
       // Loadout type filter (OR logic within category)
       if (filters.loadoutTypes.length > 0) {
         if (!filters.loadoutTypes.includes(weapon.loadoutType)) {
@@ -163,7 +231,14 @@ function WeaponShopPage() {
 
       return true;
     });
-  }, [weapons, filters, user, weaponWorkshopLevel]);
+
+    // Step 3: Sort (for card view)
+    if (viewMode === 'card') {
+      result = sortWeapons(result, sortBy);
+    }
+
+    return result;
+  }, [weapons, debouncedSearchQuery, filters, user, weaponWorkshopLevel, sortBy, viewMode]);
 
   const calculateDiscountedPrice = (basePrice: number): number => {
     const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
@@ -234,10 +309,19 @@ function WeaponShopPage() {
   };
 
   const groupedWeapons = {
-    shield: filteredWeapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
-    two_handed: filteredWeapons.filter(w => w.loadoutType === 'two_handed'),
-    one_handed: filteredWeapons.filter(w => w.loadoutType === 'single'),
+    shield: processedWeapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
+    two_handed: processedWeapons.filter(w => w.loadoutType === 'two_handed'),
+    one_handed: processedWeapons.filter(w => w.loadoutType === 'single'),
   };
+
+  // Sort options for dropdown
+  const sortOptions: SortOption[] = [
+    { value: 'name-asc', label: 'Name (A-Z)' },
+    { value: 'price-asc', label: 'Price: Low to High' },
+    { value: 'price-desc', label: 'Price: High to Low' },
+    { value: 'damage-desc', label: 'Damage: High to Low' },
+    { value: 'dps-desc', label: 'DPS: High to Low' },
+  ];
 
   const getLoadoutTypeLabel = (loadoutType: string) => {
     switch (loadoutType) {
@@ -324,7 +408,7 @@ function WeaponShopPage() {
               onFiltersChange={handleFiltersChange}
               userCredits={user?.currency || 0}
               weaponCount={weapons.length}
-              filteredCount={filteredWeapons.length}
+              filteredCount={processedWeapons.length}
             />
 
             {/* Active Filters Display */}
@@ -342,7 +426,7 @@ function WeaponShopPage() {
             {viewMode === 'table' && (
               <div className="bg-gray-800 rounded-lg overflow-hidden">
                 <WeaponTable
-                  weapons={filteredWeapons}
+                  weapons={processedWeapons}
                   onPurchase={handlePurchase}
                   calculateDiscountedPrice={calculateDiscountedPrice}
                   userCredits={user?.currency || 0}
@@ -357,7 +441,7 @@ function WeaponShopPage() {
             {/* Card View */}
             {viewMode === 'card' && (
               <>
-                {filteredWeapons.length === 0 ? (
+                {processedWeapons.length === 0 ? (
                   <div className="bg-gray-800 rounded-lg p-12 text-center">
                     <p className="text-gray-400 text-lg mb-2">No weapons match your filters</p>
                     <p className="text-gray-500 text-sm">Try adjusting your filters to see more weapons</p>
