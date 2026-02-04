@@ -76,6 +76,7 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
       totalBattles: robot.totalBattles,
       currentHP: robot.currentHP,
       maxHP: robot.maxHP,
+      fame: robot.fame,
       userId: robot.user.id,
       user: {
         username: robot.user.username,

@@ -6,7 +6,6 @@ import {
   getLeagueInstances,
   LeagueRobot,
   LeagueInstance,
-  PaginatedResponse,
   getLeagueTierName,
   getLeagueTierColor,
 } from '../utils/matchmakingApi';
@@ -16,8 +15,10 @@ const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 function LeagueStandingsPage() {
   const { user } = useAuth();
   const [selectedTier, setSelectedTier] = useState('bronze');
+  const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const [robots, setRobots] = useState<LeagueRobot[]>([]);
   const [instances, setInstances] = useState<LeagueInstance[]>([]);
+  const [userRobotTiers, setUserRobotTiers] = useState<Set<string>>(new Set());
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 50,
@@ -28,14 +29,34 @@ function LeagueStandingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setSelectedInstance(null); // Reset selected instance when tier changes
     fetchLeagueData(selectedTier, 1);
+    fetchUserRobotTiers(); // Fetch user's robot tiers on load
   }, [selectedTier]);
 
-  const fetchLeagueData = async (tier: string, page: number) => {
+  const fetchUserRobotTiers = async () => {
+    // Fetch user's robots to determine which tiers they're in
+    try {
+      const response = await fetch('http://localhost:3001/api/robots', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.ok) {
+        const robotsData = await response.json();
+        const tiers = new Set<string>(robotsData.map((r: any) => r.currentLeague));
+        setUserRobotTiers(tiers);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user robot tiers:', err);
+    }
+  };
+
+  const fetchLeagueData = async (tier: string, page: number, instance?: string) => {
     try {
       setLoading(true);
       const [standingsData, instancesData] = await Promise.all([
-        getLeagueStandings(tier, page, 50),
+        getLeagueStandings(tier, page, 50, instance),
         getLeagueInstances(tier),
       ]);
       setRobots(standingsData.data);
@@ -51,7 +72,18 @@ function LeagueStandingsPage() {
   };
 
   const handlePageChange = (newPage: number) => {
-    fetchLeagueData(selectedTier, newPage);
+    fetchLeagueData(selectedTier, newPage, selectedInstance || undefined);
+  };
+
+  const handleInstanceClick = (instanceId: string) => {
+    if (selectedInstance === instanceId) {
+      // Clicking on the same instance deselects it
+      setSelectedInstance(null);
+      fetchLeagueData(selectedTier, 1);
+    } else {
+      setSelectedInstance(instanceId);
+      fetchLeagueData(selectedTier, 1, instanceId);
+    }
   };
 
   const isMyRobot = (robotUserId: number) => {
@@ -82,18 +114,22 @@ function LeagueStandingsPage() {
             const tierColor = getLeagueTierColor(tier);
             const tierName = getLeagueTierName(tier);
             const isActive = selectedTier === tier;
+            const hasUserRobots = userRobotTiers.has(tier);
 
             return (
               <button
                 key={tier}
                 onClick={() => setSelectedTier(tier)}
-                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+                className={`px-6 py-3 rounded-lg font-semibold transition-colors relative ${
                   isActive
                     ? `${tierColor} bg-gray-700 border-2 border-current`
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}
               >
                 {tierName}
+                {hasUserRobots && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-gray-900"></span>
+                )}
               </button>
             );
           })}
@@ -102,19 +138,38 @@ function LeagueStandingsPage() {
         {/* Instance Information */}
         {!loading && instances.length > 0 && (
           <div className="bg-gray-800 p-4 rounded-lg mb-6">
-            <h2 className="text-lg font-semibold mb-2">League Instances</h2>
+            <h2 className="text-lg font-semibold mb-2">
+              League Instances
+              {selectedInstance && (
+                <span className="ml-2 text-sm text-gray-400">
+                  (Click on selected instance to view all)
+                </span>
+              )}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {instances.map((instance) => (
-                <div key={instance.leagueId} className="bg-gray-700 p-3 rounded">
-                  <div className="text-sm text-gray-400">
-                    Instance #{instance.leagueId}
+              {instances.map((instance) => {
+                const isSelected = selectedInstance === instance.leagueId;
+
+                return (
+                  <div
+                    key={instance.leagueId}
+                    onClick={() => handleInstanceClick(instance.leagueId)}
+                    className={`p-3 rounded cursor-pointer transition-all ${
+                      isSelected
+                        ? 'bg-yellow-900 border-2 border-yellow-500 ring-2 ring-yellow-400'
+                        : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
+                    }`}
+                  >
+                    <div className="text-sm text-gray-400">
+                      Instance #{instance.leagueId}
+                    </div>
+                    <div className="text-lg font-semibold">
+                      {instance.currentRobots} / {instance.maxRobots}
+                    </div>
+                    <div className="text-xs text-gray-500">robots</div>
                   </div>
-                  <div className="text-lg font-semibold">
-                    {instance.currentRobots} / {instance.maxRobots}
-                  </div>
-                  <div className="text-xs text-gray-500">robots</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -149,6 +204,7 @@ function LeagueStandingsPage() {
                       <th className="px-4 py-3 text-left font-semibold">Owner</th>
                       <th className="px-4 py-3 text-center font-semibold">ELO</th>
                       <th className="px-4 py-3 text-center font-semibold">LP</th>
+                      <th className="px-4 py-3 text-center font-semibold">Fame</th>
                       <th className="px-4 py-3 text-center font-semibold">W-D-L</th>
                       <th className="px-4 py-3 text-center font-semibold">Win Rate</th>
                       <th className="px-4 py-3 text-center font-semibold">HP</th>
@@ -191,6 +247,9 @@ function LeagueStandingsPage() {
                           <td className="px-4 py-3 text-center font-mono">{robot.elo}</td>
                           <td className="px-4 py-3 text-center font-mono text-yellow-400">
                             {robot.leaguePoints}
+                          </td>
+                          <td className="px-4 py-3 text-center font-mono text-purple-400">
+                            {robot.fame}
                           </td>
                           <td className="px-4 py-3 text-center font-mono">
                             <span className="text-green-400">{robot.wins}</span>
