@@ -201,6 +201,16 @@ The **Hall of Records** is a new feature that displays prestigious achievements 
 - **Database Query:** `MAX(fame)` from Robot table
 - **Why It's Cool:** Shows celebrity status in the arena
 
+##### 4.3 Richest Stables
+- **Metric:** Players with the most accumulated currency (Credits)
+- **Display:**
+  - Player username
+  - Currency balance (e.g., "₡12,847,500")
+  - Total battles
+  - Prestige rank
+- **Database Query:** `MAX(currency)` from User table
+- **Why It's Cool:** Shows economic mastery and resource management skills, represents successful stable management
+
 #### 5. **Prestige Records** (Player-Level)
 
 ##### 5.1 Highest Prestige Stable
@@ -260,7 +270,8 @@ The **Hall of Records** is a new feature that displays prestigious achievements 
   },
   "economic": {
     "mostExpensiveBattle": { ... },
-    "highestFame": { ... }
+    "highestFame": { ... },
+    "richestStables": { ... }
   },
   "prestige": {
     "highestPrestige": { ... },
@@ -343,15 +354,16 @@ HallOfRecordsPage.tsx
 1. Combat Records (4 records)
 2. Upset Records (3 records)
 3. Career Records (5 records)
-4. Basic UI with category tabs
-5. Simple responsive design
+4. Economic Records (3 records)
+5. Prestige Records (2 records)
+6. Basic UI with category tabs
+7. Simple responsive design
 
 ### Phase 2 (Future)
-1. Economic Records
-2. Prestige Records
-3. Enhanced UI animations
-4. Personal records comparison
-5. Record notifications
+1. Enhanced UI animations
+2. Personal records comparison
+3. Record notifications
+4. Historical record tracking
 
 ---
 
