@@ -124,6 +124,94 @@ router.get('/fame', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/leaderboards/losses
+ * Get top robots ranked by total losses (opponents destroyed)
+ */
+router.get('/losses', async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 100);
+    const league = req.query.league as string;
+    const minBattles = parseInt(req.query.minBattles as string) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Build where clause
+    const whereClause: any = {
+      totalBattles: { gte: minBattles },
+      NOT: { name: 'Bye Robot' }
+    };
+    
+    if (league && league !== 'all') {
+      whereClause.currentLeague = league;
+    }
+    
+    // Get total count
+    const totalRobots = await prisma.robot.count({ where: whereClause });
+    
+    // Get robots sorted by kills (total losses inflicted)
+    const robots = await prisma.robot.findMany({
+      where: whereClause,
+      orderBy: { kills: 'desc' },
+      skip,
+      take: limit,
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true
+          }
+        }
+      }
+    });
+    
+    // Calculate ranks and additional stats
+    const leaderboard = robots.map((robot, index) => ({
+      rank: skip + index + 1,
+      robotId: robot.id,
+      robotName: robot.name,
+      totalLosses: robot.kills, // Opponents destroyed
+      stableId: robot.userId,
+      stableName: robot.user.username,
+      currentLeague: robot.currentLeague,
+      elo: robot.elo,
+      totalBattles: robot.totalBattles,
+      wins: robot.wins,
+      losses: robot.losses,
+      draws: robot.draws,
+      winRate: robot.totalBattles > 0 
+        ? Number((robot.wins / robot.totalBattles * 100).toFixed(1)) 
+        : 0,
+      lossRatio: robot.losses > 0 
+        ? Number((robot.kills / robot.losses).toFixed(2))
+        : robot.kills,
+      damageDealtLifetime: robot.damageDealtLifetime
+    }));
+    
+    res.json({
+      leaderboard,
+      pagination: {
+        page,
+        limit,
+        totalRobots,
+        totalPages: Math.ceil(totalRobots / limit),
+        hasMore: skip + robots.length < totalRobots,
+      },
+      filters: {
+        league: league || 'all',
+        minBattles,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Leaderboards] Total Losses leaderboard error:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve total losses leaderboard',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
  * GET /api/leaderboards/prestige
  * Get top stables/users ranked by prestige
  */
