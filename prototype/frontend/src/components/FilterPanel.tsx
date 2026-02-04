@@ -90,7 +90,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     { label: 'Budget (<₡100K)', min: 0, max: 100000 },
     { label: 'Mid (₡100-300K)', min: 100000, max: 300000 },
     { label: 'Premium (₡300-500K)', min: 300000, max: 500000 },
-    { label: 'Luxury (₡500K+)', min: 500000, max: Infinity },
+    { label: 'Luxury (₡500K+)', min: 500000, max: 999999999 },
   ];
 
   return (

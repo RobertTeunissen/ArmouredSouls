@@ -27,9 +27,10 @@ interface WeaponTableProps {
   hasDiscount: boolean;
   discountPercent: number;
   onWeaponClick?: (weapon: Weapon) => void;
+  ownedWeapons?: Map<number, number>;
 }
 
-type SortField = 'name' | 'weaponType' | 'loadoutType' | 'baseDamage' | 'cooldown' | 'dps' | 'cost';
+type SortField = 'name' | 'weaponType' | 'loadoutType' | 'baseDamage' | 'cooldown' | 'dps' | 'cost' | 'attributes';
 type SortDirection = 'asc' | 'desc';
 
 const WeaponTable: React.FC<WeaponTableProps> = ({
@@ -42,6 +43,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
   hasDiscount,
   discountPercent,
   onWeaponClick,
+  ownedWeapons,
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -106,6 +108,10 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
         case 'cost':
           aValue = calculateDiscountedPrice(a.cost);
           bValue = calculateDiscountedPrice(b.cost);
+          break;
+        case 'attributes':
+          aValue = calculateAttributeTotal(a);
+          bValue = calculateAttributeTotal(b);
           break;
         default:
           aValue = a[sortField];
@@ -187,8 +193,11 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
             >
               Cost <SortIndicator field="cost" />
             </th>
-            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-300">
-              Attributes
+            <th 
+              className="px-4 py-3 text-right text-sm font-semibold text-gray-300 cursor-pointer hover:text-white"
+              onClick={() => handleSort('attributes')}
+            >
+              Attributes <SortIndicator field="attributes" />
             </th>
             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-300">
               Action
@@ -214,12 +223,19 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     {getWeaponTypeIcon(weapon.weaponType)}
-                    <span 
-                      className="font-medium cursor-pointer hover:text-blue-400 transition-colors"
-                      onClick={() => onWeaponClick?.(weapon)}
-                    >
-                      {weapon.name}
-                    </span>
+                    <div className="flex flex-col">
+                      <span 
+                        className="font-medium cursor-pointer hover:text-blue-400 transition-colors"
+                        onClick={() => onWeaponClick?.(weapon)}
+                      >
+                        {weapon.name}
+                      </span>
+                      {ownedWeapons && ownedWeapons.has(weapon.id) && (
+                        <span className="text-xs text-green-400">
+                          Own ({ownedWeapons.get(weapon.id)})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td className="px-4 py-3">

@@ -11,6 +11,7 @@ import SortDropdown, { SortOption } from '../components/SortDropdown';
 import ComparisonBar from '../components/ComparisonBar';
 import ComparisonModal from '../components/ComparisonModal';
 import WeaponDetailModal from '../components/WeaponDetailModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../utils/weaponImages';
@@ -99,6 +100,19 @@ function WeaponShopPage() {
   // Comparison state
   const [selectedForComparison, setSelectedForComparison] = useState<number[]>([]);
   const [showComparisonModal, setShowComparisonModal] = useState(false);
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Debounce search query
   useEffect(() => {
@@ -272,55 +286,84 @@ function WeaponShopPage() {
     if (!user) return;
 
     const finalCost = calculateDiscountedPrice(basePrice);
+    const weapon = weapons.find(w => w.id === weaponId);
+    const weaponName = weapon?.name || 'weapon';
 
     if (user.currency < finalCost) {
-      alert('Insufficient credits!');
+      setConfirmationModal({
+        isOpen: true,
+        title: 'Insufficient Credits',
+        message: `You don't have enough credits to purchase this weapon. You need ₡${finalCost.toLocaleString()} but only have ₡${user.currency.toLocaleString()}.`,
+        onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
+      });
       return;
     }
 
     // Check storage capacity
     if (storageStatus && storageStatus.isFull) {
-      alert('Storage capacity full! Upgrade Storage Facility to increase capacity.');
+      setConfirmationModal({
+        isOpen: true,
+        title: 'Storage Full',
+        message: 'Storage capacity full! Upgrade Storage Facility to increase capacity.',
+        onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
+      });
       return;
     }
 
-    if (!confirm('Are you sure you want to purchase this weapon?')) {
-      return;
-    }
-
-    setPurchasing(weaponId);
-    try {
-      await axios.post('http://localhost:3001/api/weapon-inventory/purchase', {
-        weaponId,
-      });
-      await refreshUser();
-      
-      // Refresh storage status after purchase
-      const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
-      setStorageStatus(storageResponse.data);
-      
-      // Refresh owned weapons
-      const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory');
-      const inventory = inventoryResponse.data;
-      const ownedMap = new Map<number, number>();
-      inventory.forEach((item: any) => {
-        const wId = item.weaponId;
-        ownedMap.set(wId, (ownedMap.get(wId) || 0) + 1);
-      });
-      setOwnedWeapons(ownedMap);
-      
-      alert('Weapon purchased successfully!');
-      
-      // Close detail modal if open
-      if (selectedWeapon?.id === weaponId) {
-        setSelectedWeapon(null);
-      }
-    } catch (err: any) {
-      console.error('Purchase failed:', err);
-      alert(err.response?.data?.error || 'Failed to purchase weapon');
-    } finally {
-      setPurchasing(null);
-    }
+    // Show confirmation dialog
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Confirm Purchase',
+      message: `Are you sure you want to purchase ${weaponName} for ₡${finalCost.toLocaleString()}?`,
+      onConfirm: async () => {
+        setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+        
+        setPurchasing(weaponId);
+        try {
+          await axios.post('http://localhost:3001/api/weapon-inventory/purchase', {
+            weaponId,
+          });
+          await refreshUser();
+          
+          // Refresh storage status after purchase
+          const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
+          setStorageStatus(storageResponse.data);
+          
+          // Refresh owned weapons
+          const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory');
+          const inventory = inventoryResponse.data;
+          const ownedMap = new Map<number, number>();
+          inventory.forEach((item: any) => {
+            const wId = item.weaponId;
+            ownedMap.set(wId, (ownedMap.get(wId) || 0) + 1);
+          });
+          setOwnedWeapons(ownedMap);
+          
+          // Show success message
+          setConfirmationModal({
+            isOpen: true,
+            title: 'Purchase Successful',
+            message: `${weaponName} purchased successfully!`,
+            onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
+          });
+          
+          // Close detail modal if open
+          if (selectedWeapon?.id === weaponId) {
+            setSelectedWeapon(null);
+          }
+        } catch (err: any) {
+          console.error('Purchase failed:', err);
+          setConfirmationModal({
+            isOpen: true,
+            title: 'Purchase Failed',
+            message: err.response?.data?.error || 'Failed to purchase weapon',
+            onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
+          });
+        } finally {
+          setPurchasing(null);
+        }
+      },
+    });
   };
 
   // Comparison handlers
@@ -502,6 +545,7 @@ function WeaponShopPage() {
                   hasDiscount={weaponWorkshopLevel > 0}
                   discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
                   onWeaponClick={setSelectedWeapon}
+                  ownedWeapons={ownedWeapons}
                 />
               </div>
             )}
@@ -698,6 +742,22 @@ function WeaponShopPage() {
             ownedCount={ownedWeapons.get(selectedWeapon.id) || 0}
           />
         )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          title={confirmationModal.title}
+          message={confirmationModal.message}
+          confirmText={confirmationModal.title === 'Confirm Purchase' ? 'Purchase' : 'OK'}
+          cancelText="Cancel"
+          confirmButtonClass={
+            confirmationModal.title === 'Confirm Purchase' 
+              ? 'bg-green-600 hover:bg-green-700' 
+              : 'bg-blue-600 hover:bg-blue-700'
+          }
+          onConfirm={confirmationModal.onConfirm}
+          onCancel={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+        />
       </div>
     </div>
   );
