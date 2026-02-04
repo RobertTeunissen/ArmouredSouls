@@ -75,9 +75,9 @@ const BASE_WEAPON_COOLDOWN = 4; // seconds
 const MAX_BATTLE_DURATION = 120; // seconds
 const SIMULATION_TICK = 0.1; // 100ms per tick
 
-// Maximum armor reduction cap removed - armor now scales without limit
-// This was previously capped at 30 to prevent armor from being too overpowered
-// export const MAX_ARMOR_REDUCTION = 30;
+// Maximum armor reduction cap (prevents armor from being too overpowered)
+// Restored at 20 (was 30, was uncapped) for better balance
+export const MAX_ARMOR_REDUCTION = 20;
 
 /**
  * Clamp a value between min and max
@@ -179,10 +179,11 @@ function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'main' | 
 
 /**
  * Calculate base damage before defense
+ * Combat Power multiplier reduced from 1.5 to 1.2 for better balance
  */
 function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: number, attackerHand: 'main' | 'offhand' = 'main'): { damage: number; breakdown: FormulaBreakdown } {
   const effectiveCombatPower = getEffectiveAttribute(attacker, attacker.combatPower, attackerHand, 'combatPowerBonus');
-  const combatPowerMult = 1 + (effectiveCombatPower * 1.5) / 100;
+  const combatPowerMult = 1 + (effectiveCombatPower * 1.2) / 100;
   let damage = weaponBaseDamage * combatPowerMult;
   
   // Loadout modifiers
@@ -218,7 +219,7 @@ function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: numbe
 
 /**
  * Apply damage through shields and armor
- * Armor reduction is no longer capped
+ * Armor reduction capped at MAX_ARMOR_REDUCTION (20) for balance
  */
 function applyDamage(
   baseDamage: number,
@@ -263,19 +264,18 @@ function applyDamage(
     const bleedThroughDamage = Math.max(0, effectiveShieldDamage - shieldDamage);
     
     if (bleedThroughDamage > 0) {
-      // Apply armor reduction (no cap)
+      // Apply armor reduction with cap to prevent armor from being too powerful
       const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
-      armorReduction = rawArmorReduction;
+      armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
       hpDamage = Math.max(1, bleedThroughDamage - armorReduction);
       detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed | Bleed: ${bleedThroughDamage.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
     } else {
       detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed, 0 HP`;
     }
   } else {
-    // No shield - damage goes to HP with armor reduction
-    // Apply armor reduction (no cap)
+    // No shield - damage goes to HP with armor reduction (capped)
     const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
-    armorReduction = rawArmorReduction;
+    armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
     hpDamage = Math.max(1, damage - armorReduction);
     detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | No shield | ${damageAfterCrit.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
   }
