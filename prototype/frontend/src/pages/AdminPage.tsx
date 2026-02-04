@@ -97,15 +97,50 @@ interface RobotStats {
   bottomPerformers: Record<string, any[]>;
 }
 
+interface CycleResult {
+  cycle: number;
+  userGeneration?: {
+    usersCreated: number;
+    error?: string;
+  };
+  repair?: {
+    robotsRepaired: number;
+  };
+  matchmaking?: {
+    matchesCreated: number;
+  };
+  battles?: {
+    summary: {
+      totalBattles: number;
+      successfulBattles: number;
+      failedBattles: number;
+    };
+  };
+  finances?: {
+    usersProcessed: number;
+    totalCostsDeducted: number;
+    bankruptUsers: number;
+  };
+  rebalancing?: {
+    summary: {
+      totalPromoted: number;
+      totalDemoted: number;
+    };
+  };
+}
+
 function AdminPage() {
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     // Get tab from localStorage or URL hash
-    const hash = window.location.hash.replace('#', '') as TabType;
+    const hash = window.location.hash.replace('#', '');
     if (['dashboard', 'cycles', 'battles', 'stats'].includes(hash)) {
-      return hash;
+      return hash as TabType;
     }
-    return localStorage.getItem('adminActiveTab') as TabType || 'dashboard';
+    const stored = localStorage.getItem('adminActiveTab');
+    return (stored && ['dashboard', 'cycles', 'battles', 'stats'].includes(stored)) 
+      ? stored as TabType 
+      : 'dashboard';
   });
 
   // Session log state
@@ -304,7 +339,7 @@ function AdminPage() {
 
       // Add detailed session log entries for each cycle
       if (response.data.results && response.data.results.length > 0) {
-        response.data.results.forEach((result: any) => {
+        response.data.results.forEach((result: CycleResult) => {
           // User generation
           if (result.userGeneration) {
             if (result.userGeneration.error) {
@@ -670,7 +705,7 @@ function AdminPage() {
                   {bulkResults.results && bulkResults.results.length > 0 && (
                     <div className="mt-4 max-h-96 overflow-y-auto">
                       <h4 className="font-semibold mb-2">Cycle Details:</h4>
-                      {bulkResults.results.map((result: any, idx: number) => (
+                      {bulkResults.results.map((result: CycleResult, idx: number) => (
                         <div key={idx} className="mb-2 p-2 bg-gray-800 rounded text-sm">
                           <p className="font-semibold">Cycle {result.cycle}:</p>
                           {result.userGeneration && (
