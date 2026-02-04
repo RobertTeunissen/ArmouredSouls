@@ -10,7 +10,7 @@ interface SessionLogEntry {
   timestamp: string;
   type: 'success' | 'info' | 'warning' | 'error';
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 interface SystemStats {
@@ -97,15 +97,6 @@ interface RobotStats {
   bottomPerformers: Record<string, any[]>;
 }
 
-type TabType = 'dashboard' | 'cycles' | 'battles' | 'stats';
-
-interface SessionLogEntry {
-  timestamp: string;
-  type: 'success' | 'info' | 'warning' | 'error';
-  message: string;
-  details?: any;
-}
-
 function AdminPage() {
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>(() => {
@@ -154,7 +145,7 @@ function AdminPage() {
   };
 
   // Session log helpers
-  const addSessionLog = (type: SessionLogEntry['type'], message: string, details?: any) => {
+  const addSessionLog = (type: SessionLogEntry['type'], message: string, details?: unknown) => {
     const entry: SessionLogEntry = {
       timestamp: new Date().toISOString(),
       type,
@@ -854,7 +845,11 @@ function AdminPage() {
                         <tr key={battle.id} className="border-t border-gray-700 hover:bg-gray-750">
                           <td className="p-3">#{battle.id}</td>
                           <td className="p-3">
-                            <Link to={`/robots/${battle.robot1.id}`} className="text-blue-400 hover:underline">
+                            <Link 
+                              to={`/robots/${battle.robot1.id}`} 
+                              className="text-blue-400 hover:underline"
+                              aria-label={`View details for ${battle.robot1.name}`}
+                            >
                               {battle.robot1.name}
                             </Link>
                             <div className="text-xs text-gray-400">
@@ -862,7 +857,11 @@ function AdminPage() {
                             </div>
                           </td>
                           <td className="p-3">
-                            <Link to={`/robots/${battle.robot2.id}`} className="text-purple-400 hover:underline">
+                            <Link 
+                              to={`/robots/${battle.robot2.id}`} 
+                              className="text-purple-400 hover:underline"
+                              aria-label={`View details for ${battle.robot2.name}`}
+                            >
                               {battle.robot2.name}
                             </Link>
                             <div className="text-xs text-gray-400">
