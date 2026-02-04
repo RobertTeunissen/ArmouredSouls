@@ -232,6 +232,12 @@ function WeaponShopPage() {
     }
   };
 
+  // Calculate discounted price (must be defined before processedWeapons useMemo)
+  const calculateDiscountedPrice = (basePrice: number): number => {
+    const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
+    return applyDiscount(basePrice, discountPercent);
+  };
+
   // Apply search, filters, and sorting
   const processedWeapons = useMemo(() => {
     // Step 1: Search
@@ -287,11 +293,6 @@ function WeaponShopPage() {
 
     return result;
   }, [weapons, debouncedSearchQuery, filters, user, weaponWorkshopLevel, sortBy, viewMode, ownedWeapons]);
-
-  const calculateDiscountedPrice = (basePrice: number): number => {
-    const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
-    return applyDiscount(basePrice, discountPercent);
-  };
 
   const handlePurchase = async (weaponId: number, basePrice: number) => {
     if (!user) return;
