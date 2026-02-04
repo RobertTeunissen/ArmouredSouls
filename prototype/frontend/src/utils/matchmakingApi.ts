@@ -78,6 +78,7 @@ export interface LeagueRobot {
   totalBattles: number;
   currentHP: number;
   maxHP: number;
+  fame: number;
   userId: number;
   user: {
     username: string;
@@ -85,7 +86,7 @@ export interface LeagueRobot {
 }
 
 export interface LeagueInstance {
-  leagueId: number;
+  leagueId: string;
   leagueTier: string;
   currentRobots: number;
   maxRobots: number;
@@ -129,10 +130,11 @@ export const getMatchHistory = async (
 export const getLeagueStandings = async (
   tier: string,
   page: number = 1,
-  pageSize: number = 50
+  pageSize: number = 50,
+  instance?: string
 ): Promise<PaginatedResponse<LeagueRobot>> => {
   const response = await axios.get(`${API_BASE_URL}/leagues/${tier}/standings`, {
-    params: { page, pageSize },
+    params: { page, pageSize, ...(instance && { instance }) },
     headers: getAuthHeaders()
   });
   return response.data;
