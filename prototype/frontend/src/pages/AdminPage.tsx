@@ -98,10 +98,15 @@ interface RobotStats {
 }
 
 // Helper function for quintile labels
-const getQuintileLabel = (index: number): string => {
-  if (index === 0) return 'Bottom 20%';
-  if (index === 4) return 'Top 20%';
-  return 'Middle';
+const getQuintileLabel = (quintileNumber: number): string => {
+  switch (quintileNumber) {
+    case 1: return 'Bottom 20%';
+    case 2: return '2nd 20%';
+    case 3: return '3rd 20%';
+    case 4: return '4th 20%';
+    case 5: return 'Top 20%';
+    default: return `Q${quintileNumber}`;
+  }
 };
 
 interface CycleResult {
@@ -152,8 +157,23 @@ function AdminPage() {
 
   // Session log state
   const [sessionLog, setSessionLog] = useState<SessionLogEntry[]>(() => {
-    const saved = localStorage.getItem('adminSessionLog');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('adminSessionLog');
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      // Validate that it's an array
+      if (!Array.isArray(parsed)) return [];
+      // Basic validation of entries
+      return parsed.filter(entry => 
+        entry && 
+        typeof entry.timestamp === 'string' &&
+        typeof entry.type === 'string' &&
+        typeof entry.message === 'string'
+      );
+    } catch (error) {
+      console.error('Failed to load session log from localStorage:', error);
+      return [];
+    }
   });
 
   const [loading, setLoading] = useState(false);
@@ -1191,7 +1211,7 @@ function AdminPage() {
                         <tbody>
                           {robotStats.winRateAnalysis[selectedAttribute].map((quintile, idx) => (
                             <tr key={idx} className="border-t border-gray-600">
-                              <td className="p-2">Q{quintile.quintile} ({getQuintileLabel(idx)})</td>
+                              <td className="p-2">Q{quintile.quintile} ({getQuintileLabel(quintile.quintile)})</td>
                               <td className="p-2 font-bold">{quintile.avgValue.toFixed(2)}</td>
                               <td className="p-2 font-bold text-green-400">{quintile.avgWinRate.toFixed(1)}%</td>
                               <td className="p-2">{quintile.sampleSize}</td>
