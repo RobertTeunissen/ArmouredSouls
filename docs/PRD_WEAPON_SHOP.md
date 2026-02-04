@@ -1,7 +1,7 @@
 # Product Requirements Document: Weapon Shop Design
 
 **Last Updated**: February 4, 2026  
-**Status**: Design Document  
+**Status**: Implementation In Progress  
 **Owner**: Robert Teunissen  
 **Epic**: Weapon Shop & Inventory System  
 **Priority**: P1 (High Priority - Core Gameplay Feature)
@@ -9,6 +9,7 @@
 **Revision History:**
 - v1.0 (Feb 4, 2026): Initial PRD created
 - v1.1 (Feb 4, 2026): Added table view mode, fixed implementation roadmap status markers, added backend requirements analysis
+- v1.2 (Feb 4, 2026): Implementation started - Phase 1 (View Mode Toggle) completed
 
 > **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from the current 23 weapons to hundreds of weapons in future phases. It establishes patterns for discovery, comparison, filtering, and purchasing that maintain usability at any catalog size.
 
@@ -1520,22 +1521,47 @@ The existing Prisma schema fully supports all PRD requirements:
 - Recommended weapons section increases purchases by >20%
 - Users discover new weapons via suggestions
 
-### Phase 4: Visual Polish & Illustrations (P2 - Weeks 7-9)
+### Phase 4: Visual Polish & Illustrations (P2 - Weeks 7-9) - IN PROGRESS
 
-**Goal**: Align with design system and enhance visual appeal.
+**Goal**: Align with design system, enhance visual appeal, and add view mode toggle.
 
 **Deliverables:**
+- ⏳ **IN PROGRESS** View mode toggle (Card/Table view switcher) 
+  - ✅ ViewModeToggle component created
+  - ✅ WeaponTable component with 8 sortable columns
+  - ✅ localStorage persistence for view preference
+  - ⏳ URL parameter integration (deferred)
+- ⏳ **IN PROGRESS** Table view layout with sortable columns
+  - ✅ Sortable columns (Name, Type, Loadout, Damage, DPS, Cost, Attributes, Action)
+  - ✅ Click column headers to sort
+  - ✅ Visual sort indicators
+  - ✅ Weapon type icons in table
 - Weapon illustrations (256×256px, all 23 weapons)
-- Weapon type icons (32×32px: Melee, Ballistic, Energy, Shield)
-- View mode toggle (Card/Table view switcher)
-- Table view layout with sortable columns
+- ✅ Weapon type icons (32×32px: Melee, Ballistic, Energy, Shield)
+  - ✅ `/icons/weapon-types/melee.svg`
+  - ✅ `/icons/weapon-types/ballistic.svg`
+  - ✅ `/icons/weapon-types/energy.svg`
+  - ✅ `/icons/weapon-types/shield.svg`
+- ✅ View mode icons (32×32px: Grid, List)
+  - ✅ `/icons/view-modes/grid.svg`
+  - ✅ `/icons/view-modes/list.svg`
 - Enhanced weapon card design (refined layout, hover states)
 - Empty state illustrations and messaging
 
+**Implementation Notes:**
+- **Completed**: Core view toggle functionality with card and table views
+- **Completed**: Table view with full sorting capability
+- **Completed**: All icon assets created
+- **Remaining**: Weapon illustrations, enhanced card design, empty states
+
 **Success Criteria:**
-- All weapons have placeholder or final illustrations
-- Visual design matches design system color palette
-- User feedback on aesthetics is positive
+- ✅ View mode toggle switches between card and table layouts
+- ✅ Table view shows 15-20+ weapons per screen
+- ✅ All columns sortable with visual feedback
+- ✅ View preference persists between sessions
+- All weapons have placeholder or final illustrations (pending)
+- Visual design matches design system color palette (mostly complete)
+- User feedback on aesthetics is positive (pending user testing)
 
 ### Phase 5: Performance & Scalability (P2 - Weeks 10-11)
 
