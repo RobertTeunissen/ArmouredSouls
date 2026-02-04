@@ -17,10 +17,10 @@
 [AS Logo]  Dashboard | Robots▾ | Battles▾ | Facilities | Shop▾ | Social▾ | [Search🔍] [🔔] [@User▾]
 ```
 
-**Dropdowns**:
+- **Dropdowns**:
 - **Robots▾**: My Robots, Create, Compare, Training
 - **Battles▾**: Queue, History, Leagues, Practice, Tournaments
-- **Shop▾**: Weapons, Inventory, Marketplace, Crafting
+- **Shop▾**: Weapons, Marketplace, Crafting
 - **Social▾**: Friends, Guild, Chat, Leaderboards (Phase 3+)
 - **@User▾**: Profile, Settings, Notifications, Logout
 
@@ -41,7 +41,6 @@
 🛠️ MANAGE STABLE
   › Facilities
   › Weapon Shop
-  › Weapon Inventory
 
 🏆 COMPETE
   › Matchmaking
@@ -58,22 +57,21 @@
 
 ## Complete Page Inventory
 
-### Phase 1: MVP (14 pages)
+### Phase 1: MVP (13 pages)
 1. Login (`/login`)
 2. Dashboard (`/dashboard`)
 3. My Robots (`/robots`)
 4. Robot Detail (`/robots/:id`)
 5. Create Robot (`/robots/create`)
 6. Facilities (`/facilities`)
-7. Weapon Shop (`/weapon-shop`)
-8. Weapon Inventory (`/weapon-inventory`)
-9. Battle History (`/battle-history`)
-10. Battle Detail (`/battle/:id`)
-11. League Standings (`/league-standings`)
-12. Admin Panel (`/admin`) - Admin
-13. Registration (`/register`) - Future
+7. Weapon Shop (`/weapon-shop`) - Includes owned weapons filter
+8. Battle History (`/battle-history`)
+9. Battle Detail (`/battle/:id`)
+10. League Standings (`/league-standings`)
+11. Admin Panel (`/admin`) - Admin
+12. Registration (`/register`) - Future
 
-### Next Release: Enhanced Features (12 NEW, 25 total)
+### Next Release: Enhanced Features (12 NEW, 24 total)
 14. Profile (`/profile`)
 15. Settings (`/settings`)
 16. Friends (`/friends`)
@@ -87,28 +85,28 @@
 25. Training Planner (`/robots/:id/training`)
 26. Loadout Presets (`/robots/:id/loadouts`)
 
-### Future - Social: Social (10 NEW, 36 total)
+### Future - Social: Social (10 NEW, 35 total)
 27-30. Guilds (Browser, Detail, My Guild, Management)
 31-33. Leaderboards (Global, Regional, Specialized)
 34-36. Social (Chat, Replay Sharing, Spectator)
 
-### Future - Tournaments: Tournaments (8 NEW, 44 total)
+### Future - Tournaments: Tournaments (8 NEW, 43 total)
 37-41. Tournaments (Hub, Detail, Registration, Bracket, Lobby)
 42-44. Events (Calendar, Detail, Daily Challenges)
 
-### Future - Economy: Economy (8 NEW, 52 total)
+### Future - Economy: Economy (8 NEW, 51 total)
 45-48. Marketplace (Hub, Search, My Listings, History)
 49-50. Crafting (Crafting, Blueprints)
 51-52. Advanced (Income Dashboard, Prestige Store)
 
-### Phase 6: Team Battles (6 NEW, 58 total)
+### Phase 6: Team Battles (6 NEW, 57 total)
 53-55. Team (Builder, Matchmaking, History)
 56-58. Advanced Modes (Battle Royale, Guild Wars, Story)
 
-### Phase 7: Cosmetics (5 NEW, 63 total)
+### Phase 7: Cosmetics (5 NEW, 62 total)
 59-63. Customization (Hub, Skins, Stable, Poses, Emotes)
 
-### Phase 8: Analytics (7 NEW, 70 total)
+### Phase 8: Analytics (7 NEW, 69 total)
 64-67. Analytics (Dashboard, Robot, Battles, Economy)
 68-70. Tools (Simulator, Calculator, Meta Reports)
 

@@ -16,7 +16,6 @@ const implementedPages = new Set([
   '/robots/create',
   '/facilities',
   '/weapon-shop',
-  '/weapon-inventory',
   '/battle-history',
   '/league-standings',
   '/admin',
@@ -57,7 +56,6 @@ const allPages = {
     items: [
       { path: '/facilities', label: 'Facilities' },
       { path: '/weapon-shop', label: 'Weapon Shop' },
-      { path: '/weapon-inventory', label: 'Weapon Inventory' },
       { path: '/marketplace', label: 'Marketplace' },
       { path: '/marketplace/my-listings', label: 'My Listings' },
       { path: '/marketplace/history', label: 'Transaction History' },

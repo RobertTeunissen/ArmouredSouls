@@ -8,7 +8,6 @@ import RobotsPage from './pages/RobotsPage';
 import CreateRobotPage from './pages/CreateRobotPage';
 import RobotDetailPage from './pages/RobotDetailPage';
 import WeaponShopPage from './pages/WeaponShopPage';
-import WeaponInventoryPage from './pages/WeaponInventoryPage';
 import BattleHistoryPage from './pages/BattleHistoryPage';
 import BattleDetailPage from './pages/BattleDetailPage';
 import LeagueStandingsPage from './pages/LeagueStandingsPage';
@@ -68,14 +67,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <WeaponShopPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/weapon-inventory"
-            element={
-              <ProtectedRoute>
-                <WeaponInventoryPage />
               </ProtectedRoute>
             }
           />

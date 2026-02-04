@@ -113,9 +113,8 @@ This document defines the complete navigation architecture and page structure fo
 6. **Create Robot** (`/robots/create`) - Purchase new robot frame
 7. **Facilities** (`/facilities`) - Stable facility upgrades
 
-#### Economy & Equipment (2 pages)
-8. **Weapon Shop** (`/weapon-shop`) - Browse and purchase weapons
-9. **Weapon Inventory** (`/weapon-inventory`) - Manage owned weapons
+#### Economy & Equipment (1 page)
+8. **Weapon Shop** (`/weapon-shop`) - Browse and purchase weapons (includes owned weapons filter)
 
 #### Battle & Competition (3 pages)
 10. **Battle History** (`/battle-history`) - Past battle results
@@ -127,7 +126,7 @@ This document defines the complete navigation architecture and page structure fo
 
 ---
 
-### Enhanced Features (12 NEW pages, 25 total)
+### Enhanced Features (12 NEW pages, 24 total)
 
 #### User Profile & Social (5 pages)
 15. **Profile** (`/profile`) - User profile, stable name, stats, achievements
@@ -320,8 +319,7 @@ Primary Level (Tier 1)
 │   └── [Tier 3: Economy | Combat | Progression | Advanced]
 │
 ├── Shop (Tier 2 Section)
-│   ├── Weapon Shop
-│   ├── Weapon Inventory
+│   ├── Weapon Shop (includes owned weapons filter)
 │   ├── Marketplace (Phase 5)
 │   │   └── [Tier 3: Browse | My Listings | History]
 │   ├── Crafting (Phase 5)
@@ -661,7 +659,6 @@ Accessed from "More" tab or hamburger icon (☰):
 │ 🛠️ MANAGE STABLE                       │
 │   › Facilities                           │
 │   › Weapon Shop                          │
-│   › Weapon Inventory                     │
 │   › Training Planner                     │
 │                                          │
 │ 🏆 COMPETE                              │
