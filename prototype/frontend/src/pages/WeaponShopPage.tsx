@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import ViewModeToggle from '../components/ViewModeToggle';
 import WeaponTable from '../components/WeaponTable';
+import FilterPanel, { WeaponFilters } from '../components/FilterPanel';
+import ActiveFiltersDisplay from '../components/ActiveFiltersDisplay';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 
@@ -66,6 +68,14 @@ function WeaponShopPage() {
     return (saved as ViewMode) || 'card';
   });
 
+  // Filter state
+  const [filters, setFilters] = useState<WeaponFilters>({
+    loadoutTypes: [],
+    weaponTypes: [],
+    priceRange: null,
+    canAffordOnly: false,
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -96,6 +106,63 @@ function WeaponShopPage() {
     setViewMode(mode);
     localStorage.setItem('weaponShopViewMode', mode);
   };
+
+  const handleFiltersChange = (newFilters: WeaponFilters) => {
+    setFilters(newFilters);
+  };
+
+  const handleRemoveFilter = (filterType: string, value?: string) => {
+    const newFilters = { ...filters };
+    
+    if (filterType === 'loadoutType' && value) {
+      newFilters.loadoutTypes = newFilters.loadoutTypes.filter(t => t !== value);
+    } else if (filterType === 'weaponType' && value) {
+      newFilters.weaponTypes = newFilters.weaponTypes.filter(t => t !== value);
+    } else if (filterType === 'priceRange') {
+      newFilters.priceRange = null;
+    } else if (filterType === 'canAfford') {
+      newFilters.canAffordOnly = false;
+    }
+    
+    setFilters(newFilters);
+  };
+
+  // Apply filters to weapons
+  const filteredWeapons = useMemo(() => {
+    return weapons.filter(weapon => {
+      // Loadout type filter (OR logic within category)
+      if (filters.loadoutTypes.length > 0) {
+        if (!filters.loadoutTypes.includes(weapon.loadoutType)) {
+          return false;
+        }
+      }
+
+      // Weapon type filter (OR logic within category)
+      if (filters.weaponTypes.length > 0) {
+        if (!filters.weaponTypes.includes(weapon.weaponType)) {
+          return false;
+        }
+      }
+
+      // Price range filter
+      if (filters.priceRange) {
+        const discountedPrice = calculateDiscountedPrice(weapon.cost);
+        if (discountedPrice < filters.priceRange.min || discountedPrice > filters.priceRange.max) {
+          return false;
+        }
+      }
+
+      // Can afford filter
+      if (filters.canAffordOnly && user) {
+        const discountedPrice = calculateDiscountedPrice(weapon.cost);
+        if (user.currency < discountedPrice) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [weapons, filters, user, weaponWorkshopLevel]);
 
   const calculateDiscountedPrice = (basePrice: number): number => {
     const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
@@ -166,9 +233,9 @@ function WeaponShopPage() {
   };
 
   const groupedWeapons = {
-    shield: weapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
-    two_handed: weapons.filter(w => w.loadoutType === 'two_handed'),
-    one_handed: weapons.filter(w => w.loadoutType === 'single'),
+    shield: filteredWeapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
+    two_handed: filteredWeapons.filter(w => w.loadoutType === 'two_handed'),
+    one_handed: filteredWeapons.filter(w => w.loadoutType === 'single'),
   };
 
   const getLoadoutTypeLabel = (loadoutType: string) => {
@@ -250,6 +317,21 @@ function WeaponShopPage() {
 
         {!loading && !error && (
           <>
+            {/* Filter Panel */}
+            <FilterPanel
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              userCredits={user?.currency || 0}
+              weaponCount={weapons.length}
+              filteredCount={filteredWeapons.length}
+            />
+
+            {/* Active Filters Display */}
+            <ActiveFiltersDisplay
+              filters={filters}
+              onRemoveFilter={handleRemoveFilter}
+            />
+
             {/* View Mode Toggle */}
             <div className="flex justify-end mb-6">
               <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
@@ -259,7 +341,7 @@ function WeaponShopPage() {
             {viewMode === 'table' && (
               <div className="bg-gray-800 rounded-lg overflow-hidden">
                 <WeaponTable
-                  weapons={weapons}
+                  weapons={filteredWeapons}
                   onPurchase={handlePurchase}
                   calculateDiscountedPrice={calculateDiscountedPrice}
                   userCredits={user?.currency || 0}
@@ -274,13 +356,20 @@ function WeaponShopPage() {
             {/* Card View */}
             {viewMode === 'card' && (
               <>
-                {Object.entries(groupedWeapons).map(([loadoutType, weaponList]) => (
-                  weaponList.length > 0 && (
-                    <div key={loadoutType} className="mb-8">
-                      <h2 className={`text-2xl font-bold mb-4 ${getLoadoutTypeColor(loadoutType)}`}>
-                        {getLoadoutTypeLabel(loadoutType)}
-                      </h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredWeapons.length === 0 ? (
+                  <div className="bg-gray-800 rounded-lg p-12 text-center">
+                    <p className="text-gray-400 text-lg mb-2">No weapons match your filters</p>
+                    <p className="text-gray-500 text-sm">Try adjusting your filters to see more weapons</p>
+                  </div>
+                ) : (
+                  <>
+                        {Object.entries(groupedWeapons).map(([loadoutType, weaponList]) => (
+                      weaponList.length > 0 && (
+                        <div key={loadoutType} className="mb-8">
+                          <h2 className={`text-2xl font-bold mb-4 ${getLoadoutTypeColor(loadoutType)}`}>
+                            {getLoadoutTypeLabel(loadoutType)}
+                          </h2>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {weaponList.map((weapon) => {
                       const bonuses = getAttributeBonuses(weapon);
                       const discountedPrice = calculateDiscountedPrice(weapon.cost);
@@ -364,10 +453,12 @@ function WeaponShopPage() {
                         </div>
                       );
                     })}
-                  </div>
-                </div>
-                  )
-                ))}
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </>
+                )}
               </>
             )}
           </>
