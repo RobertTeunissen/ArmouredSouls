@@ -555,6 +555,17 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
   const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
   const totalFame = stats1.fameAwarded + stats2.fameAwarded;
   
+  // Update battle record with prestige/fame awards for display purposes
+  await prisma.battle.update({
+    where: { id: battle.id },
+    data: {
+      robot1PrestigeAwarded: stats1.prestigeAwarded,
+      robot2PrestigeAwarded: stats2.prestigeAwarded,
+      robot1FameAwarded: stats1.fameAwarded,
+      robot2FameAwarded: stats2.fameAwarded,
+    },
+  });
+  
   // Update scheduled match
   await prisma.scheduledMatch.update({
     where: { id: scheduledMatch.id },

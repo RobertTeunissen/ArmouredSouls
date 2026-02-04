@@ -93,6 +93,7 @@ function AdminPage() {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [bulkCycles, setBulkCycles] = useState(1);
   const [autoRepair, setAutoRepair] = useState(true);
+  const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
   const [bulkResults, setBulkResults] = useState<any>(null);
   
   // Battle log state
@@ -191,6 +192,23 @@ function AdminPage() {
     }
   };
 
+  const processDailyFinances = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post('/api/admin/daily-finances/process');
+      const summary = response.data.summary;
+      showMessage(
+        'success',
+        `Daily finances processed! ${summary.usersProcessed} users, ₡${summary.totalCostsDeducted.toLocaleString()} deducted${summary.bankruptUsers > 0 ? `, ${summary.bankruptUsers} bankruptcies` : ''}`
+      );
+      fetchStats();
+    } catch (error: any) {
+      showMessage('error', error.response?.data?.error || 'Daily finances failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const runBulkCycles = async () => {
     if (bulkCycles < 1 || bulkCycles > 100) {
       showMessage('error', 'Cycles must be between 1 and 100');
@@ -203,6 +221,7 @@ function AdminPage() {
       const response = await axios.post('/api/admin/cycles/bulk', {
         cycles: bulkCycles,
         autoRepair,
+        includeDailyFinances,
       });
       setBulkResults(response.data);
       showMessage(
@@ -347,6 +366,13 @@ function AdminPage() {
               ⚔️ Execute Battles
             </button>
             <button
+              onClick={processDailyFinances}
+              disabled={loading}
+              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 px-6 py-3 rounded font-semibold transition-colors"
+            >
+              💰 Process Daily Finances
+            </button>
+            <button
               onClick={rebalanceLeagues}
               disabled={loading}
               className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-6 py-3 rounded font-semibold transition-colors"
@@ -359,8 +385,8 @@ function AdminPage() {
         {/* Bulk Cycle Testing */}
         <div className="bg-gray-800 rounded-lg p-6">
           <h2 className="text-2xl font-bold mb-4">Bulk Cycle Testing</h2>
-          <div className="mb-4">
-            <label className="block mb-2">
+          <div className="mb-4 space-y-3">
+            <label className="block">
               Number of Cycles (1-100):
               <input
                 type="number"
@@ -379,6 +405,15 @@ function AdminPage() {
                 className="mr-2"
               />
               Auto-repair before each cycle
+            </label>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={includeDailyFinances}
+                onChange={(e) => setIncludeDailyFinances(e.target.checked)}
+                className="mr-2"
+              />
+              Include daily finances processing
             </label>
           </div>
           <button

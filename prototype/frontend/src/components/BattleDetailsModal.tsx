@@ -206,6 +206,62 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                     Duration: {battle.durationSeconds}s | League: {battle.leagueType}
                   </div>
                 </div>
+
+                {/* Battle Rewards */}
+                <div className="mt-4 bg-gray-800 rounded-lg p-4">
+                  <h4 className="text-lg font-semibold mb-3 text-yellow-400">💰 Battle Rewards</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {/* Robot 1 Rewards */}
+                    <div className={`p-3 rounded ${battle.winnerId === battle.robot1.id ? 'bg-green-900/30 border border-green-700' : 'bg-gray-700'}`}>
+                      <div className="font-semibold text-blue-400 mb-2">{battle.robot1.name}</div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Credits:</span>
+                          <span className="text-green-400">
+                            +₡{(battle.winnerId === battle.robot1.id ? battle.winnerReward : battle.loserReward)?.toLocaleString() || 0}
+                          </span>
+                        </div>
+                        {battle.winnerId === battle.robot1.id && (
+                          <>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Prestige:</span>
+                              <span className="text-purple-400">+{battle.robot1PrestigeAwarded || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Fame:</span>
+                              <span className="text-yellow-400">+{battle.robot1FameAwarded || 0}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Robot 2 Rewards */}
+                    <div className={`p-3 rounded ${battle.winnerId === battle.robot2.id ? 'bg-green-900/30 border border-green-700' : 'bg-gray-700'}`}>
+                      <div className="font-semibold text-purple-400 mb-2">{battle.robot2.name}</div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Credits:</span>
+                          <span className="text-green-400">
+                            +₡{(battle.winnerId === battle.robot2.id ? battle.winnerReward : battle.loserReward)?.toLocaleString() || 0}
+                          </span>
+                        </div>
+                        {battle.winnerId === battle.robot2.id && (
+                          <>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Prestige:</span>
+                              <span className="text-purple-400">+{battle.robot2PrestigeAwarded || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Fame:</span>
+                              <span className="text-yellow-400">+{battle.robot2FameAwarded || 0}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Attribute Comparison */}
