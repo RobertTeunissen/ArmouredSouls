@@ -413,7 +413,7 @@ function HallOfRecordsPage() {
                 {records.upsets.biggestEloLoss && (
                   <RecordCard
                     title="📉 Biggest ELO Loss"
-                    value={`-${records.upsets.biggestEloLoss.eloChange} ELO`}
+                    value={`${records.upsets.biggestEloLoss.eloChange} ELO`}
                     description={`${records.upsets.biggestEloLoss.loser.name} (${records.upsets.biggestEloLoss.loser.eloBefore} → ${records.upsets.biggestEloLoss.loser.eloAfter})`}
                     details={[
                       `Lost to: ${records.upsets.biggestEloLoss.winner.username}`,
