@@ -3,6 +3,10 @@
 **Last Updated**: February 4, 2026  
 **Full PRD**: [PRD_WEAPON_SHOP.md](PRD_WEAPON_SHOP.md)
 
+**Revision History:**
+- v1.0 (Feb 4, 2026): Initial quick reference
+- v1.1 (Feb 4, 2026): Added table view mode, updated implementation status, added backend requirements summary
+
 > **Quick access guide** to the Weapon Shop design specifications. For complete details, see the full PRD.
 
 ---
@@ -11,20 +15,27 @@
 
 **Mission**: Design a weapon shop that scales from 23 weapons to 100+ weapons while maintaining excellent UX.
 
-**Core Solution**: Multi-criteria filtering + comparison tools + smart sorting = find the right weapon in <30 seconds.
+**Core Solution**: Multi-criteria filtering + comparison tools + smart sorting + dual view modes (card/table) = find the right weapon in <30 seconds.
 
 ---
 
 ## Key Features
 
-### 1. Multi-Criteria Filtering
+### 1. View Mode Toggle (NEW)
+- **Card View**: Visual grid with weapon illustrations, detailed at a glance
+- **Table View**: Compact table with sortable columns, shows 15-20+ weapons per screen
+- **Toggle Control**: Prominent button (grid/list icons)
+- **State Persistence**: View preference saved between sessions
+- **Filter Compatibility**: All filters/sorting work in both views
+
+### 2. Multi-Criteria Filtering
 - **Loadout Type**: Single, Weapon+Shield, Two-Handed, Dual-Wield
 - **Weapon Type**: Melee, Ballistic, Energy, Shield
 - **Price Range**: Budget, Mid, Premium, Luxury
 - **Quick Filters**: Can Afford, Storage Available, Show Only Owned
 - **Attribute Focus**: Offensive, Defensive, Mobility, Balanced
 
-### 2. Advanced Sorting
+### 3. Advanced Sorting
 - Recommended (default)
 - Price (Low→High, High→Low)
 - Damage (High→Low)
@@ -33,20 +44,20 @@
 - Best Value (cost-per-attribute)
 - Name (A-Z)
 
-### 3. Comparison Mode
+### 4. Comparison Mode
 - Select 2-3 weapons
 - Side-by-side stat comparison
 - Highlight highest/lowest values
 - Value metrics: DPS, cost-per-attribute, efficiency scores
 - Purchase directly from comparison view
 
-### 4. Search
+### 5. Search
 - Real-time text search (weapon names)
 - Debounced (300ms)
 - Combines with active filters
 - "No results" suggestions
 
-### 5. Economic Context
+### 6. Economic Context
 - Prominent storage display: "18/25 weapons"
 - Weapon Workshop discount badges: "Save ₡25K (15% off)"
 - Affordability indicators: Green checkmark / Red X
@@ -54,9 +65,53 @@
 
 ---
 
-## Card Design
+## View Modes
 
-### Compact View (Default)
+### Card View (Visual/Detailed)
+**Best For**: Visual browsing, seeing artwork, discovery  
+**Layout**: Grid of cards (3-4 columns desktop)  
+**Shows**: Weapon illustration, name, type, stats, actions
+
+### Compact Card View
+```
+┌────────────────────────────┐
+│   [Weapon Illustration]    │ 256×256px
+├────────────────────────────┤
+│ [Type] Weapon Name         │
+│ ₡150,000 (-15%) Save ₡25K  │
+│ ⚔ Dmg: 120  ⏱ CD: 2.5s    │
+│ 📊 DPS: 48  ⭐ +12 Attrs   │
+├────────────────────────────┤
+│ [Purchase] [Compare] [ℹ]   │
+└────────────────────────────┘
+```
+
+### Table View (Compact/Scannable) - NEW
+**Best For**: Quick scanning, comparing many weapons, data-driven decisions  
+**Layout**: Sortable table with multiple columns  
+**Shows**: 15-20+ weapons per screen
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Name        │ Type   │ Loadout │ Dmg │ DPS │ Cost  │ Attr │ Act │
+├──────────────────────────────────────────────────────────────────┤
+│ [⚡] Laser  │ Energy │ Single  │ 120 │ 48  │ ₡220K │ +12  │ [B] │
+│     Rifle   │        │         │     │     │ -15%  │      │  ☐  │
+├──────────────────────────────────────────────────────────────────┤
+│ [🔫] Machine│Ballist │ Single, │  80 │ 40  │ ₡190K │ +11  │ [B] │
+│     Gun     │   ic   │   Dual  │     │     │       │      │  ☐  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Table Features**:
+- Click column header to sort
+- Click row to open weapon detail modal
+- Checkbox for comparison selection
+- Color-coded affordability (green/red rows)
+
+---
+
+## Legacy Card Designs
 ```
 ┌────────────────────────────┐
 │   [Weapon Illustration]    │ 256×256px
@@ -106,6 +161,35 @@
 
 ---
 
+## Backend & Database Requirements
+
+### Summary: ✅ NO CHANGES REQUIRED
+
+All features can be implemented with **frontend-only changes**.
+
+**Why:**
+- Existing API endpoints sufficient (`GET /api/weapons`, purchase, inventory, storage)
+- All filter/sort data already in weapon model
+- Client-side filtering/sorting is performant for 23-100 weapons
+- View mode toggle is presentational (frontend)
+- Comparison and recommendations are client-side logic
+
+**Existing APIs Used:**
+- `GET /api/weapons` - Returns all weapons
+- `POST /api/weapon-inventory/purchase` - Purchase weapon
+- `GET /api/weapon-inventory` - User's owned weapons
+- `GET /api/weapon-inventory/storage-status` - Storage capacity
+- `GET /api/facilities` - Weapon Workshop level for discounts
+
+**Future Optimization** (if catalog exceeds 200+ weapons):
+- Add server-side filtering query params
+- Implement backend pagination
+- Add database full-text search
+
+**Current Recommendation**: Implement entirely in frontend using existing APIs.
+
+---
+
 ## Performance Targets
 
 | Metric | Target |
@@ -128,8 +212,8 @@ Comparison mode, detail modal, value metrics
 ### Phase 3: Search & Discovery (P1 - Weeks 5-6)
 Text search, recommendations, quick presets
 
-### Phase 4: Visual Polish (P2 - Weeks 7-9)
-Weapon illustrations, refined card design
+### Phase 4: Visual Polish & View Modes (P2 - Weeks 7-9)
+Weapon illustrations, table view toggle, refined card design
 
 ### Phase 5: Performance (P2 - Weeks 10-11)
 Pagination, lazy loading, virtualization
@@ -164,6 +248,7 @@ Tutorials, tooltips, help system
 - Time to find weapon: <30 seconds
 - Filter usage: >70%
 - Comparison usage: >40%
+- View mode toggle adoption: >60%
 
 ### Engagement
 - Weapons viewed per session: 10-20
