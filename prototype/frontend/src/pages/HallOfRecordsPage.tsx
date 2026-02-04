@@ -11,6 +11,7 @@ interface RecordsData {
     fastestVictory: FastestVictory | null;
     longestBattle: LongestBattle | null;
     mostDamageInBattle: MostDamageInBattle | null;
+    mostDamageSingleAttack: MostDamageSingleAttack | null;
     narrowestVictory: NarrowestVictory | null;
   };
   upsets: {
@@ -58,6 +59,15 @@ interface MostDamageInBattle {
   damageDealt: number;
   robot: { id: number; name: string; username: string };
   opponent: { id: number; name: string; username: string };
+  durationSeconds: number;
+  date: string;
+}
+
+interface MostDamageSingleAttack {
+  battleId: number;
+  damage: number;
+  attacker: { id: number; name: string; username: string };
+  defender: { id: number; name: string; username: string };
   durationSeconds: number;
   date: string;
 }
@@ -361,7 +371,22 @@ function HallOfRecordsPage() {
                   />
                 )}
 
-                {/* Narrowest Victory */}
+                {/* Most Damage in Single Attack */}
+                {records.combat.mostDamageSingleAttack && (
+                  <RecordCard
+                    title="⚡ Most Damage in Single Attack"
+                    value={`${records.combat.mostDamageSingleAttack.damage.toLocaleString()} damage`}
+                    description={`${records.combat.mostDamageSingleAttack.attacker.name} landed a devastating hit on ${records.combat.mostDamageSingleAttack.defender.name}`}
+                    details={[
+                      `Attacker: ${records.combat.mostDamageSingleAttack.attacker.username}`,
+                      `Defender: ${records.combat.mostDamageSingleAttack.defender.username}`,
+                      `Date: ${formatDate(records.combat.mostDamageSingleAttack.date)}`,
+                    ]}
+                    onClick={() => handleBattleClick(records.combat.mostDamageSingleAttack!.battleId)}
+                  />
+                )}
+
+                {/* Narrowest Victory */
                 {records.combat.narrowestVictory && (
                   <RecordCard
                     title="🎯 Narrowest Victory"
