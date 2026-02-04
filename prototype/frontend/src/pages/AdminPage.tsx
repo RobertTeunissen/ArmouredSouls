@@ -795,9 +795,11 @@ function AdminPage() {
                           {new Date(entry.timestamp).toLocaleString()}
                         </span>
                       </div>
-                      {entry.details && (
+                      {entry.details !== undefined && entry.details !== null && (
                         <pre className="mt-2 text-xs text-gray-400 overflow-x-auto">
-                          {JSON.stringify(entry.details, null, 2)}
+                          {String(typeof entry.details === 'string' 
+                            ? entry.details 
+                            : JSON.stringify(entry.details, null, 2))}
                         </pre>
                       )}
                     </div>
