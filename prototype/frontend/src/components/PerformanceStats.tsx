@@ -23,8 +23,8 @@ function PerformanceStats({ robot }: PerformanceStatsProps) {
     ? ((robot.wins / robot.totalBattles) * 100).toFixed(1) 
     : '0.0';
 
-  // Calculate K/D ratio
-  const kdRatio = robot.losses > 0 
+  // Calculate Destruction Ratio (Total Losses inflicted / Match Losses taken)
+  const destructionRatio = robot.losses > 0 
     ? (robot.kills / robot.losses).toFixed(2) 
     : robot.kills.toFixed(2);
 
@@ -102,12 +102,18 @@ function PerformanceStats({ robot }: PerformanceStatsProps) {
               <span className="font-semibold text-white">{formatNumber(robot.damageTakenLifetime)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-300">Kills:</span>
+              <span className="text-gray-300">Total Losses:</span>
               <span className="font-semibold text-green-400">{robot.kills}</span>
             </div>
+            <div className="text-xs text-gray-400 italic -mt-1 mb-1">
+              (Opponents destroyed)
+            </div>
             <div className="flex justify-between border-t border-gray-600 pt-2">
-              <span className="text-gray-300">K/D Ratio:</span>
-              <span className="font-semibold text-white">{kdRatio}</span>
+              <span className="text-gray-300">Destruction Ratio:</span>
+              <span className="font-semibold text-white">{destructionRatio}</span>
+            </div>
+            <div className="text-xs text-gray-400 italic -mt-1">
+              (Total losses ÷ match losses)
             </div>
           </div>
         </div>

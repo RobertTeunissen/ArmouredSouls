@@ -447,6 +447,9 @@ async function updateRobotStats(
     }
   }
   
+  // Check if this robot destroyed their opponent (opponent reached 0 HP)
+  const opponentDestroyed = isRobot1 ? battle.robot2Destroyed : battle.robot1Destroyed;
+  
   // Update robot
   await prisma.robot.update({
     where: { id: robot.id },
@@ -458,6 +461,7 @@ async function updateRobotStats(
       wins: isWinner ? robot.wins + 1 : robot.wins,
       draws: isDraw ? robot.draws + 1 : robot.draws,
       losses: (!isWinner && !isDraw) ? robot.losses + 1 : robot.losses,
+      kills: opponentDestroyed ? robot.kills + 1 : robot.kills, // Increment kills when opponent destroyed
       damageDealtLifetime: robot.damageDealtLifetime + (isRobot1 ? battle.robot1DamageDealt : battle.robot2DamageDealt),
       damageTakenLifetime: robot.damageTakenLifetime + (isRobot1 ? battle.robot2DamageDealt : battle.robot1DamageDealt),
       fame: isWinner ? { increment: fameAwarded } : undefined,
@@ -468,6 +472,10 @@ async function updateRobotStats(
     const fameTier = getFameTier(robot.fame + fameAwarded);
     const hpPercent = (finalHP / robot.maxHP * 100).toFixed(0);
     console.log(`[Battle] Fame: +${fameAwarded} → ${robot.name} (${hpPercent}% HP remaining, tier: ${fameTier})`);
+  }
+  
+  if (opponentDestroyed) {
+    console.log(`[Battle] Kill: ${robot.name} destroyed opponent (total kills: ${robot.kills + 1})`);
   }
   
   // Award credits to user based on battle outcome

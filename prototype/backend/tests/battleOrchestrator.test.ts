@@ -257,6 +257,95 @@ describe('Battle Orchestrator', () => {
       await prisma.weaponInventory.deleteMany({});
       await prisma.user.delete({ where: { id: byeUser.id } });
     });
+
+    it('should increment kills when a robot destroys its opponent', async () => {
+      // Create two test robots
+      const weaponInv1 = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+      const weaponInv2 = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+
+      const robot1 = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Killer Robot',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          kills: 5, // Start with 5 kills
+          loadoutType: 'single',
+          mainWeaponId: weaponInv1.id,
+        },
+      });
+
+      const robot2 = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Victim Robot',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          kills: 3, // Start with 3 kills
+          loadoutType: 'single',
+          mainWeaponId: weaponInv2.id,
+        },
+      });
+
+      // Create scheduled match
+      const scheduledMatch = await prisma.scheduledMatch.create({
+        data: {
+          robot1Id: robot1.id,
+          robot2Id: robot2.id,
+          leagueType: 'bronze',
+          scheduledFor: new Date(),
+          status: 'scheduled',
+        },
+      });
+
+      // Execute battle
+      const result = await processBattle(scheduledMatch);
+
+      // Get updated robots
+      const updatedRobot1 = await prisma.robot.findUnique({ where: { id: robot1.id } });
+      const updatedRobot2 = await prisma.robot.findUnique({ where: { id: robot2.id } });
+
+      // Get battle details to check who was destroyed
+      const battle = await prisma.battle.findUnique({ where: { id: result.battleId } });
+      
+      // Verify that the winner's kills incremented if opponent was destroyed
+      if (result.winnerId === robot1.id && battle?.robot2Destroyed) {
+        expect(updatedRobot1?.kills).toBe(6); // Should increment from 5 to 6
+        expect(updatedRobot2?.kills).toBe(3); // Should stay at 3
+      } else if (result.winnerId === robot2.id && battle?.robot1Destroyed) {
+        expect(updatedRobot2?.kills).toBe(4); // Should increment from 3 to 4
+        expect(updatedRobot1?.kills).toBe(5); // Should stay at 5
+      } else {
+        // No robot was destroyed (unlikely but possible in draws)
+        // Both should maintain their original kill counts
+        expect(updatedRobot1?.kills).toBe(5);
+        expect(updatedRobot2?.kills).toBe(3);
+      }
+
+      // Verify one of the robots was marked as destroyed (in most cases)
+      expect(battle?.robot1Destroyed || battle?.robot2Destroyed).toBeTruthy();
+
+      // Clean up
+      await prisma.battle.delete({ where: { id: result.battleId } });
+      await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
+      await prisma.robot.delete({ where: { id: robot1.id } });
+      await prisma.robot.delete({ where: { id: robot2.id } });
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+    });
   });
 
   describe('executeScheduledBattles', () => {
