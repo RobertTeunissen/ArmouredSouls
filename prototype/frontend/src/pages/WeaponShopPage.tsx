@@ -10,6 +10,7 @@ import SearchBar from '../components/SearchBar';
 import SortDropdown, { SortOption } from '../components/SortDropdown';
 import ComparisonBar from '../components/ComparisonBar';
 import ComparisonModal from '../components/ComparisonModal';
+import WeaponDetailModal from '../components/WeaponDetailModal';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../utils/weaponImages';
@@ -61,11 +62,15 @@ type ViewMode = 'card' | 'table';
 function WeaponShopPage() {
   const { user, refreshUser } = useAuth();
   const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [ownedWeapons, setOwnedWeapons] = useState<Map<number, number>>(new Map());
   const [weaponWorkshopLevel, setWeaponWorkshopLevel] = useState(0);
   const [storageStatus, setStorageStatus] = useState<StorageStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [purchasing, setPurchasing] = useState<number | null>(null);
+  
+  // Detail modal state
+  const [selectedWeapon, setSelectedWeapon] = useState<Weapon | null>(null);
   
   // View mode state with localStorage persistence
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -109,6 +114,18 @@ function WeaponShopPage() {
         // Fetch weapons
         const weaponsResponse = await axios.get('http://localhost:3001/api/weapons');
         setWeapons(weaponsResponse.data);
+
+        // Fetch owned weapons inventory
+        const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory');
+        const inventory = inventoryResponse.data;
+        
+        // Count owned weapons by weapon ID
+        const ownedMap = new Map<number, number>();
+        inventory.forEach((item: any) => {
+          const weaponId = item.weaponId;
+          ownedMap.set(weaponId, (ownedMap.get(weaponId) || 0) + 1);
+        });
+        setOwnedWeapons(ownedMap);
 
         // Fetch facilities to get Weapon Workshop level
         const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities');
@@ -282,7 +299,22 @@ function WeaponShopPage() {
       const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
       setStorageStatus(storageResponse.data);
       
+      // Refresh owned weapons
+      const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory');
+      const inventory = inventoryResponse.data;
+      const ownedMap = new Map<number, number>();
+      inventory.forEach((item: any) => {
+        const wId = item.weaponId;
+        ownedMap.set(wId, (ownedMap.get(wId) || 0) + 1);
+      });
+      setOwnedWeapons(ownedMap);
+      
       alert('Weapon purchased successfully!');
+      
+      // Close detail modal if open
+      if (selectedWeapon?.id === weaponId) {
+        setSelectedWeapon(null);
+      }
     } catch (err: any) {
       console.error('Purchase failed:', err);
       alert(err.response?.data?.error || 'Failed to purchase weapon');
@@ -469,6 +501,7 @@ function WeaponShopPage() {
                   purchasing={purchasing}
                   hasDiscount={weaponWorkshopLevel > 0}
                   discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
+                  onWeaponClick={setSelectedWeapon}
                 />
               </div>
             )}
@@ -497,6 +530,13 @@ function WeaponShopPage() {
                       const isSelected = selectedForComparison.includes(weapon.id);
                       return (
                         <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg relative">
+                          {/* Owned Indicator */}
+                          {ownedWeapons.get(weapon.id) && (
+                            <div className="absolute top-4 right-4 z-10 bg-blue-900/50 border border-blue-600 px-2 py-1 rounded text-xs font-semibold text-blue-300">
+                              Already Own ({ownedWeapons.get(weapon.id)})
+                            </div>
+                          )}
+                          
                           {/* Comparison Checkbox */}
                           <div className="absolute top-4 left-4 z-10">
                             <label className="flex items-center gap-2 cursor-pointer">
@@ -512,11 +552,11 @@ function WeaponShopPage() {
                           </div>
                           
                           {/* Weapon Image */}
-                          <div className="mb-4 flex justify-center">
+                          <div className="mb-4 flex justify-center cursor-pointer" onClick={() => setSelectedWeapon(weapon)}>
                             <img 
                               src={getWeaponImagePath(weapon.name)}
                               alt={weapon.name}
-                              className="w-48 h-48 object-contain"
+                              className="w-48 h-48 object-contain hover:scale-105 transition-transform"
                               onError={(e) => {
                                 // Fallback if image doesn't load
                                 e.currentTarget.style.display = 'none';
@@ -525,7 +565,12 @@ function WeaponShopPage() {
                           </div>
 
                           <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-xl font-semibold">{weapon.name}</h3>
+                            <h3 
+                              className="text-xl font-semibold cursor-pointer hover:text-blue-400 transition-colors"
+                              onClick={() => setSelectedWeapon(weapon)}
+                            >
+                              {weapon.name}
+                            </h3>
                             <span className={`text-sm font-semibold uppercase ${getTypeColor(weapon.weaponType)}`}>
                               {weapon.weaponType}
                             </span>
@@ -635,6 +680,22 @@ function WeaponShopPage() {
             weaponWorkshopLevel={weaponWorkshopLevel}
             storageIsFull={storageStatus?.isFull || false}
             purchasingId={purchasing}
+          />
+        )}
+
+        {/* Weapon Detail Modal */}
+        {selectedWeapon && (
+          <WeaponDetailModal
+            weapon={selectedWeapon}
+            onClose={() => setSelectedWeapon(null)}
+            onPurchase={handlePurchase}
+            calculateDiscountedPrice={calculateDiscountedPrice}
+            userCredits={user?.currency || 0}
+            isFull={storageStatus?.isFull || false}
+            purchasing={purchasing === selectedWeapon.id}
+            hasDiscount={weaponWorkshopLevel > 0}
+            discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
+            ownedCount={ownedWeapons.get(selectedWeapon.id) || 0}
           />
         )}
       </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export interface WeaponFilters {
   loadoutTypes: string[];
@@ -22,6 +22,19 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   weaponCount,
   filteredCount,
 }) => {
+  // Collapsible state with localStorage persistence
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem('weaponShopFiltersExpanded');
+    // Default to expanded on desktop (>768px), collapsed on mobile
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    return window.innerWidth >= 768;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('weaponShopFiltersExpanded', String(isExpanded));
+  }, [isExpanded]);
   const handleLoadoutTypeToggle = (type: string) => {
     const newTypes = filters.loadoutTypes.includes(type)
       ? filters.loadoutTypes.filter(t => t !== type)
@@ -81,16 +94,39 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   ];
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Filters</h2>
+    <div className="bg-gray-800 rounded-lg mb-6">
+      {/* Header - Always visible */}
+      <div className="flex justify-between items-center p-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-semibold">Filters</h2>
+          <button
+            className="text-gray-400 hover:text-white transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+          >
+            {isExpanded ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            )}
+          </button>
+        </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400">
             Showing {filteredCount} of {weaponCount} weapons
           </span>
           {hasActiveFilters && (
             <button
-              onClick={handleClearAll}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClearAll();
+              }}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
               Clear All
@@ -98,6 +134,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           )}
         </div>
       </div>
+
+      {/* Collapsible Content */}
+      {isExpanded && (
+        <div className="px-6 pb-6 border-t border-gray-700 pt-4">
 
       {/* Loadout Type Filter */}
       <div className="mb-6">
@@ -188,6 +228,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           Can Afford (₡{userCredits.toLocaleString()})
         </button>
       </div>
+        </div>
+      )}
     </div>
   );
 };

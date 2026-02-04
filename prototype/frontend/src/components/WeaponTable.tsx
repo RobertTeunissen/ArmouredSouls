@@ -26,9 +26,10 @@ interface WeaponTableProps {
   purchasing: number | null;
   hasDiscount: boolean;
   discountPercent: number;
+  onWeaponClick?: (weapon: Weapon) => void;
 }
 
-type SortField = 'name' | 'weaponType' | 'loadoutType' | 'baseDamage' | 'dps' | 'cost';
+type SortField = 'name' | 'weaponType' | 'loadoutType' | 'baseDamage' | 'cooldown' | 'dps' | 'cost';
 type SortDirection = 'asc' | 'desc';
 
 const WeaponTable: React.FC<WeaponTableProps> = ({
@@ -40,6 +41,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
   purchasing,
   hasDiscount,
   discountPercent,
+  onWeaponClick,
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -93,6 +95,10 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
       let bValue: any;
 
       switch (sortField) {
+        case 'cooldown':
+          aValue = parseFloat(calculateWeaponCooldown(a.weaponType, a.baseDamage));
+          bValue = parseFloat(calculateWeaponCooldown(b.weaponType, b.baseDamage));
+          break;
         case 'dps':
           aValue = calculateDPS(a);
           bValue = calculateDPS(b);
@@ -147,21 +153,27 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
             </th>
             <th 
               className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white"
-              onClick={() => handleSort('weaponType')}
-            >
-              Type <SortIndicator field="weaponType" />
-            </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white"
               onClick={() => handleSort('loadoutType')}
             >
               Loadout <SortIndicator field="loadoutType" />
+            </th>
+            <th 
+              className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white"
+              onClick={() => handleSort('weaponType')}
+            >
+              Type <SortIndicator field="weaponType" />
             </th>
             <th 
               className="px-4 py-3 text-right text-sm font-semibold text-gray-300 cursor-pointer hover:text-white"
               onClick={() => handleSort('baseDamage')}
             >
               Damage <SortIndicator field="baseDamage" />
+            </th>
+            <th 
+              className="px-4 py-3 text-right text-sm font-semibold text-gray-300 cursor-pointer hover:text-white"
+              onClick={() => handleSort('cooldown')}
+            >
+              Cooldown <SortIndicator field="cooldown" />
             </th>
             <th 
               className="px-4 py-3 text-right text-sm font-semibold text-gray-300 cursor-pointer hover:text-white"
@@ -187,6 +199,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
           {sortedWeapons.map((weapon) => {
             const discountedPrice = calculateDiscountedPrice(weapon.cost);
             const dps = calculateDPS(weapon);
+            const cooldown = calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage);
             const attributeTotal = calculateAttributeTotal(weapon);
             const canAfford = userCredits >= discountedPrice;
             const canPurchase = canAfford && !isFull && purchasing !== weapon.id;
@@ -201,17 +214,25 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     {getWeaponTypeIcon(weapon.weaponType)}
-                    <span className="font-medium">{weapon.name}</span>
+                    <span 
+                      className="font-medium cursor-pointer hover:text-blue-400 transition-colors"
+                      onClick={() => onWeaponClick?.(weapon)}
+                    >
+                      {weapon.name}
+                    </span>
                   </div>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="text-sm capitalize">{weapon.weaponType}</span>
                 </td>
                 <td className="px-4 py-3">
                   <span className="text-sm">{formatLoadoutType(weapon.loadoutType)}</span>
                 </td>
+                <td className="px-4 py-3">
+                  <span className="text-sm capitalize">{weapon.weaponType}</span>
+                </td>
                 <td className="px-4 py-3 text-right">
                   <span className="font-mono">{weapon.baseDamage}</span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <span className="font-mono text-gray-400">{cooldown}s</span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <span className="font-mono">{dps}</span>
