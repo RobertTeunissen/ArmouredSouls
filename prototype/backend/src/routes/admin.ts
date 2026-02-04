@@ -10,6 +10,9 @@ import { PrismaClient } from '@prisma/client';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Configuration constants
+const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
+
 /**
  * Middleware to check if user is admin
  */
@@ -481,6 +484,73 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     // Total battles
     const totalBattles = await prisma.battle.count();
 
+    // Battle statistics - draw count and duration
+    const battles = await prisma.battle.findMany({
+      select: {
+        winnerId: true,
+        robot1Id: true,
+        robot2Id: true,
+        durationSeconds: true,
+        robot1FinalHP: true,
+        robot2FinalHP: true,
+      },
+    });
+
+    const drawCount = battles.filter(b => b.winnerId === null).length;
+    const drawPercentage = totalBattles > 0 ? (drawCount / totalBattles) * 100 : 0;
+    const avgDuration = battles.length > 0 
+      ? battles.reduce((sum, b) => sum + b.durationSeconds, 0) / battles.length 
+      : 0;
+
+    // Count kill outcomes (where loser has 0 HP - not including draws)
+    const killCount = battles.filter(b => {
+      if (!b.winnerId) return false; // Not a draw
+      // Check if the loser has 0 HP
+      const loserHP = b.winnerId === b.robot1Id ? b.robot2FinalHP : b.robot1FinalHP;
+      return loserHP === 0;
+    }).length;
+
+    // Financial statistics
+    const users = await prisma.user.findMany({
+      select: {
+        currency: true,
+        facilities: {
+          select: {
+            facilityType: true,
+            level: true,
+          },
+        },
+      },
+    });
+
+    const totalCredits = users.reduce((sum, u) => sum + u.currency, 0);
+    const avgBalance = users.length > 0 ? totalCredits / users.length : 0;
+    
+    // Users at risk of bankruptcy (using configured threshold)
+    const bankruptcyRisk = users.filter(u => u.currency < BANKRUPTCY_RISK_THRESHOLD).length;
+
+    // Facility statistics
+    const facilityStats: Record<string, { count: number; totalLevel: number }> = {};
+    users.forEach(user => {
+      user.facilities.forEach(facility => {
+        if (facility.level > 0) { // Only count purchased facilities
+          if (!facilityStats[facility.facilityType]) {
+            facilityStats[facility.facilityType] = { count: 0, totalLevel: 0 };
+          }
+          facilityStats[facility.facilityType].count++;
+          facilityStats[facility.facilityType].totalLevel += facility.level;
+        }
+      });
+    });
+
+    const facilitySummary = Object.entries(facilityStats)
+      .map(([type, stats]) => ({
+        type,
+        purchaseCount: stats.count,
+        avgLevel: stats.count > 0 ? stats.totalLevel / stats.count : 0,
+      }))
+      .sort((a, b) => b.purchaseCount - a.purchaseCount);
+
     res.json({
       robots: {
         total: totalRobots,
@@ -499,7 +569,27 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
       battles: {
         last24Hours: recentBattles,
         total: totalBattles,
+        draws: drawCount,
+        drawPercentage: Math.round(drawPercentage * 10) / 10,
+        avgDuration: Math.round(avgDuration * 10) / 10,
+        kills: killCount,
+        killPercentage: totalBattles > 0 ? Math.round((killCount / totalBattles) * 1000) / 10 : 0,
       },
+      finances: {
+        totalCredits,
+        avgBalance: Math.round(avgBalance),
+        usersAtRisk: bankruptcyRisk,
+        totalUsers: users.length,
+      },
+      facilities: {
+        summary: facilitySummary,
+        totalPurchases: facilitySummary.reduce((sum, f) => sum + f.purchaseCount, 0),
+        mostPopular: facilitySummary[0]?.type || 'None',
+      },
+      weapons: await getWeaponStats(),
+      stances: await getStanceStats(),
+      loadouts: await getLoadoutStats(),
+      yieldThresholds: await getYieldThresholdStats(),
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -510,6 +600,83 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     });
   }
 });
+
+// Helper function to get weapon statistics
+async function getWeaponStats() {
+  const totalWeapons = await prisma.weapon.count();
+  const equippedWeapons = await prisma.robot.count({
+    where: {
+      NOT: { name: 'Bye Robot' },
+      mainWeaponId: { not: null },
+    },
+  });
+  
+  return {
+    totalBought: totalWeapons,
+    equipped: equippedWeapons,
+  };
+}
+
+// Helper function to get stance statistics
+async function getStanceStats() {
+  const stances = await prisma.robot.groupBy({
+    by: ['stance'],
+    where: {
+      NOT: { name: 'Bye Robot' },
+    },
+    _count: { id: true },
+  });
+  
+  return stances.map(s => ({
+    stance: s.stance,
+    count: s._count.id,
+  }));
+}
+
+// Helper function to get loadout statistics
+async function getLoadoutStats() {
+  const loadouts = await prisma.robot.groupBy({
+    by: ['loadoutType'],
+    where: {
+      NOT: { name: 'Bye Robot' },
+    },
+    _count: { id: true },
+  });
+  
+  return loadouts.map(l => ({
+    type: l.loadoutType,
+    count: l._count.id,
+  }));
+}
+
+// Helper function to get yield threshold statistics
+async function getYieldThresholdStats() {
+  const yieldThresholds = await prisma.robot.groupBy({
+    by: ['yieldThreshold'],
+    where: {
+      NOT: { name: 'Bye Robot' },
+    },
+    _count: { id: true },
+  });
+  
+  const distribution = yieldThresholds
+    .map(y => ({
+      threshold: y.yieldThreshold,
+      count: y._count.id,
+    }))
+    .sort((a, b) => a.threshold - b.threshold);
+  
+  // Find most common threshold
+  const mostCommon = distribution.length > 0
+    ? distribution.reduce((max, curr) => curr.count > max.count ? curr : max)
+    : { threshold: 10, count: 0 };
+  
+  return {
+    distribution,
+    mostCommon: mostCommon.threshold,
+    mostCommonCount: mostCommon.count,
+  };
+}
 
 /**
  * GET /api/admin/battles

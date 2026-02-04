@@ -2,10 +2,10 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.2  
+**Version**: 1.3  
 **Date**: February 4, 2026  
 **Author**: GitHub Copilot  
-**Status**: Revised based on Robert's feedback
+**Status**: Updated - Auto-User Generation implemented
 
 ---
 
@@ -13,12 +13,15 @@
 - v1.0 - Initial draft by GitHub Copilot
 - v1.1 - Review by Robert Teunissen with inline comments
 - v1.2 - Revised to address all feedback, moved to /docs/
+- v1.3 - Updated to acknowledge PRD_AUTO_USER_GENERATION.md has been implemented
 
 ---
 
 ## Executive Summary
 
 The Admin Page (`/admin`) is the primary testing tool for Armoured Souls during the prototype phase. It enables rapid cycle testing, battle debugging, and system monitoring. This PRD outlines targeted improvements to make the admin page more intuitive and efficient.
+
+**✅ Update (February 4, 2026)**: The auto-user generation feature described in [PRD_AUTO_USER_GENERATION.md](./PRD_AUTO_USER_GENERATION.md) has been successfully implemented and is now available in the admin dashboard. Users can enable this feature via the "Generate users per cycle" checkbox.
 
 **Key Goals:**
 - Make System Statistics visible by default (critical information)
@@ -405,7 +408,13 @@ The existing admin page uses Tailwind's gray-based palette. Verify alignment wit
 ### Planned Features Integration
 - **Tournaments**: Add tournament monitoring to cycle controls
 - **2v2 Battles**: Extend battle logs to show team battles
-- **Auto-User Growth**: Track automated user addition per cycle (1 user per cycle, e.g., cycle 5 = 5 users)
+- **Auto-User Growth**: ✅ **IMPLEMENTED** - Track automated user addition per cycle (1 user per cycle, e.g., cycle 5 = 5 users). The feature has been implemented with:
+  - `CycleMetadata` model tracking total cycles
+  - `generateBattleReadyUsers()` utility function for user generation
+  - Admin UI checkbox: "Generate users per cycle"
+  - Backend integration in `/api/admin/cycles/bulk` endpoint
+  - Session log tracking of user generation per cycle
+  - See [PRD_AUTO_USER_GENERATION.md](./PRD_AUTO_USER_GENERATION.md) for full details
 
 ### Advanced Analytics (Future Phases)
 - Battle outcome prediction models
