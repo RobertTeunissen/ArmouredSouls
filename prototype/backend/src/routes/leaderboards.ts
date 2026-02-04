@@ -126,18 +126,17 @@ router.get('/fame', async (req: Request, res: Response) => {
 /**
  * GET /api/leaderboards/losses
  * Get top robots ranked by total losses (opponents destroyed)
+ * This is a cumulative/lifetime leaderboard - shows all robots regardless of battle count
  */
 router.get('/losses', async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 100);
     const league = req.query.league as string;
-    const minBattles = parseInt(req.query.minBattles as string) || 10;
     const skip = (page - 1) * limit;
     
-    // Build where clause
+    // Build where clause - no minimum battles filter for cumulative total
     const whereClause: any = {
-      totalBattles: { gte: minBattles },
       NOT: { name: 'Bye Robot' }
     };
     
@@ -198,7 +197,6 @@ router.get('/losses', async (req: Request, res: Response) => {
       },
       filters: {
         league: league || 'all',
-        minBattles,
       },
       timestamp: new Date().toISOString(),
     });

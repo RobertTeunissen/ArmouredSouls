@@ -34,7 +34,6 @@ interface LeaderboardResponse {
   };
   filters: {
     league: string;
-    minBattles: number;
   };
   timestamp: string;
 }
@@ -45,7 +44,6 @@ function LeaderboardsLossesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [leagueFilter, setLeagueFilter] = useState('all');
-  const [minBattles, setMinBattles] = useState(10);
 
   const fetchLeaderboard = async () => {
     try {
@@ -59,7 +57,6 @@ function LeaderboardsLossesPage() {
             page: 1,
             limit: 100,
             league: leagueFilter,
-            minBattles,
           },
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -78,7 +75,7 @@ function LeaderboardsLossesPage() {
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [leagueFilter, minBattles]);
+  }, [leagueFilter]);
 
   const getLeagueColor = (league: string) => {
     switch (league) {
@@ -102,7 +99,7 @@ function LeaderboardsLossesPage() {
           Total Losses Leaderboard
         </h1>
         <p className="text-secondary">
-          Top robots ranked by opponents destroyed in battle
+          Cumulative lifetime ranking - all robots sorted by total opponents destroyed
         </p>
         <div className="mt-4 bg-surface border border-white/10 rounded-lg p-4">
           <div className="flex items-start gap-2">
@@ -112,8 +109,8 @@ function LeaderboardsLossesPage() {
             <div className="text-sm text-secondary">
               <p className="font-semibold text-primary mb-1">About Total Losses</p>
               <p>
-                "Total Losses" tracks the number of opponents a robot has destroyed (reduced to 0 HP) in battle. 
-                This metric showcases devastating combat effectiveness and finishing power.
+                "Total Losses" tracks the cumulative number of opponents a robot has destroyed (reduced to 0 HP) across all battles. 
+                This is a lifetime metric showing overall combat effectiveness and finishing power.
               </p>
               <p className="mt-2">
                 <span className="font-semibold text-primary">Destruction Ratio</span> shows total losses inflicted (opponents destroyed) 
@@ -143,23 +140,6 @@ function LeaderboardsLossesPage() {
               <option value="gold">Gold</option>
               <option value="silver">Silver</option>
               <option value="bronze">Bronze</option>
-            </select>
-          </div>
-
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-secondary mb-2">
-              Minimum Battles
-            </label>
-            <select
-              value={minBattles}
-              onChange={(e) => setMinBattles(parseInt(e.target.value))}
-              className="w-full bg-surface border border-white/10 rounded-md px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="5">5+ battles</option>
-              <option value="10">10+ battles</option>
-              <option value="25">25+ battles</option>
-              <option value="50">50+ battles</option>
-              <option value="100">100+ battles</option>
             </select>
           </div>
 
