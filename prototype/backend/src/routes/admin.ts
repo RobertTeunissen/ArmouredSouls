@@ -589,6 +589,7 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
       weapons: await getWeaponStats(),
       stances: await getStanceStats(),
       loadouts: await getLoadoutStats(),
+      yieldThresholds: await getYieldThresholdStats(),
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -646,6 +647,35 @@ async function getLoadoutStats() {
     type: l.loadoutType,
     count: l._count.id,
   }));
+}
+
+// Helper function to get yield threshold statistics
+async function getYieldThresholdStats() {
+  const yieldThresholds = await prisma.robot.groupBy({
+    by: ['yieldThreshold'],
+    where: {
+      NOT: { name: 'Bye Robot' },
+    },
+    _count: { id: true },
+  });
+  
+  const distribution = yieldThresholds
+    .map(y => ({
+      threshold: y.yieldThreshold,
+      count: y._count.id,
+    }))
+    .sort((a, b) => a.threshold - b.threshold);
+  
+  // Find most common threshold
+  const mostCommon = distribution.length > 0
+    ? distribution.reduce((max, curr) => curr.count > max.count ? curr : max)
+    : { threshold: 10, count: 0 };
+  
+  return {
+    distribution,
+    mostCommon: mostCommon.threshold,
+    mostCommonCount: mostCommon.count,
+  };
 }
 
 /**

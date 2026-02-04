@@ -60,6 +60,14 @@ interface SystemStats {
     type: string;
     count: number;
   }>;
+  yieldThresholds: {
+    distribution: Array<{
+      threshold: number;
+      count: number;
+    }>;
+    mostCommon: number;
+    mostCommonCount: number;
+  };
 }
 
 interface Battle {
@@ -658,7 +666,7 @@ function AdminPage() {
             {/* Statistics Display */}
             {stats && (
               <div className="bg-gray-800 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
                   {/* Robots Section */}
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-blue-400">Robots</h3>
@@ -668,7 +676,7 @@ function AdminPage() {
                       <p className="text-sm text-gray-400">By Tier:</p>
                       {stats.robots.byTier.map((tier) => (
                         <p key={tier.league} className="text-sm ml-2">
-                          {tier.count}
+                          {tier.league}: {tier.count}
                         </p>
                       ))}
                     </div>
@@ -786,6 +794,30 @@ function AdminPage() {
                           {l.type.replace(/_/g, ' ')}: {l.count}
                         </p>
                       ))
+                    ) : (
+                      <p className="text-sm text-gray-400">No data</p>
+                    )}
+                  </div>
+
+                  {/* Yield Thresholds Section */}
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2 text-indigo-400 flex items-center gap-2">
+                      Yield Thresholds
+                      <span className="text-xs text-gray-400 font-normal" title="HP % where robots surrender">ℹ️</span>
+                    </h3>
+                    {stats.yieldThresholds.distribution.length > 0 ? (
+                      <>
+                        <p className="text-sm">Most Common: {stats.yieldThresholds.mostCommon}%</p>
+                        <p className="text-xs text-gray-400">({stats.yieldThresholds.mostCommonCount} robots)</p>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-400">Distribution:</p>
+                          {stats.yieldThresholds.distribution.slice(0, 4).map((y) => (
+                            <p key={y.threshold} className="text-sm ml-2">
+                              {y.threshold}%: {y.count}
+                            </p>
+                          ))}
+                        </div>
+                      </>
                     ) : (
                       <p className="text-sm text-gray-400">No data</p>
                     )}
