@@ -1,9 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import ViewModeToggle from '../components/ViewModeToggle';
+import WeaponTable from '../components/WeaponTable';
+import FilterPanel, { WeaponFilters } from '../components/FilterPanel';
+import ActiveFiltersDisplay from '../components/ActiveFiltersDisplay';
+import SearchBar from '../components/SearchBar';
+import SortDropdown, { SortOption } from '../components/SortDropdown';
+import ComparisonBar from '../components/ComparisonBar';
+import ComparisonModal from '../components/ComparisonModal';
+import WeaponDetailModal from '../components/WeaponDetailModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
+import { getWeaponImagePath } from '../utils/weaponImages';
 
 interface Weapon {
   id: number;
@@ -47,14 +58,70 @@ interface StorageStatus {
   percentageFull: number;
 }
 
+type ViewMode = 'card' | 'table';
+
 function WeaponShopPage() {
   const { user, refreshUser } = useAuth();
   const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [ownedWeapons, setOwnedWeapons] = useState<Map<number, number>>(new Map());
   const [weaponWorkshopLevel, setWeaponWorkshopLevel] = useState(0);
   const [storageStatus, setStorageStatus] = useState<StorageStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [purchasing, setPurchasing] = useState<number | null>(null);
+  
+  // Detail modal state
+  const [selectedWeapon, setSelectedWeapon] = useState<Weapon | null>(null);
+  
+  // View mode state with localStorage persistence
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('weaponShopViewMode');
+    return (saved as ViewMode) || 'card';
+  });
+
+  // Filter state
+  const [filters, setFilters] = useState<WeaponFilters>({
+    loadoutTypes: [],
+    weaponTypes: [],
+    priceRange: null,
+    canAffordOnly: false,
+    onlyOwnedWeapons: false,
+  });
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  // Sort state with localStorage persistence
+  const [sortBy, setSortBy] = useState<string>(() => {
+    const saved = localStorage.getItem('weaponShopSortBy');
+    return saved || 'name-asc';
+  });
+
+  // Comparison state
+  const [selectedForComparison, setSelectedForComparison] = useState<number[]>([]);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,6 +129,18 @@ function WeaponShopPage() {
         // Fetch weapons
         const weaponsResponse = await axios.get('http://localhost:3001/api/weapons');
         setWeapons(weaponsResponse.data);
+
+        // Fetch owned weapons inventory
+        const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory');
+        const inventory = inventoryResponse.data;
+        
+        // Count owned weapons by weapon ID
+        const ownedMap = new Map<number, number>();
+        inventory.forEach((item: any) => {
+          const weaponId = item.weaponId;
+          ownedMap.set(weaponId, (ownedMap.get(weaponId) || 0) + 1);
+        });
+        setOwnedWeapons(ownedMap);
 
         // Fetch facilities to get Weapon Workshop level
         const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities');
@@ -82,48 +161,249 @@ function WeaponShopPage() {
     fetchData();
   }, []);
 
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem('weaponShopViewMode', mode);
+  };
+
+  const handleFiltersChange = (newFilters: WeaponFilters) => {
+    setFilters(newFilters);
+  };
+
+  const handleRemoveFilter = (filterType: string, value?: string) => {
+    const newFilters = { ...filters };
+    
+    if (filterType === 'loadoutType' && value) {
+      newFilters.loadoutTypes = newFilters.loadoutTypes.filter(t => t !== value);
+    } else if (filterType === 'weaponType' && value) {
+      newFilters.weaponTypes = newFilters.weaponTypes.filter(t => t !== value);
+    } else if (filterType === 'priceRange') {
+      newFilters.priceRange = null;
+    } else if (filterType === 'canAfford') {
+      newFilters.canAffordOnly = false;
+    } else if (filterType === 'onlyOwned') {
+      newFilters.onlyOwnedWeapons = false;
+    }
+    
+    setFilters(newFilters);
+  };
+
+  const handleSortChange = (newSortBy: string) => {
+    setSortBy(newSortBy);
+    localStorage.setItem('weaponShopSortBy', newSortBy);
+  };
+
+  // Search weapons by name, description, type
+  const searchWeapons = (weapons: Weapon[], query: string): Weapon[] => {
+    if (!query.trim()) return weapons;
+    
+    const lowerQuery = query.toLowerCase();
+    return weapons.filter(weapon =>
+      weapon.name.toLowerCase().includes(lowerQuery) ||
+      weapon.description.toLowerCase().includes(lowerQuery) ||
+      weapon.weaponType.toLowerCase().includes(lowerQuery) ||
+      weapon.loadoutType.toLowerCase().replace('_', ' ').includes(lowerQuery)
+    );
+  };
+
+  // Sort weapons
+  const sortWeapons = (weapons: Weapon[], sortOption: string): Weapon[] => {
+    const sorted = [...weapons];
+    
+    switch (sortOption) {
+      case 'price-asc':
+        return sorted.sort((a, b) => 
+          calculateDiscountedPrice(a.cost) - calculateDiscountedPrice(b.cost)
+        );
+      case 'price-desc':
+        return sorted.sort((a, b) => 
+          calculateDiscountedPrice(b.cost) - calculateDiscountedPrice(a.cost)
+        );
+      case 'damage-desc':
+        return sorted.sort((a, b) => b.baseDamage - a.baseDamage);
+      case 'name-asc':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'dps-desc':
+        const getDPS = (w: Weapon) => 
+          w.baseDamage / calculateWeaponCooldown(w.weaponType, w.baseDamage);
+        return sorted.sort((a, b) => getDPS(b) - getDPS(a));
+      default:
+        return sorted;
+    }
+  };
+
+  // Calculate discounted price (must be defined before processedWeapons useMemo)
   const calculateDiscountedPrice = (basePrice: number): number => {
     const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
     return applyDiscount(basePrice, discountPercent);
   };
 
+  // Apply search, filters, and sorting
+  const processedWeapons = useMemo(() => {
+    // Step 1: Search
+    let result = searchWeapons(weapons, debouncedSearchQuery);
+
+    // Step 2: Filter
+    result = result.filter(weapon => {
+      // Loadout type filter (OR logic within category)
+      if (filters.loadoutTypes.length > 0) {
+        if (!filters.loadoutTypes.includes(weapon.loadoutType)) {
+          return false;
+        }
+      }
+
+      // Weapon type filter (OR logic within category)
+      if (filters.weaponTypes.length > 0) {
+        if (!filters.weaponTypes.includes(weapon.weaponType)) {
+          return false;
+        }
+      }
+
+      // Price range filter
+      if (filters.priceRange) {
+        const discountedPrice = calculateDiscountedPrice(weapon.cost);
+        if (discountedPrice < filters.priceRange.min || discountedPrice > filters.priceRange.max) {
+          return false;
+        }
+      }
+
+      // Can afford filter
+      if (filters.canAffordOnly && user) {
+        const discountedPrice = calculateDiscountedPrice(weapon.cost);
+        if (user.currency < discountedPrice) {
+          return false;
+        }
+      }
+
+      // Only owned weapons filter
+      if (filters.onlyOwnedWeapons) {
+        const ownedCount = ownedWeapons.get(weapon.id) || 0;
+        if (ownedCount === 0) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    // Step 3: Sort (for card view)
+    if (viewMode === 'card') {
+      result = sortWeapons(result, sortBy);
+    }
+
+    return result;
+  }, [weapons, debouncedSearchQuery, filters, user, weaponWorkshopLevel, sortBy, viewMode, ownedWeapons]);
+
   const handlePurchase = async (weaponId: number, basePrice: number) => {
     if (!user) return;
 
     const finalCost = calculateDiscountedPrice(basePrice);
+    const weapon = weapons.find(w => w.id === weaponId);
+    const weaponName = weapon?.name || 'weapon';
 
     if (user.currency < finalCost) {
-      alert('Insufficient credits!');
+      setConfirmationModal({
+        isOpen: true,
+        title: 'Insufficient Credits',
+        message: `You don't have enough credits to purchase this weapon. You need ₡${finalCost.toLocaleString()} but only have ₡${user.currency.toLocaleString()}.`,
+        onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
+      });
       return;
     }
 
     // Check storage capacity
     if (storageStatus && storageStatus.isFull) {
-      alert('Storage capacity full! Upgrade Storage Facility to increase capacity.');
-      return;
-    }
-
-    if (!confirm('Are you sure you want to purchase this weapon?')) {
-      return;
-    }
-
-    setPurchasing(weaponId);
-    try {
-      await axios.post('http://localhost:3001/api/weapon-inventory/purchase', {
-        weaponId,
+      setConfirmationModal({
+        isOpen: true,
+        title: 'Storage Full',
+        message: 'Storage capacity full! Upgrade Storage Facility to increase capacity.',
+        onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
       });
-      await refreshUser();
-      
-      // Refresh storage status after purchase
-      const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
-      setStorageStatus(storageResponse.data);
-      
-      alert('Weapon purchased successfully!');
-    } catch (err: any) {
-      console.error('Purchase failed:', err);
-      alert(err.response?.data?.error || 'Failed to purchase weapon');
-    } finally {
-      setPurchasing(null);
+      return;
+    }
+
+    // Show confirmation dialog
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Confirm Purchase',
+      message: `Are you sure you want to purchase ${weaponName} for ₡${finalCost.toLocaleString()}?`,
+      onConfirm: async () => {
+        setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+        
+        setPurchasing(weaponId);
+        try {
+          await axios.post('http://localhost:3001/api/weapon-inventory/purchase', {
+            weaponId,
+          });
+          await refreshUser();
+          
+          // Refresh storage status after purchase
+          const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
+          setStorageStatus(storageResponse.data);
+          
+          // Refresh owned weapons
+          const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory');
+          const inventory = inventoryResponse.data;
+          const ownedMap = new Map<number, number>();
+          inventory.forEach((item: any) => {
+            const wId = item.weaponId;
+            ownedMap.set(wId, (ownedMap.get(wId) || 0) + 1);
+          });
+          setOwnedWeapons(ownedMap);
+          
+          // Show success message
+          setConfirmationModal({
+            isOpen: true,
+            title: 'Purchase Successful',
+            message: `${weaponName} purchased successfully!`,
+            onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
+          });
+          
+          // Close detail modal if open
+          if (selectedWeapon?.id === weaponId) {
+            setSelectedWeapon(null);
+          }
+        } catch (err: any) {
+          console.error('Purchase failed:', err);
+          setConfirmationModal({
+            isOpen: true,
+            title: 'Purchase Failed',
+            message: err.response?.data?.error || 'Failed to purchase weapon',
+            onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
+          });
+        } finally {
+          setPurchasing(null);
+        }
+      },
+    });
+  };
+
+  // Comparison handlers
+  const toggleComparison = (weaponId: number) => {
+    setSelectedForComparison(prev => {
+      if (prev.includes(weaponId)) {
+        return prev.filter(id => id !== weaponId);
+      } else if (prev.length < 3) {
+        return [...prev, weaponId];
+      }
+      return prev; // Already at max (3)
+    });
+  };
+
+  const handleCompare = () => {
+    if (selectedForComparison.length >= 2) {
+      setShowComparisonModal(true);
+    }
+  };
+
+  const handleClearComparison = () => {
+    setSelectedForComparison([]);
+  };
+
+  const handleRemoveFromComparison = (weaponId: number) => {
+    setSelectedForComparison(prev => prev.filter(id => id !== weaponId));
+    if (selectedForComparison.length <= 2) {
+      setShowComparisonModal(false);
     }
   };
 
@@ -151,10 +431,19 @@ function WeaponShopPage() {
   };
 
   const groupedWeapons = {
-    shield: weapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
-    two_handed: weapons.filter(w => w.loadoutType === 'two_handed'),
-    one_handed: weapons.filter(w => w.loadoutType === 'single'),
+    shield: processedWeapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
+    two_handed: processedWeapons.filter(w => w.loadoutType === 'two_handed'),
+    one_handed: processedWeapons.filter(w => w.loadoutType === 'single'),
   };
+
+  // Sort options for dropdown
+  const sortOptions: SortOption[] = [
+    { value: 'name-asc', label: 'Name (A-Z)' },
+    { value: 'price-asc', label: 'Price: Low to High' },
+    { value: 'price-desc', label: 'Price: High to Low' },
+    { value: 'damage-desc', label: 'Damage: High to Low' },
+    { value: 'dps-desc', label: 'DPS: High to Low' },
+  ];
 
   const getLoadoutTypeLabel = (loadoutType: string) => {
     switch (loadoutType) {
@@ -235,21 +524,109 @@ function WeaponShopPage() {
 
         {!loading && !error && (
           <>
-            {Object.entries(groupedWeapons).map(([loadoutType, weaponList]) => (
-              weaponList.length > 0 && (
-                <div key={loadoutType} className="mb-8">
-                  <h2 className={`text-2xl font-bold mb-4 ${getLoadoutTypeColor(loadoutType)}`}>
-                    {getLoadoutTypeLabel(loadoutType)}
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Filter Panel */}
+            <FilterPanel
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              userCredits={user?.currency || 0}
+              weaponCount={weapons.length}
+              filteredCount={processedWeapons.length}
+            />
+
+            {/* Active Filters Display */}
+            <ActiveFiltersDisplay
+              filters={filters}
+              onRemoveFilter={handleRemoveFilter}
+            />
+
+            {/* View Mode Toggle */}
+            <div className="flex justify-end mb-6">
+              <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+            </div>
+
+            {/* Table View */}
+            {viewMode === 'table' && (
+              <div className="bg-gray-800 rounded-lg overflow-hidden">
+                <WeaponTable
+                  weapons={processedWeapons}
+                  onPurchase={handlePurchase}
+                  calculateDiscountedPrice={calculateDiscountedPrice}
+                  userCredits={user?.currency || 0}
+                  isFull={storageStatus?.isFull || false}
+                  purchasing={purchasing}
+                  hasDiscount={weaponWorkshopLevel > 0}
+                  discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
+                  onWeaponClick={setSelectedWeapon}
+                  ownedWeapons={ownedWeapons}
+                />
+              </div>
+            )}
+
+            {/* Card View */}
+            {viewMode === 'card' && (
+              <>
+                {processedWeapons.length === 0 ? (
+                  <div className="bg-gray-800 rounded-lg p-12 text-center">
+                    <p className="text-gray-400 text-lg mb-2">No weapons match your filters</p>
+                    <p className="text-gray-500 text-sm">Try adjusting your filters to see more weapons</p>
+                  </div>
+                ) : (
+                  <>
+                        {Object.entries(groupedWeapons).map(([loadoutType, weaponList]) => (
+                      weaponList.length > 0 && (
+                        <div key={loadoutType} className="mb-8">
+                          <h2 className={`text-2xl font-bold mb-4 ${getLoadoutTypeColor(loadoutType)}`}>
+                            {getLoadoutTypeLabel(loadoutType)}
+                          </h2>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {weaponList.map((weapon) => {
                       const bonuses = getAttributeBonuses(weapon);
                       const discountedPrice = calculateDiscountedPrice(weapon.cost);
                       const hasDiscount = weaponWorkshopLevel > 0;
+                      const isSelected = selectedForComparison.includes(weapon.id);
                       return (
-                        <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg">
+                        <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg relative">
+                          {/* Owned Indicator */}
+                          {ownedWeapons.get(weapon.id) && (
+                            <div className="absolute top-4 right-4 z-10 bg-blue-900/50 border border-blue-600 px-2 py-1 rounded text-xs font-semibold text-blue-300">
+                              Already Own ({ownedWeapons.get(weapon.id)})
+                            </div>
+                          )}
+                          
+                          {/* Comparison Checkbox */}
+                          <div className="absolute top-4 left-4 z-10">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleComparison(weapon.id)}
+                                disabled={!isSelected && selectedForComparison.length >= 3}
+                                className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800"
+                              />
+                              <span className="text-sm text-gray-400">Compare</span>
+                            </label>
+                          </div>
+                          
+                          {/* Weapon Image */}
+                          <div className="mb-4 flex justify-center cursor-pointer" onClick={() => setSelectedWeapon(weapon)}>
+                            <img 
+                              src={getWeaponImagePath(weapon.name)}
+                              alt={weapon.name}
+                              className="w-48 h-48 object-contain hover:scale-105 transition-transform"
+                              onError={(e) => {
+                                // Fallback if image doesn't load
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+
                           <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-xl font-semibold">{weapon.name}</h3>
+                            <h3 
+                              className="text-xl font-semibold cursor-pointer hover:text-blue-400 transition-colors"
+                              onClick={() => setSelectedWeapon(weapon)}
+                            >
+                              {weapon.name}
+                            </h3>
                             <span className={`text-sm font-semibold uppercase ${getTypeColor(weapon.weaponType)}`}>
                               {weapon.weaponType}
                             </span>
@@ -325,12 +702,74 @@ function WeaponShopPage() {
                         </div>
                       );
                     })}
-                  </div>
-                </div>
-              )
-            ))}
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </>
+                )}
+              </>
+            )}
           </>
         )}
+
+        {/* Comparison Bar */}
+        <ComparisonBar
+          selectedCount={selectedForComparison.length}
+          onCompare={handleCompare}
+          onClear={handleClearComparison}
+        />
+
+        {/* Comparison Modal */}
+        {showComparisonModal && (
+          <ComparisonModal
+            weapons={weapons.filter(w => selectedForComparison.includes(w.id))}
+            onClose={() => setShowComparisonModal(false)}
+            onPurchase={(weaponId) => {
+              const weapon = weapons.find(w => w.id === weaponId);
+              if (weapon) {
+                handlePurchase(weaponId, weapon.cost);
+              }
+            }}
+            onRemove={handleRemoveFromComparison}
+            userCurrency={user?.currency || 0}
+            weaponWorkshopLevel={weaponWorkshopLevel}
+            storageIsFull={storageStatus?.isFull || false}
+            purchasingId={purchasing}
+          />
+        )}
+
+        {/* Weapon Detail Modal */}
+        {selectedWeapon && (
+          <WeaponDetailModal
+            weapon={selectedWeapon}
+            onClose={() => setSelectedWeapon(null)}
+            onPurchase={handlePurchase}
+            calculateDiscountedPrice={calculateDiscountedPrice}
+            userCredits={user?.currency || 0}
+            isFull={storageStatus?.isFull || false}
+            purchasing={purchasing === selectedWeapon.id}
+            hasDiscount={weaponWorkshopLevel > 0}
+            discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
+            ownedCount={ownedWeapons.get(selectedWeapon.id) || 0}
+          />
+        )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={confirmationModal.isOpen}
+          title={confirmationModal.title}
+          message={confirmationModal.message}
+          confirmText={confirmationModal.title === 'Confirm Purchase' ? 'Purchase' : 'OK'}
+          cancelText="Cancel"
+          confirmButtonClass={
+            confirmationModal.title === 'Confirm Purchase' 
+              ? 'bg-green-600 hover:bg-green-700' 
+              : 'bg-blue-600 hover:bg-blue-700'
+          }
+          onConfirm={confirmationModal.onConfirm}
+          onCancel={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+        />
       </div>
     </div>
   );

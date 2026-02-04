@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <path d="M100 110 L120 90 L140 110 L150 100 L120 70 L90 100 Z" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+  <rect x="115" y="105" width="10" height="60" fill="#6b7280" stroke="#4b5563" stroke-width="2"/>
+  <circle cx="120" cy="170" r="8" fill="#9ca3af"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Practice Sword</text>
+</svg>

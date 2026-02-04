@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <path d="M95 110 L118 85 L135 100 L145 90 L118 65 L85 90 Z" fill="#dc2626" stroke="#b91c1c" stroke-width="2"/>
+  <rect x="113" y="105" width="10" height="65" fill="#6b7280" stroke="#4b5563" stroke-width="2"/>
+  <circle cx="118" cy="175" r="10" fill="#9ca3af"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Power Sword</text>
+</svg>
