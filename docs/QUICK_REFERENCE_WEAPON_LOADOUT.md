@@ -138,7 +138,7 @@ Once Issues #8 and #9 are complete:
 | #3, #7 | US-2: Equip Offhand Weapon/Shield |
 | #3, #7 | US-3: Unequip Weapon from Robot |
 | #4, #6 | US-4: Change Robot Loadout Type |
-| #9 | US-5: View Weapon Inventory |
+| ~~#9~~ | ~~US-5: View Weapon Inventory~~ (Integrated into Weapon Shop) |
 | #8 | US-6: View Effective Stats with Loadout |
 | #2, #10 | US-7: Storage Capacity Management |
 
