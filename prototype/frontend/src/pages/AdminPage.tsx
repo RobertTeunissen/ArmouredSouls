@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navigation from '../components/Navigation';
 import BattleDetailsModal from '../components/BattleDetailsModal';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
 interface SystemStats {
@@ -88,6 +89,7 @@ interface RobotStats {
 }
 
 function AdminPage() {
+  const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
@@ -202,7 +204,9 @@ function AdminPage() {
         'success',
         `Daily finances processed! ${summary.usersProcessed} users, ₡${summary.totalCostsDeducted.toLocaleString()} deducted${summary.bankruptUsers > 0 ? `, ${summary.bankruptUsers} bankruptcies` : ''}`
       );
-      fetchStats();
+      await fetchStats();
+      // Refresh user data as daily finances affects current user's credits
+      await refreshUser();
     } catch (error: any) {
       showMessage('error', error.response?.data?.error || 'Daily finances failed');
     } finally {
@@ -230,7 +234,11 @@ function AdminPage() {
         'success',
         `Completed ${response.data.cyclesCompleted} cycles in ${response.data.totalDuration.toFixed(2)}s`
       );
-      fetchStats();
+      await fetchStats();
+      // Refresh user data if daily finances were processed (affects current user's credits)
+      if (includeDailyFinances) {
+        await refreshUser();
+      }
     } catch (error: any) {
       showMessage('error', error.response?.data?.error || 'Bulk cycles failed');
     } finally {
