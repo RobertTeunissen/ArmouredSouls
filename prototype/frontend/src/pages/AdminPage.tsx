@@ -181,11 +181,11 @@ interface CycleResult {
     matchesCreated: number;
   };
   battles?: {
-    summary: {
-      totalBattles: number;
-      successfulBattles: number;
-      failedBattles: number;
-    };
+    totalBattles: number;
+    successfulBattles: number;
+    failedBattles: number;
+    byeBattles: number;
+    errors: string[];
   };
   finances?: {
     usersProcessed: number;
@@ -198,6 +198,8 @@ interface CycleResult {
       totalDemoted: number;
     };
   };
+  duration: number;
+  error?: string;
 }
 
 function AdminPage() {
@@ -446,8 +448,8 @@ function AdminPage() {
           }
 
           // Battle execution
-          if (result.battles && result.battles.summary) {
-            const { totalBattles, successfulBattles, failedBattles } = result.battles.summary;
+          if (result.battles) {
+            const { totalBattles, successfulBattles, failedBattles } = result.battles;
             addSessionLog(
               failedBattles > 0 ? 'warning' : 'success',
               `Cycle ${result.cycle}: Executed ${totalBattles} battle(s) - ${successfulBattles} successful, ${failedBattles} failed`
@@ -474,10 +476,11 @@ function AdminPage() {
         });
       }
 
-      addSessionLog('success', `Bulk cycle run completed: ${response.data.cyclesCompleted} cycle(s) in ${response.data.totalDuration.toFixed(2)}s`);
+      const completionMsg = `Bulk cycle run completed: ${response.data.cyclesCompleted} cycle(s) in ${response.data.totalDuration?.toFixed(2) || 0}s`;
+      addSessionLog('success', completionMsg);
       showMessage(
         'success',
-        `Completed ${response.data.cyclesCompleted} cycles in ${response.data.totalDuration.toFixed(2)}s`
+        `Completed ${response.data.cyclesCompleted} cycles in ${response.data.totalDuration?.toFixed(2) || 0}s`
       );
       fetchStats();
     } catch (error: any) {
@@ -888,8 +891,8 @@ function AdminPage() {
                   {bulkResults.totalCyclesInSystem && (
                     <p className="text-green-400">Total Cycles in System: {bulkResults.totalCyclesInSystem}</p>
                   )}
-                  <p>Total Duration: {bulkResults.totalDuration.toFixed(2)}s</p>
-                  <p>Average Cycle Duration: {bulkResults.averageCycleDuration.toFixed(2)}s</p>
+                  <p>Total Duration: {bulkResults.totalDuration?.toFixed(2) || 0}s</p>
+                  <p>Average Cycle Duration: {bulkResults.averageCycleDuration?.toFixed(2) || 0}s</p>
                   
                   {bulkResults.results && bulkResults.results.length > 0 && (
                     <div className="mt-4 max-h-96 overflow-y-auto">
@@ -907,10 +910,10 @@ function AdminPage() {
                           )}
                           {result.repair && <p>- Repaired: {result.repair.robotsRepaired} robots</p>}
                           {result.matchmaking && <p>- Matches: {result.matchmaking.matchesCreated} created</p>}
-                          {result.battles && result.battles.summary && (
+                          {result.battles && (
                             <p>
-                              - Battles: {result.battles.summary.successfulBattles}/
-                              {result.battles.summary.totalBattles} successful
+                              - Battles: {result.battles.successfulBattles}/
+                              {result.battles.totalBattles} successful
                             </p>
                           )}
                           {result.finances && (
