@@ -8,6 +8,7 @@ import FilterPanel, { WeaponFilters } from '../components/FilterPanel';
 import ActiveFiltersDisplay from '../components/ActiveFiltersDisplay';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
+import { getWeaponImagePath } from '../utils/weaponImages';
 
 interface Weapon {
   id: number;
@@ -376,6 +377,19 @@ function WeaponShopPage() {
                       const hasDiscount = weaponWorkshopLevel > 0;
                       return (
                         <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg">
+                          {/* Weapon Image */}
+                          <div className="mb-4 flex justify-center">
+                            <img 
+                              src={getWeaponImagePath(weapon.name)}
+                              alt={weapon.name}
+                              className="w-48 h-48 object-contain"
+                              onError={(e) => {
+                                // Fallback if image doesn't load
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+
                           <div className="flex justify-between items-start mb-4">
                             <h3 className="text-xl font-semibold">{weapon.name}</h3>
                             <span className={`text-sm font-semibold uppercase ${getTypeColor(weapon.weaponType)}`}>
