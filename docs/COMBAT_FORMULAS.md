@@ -224,6 +224,7 @@ HP Damage = Max(1, Total Damage - Armor Reduction) (minimum 1 damage)
 ```
 
 ### Display Format
+When shield is present (example assumes 0 penetration bonus):
 ```
 Apply: 27.6 base × 1.00 crit = 27.6 | Shield: 10.0 absorbed | Bleed: 17.6 - 4.8 armor = 12.8 HP
 ```
@@ -237,6 +238,8 @@ Or without shield:
 ```
 Apply: 12.5 base × 1.00 crit = 12.5 | No shield | 12.5 - 4.8 armor = 7.7 HP
 ```
+
+**Note**: The penetration multiplier is applied internally to calculate effective shield damage, but the display shows the actual damage absorbed by shields and the bleed-through amount after penetration effects.
 
 ## Counter-Attack Calculation
 
