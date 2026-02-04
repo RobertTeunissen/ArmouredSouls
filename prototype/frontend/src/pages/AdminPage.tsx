@@ -204,9 +204,8 @@ function AdminPage() {
         'success',
         `Daily finances processed! ${summary.usersProcessed} users, ₡${summary.totalCostsDeducted.toLocaleString()} deducted${summary.bankruptUsers > 0 ? `, ${summary.bankruptUsers} bankruptcies` : ''}`
       );
-      await fetchStats();
-      // Refresh user data as daily finances affects current user's credits
-      await refreshUser();
+      // Refresh stats and user data in parallel (daily finances may affect current user's credits)
+      await Promise.all([fetchStats(), refreshUser()]);
     } catch (error: any) {
       showMessage('error', error.response?.data?.error || 'Daily finances failed');
     } finally {
@@ -234,10 +233,11 @@ function AdminPage() {
         'success',
         `Completed ${response.data.cyclesCompleted} cycles in ${response.data.totalDuration.toFixed(2)}s`
       );
-      await fetchStats();
-      // Refresh user data if daily finances were processed (affects current user's credits)
+      // Refresh stats and user data if daily finances were processed
       if (includeDailyFinances) {
-        await refreshUser();
+        await Promise.all([fetchStats(), refreshUser()]);
+      } else {
+        await fetchStats();
       }
     } catch (error: any) {
       showMessage('error', error.response?.data?.error || 'Bulk cycles failed');
