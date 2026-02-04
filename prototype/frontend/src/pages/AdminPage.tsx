@@ -371,9 +371,12 @@ function AdminPage() {
           // Finance processing
           if (result.finances) {
             const { usersProcessed, totalCostsDeducted, bankruptUsers } = result.finances;
+            const bankruptcyMsg = bankruptUsers > 0 ? `, ${bankruptUsers} bankruptcies` : '';
+            const financeMsg = `Cycle ${result.cycle}: Processed finances for ${usersProcessed} user(s) - ` +
+              `₡${totalCostsDeducted.toLocaleString()} deducted${bankruptcyMsg}`;
             addSessionLog(
               bankruptUsers > 0 ? 'warning' : 'info',
-              `Cycle ${result.cycle}: Processed finances for ${usersProcessed} user(s) - ₡${totalCostsDeducted.toLocaleString()} deducted${bankruptUsers > 0 ? `, ${bankruptUsers} bankruptcies` : ''}`
+              financeMsg
             );
           }
 
@@ -797,9 +800,9 @@ function AdminPage() {
                       </div>
                       {entry.details !== undefined && entry.details !== null && (
                         <pre className="mt-2 text-xs text-gray-400 overflow-x-auto">
-                          {String(typeof entry.details === 'string' 
+                          {typeof entry.details === 'string' 
                             ? entry.details 
-                            : JSON.stringify(entry.details, null, 2))}
+                            : JSON.stringify(entry.details, null, 2)}
                         </pre>
                       )}
                     </div>
