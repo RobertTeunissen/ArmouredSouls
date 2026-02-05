@@ -19,6 +19,7 @@ function LeagueStandingsPage() {
   const [robots, setRobots] = useState<LeagueRobot[]>([]);
   const [instances, setInstances] = useState<LeagueInstance[]>([]);
   const [userRobotTiers, setUserRobotTiers] = useState<Set<string>>(new Set());
+  const [showInstancesList, setShowInstancesList] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 50,
@@ -97,6 +98,16 @@ function LeagueStandingsPage() {
     return 'text-gray-400';
   };
 
+  // Transform league instance identifier to human-readable display text
+  const buildInstanceDisplayLabel = (leagueIdentifier: string) => {
+    const segments = leagueIdentifier.split('_');
+    if (segments.length < 2) return leagueIdentifier;
+    
+    const tierLabel = getLeagueTierName(segments[0]);
+    const instanceNum = segments[1];
+    return `${tierLabel} ${instanceNum}`;
+  };
+
   if (!user) {
     return null;
   }
@@ -138,39 +149,55 @@ function LeagueStandingsPage() {
         {/* Instance Information */}
         {!loading && instances.length > 0 && (
           <div className="bg-gray-800 p-4 rounded-lg mb-6">
-            <h2 className="text-lg font-semibold mb-2">
-              League Instances
-              {selectedInstance && (
-                <span className="ml-2 text-sm text-gray-400">
-                  (Click on selected instance to view all)
-                </span>
-              )}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {instances.map((instance) => {
-                const isSelected = selectedInstance === instance.leagueId;
-
-                return (
-                  <div
-                    key={instance.leagueId}
-                    onClick={() => handleInstanceClick(instance.leagueId)}
-                    className={`p-3 rounded cursor-pointer transition-all ${
-                      isSelected
-                        ? 'bg-yellow-900 border-2 border-yellow-500 ring-2 ring-yellow-400'
-                        : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
-                    }`}
-                  >
-                    <div className="text-sm text-gray-400">
-                      Instance #{instance.leagueId}
-                    </div>
-                    <div className="text-lg font-semibold">
-                      {instance.currentRobots} / {instance.maxRobots}
-                    </div>
-                    <div className="text-xs text-gray-500">robots</div>
-                  </div>
-                );
-              })}
+            <div 
+              className="flex items-center justify-between cursor-pointer mb-2"
+              onClick={() => setShowInstancesList(!showInstancesList)}
+            >
+              <h2 className="text-lg font-semibold">
+                League Instances
+                {selectedInstance && (
+                  <span className="ml-2 text-sm text-gray-400">
+                    (Click selected to view all)
+                  </span>
+                )}
+              </h2>
+              <button className="text-gray-400 hover:text-white transition-colors">
+                {showInstancesList ? (
+                  <span className="text-2xl">−</span>
+                ) : (
+                  <span className="text-2xl">+</span>
+                )}
+              </button>
             </div>
+            
+            {showInstancesList && (
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
+                {instances.map((instance) => {
+                  const isSelected = selectedInstance === instance.leagueId;
+                  const tierColorClass = getLeagueTierColor(instance.leagueTier);
+
+                  return (
+                    <div
+                      key={instance.leagueId}
+                      onClick={() => handleInstanceClick(instance.leagueId)}
+                      className={`p-3 rounded cursor-pointer transition-all ${
+                        isSelected
+                          ? 'bg-yellow-900 border-2 border-yellow-500 ring-2 ring-yellow-400'
+                          : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
+                      }`}
+                    >
+                      <div className={`text-sm ${tierColorClass} font-semibold`}>
+                        {buildInstanceDisplayLabel(instance.leagueId)}
+                      </div>
+                      <div className="text-lg font-semibold mt-1">
+                        {instance.currentRobots} / {instance.maxRobots}
+                      </div>
+                      <div className="text-xs text-gray-500">robots</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -207,7 +234,6 @@ function LeagueStandingsPage() {
                       <th className="px-4 py-3 text-center font-semibold">Fame</th>
                       <th className="px-4 py-3 text-center font-semibold">W-D-L</th>
                       <th className="px-4 py-3 text-center font-semibold">Win Rate</th>
-                      <th className="px-4 py-3 text-center font-semibold">HP</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -219,7 +245,6 @@ function LeagueStandingsPage() {
                         robot.totalBattles > 0
                           ? ((robot.wins / robot.totalBattles) * 100).toFixed(1)
                           : '0.0';
-                      const hpPercentage = ((robot.currentHP / robot.maxHP) * 100).toFixed(0);
 
                       return (
                         <tr
@@ -259,17 +284,6 @@ function LeagueStandingsPage() {
                             <span className="text-red-400">{robot.losses}</span>
                           </td>
                           <td className="px-4 py-3 text-center font-mono">{winRate}%</td>
-                          <td className="px-4 py-3 text-center">
-                            <span
-                              className={`font-mono ${
-                                parseInt(hpPercentage) >= 75
-                                  ? 'text-green-400'
-                                  : 'text-yellow-400'
-                              }`}
-                            >
-                              {hpPercentage}%
-                            </span>
-                          </td>
                         </tr>
                       );
                     })}
