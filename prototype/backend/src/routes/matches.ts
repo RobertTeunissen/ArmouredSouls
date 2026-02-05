@@ -255,6 +255,13 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
             },
           },
         },
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            maxRounds: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -279,6 +286,11 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
       robot2FinalHP: battle.robot2FinalHP,
       winnerReward: battle.winnerReward,
       loserReward: battle.loserReward,
+      battleType: battle.battleType,
+      tournamentId: battle.tournamentId,
+      tournamentRound: battle.tournamentRound,
+      tournamentName: battle.tournament?.name,
+      tournamentMaxRounds: battle.tournament?.maxRounds,
       robot1: {
         id: battle.robot1.id,
         name: battle.robot1.name,

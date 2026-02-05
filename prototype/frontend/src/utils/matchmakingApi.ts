@@ -55,6 +55,11 @@ export interface BattleHistory {
   robot2FinalHP: number;
   winnerReward: number;
   loserReward: number;
+  battleType?: string; // "league" or "tournament"
+  tournamentId?: number | null;
+  tournamentRound?: number | null;
+  tournamentName?: string | null;
+  tournamentMaxRounds?: number | null;
   robot1: {
     id: number;
     name: string;
@@ -222,6 +227,16 @@ export const formatDuration = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes}m ${remainingSeconds}s`;
+};
+
+export const getTournamentRoundName = (currentRound: number, maxRounds: number): string => {
+  const roundsFromEnd = maxRounds - currentRound;
+  
+  if (roundsFromEnd === 0) return 'Finals';
+  if (roundsFromEnd === 1) return 'Semi-finals';
+  if (roundsFromEnd === 2) return 'Quarter-finals';
+  
+  return `Round ${currentRound}/${maxRounds}`;
 };
 
 // Battle Log Types

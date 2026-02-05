@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMatchHistory, BattleHistory, getBattleOutcome, getELOChange, formatDateTime } from '../utils/matchmakingApi';
+import { getMatchHistory, BattleHistory, getBattleOutcome, getELOChange, formatDateTime, getTournamentRoundName } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -110,13 +110,29 @@ function RecentMatches() {
         {matches.map((battle) => {
           const { myRobot, opponent, outcome, eloChange } = getMatchData(battle);
           const outcomeColor = getOutcomeColor(outcome);
+          const isTournament = battle.battleType === 'tournament';
           
           return (
             <div 
               key={battle.id} 
-              className="bg-gray-700 p-3 rounded border border-gray-600 cursor-pointer hover:bg-gray-600 transition-colors"
+              className={`bg-gray-700 p-3 rounded ${isTournament ? 'border-2 border-yellow-500' : 'border border-gray-600'} cursor-pointer hover:bg-gray-600 transition-colors`}
               onClick={() => navigate(`/battle/${battle.id}`)}
             >
+              {/* Tournament Badge */}
+              {isTournament && battle.tournamentRound && battle.tournamentMaxRounds && (
+                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-600">
+                  <span className="text-lg">🏆</span>
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-yellow-400">
+                      {battle.tournamentName || 'Tournament'}
+                    </div>
+                    <div className="text-xs opacity-75">
+                      {getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between items-start mb-2">
                 <span className={`text-sm font-bold ${outcomeColor}`}>
                   {getOutcomeText(outcome)}

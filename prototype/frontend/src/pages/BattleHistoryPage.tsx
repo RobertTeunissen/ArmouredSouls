@@ -10,6 +10,7 @@ import {
   getELOChange,
   formatDateTime,
   formatDuration,
+  getTournamentRoundName,
 } from '../utils/matchmakingApi';
 
 function BattleHistoryPage() {
@@ -128,12 +129,29 @@ function BattleHistoryPage() {
                 const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
                 const outcomeClass = getOutcomeColor(outcome);
                 const reward = getReward(battle, myRobotId);
+                const isTournament = battle.battleType === 'tournament';
+                const borderClass = isTournament ? 'border-2 border-yellow-500' : 'border';
 
                 return (
                   <div
                     key={battle.id}
-                    className={`border p-4 rounded-lg ${outcomeClass}`}
+                    className={`${borderClass} p-4 rounded-lg ${outcomeClass}`}
                   >
+                    {/* Tournament Badge */}
+                    {isTournament && battle.tournamentRound && battle.tournamentMaxRounds && (
+                      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-opacity-25">
+                        <span className="text-2xl">🏆</span>
+                        <div className="flex-1">
+                          <div className="font-semibold text-yellow-400">
+                            {battle.tournamentName || 'Tournament'}
+                          </div>
+                          <div className="text-sm opacity-75">
+                            {getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       {/* Battle Outcome */}
                       <div className="flex-shrink-0">
