@@ -17,6 +17,7 @@ import LeaderboardsPrestigePage from './pages/LeaderboardsPrestigePage';
 import LeaderboardsLossesPage from './pages/LeaderboardsLossesPage';
 import FinancialReportPage from './pages/FinancialReportPage';
 import HallOfRecordsPage from './pages/HallOfRecordsPage';
+import TournamentsPage from './pages/TournamentsPage';
 
 function App() {
   return (
@@ -141,6 +142,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <HallOfRecordsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tournaments"
+            element={
+              <ProtectedRoute>
+                <TournamentsPage />
               </ProtectedRoute>
             }
           />

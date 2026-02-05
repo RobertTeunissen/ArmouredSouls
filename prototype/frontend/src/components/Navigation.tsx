@@ -18,6 +18,7 @@ const implementedPages = new Set([
   '/weapon-shop',
   '/battle-history',
   '/league-standings',
+  '/tournaments',
   '/admin',
   '/leaderboards/fame',
   '/leaderboards/prestige',
