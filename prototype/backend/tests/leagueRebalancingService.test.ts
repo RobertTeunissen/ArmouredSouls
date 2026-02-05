@@ -51,7 +51,7 @@ describe('League Rebalancing Service', () => {
   });
 
   describe('determinePromotions', () => {
-    it('should return top 10% of robots with ≥5 battles', async () => {
+    it('should return top 10% of robots with ≥5 cycles in current league', async () => {
       // Create 20 robots in bronze league with varying league points
       const robots = [];
       for (let i = 0; i < 20; i++) {
@@ -71,7 +71,8 @@ describe('League Rebalancing Service', () => {
             maxShield: 2,
             elo: 1200,
             leaguePoints: i * 10, // 0, 10, 20, ..., 190
-            totalBattles: 10, // All have enough battles
+            totalBattles: 10,
+            cyclesInCurrentLeague: 10, // All have enough cycles in current league
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
           },
@@ -93,7 +94,7 @@ describe('League Rebalancing Service', () => {
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
 
-    it('should skip robots with <5 battles', async () => {
+    it('should skip robots with <5 cycles in current league', async () => {
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
@@ -112,7 +113,8 @@ describe('League Rebalancing Service', () => {
             maxShield: 2,
             elo: 1200,
             leaguePoints: i * 10,
-            totalBattles: i < 10 ? 3 : 10, // First 10 have too few battles
+            totalBattles: 10,
+            cyclesInCurrentLeague: i < 10 ? 3 : 10, // First 10 have too few cycles in league
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
           },
@@ -122,10 +124,10 @@ describe('League Rebalancing Service', () => {
 
       const toPromote = await determinePromotions('bronze');
 
-      // Should only consider robots with ≥5 battles (last 10 robots)
+      // Should only consider robots with ≥5 cycles in current league (last 10 robots)
       // 10% of 10 = 1 robot
       expect(toPromote.length).toBe(1);
-      expect(toPromote[0].totalBattles).toBeGreaterThanOrEqual(5);
+      expect(toPromote[0].cyclesInCurrentLeague).toBeGreaterThanOrEqual(5);
 
       // Clean up
       for (const robot of robots) {
@@ -160,6 +162,7 @@ describe('League Rebalancing Service', () => {
             elo: 1200,
             leaguePoints: i * 10,
             totalBattles: 10,
+            cyclesInCurrentLeague: 10,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
           },
@@ -179,7 +182,7 @@ describe('League Rebalancing Service', () => {
   });
 
   describe('determineDemotions', () => {
-    it('should return bottom 10% of robots with ≥5 battles', async () => {
+    it('should return bottom 10% of robots with ≥5 cycles in current league', async () => {
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
@@ -199,6 +202,7 @@ describe('League Rebalancing Service', () => {
             elo: 1200,
             leaguePoints: i * 10, // 0, 10, 20, ..., 190
             totalBattles: 10,
+            cyclesInCurrentLeague: 10,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
           },
@@ -227,7 +231,7 @@ describe('League Rebalancing Service', () => {
   });
 
   describe('promoteRobot', () => {
-    it('should move robot to next tier and reset league points', async () => {
+    it('should move robot to next tier and reset league points and cycles', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: { userId: testUser.id, weaponId: practiceSword.id },
       });
@@ -244,6 +248,7 @@ describe('League Rebalancing Service', () => {
           maxShield: 2,
           elo: 1300,
           leaguePoints: 50,
+          cyclesInCurrentLeague: 10,
           loadoutType: 'single',
           mainWeaponId: weaponInv.id,
         },
@@ -255,6 +260,7 @@ describe('League Rebalancing Service', () => {
       expect(updated?.currentLeague).toBe('silver');
       expect(updated?.leagueId).toMatch(/^silver_\d+$/);
       expect(updated?.leaguePoints).toBe(0);
+      expect(updated?.cyclesInCurrentLeague).toBe(0); // Should reset cycles counter
       expect(updated?.elo).toBe(1300); // ELO should not change
 
       // Clean up
@@ -381,6 +387,7 @@ describe('League Rebalancing Service', () => {
             elo: 1200,
             leaguePoints: i * 10,
             totalBattles: 10,
+            cyclesInCurrentLeague: 10,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
           },
@@ -425,6 +432,7 @@ describe('League Rebalancing Service', () => {
             elo: 1200 + i, // Varying ELO to create order
             leaguePoints: i * 10, // 0 to 990 points
             totalBattles: 10,
+            cyclesInCurrentLeague: 10,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
           },
