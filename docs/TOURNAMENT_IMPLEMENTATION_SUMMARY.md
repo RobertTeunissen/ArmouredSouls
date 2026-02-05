@@ -1,55 +1,91 @@
 # Tournament System Implementation Summary
 
 **Date**: February 5, 2026  
-**Status**: ✅ **UPDATED - Code Changes Complete**  
+**Status**: ✅ **CORRECTED - Ready for Testing**  
 **Branch**: `copilot/implement-tournament-framework`
 
 ---
 
-## ✅ Implementation Status Update
+## ✅ Implementation Status - Corrections Applied
 
-**All review feedback has been addressed!** The code now matches the updated PRD (v1.2).
+**All review feedback has been addressed AND corrected after implementation!**
 
-### Code Changes Completed:
+### Recent Corrections (v1.3):
 
-1. ✅ **tournamentRewards.ts** - Completely redesigned
-   - Tournament size-based formula implemented
-   - Scales from 15 to 100,000+ participants
-   - Loser gets no rewards (winner-take-all)
-   - No league dependencies
+1. ✅ **Loser Rewards Added** - Was incorrectly set to 0, now 30% participation
+2. ✅ **Reward Scaling Reduced** - Was too high (₡94k), now reasonable (₡28k)
+3. ✅ **Bye Rules Clarified** - Tournament byes vs league byes documented
 
-2. ✅ **tournamentBattleOrchestrator.ts** - Bye handling fixed
-   - Removed bye match reward logic
-   - Bye matches throw error if processed
-   - Updated to use new reward formula
+### Code Changes Status:
 
+1. ✅ **tournamentRewards.ts** - Corrected formula
+   - BASE_CREDIT: 50000 → 20000 (60% reduction)
+   - Size multiplier: Reduced by 50%
+   - Added 30% participation rewards
+   
+2. ✅ **tournamentBattleOrchestrator.ts** - Documentation added
+   - Clarified tournament byes vs league byes
+   
 3. ✅ **tournamentService.ts** - Multiple tournaments enabled
-   - Removed cooldown system
-   - Robots can be in multiple tournaments
-   - Simplified eligibility (only battle-readiness)
-
-4. ✅ **adminTournaments.ts** - Parameter cleanup
-   - Removed excludeRecentParticipants
-
+4. ✅ **adminTournaments.ts** - Parameters cleaned
 5. ✅ **admin.ts** - Daily cycle restructured
-   - Sequential execution: Repair → Tournaments → Repair → Leagues
-   - Two repair steps ensure battle-readiness
 
 ---
 
-## 🔴 IMPORTANT: Previous Design vs Current Design
+## 🔴 Key Changes from Original Design
 
-### What Changed from Review:
+### What Changed in v1.3 (Post-Implementation Corrections):
 
-| **Aspect** | **Old Design** | **New Design (v1.2)** |
-|------------|----------------|----------------------|
-| **Rewards** | League-based with 1.5×, 2× multipliers | Tournament size & progression based |
-| **Formula** | `league × prestige × 1.5 × round` | `base × (1 + log10(participants/10)) × (round/maxRounds)` |
-| **Bye Matches** | 50% participation reward | NO rewards, NO records |
-| **Cooldown** | 24-hour cooldown between tournaments | NO cooldown |
-| **Multiple Tournaments** | Robot cannot be in multiple | Robot CAN be in multiple |
-| **Daily Cycle** | Tournament after leagues | Repair → Tournament → Repair → League |
-| **Loser Reward** | Participation (30%) | Zero (winner-take-all) |
+| **Aspect** | **Original v1.2** | **Corrected v1.3** |
+|------------|-------------------|-------------------|
+| **Base Credits** | ₡50,000 | ₡20,000 (60% reduction) |
+| **Size Multiplier** | `1 + log10(x/10)` | `1 + log10(x/10) × 0.5` (half) |
+| **Loser Reward** | 0 (winner-take-all) | 30% participation |
+| **Example (100k, R8/17)** | ₡94,000 | ₡28,235 (70% reduction) |
+| **Bye Matches** | Unclear | Documented: Tournament vs League |
+
+---
+
+## 🔧 Post-Implementation Corrections (v1.3)
+
+### Issues Identified and Fixed:
+
+**1. Loser Rewards Were Incorrectly Zero**
+- ❌ **Problem**: Misinterpreted review to mean no loser rewards
+- ✅ **Solution**: Added 30% participation rewards for losers
+- **Code**: Added `calculateTournamentParticipationReward()` function
+- **Impact**: Losers now get fair compensation for participation
+
+**2. Reward Scaling Was Too High**
+- ❌ **Problem**: Round 8/17 with 100k robots gave ₡94,000
+- ✅ **Solution**: Reduced base (60%) and halved scaling multiplier
+- **Changes**:
+  - BASE_CREDIT_REWARD: 50000 → 20000
+  - Size multiplier: `1 + log10(x/10)` → `1 + log10(x/10) × 0.5`
+  - BASE_PRESTIGE: 30 → 15
+  - BASE_FAME: 20 → 10
+- **Impact**: Rewards now comparable to leagues with appropriate bonuses
+
+**3. Bye Match Rules Needed Clarification**
+- ❌ **Problem**: Unclear if league byes were affected
+- ✅ **Solution**: Documented two separate systems
+- **Tournament Byes**: No battle, no rewards (extras)
+- **League Byes**: Fight Bye Robot, get rewards (income guarantee)
+- **Code**: Added clear documentation in both files
+
+### Corrected Reward Examples:
+
+| Scenario | v1.2 (Wrong) | v1.3 (Corrected) | Change |
+|----------|--------------|------------------|--------|
+| 15 robots, R2/4 Winner | ₡29,500 | ₡10,880 | -63% |
+| 100 robots, R3/4 Winner | ₡75,000 | ₡22,500 | -70% |
+| 100k robots, R8/17 Winner | ₡94,000 | ₡28,235 | -70% |
+| Any match Loser | ₡0 | 30% of winner | Added |
+
+**New Participation Rewards:**
+- 15 robots, R2/4: Loser gets ₡3,264
+- 100 robots, R3/4: Loser gets ₡6,750
+- 100k robots, R8/17: Loser gets ₡8,471
 
 ---
 
@@ -92,38 +128,39 @@ The tournament system has been successfully implemented as a comprehensive compe
 - Cooldown system (24 hours) to prevent immediate re-entry
 - Automatic tournament completion and championship awarding
 
-#### `tournamentRewards.ts` (300 lines)
-**Purpose:** Enhanced reward calculations for tournaments
+#### `tournamentRewards.ts` (235 lines) - CORRECTED v1.3
+**Purpose:** Tournament-specific reward calculations
 
-**Reward Multipliers:**
-- Win Credits: 1.5× base league reward
-- Prestige: 2.0× league prestige
-- Fame: 1.5× league fame
+**Current Implementation (v1.3):**
+- Base Credits: ₡20,000 (reduced from ₡50,000)
+- Tournament size scaling: Conservative (`1 + log10(x/10) × 0.5`)
+- Participation reward: 30% of winner's credits
 - Championship Bonus: +500 prestige (finals only)
 
-**Progressive Round Bonuses:**
-```
-Round 1: 1.0×
-Round 2: 1.2×
-Round 3: 1.4× (Quarter-finals)
-Round 4: 1.6× (Semi-finals)
-Round 5: 2.0× (Finals)
-```
-
 **Key Functions:**
-- `calculateTournamentWinReward()` - Win rewards with all multipliers
+- `calculateTournamentSizeMultiplier()` - Scales 1.09× to 3.0× (conservative)
+- `calculateTournamentWinReward()` - Win rewards with tournament scaling
+- `calculateTournamentParticipationReward()` - 30% of winner for losers
 - `calculateTournamentPrestige()` - Prestige with championship bonus
 - `calculateTournamentFame()` - Fame with performance multipliers
 - `calculateTournamentBattleRewards()` - Complete reward package
 
-#### `tournamentBattleOrchestrator.ts` (420 lines)
+**Example Rewards:**
+- 100 robots, Round 3/4: ₡22,500 winner, ₡6,750 loser
+- 100k robots, Round 8/17: ₡28,235 winner, ₡8,471 loser
+
+#### `tournamentBattleOrchestrator.ts` (380 lines) - CORRECTED v1.3
 **Purpose:** Tournament battle execution and stat tracking
 
 **Key Functions:**
 - `processTournamentBattle()` - Executes tournament match
-- `processByeMatch()` - Handles bye advancement (50% participation reward)
+- **NO `processByeMatch()`** - Tournament byes auto-complete (no battle)
 - `createTournamentBattleRecord()` - Creates Battle record with tournament context
 - `updateRobotStatsForTournament()` - Updates stats, awards rewards
+
+**Important Notes:**
+- Tournament byes: No battle, no rewards (handled at creation)
+- League byes: Fight Bye Robot (separate system in battleOrchestrator.ts)
 
 **Features:**
 - Full combat simulation integration
