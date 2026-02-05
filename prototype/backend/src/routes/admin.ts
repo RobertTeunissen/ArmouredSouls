@@ -804,6 +804,7 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 per page
     const search = req.query.search as string;
     const leagueType = req.query.leagueType as string;
+    const battleType = req.query.battleType as string; // Add battle type filter
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -834,6 +835,15 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
     // Filter by league type
     if (leagueType && leagueType !== 'all') {
       where.leagueType = leagueType;
+    }
+
+    // Filter by battle type (league vs tournament)
+    if (battleType && battleType !== 'all') {
+      if (battleType === 'tournament') {
+        where.tournamentId = { not: null };
+      } else if (battleType === 'league') {
+        where.tournamentId = null;
+      }
     }
 
     // Get total count for pagination

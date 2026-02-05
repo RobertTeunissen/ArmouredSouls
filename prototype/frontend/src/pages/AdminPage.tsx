@@ -277,6 +277,7 @@ function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [leagueFilter, setLeagueFilter] = useState('all');
+  const [battleTypeFilter, setBattleTypeFilter] = useState('all'); // Add battle type filter
   const [selectedBattleId, setSelectedBattleId] = useState<number | null>(null);
   const [showBattleModal, setShowBattleModal] = useState(false);
 
@@ -464,8 +465,42 @@ function AdminPage() {
             }
           }
 
-          // Auto-repair
-          if (result.repair) {
+          // Pre-tournament auto-repair
+          if (result.repairPreTournament) {
+            addSessionLog('info', `Cycle ${result.cycle}: Pre-tournament repair - ${result.repairPreTournament.robotsRepaired} robot(s) repaired`);
+          }
+
+          // Tournament execution
+          if (result.tournaments) {
+            if (result.tournaments.error) {
+              addSessionLog('error', `Cycle ${result.cycle}: Tournament execution failed`, result.tournaments);
+            } else {
+              const t = result.tournaments;
+              const details = [
+                t.tournamentsExecuted ? `${t.tournamentsExecuted} tournament(s) executed` : null,
+                t.roundsExecuted ? `${t.roundsExecuted} round(s) executed` : null,
+                t.matchesExecuted ? `${t.matchesExecuted} match(es) processed` : null,
+                t.tournamentsCompleted ? `${t.tournamentsCompleted} tournament(s) completed` : null,
+                t.tournamentsCreated ? `${t.tournamentsCreated} new tournament(s) created` : null,
+              ].filter(Boolean).join(', ');
+              
+              if (details) {
+                addSessionLog(
+                  t.errors && t.errors.length > 0 ? 'warning' : 'success',
+                  `Cycle ${result.cycle}: Tournaments - ${details}`,
+                  t.errors && t.errors.length > 0 ? { errors: t.errors } : undefined
+                );
+              }
+            }
+          }
+
+          // Pre-league auto-repair
+          if (result.repairPreLeague) {
+            addSessionLog('info', `Cycle ${result.cycle}: Pre-league repair - ${result.repairPreLeague.robotsRepaired} robot(s) repaired`);
+          }
+
+          // Auto-repair (legacy, for backwards compatibility)
+          if (result.repair && !result.repairPreTournament && !result.repairPreLeague) {
             addSessionLog('info', `Cycle ${result.cycle}: Repaired ${result.repair.robotsRepaired} robot(s)`);
           }
 
@@ -529,6 +564,7 @@ function AdminPage() {
       const params: any = { page, limit: 20 };
       if (searchQuery) params.search = searchQuery;
       if (leagueFilter !== 'all') params.leagueType = leagueFilter;
+      if (battleTypeFilter !== 'all') params.battleType = battleTypeFilter; // Add battle type filter
 
       const response = await axios.get<BattleListResponse>('/api/admin/battles', { params });
       setBattles(response.data.battles);
@@ -1159,6 +1195,15 @@ function AdminPage() {
                 <option value="platinum">Platinum</option>
                 <option value="diamond">Diamond</option>
                 <option value="champion">Champion</option>
+              </select>
+              <select
+                value={battleTypeFilter}
+                onChange={(e) => setBattleTypeFilter(e.target.value)}
+                className="bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                <option value="all">All Battle Types</option>
+                <option value="league">League Battles</option>
+                <option value="tournament">Tournament Battles</option>
               </select>
               <button
                 onClick={handleSearch}
