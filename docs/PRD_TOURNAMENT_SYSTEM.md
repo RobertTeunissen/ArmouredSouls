@@ -17,7 +17,8 @@ v1.2 (Feb 5, 2026): Review comments addressed - reward system redesigned, bye ma
 v1.3 (Feb 5, 2026): Corrections after implementation - rewards scaled down, participation rewards added, bye match rules clarified  
 v1.4 (Feb 5, 2026): Frontend implementation - Admin page UI complete with tournament management  
 v1.5 (Feb 5, 2026): Frontend My Robots page - Tournament matches now display in upcoming matches with badges  
-v1.6 (Feb 5, 2026): Frontend Battle History - Tournament battles now display with badges, round names, and visual distinction
+v1.6 (Feb 5, 2026): Frontend Battle History - Tournament battles now display with badges, round names, and visual distinction  
+v1.7 (Feb 5, 2026): Public Tournaments Page - Added dedicated tournament viewing page for all users at /tournaments
 
 ---
 
@@ -1135,6 +1136,19 @@ For **large tournaments** (256+ robots):
 - [x] Add getTournamentRoundName() utility function
 - [x] Update BattleHistoryPage component
 - [x] Update RecentMatches component
+
+**Milestone 6.4: Public Tournament Viewing Page** ✅ COMPLETE
+- [x] Create TournamentsPage.tsx component
+- [x] List view of all tournaments (active, pending, completed)
+- [x] Filter tabs by tournament status
+- [x] Status badges (🔴 Live, ⏳ Pending, ✓ Completed)
+- [x] Tournament stats dashboard (participant count, round progress, dates)
+- [x] Progress bars for active tournaments
+- [x] Champion display for completed tournaments
+- [x] Round name display (Finals, Semi-finals, Quarter-finals)
+- [x] Add to navigation menu and routing
+- [x] Responsive design with yellow-bordered cards
+- [x] Error handling and empty states
 
 ### Phase 7: Testing & Validation 
 
