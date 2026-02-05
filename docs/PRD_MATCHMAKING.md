@@ -294,16 +294,17 @@ The scheduled batch model allows:
 - **So that** leagues remain balanced and competitive
 
 **Acceptance Criteria:**
-- League rebalancing runs after battles complete
-- Promotion threshold: Top 10% of robots in league (minimum 5 battles)
-- Demotion threshold: Bottom 10% of robots in league (minimum 5 battles)
+- League rebalancing runs after every cycle (battles complete)
+- Promotion threshold: Top 10% of robots in league (minimum 5 cycles in current league)
+- Demotion threshold: Bottom 10% of robots in league (minimum 5 cycles in current league)
 - Champion league has no promotion (highest tier)
 - Bronze league has no demotion (lowest tier)
 - League points reset after promotion/demotion
+- Cycles in current league counter resets after promotion/demotion
 - ELO carries over between leagues
 - Instance balancing after promotions/demotions if deviation >20 robots
 
-**Design Decision**: 10% promotion/demotion provides slower, more stable league progression. Robots need minimum 5 battles to be eligible, preventing premature tier changes.
+**Design Decision**: 10% promotion/demotion provides slower, more stable league progression. Robots need minimum 5 cycles in their current league to be eligible, preventing premature tier changes and ensuring robots have established themselves in their tier before moving up or down.
 
 **US-10: League Points Calculation**
 - **As the** game system
@@ -601,9 +602,10 @@ async function createScheduledMatches(
 ### League Rebalancing Specification
 
 **Promotion/Demotion Thresholds:**
-- **Promotion**: Top 20% of robots in league (minimum 5 battles completed)
-- **Demotion**: Bottom 20% of robots in league (minimum 5 battles completed)
-- **Alternative approach**: Fixed league points thresholds (e.g., 15 points = promotion, 0 points after 10 battles = demotion)
+- **Promotion**: Top 10% of robots in league (minimum 5 cycles in current league)
+- **Demotion**: Bottom 10% of robots in league (minimum 5 cycles in current league)
+- **Frequency**: Rebalancing runs every cycle to check eligibility
+- **Alternative approach**: Fixed league points thresholds (e.g., 15 points = promotion, 0 points after 10 battles = demotion) - Not currently implemented
 
 **League Tiers:**
 ```typescript
@@ -632,7 +634,7 @@ async function rebalanceLeague(leagueType: string): Promise<RebalanceResult> {
   const robots = await prisma.robot.findMany({
     where: {
       currentLeague: leagueType,
-      totalBattles: { gte: 5 },  // Minimum battles to be eligible
+      cyclesInCurrentLeague: { gte: 5 },  // Minimum cycles in current league to be eligible
     },
     orderBy: [
       { leaguePoints: 'desc' },
@@ -641,8 +643,8 @@ async function rebalanceLeague(leagueType: string): Promise<RebalanceResult> {
   });
   
   const totalRobots = robots.length;
-  const promotionCount = Math.ceil(totalRobots * 0.2);  // Top 20%
-  const demotionCount = Math.floor(totalRobots * 0.2);  // Bottom 20%
+  const promotionCount = Math.floor(totalRobots * 0.10);  // Top 10%
+  const demotionCount = Math.floor(totalRobots * 0.10);  // Bottom 10%
   
   const toPromote = robots.slice(0, promotionCount);
   const toDemote = robots.slice(-demotionCount);
@@ -659,6 +661,7 @@ async function rebalanceLeague(leagueType: string): Promise<RebalanceResult> {
           currentLeague: promotedLeague,
           leagueId: `${promotedLeague}_1`,  // Default to instance 1
           leaguePoints: 0,  // Reset league points
+          cyclesInCurrentLeague: 0,  // Reset cycles counter for new league
           // ELO carries over
         },
       });
@@ -674,6 +677,7 @@ async function rebalanceLeague(leagueType: string): Promise<RebalanceResult> {
           currentLeague: demotedLeague,
           leagueId: `${demotedLeague}_1`,  // Default to instance 1
           leaguePoints: 0,  // Reset league points
+          cyclesInCurrentLeague: 0,  // Reset cycles counter for new league
           // ELO carries over
         },
       });

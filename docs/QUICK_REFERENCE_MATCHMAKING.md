@@ -76,9 +76,11 @@ Quick reference for implementing and understanding the Matchmaking System in Arm
 - **Upset Penalty**: -1 (lose to >300 ELO lower)
 
 ### Promotion/Demotion
-- **Promotion**: Top 10% of league (min 5 battles)
-- **Demotion**: Bottom 10% of league (min 5 battles)
+- **Frequency**: Every cycle (rebalancing runs after each cycle)
+- **Promotion**: Top 10% of league (min 5 cycles in current league)
+- **Demotion**: Bottom 10% of league (min 5 cycles in current league)
 - **League Points**: Reset to 0 after tier change
+- **Cycles in League**: Reset to 0 after tier change
 - **ELO**: Carries over between leagues
 
 ### League Instances
@@ -309,11 +311,13 @@ Display on:
 - [ ] Award rewards
 
 ### Phase 6: League Rebalancing (6 hours)
-- [ ] Promotion/demotion (10% thresholds)
-- [ ] Instance balancing
-- [ ] League point reset
-- [ ] Min 5 battles check
-- [ ] Edge case handling
+- [x] Promotion/demotion (10% thresholds)
+- [x] Instance balancing
+- [x] League point reset
+- [x] Cycles in current league counter and reset
+- [x] Min 5 cycles in current league check
+- [x] Rebalancing runs every cycle
+- [x] Edge case handling
 
 ### Phase 7: Admin Dashboard (12 hours)
 - [ ] Separate admin portal setup

@@ -93,9 +93,11 @@ The Armoured Souls matchmaking system is a comprehensive turn-based multiplayer 
 **Completed**: Promotion/demotion system
 
 **Features:**
-- Top 10% promoted (≥5 battles, ≥10 robots/tier)
+- Top 10% promoted (≥5 cycles in current league, ≥10 robots/tier)
 - Bottom 10% demoted (same requirements)
+- Rebalancing runs every cycle
 - League points reset on tier change
+- Cycles in current league counter reset on tier change
 - ELO preserved during moves
 - Edge case handling (Champion/Bronze tiers)
 - Instance rebalancing after moves
@@ -450,12 +452,14 @@ POST /api/admin/leagues/rebalance
 
 **Process:**
 - For each tier with ≥10 robots:
-  - Identify top 10% (≥5 battles) for promotion
-  - Identify bottom 10% (≥5 battles) for demotion
+  - Identify top 10% (≥5 cycles in current league) for promotion
+  - Identify bottom 10% (≥5 cycles in current league) for demotion
   - Move robots to new tiers
   - Reset league points to 0
+  - Reset cycles in current league to 0
   - Preserve ELO ratings
 - Rebalance instances after moves
+- Increment cyclesInCurrentLeague for all robots at end of cycle
 
 ### 5. Repeat
 The cycle repeats daily, allowing continuous progression.
@@ -537,8 +541,8 @@ MIN_ROBOTS_FOR_REBALANCE = 10   // Minimum robots in tier
 ### Issue: League rebalancing not happening
 **Causes:**
 - <10 robots in tier
-- Robots have <5 battles
-- Not enough cycles completed
+- Robots have <5 cycles in current league
+- Rebalancing runs every cycle, but requires eligibility threshold
 
 **Solutions:**
 - Run more battle cycles
