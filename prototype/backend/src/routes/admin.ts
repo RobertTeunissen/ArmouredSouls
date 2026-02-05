@@ -352,8 +352,8 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           }
         }
 
-        // Step 1: Auto-repair if enabled
-        let repairSummary = null;
+        // Step 1: Auto-repair robots (before tournaments)
+        let repairSummaryPreTournament = null;
         if (autoRepair) {
           const robots = await prisma.robot.findMany({
             where: {
@@ -369,21 +369,11 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             });
           }
 
-          repairSummary = { robotsRepaired: robots.length };
+          repairSummaryPreTournament = { robotsRepaired: robots.length };
+          console.log(`[Admin] Pre-tournament repair: ${robots.length} robots repaired`);
         }
 
-        // Step 2: Matchmaking
-        const scheduledFor = new Date(Date.now() + 1000); // 1 second ahead
-        const matchesCreated = await runMatchmaking(scheduledFor);
-        const matchmakingSummary = { matchesCreated };
-
-        // Small delay to ensure time passes
-        await new Promise(resolve => setTimeout(resolve, 1100));
-
-        // Step 3: Execute battles
-        const battleSummary = await executeScheduledBattles(new Date());
-
-        // Step 3.5: Execute tournament rounds (if enabled)
+        // Step 2: Execute tournament rounds (if enabled)
         let tournamentSummary = null;
         if (includeTournaments) {
           try {
@@ -457,13 +447,45 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           }
         }
 
-        // Step 4: Process daily finances (if enabled)
+        // Step 3: Auto-repair robots (before leagues)
+        let repairSummaryPreLeague = null;
+        if (autoRepair) {
+          const robots = await prisma.robot.findMany({
+            where: {
+              currentHP: { lt: prisma.robot.fields.maxHP },
+              NOT: { name: 'Bye Robot' },
+            },
+          });
+
+          for (const robot of robots) {
+            await prisma.robot.update({
+              where: { id: robot.id },
+              data: { currentHP: robot.maxHP },
+            });
+          }
+
+          repairSummaryPreLeague = { robotsRepaired: robots.length };
+          console.log(`[Admin] Pre-league repair: ${robots.length} robots repaired`);
+        }
+
+        // Step 4: Matchmaking
+        const scheduledFor = new Date(Date.now() + 1000); // 1 second ahead
+        const matchesCreated = await runMatchmaking(scheduledFor);
+        const matchmakingSummary = { matchesCreated };
+
+        // Small delay to ensure time passes
+        await new Promise(resolve => setTimeout(resolve, 1100));
+
+        // Step 5: Execute league battles
+        const battleSummary = await executeScheduledBattles(new Date());
+
+        // Step 6: Process daily finances (if enabled)
         let financeSummary = null;
         if (includeDailyFinances) {
           financeSummary = await processAllDailyFinances();
         }
 
-        // Step 5: Rebalance leagues (every 5 cycles or last cycle)
+        // Step 7: Rebalance leagues (every 5 cycles or last cycle)
         let rebalancingSummary = null;
         if (i % 5 === 0 || i === cycleCount) {
           rebalancingSummary = await rebalanceLeagues();
@@ -472,10 +494,11 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         cycleResults.push({
           cycle: currentCycleNumber,
           userGeneration: userGenerationSummary,
-          repair: repairSummary,
+          repairPreTournament: repairSummaryPreTournament,
+          tournaments: tournamentSummary,
+          repairPreLeague: repairSummaryPreLeague,
           matchmaking: matchmakingSummary,
           battles: battleSummary,
-          tournaments: tournamentSummary, // NEW
           finances: financeSummary,
           rebalancing: rebalancingSummary,
           duration: Date.now() - cycleStart,
