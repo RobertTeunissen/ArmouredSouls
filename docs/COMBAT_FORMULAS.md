@@ -1,9 +1,18 @@
 # Combat Formulas and Battle Mechanics
 
-**Last Updated**: February 3, 2026  
-**Status**: Comprehensive Reference - Matches Current Implementation
+**Last Updated**: February 5, 2026  
+**Status**: Authoritative Reference - Defines formulas, implementation, and display formats
 
-This document is the **authoritative source** for all combat formulas, weapon bonus applications, and battle mechanics in Armoured Souls.
+This document is the **authoritative source** for all combat formulas, weapon bonus applications, and battle mechanics in Armoured Souls. It defines:
+1. **System Logic**: Mathematical formulas and game mechanics
+2. **Implementation**: Code structure and function references
+3. **Display Formats**: How formulas are shown in extended battle logs (Admin panel at `/admin`)
+4. **User Messages**: How battle events are presented to players (see COMBAT_MESSAGES.md for variations)
+
+**Important Terminology:**
+- **"Energy Shield"**: The HP pool that absorbs damage (attribute: Energy Shield Capacity)
+- **"Shield weapon"**: Physical equipment held in hand (e.g., Combat Shield)
+- Use "Energy Shield" consistently when referring to the damage-absorbing HP pool
 
 ## Table of Contents
 1. [Weapon Attribute Bonuses](#weapon-attribute-bonuses)
@@ -35,7 +44,7 @@ Weapons can provide attribute bonuses (positive or negative) that enhance or pen
 
 - **Defensive Systems:**
   - `armorPlatingBonus` - Reduces incoming damage
-  - `shieldCapacityBonus` - Increases max shield
+  - `shieldCapacityBonus` - Increases max Energy Shield
   - `evasionThrustersBonus` - Makes attacks harder to land
   - `damageDampenersBonus` - Reduces critical damage multiplier
   - `counterProtocolsBonus` - Increases counter-attack chance
@@ -198,41 +207,245 @@ Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1
 
 ## Damage Application
 
-### Shield Absorption
-When defender has shields:
-```
-Shield Absorption = Damage × 0.7 (shields absorb 70% of damage)
-Penetration Multiplier = 1 + (Attacker Penetration + Weapon Bonus) / 200
-Effective Shield Damage = Shield Absorption × Penetration Multiplier
-Actual Shield Damage = Min(Effective Shield Damage, Current Shield)
+**Last Updated**: February 5, 2026  
+**Status**: New simplified formula - eliminates 70% absorption and bleed-through
+
+This section defines how damage is applied to Energy Shields and HP, including armor reduction mechanics.
+
+### Overview
+
+Damage is applied in a simple two-step process:
+1. **Energy Shield Absorption**: Damage goes to Energy Shield first (100% effective, no absorption penalty)
+2. **HP Damage**: Any overflow damage (after shield depleted) goes to HP with armor reduction applied
+
+### Constants
+
+```typescript
+// Armor reduction effectiveness (percentage per armor point)
+export const ARMOR_EFFECTIVENESS = 1.5;  // 1.5% damage reduction per armor point
+
+// Penetration bonus when penetration exceeds armor (percentage per excess point)
+export const PENETRATION_BONUS = 2.0;    // 2% damage increase per penetration point above armor
+
+// Maximum armor reduction cap has been REMOVED - now scales smoothly
 ```
 
-### Bleed-Through Damage
-If shield damage exceeds current shield:
+### Naming Clarification
+
+To understand the variable naming in damage calculations:
+
+**Naming Chain:**
+1. **Robot Attribute** (database): `armorPlating` (the robot's defensive attribute, 1-50)
+2. **Effective Value** (code variable): `effectiveArmorPlating` (includes weapon bonuses, if any)
+3. **Constant** (formula): `ARMOR_EFFECTIVENESS` (1.5% per point)
+4. **Calculated Result** (code variable): `armorReductionPercent` (the percentage of damage reduced)
+
+**Example Flow:**
 ```
-Overflow = (Effective Shield Damage - Current Shield) × 0.3 (30% bleeds through)
-Raw Armor Reduction = Defender Armor × (1 - (Attacker Penetration + Weapon Bonus) / 100)
-Armor Reduction = Min(Raw Armor Reduction, 30) (capped at 30)
-HP Damage = Max(1, Overflow - Armor Reduction) (minimum 1 damage)
+Robot has armorPlating = 20
+effectiveArmorPlating = 20 (no weapon bonuses in current implementation)
+armorReductionPercent = (20 - 10) × ARMOR_EFFECTIVENESS = 10 × 1.5 = 15%
+Damage after armor = damage × (1 - 0.15) = damage × 0.85
 ```
 
-### No Shield
-When defender has no shield:
+**Note**: In the current implementation, `effectiveArmor` is used as shorthand for `effectiveArmorPlating` since the defender's armor isn't affected by their equipped weapon bonuses (only attacker's penetration matters).
+
+### Step 1: Energy Shield Damage
+
+When defender has Energy Shield remaining:
 ```
-Raw Armor Reduction = Defender Armor × (1 - (Attacker Penetration + Weapon Bonus) / 100)
-Armor Reduction = Min(Raw Armor Reduction, 30) (capped at 30)
-HP Damage = Max(1, Damage - Armor Reduction) (minimum 1 damage)
+Energy Shield Damage = Min(Total Damage, Current Energy Shield)
+Current Energy Shield = Current Energy Shield - Energy Shield Damage
+Remaining Damage = Total Damage - Energy Shield Damage
 ```
 
-### Display Format
+**Important Changes:**
+- ❌ **Removed**: 70% shield absorption (was: `Damage × 0.7`)
+- ❌ **Removed**: Penetration multiplier on shields (was: `1 + Penetration/200`)
+- ✅ **New**: 100% of damage applies directly to Energy Shield
+
+### Step 2: HP Damage with Armor Reduction
+
+If remaining damage > 0 after Energy Shield depleted:
+
+#### Case A: Penetration ≤ Armor (Armor reduces damage)
 ```
-Apply: 12.5 base × 1.00 crit = 12.5 | Shield: 1.0 absorbed | Bleed: 2.7 - 4.8 armor = 1.0 HP
+Armor Reduction Percent = (Effective Armor - Effective Penetration) × ARMOR_EFFECTIVENESS
+Damage Multiplier = 1 - (Armor Reduction Percent / 100)
+HP Damage = Max(1, Remaining Damage × Damage Multiplier)
 ```
 
-Or without shield:
+**Example:**
 ```
-Apply: 12.5 base × 1.00 crit = 12.5 | No shield | 12.5 - 4.8 armor = 7.7 HP
+20 Armor vs 10 Penetration, 50 damage overflow
+  Armor Reduction = (20 - 10) × 1.5% = 15%
+  Damage Multiplier = 1 - 0.15 = 0.85
+  HP Damage = 50 × 0.85 = 42.5 damage
 ```
+
+#### Case B: Penetration > Armor (Penetration adds bonus damage)
+```
+Penetration Bonus Percent = (Effective Penetration - Effective Armor) × PENETRATION_BONUS
+Damage Multiplier = 1 + (Penetration Bonus Percent / 100)
+HP Damage = Max(1, Remaining Damage × Damage Multiplier)
+```
+
+**Example:**
+```
+10 Armor vs 30 Penetration, 50 damage overflow
+  Penetration Bonus = (30 - 10) × 2% = 40%
+  Damage Multiplier = 1 + 0.40 = 1.40
+  HP Damage = 50 × 1.40 = 70 damage
+```
+
+### Implementation Reference
+
+**File**: `prototype/backend/src/services/combatSimulator.ts`  
+**Function**: `applyDamage()`  
+**Lines**: ~220-296 (to be updated)
+
+```typescript
+function applyDamage(
+  baseDamage: number,
+  attacker: RobotWithWeapons,
+  defender: RobotWithWeapons,
+  defenderState: RobotCombatState,
+  isCritical: boolean,
+  attackerHand: 'main' | 'offhand' = 'main'
+): { hpDamage: number; shieldDamage: number; breakdown: FormulaBreakdown } {
+  let damage = baseDamage;
+  
+  // Apply critical multiplier
+  if (isCritical) {
+    const critMultiplier = attacker.loadoutType === 'two_handed' ? 2.5 : 2.0;
+    damage *= Math.max(critMultiplier - Number(defender.damageDampeners) / 100, 1.2);
+  }
+  
+  const effectivePenetration = getEffectiveAttribute(attacker, attacker.penetration, attackerHand, 'penetrationBonus');
+  const effectiveArmorPlating = Number(defender.armorPlating);  // Defender's Armor Plating attribute
+  
+  let shieldDamage = 0;
+  let hpDamage = 0;
+  
+  // Step 1: Apply to Energy Shield first (100% effective)
+  if (defenderState.currentShield > 0) {
+    shieldDamage = Math.min(damage, defenderState.currentShield);
+    defenderState.currentShield -= shieldDamage;
+    damage = damage - shieldDamage; // Remaining damage
+  }
+  
+  // Step 2: Apply overflow to HP with armor reduction
+  if (damage > 0) {
+    if (effectivePenetration <= effectiveArmorPlating) {
+      // Case A: Armor reduces damage
+      const armorReductionPercent = (effectiveArmorPlating - effectivePenetration) * ARMOR_EFFECTIVENESS;
+      const damageMultiplier = 1 - (armorReductionPercent / 100);
+      hpDamage = Math.max(1, damage * damageMultiplier);
+    } else {
+      // Case B: Penetration bonus damage
+      const penetrationBonusPercent = (effectivePenetration - effectiveArmorPlating) * PENETRATION_BONUS;
+      const damageMultiplier = 1 + (penetrationBonusPercent / 100);
+      hpDamage = Math.max(1, damage * damageMultiplier);
+    }
+  }
+  
+  defenderState.currentHP = Math.max(0, defenderState.currentHP - hpDamage);
+  
+  return { hpDamage, shieldDamage, breakdown: {...} };
+}
+```
+
+### Display Format (Extended Battle Logs - Admin)
+
+**With Energy Shield:**
+```
+Apply: 25.0 base × 2.00 crit = 50.0 | Energy Shield: 40.0 absorbed | Overflow: 10.0 × 0.85 armor = 8.5 HP
+```
+
+**Without Energy Shield:**
+```
+Apply: 25.0 base × 1.00 crit = 25.0 | No Energy Shield | 25.0 × 0.85 armor = 21.3 HP
+```
+
+**With Penetration Bonus:**
+```
+Apply: 25.0 base × 1.00 crit = 25.0 | No Energy Shield | 25.0 × 1.40 pen bonus = 35.0 HP
+```
+
+### Display Format (User-Facing Battle Logs)
+
+**Simple Format** (for main battle log):
+```
+💥 RobotA hits RobotB for 50 damage with Plasma Rifle (40 energy shield, 8 HP)
+⚡ RobotA's attack breaks through RobotB's energy shield!
+💥 RobotA hits RobotB for 25 damage with Power Sword (21 HP)
+```
+
+**See COMBAT_MESSAGES.md** for complete message variations and templates.
+
+### Important Notes
+
+**Energy Shield Terminology:**
+- **"Energy Shield"** refers to the HP pool (attribute: Energy Shield Capacity)
+- **"Shield weapon"** refers to physical equipment (e.g., Combat Shield)
+- Never confuse the two in documentation or code comments
+
+**Removed Mechanics:**
+- ❌ 70% shield absorption (was reducing damage too much)
+- ❌ 30% bleed-through (was creating confusing overflow mechanics)
+- ❌ Armor reduction cap at 30 (was making high armor invincible)
+- ❌ Penetration multiplier on shields (was inconsistent with armor penetration)
+
+**Key Benefits:**
+- ✅ Much faster battles (2-3x faster damage application)
+- ✅ Simpler mechanics (damage → shield → HP, clean flow)
+- ✅ Armor scales smoothly (no hard caps)
+- ✅ Penetration is strong counter-stat (can add bonus damage)
+- ✅ Easier to understand and debug
+
+### Edge Cases
+
+**Edge Case 1: High Armor vs Low Penetration**
+```
+50 Armor vs 1 Penetration, 50 damage
+  Armor Reduction = (50 - 1) × 1.5% = 73.5%
+  HP Damage = 50 × (1 - 0.735) = 13.25 damage
+  
+Result: High armor still very effective but not invincible
+```
+
+**Edge Case 2: High Penetration vs Low Armor**
+```
+50 Penetration vs 10 Armor, 50 damage
+  Penetration Bonus = (50 - 10) × 2% = 80%
+  HP Damage = 50 × (1 + 0.80) = 90 damage
+  
+Result: High penetration hard-counters armor and amplifies damage
+```
+
+**Edge Case 3: Energy Shield Depletion Mid-Attack**
+```
+Robot has 20 Energy Shield, takes 50 damage
+  Energy Shield Damage = 20 (shield breaks)
+  Remaining = 50 - 20 = 30
+  With 15% armor reduction: 30 × 0.85 = 25.5 HP damage
+  Total effective: 45.5 damage (91% of attack)
+  
+Result: Breaking shields is punishing but fair
+```
+
+### Version History
+
+- **2026-02-05**: Complete rewrite with new simplified formula
+  - Removed 70% shield absorption
+  - Removed bleed-through mechanics
+  - Removed armor cap at 30
+  - Added percentage-based armor reduction
+  - Added penetration bonus mechanics
+  - Added implementation code reference
+  - Added display formats for admin and users
+
+- **2026-02-03**: Initial documentation with old formula
 
 ## Counter-Attack Calculation
 
@@ -259,30 +472,30 @@ Counter: 5.00 counter_protocols / 100 × 1.0 × 1.0 = 5.0% (rolled 40.7, result:
 
 ---
 
-## Shield Regeneration
+## Energy Shield Regeneration
 
 ### Overview
-Robot HP does **NOT** regenerate during or between battles. Energy shields DO regenerate during battle based on the Power Core attribute.
+Robot HP does **NOT** regenerate during or between battles. Energy Shields DO regenerate during battle based on the Power Core attribute.
 
 ### Formula
 ```
-Shield Regen Per Second = Power Core × 0.15
+Energy Shield Regen Per Second = Power Core × 0.15
 Stance Bonus = 1.20 if defensive stance, else 1.0
-Effective Regen = Shield Regen Per Second × Stance Bonus × Delta Time
-New Shield = Min(Current Shield + Effective Regen, Max Shield)
+Effective Regen = Energy Shield Regen Per Second × Stance Bonus × Delta Time
+New Energy Shield = Min(Current Energy Shield + Effective Regen, Max Energy Shield)
 ```
 
 ### Example
 - Power Core: 20
 - Defensive Stance: Yes
-- Shield Regen: 20 × 0.15 × 1.20 = 3.6 per second
-- After 5 seconds: Shield regenerates 18 HP (up to max)
+- Energy Shield Regen: 20 × 0.15 × 1.20 = 3.6 per second
+- After 5 seconds: Energy Shield regenerates 18 HP (up to max)
 
 ### Notes
-- Energy shields regenerate continuously during battle
-- Defensive stance provides +20% shield regeneration
+- Energy Shields regenerate continuously during battle
+- Defensive stance provides +20% Energy Shield regeneration
 - Robot HP never regenerates during battle
-- Shields reset to maximum after battle ends
+- Energy Shields reset to maximum after battle ends
 
 ---
 

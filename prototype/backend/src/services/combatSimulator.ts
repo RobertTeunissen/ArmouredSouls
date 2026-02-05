@@ -72,9 +72,10 @@ const BASE_WEAPON_COOLDOWN = 4; // seconds
 const MAX_BATTLE_DURATION = 120; // seconds
 const SIMULATION_TICK = 0.1; // 100ms per tick
 
-// Maximum armor reduction cap (prevents armor from being too overpowered)
-// Exported for testing and reusability
-export const MAX_ARMOR_REDUCTION = 30;
+// Armor and penetration constants for new damage formula (Feb 2026)
+// These replace the old MAX_ARMOR_REDUCTION cap system
+export const ARMOR_EFFECTIVENESS = 1.5;  // 1.5% damage reduction per armor point
+export const PENETRATION_BONUS = 2.0;    // 2% damage increase per penetration point above armor
 
 /**
  * Clamp a value between min and max
@@ -214,8 +215,8 @@ function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: numbe
 }
 
 /**
- * Apply damage through shields and armor
- * Uses MAX_ARMOR_REDUCTION constant to cap armor effectiveness
+ * Apply damage through Energy Shields and armor
+ * New simplified formula (Feb 2026): 100% to Energy Shield, overflow to HP with armor %
  */
 function applyDamage(
   baseDamage: number,
@@ -237,42 +238,53 @@ function applyDamage(
   }
   
   const effectivePenetration = getEffectiveAttribute(attacker, attacker.penetration, attackerHand, 'penetrationBonus');
-  const effectiveArmor = Number(defender.armorPlating); // Defender doesn't have equipped weapon affecting their armor in this context
+  const effectiveArmorPlating = Number(defender.armorPlating);  // Defender's Armor Plating attribute
   
   let shieldDamage = 0;
   let hpDamage = 0;
-  let armorReduction = 0;
+  let remainingDamage = damage;
   let detailedFormula = '';
   
   const damageAfterCrit = damage;
   
+  // Step 1: Apply to Energy Shield first (100% effective)
   if (defenderState.currentShield > 0) {
-    // Shields absorb at 70% effectiveness
-    const shieldAbsorption = damage * 0.7;
-    const penetrationMult = 1 + effectivePenetration / 200;
-    const effectiveShieldDamage = shieldAbsorption * penetrationMult;
-    
-    shieldDamage = Math.min(effectiveShieldDamage, defenderState.currentShield);
+    shieldDamage = Math.min(damage, defenderState.currentShield);
     defenderState.currentShield -= shieldDamage;
+    remainingDamage = damage - shieldDamage;
+  }
+  
+  // Step 2: Apply overflow to HP with armor reduction
+  if (remainingDamage > 0) {
+    let armorReductionPercent = 0;
+    let damageMultiplier = 1.0;
     
-    // Bleed-through damage at reduced rate
-    if (effectiveShieldDamage > defenderState.currentShield) {
-      const overflow = (effectiveShieldDamage - defenderState.currentShield) * 0.3;
-      // Cap armor reduction to prevent armor from being too strong
-      const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
-      armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
-      hpDamage = Math.max(1, overflow - armorReduction);
-      detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed | Bleed: ${overflow.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
+    if (effectivePenetration <= effectiveArmorPlating) {
+      // Case A: Armor reduces damage
+      armorReductionPercent = (effectiveArmorPlating - effectivePenetration) * ARMOR_EFFECTIVENESS;
+      damageMultiplier = 1 - (armorReductionPercent / 100);
+      hpDamage = Math.max(1, remainingDamage * damageMultiplier);
+      
+      if (shieldDamage > 0) {
+        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed | Overflow: ${remainingDamage.toFixed(1)} × ${damageMultiplier.toFixed(2)} armor = ${hpDamage.toFixed(1)} HP`;
+      } else {
+        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | No Energy Shield | ${damageAfterCrit.toFixed(1)} × ${damageMultiplier.toFixed(2)} armor = ${hpDamage.toFixed(1)} HP`;
+      }
     } else {
-      detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Shield: ${shieldDamage.toFixed(1)} absorbed, 0 HP`;
+      // Case B: Penetration bonus damage
+      const penetrationBonusPercent = (effectivePenetration - effectiveArmorPlating) * PENETRATION_BONUS;
+      damageMultiplier = 1 + (penetrationBonusPercent / 100);
+      hpDamage = Math.max(1, remainingDamage * damageMultiplier);
+      
+      if (shieldDamage > 0) {
+        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed | Overflow: ${remainingDamage.toFixed(1)} × ${damageMultiplier.toFixed(2)} pen bonus = ${hpDamage.toFixed(1)} HP`;
+      } else {
+        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | No Energy Shield | ${damageAfterCrit.toFixed(1)} × ${damageMultiplier.toFixed(2)} pen bonus = ${hpDamage.toFixed(1)} HP`;
+      }
     }
-  } else {
-    // No shield - damage goes to HP with armor reduction
-    // Cap armor reduction to prevent armor from being too strong
-    const rawArmorReduction = effectiveArmor * (1 - effectivePenetration / 100);
-    armorReduction = Math.min(rawArmorReduction, MAX_ARMOR_REDUCTION);
-    hpDamage = Math.max(1, damage - armorReduction);
-    detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | No shield | ${damageAfterCrit.toFixed(1)} - ${armorReduction.toFixed(1)} armor = ${hpDamage.toFixed(1)} HP`;
+  } else if (shieldDamage > 0) {
+    // Shield absorbed all damage
+    detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed, 0 HP`;
   }
   
   defenderState.currentHP = Math.max(0, defenderState.currentHP - hpDamage);
@@ -287,8 +299,7 @@ function applyDamage(
         critMultiplier,
         damageAfterCrit,
         penetration: effectivePenetration,
-        armor: effectiveArmor,
-        armorReduction,
+        armorPlating: effectiveArmorPlating,
         shieldDamage,
         hpDamage,
       },
