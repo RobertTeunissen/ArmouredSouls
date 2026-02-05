@@ -1,7 +1,7 @@
 # Product Requirements Document: Tournament System
 
 **Last Updated**: February 5, 2026  
-**Status**: ✅ Approved - Review Comments Addressed  
+**Status**: ✅ Approved - Corrected After Implementation  
 **Owner**: Robert Teunissen  
 **Epic**: Tournament Framework and Single Elimination Implementation  
 **Related Documents**: 
@@ -11,9 +11,10 @@
 
 **Revision History**:
 
-v1.0 (Feb 5, 2026): Initial PRD created
-v1.1 (Feb 5, 2026): Review done by Robert Teunissen
-v1.2 (Feb 5, 2026): Review comments addressed - reward system redesigned, bye match handling updated, battle-readiness clarified
+v1.0 (Feb 5, 2026): Initial PRD created  
+v1.1 (Feb 5, 2026): Review done by Robert Teunissen  
+v1.2 (Feb 5, 2026): Review comments addressed - reward system redesigned, bye match handling updated, battle-readiness clarified  
+v1.3 (Feb 5, 2026): Corrections after implementation - rewards scaled down, participation rewards added, bye match rules clarified
 
 ---
 
@@ -250,14 +251,18 @@ The continuous tournament model ensures:
     2. **Current Round**: How far the robot has progressed
     3. **Robots Remaining**: Number of active competitors in current round
   - **Credits Formula**: `baseAmount × tournamentSizeMultiplier × roundProgressMultiplier`
-    - `tournamentSizeMultiplier = 1 + log10(totalParticipants / 10)`
+    - `baseAmount = 20,000` (base tournament win reward)
+    - `tournamentSizeMultiplier = 1 + (log10(totalParticipants / 10) × 0.5)` (conservative scaling)
     - `roundProgressMultiplier = currentRound / maxRounds`
-    - Example: 100 robots, round 3/4 → multiplier = (1 + log10(10)) × (3/4) = 1.75
-    - Scales appropriately even for 100,000+ participant tournaments
+    - Example: 100 robots, round 3/4 → multiplier = 1.5 × 0.75 = 1.125 → ₡22,500
+    - Scales appropriately even for 100,000+ participant tournaments (₡28k for round 8/17)
   - **Prestige Formula**: `basePrestige × (currentRound / maxRounds) × tournamentSizeMultiplier`
+    - `basePrestige = 15`
   - **Fame Formula**: `baseFame × (robotsRemaining / totalParticipants)^-0.5 × performanceBonus`
+    - `baseFame = 10`
     - More exclusive as fewer robots remain
     - Performance bonus based on HP remaining after victory
+  - **Participation Reward**: Loser receives 30% of winner's credits (not winner-take-all)
   - **Championship Title**: +1 championshipTitles for tournament winner (finals only)
   - **No Streaming Income**: Tournament battles do NOT count toward streaming multiplier (no audience for individual matches) 
 
@@ -270,12 +275,13 @@ The continuous tournament model ensures:
   - Calculates robots remaining in current round
   - Applies logarithmic scaling for tournament size (handles 100k+ participants)
   - **Winner receives full calculated reward**
-  - **Loser receives no reward** (tournament is winner-take-all per match)
-  - **Bye matches**: Robot advances to next round automatically
-    - NO battle record created
+  - **Loser receives participation reward** (30% of winner's credits)
+  - **Bye matches (TOURNAMENT ONLY)**: Robot advances to next round automatically
+    - NO battle record created (different from league byes)
     - NO rewards awarded (no match occurred)
     - NO streaming income (no match to stream)
     - Simply updates TournamentMatch.winnerId and status
+    - **League byes still fight "Bye Robot" for income** (handled in battleOrchestrator.ts)
   - All rewards deposited immediately after battle 
 
 #### User Story 4.3: Financial Tracking
@@ -756,6 +762,20 @@ Round 3 (1 match):
 
 ### Bye Match Handling
 
+**IMPORTANT: Two Different Bye Systems**
+
+**Tournament Byes (NO battles - TOURNAMENT ONLY):**
+- Highest-seeded robots in non-power-of-2 brackets
+- Auto-complete at tournament creation
+- NO battle, NO rewards, NO records
+- Robot advances automatically to next round
+
+**League Byes (WITH battles - LEAGUE ONLY):**
+- Robot fights "Bye Robot" (system robot)
+- Battle record created with participation rewards
+- Ensures income on days with odd number of league participants
+- Handled separately in battleOrchestrator.ts
+
 **When Byes Occur:**
 - Participant count not a power of 2 (e.g., 350 participants → 512 bracket → 162 byes)
 - Highest-seeded robots receive byes based on ELO ranking
@@ -777,31 +797,45 @@ Round 3 (1 match):
 ### Tournament Rewards Summary
 
 **Reward Formula Components:**
-- `tournamentSizeMultiplier = 1 + log10(totalParticipants / 10)`
+- `tournamentSizeMultiplier = 1 + (log10(totalParticipants / 10) × 0.5)`
 - `roundProgressMultiplier = currentRound / maxRounds`
 - `exclusivityMultiplier = (robotsRemaining / totalParticipants)^-0.5`
+- `participationReward = winnerReward × 0.30`
 
 | **Reward Type** | **Formula** | **Example (100 robots, Round 3/4, 25 remaining)** |
 |-----------------|-------------|---------------------------------------------------|
-| Win Credits     | 50000 × (1 + log10(10)) × (3/4) | ₡75,000 |
-| Loss Credits    | 0 (tournament is winner-take-all) | ₡0 |
-| Prestige (Win)  | 30 × (3/4) × (1 + log10(10)) | +45 prestige |
-| Fame (Win)      | 20 × (25/100)^-0.5 × perfBonus | +40 fame |
+| Win Credits     | 20000 × (1 + log10(10) × 0.5) × (3/4) | ₡22,500 |
+| Loss Credits    | winReward × 0.30 (participation) | ₡6,750 |
+| Prestige (Win)  | 15 × (3/4) × (1 + log10(10) × 0.5) | +17 prestige |
+| Fame (Win)      | 10 × (25/100)^-0.5 × perfBonus | +20 fame |
 | Championship    | N/A (Finals only) | +1 Title (Finals) |
 | Streaming Income | No streaming for tournaments | N/A |
 
 **Scaling Examples:**
 - **Small Tournament** (15 robots, Round 2/4):
-  - Credits: ₡50,000 × 1.18 × 0.5 = ₡29,500
-  - Prestige: 30 × 0.5 × 1.18 = +18
+  - Win Credits: ₡20,000 × 1.09 × 0.5 = ₡10,880
+  - Loss Credits: ₡10,880 × 0.30 = ₡3,264
+  - Prestige: 15 × 0.5 × 1.09 = +8
+  
+- **Medium Tournament** (100 robots, Round 3/4):
+  - Win Credits: ₡20,000 × 1.5 × 0.75 = ₡22,500
+  - Loss Credits: ₡22,500 × 0.30 = ₡6,750
+  - Prestige: 15 × 0.75 × 1.5 = +17
   
 - **Large Tournament** (1000 robots, Round 5/10):
-  - Credits: ₡50,000 × 2.0 × 0.5 = ₡50,000
-  - Prestige: 30 × 0.5 × 2.0 = +30
+  - Win Credits: ₡20,000 × 2.0 × 0.5 = ₡20,000
+  - Loss Credits: ₡20,000 × 0.30 = ₡6,000
+  - Prestige: 15 × 0.5 × 2.0 = +15
   
 - **Massive Tournament** (100,000 robots, Round 8/17):
-  - Credits: ₡50,000 × 4.0 × 0.47 = ₡94,000
-  - Prestige: 30 × 0.47 × 4.0 = +56 
+  - Win Credits: ₡20,000 × 3.0 × 0.47 = ₡28,235
+  - Loss Credits: ₡28,235 × 0.30 = ₡8,471
+  - Prestige: 15 × 0.47 × 3.0 = +21
+
+**Comparison to League Battles:**
+- Gold League: ~₡30,000 winner, ~₡9,000 loser
+- Tournament Finals (100 robots): ₡30,000 winner, ₡9,000 loser + 500 prestige
+- Tournaments reward slightly more than leagues with prestige bonuses 
 
 ---
 
