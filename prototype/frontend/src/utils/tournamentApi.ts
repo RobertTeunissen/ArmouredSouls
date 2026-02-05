@@ -39,6 +39,11 @@ export interface TournamentMatch {
     elo: number;
     currentHP: number;
     maxHP: number;
+    user?: {
+      id: number;
+      username: string;
+      stableName: string | null;
+    };
   };
   robot2?: {
     id: number;
@@ -46,6 +51,11 @@ export interface TournamentMatch {
     elo: number;
     currentHP: number;
     maxHP: number;
+    user?: {
+      id: number;
+      username: string;
+      stableName: string | null;
+    };
   };
 }
 

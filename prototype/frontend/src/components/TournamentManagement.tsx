@@ -195,7 +195,26 @@ const TournamentManagement = () => {
               </div>
             </div>
             <div>
-              <div className="text-gray-400">Robots Remaining</div>
+              <div className="text-gray-400">In Matches</div>
+              <div className="text-lg font-bold text-white">
+                {(() => {
+                  const matches = activeTournament.currentRoundMatches || [];
+                  const regularMatches = matches.filter(m => !m.isByeMatch).length;
+                  return regularMatches * 2;
+                })()}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400">With Byes</div>
+              <div className="text-lg font-bold text-white">
+                {(() => {
+                  const matches = activeTournament.currentRoundMatches || [];
+                  return matches.filter(m => m.isByeMatch).length;
+                })()}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400">Total Remaining</div>
               <div className="text-lg font-bold text-white">
                 {(() => {
                   const matches = activeTournament.currentRoundMatches || [];
@@ -228,21 +247,52 @@ const TournamentManagement = () => {
                     }`}
                   >
                     {match.isByeMatch ? (
-                      <span className="flex items-center gap-2">
-                        <span className="text-yellow-400">🎖️</span>
-                        {match.robot1?.name || 'TBD'} (Bye - Auto-advance)
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-yellow-400">🎖️</span>
+                          <span className="font-semibold">{match.robot1?.name || 'TBD'}</span>
+                          <span className="text-gray-400 text-xs">(ELO: {match.robot1?.elo || 'N/A'})</span>
+                        </div>
+                        {match.robot1?.user && (
+                          <span className="text-xs text-gray-400 ml-6">
+                            {match.robot1.user.stableName || match.robot1.user.username}
+                          </span>
+                        )}
+                        <span className="text-xs text-yellow-300 ml-6">(Bye - Auto-advance)</span>
+                      </div>
                     ) : (
-                      <span className="flex items-center justify-between">
-                        <span>
-                          {match.robot1?.name || 'TBD'} vs {match.robot2?.name || 'TBD'}
-                        </span>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{match.robot1?.name || 'TBD'}</span>
+                              <span className="text-gray-400 text-xs">(ELO: {match.robot1?.elo || 'N/A'})</span>
+                            </div>
+                            {match.robot1?.user && (
+                              <span className="text-xs text-gray-400">
+                                {match.robot1.user.stableName || match.robot1.user.username}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-gray-500 mx-2">vs</span>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{match.robot2?.name || 'TBD'}</span>
+                              <span className="text-gray-400 text-xs">(ELO: {match.robot2?.elo || 'N/A'})</span>
+                            </div>
+                            {match.robot2?.user && (
+                              <span className="text-xs text-gray-400">
+                                {match.robot2.user.stableName || match.robot2.user.username}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                         {match.status === 'completed' && match.winnerId && (
-                          <span className="text-green-400">
+                          <span className="text-green-400 text-sm">
                             Winner: {match.winnerId === match.robot1Id ? match.robot1?.name : match.robot2?.name}
                           </span>
                         )}
-                      </span>
+                      </div>
                     )}
                   </div>
                 ))}

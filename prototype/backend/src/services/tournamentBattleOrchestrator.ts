@@ -79,8 +79,8 @@ export async function processTournamentBattle(
   robot2.currentHP = robot2.maxHP;
   robot2.currentShield = robot2.maxShield;
 
-  // Simulate battle
-  const combatResult = simulateBattle(robot1, robot2);
+  // Simulate battle with tournament mode (resolves draws with HP tiebreaker)
+  const combatResult = simulateBattle(robot1, robot2, true);
 
   // Get tournament for round information and participant count
   const tournament = await prisma.tournament.findUnique({

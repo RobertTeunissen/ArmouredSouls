@@ -316,8 +316,28 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Tour
       status: { in: ['pending', 'scheduled'] },
     },
     include: {
-      robot1: true,
-      robot2: true,
+      robot1: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              stableName: true,
+            },
+          },
+        },
+      },
+      robot2: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              stableName: true,
+            },
+          },
+        },
+      },
     },
   });
 }
