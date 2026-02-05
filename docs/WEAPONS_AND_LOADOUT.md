@@ -131,9 +131,10 @@ Loadouts use **percentage-based bonuses** rather than flat attribute bonuses for
 **2. Two-Handed Weapon**
 - **Equipment**: One two-handed weapon (both hands)
 - **Bonuses**:
-  - +25% to Combat Power
+  - +10% to Combat Power (v1.2: reduced from +25%)
   - +20% to Critical Systems
   - Critical damage multiplier increased to 2.5x (from 2.0x base)
+  - Damage multiplier: 1.10x (v1.2: reduced from 1.25x)
 - **Penalties**:
   - -10% to Evasion Thrusters (less mobility)
   - No shield available

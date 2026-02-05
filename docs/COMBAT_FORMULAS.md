@@ -200,6 +200,12 @@ Stance Multiplier = 1.15 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
 Base Damage = Weapon Base Damage × Combat Power × Loadout × Weapon Control × Stance
 ```
 
+**Note on Loadout Bonuses (v1.2)**:
+- Two-handed loadout provides +10% to Combat Power attribute (applied before multipliers)
+- Two-handed loadout also provides 1.10× damage multiplier (applied during damage calculation)
+- Combined effect: Robot with 5 Combat Power becomes 5.5 effective CP with two-handed loadout
+- See [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) for complete loadout attribute bonuses
+
 ### Display Format
 ```
 Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1.00 stance = 12.5
