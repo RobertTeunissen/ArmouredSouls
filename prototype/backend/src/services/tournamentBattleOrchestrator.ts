@@ -91,7 +91,7 @@ export async function processTournamentBattle(
     throw new Error(`Tournament ${tournamentMatch.tournamentId} not found`);
   }
 
-  // Count robots remaining in current round
+  // Count robots remaining in current round (including bye robots)
   const currentRoundMatches = await prisma.tournamentMatch.findMany({
     where: {
       tournamentId: tournamentMatch.tournamentId,
@@ -99,7 +99,10 @@ export async function processTournamentBattle(
     },
   });
   
-  const robotsRemaining = currentRoundMatches.filter(m => !m.isByeMatch).length * 2;
+  // Count all robots: regular matches (2 robots each) + bye matches (1 robot each)
+  const regularMatchCount = currentRoundMatches.filter(m => !m.isByeMatch).length;
+  const byeMatchCount = currentRoundMatches.filter(m => m.isByeMatch).length;
+  const robotsRemaining = (regularMatchCount * 2) + byeMatchCount;
 
   // Create battle record with tournament context
   const battle = await createTournamentBattleRecord(

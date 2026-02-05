@@ -197,7 +197,12 @@ const TournamentManagement = () => {
             <div>
               <div className="text-gray-400">Robots Remaining</div>
               <div className="text-lg font-bold text-white">
-                {(activeTournament.currentRoundMatches || []).filter(m => !m.isByeMatch).length * 2}
+                {(() => {
+                  const matches = activeTournament.currentRoundMatches || [];
+                  const regularMatches = matches.filter(m => !m.isByeMatch).length;
+                  const byeMatches = matches.filter(m => m.isByeMatch).length;
+                  return (regularMatches * 2) + byeMatches;
+                })()}
               </div>
             </div>
             <div>
