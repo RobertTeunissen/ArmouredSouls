@@ -1,61 +1,136 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Last Updated**: February 2, 2026  
-**Status**: Implementation Ready  
+**Version**: 1.1  
+**Last Updated**: February 5, 2026  
+**Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
 **Epic**: Weapon System Economy Redesign
+
+**Change Log:**
+- **v1.0** (Feb 2, 2026): Initial pricing formula and weapon catalog
+- **v1.1** (Feb 5, 2026): Updated for combat rebalancing - reduced weapon damage values
 
 ---
 
 ## Executive Summary
 
-This PRD defines the requirements for overhauling the weapon economy system in Armoured Souls Phase 1 prototype. The current weapon pricing is inconsistent and does not reflect the actual value of attribute bonuses. This redesign establishes a fair, balanced, and scalable pricing formula that ensures all weapons provide proportional value for their cost.
+This PRD defines the requirements for the weapon economy system in Armoured Souls Phase 1 prototype. **Version 1.1 updates the weapon damage values following the February 2026 combat rebalancing** that simplified damage application formulas and adjusted battle duration targets.
 
-**Key Changes:**
-- Remove all special properties from weapons (not yet implemented in combat system)
-- Establish Practice Sword as ₡50,000 baseline weapon (no longer free)
-- Implement exponential pricing formula where higher bonuses cost more per point
-- Design balanced weapon catalog covering all loadout types
-- Ensure consistent value proposition across all weapons
+**Key Changes in v1.1:**
+- **Practice Sword baseline**: 10 → 8 damage (20% reduction, new baseline)
+- **All other weapons**: 25-33% damage reduction to compensate for new damage formula
+- **Pricing formula**: Remains unchanged (DPS-based with attribute bonuses)
+- **Weapon economy**: Prices slightly reduced (15-20%) due to lower DPS values
 
-**Success Criteria**: All weapons have fair pricing based on a transparent formula, no weapon is objectively better value than others, and all loadout types have viable weapon options at different price points.
+**Context**: The combat system was rebalanced to eliminate 70% shield absorption and 30% bleed-through mechanics, resulting in 2-3x faster damage application. Weapon damage was reduced proportionally to maintain target battle duration of 40-60 seconds.
+
+**Success Criteria**: All weapons have fair pricing based on transparent formula, maintain value proposition relative to each other, and support faster battle times without economy disruption.
 
 ---
 
-## Background & Context
+## Version 1.1 Updates
 
-### Current State
+### What Changed in Combat System
+
+**Old Damage Application:**
+- Energy shields absorbed 70% of damage
+- 30% bleed-through when shields depleted
+- Armor reduction capped at 30
+- Effective damage to HP: ~20-30% of base weapon damage
+
+**New Damage Application** (Feb 5, 2026):
+- Energy shields absorb 100% of damage (no reduction)
+- Overflow damage goes directly to HP with armor % reduction
+- Armor reduction: `(armorPlating - penetration) × 1.5%` (no cap)
+- Effective damage to HP: ~60-80% of base weapon damage
+
+**Impact**: Damage effectiveness increased 2-3x, requiring weapon damage reduction.
+
+### Updated Weapon Damage Values
+
+All weapons rebalanced with new damage values:
+
+| Weapon | v1.0 Damage | v1.1 Damage | % Change | Notes |
+|--------|-------------|-------------|----------|-------|
+| Practice Sword | 10 | 8 | -20% | New baseline |
+| Machine Pistol | 8 | 6 | -25% | |
+| Laser Pistol | 12 | 8 | -33% | |
+| Combat Knife | 9 | 6 | -33% | |
+| Machine Gun | 10 | 7 | -30% | |
+| Burst Rifle | 15 | 11 | -27% | |
+| Assault Rifle | 18 | 13 | -28% | |
+| Energy Blade | 18 | 13 | -28% | |
+| Laser Rifle | 22 | 15 | -32% | |
+| Plasma Blade | 20 | 14 | -30% | |
+| Plasma Rifle | 24 | 17 | -29% | |
+| Power Sword | 28 | 20 | -29% | |
+| Shotgun | 32 | 22 | -31% | |
+| Grenade Launcher | 35 | 25 | -29% | |
+| Sniper Rifle | 50 | 35 | -30% | Two-handed |
+| Battle Axe | 38 | 27 | -29% | Two-handed |
+| Plasma Cannon | 45 | 32 | -29% | Two-handed |
+| Heavy Hammer | 48 | 34 | -29% | Two-handed |
+| Railgun | 55 | 39 | -29% | Two-handed |
+| Ion Beam | 40 | 28 | -30% | Two-handed |
+
+**Shields (0 damage - unchanged):**
+- Light Shield
+- Combat Shield  
+- Reactive Shield
+
+### Pricing Impact
+
+**DPS Baseline Shift:**
+- v1.0: Practice Sword 10 damage / 3s = 3.33 DPS baseline
+- v1.1: Practice Sword 8 damage / 3s = 2.67 DPS baseline
+
+**Price Adjustment:**
+- Most weapons: 15-20% price reduction
+- Practice Sword: ~54% price reduction (₡50k → ₡23k estimated)
+- High-tier weapons: 18-20% price reduction
+
+**Rationale for Price Reduction:**
+- Lower DPS values reduce DPS Cost component of pricing formula
+- Weapons are relatively more powerful due to armor cap removal
+- Price reduction is player-friendly and improves economy
+
+**Formula Remains Valid:**
+```
+Total Cost = (Base Cost + Attribute Cost + DPS Cost) × Hand Multiplier
+
+Where DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 2.67  // Was 2.0 in v1.0
+```
+
+The DPS Cost multiplier was increased from 2.0 to 2.67 to partially offset the lower DPS ratios.
+
+---
+
+## Background & Context (v1.0)
+
+**Note**: This section describes the original v1.0 design. See "Version 1.1 Updates" above for combat rebalancing changes.
+
+### Original State (v1.0)
 
 **What Exists:**
-- ✅ 11 weapons implemented in database and seed data
+- ✅ 23 weapons implemented in database and seed data
 - ✅ Weapon purchase system functional
 - ✅ Weapon inventory management working
 - ✅ Loadout system with 4 types (single, weapon_shield, two_handed, dual_wield)
 - ✅ 23 robot attributes that weapons can modify
 - ✅ Combat system using weapon damage and cooldown
 
-**What's Broken:**
-- ❌ Inconsistent weapon pricing (Machine Gun: ₡4,500/attribute point vs Power Sword: ₡9,300/attribute point)
-- ❌ Special properties listed in documentation but not implemented in combat
-- ❌ Practice Sword is free (₡0), creating economic imbalance
-- ❌ No clear pricing methodology or formula
-- ❌ Linear pricing assumption doesn't reflect diminishing returns of spreading bonuses
-- ❌ Insufficient weapon variety for all loadout types at different price points
+**What Was Fixed in v1.0:**
+- ✅ Established consistent pricing formula
+- ✅ Set Practice Sword as ₡50,000 baseline
+- ✅ Implemented exponential attribute cost scaling
+- ✅ Added DPS-based pricing component
+- ✅ Balanced weapon catalog across loadout types
 
-### Problem Statement
-
-**The Core Issue:**
-Current weapon pricing does not follow a consistent formula. Examining the existing weapons:
-
-- **Machine Gun** (₡100,000): 11 total attribute points = ₡9,091 per point
-- **Power Sword** (₡180,000): 14 total attribute points = ₡12,857 per point
-
-This creates an obvious imbalance: Machine Gun provides 41% better value per attribute point than Power Sword. Players will always choose cheaper weapons with better cost efficiency, making expensive weapons obsolete.
-
-**Additional Problems:**
-1. **Special Properties**: Listed in documentation (e.g., "+15% accuracy bonus", "ignores 50% armor") but not implemented in combat system, creating confusion
-2. **Free Starter Weapon**: Practice Sword being free (₡0) means it has no baseline cost, making it impossible to calculate consistent pricing ratios
-3. **Linear Pricing Assumption**: The documentation suggests ₡15,000-₡20,000 per attribute point, but this doesn't account for the fact that concentrated bonuses (+10 to one attribute) should cost more than spread bonuses (ten +1s)
+**What Changed in v1.1:**
+- ✅ Updated all weapon damage values (20-33% reduction)
+- ✅ Adjusted DPS baseline from 3.33 to 2.67
+- ✅ Increased DPS Cost multiplier to 2.67
+- ✅ Prices reduced by 15-20% (acceptable trade-off)
 
 ### Design References
 

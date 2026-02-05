@@ -230,6 +230,26 @@ export const PENETRATION_BONUS = 2.0;    // 2% damage increase per penetration p
 // Maximum armor reduction cap has been REMOVED - now scales smoothly
 ```
 
+### Naming Clarification
+
+To understand the variable naming in damage calculations:
+
+**Naming Chain:**
+1. **Robot Attribute** (database): `armorPlating` (the robot's defensive attribute, 1-50)
+2. **Effective Value** (code variable): `effectiveArmorPlating` (includes weapon bonuses, if any)
+3. **Constant** (formula): `ARMOR_EFFECTIVENESS` (1.5% per point)
+4. **Calculated Result** (code variable): `armorReductionPercent` (the percentage of damage reduced)
+
+**Example Flow:**
+```
+Robot has armorPlating = 20
+effectiveArmorPlating = 20 (no weapon bonuses in current implementation)
+armorReductionPercent = (20 - 10) × ARMOR_EFFECTIVENESS = 10 × 1.5 = 15%
+Damage after armor = damage × (1 - 0.15) = damage × 0.85
+```
+
+**Note**: In the current implementation, `effectiveArmor` is used as shorthand for `effectiveArmorPlating` since the defender's armor isn't affected by their equipped weapon bonuses (only attacker's penetration matters).
+
 ### Step 1: Energy Shield Damage
 
 When defender has Energy Shield remaining:
@@ -302,7 +322,7 @@ function applyDamage(
   }
   
   const effectivePenetration = getEffectiveAttribute(attacker, attacker.penetration, attackerHand, 'penetrationBonus');
-  const effectiveArmor = Number(defender.armorPlating);
+  const effectiveArmorPlating = Number(defender.armorPlating);  // Defender's Armor Plating attribute
   
   let shieldDamage = 0;
   let hpDamage = 0;
@@ -316,14 +336,14 @@ function applyDamage(
   
   // Step 2: Apply overflow to HP with armor reduction
   if (damage > 0) {
-    if (effectivePenetration <= effectiveArmor) {
+    if (effectivePenetration <= effectiveArmorPlating) {
       // Case A: Armor reduces damage
-      const armorReductionPercent = (effectiveArmor - effectivePenetration) * ARMOR_EFFECTIVENESS;
+      const armorReductionPercent = (effectiveArmorPlating - effectivePenetration) * ARMOR_EFFECTIVENESS;
       const damageMultiplier = 1 - (armorReductionPercent / 100);
       hpDamage = Math.max(1, damage * damageMultiplier);
     } else {
       // Case B: Penetration bonus damage
-      const penetrationBonusPercent = (effectivePenetration - effectiveArmor) * PENETRATION_BONUS;
+      const penetrationBonusPercent = (effectivePenetration - effectiveArmorPlating) * PENETRATION_BONUS;
       const damageMultiplier = 1 + (penetrationBonusPercent / 100);
       hpDamage = Math.max(1, damage * damageMultiplier);
     }

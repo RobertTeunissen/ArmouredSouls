@@ -238,7 +238,7 @@ function applyDamage(
   }
   
   const effectivePenetration = getEffectiveAttribute(attacker, attacker.penetration, attackerHand, 'penetrationBonus');
-  const effectiveArmor = Number(defender.armorPlating);
+  const effectiveArmorPlating = Number(defender.armorPlating);  // Defender's Armor Plating attribute
   
   let shieldDamage = 0;
   let hpDamage = 0;
@@ -259,9 +259,9 @@ function applyDamage(
     let armorReductionPercent = 0;
     let damageMultiplier = 1.0;
     
-    if (effectivePenetration <= effectiveArmor) {
+    if (effectivePenetration <= effectiveArmorPlating) {
       // Case A: Armor reduces damage
-      armorReductionPercent = (effectiveArmor - effectivePenetration) * ARMOR_EFFECTIVENESS;
+      armorReductionPercent = (effectiveArmorPlating - effectivePenetration) * ARMOR_EFFECTIVENESS;
       damageMultiplier = 1 - (armorReductionPercent / 100);
       hpDamage = Math.max(1, remainingDamage * damageMultiplier);
       
@@ -272,7 +272,7 @@ function applyDamage(
       }
     } else {
       // Case B: Penetration bonus damage
-      const penetrationBonusPercent = (effectivePenetration - effectiveArmor) * PENETRATION_BONUS;
+      const penetrationBonusPercent = (effectivePenetration - effectiveArmorPlating) * PENETRATION_BONUS;
       damageMultiplier = 1 + (penetrationBonusPercent / 100);
       hpDamage = Math.max(1, remainingDamage * damageMultiplier);
       
@@ -299,7 +299,7 @@ function applyDamage(
         critMultiplier,
         damageAfterCrit,
         penetration: effectivePenetration,
-        armor: effectiveArmor,
+        armorPlating: effectiveArmorPlating,
         shieldDamage,
         hpDamage,
       },

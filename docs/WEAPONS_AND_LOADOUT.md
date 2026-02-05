@@ -1,7 +1,17 @@
 # Weapons & Loadout System
 
-**Last Updated**: February 2, 2026  
-**Status**: Design Document - Pricing Updated with DPS-Inclusive Formula
+**Last Updated**: February 5, 2026  
+**Status**: Design Document - Updated for Combat Rebalancing (v1.1)
+
+**Version History:**
+- **v1.0** (Feb 2, 2026): Initial weapon catalog with DPS-inclusive pricing
+- **v1.1** (Feb 5, 2026): Updated weapon damage values following combat rebalancing
+
+**Key Changes in v1.1:**
+- All weapon damage values reduced 20-33% to compensate for new damage formula
+- Energy shields now absorb 100% damage (was 70%), making damage more effective
+- Armor Plating uses percentage-based reduction (1.5% per point, no cap)
+- See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) and [PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md) v1.1 for details
 
 ## Overview
 
@@ -233,9 +243,9 @@ The following weapons are currently implemented in the game database and availab
 #### Energy Weapons (3)
 
 **Laser Rifle** (₡195,000) - One-handed
-- Base Damage: 22
+- Base Damage: 15  (v1.1: reduced from 22, -32%)
 - Cooldown: 3 seconds
-- DPS: 7.33
+- DPS: 5.0  (v1.1: reduced from 7.33)
 - Attribute Bonuses:
   - targetingSystemsBonus: +5
   - weaponControlBonus: +4
@@ -245,9 +255,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Plasma Cannon** (₡440,000) - Two-handed
-- Base Damage: 45
+- Base Damage: 32  (v1.1: reduced from 45, -29%)
 - Cooldown: 5 seconds
-- DPS: 9.0
+- DPS: 6.4  (v1.1: reduced from 9.0)
 - Attribute Bonuses:
   - combatPowerBonus: +7
   - criticalSystemsBonus: +6
@@ -257,9 +267,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Two-Handed only
 
 **Ion Beam** (₡565,000) - Two-handed
-- Base Damage: 40
+- Base Damage: 28  (v1.1: reduced from 40, -30%)
 - Cooldown: 4 seconds
-- DPS: 10.0 (Highest DPS in game)
+- DPS: 7.0  (v1.1: reduced from 10.0) (Highest DPS in game)
 - Attribute Bonuses:
   - penetrationBonus: +10
   - shieldCapacityBonus: +8
@@ -271,9 +281,9 @@ The following weapons are currently implemented in the game database and availab
 #### Ballistic Weapons (3)
 
 **Machine Gun** (₡120,000) - One-handed, Dual-wield compatible
-- Base Damage: 10
+- Base Damage: 7  (v1.1: reduced from 10, -30%)
 - Cooldown: 2 seconds
-- DPS: 5.0
+- DPS: 3.5  (v1.1: reduced from 5.0)
 - Attribute Bonuses:
   - combatPowerBonus: +3
   - attackSpeedBonus: +5
@@ -282,9 +292,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Railgun** (₡545,000) - Two-handed
-- Base Damage: 55
+- Base Damage: 39  (v1.1: reduced from 55, -29%)
 - Cooldown: 6 seconds
-- DPS: 9.17
+- DPS: 6.5  (v1.1: reduced from 9.17)
 - Attribute Bonuses:
   - penetrationBonus: +12
   - targetingSystemsBonus: +7
@@ -294,9 +304,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Two-Handed only
 
 **Shotgun** (₡325,000) - Two-handed
-- Base Damage: 32
+- Base Damage: 22  (v1.1: reduced from 32, -31%)
 - Cooldown: 4 seconds
-- DPS: 8.0
+- DPS: 5.5  (v1.1: reduced from 8.0)
 - Attribute Bonuses:
   - combatPowerBonus: +4
   - criticalSystemsBonus: +3
@@ -307,9 +317,9 @@ The following weapons are currently implemented in the game database and availab
 #### Melee Weapons (3)
 
 **Power Sword** (₡280,000) - One-handed
-- Base Damage: 28
+- Base Damage: 20  (v1.1: reduced from 28, -29%)
 - Cooldown: 3 seconds
-- DPS: 9.33
+- DPS: 6.67  (v1.1: reduced from 9.33)
 - Attribute Bonuses:
   - hydraulicSystemsBonus: +7
   - counterProtocolsBonus: +5
@@ -319,9 +329,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Hammer** (₡490,000) - Two-handed
-- Base Damage: 48
+- Base Damage: 34  (v1.1: reduced from 48, -29%)
 - Cooldown: 5 seconds
-- DPS: 9.6
+- DPS: 6.8  (v1.1: reduced from 9.6)
 - Attribute Bonuses:
   - hydraulicSystemsBonus: +8
   - combatPowerBonus: +7
@@ -331,9 +341,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Two-Handed only
 
 **Plasma Blade** (₡215,000) - One-handed, Dual-wield compatible
-- Base Damage: 20
+- Base Damage: 14  (v1.1: reduced from 20, -30%)
 - Cooldown: 3 seconds (adjusted from 2.5 for integer compatibility)
-- DPS: 6.67
+- DPS: 4.67  (v1.1: reduced from 6.67)
 - Attribute Bonuses:
   - hydraulicSystemsBonus: +5
   - attackSpeedBonus: +4
@@ -359,13 +369,13 @@ The following weapons are currently implemented in the game database and availab
 #### Baseline Weapon (1)
 
 **Practice Sword** (₡50,000) - One-handed baseline weapon
-- Base Damage: 10
+- Base Damage: 8  (v1.1: reduced from 10, -20% - NEW BASELINE)
 - Cooldown: 3 seconds
-- DPS: 3.33 (Baseline for pricing formula)
+- DPS: 2.67  (v1.1: NEW baseline for pricing formula, was 3.33)
 - Attribute Bonuses: None (all bonuses are 0)
 - Description: Basic training weapon establishing baseline cost for the weapon economy
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
-- **Note**: This weapon serves as the baseline for the DPS-inclusive pricing formula. All other weapons are priced relative to its cost and combat effectiveness.
+- **Note**: This weapon serves as the baseline for the DPS-inclusive pricing formula. All other weapons are priced relative to its cost and combat effectiveness. In v1.1, damage was reduced to compensate for new combat formula.
 
 ---
 

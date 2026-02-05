@@ -1,7 +1,12 @@
 # Robot Attributes System
 
-**Last Updated**: January 30, 2026  
+**Last Updated**: February 5, 2026  
 **Status**: Design Document - Complete Time-Based Combat System
+
+**Recent Updates (Feb 5, 2026):**
+- Armor Plating now uses percentage-based reduction (1.5% per point, no cap)
+- Energy Shield Capacity renamed (was "Shield Capacity") for clarity
+- Combat formulas updated - see [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for details
 
 ## Overview
 
@@ -49,11 +54,13 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 
 **Armor, shields, and damage mitigation**
 
-7. **Armor Plating** - Physical damage reduction from all sources
-8. **Shield Capacity** - Maximum energy shield HP pool (separate from robot HP)
+7. **Armor Plating** - Physical damage reduction from all sources (percentage-based, 1.5% per point)
+8. **Energy Shield Capacity** - Maximum energy shield HP pool (separate from robot HP)
 9. **Evasion Thrusters** - Chance to dodge incoming attacks
 10. **Damage Dampeners** - Reduces critical hit damage taken
 11. **Counter Protocols** - Chance to strike back when hit
+
+**Note**: See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for detailed Armor Plating mechanics with new percentage-based formula (updated Feb 2026).
 
 ### 🟢 Chassis & Mobility (5)
 
