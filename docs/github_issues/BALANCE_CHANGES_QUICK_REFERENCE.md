@@ -134,11 +134,11 @@ finalDamage = baseDamage * damageMultiplier;
 
 ### Seed Data Updates (prototype/backend/prisma/seed.ts)
 
-**Keep Practice Sword at 10 damage (new baseline), reduce all others by ~27%:**
+**Reduce Practice Sword to 8 damage (new baseline), reduce all others by ~27-35%:**
 
 ```typescript
 // Current → New
-{ name: 'Practice Sword', baseDamage: 10 }  // ✅ No change (baseline)
+{ name: 'Practice Sword', baseDamage: 10 }  // ➜ 8 (20% nerf, new baseline)
 { name: 'Power Sword', baseDamage: 22 }     // ➜ 16
 { name: 'Heavy Hammer', baseDamage: 40 }    // ➜ 30
 { name: 'Plasma Blade', baseDamage: 28 }    // ➜ 21
@@ -153,7 +153,11 @@ finalDamage = baseDamage * damageMultiplier;
 
 **Formula for conversion:**
 ```typescript
-newDamage = Math.round(currentDamage * 0.73)  // Except Practice Sword
+// Practice Sword: 20% nerf (becomes new baseline)
+newDamage = Math.round(currentDamage * 0.80)  // For Practice Sword
+
+// All others: ~27-35% nerf
+newDamage = Math.round(currentDamage * 0.70)  // For other weapons
 ```
 
 ---
@@ -175,7 +179,7 @@ DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 2.67  // Increased multiplier
 **Why**: Compensates for lower DPS ratios due to reduced damage, keeps prices more stable.
 
 **Expected Price Impact:**
-- Low-tier weapons (Practice Sword, Machine Gun): -10% to -15%
+- Low-tier weapons (Practice Sword, Machine Gun): -50% to -20%
 - Mid-tier weapons (Power Sword, Plasma Rifle): -15% to -18%
 - High-tier weapons (Plasma Cannon, Railgun): -18% to -20%
 
@@ -386,8 +390,8 @@ If initial values need adjustment after testing:
 - Impact: Armor less effective, faster damage
 
 **Option 3**: Reduce shield HP
-- Current: Shield Capacity × 2
-- Adjust to: Shield Capacity × 1.5
+- Current: Energy Shield Capacity × 2
+- Adjust to: Energy Shield Capacity × 1.5
 - Impact: Shields break faster
 
 ### If Battles Too Fast (<35s average)
@@ -403,8 +407,8 @@ If initial values need adjustment after testing:
 - Impact: Armor more effective, slower damage
 
 **Option 3**: Increase shield HP
-- Current: Shield Capacity × 2
-- Adjust to: Shield Capacity × 2.5
+- Current: Energy Shield Capacity × 2
+- Adjust to: Energy Shield Capacity × 2.5
 - Impact: Shields last longer
 
 ### If Armor Still Dominant

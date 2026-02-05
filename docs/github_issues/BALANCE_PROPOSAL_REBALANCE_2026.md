@@ -77,7 +77,7 @@ armorReduction = min(armorReduction, 30)  // Hard cap
 
 **Files to Update:**
 - `docs/COMBAT_FORMULAS.md` - Lines 14, 200-236 ("Shield Absorption" → "Energy Shield Absorption")
-- `docs/ROBOT_ATTRIBUTES.md` - Clarify Shield Capacity attribute description
+- `docs/ROBOT_ATTRIBUTES.md` - Clarify Energy Shield Capacity attribute description
 - `docs/WEAPONS_AND_LOADOUT.md` - Distinguish shield weapon vs energy shield HP
 
 **Rationale**: Eliminates confusion between shield weapons (equipment) and energy shields (HP pool).
@@ -281,11 +281,11 @@ Recommended damage nerf: 20-30% across all weapons
 
 **Proposed Weapon Damage Adjustments:**
 
-**Damage Nerf: 25% reduction** (multiplier: 0.75)
+**Damage Nerf: 20% reduction for Practice Sword baseline, ~27-35% for others**
 
 | Weapon Type | Current Damage | New Damage | Notes |
 |-------------|----------------|------------|-------|
-| Practice Sword | 10 | 8 | Starter weapon, slight nerf |
+| Practice Sword | 10 | 8 | Starter weapon, baseline (20% nerf) |
 | Power Sword | 22 | 16 | Mid-tier melee |
 | Combat Shield | 8 | 6 | Defensive weapon |
 | Machine Gun | 10 | 8 | Fast, low damage |
@@ -333,10 +333,10 @@ Why 2.67?
 Current: 10 damage / 3s = 3.33 DPS, ratio 1.0, cost ₡50,000
 New: 8 damage / 3s = 2.67 DPS, ratio 0.80
   DPS Cost = 50k × (0.80 - 1.0) × 2.67 = 50k × -0.20 × 2.67 = ₡-26,700
-  Total = 50k - 26.7k = ₡23,300 (46% reduction - but it's baseline, acceptable)
+  Total = 50k - 26.7k = ₡23,300 (54% reduction)
   
-Alternative: Keep Practice Sword at 10 damage (new baseline 3.33 DPS)
-  Then new baseline DPS = 10/3 = 3.33, ratio = 1.0, cost = ₡50,000 ✅
+Note: Practice Sword gets 20% nerf to maintain viable starter weapon while still
+improving battle speed. New baseline DPS = 2.67 (was 3.33).
 ```
 
 **Plasma Cannon (high-tier):**
@@ -354,8 +354,8 @@ Impact: ~20% price reduction acceptable (weapons are stronger vs nerfed armor)
 ```
 
 **Recommendation**: 
-1. **Keep Practice Sword at 10 damage** (new DPS baseline)
-2. **Reduce all other weapons by ~27%** (multiply by 0.73) to maintain DPS ratio spread
+1. **Reduce Practice Sword to 8 damage** (20% nerf, new DPS baseline 2.67)
+2. **Reduce all other weapons by ~27-35%** to maintain DPS ratio spread
 3. **Increase DPS Cost multiplier to 2.67** to partially compensate prices
 4. **Accept 15-20% weapon price reduction** (justified by increased relative power)
 
@@ -363,7 +363,7 @@ Impact: ~20% price reduction acceptable (weapons are stronger vs nerfed armor)
 
 | Weapon Type | Current Damage | New Damage | DPS (old) | DPS (new) | Price Impact |
 |-------------|----------------|------------|-----------|-----------|--------------|
-| Practice Sword | 10 | **10** | 3.33 | 3.33 | Baseline ₡50k |
+| Practice Sword | 10 | **8** | 3.33 | 2.67 | Baseline ₡23k (-54%) |
 | Power Sword | 22 | **16** | 7.33 | 5.33 | -15% |
 | Machine Gun | 10 | **7** | 5.00 | 3.50 | -18% |
 | Plasma Rifle | 35 | **26** | 8.75 | 6.50 | -17% |
@@ -454,17 +454,17 @@ Total: 20 shield + 25 HP = 45 effective damage
 - ⚠️ **Massive increase in damage**: 21 → 45 (114% increase)
 - ⚠️ Shield breaking is much more punishing
 - ✅ This is intentional - shields should be valuable but not overpowered
-- ✅ Encourages Shield Capacity investment and defensive stances
+- ✅ Encourages Energy Shield Capacity investment and defensive stances
 
 **Mitigation**: None needed - this is desired behavior. Energy shields protect, but breaking them has consequences.
 
 ### Edge Case 4: Zero Energy Shield Builds
 
-**Scenario**: Robot invests 1 point in Shield Capacity (minimum), focuses on HP and Armor
+**Scenario**: Robot invests 1 point in Energy Shield Capacity (minimum), focuses on HP and Armor
 
 **Current System:**
 ```
-Shield Capacity 1 = 2 shield HP
+Energy Shield Capacity 1 = 2 shield HP
 Even 1 point in shield gets 70% absorption benefit
 Armor caps at 30 reduction
 High survivability
@@ -472,7 +472,7 @@ High survivability
 
 **New System:**
 ```
-Shield Capacity 1 = 2 shield HP
+Energy Shield Capacity 1 = 2 shield HP
 Blocks 2 damage total, then HP takes full damage (minus armor%)
 Armor provides % reduction (e.g., 30 armor = 45% reduction)
 Lower survivability, but armor still valuable
@@ -480,7 +480,7 @@ Lower survivability, but armor still valuable
 
 **Analysis:**
 - ✅ Minimal shield investment no longer provides massive benefit
-- ✅ Makes Shield Capacity meaningful investment choice
+- ✅ Makes Energy Shield Capacity meaningful investment choice
 - ✅ Tank builds must choose: invest in shields OR armor/HP, not just get free 70% absorption
 - ✅ Increases build diversity
 
@@ -568,7 +568,7 @@ Both robots attacking:
    - Section: "Pricing Formula Design" (line 146-154)
    - Change: Update DPS Cost multiplier from 2.0 to 2.67
    - Section: "Complete Weapon Catalog" (damage values throughout)
-   - Change: Update all weapon damage values (-27% except Practice Sword)
+   - Change: Update all weapon damage values (Practice Sword -20%, others -27% to -35%)
 
 ### Phase 2: Code Implementation
 
@@ -618,13 +618,13 @@ Both robots attacking:
 **Risk**: Energy shields become worthless if they don't provide enough protection
 
 **Likelihood**: Medium  
-**Impact**: High (invalidates Shield Capacity attribute)
+**Impact**: High (invalidates Energy Shield Capacity attribute)
 
 **Mitigation:**
 - Monitor battle statistics post-implementation
 - If shields break too quickly (<2 hits average), consider:
   - Reducing weapon damage further (-35% instead of -27%)
-  - Increasing Shield Capacity multiplier (×2.5 instead of ×2)
+  - Increasing Energy Shield Capacity multiplier (×2.5 instead of ×2)
   - Adding shield damage reduction (e.g., shields take 80% of damage)
 
 ### Risk 2: Under-Nerfing Armor
@@ -803,7 +803,7 @@ Effective: 48.5 / 50 = 97% damage dealt
 
 | Weapon Name | Type | Current Damage | Current Cooldown | Current DPS | New Damage | New DPS | DPS Change |
 |-------------|------|----------------|------------------|-------------|------------|---------|------------|
-| Practice Sword | Melee | 10 | 3s | 3.33 | 10 | 3.33 | 0% |
+| Practice Sword | Melee | 10 | 3s | 3.33 | 8 | 2.67 | -20% |
 | Power Sword | Melee | 22 | 3s | 7.33 | 16 | 5.33 | -27% |
 | Heavy Hammer | Melee 2H | 40 | 5s | 8.00 | 30 | 6.00 | -25% |
 | Plasma Blade | Melee | 28 | 3s | 9.33 | 21 | 7.00 | -25% |
@@ -822,7 +822,7 @@ Effective: 48.5 / 50 = 97% damage dealt
 **Terms to Standardize:**
 
 1. **"Energy Shield"**: HP pool that absorbs damage (current terminology: "shield", "shields")
-   - Robot attribute: Shield Capacity (determines max energy shield HP)
+   - Robot attribute: Energy Shield Capacity (determines max energy shield HP)
    - Combat state: currentShield (current energy shield HP remaining)
    - Regenerates during battle based on Power Core attribute
 

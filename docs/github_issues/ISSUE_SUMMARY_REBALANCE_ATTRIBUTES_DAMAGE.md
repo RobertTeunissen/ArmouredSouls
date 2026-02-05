@@ -151,15 +151,15 @@ If pen > armor:
 - Edge cases handled gracefully
 
 #### 4. Weapon Damage Rebalancing ✅
-**Strategy**: Keep Practice Sword at 10 damage (baseline), reduce others by ~27%
+**Strategy**: Reduce Practice Sword to 8 damage (new baseline), reduce others by ~27-35%
 
 **Rationale**: 
 - New system deals 2-3x more effective damage
-- Need ~27% nerf to reach 40-60 second target (from 112s)
-- Practice Sword stays baseline to keep early game balance
+- Need ~27-35% nerf to reach 40-60 second target (from 112s)
+- Practice Sword gets 20% nerf to stay viable as starter weapon
 
 **Sample Changes**:
-- Practice Sword: 10 → **10** (no change)
+- Practice Sword: 10 → **8** (-20%)
 - Power Sword: 22 → **16** (-27%)
 - Plasma Rifle: 35 → **26** (-26%)
 - Plasma Cannon: 55 → **40** (-27%)
