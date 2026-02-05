@@ -15,7 +15,8 @@ v1.0 (Feb 5, 2026): Initial PRD created
 v1.1 (Feb 5, 2026): Review done by Robert Teunissen  
 v1.2 (Feb 5, 2026): Review comments addressed - reward system redesigned, bye match handling updated, battle-readiness clarified  
 v1.3 (Feb 5, 2026): Corrections after implementation - rewards scaled down, participation rewards added, bye match rules clarified  
-v1.4 (Feb 5, 2026): Frontend implementation - Admin page UI complete with tournament management
+v1.4 (Feb 5, 2026): Frontend implementation - Admin page UI complete with tournament management  
+v1.5 (Feb 5, 2026): Frontend My Robots page - Tournament matches now display in upcoming matches with badges
 
 ---
 
@@ -1113,12 +1114,15 @@ For **large tournaments** (256+ robots):
 - [x] Display current round matches
 - [x] Success/error message handling
 
-**Milestone 6.2: My Robots Page Updates**
-- [ ] Update upcoming matches query to include tournaments
-- [ ] Display tournament matches alongside league matches
-- [ ] Add tournament badge/indicator
-- [ ] Show tournament round information
-- [ ] Test with robots having both match types
+**Milestone 6.2: My Robots Page Updates** ✅ COMPLETE
+- [x] Update upcoming matches query to include tournaments
+- [x] Display tournament matches alongside league matches
+- [x] Add tournament badge/indicator (🏆 icon + yellow border)
+- [x] Show tournament round information (Finals, Semi-finals, etc.)
+- [x] Test with robots having both match types
+- [x] Update backend API to include tournament matches
+- [x] Add tournament-specific fields to ScheduledMatch interface
+- [x] Handle placeholder/incomplete tournament matches safely
 
 **Milestone 6.3: Battle History Updates**
 - [ ] Update battle list to distinguish tournament battles
