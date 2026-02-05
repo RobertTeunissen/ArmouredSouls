@@ -121,10 +121,11 @@ model Robot {
   kills               Int @default(0) // Opponents destroyed (0 HP)
 
   // ===== LEAGUE & FAME =====
-  currentLeague String  @default("bronze") @map("current_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
-  leagueId      String  @default("bronze_1") @map("league_id") @db.VarChar(30) // Specific league instance (supports multiple Bronze leagues)
-  leaguePoints  Int     @default(0) @map("league_points") // Points for promotion/demotion
-  fame          Int     @default(0) // Individual robot reputation
+  currentLeague         String  @default("bronze") @map("current_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
+  leagueId              String  @default("bronze_1") @map("league_id") @db.VarChar(30) // Specific league instance (supports multiple Bronze leagues)
+  leaguePoints          Int     @default(0) @map("league_points") // Points for promotion/demotion
+  cyclesInCurrentLeague Int     @default(0) @map("cycles_in_current_league") // Number of cycles robot has been in current league
+  fame                  Int     @default(0) // Individual robot reputation
   titles        String? @db.Text // Comma-separated achievements
 
   // ===== ECONOMIC STATE =====

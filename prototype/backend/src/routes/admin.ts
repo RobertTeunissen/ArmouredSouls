@@ -485,11 +485,22 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           financeSummary = await processAllDailyFinances();
         }
 
-        // Step 7: Rebalance leagues (every 5 cycles or last cycle)
+        // Step 7: Rebalance leagues (every cycle)
         let rebalancingSummary = null;
-        if (i % 5 === 0 || i === cycleCount) {
-          rebalancingSummary = await rebalanceLeagues();
-        }
+        rebalancingSummary = await rebalanceLeagues();
+
+        // Step 8: Increment cyclesInCurrentLeague for all robots (after rebalancing)
+        // This ensures robots that were promoted/demoted start at 0 in their new league
+        await prisma.robot.updateMany({
+          where: {
+            NOT: { name: 'Bye Robot' },
+          },
+          data: {
+            cyclesInCurrentLeague: {
+              increment: 1,
+            },
+          },
+        });
 
         cycleResults.push({
           cycle: currentCycleNumber,

@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 // Promotion/Demotion thresholds
 const PROMOTION_PERCENTAGE = 0.10; // Top 10%
 const DEMOTION_PERCENTAGE = 0.10; // Bottom 10%
-const MIN_BATTLES_FOR_REBALANCING = 5;
+const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5; // Must be in current league for 5+ cycles
 const MIN_ROBOTS_FOR_REBALANCING = 10;
 
 export interface RebalancingSummary {
@@ -41,12 +41,12 @@ export async function determinePromotions(tier: LeagueTier, excludeRobotIds: Set
     return [];
   }
 
-  // Get all robots in this tier with minimum battles
+  // Get all robots in this tier with minimum cycles in current league
   const robots = await prisma.robot.findMany({
     where: {
       currentLeague: tier,
-      totalBattles: {
-        gte: MIN_BATTLES_FOR_REBALANCING,
+      cyclesInCurrentLeague: {
+        gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
       },
       NOT: [
         { name: 'Bye Robot' },
@@ -90,12 +90,12 @@ export async function determineDemotions(tier: LeagueTier, excludeRobotIds: Set<
     return [];
   }
 
-  // Get all robots in this tier with minimum battles
+  // Get all robots in this tier with minimum cycles in current league
   const robots = await prisma.robot.findMany({
     where: {
       currentLeague: tier,
-      totalBattles: {
-        gte: MIN_BATTLES_FOR_REBALANCING,
+      cyclesInCurrentLeague: {
+        gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
       },
       NOT: [
         { name: 'Bye Robot' },
@@ -170,6 +170,7 @@ export async function promoteRobot(robot: Robot): Promise<void> {
       currentLeague: nextTier,
       leagueId: newLeagueId,
       leaguePoints: 0, // Reset league points
+      cyclesInCurrentLeague: 0, // Reset cycles counter for new league
     },
   });
 
@@ -196,6 +197,7 @@ export async function demoteRobot(robot: Robot): Promise<void> {
       currentLeague: previousTier,
       leagueId: newLeagueId,
       leaguePoints: 0, // Reset league points
+      cyclesInCurrentLeague: 0, // Reset cycles counter for new league
     },
   });
 
@@ -218,11 +220,11 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
     },
   });
 
-  // Count eligible robots (≥5 battles and not already processed)
+  // Count eligible robots (≥5 cycles in current league and not already processed)
   const eligibleRobots = await prisma.robot.count({
     where: {
       currentLeague: tier,
-      totalBattles: { gte: MIN_BATTLES_FOR_REBALANCING },
+      cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING },
       NOT: [
         { name: 'Bye Robot' },
         { id: { in: Array.from(excludeRobotIds) } },

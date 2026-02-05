@@ -475,9 +475,11 @@ This script tests:
 - ✅ Battle logs generated
 
 ### Successful League Rebalancing
-- ✅ Top 10% promoted (if ≥5 battles and ≥10 robots per tier)
+- ✅ Rebalancing runs every cycle
+- ✅ Top 10% promoted (if ≥5 cycles in current league and ≥10 robots per tier)
 - ✅ Bottom 10% demoted (same conditions)
 - ✅ League points reset to 0 after tier change
+- ✅ Cycles in current league reset to 0 after tier change
 - ✅ ELO preserved during tier changes
 - ✅ Instances rebalanced after moves
 
@@ -541,8 +543,8 @@ curl -X POST http://localhost:3001/api/admin/battles/run \
 
 **Requirements for rebalancing**:
 - ≥10 robots in a tier
-- Robots need ≥5 battles
-- Run multiple cycles to accumulate battles
+- Robots need ≥5 cycles in their current league
+- Run multiple cycles to accumulate cycles in league (rebalancing now happens every cycle)
 
 **Solution**:
 ```bash
