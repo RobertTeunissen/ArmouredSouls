@@ -11,7 +11,6 @@ const prisma = new PrismaClient();
 // Tournament configuration constants
 const MIN_TOURNAMENT_PARTICIPANTS = 4; // Minimum robots needed to start a tournament
 const AUTO_START_THRESHOLD = 8; // Minimum robots for auto-tournament creation
-const TOURNAMENT_COOLDOWN_HOURS = 24; // Hours before robot can re-enter tournament
 
 export interface TournamentCreationResult {
   tournament: Tournament;
@@ -41,15 +40,13 @@ function calculateMaxRounds(participants: number): number {
 
 /**
  * Get robots eligible for tournament participation
+ * Robots CAN participate in multiple active tournaments simultaneously
+ * 
  * Excludes:
  * - Bye robot
  * - Robots not battle-ready (< 75% HP, missing weapons)
- * - Robots already in active tournaments
- * - Robots in cooldown from recent tournaments (optional)
  */
-export async function getEligibleRobotsForTournament(
-  excludeRecentParticipants: boolean = false
-): Promise<Robot[]> {
+export async function getEligibleRobotsForTournament(): Promise<Robot[]> {
   // Get all robots except bye robot
   const allRobots = await prisma.robot.findMany({
     where: {
@@ -69,70 +66,7 @@ export async function getEligibleRobotsForTournament(
     return readiness.isReady;
   });
 
-  // Get robots already in active tournaments
-  const activeTournaments = await prisma.tournament.findMany({
-    where: {
-      status: { in: ['pending', 'active'] },
-    },
-    include: {
-      matches: {
-        where: {
-          status: { in: ['pending', 'scheduled'] },
-        },
-        select: {
-          robot1Id: true,
-          robot2Id: true,
-        },
-      },
-    },
-  });
-
-  const robotsInActiveTournaments = new Set<number>();
-  activeTournaments.forEach(tournament => {
-    tournament.matches.forEach(match => {
-      if (match.robot1Id) robotsInActiveTournaments.add(match.robot1Id);
-      if (match.robot2Id) robotsInActiveTournaments.add(match.robot2Id);
-    });
-  });
-
-  // Filter out robots already in active tournaments
-  let eligibleRobots = battleReadyRobots.filter(robot => 
-    !robotsInActiveTournaments.has(robot.id)
-  );
-
-  // Optional: Exclude robots from recently completed tournaments (cooldown)
-  if (excludeRecentParticipants) {
-    const cooldownDate = new Date(Date.now() - TOURNAMENT_COOLDOWN_HOURS * 60 * 60 * 1000);
-    
-    const recentTournaments = await prisma.tournament.findMany({
-      where: {
-        status: 'completed',
-        completedAt: {
-          gte: cooldownDate,
-        },
-      },
-      include: {
-        matches: {
-          select: {
-            robot1Id: true,
-            robot2Id: true,
-          },
-        },
-      },
-    });
-
-    const recentParticipants = new Set<number>();
-    recentTournaments.forEach(tournament => {
-      tournament.matches.forEach(match => {
-        if (match.robot1Id) recentParticipants.add(match.robot1Id);
-        if (match.robot2Id) recentParticipants.add(match.robot2Id);
-      });
-    });
-
-    eligibleRobots = eligibleRobots.filter(robot => !recentParticipants.has(robot.id));
-  }
-
-  return eligibleRobots;
+  return battleReadyRobots;
 }
 
 /**
@@ -231,12 +165,11 @@ function generateBracketPairs(seededRobots: Robot[], maxRounds: number): Tournam
 /**
  * Create a new single elimination tournament
  * Returns tournament with generated bracket
+ * All eligible robots participate (can be in multiple tournaments)
  */
-export async function createSingleEliminationTournament(
-  excludeRecentParticipants: boolean = false
-): Promise<TournamentCreationResult> {
+export async function createSingleEliminationTournament(): Promise<TournamentCreationResult> {
   // Get eligible robots
-  const eligibleRobots = await getEligibleRobotsForTournament(excludeRecentParticipants);
+  const eligibleRobots = await getEligibleRobotsForTournament();
 
   if (eligibleRobots.length < MIN_TOURNAMENT_PARTICIPANTS) {
     throw new Error(
@@ -526,13 +459,13 @@ export async function autoCreateNextTournament(): Promise<Tournament | null> {
   }
 
   // Check for eligible robots
-  const eligibleRobots = await getEligibleRobotsForTournament(true); // Exclude recent participants
+  const eligibleRobots = await getEligibleRobotsForTournament();
   if (eligibleRobots.length < AUTO_START_THRESHOLD) {
     console.log(`[Tournament] Insufficient robots for auto-tournament (${eligibleRobots.length}/${AUTO_START_THRESHOLD})`);
     return null;
   }
 
   console.log(`[Tournament] Auto-creating tournament with ${eligibleRobots.length} eligible robots`);
-  const result = await createSingleEliminationTournament(true);
+  const result = await createSingleEliminationTournament();
   return result.tournament;
 }

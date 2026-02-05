@@ -41,7 +41,7 @@ const requireAdmin = (req: AuthRequest, res: Response, next: express.NextFunctio
  */
 router.post('/create', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { tournamentType = 'single_elimination', excludeRecentParticipants = false } = req.body;
+    const { tournamentType = 'single_elimination' } = req.body;
 
     if (tournamentType !== 'single_elimination') {
       return res.status(400).json({
@@ -51,7 +51,7 @@ router.post('/create', authenticateToken, requireAdmin, async (req: Request, res
     }
 
     console.log('[Admin] Creating tournament...');
-    const result = await createSingleEliminationTournament(excludeRecentParticipants);
+    const result = await createSingleEliminationTournament();
 
     res.json({
       success: true,
@@ -251,16 +251,12 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
  */
 router.get('/eligible-robots', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { excludeRecent = 'false' } = req.query;
-    const excludeRecentParticipants = excludeRecent === 'true';
-
-    const eligibleRobots = await getEligibleRobotsForTournament(excludeRecentParticipants);
+    const eligibleRobots = await getEligibleRobotsForTournament();
 
     res.json({
       success: true,
       eligibleRobots,
       count: eligibleRobots.length,
-      excludedRecentParticipants: excludeRecentParticipants,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
