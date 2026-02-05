@@ -59,10 +59,10 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       },
     });
 
-    // Get tournament matches involving user's robots (scheduled status, not completed)
+    // Get tournament matches involving user's robots (pending or scheduled status, not completed)
     const tournamentMatches = await prisma.tournamentMatch.findMany({
       where: {
-        status: 'scheduled',
+        status: { in: ['pending', 'scheduled'] },
         OR: [
           { robot1Id: { in: robotIds } },
           { robot2Id: { in: robotIds } },

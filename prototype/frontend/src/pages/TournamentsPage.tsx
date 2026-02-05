@@ -15,6 +15,9 @@ function TournamentsPage() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'pending' | 'completed'>('all');
+  const [showOnlyUserRobots, setShowOnlyUserRobots] = useState(false);
+  const [matchesPage, setMatchesPage] = useState(1);
+  const [matchesPerPage, setMatchesPerPage] = useState(50);
 
   useEffect(() => {
     fetchTournaments();
@@ -374,10 +377,18 @@ function TournamentsPage() {
                     <div className="bg-gray-900 p-4 rounded-lg">
                       <div className="text-sm text-gray-400">Your Robots</div>
                       <div className="text-2xl font-bold text-blue-400">
-                        {selectedTournament.currentRoundMatches?.filter((m: any) => 
-                          (m.robot1Id && userRobots.has(m.robot1Id)) || 
-                          (m.robot2Id && userRobots.has(m.robot2Id))
-                        ).length || 0}
+                        {(() => {
+                          const userRobotIds = new Set<number>();
+                          selectedTournament.currentRoundMatches?.forEach((m: any) => {
+                            if (m.robot1Id && userRobots.has(m.robot1Id)) {
+                              userRobotIds.add(m.robot1Id);
+                            }
+                            if (m.robot2Id && userRobots.has(m.robot2Id)) {
+                              userRobotIds.add(m.robot2Id);
+                            }
+                          });
+                          return userRobotIds.size;
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -435,47 +446,146 @@ function TournamentsPage() {
 
                   {/* Current Round Matches */}
                   <div>
-                    <h3 className="text-xl font-bold mb-4">
-                      {getRoundName(selectedTournament.currentRound, selectedTournament.maxRounds)} Matches
-                    </h3>
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold">
+                        {getRoundName(selectedTournament.currentRound, selectedTournament.maxRounds)} Matches
+                      </h3>
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={showOnlyUserRobots}
+                            onChange={(e) => {
+                              setShowOnlyUserRobots(e.target.checked);
+                              setMatchesPage(1); // Reset to first page
+                            }}
+                            className="rounded"
+                          />
+                          <span className="text-gray-300">Show only my robots</span>
+                        </label>
+                        <select
+                          value={matchesPerPage}
+                          onChange={(e) => {
+                            setMatchesPerPage(Number(e.target.value));
+                            setMatchesPage(1); // Reset to first page
+                          }}
+                          className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm"
+                        >
+                          <option value={25}>25 per page</option>
+                          <option value={50}>50 per page</option>
+                          <option value={100}>100 per page</option>
+                          <option value={500}>500 per page</option>
+                        </select>
+                      </div>
+                    </div>
                     
                     {selectedTournament.currentRoundMatches && selectedTournament.currentRoundMatches.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                        {selectedTournament.currentRoundMatches.map((match: any) => (
-                          <div
-                            key={match.id}
-                            className={`p-3 rounded border ${
-                              match.status === 'completed'
-                                ? 'bg-gray-900/50 border-gray-700'
-                                : 'bg-gray-900 border-yellow-500/30'
-                            }`}
-                          >
-                            {match.isByeMatch ? (
-                              <div className="text-center py-2">
-                                <div className="font-bold text-yellow-400">
-                                  {match.robot1?.name || 'Robot'} (Bye)
-                                </div>
-                                <div className="text-xs text-gray-500 mt-1">Auto-advances to next round</div>
-                              </div>
-                            ) : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                          {(() => {
+                            // Filter matches if "show only my robots" is enabled
+                            const filteredMatches = showOnlyUserRobots
+                              ? selectedTournament.currentRoundMatches.filter((m: any) =>
+                                  (m.robot1Id && userRobots.has(m.robot1Id)) ||
+                                  (m.robot2Id && userRobots.has(m.robot2Id))
+                                )
+                              : selectedTournament.currentRoundMatches;
+
+                            // Pagination
+                            const totalMatches = filteredMatches.length;
+                            const totalPages = Math.ceil(totalMatches / matchesPerPage);
+                            const startIndex = (matchesPage - 1) * matchesPerPage;
+                            const endIndex = startIndex + matchesPerPage;
+                            const paginatedMatches = filteredMatches.slice(startIndex, endIndex);
+
+                            return (
                               <>
-                                <div className="flex justify-between items-center">
-                                  <div className={`flex-1 ${match.winnerId === match.robot1Id ? 'font-bold text-green-400' : ''}`}>
-                                    {match.robot1?.name || 'TBD'}
+                                {paginatedMatches.map((match: any) => (
+                                  <div
+                                    key={match.id}
+                                    className={`p-3 rounded border ${
+                                      match.status === 'completed'
+                                        ? 'bg-gray-900/50 border-gray-700'
+                                        : 'bg-gray-900 border-yellow-500/30'
+                                    }`}
+                                  >
+                                    {match.isByeMatch ? (
+                                      <div className="text-center py-2">
+                                        <div className="font-bold text-yellow-400">
+                                          {match.robot1?.name || 'Robot'}
+                                        </div>
+                                        <div className="text-xs text-gray-400">
+                                          ELO: {match.robot1?.elo || 'N/A'}
+                                        </div>
+                                        {match.robot1?.user && (
+                                          <div className="text-xs text-gray-500">
+                                            {match.robot1.user.stableName || match.robot1.user.username}
+                                          </div>
+                                        )}
+                                        <div className="text-xs text-yellow-300 mt-1">🎖️ Bye - Auto-advances</div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className="flex justify-between items-start gap-2">
+                                          <div className={`flex-1 ${match.winnerId === match.robot1Id ? 'font-bold text-green-400' : ''}`}>
+                                            <div>{match.robot1?.name || 'TBD'}</div>
+                                            <div className="text-xs text-gray-400">
+                                              ELO: {match.robot1?.elo || 'N/A'}
+                                            </div>
+                                            {match.robot1?.user && (
+                                              <div className="text-xs text-gray-500">
+                                                {match.robot1.user.stableName || match.robot1.user.username}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="px-2 text-gray-500 text-xs pt-2">VS</div>
+                                          <div className={`flex-1 text-right ${match.winnerId === match.robot2Id ? 'font-bold text-green-400' : ''}`}>
+                                            <div>{match.robot2?.name || 'TBD'}</div>
+                                            <div className="text-xs text-gray-400">
+                                              ELO: {match.robot2?.elo || 'N/A'}
+                                            </div>
+                                            {match.robot2?.user && (
+                                              <div className="text-xs text-gray-500">
+                                                {match.robot2.user.stableName || match.robot2.user.username}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <div className="text-center text-xs text-gray-500 mt-2">
+                                          {match.status === 'completed' ? '✓ Completed' : 'Pending'}
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
-                                  <div className="px-3 text-gray-500 text-xs">VS</div>
-                                  <div className={`flex-1 text-right ${match.winnerId === match.robot2Id ? 'font-bold text-green-400' : ''}`}>
-                                    {match.robot2?.name || 'TBD'}
+                                ))}
+
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
+                                  <div className="col-span-full flex justify-center items-center gap-4 mt-4">
+                                    <button
+                                      onClick={() => setMatchesPage(Math.max(1, matchesPage - 1))}
+                                      disabled={matchesPage === 1}
+                                      className="px-4 py-2 bg-gray-800 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+                                    >
+                                      Previous
+                                    </button>
+                                    <span className="text-gray-400">
+                                      Page {matchesPage} of {totalPages} ({totalMatches} matches)
+                                    </span>
+                                    <button
+                                      onClick={() => setMatchesPage(Math.min(totalPages, matchesPage + 1))}
+                                      disabled={matchesPage === totalPages}
+                                      className="px-4 py-2 bg-gray-800 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+                                    >
+                                      Next
+                                    </button>
                                   </div>
-                                </div>
-                                <div className="text-center text-xs text-gray-500 mt-1">
-                                  {match.status === 'completed' ? '✓ Completed' : 'Pending'}
-                                </div>
+                                )}
                               </>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                            );
+                          })()}
+                        </div>
+                      </>
                     ) : (
                       <p className="text-gray-400 text-center py-8">No matches in current round</p>
                     )}
