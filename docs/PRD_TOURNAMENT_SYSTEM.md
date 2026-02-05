@@ -16,7 +16,8 @@ v1.1 (Feb 5, 2026): Review done by Robert Teunissen
 v1.2 (Feb 5, 2026): Review comments addressed - reward system redesigned, bye match handling updated, battle-readiness clarified  
 v1.3 (Feb 5, 2026): Corrections after implementation - rewards scaled down, participation rewards added, bye match rules clarified  
 v1.4 (Feb 5, 2026): Frontend implementation - Admin page UI complete with tournament management  
-v1.5 (Feb 5, 2026): Frontend My Robots page - Tournament matches now display in upcoming matches with badges
+v1.5 (Feb 5, 2026): Frontend My Robots page - Tournament matches now display in upcoming matches with badges  
+v1.6 (Feb 5, 2026): Frontend Battle History - Tournament battles now display with badges, round names, and visual distinction
 
 ---
 
@@ -1124,12 +1125,16 @@ For **large tournaments** (256+ robots):
 - [x] Add tournament-specific fields to ScheduledMatch interface
 - [x] Handle placeholder/incomplete tournament matches safely
 
-**Milestone 6.3: Battle History Updates**
-- [ ] Update battle list to distinguish tournament battles
-- [ ] Add tournament badge/icon
-- [ ] Display tournament name and round
-- [ ] Show championship title award notification
-- [ ] Test filtering and display
+**Milestone 6.3: Battle History Updates** ✅ COMPLETE
+- [x] Update battle list to distinguish tournament battles
+- [x] Add tournament badge/icon (🏆 trophy icon)
+- [x] Display tournament name and round
+- [x] Add visual distinction (yellow double border)
+- [x] Test filtering and display
+- [x] Update backend API to include tournament data
+- [x] Add getTournamentRoundName() utility function
+- [x] Update BattleHistoryPage component
+- [x] Update RecentMatches component
 
 ### Phase 7: Testing & Validation 
 
