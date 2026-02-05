@@ -4,7 +4,13 @@ const API_BASE_URL = 'http://localhost:3001/api';
 
 // Types
 export interface ScheduledMatch {
-  id: number;
+  id: number | string; // Can be number for league or "tournament-X" string for tournaments
+  matchType?: 'league' | 'tournament';
+  tournamentId?: number;
+  tournamentName?: string;
+  tournamentRound?: number;
+  currentRound?: number;
+  maxRounds?: number;
   robot1Id: number;
   robot2Id: number;
   leagueType: string;
@@ -20,7 +26,7 @@ export interface ScheduledMatch {
     user: {
       username: string;
     };
-  };
+  } | null;
   robot2: {
     id: number;
     name: string;
@@ -31,7 +37,7 @@ export interface ScheduledMatch {
     user: {
       username: string;
     };
-  };
+  } | null;
 }
 
 export interface BattleHistory {
