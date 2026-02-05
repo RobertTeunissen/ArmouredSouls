@@ -322,7 +322,6 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Tour
             select: {
               id: true,
               username: true,
-              stableName: true,
             },
           },
         },
@@ -333,7 +332,6 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Tour
             select: {
               id: true,
               username: true,
-              stableName: true,
             },
           },
         },
