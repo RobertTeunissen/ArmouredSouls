@@ -381,14 +381,14 @@ async function main() {
       },
     }),
 
-    // 16. Shotgun (₡325,000) - Two-handed ballistic
+    // 16. Shotgun (₡215,000) - Two-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Shotgun',
         weaponType: 'ballistic',
         baseDamage: 18,  // Reduced from 22 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
-        cost: 325000,
+        cost: 215000,  // v1.2: Reduced from 325K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
@@ -400,14 +400,14 @@ async function main() {
       },
     }),
 
-    // 17. Grenade Launcher (₡325,000) - Two-handed ballistic
+    // 17. Grenade Launcher (₡235,000) - Two-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Grenade Launcher',
         weaponType: 'ballistic',
         baseDamage: 21,  // Reduced from 25 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
-        cost: 325000,
+        cost: 235000,  // v1.2: Reduced from 325K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
@@ -421,14 +421,14 @@ async function main() {
     }),
 
     // ===== ELITE TIER (₡400K+) =====
-    // 18. Sniper Rifle (₡425,000) - Two-handed ballistic
+    // 18. Sniper Rifle (₡295,000) - Two-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Sniper Rifle',
         weaponType: 'ballistic',
         baseDamage: 29,  // Reduced from 35 (v1.2: further nerf due to two-handed dominance)
         cooldown: 6,
-        cost: 425000,
+        cost: 295000,  // v1.2: Reduced from 425K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
@@ -441,14 +441,14 @@ async function main() {
       },
     }),
 
-    // 19. Battle Axe (₡430,000) - Two-handed melee
+    // 19. Battle Axe (₡310,000) - Two-handed melee
     prisma.weapon.create({
       data: {
         name: 'Battle Axe',
         weaponType: 'melee',
         baseDamage: 23,  // Reduced from 27 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
-        cost: 430000,
+        cost: 310000,  // v1.2: Reduced from 430K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'melee',
         loadoutType: 'two_handed',
@@ -461,14 +461,14 @@ async function main() {
       },
     }),
 
-    // 20. Plasma Cannon (₡440,000) - Two-handed energy
+    // 20. Plasma Cannon (₡320,000) - Two-handed energy
     prisma.weapon.create({
       data: {
         name: 'Plasma Cannon',
         weaponType: 'energy',
         baseDamage: 27,  // Reduced from 32 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
-        cost: 440000,
+        cost: 320000,  // v1.2: Reduced from 440K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'energy',
         loadoutType: 'two_handed',
@@ -481,14 +481,14 @@ async function main() {
       },
     }),
 
-    // 21. Heavy Hammer (₡490,000) - Two-handed melee
+    // 21. Heavy Hammer (₡360,000) - Two-handed melee
     prisma.weapon.create({
       data: {
         name: 'Heavy Hammer',
         weaponType: 'melee',
         baseDamage: 29,  // Reduced from 34 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
-        cost: 490000,
+        cost: 360000,  // v1.2: Reduced from 490K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'melee',
         loadoutType: 'two_handed',
@@ -501,14 +501,14 @@ async function main() {
       },
     }),
 
-    // 22. Railgun (₡545,000) - Two-handed ballistic
+    // 22. Railgun (₡390,000) - Two-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Railgun',
         weaponType: 'ballistic',
         baseDamage: 33,  // Reduced from 39 (v1.2: further nerf due to two-handed dominance)
         cooldown: 6,
-        cost: 545000,
+        cost: 390000,  // v1.2: Reduced from 545K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
@@ -521,14 +521,14 @@ async function main() {
       },
     }),
 
-    // 23. Ion Beam (₡565,000) - Two-handed energy (Highest DPS)
+    // 23. Ion Beam (₡430,000) - Two-handed energy (Highest DPS)
     prisma.weapon.create({
       data: {
         name: 'Ion Beam',
         weaponType: 'energy',
         baseDamage: 24,  // Reduced from 28 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
-        cost: 565000,
+        cost: 430000,  // v1.2: Reduced from 565K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'energy',
         loadoutType: 'two_handed',
@@ -552,14 +552,14 @@ async function main() {
   console.log('     - Burst Rifle (₡145K), Assault Rifle (₡150K)');
   console.log('     - Energy Blade (₡190K), Laser Rifle (₡195K)');
   console.log('     - Plasma Blade (₡215K)');
-  console.log('   Premium Tier (₡200K-₡400K): 2 weapons');
+  console.log('   Premium Tier (₡200K-₡400K): 10 weapons (including 2 two-handed)');
   console.log('     - Plasma Rifle (₡220K), Power Sword (₡280K)');
-  console.log('   Elite Tier (₡400K+): 8 weapons');
-  console.log('     - Shotgun (₡325K), Grenade Launcher (₡325K)');
-  console.log('     - Sniper Rifle (₡425K), Battle Axe (₡430K)');
-  console.log('     - Plasma Cannon (₡440K), Heavy Hammer (₡490K)');
-  console.log('     - Railgun (₡545K), Ion Beam (₡565K)');
+  console.log('     - Shotgun (₡215K), Grenade Launcher (₡235K), Sniper Rifle (₡295K)');
+  console.log('     - Battle Axe (₡310K), Plasma Cannon (₡320K), Heavy Hammer (₡360K)');
+  console.log('   Elite Tier (₡400K+): 1 weapon');
+  console.log('     - Railgun (₡390K), Ion Beam (₡430K)');
   console.log('   ✅ All weapons use DPS-inclusive pricing formula');
+  console.log('   ✅ v1.2: Two-handed prices reduced 24-34% to match nerfed DPS values');
   console.log('   ✅ Special properties removed (not yet implemented in combat)');
   console.log('   ✅ Complete weapon variety across all loadout types');
 
