@@ -9,7 +9,6 @@ import { CombatMessageGenerator } from './combatMessageGenerator';
 import { calculateELOChange } from './battleOrchestrator';
 import {
   calculateTournamentBattleRewards,
-  calculateByeMatchReward,
   getTournamentRewardBreakdown,
 } from '../utils/tournamentRewards';
 
@@ -33,22 +32,17 @@ export interface TournamentBattleResult {
 
 /**
  * Process a tournament match battle
- * Similar to league battles but with tournament-specific rewards
+ * Note: Bye matches should NOT call this function - they're handled at tournament creation
  */
 export async function processTournamentBattle(
   tournamentMatch: TournamentMatch
 ): Promise<TournamentBattleResult> {
-  if (!tournamentMatch.robot1Id) {
-    throw new Error(`Tournament match ${tournamentMatch.id} has no robot1`);
+  if (!tournamentMatch.robot1Id || !tournamentMatch.robot2Id) {
+    throw new Error(`Tournament match ${tournamentMatch.id} missing robots`);
   }
 
-  // Handle bye matches (robot advances without battle)
   if (tournamentMatch.isByeMatch) {
-    return processByeMatch(tournamentMatch);
-  }
-
-  if (!tournamentMatch.robot2Id) {
-    throw new Error(`Tournament match ${tournamentMatch.id} has no robot2 (not a bye match)`);
+    throw new Error(`Bye match ${tournamentMatch.id} should not be processed as a battle`);
   }
 
   // Load both robots with weapons
@@ -81,7 +75,7 @@ export async function processTournamentBattle(
   // Simulate battle
   const combatResult = simulateBattle(robot1, robot2);
 
-  // Get tournament for round information
+  // Get tournament for round information and participant count
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentMatch.tournamentId },
   });
@@ -90,6 +84,16 @@ export async function processTournamentBattle(
     throw new Error(`Tournament ${tournamentMatch.tournamentId} not found`);
   }
 
+  // Count robots remaining in current round
+  const currentRoundMatches = await prisma.tournamentMatch.findMany({
+    where: {
+      tournamentId: tournamentMatch.tournamentId,
+      round: tournament.currentRound,
+    },
+  });
+  
+  const robotsRemaining = currentRoundMatches.filter(m => !m.isByeMatch).length * 2;
+
   // Create battle record with tournament context
   const battle = await createTournamentBattleRecord(
     tournamentMatch,
@@ -97,7 +101,10 @@ export async function processTournamentBattle(
     robot2,
     combatResult,
     tournament.currentRound,
-    tournament.maxRounds
+    tournament.maxRounds,
+    tournament.totalParticipants,
+    robotsRemaining
+  );
   );
 
   // Update robot stats and award rewards
@@ -146,60 +153,6 @@ export async function processTournamentBattle(
 }
 
 /**
- * Process a bye match (robot advances without battle)
- */
-async function processByeMatch(
-  tournamentMatch: TournamentMatch
-): Promise<TournamentBattleResult> {
-  if (!tournamentMatch.robot1Id) {
-    throw new Error(`Bye match has no robot1`);
-  }
-
-  const robot = await prisma.robot.findUnique({
-    where: { id: tournamentMatch.robot1Id },
-  });
-
-  if (!robot) {
-    throw new Error(`Robot ${tournamentMatch.robot1Id} not found for bye match`);
-  }
-
-  // Award reduced participation reward (50% of normal)
-  const byeReward = calculateByeMatchReward(robot);
-
-  await prisma.user.update({
-    where: { id: robot.userId },
-    data: {
-      currency: { increment: byeReward },
-    },
-  });
-
-  // Update tournament match
-  await prisma.tournamentMatch.update({
-    where: { id: tournamentMatch.id },
-    data: {
-      winnerId: robot.id,
-      status: 'completed',
-      completedAt: new Date(),
-    },
-  });
-
-  console.log(`[Tournament] Bye match: ${robot.name} advances (₡${byeReward.toLocaleString()} awarded)`);
-
-  return {
-    battleId: 0, // No battle for bye matches
-    winnerId: robot.id,
-    robot1FinalHP: robot.maxHP,
-    robot2FinalHP: 0,
-    robot1Damage: 0,
-    robot2Damage: 0,
-    durationSeconds: 0,
-    prestigeAwarded: 0,
-    fameAwarded: 0,
-    isByeMatch: true,
-  };
-}
-
-/**
  * Create a Battle record for a tournament battle
  */
 async function createTournamentBattleRecord(
@@ -208,7 +161,9 @@ async function createTournamentBattleRecord(
   robot2: Robot,
   combatResult: any,
   round: number,
-  maxRounds: number
+  maxRounds: number,
+  totalParticipants: number,
+  robotsRemaining: number
 ): Promise<Battle> {
   const isRobot1Winner = combatResult.winnerId === robot1.id;
   const robot1ELOBefore = robot1.elo;
@@ -230,29 +185,18 @@ async function createTournamentBattleRecord(
 
   const eloChange = Math.abs(eloChanges.winnerChange);
 
-  // Get users for reward calculations
-  const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId } });
-  const robot2User = await prisma.user.findUnique({ where: { id: robot2.userId } });
-
-  if (!robot1User || !robot2User) {
-    throw new Error('User not found for tournament battle');
-  }
-
-  // Calculate tournament rewards
+  // Calculate tournament rewards (new formula based on tournament size & progression)
   const winnerRobot = isRobot1Winner ? robot1 : robot2;
   const loserRobot = isRobot1Winner ? robot2 : robot1;
-  const winnerUser = isRobot1Winner ? robot1User : robot2User;
-  const loserUser = isRobot1Winner ? robot2User : robot1User;
   const winnerFinalHP = isRobot1Winner ? combatResult.robot1FinalHP : combatResult.robot2FinalHP;
 
   const rewards = await calculateTournamentBattleRewards(
-    winnerRobot,
-    loserRobot,
-    winnerUser,
-    loserUser,
-    winnerFinalHP,
+    totalParticipants,
     round,
-    maxRounds
+    maxRounds,
+    robotsRemaining,
+    winnerFinalHP,
+    winnerRobot.maxHP
   );
 
   // Generate battle log
@@ -275,7 +219,14 @@ async function createTournamentBattleRecord(
   });
 
   // Add tournament reward breakdown to battle log
-  const rewardBreakdown = getTournamentRewardBreakdown(rewards, winnerRobot, loserRobot, winnerUser);
+  const rewardBreakdown = getTournamentRewardBreakdown(
+    rewards,
+    winnerRobot.name,
+    loserRobot.name,
+    totalParticipants,
+    round,
+    maxRounds
+  );
   rewardBreakdown.forEach((line, index) => {
     battleLog.push({
       timestamp: combatResult.durationSeconds + index * 0.1,

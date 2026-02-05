@@ -1,157 +1,144 @@
 /**
  * Tournament Rewards Calculations
- * Handles tournament-specific reward calculations with enhanced multipliers
+ * Rewards based on tournament size and progression, NOT robot's league
+ * Formula scales from small (15 robots) to massive (100k+ robots) tournaments
  */
 
 import { Robot, User } from '@prisma/client';
-import {
-  getLeagueBaseReward,
-  getParticipationReward,
-  getPrestigeMultiplier,
-  calculateBattleWinnings,
-} from './economyCalculations';
 
-// Tournament reward multipliers
-const TOURNAMENT_WIN_MULTIPLIER = 1.5; // 1.5× base win reward
-const TOURNAMENT_PRESTIGE_MULTIPLIER = 2.0; // 2× prestige
-const TOURNAMENT_FAME_MULTIPLIER = 1.5; // 1.5× fame
+// Base reward amounts (not league-dependent)
+const BASE_CREDIT_REWARD = 50000; // Base credits for tournament win
+const BASE_PRESTIGE_REWARD = 30; // Base prestige for tournament win
+const BASE_FAME_REWARD = 20; // Base fame for tournament win
 const CHAMPIONSHIP_PRESTIGE_BONUS = 500; // Bonus for winning finals
 
-// Round-based multipliers (progressive rewards for deeper rounds)
-const ROUND_MULTIPLIERS: { [key: number]: number } = {
-  1: 1.0,  // First round (many participants)
-  2: 1.2,  // Round of 16/32
-  3: 1.4,  // Quarter-finals
-  4: 1.6,  // Semi-finals
-  5: 2.0,  // Finals
-};
-
 /**
- * Get round multiplier based on round number
+ * Calculate tournament size multiplier
+ * Formula: 1 + log10(totalParticipants / 10)
+ * 
+ * Examples:
+ * - 15 robots: 1 + log10(1.5) = 1.18
+ * - 100 robots: 1 + log10(10) = 2.0
+ * - 1000 robots: 1 + log10(100) = 3.0
+ * - 100,000 robots: 1 + log10(10000) = 5.0
  */
-function getRoundMultiplier(round: number): number {
-  return ROUND_MULTIPLIERS[round] || 1.0;
+export function calculateTournamentSizeMultiplier(totalParticipants: number): number {
+  if (totalParticipants < 1) return 1.0;
+  return 1 + Math.log10(totalParticipants / 10);
 }
 
 /**
- * Calculate tournament win reward with all multipliers
- * Formula: base × prestige × tournament × round
+ * Calculate round progression multiplier
+ * Formula: currentRound / maxRounds
+ * 
+ * Rewards increase as tournament progresses
+ * - Round 1/4: 0.25
+ * - Round 2/4: 0.5
+ * - Round 3/4: 0.75
+ * - Round 4/4 (Finals): 1.0
  */
-export function calculateTournamentWinReward(
-  robot: Robot,
-  user: User,
-  round: number
-): number {
-  const leagueReward = getLeagueBaseReward(robot.currentLeague).midpoint;
-  const prestigeMultiplier = getPrestigeMultiplier(user.prestige);
-  const roundMultiplier = getRoundMultiplier(round);
-  
-  // Apply all multipliers
-  const baseReward = leagueReward * prestigeMultiplier;
-  const tournamentReward = baseReward * TOURNAMENT_WIN_MULTIPLIER * roundMultiplier;
-  
-  return Math.round(tournamentReward);
-}
-
-/**
- * Calculate tournament participation reward
- * Same as league battles (30% of league base)
- */
-export function calculateTournamentParticipationReward(robot: Robot): number {
-  return getParticipationReward(robot.currentLeague);
-}
-
-/**
- * Calculate bye match participation reward
- * 50% of normal participation (no combat effort)
- */
-export function calculateByeMatchReward(robot: Robot): number {
-  const normalParticipation = getParticipationReward(robot.currentLeague);
-  return Math.round(normalParticipation * 0.5);
-}
-
-/**
- * Calculate prestige award for tournament win
- * Formula: base league prestige × 2.0
- * Finals add +500 bonus prestige
- */
-export function calculateTournamentPrestige(
-  robot: Robot,
-  round: number,
+export function calculateRoundProgressMultiplier(
+  currentRound: number,
   maxRounds: number
 ): number {
-  // Base prestige by league
-  const prestigeByLeague: Record<string, number> = {
-    bronze: 5,
-    silver: 10,
-    gold: 20,
-    platinum: 30,
-    diamond: 50,
-    champion: 75,
-  };
-  
-  const basePrestige = prestigeByLeague[robot.currentLeague] || 0;
-  let tournamentPrestige = Math.round(basePrestige * TOURNAMENT_PRESTIGE_MULTIPLIER);
-  
-  // Finals bonus (championship title round)
-  const isFinals = round === maxRounds;
-  if (isFinals) {
-    tournamentPrestige += CHAMPIONSHIP_PRESTIGE_BONUS;
-  }
-  
-  return tournamentPrestige;
+  if (maxRounds === 0) return 1.0;
+  return currentRound / maxRounds;
 }
 
 /**
- * Calculate fame award for tournament win
- * Formula: (base league fame × performance multiplier) × 1.5
+ * Calculate exclusivity multiplier for fame
+ * Formula: (robotsRemaining / totalParticipants)^-0.5
+ * 
+ * Fame increases as fewer robots remain (more exclusive achievement)
+ * - 50% remaining: 1.41×
+ * - 25% remaining: 2.0×
+ * - 10% remaining: 3.16×
+ * - 1% remaining: 10×
+ */
+export function calculateExclusivityMultiplier(
+  robotsRemaining: number,
+  totalParticipants: number
+): number {
+  if (totalParticipants === 0 || robotsRemaining === 0) return 1.0;
+  const ratio = robotsRemaining / totalParticipants;
+  return Math.pow(ratio, -0.5);
+}
+
+/**
+ * Calculate tournament win credits
+ * Formula: BASE × tournamentSizeMultiplier × roundProgressMultiplier
+ */
+export function calculateTournamentWinReward(
+  totalParticipants: number,
+  currentRound: number,
+  maxRounds: number
+): number {
+  const sizeMultiplier = calculateTournamentSizeMultiplier(totalParticipants);
+  const progressMultiplier = calculateRoundProgressMultiplier(currentRound, maxRounds);
+  
+  const reward = BASE_CREDIT_REWARD * sizeMultiplier * progressMultiplier;
+  return Math.round(reward);
+}
+
+/**
+ * Calculate tournament prestige award
+ * Formula: BASE × roundProgressMultiplier × tournamentSizeMultiplier
+ * Finals add +500 championship bonus
+ */
+export function calculateTournamentPrestige(
+  totalParticipants: number,
+  currentRound: number,
+  maxRounds: number
+): number {
+  const sizeMultiplier = calculateTournamentSizeMultiplier(totalParticipants);
+  const progressMultiplier = calculateRoundProgressMultiplier(currentRound, maxRounds);
+  
+  let prestige = BASE_PRESTIGE_REWARD * progressMultiplier * sizeMultiplier;
+  
+  // Championship bonus for finals
+  const isFinals = currentRound === maxRounds;
+  if (isFinals) {
+    prestige += CHAMPIONSHIP_PRESTIGE_BONUS;
+  }
+  
+  return Math.round(prestige);
+}
+
+/**
+ * Calculate tournament fame award
+ * Formula: BASE × exclusivityMultiplier × performanceBonus
+ * 
+ * Performance bonus based on HP remaining after victory:
+ * - Perfect (100% HP): 2.0×
+ * - Dominating (>80% HP): 1.5×
+ * - Comeback (<20% HP): 1.25×
+ * - Normal: 1.0×
  */
 export function calculateTournamentFame(
-  robot: Robot,
+  totalParticipants: number,
+  robotsRemaining: number,
   winnerFinalHP: number,
-  round: number
+  winnerMaxHP: number
 ): number {
-  // Base fame by league
-  const fameByLeague: Record<string, number> = {
-    bronze: 2,
-    silver: 5,
-    gold: 10,
-    platinum: 15,
-    diamond: 25,
-    champion: 40,
-  };
+  const exclusivityMultiplier = calculateExclusivityMultiplier(
+    robotsRemaining,
+    totalParticipants
+  );
   
-  let baseFame = fameByLeague[robot.currentLeague] || 0;
+  // Performance bonus (same as league battles)
+  let performanceBonus = 1.0;
+  const hpPercent = winnerFinalHP / winnerMaxHP;
   
-  // Performance multipliers (same as league battles)
-  const hpPercent = winnerFinalHP / robot.maxHP;
-  
-  if (winnerFinalHP === robot.maxHP) {
-    // Perfect victory (no HP damage taken)
-    baseFame *= 2.0;
+  if (winnerFinalHP === winnerMaxHP) {
+    performanceBonus = 2.0; // Perfect victory
   } else if (hpPercent > 0.8) {
-    // Dominating victory (>80% HP remaining)
-    baseFame *= 1.5;
+    performanceBonus = 1.5; // Dominating victory
   } else if (hpPercent < 0.2) {
-    // Comeback victory (<20% HP remaining)
-    baseFame *= 1.25;
+    performanceBonus = 1.25; // Comeback victory
   }
   
-  // Apply tournament multiplier
-  const tournamentFame = baseFame * TOURNAMENT_FAME_MULTIPLIER;
-  
-  // Round bonus (later rounds = more fame)
-  const roundMultiplier = getRoundMultiplier(round);
-  
-  return Math.round(tournamentFame * roundMultiplier);
-}
-
-/**
- * Get championship bonus prestige
- * Awarded only to final round winner
- */
-export function getChampionshipPrestigeBonus(): number {
-  return CHAMPIONSHIP_PRESTIGE_BONUS;
+  const fame = BASE_FAME_REWARD * exclusivityMultiplier * performanceBonus;
+  return Math.round(fame);
 }
 
 /**
@@ -160,36 +147,50 @@ export function getChampionshipPrestigeBonus(): number {
  */
 export interface TournamentRewards {
   winnerReward: number;
-  loserReward: number;
+  loserReward: number; // Always 0 (winner-take-all)
   winnerPrestige: number;
-  loserPrestige: number;
+  loserPrestige: number; // Always 0
   winnerFame: number;
-  loserFame: number;
+  loserFame: number; // Always 0
   isFinals: boolean;
-  roundMultiplier: number;
+  tournamentSizeMultiplier: number;
+  roundProgressMultiplier: number;
 }
 
 export async function calculateTournamentBattleRewards(
-  winnerRobot: Robot,
-  loserRobot: Robot,
-  winnerUser: User,
-  loserUser: User,
+  totalParticipants: number,
+  currentRound: number,
+  maxRounds: number,
+  robotsRemaining: number,
   winnerFinalHP: number,
-  round: number,
-  maxRounds: number
+  winnerMaxHP: number
 ): Promise<TournamentRewards> {
   // Winner rewards
-  const winnerReward = calculateTournamentWinReward(winnerRobot, winnerUser, round);
-  const winnerPrestige = calculateTournamentPrestige(winnerRobot, round, maxRounds);
-  const winnerFame = calculateTournamentFame(winnerRobot, winnerFinalHP, round);
+  const winnerReward = calculateTournamentWinReward(
+    totalParticipants,
+    currentRound,
+    maxRounds
+  );
+  const winnerPrestige = calculateTournamentPrestige(
+    totalParticipants,
+    currentRound,
+    maxRounds
+  );
+  const winnerFame = calculateTournamentFame(
+    totalParticipants,
+    robotsRemaining,
+    winnerFinalHP,
+    winnerMaxHP
+  );
   
-  // Loser rewards (participation only)
-  const loserReward = calculateTournamentParticipationReward(loserRobot);
-  const loserPrestige = 0; // No prestige for losing
-  const loserFame = 0; // No fame for losing
+  // Loser rewards (winner-take-all)
+  const loserReward = 0;
+  const loserPrestige = 0;
+  const loserFame = 0;
   
-  const isFinals = round === maxRounds;
-  const roundMultiplier = getRoundMultiplier(round);
+  const isFinals = currentRound === maxRounds;
+  const tournamentSizeMultiplier = calculateTournamentSizeMultiplier(totalParticipants);
+  const roundProgressMultiplier = calculateRoundProgressMultiplier(currentRound, maxRounds);
   
   return {
     winnerReward,
@@ -199,7 +200,8 @@ export async function calculateTournamentBattleRewards(
     winnerFame,
     loserFame,
     isFinals,
-    roundMultiplier,
+    tournamentSizeMultiplier,
+    roundProgressMultiplier,
   };
 }
 
@@ -208,37 +210,33 @@ export async function calculateTournamentBattleRewards(
  */
 export function getTournamentRewardBreakdown(
   rewards: TournamentRewards,
-  winnerRobot: Robot,
-  loserRobot: Robot,
-  winnerUser: User
+  winnerRobotName: string,
+  loserRobotName: string,
+  totalParticipants: number,
+  currentRound: number,
+  maxRounds: number
 ): string[] {
   const breakdown: string[] = [];
   
   breakdown.push(`💰 Tournament Financial Rewards Summary`);
-  breakdown.push(`   Winner (${winnerRobot.name}): ₡${rewards.winnerReward.toLocaleString()}`);
-  
-  const baseLeagueReward = getLeagueBaseReward(winnerRobot.currentLeague).midpoint;
-  const prestigeMultiplier = getPrestigeMultiplier(winnerUser.prestige);
-  
-  breakdown.push(`      • League Base (${winnerRobot.currentLeague}): ₡${baseLeagueReward.toLocaleString()}`);
-  
-  if (prestigeMultiplier > 1.0) {
-    breakdown.push(`      • Prestige Bonus (${Math.round((prestigeMultiplier - 1) * 100)}%): Applied`);
-  }
-  
-  breakdown.push(`      • Tournament Bonus (${TOURNAMENT_WIN_MULTIPLIER}×): Applied`);
-  breakdown.push(`      • Round Multiplier (${rewards.roundMultiplier}×): Applied`);
+  breakdown.push(`   Tournament Size: ${totalParticipants} participants`);
+  breakdown.push(`   Round: ${currentRound}/${maxRounds}`);
+  breakdown.push(``);
+  breakdown.push(`   Winner (${winnerRobotName}): ₡${rewards.winnerReward.toLocaleString()}`);
+  breakdown.push(`      • Base: ₡${BASE_CREDIT_REWARD.toLocaleString()}`);
+  breakdown.push(`      • Tournament Size (${rewards.tournamentSizeMultiplier.toFixed(2)}×): Applied`);
+  breakdown.push(`      • Round Progress (${rewards.roundProgressMultiplier.toFixed(2)}×): Applied`);
   
   if (rewards.isFinals) {
     breakdown.push(`      • 🏆 CHAMPIONSHIP FINALS 🏆`);
   }
   
-  breakdown.push(`   Loser (${loserRobot.name}): ₡${rewards.loserReward.toLocaleString()}`);
-  breakdown.push(`      • Participation: ₡${rewards.loserReward.toLocaleString()}`);
+  breakdown.push(`   Loser (${loserRobotName}): ₡0`);
+  breakdown.push(`      • Tournament is winner-take-all`);
   
   // Prestige breakdown
   if (rewards.winnerPrestige > 0) {
-    breakdown.push(`   Prestige: +${rewards.winnerPrestige} (${winnerRobot.name})`);
+    breakdown.push(`   Prestige: +${rewards.winnerPrestige} (${winnerRobotName})`);
     if (rewards.isFinals) {
       breakdown.push(`      • Championship Bonus: +${CHAMPIONSHIP_PRESTIGE_BONUS}`);
     }
@@ -246,7 +244,7 @@ export function getTournamentRewardBreakdown(
   
   // Fame breakdown
   if (rewards.winnerFame > 0) {
-    breakdown.push(`   Fame: +${rewards.winnerFame} (${winnerRobot.name})`);
+    breakdown.push(`   Fame: +${rewards.winnerFame} (${winnerRobotName})`);
   }
   
   return breakdown;
