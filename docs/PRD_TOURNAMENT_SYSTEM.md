@@ -1,13 +1,18 @@
 # Product Requirements Document: Tournament System
 
 **Last Updated**: February 5, 2026  
-**Status**: 🚧 Draft - Ready for Review  
+**Status**: 🚧 Reviewed  
 **Owner**: Robert Teunissen  
 **Epic**: Tournament Framework and Single Elimination Implementation  
 **Related Documents**: 
 - [PRD_MATCHMAKING.md](PRD_MATCHMAKING.md) - Matchmaking system architecture
 - [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) - Financial integration
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Current database structure
+
+**Revision History**:
+
+v1.0 (Feb 5, 2026): Initial PRD created
+v1.1 (Feb 5, 2026): Review done by Robert Teunissen
 
 ---
 
@@ -88,6 +93,9 @@ The continuous tournament model ensures:
 - Tournament state persists correctly across rounds
 - Winner determination and new tournament creation work automatically
 
+--> Robots need to be repaired after each battle in (cycle) simulation. What happens if a robot is not repaired (ie. not considered battle ready)?
+
+
 ### Non-Goals (Out of Scope for Initial Release)
 
 - **Team tournaments (2v2, 3v3)**: Future feature, not in initial release
@@ -113,6 +121,8 @@ The continuous tournament model ensures:
   - Tournament types: "single_elimination" (extensible for future types)
   - Can query active tournaments
   - Can track tournament progression through rounds
+ 
+--> Need to know what round we're currently in and when the next tournament would start (important for new robots a manager might want to buy)
 
 #### User Story 1.2: Tournament Match Model
 - **As a developer**, I need a TournamentMatch model to track individual tournament battles
@@ -122,7 +132,7 @@ The continuous tournament model ensures:
   - Supports bye matches (one robot, no opponent)
   - Can query matches by tournament and round
   - Links to Battle record after execution
-
+ 
 #### User Story 1.3: Multiple Tournaments
 - **As a system**, I need to support multiple concurrent tournaments
 - **Acceptance Criteria:**
@@ -144,7 +154,7 @@ The continuous tournament model ensures:
   - Generates initial bracket with proper seeding (by ELO)
   - Handles odd numbers with bye matches in first round
   - Sets tournament to "active" status
-
+ 
 #### User Story 2.2: Bracket Generation
 - **As a system**, I need to generate proper single elimination brackets
 - **Acceptance Criteria:**
@@ -154,6 +164,9 @@ The continuous tournament model ensures:
   - Assigns bye matches for odd participants
   - Creates TournamentMatch records for first round
   - Creates placeholder matches for future rounds
+ 
+--> Bye matches are not with "odd" numbers. With 350 robots in the system, you will want to get to 256 in the first round of single elimination, so many robots will get a bye (by highest current ELO, not by league!)
+--> So the entire bracket is known at the beginning of the tournament? Is there a way to easily display this? That would be a nice feature!
 
 #### User Story 2.3: Round Execution
 - **As a system**, I execute tournament rounds via battle orchestrator
@@ -164,6 +177,8 @@ The continuous tournament model ensures:
   - Battle execution uses same combat simulator as league battles
   - Battle records link back to TournamentMatch
   - Winners advance to next round automatically
+ 
+--> I agree this should use the same combat simulator. We need to account for rewards though, which will be different based on the tournament itself, and the progression in the tournament. This is true for credits, prestige and fame. 
 
 #### User Story 2.4: Tournament Progression
 - **As a system**, I progress tournaments through rounds automatically
@@ -174,6 +189,8 @@ The continuous tournament model ensures:
   - Winner recorded in Tournament.winnerId
   - Tournament status changes to "completed"
   - User's championshipTitles increments for winner
+ 
+--> How are we going to display this? 
 
 #### User Story 2.5: Continuous Tournaments
 - **As a system**, I start a new tournament when one completes
@@ -183,6 +200,8 @@ The continuous tournament model ensures:
   - New tournament excludes recent tournament participants (cooldown: 1 cycle)
   - Seamless transition - no manual intervention needed
   - Configurable via admin settings (auto-start on/off)
+ 
+--> Would a cooldown of 1 cycle not exclude the winner? For this first tournament, all robots should participate. We need to think about what to do when they're not battle read (yet), since their first scheduled match might be in 2 days because of a bye in the first round.
 
 ### Epic 3: Battle Integration
 
@@ -196,15 +215,20 @@ The continuous tournament model ensures:
   - Tournament battles generate same detailed battle logs
   - Battle reports display tournament context
   - ELO changes apply same as league battles
+ 
+--> I agree this should use the same combat simulator. We need to account for rewards though, which will be different based on the tournament itself, and the progression in the tournament. This is true for credits, prestige and fame. 
+--> ELO changes are fine, since league promotion is also dependant on League Points.
 
 #### User Story 3.2: Multiple Upcoming Matches
 - **As a player**, I can see all my upcoming matches (league + tournament)
 - **Acceptance Criteria:**
   - ScheduledMatch queries return both league and tournament matches
   - UI displays match type clearly (league vs tournament)
-  - Robots can have up to 2 upcoming matches simultaneously
+  - Robots can have multiple upcoming matches simultaneously 
   - No scheduling conflicts (can't schedule tournament match if league match exists for same time)
   - Battle readiness warnings account for both match types
+ 
+--> A robot is either ready for a match or is not. 
 
 #### User Story 3.3: Battle Reports
 - **As a player**, I can view tournament battle results in my battle history
@@ -212,7 +236,7 @@ The continuous tournament model ensures:
   - Battle history includes tournament battles
   - Tournament battles labeled clearly
   - Shows tournament name and round information
-  - Links to tournament bracket view (future enhancement)
+  - Links to tournament bracket view 
   - Same financial breakdown as league battles
 
 ### Epic 4: Financial Integration
@@ -228,6 +252,10 @@ The continuous tournament model ensures:
   - **Fame**: 1.5× fame for tournament wins vs league wins
   - **Championship Title**: +1 championshipTitles for tournament winner
   - **Streaming Income**: Tournament battles count toward streaming multiplier
+ 
+--> Rewards should not be based on the league since all robots from all leagues enter. Rewards should be based on round. The further a robot advances, the better the rewards. The bigger the tournament, the better the rewards. Maybe the first tournament starts with 15 robots and the second with 198. Better rewards. 
+--> There should be a reward formula applied taking into account the total robots that entered the tournament and the number of robots still active in the tournament. This should count for credits, prestige and fame. 
+--> No rewards for byes in tournaments. There is no match. There is no streaming income. 
 
 #### User Story 4.2: Reward Calculation
 - **As a system**, I calculate tournament rewards using existing economy functions
@@ -238,13 +266,15 @@ The continuous tournament model ensures:
   - Awards participation reward to loser
   - Bye matches award reduced participation reward (50%)
   - All rewards deposited immediately after battle
+ 
+--> No, not based on league. Based on number of participants. Find a meaningful formula, even if there are 100k robots participating in the first round. 
 
 #### User Story 4.3: Financial Tracking
 - **As a player**, I can track my tournament earnings separately
 - **Acceptance Criteria:**
   - Battle records include tournament rewards breakdown
-  - User stats track total tournament earnings (future enhancement)
-  - Financial reports distinguish league vs tournament income (future enhancement)
+  - User stats track total tournament earnings 
+  - Financial reports distinguish league vs tournament income 
 
 ### Epic 5: Admin Integration
 
@@ -257,6 +287,9 @@ The continuous tournament model ensures:
   - Creates tournament with all eligible robots
   - Returns tournament details (id, participants, bracket)
   - Error handling for insufficient participants
+ 
+--> I want to trigger a tournament cycle each day. If there is none active currently, start one. If there is an active one, run matches and prepare for next round of tournament. 
+--> I also want to see the tournament progress somewhere. 
 
 #### User Story 5.2: Tournament Round Execution
 - **As an admin**, I can manually execute tournament rounds
@@ -602,6 +635,8 @@ finalReward *= roundBonus;
 - ✅ Not the bye-robot (system robot)
 - ⚠️ **Conflict Avoidance**: Can participate even if scheduled for league match (tournaments and leagues run independently)
 
+--> Treat this as if matches are run sequentially. Tournament first makes most sense. Auto-repair, Run tournament, auto repair, run leagues, rebalance leagues, run finances makes a nice daily cycle.  
+
 **Tournament creation requirements:**
 - Minimum participants: 4 robots
 - Maximum participants: Unlimited (bracket size determined by participants)
@@ -619,6 +654,8 @@ finalReward *= roundBonus;
 5. **Generate Pairings**: Traditional bracket structure
    - Round 1: #1 vs #16, #8 vs #9, #4 vs #13, #5 vs #12, etc.
 6. **Create Placeholder Matches**: Future rounds have null robot IDs until winners determined
+
+--> See earlier comments about battle-readiness. Do we need a solution here? What happens is a robot is battle ready at the start of the tournament but is not ready for his battle in round 3?
 
 **Example Bracket (8 participants):**
 ```
@@ -678,10 +715,15 @@ Round 3 (1 match):
 - Scheduled times must differ by ≥1 hour (prevents simultaneous battles)
 - Battle readiness warnings account for both match types
 
+--> Robots might have multiple tournament matches on the same day in the future. 
+--> We'll pick schedules that fit, but this is not in place for the prototype phase.
+
 **Tournament vs Tournament:**
 - Robots CANNOT participate in multiple active tournaments simultaneously
 - Tournament creation excludes robots already in active tournaments
 - Tournament completion allows robot to enter next tournament
+
+--> CAN participate in multiple active tournaments. What we're implementing now is a "All Robots Single Elimination Tournament". In the future we'll have multiple tournaments running (Bronze League tournaments for example where only robots from Bronze league are particpating) at the same time as this mega all-robots tournament. 
 
 ### Bye Match Handling
 
@@ -696,6 +738,8 @@ Round 3 (1 match):
 - Robot takes no damage (fully repaired state maintained)
 - Advances to next round immediately
 
+--> Bye = no match, no rewards, no battle record. Scheduled match in next round.
+
 ### Tournament Rewards Summary
 
 | **Reward Type** | **League Battle** | **Tournament Battle** | **Tournament Finals** |
@@ -706,6 +750,8 @@ Round 3 (1 match):
 | Fame (Win)      | League fame       | League × 1.5         | League × 1.5 × 2.0   |
 | Championship    | N/A               | N/A                  | +1 Title             |
 | Streaming Income | Counts toward total | Counts toward total | Counts toward total |
+
+--> No. For this tournament, not dependent on the league the robot is in. Should be on the round and the amount of robots at the start of the tournament. 
 
 ---
 
@@ -736,6 +782,8 @@ Round 3 (1 match):
 └─────────────────────────────────────────────────────┘
 ```
 
+--> Where / how can a user see this?
+
 **Daily Cycle Configuration:**
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -751,6 +799,8 @@ Round 3 (1 match):
 │  [Run Daily Cycle]                                    │
 └─────────────────────────────────────────────────────┘
 ```
+
+--> There currently also is a "Generate users per cycle" 
 
 ### My Robots Page - Multiple Upcoming Matches
 
@@ -798,7 +848,9 @@ Round 3 (1 match):
 └─────────────────────────────────────────────────────┘
 ```
 
-### Tournament Bracket View (Future Enhancement)
+--> Why caps for one and not for the other?
+
+### Tournament Bracket View 
 
 **Visual Bracket Display:**
 ```
@@ -822,11 +874,14 @@ Round 3 (1 match):
 └─────────────────────────────────────────────────────┘
 ```
 
+--> How do you take into account really big tournaments?
+--> Where / how is this accessed?
+
 ---
 
 ## Implementation Plan
 
-### Phase 1: Database & Core Framework (Week 1)
+### Phase 1: Database & Core Framework 
 
 **Milestone 1.1: Database Migration**
 - [ ] Create Tournament model migration
@@ -844,7 +899,7 @@ Round 3 (1 match):
 - [ ] Implement `calculateMaxRounds()`
 - [ ] Write unit tests for eligibility logic
 
-### Phase 2: Bracket Generation (Week 1-2)
+### Phase 2: Bracket Generation
 
 **Milestone 2.1: Bracket Algorithm**
 - [ ] Implement `generateTournamentBracket()`
@@ -859,7 +914,7 @@ Round 3 (1 match):
 - [ ] Implement `getActiveTournaments()`
 - [ ] Write unit tests for query functions
 
-### Phase 3: Tournament Execution (Week 2)
+### Phase 3: Tournament Execution 
 
 **Milestone 3.1: Round Execution**
 - [ ] Implement `executeCurrentRound()`
@@ -882,7 +937,7 @@ Round 3 (1 match):
 - [ ] Set completedAt timestamp
 - [ ] Test tournament completion flow
 
-### Phase 4: Rewards Integration (Week 2-3)
+### Phase 4: Rewards Integration 
 
 **Milestone 4.1: Reward Calculations**
 - [ ] Create `tournamentRewards.ts` utility
@@ -898,7 +953,7 @@ Round 3 (1 match):
 - [ ] Test reward calculations with various scenarios
 - [ ] Validate prestige and fame awards
 
-### Phase 5: Admin Endpoints (Week 3)
+### Phase 5: Admin Endpoints 
 
 **Milestone 5.1: Tournament Management APIs**
 - [ ] POST /api/admin/tournaments/create
@@ -919,7 +974,7 @@ Round 3 (1 match):
 - [ ] Test continuous tournament flow
 - [ ] Validate no duplicate entries
 
-### Phase 6: Frontend Updates (Week 3-4)
+### Phase 6: Frontend Updates
 
 **Milestone 6.1: Admin Page UI**
 - [ ] Add Tournament Management section
@@ -942,7 +997,7 @@ Round 3 (1 match):
 - [ ] Show championship title award notification
 - [ ] Test filtering and display
 
-### Phase 7: Testing & Validation (Week 4)
+### Phase 7: Testing & Validation 
 
 **Milestone 7.1: Unit Tests**
 - [ ] Test bracket generation (all participant counts)
@@ -964,7 +1019,7 @@ Round 3 (1 match):
 - [ ] Check battle history display
 - [ ] Validate database state at each step
 
-### Phase 8: Documentation & Deployment (Week 4)
+### Phase 8: Documentation & Deployment 
 
 **Milestone 8.1: Documentation**
 - [ ] Update DATABASE_SCHEMA.md with new models
@@ -1111,6 +1166,8 @@ Round 3 (1 match):
 - ✅ Upcoming matches display both types correctly
 - ✅ Battle history shows tournament context
 - ✅ Admin page displays tournament status clearly
+
+--> Don't use ✅ unless they have been implemented.
 
 ---
 
