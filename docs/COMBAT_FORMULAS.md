@@ -193,7 +193,7 @@ Final Multiplier = Max(Base - Dampeners, 1.2)
 ### Formula
 ```
 Combat Power Multiplier = 1 + ((Robot Combat Power + Weapon Bonus) * 1.5) / 100
-Loadout Multiplier = 1.25 (two-handed) OR 0.90 (dual wield) OR 1.0 (other)
+Loadout Multiplier = 1.10 (two-handed) OR 0.90 (dual wield) OR 1.0 (other)
 Weapon Control Multiplier = 1 + (Robot Weapon Control + Weapon Bonus) / 100
 Stance Multiplier = 1.15 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
 

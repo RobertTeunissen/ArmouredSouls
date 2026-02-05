@@ -1,11 +1,19 @@
 # Weapons & Loadout System
 
 **Last Updated**: February 5, 2026  
-**Status**: Design Document - Updated for Combat Rebalancing (v1.1)
+**Status**: Design Document - Updated for Combat Rebalancing (v1.2)
 
 **Version History:**
 - **v1.0** (Feb 2, 2026): Initial weapon catalog with DPS-inclusive pricing
 - **v1.1** (Feb 5, 2026): Updated weapon damage values following combat rebalancing
+- **v1.2** (Feb 5, 2026): Further nerfs to two-handed weapons and loadout multiplier
+
+**Key Changes in v1.2:**
+- Two-handed loadout multiplier reduced from 1.25× to 1.10× (12% reduction)
+- All two-handed weapon base damage reduced by ~18% (Shotgun 22→18, Heavy Hammer 34→29, etc.)
+- Combined changes result in ~28% total damage reduction for two-handed weapons
+- Goal: Balance loadout diversity, prevent two-handed dominance in Champion League
+- See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for updated damage formula
 
 **Key Changes in v1.1:**
 - All weapon damage values reduced 20-33% to compensate for new damage formula
@@ -255,9 +263,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Plasma Cannon** (₡440,000) - Two-handed
-- Base Damage: 32  (v1.1: reduced from 45, -29%)
+- Base Damage: 27  (v1.1: 32→27; v1.2: further nerf for two-handed balance)
 - Cooldown: 5 seconds
-- DPS: 6.4  (v1.1: reduced from 9.0)
+- DPS: 5.4  (v1.2: reduced from 6.4)
 - Attribute Bonuses:
   - combatPowerBonus: +7
   - criticalSystemsBonus: +6
@@ -267,9 +275,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Two-Handed only
 
 **Ion Beam** (₡565,000) - Two-handed
-- Base Damage: 28  (v1.1: reduced from 40, -30%)
+- Base Damage: 24  (v1.1: 28→24; v1.2: further nerf for two-handed balance)
 - Cooldown: 4 seconds
-- DPS: 7.0  (v1.1: reduced from 10.0) (Highest DPS in game)
+- DPS: 6.0  (v1.2: reduced from 7.0) (Highest DPS in game)
 - Attribute Bonuses:
   - penetrationBonus: +10
   - shieldCapacityBonus: +8
@@ -292,9 +300,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Railgun** (₡545,000) - Two-handed
-- Base Damage: 39  (v1.1: reduced from 55, -29%)
+- Base Damage: 33  (v1.1: 39→33; v1.2: further nerf for two-handed balance)
 - Cooldown: 6 seconds
-- DPS: 6.5  (v1.1: reduced from 9.17)
+- DPS: 5.5  (v1.2: reduced from 6.5)
 - Attribute Bonuses:
   - penetrationBonus: +12
   - targetingSystemsBonus: +7
@@ -304,9 +312,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Two-Handed only
 
 **Shotgun** (₡325,000) - Two-handed
-- Base Damage: 22  (v1.1: reduced from 32, -31%)
+- Base Damage: 18  (v1.1: 22→18; v1.2: further nerf for two-handed balance)
 - Cooldown: 4 seconds
-- DPS: 5.5  (v1.1: reduced from 8.0)
+- DPS: 4.5  (v1.2: reduced from 5.5)
 - Attribute Bonuses:
   - combatPowerBonus: +4
   - criticalSystemsBonus: +3
@@ -329,9 +337,9 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Hammer** (₡490,000) - Two-handed
-- Base Damage: 34  (v1.1: reduced from 48, -29%)
+- Base Damage: 29  (v1.1: 34→29; v1.2: further nerf for two-handed balance)
 - Cooldown: 5 seconds
-- DPS: 6.8  (v1.1: reduced from 9.6)
+- DPS: 5.8  (v1.2: reduced from 6.8)
 - Attribute Bonuses:
   - hydraulicSystemsBonus: +8
   - combatPowerBonus: +7

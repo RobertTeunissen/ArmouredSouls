@@ -131,7 +131,7 @@ hit_chance = clamp(base + targeting + stance - evasion - gyro + variance, 10%, 9
 ```
 base_damage = weapon.base_damage
 combat_power_mult = 1 + (attacker.combat_power / 100)
-loadout_mult = loadout-specific (two_handed: 1.25, dual_wield: 0.90, default: 1.0)
+loadout_mult = loadout-specific (two_handed: 1.10, dual_wield: 0.90, default: 1.0)
 weapon_control_mult = 1 + (attacker.weapon_control / 100)
 stance_mult = stance-specific (offensive: 1.15, defensive: 0.90, balanced: 1.0)
 
@@ -141,10 +141,10 @@ damage = base × combat_power × loadout × weapon_control × stance
 **Example**:
 - Weapon Base: 20
 - Combat Power: 15 → ×1.15
-- Loadout (two-handed): ×1.25
+- Loadout (two-handed): ×1.10
 - Weapon Control: 10 → ×1.10
 - Stance (offensive): ×1.15
-- **Final Damage: 20 × 1.15 × 1.25 × 1.10 × 1.15 = 36.5**
+- **Final Damage: 20 × 1.15 × 1.10 × 1.10 × 1.15 = 32.1**
 
 ### Damage Application (Shields & Armor)
 

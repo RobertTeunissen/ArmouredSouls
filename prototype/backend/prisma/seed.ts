@@ -386,7 +386,7 @@ async function main() {
       data: {
         name: 'Shotgun',
         weaponType: 'ballistic',
-        baseDamage: 22,  // Reduced from 32 (~31% nerf)
+        baseDamage: 18,  // Reduced from 22 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
         cost: 325000,
         handsRequired: 'two',
@@ -405,7 +405,7 @@ async function main() {
       data: {
         name: 'Grenade Launcher',
         weaponType: 'ballistic',
-        baseDamage: 25,  // Reduced from 35 (~29% nerf)
+        baseDamage: 21,  // Reduced from 25 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
         cost: 325000,
         handsRequired: 'two',
@@ -426,7 +426,7 @@ async function main() {
       data: {
         name: 'Sniper Rifle',
         weaponType: 'ballistic',
-        baseDamage: 35,  // Reduced from 50 (~30% nerf)
+        baseDamage: 29,  // Reduced from 35 (v1.2: further nerf due to two-handed dominance)
         cooldown: 6,
         cost: 425000,
         handsRequired: 'two',
@@ -446,7 +446,7 @@ async function main() {
       data: {
         name: 'Battle Axe',
         weaponType: 'melee',
-        baseDamage: 27,  // Reduced from 38 (~29% nerf)
+        baseDamage: 23,  // Reduced from 27 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
         cost: 430000,
         handsRequired: 'two',
@@ -466,7 +466,7 @@ async function main() {
       data: {
         name: 'Plasma Cannon',
         weaponType: 'energy',
-        baseDamage: 32,  // Reduced from 45 (~29% nerf)
+        baseDamage: 27,  // Reduced from 32 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
         cost: 440000,
         handsRequired: 'two',
@@ -486,7 +486,7 @@ async function main() {
       data: {
         name: 'Heavy Hammer',
         weaponType: 'melee',
-        baseDamage: 34,  // Reduced from 48 (~29% nerf)
+        baseDamage: 29,  // Reduced from 34 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
         cost: 490000,
         handsRequired: 'two',
@@ -506,7 +506,7 @@ async function main() {
       data: {
         name: 'Railgun',
         weaponType: 'ballistic',
-        baseDamage: 39,  // Reduced from 55 (~29% nerf)
+        baseDamage: 33,  // Reduced from 39 (v1.2: further nerf due to two-handed dominance)
         cooldown: 6,
         cost: 545000,
         handsRequired: 'two',
@@ -526,7 +526,7 @@ async function main() {
       data: {
         name: 'Ion Beam',
         weaponType: 'energy',
-        baseDamage: 28,  // Reduced from 40 (~30% nerf)
+        baseDamage: 24,  // Reduced from 28 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
         cost: 565000,
         handsRequired: 'two',
