@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import BattleDetailsModal from '../components/BattleDetailsModal';
+import TournamentManagement from '../components/TournamentManagement';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
-type TabType = 'dashboard' | 'cycles' | 'battles' | 'stats';
+type TabType = 'dashboard' | 'cycles' | 'battles' | 'tournaments' | 'stats';
 
 interface SessionLogEntry {
   timestamp: string;
@@ -228,11 +229,11 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     // Get tab from localStorage or URL hash
     const hash = window.location.hash.replace('#', '');
-    if (['dashboard', 'cycles', 'battles', 'stats'].includes(hash)) {
+    if (['dashboard', 'cycles', 'battles', 'tournaments', 'stats'].includes(hash)) {
       return hash as TabType;
     }
     const stored = localStorage.getItem('adminActiveTab');
-    return (stored && ['dashboard', 'cycles', 'battles', 'stats'].includes(stored)) 
+    return (stored && ['dashboard', 'cycles', 'battles', 'tournaments', 'stats'].includes(stored)) 
       ? stored as TabType 
       : 'dashboard';
   });
@@ -264,6 +265,7 @@ function AdminPage() {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [bulkCycles, setBulkCycles] = useState(1);
   const [autoRepair, setAutoRepair] = useState(true);
+  const [includeTournaments, setIncludeTournaments] = useState(true);
   const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
   const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(false);
   const [bulkResults, setBulkResults] = useState<any>(null);
@@ -435,6 +437,7 @@ function AdminPage() {
     setBulkResults(null);
     addSessionLog('info', `Starting bulk cycle run: ${bulkCycles} cycle(s)`, {
       autoRepair,
+      includeTournaments,
       includeDailyFinances,
       generateUsersPerCycle
     });
@@ -443,6 +446,7 @@ function AdminPage() {
       const response = await axios.post('/api/admin/cycles/bulk', {
         cycles: bulkCycles,
         autoRepair,
+        includeTournaments,
         includeDailyFinances,
         generateUsersPerCycle,
       });
@@ -636,6 +640,20 @@ function AdminPage() {
               }`}
             >
               ⚙️ Cycle Controls
+            </button>
+            <button
+              id="tournaments-tab"
+              role="tab"
+              aria-selected={activeTab === 'tournaments'}
+              aria-controls="tournaments-panel"
+              onClick={() => switchTab('tournaments')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'tournaments'
+                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              🏆 Tournaments
             </button>
             <button
               id="battles-tab"
@@ -905,6 +923,15 @@ function AdminPage() {
                 className="mr-2"
               />
               Auto-repair before each cycle
+            </label>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={includeTournaments}
+                onChange={(e) => setIncludeTournaments(e.target.checked)}
+                className="mr-2"
+              />
+              Include tournament execution
             </label>
             <label className="flex items-center">
               <input
@@ -1275,6 +1302,13 @@ function AdminPage() {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tournaments Tab */}
+        {activeTab === 'tournaments' && (
+          <div role="tabpanel" id="tournaments-panel" aria-labelledby="tournaments-tab">
+            <TournamentManagement />
           </div>
         )}
 
