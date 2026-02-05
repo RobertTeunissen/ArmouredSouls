@@ -2,20 +2,60 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import { listTournaments, Tournament } from '../utils/tournamentApi';
+import { listTournaments, getTournamentDetails, Tournament, TournamentDetails } from '../utils/tournamentApi';
 import axios from 'axios';
 
 function TournamentsPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [selectedTournament, setSelectedTournament] = useState<TournamentDetails | null>(null);
+  const [userRobots, setUserRobots] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'pending' | 'completed'>('all');
 
   useEffect(() => {
     fetchTournaments();
+    fetchUserRobots();
   }, []);
+
+  const fetchUserRobots = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get('http://localhost:3001/api/robots/my-robots', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const robotIds = new Set(response.data.robots.map((r: any) => r.id));
+      setUserRobots(robotIds);
+    } catch (err) {
+      console.error('Failed to fetch user robots:', err);
+    }
+  };
+
+  const fetchTournamentDetails = async (tournamentId: number) => {
+    try {
+      setDetailsLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        logout();
+        navigate('/login');
+        return;
+      }
+
+      const data = await getTournamentDetails(token, tournamentId);
+      setSelectedTournament(data.tournament);
+    } catch (err: any) {
+      console.error('Failed to fetch tournament details:', err);
+      setError('Failed to load tournament details');
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
 
   const fetchTournaments = async () => {
     try {
@@ -266,8 +306,183 @@ function TournamentsPage() {
                     </div>
                   </div>
                 )}
+
+                {/* View Details Button */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => fetchTournamentDetails(tournament.id)}
+                    className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors font-semibold"
+                  >
+                    View Tournament Details
+                  </button>
+                </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Tournament Details Modal */}
+        {selectedTournament && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto border-2 border-yellow-500/50">
+              {/* Header */}
+              <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex justify-between items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-yellow-400 mb-1">{selectedTournament.name}</h2>
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge(selectedTournament.status)}
+                    <span className="text-gray-400">
+                      Round {selectedTournament.currentRound} of {selectedTournament.maxRounds}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedTournament(null)}
+                  className="text-gray-400 hover:text-white text-3xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+
+              {detailsLoading ? (
+                <div className="p-12 text-center">
+                  <p className="text-gray-400">Loading tournament details...</p>
+                </div>
+              ) : (
+                <div className="p-6">
+                  {/* Tournament Info */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-gray-900 p-4 rounded-lg">
+                      <div className="text-sm text-gray-400">Total Participants</div>
+                      <div className="text-2xl font-bold">{selectedTournament.totalParticipants}</div>
+                    </div>
+                    <div className="bg-gray-900 p-4 rounded-lg">
+                      <div className="text-sm text-gray-400">Robots Remaining</div>
+                      <div className="text-2xl font-bold text-green-400">
+                        {(() => {
+                          const matches = selectedTournament.currentRoundMatches || [];
+                          const regularMatches = matches.filter((m: any) => !m.isByeMatch).length;
+                          const byeMatches = matches.filter((m: any) => m.isByeMatch).length;
+                          return (regularMatches * 2) + byeMatches;
+                        })()}
+                      </div>
+                    </div>
+                    <div className="bg-gray-900 p-4 rounded-lg">
+                      <div className="text-sm text-gray-400">Total Rounds</div>
+                      <div className="text-2xl font-bold">{selectedTournament.maxRounds}</div>
+                    </div>
+                    <div className="bg-gray-900 p-4 rounded-lg">
+                      <div className="text-sm text-gray-400">Your Robots</div>
+                      <div className="text-2xl font-bold text-blue-400">
+                        {selectedTournament.currentRoundMatches?.filter((m: any) => 
+                          (m.robot1Id && userRobots.has(m.robot1Id)) || 
+                          (m.robot2Id && userRobots.has(m.robot2Id))
+                        ).length || 0}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User's Robots in Tournament */}
+                  {selectedTournament.currentRoundMatches && selectedTournament.currentRoundMatches.some((m: any) => 
+                    (m.robot1Id && userRobots.has(m.robot1Id)) || 
+                    (m.robot2Id && userRobots.has(m.robot2Id))
+                  ) && (
+                    <div className="bg-blue-900/20 border border-blue-500/50 p-4 rounded-lg mb-6">
+                      <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center gap-2">
+                        <span>🤖</span>
+                        Your Robots Still In Tournament
+                      </h3>
+                      <div className="space-y-2">
+                        {selectedTournament.currentRoundMatches
+                          .filter((m: any) => 
+                            (m.robot1Id && userRobots.has(m.robot1Id)) || 
+                            (m.robot2Id && userRobots.has(m.robot2Id))
+                          )
+                          .map((match: any) => {
+                            const userRobot = userRobots.has(match.robot1Id) ? match.robot1 : match.robot2;
+                            const opponent = userRobots.has(match.robot1Id) ? match.robot2 : match.robot1;
+                            
+                            return (
+                              <div key={match.id} className="bg-gray-900 p-3 rounded flex justify-between items-center">
+                                <div>
+                                  <span className="font-bold text-blue-400">{userRobot?.name || 'Your Robot'}</span>
+                                  {match.status === 'completed' ? (
+                                    <span className="ml-2 text-sm">
+                                      {match.winnerId === userRobot?.id ? (
+                                        <span className="text-green-400">✓ Advanced</span>
+                                      ) : (
+                                        <span className="text-red-400">✗ Eliminated</span>
+                                      )}
+                                    </span>
+                                  ) : match.isByeMatch ? (
+                                    <span className="ml-2 text-sm text-yellow-400">Bye (Auto-advance)</span>
+                                  ) : (
+                                    <span className="ml-2 text-sm text-gray-400">
+                                      vs {opponent?.name || 'TBD'}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-400">
+                                  {match.isByeMatch ? 'No Match' : 
+                                    match.status === 'completed' ? 'Completed' : 'Pending'}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Current Round Matches */}
+                  <div>
+                    <h3 className="text-xl font-bold mb-4">
+                      {getRoundName(selectedTournament.currentRound, selectedTournament.maxRounds)} Matches
+                    </h3>
+                    
+                    {selectedTournament.currentRoundMatches && selectedTournament.currentRoundMatches.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                        {selectedTournament.currentRoundMatches.map((match: any) => (
+                          <div
+                            key={match.id}
+                            className={`p-3 rounded border ${
+                              match.status === 'completed'
+                                ? 'bg-gray-900/50 border-gray-700'
+                                : 'bg-gray-900 border-yellow-500/30'
+                            }`}
+                          >
+                            {match.isByeMatch ? (
+                              <div className="text-center py-2">
+                                <div className="font-bold text-yellow-400">
+                                  {match.robot1?.name || 'Robot'} (Bye)
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">Auto-advances to next round</div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex justify-between items-center">
+                                  <div className={`flex-1 ${match.winnerId === match.robot1Id ? 'font-bold text-green-400' : ''}`}>
+                                    {match.robot1?.name || 'TBD'}
+                                  </div>
+                                  <div className="px-3 text-gray-500 text-xs">VS</div>
+                                  <div className={`flex-1 text-right ${match.winnerId === match.robot2Id ? 'font-bold text-green-400' : ''}`}>
+                                    {match.robot2?.name || 'TBD'}
+                                  </div>
+                                </div>
+                                <div className="text-center text-xs text-gray-500 mt-1">
+                                  {match.status === 'completed' ? '✓ Completed' : 'Pending'}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 text-center py-8">No matches in current round</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
