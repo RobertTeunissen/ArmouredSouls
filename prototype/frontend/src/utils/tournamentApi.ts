@@ -124,7 +124,16 @@ export const getTournamentDetails = async (
       headers: { Authorization: `Bearer ${token}` }
     }
   );
-  return response.data;
+  
+  // Backend returns tournament and currentRoundMatches separately
+  // Merge them for easier frontend consumption
+  const { tournament, currentRoundMatches } = response.data;
+  return {
+    tournament: {
+      ...tournament,
+      currentRoundMatches: currentRoundMatches || [],
+    }
+  };
 };
 
 /**

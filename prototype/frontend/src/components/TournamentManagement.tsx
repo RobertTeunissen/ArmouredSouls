@@ -197,19 +197,19 @@ const TournamentManagement = () => {
             <div>
               <div className="text-gray-400">Robots Remaining</div>
               <div className="text-lg font-bold text-white">
-                {activeTournament.currentRoundMatches.filter(m => !m.isByeMatch).length * 2}
+                {(activeTournament.currentRoundMatches || []).filter(m => !m.isByeMatch).length * 2}
               </div>
             </div>
             <div>
               <div className="text-gray-400">Pending Matches</div>
               <div className="text-lg font-bold text-white">
-                {activeTournament.currentRoundMatches.filter(m => m.status !== 'completed').length}
+                {(activeTournament.currentRoundMatches || []).filter(m => m.status !== 'completed').length}
               </div>
             </div>
           </div>
 
           {/* Current Round Matches */}
-          {activeTournament.currentRoundMatches.length > 0 && (
+          {activeTournament.currentRoundMatches && activeTournament.currentRoundMatches.length > 0 && (
             <div className="mb-4">
               <h4 className="text-sm font-semibold text-gray-300 mb-2">Current Round Matches:</h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
