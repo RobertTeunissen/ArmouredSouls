@@ -7,24 +7,26 @@
 import { Robot, User } from '@prisma/client';
 
 // Base reward amounts (not league-dependent)
-const BASE_CREDIT_REWARD = 50000; // Base credits for tournament win
-const BASE_PRESTIGE_REWARD = 30; // Base prestige for tournament win
-const BASE_FAME_REWARD = 20; // Base fame for tournament win
+const BASE_CREDIT_REWARD = 20000; // Base credits for tournament win (reduced from 50000)
+const BASE_PRESTIGE_REWARD = 15; // Base prestige for tournament win (reduced from 30)
+const BASE_FAME_REWARD = 10; // Base fame for tournament win (reduced from 20)
 const CHAMPIONSHIP_PRESTIGE_BONUS = 500; // Bonus for winning finals
+const PARTICIPATION_PERCENTAGE = 0.30; // Loser gets 30% of winner reward
 
 /**
  * Calculate tournament size multiplier
- * Formula: 1 + log10(totalParticipants / 10)
+ * Formula: 1 + (log10(totalParticipants / 10) * 0.5)
+ * More conservative scaling than before
  * 
  * Examples:
- * - 15 robots: 1 + log10(1.5) = 1.18
- * - 100 robots: 1 + log10(10) = 2.0
- * - 1000 robots: 1 + log10(100) = 3.0
- * - 100,000 robots: 1 + log10(10000) = 5.0
+ * - 15 robots: 1 + log10(1.5) * 0.5 = 1.09
+ * - 100 robots: 1 + log10(10) * 0.5 = 1.5
+ * - 1000 robots: 1 + log10(100) * 0.5 = 2.0
+ * - 100,000 robots: 1 + log10(10000) * 0.5 = 3.0
  */
 export function calculateTournamentSizeMultiplier(totalParticipants: number): number {
   if (totalParticipants < 1) return 1.0;
-  return 1 + Math.log10(totalParticipants / 10);
+  return 1 + (Math.log10(totalParticipants / 10) * 0.5);
 }
 
 /**
@@ -62,6 +64,23 @@ export function calculateExclusivityMultiplier(
   if (totalParticipants === 0 || robotsRemaining === 0) return 1.0;
   const ratio = robotsRemaining / totalParticipants;
   return Math.pow(ratio, -0.5);
+}
+
+/**
+ * Calculate participation reward for tournament loser
+ * Formula: 30% of winner's reward
+ */
+export function calculateTournamentParticipationReward(
+  totalParticipants: number,
+  currentRound: number,
+  maxRounds: number
+): number {
+  const winnerReward = calculateTournamentWinReward(
+    totalParticipants,
+    currentRound,
+    maxRounds
+  );
+  return Math.round(winnerReward * PARTICIPATION_PERCENTAGE);
 }
 
 /**
@@ -147,11 +166,11 @@ export function calculateTournamentFame(
  */
 export interface TournamentRewards {
   winnerReward: number;
-  loserReward: number; // Always 0 (winner-take-all)
+  loserReward: number; // Participation reward (30% of winner)
   winnerPrestige: number;
-  loserPrestige: number; // Always 0
+  loserPrestige: number; // No prestige for losing
   winnerFame: number;
-  loserFame: number; // Always 0
+  loserFame: number; // No fame for losing
   isFinals: boolean;
   tournamentSizeMultiplier: number;
   roundProgressMultiplier: number;
@@ -183,10 +202,14 @@ export async function calculateTournamentBattleRewards(
     winnerMaxHP
   );
   
-  // Loser rewards (winner-take-all)
-  const loserReward = 0;
-  const loserPrestige = 0;
-  const loserFame = 0;
+  // Loser rewards (participation only - 30% of winner credits)
+  const loserReward = calculateTournamentParticipationReward(
+    totalParticipants,
+    currentRound,
+    maxRounds
+  );
+  const loserPrestige = 0; // No prestige for losing
+  const loserFame = 0; // No fame for losing
   
   const isFinals = currentRound === maxRounds;
   const tournamentSizeMultiplier = calculateTournamentSizeMultiplier(totalParticipants);
@@ -231,8 +254,9 @@ export function getTournamentRewardBreakdown(
     breakdown.push(`      • 🏆 CHAMPIONSHIP FINALS 🏆`);
   }
   
-  breakdown.push(`   Loser (${loserRobotName}): ₡0`);
-  breakdown.push(`      • Tournament is winner-take-all`);
+  breakdown.push(`   Loser (${loserRobotName}): ₡${rewards.loserReward.toLocaleString()}`);
+  breakdown.push(`      • Participation reward (30% of winner)`);
+  breakdown.push(`      • Tournaments reward participation, not just wins`);
   
   // Prestige breakdown
   if (rewards.winnerPrestige > 0) {

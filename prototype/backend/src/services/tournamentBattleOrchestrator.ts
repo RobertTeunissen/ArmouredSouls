@@ -1,6 +1,10 @@
 /**
  * Tournament Battle Orchestrator
  * Handles tournament-specific battle execution and rewards
+ * 
+ * IMPORTANT: Tournament bye matches do NOT create battles or awards.
+ * League bye matches (against "Bye Robot") are handled in battleOrchestrator.ts
+ * and DO create battles with participation rewards.
  */
 
 import { PrismaClient, Robot, TournamentMatch, Battle } from '@prisma/client';
@@ -32,7 +36,10 @@ export interface TournamentBattleResult {
 
 /**
  * Process a tournament match battle
- * Note: Bye matches should NOT call this function - they're handled at tournament creation
+ * 
+ * Note: Tournament bye matches should NOT call this function.
+ * Tournament byes are auto-completed at tournament creation (no battle, no rewards).
+ * This is different from league bye matches which DO fight the "Bye Robot".
  */
 export async function processTournamentBattle(
   tournamentMatch: TournamentMatch
