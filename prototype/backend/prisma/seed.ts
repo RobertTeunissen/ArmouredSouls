@@ -97,7 +97,7 @@ async function main() {
       data: {
         name: 'Practice Sword',
         weaponType: 'melee',
-        baseDamage: 10,
+        baseDamage: 8,  // Reduced from 10 (20% nerf, new baseline)
         cooldown: 3,
         cost: 50000,
         handsRequired: 'one',
@@ -115,7 +115,7 @@ async function main() {
       data: {
         name: 'Machine Pistol',
         weaponType: 'ballistic',
-        baseDamage: 8,
+        baseDamage: 6,  // Reduced from 8 (~25% nerf)
         cooldown: 2,
         cost: 75000,
         handsRequired: 'one',
@@ -133,7 +133,7 @@ async function main() {
       data: {
         name: 'Laser Pistol',
         weaponType: 'energy',
-        baseDamage: 12,
+        baseDamage: 8,  // Reduced from 12 (~33% nerf)
         cooldown: 3,
         cost: 75000,
         handsRequired: 'one',
@@ -151,7 +151,7 @@ async function main() {
       data: {
         name: 'Combat Knife',
         weaponType: 'melee',
-        baseDamage: 9,
+        baseDamage: 6,  // Reduced from 9 (~33% nerf)
         cooldown: 2,
         cost: 90000,
         handsRequired: 'one',
@@ -227,7 +227,7 @@ async function main() {
       data: {
         name: 'Machine Gun',
         weaponType: 'ballistic',
-        baseDamage: 10,
+        baseDamage: 7,  // Reduced from 10 (~30% nerf)
         cooldown: 2,
         cost: 120000,
         handsRequired: 'one',
@@ -247,7 +247,7 @@ async function main() {
       data: {
         name: 'Burst Rifle',
         weaponType: 'ballistic',
-        baseDamage: 15,
+        baseDamage: 11,  // Reduced from 15 (~27% nerf)
         cooldown: 3, // Adjusted from 2.5 for integer compatibility
         cost: 145000,
         handsRequired: 'one',
@@ -266,7 +266,7 @@ async function main() {
       data: {
         name: 'Assault Rifle',
         weaponType: 'ballistic',
-        baseDamage: 18,
+        baseDamage: 13,  // Reduced from 18 (~28% nerf)
         cooldown: 3,
         cost: 150000,
         handsRequired: 'one',
@@ -286,7 +286,7 @@ async function main() {
       data: {
         name: 'Energy Blade',
         weaponType: 'melee',
-        baseDamage: 18,
+        baseDamage: 13,  // Reduced from 18 (~28% nerf)
         cooldown: 3, // Adjusted from 2.5 for integer compatibility
         cost: 190000,
         handsRequired: 'one',
@@ -305,7 +305,7 @@ async function main() {
       data: {
         name: 'Laser Rifle',
         weaponType: 'energy',
-        baseDamage: 22,
+        baseDamage: 15,  // Reduced from 22 (~32% nerf)
         cooldown: 3,
         cost: 195000,
         handsRequired: 'one',
@@ -326,7 +326,7 @@ async function main() {
       data: {
         name: 'Plasma Blade',
         weaponType: 'melee',
-        baseDamage: 20,
+        baseDamage: 14,  // Reduced from 20 (~30% nerf)
         cooldown: 3,  // Adjusted from 2.5 for integer compatibility
         cost: 215000,
         handsRequired: 'one',
@@ -346,7 +346,7 @@ async function main() {
       data: {
         name: 'Plasma Rifle',
         weaponType: 'energy',
-        baseDamage: 24,
+        baseDamage: 17,  // Reduced from 24 (~29% nerf)
         cooldown: 3,
         cost: 220000,
         handsRequired: 'one',
@@ -366,7 +366,7 @@ async function main() {
       data: {
         name: 'Power Sword',
         weaponType: 'melee',
-        baseDamage: 28,
+        baseDamage: 20,  // Reduced from 28 (~29% nerf)
         cooldown: 3,
         cost: 280000,
         handsRequired: 'one',
@@ -386,7 +386,7 @@ async function main() {
       data: {
         name: 'Shotgun',
         weaponType: 'ballistic',
-        baseDamage: 32,
+        baseDamage: 22,  // Reduced from 32 (~31% nerf)
         cooldown: 4,
         cost: 325000,
         handsRequired: 'two',
@@ -405,7 +405,7 @@ async function main() {
       data: {
         name: 'Grenade Launcher',
         weaponType: 'ballistic',
-        baseDamage: 35,
+        baseDamage: 25,  // Reduced from 35 (~29% nerf)
         cooldown: 5,
         cost: 325000,
         handsRequired: 'two',
@@ -426,7 +426,7 @@ async function main() {
       data: {
         name: 'Sniper Rifle',
         weaponType: 'ballistic',
-        baseDamage: 50,
+        baseDamage: 35,  // Reduced from 50 (~30% nerf)
         cooldown: 6,
         cost: 425000,
         handsRequired: 'two',
@@ -446,7 +446,7 @@ async function main() {
       data: {
         name: 'Battle Axe',
         weaponType: 'melee',
-        baseDamage: 38,
+        baseDamage: 27,  // Reduced from 38 (~29% nerf)
         cooldown: 4,
         cost: 430000,
         handsRequired: 'two',
@@ -466,7 +466,7 @@ async function main() {
       data: {
         name: 'Plasma Cannon',
         weaponType: 'energy',
-        baseDamage: 45,
+        baseDamage: 32,  // Reduced from 45 (~29% nerf)
         cooldown: 5,
         cost: 440000,
         handsRequired: 'two',
@@ -486,7 +486,7 @@ async function main() {
       data: {
         name: 'Heavy Hammer',
         weaponType: 'melee',
-        baseDamage: 48,
+        baseDamage: 34,  // Reduced from 48 (~29% nerf)
         cooldown: 5,
         cost: 490000,
         handsRequired: 'two',
@@ -506,7 +506,7 @@ async function main() {
       data: {
         name: 'Railgun',
         weaponType: 'ballistic',
-        baseDamage: 55,
+        baseDamage: 39,  // Reduced from 55 (~29% nerf)
         cooldown: 6,
         cost: 545000,
         handsRequired: 'two',
@@ -526,7 +526,7 @@ async function main() {
       data: {
         name: 'Ion Beam',
         weaponType: 'energy',
-        baseDamage: 40,
+        baseDamage: 28,  // Reduced from 40 (~30% nerf)
         cooldown: 4,
         cost: 565000,
         handsRequired: 'two',
