@@ -112,7 +112,6 @@ export async function processTournamentBattle(
     tournament.totalParticipants,
     robotsRemaining
   );
-  );
 
   // Update robot stats and award rewards
   const stats1 = await updateRobotStatsForTournament(
