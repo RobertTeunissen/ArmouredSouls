@@ -19,7 +19,9 @@ v1.4 (Feb 5, 2026): Frontend implementation - Admin page UI complete with tourna
 v1.5 (Feb 5, 2026): Frontend My Robots page - Tournament matches now display in upcoming matches with badges  
 v1.6 (Feb 5, 2026): Frontend Battle History - Tournament battles now display with badges, round names, and visual distinction  
 v1.7 (Feb 5, 2026): Public Tournaments Page - Added dedicated tournament viewing page for all users at /tournaments  
-v1.8 (Feb 5, 2026): Bug fixes and enhancements - Fixed Prisma relation, corrected robots remaining calculation, added comprehensive tournament details modal with user participation tracking. **Implementation Phases 1-6 marked complete.**
+v1.8 (Feb 5, 2026): Bug fixes and enhancements - Fixed Prisma relation, corrected robots remaining calculation, added comprehensive tournament details modal with user participation tracking. **Implementation Phases 1-6 marked complete.**  
+v1.9 (Feb 5, 2026): Major improvements - Added draw handling with HP tiebreaker, match/bye distinction, ELO and stable name display, pagination for large tournaments, tournament session logs, battle type filter in admin. **All 9 user-reported issues resolved.**  
+v1.10 (Feb 5, 2026): Critical bug fix - Removed non-existent `stableName` field from User queries that was breaking admin panel and tournament hub. Uses `username` as stable identifier.
 
 ---
 
