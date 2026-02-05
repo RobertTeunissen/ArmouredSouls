@@ -264,7 +264,7 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Plasma Cannon** (₡440,000) - Two-handed
-- Base Damage: 27  (v1.1: 32→27; v1.2: further nerf for two-handed balance)
+- Base Damage: 27  (v1.1: 45→32; v1.2: 32→27)
 - Cooldown: 5 seconds
 - DPS: 5.4  (v1.2: reduced from 6.4)
 - Attribute Bonuses:
@@ -276,7 +276,7 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Two-Handed only
 
 **Ion Beam** (₡565,000) - Two-handed
-- Base Damage: 24  (v1.1: 28→24; v1.2: further nerf for two-handed balance)
+- Base Damage: 24  (v1.1: 40→28; v1.2: 28→24)
 - Cooldown: 4 seconds
 - DPS: 6.0  (v1.2: reduced from 7.0) (Highest DPS in game)
 - Attribute Bonuses:
@@ -301,7 +301,7 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Railgun** (₡545,000) - Two-handed
-- Base Damage: 33  (v1.1: 39→33; v1.2: further nerf for two-handed balance)
+- Base Damage: 33  (v1.1: 55→39; v1.2: 39→33)
 - Cooldown: 6 seconds
 - DPS: 5.5  (v1.2: reduced from 6.5)
 - Attribute Bonuses:
@@ -313,7 +313,7 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Two-Handed only
 
 **Shotgun** (₡325,000) - Two-handed
-- Base Damage: 18  (v1.1: 22→18; v1.2: further nerf for two-handed balance)
+- Base Damage: 18  (v1.1: 32→22; v1.2: 22→18)
 - Cooldown: 4 seconds
 - DPS: 4.5  (v1.2: reduced from 5.5)
 - Attribute Bonuses:
@@ -338,7 +338,7 @@ The following weapons are currently implemented in the game database and availab
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
 **Hammer** (₡490,000) - Two-handed
-- Base Damage: 29  (v1.1: 34→29; v1.2: further nerf for two-handed balance)
+- Base Damage: 29  (v1.1: 48→34; v1.2: 34→29)
 - Cooldown: 5 seconds
 - DPS: 5.8  (v1.2: reduced from 6.8)
 - Attribute Bonuses:
