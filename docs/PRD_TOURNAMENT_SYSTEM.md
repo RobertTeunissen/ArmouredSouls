@@ -1,7 +1,7 @@
 # Product Requirements Document: Tournament System
 
 **Last Updated**: February 5, 2026  
-**Status**: 🚧 Reviewed  
+**Status**: ✅ Approved - Review Comments Addressed  
 **Owner**: Robert Teunissen  
 **Epic**: Tournament Framework and Single Elimination Implementation  
 **Related Documents**: 
@@ -13,6 +13,7 @@
 
 v1.0 (Feb 5, 2026): Initial PRD created
 v1.1 (Feb 5, 2026): Review done by Robert Teunissen
+v1.2 (Feb 5, 2026): Review comments addressed - reward system redesigned, bye match handling updated, battle-readiness clarified
 
 ---
 
@@ -84,16 +85,15 @@ The continuous tournament model ensures:
 
 ### Success Metrics
 
-- Tournaments successfully run alongside league battles without scheduling conflicts
+- Tournaments successfully run alongside league battles with sequential execution
 - Robots can have multiple upcoming matches (league + tournament)
-- Tournament brackets properly handle odd numbers of participants (bye matches)
-- Financial rewards correctly calculated and awarded (participation, wins, streaming)
+- Tournament brackets properly handle power-of-2 sizing (bye matches for highest seeds)
+- Financial rewards correctly calculated based on tournament size and round
 - Tournament battles appear in battle history with proper categorization
 - Admin can manually trigger tournaments and include in daily cycle
 - Tournament state persists correctly across rounds
 - Winner determination and new tournament creation work automatically
-
---> Robots need to be repaired after each battle in (cycle) simulation. What happens if a robot is not repaired (ie. not considered battle ready)?
+- **Battle Readiness**: Auto-repair is performed between tournament and league execution phases in daily cycle. Tournament rounds execute sequentially with all robots fully repaired at start of each round.
 
 
 ### Non-Goals (Out of Scope for Initial Release)
@@ -116,13 +116,13 @@ The continuous tournament model ensures:
 #### User Story 1.1: Tournament Model
 - **As a developer**, I need a Tournament database model to track tournament state
 - **Acceptance Criteria:**
-  - Tournament model includes: id, name, tournamentType, status, currentRound, maxRounds, createdAt, startedAt, completedAt, winnerId
+  - Tournament model includes: id, name, tournamentType, status, currentRound, maxRounds, totalParticipants, createdAt, startedAt, completedAt, winnerId
   - Tournament statuses: "pending", "active", "completed"
   - Tournament types: "single_elimination" (extensible for future types)
   - Can query active tournaments
   - Can track tournament progression through rounds
- 
---> Need to know what round we're currently in and when the next tournament would start (important for new robots a manager might want to buy)
+  - **totalParticipants** field stores initial robot count for reward scaling calculations
+  - Current round number and timing visible for UI display
 
 #### User Story 1.2: Tournament Match Model
 - **As a developer**, I need a TournamentMatch model to track individual tournament battles
@@ -158,27 +158,28 @@ The continuous tournament model ensures:
 #### User Story 2.2: Bracket Generation
 - **As a system**, I need to generate proper single elimination brackets
 - **Acceptance Criteria:**
-  - Seeds robots by ELO rating (highest vs lowest)
+  - Seeds robots by ELO rating (highest to lowest)
   - Calculates correct number of rounds: ceil(log2(participants))
-  - First round pairs: #1 vs #16, #8 vs #9, etc. (power-of-2 bracket)
-  - Assigns bye matches for odd participants
-  - Creates TournamentMatch records for first round
-  - Creates placeholder matches for future rounds
- 
---> Bye matches are not with "odd" numbers. With 350 robots in the system, you will want to get to 256 in the first round of single elimination, so many robots will get a bye (by highest current ELO, not by league!)
---> So the entire bracket is known at the beginning of the tournament? Is there a way to easily display this? That would be a nice feature!
+  - **Bye Handling**: If participants not a power of 2, highest-seeded robots get byes to reach next power of 2
+    - Example: 350 robots → 512-slot bracket → 162 byes for top 162 seeds
+    - Example: 13 robots → 16-slot bracket → 3 byes for top 3 seeds
+  - **Entire bracket is generated upfront** with placeholder matches for future rounds
+  - Creates TournamentMatch records for all rounds at tournament creation
+  - First round includes all real matches and bye matches
+  - Future rounds have null robot IDs until winners are determined
+  - Bracket structure enables visual display of full tournament progression
 
 #### User Story 2.3: Round Execution
 - **As a system**, I execute tournament rounds via battle orchestrator
 - **Acceptance Criteria:**
-  - Creates ScheduledMatch records for current round
-  - ScheduledMatches marked with battleType: "tournament"
-  - Links ScheduledMatch to TournamentMatch
+  - Executes tournament battles directly (no ScheduledMatch for tournaments)
+  - Battle records created with battleType: "tournament"
   - Battle execution uses same combat simulator as league battles
+  - **Rewards are calculated based on tournament size and round**, not robot's league
+  - Reward formula: `f(totalParticipants, currentRound, robotsRemaining)`
   - Battle records link back to TournamentMatch
   - Winners advance to next round automatically
- 
---> I agree this should use the same combat simulator. We need to account for rewards though, which will be different based on the tournament itself, and the progression in the tournament. This is true for credits, prestige and fame. 
+  - Tournament progress is visible in admin UI 
 
 #### User Story 2.4: Tournament Progression
 - **As a system**, I progress tournaments through rounds automatically
@@ -196,12 +197,12 @@ The continuous tournament model ensures:
 - **As a system**, I start a new tournament when one completes
 - **Acceptance Criteria:**
   - On tournament completion, check if new tournament should start
-  - Auto-create new tournament if sufficient battle-ready robots exist
-  - New tournament excludes recent tournament participants (cooldown: 1 cycle)
+  - Auto-create new tournament if sufficient battle-ready robots exist (minimum 4)
+  - **All eligible robots participate** - no cooldown between tournaments
+  - **Battle-readiness managed by daily cycle**: Auto-repair ensures robots are ready for their matches
+  - Robots enter tournament fully repaired; daily cycle handles repair between tournament and league phases
   - Seamless transition - no manual intervention needed
   - Configurable via admin settings (auto-start on/off)
- 
---> Would a cooldown of 1 cycle not exclude the winner? For this first tournament, all robots should participate. We need to think about what to do when they're not battle read (yet), since their first scheduled match might be in 2 days because of a bye in the first round.
 
 ### Epic 3: Battle Integration
 
@@ -213,22 +214,19 @@ The continuous tournament model ensures:
   - Battle.battleType supports "tournament" (existing: "league")
   - Tournament battles use same combat simulator
   - Tournament battles generate same detailed battle logs
-  - Battle reports display tournament context
-  - ELO changes apply same as league battles
- 
---> I agree this should use the same combat simulator. We need to account for rewards though, which will be different based on the tournament itself, and the progression in the tournament. This is true for credits, prestige and fame. 
---> ELO changes are fine, since league promotion is also dependant on League Points.
+  - **Rewards calculated using tournament-specific formula**: based on tournament size, round, and robots remaining
+  - Battle reports display tournament context (tournament name, round, total participants)
+  - **ELO changes apply normally** (league promotion depends on League Points, not ELO)
 
 #### User Story 3.2: Multiple Upcoming Matches
-- **As a player**, I can see all my upcoming matches (league + tournament)
+- **As a player**, I can see all my upcoming matches (tournament + league)
 - **Acceptance Criteria:**
-  - ScheduledMatch queries return both league and tournament matches
+  - Tournament matches displayed alongside league matches
   - UI displays match type clearly (league vs tournament)
-  - Robots can have multiple upcoming matches simultaneously 
-  - No scheduling conflicts (can't schedule tournament match if league match exists for same time)
-  - Battle readiness warnings account for both match types
- 
---> A robot is either ready for a match or is not. 
+  - Robots can have multiple tournament matches scheduled (future rounds)
+  - Robots can also have league matches scheduled
+  - **Battle readiness is binary**: Robot is either ready (HP ≥75%, weapons equipped) or not
+  - Daily cycle auto-repair ensures robots are ready for scheduled matches 
 
 #### User Story 3.3: Battle Reports
 - **As a player**, I can view tournament battle results in my battle history
@@ -244,30 +242,41 @@ The continuous tournament model ensures:
 **As a player**, I want to earn rewards for tournament participation and victories.
 
 #### User Story 4.1: Tournament Rewards
-- **As a player**, I earn enhanced rewards for tournament battles
+- **As a player**, I earn rewards for tournament battles based on tournament size and progression
 - **Acceptance Criteria:**
-  - **Participation Rewards**: Same as league battles (30% of league base)
-  - **Win Rewards**: 1.5× league battle rewards (tournament bonus)
-  - **Prestige**: 2× prestige for tournament wins vs league wins
-  - **Fame**: 1.5× fame for tournament wins vs league wins
-  - **Championship Title**: +1 championshipTitles for tournament winner
-  - **Streaming Income**: Tournament battles count toward streaming multiplier
- 
---> Rewards should not be based on the league since all robots from all leagues enter. Rewards should be based on round. The further a robot advances, the better the rewards. The bigger the tournament, the better the rewards. Maybe the first tournament starts with 15 robots and the second with 198. Better rewards. 
---> There should be a reward formula applied taking into account the total robots that entered the tournament and the number of robots still active in the tournament. This should count for credits, prestige and fame. 
---> No rewards for byes in tournaments. There is no match. There is no streaming income. 
+  - **Rewards NOT based on robot's league** - tournaments are cross-league
+  - **Reward Formula**: Based on three factors:
+    1. **Tournament Size**: `totalParticipants` at start
+    2. **Current Round**: How far the robot has progressed
+    3. **Robots Remaining**: Number of active competitors in current round
+  - **Credits Formula**: `baseAmount × tournamentSizeMultiplier × roundProgressMultiplier`
+    - `tournamentSizeMultiplier = 1 + log10(totalParticipants / 10)`
+    - `roundProgressMultiplier = currentRound / maxRounds`
+    - Example: 100 robots, round 3/4 → multiplier = (1 + log10(10)) × (3/4) = 1.75
+    - Scales appropriately even for 100,000+ participant tournaments
+  - **Prestige Formula**: `basePrestige × (currentRound / maxRounds) × tournamentSizeMultiplier`
+  - **Fame Formula**: `baseFame × (robotsRemaining / totalParticipants)^-0.5 × performanceBonus`
+    - More exclusive as fewer robots remain
+    - Performance bonus based on HP remaining after victory
+  - **Championship Title**: +1 championshipTitles for tournament winner (finals only)
+  - **No Streaming Income**: Tournament battles do NOT count toward streaming multiplier (no audience for individual matches) 
 
 #### User Story 4.2: Reward Calculation
-- **As a system**, I calculate tournament rewards using existing economy functions
+- **As a system**, I calculate tournament rewards using tournament-specific formulas
 - **Acceptance Criteria:**
-  - Uses getLeagueBaseReward() for robot's current league
-  - Applies tournament multiplier (1.5×) to win rewards
-  - Applies prestige multiplier from user's prestige level
-  - Awards participation reward to loser
-  - Bye matches award reduced participation reward (50%)
-  - All rewards deposited immediately after battle
- 
---> No, not based on league. Based on number of participants. Find a meaningful formula, even if there are 100k robots participating in the first round. 
+  - **Does NOT use league-based reward functions**
+  - Uses tournament size (`totalParticipants`) from Tournament model
+  - Uses current round and max rounds for progression multiplier
+  - Calculates robots remaining in current round
+  - Applies logarithmic scaling for tournament size (handles 100k+ participants)
+  - **Winner receives full calculated reward**
+  - **Loser receives no reward** (tournament is winner-take-all per match)
+  - **Bye matches**: Robot advances to next round automatically
+    - NO battle record created
+    - NO rewards awarded (no match occurred)
+    - NO streaming income (no match to stream)
+    - Simply updates TournamentMatch.winnerId and status
+  - All rewards deposited immediately after battle 
 
 #### User Story 4.3: Financial Tracking
 - **As a player**, I can track my tournament earnings separately
@@ -301,13 +310,21 @@ The continuous tournament model ensures:
   - Returns round execution summary
 
 #### User Story 5.3: Daily Cycle Integration
-- **As an admin**, tournaments execute as part of daily cycle
+- **As an admin**, tournaments execute as part of daily cycle with sequential repair
 - **Acceptance Criteria:**
-  - /api/admin/cycles/bulk includes tournament execution
-  - Step added: "Execute tournament rounds" (after league battles)
-  - Auto-creates new tournament if none active and robots available
-  - Configurable option: includeTournaments (default: true)
+  - **Daily Cycle Flow**:
+    1. Auto-repair all robots (if enabled)
+    2. Execute tournament rounds (all pending matches)
+    3. Auto-repair all robots (if enabled) 
+    4. Execute league matches
+    5. Rebalance leagues (if scheduled)
+    6. Process daily finances (if enabled)
+  - Tournament execution happens FIRST (before leagues)
+  - Separate auto-repair steps ensure robots are ready for both tournament and league
   - Tournament execution summary in cycle results
+  - Auto-creates new tournament if none active and sufficient robots available
+  - Configurable option: `includeTournaments` (default: true)
+  - Can trigger tournament progression daily: if tournament active, run current round; if none active, start new tournament
 
 #### User Story 5.4: Tournament Status Endpoint
 - **As an admin**, I can view active tournament status
@@ -631,11 +648,17 @@ finalReward *= roundBonus;
 **Robots eligible for tournament:**
 - ✅ HP ≥ 75% (battle-ready threshold)
 - ✅ All required weapons equipped (based on loadoutType)
-- ✅ Not already participating in an active tournament
+- ❌ ~~Not already participating in an active tournament~~ **CAN participate in multiple tournaments**
 - ✅ Not the bye-robot (system robot)
-- ⚠️ **Conflict Avoidance**: Can participate even if scheduled for league match (tournaments and leagues run independently)
+- ✅ **Daily cycle manages battle-readiness**: Auto-repair between tournament and league phases
 
---> Treat this as if matches are run sequentially. Tournament first makes most sense. Auto-repair, Run tournament, auto repair, run leagues, rebalance leagues, run finances makes a nice daily cycle.  
+**Daily Cycle Execution Order**:
+1. Auto-repair all robots (ensures tournament readiness)
+2. Execute tournament matches (robots enter fully repaired)
+3. Auto-repair all robots (ensures league readiness)
+4. Execute league matches
+5. Rebalance leagues
+6. Process daily finances
 
 **Tournament creation requirements:**
 - Minimum participants: 4 robots
@@ -646,16 +669,20 @@ finalReward *= roundBonus;
 
 **Single Elimination Seeding:**
 
-1. **Get Eligible Robots**: Query all battle-ready robots not in active tournaments
+1. **Get Eligible Robots**: Query all battle-ready robots (CAN be in multiple tournaments)
 2. **Sort by ELO**: Highest to lowest (skill-based seeding)
-3. **Calculate Rounds**: `maxRounds = Math.ceil(Math.log2(participants))`
-4. **Handle Byes**: If participants not power of 2, highest seeds get byes
-   - Example: 13 participants → 16-slot bracket → 3 byes (#1, #2, #3 seeds)
-5. **Generate Pairings**: Traditional bracket structure
-   - Round 1: #1 vs #16, #8 vs #9, #4 vs #13, #5 vs #12, etc.
+3. **Calculate Bracket Size**: Next power of 2 that accommodates all participants
+   - Example: 350 participants → 512-slot bracket
+   - Example: 13 participants → 16-slot bracket
+4. **Calculate Byes**: `byes = bracketSize - participants`
+   - Top-seeded robots receive byes (advance without battle)
+   - Example: 350 participants → 162 byes for seeds #1-#162
+5. **Generate Pairings**: Traditional bracket structure for non-bye matches
+   - Remaining robots pair: highest vs lowest seeds
 6. **Create Placeholder Matches**: Future rounds have null robot IDs until winners determined
+7. **Entire Bracket Known Upfront**: All TournamentMatch records created at tournament start, enables full bracket visualization
 
---> See earlier comments about battle-readiness. Do we need a solution here? What happens is a robot is battle ready at the start of the tournament but is not ready for his battle in round 3?
+**Robots are fully repaired at start of tournament and before each round via daily cycle auto-repair. If a robot is damaged between rounds, the daily cycle repair ensures it's ready for the next match.**
 
 **Example Bracket (8 participants):**
 ```
@@ -707,57 +734,82 @@ Round 3 (1 match):
    - Exclude recent tournament participants (cooldown: 1 day)
 ```
 
-### Conflict Management
+### Tournament Execution Model
 
-**League vs Tournament Scheduling:**
-- Robots CAN have both league and tournament matches scheduled
-- Maximum 2 upcoming matches per robot (1 league + 1 tournament)
-- Scheduled times must differ by ≥1 hour (prevents simultaneous battles)
-- Battle readiness warnings account for both match types
+**Sequential Execution (Not Scheduled)**:
+- Tournament matches execute immediately when tournament round is triggered
+- No ScheduledMatch records for tournaments (unlike league battles)
+- Daily cycle triggers tournament round execution directly
+- All matches in a round execute sequentially (not in parallel)
+- Auto-repair between tournament and league phases ensures readiness
 
---> Robots might have multiple tournament matches on the same day in the future. 
---> We'll pick schedules that fit, but this is not in place for the prototype phase.
-
-**Tournament vs Tournament:**
-- Robots CANNOT participate in multiple active tournaments simultaneously
-- Tournament creation excludes robots already in active tournaments
-- Tournament completion allows robot to enter next tournament
-
---> CAN participate in multiple active tournaments. What we're implementing now is a "All Robots Single Elimination Tournament". In the future we'll have multiple tournaments running (Bronze League tournaments for example where only robots from Bronze league are particpating) at the same time as this mega all-robots tournament. 
+**Multiple Tournament Participation**:
+- Robots **CAN** participate in multiple active tournaments simultaneously
+- Current implementation: "All Robots Single Elimination Tournament"
+- Future: Multiple tournament types running concurrently:
+  - All-Robots Tournament (current)
+  - Bronze League Tournament (Bronze robots only)
+  - Silver League Tournament (Silver robots only)
+  - Etc.
+- A robot can be in the All-Robots tournament AND a league-specific tournament at the same time
+- Each tournament tracks its own bracket and progression independently 
 
 ### Bye Match Handling
 
 **When Byes Occur:**
-- Participant count not a power of 2 (e.g., 13 participants → 3 byes in Round 1)
+- Participant count not a power of 2 (e.g., 350 participants → 512 bracket → 162 byes)
+- Highest-seeded robots receive byes based on ELO ranking
 
-**Bye Match Rules:**
-- Highest seeds receive byes (reward better ELO)
-- TournamentMatch created with: robot1Id = seeded robot, robot2Id = null, isByeMatch = true
-- No Battle record created (robot advances automatically)
-- Reduced participation reward: 50% of normal (no combat effort)
-- Robot takes no damage (fully repaired state maintained)
-- Advances to next round immediately
-
---> Bye = no match, no rewards, no battle record. Scheduled match in next round.
+**Bye Match Processing:**
+- **NO battle occurs** - robot advances automatically
+- **NO battle record created** - no Battle entry in database
+- **NO rewards awarded** - no credits, prestige, or fame
+- **NO streaming income** - no match to stream
+- **NO damage taken** - robot maintains current HP
+- TournamentMatch record updated:
+  - `winnerId` = `robot1Id` (the bye recipient)
+  - `status` = "completed"
+  - `isByeMatch` = true
+  - `completedAt` = timestamp
+- Robot advances to next round placeholder match
+- Happens immediately when tournament created (all byes auto-complete)
 
 ### Tournament Rewards Summary
 
-| **Reward Type** | **League Battle** | **Tournament Battle** | **Tournament Finals** |
-|-----------------|-------------------|----------------------|----------------------|
-| Win Credits     | Base reward       | Base × 1.5 × round   | Base × 1.5 × 2.0     |
-| Loss Credits    | Participation (30%) | Participation (30%) | Participation (30%)  |
-| Prestige (Win)  | League prestige   | League × 2.0         | League × 2.0 + 500   |
-| Fame (Win)      | League fame       | League × 1.5         | League × 1.5 × 2.0   |
-| Championship    | N/A               | N/A                  | +1 Title             |
-| Streaming Income | Counts toward total | Counts toward total | Counts toward total |
+**Reward Formula Components:**
+- `tournamentSizeMultiplier = 1 + log10(totalParticipants / 10)`
+- `roundProgressMultiplier = currentRound / maxRounds`
+- `exclusivityMultiplier = (robotsRemaining / totalParticipants)^-0.5`
 
---> No. For this tournament, not dependent on the league the robot is in. Should be on the round and the amount of robots at the start of the tournament. 
+| **Reward Type** | **Formula** | **Example (100 robots, Round 3/4, 25 remaining)** |
+|-----------------|-------------|---------------------------------------------------|
+| Win Credits     | 50000 × (1 + log10(10)) × (3/4) | ₡75,000 |
+| Loss Credits    | 0 (tournament is winner-take-all) | ₡0 |
+| Prestige (Win)  | 30 × (3/4) × (1 + log10(10)) | +45 prestige |
+| Fame (Win)      | 20 × (25/100)^-0.5 × perfBonus | +40 fame |
+| Championship    | N/A (Finals only) | +1 Title (Finals) |
+| Streaming Income | No streaming for tournaments | N/A |
+
+**Scaling Examples:**
+- **Small Tournament** (15 robots, Round 2/4):
+  - Credits: ₡50,000 × 1.18 × 0.5 = ₡29,500
+  - Prestige: 30 × 0.5 × 1.18 = +18
+  
+- **Large Tournament** (1000 robots, Round 5/10):
+  - Credits: ₡50,000 × 2.0 × 0.5 = ₡50,000
+  - Prestige: 30 × 0.5 × 2.0 = +30
+  
+- **Massive Tournament** (100,000 robots, Round 8/17):
+  - Credits: ₡50,000 × 4.0 × 0.47 = ₡94,000
+  - Prestige: 30 × 0.47 × 4.0 = +56 
 
 ---
 
 ## User Experience & UI/UX
 
 ### Admin Page - Tournament Controls
+
+**Location**: `/admin` page (admin role required)
 
 **New Section: Tournament Management**
 
@@ -769,20 +821,21 @@ Round 3 (1 match):
 │                                                       │
 │  Current Status:                                      │
 │  • Active Tournaments: 1                              │
+│  • Current Round: 3/5 (Semi-finals)                  │
 │  • Eligible Robots: 47                                │
+│  • Next Tournament: Auto-start when current completes │
 │                                                       │
 │  [Create Single Elimination Tournament]               │
 │                                                       │
 │  Tournament #1 (Active)                               │
-│  • Round: 2/4 (Quarter-finals)                        │
-│  • Participants: 16                                   │
-│  • Pending Matches: 4                                 │
+│  • Participants: 128 (started with 128)              │
+│  • Round: 3/7 (Semi-finals)                          │
+│  • Robots Remaining: 4                               │
+│  • Pending Matches: 2                                │
 │                                                       │
-│  [Execute Current Round] [View Bracket]               │
+│  [Execute Current Round] [View Tournament Details]    │
 └─────────────────────────────────────────────────────┘
 ```
-
---> Where / how can a user see this?
 
 **Daily Cycle Configuration:**
 ```
@@ -790,17 +843,17 @@ Round 3 (1 match):
 │ ⚙️ Daily Cycle Settings                              │
 ├─────────────────────────────────────────────────────┤
 │                                                       │
-│  ☑ Auto-repair robots                                 │
-│  ☑ Include daily finances                             │
-│  ☑ Include tournaments (NEW)                          │
+│  ☑ Auto-repair robots (before tournament)            │
+│  ☑ Include tournaments                               │
+│  ☑ Auto-repair robots (before leagues)               │
+│  ☑ Include daily finances                            │
+│  ☑ Generate users per cycle                          │
 │                                                       │
 │  Cycles to run: [5]                                   │
 │                                                       │
 │  [Run Daily Cycle]                                    │
 └─────────────────────────────────────────────────────┘
-```
-
---> There currently also is a "Generate users per cycle" 
+``` 
 
 ### My Robots Page - Multiple Upcoming Matches
 
@@ -826,56 +879,92 @@ Round 3 (1 match):
 
 ### Battle History - Tournament Battles
 
+**Location**: Battle history visible on My Robots page and individual robot detail pages
+
 **Battle List with Tournament Indicator:**
 ```
 ┌─────────────────────────────────────────────────────┐
 │ 📜 Battle History                                    │
 ├─────────────────────────────────────────────────────┤
 │                                                       │
-│  🏆 TOURNAMENT #1 - Finals                            │
+│  🏆 TOURNAMENT #1 - FINALS (128 participants)        │
 │  BattleBot-Alpha defeated RoboCrusher-99             │
-│  Victory | +₡75,000 | +150 Prestige | +60 Fame      │
-│  Championship Title Earned! 👑                        │
+│  Victory | +₡95,000 | +150 Prestige | +60 Fame      │
+│  👑 Championship Title Earned!                       │
 │                                                       │
-│  🏆 Tournament #1 - Semi-finals                       │
+│  🏆 TOURNAMENT #1 - Semi-finals (128 participants)   │
 │  BattleBot-Alpha defeated IronCrusher                │
-│  Victory | +₡48,000 | +60 Prestige | +22 Fame       │
+│  Victory | +₡85,000 | +120 Prestige | +45 Fame      │
 │                                                       │
-│  ⚔️ League Battle (Gold League)                       │
+│  ⚔️ League Battle (Gold League)                      │
 │  BattleBot-Alpha defeated ThunderStrike              │
 │  Victory | +₡30,000 | +20 Prestige | +10 Fame       │
 │                                                       │
 └─────────────────────────────────────────────────────┘
 ```
 
---> Why caps for one and not for the other?
+### Tournament Bracket View (Future Enhancement)
 
-### Tournament Bracket View 
+**Location**: Accessible from Admin page tournament details and My Robots page
 
-**Visual Bracket Display:**
+**Scalable Bracket Display Strategy:**
+
+For **small tournaments** (< 32 robots):
+- Full visual bracket tree displayed
+- All matches visible at once
+
+For **medium tournaments** (32-256 robots):
+- Collapsible rounds
+- Show only active rounds expanded by default
+- Click to expand other rounds
+
+For **large tournaments** (256+ robots):
+- List view with round filtering
+- "Your robots" filter to track specific robots
+- Summary statistics (e.g., "Round 3: 64 matches, 32 complete")
+
+**Example Small Bracket Display:**
 ```
 ┌─────────────────────────────────────────────────────┐
-│ 🏆 Tournament #1 - Single Elimination                │
+│ 🏆 Tournament #1 - Single Elimination (16 robots)   │
 ├─────────────────────────────────────────────────────┤
 │                                                       │
-│  Round 1          Round 2       Finals               │
+│  Round 1      Round 2      Semi-Finals    Finals    │
 │                                                       │
-│  #1 Seed ──┐                                          │
-│            ├─→ Winner 1 ──┐                           │
-│  #8 Seed ──┘              │                           │
-│                           ├─→ CHAMPION 👑             │
-│  #4 Seed ──┐              │                           │
-│            ├─→ Winner 2 ──┘                           │
-│  #5 Seed ──┘                                          │
-│                                                       │
-│  Current Round: 2 (Semi-finals)                       │
-│  Matches Remaining: 1                                 │
+│  #1 ──┐                                              │
+│       ├─→ #1 ──┐                                     │
+│  #16 ─┘       │                                      │
+│               ├─→ #1 ──┐                             │
+│  #8 ──┐       │        │                             │
+│       ├─→ #8 ─┘        │                             │
+│  #9 ──┘                ├─→ CHAMPION: #1 👑           │
+│                        │                             │
+│  Current Round: Finals                               │
+│  Matches Remaining: 1                                │
 │                                                       │
 └─────────────────────────────────────────────────────┘
 ```
 
---> How do you take into account really big tournaments?
---> Where / how is this accessed?
+**Example Large Tournament Display:**
+```
+┌─────────────────────────────────────────────────────┐
+│ 🏆 Tournament #5 - All Robots (512 participants)    │
+├─────────────────────────────────────────────────────┤
+│                                                       │
+│  Current Round: 4/9 (Round of 32)                    │
+│  Robots Remaining: 32                                │
+│                                                       │
+│  [View All Rounds ▼] [Filter: My Robots] [Search]   │
+│                                                       │
+│  Round 4 - Round of 32 (In Progress)                │
+│  ├─ Match 1: RobotA vs RobotB (Pending)             │
+│  ├─ Match 2: RobotC vs RobotD (Complete: RobotC)    │
+│  └─ ... 14 more matches                              │
+│                                                       │
+│  [Expand Previous Rounds ▼]                          │
+│                                                       │
+└─────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -1162,12 +1251,10 @@ Round 3 (1 match):
 ### User Experience Acceptance Tests
 
 **Test 7: UI Clarity**
-- ✅ Tournament matches clearly distinguished from league matches
-- ✅ Upcoming matches display both types correctly
-- ✅ Battle history shows tournament context
-- ✅ Admin page displays tournament status clearly
-
---> Don't use ✅ unless they have been implemented.
+- [ ] Tournament matches clearly distinguished from league matches
+- [ ] Upcoming matches display tournament info correctly
+- [ ] Battle history shows tournament context
+- [ ] Admin page displays tournament status clearly
 
 ---
 
