@@ -300,6 +300,7 @@ model Battle {
   user              User              @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
   robot1            Robot             @relation("Robot1", fields: [robot1Id], references: [id])
   robot2            Robot             @relation("Robot2", fields: [robot2Id], references: [id])
+  tournament        Tournament?       @relation("TournamentBattles", fields: [tournamentId], references: [id])
   scheduledMatch    ScheduledMatch[]
   tournamentMatches TournamentMatch[]
 
@@ -370,6 +371,7 @@ model Tournament {
   // Relations
   winner  Robot?            @relation("TournamentWinner", fields: [winnerId], references: [id])
   matches TournamentMatch[]
+  battles Battle[]          @relation("TournamentBattles")
 
   @@index([status])
   @@index([winnerId])
