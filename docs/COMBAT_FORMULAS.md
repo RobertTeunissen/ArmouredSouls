@@ -193,12 +193,18 @@ Final Multiplier = Max(Base - Dampeners, 1.2)
 ### Formula
 ```
 Combat Power Multiplier = 1 + ((Robot Combat Power + Weapon Bonus) * 1.5) / 100
-Loadout Multiplier = 1.25 (two-handed) OR 0.90 (dual wield) OR 1.0 (other)
+Loadout Multiplier = 1.10 (two-handed) OR 0.90 (dual wield) OR 1.0 (other)
 Weapon Control Multiplier = 1 + (Robot Weapon Control + Weapon Bonus) / 100
 Stance Multiplier = 1.15 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
 
 Base Damage = Weapon Base Damage × Combat Power × Loadout × Weapon Control × Stance
 ```
+
+**Note on Loadout Bonuses (v1.2)**:
+- Two-handed loadout provides +10% to Combat Power attribute (applied before multipliers)
+- Two-handed loadout also provides 1.10× damage multiplier (applied during damage calculation)
+- Combined effect: Robot with 5 Combat Power becomes 5.5 effective CP with two-handed loadout
+- See [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) for complete loadout attribute bonuses
 
 ### Display Format
 ```

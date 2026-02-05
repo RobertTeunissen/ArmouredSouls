@@ -184,7 +184,7 @@ function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: numbe
   let damage = weaponBaseDamage * combatPowerMult;
   
   // Loadout modifiers
-  const loadoutMult = attacker.loadoutType === 'two_handed' ? 1.25 : 
+  const loadoutMult = attacker.loadoutType === 'two_handed' ? 1.10 : 
                       attacker.loadoutType === 'dual_wield' ? 0.90 : 1.0;
   damage *= loadoutMult;
   

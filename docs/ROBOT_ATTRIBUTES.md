@@ -180,7 +180,8 @@ For quick reference, the four loadout types provide the following bonuses/penalt
 - **Best For**: Defensive tank builds
 
 **2. Two-Handed** (`two_handed`)
-- **Bonuses**: +25% Combat Power, +20% Critical Systems
+- **Bonuses**: +10% Combat Power (v1.2: reduced from +25%), +20% Critical Systems
+- **Damage Multiplier**: 1.10x (v1.2: reduced from 1.25x)
 - **Penalties**: -10% Evasion Thrusters
 - **Best For**: High-damage glass cannon builds
 

@@ -1,11 +1,31 @@
 # Weapons & Loadout System
 
 **Last Updated**: February 5, 2026  
-**Status**: Design Document - Updated for Combat Rebalancing (v1.1)
+**Status**: Design Document - Updated for Combat Rebalancing (v1.2)
 
 **Version History:**
 - **v1.0** (Feb 2, 2026): Initial weapon catalog with DPS-inclusive pricing
 - **v1.1** (Feb 5, 2026): Updated weapon damage values following combat rebalancing
+- **v1.2** (Feb 5, 2026): Further nerfs to two-handed weapons and loadout multiplier
+
+**Key Changes in v1.2:**
+- Two-handed loadout multiplier reduced from 1.25× to 1.10× (12% reduction)
+- All two-handed weapon base damage reduced by ~18% (Shotgun 22→18, Heavy Hammer 34→29, etc.)
+- **Two-handed weapon PRICES reduced 24-34% to maintain DPS-based pricing consistency**
+- Combined changes result in ~29% total damage reduction for two-handed weapons
+- Goal: Balance loadout diversity, prevent two-handed dominance in Champion League
+- Economic Goal: Maintain transparent DPS-inclusive pricing formula
+- See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for updated damage formula
+
+**Pricing Adjustments in v1.2:**
+- Shotgun: ₡325K → ₡215K (-34%)
+- Grenade Launcher: ₡325K → ₡235K (-28%)
+- Sniper Rifle: ₡425K → ₡295K (-31%)
+- Battle Axe: ₡430K → ₡310K (-28%)
+- Plasma Cannon: ₡440K → ₡320K (-27%)
+- Heavy Hammer: ₡490K → ₡360K (-27%)
+- Railgun: ₡545K → ₡390K (-28%)
+- Ion Beam: ₡565K → ₡430K (-24%)
 
 **Key Changes in v1.1:**
 - All weapon damage values reduced 20-33% to compensate for new damage formula
@@ -123,9 +143,10 @@ Loadouts use **percentage-based bonuses** rather than flat attribute bonuses for
 **2. Two-Handed Weapon**
 - **Equipment**: One two-handed weapon (both hands)
 - **Bonuses**:
-  - +25% to Combat Power
+  - +10% to Combat Power (v1.2: reduced from +25%)
   - +20% to Critical Systems
   - Critical damage multiplier increased to 2.5x (from 2.0x base)
+  - Damage multiplier: 1.10x (v1.2: reduced from 1.25x)
 - **Penalties**:
   - -10% to Evasion Thrusters (less mobility)
   - No shield available
@@ -254,10 +275,11 @@ The following weapons are currently implemented in the game database and availab
 - Description: Precision energy rifle with excellent accuracy
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
-**Plasma Cannon** (₡440,000) - Two-handed
-- Base Damage: 32  (v1.1: reduced from 45, -29%)
+**Plasma Cannon** (₡320,000) - Two-handed
+- Base Damage: 27  (v1.1: 45→32; v1.2: 32→27)
 - Cooldown: 5 seconds
-- DPS: 6.4  (v1.1: reduced from 9.0)
+- DPS: 5.4  (v1.2: reduced from 6.4)
+- Cost: ₡320,000 (v1.2: reduced from ₡440K to match DPS-based pricing)
 - Attribute Bonuses:
   - combatPowerBonus: +7
   - criticalSystemsBonus: +6
@@ -266,10 +288,11 @@ The following weapons are currently implemented in the game database and availab
 - Description: Heavy plasma weapon with devastating firepower
 - **Loadout Compatibility**: Two-Handed only
 
-**Ion Beam** (₡565,000) - Two-handed
-- Base Damage: 28  (v1.1: reduced from 40, -30%)
+**Ion Beam** (₡430,000) - Two-handed
+- Base Damage: 24  (v1.1: 40→28; v1.2: 28→24)
 - Cooldown: 4 seconds
-- DPS: 7.0  (v1.1: reduced from 10.0) (Highest DPS in game)
+- DPS: 6.0  (v1.2: reduced from 7.0) (Highest DPS in game)
+- Cost: ₡430,000 (v1.2: reduced from ₡565K to match DPS-based pricing)
 - Attribute Bonuses:
   - penetrationBonus: +10
   - shieldCapacityBonus: +8
@@ -291,10 +314,11 @@ The following weapons are currently implemented in the game database and availab
 - Description: Sustained fire support weapon
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
-**Railgun** (₡545,000) - Two-handed
-- Base Damage: 39  (v1.1: reduced from 55, -29%)
+**Railgun** (₡390,000) - Two-handed
+- Base Damage: 33  (v1.1: 55→39; v1.2: 39→33)
 - Cooldown: 6 seconds
-- DPS: 6.5  (v1.1: reduced from 9.17)
+- DPS: 5.5  (v1.2: reduced from 6.5)
+- Cost: ₡390,000 (v1.2: reduced from ₡545K to match DPS-based pricing)
 - Attribute Bonuses:
   - penetrationBonus: +12
   - targetingSystemsBonus: +7
@@ -303,10 +327,11 @@ The following weapons are currently implemented in the game database and availab
 - Description: Ultra-high velocity kinetic weapon with extreme penetration
 - **Loadout Compatibility**: Two-Handed only
 
-**Shotgun** (₡325,000) - Two-handed
-- Base Damage: 22  (v1.1: reduced from 32, -31%)
+**Shotgun** (₡215,000) - Two-handed
+- Base Damage: 18  (v1.1: 32→22; v1.2: 22→18)
 - Cooldown: 4 seconds
-- DPS: 5.5  (v1.1: reduced from 8.0)
+- DPS: 4.5  (v1.2: reduced from 5.5)
+- Cost: ₡215,000 (v1.2: reduced from ₡325K to match DPS-based pricing)
 - Attribute Bonuses:
   - combatPowerBonus: +4
   - criticalSystemsBonus: +3
@@ -328,10 +353,11 @@ The following weapons are currently implemented in the game database and availab
 - Description: High-tech melee weapon with superior handling
 - **Loadout Compatibility**: Single, Weapon + Shield, Dual-Wield
 
-**Hammer** (₡490,000) - Two-handed
-- Base Damage: 34  (v1.1: reduced from 48, -29%)
+**Hammer** (₡360,000) - Two-handed
+- Base Damage: 29  (v1.1: 48→34; v1.2: 34→29)
 - Cooldown: 5 seconds
-- DPS: 6.8  (v1.1: reduced from 9.6)
+- DPS: 5.8  (v1.2: reduced from 6.8)
+- Cost: ₡360,000 (v1.2: reduced from ₡490K to match DPS-based pricing)
 - Attribute Bonuses:
   - hydraulicSystemsBonus: +8
   - combatPowerBonus: +7

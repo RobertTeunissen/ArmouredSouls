@@ -46,7 +46,7 @@ export const LOADOUT_BONUSES = {
     attackSpeed: -0.15,        // -15%
   },
   two_handed: {
-    combatPower: 0.25,         // +25%
+    combatPower: 0.10,         // +10% (v1.2: reduced from 0.25 for balance)
     criticalSystems: 0.20,     // +20%
     evasionThrusters: -0.10,   // -10%
   },
