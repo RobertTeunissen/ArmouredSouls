@@ -33,13 +33,31 @@ function BattleHistoryPage() {
   const fetchBattles = async (page: number) => {
     try {
       setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('[BattleHistory] No authentication token found');
+        setError('Authentication required');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('[BattleHistory] Fetching battle history, page:', page);
       const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, 20);
+      console.log('[BattleHistory] Received data:', data);
+      
       setBattles(data.data);
       setPagination(data.pagination);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to fetch battle history:', err);
-      setError('Failed to load battle history');
+      console.error('[BattleHistory] Failed to fetch battle history:', err);
+      console.error('[BattleHistory] Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+      setError(err.response?.data?.message || 'Failed to load battle history');
     } finally {
       setLoading(false);
     }

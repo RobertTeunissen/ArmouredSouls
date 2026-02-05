@@ -21,18 +21,37 @@ function UpcomingMatches() {
   const fetchMatches = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('[UpcomingMatches] No authentication token found');
+        logout();
+        navigate('/login');
+        return;
+      }
+      
+      console.log('[UpcomingMatches] Fetching upcoming matches...');
       const data = await getUpcomingMatches();
+      console.log('[UpcomingMatches] Received data:', data);
+      
       setMatches(data);
       setError(null);
     } catch (err: any) {
       // Handle 401 Unauthorized errors
       if (axios.isAxiosError(err) && err.response?.status === 401) {
+        console.error('[UpcomingMatches] Authentication error:', err);
         logout();
         navigate('/login');
         return;
       }
-      console.error('Failed to fetch upcoming matches:', err);
-      setError('Failed to load upcoming matches');
+      console.error('[UpcomingMatches] Failed to fetch upcoming matches:', err);
+      console.error('[UpcomingMatches] Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+      setError(err.response?.data?.message || 'Failed to load upcoming matches');
     } finally {
       setLoading(false);
     }
