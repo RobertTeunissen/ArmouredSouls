@@ -4,7 +4,13 @@ const API_BASE_URL = 'http://localhost:3001/api';
 
 // Types
 export interface ScheduledMatch {
-  id: number;
+  id: number | string; // Can be number for league or "tournament-X" string for tournaments
+  matchType?: 'league' | 'tournament';
+  tournamentId?: number;
+  tournamentName?: string;
+  tournamentRound?: number;
+  currentRound?: number;
+  maxRounds?: number;
   robot1Id: number;
   robot2Id: number;
   leagueType: string;
@@ -20,7 +26,7 @@ export interface ScheduledMatch {
     user: {
       username: string;
     };
-  };
+  } | null;
   robot2: {
     id: number;
     name: string;
@@ -31,7 +37,7 @@ export interface ScheduledMatch {
     user: {
       username: string;
     };
-  };
+  } | null;
 }
 
 export interface BattleHistory {
@@ -49,6 +55,11 @@ export interface BattleHistory {
   robot2FinalHP: number;
   winnerReward: number;
   loserReward: number;
+  battleType?: string; // "league" or "tournament"
+  tournamentId?: number | null;
+  tournamentRound?: number | null;
+  tournamentName?: string | null;
+  tournamentMaxRounds?: number | null;
   robot1: {
     id: number;
     name: string;
@@ -216,6 +227,16 @@ export const formatDuration = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes}m ${remainingSeconds}s`;
+};
+
+export const getTournamentRoundName = (currentRound: number, maxRounds: number): string => {
+  const roundsFromEnd = maxRounds - currentRound;
+  
+  if (roundsFromEnd === 0) return 'Finals';
+  if (roundsFromEnd === 1) return 'Semi-finals';
+  if (roundsFromEnd === 2) return 'Quarter-finals';
+  
+  return `Round ${currentRound}/${maxRounds}`;
 };
 
 // Battle Log Types

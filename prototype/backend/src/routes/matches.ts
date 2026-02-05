@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 /**
  * GET /api/matches/upcoming
- * Get upcoming scheduled matches for the current user's robots
+ * Get upcoming scheduled matches and tournament matches for the current user's robots
  */
 router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -23,8 +23,8 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
 
     const robotIds = userRobots.map(r => r.id);
 
-    // Get scheduled matches involving user's robots
-    const matches = await prisma.scheduledMatch.findMany({
+    // Get scheduled league matches involving user's robots
+    const leagueMatches = await prisma.scheduledMatch.findMany({
       where: {
         status: 'scheduled',
         OR: [
@@ -59,9 +59,54 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       },
     });
 
-    // Format response to match frontend ScheduledMatch interface
-    const formattedMatches = matches.map(match => ({
+    // Get tournament matches involving user's robots (pending or scheduled status, not completed)
+    const tournamentMatches = await prisma.tournamentMatch.findMany({
+      where: {
+        status: { in: ['pending', 'scheduled'] },
+        OR: [
+          { robot1Id: { in: robotIds } },
+          { robot2Id: { in: robotIds } },
+        ],
+      },
+      include: {
+        robot1: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        robot2: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            currentRound: true,
+            maxRounds: true,
+          },
+        },
+      },
+      orderBy: {
+        round: 'asc',
+      },
+    });
+
+    // Format league matches
+    const formattedLeagueMatches = leagueMatches.map(match => ({
       id: match.id,
+      matchType: 'league',
       robot1Id: match.robot1Id,
       robot2Id: match.robot2Id,
       leagueType: match.leagueType,
@@ -91,9 +136,52 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       },
     }));
 
+    // Format tournament matches
+    const formattedTournamentMatches = tournamentMatches.map(match => ({
+      id: `tournament-${match.id}`,
+      matchType: 'tournament',
+      tournamentId: match.tournamentId,
+      tournamentName: match.tournament.name,
+      tournamentRound: match.round,
+      currentRound: match.tournament.currentRound,
+      maxRounds: match.tournament.maxRounds,
+      robot1Id: match.robot1Id,
+      robot2Id: match.robot2Id,
+      leagueType: 'tournament', // Use 'tournament' as league type for display
+      scheduledFor: new Date().toISOString(), // Tournaments don't have scheduled time
+      status: match.status,
+      robot1: match.robot1 ? {
+        id: match.robot1.id,
+        name: match.robot1.name,
+        elo: match.robot1.elo,
+        currentHP: match.robot1.currentHP,
+        maxHP: match.robot1.maxHP,
+        userId: match.robot1.userId,
+        user: {
+          username: match.robot1.user.username,
+        },
+      } : null,
+      robot2: match.robot2 ? {
+        id: match.robot2.id,
+        name: match.robot2.name,
+        elo: match.robot2.elo,
+        currentHP: match.robot2.currentHP,
+        maxHP: match.robot2.maxHP,
+        userId: match.robot2.userId,
+        user: {
+          username: match.robot2.user.username,
+        },
+      } : null,
+    }));
+
+    // Combine both types of matches
+    const allMatches = [...formattedLeagueMatches, ...formattedTournamentMatches];
+
     res.json({
-      matches: formattedMatches,
-      total: formattedMatches.length,
+      matches: allMatches,
+      total: allMatches.length,
+      leagueMatches: formattedLeagueMatches.length,
+      tournamentMatches: formattedTournamentMatches.length,
     });
   } catch (error) {
     console.error('[Matches API] Error fetching upcoming matches:', error);
@@ -167,6 +255,13 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
             },
           },
         },
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            maxRounds: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -191,6 +286,11 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
       robot2FinalHP: battle.robot2FinalHP,
       winnerReward: battle.winnerReward,
       loserReward: battle.loserReward,
+      battleType: battle.battleType,
+      tournamentId: battle.tournamentId,
+      tournamentRound: battle.tournamentRound,
+      tournamentName: battle.tournament?.name,
+      tournamentMaxRounds: battle.tournament?.maxRounds,
       robot1: {
         id: battle.robot1.id,
         name: battle.robot1.name,

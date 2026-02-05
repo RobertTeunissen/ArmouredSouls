@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import BattleDetailsModal from '../components/BattleDetailsModal';
+import TournamentManagement from '../components/TournamentManagement';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
-type TabType = 'dashboard' | 'cycles' | 'battles' | 'stats';
+type TabType = 'dashboard' | 'cycles' | 'battles' | 'tournaments' | 'stats';
 
 interface SessionLogEntry {
   timestamp: string;
@@ -228,11 +229,11 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     // Get tab from localStorage or URL hash
     const hash = window.location.hash.replace('#', '');
-    if (['dashboard', 'cycles', 'battles', 'stats'].includes(hash)) {
+    if (['dashboard', 'cycles', 'battles', 'tournaments', 'stats'].includes(hash)) {
       return hash as TabType;
     }
     const stored = localStorage.getItem('adminActiveTab');
-    return (stored && ['dashboard', 'cycles', 'battles', 'stats'].includes(stored)) 
+    return (stored && ['dashboard', 'cycles', 'battles', 'tournaments', 'stats'].includes(stored)) 
       ? stored as TabType 
       : 'dashboard';
   });
@@ -264,6 +265,7 @@ function AdminPage() {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [bulkCycles, setBulkCycles] = useState(1);
   const [autoRepair, setAutoRepair] = useState(true);
+  const [includeTournaments, setIncludeTournaments] = useState(true);
   const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
   const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(false);
   const [bulkResults, setBulkResults] = useState<any>(null);
@@ -275,6 +277,7 @@ function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [leagueFilter, setLeagueFilter] = useState('all');
+  const [battleTypeFilter, setBattleTypeFilter] = useState('all'); // Add battle type filter
   const [selectedBattleId, setSelectedBattleId] = useState<number | null>(null);
   const [showBattleModal, setShowBattleModal] = useState(false);
 
@@ -435,6 +438,7 @@ function AdminPage() {
     setBulkResults(null);
     addSessionLog('info', `Starting bulk cycle run: ${bulkCycles} cycle(s)`, {
       autoRepair,
+      includeTournaments,
       includeDailyFinances,
       generateUsersPerCycle
     });
@@ -443,6 +447,7 @@ function AdminPage() {
       const response = await axios.post('/api/admin/cycles/bulk', {
         cycles: bulkCycles,
         autoRepair,
+        includeTournaments,
         includeDailyFinances,
         generateUsersPerCycle,
       });
@@ -460,8 +465,42 @@ function AdminPage() {
             }
           }
 
-          // Auto-repair
-          if (result.repair) {
+          // Pre-tournament auto-repair
+          if (result.repairPreTournament) {
+            addSessionLog('info', `Cycle ${result.cycle}: Pre-tournament repair - ${result.repairPreTournament.robotsRepaired} robot(s) repaired`);
+          }
+
+          // Tournament execution
+          if (result.tournaments) {
+            if (result.tournaments.error) {
+              addSessionLog('error', `Cycle ${result.cycle}: Tournament execution failed`, result.tournaments);
+            } else {
+              const t = result.tournaments;
+              const details = [
+                t.tournamentsExecuted ? `${t.tournamentsExecuted} tournament(s) executed` : null,
+                t.roundsExecuted ? `${t.roundsExecuted} round(s) executed` : null,
+                t.matchesExecuted ? `${t.matchesExecuted} match(es) processed` : null,
+                t.tournamentsCompleted ? `${t.tournamentsCompleted} tournament(s) completed` : null,
+                t.tournamentsCreated ? `${t.tournamentsCreated} new tournament(s) created` : null,
+              ].filter(Boolean).join(', ');
+              
+              if (details) {
+                addSessionLog(
+                  t.errors && t.errors.length > 0 ? 'warning' : 'success',
+                  `Cycle ${result.cycle}: Tournaments - ${details}`,
+                  t.errors && t.errors.length > 0 ? { errors: t.errors } : undefined
+                );
+              }
+            }
+          }
+
+          // Pre-league auto-repair
+          if (result.repairPreLeague) {
+            addSessionLog('info', `Cycle ${result.cycle}: Pre-league repair - ${result.repairPreLeague.robotsRepaired} robot(s) repaired`);
+          }
+
+          // Auto-repair (legacy, for backwards compatibility)
+          if (result.repair && !result.repairPreTournament && !result.repairPreLeague) {
             addSessionLog('info', `Cycle ${result.cycle}: Repaired ${result.repair.robotsRepaired} robot(s)`);
           }
 
@@ -525,6 +564,7 @@ function AdminPage() {
       const params: any = { page, limit: 20 };
       if (searchQuery) params.search = searchQuery;
       if (leagueFilter !== 'all') params.leagueType = leagueFilter;
+      if (battleTypeFilter !== 'all') params.battleType = battleTypeFilter; // Add battle type filter
 
       const response = await axios.get<BattleListResponse>('/api/admin/battles', { params });
       setBattles(response.data.battles);
@@ -636,6 +676,20 @@ function AdminPage() {
               }`}
             >
               ⚙️ Cycle Controls
+            </button>
+            <button
+              id="tournaments-tab"
+              role="tab"
+              aria-selected={activeTab === 'tournaments'}
+              aria-controls="tournaments-panel"
+              onClick={() => switchTab('tournaments')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'tournaments'
+                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              🏆 Tournaments
             </button>
             <button
               id="battles-tab"
@@ -909,6 +963,15 @@ function AdminPage() {
             <label className="flex items-center">
               <input
                 type="checkbox"
+                checked={includeTournaments}
+                onChange={(e) => setIncludeTournaments(e.target.checked)}
+                className="mr-2"
+              />
+              Include tournament execution
+            </label>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
                 checked={includeDailyFinances}
                 onChange={(e) => setIncludeDailyFinances(e.target.checked)}
                 className="mr-2"
@@ -1133,6 +1196,15 @@ function AdminPage() {
                 <option value="diamond">Diamond</option>
                 <option value="champion">Champion</option>
               </select>
+              <select
+                value={battleTypeFilter}
+                onChange={(e) => setBattleTypeFilter(e.target.value)}
+                className="bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                <option value="all">All Battle Types</option>
+                <option value="league">League Battles</option>
+                <option value="tournament">Tournament Battles</option>
+              </select>
               <button
                 onClick={handleSearch}
                 disabled={battlesLoading}
@@ -1275,6 +1347,13 @@ function AdminPage() {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tournaments Tab */}
+        {activeTab === 'tournaments' && (
+          <div role="tabpanel" id="tournaments-panel" aria-labelledby="tournaments-tab">
+            <TournamentManagement />
           </div>
         )}
 

@@ -612,8 +612,11 @@ function performAttack(
 
 /**
  * Simulate a complete battle between two robots
+ * @param robot1 First robot
+ * @param robot2 Second robot
+ * @param isTournament If true, resolves draws with HP tiebreaker (tournaments can't have draws)
  */
-export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapons): CombatResult {
+export function simulateBattle(robot1: RobotWithWeapons, robot2: RobotWithWeapons, isTournament: boolean = false): CombatResult {
   // Get weapon cooldowns (use weapon cooldown if equipped, otherwise use base)
   const mainWeapon1 = robot1.mainWeapon?.weapon;
   const offhandWeapon1 = robot1.offhandWeapon?.weapon;
@@ -797,17 +800,62 @@ ${weaponBonuses2}`,
     }
   }
   
-  // Time limit draw
+  // Time limit reached
   if (!battleEnded) {
-    events.push({
-      timestamp: Number(currentTime.toFixed(1)),
-      type: 'yield',
-      message: `⏱️ Time limit reached - Draw!`,
-      robot1HP: state1.currentHP,
-      robot2HP: state2.currentHP,
-      robot1Shield: state1.currentShield,
-      robot2Shield: state2.currentShield,
-    });
+    // Tournament mode: Resolve draw with HP percentage tiebreaker
+    if (isTournament && winnerId === null) {
+      const robot1FinalHP = Math.max(0, state1.currentHP);
+      const robot2FinalHP = Math.max(0, state2.currentHP);
+      const hpPercent1 = robot1FinalHP / state1.maxHP;
+      const hpPercent2 = robot2FinalHP / state2.maxHP;
+      
+      if (hpPercent1 > hpPercent2) {
+        winnerId = robot1.id;
+        events.push({
+          timestamp: Number(currentTime.toFixed(1)),
+          type: 'yield',
+          message: `⏱️ Time limit! ${robot1.name} wins by HP (${(hpPercent1*100).toFixed(1)}% vs ${(hpPercent2*100).toFixed(1)}%)`,
+          robot1HP: state1.currentHP,
+          robot2HP: state2.currentHP,
+          robot1Shield: state1.currentShield,
+          robot2Shield: state2.currentShield,
+        });
+      } else if (hpPercent2 > hpPercent1) {
+        winnerId = robot2.id;
+        events.push({
+          timestamp: Number(currentTime.toFixed(1)),
+          type: 'yield',
+          message: `⏱️ Time limit! ${robot2.name} wins by HP (${(hpPercent2*100).toFixed(1)}% vs ${(hpPercent1*100).toFixed(1)}%)`,
+          robot1HP: state1.currentHP,
+          robot2HP: state2.currentHP,
+          robot1Shield: state1.currentShield,
+          robot2Shield: state2.currentShield,
+        });
+      } else {
+        // Perfect tie - robot1 wins (deterministic)
+        winnerId = robot1.id;
+        events.push({
+          timestamp: Number(currentTime.toFixed(1)),
+          type: 'yield',
+          message: `⏱️ Time limit! Perfect tie! ${robot1.name} wins (tournament tiebreaker)`,
+          robot1HP: state1.currentHP,
+          robot2HP: state2.currentHP,
+          robot1Shield: state1.currentShield,
+          robot2Shield: state2.currentShield,
+        });
+      }
+    } else {
+      // Normal mode: Allow draw
+      events.push({
+        timestamp: Number(currentTime.toFixed(1)),
+        type: 'yield',
+        message: `⏱️ Time limit reached - Draw!`,
+        robot1HP: state1.currentHP,
+        robot2HP: state2.currentHP,
+        robot1Shield: state1.currentShield,
+        robot2Shield: state2.currentShield,
+      });
+    }
   }
   
   return {

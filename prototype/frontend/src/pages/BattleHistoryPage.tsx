@@ -10,6 +10,7 @@ import {
   getELOChange,
   formatDateTime,
   formatDuration,
+  getTournamentRoundName,
 } from '../utils/matchmakingApi';
 
 function BattleHistoryPage() {
@@ -32,13 +33,31 @@ function BattleHistoryPage() {
   const fetchBattles = async (page: number) => {
     try {
       setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('[BattleHistory] No authentication token found');
+        setError('Authentication required');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('[BattleHistory] Fetching battle history, page:', page);
       const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, 20);
+      console.log('[BattleHistory] Received data:', data);
+      
       setBattles(data.data);
       setPagination(data.pagination);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to fetch battle history:', err);
-      setError('Failed to load battle history');
+      console.error('[BattleHistory] Failed to fetch battle history:', err);
+      console.error('[BattleHistory] Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+      setError(err.response?.data?.message || 'Failed to load battle history');
     } finally {
       setLoading(false);
     }
@@ -128,12 +147,29 @@ function BattleHistoryPage() {
                 const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
                 const outcomeClass = getOutcomeColor(outcome);
                 const reward = getReward(battle, myRobotId);
+                const isTournament = battle.battleType === 'tournament';
+                const borderClass = isTournament ? 'border-2 border-yellow-500' : 'border';
 
                 return (
                   <div
                     key={battle.id}
-                    className={`border p-4 rounded-lg ${outcomeClass}`}
+                    className={`${borderClass} p-4 rounded-lg ${outcomeClass}`}
                   >
+                    {/* Tournament Badge */}
+                    {isTournament && battle.tournamentRound && battle.tournamentMaxRounds && (
+                      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-opacity-25">
+                        <span className="text-2xl">🏆</span>
+                        <div className="flex-1">
+                          <div className="font-semibold text-yellow-400">
+                            {battle.tournamentName || 'Tournament'}
+                          </div>
+                          <div className="text-sm opacity-75">
+                            {getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       {/* Battle Outcome */}
                       <div className="flex-shrink-0">

@@ -6,9 +6,20 @@ import { rebalanceLeagues } from '../services/leagueRebalancingService';
 import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { PrismaClient } from '@prisma/client';
+import tournamentRoutes from './adminTournaments';
+import { 
+  getActiveTournaments, 
+  getCurrentRoundMatches,
+  autoCreateNextTournament 
+} from '../services/tournamentService';
+import { processTournamentBattle } from '../services/tournamentBattleOrchestrator';
+import { advanceWinnersToNextRound } from '../services/tournamentService';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Mount tournament routes
+router.use('/tournaments', tournamentRoutes);
 
 // Configuration constants
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
@@ -294,11 +305,17 @@ router.post('/daily-finances/process', authenticateToken, requireAdmin, async (r
  */
 router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { cycles = 1, autoRepair = false, includeDailyFinances = true, generateUsersPerCycle = false } = req.body;
+    const { 
+      cycles = 1, 
+      autoRepair = false, 
+      includeDailyFinances = true, 
+      generateUsersPerCycle = false,
+      includeTournaments = true // NEW: Enable tournament execution
+    } = req.body;
     const maxCycles = 100;
     const cycleCount = Math.min(Math.max(1, cycles), maxCycles);
 
-    console.log(`[Admin] Running ${cycleCount} bulk cycles (autoRepair: ${autoRepair}, includeDailyFinances: ${includeDailyFinances}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
+    console.log(`[Admin] Running ${cycleCount} bulk cycles (autoRepair: ${autoRepair}, includeDailyFinances: ${includeDailyFinances}, includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
 
     // Get or create cycle metadata (singleton pattern)
     // Note: This initialization is also in seed.ts. Both locations create the same
@@ -335,8 +352,8 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           }
         }
 
-        // Step 1: Auto-repair if enabled
-        let repairSummary = null;
+        // Step 1: Auto-repair robots (before tournaments)
+        let repairSummaryPreTournament = null;
         if (autoRepair) {
           const robots = await prisma.robot.findMany({
             where: {
@@ -352,10 +369,106 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             });
           }
 
-          repairSummary = { robotsRepaired: robots.length };
+          repairSummaryPreTournament = { robotsRepaired: robots.length };
+          console.log(`[Admin] Pre-tournament repair: ${robots.length} robots repaired`);
         }
 
-        // Step 2: Matchmaking
+        // Step 2: Execute tournament rounds (if enabled)
+        let tournamentSummary = null;
+        if (includeTournaments) {
+          try {
+            tournamentSummary = {
+              tournamentsExecuted: 0,
+              roundsExecuted: 0,
+              matchesExecuted: 0,
+              tournamentsCompleted: 0,
+              tournamentsCreated: 0,
+              errors: [] as string[],
+            };
+
+            // Get all active tournaments
+            const activeTournaments = await getActiveTournaments();
+
+            for (const tournament of activeTournaments) {
+              try {
+                // Get current round matches
+                const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
+                
+                if (currentRoundMatches.length > 0) {
+                  // Execute matches
+                  for (const match of currentRoundMatches) {
+                    try {
+                      await processTournamentBattle(match);
+                      tournamentSummary.matchesExecuted++;
+                    } catch (error) {
+                      const errorMsg = error instanceof Error ? error.message : String(error);
+                      tournamentSummary.errors.push(`Tournament ${tournament.id} Match ${match.id}: ${errorMsg}`);
+                    }
+                  }
+
+                  // Advance winners
+                  await advanceWinnersToNextRound(tournament.id);
+                  tournamentSummary.roundsExecuted++;
+                }
+
+                tournamentSummary.tournamentsExecuted++;
+
+                // Check if tournament completed
+                const updatedTournament = await prisma.tournament.findUnique({
+                  where: { id: tournament.id },
+                });
+
+                if (updatedTournament?.status === 'completed') {
+                  tournamentSummary.tournamentsCompleted++;
+                }
+              } catch (error) {
+                const errorMsg = error instanceof Error ? error.message : String(error);
+                tournamentSummary.errors.push(`Tournament ${tournament.id}: ${errorMsg}`);
+              }
+            }
+
+            // Auto-create next tournament if none active
+            try {
+              const nextTournament = await autoCreateNextTournament();
+              if (nextTournament) {
+                tournamentSummary.tournamentsCreated++;
+                console.log(`[Admin] Auto-created tournament: ${nextTournament.name}`);
+              }
+            } catch (error) {
+              console.error('[Admin] Failed to auto-create tournament:', error);
+            }
+
+            console.log(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted} executed, ${tournamentSummary.roundsExecuted} rounds, ${tournamentSummary.matchesExecuted} matches`);
+          } catch (error) {
+            console.error('[Admin] Tournament execution error:', error);
+            tournamentSummary = {
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        }
+
+        // Step 3: Auto-repair robots (before leagues)
+        let repairSummaryPreLeague = null;
+        if (autoRepair) {
+          const robots = await prisma.robot.findMany({
+            where: {
+              currentHP: { lt: prisma.robot.fields.maxHP },
+              NOT: { name: 'Bye Robot' },
+            },
+          });
+
+          for (const robot of robots) {
+            await prisma.robot.update({
+              where: { id: robot.id },
+              data: { currentHP: robot.maxHP },
+            });
+          }
+
+          repairSummaryPreLeague = { robotsRepaired: robots.length };
+          console.log(`[Admin] Pre-league repair: ${robots.length} robots repaired`);
+        }
+
+        // Step 4: Matchmaking
         const scheduledFor = new Date(Date.now() + 1000); // 1 second ahead
         const matchesCreated = await runMatchmaking(scheduledFor);
         const matchmakingSummary = { matchesCreated };
@@ -363,16 +476,16 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // Small delay to ensure time passes
         await new Promise(resolve => setTimeout(resolve, 1100));
 
-        // Step 3: Execute battles
+        // Step 5: Execute league battles
         const battleSummary = await executeScheduledBattles(new Date());
 
-        // Step 4: Process daily finances (if enabled)
+        // Step 6: Process daily finances (if enabled)
         let financeSummary = null;
         if (includeDailyFinances) {
           financeSummary = await processAllDailyFinances();
         }
 
-        // Step 5: Rebalance leagues (every 5 cycles or last cycle)
+        // Step 7: Rebalance leagues (every 5 cycles or last cycle)
         let rebalancingSummary = null;
         if (i % 5 === 0 || i === cycleCount) {
           rebalancingSummary = await rebalanceLeagues();
@@ -381,7 +494,9 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         cycleResults.push({
           cycle: currentCycleNumber,
           userGeneration: userGenerationSummary,
-          repair: repairSummary,
+          repairPreTournament: repairSummaryPreTournament,
+          tournaments: tournamentSummary,
+          repairPreLeague: repairSummaryPreLeague,
           matchmaking: matchmakingSummary,
           battles: battleSummary,
           finances: financeSummary,
@@ -415,6 +530,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       totalCyclesInSystem: currentCycleNumber,
       autoRepairEnabled: autoRepair,
       includeDailyFinances,
+      includeTournaments, // NEW
       generateUsersPerCycleEnabled: generateUsersPerCycle,
       totalDuration,
       averageCycleDuration: Math.round(totalDuration / cycleCount),
@@ -688,6 +804,7 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 per page
     const search = req.query.search as string;
     const leagueType = req.query.leagueType as string;
+    const battleType = req.query.battleType as string; // Add battle type filter
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -718,6 +835,15 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
     // Filter by league type
     if (leagueType && leagueType !== 'all') {
       where.leagueType = leagueType;
+    }
+
+    // Filter by battle type (league vs tournament)
+    if (battleType && battleType !== 'all') {
+      if (battleType === 'tournament') {
+        where.tournamentId = { not: null };
+      } else if (battleType === 'league') {
+        where.tournamentId = null;
+      }
     }
 
     // Get total count for pagination
