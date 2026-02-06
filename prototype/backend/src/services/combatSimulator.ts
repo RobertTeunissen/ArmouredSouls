@@ -14,7 +14,7 @@ export interface RobotWithWeapons extends Robot {
 
 export interface CombatEvent {
   timestamp: number;
-  type: 'attack' | 'miss' | 'critical' | 'counter' | 'shield_break' | 'shield_regen' | 'yield' | 'destroyed';
+  type: 'attack' | 'miss' | 'critical' | 'counter' | 'shield_break' | 'shield_regen' | 'yield' | 'destroyed' | 'malfunction';
   attacker?: string;
   defender?: string;
   weapon?: string;
@@ -25,6 +25,7 @@ export interface CombatEvent {
   hit?: boolean;
   critical?: boolean;
   counter?: boolean;
+  malfunction?: boolean;
   robot1HP?: number;
   robot2HP?: number;
   robot1Shield?: number;
@@ -176,7 +177,36 @@ function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'main' | 
 }
 
 /**
+ * Calculate weapon malfunction chance based on weapon control
+ * Lower weapon control = higher chance of malfunction
+ */
+function calculateMalfunctionChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { malfunctionChance: number; breakdown: FormulaBreakdown } {
+  const effectiveWeaponControl = getEffectiveAttribute(attacker, attacker.weaponControl, attackerHand, 'weaponControlBonus');
+  
+  // Base malfunction: 20% at weaponControl=1, reduces by 0.4% per point
+  // At weaponControl=50: 0% malfunction
+  const baseMalfunction = 20;
+  const reductionPerPoint = 0.4;
+  const calculated = baseMalfunction - (effectiveWeaponControl * reductionPerPoint);
+  const finalChance = Math.max(0, calculated);
+  
+  return {
+    malfunctionChance: finalChance,
+    breakdown: {
+      calculation: `${baseMalfunction} base - (${effectiveWeaponControl.toFixed(1)} weapon_control × ${reductionPerPoint}) = ${finalChance.toFixed(1)}%`,
+      components: {
+        base: baseMalfunction,
+        weaponControl: effectiveWeaponControl,
+        reductionPerPoint,
+      },
+      result: finalChance,
+    },
+  };
+}
+
+/**
  * Calculate base damage before defense
+ * Note: Weapon control now reduced from /100 to /150 since reliability adds value
  */
 function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: number, attackerHand: 'main' | 'offhand' = 'main'): { damage: number; breakdown: FormulaBreakdown } {
   const effectiveCombatPower = getEffectiveAttribute(attacker, attacker.combatPower, attackerHand, 'combatPowerBonus');
@@ -188,9 +218,9 @@ function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: numbe
                       attacker.loadoutType === 'dual_wield' ? 0.90 : 1.0;
   damage *= loadoutMult;
   
-  // Weapon control
+  // Weapon control (reduced from /100 to /150 to balance new malfunction mechanic)
   const effectiveWeaponControl = getEffectiveAttribute(attacker, attacker.weaponControl, attackerHand, 'weaponControlBonus');
-  const controlMult = 1 + effectiveWeaponControl / 100;
+  const controlMult = 1 + effectiveWeaponControl / 150;
   damage *= controlMult;
   
   // Stance modifiers
@@ -455,6 +485,43 @@ function performAttack(
   hand: 'main' | 'offhand',
   events: CombatEvent[]
 ): void {
+  const weaponInfo = getWeaponInfo(attackerState.robot, hand);
+  const handLabel = hand === 'offhand' ? ' [OFFHAND]' : '';
+  
+  // FIRST: Check for weapon malfunction (happens before hit calculation)
+  const { malfunctionChance, breakdown: malfunctionBreakdown } = calculateMalfunctionChance(attackerState.robot, hand);
+  const malfunctionRoll = random(0, 100);
+  const weaponMalfunctions = malfunctionRoll < malfunctionChance;
+  
+  if (weaponMalfunctions) {
+    // Weapon malfunction: attack fails completely
+    events.push({
+      timestamp: Number(currentTime.toFixed(1)),
+      type: 'malfunction',
+      attacker: attackerName,
+      defender: defenderName,
+      weapon: weaponInfo.name,
+      hand,
+      hit: false,
+      malfunction: true,
+      robot1HP: attackerState.currentHP,
+      robot2HP: defenderState.currentHP,
+      robot1Shield: attackerState.currentShield,
+      robot2Shield: defenderState.currentShield,
+      message: `⚠️${handLabel} ${attackerName}'s ${weaponInfo.name} malfunctions! (Weapon Control failure)`,
+      formulaBreakdown: {
+        calculation: `Malfunction: ${malfunctionBreakdown.calculation} (rolled ${malfunctionRoll.toFixed(1)}, result: MALFUNCTION)`,
+        components: {
+          ...malfunctionBreakdown.components,
+          malfunctionRoll,
+        },
+        result: 0,
+      },
+    });
+    return; // Attack ends here, no damage dealt
+  }
+  
+  // Weapon is reliable, continue with normal attack
   const { hitChance, breakdown: hitBreakdown } = calculateHitChance(attackerState.robot, defenderState.robot, hand);
   const hitRoll = random(0, 100);
   const hit = hitRoll < hitChance;
@@ -464,7 +531,6 @@ function performAttack(
   const critRoll = random(0, 100);
   const isCritical = hit && (critRoll < critChance);
   
-  const weaponInfo = getWeaponInfo(attackerState.robot, hand);
   const weaponDamage = weaponInfo.baseDamage;
   
   if (hit) {
@@ -483,10 +549,9 @@ function performAttack(
     
     const totalDamage = hpDamage + shieldDamage;
     
-    const handLabel = hand === 'offhand' ? ' [OFFHAND]' : '';
-    
-    // Build multiline formula breakdown with crit roll info
+    // Build multiline formula breakdown with malfunction, crit roll info
     const formulaParts = [
+      `Malfunction: ${malfunctionBreakdown.calculation} (rolled ${malfunctionRoll.toFixed(1)}, result: weapon reliable)`,
       `Hit: ${hitBreakdown.calculation} (rolled ${hitRoll.toFixed(1)}, result: HIT)`,
       `Crit: ${critBreakdown.calculation} (rolled ${critRoll.toFixed(1)}, result: ${isCritical ? 'CRITICAL HIT' : 'normal'})`,
       `Damage: ${damageBreakdown.calculation}`,
@@ -522,6 +587,8 @@ function performAttack(
       formulaBreakdown: {
         calculation: formulaParts.join('\n'),
         components: { 
+          ...malfunctionBreakdown.components,
+          malfunctionRoll,
           ...hitBreakdown.components,
           hitRoll,
           ...critBreakdown.components,
@@ -577,8 +644,9 @@ function performAttack(
       });
     }
   } else {
-    // Miss - show hit calculation and crit roll too
+    // Miss - show malfunction check, hit calculation and crit roll too
     const formulaParts = [
+      `Malfunction: ${malfunctionBreakdown.calculation} (rolled ${malfunctionRoll.toFixed(1)}, result: weapon reliable)`,
       `Hit: ${hitBreakdown.calculation} (rolled ${hitRoll.toFixed(1)}, result: MISS)`,
       `Crit: ${critBreakdown.calculation} (rolled ${critRoll.toFixed(1)}, would be: ${critRoll < critChance ? 'CRITICAL' : 'normal'})`,
     ];
@@ -595,10 +663,12 @@ function performAttack(
       robot2HP: defenderState.currentHP,
       robot1Shield: attackerState.currentShield,
       robot2Shield: defenderState.currentShield,
-      message: `❌${hand === 'offhand' ? ' [OFFHAND]' : ''} ${attackerName} misses ${defenderName} with ${weaponInfo.name}`,
+      message: `❌${handLabel} ${attackerName} misses ${defenderName} with ${weaponInfo.name}`,
       formulaBreakdown: {
         calculation: formulaParts.join('\n'),
         components: {
+          ...malfunctionBreakdown.components,
+          malfunctionRoll,
           ...hitBreakdown.components,
           hitRoll,
           ...critBreakdown.components,
