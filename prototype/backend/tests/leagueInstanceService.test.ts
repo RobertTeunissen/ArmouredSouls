@@ -166,6 +166,45 @@ describe('League Instance Service', () => {
       await prisma.robot.deleteMany({ where: { userId: user.id } });
       await prisma.user.delete({ where: { id: user.id } });
     });
+
+    it('should detect rebalancing needed when single instance exceeds MAX_ROBOTS_PER_INSTANCE', async () => {
+      const user = await prisma.user.create({
+        data: {
+          username: 'test_oversized_user',
+          passwordHash: 'hash',
+        },
+      });
+
+      // Create a single oversized instance (like the bug scenario: 331 robots in bronze_1)
+      const robots = [];
+      for (let i = 0; i < 331; i++) {
+        robots.push({
+          userId: user.id,
+          name: `Robot ${i}`,
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze' as const,
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+        });
+      }
+      await prisma.robot.createMany({ data: robots });
+
+      const stats = await getLeagueInstanceStats('bronze');
+      
+      expect(stats.totalRobots).toBe(331);
+      expect(stats.instances).toHaveLength(1);
+      expect(stats.instances[0].currentRobots).toBe(331);
+      expect(stats.averagePerInstance).toBe(331);
+      // Even though deviation from average is 0, rebalancing should be triggered
+      // because the instance exceeds MAX_ROBOTS_PER_INSTANCE (100)
+      expect(stats.needsRebalancing).toBe(true);
+
+      // Clean up
+      await prisma.robot.deleteMany({ where: { userId: user.id } });
+      await prisma.user.delete({ where: { id: user.id } });
+    });
   });
 
   describe('assignLeagueInstance', () => {

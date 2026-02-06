@@ -74,9 +74,12 @@ export async function getLeagueInstanceStats(tier: LeagueTier): Promise<LeagueIn
   const totalRobots = instances.reduce((sum, inst) => sum + inst.currentRobots, 0);
   const averagePerInstance = instances.length > 0 ? totalRobots / instances.length : 0;
 
-  // Check if rebalancing is needed (any instance deviates more than threshold from average)
+  // Check if rebalancing is needed:
+  // 1. Any instance deviates more than threshold from average
+  // 2. Any instance exceeds the maximum robot limit
   const needsRebalancing = instances.some((inst) => 
-    Math.abs(inst.currentRobots - averagePerInstance) > REBALANCE_THRESHOLD
+    Math.abs(inst.currentRobots - averagePerInstance) > REBALANCE_THRESHOLD ||
+    inst.currentRobots > MAX_ROBOTS_PER_INSTANCE
   );
 
   return {
