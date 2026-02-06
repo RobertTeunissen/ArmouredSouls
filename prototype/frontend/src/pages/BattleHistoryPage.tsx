@@ -106,15 +106,17 @@ function BattleHistoryPage() {
     let draws = 0;
     let totalELOChange = 0;
     let totalCredits = 0;
-    let lastOutcome: string | null = null;
+    
+    // For streak calculation: count consecutive outcomes from most recent battle
     let streakCount = 0;
     let streakType: 'win' | 'loss' | null = null;
+    let firstBattleOutcome: 'win' | 'loss' | 'draw' | null = null;
 
     // League vs Tournament breakdown
     let leagueWins = 0, leagueLosses = 0, leagueDraws = 0, leagueELOChange = 0, leagueBattles = 0;
     let tournamentWins = 0, tournamentLosses = 0, tournamentDraws = 0, tournamentELOChange = 0, tournamentBattles = 0;
 
-    battles.forEach((battle) => {
+    battles.forEach((battle, index) => {
       const { outcome, eloChange, myRobotId } = getMatchData(battle);
       const reward = getReward(battle, myRobotId);
       const isTournament = battle.battleType === 'tournament';
@@ -144,14 +146,25 @@ function BattleHistoryPage() {
         leagueELOChange += eloChange;
       }
 
-      // Track streak (only for first page)
-      if (lastOutcome === null || lastOutcome === outcome) {
+      // Track streak: count consecutive outcomes starting from most recent (index 0)
+      if (index === 0) {
+        // First battle (most recent) - establish the streak type
         if (outcome === 'win' || outcome === 'loss') {
-          streakCount++;
+          streakCount = 1;
           streakType = outcome as 'win' | 'loss';
+          firstBattleOutcome = outcome;
+        } else {
+          // First battle is a draw - no streak
+          firstBattleOutcome = 'draw';
         }
+      } else if (firstBattleOutcome && (outcome === 'win' || outcome === 'loss')) {
+        // Check if this battle continues the streak
+        if (outcome === firstBattleOutcome) {
+          streakCount++;
+        }
+        // If outcome doesn't match, streak is already broken (we don't continue counting)
       }
-      lastOutcome = outcome;
+      // If outcome is draw or doesn't match, we just don't increment streakCount
     });
 
     const totalBattles = wins + losses + draws;
