@@ -11,20 +11,6 @@ import {
   getLeagueTierName,
 } from '../utils/matchmakingApi';
 
-// Extended interface to include rewards, fame, and prestige
-interface ExtendedBattleRobot {
-  id: number;
-  name: string;
-  owner: string;
-  eloBefore: number;
-  eloAfter: number;
-  finalHP: number;
-  damageDealt: number;
-  reward?: number;
-  prestige?: number;
-  fame?: number;
-}
-
 function BattleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();

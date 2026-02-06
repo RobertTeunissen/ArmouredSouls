@@ -260,6 +260,9 @@ export interface BattleLogResponse {
     eloAfter: number;
     finalHP: number;
     damageDealt: number;
+    reward?: number;
+    prestige?: number;
+    fame?: number;
   };
   robot2: {
     id: number;
@@ -269,6 +272,9 @@ export interface BattleLogResponse {
     eloAfter: number;
     finalHP: number;
     damageDealt: number;
+    reward?: number;
+    prestige?: number;
+    fame?: number;
   };
   winner: 'robot1' | 'robot2' | null;
   battleLog: {
