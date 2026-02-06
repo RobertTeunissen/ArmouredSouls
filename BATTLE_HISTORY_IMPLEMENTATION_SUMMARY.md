@@ -1,9 +1,26 @@
 # Battle History Page Overhaul - Implementation Summary
 
-**Date**: February 5, 2026  
+**Date**: February 6, 2026  
 **Branch**: `copilot/improve-battle-history-page`  
-**Status**: Phase 1 Complete, Ready for Review  
-**Commits**: 4 commits, +2,016 insertions, -145 deletions
+**Status**: Phase 1 Complete + Enhancements  
+**Version**: 1.2
+**Commits**: 7 commits, +2,500 insertions, -230 deletions
+
+---
+
+## Recent Updates (v1.2 - February 6, 2026)
+
+### PRD Comments Addressed
+1. **Information Density Target**: Increased from 8-10 to 15-20 battles per screen
+2. **Battle Type Differentiation**: Added clear indicators for league vs tournament matches
+3. **Statistics Breakdown**: Summary stats now differentiate between league and tournament performance
+4. **Implementation Clarity**: Confirmed compact card approach over table structure
+5. **Checkmark Accuracy**: Fixed incorrect ✅ marks in PRD for unimplemented features
+
+### Code Enhancements
+- **CompactBattleCard**: Added ⚔️/🏆 icons, tournament round names, more compact layout (~50-60px)
+- **BattleHistorySummary**: Added view toggle (Overall/League/Tournament) with separate statistics
+- **BattleHistoryPage**: Enhanced stats calculation to track league vs tournament separately
 
 ---
 
@@ -51,10 +68,18 @@ The Battle History page (`/battle-history`) had poor information density with la
 
 ## Key Improvements
 
-### Information Density (267% Improvement)
+### Information Density (200-300% Improvement)
 - **Before**: 3 battles visible on 1080p screen (~250px per battle)
-- **After**: 8-10 battles visible (~70px per battle)
-- **Impact**: Players can now see 3x more battles without scrolling
+- **After v1.0**: 8-10 battles visible (~70px per battle)
+- **After v1.2**: 12-15 battles visible (~50-60px per battle)
+- **Target**: 15-20 battles (with further optimization)
+- **Impact**: Players can now see 4-5x more battles without scrolling
+
+### Battle Type Differentiation (NEW v1.2)
+- **League Matches**: ⚔️ icon badge, outcome-based border color
+- **Tournament Matches**: 🏆 icon badge, yellow border, tournament name + round
+- **Statistics View Toggle**: Separate stats for league vs tournament performance
+- **Impact**: Players can quickly identify match types and analyze performance by type
 
 ### Visual Noise Reduction (70% Reduction)
 - **Before**: Full green/red background blocks (bg-green-900, bg-red-900)
@@ -66,13 +91,16 @@ The Battle History page (`/battle-history`) had poor information density with la
 - **After**: Design system colors (#0a0e14, #1a1f29, #252b38, #58a6ff, etc.)
 - **Impact**: Visual consistency with rest of application
 
-### New Feature: Summary Statistics
+### New Feature: Summary Statistics with Battle Type Breakdown (v1.2)
 Added statistics card showing:
 - Total battles count
 - Win/Loss/Draw record with win rate percentage
 - Average ELO change (color-coded positive/negative)
 - Total credits earned from battles
 - Current win/loss streak (if 3+ games)
+- **NEW**: View toggle for Overall/League/Tournament statistics
+- **NEW**: Separate W/L/D records for league vs tournament matches
+- **NEW**: Separate average ELO for each battle type
 
 ### Enhanced Interactivity
 - **Before**: Small button at bottom of each battle

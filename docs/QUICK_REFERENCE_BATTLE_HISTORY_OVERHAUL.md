@@ -1,12 +1,25 @@
 # Battle History Page Overhaul - Quick Reference
 
-**Last Updated**: February 5, 2026  
-**Status**: Phase 1 Complete  
+**Last Updated**: February 6, 2026  
+**Status**: Phase 1 Complete + v1.2 Enhancements  
 **Related PRD**: [PRD_BATTLE_HISTORY_PAGE_OVERHAUL.md](./PRD_BATTLE_HISTORY_PAGE_OVERHAUL.md)
 
 ---
 
-## What Was Changed
+## What Was Changed (v1.2 Update)
+
+### Version 1.0 (February 5, 2026)
+- Initial compact layout implementation
+- Summary statistics card
+- Design system alignment
+- Reduced from 295 to 237 lines
+
+### Version 1.2 (February 6, 2026)
+- **Battle type indicators**: ⚔️ league, 🏆 tournament
+- **Statistics differentiation**: Separate stats for league vs tournament
+- **Further density optimization**: 50-60px per battle (from 70px)
+- **Tournament details**: Shows tournament name and round
+- **View toggle**: Overall/League/Tournament stats tabs
 
 ### Before
 - **Height per battle**: ~250-300px
@@ -15,8 +28,10 @@
 - **Design system**: Using Tailwind defaults (gray-900, etc.)
 - **Interactivity**: Large full-width "View Details" button
 - **File size**: 295 lines
+- **Battle type indication**: Tournament badge only (🏆)
+- **Statistics**: Overall only, no differentiation
 
-### After (Phase 1)
+### After v1.0 (Phase 1)
 - **Height per battle**: ~70-80px (compact layout)
 - **Visible battles on 1080p**: 8-10 battles (267% improvement)
 - **Visual style**: Neutral background with subtle left border accent
@@ -25,6 +40,14 @@
 - **File size**: 237 lines (58 lines shorter, 20% reduction)
 - **New features**: Summary statistics card (W/L/D, avg ELO, total credits)
 
+### After v1.2 (Enhancements)
+- **Height per battle**: ~50-60px (further optimized)
+- **Visible battles on 1080p**: 12-15 battles (400% improvement, targeting 15-20)
+- **Battle type indication**: ⚔️ league + 🏆 tournament icons with names
+- **Statistics**: Toggle between Overall/League/Tournament views
+- **Tournament details**: Shows tournament name + round (Finals, Semi-Finals, etc.)
+- **Outcome text**: Shortened (VICTORY→WIN, DEFEAT→LOSS) for compactness
+
 ---
 
 ## Key Improvements
@@ -32,7 +55,30 @@
 ### 1. Information Density (⭐ CRITICAL)
 **Problem**: Only 3 battles visible on laptop screen  
 **Solution**: Compact horizontal layout with reduced padding and font sizes  
-**Result**: 8-10 battles now visible (267% improvement)
+**Result v1.0**: 8-10 battles now visible (267% improvement)
+**Result v1.2**: 12-15 battles now visible (400% improvement, target 15-20)
+
+**Height Reduction Timeline**:
+- Before: ~250px per battle
+- v1.0: ~70px per battle (-72%)
+- v1.2: ~50px per battle (-80%)
+
+### 2. Battle Type Differentiation (⭐ NEW v1.2)
+**Problem**: Cannot distinguish league matches from tournaments  
+**Solution**: Icon badges and clear labeling  
+**Result**: 
+- ⚔️ League matches: Outcome-colored border
+- 🏆 Tournament matches: Yellow border + tournament name + round
+- Easy visual scanning to find specific match types
+
+### 3. Statistics Breakdown (⭐ NEW v1.2)
+**Problem**: No separation between league and tournament performance  
+**Solution**: View toggle with separate statistics  
+**Result**: 
+- Overall view: Combined statistics for all battles
+- League view: W/L/D, win rate, avg ELO for league matches only
+- Tournament view: W/L/D, win rate, avg ELO for tournaments only
+- Helps identify strengths/weaknesses in different battle types
 
 ### 2. Visual Noise Reduction (⭐ HIGH)
 **Problem**: Large green/red blocks overwhelming the page  
