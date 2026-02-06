@@ -2,15 +2,16 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.0  
+**Version**: 1.1  
 **Date**: February 5, 2026  
 **Author**: GitHub Copilot  
-**Status**: Draft - Ready for Review
+**Status**: Reviewed
 
 ---
 
 ## Version History
 - v1.0 - Initial draft by GitHub Copilot (February 5, 2026)
+- v1.1 - Review done by Robert Teunissen (February 6, 2026)
 
 ---
 
@@ -20,12 +21,16 @@ The Battle History Page (`/battle-history`) is a critical player-facing feature 
 
 **Key Goals:**
 - Dramatically improve information density (target: 8-10 battles per screen vs. current 3)
+
+--> Is this enough? 3 robots each fighting one league match and two tournament matches is already 9 matches each day/cycle!
+
 - Reduce visual noise from oversized colored blocks
 - Enhance scannability with compact, tabular layout
 - Align with design system (Direction B logo, proper color palette)
 - Add filtering, sorting, and search capabilities
 - Improve mobile responsiveness
 - Maintain quick access to detailed battle reports
+
 
 **Problem Statement:**  
 Players need to review multiple battles to analyze performance patterns, but the current UI only shows 3 battles per screen on a laptop due to large green/red blocks. This forces excessive scrolling and makes pattern recognition difficult.
@@ -162,6 +167,8 @@ Target height per battle: 60-80px
 Expected visible battles (1080p): 8-10 battles
 ```
 
+--> I want to see a difference between match types. Is it a league match or a tournament match? Which type of tournament? Maybe a 2v2? Should also be possible to sort on them. 
+
 #### Option B: Compact Card Layout (ALTERNATIVE)
 **Good for mobile, balanced approach**
 
@@ -201,8 +208,6 @@ Expected visible battles (1080p): 7-9 battles
 │   ├── Summary Statistics Card
 │   │   ├── Total Battles
 │   │   ├── W/L/D Record (with percentages)
-│   │   ├── Average ELO Change
-│   │   ├── Total Credits Earned
 │   │   └── Current Win Streak (if applicable)
 │   └── Controls Row
 │       ├── Filter Controls (dropdown/toggles)
@@ -231,6 +236,8 @@ Expected visible battles (1080p): 7-9 battles
     ├── Page Number Display
     └── Results Per Page Selector (20/50/100)
 ```
+
+--> For statistics, differentiate between league matches and tournaments.
 
 ### Component Specifications
 
@@ -538,9 +545,9 @@ text-tertiary: #57606a  /* Muted gray */
 
 ---
 
-## Proposed UX Improvements (Prioritized)
+## Proposed UX Improvements 
 
-### Phase 1: Critical Layout Overhaul (Week 1)
+### Phase 1: Critical Layout Overhaul 
 
 #### 1.1 Implement Compact Battle Card Layout ⭐ CRITICAL
 **Problem Solved**: Dramatically increase information density
@@ -554,6 +561,8 @@ text-tertiary: #57606a  /* Muted gray */
 - Target: 70-80px height per battle (down from ~250px)
 
 **Expected Result**: 8-10 battles visible on 1080p screen (vs. current 3)
+
+--> Battle cards or table structure?
 
 #### 1.2 Replace Full Background Colors with Border Accents ⭐ HIGH PRIORITY
 **Problem Solved**: Reduce visual noise, improve scannability
@@ -598,7 +607,7 @@ text-tertiary: #57606a  /* Muted gray */
 - Remove individual "View Detailed Battle Report" button
 - Add small arrow icon on right side as visual cue
 
-### Phase 2: Filtering and Sorting (Week 2)
+### Phase 2: Filtering and Sorting 
 
 #### 2.1 Implement Outcome Filter
 **Problem Solved**: Cannot view only wins or losses
@@ -647,7 +656,7 @@ text-tertiary: #57606a  /* Muted gray */
 - Store preference in localStorage
 - Consider infinite scroll as alternative (Phase 3)
 
-### Phase 3: Enhanced Visibility and Polish (Week 3)
+### Phase 3: Enhanced Visibility and Polish 
 
 #### 3.1 Responsive Mobile Layout
 **Problem Solved**: Table layout doesn't work well on mobile
@@ -699,7 +708,7 @@ text-tertiary: #57606a  /* Muted gray */
 
 ## Implementation Plan
 
-### Phase 1: Foundation (Week 1) - MUST HAVE
+### Phase 1: Foundation 
 **Goal**: Fix critical information density and visual noise issues
 
 **Tasks**:
@@ -718,7 +727,7 @@ text-tertiary: #57606a  /* Muted gray */
 
 **Risk**: Low - mostly frontend refactoring
 
-### Phase 2: Functionality (Week 2) - SHOULD HAVE
+### Phase 2: Functionality 
 **Goal**: Add filtering, sorting, and search capabilities
 
 **Tasks**:
@@ -737,7 +746,7 @@ text-tertiary: #57606a  /* Muted gray */
 
 **Risk**: Low - standard filtering/sorting implementation
 
-### Phase 3: Polish (Week 3) - NICE TO HAVE
+### Phase 3: Polish (Week 3)
 **Goal**: Enhance user experience with polish and optimization
 
 **Tasks**:
@@ -994,6 +1003,8 @@ badge-text: #f85149;                 /* error */
 - ✅ Performance optimized for large lists
 - ✅ Export functionality working
 - ✅ WCAG AA accessibility compliance
+
+--> This is all not implemented, only use ✅ when it's already implemented
 
 ---
 
