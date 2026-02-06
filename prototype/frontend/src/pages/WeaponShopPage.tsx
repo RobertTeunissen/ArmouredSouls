@@ -21,9 +21,11 @@ interface Weapon {
   name: string;
   weaponType: string;
   loadoutType: string;
+  handsRequired: string;
   description: string;
   baseDamage: number;
   cost: number;
+  cooldown: number;
   // Attribute bonuses
   combatPowerBonus: number;
   targetingSystemsBonus: number;
@@ -231,8 +233,7 @@ function WeaponShopPage() {
       case 'name-asc':
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case 'dps-desc':
-        const getDPS = (w: Weapon) => 
-          w.baseDamage / calculateWeaponCooldown(w.weaponType, w.baseDamage);
+        const getDPS = (w: Weapon) => w.baseDamage / w.cooldown;
         return sorted.sort((a, b) => getDPS(b) - getDPS(a));
       default:
         return sorted;
@@ -245,6 +246,36 @@ function WeaponShopPage() {
     return applyDiscount(basePrice, discountPercent);
   };
 
+  // Helper function to check if weapon is compatible with a loadout type
+  // Based on compatibility rules from WEAPONS_AND_LOADOUT.md
+  const isWeaponCompatibleWithLoadout = (weapon: Weapon, loadoutType: string): boolean => {
+    const { handsRequired, weaponType } = weapon;
+
+    // Helper to check if weapon is a one-handed weapon (not shield)
+    const isOneHandedWeapon = () => handsRequired === 'one' && weaponType !== 'shield';
+
+    switch (loadoutType) {
+      case 'single':
+        // Single loadout: one-handed weapons only (not shields)
+        return isOneHandedWeapon();
+      
+      case 'weapon_shield':
+        // Weapon + Shield loadout: one-handed weapons (main) OR shields (offhand)
+        return isOneHandedWeapon() || (handsRequired === 'shield' && weaponType === 'shield');
+      
+      case 'two_handed':
+        // Two-handed loadout: only two-handed weapons
+        return handsRequired === 'two';
+      
+      case 'dual_wield':
+        // Dual-wield loadout: one-handed weapons only (not shields)
+        return isOneHandedWeapon();
+      
+      default:
+        return false;
+    }
+  };
+
   // Apply search, filters, and sorting
   const processedWeapons = useMemo(() => {
     // Step 1: Search
@@ -253,8 +284,12 @@ function WeaponShopPage() {
     // Step 2: Filter
     result = result.filter(weapon => {
       // Loadout type filter (OR logic within category)
+      // Changed from exact loadoutType match to compatibility check
       if (filters.loadoutTypes.length > 0) {
-        if (!filters.loadoutTypes.includes(weapon.loadoutType)) {
+        const isCompatible = filters.loadoutTypes.some(loadoutType =>
+          isWeaponCompatibleWithLoadout(weapon, loadoutType)
+        );
+        if (!isCompatible) {
           return false;
         }
       }

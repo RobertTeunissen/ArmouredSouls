@@ -79,8 +79,11 @@ interface Weapon {
   id: number;
   name: string;
   weaponType: string;
+  loadoutType: string;
+  handsRequired: string;
   description: string | null;
   baseDamage: number;
+  cooldown: number;
   cost: number;
   combatPowerBonus: number;
   targetingSystemsBonus: number;
