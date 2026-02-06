@@ -368,6 +368,109 @@ Minimum Multiplier = 1.2
 Final Multiplier = Max(Base - Dampeners, 1.2)
 ```
 
+### Damage Dampeners Mechanics
+
+**Last Updated**: February 6, 2026  
+**Status**: Rebalanced - Now provides always-on mitigation + crit reduction
+
+Damage Dampeners now provides **two distinct benefits**:
+
+1. **Critical Hit Reduction** (existing): Reduces the critical damage multiplier
+2. **Pre-Shield Mitigation** (new): Reduces ALL incoming damage before it applies to Energy Shield
+
+This makes Damage Dampeners valuable in every fight, not just against critical hits.
+
+#### Pre-Shield Mitigation Formula
+
+```
+Pre-Shield Mitigation Percent = Clamp(Damage Dampeners × 0.2%, 0%, 15%)
+Pre-Shield Damage Multiplier = 1 - (Pre-Shield Mitigation Percent / 100)
+Mitigated Damage = Incoming Damage × Pre-Shield Damage Multiplier
+```
+
+**Examples:**
+```
+Dampeners = 10:  2% reduction  (×0.98)
+Dampeners = 25:  5% reduction  (×0.95)
+Dampeners = 50:  10% reduction (×0.90)
+Dampeners = 75:  15% reduction (×0.85) - capped
+Dampeners = 100: 15% reduction (×0.85) - capped
+```
+
+#### Order of Operations
+
+When damage is calculated and applied:
+
+1. **Base Damage**: Calculate from weapon and attributes
+2. **Critical Multiplier**: If crit, apply multiplier (reduced by Dampeners)
+3. **Pre-Shield Mitigation**: Apply Dampeners mitigation (NEW - always applies)
+4. **Energy Shield**: Apply damage to shield first
+5. **HP Overflow**: Apply remaining damage to HP with armor reduction
+
+**Example with Critical Hit:**
+```
+Base Damage: 100
+Critical Hit: Yes (×2.0 multiplier)
+Defender Dampeners: 20
+
+Step 1: Apply crit multiplier (reduced by dampeners)
+  Crit Multiplier = 2.0 - (20/100) = 1.8
+  After Crit = 100 × 1.8 = 180
+
+Step 2: Apply pre-shield mitigation
+  Mitigation = 20 × 0.2% = 4%
+  Multiplier = 1 - 0.04 = 0.96
+  After Mitigation = 180 × 0.96 = 172.8
+
+Step 3: Apply to shield, then HP
+  (continues as normal)
+```
+
+**Example with Non-Critical Hit:**
+```
+Base Damage: 100
+Critical Hit: No
+Defender Dampeners: 20
+
+Step 1: No crit multiplier
+  Damage = 100
+
+Step 2: Apply pre-shield mitigation (NEW - now affects normal hits!)
+  Mitigation = 20 × 0.2% = 4%
+  Multiplier = 1 - 0.04 = 0.96
+  After Mitigation = 100 × 0.96 = 96
+
+Step 3: Apply to shield, then HP
+  (continues as normal)
+```
+
+#### Display Format (Extended Battle Logs - Admin)
+
+```
+// With crit and dampeners
+Apply: 100.0 base × 1.80 crit × 0.96 dampen = 172.8 | Energy Shield: 50.0 absorbed | Overflow: 122.8 × 0.85 armor = 104.4 HP
+
+// Without crit, but with dampeners
+Apply: 100.0 base × 1.00 crit × 0.96 dampen = 96.0 | Energy Shield: 50.0 absorbed | Overflow: 46.0 × 0.85 armor = 39.1 HP
+```
+
+#### Design Benefits
+
+1. **Consistent Value**: Dampeners now provides measurable benefit on EVERY hit, not just crits
+2. **Synergy with Shields**: Reduces shield depletion rate, making shields more effective
+3. **Synergy with Armor**: Reduced damage means armor has more effective HP to work with
+4. **Balanced Scaling**: 0.2% per point is noticeable but not overwhelming
+5. **Fair Cap**: 15% maximum prevents it from becoming mandatory or overpowered
+6. **Preserves Identity**: Still excels at reducing critical hit spikes (dual benefit)
+
+#### Balance Considerations
+
+- **Not Overpowered**: 15% cap ensures it doesn't overshadow other defensive stats
+- **Competitive with Armor/Shield**: Comparable value to other defensive investments
+- **Scales Smoothly**: Linear scaling (0.2% per point) is predictable and fair
+- **Early Game Value**: Even 5-10 points provides noticeable benefit (1-2% reduction)
+- **Late Game Value**: Caps at 75 points to prevent excessive stacking
+
 ## Damage Calculation
 
 ### Formula
@@ -393,16 +496,18 @@ Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1
 
 ## Damage Application
 
-**Last Updated**: February 5, 2026  
-**Status**: New simplified formula - eliminates 70% absorption and bleed-through
+**Last Updated**: February 6, 2026  
+**Status**: Updated with pre-shield dampeners mitigation
 
-This section defines how damage is applied to Energy Shields and HP, including armor reduction mechanics.
+This section defines how damage is applied to Energy Shields and HP, including the new damage dampeners mitigation and armor reduction mechanics.
 
 ### Overview
 
-Damage is applied in a simple two-step process:
-1. **Energy Shield Absorption**: Damage goes to Energy Shield first (100% effective, no absorption penalty)
-2. **HP Damage**: Any overflow damage (after shield depleted) goes to HP with armor reduction applied
+Damage is applied in a multi-step process:
+1. **Critical Multiplier**: If critical hit, apply multiplier (reduced by Damage Dampeners)
+2. **Pre-Shield Mitigation**: Apply Damage Dampeners mitigation to all damage (NEW - Feb 2026)
+3. **Energy Shield Absorption**: Damage goes to Energy Shield first (100% effective)
+4. **HP Damage**: Any overflow damage (after shield depleted) goes to HP with armor reduction applied
 
 ### Constants
 

@@ -68,10 +68,21 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 7. **Armor Plating** - Physical damage reduction from all sources (percentage-based, 1.5% per point)
 8. **Energy Shield Capacity** - Maximum energy shield HP pool (separate from robot HP)
 9. **Evasion Thrusters** - Chance to dodge incoming attacks
-10. **Damage Dampeners** - Reduces critical hit damage taken
+10. **Damage Dampeners** - Reduces ALL incoming damage + extra crit damage reduction (rebalanced Feb 2026)
 11. **Counter Protocols** - Chance to strike back when hit
 
-**Note**: See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for detailed Armor Plating mechanics with new percentage-based formula (updated Feb 2026).
+**Damage Dampeners Mechanics (Updated Feb 2026)**:
+- **Primary Benefit**: Pre-shield damage mitigation on ALL hits (0.2% per point, capped at 15%)
+  - At DD=10: 2% reduction (×0.98 damage multiplier)
+  - At DD=25: 5% reduction (×0.95 damage multiplier)
+  - At DD=50: 10% reduction (×0.90 damage multiplier)
+  - At DD=75+: 15% reduction cap (×0.85 damage multiplier)
+- **Secondary Benefit**: Reduces critical hit multiplier (existing mechanic)
+  - Critical multiplier reduced by DD/100 (min 1.2x)
+- **Design**: Now provides consistent value every fight, not just against crits
+- **Synergy**: Works with shields (reduces depletion) and armor (more effective HP)
+
+**Note**: See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for detailed mechanics including new Damage Dampeners formula (updated Feb 2026) and Armor Plating percentage-based formula.
 
 ### 🟢 Chassis & Mobility (5)
 

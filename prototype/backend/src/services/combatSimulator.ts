@@ -247,6 +247,7 @@ function calculateBaseDamage(attacker: RobotWithWeapons, weaponBaseDamage: numbe
 /**
  * Apply damage through Energy Shields and armor
  * New simplified formula (Feb 2026): 100% to Energy Shield, overflow to HP with armor %
+ * Updated (Feb 2026): damageDampeners now provide pre-shield mitigation on all hits
  */
 function applyDamage(
   baseDamage: number,
@@ -258,7 +259,7 @@ function applyDamage(
 ): { hpDamage: number; shieldDamage: number; breakdown: FormulaBreakdown } {
   let damage = baseDamage;
   
-  // Apply critical multiplier
+  // Apply critical multiplier (existing behavior)
   let critMultiplier = 1.0;
   if (isCritical) {
     critMultiplier = attacker.loadoutType === 'two_handed' ? 2.5 : 2.0;
@@ -266,6 +267,12 @@ function applyDamage(
     critMultiplier = Math.max(critMultiplier, 1.2);
     damage *= critMultiplier;
   }
+  
+  // Apply pre-shield dampeners mitigation (new feature: always-on damage reduction)
+  const dampenersValue = Number(defender.damageDampeners);
+  const preShieldMitigationPercent = clamp(dampenersValue * 0.2, 0, 15);
+  const preShieldDamageMultiplier = 1 - (preShieldMitigationPercent / 100);
+  damage *= preShieldDamageMultiplier;
   
   const effectivePenetration = getEffectiveAttribute(attacker, attacker.penetration, attackerHand, 'penetrationBonus');
   const effectiveArmorPlating = Number(defender.armorPlating);  // Defender's Armor Plating attribute
@@ -275,7 +282,8 @@ function applyDamage(
   let remainingDamage = damage;
   let detailedFormula = '';
   
-  const damageAfterCrit = damage;
+  // For formula breakdown clarity
+  const damageAfterDampeners = damage; // Final damage after both crit and mitigation
   
   // Step 1: Apply to Energy Shield first (100% effective)
   if (defenderState.currentShield > 0) {
@@ -296,9 +304,9 @@ function applyDamage(
       hpDamage = Math.max(1, remainingDamage * damageMultiplier);
       
       if (shieldDamage > 0) {
-        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed | Overflow: ${remainingDamage.toFixed(1)} × ${damageMultiplier.toFixed(2)} armor = ${hpDamage.toFixed(1)} HP`;
+        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit × ${preShieldDamageMultiplier.toFixed(2)} dampen = ${damageAfterDampeners.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed | Overflow: ${remainingDamage.toFixed(1)} × ${damageMultiplier.toFixed(2)} armor = ${hpDamage.toFixed(1)} HP`;
       } else {
-        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | No Energy Shield | ${damageAfterCrit.toFixed(1)} × ${damageMultiplier.toFixed(2)} armor = ${hpDamage.toFixed(1)} HP`;
+        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit × ${preShieldDamageMultiplier.toFixed(2)} dampen = ${damageAfterDampeners.toFixed(1)} | No Energy Shield | ${damageAfterDampeners.toFixed(1)} × ${damageMultiplier.toFixed(2)} armor = ${hpDamage.toFixed(1)} HP`;
       }
     } else {
       // Case B: Penetration bonus damage
@@ -307,14 +315,14 @@ function applyDamage(
       hpDamage = Math.max(1, remainingDamage * damageMultiplier);
       
       if (shieldDamage > 0) {
-        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed | Overflow: ${remainingDamage.toFixed(1)} × ${damageMultiplier.toFixed(2)} pen bonus = ${hpDamage.toFixed(1)} HP`;
+        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit × ${preShieldDamageMultiplier.toFixed(2)} dampen = ${damageAfterDampeners.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed | Overflow: ${remainingDamage.toFixed(1)} × ${damageMultiplier.toFixed(2)} pen bonus = ${hpDamage.toFixed(1)} HP`;
       } else {
-        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | No Energy Shield | ${damageAfterCrit.toFixed(1)} × ${damageMultiplier.toFixed(2)} pen bonus = ${hpDamage.toFixed(1)} HP`;
+        detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit × ${preShieldDamageMultiplier.toFixed(2)} dampen = ${damageAfterDampeners.toFixed(1)} | No Energy Shield | ${damageAfterDampeners.toFixed(1)} × ${damageMultiplier.toFixed(2)} pen bonus = ${hpDamage.toFixed(1)} HP`;
       }
     }
   } else if (shieldDamage > 0) {
     // Shield absorbed all damage
-    detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit = ${damageAfterCrit.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed, 0 HP`;
+    detailedFormula = `${baseDamage.toFixed(1)} base × ${critMultiplier.toFixed(2)} crit × ${preShieldDamageMultiplier.toFixed(2)} dampen = ${damageAfterDampeners.toFixed(1)} | Energy Shield: ${shieldDamage.toFixed(1)} absorbed, 0 HP`;
   }
   
   defenderState.currentHP = Math.max(0, defenderState.currentHP - hpDamage);
@@ -327,7 +335,10 @@ function applyDamage(
       components: {
         baseDamage,
         critMultiplier,
-        damageAfterCrit,
+        dampenersValue,
+        preShieldMitigationPercent,
+        preShieldDamageMultiplier,
+        damageAfterDampeners,
         penetration: effectivePenetration,
         armorPlating: effectiveArmorPlating,
         shieldDamage,
