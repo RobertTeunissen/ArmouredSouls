@@ -37,16 +37,27 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 
 **Offensive and defensive combat capabilities (weapon-neutral)**
 
-1. **Combat Power** - Base damage multiplier for all weapons
+1. **Combat Power** - Base damage multiplier for all weapons (1.5% per point, multiplicative)
 2. **Targeting Systems** - Hit chance and precision for all attacks
 3. **Critical Systems** - Chance to deal critical damage with any weapon
 4. **Penetration** - Bypasses armor and shields for all attack types
-5. **Weapon Control** - Handling and effectiveness with equipped weapons
+5. **Weapon Control** - Weapon reliability (reduces malfunction chance) and damage multiplier (see below)
 6. **Attack Speed** - Time between attacks for all weapon types
+
+**Weapon Control Mechanics (Updated Feb 2026)**:
+- **Primary Benefit**: Reduces weapon malfunction chance
+  - At WC=1: 19.6% chance weapon malfunctions (attack deals 0 damage)
+  - At WC=25: 10% malfunction chance
+  - At WC=50: 0% malfunction chance (perfectly reliable)
+- **Secondary Benefit**: Damage multiplier `1 + WC/150` (reduced from /100)
+  - At WC=30: 1.20× damage multiplier
+  - At WC=50: 1.33× damage multiplier
+- **Design**: Differentiates Weapon Control from Combat Power (no longer redundant)
 
 **Design Notes:**
 - All attributes are weapon-neutral - apply to all loadouts and weapon types
-- Combat Power affects base damage regardless of weapons
+- Combat Power affects base damage regardless of weapons (pure damage multiplier)
+- Weapon Control affects reliability AND damage (consistency + damage)
 - Targeting Systems helps both ranged accuracy and melee precision
 - Specialization comes from weapon choice and loadout, not attributes
 

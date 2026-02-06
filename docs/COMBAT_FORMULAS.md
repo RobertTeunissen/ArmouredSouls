@@ -16,15 +16,16 @@ This document is the **authoritative source** for all combat formulas, weapon bo
 
 ## Table of Contents
 1. [Weapon Attribute Bonuses](#weapon-attribute-bonuses)
-2. [Attack Speed and Cooldown Calculation](#attack-speed-and-cooldown-calculation)
-3. [Hit Chance Calculation](#hit-chance-calculation)
-4. [Critical Hit Calculation](#critical-hit-calculation)
-5. [Damage Calculation](#damage-calculation)
-6. [Damage Application (Shield & Armor)](#damage-application)
-7. [Counter-Attack Calculation](#counter-attack-calculation)
-8. [Shield Regeneration](#shield-regeneration)
-9. [Offhand Attack Rules](#offhand-attack-rules)
-10. [Weapon Bonus Design Considerations](#weapon-bonus-design-considerations)
+2. [Weapon Malfunction Mechanic](#weapon-malfunction-mechanic)
+3. [Attack Speed and Cooldown Calculation](#attack-speed-and-cooldown-calculation)
+4. [Hit Chance Calculation](#hit-chance-calculation)
+5. [Critical Hit Calculation](#critical-hit-calculation)
+6. [Damage Calculation](#damage-calculation)
+7. [Damage Application (Shield & Armor)](#damage-application)
+8. [Counter-Attack Calculation](#counter-attack-calculation)
+9. [Shield Regeneration](#shield-regeneration)
+10. [Offhand Attack Rules](#offhand-attack-rules)
+11. [Weapon Bonus Design Considerations](#weapon-bonus-design-considerations)
 
 ---
 
@@ -81,6 +82,185 @@ Weapon Attribute Bonuses:
 Main (Machine Pistol): CombatPower +1, Targeting +2, Speed +3
 Offhand (Machine Pistol): CombatPower +1, Targeting +2, Speed +3
 ```
+
+---
+
+## Weapon Malfunction Mechanic
+
+**Last Updated**: February 6, 2026  
+**Status**: Implemented - Differentiates Weapon Control from Combat Power
+
+### Overview
+
+Weapon Control now provides **two distinct benefits**:
+1. **Reliability**: Reduces weapon malfunction chance (primary utility)
+2. **Damage Multiplier**: Increases damage output (secondary utility, reduced from original)
+
+This differentiates Weapon Control from Combat Power, making them no longer redundant multiplicative damage modifiers.
+
+### Malfunction Chance Formula
+
+```
+Base Malfunction Rate = 20%
+Reduction Per Point = 0.4%
+Effective Weapon Control = Robot Weapon Control + Weapon Bonus (for attacking hand)
+
+Malfunction Chance = Max(0, Base Malfunction Rate - (Effective Weapon Control × Reduction Per Point))
+```
+
+### Examples
+
+**Low Weapon Control (1-10)**:
+- Weapon Control 1:  `20 - (1 × 0.4) = 19.6%` malfunction chance
+- Weapon Control 5:  `20 - (5 × 0.4) = 18.0%` malfunction chance
+- Weapon Control 10: `20 - (10 × 0.4) = 16.0%` malfunction chance
+
+**Mid Weapon Control (20-30)**:
+- Weapon Control 20: `20 - (20 × 0.4) = 12.0%` malfunction chance
+- Weapon Control 25: `20 - (25 × 0.4) = 10.0%` malfunction chance
+- Weapon Control 30: `20 - (30 × 0.4) = 8.0%` malfunction chance
+
+**High Weapon Control (40-50)**:
+- Weapon Control 40: `20 - (40 × 0.4) = 4.0%` malfunction chance
+- Weapon Control 45: `20 - (45 × 0.4) = 2.0%` malfunction chance
+- Weapon Control 50: `20 - (50 × 0.4) = 0.0%` malfunction chance (perfectly reliable)
+
+### Malfunction Effects
+
+When a weapon malfunctions:
+- ❌ Attack immediately fails (bypasses hit calculation)
+- ❌ No damage dealt (0 HP, 0 Shield damage)
+- ❌ No critical hit possible
+- ❌ No counter-attack triggered
+- ⚠️ Event logged as 'malfunction' type with warning message
+
+### Malfunction Order of Operations
+
+```
+1. Check Weapon Malfunction (FIRST)
+   └─> If malfunction: Attack fails immediately, skip all other checks
+   └─> If reliable: Continue to step 2
+
+2. Calculate Hit Chance
+   └─> If miss: Attack fails, 0 damage
+   └─> If hit: Continue to step 3
+
+3. Calculate Critical Hit Chance
+4. Calculate Damage
+5. Apply Damage through Shield & Armor
+6. Check Counter-Attack
+```
+
+### Display Format (Extended Battle Logs - Admin)
+
+**Successful Attack**:
+```
+Malfunction: 20 base - (15.0 weapon_control × 0.4) = 14.0% (rolled 45.3, result: weapon reliable)
+Hit: 70 base + 7.5 targeting + 0 stance - 3.3 evasion - 2.0 gyro + 5.2 variance = 77.4%
+...
+```
+
+**Malfunction Event**:
+```
+Malfunction: 20 base - (5.0 weapon_control × 0.4) = 18.0% (rolled 12.5, result: MALFUNCTION)
+```
+
+### Display Format (User-Facing Battle Logs)
+
+```
+⚠️ RobotA's Plasma Rifle malfunctions! (Weapon Control failure)
+⚠️ [OFFHAND] RobotB's Machine Pistol malfunctions! (Weapon Control failure)
+```
+
+### Implementation Reference
+
+**File**: `prototype/backend/src/services/combatSimulator.ts`  
+**Function**: `calculateMalfunctionChance()`  
+**Lines**: ~178-197
+
+```typescript
+function calculateMalfunctionChance(
+  attacker: RobotWithWeapons,
+  attackerHand: 'main' | 'offhand' = 'main'
+): { malfunctionChance: number; breakdown: FormulaBreakdown } {
+  const effectiveWeaponControl = getEffectiveAttribute(
+    attacker,
+    attacker.weaponControl,
+    attackerHand,
+    'weaponControlBonus'
+  );
+  
+  const baseMalfunction = 20;
+  const reductionPerPoint = 0.4;
+  const calculated = baseMalfunction - (effectiveWeaponControl * reductionPerPoint);
+  const finalChance = Math.max(0, calculated);
+  
+  return {
+    malfunctionChance: finalChance,
+    breakdown: {
+      calculation: `${baseMalfunction} base - (${effectiveWeaponControl.toFixed(1)} weapon_control × ${reductionPerPoint}) = ${finalChance.toFixed(1)}%`,
+      components: {
+        base: baseMalfunction,
+        weaponControl: effectiveWeaponControl,
+        reductionPerPoint,
+      },
+      result: finalChance,
+    },
+  };
+}
+```
+
+### Weapon Control Damage Multiplier (Rebalanced)
+
+**Previous Formula**:
+```
+Damage Multiplier = 1 + (Weapon Control / 100)
+```
+
+**New Formula (Reduced)**:
+```
+Damage Multiplier = 1 + (Weapon Control / 150)
+```
+
+**Rationale**: Since Weapon Control now provides significant value through reliability (preventing 0-20% of attacks from failing), its damage multiplier has been reduced by 33% to maintain balance. This prevents Weapon Control from being overpowered.
+
+**Comparison**:
+```
+Weapon Control = 30:
+  Old: 1 + 30/100 = 1.30 (30% damage increase)
+  New: 1 + 30/150 = 1.20 (20% damage increase)
+  
+Weapon Control = 50:
+  Old: 1 + 50/100 = 1.50 (50% damage increase)
+  New: 1 + 50/150 = 1.33 (33% damage increase)
+```
+
+### Design Benefits
+
+1. **Differentiation**: Combat Power and Weapon Control are no longer redundant
+   - Combat Power: Pure damage multiplier (1.5% per point, unchanged)
+   - Weapon Control: Reliability + reduced damage multiplier
+
+2. **Strategic Depth**: Players must decide between:
+   - High Combat Power (raw damage output)
+   - High Weapon Control (consistency and reliability)
+   - Balanced approach
+
+3. **Scaling**: Malfunction chance scales smoothly from 20% to 0%
+   - Noticeable at low levels (forces early investment decisions)
+   - Meaningful at mid levels (10-15% malfunction still impactful)
+   - Eliminates at high levels (reward for heavy investment)
+
+4. **Weapon Bonuses**: Weapons can now provide weaponControlBonus to:
+   - Represent weapon quality (reliable vs. unreliable)
+   - Create trade-offs (high damage but unreliable vs. lower damage but reliable)
+
+### Balance Notes
+
+- **Not Overpowered**: 20% malfunction at low levels is noticeable but not crippling (1 in 5 attacks)
+- **Incentivizes Investment**: Players must invest in Weapon Control to maintain reliability
+- **Fair Scaling**: Linear reduction (0.4% per point) ensures consistent improvement
+- **Natural Cap**: 0% malfunction at WC=50 provides perfect reliability as end-game reward
 
 ---
 
@@ -194,7 +374,7 @@ Final Multiplier = Max(Base - Dampeners, 1.2)
 ```
 Combat Power Multiplier = 1 + ((Robot Combat Power + Weapon Bonus) * 1.5) / 100
 Loadout Multiplier = 1.10 (two-handed) OR 0.90 (dual wield) OR 1.0 (other)
-Weapon Control Multiplier = 1 + (Robot Weapon Control + Weapon Bonus) / 100
+Weapon Control Multiplier = 1 + (Robot Weapon Control + Weapon Bonus) / 150  // Changed from /100 (Feb 2026)
 Stance Multiplier = 1.15 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
 
 Base Damage = Weapon Base Damage × Combat Power × Loadout × Weapon Control × Stance
