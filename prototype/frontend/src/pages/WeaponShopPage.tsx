@@ -251,14 +251,17 @@ function WeaponShopPage() {
   const isWeaponCompatibleWithLoadout = (weapon: Weapon, loadoutType: string): boolean => {
     const { handsRequired, weaponType } = weapon;
 
+    // Helper to check if weapon is a one-handed weapon (not shield)
+    const isOneHandedWeapon = () => handsRequired === 'one' && weaponType !== 'shield';
+
     switch (loadoutType) {
       case 'single':
         // Single loadout: one-handed weapons only (not shields)
-        return handsRequired === 'one' && weaponType !== 'shield';
+        return isOneHandedWeapon();
       
       case 'weapon_shield':
         // Weapon + Shield loadout: one-handed weapons (main) OR shields (offhand)
-        return (handsRequired === 'one' && weaponType !== 'shield') || handsRequired === 'shield';
+        return isOneHandedWeapon() || (handsRequired === 'shield' && weaponType === 'shield');
       
       case 'two_handed':
         // Two-handed loadout: only two-handed weapons
@@ -266,7 +269,7 @@ function WeaponShopPage() {
       
       case 'dual_wield':
         // Dual-wield loadout: one-handed weapons only (not shields)
-        return handsRequired === 'one' && weaponType !== 'shield';
+        return isOneHandedWeapon();
       
       default:
         return false;
