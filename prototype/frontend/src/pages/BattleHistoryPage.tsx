@@ -27,6 +27,7 @@ function BattleHistoryPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [battleFilter, setBattleFilter] = useState<'overall' | 'league' | 'tournament'>('overall');
 
   useEffect(() => {
     fetchBattles(1);
@@ -147,6 +148,7 @@ function BattleHistoryPage() {
       }
 
       // Track streak: count consecutive outcomes starting from most recent (index 0)
+      // Only count if outcome is win or loss (draws break streaks)
       if (index === 0) {
         // First battle (most recent) - establish the streak type
         if (outcome === 'win' || outcome === 'loss') {
@@ -156,15 +158,17 @@ function BattleHistoryPage() {
         } else {
           // First battle is a draw - no streak
           firstBattleOutcome = 'draw';
+          streakCount = 0;
+          streakType = null;
         }
-      } else if (firstBattleOutcome && (outcome === 'win' || outcome === 'loss')) {
-        // Check if this battle continues the streak
+      } else if (firstBattleOutcome === 'win' || firstBattleOutcome === 'loss') {
+        // We have an established streak type, check if this battle continues it
         if (outcome === firstBattleOutcome) {
           streakCount++;
         }
-        // If outcome doesn't match, streak is already broken (we don't continue counting)
+        // If outcome doesn't match or is a draw, streak ends (don't increment)
       }
-      // If outcome is draw or doesn't match, we just don't increment streakCount
+      // Any other case: streak remains as is
     });
 
     const totalBattles = wins + losses + draws;
@@ -237,25 +241,36 @@ function BattleHistoryPage() {
         {!loading && !error && battles.length > 0 && (
           <>
             {/* Summary Statistics */}
-            <BattleHistorySummary stats={summaryStats} />
+            <BattleHistorySummary 
+              stats={summaryStats} 
+              view={battleFilter} 
+              onViewChange={setBattleFilter}
+            />
 
             {/* Battle List */}
             <div className="mb-6">
-              {battles.map((battle) => {
-                const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
-                const reward = getReward(battle, myRobotId);
+              {battles
+                .filter((battle) => {
+                  if (battleFilter === 'overall') return true;
+                  if (battleFilter === 'league') return battle.battleType !== 'tournament';
+                  if (battleFilter === 'tournament') return battle.battleType === 'tournament';
+                  return true;
+                })
+                .map((battle) => {
+                  const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
+                  const reward = getReward(battle, myRobotId);
 
-                return (
-                  <CompactBattleCard
-                    key={battle.id}
-                    battle={battle}
-                    myRobot={myRobot}
-                    opponent={opponent}
-                    outcome={outcome}
-                    eloChange={eloChange}
-                    myRobotId={myRobotId}
-                    reward={reward}
-                    onClick={() => navigate(`/battle/${battle.id}`)}
+                  return (
+                    <CompactBattleCard
+                      key={battle.id}
+                      battle={battle}
+                      myRobot={myRobot}
+                      opponent={opponent}
+                      outcome={outcome}
+                      eloChange={eloChange}
+                      myRobotId={myRobotId}
+                      reward={reward}
+                      onClick={() => navigate(`/battle/${battle.id}`)}
                   />
                 );
               })}

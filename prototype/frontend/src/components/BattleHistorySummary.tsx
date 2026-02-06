@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface SummaryStats {
   totalBattles: number;
@@ -30,10 +30,11 @@ interface SummaryStats {
 
 interface BattleHistorySummaryProps {
   stats: SummaryStats;
+  view: 'overall' | 'league' | 'tournament';
+  onViewChange: (view: 'overall' | 'league' | 'tournament') => void;
 }
 
-const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats }) => {
-  const [view, setView] = useState<'overall' | 'league' | 'tournament'>('overall');
+const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view, onViewChange }) => {
   
   const getDisplayStats = () => {
     if (view === 'league' && stats.leagueStats) {
@@ -76,7 +77,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats }) =>
       {hasBreakdown && (
         <div className="flex gap-2 mb-4 pb-3 border-b border-gray-700">
           <button
-            onClick={() => setView('overall')}
+            onClick={() => onViewChange('overall')}
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               view === 'overall' 
                 ? 'bg-[#58a6ff] text-white' 
@@ -86,7 +87,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats }) =>
             Overall
           </button>
           <button
-            onClick={() => setView('league')}
+            onClick={() => onViewChange('league')}
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               view === 'league' 
                 ? 'bg-[#58a6ff] text-white' 
@@ -96,7 +97,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats }) =>
             ⚔️ League
           </button>
           <button
-            onClick={() => setView('tournament')}
+            onClick={() => onViewChange('tournament')}
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               view === 'tournament' 
                 ? 'bg-[#58a6ff] text-white' 
