@@ -282,8 +282,8 @@ function applyDamage(
   let remainingDamage = damage;
   let detailedFormula = '';
   
-  const damageAfterCrit = baseDamage * critMultiplier;
-  const damageAfterDampeners = damage;
+  // For formula breakdown clarity
+  const damageAfterDampeners = damage; // Final damage after both crit and mitigation
   
   // Step 1: Apply to Energy Shield first (100% effective)
   if (defenderState.currentShield > 0) {
@@ -335,7 +335,6 @@ function applyDamage(
       components: {
         baseDamage,
         critMultiplier,
-        damageAfterCrit,
         dampenersValue,
         preShieldMitigationPercent,
         preShieldDamageMultiplier,
