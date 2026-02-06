@@ -110,16 +110,39 @@ function BattleHistoryPage() {
     let streakCount = 0;
     let streakType: 'win' | 'loss' | null = null;
 
+    // League vs Tournament breakdown
+    let leagueWins = 0, leagueLosses = 0, leagueDraws = 0, leagueELOChange = 0, leagueBattles = 0;
+    let tournamentWins = 0, tournamentLosses = 0, tournamentDraws = 0, tournamentELOChange = 0, tournamentBattles = 0;
+
     battles.forEach((battle) => {
       const { outcome, eloChange, myRobotId } = getMatchData(battle);
       const reward = getReward(battle, myRobotId);
+      const isTournament = battle.battleType === 'tournament';
 
-      if (outcome === 'win') wins++;
-      else if (outcome === 'loss') losses++;
-      else if (outcome === 'draw') draws++;
+      if (outcome === 'win') {
+        wins++;
+        if (isTournament) tournamentWins++;
+        else leagueWins++;
+      } else if (outcome === 'loss') {
+        losses++;
+        if (isTournament) tournamentLosses++;
+        else leagueLosses++;
+      } else if (outcome === 'draw') {
+        draws++;
+        if (isTournament) tournamentDraws++;
+        else leagueDraws++;
+      }
 
       totalELOChange += eloChange;
       totalCredits += reward;
+
+      if (isTournament) {
+        tournamentBattles++;
+        tournamentELOChange += eloChange;
+      } else {
+        leagueBattles++;
+        leagueELOChange += eloChange;
+      }
 
       // Track streak (only for first page)
       if (lastOutcome === null || lastOutcome === outcome) {
@@ -135,6 +158,12 @@ function BattleHistoryPage() {
     const winRate = totalBattles > 0 ? wins / totalBattles : 0;
     const avgELOChange = totalBattles > 0 ? totalELOChange / totalBattles : 0;
 
+    const leagueWinRate = leagueBattles > 0 ? leagueWins / leagueBattles : 0;
+    const leagueAvgELO = leagueBattles > 0 ? leagueELOChange / leagueBattles : 0;
+
+    const tournamentWinRate = tournamentBattles > 0 ? tournamentWins / tournamentBattles : 0;
+    const tournamentAvgELO = tournamentBattles > 0 ? tournamentELOChange / tournamentBattles : 0;
+
     return {
       totalBattles,
       wins,
@@ -144,6 +173,22 @@ function BattleHistoryPage() {
       avgELOChange,
       totalCreditsEarned: totalCredits,
       currentStreak: streakCount >= 3 ? { type: streakType!, count: streakCount } : undefined,
+      leagueStats: leagueBattles > 0 ? {
+        battles: leagueBattles,
+        wins: leagueWins,
+        losses: leagueLosses,
+        draws: leagueDraws,
+        winRate: leagueWinRate,
+        avgELOChange: leagueAvgELO,
+      } : undefined,
+      tournamentStats: tournamentBattles > 0 ? {
+        battles: tournamentBattles,
+        wins: tournamentWins,
+        losses: tournamentLosses,
+        draws: tournamentDraws,
+        winRate: tournamentWinRate,
+        avgELOChange: tournamentAvgELO,
+      } : undefined,
     };
   }, [battles]);
 
