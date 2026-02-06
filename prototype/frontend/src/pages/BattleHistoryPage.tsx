@@ -112,6 +112,7 @@ function BattleHistoryPage() {
     let streakCount = 0;
     let streakType: 'win' | 'loss' | null = null;
     let firstBattleOutcome: 'win' | 'loss' | 'draw' | null = null;
+    let streakBroken = false; // Flag to stop counting once streak is broken
 
     // League vs Tournament breakdown
     let leagueWins = 0, leagueLosses = 0, leagueDraws = 0, leagueELOChange = 0, leagueBattles = 0;
@@ -148,27 +149,31 @@ function BattleHistoryPage() {
       }
 
       // Track streak: count consecutive outcomes starting from most recent (index 0)
-      // Only count if outcome is win or loss (draws break streaks)
-      if (index === 0) {
-        // First battle (most recent) - establish the streak type
-        if (outcome === 'win' || outcome === 'loss') {
-          streakCount = 1;
-          streakType = outcome as 'win' | 'loss';
-          firstBattleOutcome = outcome;
-        } else {
-          // First battle is a draw - no streak
-          firstBattleOutcome = 'draw';
-          streakCount = 0;
-          streakType = null;
+      // Stop counting once the streak is broken
+      if (!streakBroken) {
+        if (index === 0) {
+          // First battle (most recent) - establish the streak type
+          if (outcome === 'win' || outcome === 'loss') {
+            streakCount = 1;
+            streakType = outcome as 'win' | 'loss';
+            firstBattleOutcome = outcome;
+          } else {
+            // First battle is a draw - no streak
+            firstBattleOutcome = 'draw';
+            streakCount = 0;
+            streakType = null;
+            streakBroken = true; // Draw breaks the streak
+          }
+        } else if (firstBattleOutcome === 'win' || firstBattleOutcome === 'loss') {
+          // We have an established streak type, check if this battle continues it
+          if (outcome === firstBattleOutcome) {
+            streakCount++;
+          } else {
+            // Outcome doesn't match or is a draw - streak is broken, stop counting
+            streakBroken = true;
+          }
         }
-      } else if (firstBattleOutcome === 'win' || firstBattleOutcome === 'loss') {
-        // We have an established streak type, check if this battle continues it
-        if (outcome === firstBattleOutcome) {
-          streakCount++;
-        }
-        // If outcome doesn't match or is a draw, streak ends (don't increment)
       }
-      // Any other case: streak remains as is
     });
 
     const totalBattles = wins + losses + draws;
