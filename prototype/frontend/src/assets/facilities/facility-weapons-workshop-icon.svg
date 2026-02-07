@@ -1,0 +1,23 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#3B82F6" stroke-width="4"/>
+  
+  <!-- Wrench icon -->
+  <!-- Wrench handle -->
+  <rect x="100" y="150" width="20" height="80" rx="10" fill="#60A5FA" transform="rotate(-45 110 190)"/>
+  
+  <!-- Wrench head -->
+  <rect x="130" y="80" width="40" height="50" rx="8" fill="#3B82F6"/>
+  <rect x="135" y="85" width="30" height="30" rx="4" fill="#1F2937"/>
+  
+  <!-- Adjustable jaw -->
+  <rect x="165" y="90" width="15" height="30" rx="3" fill="#93C5FD"/>
+  
+  <!-- Sparkles/work indicators -->
+  <circle cx="90" cy="90" r="4" fill="#FBBF24"/>
+  <circle cx="180" cy="170" r="4" fill="#FBBF24"/>
+  <circle cx="75" cy="110" r="3" fill="#FBBF24"/>
+  
+  <!-- Text -->
+  <text x="128" y="210" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#93C5FD" text-anchor="middle">TOOLS</text>
+</svg>

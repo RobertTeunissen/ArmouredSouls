@@ -1,0 +1,19 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#3B82F6" stroke-width="4"/>
+  
+  <!-- Dumbbell icon representing training -->
+  <!-- Left weight -->
+  <rect x="40" y="110" width="30" height="40" rx="4" fill="#3B82F6"/>
+  <rect x="35" y="105" width="40" height="50" rx="6" fill="#60A5FA" opacity="0.5"/>
+  
+  <!-- Bar -->
+  <rect x="70" y="122" width="116" height="16" rx="8" fill="#93C5FD"/>
+  
+  <!-- Right weight -->
+  <rect x="186" y="110" width="30" height="40" rx="4" fill="#3B82F6"/>
+  <rect x="181" y="105" width="40" height="50" rx="6" fill="#60A5FA" opacity="0.5"/>
+  
+  <!-- Text indicator -->
+  <text x="128" y="190" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#93C5FD" text-anchor="middle">TRAIN</text>
+</svg>

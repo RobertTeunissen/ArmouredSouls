@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
+import FacilityIcon from '../components/FacilityIcon';
 
 interface Facility {
   type: string;
@@ -55,24 +56,6 @@ const FACILITY_CATEGORIES: CategoryInfo[] = [
     facilityTypes: ['research_lab', 'medical_bay', 'coaching_staff', 'booking_office']
   }
 ];
-
-// Facility emoji icons
-const FACILITY_ICONS: Record<string, string> = {
-  training_facility: '🏋️',
-  weapons_workshop: '🔧',
-  repair_bay: '🔩',
-  income_generator: '💰',
-  roster_expansion: '🏭',
-  storage_facility: '📦',
-  combat_training_academy: '⚔️',
-  defense_training_academy: '🛡️',
-  mobility_training_academy: '🦿',
-  ai_training_academy: '🤖',
-  research_lab: '🔬',
-  medical_bay: '⚕️',
-  coaching_staff: '📋',
-  booking_office: '🏆',
-};
 
 function FacilitiesPage() {
   const { user, refreshUser } = useAuth();
@@ -229,7 +212,13 @@ function FacilitiesPage() {
 
                           <div className="flex items-start mb-4">
                             {/* Facility Icon */}
-                            <div className="text-4xl mr-4 mt-1 flex-shrink-0">{FACILITY_ICONS[facility.type]}</div>
+                            <div className="mr-4 mt-1 flex-shrink-0">
+                              <FacilityIcon 
+                                facilityType={facility.type}
+                                facilityName={facility.name}
+                                size="medium"
+                              />
+                            </div>
                             
                             <div className="flex-1 min-w-0">
                               <h3 className="text-2xl font-semibold mb-2">{facility.name}</h3>
