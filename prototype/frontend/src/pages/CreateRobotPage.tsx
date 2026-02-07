@@ -28,8 +28,8 @@ function CreateRobotPage() {
       return;
     }
 
-    if (name.length > 100) {
-      setError('Robot name must be 100 characters or less');
+    if (name.length > 50) {
+      setError('Robot name must be 50 characters or less');
       return;
     }
 
@@ -139,13 +139,13 @@ function CreateRobotPage() {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter robot name (1-100 characters)"
+                  placeholder="Enter robot name (1-50 characters)"
                   className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-3 text-white focus:outline-none focus:border-blue-500"
                   disabled={loading}
-                  maxLength={100}
+                  maxLength={50}
                   required
                 />
-                <p className="text-gray-400 text-sm mt-1">{name.length}/100 characters</p>
+                <p className="text-gray-400 text-sm mt-1">{name.length}/50 characters</p>
               </div>
 
               <div className="flex gap-4">

@@ -159,6 +159,7 @@ model Robot {
   tournamentMatchesAsRobot2 TournamentMatch[] @relation("TournamentRobot2")
   tournamentMatchesWon      TournamentMatch[] @relation("TournamentMatchWinner")
 
+  @@unique([userId, name])
   @@index([userId])
   @@index([elo])
   @@index([currentLeague])
