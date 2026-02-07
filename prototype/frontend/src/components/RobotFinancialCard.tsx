@@ -25,7 +25,7 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
               <h3 className="text-xl font-bold text-gray-100">{robot.name}</h3>
             </div>
             <div className="text-xs text-gray-400 mt-1">
-              {robot.league.replace('_', ' ').toUpperCase()} | ELO: {robot.elo}
+              {robot.currentLeague.replace('_', ' ').toUpperCase()} | ELO: {robot.elo}
             </div>
           </div>
           <div className="text-right">

@@ -204,7 +204,7 @@ export const getHealthIcon = (
 export interface RobotFinancialData {
   id: number;
   name: string;
-  league: string;
+  currentLeague: string;
   elo: number;
   revenue: {
     battleWinnings: number;

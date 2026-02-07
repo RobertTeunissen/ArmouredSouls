@@ -635,7 +635,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
   robots: Array<{
     id: number;
     name: string;
-    league: string;
+    currentLeague: string;
     elo: number;
     revenue: {
       battleWinnings: number;
@@ -673,7 +673,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
     select: {
       id: true,
       name: true,
-      league: true,
+      currentLeague: true,
       elo: true,
       fame: true,
       totalBattles: true,
@@ -805,7 +805,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       return {
         id: robot.id,
         name: robot.name,
-        league: robot.league,
+        currentLeague: robot.currentLeague,
         elo: robot.elo,
         revenue: {
           battleWinnings,
