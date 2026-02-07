@@ -2,10 +2,10 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.2  
+**Version**: 1.3  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
-**Status**: Implementation In Progress - Review Comments Addressed
+**Status**: Phase 1 & 2 Complete - Compact Cockpit Layout
 
 ---
 
@@ -13,6 +13,7 @@
 - v1.0 (Feb 7, 2026): Initial PRD created
 - v1.1 (Feb 7, 2026): Review by Robert Teunissen - Comments added
 - v1.2 (Feb 7, 2026): Review comments addressed, implementation updated
+- v1.3 (Feb 7, 2026): Compact cockpit layout complete, all --> references removed
 
 ---
 
@@ -169,27 +170,61 @@ Players need to quickly assess their stable's status (robot health, finances, up
 
 ---
 
-## Implementation Status (v1.2)
+## Implementation Status
 
-### ✅ Completed Features
+### ✅ v1.3 - Compact Cockpit Layout (Current)
 
-1. **Notification System** (NEW in v1.2)
+**Major Changes:**
+1. **Compact Stable Overview** - Reduced from ~80% browser height to ~20%
+   - Removed stable name (redundant with header)
+   - Changed to 2x2 grid layout for stats
+   - Reduced padding (p-6 → p-4), fonts (text-2xl → text-lg)
+   - Inline W/L/D display instead of large boxes
+   
+2. **Removed Quick Action Buttons** - Deleted 3-button section at bottom
+   - Upgrade Facilities, Manage Robots, Battle Arena buttons removed
+   - No longer needed with notification system
+   - Not part of PRD proposed structure
+
+3. **Compact Match Cards** - Both Upcoming and Recent matches
+   - Reduced padding (p-6 → p-4, p-4 → p-2)
+   - Smaller fonts (text-2xl → text-lg, text-sm → text-xs)
+   - Left border color coding (tournament=yellow, league=blue, outcome colors)
+   - More compact spacing (space-y-4 → space-y-1.5)
+   - Design system colors throughout
+
+4. **Removed Repair Button** - From robot dashboard cards
+   - Removed blue "Repair Robot" button section
+   - Kept red "Needs Repair" badge only
+   - Consistent with yellow notification warnings
+   - Click card to navigate to repair page
+
+5. **Design System Consistency**
+   - All bg-gray-800 → bg-surface
+   - All bg-gray-700 → bg-surface-elevated
+   - All text-blue-400 → text-primary
+   - All text-red/green-400 → text-error/success
+   - All text-yellow-400 → text-warning
+
+### ✅ v1.2 - Initial Implementation
+
+1. **Notification System**
    - Critical alerts at top of dashboard
    - Color-coded by severity (danger/warning/info)
    - Actionable buttons link to fix pages
    - Auto-generated based on robot/financial status
 
-2. **Prestige Display** (NEW in v1.2)
+2. **Prestige Display**
    - Prominently displayed in Stable Overview
-   - Large text (3xl), purple color
-   - Most visible stat (top of card)
+   - Large text, purple color
+   - Most visible stat
 
-3. **Upcoming Matches Fix** (FIXED in v1.2)
+3. **Upcoming Matches Fix**
    - Both league and tournament matches display
    - Fixed filtering bug that hid league matches
    - Visual separation between match types
 
-4. **Robot Cards** (UPDATED in v1.2)
+4. **Robot Cards**
    - Compact layout (96x96 portrait, smaller text)
    - Better text truncation (no overflow)
    - HP bars, battle readiness badges
@@ -212,7 +247,7 @@ Players need to quickly assess their stable's status (robot health, finances, up
 ### ⏳ Deferred to Future Phases
 
 1. **Stable Name Editing**
-   - Currently displays name
+   - Currently displays name in header only
    - Edit functionality Phase 2
 
 2. **Achievements/Trophies**

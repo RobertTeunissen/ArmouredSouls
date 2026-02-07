@@ -8,10 +8,9 @@ import { getStableStatistics, StableStatistics as StableStatsType } from '../uti
 
 interface StableStatisticsProps {
   prestige?: number;
-  stableName?: string;
 }
 
-function StableStatistics({ prestige, stableName }: StableStatisticsProps) {
+function StableStatistics({ prestige }: StableStatisticsProps) {
   const [stats, setStats] = useState<StableStatsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

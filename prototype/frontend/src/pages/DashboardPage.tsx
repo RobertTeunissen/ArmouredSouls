@@ -80,7 +80,6 @@ function DashboardPage() {
     
     // Check for low balance (bankruptcy warning)
     if (user && user.currency < 50000) {
-      const daysLeft = Math.floor(user.currency / 10000); // Rough estimate
       alerts.push({
         type: 'danger',
         message: `Low balance warning: ₡${user.currency.toLocaleString()} remaining`,
@@ -124,12 +123,6 @@ function DashboardPage() {
     // }
   };
 
-  const calculateStats = (robot: Robot) => {
-    const wins = robot.battlesWon?.length || 0;
-    const totalBattles = (robot.battlesAsRobot1?.length || 0) + (robot.battlesAsRobot2?.length || 0);
-    const losses = totalBattles - wins;
-    const winRate = totalBattles > 0 ? ((wins / totalBattles) * 100).toFixed(1) : '0.0';
-    return { wins, losses, totalBattles, winRate };
   };
 
   if (!user) {
