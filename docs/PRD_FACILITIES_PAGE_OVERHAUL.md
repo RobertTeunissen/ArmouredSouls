@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.0  
+**Version**: v1.1  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
 **Status**: Draft - Implementation Planning  
@@ -18,6 +18,7 @@
   - Defined logical facility groupings (4 categories)
   - Specified image requirements (14 facility icons + 4 category icons)
   - Outlined UX improvement plan
+- v1.1 - Review by Robert Teunissen
 
 ---
 
@@ -86,11 +87,19 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 **Not Yet Implemented (6 facilities):**
 1. ❌ **Repair Bay** - Discount on repair costs (10%-55%)
+
+--> /facilities says it has not been implemented, but I think this IS actually implemented in the system. Check this; update relevant documentation (not only this PRD). 
+
 2. ❌ **Research Lab** - Unlock analytics, loadout presets, battle simulation
 3. ❌ **Medical Bay** - Critical damage repair cost reduction (15%-100%)
+
+--> Medical Bay sounds like a dud. How does this add value over the Repair Bay?
+
 4. ❌ **Coaching Staff** - Stable-wide stat bonuses (coaches for offense/defense/tactics)
 5. ❌ **Booking Office** - Tournament access and enhanced rewards
 6. ❌ **Income Generator** - Passive income streams (merchandising, streaming)
+
+--> /facilities says effects have not been implemented, but I think this has been done during the Economy update. Check this; update relevant documentation (not only this PRD).
 
 #### 🚧 **Current UI Limitations**
 
@@ -163,7 +172,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 ### Primary Goals
 
-1. **Implement Logical Facility Grouping**: Organize facilities into clear categories (Economy, Capacity, Training, Advanced)
+1. **Implement Logical Facility Grouping**: Organize facilities into clear categories 
 2. **Improve Implementation Clarity**: Make it immediately obvious which facilities are functional
 3. **Document Image Requirements**: Specify all facility images needed for visual enhancement
 4. **Enhance Visual Hierarchy**: Use design system patterns to create clear visual distinction between facility types
@@ -173,7 +182,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 ### Success Metrics
 
 - Players can identify facility categories without reading all facility names (visual clarity test)
-- 90%+ of players understand which facilities are implemented vs. planned
+- 95%+ of players understand which facilities are implemented vs. planned
 - Time to find specific facility reduced by 50% through categorization
 - Image asset list is complete and actionable for asset creation
 - Page maintains current scroll length despite added organization
@@ -203,6 +212,8 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
   1. Training Facility (✅ Implemented) - Attribute upgrade discounts
   2. Weapons Workshop (✅ Implemented) - Weapon purchase discounts
   3. Repair Bay (❌ Not Implemented) - Repair cost discounts
+ 
+--> Not true. Repair Bay should be implemented. Check actual backend system, not documents. 
 
 **Category 2: Capacity & Storage** (2 facilities)
 - **Purpose**: Expand stable capacity for robots and weapons
@@ -229,6 +240,8 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
   3. Coaching Staff (❌ Not Implemented) - Stable-wide stat bonuses
   4. Booking Office (❌ Not Implemented) - Tournament access and rewards
   5. Income Generator (❌ Not Implemented) - Passive income streams
+ 
+--> Income Generator has been implemented during Economy work. Is this an "Advanced" feature or an economy feature?
 
 #### 1.2 Category Display Requirements
 
@@ -325,6 +338,8 @@ Not Yet Implemented:
 └─────────────────────────────────────────────────────────────
 ```
 
+No icon / image on the Visual Example?
+
 #### 2.2 Category-Level Status Summary
 
 **Requirements:**
@@ -337,6 +352,8 @@ Not Yet Implemented:
 - Capacity & Storage: `[2 of 2 ✓]` (Green - 100% implemented)
 - Training Academies: `[4 of 4 ✓]` (Green - 100% implemented)
 - Advanced Features: `[0 of 5]` (Gray - 0% implemented)
+
+--> Not important. Remove. 
 
 #### 2.3 Stable Overview Dashboard
 
@@ -374,6 +391,8 @@ Not Yet Implemented:
 - **Color Palette**: Match design system (gray, blue, green, yellow accents)
 - **Background**: Transparent background
 - **File Naming**: `facility-{type}-icon.svg` (e.g., `facility-training-facility-icon.svg`)
+
+--> Which path should the images be stored?
 
 **Facility Image List (14 total):**
 
@@ -420,7 +439,7 @@ Not Yet Implemented:
 
 #### 3.3 Future Image Enhancements
 
-**Phase 2+ Considerations:**
+**Considerations:**
 - Facility background images (large 1920×1080px backgrounds for each category)
 - Animated facility icons (Lottie animations showing facility activity)
 - Facility level-up visual effects (particles, glows, etc.)
@@ -632,9 +651,7 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 
 ## Implementation Roadmap
 
-### Phase 1: Organization & Clarity (P1 - Immediate)
-
-**Estimated Effort**: 4-6 hours
+### Phase 1: Organization & Clarity 
 
 **Tasks:**
 1. ✅ Create PRD document with facility groupings and image requirements
@@ -654,9 +671,7 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - ⬜ Enhanced implementation status visibility
 - ⬜ Emoji placeholder icons for all facilities
 
-### Phase 2: Visual Enhancement (P2 - Near Future)
-
-**Estimated Effort**: 8-12 hours (includes asset creation)
+### Phase 2: Visual Enhancement 
 
 **Tasks:**
 1. ⬜ Design and create 14 facility SVG icons
@@ -675,9 +690,7 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - ⬜ Stable overview dashboard
 - ⬜ Enhanced visual design
 
-### Phase 3: Advanced Features (P3 - Future)
-
-**Estimated Effort**: 16-24 hours
+### Phase 3: Advanced Features (Future)
 
 **Tasks:**
 1. ⬜ Implement upgrade recommendations system
@@ -706,6 +719,8 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - B) Simple iconic symbols (faster to create, scales better at small sizes)
 - C) Hybrid approach (simple shapes with detailed textures)
 
+--> I don't understand this question. Icons have been proposed above. And we can let AI generate these if needed, why would there be a higher production cost?
+
 **Recommendation**: Start with Option B (simple iconic) for Phase 1, enhance to Option C in Phase 2.
 
 ### 2. Category Collapsing
@@ -714,6 +729,8 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - A) All categories always expanded (current scroll length ~doubled)
 - B) All categories collapsible, remember user preference
 - C) Advanced features category collapsed by default, others expanded
+
+--> I don't understand the question. You propose a navigational bar. I assume this is to prevent scrolling from happening?
 
 **Recommendation**: Option C - Collapse "Advanced Features" by default since all are not implemented.
 
@@ -724,6 +741,8 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - B) Reduced opacity and moved to bottom of category
 - C) Collapsible "Coming Soon" section that hides them by default
 - D) Only show implemented facilities, list others in "Roadmap" section
+
+--> We have everything implemented apart from the "Advanced Facilities". If they go in a seperate tab I don't see any concerns.
 
 **Recommendation**: Option B - Show them but make them visually secondary to functional facilities.
 
@@ -1061,25 +1080,3 @@ const categoryEmojis = {
 - [PRD_WEAPON_SHOP.md](PRD_WEAPON_SHOP.md) - Reference for filtering and views
 - [PRD_BATTLE_HISTORY_PAGE_OVERHAUL.md](PRD_BATTLE_HISTORY_PAGE_OVERHAUL.md) - Reference for information density
 - [PRD_MY_ROBOTS_LIST_PAGE.md](PRD_MY_ROBOTS_LIST_PAGE.md) - Card-based UI patterns
-
-### Implementation PRDs (Future)
-- PRD_REPAIR_BAY_IMPLEMENTATION.md (not yet created)
-- PRD_RESEARCH_LAB_FEATURES.md (not yet created)
-- PRD_MEDICAL_BAY_CRITICAL_DAMAGE.md (not yet created)
-- PRD_COACHING_STAFF_BONUSES.md (not yet created)
-- PRD_BOOKING_OFFICE_TOURNAMENTS.md (not yet created)
-- PRD_INCOME_GENERATOR_PASSIVE_INCOME.md (not yet created)
-
----
-
-## Revision History
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | Feb 7, 2026 | GitHub Copilot | Initial PRD created with facility groupings, implementation status tracking, and image requirements |
-
----
-
-**Document Status**: ✅ Ready for Review  
-**Next Steps**: Review with owner, begin Phase 1 implementation  
-**Estimated Completion**: Phase 1 by end of Q1 2026
