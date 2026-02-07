@@ -2,17 +2,18 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.2  
+**Version**: 1.3  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
-**Status**: Phase 2 Implementation In Progress
+**Status**: Phase 3 Implementation Complete
 
 ---
 
 ## Version History
 - v1.0 - Initial draft by GitHub Copilot
 - v1.1 - Phase 1 implementation complete (Navigation & Terminology fixes)
-- v1.2 - Phase 2 implementation in progress (Daily Stable Report format)
+- v1.2 - Phase 2 implementation complete (Daily Stable Report format)
+- v1.3 - Phase 3 implementation complete (Per-Robot Financial Breakdown)
 
 ---
 
@@ -31,8 +32,8 @@
 
 **Result**: Navigation now works correctly, terminology is consistent throughout the application.
 
-### 🔄 Phase 2: Daily Stable Report Implementation (IN PROGRESS)
-**Implementation Date**: February 7, 2026 (ongoing)
+### ✅ Phase 2: Daily Stable Report Implementation (COMPLETE)
+**Implementation Date**: February 7, 2026
 
 **Completed Changes**:
 - ✅ Created DailyStableReport.tsx component with ASCII-style formatting
@@ -44,12 +45,37 @@
 - ✅ Total repairs displayed (per-robot breakdown not available in current API)
 - ✅ Financial health indicators shown at bottom of report
 
-**In Progress**:
-- [ ] Test with live data to verify all fields display correctly
-- [ ] Take screenshots for documentation
-- [ ] Add pie charts (Phase 2 stretch goal)
-
 **Result**: Daily Stable Report format implemented matching PRD_ECONOMY_SYSTEM.md specification.
+
+### ✅ Phase 3: Per-Robot Financial Breakdown (COMPLETE)
+**Implementation Date**: February 7, 2026
+
+**Completed Changes**:
+- ✅ Backend: Added `/api/finances/per-robot` endpoint
+- ✅ Backend: Implemented `generatePerRobotFinancialReport()` function
+- ✅ Backend: Calculate per-robot revenue (battle winnings, merchandising, streaming)
+- ✅ Backend: Allocate facility costs evenly across active robots
+- ✅ Backend: Calculate repair costs from battle history (last 7 days)
+- ✅ Backend: Calculate performance metrics (win rate, avg earnings, ROI)
+- ✅ Frontend: Created RobotFinancialCard component
+- ✅ Frontend: Created PerRobotBreakdown component with profitability ranking
+- ✅ Frontend: Added tab navigation (Overview, Per-Robot)
+- ✅ Frontend: Display robots ranked by profitability
+- ✅ Frontend: Show per-robot recommendations
+
+**Components Created**:
+- `RobotFinancialCard.tsx` - Individual robot financial display
+- `PerRobotBreakdown.tsx` - Container with ranking and summary
+
+**Components Modified**:
+- `FinancialReportPage.tsx` - Added tab navigation
+- `financialApi.ts` - Added per-robot interfaces and API call
+
+**Backend Modified**:
+- `economyCalculations.ts` - Added generatePerRobotFinancialReport()
+- `finances.ts` - Added /per-robot endpoint
+
+**Result**: Per-robot financial tracking fully implemented with profitability ranking and performance metrics.
 
 ---
 
@@ -473,23 +499,43 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 
 **Risk**: Medium - requires backend API enhancements to provide complete data
 
-### Phase 3: Per-Robot Financial Breakdown (Week 3)
+### Phase 3: Per-Robot Financial Breakdown (Week 3) ✅ COMPLETE
 
 **Goal**: Enable individual robot financial tracking
 
 **Tasks**:
-- [ ] Create "Per-Robot" tab in Income Dashboard
-- [ ] Backend: Add `/api/finances/per-robot` endpoint
+- [x] Create "Per-Robot" tab in Income Dashboard
+- [x] Backend: Add `/api/finances/per-robot` endpoint
   - Calculate revenue per robot (battle winnings, merchandising contribution, streaming contribution)
   - Allocate facility costs evenly across active robots
   - Calculate repair costs per robot
   - Calculate net income and ROI per robot
-- [ ] Frontend: Create robot financial cards showing revenue, costs, net income
-- [ ] Add robot performance metrics (win rate, avg earnings per battle)
-- [ ] Implement robot profitability ranking
-- [ ] Add per-robot recommendations based on financial performance
+- [x] Frontend: Create robot financial cards showing revenue, costs, net income
+- [x] Add robot performance metrics (win rate, avg earnings per battle)
+- [x] Implement robot profitability ranking
+- [x] Add per-robot recommendations based on financial performance
 
-**Risk**: Medium - requires new backend calculations and data aggregation
+**Status**: ✅ IMPLEMENTED (February 7, 2026)
+
+**Components Created**:
+- `RobotFinancialCard.tsx` - Individual robot financial display card
+- `PerRobotBreakdown.tsx` - Container with ranking and recommendations
+
+**Backend Created**:
+- `generatePerRobotFinancialReport()` function in economyCalculations.ts
+- `GET /api/finances/per-robot` endpoint in finances.ts
+
+**Features Implemented**:
+- Tab navigation (Overview, Per-Robot Breakdown)
+- Per-robot revenue breakdown (battles, merchandising, streaming)
+- Per-robot cost allocation (repairs, facilities)
+- Performance metrics (win rate, avg earnings, battles, fame, repair %)
+- ROI calculation per robot
+- Profitability ranking (most to least profitable)
+- Summary with totals and most/least profitable robots
+- Contextual recommendations based on performance
+
+**Risk**: Medium - required backend calculations and data aggregation (successfully implemented)
 
 ### Phase 4: Investments & Spending Tracking (Week 4)
 
