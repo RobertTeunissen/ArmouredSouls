@@ -1,0 +1,25 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#8B5CF6" stroke-width="4"/>
+  
+  <!-- Building/Hangar icon -->
+  <!-- Main structure -->
+  <rect x="70" y="110" width="116" height="80" rx="4" fill="#8B5CF6"/>
+  
+  <!-- Roof/Top -->
+  <path d="M 60 110 L 128 70 L 196 110 Z" fill="#A78BFA"/>
+  
+  <!-- Doors -->
+  <rect x="95" y="130" width="30" height="50" rx="2" fill="#1F2937"/>
+  <rect x="131" y="130" width="30" height="50" rx="2" fill="#1F2937"/>
+  
+  <!-- Robot silhouettes inside -->
+  <circle cx="112" cy="155" r="8" fill="#A78BFA"/>
+  <rect x="107" y="163" width="10" height="15" rx="2" fill="#A78BFA"/>
+  
+  <circle cx="146" cy="155" r="8" fill="#A78BFA"/>
+  <rect x="141" y="163" width="10" height="15" rx="2" fill="#A78BFA"/>
+  
+  <!-- Text -->
+  <text x="128" y="215" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#A78BFA" text-anchor="middle">ROSTER</text>
+</svg>

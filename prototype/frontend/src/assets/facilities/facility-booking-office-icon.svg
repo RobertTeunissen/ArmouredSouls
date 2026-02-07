@@ -1,0 +1,32 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#EAB308" stroke-width="4"/>
+  
+  <!-- Trophy cup -->
+  <!-- Cup body -->
+  <path d="M 95 110 L 90 150 Q 90 165, 128 165 Q 166 165, 166 150 L 161 110 Z" fill="#EAB308"/>
+  
+  <!-- Cup top rim -->
+  <ellipse cx="128" cy="110" rx="36" ry="8" fill="#FACC15"/>
+  
+  <!-- Cup handles -->
+  <path d="M 90 120 Q 75 120, 75 135 Q 75 150, 90 145" fill="none" stroke="#FACC15" stroke-width="6"/>
+  <path d="M 166 120 Q 181 120, 181 135 Q 181 150, 166 145" fill="none" stroke="#FACC15" stroke-width="6"/>
+  
+  <!-- Base -->
+  <rect x="115" y="165" width="26" height="15" fill="#EAB308"/>
+  <rect x="105" y="180" width="46" height="8" rx="2" fill="#FACC15"/>
+  
+  <!-- Winner's star -->
+  <path d="M 128 85 L 133 95 L 145 97 L 136 106 L 138 118 L 128 112 L 118 118 L 120 106 L 111 97 L 123 95 Z" 
+        fill="#FACC15"/>
+  
+  <!-- Sparkles -->
+  <circle cx="70" cy="95" r="3" fill="#FEF08A"/>
+  <circle cx="186" cy="95" r="3" fill="#FEF08A"/>
+  <circle cx="80" cy="160" r="3" fill="#FEF08A"/>
+  <circle cx="176" cy="160" r="3" fill="#FEF08A"/>
+  
+  <!-- Text -->
+  <text x="128" y="220" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#FACC15" text-anchor="middle">BOOKING</text>
+</svg>

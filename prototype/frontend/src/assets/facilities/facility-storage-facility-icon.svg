@@ -1,0 +1,23 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#F59E0B" stroke-width="4"/>
+  
+  <!-- Storage boxes/crates -->
+  <rect x="70" y="100" width="45" height="45" rx="4" fill="#F59E0B"/>
+  <rect x="75" y="105" width="35" height="35" rx="2" fill="#1F2937"/>
+  
+  <rect x="141" y="100" width="45" height="45" rx="4" fill="#FBBF24"/>
+  <rect x="146" y="105" width="35" height="35" rx="2" fill="#1F2937"/>
+  
+  <rect x="70" y="155" width="45" height="45" rx="4" fill="#FBBF24"/>
+  <rect x="75" y="160" width="35" height="35" rx="2" fill="#1F2937"/>
+  
+  <rect x="141" y="155" width="45" height="45" rx="4" fill="#F59E0B"/>
+  <rect x="146" y="160" width="35" height="35" rx="2" fill="#1F2937"/>
+  
+  <!-- Weapon icon on one box -->
+  <path d="M 92 118 L 98 112 L 105 119" stroke="#F59E0B" stroke-width="2" fill="none"/>
+  
+  <!-- Text -->
+  <text x="128" y="225" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#FBBF24" text-anchor="middle">STORAGE</text>
+</svg>

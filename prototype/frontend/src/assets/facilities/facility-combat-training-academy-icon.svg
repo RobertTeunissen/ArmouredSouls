@@ -1,0 +1,28 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#DC2626" stroke-width="4"/>
+  
+  <!-- Sword/Combat icon -->
+  <!-- Sword blade -->
+  <rect x="120" y="60" width="16" height="100" rx="2" fill="#DC2626"/>
+  
+  <!-- Crossguard -->
+  <rect x="100" y="155" width="56" height="10" rx="2" fill="#EF4444"/>
+  
+  <!-- Handle -->
+  <rect x="118" y="165" width="20" height="35" rx="3" fill="#F87171"/>
+  
+  <!-- Pommel -->
+  <circle cx="128" cy="205" r="8" fill="#EF4444"/>
+  
+  <!-- Target reticle -->
+  <circle cx="170" cy="90" r="20" fill="none" stroke="#F87171" stroke-width="3"/>
+  <circle cx="170" cy="90" r="10" fill="none" stroke="#F87171" stroke-width="2"/>
+  <line x1="150" y1="90" x2="160" y2="90" stroke="#F87171" stroke-width="2"/>
+  <line x1="180" y1="90" x2="190" y2="90" stroke="#F87171" stroke-width="2"/>
+  <line x1="170" y1="70" x2="170" y2="80" stroke="#F87171" stroke-width="2"/>
+  <line x1="170" y1="100" x2="170" y2="110" stroke="#F87171" stroke-width="2"/>
+  
+  <!-- Text -->
+  <text x="128" y="235" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#F87171" text-anchor="middle">COMBAT</text>
+</svg>
