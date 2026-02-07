@@ -18,6 +18,33 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Custom scrollbar styling for match sections */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #1a1f29;
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+  
+  /* Firefox scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 #1a1f29;
+  }
+}
+
 /* Reduced motion support for accessibility (WCAG 2.1 compliance) */
 @media (prefers-reduced-motion: reduce) {
   * {
