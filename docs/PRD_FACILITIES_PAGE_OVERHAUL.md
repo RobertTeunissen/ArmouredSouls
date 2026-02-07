@@ -18,7 +18,14 @@
   - Defined logical facility groupings (4 categories)
   - Specified image requirements (14 facility icons + 4 category icons)
   - Outlined UX improvement plan
-- v1.1 - Review by Robert Teunissen
+- v1.1 - Review comments processed (February 7, 2026)
+  - Corrected implementation status: Repair Bay and Income Generator are implemented (10 of 14 total)
+  - Recategorized Income Generator from Advanced to Economy category
+  - Clarified Medical Bay purpose (critical damage vs regular damage)
+  - Removed Stable Overview Dashboard section (not priority)
+  - Specified image storage path (frontend/src/assets/facilities/)
+  - Clarified navigation bar purpose and open questions
+  - Updated implementation counts throughout document
 
 ---
 
@@ -75,31 +82,24 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 **Facility Types & Implementation Status:**
 
-**Implemented (8 facilities):**
+**Implemented (10 facilities):**
 1. ✅ **Training Facility** - Discount on attribute upgrades (5%-50%)
 2. ✅ **Weapons Workshop** - Discount on weapon purchases (5%-50%)
-3. ✅ **Roster Expansion** - Increase robot slots (1→10 robots)
-4. ✅ **Storage Facility** - Increase weapon storage (5→55 weapons)
-5. ✅ **Combat Training Academy** - Combat Systems caps (10→50)
-6. ✅ **Defense Training Academy** - Defensive Systems caps (10→50)
-7. ✅ **Mobility Training Academy** - Chassis & Mobility caps (10→50)
-8. ✅ **AI Training Academy** - AI/Team Coordination caps (10→50)
+3. ✅ **Repair Bay** - Discount on repair costs (10%-55%)
+4. ✅ **Roster Expansion** - Increase robot slots (1→10 robots)
+5. ✅ **Storage Facility** - Increase weapon storage (5→55 weapons)
+6. ✅ **Combat Training Academy** - Combat Systems caps (10→50)
+7. ✅ **Defense Training Academy** - Defensive Systems caps (10→50)
+8. ✅ **Mobility Training Academy** - Chassis & Mobility caps (10→50)
+9. ✅ **AI Training Academy** - AI/Team Coordination caps (10→50)
+10. ✅ **Income Generator** - Passive income streams (merchandising, streaming)
 
-**Not Yet Implemented (6 facilities):**
-1. ❌ **Repair Bay** - Discount on repair costs (10%-55%)
-
---> /facilities says it has not been implemented, but I think this IS actually implemented in the system. Check this; update relevant documentation (not only this PRD). 
-
-2. ❌ **Research Lab** - Unlock analytics, loadout presets, battle simulation
-3. ❌ **Medical Bay** - Critical damage repair cost reduction (15%-100%)
-
---> Medical Bay sounds like a dud. How does this add value over the Repair Bay?
-
-4. ❌ **Coaching Staff** - Stable-wide stat bonuses (coaches for offense/defense/tactics)
-5. ❌ **Booking Office** - Tournament access and enhanced rewards
-6. ❌ **Income Generator** - Passive income streams (merchandising, streaming)
-
---> /facilities says effects have not been implemented, but I think this has been done during the Economy update. Check this; update relevant documentation (not only this PRD).
+**Not Yet Implemented (4 facilities):**
+1. ❌ **Research Lab** - Unlock analytics, loadout presets, battle simulation
+2. ❌ **Medical Bay** - Critical damage repair cost reduction (15%-100%)
+   - *Note: Medical Bay handles critical/permanent damage, while Repair Bay handles regular battle damage. Different systems.*
+3. ❌ **Coaching Staff** - Stable-wide stat bonuses (coaches for offense/defense/tactics)
+4. ❌ **Booking Office** - Tournament access and enhanced rewards
 
 #### 🚧 **Current UI Limitations**
 
@@ -191,8 +191,8 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 ### Non-Goals (Out of Scope for This PRD)
 
-- ❌ Implementation of actual backend logic for remaining 6 facilities (separate PRDs)
-- ❌ Creation of actual facility images/icons (design asset work)
+- ❌ Implementation of actual backend logic for remaining 4 facilities (separate PRDs)
+- ❌ Creation of actual facility images/icons (design asset work, can use AI generation)
 - ❌ Advanced features like upgrade recommendations or batch upgrades (Phase 2+)
 - ❌ Facility unlock system or progression gating (future enhancement)
 - ❌ Detailed ROI calculations or payback analysis (future feature)
@@ -205,15 +205,14 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 #### 1.1 Facility Categories
 
-**Category 1: Economy & Discounts** (3 facilities)
-- **Purpose**: Reduce operational costs across the stable
+**Category 1: Economy & Discounts** (4 facilities)
+- **Purpose**: Reduce operational costs and unlock passive income across the stable
 - **Strategic Value**: High ROI, should be prioritized early-game
 - **Facilities**:
   1. Training Facility (✅ Implemented) - Attribute upgrade discounts
   2. Weapons Workshop (✅ Implemented) - Weapon purchase discounts
-  3. Repair Bay (❌ Not Implemented) - Repair cost discounts
- 
---> Not true. Repair Bay should be implemented. Check actual backend system, not documents. 
+  3. Repair Bay (✅ Implemented) - Repair cost discounts
+  4. Income Generator (✅ Implemented) - Passive income from merchandising & streaming 
 
 **Category 2: Capacity & Storage** (2 facilities)
 - **Purpose**: Expand stable capacity for robots and weapons
@@ -231,17 +230,14 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
   3. Mobility Training Academy (✅ Implemented) - Chassis & Mobility caps (10→50)
   4. AI Training Academy (✅ Implemented) - AI/Team Coordination caps (10→50)
 
-**Category 4: Advanced Features** (5 facilities)
+**Category 4: Advanced Features** (3 facilities)
 - **Purpose**: Unlock special features and advanced gameplay mechanics
 - **Strategic Value**: Late-game enhancements, not required for basic progression
 - **Facilities**:
   1. Research Lab (❌ Not Implemented) - Analytics, loadout presets, battle simulation
-  2. Medical Bay (❌ Not Implemented) - Critical damage repair reduction
+  2. Medical Bay (❌ Not Implemented) - Critical damage repair reduction (different from Repair Bay's regular damage)
   3. Coaching Staff (❌ Not Implemented) - Stable-wide stat bonuses
   4. Booking Office (❌ Not Implemented) - Tournament access and rewards
-  5. Income Generator (❌ Not Implemented) - Passive income streams
- 
---> Income Generator has been implemented during Economy work. Is this an "Advanced" feature or an economy feature?
 
 #### 1.2 Category Display Requirements
 
@@ -258,8 +254,8 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 **Category Headers:**
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 💰 Economy & Discounts                          [2 of 3 ✓]  │
-│ Reduce operational costs and maximize your budget           │
+│ 💰 Economy & Discounts                          [4 of 4 ✓]  │
+│ Reduce operational costs and unlock passive income          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -273,7 +269,8 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 **Economy & Discounts** (by usage frequency):
 1. Training Facility (most used in gameplay)
 2. Weapons Workshop (frequent purchases)
-3. Repair Bay (future: combat damage)
+3. Repair Bay (combat damage)
+4. Income Generator (passive income)
 
 **Capacity & Storage** (by progression importance):
 1. Roster Expansion (hard blocker for multi-robot strategies)
@@ -348,35 +345,10 @@ No icon / image on the Visual Example?
 - Color-coded: Green for 100%, Yellow for partial, Gray for 0%
 
 **Examples:**
-- Economy & Discounts: `[2 of 3 ✓]` (Yellow - 67% implemented)
+- Economy & Discounts: `[4 of 4 ✓]` (Green - 100% implemented)
 - Capacity & Storage: `[2 of 2 ✓]` (Green - 100% implemented)
 - Training Academies: `[4 of 4 ✓]` (Green - 100% implemented)
-- Advanced Features: `[0 of 5]` (Gray - 0% implemented)
-
---> Not important. Remove. 
-
-#### 2.3 Stable Overview Dashboard
-
-**Requirements:**
-- Display overall stable development statistics at top of page
-- Show total investment, facilities upgraded, implementation coverage
-
-**Dashboard Content:**
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Stable Overview                                              │
-├─────────────────────────────────────────────────────────────┤
-│ Total Investment: ₡12,450,000                                │
-│ Facilities Upgraded: 23 levels across 8 facilities           │
-│ Implementation Coverage: 8 of 14 facilities active (57%)     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Visual Design:**
-- Placed directly below page title "Stable Facilities"
-- Uses same card styling as facility cards (bg-gray-800)
-- Single-column layout with 3 key metrics
-- Future: Add visual progress bars for each metric
+- Advanced Features: `[0 of 4]` (Gray - 0% implemented) 
 
 ### 3. Image Requirements
 
@@ -391,8 +363,7 @@ No icon / image on the Visual Example?
 - **Color Palette**: Match design system (gray, blue, green, yellow accents)
 - **Background**: Transparent background
 - **File Naming**: `facility-{type}-icon.svg` (e.g., `facility-training-facility-icon.svg`)
-
---> Which path should the images be stored?
+- **Storage Path**: `/prototype/frontend/src/assets/facilities/` (create this directory)
 
 **Facility Image List (14 total):**
 
@@ -715,24 +686,24 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 ### 1. Facility Icon Art Direction
 **Question**: Should facility icons use realistic/detailed art style or simple/iconic style?  
 **Options**:
-- A) Detailed realistic icons (matches robot aesthetics, higher production cost)
+- A) Detailed realistic icons (matches robot aesthetics)
 - B) Simple iconic symbols (faster to create, scales better at small sizes)
 - C) Hybrid approach (simple shapes with detailed textures)
 
---> I don't understand this question. Icons have been proposed above. And we can let AI generate these if needed, why would there be a higher production cost?
+**Owner Response**: Icons can be AI-generated as needed. Production cost is not a concern.
 
-**Recommendation**: Start with Option B (simple iconic) for Phase 1, enhance to Option C in Phase 2.
+**Recommendation**: Start with Option B (simple iconic) for Phase 1, use AI generation for quick iteration.
 
-### 2. Category Collapsing
+### 2. Category Navigation & Collapsing
 **Question**: Should categories be collapsible to reduce page length?  
 **Options**:
 - A) All categories always expanded (current scroll length ~doubled)
 - B) All categories collapsible, remember user preference
 - C) Advanced features category collapsed by default, others expanded
 
---> I don't understand the question. You propose a navigational bar. I assume this is to prevent scrolling from happening?
+**Owner Response**: Navigation bar is proposed to enable quick jumping between categories without scrolling. This is the primary solution for page length management.
 
-**Recommendation**: Option C - Collapse "Advanced Features" by default since all are not implemented.
+**Recommendation**: Option C - Collapse "Advanced Features" by default since they are not implemented. Navigation bar provides quick access without scrolling.
 
 ### 3. Not-Implemented Facility Display
 **Question**: How prominently should not-yet-implemented facilities be shown?  
@@ -742,9 +713,9 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - C) Collapsible "Coming Soon" section that hides them by default
 - D) Only show implemented facilities, list others in "Roadmap" section
 
---> We have everything implemented apart from the "Advanced Facilities". If they go in a seperate tab I don't see any concerns.
+**Owner Response**: All facilities except "Advanced Features" are implemented. Advanced Features can go in a separate collapsed section.
 
-**Recommendation**: Option B - Show them but make them visually secondary to functional facilities.
+**Recommendation**: Option C - Advanced Features category collapsed by default with clear "Coming Soon" indicators. All 10 implemented facilities displayed prominently.
 
 ### 4. Mobile Category Navigation
 **Question**: How should category navigation work on mobile screens?  
@@ -825,13 +796,21 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - **Strategic Value**: Essential - Critical for economy-focused players, saves credits on weapon acquisitions
 - **Implementation Status**: Fully implemented, discount applies at weapon shop
 
-#### Repair Bay (❌ Not Implemented)
+#### Repair Bay (✅ Implemented)
 - **Type**: `repair_bay`
 - **Max Level**: 10
 - **Cost Range**: ₡200K - ₡3M (total: ₡12.7M)
 - **Benefits**: 10% - 55% discount on repair costs + automatic minor repairs at max level
-- **Strategic Value**: Important - Will be critical when combat damage system is implemented
-- **Implementation Status**: Not yet implemented (requires combat damage system)
+- **Strategic Value**: Important - Critical for managing battle damage repair costs
+- **Implementation Status**: Fully implemented, discount applies to robot repair costs after battles
+
+#### Income Generator (✅ Implemented)
+- **Type**: `income_generator`
+- **Max Level**: 10
+- **Cost Range**: ₡800K - ₡5M (total: ₡28M)
+- **Benefits**: Passive income from merchandising (unlocked at L1) and streaming (unlocked at L3), scales with prestige and battles
+- **Strategic Value**: Important - Provides passive income to supplement battle earnings
+- **Implementation Status**: Fully implemented, provides daily passive income from merchandising and streaming
 
 ### Capacity & Storage (Category 2)
 
@@ -900,8 +879,8 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - **Max Level**: 10
 - **Cost Range**: ₡350K - ₡4.5M (total: ₡21.6M)
 - **Benefits**: 15% - 100% reduction on critical damage repair costs, prevents permanent damage
-- **Strategic Value**: Advanced - Will be important when critical damage system is implemented
-- **Implementation Status**: Not yet implemented (requires critical damage system)
+- **Strategic Value**: Advanced - Handles critical/permanent damage (different from Repair Bay's regular damage)
+- **Implementation Status**: Not yet implemented (requires critical damage system separate from regular battle damage)
 
 #### Coaching Staff (❌ Not Implemented)
 - **Type**: `coaching_staff`
@@ -918,14 +897,6 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - **Benefits**: Access to higher-tier tournaments, enhanced tournament rewards (+10-40%), cosmetics
 - **Strategic Value**: Advanced - Required for tournament progression system
 - **Implementation Status**: Not yet implemented (requires tournament system expansion)
-
-#### Income Generator (❌ Not Implemented)
-- **Type**: `income_generator`
-- **Max Level**: 10
-- **Cost Range**: ₡800K - ₡5M (total: ₡28M)
-- **Benefits**: Passive income from merchandising and streaming (₡5K-35K/day, scales with prestige)
-- **Strategic Value**: Advanced - Late-game economic boost
-- **Implementation Status**: Not yet implemented (Phase 3+ feature)
 
 ---
 

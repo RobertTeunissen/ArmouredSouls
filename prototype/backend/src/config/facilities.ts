@@ -28,7 +28,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '50% discount on repair costs',
       '55% discount on repair costs, automatic minor repairs',
     ],
-    implemented: false,
+    implemented: true,
   },
   {
     type: 'training_facility',
@@ -287,7 +287,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Improve Streaming Revenue (₡15,000/day base)',
       'Master Income (₡35,000/day merchandising, ₡22,000/day streaming)',
     ],
-    implemented: false,
+    implemented: true,
   },
 ];
 
