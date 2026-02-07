@@ -63,10 +63,6 @@ function FinancialSummary() {
           className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
         >
           View Income Dashboard →
-          onClick={() => window.location.href = '/finances'}
-          className="text-xs text-primary hover:text-primary-light transition-colors"
-        >
-          Full Report →
         </button>
       </div>
       
