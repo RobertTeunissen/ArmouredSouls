@@ -85,7 +85,7 @@ function FinancialReportPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Financial Report</h1>
+          <h1 className="text-3xl font-bold">Income Dashboard</h1>
           <button
             onClick={() => navigate('/dashboard')}
             className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"

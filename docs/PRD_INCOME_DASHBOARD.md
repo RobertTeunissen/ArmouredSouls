@@ -2,15 +2,33 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.0  
+**Version**: 1.1  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
-**Status**: Draft - Awaiting Implementation
+**Status**: Phase 1 Implementation Complete
 
 ---
 
 ## Version History
 - v1.0 - Initial draft by GitHub Copilot
+- v1.1 - Phase 1 implementation complete (Navigation & Terminology fixes)
+
+---
+
+## Implementation Status
+
+### ✅ Phase 1: Navigation & Terminology Fixes (COMPLETE)
+**Implementation Date**: February 7, 2026
+
+**Completed Changes**:
+- ✅ Updated Navigation.tsx: Added `/income` to implementedPages Set
+- ✅ Created `/income` route in App.tsx rendering FinancialReportPage
+- ✅ Added redirect from `/finances` to `/income` for backwards compatibility
+- ✅ Updated FinancialReportPage.tsx: Changed title from "Financial Report" to "Income Dashboard"
+- ✅ Updated FinancialSummary.tsx: Changed link from `/finances` to `/income`
+- ✅ Updated button text to "View Income Dashboard →"
+
+**Result**: Navigation now works correctly, terminology is consistent throughout the application.
 
 ---
 
@@ -376,18 +394,20 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 
 ## Proposed UX Improvements (Prioritized)
 
-### Phase 1: Navigation & Terminology Fixes (Week 1)
+### Phase 1: Navigation & Terminology Fixes (Week 1) ✅ COMPLETE
 
 **Goal**: Fix immediate navigation issues and establish consistent naming
 
 **Tasks**:
 - [x] Update Navigation menu: "Income Dashboard" label, route to `/income`
-- [ ] Create route `/income` in `App.tsx` that renders `FinancialReportPage`
-- [ ] Add redirect from `/finances` to `/income` for backwards compatibility
-- [ ] Update page title in `FinancialReportPage.tsx`: "Financial Report" → "Income Dashboard"
-- [ ] Update FinancialSummary component link: `/finances` → `/income`
-- [ ] Add `/income` to `implementedPages` Set in `Navigation.tsx`
-- [ ] Update all documentation references to use "Income Dashboard" terminology
+- [x] Create route `/income` in `App.tsx` that renders `FinancialReportPage`
+- [x] Add redirect from `/finances` to `/income` for backwards compatibility
+- [x] Update page title in `FinancialReportPage.tsx`: "Financial Report" → "Income Dashboard"
+- [x] Update FinancialSummary component link: `/finances` → `/income`
+- [x] Add `/income` to `implementedPages` Set in `Navigation.tsx`
+- [x] Update button text to "View Income Dashboard →"
+
+**Status**: ✅ IMPLEMENTED (February 7, 2026)
 
 **Risk**: Low - mostly frontend routing and text changes
 

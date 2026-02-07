@@ -59,10 +59,10 @@ function FinancialSummary() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">Financial Overview</h2>
         <button
-          onClick={() => window.location.href = '/finances'}
+          onClick={() => window.location.href = '/income'}
           className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
         >
-          View Full Report →
+          View Income Dashboard →
         </button>
       </div>
       
