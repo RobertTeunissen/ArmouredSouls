@@ -35,7 +35,7 @@ function FinancialSummary() {
 
   if (loading) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
+      <div className="bg-surface p-6 rounded-lg border border-gray-700">
         <h2 className="text-2xl font-semibold mb-4">Financial Overview</h2>
         <div className="text-center py-4 text-gray-400">Loading...</div>
       </div>
@@ -44,9 +44,9 @@ function FinancialSummary() {
 
   if (error || !summary) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
+      <div className="bg-surface p-6 rounded-lg border border-gray-700">
         <h2 className="text-2xl font-semibold mb-4">Financial Overview</h2>
-        <div className="text-center py-4 text-red-400">{error || 'No data available'}</div>
+        <div className="text-center py-4 text-error">{error || 'No data available'}</div>
       </div>
     );
   }
@@ -55,12 +55,12 @@ function FinancialSummary() {
   const prestigeBonusPercent = Math.round((summary.prestigeMultiplier - 1) * 100);
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg">
+    <div className="bg-surface p-6 rounded-lg border border-gray-700">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">Financial Overview</h2>
         <button
           onClick={() => window.location.href = '/finances'}
-          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          className="text-sm text-primary hover:text-primary-light transition-colors"
         >
           View Full Report →
         </button>
@@ -70,7 +70,7 @@ function FinancialSummary() {
         {/* Current Balance */}
         <div className="pb-4 border-b border-gray-700">
           <div className="text-sm text-gray-400 mb-1">Current Balance</div>
-          <div className="text-3xl font-bold text-green-400">
+          <div className="text-3xl font-bold text-success">
             {formatCurrency(summary.currentBalance)}
           </div>
         </div>
@@ -78,7 +78,7 @@ function FinancialSummary() {
         {/* Daily Net Income */}
         <div className="pb-4 border-b border-gray-700">
           <div className="text-sm text-gray-400 mb-1">Daily Passive Net</div>
-          <div className={`text-2xl font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`text-2xl font-bold ${isPositive ? 'text-success' : 'text-error'}`}>
             {isPositive ? '+' : ''}{formatCurrency(summary.netPassiveIncome)}
           </div>
           <div className="text-xs text-gray-500 mt-1">
@@ -91,13 +91,13 @@ function FinancialSummary() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <div className="text-sm text-gray-400 mb-1">Prestige</div>
-            <div className="text-xl font-semibold text-purple-400">
+            <div className="text-xl font-semibold text-info">
               {summary.prestige.toLocaleString()}
             </div>
           </div>
           <div>
             <div className="text-sm text-gray-400 mb-1">Battle Bonus</div>
-            <div className="text-xl font-semibold text-blue-400">
+            <div className="text-xl font-semibold text-primary">
               {prestigeBonusPercent > 0 ? `+${prestigeBonusPercent}%` : '0%'}
             </div>
           </div>
@@ -105,16 +105,16 @@ function FinancialSummary() {
 
         {/* Financial Tips */}
         {summary.netPassiveIncome < 0 && (
-          <div className="mt-4 p-3 bg-red-900/20 border border-red-700 rounded">
-            <div className="text-sm text-red-400">
+          <div className="mt-4 p-3 bg-error/20 border border-error rounded">
+            <div className="text-sm text-error">
               ⚠️ Your facilities cost more than passive income generates. Win battles to stay profitable!
             </div>
           </div>
         )}
         
         {summary.currentBalance < 100000 && (
-          <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-700 rounded">
-            <div className="text-sm text-yellow-400">
+          <div className="mt-4 p-3 bg-warning/20 border border-warning rounded">
+            <div className="text-sm text-warning">
               ⚠️ Low balance warning. Consider reducing operating costs or winning more battles.
             </div>
           </div>

@@ -6,11 +6,25 @@ import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
 import RecentMatches from '../components/RecentMatches';
 import FinancialSummary from '../components/FinancialSummary';
+import RobotDashboardCard from '../components/RobotDashboardCard';
 
 interface Robot {
   id: number;
   name: string;
   elo: number;
+  currentHP: number;
+  maxHP: number;
+  currentShield?: number;
+  maxShield?: number;
+  currentLeague?: string;
+  leaguePoints?: number;
+  wins?: number;
+  losses?: number;
+  draws?: number;
+  totalBattles?: number;
+  mainWeapon?: any;
+  offhandWeapon?: any;
+  loadoutType?: string;
   battlesWon?: any[];
   battlesAsRobot1?: any[];
   battlesAsRobot2?: any[];
@@ -73,13 +87,22 @@ function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Dashboard Header */}
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-700">
+          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <div className="text-lg text-gray-400">
+            <span className="font-semibold text-white">{user.username}</span>'s Stable
+          </div>
+        </div>
+
+        {/* Top Row: Profile and Financial Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* User Profile */}
-          <div className="bg-gray-800 p-6 rounded-lg">
+          <div className="bg-surface p-6 rounded-lg border border-gray-700">
             <h2 className="text-2xl font-semibold mb-4">Profile</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
@@ -111,52 +134,62 @@ function DashboardPage() {
 
         {/* My Robots Section */}
         {robots.length > 0 && (
-          <div className="bg-gray-800 p-6 rounded-lg mb-8">
+          <div className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">My Robots</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left border-b border-gray-700">
-                    <th className="pb-3 font-semibold">Name</th>
-                    <th className="pb-3 font-semibold">ELO</th>
-                    <th className="pb-3 font-semibold">Wins</th>
-                    <th className="pb-3 font-semibold">Losses</th>
-                    <th className="pb-3 font-semibold">Win Rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {robots.map((robot) => {
-                    const stats = calculateStats(robot);
-                    return (
-                      <tr key={robot.id} className="border-b border-gray-700 hover:bg-gray-700 transition-colors">
-                        <td className="py-3">
-                          <button
-                            onClick={() => navigate(`/robots/${robot.id}`)}
-                            className="text-blue-400 hover:text-blue-300 font-semibold"
-                          >
-                            {robot.name}
-                          </button>
-                        </td>
-                        <td className="py-3">{robot.elo}</td>
-                        <td className="py-3 text-green-400">{stats.wins}</td>
-                        <td className="py-3 text-red-400">{stats.losses}</td>
-                        <td className="py-3">{stats.winRate}%</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {robots.map((robot) => (
+                <RobotDashboardCard key={robot.id} robot={robot} />
+              ))}
             </div>
           </div>
         )}
 
         {/* Stable Info (empty state) */}
         {robots.length === 0 && (
-          <div className="bg-gray-800 p-6 rounded-lg mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Your Stable</h2>
-            <div className="text-center py-8 text-gray-400">
-              <p className="mb-4">Your stable is empty. Start by upgrading facilities or creating robots!</p>
-              <p className="text-sm">You have ₡{user.currency.toLocaleString()} to spend on upgrades and robots.</p>
+          <div className="bg-surface-elevated p-8 rounded-lg mb-8 border border-gray-700 text-center">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-3xl font-bold mb-4">Welcome to Your Stable!</h2>
+              <p className="text-lg text-gray-300 mb-6">
+                You're ready to build your robot fighting empire. Here's how to get started:
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
+                <div className="bg-surface p-4 rounded-lg border border-gray-600">
+                  <div className="text-primary font-bold text-xl mb-2">1. Upgrade Facilities</div>
+                  <p className="text-sm text-gray-400">
+                    Unlock robot creation and improve your stable's capabilities
+                  </p>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-gray-600">
+                  <div className="text-primary font-bold text-xl mb-2">2. Create Your Robot</div>
+                  <p className="text-sm text-gray-400">
+                    Build your first battle robot with unique attributes
+                  </p>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-gray-600">
+                  <div className="text-primary font-bold text-xl mb-2">3. Equip Weapons</div>
+                  <p className="text-sm text-gray-400">
+                    Visit the weapon shop and configure loadouts
+                  </p>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-gray-600">
+                  <div className="text-primary font-bold text-xl mb-2">4. Enter Battles</div>
+                  <p className="text-sm text-gray-400">
+                    Compete in leagues and climb the rankings!
+                  </p>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => navigate('/facilities')}
+                className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
+              >
+                Get Started
+              </button>
+              
+              <p className="text-sm text-gray-400 mt-6">
+                You have ₡{user.currency.toLocaleString()} to spend on upgrades and robots.
+              </p>
             </div>
           </div>
         )}
@@ -165,25 +198,28 @@ function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button 
             onClick={() => navigate('/facilities')}
-            className="bg-blue-600 hover:bg-blue-700 p-6 rounded-lg transition-colors"
+            className="bg-primary hover:bg-primary-dark p-6 rounded-lg transition-colors border border-primary-light"
           >
             <h3 className="text-xl font-semibold mb-2">Upgrade Facilities</h3>
             <p className="text-sm text-gray-300">Improve your stable's capabilities</p>
           </button>
           <button 
             onClick={() => navigate('/robots')}
-            className="bg-green-600 hover:bg-green-700 p-6 rounded-lg transition-colors"
+            className="border-2 border-primary text-primary hover:bg-primary hover:text-white p-6 rounded-lg transition-colors"
           >
             <h3 className="text-xl font-semibold mb-2">
               {robots.length === 0 ? 'Create Robot' : 'Manage Robots'}
             </h3>
-            <p className="text-sm text-gray-300">
+            <p className="text-sm">
               {robots.length === 0 ? 'Build your first battle robot' : 'View and upgrade your robots'}
             </p>
           </button>
-          <button className="bg-purple-600 hover:bg-purple-700 p-6 rounded-lg transition-colors opacity-50 cursor-not-allowed">
+          <button 
+            className="border border-gray-600 text-gray-500 p-6 rounded-lg opacity-50 cursor-not-allowed"
+            disabled
+          >
             <h3 className="text-xl font-semibold mb-2">Battle Arena</h3>
-            <p className="text-sm text-gray-300">Coming soon</p>
+            <p className="text-sm">Coming soon</p>
           </button>
         </div>
       </div>
