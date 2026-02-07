@@ -190,7 +190,9 @@ function FacilitiesPage() {
                                 ? 'bg-yellow-700 text-yellow-100'
                                 : 'bg-gray-700 text-gray-300'
                             }`}>
-                              {stats.implemented} of {stats.total} {allImplemented ? '✓' : ''}
+                              {allImplemented && '✓ '}
+                              {stats.implemented} of {stats.total}
+                              {allImplemented ? ' Complete' : stats.implemented > 0 ? ' Partial' : ' Pending'}
                             </span>
                           </div>
                           <p className="text-sm text-gray-400 mt-1">{category.description}</p>
@@ -227,9 +229,9 @@ function FacilitiesPage() {
 
                           <div className="flex items-start mb-4">
                             {/* Facility Icon */}
-                            <div className="text-4xl mr-4 mt-1">{FACILITY_ICONS[facility.type]}</div>
+                            <div className="text-4xl mr-4 mt-1 flex-shrink-0">{FACILITY_ICONS[facility.type]}</div>
                             
-                            <div className="flex-1 pr-20">
+                            <div className="flex-1 min-w-0">
                               <h3 className="text-2xl font-semibold mb-2">{facility.name}</h3>
                               <p className="text-gray-400 text-sm">{facility.description}</p>
                             </div>
