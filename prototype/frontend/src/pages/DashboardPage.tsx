@@ -123,8 +123,6 @@ function DashboardPage() {
     // }
   };
 
-  };
-
   if (!user) {
     return null;
   }
