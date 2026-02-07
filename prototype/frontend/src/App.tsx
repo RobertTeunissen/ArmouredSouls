@@ -130,12 +130,16 @@ function App() {
             }
           />
           <Route
-            path="/finances"
+            path="/income"
             element={
               <ProtectedRoute>
                 <FinancialReportPage />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/finances"
+            element={<Navigate to="/income" replace />}
           />
           <Route
             path="/hall-of-records"

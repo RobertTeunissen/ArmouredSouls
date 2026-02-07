@@ -197,3 +197,92 @@ export const getHealthIcon = (
       return '❓';
   }
 };
+
+/**
+ * Per-Robot Financial Report
+ */
+export interface RobotFinancialData {
+  id: number;
+  name: string;
+  currentLeague: string;
+  elo: number;
+  revenue: {
+    battleWinnings: number;
+    merchandising: number;
+    streaming: number;
+    total: number;
+  };
+  costs: {
+    repairs: number;
+    allocatedFacilities: number;
+    total: number;
+  };
+  netIncome: number;
+  roi: number;
+  metrics: {
+    winRate: number;
+    avgEarningsPerBattle: number;
+    totalBattles: number;
+    fameContribution: number;
+    repairCostPercentage: number;
+  };
+  battles: Array<{
+    id: number;
+    isWinner: boolean;
+    reward: number;
+    repairCost: number;
+    battleType: string;
+    createdAt: string;
+  }>;
+}
+
+export interface PerRobotFinancialReport {
+  robots: RobotFinancialData[];
+  summary: {
+    totalRevenue: number;
+    totalCosts: number;
+    totalNetIncome: number;
+    averageROI: number;
+    mostProfitable: string | null;
+    leastProfitable: string | null;
+  };
+}
+
+export const getPerRobotFinancialReport = async (): Promise<PerRobotFinancialReport> => {
+  const response = await axios.get(
+    `${API_BASE_URL}/finances/per-robot`,
+    getAuthHeaders()
+  );
+  return response.data;
+};
+
+/**
+ * Facility ROI Calculator
+ */
+export interface FacilityROIData {
+  currentLevel: number;
+  targetLevel: number;
+  upgradeCost: number;
+  dailyCostIncrease: number;
+  dailyBenefitIncrease: number;
+  netDailyChange: number;
+  breakevenDays: number | null;
+  net30Days: number;
+  net90Days: number;
+  net180Days: number;
+  affordable: boolean;
+  recommendation: string;
+  recommendationType: 'excellent' | 'good' | 'neutral' | 'poor' | 'not_affordable';
+}
+
+export const calculateFacilityROI = async (
+  facilityType: string,
+  targetLevel: number
+): Promise<FacilityROIData> => {
+  const response = await axios.post(
+    `${API_BASE_URL}/finances/roi-calculator`,
+    { facilityType, targetLevel },
+    getAuthHeaders()
+  );
+  return response.data;
+};

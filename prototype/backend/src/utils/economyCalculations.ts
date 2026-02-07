@@ -5,6 +5,7 @@
 
 import { User, Facility, Robot } from '@prisma/client';
 import { PrismaClient, Prisma } from '@prisma/client';
+import { getFacilityConfig } from '../config/facilities';
 
 const prisma = new PrismaClient();
 
@@ -82,7 +83,7 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
  */
 export async function calculateTotalDailyOperatingCosts(userId: number): Promise<{
   total: number;
-  breakdown: Array<{ facilityType: string; facilityName: string; cost: number }>;
+  breakdown: Array<{ facilityType: string; facilityName: string; cost: number; level?: number }>;
 }> {
   const facilities = await prisma.facility.findMany({
     where: { userId },
@@ -92,7 +93,7 @@ export async function calculateTotalDailyOperatingCosts(userId: number): Promise
     where: { userId },
   });
 
-  const breakdown: Array<{ facilityType: string; facilityName: string; cost: number }> = [];
+  const breakdown: Array<{ facilityType: string; facilityName: string; cost: number; level?: number }> = [];
   let total = 0;
 
   // Calculate facility operating costs
@@ -104,6 +105,7 @@ export async function calculateTotalDailyOperatingCosts(userId: number): Promise
         facilityType: facility.facilityType,
         facilityName: getFacilityName(facility.facilityType),
         cost,
+        level: facility.level,
       });
       total += cost;
     }
@@ -327,7 +329,7 @@ export interface FinancialReport {
   };
   expenses: {
     operatingCosts: number;
-    operatingCostsBreakdown: Array<{ facilityType: string; facilityName: string; cost: number }>;
+    operatingCostsBreakdown: Array<{ facilityType: string; facilityName: string; cost: number; level?: number }>;
     repairs: number;
     total: number;
   };
@@ -389,11 +391,33 @@ export async function generateFinancialReport(
   // Calculate prestige bonus on battle winnings
   const prestigeBonus = Math.round(recentBattleWinnings * (getPrestigeMultiplier(user.prestige) - 1));
 
+  // Calculate repair costs from recent battles (last 7 days)
+  const recentBattles = await prisma.battle.findMany({
+    where: {
+      userId,
+      createdAt: {
+        gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+      },
+    },
+    select: {
+      robot1RepairCost: true,
+      robot2RepairCost: true,
+    },
+  });
+
+  // Sum all repair costs from battles
+  const totalRepairCosts = recentBattles.reduce((sum, battle) => {
+    return sum + (battle.robot1RepairCost || 0) + (battle.robot2RepairCost || 0);
+  }, 0);
+
+  // Calculate daily average repair cost
+  const dailyRepairCost = recentBattles.length > 0 ? Math.round(totalRepairCosts / 7) : 0;
+
   // Total revenue
   const totalRevenue = recentBattleWinnings + passiveIncome.total;
 
-  // Total expenses (repairs would be calculated per battle)
-  const totalExpenses = operatingCosts.total;
+  // Total expenses (operating costs + repairs)
+  const totalExpenses = operatingCosts.total + dailyRepairCost;
 
   // Net income
   const netIncome = totalRevenue - totalExpenses;
@@ -418,7 +442,7 @@ export async function generateFinancialReport(
     expenses: {
       operatingCosts: operatingCosts.total,
       operatingCostsBreakdown: operatingCosts.breakdown,
-      repairs: 0, // Would be calculated from recent battles
+      repairs: dailyRepairCost, // Daily average from last 7 days
       total: totalExpenses,
     },
     netIncome,
@@ -621,5 +645,460 @@ export async function processAllDailyFinances(): Promise<{
     totalCostsDeducted,
     bankruptUsers,
     summaries,
+  };
+}
+
+// ==================== PER-ROBOT FINANCIAL BREAKDOWN ====================
+
+/**
+ * Calculate per-robot financial performance
+ * Includes revenue breakdown, cost allocation, and performance metrics
+ */
+export async function generatePerRobotFinancialReport(userId: number): Promise<{
+  robots: Array<{
+    id: number;
+    name: string;
+    currentLeague: string;
+    elo: number;
+    revenue: {
+      battleWinnings: number;
+      merchandising: number;
+      streaming: number;
+      total: number;
+    };
+    costs: {
+      repairs: number;
+      allocatedFacilities: number;
+      total: number;
+    };
+    netIncome: number;
+    roi: number;
+    metrics: {
+      winRate: number;
+      avgEarningsPerBattle: number;
+      totalBattles: number;
+      fameContribution: number;
+      repairCostPercentage: number;
+    };
+    battles: Array<{
+      id: number;
+      isWinner: boolean;
+      reward: number;
+      repairCost: number;
+      battleType: string;
+      createdAt: Date;
+    }>;
+  }>;
+  summary: {
+    totalRevenue: number;
+    totalCosts: number;
+    totalNetIncome: number;
+    averageROI: number;
+    mostProfitable: string | null;
+    leastProfitable: string | null;
+  };
+}> {
+  // Get user's robots
+  const robots = await prisma.robot.findMany({
+    where: { userId },
+    select: {
+      id: true,
+      name: true,
+      currentLeague: true,
+      elo: true,
+      fame: true,
+      totalBattles: true,
+      wins: true,
+    },
+  });
+
+  if (robots.length === 0) {
+    return {
+      robots: [],
+      summary: {
+        totalRevenue: 0,
+        totalCosts: 0,
+        totalNetIncome: 0,
+        averageROI: 0,
+        mostProfitable: null,
+        leastProfitable: null,
+      },
+    };
+  }
+
+  // Get total operating costs
+  const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
+  const allocatedFacilityCostPerRobot = operatingCosts.total / robots.length;
+
+  // Get Income Generator level for passive income calculations
+  const incomeGenerator = await prisma.facility.findUnique({
+    where: {
+      userId_facilityType: {
+        userId,
+        facilityType: 'income_generator',
+      },
+    },
+  });
+  const incomeGeneratorLevel = incomeGenerator?.level || 0;
+
+  // Calculate totals for distribution calculations
+  const totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
+  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
+
+  // Get user for prestige
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Calculate total passive income
+  const totalMerchandising = calculateMerchandisingIncome(incomeGeneratorLevel, user.prestige);
+  const totalStreaming = calculateStreamingIncome(incomeGeneratorLevel, totalBattles, totalFame);
+
+  // Process each robot
+  const robotReports = await Promise.all(
+    robots.map(async (robot) => {
+      // Calculate battle winnings from recent battles
+      const recentBattles = await prisma.battle.findMany({
+        where: {
+          userId,
+          OR: [
+            { robot1Id: robot.id },
+            { robot2Id: robot.id },
+          ],
+          createdAt: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+          },
+        },
+        select: {
+          id: true,
+          winnerId: true,
+          winnerReward: true,
+          loserReward: true,
+          robot1Id: true,
+          robot2Id: true,
+          robot1RepairCost: true,
+          robot2RepairCost: true,
+          battleType: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      // Calculate battle winnings and repair costs, and build battle details array
+      let battleWinnings = 0;
+      let repairCosts = 0;
+      const battleDetails = [];
+
+      for (const battle of recentBattles) {
+        const isRobot1 = battle.robot1Id === robot.id;
+        const isWinner = battle.winnerId === robot.id;
+        const reward = isWinner ? (battle.winnerReward || 0) : (battle.loserReward || 0);
+        const repairCost = isRobot1 
+          ? (battle.robot1RepairCost || 0) 
+          : (battle.robot2RepairCost || 0);
+
+        battleWinnings += reward;
+        repairCosts += repairCost;
+
+        battleDetails.push({
+          id: battle.id,
+          isWinner,
+          reward,
+          repairCost,
+          battleType: battle.battleType || 'league', // Default to league if not set
+          createdAt: battle.createdAt,
+        });
+      }
+
+      // Calculate merchandising contribution (proportional to fame)
+      const merchandising = totalFame > 0
+        ? Math.round((robot.fame / totalFame) * totalMerchandising)
+        : 0;
+
+      // Calculate streaming contribution (proportional to battles and fame)
+      const streamingContribution = totalBattles > 0 && totalFame > 0
+        ? ((robot.totalBattles / totalBattles) + (robot.fame / totalFame)) / 2
+        : 0;
+      const streaming = Math.round(streamingContribution * totalStreaming);
+
+      // Calculate totals
+      const totalRevenue = battleWinnings + merchandising + streaming;
+      const totalCosts = repairCosts + allocatedFacilityCostPerRobot;
+      const netIncome = totalRevenue - totalCosts;
+      const roi = totalCosts > 0 ? (netIncome / totalCosts) * 100 : 0;
+
+      // Calculate metrics
+      const winRate = robot.totalBattles > 0
+        ? (robot.wins / robot.totalBattles) * 100
+        : 0;
+      const avgEarningsPerBattle = robot.totalBattles > 0
+        ? battleWinnings / robot.totalBattles
+        : 0;
+      const repairCostPercentage = totalRevenue > 0
+        ? (repairCosts / totalRevenue) * 100
+        : 0;
+
+      return {
+        id: robot.id,
+        name: robot.name,
+        currentLeague: robot.currentLeague,
+        elo: robot.elo,
+        revenue: {
+          battleWinnings,
+          merchandising,
+          streaming,
+          total: totalRevenue,
+        },
+        costs: {
+          repairs: repairCosts,
+          allocatedFacilities: Math.round(allocatedFacilityCostPerRobot),
+          total: Math.round(totalCosts),
+        },
+        netIncome: Math.round(netIncome),
+        roi: Math.round(roi * 10) / 10,
+        metrics: {
+          winRate: Math.round(winRate * 10) / 10,
+          avgEarningsPerBattle: Math.round(avgEarningsPerBattle),
+          totalBattles: recentBattles.length,
+          fameContribution: robot.fame,
+          repairCostPercentage: Math.round(repairCostPercentage * 10) / 10,
+        },
+        battles: battleDetails,
+      };
+    })
+  );
+
+  // Sort by profitability (net income)
+  robotReports.sort((a, b) => b.netIncome - a.netIncome);
+
+  // Calculate summary
+  const totalRevenue = robotReports.reduce((sum, r) => sum + r.revenue.total, 0);
+  const totalCosts = robotReports.reduce((sum, r) => sum + r.costs.total, 0);
+  const totalNetIncome = robotReports.reduce((sum, r) => sum + r.netIncome, 0);
+  const averageROI = robotReports.length > 0
+    ? robotReports.reduce((sum, r) => sum + r.roi, 0) / robotReports.length
+    : 0;
+
+  return {
+    robots: robotReports,
+    summary: {
+      totalRevenue: Math.round(totalRevenue),
+      totalCosts: Math.round(totalCosts),
+      totalNetIncome: Math.round(totalNetIncome),
+      averageROI: Math.round(averageROI * 10) / 10,
+      mostProfitable: robotReports.length > 0 ? robotReports[0].name : null,
+      leastProfitable: robotReports.length > 0 ? robotReports[robotReports.length - 1].name : null,
+    },
+  };
+}
+
+// ==================== FACILITY ROI CALCULATIONS ====================
+
+/**
+ * Calculate total upgrade cost from current level to target level
+ */
+export function calculateTotalUpgradeCost(
+  facilityType: string,
+  fromLevel: number,
+  toLevel: number
+): number {
+  const config = getFacilityConfig(facilityType);
+  if (!config || toLevel > config.maxLevel || fromLevel >= toLevel) {
+    return 0;
+  }
+
+  let totalCost = 0;
+  for (let level = fromLevel; level < toLevel; level++) {
+    totalCost += config.costs[level] || 0;
+  }
+  return totalCost;
+}
+
+/**
+ * Calculate daily operating cost increase for facility upgrade
+ */
+export function calculateOperatingCostIncrease(
+  facilityType: string,
+  fromLevel: number,
+  toLevel: number
+): number {
+  const costBefore = calculateFacilityOperatingCost(facilityType, fromLevel);
+  const costAfter = calculateFacilityOperatingCost(facilityType, toLevel);
+  return costAfter - costBefore;
+}
+
+/**
+ * Calculate daily benefit increase for income-generating facilities
+ * Returns 0 for non-income facilities
+ */
+export function calculateDailyBenefitIncrease(
+  facilityType: string,
+  fromLevel: number,
+  toLevel: number,
+  userPrestige: number,
+  totalBattles: number,
+  totalFame: number
+): number {
+  // Only Income Generator provides direct daily income benefit
+  if (facilityType !== 'income_generator') {
+    return 0; // Other facilities provide indirect benefits (discounts, caps, etc.)
+  }
+
+  // Calculate income at current level
+  const incomeBefore = calculateMerchandisingIncome(fromLevel, userPrestige) +
+    calculateStreamingIncome(fromLevel, totalBattles, totalFame);
+
+  // Calculate income at target level
+  const incomeAfter = calculateMerchandisingIncome(toLevel, userPrestige) +
+    calculateStreamingIncome(toLevel, totalBattles, totalFame);
+
+  return incomeAfter - incomeBefore;
+}
+
+/**
+ * Calculate comprehensive ROI metrics for a facility upgrade
+ */
+export async function calculateFacilityROI(
+  userId: number,
+  facilityType: string,
+  targetLevel: number
+): Promise<{
+  currentLevel: number;
+  targetLevel: number;
+  upgradeCost: number;
+  dailyCostIncrease: number;
+  dailyBenefitIncrease: number;
+  netDailyChange: number;
+  breakevenDays: number | null;
+  net30Days: number;
+  net90Days: number;
+  net180Days: number;
+  affordable: boolean;
+  recommendation: string;
+  recommendationType: 'excellent' | 'good' | 'neutral' | 'poor' | 'not_affordable';
+}> {
+  // Get user data
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Get current facility level
+  const facility = await prisma.facility.findUnique({
+    where: {
+      userId_facilityType: {
+        userId,
+        facilityType,
+      },
+    },
+  });
+
+  const currentLevel = facility?.level || 0;
+
+  // Validate target level
+  const config = getFacilityConfig(facilityType);
+  if (!config || targetLevel > config.maxLevel || targetLevel <= currentLevel) {
+    throw new Error('Invalid target level');
+  }
+
+  // Calculate costs
+  const upgradeCost = calculateTotalUpgradeCost(facilityType, currentLevel, targetLevel);
+  const dailyCostIncrease = calculateOperatingCostIncrease(facilityType, currentLevel, targetLevel);
+
+  // Calculate benefits (for income generators)
+  const robots = await prisma.robot.findMany({
+    where: { userId },
+    select: { totalBattles: true, fame: true },
+  });
+
+  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
+  const totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
+
+  const dailyBenefitIncrease = calculateDailyBenefitIncrease(
+    facilityType,
+    currentLevel,
+    targetLevel,
+    user.prestige,
+    totalBattles,
+    totalFame
+  );
+
+  // Calculate net change
+  const netDailyChange = dailyBenefitIncrease - dailyCostIncrease;
+
+  // Calculate breakeven
+  let breakevenDays: number | null = null;
+  if (netDailyChange > 0) {
+    breakevenDays = Math.ceil(upgradeCost / netDailyChange);
+  }
+
+  // Calculate net over time periods
+  const net30Days = (netDailyChange * 30) - upgradeCost;
+  const net90Days = (netDailyChange * 90) - upgradeCost;
+  const net180Days = (netDailyChange * 180) - upgradeCost;
+
+  // Check affordability
+  const affordable = user.currency >= upgradeCost;
+
+  // Generate recommendation
+  let recommendation = '';
+  let recommendationType: 'excellent' | 'good' | 'neutral' | 'poor' | 'not_affordable' = 'neutral';
+
+  if (!affordable) {
+    recommendation = `You need ₡${(upgradeCost - user.currency).toLocaleString()} more credits to afford this upgrade.`;
+    recommendationType = 'not_affordable';
+  } else if (facilityType === 'income_generator') {
+    // Income generator - calculate ROI
+    if (breakevenDays && breakevenDays <= 30) {
+      recommendation = `Excellent investment! Pays for itself in ${breakevenDays} days with ₡${netDailyChange.toLocaleString()}/day net gain.`;
+      recommendationType = 'excellent';
+    } else if (breakevenDays && breakevenDays <= 90) {
+      recommendation = `Good investment. Break-even in ${breakevenDays} days (~${Math.round(breakevenDays / 30)} months) with ₡${netDailyChange.toLocaleString()}/day net gain.`;
+      recommendationType = 'good';
+    } else if (breakevenDays) {
+      recommendation = `Long-term investment. Break-even in ${breakevenDays} days (~${Math.round(breakevenDays / 30)} months). Consider if planning long-term.`;
+      recommendationType = 'neutral';
+    } else {
+      recommendation = `This upgrade increases costs by ₡${Math.abs(netDailyChange).toLocaleString()}/day without offsetting income. Consider other facilities first.`;
+      recommendationType = 'poor';
+    }
+  } else {
+    // Non-income facilities - provide qualitative recommendation
+    const facilityName = config.name;
+    if (upgradeCost < user.currency * 0.1) {
+      recommendation = `${facilityName} upgrade is affordable (${Math.round((upgradeCost / user.currency) * 100)}% of balance). ${config.benefits[targetLevel - 1] || 'Provides valuable benefits'}.`;
+      recommendationType = 'good';
+    } else if (upgradeCost < user.currency * 0.3) {
+      recommendation = `${facilityName} upgrade costs ${Math.round((upgradeCost / user.currency) * 100)}% of your balance. ${config.benefits[targetLevel - 1] || 'Provides useful benefits'}.`;
+      recommendationType = 'neutral';
+    } else {
+      recommendation = `${facilityName} upgrade costs ${Math.round((upgradeCost / user.currency) * 100)}% of your balance. Save more credits before upgrading.`;
+      recommendationType = 'poor';
+    }
+  }
+
+  return {
+    currentLevel,
+    targetLevel,
+    upgradeCost: Math.round(upgradeCost),
+    dailyCostIncrease: Math.round(dailyCostIncrease),
+    dailyBenefitIncrease: Math.round(dailyBenefitIncrease),
+    netDailyChange: Math.round(netDailyChange),
+    breakevenDays,
+    net30Days: Math.round(net30Days),
+    net90Days: Math.round(net90Days),
+    net180Days: Math.round(net180Days),
+    affordable,
+    recommendation,
+    recommendationType,
   };
 }

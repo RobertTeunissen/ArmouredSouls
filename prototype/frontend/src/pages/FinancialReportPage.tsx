@@ -1,25 +1,34 @@
 /**
  * FinancialReportPage
- * Comprehensive financial report with detailed breakdown
+ * Comprehensive financial report with detailed breakdown and per-robot analysis
  */
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
+import DailyStableReport from '../components/DailyStableReport';
+import PerRobotBreakdown from '../components/PerRobotBreakdown';
+import InvestmentsTab from '../components/InvestmentsTab';
 import {
   getDailyFinancialReport,
   getFinancialProjections,
+  getPerRobotFinancialReport,
   FinancialReport,
   FinancialProjections,
+  PerRobotFinancialReport,
   formatCurrency,
   getHealthColor,
   getHealthIcon,
 } from '../utils/financialApi';
 
+type TabType = 'overview' | 'per-robot' | 'investments';
+
 function FinancialReportPage() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [report, setReport] = useState<FinancialReport | null>(null);
   const [projections, setProjections] = useState<FinancialProjections | null>(null);
+  const [perRobotReport, setPerRobotReport] = useState<PerRobotFinancialReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,12 +39,14 @@ function FinancialReportPage() {
   const fetchFinancialData = async () => {
     try {
       setLoading(true);
-      const [reportData, projectionsData] = await Promise.all([
+      const [reportData, projectionsData, perRobotData] = await Promise.all([
         getDailyFinancialReport(),
         getFinancialProjections(),
+        getPerRobotFinancialReport(),
       ]);
       setReport(reportData);
       setProjections(projectionsData);
+      setPerRobotReport(perRobotData);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch financial data:', err);
@@ -85,7 +96,7 @@ function FinancialReportPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Financial Report</h1>
+          <h1 className="text-3xl font-bold">Income Dashboard</h1>
           <button
             onClick={() => navigate('/dashboard')}
             className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
@@ -94,7 +105,51 @@ function FinancialReportPage() {
           </button>
         </div>
 
-        {/* Financial Health Overview */}
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="border-b border-gray-700">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'overview'
+                    ? 'border-blue-500 text-blue-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  }
+                `}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('per-robot')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'per-robot'
+                    ? 'border-blue-500 text-blue-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  }
+                `}
+              >
+                Per-Robot Breakdown
+              </button>
+              <button
+                onClick={() => setActiveTab('investments')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'investments'
+                    ? 'border-blue-500 text-blue-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  }
+                `}
+              >
+                Investments & ROI
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Financial Health Overview (shown on both tabs) */}
         <div className="bg-gray-800 p-6 rounded-lg mb-6">
           <div className="flex justify-between items-center">
             <div>
@@ -112,118 +167,47 @@ function FinancialReportPage() {
           </div>
         </div>
 
-        {/* Revenue & Expenses Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-green-400">Total Revenue</h3>
-            <div className="text-3xl font-bold mb-4">
-              {formatCurrency(report.revenue.total)}
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column: Daily Stable Report */}
+            <div>
+              <DailyStableReport report={report} />
             </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Battle Winnings:</span>
-                <span>{formatCurrency(report.revenue.battleWinnings)}</span>
-              </div>
-              {report.revenue.prestigeBonus > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Prestige Bonus:</span>
-                  <span className="text-purple-400">+{formatCurrency(report.revenue.prestigeBonus)}</span>
+
+            {/* Right Column: Projections and Recommendations */}
+            <div className="space-y-6">
+              {/* Projections */}
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">Financial Projections</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Weekly Projection</div>
+                    <div className={`text-2xl font-bold ${projections.projections.weekly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {projections.projections.weekly >= 0 ? '+' : ''}{formatCurrency(projections.projections.weekly)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Monthly Projection</div>
+                    <div className={`text-2xl font-bold ${projections.projections.monthly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {projections.projections.monthly >= 0 ? '+' : ''}{formatCurrency(projections.projections.monthly)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Current Daily Net</div>
+                    <div className={`text-2xl font-bold ${projections.current.dailyNet >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {projections.current.dailyNet >= 0 ? '+' : ''}{formatCurrency(projections.current.dailyNet)}
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-400">Merchandising:</span>
-                <span>{formatCurrency(report.revenue.merchandising)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Streaming:</span>
-                <span>{formatCurrency(report.revenue.streaming)}</span>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-red-400">Total Expenses</h3>
-            <div className="text-3xl font-bold mb-4">
-              {formatCurrency(report.expenses.total)}
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Operating Costs:</span>
-                <span>{formatCurrency(report.expenses.operatingCosts)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Repairs:</span>
-                <span>{formatCurrency(report.expenses.repairs)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Net Income</h3>
-            <div className={`text-3xl font-bold mb-4 ${report.netIncome >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {report.netIncome >= 0 ? '+' : ''}{formatCurrency(report.netIncome)}
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Profit Margin:</span>
-                <span>{report.profitMargin.toFixed(1)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Days to Bankruptcy:</span>
-                <span className={report.daysToBankruptcy < 30 ? 'text-red-400' : 'text-gray-300'}>
-                  {report.daysToBankruptcy} days
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Operating Costs Breakdown */}
-        {report.expenses.operatingCostsBreakdown.length > 0 && (
-          <div className="bg-gray-800 p-6 rounded-lg mb-6">
-            <h3 className="text-xl font-semibold mb-4">Operating Costs Breakdown</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {report.expenses.operatingCostsBreakdown.map((item) => (
-                <div key={item.facilityType} className="flex justify-between p-3 bg-gray-700 rounded">
-                  <span className="text-gray-300">{item.facilityName}</span>
-                  <span className="font-semibold">{formatCurrency(item.cost)}/day</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Projections */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h3 className="text-xl font-semibold mb-4">Financial Projections</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Weekly Projection</div>
-              <div className={`text-2xl font-bold ${projections.projections.weekly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {projections.projections.weekly >= 0 ? '+' : ''}{formatCurrency(projections.projections.weekly)}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Monthly Projection</div>
-              <div className={`text-2xl font-bold ${projections.projections.monthly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {projections.projections.monthly >= 0 ? '+' : ''}{formatCurrency(projections.projections.monthly)}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Current Daily Net</div>
-              <div className={`text-2xl font-bold ${projections.current.dailyNet >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {projections.current.dailyNet >= 0 ? '+' : ''}{formatCurrency(projections.current.dailyNet)}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recommendations */}
-        {projections.recommendations.length > 0 && (
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h3 className="text-xl font-semibold mb-4">💡 Recommendations</h3>
-            <ul className="space-y-3">
-              {projections.recommendations.map((rec, index) => (
+              {/* Recommendations */}
+              {projections.recommendations.length > 0 && (
+                <div className="bg-gray-800 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold mb-4">💡 Recommendations</h3>
+                  <ul className="space-y-3">
+                    {projections.recommendations.map((rec, index) => (
                 <li key={index} className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
                   <span className="text-gray-300">{rec}</span>
@@ -231,6 +215,19 @@ function FinancialReportPage() {
               ))}
             </ul>
           </div>
+        )}
+            </div>
+          </div>
+        )}
+
+        {/* Per-Robot Tab Content */}
+        {activeTab === 'per-robot' && perRobotReport && (
+          <PerRobotBreakdown report={perRobotReport} />
+        )}
+
+        {/* Investments Tab Content */}
+        {activeTab === 'investments' && (
+          <InvestmentsTab report={report} />
         )}
       </div>
     </div>

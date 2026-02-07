@@ -24,6 +24,7 @@ const implementedPages = new Set([
   '/leaderboards/prestige',
   '/leaderboards/losses',
   '/hall-of-records',
+  '/income',
 ]);
 
 const allPages = {

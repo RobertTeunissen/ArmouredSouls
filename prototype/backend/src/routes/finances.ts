@@ -7,6 +7,8 @@ import {
   calculateDailyPassiveIncome,
   getPrestigeMultiplier,
   calculateBattleWinnings,
+  generatePerRobotFinancialReport,
+  calculateFacilityROI,
 } from '../utils/economyCalculations';
 
 const router = express.Router();
@@ -20,9 +22,45 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
   try {
     const userId = req.user!.userId;
 
-    // Get recent battle winnings from query params (defaults to 0)
-    // In production, this would be tracked in a separate table
-    const recentBattleWinnings = parseInt(req.query.battleWinnings as string) || 0;
+    // Calculate recent battle winnings from last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const userRobots = await prisma.robot.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+
+    const robotIds = userRobots.map(r => r.id);
+
+    let recentBattleWinnings = 0;
+
+    if (robotIds.length > 0) {
+      const battles = await prisma.battle.findMany({
+        where: {
+          createdAt: {
+            gte: sevenDaysAgo,
+          },
+          OR: [
+            { robot1Id: { in: robotIds } },
+            { robot2Id: { in: robotIds } },
+          ],
+        },
+      });
+
+      for (const battle of battles) {
+        if (battle.winnerId && robotIds.includes(battle.winnerId)) {
+          recentBattleWinnings += battle.winnerReward || 0;
+        }
+        if (robotIds.includes(battle.robot1Id) || robotIds.includes(battle.robot2Id)) {
+          // Add loser reward if this robot participated
+          const loserId = battle.winnerId === battle.robot1Id ? battle.robot2Id : battle.robot1Id;
+          if (robotIds.includes(loserId)) {
+            recentBattleWinnings += battle.loserReward || 0;
+          }
+        }
+      }
+    }
 
     const report = await generateFinancialReport(userId, recentBattleWinnings);
 
@@ -212,6 +250,49 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
   } catch (error) {
     console.error('Financial projections error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/finances/per-robot
+ * Get per-robot financial breakdown with profitability analysis
+ */
+router.get('/per-robot', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    const report = await generatePerRobotFinancialReport(userId);
+
+    res.json(report);
+  } catch (error) {
+    console.error('Per-robot financial report error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/finances/roi-calculator
+ * Calculate ROI for facility upgrade
+ */
+router.post('/roi-calculator', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { facilityType, targetLevel } = req.body;
+
+    if (!facilityType || !targetLevel) {
+      return res.status(400).json({ error: 'Facility type and target level are required' });
+    }
+
+    const roiData = await calculateFacilityROI(userId, facilityType, targetLevel);
+
+    res.json(roiData);
+  } catch (error) {
+    console.error('ROI calculator error:', error);
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 
