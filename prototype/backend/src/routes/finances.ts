@@ -22,9 +22,45 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
   try {
     const userId = req.user!.userId;
 
-    // Get recent battle winnings from query params (defaults to 0)
-    // In production, this would be tracked in a separate table
-    const recentBattleWinnings = parseInt(req.query.battleWinnings as string) || 0;
+    // Calculate recent battle winnings from last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const userRobots = await prisma.robot.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+
+    const robotIds = userRobots.map(r => r.id);
+
+    let recentBattleWinnings = 0;
+
+    if (robotIds.length > 0) {
+      const battles = await prisma.battle.findMany({
+        where: {
+          createdAt: {
+            gte: sevenDaysAgo,
+          },
+          OR: [
+            { robot1Id: { in: robotIds } },
+            { robot2Id: { in: robotIds } },
+          ],
+        },
+      });
+
+      for (const battle of battles) {
+        if (battle.winnerId && robotIds.includes(battle.winnerId)) {
+          recentBattleWinnings += battle.winnerReward || 0;
+        }
+        if (robotIds.includes(battle.robot1Id) || robotIds.includes(battle.robot2Id)) {
+          // Add loser reward if this robot participated
+          const loserId = battle.winnerId === battle.robot1Id ? battle.robot2Id : battle.robot1Id;
+          if (robotIds.includes(loserId)) {
+            recentBattleWinnings += battle.loserReward || 0;
+          }
+        }
+      }
+    }
 
     const report = await generateFinancialReport(userId, recentBattleWinnings);
 

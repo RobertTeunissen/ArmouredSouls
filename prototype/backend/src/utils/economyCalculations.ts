@@ -83,7 +83,7 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
  */
 export async function calculateTotalDailyOperatingCosts(userId: number): Promise<{
   total: number;
-  breakdown: Array<{ facilityType: string; facilityName: string; cost: number }>;
+  breakdown: Array<{ facilityType: string; facilityName: string; cost: number; level?: number }>;
 }> {
   const facilities = await prisma.facility.findMany({
     where: { userId },
@@ -93,7 +93,7 @@ export async function calculateTotalDailyOperatingCosts(userId: number): Promise
     where: { userId },
   });
 
-  const breakdown: Array<{ facilityType: string; facilityName: string; cost: number }> = [];
+  const breakdown: Array<{ facilityType: string; facilityName: string; cost: number; level?: number }> = [];
   let total = 0;
 
   // Calculate facility operating costs
@@ -105,6 +105,7 @@ export async function calculateTotalDailyOperatingCosts(userId: number): Promise
         facilityType: facility.facilityType,
         facilityName: getFacilityName(facility.facilityType),
         cost,
+        level: facility.level,
       });
       total += cost;
     }
@@ -328,7 +329,7 @@ export interface FinancialReport {
   };
   expenses: {
     operatingCosts: number;
-    operatingCostsBreakdown: Array<{ facilityType: string; facilityName: string; cost: number }>;
+    operatingCostsBreakdown: Array<{ facilityType: string; facilityName: string; cost: number; level?: number }>;
     repairs: number;
     total: number;
   };

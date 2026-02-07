@@ -165,59 +165,49 @@ function FinancialReportPage() {
               </div>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-700 flex justify-around text-sm">
-            <div className="text-center">
-              <div className="text-gray-400">Profit Margin</div>
-              <div className="text-lg font-semibold text-gray-200">{report.profitMargin.toFixed(1)}%</div>
-            </div>
-            <div className="text-center">
-              <div className="text-gray-400">Days to Bankruptcy</div>
-              <div className={`text-lg font-semibold ${report.daysToBankruptcy < 30 ? 'text-red-400' : 'text-gray-200'}`}>
-                {report.daysToBankruptcy} days
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Tab Content */}
         {activeTab === 'overview' && (
-          <>
-            {/* Daily Stable Report */}
-            <div className="mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column: Daily Stable Report */}
+            <div>
               <DailyStableReport report={report} />
             </div>
 
-            {/* Projections */}
-            <div className="bg-gray-800 p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-semibold mb-4">Financial Projections</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Weekly Projection</div>
-              <div className={`text-2xl font-bold ${projections.projections.weekly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {projections.projections.weekly >= 0 ? '+' : ''}{formatCurrency(projections.projections.weekly)}
+            {/* Right Column: Projections and Recommendations */}
+            <div className="space-y-6">
+              {/* Projections */}
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold mb-4">Financial Projections</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Weekly Projection</div>
+                    <div className={`text-2xl font-bold ${projections.projections.weekly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {projections.projections.weekly >= 0 ? '+' : ''}{formatCurrency(projections.projections.weekly)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Monthly Projection</div>
+                    <div className={`text-2xl font-bold ${projections.projections.monthly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {projections.projections.monthly >= 0 ? '+' : ''}{formatCurrency(projections.projections.monthly)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Current Daily Net</div>
+                    <div className={`text-2xl font-bold ${projections.current.dailyNet >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {projections.current.dailyNet >= 0 ? '+' : ''}{formatCurrency(projections.current.dailyNet)}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Monthly Projection</div>
-              <div className={`text-2xl font-bold ${projections.projections.monthly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {projections.projections.monthly >= 0 ? '+' : ''}{formatCurrency(projections.projections.monthly)}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Current Daily Net</div>
-              <div className={`text-2xl font-bold ${projections.current.dailyNet >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {projections.current.dailyNet >= 0 ? '+' : ''}{formatCurrency(projections.current.dailyNet)}
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Recommendations */}
-        {projections.recommendations.length > 0 && (
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h3 className="text-xl font-semibold mb-4">💡 Recommendations</h3>
-            <ul className="space-y-3">
-              {projections.recommendations.map((rec, index) => (
+              {/* Recommendations */}
+              {projections.recommendations.length > 0 && (
+                <div className="bg-gray-800 p-6 rounded-lg">
+                  <h3 className="text-xl font-semibold mb-4">💡 Recommendations</h3>
+                  <ul className="space-y-3">
+                    {projections.recommendations.map((rec, index) => (
                 <li key={index} className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
                   <span className="text-gray-300">{rec}</span>
@@ -226,7 +216,8 @@ function FinancialReportPage() {
             </ul>
           </div>
         )}
-          </>
+            </div>
+          </div>
         )}
 
         {/* Per-Robot Tab Content */}

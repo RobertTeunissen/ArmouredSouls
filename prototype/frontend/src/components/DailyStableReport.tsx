@@ -71,7 +71,7 @@ function DailyStableReport({ report }: DailyStableReportProps) {
             {report.expenses.operatingCostsBreakdown.map((item) => (
               <div key={item.facilityType} className="flex justify-between">
                 <span className="text-gray-300">
-                  {item.facilityName} (Lvl {item.facilityType === 'roster_expansion' ? 'N/A' : 'varies'}):
+                  {item.facilityName} (Lvl {item.level !== undefined ? item.level : 'N/A'}):
                 </span>
                 <span className="text-gray-100">{formatCurrency(item.cost)}</span>
               </div>
