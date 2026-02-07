@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface FacilityIconProps {
   facilityType: string;
@@ -41,10 +41,9 @@ const EMOJI_SIZE_CLASSES = {
  * FacilityIcon component that loads WebP images with SVG fallback
  * Falls back to emoji if images are not available
  * 
- * Uses HTML <picture> element for automatic format detection:
- * - Modern browsers load WebP for optimal quality
- * - Older browsers automatically fallback to SVG
- * - If both fail, displays emoji icon
+ * Uses dynamic import for Vite compatibility:
+ * - Tries to load SVG from assets directory
+ * - Falls back to emoji if SVG not found
  */
 const FacilityIcon: React.FC<FacilityIconProps> = ({ 
   facilityType, 
@@ -52,18 +51,31 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({
   size = 'medium',
   className 
 }) => {
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   
-  // Construct image paths
-  const webpPath = `/assets/facilities/facility-${facilityType}-icon.webp`;
-  const svgPath = `/assets/facilities/facility-${facilityType}-icon.svg`;
+  useEffect(() => {
+    // Dynamically import the SVG file for this facility
+    const loadImage = async () => {
+      try {
+        const svgModule = await import(`../assets/facilities/facility-${facilityType}-icon.svg`);
+        setImageSrc(svgModule.default);
+      } catch (error) {
+        // If import fails, we'll fall back to emoji
+        setImageError(true);
+      }
+    };
+    
+    loadImage();
+  }, [facilityType]);
+  
   const emojiIcon = EMOJI_FALLBACKS[facilityType] || '❓';
   
   const sizeClass = SIZE_CLASSES[size];
   const emojiSizeClass = EMOJI_SIZE_CLASSES[size];
   
-  // If image failed to load, show emoji fallback
-  if (imageError) {
+  // If image failed to load or not yet loaded, show emoji fallback
+  if (imageError || !imageSrc) {
     return (
       <div 
         className={`${emojiSizeClass} flex items-center justify-center ${className || ''}`}
@@ -77,20 +89,14 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({
   }
   
   return (
-    <picture className={className || ''}>
-      {/* Try WebP first - modern browsers with best quality */}
-      <source srcSet={webpPath} type="image/webp" />
-      
-      {/* Fallback to SVG - universal compatibility */}
-      <img 
-        src={svgPath}
-        alt={facilityName}
-        className={`${sizeClass} object-contain`}
-        loading="lazy"
-        onError={() => setImageError(true)}
-        title={facilityName}
-      />
-    </picture>
+    <img 
+      src={imageSrc}
+      alt={facilityName}
+      className={`${sizeClass} object-contain ${className || ''}`}
+      loading="lazy"
+      onError={() => setImageError(true)}
+      title={facilityName}
+    />
   );
 };
 
