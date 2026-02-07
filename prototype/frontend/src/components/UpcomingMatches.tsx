@@ -62,11 +62,8 @@ function UpcomingMatches() {
   };
 
   const getMatchResult = (match: ScheduledMatch) => {
-    // Defensive checks to prevent crashes - validate all required nested data
-    if (!match || !match.robot1 || !match.robot2) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Invalid match data:', match);
-      }
+    // Basic validation
+    if (!match) {
       return null;
     }
     
@@ -75,6 +72,15 @@ function UpcomingMatches() {
       return null; // Don't display incomplete tournament matches
     }
     
+    // For league matches, both robots should be present
+    if (!match.robot1 || !match.robot2) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid match data - missing robots:', match);
+      }
+      return null;
+    }
+    
+    // Check if user data exists
     if (!match.robot1.user || !match.robot2.user) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Invalid match user data:', match);

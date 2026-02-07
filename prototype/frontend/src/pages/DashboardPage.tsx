@@ -31,10 +31,18 @@ interface Robot {
   battlesAsRobot2?: any[];
 }
 
+interface Notification {
+  type: 'warning' | 'danger' | 'info';
+  message: string;
+  action?: () => void;
+  actionLabel?: string;
+}
+
 function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [robots, setRobots] = useState<Robot[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,6 +50,47 @@ function DashboardPage() {
       fetchRobots();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (robots.length > 0) {
+      generateNotifications();
+    }
+  }, [robots, user]);
+
+  const generateNotifications = () => {
+    const alerts: Notification[] = [];
+    
+    // Check for robots not battle ready
+    const notReadyRobots = robots.filter(r => 
+      r.currentHP < r.maxHP || !r.mainWeapon
+    );
+    
+    if (notReadyRobots.length > 0) {
+      const reason = notReadyRobots[0].currentHP < notReadyRobots[0].maxHP 
+        ? 'needs repair' 
+        : 'has no weapon equipped';
+      
+      alerts.push({
+        type: 'warning',
+        message: `${notReadyRobots[0].name} ${reason}${notReadyRobots.length > 1 ? ` (+${notReadyRobots.length - 1} more)` : ''}`,
+        action: () => navigate(`/robots/${notReadyRobots[0].id}`),
+        actionLabel: 'Fix Now'
+      });
+    }
+    
+    // Check for low balance (bankruptcy warning)
+    if (user && user.currency < 50000) {
+      const daysLeft = Math.floor(user.currency / 10000); // Rough estimate
+      alerts.push({
+        type: 'danger',
+        message: `Low balance warning: ₡${user.currency.toLocaleString()} remaining`,
+        action: () => navigate('/finances'),
+        actionLabel: 'View Finances'
+      });
+    }
+    
+    setNotifications(alerts);
+  };
 
   const fetchRobots = async () => {
     try {
@@ -93,17 +142,65 @@ function DashboardPage() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Dashboard Header */}
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-700">
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700">
+          <h1 className="text-3xl font-bold text-white">Command Center</h1>
           <div className="text-lg text-gray-400">
             <span className="font-semibold text-white">{user.username}</span>'s Stable
           </div>
         </div>
 
+        {/* Critical Notifications/Warnings */}
+        {notifications.length > 0 && (
+          <div className="mb-6 space-y-3">
+            {notifications.map((notif, idx) => (
+              <div 
+                key={idx}
+                className={`
+                  p-4 rounded-lg border-l-4 flex items-center justify-between
+                  ${notif.type === 'danger' ? 'bg-error/10 border-error' : ''}
+                  ${notif.type === 'warning' ? 'bg-warning/10 border-warning' : ''}
+                  ${notif.type === 'info' ? 'bg-primary/10 border-primary' : ''}
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">
+                    {notif.type === 'danger' && '⚠️'}
+                    {notif.type === 'warning' && '⚡'}
+                    {notif.type === 'info' && 'ℹ️'}
+                  </span>
+                  <span className={`font-semibold ${
+                    notif.type === 'danger' ? 'text-error' : 
+                    notif.type === 'warning' ? 'text-warning' : 
+                    'text-primary'
+                  }`}>
+                    {notif.message}
+                  </span>
+                </div>
+                {notif.action && notif.actionLabel && (
+                  <button
+                    onClick={notif.action}
+                    className={`
+                      px-4 py-2 rounded font-semibold text-sm
+                      ${notif.type === 'danger' ? 'bg-error hover:bg-error/90 text-white' : ''}
+                      ${notif.type === 'warning' ? 'bg-warning hover:bg-warning/90 text-gray-900' : ''}
+                      ${notif.type === 'info' ? 'bg-primary hover:bg-primary/90 text-white' : ''}
+                    `}
+                  >
+                    {notif.actionLabel}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Top Row: Stable Statistics and Financial Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Stable Statistics */}
-          <StableStatistics />
+          <StableStatistics 
+            prestige={user.prestige}
+            stableName={`${user.username}'s Stable`}
+          />
 
           {/* Financial Summary */}
           <FinancialSummary />
