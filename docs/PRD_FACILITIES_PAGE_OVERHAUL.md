@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.1  
+**Version**: v1.2  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
 **Status**: Draft - Implementation Planning  
@@ -26,6 +26,12 @@
   - Specified image storage path (frontend/src/assets/facilities/)
   - Clarified navigation bar purpose and open questions
   - Updated implementation counts throughout document
+- v1.2 - Image format specification update (February 7, 2026)
+  - Changed primary image format from SVG to WebP 256×256px
+  - Added SVG as fallback format for compatibility
+  - Rationale: Facilities are important expenses requiring high-quality visuals
+  - Updated file naming conventions and technical specifications
+  - WebP provides better visual quality with modern compression
 
 ---
 
@@ -354,16 +360,28 @@ No icon / image on the Visual Example?
 
 #### 3.1 Facility Icons/Illustrations
 
-**Purpose**: Provide visual identity for each facility type to aid recognition and navigation.
+**Purpose**: Provide visual identity for each facility type to aid recognition and navigation. Facilities represent significant player investments and require high-quality visual representation.
 
 **Image Specifications:**
-- **Format**: SVG (scalable vector graphics) preferred, PNG fallback
-- **Size**: 256×256px (displayed at 64×64px or 128×128px depending on viewport)
+- **Primary Format**: WebP (modern compression, high quality)
+- **Fallback Format**: SVG (scalable vector graphics for compatibility)
+- **Size**: 256×256px (WebP), scalable (SVG)
+- **Display Sizes**: 64×64px (card header), 128×128px (detail view), 256×256px (modal/expanded view)
 - **Style**: Consistent art direction matching Armoured Souls robot aesthetic
 - **Color Palette**: Match design system (gray, blue, green, yellow accents)
 - **Background**: Transparent background
-- **File Naming**: `facility-{type}-icon.svg` (e.g., `facility-training-facility-icon.svg`)
+- **File Naming**: 
+  - Primary: `facility-{type}-icon.webp` (e.g., `facility-training-facility-icon.webp`)
+  - Fallback: `facility-{type}-icon.svg` (e.g., `facility-training-facility-icon.svg`)
 - **Storage Path**: `/prototype/frontend/src/assets/facilities/` (create this directory)
+- **Loading Strategy**: Load WebP first, fallback to SVG if WebP not supported or fails to load
+
+**Rationale for WebP Primary:**
+- Facilities are important economic investments (costs ranging from ₡150K to ₡5M)
+- Players need to clearly see what they're investing in
+- 256×256 WebP provides superior visual quality while maintaining small file sizes (~10-30KB)
+- Modern browsers have excellent WebP support (95%+ coverage)
+- SVG fallback ensures universal compatibility
 
 **Facility Image List (14 total):**
 
@@ -383,9 +401,10 @@ No icon / image on the Visual Example?
 14. **Income Generator** - Icon showing currency symbol, merchandising, or media
 
 **Placeholder Strategy (Current Implementation):**
-- Use SVG placeholders with facility-specific colors and simple shapes
-- Text-based icons using emoji or single letters (temporary)
-- Example: 🏋️ for Training Facility, 🔧 for Weapons Workshop, etc.
+- Use emoji placeholders until WebP assets are created (🏋️, 🔧, 🔩, etc.)
+- Phase 1: Emoji icons (immediate)
+- Phase 2: WebP 256×256px icons with SVG fallback (primary implementation)
+- Phase 3: Enhanced visuals with animations (future)
 
 #### 3.2 Category Icons
 
@@ -577,7 +596,7 @@ export interface FacilityConfig {
 
 #### 5.4 Image Integration
 
-**Phase 1: Placeholder Icons (Immediate)**
+**Phase 1: Placeholder Icons (Immediate - Current)**
 ```typescript
 const facilityIcons: Record<string, string> = {
   training_facility: '🏋️',
@@ -590,15 +609,56 @@ const facilityIcons: Record<string, string> = {
 <div className="text-4xl">{facilityIcons[facility.type]}</div>
 ```
 
-**Phase 2: SVG/PNG Icons (Future)**
-```typescript
-import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
+**Phase 2: WebP with SVG Fallback (Primary Implementation)**
 
-<img 
-  src={TrainingFacilityIcon} 
-  alt="Training Facility"
+**Component Pattern:**
+```typescript
+import { useState, useEffect } from 'react';
+
+interface FacilityIconProps {
+  facilityType: string;
+  alt: string;
+  className?: string;
+}
+
+const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, className }) => {
+  const webpSrc = `/assets/facilities/facility-${facilityType}-icon.webp`;
+  const svgSrc = `/assets/facilities/facility-${facilityType}-icon.svg`;
+  
+  return (
+    <picture>
+      <source srcSet={webpSrc} type="image/webp" />
+      <img 
+        src={svgSrc} 
+        alt={alt}
+        className={className || "w-16 h-16"}
+        loading="lazy"
+      />
+    </picture>
+  );
+};
+
+// Usage in FacilityCard
+<FacilityIcon 
+  facilityType={facility.type}
+  alt={facility.name}
   className="w-16 h-16"
 />
+```
+
+**Browser Compatibility:**
+- Modern browsers (Chrome, Firefox, Edge, Safari): Load WebP for optimal quality
+- Older browsers: Automatically fallback to SVG
+- Lazy loading: Defer off-screen images for performance
+
+**File Structure:**
+```
+/prototype/frontend/src/assets/facilities/
+├── facility-training-facility-icon.webp    (256×256px)
+├── facility-training-facility-icon.svg     (fallback)
+├── facility-weapons-workshop-icon.webp     (256×256px)
+├── facility-weapons-workshop-icon.svg      (fallback)
+└── ... (28 files total)
 ```
 
 #### 5.5 Testing Requirements
@@ -642,23 +702,28 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 - ⬜ Enhanced implementation status visibility
 - ⬜ Emoji placeholder icons for all facilities
 
-### Phase 2: Visual Enhancement 
+### Phase 2: Visual Enhancement (P1 - Near Future)
+
+**Estimated Effort**: 12-16 hours (includes asset creation)
 
 **Tasks:**
-1. ⬜ Design and create 14 facility SVG icons
-2. ⬜ Design and create 4 category SVG icons
-3. ⬜ Replace emoji placeholders with SVG icons
-4. ⬜ Implement CategoryNavigation sticky bar
-5. ⬜ Add smooth scroll to category sections
-6. ⬜ Create StableOverview dashboard component
-7. ⬜ Enhance facility card visual design
-8. ⬜ Add hover effects and transitions
+1. ⬜ Design and create 14 facility WebP icons (256×256px)
+2. ⬜ Design and create 14 facility SVG icons (fallback)
+3. ⬜ Design and create 4 category SVG icons
+4. ⬜ Implement image loading with WebP/SVG fallback logic
+5. ⬜ Replace emoji placeholders with WebP icons (SVG fallback)
+6. ⬜ Implement CategoryNavigation sticky bar
+7. ⬜ Add smooth scroll to category sections
+8. ⬜ Enhance facility card visual design
+9. ⬜ Add hover effects and transitions
+10. ⬜ Test WebP fallback on non-supporting browsers
 
 **Deliverables:**
-- ⬜ 14 facility SVG icons
+- ⬜ 14 facility WebP icons (256×256px, ~10-30KB each)
+- ⬜ 14 facility SVG icons (fallback format)
 - ⬜ 4 category SVG icons
+- ⬜ Image loading component with format detection
 - ⬜ Sticky category navigation
-- ⬜ Stable overview dashboard
 - ⬜ Enhanced visual design
 
 ### Phase 3: Advanced Features (Future)
@@ -902,34 +967,76 @@ import TrainingFacilityIcon from '@/assets/facilities/training-facility.svg';
 
 ## Appendix B: Image Asset Specifications
 
-### Facility Icons (14 assets)
+### Facility Icons (14 assets - Dual Format)
+
+**Primary Format: WebP**
+
+**File Naming Convention**: `facility-[facility-type]-icon.webp`
+
+**Technical Specs:**
+- Format: WebP
+- Resolution: 256×256px
+- Quality: 85-90% (balance quality and file size)
+- File Size Target: 10-30KB per file
+- Color Palette: Match design system (neutral grays with colored accents)
+- Transparency: Yes (alpha channel support)
+- Optimization: Use imagemin-webp or similar tools
+
+**Fallback Format: SVG**
 
 **File Naming Convention**: `facility-[facility-type]-icon.svg`
 
 **Technical Specs:**
 - Format: SVG (vector)
 - Canvas Size: 256×256px
-- Display Sizes: 64×64px (card header), 128×128px (detail view)
+- Display Sizes: 64×64px (card header), 128×128px (detail view), 256×256px (modal)
 - Color Palette: Match design system (neutral grays with colored accents)
 - Transparency: Yes (transparent background)
 - Optimization: SVGO optimized, < 10KB per file
+- Fallback Strategy: Used when WebP not supported or fails to load
 
-**Individual Asset List:**
+**Loading Implementation:**
+```typescript
+// React component pattern
+<picture>
+  <source srcset="facility-training-facility-icon.webp" type="image/webp" />
+  <img src="facility-training-facility-icon.svg" alt="Training Facility" />
+</picture>
+```
 
-1. `facility-training-facility-icon.svg` - Robot exercising/training equipment
-2. `facility-weapons-workshop-icon.svg` - Weapons on workbench, forge imagery
-3. `facility-repair-bay-icon.svg` - Repair tools, wrench, maintenance equipment
-4. `facility-research-lab-icon.svg` - Computer screens, data analytics, graphs
-5. `facility-medical-bay-icon.svg` - Medical cross, healing beams
-6. `facility-roster-expansion-icon.svg` - Multiple robot silhouettes, hangar door
-7. `facility-storage-facility-icon.svg` - Weapon racks, storage containers
-8. `facility-coaching-staff-icon.svg` - Coach clipboard, tactical whiteboard
-9. `facility-booking-office-icon.svg` - Trophy, tournament bracket, schedule
-10. `facility-combat-training-academy-icon.svg` - Weapon targeting reticle
-11. `facility-defense-training-academy-icon.svg` - Shield, defensive barrier
-12. `facility-mobility-training-academy-icon.svg` - Robot legs, movement trails
-13. `facility-ai-training-academy-icon.svg` - Circuit board, neural network
-14. `facility-income-generator-icon.svg` - Currency symbol, media/merchandise
+**Individual Asset List (Dual Format Required):**
+
+1. `facility-training-facility-icon.webp` + `.svg` - Robot exercising/training equipment
+2. `facility-weapons-workshop-icon.webp` + `.svg` - Weapons on workbench, forge imagery
+3. `facility-repair-bay-icon.webp` + `.svg` - Repair tools, wrench, maintenance equipment
+4. `facility-research-lab-icon.webp` + `.svg` - Computer screens, data analytics, graphs
+5. `facility-medical-bay-icon.webp` + `.svg` - Medical cross, healing beams
+6. `facility-roster-expansion-icon.webp` + `.svg` - Multiple robot silhouettes, hangar door
+7. `facility-storage-facility-icon.webp` + `.svg` - Weapon racks, storage containers
+8. `facility-coaching-staff-icon.webp` + `.svg` - Coach clipboard, tactical whiteboard
+9. `facility-booking-office-icon.webp` + `.svg` - Trophy, tournament bracket, schedule
+10. `facility-combat-training-academy-icon.webp` + `.svg` - Weapon targeting reticle
+11. `facility-defense-training-academy-icon.webp` + `.svg` - Shield, defensive barrier
+12. `facility-mobility-training-academy-icon.webp` + `.svg` - Robot legs, movement trails
+13. `facility-ai-training-academy-icon.webp` + `.svg` - Circuit board, neural network
+14. `facility-income-generator-icon.webp` + `.svg` - Currency symbol, media/merchandise
+
+**Total Assets Required**: 28 files (14 WebP + 14 SVG)
+
+**WebP Format Benefits:**
+- **Superior Quality**: 256×256px resolution provides crisp, detailed visuals at all display sizes
+- **Small File Size**: 25-50% smaller than PNG while maintaining higher quality
+- **Modern Compression**: Lossy and lossless compression options
+- **Alpha Channel**: Full transparency support like PNG
+- **Wide Support**: 95%+ browser coverage (Chrome, Firefox, Edge, Safari 14+, Opera)
+- **Future-Proof**: Industry standard for web images
+- **Appropriate for Investment**: High-quality visuals match the significance of facility investments (₡150K-₡5M)
+
+**SVG Fallback Benefits:**
+- **Universal Compatibility**: Works on all browsers including older versions
+- **Scalability**: Vector format scales perfectly at any size
+- **Small File Size**: < 10KB optimized
+- **Reliability**: Guaranteed to work when WebP is not supported
 
 ### Category Icons (4 assets)
 
@@ -981,10 +1088,10 @@ const categoryEmojis = {
 ### Future Enhancement Assets (Phase 3+)
 
 **Optional Additions:**
-- Facility background images (1920×1080px, used as page backgrounds)
-- Animated facility icons (Lottie JSON animations)
-- Facility level-up effects (particle systems, glows)
-- Facility preview images (show upgraded facility appearance)
+- Facility background images (1920×1080px WebP with JPG fallback, used as page backgrounds)
+- Animated facility icons (Lottie JSON animations or animated WebP)
+- Facility level-up effects (particle systems, glows - CSS/Canvas)
+- Facility preview images (show upgraded facility appearance - WebP format)
 
 ---
 
