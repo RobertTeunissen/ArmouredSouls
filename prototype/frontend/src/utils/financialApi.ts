@@ -197,3 +197,53 @@ export const getHealthIcon = (
       return '❓';
   }
 };
+
+/**
+ * Per-Robot Financial Report
+ */
+export interface RobotFinancialData {
+  id: string;
+  name: string;
+  league: string;
+  elo: number;
+  revenue: {
+    battleWinnings: number;
+    merchandising: number;
+    streaming: number;
+    total: number;
+  };
+  costs: {
+    repairs: number;
+    allocatedFacilities: number;
+    total: number;
+  };
+  netIncome: number;
+  roi: number;
+  metrics: {
+    winRate: number;
+    avgEarningsPerBattle: number;
+    totalBattles: number;
+    fameContribution: number;
+    repairCostPercentage: number;
+  };
+}
+
+export interface PerRobotFinancialReport {
+  robots: RobotFinancialData[];
+  summary: {
+    totalRevenue: number;
+    totalCosts: number;
+    totalNetIncome: number;
+    averageROI: number;
+    mostProfitable: string | null;
+    leastProfitable: string | null;
+  };
+}
+
+export const getPerRobotFinancialReport = async (): Promise<PerRobotFinancialReport> => {
+  const response = await axios.get(
+    `${API_BASE_URL}/finances/per-robot`,
+    getAuthHeaders()
+  );
+  return response.data;
+};

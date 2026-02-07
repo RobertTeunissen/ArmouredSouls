@@ -623,3 +623,233 @@ export async function processAllDailyFinances(): Promise<{
     summaries,
   };
 }
+
+// ==================== PER-ROBOT FINANCIAL BREAKDOWN ====================
+
+/**
+ * Calculate per-robot financial performance
+ * Includes revenue breakdown, cost allocation, and performance metrics
+ */
+export async function generatePerRobotFinancialReport(userId: number): Promise<{
+  robots: Array<{
+    id: string;
+    name: string;
+    league: string;
+    elo: number;
+    revenue: {
+      battleWinnings: number;
+      merchandising: number;
+      streaming: number;
+      total: number;
+    };
+    costs: {
+      repairs: number;
+      allocatedFacilities: number;
+      total: number;
+    };
+    netIncome: number;
+    roi: number;
+    metrics: {
+      winRate: number;
+      avgEarningsPerBattle: number;
+      totalBattles: number;
+      fameContribution: number;
+      repairCostPercentage: number;
+    };
+  }>;
+  summary: {
+    totalRevenue: number;
+    totalCosts: number;
+    totalNetIncome: number;
+    averageROI: number;
+    mostProfitable: string | null;
+    leastProfitable: string | null;
+  };
+}> {
+  // Get user's robots
+  const robots = await prisma.robot.findMany({
+    where: { userId },
+    select: {
+      id: true,
+      name: true,
+      league: true,
+      elo: true,
+      fame: true,
+      totalBattles: true,
+      wins: true,
+    },
+  });
+
+  if (robots.length === 0) {
+    return {
+      robots: [],
+      summary: {
+        totalRevenue: 0,
+        totalCosts: 0,
+        totalNetIncome: 0,
+        averageROI: 0,
+        mostProfitable: null,
+        leastProfitable: null,
+      },
+    };
+  }
+
+  // Get total operating costs
+  const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
+  const allocatedFacilityCostPerRobot = operatingCosts.total / robots.length;
+
+  // Get Income Generator level for passive income calculations
+  const incomeGenerator = await prisma.facility.findUnique({
+    where: {
+      userId_facilityType: {
+        userId,
+        facilityType: 'income_generator',
+      },
+    },
+  });
+  const incomeGeneratorLevel = incomeGenerator?.level || 0;
+
+  // Calculate totals for distribution calculations
+  const totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
+  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
+
+  // Get user for prestige
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Calculate total passive income
+  const totalMerchandising = calculateMerchandisingIncome(incomeGeneratorLevel, user.prestige);
+  const totalStreaming = calculateStreamingIncome(incomeGeneratorLevel, totalBattles, totalFame);
+
+  // Process each robot
+  const robotReports = await Promise.all(
+    robots.map(async (robot) => {
+      // Calculate battle winnings from recent battles
+      // For MVP, we'll estimate based on league and wins
+      // In production, this would sum actual winnerReward/loserReward from Battle records
+      const recentBattles = await prisma.battle.findMany({
+        where: {
+          userId,
+          OR: [
+            { robot1Id: robot.id },
+            { robot2Id: robot.id },
+          ],
+          createdAt: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+          },
+        },
+        select: {
+          winnerId: true,
+          winnerReward: true,
+          loserReward: true,
+          robot1Id: true,
+          robot2Id: true,
+          robot1RepairCost: true,
+          robot2RepairCost: true,
+        },
+      });
+
+      // Calculate battle winnings and repair costs
+      let battleWinnings = 0;
+      let repairCosts = 0;
+
+      for (const battle of recentBattles) {
+        const isRobot1 = battle.robot1Id === robot.id;
+        const isWinner = battle.winnerId === robot.id;
+
+        if (isWinner) {
+          battleWinnings += battle.winnerReward || 0;
+        } else {
+          battleWinnings += battle.loserReward || 0;
+        }
+
+        repairCosts += isRobot1 
+          ? (battle.robot1RepairCost || 0) 
+          : (battle.robot2RepairCost || 0);
+      }
+
+      // Calculate merchandising contribution (proportional to fame)
+      const merchandising = totalFame > 0
+        ? Math.round((robot.fame / totalFame) * totalMerchandising)
+        : 0;
+
+      // Calculate streaming contribution (proportional to battles and fame)
+      const streamingContribution = totalBattles > 0 && totalFame > 0
+        ? ((robot.totalBattles / totalBattles) + (robot.fame / totalFame)) / 2
+        : 0;
+      const streaming = Math.round(streamingContribution * totalStreaming);
+
+      // Calculate totals
+      const totalRevenue = battleWinnings + merchandising + streaming;
+      const totalCosts = repairCosts + allocatedFacilityCostPerRobot;
+      const netIncome = totalRevenue - totalCosts;
+      const roi = totalCosts > 0 ? (netIncome / totalCosts) * 100 : 0;
+
+      // Calculate metrics
+      const winRate = robot.totalBattles > 0
+        ? (robot.wins / robot.totalBattles) * 100
+        : 0;
+      const avgEarningsPerBattle = robot.totalBattles > 0
+        ? battleWinnings / robot.totalBattles
+        : 0;
+      const repairCostPercentage = totalRevenue > 0
+        ? (repairCosts / totalRevenue) * 100
+        : 0;
+
+      return {
+        id: robot.id,
+        name: robot.name,
+        league: robot.league,
+        elo: robot.elo,
+        revenue: {
+          battleWinnings,
+          merchandising,
+          streaming,
+          total: totalRevenue,
+        },
+        costs: {
+          repairs: repairCosts,
+          allocatedFacilities: Math.round(allocatedFacilityCostPerRobot),
+          total: Math.round(totalCosts),
+        },
+        netIncome: Math.round(netIncome),
+        roi: Math.round(roi * 10) / 10,
+        metrics: {
+          winRate: Math.round(winRate * 10) / 10,
+          avgEarningsPerBattle: Math.round(avgEarningsPerBattle),
+          totalBattles: recentBattles.length,
+          fameContribution: robot.fame,
+          repairCostPercentage: Math.round(repairCostPercentage * 10) / 10,
+        },
+      };
+    })
+  );
+
+  // Sort by profitability (net income)
+  robotReports.sort((a, b) => b.netIncome - a.netIncome);
+
+  // Calculate summary
+  const totalRevenue = robotReports.reduce((sum, r) => sum + r.revenue.total, 0);
+  const totalCosts = robotReports.reduce((sum, r) => sum + r.costs.total, 0);
+  const totalNetIncome = robotReports.reduce((sum, r) => sum + r.netIncome, 0);
+  const averageROI = robotReports.length > 0
+    ? robotReports.reduce((sum, r) => sum + r.roi, 0) / robotReports.length
+    : 0;
+
+  return {
+    robots: robotReports,
+    summary: {
+      totalRevenue: Math.round(totalRevenue),
+      totalCosts: Math.round(totalCosts),
+      totalNetIncome: Math.round(totalNetIncome),
+      averageROI: Math.round(averageROI * 10) / 10,
+      mostProfitable: robotReports.length > 0 ? robotReports[0].name : null,
+      leastProfitable: robotReports.length > 0 ? robotReports[robotReports.length - 1].name : null,
+    },
+  };
+}

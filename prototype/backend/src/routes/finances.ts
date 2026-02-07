@@ -7,6 +7,7 @@ import {
   calculateDailyPassiveIncome,
   getPrestigeMultiplier,
   calculateBattleWinnings,
+  generatePerRobotFinancialReport,
 } from '../utils/economyCalculations';
 
 const router = express.Router();
@@ -211,6 +212,23 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
     });
   } catch (error) {
     console.error('Financial projections error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/finances/per-robot
+ * Get per-robot financial breakdown with profitability analysis
+ */
+router.get('/per-robot', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+
+    const report = await generatePerRobotFinancialReport(userId);
+
+    res.json(report);
+  } catch (error) {
+    console.error('Per-robot financial report error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

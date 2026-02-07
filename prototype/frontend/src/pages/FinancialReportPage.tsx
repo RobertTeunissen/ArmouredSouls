@@ -1,26 +1,33 @@
 /**
  * FinancialReportPage
- * Comprehensive financial report with detailed breakdown
+ * Comprehensive financial report with detailed breakdown and per-robot analysis
  */
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import DailyStableReport from '../components/DailyStableReport';
+import PerRobotBreakdown from '../components/PerRobotBreakdown';
 import {
   getDailyFinancialReport,
   getFinancialProjections,
+  getPerRobotFinancialReport,
   FinancialReport,
   FinancialProjections,
+  PerRobotFinancialReport,
   formatCurrency,
   getHealthColor,
   getHealthIcon,
 } from '../utils/financialApi';
 
+type TabType = 'overview' | 'per-robot';
+
 function FinancialReportPage() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [report, setReport] = useState<FinancialReport | null>(null);
   const [projections, setProjections] = useState<FinancialProjections | null>(null);
+  const [perRobotReport, setPerRobotReport] = useState<PerRobotFinancialReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,12 +38,14 @@ function FinancialReportPage() {
   const fetchFinancialData = async () => {
     try {
       setLoading(true);
-      const [reportData, projectionsData] = await Promise.all([
+      const [reportData, projectionsData, perRobotData] = await Promise.all([
         getDailyFinancialReport(),
         getFinancialProjections(),
+        getPerRobotFinancialReport(),
       ]);
       setReport(reportData);
       setProjections(projectionsData);
+      setPerRobotReport(perRobotData);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch financial data:', err);
@@ -95,7 +104,39 @@ function FinancialReportPage() {
           </button>
         </div>
 
-        {/* Financial Health Overview */}
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="border-b border-gray-700">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'overview'
+                    ? 'border-blue-500 text-blue-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  }
+                `}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('per-robot')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'per-robot'
+                    ? 'border-blue-500 text-blue-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  }
+                `}
+              >
+                Per-Robot Breakdown
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Financial Health Overview (shown on both tabs) */}
         <div className="bg-gray-800 p-6 rounded-lg mb-6">
           <div className="flex justify-between items-center">
             <div>
@@ -125,15 +166,18 @@ function FinancialReportPage() {
           </div>
         </div>
 
-        {/* Daily Stable Report */}
-        <div className="mb-6">
-          <DailyStableReport report={report} />
-        </div>
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Daily Stable Report */}
+            <div className="mb-6">
+              <DailyStableReport report={report} />
+            </div>
 
-        {/* Projections */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h3 className="text-xl font-semibold mb-4">Financial Projections</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Projections */}
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-semibold mb-4">Financial Projections</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <div className="text-sm text-gray-400 mb-1">Weekly Projection</div>
               <div className={`text-2xl font-bold ${projections.projections.weekly >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -168,6 +212,13 @@ function FinancialReportPage() {
               ))}
             </ul>
           </div>
+        )}
+          </>
+        )}
+
+        {/* Per-Robot Tab Content */}
+        {activeTab === 'per-robot' && perRobotReport && (
+          <PerRobotBreakdown report={perRobotReport} />
         )}
       </div>
     </div>
