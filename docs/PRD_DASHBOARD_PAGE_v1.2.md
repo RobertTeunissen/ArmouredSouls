@@ -143,91 +143,27 @@ This section addresses all review comments from v1.1:
 
 ## Executive Summary
 
-The Dashboard Page (`/dashboard`) is **the most critical page in Armoured Souls** - it's the first thing players see after logging in and serves as the **command center** for their robot stable. Currently functional but basic, it needs to evolve into an informational, concise, and engaging cockpit that invites players to dive deeper into the game while communicating their role as a stable manager.
+The Dashboard Page (`/dashboard`) is **the most critical page in Armoured Souls** - it's the first thing players see after logging in and serves as the command center for their robot stable. Currently functional but basic, it needs to evolve into an informational, concise, and engaging cockpit that invites players to dive deeper into the game while communicating their role as a stable manager.
 
 **Key Goals:**
 - Transform the dashboard from a simple list page into an **engaging command center**
 - Provide **at-a-glance status** of robots, finances, and upcoming/recent battles
-- Display **actionable insights** that guide players to their next decision via notifications
+- Display **actionable insights** that guide players to their next decision
 - Align with **design system** (Direction B logo, proper color palette, typography)
 - Create **visual hierarchy** that prioritizes critical information
 - Support both **new player onboarding** (empty state) and **experienced player efficiency** (information density)
 
 **Problem Statement:**  
-Players need to quickly assess their stable's status (robot health, finances, upcoming battles) and make informed decisions about their next action. The current dashboard shows basic information but lacks visual polish, information hierarchy, notification system, and the "pride of ownership" feeling central to the game's design philosophy.
+Players need to quickly assess their stable's status (robot health, finances, upcoming battles) and make informed decisions about their next action. The current dashboard shows basic information but lacks visual polish, information hierarchy, and the "pride of ownership" feeling central to the game's design philosophy.
 
 **Success Criteria:**
 - Players can assess stable health in <5 seconds (robot HP, finances, battle readiness)
 - Dashboard communicates "This is YOUR stable. You're in control."
 - All design system requirements met (Direction B logo, color palette, typography)
-- Critical issues surfaced via notification system with actionable buttons
-- Prominent display of prestige (most important stable-level stat)
 - Empty state provides clear, welcoming onboarding path
-- Both league and tournament matches visible
+- Quick actions lead to most common workflows (manage robots, upgrade facilities, view battles)
 - Responsive design works on desktop and mobile
 - Information is scannable, not overwhelming
-
----
-
-## Implementation Status (v1.2)
-
-### ✅ Completed Features
-
-1. **Notification System** (NEW in v1.2)
-   - Critical alerts at top of dashboard
-   - Color-coded by severity (danger/warning/info)
-   - Actionable buttons link to fix pages
-   - Auto-generated based on robot/financial status
-
-2. **Prestige Display** (NEW in v1.2)
-   - Prominently displayed in Stable Overview
-   - Large text (3xl), purple color
-   - Most visible stat (top of card)
-
-3. **Upcoming Matches Fix** (FIXED in v1.2)
-   - Both league and tournament matches display
-   - Fixed filtering bug that hid league matches
-   - Visual separation between match types
-
-4. **Robot Cards** (UPDATED in v1.2)
-   - Compact layout (96x96 portrait, smaller text)
-   - Better text truncation (no overflow)
-   - HP bars, battle readiness badges
-   - Links to individual robot pages
-
-5. **Design System Colors**
-   - All components use design system palette
-   - Background, surface, primary colors applied
-   - Success/warning/error for status indicators
-
-6. **Stable Statistics Panel**
-   - Aggregate metrics across all robots
-   - Total battles, win rate, W/L/D record
-   - Average ELO, highest league
-
-7. **Enhanced Empty State**
-   - 4-step onboarding guide
-   - Welcoming copy and clear CTAs
-
-### ⏳ Deferred to Future Phases
-
-1. **Stable Name Editing**
-   - Currently displays name
-   - Edit functionality Phase 2
-
-2. **Achievements/Trophies**
-   - Tournament wins tracking
-   - Achievement badges
-   - Phase 2-3
-
-3. **Expected Winnings Display**
-   - Show prize pools for matches
-   - Requires backend calculation
-   - Phase 2
-
-4. **Robot Card Pagination**
-   - Only needed at 20+ robots
-   - Phase 2 if needed
 
 ---
 
