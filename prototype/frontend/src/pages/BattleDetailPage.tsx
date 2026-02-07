@@ -125,130 +125,119 @@ function BattleDetailPage() {
           </div>
         </div>
 
-        {/* Battle Summary with Rewards/ELO at Top */}
-        <div className="bg-gray-800 rounded-lg mb-3 overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-700">
-            {/* Robot 1 */}
-            <div className="p-4">
-              <h3 className="text-xl font-bold text-blue-400 mb-1">{battleLog.robot1.name}</h3>
-              <p className="text-gray-400 mb-3 text-sm">Pilot: {battleLog.robot1.owner}</p>
-              
-              {/* ELO Change - Prominent at Top */}
-              <div className="bg-gray-900 rounded-lg p-2 mb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">ELO Rating</span>
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <span>{battleLog.robot1.eloBefore}</span>
-                    <span className="text-gray-500">→</span>
-                    <span className="font-bold">{battleLog.robot1.eloAfter}</span>
-                    <span
-                      className={`text-xs font-bold ${
-                        battleLog.robot1.eloAfter - battleLog.robot1.eloBefore >= 0
-                          ? 'text-green-400'
-                          : 'text-red-400'
-                      }`}
-                    >
-                      ({battleLog.robot1.eloAfter - battleLog.robot1.eloBefore > 0 ? '+' : ''}
-                      {battleLog.robot1.eloAfter - battleLog.robot1.eloBefore})
-                    </span>
-                  </div>
-                </div>
-              </div>
+        {/* Battle Summary - Horizontal Compact Layout */}
+        <div className="bg-gray-800 rounded-lg mb-3 p-3">
+          {/* Robot Names Row */}
+          <div className="grid grid-cols-2 gap-4 mb-2 pb-2 border-b border-gray-700">
+            <div>
+              <h3 className="text-lg font-bold text-blue-400">{battleLog.robot1.name}</h3>
+              <p className="text-gray-400 text-xs">Pilot: {battleLog.robot1.owner}</p>
+            </div>
+            <div className="text-right">
+              <h3 className="text-lg font-bold text-blue-400">{battleLog.robot2.name}</h3>
+              <p className="text-gray-400 text-xs">Pilot: {battleLog.robot2.owner}</p>
+            </div>
+          </div>
 
-              {/* Rewards */}
-              <div className="space-y-1.5">
-                {battleLog.robot1.reward !== undefined && battleLog.robot1.reward !== null && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
-                    <span className="text-xs text-gray-400">💰 Credits</span>
-                    <span className="text-sm font-bold text-green-400">₡{battleLog.robot1.reward}</span>
-                  </div>
-                )}
-                {battleLog.robot1.prestige !== undefined && battleLog.robot1.prestige > 0 && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
-                    <span className="text-xs text-gray-400">⭐ Prestige</span>
-                    <span className="text-sm font-bold text-purple-400">+{battleLog.robot1.prestige}</span>
-                  </div>
-                )}
-                {battleLog.robot1.fame !== undefined && battleLog.robot1.fame > 0 && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
-                    <span className="text-xs text-gray-400">🎖️ Fame</span>
-                    <span className="text-sm font-bold text-yellow-400">+{battleLog.robot1.fame}</span>
-                  </div>
-                )}
+          {/* ELO Changes Row */}
+          <div className="grid grid-cols-2 gap-4 mb-2 pb-2 border-b border-gray-700">
+            <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1.5">
+              <span className="text-xs text-gray-400">ELO</span>
+              <div className="flex items-center gap-1.5 text-sm">
+                <span>{battleLog.robot1.eloBefore}</span>
+                <span className="text-gray-500">→</span>
+                <span className="font-bold">{battleLog.robot1.eloAfter}</span>
+                <span
+                  className={`text-xs font-bold ${
+                    battleLog.robot1.eloAfter - battleLog.robot1.eloBefore >= 0
+                      ? 'text-green-400'
+                      : 'text-red-400'
+                  }`}
+                >
+                  ({battleLog.robot1.eloAfter - battleLog.robot1.eloBefore > 0 ? '+' : ''}
+                  {battleLog.robot1.eloAfter - battleLog.robot1.eloBefore})
+                </span>
               </div>
+            </div>
+            <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1.5">
+              <span className="text-xs text-gray-400">ELO</span>
+              <div className="flex items-center gap-1.5 text-sm">
+                <span>{battleLog.robot2.eloBefore}</span>
+                <span className="text-gray-500">→</span>
+                <span className="font-bold">{battleLog.robot2.eloAfter}</span>
+                <span
+                  className={`text-xs font-bold ${
+                    battleLog.robot2.eloAfter - battleLog.robot2.eloBefore >= 0
+                      ? 'text-green-400'
+                      : 'text-red-400'
+                  }`}
+                >
+                  ({battleLog.robot2.eloAfter - battleLog.robot2.eloBefore > 0 ? '+' : ''}
+                  {battleLog.robot2.eloAfter - battleLog.robot2.eloBefore})
+                </span>
+              </div>
+            </div>
+          </div>
 
-              {/* Battle Stats */}
-              <div className="mt-3 pt-3 border-t border-gray-700 space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Final HP:</span>
-                  <span>{battleLog.robot1.finalHP}%</span>
+          {/* Rewards & Stats Grid */}
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            {/* Robot 1 Rewards & Stats */}
+            <div className="space-y-1">
+              {battleLog.robot1.reward !== undefined && battleLog.robot1.reward !== null && (
+                <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                  <span className="text-gray-400">💰 Credits</span>
+                  <span className="font-bold text-green-400">₡{battleLog.robot1.reward}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Damage Dealt:</span>
-                  <span className="text-blue-400">{battleLog.robot1.damageDealt}</span>
+              )}
+              {battleLog.robot1.prestige !== undefined && battleLog.robot1.prestige > 0 && (
+                <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                  <span className="text-gray-400">⭐ Prestige</span>
+                  <span className="font-bold text-purple-400">+{battleLog.robot1.prestige}</span>
                 </div>
+              )}
+              {battleLog.robot1.fame !== undefined && battleLog.robot1.fame > 0 && (
+                <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                  <span className="text-gray-400">🎖️ Fame</span>
+                  <span className="font-bold text-yellow-400">+{battleLog.robot1.fame}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                <span className="text-gray-400">Final HP</span>
+                <span>{battleLog.robot1.finalHP}%</span>
+              </div>
+              <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                <span className="text-gray-400">Damage</span>
+                <span className="text-blue-400">{battleLog.robot1.damageDealt}</span>
               </div>
             </div>
 
-            {/* Robot 2 */}
-            <div className="p-4">
-              <h3 className="text-xl font-bold text-blue-400 mb-1">{battleLog.robot2.name}</h3>
-              <p className="text-gray-400 mb-3 text-sm">Pilot: {battleLog.robot2.owner}</p>
-              
-              {/* ELO Change - Prominent at Top */}
-              <div className="bg-gray-900 rounded-lg p-2 mb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">ELO Rating</span>
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <span>{battleLog.robot2.eloBefore}</span>
-                    <span className="text-gray-500">→</span>
-                    <span className="font-bold">{battleLog.robot2.eloAfter}</span>
-                    <span
-                      className={`text-xs font-bold ${
-                        battleLog.robot2.eloAfter - battleLog.robot2.eloBefore >= 0
-                          ? 'text-green-400'
-                          : 'text-red-400'
-                      }`}
-                    >
-                      ({battleLog.robot2.eloAfter - battleLog.robot2.eloBefore > 0 ? '+' : ''}
-                      {battleLog.robot2.eloAfter - battleLog.robot2.eloBefore})
-                    </span>
-                  </div>
+            {/* Robot 2 Rewards & Stats */}
+            <div className="space-y-1">
+              {battleLog.robot2.reward !== undefined && battleLog.robot2.reward !== null && (
+                <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                  <span className="text-gray-400">💰 Credits</span>
+                  <span className="font-bold text-green-400">₡{battleLog.robot2.reward}</span>
                 </div>
+              )}
+              {battleLog.robot2.prestige !== undefined && battleLog.robot2.prestige > 0 && (
+                <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                  <span className="text-gray-400">⭐ Prestige</span>
+                  <span className="font-bold text-purple-400">+{battleLog.robot2.prestige}</span>
+                </div>
+              )}
+              {battleLog.robot2.fame !== undefined && battleLog.robot2.fame > 0 && (
+                <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                  <span className="text-gray-400">🎖️ Fame</span>
+                  <span className="font-bold text-yellow-400">+{battleLog.robot2.fame}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                <span className="text-gray-400">Final HP</span>
+                <span>{battleLog.robot2.finalHP}%</span>
               </div>
-
-              {/* Rewards */}
-              <div className="space-y-1.5">
-                {battleLog.robot2.reward !== undefined && battleLog.robot2.reward !== null && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
-                    <span className="text-xs text-gray-400">💰 Credits</span>
-                    <span className="text-sm font-bold text-green-400">₡{battleLog.robot2.reward}</span>
-                  </div>
-                )}
-                {battleLog.robot2.prestige !== undefined && battleLog.robot2.prestige > 0 && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
-                    <span className="text-xs text-gray-400">⭐ Prestige</span>
-                    <span className="text-sm font-bold text-purple-400">+{battleLog.robot2.prestige}</span>
-                  </div>
-                )}
-                {battleLog.robot2.fame !== undefined && battleLog.robot2.fame > 0 && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
-                    <span className="text-xs text-gray-400">🎖️ Fame</span>
-                    <span className="text-sm font-bold text-yellow-400">+{battleLog.robot2.fame}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Battle Stats */}
-              <div className="mt-3 pt-3 border-t border-gray-700 space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Final HP:</span>
-                  <span>{battleLog.robot2.finalHP}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Damage Dealt:</span>
-                  <span className="text-blue-400">{battleLog.robot2.damageDealt}</span>
-                </div>
+              <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                <span className="text-gray-400">Damage</span>
+                <span className="text-blue-400">{battleLog.robot2.damageDealt}</span>
               </div>
             </div>
           </div>
