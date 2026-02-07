@@ -2,10 +2,10 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.5  
+**Version**: 1.6  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
-**Status**: ✅ FULLY FUNCTIONAL - All Phases Complete & Tested
+**Status**: ✅ FULLY FUNCTIONAL - All Phases Complete & Refined
 
 ---
 
@@ -16,6 +16,49 @@
 - v1.3 - Phase 3 implementation complete (Per-Robot Financial Breakdown)
 - v1.4 - Phase 4 MVP implementation complete (Investments & ROI Calculator)
 - v1.5 - **Critical bug fix**: Database field name correction (league → currentLeague). All tabs tested and working.
+- v1.6 - **Overview tab refinements**: UI improvements based on user feedback (duplicate metrics, battle winnings, facility levels, two-column layout)
+
+---
+
+## Latest Updates (v1.6)
+
+### Overview Tab UI Refinements (February 7, 2026)
+
+Based on user feedback, implemented 4 critical UI improvements:
+
+1. **Removed Duplicate Metrics**:
+   - Profit margin and days to bankruptcy were shown twice (header + report)
+   - Removed from Financial Health header
+   - Now only displayed in Daily Stable Report metrics section
+   - **Result**: Cleaner, non-redundant UI
+
+2. **Fixed Battle Winnings Calculation**:
+   - Previously always showed ₡0 (default parameter value)
+   - Now calculates from actual battles in last 7 days
+   - Backend queries battles where user's robots participated
+   - Sums winner rewards + loser rewards correctly
+   - **Result**: Accurate real-time battle earnings displayed
+
+3. **Display Specific Facility Levels**:
+   - Previously showed "Income Generator (Lvl varies):" for all facilities
+   - Backend now includes `level` field in operatingCostsBreakdown
+   - Frontend displays actual level: "Income Generator (Lvl 5):"
+   - **Result**: Users see specific facility levels for better decision-making
+
+4. **Two-Column Layout for Desktop**:
+   - Previously single column required excessive scrolling (~2000px height)
+   - Implemented responsive grid: Daily Stable Report (left) + Projections (right)
+   - Uses Tailwind `lg:grid-cols-2` for desktop (≥1024px width)
+   - Maintains single column on mobile/tablet
+   - **Result**: 50% reduction in vertical space on desktop
+
+**Files Modified**:
+- Backend: `economyCalculations.ts`, `finances.ts`
+- Frontend: `FinancialReportPage.tsx`, `DailyStableReport.tsx`
+
+**Documentation**:
+- `OVERVIEW_TAB_FIXES.md` - Implementation details
+- `VISUAL_COMPARISON.md` - Visual proof with ASCII art diagrams
 
 ---
 
