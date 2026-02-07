@@ -2,10 +2,10 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.3  
+**Version**: 1.4  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
-**Status**: Phase 3 Implementation Complete
+**Status**: Phase 4 MVP Implementation Complete
 
 ---
 
@@ -14,6 +14,7 @@
 - v1.1 - Phase 1 implementation complete (Navigation & Terminology fixes)
 - v1.2 - Phase 2 implementation complete (Daily Stable Report format)
 - v1.3 - Phase 3 implementation complete (Per-Robot Financial Breakdown)
+- v1.4 - Phase 4 MVP implementation complete (Investments & ROI Calculator)
 
 ---
 
@@ -76,6 +77,49 @@
 - `finances.ts` - Added /per-robot endpoint
 
 **Result**: Per-robot financial tracking fully implemented with profitability ranking and performance metrics.
+
+### ✅ Phase 4: Investments & Spending Tracking (MVP COMPLETE)
+**Implementation Date**: February 7, 2026
+
+**MVP Strategy**: Implemented ROI calculator without database schema changes. Full transaction history deferred.
+
+**Completed Changes**:
+- ✅ Backend: ROI calculation functions:
+  - `calculateTotalUpgradeCost()` - Multi-level upgrade cost
+  - `calculateOperatingCostIncrease()` - Daily cost change
+  - `calculateDailyBenefitIncrease()` - Daily benefit for income facilities
+  - `calculateFacilityROI()` - Comprehensive ROI with recommendations
+- ✅ Backend: Added `POST /api/finances/roi-calculator` endpoint
+- ✅ Frontend: Created `FacilityROICalculator.tsx` component:
+  - Facility type selector (all 14 types)
+  - Target level input
+  - Upgrade cost and affordability check
+  - Daily impact display (cost/benefit/net)
+  - Break-even analysis (for profitable upgrades)
+  - Net profit projections (30/90/180 days)
+  - Color-coded recommendations with icons
+- ✅ Frontend: Created `InvestmentsTab.tsx` component:
+  - Current monthly costs overview
+  - Facility costs breakdown
+  - ROI calculator integration
+  - Investment tips section
+- ✅ Frontend: Added "Investments & ROI" tab to Income Dashboard
+
+**Features Implemented**:
+- ROI calculator for all facility types
+- Upgrade cost calculations (single or multi-level)
+- Break-even time analysis for Income Generator
+- Affordability checks based on current balance
+- Contextual recommendations (excellent/good/neutral/poor/not_affordable)
+- Current costs summary (operating + repairs)
+
+**Deferred** (requires database schema changes):
+- ❌ Historical spending transactions log
+- ❌ Weekly spending summary from real data
+- ❌ Investment vs operating costs trend chart
+- ❌ Spending patterns over time
+
+**Result**: ROI calculator fully functional, providing valuable investment insights without database complexity.
 
 ---
 
@@ -537,24 +581,60 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 
 **Risk**: Medium - required backend calculations and data aggregation (successfully implemented)
 
-### Phase 4: Investments & Spending Tracking (Week 4)
+### Phase 4: Investments & Spending Tracking (Week 4) ✅ MVP COMPLETE
 
 **Goal**: Track voluntary spending vs passive costs
 
 **Tasks**:
-- [ ] Backend: Track user spending in database
-  - Log attribute upgrades, weapon purchases, facility upgrades, robot creation
-  - Create `/api/finances/investments` endpoint
-- [ ] Frontend: Create "Investments" tab
-- [ ] Display weekly spending summary
-- [ ] Add investment vs operating costs chart
-- [ ] Implement facility upgrade ROI calculator
+- [x] Backend: ROI calculation functions (without database schema changes)
+  - Calculate total upgrade cost from level X to Y
+  - Calculate daily operating cost increase
+  - Calculate daily benefit increase (for income-generating facilities)
+  - Comprehensive ROI analysis with break-even time
+- [x] Backend: Create `/api/finances/roi-calculator` endpoint
+- [x] Frontend: Create "Investments & ROI" tab
+- [x] Display current monthly costs summary
+- [x] Add operating costs breakdown
+- [x] Implement facility upgrade ROI calculator
   - Input fields for facility type and target level
   - Calculate upgrade cost, daily cost increase, daily benefit increase
   - Calculate break-even time and net benefit over time periods
-- [ ] Add recent transactions log with sorting/filtering
+  - Affordability check and color-coded recommendations
+- [x] Add investment tips section
+- [ ] ~~Log spending transactions in database~~ (deferred - requires schema changes)
+- [ ] ~~Display weekly spending summary~~ (deferred - requires transaction data)
+- [ ] ~~Add investment vs operating costs chart~~ (deferred - requires historical data)
+- [ ] ~~Add recent transactions log with sorting/filtering~~ (deferred - requires transaction data)
 
-**Risk**: High - requires database schema changes and transaction logging
+**Status**: ✅ MVP IMPLEMENTED (February 7, 2026)
+
+**MVP Implementation** (No database changes):
+- ROI calculator for all 14 facility types
+- Multi-level upgrade cost calculations
+- Break-even analysis for Income Generator
+- Affordability checks
+- Net profit projections (30/90/180 days)
+- Color-coded recommendations (excellent/good/neutral/poor/not_affordable)
+- Current costs display (operating + repairs)
+
+**Components Created**:
+- `FacilityROICalculator.tsx` - Interactive ROI calculator
+- `InvestmentsTab.tsx` - Tab container with costs and calculator
+
+**Backend Created**:
+- `calculateTotalUpgradeCost()` function
+- `calculateOperatingCostIncrease()` function
+- `calculateDailyBenefitIncrease()` function
+- `calculateFacilityROI()` function
+- `POST /api/finances/roi-calculator` endpoint
+
+**Deferred Features** (require database schema changes):
+- SpendingTransaction model for transaction history
+- Weekly/monthly spending summaries from real data
+- Investment vs operating costs trend charts
+- Transaction logging in upgrade/purchase endpoints
+
+**Risk**: Medium - MVP approach avoided high risk of database changes while delivering core value
 
 ### Phase 5: Projections & Trends (Week 5)
 
