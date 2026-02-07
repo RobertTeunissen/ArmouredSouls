@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import DailyStableReport from '../components/DailyStableReport';
 import PerRobotBreakdown from '../components/PerRobotBreakdown';
+import InvestmentsTab from '../components/InvestmentsTab';
 import {
   getDailyFinancialReport,
   getFinancialProjections,
@@ -20,7 +21,7 @@ import {
   getHealthIcon,
 } from '../utils/financialApi';
 
-type TabType = 'overview' | 'per-robot';
+type TabType = 'overview' | 'per-robot' | 'investments';
 
 function FinancialReportPage() {
   const navigate = useNavigate();
@@ -132,6 +133,18 @@ function FinancialReportPage() {
               >
                 Per-Robot Breakdown
               </button>
+              <button
+                onClick={() => setActiveTab('investments')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'investments'
+                    ? 'border-blue-500 text-blue-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                  }
+                `}
+              >
+                Investments & ROI
+              </button>
             </nav>
           </div>
         </div>
@@ -219,6 +232,11 @@ function FinancialReportPage() {
         {/* Per-Robot Tab Content */}
         {activeTab === 'per-robot' && perRobotReport && (
           <PerRobotBreakdown report={perRobotReport} />
+        )}
+
+        {/* Investments Tab Content */}
+        {activeTab === 'investments' && (
+          <InvestmentsTab report={report} />
         )}
       </div>
     </div>

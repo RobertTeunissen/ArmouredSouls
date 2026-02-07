@@ -8,6 +8,7 @@ import {
   getPrestigeMultiplier,
   calculateBattleWinnings,
   generatePerRobotFinancialReport,
+  calculateFacilityROI,
 } from '../utils/economyCalculations';
 
 const router = express.Router();
@@ -230,6 +231,32 @@ router.get('/per-robot', authenticateToken, async (req: AuthRequest, res: Respon
   } catch (error) {
     console.error('Per-robot financial report error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/finances/roi-calculator
+ * Calculate ROI for facility upgrade
+ */
+router.post('/roi-calculator', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { facilityType, targetLevel } = req.body;
+
+    if (!facilityType || !targetLevel) {
+      return res.status(400).json({ error: 'Facility type and target level are required' });
+    }
+
+    const roiData = await calculateFacilityROI(userId, facilityType, targetLevel);
+
+    res.json(roiData);
+  } catch (error) {
+    console.error('ROI calculator error:', error);
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 
