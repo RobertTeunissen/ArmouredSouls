@@ -14,9 +14,9 @@
 
 ## Version History
 - v1.0 - Initial PRD created (February 7, 2026)
-  - Documented current implementation status
-  - Defined logical facility groupings
-  - Specified image requirements
+  - Documented current implementation status (8 implemented, 6 not implemented)
+  - Defined logical facility groupings (4 categories)
+  - Specified image requirements (14 facility icons + 4 category icons)
   - Outlined UX improvement plan
 
 ---
@@ -74,7 +74,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 **Facility Types & Implementation Status:**
 
-**Implemented (7 facilities):**
+**Implemented (8 facilities):**
 1. ✅ **Training Facility** - Discount on attribute upgrades (5%-50%)
 2. ✅ **Weapons Workshop** - Discount on weapon purchases (5%-50%)
 3. ✅ **Roster Expansion** - Increase robot slots (1→10 robots)
@@ -245,7 +245,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 **Category Headers:**
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 💰 Economy & Discounts                          [3 of 3 ✓]  │
+│ 💰 Economy & Discounts                          [2 of 3 ✓]  │
 │ Reduce operational costs and maximize your budget           │
 └─────────────────────────────────────────────────────────────┘
 ```
