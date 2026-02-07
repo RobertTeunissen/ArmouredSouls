@@ -226,6 +226,14 @@ export interface RobotFinancialData {
     fameContribution: number;
     repairCostPercentage: number;
   };
+  battles: Array<{
+    id: number;
+    isWinner: boolean;
+    reward: number;
+    repairCost: number;
+    battleType: string;
+    createdAt: string;
+  }>;
 }
 
 export interface PerRobotFinancialReport {

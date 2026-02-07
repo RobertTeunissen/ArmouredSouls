@@ -78,61 +78,6 @@ function PerRobotBreakdown({ report }: PerRobotBreakdownProps) {
           <RobotFinancialCard key={robot.id} robot={robot} rank={index + 1} />
         ))}
       </div>
-
-      {/* Recommendations Section */}
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h3 className="text-xl font-semibold mb-4">💡 Per-Robot Recommendations</h3>
-        <ul className="space-y-3">
-          {report.robots.map((robot) => {
-            const recommendations = [];
-            
-            // High repair costs
-            if (robot.metrics.repairCostPercentage > 50) {
-              recommendations.push(
-                `${robot.name}: High repair costs (${robot.metrics.repairCostPercentage}% of revenue). Consider upgrading Medical Bay or avoiding risky battles.`
-              );
-            }
-            
-            // Low profitability
-            if (robot.netIncome < 0) {
-              recommendations.push(
-                `${robot.name}: Negative net income (${formatCurrency(robot.netIncome)}). Focus on winning battles and reducing repair costs.`
-              );
-            }
-            
-            // High profitability
-            if (robot.roi > 100) {
-              recommendations.push(
-                `${robot.name}: Excellent ROI (${robot.roi}%). Consider entering tournaments to maximize earnings.`
-              );
-            }
-            
-            // Low battle activity
-            if (robot.metrics.totalBattles < 5) {
-              recommendations.push(
-                `${robot.name}: Low battle activity (${robot.metrics.totalBattles} battles in last 7 days). Increase battles to maximize streaming revenue.`
-              );
-            }
-
-            return recommendations;
-          }).flat().map((rec, index) => (
-            <li key={index} className="flex items-start">
-              <span className="text-blue-400 mr-2">•</span>
-              <span className="text-gray-300">{rec}</span>
-            </li>
-          ))}
-          {report.robots.every(robot => 
-            robot.metrics.repairCostPercentage <= 50 && 
-            robot.netIncome >= 0 && 
-            robot.metrics.totalBattles >= 5
-          ) && (
-            <li className="flex items-start">
-              <span className="text-green-400 mr-2">✓</span>
-              <span className="text-gray-300">All robots are performing well! Keep up the good work.</span>
-            </li>
-          )}
-        </ul>
-      </div>
     </div>
   );
 }

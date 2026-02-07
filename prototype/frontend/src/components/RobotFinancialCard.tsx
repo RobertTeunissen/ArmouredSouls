@@ -4,6 +4,7 @@
  */
 
 import { RobotFinancialData, formatCurrency } from '../utils/financialApi';
+import { useState } from 'react';
 
 interface RobotFinancialCardProps {
   robot: RobotFinancialData;
@@ -11,8 +12,36 @@ interface RobotFinancialCardProps {
 }
 
 function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
+  const [showBattles, setShowBattles] = useState(false);
   const isProfitable = robot.netIncome >= 0;
   const netIncomeColor = isProfitable ? 'text-green-400' : 'text-red-400';
+
+  // Generate recommendations for this robot
+  const recommendations = [];
+  if (robot.metrics.repairCostPercentage > 50) {
+    recommendations.push({
+      type: 'warning',
+      message: `High repair costs (${robot.metrics.repairCostPercentage}% of revenue). Consider upgrading Medical Bay or avoiding risky battles.`,
+    });
+  }
+  if (robot.netIncome < 0) {
+    recommendations.push({
+      type: 'error',
+      message: `Negative net income (${formatCurrency(robot.netIncome)}). Focus on winning battles and reducing repair costs.`,
+    });
+  }
+  if (robot.roi > 100) {
+    recommendations.push({
+      type: 'success',
+      message: `Excellent ROI (${robot.roi}%). Consider entering tournaments to maximize earnings.`,
+    });
+  }
+  if (robot.metrics.totalBattles < 5) {
+    recommendations.push({
+      type: 'info',
+      message: `Low battle activity (${robot.metrics.totalBattles} battles in last 7 days). Increase battles to maximize streaming revenue.`,
+    });
+  }
 
   return (
     <div className="bg-gray-800 rounded-lg p-6 border-2 border-gray-700 font-mono text-sm">
@@ -36,6 +65,26 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
           </div>
         </div>
       </div>
+
+      {/* Recommendations */}
+      {recommendations.length > 0 && (
+        <div className="mb-4 p-3 bg-gray-700/50 rounded border-l-4 border-blue-500">
+          <div className="text-xs font-semibold text-blue-400 mb-2">💡 Recommendations</div>
+          <ul className="space-y-1">
+            {recommendations.map((rec, index) => (
+              <li key={index} className="text-xs text-gray-300 flex items-start">
+                <span className="mr-2">
+                  {rec.type === 'error' && '⚠️'}
+                  {rec.type === 'warning' && '⚡'}
+                  {rec.type === 'success' && '✅'}
+                  {rec.type === 'info' && 'ℹ️'}
+                </span>
+                <span>{rec.message}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Revenue Section */}
       <div className="mb-4">
@@ -80,6 +129,65 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
           </div>
         </div>
       </div>
+
+      {/* Battle Breakdown */}
+      {robot.battles.length > 0 && (
+        <div className="mb-4">
+          <button
+            onClick={() => setShowBattles(!showBattles)}
+            className="w-full text-left px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-purple-400 font-semibold">
+                📊 Battle Breakdown ({robot.battles.length} battles)
+              </span>
+              <span className="text-gray-400">{showBattles ? '▼' : '▶'}</span>
+            </div>
+          </button>
+          
+          {showBattles && (
+            <div className="mt-2 space-y-1 max-h-64 overflow-y-auto">
+              {robot.battles.map((battle) => (
+                <div
+                  key={battle.id}
+                  className="bg-gray-700/50 p-2 rounded text-xs border-l-2"
+                  style={{
+                    borderLeftColor: battle.isWinner ? '#10b981' : '#ef4444',
+                  }}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <div>
+                      <span className={battle.isWinner ? 'text-green-400' : 'text-red-400'}>
+                        {battle.isWinner ? '✓ WIN' : '✗ LOSS'}
+                      </span>
+                      <span className="text-gray-400 ml-2">
+                        {battle.battleType === 'tournament' ? '🏆 Tournament' : '⚔️ League'}
+                      </span>
+                    </div>
+                    <span className="text-gray-500">
+                      {new Date(battle.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Earnings:</span>
+                    <span className="text-green-400">{formatCurrency(battle.reward)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Repairs:</span>
+                    <span className="text-red-400">{formatCurrency(battle.repairCost)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold pt-1 border-t border-gray-600 mt-1">
+                    <span className="text-gray-300">Net:</span>
+                    <span className={battle.reward - battle.repairCost >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      {formatCurrency(battle.reward - battle.repairCost)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Summary */}
       <div className="mb-4 py-4 border-t-2 border-gray-600">

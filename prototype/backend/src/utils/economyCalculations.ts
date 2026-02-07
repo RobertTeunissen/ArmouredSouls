@@ -391,11 +391,33 @@ export async function generateFinancialReport(
   // Calculate prestige bonus on battle winnings
   const prestigeBonus = Math.round(recentBattleWinnings * (getPrestigeMultiplier(user.prestige) - 1));
 
+  // Calculate repair costs from recent battles (last 7 days)
+  const recentBattles = await prisma.battle.findMany({
+    where: {
+      userId,
+      createdAt: {
+        gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+      },
+    },
+    select: {
+      robot1RepairCost: true,
+      robot2RepairCost: true,
+    },
+  });
+
+  // Sum all repair costs from battles
+  const totalRepairCosts = recentBattles.reduce((sum, battle) => {
+    return sum + (battle.robot1RepairCost || 0) + (battle.robot2RepairCost || 0);
+  }, 0);
+
+  // Calculate daily average repair cost
+  const dailyRepairCost = recentBattles.length > 0 ? Math.round(totalRepairCosts / 7) : 0;
+
   // Total revenue
   const totalRevenue = recentBattleWinnings + passiveIncome.total;
 
-  // Total expenses (repairs would be calculated per battle)
-  const totalExpenses = operatingCosts.total;
+  // Total expenses (operating costs + repairs)
+  const totalExpenses = operatingCosts.total + dailyRepairCost;
 
   // Net income
   const netIncome = totalRevenue - totalExpenses;
@@ -420,7 +442,7 @@ export async function generateFinancialReport(
     expenses: {
       operatingCosts: operatingCosts.total,
       operatingCostsBreakdown: operatingCosts.breakdown,
-      repairs: 0, // Would be calculated from recent battles
+      repairs: dailyRepairCost, // Daily average from last 7 days
       total: totalExpenses,
     },
     netIncome,
@@ -658,6 +680,14 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       fameContribution: number;
       repairCostPercentage: number;
     };
+    battles: Array<{
+      id: number;
+      isWinner: boolean;
+      reward: number;
+      repairCost: number;
+      battleType: string;
+      createdAt: Date;
+    }>;
   }>;
   summary: {
     totalRevenue: number;
@@ -732,8 +762,6 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
   const robotReports = await Promise.all(
     robots.map(async (robot) => {
       // Calculate battle winnings from recent battles
-      // For MVP, we'll estimate based on league and wins
-      // In production, this would sum actual winnerReward/loserReward from Battle records
       const recentBattles = await prisma.battle.findMany({
         where: {
           userId,
@@ -746,6 +774,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
           },
         },
         select: {
+          id: true,
           winnerId: true,
           winnerReward: true,
           loserReward: true,
@@ -753,26 +782,38 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
           robot2Id: true,
           robot1RepairCost: true,
           robot2RepairCost: true,
+          battleType: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
         },
       });
 
-      // Calculate battle winnings and repair costs
+      // Calculate battle winnings and repair costs, and build battle details array
       let battleWinnings = 0;
       let repairCosts = 0;
+      const battleDetails = [];
 
       for (const battle of recentBattles) {
         const isRobot1 = battle.robot1Id === robot.id;
         const isWinner = battle.winnerId === robot.id;
-
-        if (isWinner) {
-          battleWinnings += battle.winnerReward || 0;
-        } else {
-          battleWinnings += battle.loserReward || 0;
-        }
-
-        repairCosts += isRobot1 
+        const reward = isWinner ? (battle.winnerReward || 0) : (battle.loserReward || 0);
+        const repairCost = isRobot1 
           ? (battle.robot1RepairCost || 0) 
           : (battle.robot2RepairCost || 0);
+
+        battleWinnings += reward;
+        repairCosts += repairCost;
+
+        battleDetails.push({
+          id: battle.id,
+          isWinner,
+          reward,
+          repairCost,
+          battleType: battle.battleType || 'league', // Default to league if not set
+          createdAt: battle.createdAt,
+        });
       }
 
       // Calculate merchandising contribution (proportional to fame)
@@ -828,6 +869,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
           fameContribution: robot.fame,
           repairCostPercentage: Math.round(repairCostPercentage * 10) / 10,
         },
+        battles: battleDetails,
       };
     })
   );
