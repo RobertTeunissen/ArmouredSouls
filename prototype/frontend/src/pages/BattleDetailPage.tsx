@@ -97,52 +97,52 @@ function BattleDetailPage() {
     <div className="min-h-screen bg-gray-900 text-white">
       <Navigation />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-3">
           <button
             onClick={() => navigate('/battle-history')}
-            className="text-blue-400 hover:text-blue-300 mb-4 transition-colors"
+            className="text-blue-400 hover:text-blue-300 mb-2 transition-colors text-sm"
           >
             ← Back to Battle History
           </button>
-          <h1 className="text-4xl font-bold">Battle Report #{battleLog.battleId}</h1>
-          <p className="text-gray-400 mt-2">{formatDateTime(battleLog.createdAt)}</p>
+          <h1 className="text-3xl font-bold">Battle Report #{battleLog.battleId}</h1>
+          <p className="text-gray-400 mt-1 text-sm">{formatDateTime(battleLog.createdAt)}</p>
         </div>
 
         {/* Battle Result Banner */}
-        <div className={`mb-6 p-8 rounded-lg text-center ${
+        <div className={`mb-3 p-3 rounded-lg text-center ${
           !battleLog.winner ? 'bg-yellow-900/20 border-2 border-yellow-600' :
           battleLog.winner === 'robot1' && battleLog.robot1.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
           battleLog.winner === 'robot2' && battleLog.robot2.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
           'bg-red-900/20 border-2 border-red-600'
         }`}>
-          <div className={`text-5xl font-bold mb-2 ${getWinnerColor()}`}>
+          <div className={`text-3xl font-bold mb-1 ${getWinnerColor()}`}>
             {getWinnerText()}
           </div>
-          <div className="text-gray-300 text-lg">
+          <div className="text-gray-300 text-sm">
             {getLeagueTierName(battleLog.leagueType)} League • Duration: {formatDuration(battleLog.duration)}
           </div>
         </div>
 
         {/* Battle Summary with Rewards/ELO at Top */}
-        <div className="bg-gray-800 rounded-lg mb-6 overflow-hidden">
+        <div className="bg-gray-800 rounded-lg mb-3 overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-700">
             {/* Robot 1 */}
-            <div className="p-6">
-              <h3 className="text-2xl font-bold text-blue-400 mb-2">{battleLog.robot1.name}</h3>
-              <p className="text-gray-400 mb-4">Pilot: {battleLog.robot1.owner}</p>
+            <div className="p-4">
+              <h3 className="text-xl font-bold text-blue-400 mb-1">{battleLog.robot1.name}</h3>
+              <p className="text-gray-400 mb-3 text-sm">Pilot: {battleLog.robot1.owner}</p>
               
               {/* ELO Change - Prominent at Top */}
-              <div className="bg-gray-900 rounded-lg p-4 mb-4">
+              <div className="bg-gray-900 rounded-lg p-2 mb-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">ELO Rating</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{battleLog.robot1.eloBefore}</span>
+                  <span className="text-xs text-gray-400">ELO Rating</span>
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <span>{battleLog.robot1.eloBefore}</span>
                     <span className="text-gray-500">→</span>
-                    <span className="text-lg font-bold">{battleLog.robot1.eloAfter}</span>
+                    <span className="font-bold">{battleLog.robot1.eloAfter}</span>
                     <span
-                      className={`text-sm font-bold ${
+                      className={`text-xs font-bold ${
                         battleLog.robot1.eloAfter - battleLog.robot1.eloBefore >= 0
                           ? 'text-green-400'
                           : 'text-red-400'
@@ -156,29 +156,29 @@ function BattleDetailPage() {
               </div>
 
               {/* Rewards */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {battleLog.robot1.reward !== undefined && battleLog.robot1.reward !== null && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-3">
-                    <span className="text-sm text-gray-400">💰 Credits</span>
-                    <span className="text-lg font-bold text-green-400">₡{battleLog.robot1.reward}</span>
+                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
+                    <span className="text-xs text-gray-400">💰 Credits</span>
+                    <span className="text-sm font-bold text-green-400">₡{battleLog.robot1.reward}</span>
                   </div>
                 )}
                 {battleLog.robot1.prestige !== undefined && battleLog.robot1.prestige > 0 && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-3">
-                    <span className="text-sm text-gray-400">⭐ Prestige</span>
-                    <span className="text-lg font-bold text-purple-400">+{battleLog.robot1.prestige}</span>
+                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
+                    <span className="text-xs text-gray-400">⭐ Prestige</span>
+                    <span className="text-sm font-bold text-purple-400">+{battleLog.robot1.prestige}</span>
                   </div>
                 )}
                 {battleLog.robot1.fame !== undefined && battleLog.robot1.fame > 0 && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-3">
-                    <span className="text-sm text-gray-400">🎖️ Fame</span>
-                    <span className="text-lg font-bold text-yellow-400">+{battleLog.robot1.fame}</span>
+                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
+                    <span className="text-xs text-gray-400">🎖️ Fame</span>
+                    <span className="text-sm font-bold text-yellow-400">+{battleLog.robot1.fame}</span>
                   </div>
                 )}
               </div>
 
               {/* Battle Stats */}
-              <div className="mt-4 pt-4 border-t border-gray-700 space-y-2 text-sm">
+              <div className="mt-3 pt-3 border-t border-gray-700 space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Final HP:</span>
                   <span>{battleLog.robot1.finalHP}%</span>
@@ -191,20 +191,20 @@ function BattleDetailPage() {
             </div>
 
             {/* Robot 2 */}
-            <div className="p-6">
-              <h3 className="text-2xl font-bold text-blue-400 mb-2">{battleLog.robot2.name}</h3>
-              <p className="text-gray-400 mb-4">Pilot: {battleLog.robot2.owner}</p>
+            <div className="p-4">
+              <h3 className="text-xl font-bold text-blue-400 mb-1">{battleLog.robot2.name}</h3>
+              <p className="text-gray-400 mb-3 text-sm">Pilot: {battleLog.robot2.owner}</p>
               
               {/* ELO Change - Prominent at Top */}
-              <div className="bg-gray-900 rounded-lg p-4 mb-4">
+              <div className="bg-gray-900 rounded-lg p-2 mb-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">ELO Rating</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{battleLog.robot2.eloBefore}</span>
+                  <span className="text-xs text-gray-400">ELO Rating</span>
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <span>{battleLog.robot2.eloBefore}</span>
                     <span className="text-gray-500">→</span>
-                    <span className="text-lg font-bold">{battleLog.robot2.eloAfter}</span>
+                    <span className="font-bold">{battleLog.robot2.eloAfter}</span>
                     <span
-                      className={`text-sm font-bold ${
+                      className={`text-xs font-bold ${
                         battleLog.robot2.eloAfter - battleLog.robot2.eloBefore >= 0
                           ? 'text-green-400'
                           : 'text-red-400'
@@ -218,29 +218,29 @@ function BattleDetailPage() {
               </div>
 
               {/* Rewards */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {battleLog.robot2.reward !== undefined && battleLog.robot2.reward !== null && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-3">
-                    <span className="text-sm text-gray-400">💰 Credits</span>
-                    <span className="text-lg font-bold text-green-400">₡{battleLog.robot2.reward}</span>
+                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
+                    <span className="text-xs text-gray-400">💰 Credits</span>
+                    <span className="text-sm font-bold text-green-400">₡{battleLog.robot2.reward}</span>
                   </div>
                 )}
                 {battleLog.robot2.prestige !== undefined && battleLog.robot2.prestige > 0 && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-3">
-                    <span className="text-sm text-gray-400">⭐ Prestige</span>
-                    <span className="text-lg font-bold text-purple-400">+{battleLog.robot2.prestige}</span>
+                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
+                    <span className="text-xs text-gray-400">⭐ Prestige</span>
+                    <span className="text-sm font-bold text-purple-400">+{battleLog.robot2.prestige}</span>
                   </div>
                 )}
                 {battleLog.robot2.fame !== undefined && battleLog.robot2.fame > 0 && (
-                  <div className="flex items-center justify-between bg-gray-900 rounded p-3">
-                    <span className="text-sm text-gray-400">🎖️ Fame</span>
-                    <span className="text-lg font-bold text-yellow-400">+{battleLog.robot2.fame}</span>
+                  <div className="flex items-center justify-between bg-gray-900 rounded p-2">
+                    <span className="text-xs text-gray-400">🎖️ Fame</span>
+                    <span className="text-sm font-bold text-yellow-400">+{battleLog.robot2.fame}</span>
                   </div>
                 )}
               </div>
 
               {/* Battle Stats */}
-              <div className="mt-4 pt-4 border-t border-gray-700 space-y-2 text-sm">
+              <div className="mt-3 pt-3 border-t border-gray-700 space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Final HP:</span>
                   <span>{battleLog.robot2.finalHP}%</span>
@@ -255,11 +255,23 @@ function BattleDetailPage() {
         </div>
 
         {/* Combat Log */}
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-2xl font-bold mb-4">Combat Messages</h2>
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <h2 className="text-xl font-bold mb-3">Combat Messages</h2>
           <div className="space-y-2 max-h-[600px] overflow-y-auto">
             {battleLog.battleLog.events && battleLog.battleLog.events.length > 0 ? (
-              battleLog.battleLog.events.map((event: BattleLogEvent, index: number) => {
+              battleLog.battleLog.events
+                .filter((event: BattleLogEvent) => {
+                  // Filter out financial/reward messages since they're now in the top summary
+                  const message = event.message.toLowerCase();
+                  return !message.includes('financial') && 
+                         !message.includes('₡') && 
+                         !message.includes('credits') &&
+                         !message.includes('winner (') &&
+                         !message.includes('loser (') &&
+                         !message.includes('league base') &&
+                         !message.includes('participation');
+                })
+                .map((event: BattleLogEvent, index: number) => {
                 // Determine event color based on type
                 let eventColor = 'border-gray-600';
                 let bgColor = 'bg-gray-700';
