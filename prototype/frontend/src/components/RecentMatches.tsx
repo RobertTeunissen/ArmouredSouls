@@ -88,98 +88,102 @@ function RecentMatches() {
 
   if (loading) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4">Recent Matches</h2>
-        <p className="text-gray-400">Loading...</p>
+      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+        <h2 className="text-lg font-semibold mb-3">Recent Matches</h2>
+        <p className="text-sm text-gray-400">Loading...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4">Recent Matches</h2>
-        <p className="text-red-400">{error}</p>
+      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+        <h2 className="text-lg font-semibold mb-3">Recent Matches</h2>
+        <p className="text-sm text-error">{error}</p>
       </div>
     );
   }
 
   if (matches.length === 0) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4">Recent Matches</h2>
-        <p className="text-gray-400">No recent matches</p>
+      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+        <h2 className="text-lg font-semibold mb-3">Recent Matches</h2>
+        <p className="text-sm text-gray-400">No recent matches</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Recent Matches</h2>
+    <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-semibold">Recent Matches</h2>
         <button
           onClick={() => navigate('/battle-history')}
-          className="text-blue-400 hover:text-blue-300 text-sm"
+          className="text-primary hover:text-primary-light text-xs font-semibold"
         >
           View All →
         </button>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {matches.map((battle) => {
           const { myRobot, opponent, outcome, eloChange } = getMatchData(battle);
           const outcomeColor = getOutcomeColor(outcome);
           const isTournament = battle.battleType === 'tournament';
           
+          const getBorderColor = () => {
+            if (isTournament) return 'border-l-warning';
+            switch (outcome) {
+              case 'win': return 'border-l-success';
+              case 'loss': return 'border-l-error';
+              case 'draw': return 'border-l-gray-500';
+              default: return 'border-l-gray-700';
+            }
+          };
+          
           return (
             <div 
               key={battle.id} 
-              className={`bg-gray-700 p-3 rounded ${isTournament ? 'border-2 border-yellow-500' : 'border border-gray-600'} cursor-pointer hover:bg-gray-600 transition-colors`}
+              className={`
+                bg-surface-elevated border border-gray-700 rounded-lg p-2
+                border-l-4 ${getBorderColor()}
+                hover:bg-surface hover:border-primary/50 cursor-pointer 
+                transition-all duration-150
+              `}
               onClick={() => navigate(`/battle/${battle.id}`)}
             >
-              {/* Tournament Badge */}
-              {isTournament && battle.tournamentRound && battle.tournamentMaxRounds && (
-                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-600">
-                  <span className="text-lg">🏆</span>
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold text-yellow-400">
-                      {battle.tournamentName || 'Tournament'}
-                    </div>
-                    <div className="text-xs opacity-75">
-                      {getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)}
-                    </div>
-                  </div>
+              <div className="flex justify-between items-start mb-1">
+                <div className="flex items-center gap-2">
+                  {isTournament && <span className="text-sm">🏆</span>}
+                  <span className={`text-xs font-bold ${outcomeColor}`}>
+                    {getOutcomeText(outcome)}
+                  </span>
                 </div>
-              )}
-
-              <div className="flex justify-between items-start mb-2">
-                <span className={`text-sm font-bold ${outcomeColor}`}>
-                  {getOutcomeText(outcome)}
-                </span>
                 <span className="text-xs text-gray-400">
                   {formatDateTime(battle.createdAt)}
                 </span>
               </div>
               
-              <div className="grid grid-cols-3 gap-2 items-center text-sm">
-                <div className="text-right">
-                  <div className="font-semibold text-blue-400 truncate">{myRobot.name}</div>
+              <div className="grid grid-cols-3 gap-2 items-center text-xs mb-1">
+                <div className="text-right font-semibold text-primary truncate">
+                  {myRobot.name}
                 </div>
-                
-                <div className="text-center text-gray-500 text-xs">vs</div>
-                
-                <div className="text-left">
-                  <div className="font-semibold truncate">{opponent.name}</div>
+                <div className="text-center text-gray-500">vs</div>
+                <div className="text-left font-semibold text-white truncate">
+                  {opponent.name}
                 </div>
               </div>
               
-              <div className="mt-2 pt-2 border-t border-gray-600 flex justify-between text-xs">
-                <span className={eloChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+              <div className="flex justify-between text-xs text-gray-400">
+                <span className={eloChange >= 0 ? 'text-success' : 'text-error'}>
                   ELO: {eloChange > 0 ? '+' : ''}{eloChange}
                 </span>
-                <span className="text-gray-400">
-                  {battle.durationSeconds}s
-                </span>
+                {isTournament && battle.tournamentRound && battle.tournamentMaxRounds && (
+                  <span className="text-warning text-xs">
+                    {getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)}
+                  </span>
+                )}
+                <span>{battle.durationSeconds}s</span>
               </div>
             </div>
           );

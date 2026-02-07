@@ -199,7 +199,6 @@ function DashboardPage() {
           {/* Stable Statistics */}
           <StableStatistics 
             prestige={user.prestige}
-            stableName={`${user.username}'s Stable`}
           />
 
           {/* Financial Summary */}
@@ -275,35 +274,6 @@ function DashboardPage() {
             </div>
           </div>
         )}
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button 
-            onClick={() => navigate('/facilities')}
-            className="bg-primary hover:bg-primary-dark p-6 rounded-lg transition-colors border border-primary-light"
-          >
-            <h3 className="text-xl font-semibold mb-2">Upgrade Facilities</h3>
-            <p className="text-sm text-gray-300">Improve your stable's capabilities</p>
-          </button>
-          <button 
-            onClick={() => navigate('/robots')}
-            className="border-2 border-primary text-primary hover:bg-primary hover:text-white p-6 rounded-lg transition-colors"
-          >
-            <h3 className="text-xl font-semibold mb-2">
-              {robots.length === 0 ? 'Create Robot' : 'Manage Robots'}
-            </h3>
-            <p className="text-sm">
-              {robots.length === 0 ? 'Build your first battle robot' : 'View and upgrade your robots'}
-            </p>
-          </button>
-          <button 
-            className="border border-gray-600 text-gray-500 p-6 rounded-lg opacity-50 cursor-not-allowed"
-            disabled
-          >
-            <h3 className="text-xl font-semibold mb-2">Battle Arena</h3>
-            <p className="text-sm">Coming soon</p>
-          </button>
-        </div>
       </div>
     </div>
   );

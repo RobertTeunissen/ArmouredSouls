@@ -68,72 +68,58 @@ function StableStatistics({ prestige, stableName }: StableStatisticsProps) {
   }
 
   return (
-    <div className="bg-surface p-6 rounded-lg border border-gray-700">
-      <h2 className="text-2xl font-semibold mb-4">Stable Overview</h2>
+    <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <h2 className="text-lg font-semibold mb-3">Stable Overview</h2>
       
-      <div className="space-y-4">
-        {/* Stable Name and Prestige - Most Prominent */}
-        {stableName && (
-          <div className="pb-4 border-b border-gray-700">
-            <div className="text-sm text-gray-400 mb-1">Stable Name</div>
-            <div className="text-2xl font-bold text-white">{stableName}</div>
-          </div>
-        )}
-        
+      <div className="space-y-2">
+        {/* Prestige - Most Prominent */}
         {prestige !== undefined && (
-          <div className="pb-4 border-b border-gray-700">
-            <div className="text-sm text-gray-400 mb-1">Prestige</div>
-            <div className="text-3xl font-bold text-info">{prestige.toLocaleString()}</div>
+          <div className="pb-2 border-b border-gray-700">
+            <div className="text-xs text-gray-400">Prestige</div>
+            <div className="text-2xl font-bold text-info">{prestige.toLocaleString()}</div>
           </div>
         )}
 
-        {/* Total Battles */}
-        <div className="flex justify-between items-center pb-3 border-b border-gray-700">
-          <span className="text-sm text-gray-400">Total Battles:</span>
-          <span className="text-xl font-bold text-white">{stats.totalBattles}</span>
+        {/* Compact Stats Grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {/* Total Battles */}
+          <div>
+            <div className="text-xs text-gray-400">Total Battles</div>
+            <div className="text-lg font-bold text-white">{stats.totalBattles}</div>
+          </div>
+
+          {/* Win Rate */}
+          <div>
+            <div className="text-xs text-gray-400">Win Rate</div>
+            <div className={`text-lg font-bold ${getWinRateColor(stats.winRate)}`}>
+              {stats.winRate.toFixed(1)}%
+            </div>
+          </div>
+
+          {/* Average ELO */}
+          <div>
+            <div className="text-xs text-gray-400">Avg ELO</div>
+            <div className="text-lg font-bold text-primary">{stats.avgELO}</div>
+          </div>
+
+          {/* Highest League */}
+          <div>
+            <div className="text-xs text-gray-400">Highest League</div>
+            <div className="text-sm font-semibold text-white truncate">
+              {formatLeague(stats.highestLeague)}
+            </div>
+          </div>
         </div>
 
-        {/* Win Rate */}
-        <div className="flex justify-between items-center pb-3 border-b border-gray-700">
-          <span className="text-sm text-gray-400">Win Rate:</span>
-          <span className={`text-xl font-bold ${getWinRateColor(stats.winRate)}`}>
-            {stats.winRate.toFixed(1)}%
-          </span>
-        </div>
-
-        {/* W/L/D Record */}
-        <div className="pb-3 border-b border-gray-700">
-          <div className="text-sm text-gray-400 mb-2">Record:</div>
-          <div className="flex gap-4 justify-center">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-success">{stats.wins}</div>
-              <div className="text-xs text-gray-400">Wins</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-error">{stats.losses}</div>
-              <div className="text-xs text-gray-400">Losses</div>
-            </div>
+        {/* W/L/D Record - Compact */}
+        <div className="pt-2 border-t border-gray-700">
+          <div className="flex gap-3 justify-center text-sm">
+            <span className="text-success font-semibold">{stats.wins}W</span>
+            <span className="text-error font-semibold">{stats.losses}L</span>
             {stats.draws > 0 && (
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-400">{stats.draws}</div>
-                <div className="text-xs text-gray-400">Draws</div>
-              </div>
+              <span className="text-gray-400 font-semibold">{stats.draws}D</span>
             )}
           </div>
-        </div>
-
-        {/* Average ELO */}
-        <div className="flex justify-between items-center pb-3 border-b border-gray-700">
-          <span className="text-sm text-gray-400">Average ELO:</span>
-          <span className="text-xl font-bold text-primary">{stats.avgELO}</span>
-        </div>
-
-        {/* Highest League */}
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-400">Highest League:</span>
-          <span className="text-base font-semibold text-white">
-            {formatLeague(stats.highestLeague)}
-          </span>
         </div>
       </div>
     </div>

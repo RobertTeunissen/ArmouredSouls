@@ -155,21 +155,6 @@ function RobotDashboardCard({ robot }: RobotDashboardCardProps) {
           </div>
         </div>
       </div>
-      
-      {/* Quick Actions (if needed repair) */}
-      {readinessStatus === 'needs-repair' && (
-        <div className="mt-3 pt-3 border-t border-gray-700">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/robots/${robot.id}`);
-            }}
-            className="text-xs text-primary hover:text-primary-light font-semibold"
-          >
-            → Repair Robot
-          </button>
-        </div>
-      )}
     </div>
   );
 }
