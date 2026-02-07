@@ -116,6 +116,18 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Robot name must be between 1 and 50 characters' });
     }
 
+    // Check if a robot with this name already exists for the user
+    const existingRobot = await prisma.robot.findFirst({
+      where: {
+        userId,
+        name,
+      },
+    });
+
+    if (existingRobot) {
+      return res.status(400).json({ error: 'You already have a robot with this name' });
+    }
+
     // Get user's current currency
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -201,6 +213,12 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Robot creation error:', error);
+    
+    // Handle unique constraint violation (as a fallback safety check)
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return res.status(400).json({ error: 'You already have a robot with this name' });
+    }
+    
     res.status(500).json({ error: 'Internal server error' });
   }
 });
