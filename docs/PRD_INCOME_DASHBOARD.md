@@ -2,10 +2,10 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.4  
+**Version**: 1.5  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
-**Status**: Phase 4 MVP Implementation Complete
+**Status**: ✅ FULLY FUNCTIONAL - All Phases Complete & Tested
 
 ---
 
@@ -15,6 +15,7 @@
 - v1.2 - Phase 2 implementation complete (Daily Stable Report format)
 - v1.3 - Phase 3 implementation complete (Per-Robot Financial Breakdown)
 - v1.4 - Phase 4 MVP implementation complete (Investments & ROI Calculator)
+- v1.5 - **Critical bug fix**: Database field name correction (league → currentLeague). All tabs tested and working.
 
 ---
 
@@ -120,6 +121,42 @@
 - ❌ Spending patterns over time
 
 **Result**: ROI calculator fully functional, providing valuable investment insights without database complexity.
+
+---
+
+### 🐛 Critical Bug Fix: Database Field Name Correction (February 7, 2026)
+
+**Issue**: `/income` page failed to load with error "Failed to load financial report"
+
+**Root Cause**: Backend code was querying non-existent `league` field in Robot model. The correct field name is `currentLeague`.
+
+**Error Details**:
+```
+PrismaClientValidationError: Unknown field `league` for select statement on model `Robot`.
+```
+
+**Fixes Applied**:
+- ✅ Backend (`economyCalculations.ts`): Changed Prisma query from `league: true` → `currentLeague: true`
+- ✅ Backend: Updated return type interface from `league: string` → `currentLeague: string`
+- ✅ Backend: Updated return object from `robot.league` → `robot.currentLeague`
+- ✅ Frontend (`financialApi.ts`): Updated `RobotFinancialData` interface
+- ✅ Frontend (`RobotFinancialCard.tsx`): Updated display to use `robot.currentLeague`
+
+**Testing Results** (Live Verification):
+- ✅ Overview tab loads successfully with Daily Stable Report
+- ✅ Per-Robot Breakdown tab loads correctly (shows empty state for users without robots)
+- ✅ Investments & ROI tab loads with calculator and tips
+- ✅ All three tabs functional with proper tab navigation
+- ✅ Financial Health metrics display correctly
+- ✅ No 500 errors in backend logs
+- ✅ No console errors in frontend
+
+**Screenshots**:
+- [Overview Tab](https://github.com/user-attachments/assets/180c1905-d6f8-4f64-a388-37106e3233fb) - Daily Stable Report displaying
+- [Per-Robot Tab](https://github.com/user-attachments/assets/af6fee0a-b44e-4f03-941d-d84e495341ac) - Empty state for admin user
+- [Investments Tab](https://github.com/user-attachments/assets/41e8d22e-2f3c-461d-8003-75a993c25771) - ROI Calculator and tips
+
+**Status**: ✅ RESOLVED - All functionality working as expected
 
 ---
 
