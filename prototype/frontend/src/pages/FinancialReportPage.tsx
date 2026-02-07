@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
+import DailyStableReport from '../components/DailyStableReport';
 import {
   getDailyFinancialReport,
   getFinancialProjections,
@@ -110,88 +111,24 @@ function FinancialReportPage() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Revenue & Expenses Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-green-400">Total Revenue</h3>
-            <div className="text-3xl font-bold mb-4">
-              {formatCurrency(report.revenue.total)}
+          <div className="mt-4 pt-4 border-t border-gray-700 flex justify-around text-sm">
+            <div className="text-center">
+              <div className="text-gray-400">Profit Margin</div>
+              <div className="text-lg font-semibold text-gray-200">{report.profitMargin.toFixed(1)}%</div>
             </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Battle Winnings:</span>
-                <span>{formatCurrency(report.revenue.battleWinnings)}</span>
-              </div>
-              {report.revenue.prestigeBonus > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Prestige Bonus:</span>
-                  <span className="text-purple-400">+{formatCurrency(report.revenue.prestigeBonus)}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-gray-400">Merchandising:</span>
-                <span>{formatCurrency(report.revenue.merchandising)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Streaming:</span>
-                <span>{formatCurrency(report.revenue.streaming)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-red-400">Total Expenses</h3>
-            <div className="text-3xl font-bold mb-4">
-              {formatCurrency(report.expenses.total)}
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Operating Costs:</span>
-                <span>{formatCurrency(report.expenses.operatingCosts)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Repairs:</span>
-                <span>{formatCurrency(report.expenses.repairs)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Net Income</h3>
-            <div className={`text-3xl font-bold mb-4 ${report.netIncome >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {report.netIncome >= 0 ? '+' : ''}{formatCurrency(report.netIncome)}
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Profit Margin:</span>
-                <span>{report.profitMargin.toFixed(1)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Days to Bankruptcy:</span>
-                <span className={report.daysToBankruptcy < 30 ? 'text-red-400' : 'text-gray-300'}>
-                  {report.daysToBankruptcy} days
-                </span>
+            <div className="text-center">
+              <div className="text-gray-400">Days to Bankruptcy</div>
+              <div className={`text-lg font-semibold ${report.daysToBankruptcy < 30 ? 'text-red-400' : 'text-gray-200'}`}>
+                {report.daysToBankruptcy} days
               </div>
             </div>
           </div>
         </div>
 
-        {/* Operating Costs Breakdown */}
-        {report.expenses.operatingCostsBreakdown.length > 0 && (
-          <div className="bg-gray-800 p-6 rounded-lg mb-6">
-            <h3 className="text-xl font-semibold mb-4">Operating Costs Breakdown</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {report.expenses.operatingCostsBreakdown.map((item) => (
-                <div key={item.facilityType} className="flex justify-between p-3 bg-gray-700 rounded">
-                  <span className="text-gray-300">{item.facilityName}</span>
-                  <span className="font-semibold">{formatCurrency(item.cost)}/day</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Daily Stable Report */}
+        <div className="mb-6">
+          <DailyStableReport report={report} />
+        </div>
 
         {/* Projections */}
         <div className="bg-gray-800 p-6 rounded-lg mb-6">
