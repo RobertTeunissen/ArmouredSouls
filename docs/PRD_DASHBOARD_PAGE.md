@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.0  
+**Version**: 1.1  
 **Date**: February 7, 2026  
 **Author**: GitHub Copilot  
 **Status**: Draft - Ready for Review
@@ -11,6 +11,7 @@
 
 ## Version History
 - v1.0 (Feb 7, 2026): Initial PRD created
+- v1.1 (Feb 7, 2026): Review by Robert Teunissen
 
 ---
 
@@ -104,6 +105,8 @@ The Dashboard Page (`/dashboard`) currently provides:
 - **Impact**: Inconsistent with design system, feels generic
 - **Solution**: Apply design system colors and improve button styling
 
+--> Do we want Quick Action buttons or do we want the player to use the underlying pages. From the dashboard, it should be possible to go to the sections in the app that need attention. Or should they be able to do everything from the dashboard?
+
 #### 7. **No League/Ranking Context** ⭐ LOW PRIORITY
 - **Issue**: No indication of current league standing or competitive position
 - **Impact**: Missing competitive context that motivates players
@@ -179,6 +182,8 @@ Visual Style:
 - Foreground: Color-coded (fill)
 ```
 
+--> What is this? Isn't this on a robot level instead of stable level? Shouldn't this be part of a robot overview? Where do you take action on this? What's the integration with other components?
+
 **Robot Card** (Dashboard Variant):
 ```
 Size: Compact (not full detail view)
@@ -187,6 +192,8 @@ Layout: Horizontal card with portrait on left, info on right
 Border: 1px solid gray-700, hover effect
 Background: Surface color (#1a1f29)
 ```
+
+--> How is this different from the robot card on /robots? Does the card on /robots provide more information? Is it bigger? 
 
 **Status Badge**:
 ```
@@ -227,6 +234,9 @@ No Weapon: Yellow background, black text
 └─────────────────────────────────────────────────────────┘
 ```
 
+--> Do we need information on tournament matches? Seperate League from Tournament information? Show what is at stake (expected winnings) to enable them to make informed decisions?
+--> Would it be beneficial to have some sort of action displayed prominently on the page with message like "Robot X not battle ready, no weapon equipped" or "Bankruptcy looming in x days". Other warnings / things that require immediate action from the user?
+
 ### Information Hierarchy
 
 **Priority Levels**:
@@ -245,6 +255,8 @@ No Weapon: Yellow background, black text
    - Quick action buttons
    - Stable name
    - User profile details
+
+--> I think we have Stable Name in the database, but no means to change the Stable Name
 
 ### Visual Weight Distribution
 
@@ -277,6 +289,12 @@ No Weapon: Yellow background, black text
 - Win/Loss/Draw Record (e.g., "45W - 12L - 3D")
 - Current Average ELO (across all robots)
 - Highest League (best-performing robot's league)
+
+--> Current prestige? This is the most important stat on Stable level
+--> Stable Name?
+--> Trophies / Achievements? Tournament wins?
+--> Robot with highest fame? 
+--> What else?
 
 **Visual Design**:
 - Card background: Surface color (#1a1f29)
@@ -320,6 +338,10 @@ No Weapon: Yellow background, black text
 └────────────────────────────────────────────────┘
 ```
 
+--> Repair here or repair on /robots?
+--> Link to the individual robot (/robots/123) or /robots)?
+--> How many cards on a row? Responsive? What if a user has 10 robots in his stable?
+
 **Data Displayed Per Card**:
 - Robot portrait space (128×128px placeholder until images implemented)
 - Robot name (linked to detail page)
@@ -327,6 +349,9 @@ No Weapon: Yellow background, black text
 - Current League and League Points
 - HP bar with percentage (color-coded: Green/Yellow/Red)
 - Shield bar with percentage (if implemented)
+
+--> What is a shield bar? Energy Shield? Why would that matter here? Shields are always full / regenerated after a battle
+
 - Win/Loss/Draw record
 - Battle readiness badge (Ready, Needs Repair, No Weapon)
 - Quick action buttons (View Details, Repair if needed)
@@ -448,6 +473,8 @@ No Weapon: Yellow background, black text
 - [ ] Hover states work correctly
 - [ ] Disabled state clearly indicates unavailability
 
+--> Do we want quick actions, or notifications and links to quick actions on subsequent pages?
+
 ---
 
 ### Feature 6: Page Title & Stable Name Header (NEW)
@@ -568,6 +595,9 @@ Acceptance Criteria:
 4. `BattleReadinessBadge.tsx` - Status badge component
 5. `DashboardEmptyState.tsx` - Enhanced empty state component
 6. `DashboardHeader.tsx` - Page title and stable name header
+
+--> Are these all new? Nothing existing we can use?
+--> We already have an HP bar on /robots?
 
 ### API Requirements
 
