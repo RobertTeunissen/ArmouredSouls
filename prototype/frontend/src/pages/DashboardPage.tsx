@@ -7,6 +7,7 @@ import UpcomingMatches from '../components/UpcomingMatches';
 import RecentMatches from '../components/RecentMatches';
 import FinancialSummary from '../components/FinancialSummary';
 import RobotDashboardCard from '../components/RobotDashboardCard';
+import StableStatistics from '../components/StableStatistics';
 
 interface Robot {
   id: number;
@@ -99,26 +100,10 @@ function DashboardPage() {
           </div>
         </div>
 
-        {/* Top Row: Profile and Financial Summary */}
+        {/* Top Row: Stable Statistics and Financial Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* User Profile */}
-          <div className="bg-surface p-6 rounded-lg border border-gray-700">
-            <h2 className="text-2xl font-semibold mb-4">Profile</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Username:</span>
-                <span className="font-semibold">{user.username}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Role:</span>
-                <span className="font-semibold capitalize">{user.role}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Prestige:</span>
-                <span className="font-semibold">{user.prestige}</span>
-              </div>
-            </div>
-          </div>
+          {/* Stable Statistics */}
+          <StableStatistics />
 
           {/* Financial Summary */}
           <FinancialSummary />
