@@ -633,7 +633,7 @@ export async function processAllDailyFinances(): Promise<{
  */
 export async function generatePerRobotFinancialReport(userId: number): Promise<{
   robots: Array<{
-    id: string;
+    id: number;
     name: string;
     league: string;
     elo: number;
