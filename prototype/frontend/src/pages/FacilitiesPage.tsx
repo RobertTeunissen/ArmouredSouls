@@ -117,13 +117,6 @@ function FacilitiesPage() {
     return facilities.filter(f => categoryTypes.includes(f.type));
   };
 
-  const getCategoryStats = (categoryTypes: string[]) => {
-    const categoryFacilities = getCategoryFacilities(categoryTypes);
-    const implemented = categoryFacilities.filter(f => f.implemented).length;
-    const total = categoryFacilities.length;
-    return { implemented, total };
-  };
-
   if (!user) {
     return null;
   }
@@ -148,10 +141,8 @@ function FacilitiesPage() {
         ) : (
           <div className="space-y-8">
             {FACILITY_CATEGORIES.map((category) => {
-              const stats = getCategoryStats(category.facilityTypes);
               const isCollapsed = collapsedCategories.has(category.id);
               const categoryFacilities = getCategoryFacilities(category.facilityTypes);
-              const allImplemented = stats.implemented === stats.total;
 
               return (
                 <div key={category.id} className="space-y-4">
@@ -164,20 +155,7 @@ function FacilitiesPage() {
                       <div className="flex items-center space-x-3">
                         <span className="text-3xl">{category.icon}</span>
                         <div>
-                          <div className="flex items-center space-x-3">
-                            <h3 className="text-xl font-semibold">{category.name}</h3>
-                            <span className={`text-sm px-2 py-1 rounded ${
-                              allImplemented 
-                                ? 'bg-green-700 text-green-100' 
-                                : stats.implemented > 0
-                                ? 'bg-yellow-700 text-yellow-100'
-                                : 'bg-gray-700 text-gray-300'
-                            }`}>
-                              {allImplemented && '✓ '}
-                              {stats.implemented} of {stats.total}
-                              {allImplemented ? ' Complete' : stats.implemented > 0 ? ' Partial' : ' Pending'}
-                            </span>
-                          </div>
+                          <h3 className="text-xl font-semibold">{category.name}</h3>
                           <p className="text-sm text-gray-400 mt-1">{category.description}</p>
                         </div>
                       </div>
@@ -200,15 +178,13 @@ function FacilitiesPage() {
                           }`}
                         >
                           {/* Implementation Status Badge */}
-                          <div className="absolute top-4 right-4">
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              facility.implemented
-                                ? 'bg-green-700 text-green-100'
-                                : 'bg-yellow-600 text-yellow-100'
-                            }`}>
-                              {facility.implemented ? '✓ Active' : '⚠ Coming Soon'}
-                            </span>
-                          </div>
+                          {!facility.implemented && (
+                            <div className="absolute top-4 right-4">
+                              <span className="text-xs px-2 py-1 rounded bg-yellow-600 text-yellow-100">
+                                ⚠ Coming Soon
+                              </span>
+                            </div>
+                          )}
 
                           <div className="flex items-start mb-4">
                             {/* Facility Icon */}

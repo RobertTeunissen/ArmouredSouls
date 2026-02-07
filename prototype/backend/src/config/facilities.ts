@@ -17,6 +17,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     maxLevel: 10,
     costs: [200000, 400000, 600000, 800000, 1000000, 1200000, 1500000, 2000000, 2500000, 3000000],
     benefits: [
+      '5% discount on repair costs',
       '10% discount on repair costs',
       '15% discount on repair costs',
       '20% discount on repair costs',
@@ -25,8 +26,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '35% discount on repair costs',
       '40% discount on repair costs',
       '45% discount on repair costs',
-      '50% discount on repair costs',
-      '55% discount on repair costs, automatic minor repairs',
+      '50% discount on repair costs, automatic minor repairs',
     ],
     implemented: true,
   },
