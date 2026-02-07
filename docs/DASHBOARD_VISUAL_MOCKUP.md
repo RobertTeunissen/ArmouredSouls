@@ -18,13 +18,14 @@ This document shows the visual structure of the new Dashboard after Phase 1 impl
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌───────────────────────────────┬─────────────────────────────────────────────┐
-│ Profile Card                  │ Financial Overview Card                     │
+│ Stable Statistics             │ Financial Overview Card                     │
 ├───────────────────────────────┼─────────────────────────────────────────────┤
-│ • Username: john_doe          │ Current Balance: ₡250,000 (green, large)   │
-│ • Role: player                │ Daily Passive Net: +₡5,000 (green)         │
-│ • Prestige: 1,250             │   Income: ₡8,000 | Costs: ₡3,000           │
-│                               │ Prestige: 1,250  |  Battle Bonus: +25%     │
-│                               │ [View Full Report →] (blue link)           │
+│ Total Battles: 58             │ Current Balance: ₡250,000 (green, large)   │
+│ Win Rate: 60.3% (green)       │ Daily Passive Net: +₡5,000 (green)         │
+│ Record:                       │   Income: ₡8,000 | Costs: ₡3,000           │
+│   35W   20L   3D              │ Prestige: 1,250  |  Battle Bonus: +25%     │
+│ Avg ELO: 1542 (blue)          │ [View Full Report →] (blue link)           │
+│ Highest League: Silver I      │                                             │
 └───────────────────────────────┴─────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -327,6 +328,37 @@ Disabled:
 ---
 
 ## Before vs After Comparison
+
+### Top Section - Phase 1 vs Phase 2
+
+**Phase 1 (Profile Card):**
+```
+┌─────────────────────┐
+│ Profile             │
+│ • Username          │
+│ • Role              │
+│ • Prestige          │
+└─────────────────────┘
+```
+
+**Phase 2 (Stable Statistics):**
+```
+┌─────────────────────┐
+│ Stable Statistics   │
+│ Total Battles: 58   │
+│ Win Rate: 60.3% ✓   │
+│ Record:             │
+│   35W  20L  3D      │
+│ Avg ELO: 1542       │
+│ League: Silver I    │
+└─────────────────────┘
+```
+
+**Improvements:**
+- Static profile → Dynamic performance metrics
+- 3 data points → 5 key metrics
+- Gameplay-relevant information
+- Updates after every battle
 
 ### Robot Display - Before
 ```
