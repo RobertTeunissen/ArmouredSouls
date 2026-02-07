@@ -46,6 +46,9 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
         losses: true,
         draws: true,
         currentLeague: true,
+        currentHP: true,
+        maxHP: true,
+        mainWeapon: true,
       },
     });
 
@@ -59,8 +62,15 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
         winRate: 0,
         avgELO: 0,
         highestLeague: null,
+        totalRobots: 0,
+        robotsReady: 0,
       });
     }
+
+    // Calculate robot readiness
+    const robotsReady = robots.filter(r => 
+      r.currentHP === r.maxHP && r.mainWeapon !== null
+    ).length;
 
     // Calculate aggregate stats
     const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
@@ -97,6 +107,8 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
       winRate: Math.round(winRate * 10) / 10, // Round to 1 decimal
       avgELO,
       highestLeague,
+      totalRobots: robots.length,
+      robotsReady,
     });
   } catch (error) {
     console.error('Stats fetch error:', error);

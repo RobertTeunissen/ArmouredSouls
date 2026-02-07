@@ -80,13 +80,9 @@ function UpcomingMatches() {
       return null;
     }
     
-    // Check if user data exists
-    if (!match.robot1.user || !match.robot2.user) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Invalid match user data:', match);
-      }
-      return null;
-    }
+    // IMPORTANT: League matches don't always have user data pre-loaded
+    // Only filter out if BOTH robot AND user are completely missing
+    // If user is missing, we'll use UNKNOWN_USER fallback
     
     const myRobot = isMyRobot(match.robot1.userId) ? match.robot1 : match.robot2;
     const opponent = isMyRobot(match.robot1.userId) ? match.robot2 : match.robot1;
@@ -131,7 +127,7 @@ function UpcomingMatches() {
   return (
     <div className="bg-surface p-4 rounded-lg border border-gray-700">
       <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {matches.map((match) => {
           const matchResult = getMatchResult(match);
           

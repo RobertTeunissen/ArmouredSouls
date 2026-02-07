@@ -79,11 +79,23 @@ function StableStatistics({ prestige }: StableStatisticsProps) {
           </div>
         )}
 
-        {/* Compact Stats Grid */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Compact Stats Grid - 3 columns */}
+        <div className="grid grid-cols-3 gap-2">
+          {/* Total Robots */}
+          <div>
+            <div className="text-xs text-gray-400">Robots</div>
+            <div className="text-lg font-bold text-white">{stats.totalRobots}</div>
+          </div>
+
+          {/* Battle Ready */}
+          <div>
+            <div className="text-xs text-gray-400">Ready</div>
+            <div className="text-lg font-bold text-success">{stats.robotsReady}</div>
+          </div>
+
           {/* Total Battles */}
           <div>
-            <div className="text-xs text-gray-400">Total Battles</div>
+            <div className="text-xs text-gray-400">Battles</div>
             <div className="text-lg font-bold text-white">{stats.totalBattles}</div>
           </div>
 
@@ -103,7 +115,7 @@ function StableStatistics({ prestige }: StableStatisticsProps) {
 
           {/* Highest League */}
           <div>
-            <div className="text-xs text-gray-400">Highest League</div>
+            <div className="text-xs text-gray-400">League</div>
             <div className="text-sm font-semibold text-white truncate">
               {formatLeague(stats.highestLeague)}
             </div>

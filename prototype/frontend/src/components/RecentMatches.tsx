@@ -125,7 +125,7 @@ function RecentMatches() {
         </button>
       </div>
       
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {matches.map((battle) => {
           const { myRobot, opponent, outcome, eloChange } = getMatchData(battle);
           const outcomeColor = getOutcomeColor(outcome);

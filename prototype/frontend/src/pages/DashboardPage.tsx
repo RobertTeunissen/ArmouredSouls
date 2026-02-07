@@ -73,8 +73,8 @@ function DashboardPage() {
       alerts.push({
         type: 'warning',
         message: `${notReadyRobots[0].name} ${reason}${notReadyRobots.length > 1 ? ` (+${notReadyRobots.length - 1} more)` : ''}`,
-        action: () => navigate(`/robots/${notReadyRobots[0].id}`),
-        actionLabel: 'Fix Now'
+        action: () => navigate('/robots'),
+        actionLabel: 'View Robots'
       });
     }
     

@@ -30,6 +30,8 @@ export interface StableStatistics {
   winRate: number; // Percentage
   avgELO: number;
   highestLeague: string | null;
+  totalRobots: number;
+  robotsReady: number;
 }
 
 export const getStableStatistics = async (): Promise<StableStatistics> => {
