@@ -5,7 +5,7 @@
 
 import { User, Facility, Robot } from '@prisma/client';
 import { PrismaClient, Prisma } from '@prisma/client';
-import { getFacilityConfig, getFacilityUpgradeCost } from '../config/facilities';
+import { getFacilityConfig } from '../config/facilities';
 
 const prisma = new PrismaClient();
 
