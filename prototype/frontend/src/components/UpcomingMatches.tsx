@@ -62,11 +62,8 @@ function UpcomingMatches() {
   };
 
   const getMatchResult = (match: ScheduledMatch) => {
-    // Defensive checks to prevent crashes - validate all required nested data
-    if (!match || !match.robot1 || !match.robot2) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Invalid match data:', match);
-      }
+    // Basic validation
+    if (!match) {
       return null;
     }
     
@@ -75,12 +72,17 @@ function UpcomingMatches() {
       return null; // Don't display incomplete tournament matches
     }
     
-    if (!match.robot1.user || !match.robot2.user) {
+    // For league matches, both robots should be present
+    if (!match.robot1 || !match.robot2) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Invalid match user data:', match);
+        console.error('Invalid match data - missing robots:', match);
       }
       return null;
     }
+    
+    // IMPORTANT: League matches don't always have user data pre-loaded
+    // Only filter out if BOTH robot AND user are completely missing
+    // If user is missing, we'll use UNKNOWN_USER fallback
     
     const myRobot = isMyRobot(match.robot1.userId) ? match.robot1 : match.robot2;
     const opponent = isMyRobot(match.robot1.userId) ? match.robot2 : match.robot1;
@@ -97,35 +99,35 @@ function UpcomingMatches() {
 
   if (loading) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4">Upcoming Matches</h2>
-        <p className="text-gray-400">Loading...</p>
+      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+        <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
+        <p className="text-sm text-gray-400">Loading...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4">Upcoming Matches</h2>
-        <p className="text-red-400">{error}</p>
+      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+        <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
+        <p className="text-sm text-error">{error}</p>
       </div>
     );
   }
 
   if (matches.length === 0) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-4">Upcoming Matches</h2>
-        <p className="text-gray-400">No upcoming matches scheduled</p>
+      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+        <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
+        <p className="text-sm text-gray-400">No upcoming matches scheduled</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">Upcoming Matches</h2>
-      <div className="space-y-4">
+    <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
+      <div className="space-y-1.5 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {matches.map((match) => {
           const matchResult = getMatchResult(match);
           
@@ -136,61 +138,67 @@ function UpcomingMatches() {
           
           const { myRobot, opponent } = matchResult;
           const isTournament = match.matchType === 'tournament';
-          const tierColor = isTournament ? 'text-yellow-400' : getLeagueTierColor(match.leagueType);
+          const tierColor = isTournament ? 'text-warning' : getLeagueTierColor(match.leagueType);
           const tierName = isTournament ? 'Tournament' : getLeagueTierName(match.leagueType);
+          
+          const getBorderColor = () => {
+            return isTournament ? 'border-l-warning' : 'border-l-primary';
+          };
           
           return (
             <div 
               key={match.id} 
-              className={`bg-gray-700 p-4 rounded border ${
-                isTournament ? 'border-yellow-600/50' : 'border-gray-600'
-              }`}
+              className={`
+                bg-surface-elevated border border-gray-700 rounded-lg p-2
+                border-l-4 ${getBorderColor()}
+                hover:bg-surface hover:border-primary/50
+                transition-all duration-150
+              `}
             >
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-1">
                 <div className="flex items-center gap-2">
-                  <span className={`text-sm font-semibold ${tierColor}`}>
-                    {isTournament && <span className="mr-1">🏆</span>}
+                  {isTournament && <span className="text-sm">🏆</span>}
+                  <span className={`text-xs font-semibold ${tierColor}`}>
                     {tierName}
                     {!isTournament && ' League'}
                   </span>
                   {isTournament && match.tournamentRound && match.maxRounds && (
-                    <span className="text-xs px-2 py-1 bg-yellow-900/50 rounded text-yellow-300">
+                    <span className="text-xs px-1.5 py-0.5 bg-warning/20 rounded text-warning">
                       {getRoundName(match.tournamentRound, match.maxRounds)}
                     </span>
                   )}
                 </div>
-                <span className="text-sm text-gray-400">
+                <span className="text-xs text-gray-400">
                   {isTournament ? 'Pending' : formatDateTime(match.scheduledFor)}
                 </span>
               </div>
               
-              <div className="grid grid-cols-3 gap-2 items-center">
+              <div className="grid grid-cols-3 gap-2 items-center text-xs mb-1">
                 {/* Your Robot */}
                 <div className="text-right">
-                  <div className="font-semibold text-blue-400">{myRobot.name}</div>
-                  <div className="text-sm text-gray-400">
+                  <div className="font-semibold text-primary truncate">{myRobot.name}</div>
+                  <div className="text-xs text-gray-400">
                     ELO: {myRobot.elo}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    HP: {myRobot.currentHP}/{myRobot.maxHP}
                   </div>
                 </div>
                 
                 {/* VS */}
                 <div className="text-center">
-                  <span className="text-gray-500 font-bold">VS</span>
+                  <span className="text-gray-500 font-bold text-xs">VS</span>
                 </div>
                 
                 {/* Opponent */}
                 <div className="text-left">
-                  <div className="font-semibold">{opponent.name}</div>
-                  <div className="text-sm text-gray-400">
+                  <div className="font-semibold text-white truncate">{opponent.name}</div>
+                  <div className="text-xs text-gray-400">
                     ELO: {opponent.elo}
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {opponent.user?.username || UNKNOWN_USER}
-                  </div>
                 </div>
+              </div>
+              
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>HP: {myRobot.currentHP}/{myRobot.maxHP}</span>
+                <span>{opponent.user?.username || UNKNOWN_USER}</span>
               </div>
             </div>
           );
