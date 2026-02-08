@@ -108,7 +108,6 @@ describe('CombatMessageGenerator', () => {
       expect(message).toContain('16'); // Change value is always included
       // Old/new ELO may or may not be included depending on template
     });
-    });
 
     it('should generate ELO loss message', () => {
       const message = CombatMessageGenerator.generateELOChange({
@@ -200,4 +199,5 @@ describe('CombatMessageGenerator', () => {
       });
     });
   });
+
 });
