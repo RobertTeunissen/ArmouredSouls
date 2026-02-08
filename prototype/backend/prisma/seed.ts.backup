@@ -92,14 +92,14 @@ async function main() {
   
   const weapons = await Promise.all([
     // ===== STARTER/PRACTICE WEAPONS =====
-    // 1. Practice Sword (₡62,500) - Baseline weapon
+    // 1. Practice Sword (₡50,000) - Baseline weapon
     prisma.weapon.create({
       data: {
         name: 'Practice Sword',
         weaponType: 'melee',
         baseDamage: 8,  // Reduced from 10 (20% nerf, new baseline)
         cooldown: 3,
-        cost: 62500,
+        cost: 50000,
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
@@ -109,15 +109,15 @@ async function main() {
       },
     }),
 
-    // ===== BUDGET TIER (₡62K-₡125K) =====
-    // 2. Machine Pistol (₡94,000) - One-handed ballistic
+    // ===== BUDGET TIER (₡50K-₡100K) =====
+    // 2. Machine Pistol (₡75,000) - One-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Machine Pistol',
         weaponType: 'ballistic',
         baseDamage: 6,  // Reduced from 8 (~25% nerf)
         cooldown: 2,
-        cost: 94000,
+        cost: 75000,
         handsRequired: 'one',
         damageType: 'ballistic',
         loadoutType: 'single',
@@ -128,14 +128,14 @@ async function main() {
       },
     }),
 
-    // 3. Laser Pistol (₡94,000) - One-handed energy
+    // 3. Laser Pistol (₡75,000) - One-handed energy
     prisma.weapon.create({
       data: {
         name: 'Laser Pistol',
         weaponType: 'energy',
         baseDamage: 8,  // Reduced from 12 (~33% nerf)
         cooldown: 3,
-        cost: 94000,
+        cost: 75000,
         handsRequired: 'one',
         damageType: 'energy',
         loadoutType: 'single',
@@ -146,14 +146,14 @@ async function main() {
       },
     }),
 
-    // 4. Combat Knife (₡113,000) - One-handed melee
+    // 4. Combat Knife (₡90,000) - One-handed melee
     prisma.weapon.create({
       data: {
         name: 'Combat Knife',
         weaponType: 'melee',
         baseDamage: 6,  // Reduced from 9 (~33% nerf)
         cooldown: 2,
-        cost: 113000,
+        cost: 90000,
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
@@ -164,14 +164,14 @@ async function main() {
       },
     }),
 
-    // 5. Light Shield (₡62,500) - Budget shield
+    // 5. Light Shield (₡50,000) - Budget shield
     prisma.weapon.create({
       data: {
         name: 'Light Shield',
         weaponType: 'shield',
         baseDamage: 0,
         cooldown: 0,
-        cost: 62500,
+        cost: 50000,
         handsRequired: 'shield',
         damageType: 'none',
         loadoutType: 'weapon_shield',
@@ -182,14 +182,14 @@ async function main() {
       },
     }),
 
-    // 6. Combat Shield (₡100,000) - Mid shield
+    // 6. Combat Shield (₡80,000) - Mid shield
     prisma.weapon.create({
       data: {
         name: 'Combat Shield',
         weaponType: 'shield',
         baseDamage: 0,
         cooldown: 0,
-        cost: 100000,
+        cost: 80000,
         handsRequired: 'shield',
         damageType: 'none',
         loadoutType: 'weapon_shield',
@@ -202,14 +202,14 @@ async function main() {
       },
     }),
 
-    // 7. Reactive Shield (₡113,000) - Advanced shield
+    // 7. Reactive Shield (₡90,000) - Advanced shield
     prisma.weapon.create({
       data: {
         name: 'Reactive Shield',
         weaponType: 'shield',
         baseDamage: 0,
         cooldown: 0,
-        cost: 113000,
+        cost: 90000,
         handsRequired: 'shield',
         damageType: 'none',
         loadoutType: 'weapon_shield',
@@ -222,14 +222,14 @@ async function main() {
       },
     }),
 
-    // 8. Machine Gun (₡150,000) - One-handed ballistic
+    // 8. Machine Gun (₡120,000) - One-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Machine Gun',
         weaponType: 'ballistic',
         baseDamage: 7,  // Reduced from 10 (~30% nerf)
         cooldown: 2,
-        cost: 150000,
+        cost: 120000,
         handsRequired: 'one',
         damageType: 'ballistic',
         loadoutType: 'single',
@@ -241,15 +241,15 @@ async function main() {
       },
     }),
 
-    // ===== MID TIER (₡125K-₡250K) =====
-    // 9. Burst Rifle (₡181,000) - One-handed ballistic
+    // ===== MID TIER (₡100K-₡200K) =====
+    // 9. Burst Rifle (₡145,000) - One-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Burst Rifle',
         weaponType: 'ballistic',
         baseDamage: 11,  // Reduced from 15 (~27% nerf)
         cooldown: 3, // Adjusted from 2.5 for integer compatibility
-        cost: 181000,
+        cost: 145000,
         handsRequired: 'one',
         damageType: 'ballistic',
         loadoutType: 'single',
@@ -261,14 +261,14 @@ async function main() {
       },
     }),
 
-    // 10. Assault Rifle (₡188,000) - One-handed ballistic
+    // 10. Assault Rifle (₡150,000) - One-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Assault Rifle',
         weaponType: 'ballistic',
         baseDamage: 13,  // Reduced from 18 (~28% nerf)
         cooldown: 3,
-        cost: 188000,
+        cost: 150000,
         handsRequired: 'one',
         damageType: 'ballistic',
         loadoutType: 'single',
@@ -281,14 +281,14 @@ async function main() {
       },
     }),
 
-    // 11. Energy Blade (₡238,000) - One-handed melee
+    // 11. Energy Blade (₡190,000) - One-handed melee
     prisma.weapon.create({
       data: {
         name: 'Energy Blade',
         weaponType: 'melee',
         baseDamage: 13,  // Reduced from 18 (~28% nerf)
         cooldown: 3, // Adjusted from 2.5 for integer compatibility
-        cost: 238000,
+        cost: 190000,
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
@@ -300,14 +300,14 @@ async function main() {
       },
     }),
 
-    // 12. Laser Rifle (₡244,000) - One-handed energy
+    // 12. Laser Rifle (₡195,000) - One-handed energy
     prisma.weapon.create({
       data: {
         name: 'Laser Rifle',
         weaponType: 'energy',
         baseDamage: 15,  // Reduced from 22 (~32% nerf)
         cooldown: 3,
-        cost: 244000,
+        cost: 195000,
         handsRequired: 'one',
         damageType: 'energy',
         loadoutType: 'single',
@@ -320,15 +320,15 @@ async function main() {
       },
     }),
 
-    // ===== PREMIUM TIER (₡250K-₡500K) =====
-    // 13. Plasma Blade (₡269,000) - One-handed melee
+    // ===== PREMIUM TIER (₡200K-₡400K) =====
+    // 13. Plasma Blade (₡215,000) - One-handed melee
     prisma.weapon.create({
       data: {
         name: 'Plasma Blade',
         weaponType: 'melee',
         baseDamage: 14,  // Reduced from 20 (~30% nerf)
         cooldown: 3,  // Adjusted from 2.5 for integer compatibility
-        cost: 269000,
+        cost: 215000,
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
@@ -341,14 +341,14 @@ async function main() {
       },
     }),
 
-    // 14. Plasma Rifle (₡275,000) - One-handed energy
+    // 14. Plasma Rifle (₡220,000) - One-handed energy
     prisma.weapon.create({
       data: {
         name: 'Plasma Rifle',
         weaponType: 'energy',
         baseDamage: 17,  // Reduced from 24 (~29% nerf)
         cooldown: 3,
-        cost: 275000,
+        cost: 220000,
         handsRequired: 'one',
         damageType: 'energy',
         loadoutType: 'single',
@@ -361,14 +361,14 @@ async function main() {
       },
     }),
 
-    // 15. Power Sword (₡350,000) - One-handed melee
+    // 15. Power Sword (₡280,000) - One-handed melee
     prisma.weapon.create({
       data: {
         name: 'Power Sword',
         weaponType: 'melee',
         baseDamage: 20,  // Reduced from 28 (~29% nerf)
         cooldown: 3,
-        cost: 350000,
+        cost: 280000,
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
@@ -381,14 +381,14 @@ async function main() {
       },
     }),
 
-    // 16. Shotgun (₡269,000) - Two-handed ballistic
+    // 16. Shotgun (₡215,000) - Two-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Shotgun',
         weaponType: 'ballistic',
         baseDamage: 18,  // Reduced from 22 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
-        cost: 269000,  // v1.2: Increased by 25% from base pricing formula
+        cost: 215000,  // v1.2: Reduced from 325K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
@@ -400,14 +400,14 @@ async function main() {
       },
     }),
 
-    // 17. Grenade Launcher (₡294,000) - Two-handed ballistic
+    // 17. Grenade Launcher (₡235,000) - Two-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Grenade Launcher',
         weaponType: 'ballistic',
         baseDamage: 21,  // Reduced from 25 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
-        cost: 294000,  // v1.2: Increased by 25% from base pricing formula
+        cost: 235000,  // v1.2: Reduced from 325K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
@@ -420,15 +420,15 @@ async function main() {
       },
     }),
 
-    // ===== ELITE TIER (₡350K+) =====
-    // 18. Sniper Rifle (₡369,000) - Two-handed ballistic
+    // ===== ELITE TIER (₡400K+) =====
+    // 18. Sniper Rifle (₡295,000) - Two-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Sniper Rifle',
         weaponType: 'ballistic',
         baseDamage: 29,  // Reduced from 35 (v1.2: further nerf due to two-handed dominance)
         cooldown: 6,
-        cost: 369000,  // v1.2: Increased by 25% from base pricing formula
+        cost: 295000,  // v1.2: Reduced from 425K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
@@ -441,14 +441,14 @@ async function main() {
       },
     }),
 
-    // 19. Battle Axe (₡388,000) - Two-handed melee
+    // 19. Battle Axe (₡310,000) - Two-handed melee
     prisma.weapon.create({
       data: {
         name: 'Battle Axe',
         weaponType: 'melee',
         baseDamage: 23,  // Reduced from 27 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
-        cost: 388000,  // v1.2: Increased by 25% from base pricing formula
+        cost: 310000,  // v1.2: Reduced from 430K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'melee',
         loadoutType: 'two_handed',
@@ -461,14 +461,14 @@ async function main() {
       },
     }),
 
-    // 20. Plasma Cannon (₡400,000) - Two-handed energy
+    // 20. Plasma Cannon (₡320,000) - Two-handed energy
     prisma.weapon.create({
       data: {
         name: 'Plasma Cannon',
         weaponType: 'energy',
         baseDamage: 27,  // Reduced from 32 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
-        cost: 400000,  // v1.2: Increased by 25% from base pricing formula
+        cost: 320000,  // v1.2: Reduced from 440K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'energy',
         loadoutType: 'two_handed',
@@ -481,14 +481,14 @@ async function main() {
       },
     }),
 
-    // 21. Heavy Hammer (₡450,000) - Two-handed melee
+    // 21. Heavy Hammer (₡360,000) - Two-handed melee
     prisma.weapon.create({
       data: {
         name: 'Heavy Hammer',
         weaponType: 'melee',
         baseDamage: 29,  // Reduced from 34 (v1.2: further nerf due to two-handed dominance)
         cooldown: 5,
-        cost: 450000,  // v1.2: Increased by 25% from base pricing formula
+        cost: 360000,  // v1.2: Reduced from 490K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'melee',
         loadoutType: 'two_handed',
@@ -501,14 +501,14 @@ async function main() {
       },
     }),
 
-    // 22. Railgun (₡488,000) - Two-handed ballistic
+    // 22. Railgun (₡390,000) - Two-handed ballistic
     prisma.weapon.create({
       data: {
         name: 'Railgun',
         weaponType: 'ballistic',
         baseDamage: 33,  // Reduced from 39 (v1.2: further nerf due to two-handed dominance)
         cooldown: 6,
-        cost: 488000,  // v1.2: Increased by 25% from base pricing formula
+        cost: 390000,  // v1.2: Reduced from 545K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'ballistic',
         loadoutType: 'two_handed',
@@ -521,14 +521,14 @@ async function main() {
       },
     }),
 
-    // 23. Ion Beam (₡538,000) - Two-handed energy (Highest DPS)
+    // 23. Ion Beam (₡430,000) - Two-handed energy (Highest DPS)
     prisma.weapon.create({
       data: {
         name: 'Ion Beam',
         weaponType: 'energy',
         baseDamage: 24,  // Reduced from 28 (v1.2: further nerf due to two-handed dominance)
         cooldown: 4,
-        cost: 538000,  // v1.2: Increased by 25% from base pricing formula
+        cost: 430000,  // v1.2: Reduced from 565K to match DPS-based pricing formula
         handsRequired: 'two',
         damageType: 'energy',
         loadoutType: 'two_handed',
