@@ -36,6 +36,8 @@ Open http://localhost:3000 - Login with `player1` / `password123`
 📖 **For testing new versions and database reset:** See [SETUP.md](docs/SETUP.md)
 🔧 **Having installation issues?** → See the "🐛 Troubleshooting" section in [SETUP.md](docs/SETUP.md)
 
+⚠️ **If you see "Environment variable not found: DATABASE_URL"**: You forgot to create the `.env` file. Run: `cd prototype/backend && cp .env.example .env` — See [TROUBLESHOOTING_DATABASE_URL.md](docs/TROUBLESHOOTING_DATABASE_URL.md) for details.
+
 ⚠️ **If `prisma generate` fails**: Your local `schema.prisma` may be corrupted. Run: `git restore prototype/backend/prisma/schema.prisma` then try again. See the troubleshooting section in [SETUP.md](docs/SETUP.md) for details.
 
 ## 🎮 Project Vision

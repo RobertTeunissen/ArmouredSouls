@@ -71,6 +71,33 @@ npm run dev
 
 ---
 
+## 🚨 CRITICAL: Environment Variable Not Found (DATABASE_URL)
+
+**If you're seeing this error**:
+```
+Error code: P1012
+error: Environment variable not found: DATABASE_URL.
+```
+
+**YOU'RE MISSING THE .env FILE!** The `.env` file is required but not tracked in git.
+
+### Quick Fix
+
+```bash
+cd ArmouredSouls/prototype/backend
+cp .env.example .env
+```
+
+**That's it!** Now Prisma commands will work.
+
+### Why This Happens
+
+The `.env` file contains sensitive credentials (database passwords, JWT secrets) and is intentionally not committed to git. You must create it manually from the `.env.example` template.
+
+**For detailed troubleshooting**, see [TROUBLESHOOTING_DATABASE_URL.md](TROUBLESHOOTING_DATABASE_URL.md)
+
+---
+
 ## ⚡ Quick Testing Reference
 
 **For detailed setup instructions, see the sections below. This section provides quick commands for testing the matchmaking system.**
