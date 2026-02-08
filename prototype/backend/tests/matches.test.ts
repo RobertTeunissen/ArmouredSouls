@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import matchesRoutes from '../src/routes/matches';
+import { createTestUser, createTestRobot, deleteTestUser } from './testHelpers';
 
 dotenv.config();
 
@@ -24,23 +25,12 @@ describe('Matches Routes', () => {
   beforeAll(async () => {
     await prisma.$connect();
     
-    // Use existing test user from seed data
-    testUser = await prisma.user.findFirst({
-      where: { username: 'player1' },
-    });
+    // Create test user
+    testUser = await createTestUser();
 
-    if (!testUser) {
-      throw new Error('Test user player1 not found - ensure database is seeded');
-    }
-
-    // Get one of the user's robots
-    const robot = await prisma.robot.findFirst({
-      where: { userId: testUser.id },
-    });
-
-    if (robot) {
-      testRobotId = robot.id;
-    }
+    // Create a test robot
+    const robot = await createTestRobot(testUser.id);
+    testRobotId = robot.id;
 
     // Generate JWT token
     authToken = jwt.sign(
@@ -50,6 +40,10 @@ describe('Matches Routes', () => {
   });
 
   afterAll(async () => {
+    // Cleanup
+    if (testUser) {
+      await deleteTestUser(testUser.id);
+    }
     await prisma.$disconnect();
   });
 

@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import weaponInventoryRoutes from '../src/routes/weaponInventory';
+import { createTestUser, deleteTestUser } from './testHelpers';
 
 dotenv.config();
 
@@ -24,16 +25,10 @@ describe('Weapon Inventory Routes', () => {
   beforeAll(async () => {
     await prisma.$connect();
     
-    // Use existing test user from seed data
-    testUser = await prisma.user.findFirst({
-      where: { username: 'player1' },
-    });
+    // Create test user
+    testUser = await createTestUser();
 
-    if (!testUser) {
-      throw new Error('Test user player1 not found - ensure database is seeded');
-    }
-
-    // Get a weapon for testing
+    // Get a weapon for testing (from seed data - weapons are global)
     testWeapon = await prisma.weapon.findFirst({
       where: { name: 'Practice Sword' },
     });
@@ -46,6 +41,10 @@ describe('Weapon Inventory Routes', () => {
   });
 
   afterAll(async () => {
+    // Cleanup
+    if (testUser) {
+      await deleteTestUser(testUser.id);
+    }
     await prisma.$disconnect();
   });
 

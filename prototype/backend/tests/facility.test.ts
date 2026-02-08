@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import facilityRoutes from '../src/routes/facility';
+import { createTestUser, deleteTestUser } from './testHelpers';
 
 dotenv.config();
 
@@ -23,14 +24,8 @@ describe('Facility Routes', () => {
   beforeAll(async () => {
     await prisma.$connect();
     
-    // Use existing test user from seed data
-    testUser = await prisma.user.findFirst({
-      where: { username: 'player1' },
-    });
-
-    if (!testUser) {
-      throw new Error('Test user player1 not found - ensure database is seeded');
-    }
+    // Create test user
+    testUser = await createTestUser();
 
     // Generate JWT token
     authToken = jwt.sign(
@@ -40,6 +35,10 @@ describe('Facility Routes', () => {
   });
 
   afterAll(async () => {
+    // Cleanup
+    if (testUser) {
+      await deleteTestUser(testUser.id);
+    }
     await prisma.$disconnect();
   });
 
