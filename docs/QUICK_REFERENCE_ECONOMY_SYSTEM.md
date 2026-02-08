@@ -1,14 +1,16 @@
 # Quick Reference: Economy System
 
-**Last Updated**: February 2, 2026 (Revised after review)  
+**Last Updated**: February 8, 2026 (**Option C Implementation**)  
 **For Complete Details**: See [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md)  
 **For Prestige & Fame**: See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) - **Authoritative**
 
-**⚠️ Key Changes from Review**:
-- Battle frequency: 7 battles/week (1/day per robot)
-- Income Generator: **Changed to stable-level scaling** (prestige for merchandising, aggregate for streaming)
-- Repair costs: Need rebalancing for 50% win rate
-- Facility ROI: Income Generator much faster with prestige scaling
+**⚠️ Key Changes (Option C Hybrid Rebalancing)**:
+- **Starting money**: ₡2M → ₡3M (+50%)
+- **Attribute upgrade costs**: +50% (level × 1,500 instead of × 1,000)
+- **Facility costs**: -50% reduction across all facilities
+- **Weapon costs**: +25% increase across all weapons
+- **League rewards**: Unchanged (2x progression maintained)
+- **Robot creation cost**: Unchanged (₡500K)
 
 ---
 
@@ -18,13 +20,13 @@
 - **Credits (₡)**: Primary currency for all purchases
 - **Fame**: Robot-level reputation (individual stat)
 - **Prestige**: Stable-level reputation (account-wide, unlocks content)
-- **Starting Balance**: ₡2,000,000
+- **Starting Balance**: ₡3,000,000 (increased from ₡2M in Option C rebalancing)
 
 ### Key Formulas
 
-**Attribute Upgrade Cost**:
+**Attribute Upgrade Cost** (increased 50% in Option C):
 ```
-cost = (current_level + 1) × 1,000 Credits
+cost = (current_level + 1) × 1,500 Credits  // Was × 1,000
 ```
 
 **Repair Cost** (needs rebalancing - see PRD):
@@ -55,40 +57,49 @@ streaming = base_rate × (1 + total_battles/1000) × (1 + total_fame/5000)
 
 ### 2. Facilities (14 types, 10 levels each)
 
+**NOTE: All facility costs reduced by 50% in Option C rebalancing (Feb 8, 2026)**
+
 | Facility | Level 1 Cost | Operating Cost/Day |
 |----------|-------------|-------------------|
-| Repair Bay | ₡200K | ₡1,000 |
-| Training Facility | ₡300K | ₡1,500 |
-| Weapons Workshop | ₡250K | ₡1,000 |
-| Research Lab | ₡400K | ₡2,000 |
-| Medical Bay | ₡350K | ₡2,000 |
-| Roster Expansion | ₡300K | ₡500/slot |
-| Storage Facility | ₡150K | ₡500 |
-| Coaching Staff | ₡500K | ₡3,000 (active) |
-| Booking Office | ₡500K | ₡0 |
-| Combat Academy | ₡400K | ₡800 |
-| Defense Academy | ₡400K | ₡800 |
-| Mobility Academy | ₡400K | ₡800 |
-| AI Academy | ₡500K | ₡1,000 |
-| Income Generator | ₡800K | ₡1,000 |
+| Repair Bay | ₡100K | ₡1,000 |
+| Training Facility | ₡150K | ₡1,500 |
+| Weapons Workshop | ₡125K | ₡1,000 |
+| Research Lab | ₡200K | ₡2,000 |
+| Medical Bay | ₡175K | ₡2,000 |
+| Roster Expansion | ₡150K | ₡500/slot |
+| Storage Facility | ₡75K | ₡500 |
+| Coaching Staff | ₡250K | ₡3,000 (active) |
+| Booking Office | ₡250K | ₡0 |
+| Combat Academy | ₡200K | ₡800 |
+| Defense Academy | ₡200K | ₡800 |
+| Mobility Academy | ₡200K | ₡800 |
+| AI Academy | ₡250K | ₡1,000 |
+| Income Generator | ₡400K | ₡1,000 |
 
-**Total to Purchase All (Level 1)**: ₡5,450,000
+**Total to Purchase All (Level 1)**: ₡2,725,000 (was ₡5,450,000)
 
 ### 3. Weapons (11 implemented)
 
+**NOTE: All weapon costs increased by 25% in Option C rebalancing (Feb 8, 2026)**
+
 | Weapon | Type | Cost | Hands |
 |--------|------|------|-------|
-| Practice Sword | Melee | **₡0** | One |
-| Machine Gun | Ballistic | ₡100K | One |
+| Practice Sword | Melee | ₡62.5K | One |
+| Machine Gun | Ballistic | ₡150K | One |
 | Combat Shield | Shield | ₡100K | Shield |
-| Shotgun | Ballistic | ₡120K | Two |
-| Laser Rifle | Energy | ₡150K | One |
-| Power Sword | Melee | ₡180K | One |
-| Hammer | Melee | ₡200K | Two |
-| Plasma Blade | Melee | ₡250K | One |
-| Plasma Cannon | Energy | ₡300K | Two |
-| Railgun | Ballistic | ₡350K | Two |
-| Ion Beam | Energy | ₡400K | Two |
+| Shotgun | Ballistic | ₡269K | Two |
+| Laser Rifle | Energy | ₡244K | One |
+| Power Sword | Melee | ₡350K | One |
+| Hammer | Melee | ₡450K | Two |
+| Plasma Blade | Melee | ₡269K | One |
+| Plasma Cannon | Energy | ₡400K | Two |
+| Railgun | Ballistic | ₡488K | Two |
+| Ion Beam | Energy | ₡538K | Two |
+
+**Budget Tier**: ₡62.5K-₡150K  
+**Mid Tier**: ₡181K-₡275K  
+**Premium Tier**: ₡269K-₡350K  
+**Elite Tier**: ₡369K-₡538K
 
 ### 4. Repairs
 - **Formula**: `base_repair × damage% × multiplier × (1 - discounts)`
@@ -172,14 +183,19 @@ streaming = base_rate × (1 + total_battles/1000) × (1 + total_fame/5000)
 ## Economic Progression
 
 ### Early Game (Days 1-30)
-**Starting**: ₡2,000,000
+**Starting**: ₡3,000,000 (increased from ₡2M in Option C rebalancing)
 
-**Recommended Spending**:
+**Recommended Spending (Option C)**:
 - 1 Robot: ₡500K
-- 1 Good weapon: ₡150K-₡300K
-- Repair Bay Level 1: ₡200K (optional, long payback)
-- Upgrades to level 10: ₡300K-₡500K
-- Buffer: ₡500K (realistic: ₡50K-₡150K)
+- Upgrades to level 10 (15 attributes): ₡1,215K
+- 1 Good weapon: ₡250K-₡400K
+- Training Facility Level 1: ₡150K (5% discount, pays off after 5-6 robots)
+- Combat Academy Level 1: ₡200K (unlocks level 15 cap)
+- Buffer: ₡285K-₡435K
+
+**Alternative Strategies**:
+- **Multi-Robot**: 3 robots (₡1.5M) + basic upgrades (₡900K) + weapons (₡400K)
+- **Facility Focus**: 1 robot (₡500K) + upgrades (₡600K) + 5 facilities (₡1M) + weapon (₡300K)
 
 **Battle Frequency**: 7 battles/week  
 **Daily Income** (50% win rate): ₡4K/day (3.5 wins/week × ₡8K avg ÷ 7)  

@@ -17,7 +17,7 @@ model User {
   role         String @default("user") @db.VarChar(20) // "user", "admin"
 
   // ===== RESOURCES =====
-  currency Int @default(2000000) // Credits (₡) - Starting: ₡2,000,000
+  currency Int @default(3000000) // Credits (₡) - Starting: ₡3,000,000
   prestige Int @default(0) // Stable reputation (earned, never spent)
 
   // ===== STABLE STATISTICS (Aggregated from robots) =====
