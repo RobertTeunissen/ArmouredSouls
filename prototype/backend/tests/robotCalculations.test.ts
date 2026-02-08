@@ -118,7 +118,7 @@ describe('Robot Calculations', () => {
       // With single loadout: gyroStabilizers +10%, servoMotors +5%
       expect(stats.combatPower).toBe(10); // No bonus
       expect(stats.gyroStabilizers).toBe(11); // 10 * 1.10 = 11
-      expect(stats.servoMotors).toBe(10); // 10 * 1.05 = 10.5, floored to 10
+      expect(stats.servoMotors).toBe(10.5); // 10 * 1.05 = 10.5, rounded to 2 decimals
     });
 
     it('should apply weapon bonuses correctly', () => {
@@ -168,8 +168,8 @@ describe('Robot Calculations', () => {
 
       // shieldCapacity: new Prisma.Decimal(10) * 1.20 = 12
       expect(stats.shieldCapacity).toBe(12);
-      // armorPlating: new Prisma.Decimal(10) * 1.15 = 11.5, floored to 11
-      expect(stats.armorPlating).toBe(11);
+      // armorPlating: new Prisma.Decimal(10) * 1.15 = 11.5, rounded to 2 decimals
+      expect(stats.armorPlating).toBe(11.5);
       // counterProtocols: new Prisma.Decimal(10) * 1.10 = 11
       expect(stats.counterProtocols).toBe(11);
       // attackSpeed: new Prisma.Decimal(10) * 0.85 = 8.5, floored to 8
@@ -186,8 +186,8 @@ describe('Robot Calculations', () => {
 
       const stats = calculateEffectiveStats(robot);
 
-      // combatPower: new Prisma.Decimal(10) * 1.25 = 12.5, floored to 12
-      expect(stats.combatPower).toBe(12);
+      // combatPower: new Prisma.Decimal(10) * 1.10 = 11 (v1.2: bonus reduced from 25% to 10%)
+      expect(stats.combatPower).toBe(11);
       // criticalSystems: new Prisma.Decimal(10) * 1.20 = 12
       expect(stats.criticalSystems).toBe(12);
       // evasionThrusters: new Prisma.Decimal(10) * 0.90 = 9
@@ -219,8 +219,8 @@ describe('Robot Calculations', () => {
 
       const stats = calculateEffectiveStats(robotWithWeapon);
 
-      // (Base 10 + weapon 5) * 1.25 = 18.75, floored to 18
-      expect(stats.combatPower).toBe(18);
+      // (Base 10 + weapon 5) * 1.10 = 16.5 (v1.2: bonus reduced from 25% to 10%)
+      expect(stats.combatPower).toBe(16.5);
     });
 
     it('should combine main and offhand weapon bonuses', () => {
@@ -264,8 +264,8 @@ describe('Robot Calculations', () => {
 
       const stats = calculateEffectiveStats(robotWithWeapons);
 
-      // Combat Power: (10 + 5 + 3) * 0.90 = 16.2, floored to 16 (dual_wield has -10% penalty)
-      expect(stats.combatPower).toBe(16);
+      // Combat Power: (10 + 5 + 3) * 0.90 = 16.2 (dual_wield has -10% penalty, rounded to 2 decimals)
+      expect(stats.combatPower).toBe(16.2);
       // Targeting: 10 + 2 + 4 = 16 (no loadout modifier)
       expect(stats.targetingSystems).toBe(16);
     });
@@ -384,7 +384,7 @@ describe('Robot Calculations', () => {
   describe('getLoadoutBonus', () => {
     it('should return correct bonus for existing attribute', () => {
       expect(getLoadoutBonus('weapon_shield', 'shieldCapacity')).toBe(0.20);
-      expect(getLoadoutBonus('two_handed', 'combatPower')).toBe(0.25);
+      expect(getLoadoutBonus('two_handed', 'combatPower')).toBe(0.10); // v1.2: reduced from 0.25 for balance
       expect(getLoadoutBonus('dual_wield', 'attackSpeed')).toBe(0.30);
       expect(getLoadoutBonus('single', 'gyroStabilizers')).toBe(0.10);
     });
