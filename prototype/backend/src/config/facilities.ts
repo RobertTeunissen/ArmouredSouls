@@ -15,7 +15,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Repair Bay',
     description: 'Reduces repair costs for damaged robots',
     maxLevel: 10,
-    costs: [60000, 120000, 180000, 240000, 300000, 360000, 450000, 600000, 750000, 900000],
+    costs: [100000, 200000, 300000, 400000, 500000, 600000, 750000, 1000000, 1250000, 1500000],
     benefits: [
       '5% discount on repair costs',
       '10% discount on repair costs',
@@ -35,7 +35,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Training Facility',
     description: 'Reduces costs for upgrading robot attributes',
     maxLevel: 10,
-    costs: [90000, 180000, 270000, 360000, 450000, 540000, 660000, 840000, 1050000, 1350000],
+    costs: [150000, 300000, 450000, 600000, 750000, 900000, 1100000, 1400000, 1750000, 2250000],
     benefits: [
       '5% discount on attribute upgrades',
       '10% discount on attribute upgrades',
@@ -55,7 +55,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Weapons Workshop',
     description: 'Reduces costs for purchasing weapons',
     maxLevel: 10,
-    costs: [75000, 150000, 225000, 300000, 390000, 480000, 600000, 750000, 900000, 1200000],
+    costs: [125000, 250000, 375000, 500000, 650000, 800000, 1000000, 1250000, 1500000, 2000000],
     benefits: [
       '5% discount on weapon purchases',
       '10% discount on weapon purchases',
@@ -75,7 +75,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Research Lab',
     description: 'Unlock advanced analytics and loadout features',
     maxLevel: 10,
-    costs: [120000, 240000, 360000, 480000, 600000, 750000, 900000, 1050000, 1200000, 1500000],
+    costs: [200000, 400000, 600000, 800000, 1000000, 1250000, 1500000, 1750000, 2000000, 2500000],
     benefits: [
       'Unlock advanced battle analytics',
       'Unlock loadout presets (save 3 configurations per robot)',
@@ -95,7 +95,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Medical Bay',
     description: 'Reduces critical damage repair costs',
     maxLevel: 10,
-    costs: [105000, 210000, 315000, 420000, 525000, 630000, 750000, 900000, 1050000, 1350000],
+    costs: [175000, 350000, 525000, 700000, 875000, 1050000, 1250000, 1500000, 1750000, 2250000],
     benefits: [
       '15% reduction on critical damage repair costs',
       '25% reduction on critical damage repair costs',
@@ -115,7 +115,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Roster Expansion',
     description: 'Increases the number of robots you can own',
     maxLevel: 9,
-    costs: [90000, 180000, 270000, 360000, 450000, 540000, 660000, 780000, 900000],
+    costs: [150000, 300000, 450000, 600000, 750000, 900000, 1100000, 1300000, 1500000],
     benefits: [
       '2 robot slots',
       '3 robot slots',
@@ -134,7 +134,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Storage Facility',
     description: 'Increases weapon storage capacity',
     maxLevel: 10,
-    costs: [45000, 90000, 135000, 180000, 225000, 270000, 330000, 390000, 450000, 600000],
+    costs: [75000, 150000, 225000, 300000, 375000, 450000, 550000, 650000, 750000, 1000000],
     benefits: [
       '10 weapons storage (5 base + 5 from facility)',
       '15 weapons storage (5 base + 10 from facility)',
@@ -154,7 +154,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Coaching Staff',
     description: 'Hire coaches for stable-wide bonuses',
     maxLevel: 10,
-    costs: [150000, 210000, 270000, 360000, 450000, 540000, 660000, 780000, 900000, 1050000],
+    costs: [250000, 350000, 450000, 600000, 750000, 900000, 1100000, 1300000, 1500000, 1750000],
     benefits: [
       'Unlock Offensive Coach (+3% Combat Power for all robots)',
       'Unlock Defensive Coach (+3% Armor Plating for all robots)',
@@ -174,7 +174,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Booking Office',
     description: 'Access to tournaments and prestige events',
     maxLevel: 10,
-    costs: [150000, 300000, 450000, 600000, 750000, 900000, 1050000, 1200000, 1350000, 1500000],
+    costs: [250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000, 2250000, 2500000],
     benefits: [
       'Unlock Silver league tournaments',
       'Unlock Gold league tournaments, custom paint jobs',
@@ -194,7 +194,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Combat Training Academy',
     description: 'Increases Combat Systems attribute caps',
     maxLevel: 10,
-    costs: [120000, 180000, 240000, 300000, 360000, 420000, 480000, 540000, 600000, 750000],
+    costs: [200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1250000],
     benefits: [
       'Combat Systems cap to level 15',
       'Combat Systems cap to level 20',
@@ -214,7 +214,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Defense Training Academy',
     description: 'Increases Defensive Systems attribute caps',
     maxLevel: 10,
-    costs: [120000, 180000, 240000, 300000, 360000, 420000, 480000, 540000, 600000, 750000],
+    costs: [200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1250000],
     benefits: [
       'Defensive Systems cap to level 15',
       'Defensive Systems cap to level 20',
@@ -234,7 +234,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Mobility Training Academy',
     description: 'Increases Chassis & Mobility attribute caps',
     maxLevel: 10,
-    costs: [120000, 180000, 240000, 300000, 360000, 420000, 480000, 540000, 600000, 750000],
+    costs: [200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1250000],
     benefits: [
       'Chassis & Mobility cap to level 15',
       'Chassis & Mobility cap to level 20',
@@ -254,7 +254,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'AI Training Academy',
     description: 'Increases AI Processing + Team Coordination attribute caps',
     maxLevel: 10,
-    costs: [150000, 225000, 300000, 375000, 450000, 525000, 600000, 675000, 750000, 900000],
+    costs: [250000, 375000, 500000, 625000, 750000, 875000, 1000000, 1125000, 1250000, 1500000],
     benefits: [
       'AI & Team cap to level 15',
       'AI & Team cap to level 20',
@@ -274,7 +274,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Income Generator',
     description: 'Unlocks additional revenue streams',
     maxLevel: 10,
-    costs: [240000, 360000, 480000, 600000, 720000, 840000, 960000, 1080000, 1200000, 1500000],
+    costs: [400000, 600000, 800000, 1000000, 1200000, 1400000, 1600000, 1800000, 2000000, 2500000],
     benefits: [
       'Unlock Merchandising (₡5,000/day base, scales with prestige)',
       'Improve Merchandising (₡8,000/day base)',

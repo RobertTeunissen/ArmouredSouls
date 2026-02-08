@@ -316,9 +316,9 @@ router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Resp
       return res.status(400).json({ error: 'Attribute is already at maximum level or invalid' });
     }
 
-    // Calculate upgrade cost based on floor of current level: (floor(current_level) + 1) × 1,000
+    // Calculate upgrade cost based on floor of current level: (floor(current_level) + 1) × 1,500
     // This means 25.50 upgrades to 26.50 for the same cost as 25 to 26
-    const baseCost = (Math.floor(currentLevel) + 1) * 1000;
+    const baseCost = (Math.floor(currentLevel) + 1) * 1500;
 
     // Get user's current currency and Training Facility level
     const user = await prisma.user.findUnique({
