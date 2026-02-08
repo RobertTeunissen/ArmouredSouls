@@ -15,29 +15,29 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   name: 'TestBot',
   frameId: 1,
   paintJob: null,
-  combatPower: 10,
-  targetingSystems: 10,
-  criticalSystems: 10,
-  penetration: 10,
-  weaponControl: 10,
-  attackSpeed: 10,
-  armorPlating: 10,
-  shieldCapacity: 10,
-  evasionThrusters: 10,
-  damageDampeners: 10,
-  counterProtocols: 10,
-  hullIntegrity: 10,
-  servoMotors: 10,
-  gyroStabilizers: 10,
-  hydraulicSystems: 10,
-  powerCore: 10,
-  combatAlgorithms: 10,
-  threatAnalysis: 10,
-  adaptiveAI: 10,
-  logicCores: 10,
-  syncProtocols: 10,
-  supportSystems: 10,
-  formationTactics: 10,
+  combatPower: new Prisma.Decimal(10),
+  targetingSystems: new Prisma.Decimal(10),
+  criticalSystems: new Prisma.Decimal(10),
+  penetration: new Prisma.Decimal(10),
+  weaponControl: new Prisma.Decimal(10),
+  attackSpeed: new Prisma.Decimal(10),
+  armorPlating: new Prisma.Decimal(10),
+  shieldCapacity: new Prisma.Decimal(10),
+  evasionThrusters: new Prisma.Decimal(10),
+  damageDampeners: new Prisma.Decimal(10),
+  counterProtocols: new Prisma.Decimal(10),
+  hullIntegrity: new Prisma.Decimal(10),
+  servoMotors: new Prisma.Decimal(10),
+  gyroStabilizers: new Prisma.Decimal(10),
+  hydraulicSystems: new Prisma.Decimal(10),
+  powerCore: new Prisma.Decimal(10),
+  combatAlgorithms: new Prisma.Decimal(10),
+  threatAnalysis: new Prisma.Decimal(10),
+  adaptiveAI: new Prisma.Decimal(10),
+  logicCores: new Prisma.Decimal(10),
+  syncProtocols: new Prisma.Decimal(10),
+  supportSystems: new Prisma.Decimal(10),
+  formationTactics: new Prisma.Decimal(10),
   currentHP: 55, // Updated to match new formula: 50 + (1 * 5) = 55
   maxHP: 55,     // Updated to match new formula: 50 + (1 * 5) = 55
   currentShield: 20,
@@ -46,7 +46,14 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   elo: 1200,
   totalBattles: 0,
   wins: 0,
+  draws: 0,
   losses: 0,
+  leagueWins: 0,
+  leagueLosses: 0,
+  leagueDraws: 0,
+  tournamentWins: 0,
+  tournamentLosses: 0,
+  currentLeagueInstanceId: null,
   damageDealtLifetime: 0,
   damageTakenLifetime: 0,
   kills: 0,
@@ -57,12 +64,15 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   titles: null,
   repairCost: 0,
   battleReadiness: 100,
+  isBattleReady: true,
+  isRepairing: false,
   totalRepairsPaid: 0,
   yieldThreshold: 10,
   loadoutType: 'single',
   stance: 'balanced',
   mainWeaponId: null,
   offhandWeaponId: null,
+  twoHandedWeaponId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -156,39 +166,39 @@ describe('Robot Calculations', () => {
     it('should apply loadout bonuses correctly for weapon_shield', () => {
       const robot = createMockRobot({ 
         loadoutType: 'weapon_shield',
-        shieldCapacity: 10,
-        armorPlating: 10,
-        counterProtocols: 10,
-        attackSpeed: 10,
+        shieldCapacity: new Prisma.Decimal(10),
+        armorPlating: new Prisma.Decimal(10),
+        counterProtocols: new Prisma.Decimal(10),
+        attackSpeed: new Prisma.Decimal(10),
       });
 
       const stats = calculateEffectiveStats(robot);
 
-      // shieldCapacity: 10 * 1.20 = 12
+      // shieldCapacity: new Prisma.Decimal(10) * 1.20 = 12
       expect(stats.shieldCapacity).toBe(12);
-      // armorPlating: 10 * 1.15 = 11.5, floored to 11
+      // armorPlating: new Prisma.Decimal(10) * 1.15 = 11.5, floored to 11
       expect(stats.armorPlating).toBe(11);
-      // counterProtocols: 10 * 1.10 = 11
+      // counterProtocols: new Prisma.Decimal(10) * 1.10 = 11
       expect(stats.counterProtocols).toBe(11);
-      // attackSpeed: 10 * 0.85 = 8.5, floored to 8
+      // attackSpeed: new Prisma.Decimal(10) * 0.85 = 8.5, floored to 8
       expect(stats.attackSpeed).toBe(8);
     });
 
     it('should apply loadout bonuses correctly for two_handed', () => {
       const robot = createMockRobot({ 
         loadoutType: 'two_handed',
-        combatPower: 10,
-        criticalSystems: 10,
-        evasionThrusters: 10,
+        combatPower: new Prisma.Decimal(10),
+        criticalSystems: new Prisma.Decimal(10),
+        evasionThrusters: new Prisma.Decimal(10),
       });
 
       const stats = calculateEffectiveStats(robot);
 
-      // combatPower: 10 * 1.25 = 12.5, floored to 12
+      // combatPower: new Prisma.Decimal(10) * 1.25 = 12.5, floored to 12
       expect(stats.combatPower).toBe(12);
-      // criticalSystems: 10 * 1.20 = 12
+      // criticalSystems: new Prisma.Decimal(10) * 1.20 = 12
       expect(stats.criticalSystems).toBe(12);
-      // evasionThrusters: 10 * 0.90 = 9
+      // evasionThrusters: new Prisma.Decimal(10) * 0.90 = 9
       expect(stats.evasionThrusters).toBe(9);
     });
 
@@ -199,7 +209,7 @@ describe('Robot Calculations', () => {
 
       const robot = createMockRobot({ 
         loadoutType: 'two_handed',
-        combatPower: 10,
+        combatPower: new Prisma.Decimal(10),
         mainWeaponId: 1,
       });
 
@@ -234,8 +244,8 @@ describe('Robot Calculations', () => {
 
       const robot = createMockRobot({ 
         loadoutType: 'dual_wield',
-        combatPower: 10,
-        targetingSystems: 10,
+        combatPower: new Prisma.Decimal(10),
+        targetingSystems: new Prisma.Decimal(10),
         mainWeaponId: 1,
         offhandWeaponId: 2,
       });
@@ -273,7 +283,7 @@ describe('Robot Calculations', () => {
     it('should calculate max HP based on effective hull integrity with base HP', () => {
       const robot = createMockRobot({ 
         loadoutType: 'single',
-        hullIntegrity: 10,
+        hullIntegrity: new Prisma.Decimal(10),
       });
 
       const maxHP = calculateMaxHP(robot);
@@ -289,7 +299,7 @@ describe('Robot Calculations', () => {
 
       const robot = createMockRobot({ 
         loadoutType: 'single',
-        hullIntegrity: 10,
+        hullIntegrity: new Prisma.Decimal(10),
         mainWeaponId: 1,
       });
 
@@ -314,7 +324,7 @@ describe('Robot Calculations', () => {
     it('should calculate correct HP for starting robot with hull integrity 1', () => {
       const robot = createMockRobot({ 
         loadoutType: 'single',
-        hullIntegrity: 1,
+        hullIntegrity: new Prisma.Decimal(1),
       });
 
       const maxHP = calculateMaxHP(robot);
@@ -326,7 +336,7 @@ describe('Robot Calculations', () => {
     it('should calculate correct HP for max level robot with hull integrity 50', () => {
       const robot = createMockRobot({ 
         loadoutType: 'single',
-        hullIntegrity: 50,
+        hullIntegrity: new Prisma.Decimal(50),
       });
 
       const maxHP = calculateMaxHP(robot);
@@ -340,7 +350,7 @@ describe('Robot Calculations', () => {
     it('should calculate max shield based on effective shield capacity', () => {
       const robot = createMockRobot({ 
         loadoutType: 'single',
-        shieldCapacity: 10,
+        shieldCapacity: new Prisma.Decimal(10),
       });
 
       const maxShield = calculateMaxShield(robot);
@@ -356,7 +366,7 @@ describe('Robot Calculations', () => {
 
       const robot = createMockRobot({ 
         loadoutType: 'weapon_shield', // +20% shield capacity
-        shieldCapacity: 10,
+        shieldCapacity: new Prisma.Decimal(10),
         mainWeaponId: 1,
       });
 
