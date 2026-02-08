@@ -1,6 +1,6 @@
 import React from 'react';
 import { BattleHistory, getTournamentRoundName } from '../utils/matchmakingApi';
-import { formatDateTime, formatDuration } from '../utils/matchmakingApi';
+import { formatDateTime } from '../utils/matchmakingApi';
 
 interface CompactBattleCardProps {
   battle: BattleHistory;
@@ -19,12 +19,13 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   opponent,
   outcome,
   eloChange,
-  myRobotId,
+  // myRobotId is used in commented-out ELO calculations
+  // myRobotId,
   reward,
   onClick,
 }) => {
   const isTournament = battle.battleType === 'tournament';
-  const isLeague = battle.battleType === 'league' || !battle.battleType;
+  // Note: isLeague can be derived but not currently used in display logic
   
   const getBattleTypeIcon = () => {
     if (isTournament) {
@@ -64,8 +65,9 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
     }
   };
 
-  const myRobotELOBefore = battle.robot1Id === myRobotId ? battle.robot1ELOBefore : battle.robot2ELOBefore;
-  const myRobotELOAfter = battle.robot1Id === myRobotId ? battle.robot1ELOAfter : battle.robot2ELOAfter;
+  // ELO values available if needed for future display
+  // const myRobotELOBefore = battle.robot1Id === myRobotId ? battle.robot1ELOBefore : battle.robot2ELOBefore;
+  // const myRobotELOAfter = battle.robot1Id === myRobotId ? battle.robot1ELOAfter : battle.robot2ELOAfter;
   
   return (
     <div 

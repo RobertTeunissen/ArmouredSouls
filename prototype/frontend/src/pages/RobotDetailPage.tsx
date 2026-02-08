@@ -123,7 +123,8 @@ function RobotDetailPage() {
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
 
-  const MAX_ATTRIBUTE_LEVEL = 50;
+  // Max attribute level cap (from STABLE_SYSTEM.md)
+  // const MAX_ATTRIBUTE_LEVEL = 50;
 
   // Get cap for academy level (from STABLE_SYSTEM.md)
   const getCapForLevel = (level: number): number => {
@@ -486,7 +487,7 @@ function RobotDetailPage() {
               <div className="w-48 h-48 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
                 <div className="text-center">
                   <div className="text-6xl mb-2">🤖</div>
-                  <div className="text-gray-400 text-sm">Frame #{robot.frameId || 1}</div>
+                  <div className="text-gray-400 text-sm">Frame #{(robot as any).frameId || 1}</div>
                 </div>
               </div>
               

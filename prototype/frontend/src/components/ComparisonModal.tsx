@@ -70,7 +70,8 @@ function getTotalAttributes(weapon: Weapon): number {
 }
 
 function calculateValueMetrics(weapon: Weapon, discountedCost: number) {
-  const cooldown = calculateWeaponCooldown(weapon.weaponType);
+  const cooldownStr = calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage);
+  const cooldown = parseFloat(cooldownStr);
   const dps = cooldown > 0 ? weapon.baseDamage / cooldown : 0;
   const totalAttributes = getTotalAttributes(weapon);
 
@@ -144,7 +145,8 @@ export default function ComparisonModal({
           <div className={`grid ${weapons.length === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-6`}>
             {weaponsWithMetrics.map(({ weapon, discountedCost, metrics }) => {
               const canAfford = userCurrency >= discountedCost;
-              const cooldown = calculateWeaponCooldown(weapon.weaponType);
+              const cooldownStr = calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage);
+              const cooldown = parseFloat(cooldownStr);
               const totalAttributes = getTotalAttributes(weapon);
 
               const isBestDamageValue = bestDamageValue.weapon.id === weapon.id && metrics.costPerDamage > 0;
@@ -184,7 +186,7 @@ export default function ComparisonModal({
                         <>
                           <div className="flex justify-between">
                             <span className="text-gray-400">Cooldown:</span>
-                            <span className="text-white">{cooldown}s</span>
+                            <span className="text-white">{cooldownStr}s</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-400">DPS:</span>

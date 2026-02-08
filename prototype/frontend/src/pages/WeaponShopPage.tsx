@@ -6,8 +6,8 @@ import ViewModeToggle from '../components/ViewModeToggle';
 import WeaponTable from '../components/WeaponTable';
 import FilterPanel, { WeaponFilters } from '../components/FilterPanel';
 import ActiveFiltersDisplay from '../components/ActiveFiltersDisplay';
-import SearchBar from '../components/SearchBar';
-import SortDropdown, { SortOption } from '../components/SortDropdown';
+// import SearchBar from '../components/SearchBar';
+// import { SortOption } from '../components/SortDropdown';
 import ComparisonBar from '../components/ComparisonBar';
 import ComparisonModal from '../components/ComparisonModal';
 import WeaponDetailModal from '../components/WeaponDetailModal';
@@ -91,12 +91,12 @@ function WeaponShopPage() {
     onlyOwnedWeapons: false,
   });
 
-  // Search state
-  const [searchQuery, setSearchQuery] = useState('');
+  // Search state (currently unused - search functionality not implemented yet)
+  const [searchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
   // Sort state with localStorage persistence
-  const [sortBy, setSortBy] = useState<string>(() => {
+  const [sortBy] = useState<string>(() => {
     const saved = localStorage.getItem('weaponShopSortBy');
     return saved || 'name-asc';
   });
@@ -197,10 +197,11 @@ function WeaponShopPage() {
     setFilters(newFilters);
   };
 
-  const handleSortChange = (newSortBy: string) => {
-    setSortBy(newSortBy);
-    localStorage.setItem('weaponShopSortBy', newSortBy);
-  };
+  // Sort handler (currently managed by ViewModeToggle component)
+  // const handleSortChange = (newSortBy: string) => {
+  //   setSortBy(newSortBy);
+  //   localStorage.setItem('weaponShopSortBy', newSortBy);
+  // };
 
   // Search weapons by name, description, type
   const searchWeapons = (weapons: Weapon[], query: string): Weapon[] => {
@@ -478,14 +479,14 @@ function WeaponShopPage() {
     one_handed: processedWeapons.filter(w => w.loadoutType === 'single'),
   };
 
-  // Sort options for dropdown
-  const sortOptions: SortOption[] = [
-    { value: 'name-asc', label: 'Name (A-Z)' },
-    { value: 'price-asc', label: 'Price: Low to High' },
-    { value: 'price-desc', label: 'Price: High to Low' },
-    { value: 'damage-desc', label: 'Damage: High to Low' },
-    { value: 'dps-desc', label: 'DPS: High to Low' },
-  ];
+  // Sort options for dropdown (defined but not directly used - ViewModeToggle manages sorting)
+  // const sortOptions: SortOption[] = [
+  //   { value: 'name-asc', label: 'Name (A-Z)' },
+  //   { value: 'price-asc', label: 'Price: Low to High' },
+  //   { value: 'price-desc', label: 'Price: High to Low' },
+  //   { value: 'damage-desc', label: 'Damage: High to Low' },
+  //   { value: 'dps-desc', label: 'DPS: High to Low' },
+  // ];
 
   const getLoadoutTypeLabel = (loadoutType: string) => {
     switch (loadoutType) {
@@ -633,7 +634,7 @@ function WeaponShopPage() {
                   purchasing={purchasing}
                   hasDiscount={weaponWorkshopLevel > 0}
                   discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
-                  onWeaponClick={setSelectedWeapon}
+                  onWeaponClick={(weapon) => setSelectedWeapon(weapon as any)}
                   ownedWeapons={ownedWeapons}
                 />
               </div>

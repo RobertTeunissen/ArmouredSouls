@@ -10,9 +10,6 @@ import {
   PaginatedResponse,
   getBattleOutcome,
   getELOChange,
-  formatDateTime,
-  formatDuration,
-  getTournamentRoundName,
 } from '../utils/matchmakingApi';
 
 function BattleHistoryPage() {

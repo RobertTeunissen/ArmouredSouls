@@ -33,7 +33,7 @@ function TournamentsPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const robotIds = new Set(response.data.robots.map((r: any) => r.id));
+      const robotIds = new Set<number>(response.data.robots.map((r: any) => r.id));
       setUserRobots(robotIds);
     } catch (err) {
       console.error('Failed to fetch user robots:', err);
@@ -285,7 +285,7 @@ function TournamentsPage() {
                         <div className="text-sm text-yellow-400 font-semibold">Champion</div>
                         <div className="text-xl font-bold">{tournament.winner.name}</div>
                         <div className="text-sm text-gray-400">
-                          Owned by {tournament.winner.user?.username || 'Unknown'}
+                          Owned by {(tournament.winner as any).user?.username || 'Unknown'}
                         </div>
                       </div>
                     </div>
