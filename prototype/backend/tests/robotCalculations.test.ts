@@ -6,7 +6,7 @@ import {
   getLoadoutModifiedAttributes,
   LOADOUT_BONUSES 
 } from '../src/utils/robotCalculations';
-import { Robot, WeaponInventory, Weapon } from '@prisma/client';
+import { Robot, WeaponInventory, Weapon, Prisma } from '@prisma/client';
 
 // Mock robot data
 const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
@@ -48,12 +48,6 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   wins: 0,
   draws: 0,
   losses: 0,
-  leagueWins: 0,
-  leagueLosses: 0,
-  leagueDraws: 0,
-  tournamentWins: 0,
-  tournamentLosses: 0,
-  currentLeagueInstanceId: null,
   damageDealtLifetime: 0,
   damageTakenLifetime: 0,
   kills: 0,
@@ -64,15 +58,12 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   titles: null,
   repairCost: 0,
   battleReadiness: 100,
-  isBattleReady: true,
-  isRepairing: false,
   totalRepairsPaid: 0,
   yieldThreshold: 10,
   loadoutType: 'single',
   stance: 'balanced',
   mainWeaponId: null,
   offhandWeaponId: null,
-  twoHandedWeaponId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,

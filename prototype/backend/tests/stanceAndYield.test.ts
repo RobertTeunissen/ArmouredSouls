@@ -49,31 +49,23 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   wins: 0,
   draws: 0,
   losses: 0,
-  leagueWins: 0,
-  leagueLosses: 0,
-  leagueDraws: 0,
-  tournamentWins: 0,
-  tournamentLosses: 0,
-  currentLeagueInstanceId: null,
   damageDealtLifetime: 0,
   damageTakenLifetime: 0,
   kills: 0,
   currentLeague: 'bronze',
   leagueId: 'bronze_1',
   leaguePoints: 0,
-  fame: new Prisma.Decimal(0),
+  cyclesInCurrentLeague: 0,
+  fame: 0,
   titles: null,
   repairCost: 0,
   battleReadiness: 100,
-  isBattleReady: true,
-  isRepairing: false,
   totalRepairsPaid: 0,
   yieldThreshold: 10,
   loadoutType: 'single',
   stance: 'balanced',
   mainWeaponId: null,
   offhandWeaponId: null,
-  twoHandedWeaponId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -109,10 +101,10 @@ describe('Stance Modifiers', () => {
     it('should calculate offensive stance modifiers correctly', () => {
       const robot = createMockRobot({ 
         stance: 'offensive',
-        combatPower: 20,
-        attackSpeed: 15,
-        counterProtocols: 15,
-        evasionThrusters: 18,
+        combatPower: new Prisma.Decimal(20),
+        attackSpeed: new Prisma.Decimal(15),
+        counterProtocols: new Prisma.Decimal(15),
+        evasionThrusters: new Prisma.Decimal(18),
       });
       
       const stats = calculateEffectiveStatsWithStance(robot);
@@ -130,10 +122,10 @@ describe('Stance Modifiers', () => {
     it('should calculate defensive stance modifiers correctly', () => {
       const robot = createMockRobot({ 
         stance: 'defensive',
-        armorPlating: 20,
-        counterProtocols: 15,
-        combatPower: 20,
-        attackSpeed: 15,
+        armorPlating: new Prisma.Decimal(20),
+        counterProtocols: new Prisma.Decimal(15),
+        combatPower: new Prisma.Decimal(20),
+        attackSpeed: new Prisma.Decimal(15),
       });
       
       const stats = calculateEffectiveStatsWithStance(robot);
