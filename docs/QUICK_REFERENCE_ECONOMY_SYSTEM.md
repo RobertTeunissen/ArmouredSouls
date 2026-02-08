@@ -1,6 +1,6 @@
 # Quick Reference: Economy System
 
-**Last Updated**: February 2, 2026 (Revised after review)  
+**Last Updated**: February 8, 2026 (Facility costs rebalanced)  
 **For Complete Details**: See [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md)  
 **For Prestige & Fame**: See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) - **Authoritative**
 
@@ -9,6 +9,7 @@
 - Income Generator: **Changed to stable-level scaling** (prestige for merchandising, aggregate for streaming)
 - Repair costs: Need rebalancing for 50% win rate
 - Facility ROI: Income Generator much faster with prestige scaling
+- **NEW (Feb 8, 2026)**: All facility costs reduced by 70% to improve game balance
 
 ---
 
@@ -55,24 +56,26 @@ streaming = base_rate × (1 + total_battles/1000) × (1 + total_fame/5000)
 
 ### 2. Facilities (14 types, 10 levels each)
 
+**NOTE: All facility costs reduced by 70% as of February 8, 2026 for better game balance**
+
 | Facility | Level 1 Cost | Operating Cost/Day |
 |----------|-------------|-------------------|
-| Repair Bay | ₡200K | ₡1,000 |
-| Training Facility | ₡300K | ₡1,500 |
-| Weapons Workshop | ₡250K | ₡1,000 |
-| Research Lab | ₡400K | ₡2,000 |
-| Medical Bay | ₡350K | ₡2,000 |
-| Roster Expansion | ₡300K | ₡500/slot |
-| Storage Facility | ₡150K | ₡500 |
-| Coaching Staff | ₡500K | ₡3,000 (active) |
-| Booking Office | ₡500K | ₡0 |
-| Combat Academy | ₡400K | ₡800 |
-| Defense Academy | ₡400K | ₡800 |
-| Mobility Academy | ₡400K | ₡800 |
-| AI Academy | ₡500K | ₡1,000 |
-| Income Generator | ₡800K | ₡1,000 |
+| Repair Bay | ₡60K | ₡1,000 |
+| Training Facility | ₡90K | ₡1,500 |
+| Weapons Workshop | ₡75K | ₡1,000 |
+| Research Lab | ₡120K | ₡2,000 |
+| Medical Bay | ₡105K | ₡2,000 |
+| Roster Expansion | ₡90K | ₡500/slot |
+| Storage Facility | ₡45K | ₡500 |
+| Coaching Staff | ₡150K | ₡3,000 (active) |
+| Booking Office | ₡150K | ₡0 |
+| Combat Academy | ₡120K | ₡800 |
+| Defense Academy | ₡120K | ₡800 |
+| Mobility Academy | ₡120K | ₡800 |
+| AI Academy | ₡150K | ₡1,000 |
+| Income Generator | ₡240K | ₡1,000 |
 
-**Total to Purchase All (Level 1)**: ₡5,450,000
+**Total to Purchase All (Level 1)**: ₡1,635,000 (was ₡5,450,000)
 
 ### 3. Weapons (11 implemented)
 
