@@ -1,0 +1,21 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#10B981" stroke-width="4"/>
+  
+  <!-- Money/Currency icon -->
+  <!-- Dollar sign -->
+  <path d="M128 50 L128 70 M128 190 L128 210" stroke="#10B981" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- S shape for dollar -->
+  <path d="M 100 85 Q 95 75, 105 70 L 151 70 Q 161 75, 156 85 L 156 100 Q 161 110, 151 115 L 105 115 Q 95 120, 100 130 L 100 145 Q 95 155, 105 160 L 151 160 Q 161 155, 156 145" 
+        stroke="#10B981" stroke-width="10" fill="none" stroke-linecap="round"/>
+  
+  <!-- Coins floating around -->
+  <circle cx="70" cy="80" r="12" fill="#34D399" opacity="0.7"/>
+  <circle cx="186" cy="90" r="10" fill="#34D399" opacity="0.7"/>
+  <circle cx="75" cy="170" r="14" fill="#34D399" opacity="0.7"/>
+  <circle cx="180" cy="165" r="11" fill="#34D399" opacity="0.7"/>
+  
+  <!-- Text -->
+  <text x="128" y="215" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#34D399" text-anchor="middle">INCOME</text>
+</svg>

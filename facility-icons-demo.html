@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facility Icons Demo - Armoured Souls</title>
+    <style>
+        body {
+            background: #111827;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 2rem;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: #9CA3AF;
+            margin-bottom: 2rem;
+        }
+        .category {
+            margin-bottom: 3rem;
+        }
+        .category-header {
+            background: #1F2937;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #374151;
+            margin-bottom: 1rem;
+        }
+        .category-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .category-desc {
+            color: #9CA3AF;
+            font-size: 0.9rem;
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .icon-card {
+            background: #1F2937;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #374151;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .icon-card:hover {
+            border-color: #3B82F6;
+            transform: translateY(-2px);
+        }
+        .icon-card img {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            display: block;
+        }
+        .icon-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .icon-type {
+            color: #6B7280;
+            font-size: 0.8rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .badge-active {
+            background: #10B981;
+            color: #D1FAE5;
+        }
+        .badge-coming {
+            background: #F59E0B;
+            color: #FEF3C7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏭 Facility Icons - Phase 2 Implementation</h1>
+        <p class="subtitle">WebP/SVG fallback system with 14 custom facility icons</p>
+
+        <!-- Economy & Discounts -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">💰 Economy & Discounts</div>
+                <div class="category-desc">Reduce operational costs and unlock passive income</div>
+            </div>
+            <div class="icon-grid">
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-training-facility-icon.svg" alt="Training Facility">
+                    <div class="icon-name">Training Facility</div>
+                    <div class="icon-type">training_facility</div>
+                    
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-weapons-workshop-icon.svg" alt="Weapons Workshop">
+                    <div class="icon-name">Weapons Workshop</div>
+                    <div class="icon-type">weapons_workshop</div>
+                    
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-repair-bay-icon.svg" alt="Repair Bay">
+                    <div class="icon-name">Repair Bay</div>
+                    <div class="icon-type">repair_bay</div>
+                    
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-income-generator-icon.svg" alt="Income Generator">
+                    <div class="icon-name">Income Generator</div>
+                    <div class="icon-type">income_generator</div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Capacity & Storage -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">📦 Capacity & Storage</div>
+                <div class="category-desc">Expand stable capacity for robots and weapons</div>
+            </div>
+            <div class="icon-grid">
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-roster-expansion-icon.svg" alt="Roster Expansion">
+                    <div class="icon-name">Roster Expansion</div>
+                    <div class="icon-type">roster_expansion</div>
+                    
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-storage-facility-icon.svg" alt="Storage Facility">
+                    <div class="icon-name">Storage Facility</div>
+                    <div class="icon-type">storage_facility</div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Academies -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">🎓 Training Academies</div>
+                <div class="category-desc">Increase attribute caps for robot development</div>
+            </div>
+            <div class="icon-grid">
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-combat-training-academy-icon.svg" alt="Combat Training Academy">
+                    <div class="icon-name">Combat Training</div>
+                    <div class="icon-type">combat_training_academy</div>
+                    
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-defense-training-academy-icon.svg" alt="Defense Training Academy">
+                    <div class="icon-name">Defense Training</div>
+                    <div class="icon-type">defense_training_academy</div>
+                    
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-mobility-training-academy-icon.svg" alt="Mobility Training Academy">
+                    <div class="icon-name">Mobility Training</div>
+                    <div class="icon-type">mobility_training_academy</div>
+                    
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-ai-training-academy-icon.svg" alt="AI Training Academy">
+                    <div class="icon-name">AI Training</div>
+                    <div class="icon-type">ai_training_academy</div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Features -->
+        <div class="category">
+            <div class="category-header">
+                <div class="category-title">⭐ Advanced Features</div>
+                <div class="category-desc">Unlock special features and advanced gameplay mechanics</div>
+            </div>
+            <div class="icon-grid">
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-research-lab-icon.svg" alt="Research Lab">
+                    <div class="icon-name">Research Lab</div>
+                    <div class="icon-type">research_lab</div>
+                    <span class="badge badge-coming">⚠ Coming Soon</span>
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-medical-bay-icon.svg" alt="Medical Bay">
+                    <div class="icon-name">Medical Bay</div>
+                    <div class="icon-type">medical_bay</div>
+                    <span class="badge badge-coming">⚠ Coming Soon</span>
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-coaching-staff-icon.svg" alt="Coaching Staff">
+                    <div class="icon-name">Coaching Staff</div>
+                    <div class="icon-type">coaching_staff</div>
+                    <span class="badge badge-coming">⚠ Coming Soon</span>
+                </div>
+                <div class="icon-card">
+                    <img src="./prototype/frontend/src/assets/facilities/facility-booking-office-icon.svg" alt="Booking Office">
+                    <div class="icon-name">Booking Office</div>
+                    <div class="icon-type">booking_office</div>
+                    <span class="badge badge-coming">⚠ Coming Soon</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 3rem; padding: 2rem; background: #1F2937; border-radius: 0.5rem; border: 1px solid #374151;">
+            <h2 style="margin-top: 0;">✅ Implementation Complete</h2>
+            <ul style="line-height: 1.8;">
+                <li><strong>FacilityIcon Component</strong>: WebP primary, SVG fallback, emoji ultimate fallback</li>
+                <li><strong>14 Custom SVG Icons</strong>: Professional themed designs (1-2KB each)</li>
+                <li><strong>Category Organization</strong>: 4 logical groups with color themes</li>
+                <li><strong>Lazy Loading</strong>: Performance optimized with loading="lazy"</li>
+                <li><strong>Accessibility</strong>: Alt text, ARIA labels, emoji fallbacks</li>
+            </ul>
+            <p style="color: #9CA3AF; margin-bottom: 0;">Ready for Phase 3: WebP generation (256×256px) for even higher quality</p>
+        </div>
+    </div>
+</body>
+</html>

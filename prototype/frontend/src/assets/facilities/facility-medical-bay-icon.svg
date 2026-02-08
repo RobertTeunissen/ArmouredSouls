@@ -1,0 +1,28 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#10B981" stroke-width="4"/>
+  
+  <!-- Medical cross -->
+  <!-- Vertical bar -->
+  <rect x="110" y="70" width="36" height="100" rx="4" fill="#10B981"/>
+  
+  <!-- Horizontal bar -->
+  <rect x="88" y="110" width="80" height="36" rx="4" fill="#10B981"/>
+  
+  <!-- Inner cross details -->
+  <rect x="115" y="75" width="26" height="90" rx="2" fill="#34D399"/>
+  <rect x="93" y="115" width="70" height="26" rx="2" fill="#34D399"/>
+  
+  <!-- Plus symbol highlight -->
+  <rect x="118" y="95" width="20" height="50" rx="2" fill="#1F2937"/>
+  <rect x="103" y="118" width="50" height="20" rx="2" fill="#1F2937"/>
+  
+  <!-- Healing sparkles -->
+  <circle cx="70" cy="80" r="4" fill="#6EE7B7"/>
+  <circle cx="186" cy="80" r="4" fill="#6EE7B7"/>
+  <circle cx="70" cy="176" r="4" fill="#6EE7B7"/>
+  <circle cx="186" cy="176" r="4" fill="#6EE7B7"/>
+  
+  <!-- Text -->
+  <text x="128" y="210" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#34D399" text-anchor="middle">MEDICAL</text>
+</svg>

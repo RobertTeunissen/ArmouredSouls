@@ -1,0 +1,29 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#1F2937" stroke="#06B6D4" stroke-width="4"/>
+  
+  <!-- Robot leg/mobility icon -->
+  <!-- Upper leg -->
+  <rect x="100" y="80" width="30" height="50" rx="6" fill="#06B6D4"/>
+  
+  <!-- Knee joint -->
+  <circle cx="115" cy="130" r="12" fill="#22D3EE"/>
+  
+  <!-- Lower leg -->
+  <rect x="100" y="130" width="30" height="55" rx="6" fill="#0EA5E9"/>
+  
+  <!-- Foot -->
+  <rect x="95" y="180" width="40" height="15" rx="4" fill="#22D3EE"/>
+  
+  <!-- Movement arrows -->
+  <path d="M 150 100 L 170 100 L 165 95 M 170 100 L 165 105" stroke="#22D3EE" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 150 150 L 170 150 L 165 145 M 170 150 L 165 155" stroke="#22D3EE" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Speed lines -->
+  <line x1="60" y1="110" x2="80" y2="110" stroke="#22D3EE" stroke-width="2"/>
+  <line x1="60" y1="125" x2="85" y2="125" stroke="#22D3EE" stroke-width="2"/>
+  <line x1="60" y1="140" x2="80" y2="140" stroke="#22D3EE" stroke-width="2"/>
+  
+  <!-- Text -->
+  <text x="128" y="220" font-family="Arial, sans-serif" font-size="17" font-weight="bold" fill="#22D3EE" text-anchor="middle">MOBILITY</text>
+</svg>
