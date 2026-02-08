@@ -111,12 +111,12 @@ describe('Stance Modifiers', () => {
       
       // +15% to combatPower: 20 * 1.15 = 23
       expect(stats.combatPower).toBe(23);
-      // +10% to attackSpeed: 15 * 1.10 = 16.5 -> 16
-      expect(stats.attackSpeed).toBe(16);
-      // -10% to counterProtocols: 15 * 0.90 = 13.5 -> 13
-      expect(stats.counterProtocols).toBe(13);
-      // -10% to evasionThrusters: 18 * 0.90 = 16.2 -> 16
-      expect(stats.evasionThrusters).toBe(16);
+      // +10% to attackSpeed: 15 * 1.10 = 16.5 (rounded to 2 decimals)
+      expect(stats.attackSpeed).toBe(16.5);
+      // -10% to counterProtocols: 15 * 0.90 = 13.5 (rounded to 2 decimals)
+      expect(stats.counterProtocols).toBe(13.5);
+      // -10% to evasionThrusters: 18 * 0.90 = 16.2 (rounded to 2 decimals)
+      expect(stats.evasionThrusters).toBe(16.2);
     });
 
     it('should calculate defensive stance modifiers correctly', () => {
@@ -132,12 +132,12 @@ describe('Stance Modifiers', () => {
       
       // +15% to armorPlating: 20 * 1.15 = 23
       expect(stats.armorPlating).toBe(23);
-      // +15% to counterProtocols: 15 * 1.15 = 17.25 -> 17
-      expect(stats.counterProtocols).toBe(17);
+      // +15% to counterProtocols: 15 * 1.15 = 17.25 (rounded to 2 decimals)
+      expect(stats.counterProtocols).toBe(17.25);
       // -10% to combatPower: 20 * 0.90 = 18
       expect(stats.combatPower).toBe(18);
-      // -10% to attackSpeed: 15 * 0.90 = 13.5 -> 13
-      expect(stats.attackSpeed).toBe(13);
+      // -10% to attackSpeed: 15 * 0.90 = 13.5 (rounded to 2 decimals)
+      expect(stats.attackSpeed).toBe(13.5);
     });
 
     it('should not apply modifiers for balanced stance', () => {
@@ -164,8 +164,8 @@ describe('Stance Modifiers', () => {
       
       const stats = calculateEffectiveStatsWithStance(robot);
       
-      // Should be 28 (20 * 1.25 * 1.15 = 28.75 -> 28)
-      expect(stats.combatPower).toBe(28);
+      // Should be 28.75 (20 * 1.25 * 1.15 = 28.75, rounded to 2 decimals)
+      expect(stats.combatPower).toBe(28.75);
     });
   });
 });
