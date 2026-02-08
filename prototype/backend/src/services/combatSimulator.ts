@@ -97,11 +97,13 @@ function random(min: number, max: number): number {
  */
 function getEffectiveAttribute(
   robot: RobotWithWeapons,
-  baseAttribute: number | string,
+  baseAttribute: number | string | { toNumber(): number },
   hand: 'main' | 'offhand',
   bonusField: keyof Weapon
 ): number {
-  const baseValue = Number(baseAttribute);
+  const baseValue = typeof baseAttribute === 'object' && 'toNumber' in baseAttribute 
+    ? baseAttribute.toNumber() 
+    : Number(baseAttribute);
   const weapon = hand === 'main' ? robot.mainWeapon?.weapon : robot.offhandWeapon?.weapon;
   
   if (!weapon || !(bonusField in weapon)) {

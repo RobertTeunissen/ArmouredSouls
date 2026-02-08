@@ -484,7 +484,7 @@ async function updateRobotStats(
     ? (battle.winnerId === battle.robot1Id ? battle.winnerReward : battle.loserReward)
     : (battle.winnerId === battle.robot2Id ? battle.winnerReward : battle.loserReward);
   
-  if (reward > 0) {
+  if (reward !== null && reward > 0) {
     await prisma.user.update({
       where: { id: robot.userId },
       data: {

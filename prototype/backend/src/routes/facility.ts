@@ -57,7 +57,7 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
     }
 
     // Get or create facility
-    let facility = await prisma.facility.findUnique({
+    const facility = await prisma.facility.findUnique({
       where: {
         userId_facilityType: {
           userId,
