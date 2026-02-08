@@ -64,6 +64,7 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   stance: 'balanced',
   mainWeaponId: null,
   offhandWeaponId: null,
+  cyclesInCurrentLeague: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,

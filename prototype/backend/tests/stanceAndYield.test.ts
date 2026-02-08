@@ -143,8 +143,8 @@ describe('Stance Modifiers', () => {
     it('should not apply modifiers for balanced stance', () => {
       const robot = createMockRobot({ 
         stance: 'balanced',
-        combatPower: 20,
-        attackSpeed: 15,
+        combatPower: new Prisma.Decimal(20),
+        attackSpeed: new Prisma.Decimal(15),
       });
       
       const stats = calculateEffectiveStatsWithStance(robot);
@@ -157,7 +157,7 @@ describe('Stance Modifiers', () => {
       const robot = createMockRobot({ 
         stance: 'offensive',
         loadoutType: 'two_handed',
-        combatPower: 20, // base
+        combatPower: new Prisma.Decimal(20), // base
         // two_handed gives +25% combatPower: 20 * 1.25 = 25
         // offensive gives +15% combatPower: 25 * 1.15 = 28.75 -> 28
       });
