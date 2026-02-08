@@ -18,19 +18,57 @@ app.use('/api/finances', financesRoutes);
 
 describe('Finances Routes', () => {
   let testUser: any;
+  let testRobot: any;
   let authToken: string;
 
   beforeAll(async () => {
     await prisma.$connect();
     
-    // Use existing test user from seed data
-    testUser = await prisma.user.findFirst({
-      where: { username: 'player1' },
+    // Create test user for this test suite
+    testUser = await prisma.user.create({
+      data: {
+        username: `test_finances_${Date.now()}`,
+        passwordHash: '$2b$10$abcdefghijklmnopqrstuv', // hashed 'password'
+        prestige: 1000,
+        currency: 5000,
+      },
     });
 
-    if (!testUser) {
-      throw new Error('Test user player1 not found - ensure database is seeded');
-    }
+    // Create a test robot
+    testRobot = await prisma.robot.create({
+      data: {
+        name: `TestRobot_${Date.now()}`,
+        userId: testUser.id,
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 10,
+        maxShield: 10,
+        // All 23 attributes set to 5.0
+        combatPower: 5,
+        targetingSystems: 5,
+        criticalSystems: 5,
+        penetration: 5,
+        weaponControl: 5,
+        attackSpeed: 5,
+        armorPlating: 5,
+        shieldCapacity: 5,
+        evasionThrusters: 5,
+        damageDampeners: 5,
+        counterProtocols: 5,
+        hullIntegrity: 5,
+        servoMotors: 5,
+        gyroStabilizers: 5,
+        hydraulicSystems: 5,
+        powerCore: 5,
+        combatAlgorithms: 5,
+        threatAnalysis: 5,
+        adaptiveAI: 5,
+        logicCores: 5,
+        syncProtocols: 5,
+        supportSystems: 5,
+        formationTactics: 5,
+      },
+    });
 
     // Generate JWT token
     authToken = jwt.sign(
@@ -40,6 +78,13 @@ describe('Finances Routes', () => {
   });
 
   afterAll(async () => {
+    // Cleanup: delete test robot and user
+    if (testRobot) {
+      await prisma.robot.delete({ where: { id: testRobot.id } }).catch(() => {});
+    }
+    if (testUser) {
+      await prisma.user.delete({ where: { id: testUser.id } }).catch(() => {});
+    }
     await prisma.$disconnect();
   });
 
