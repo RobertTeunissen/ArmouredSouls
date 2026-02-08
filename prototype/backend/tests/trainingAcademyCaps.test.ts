@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import app from './testApp';
 
@@ -91,7 +91,7 @@ describe('Training Academy Cap Enforcement', () => {
       // First upgrade to level 10
       await prisma.robot.update({
         where: { id: testRobot.id },
-        data: { combatPower: 10 },
+        data: { combatPower: new Prisma.Decimal(10) },
       });
 
       // Try to upgrade to level 11
@@ -122,7 +122,7 @@ describe('Training Academy Cap Enforcement', () => {
       // Update robot to level 14
       await prisma.robot.update({
         where: { id: testRobot.id },
-        data: { combatPower: 14 },
+        data: { combatPower: new Prisma.Decimal(14) },
       });
 
       // Try to upgrade to level 15
@@ -144,7 +144,7 @@ describe('Training Academy Cap Enforcement', () => {
       // Update robot to level 15
       await prisma.robot.update({
         where: { id: testRobot.id },
-        data: { combatPower: 15 },
+        data: { combatPower: new Prisma.Decimal(15) },
       });
 
       // Try to upgrade to level 16
@@ -292,7 +292,7 @@ describe('Training Academy Cap Enforcement', () => {
       // Update robot to level 49
       await prisma.robot.update({
         where: { id: testRobot.id },
-        data: { combatPower: 49 },
+        data: { combatPower: new Prisma.Decimal(49) },
       });
 
       // Try to upgrade to level 50
@@ -314,7 +314,7 @@ describe('Training Academy Cap Enforcement', () => {
       // Update robot to level 50
       await prisma.robot.update({
         where: { id: testRobot.id },
-        data: { combatPower: 50 },
+        data: { combatPower: new Prisma.Decimal(50) },
       });
 
       // Try to upgrade to level 51

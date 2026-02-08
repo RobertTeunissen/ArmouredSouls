@@ -94,6 +94,14 @@ Thumbs.db
 # CI/CD
 .github/workflows/*.disabled
 
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+
+# ESLint cache
+.eslintcache
+
 # Mobile
 *.apk
 *.aab

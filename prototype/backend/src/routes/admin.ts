@@ -5,6 +5,7 @@ import { runMatchmaking } from '../services/matchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';
 import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
+import { calculateMaxHP } from '../utils/robotCalculations';
 import { PrismaClient } from '@prisma/client';
 import tournamentRoutes from './adminTournaments';
 import { 
@@ -204,9 +205,6 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
 router.post('/recalculate-hp', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
     console.log('[Admin] Recalculating HP for all robots using new formula...');
-
-    // Import calculateMaxHP function
-    const { calculateMaxHP } = require('../utils/robotCalculations');
 
     // Get all robots
     const robots = await prisma.robot.findMany({

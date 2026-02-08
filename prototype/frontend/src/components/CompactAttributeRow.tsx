@@ -1,4 +1,4 @@
-import React from 'react';
+// React imported for JSX transform (no longer needed in React 18)
 import { calculateAttributeBonus } from '../utils/robotStats';
 
 interface WeaponInventory {

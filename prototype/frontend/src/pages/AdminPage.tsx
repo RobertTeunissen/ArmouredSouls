@@ -199,6 +199,12 @@ interface CycleResult {
   repair?: {
     robotsRepaired: number;
   };
+  repairPreTournament?: {
+    robotsRepaired: number;
+  };
+  repairPreLeague?: {
+    robotsRepaired: number;
+  };
   matchmaking?: {
     matchesCreated: number;
   };
@@ -208,6 +214,18 @@ interface CycleResult {
     failedBattles: number;
     byeBattles: number;
     errors: string[];
+  };
+  tournaments?: {
+    executed?: number;
+    completed?: number;
+    failed?: number;
+    tournamentsExecuted?: number;
+    roundsExecuted?: number;
+    matchesExecuted?: number;
+    tournamentsCompleted?: number;
+    tournamentsCreated?: number;
+    errors?: string[];
+    error?: string;
   };
   finances?: {
     usersProcessed: number;

@@ -7,7 +7,7 @@ import {
   calculateAttributeSum,
   STANCE_MODIFIERS,
 } from '../src/utils/robotCalculations';
-import { Robot, WeaponInventory, Weapon } from '@prisma/client';
+import { Robot, WeaponInventory, Weapon, Prisma } from '@prisma/client';
 
 // Mock robot data
 const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
@@ -16,29 +16,29 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   name: 'TestBot',
   frameId: 1,
   paintJob: null,
-  combatPower: 20,
-  targetingSystems: 15,
-  criticalSystems: 10,
-  penetration: 10,
-  weaponControl: 10,
-  attackSpeed: 15,
-  armorPlating: 20,
-  shieldCapacity: 10,
-  evasionThrusters: 18,
-  damageDampeners: 10,
-  counterProtocols: 15,
-  hullIntegrity: 25,
-  servoMotors: 10,
-  gyroStabilizers: 10,
-  hydraulicSystems: 10,
-  powerCore: 10,
-  combatAlgorithms: 10,
-  threatAnalysis: 10,
-  adaptiveAI: 10,
-  logicCores: 10,
-  syncProtocols: 10,
-  supportSystems: 10,
-  formationTactics: 10,
+  combatPower: new Prisma.Decimal(20),
+  targetingSystems: new Prisma.Decimal(15),
+  criticalSystems: new Prisma.Decimal(10),
+  penetration: new Prisma.Decimal(10),
+  weaponControl: new Prisma.Decimal(10),
+  attackSpeed: new Prisma.Decimal(15),
+  armorPlating: new Prisma.Decimal(20),
+  shieldCapacity: new Prisma.Decimal(10),
+  evasionThrusters: new Prisma.Decimal(18),
+  damageDampeners: new Prisma.Decimal(10),
+  counterProtocols: new Prisma.Decimal(15),
+  hullIntegrity: new Prisma.Decimal(25),
+  servoMotors: new Prisma.Decimal(10),
+  gyroStabilizers: new Prisma.Decimal(10),
+  hydraulicSystems: new Prisma.Decimal(10),
+  powerCore: new Prisma.Decimal(10),
+  combatAlgorithms: new Prisma.Decimal(10),
+  threatAnalysis: new Prisma.Decimal(10),
+  adaptiveAI: new Prisma.Decimal(10),
+  logicCores: new Prisma.Decimal(10),
+  syncProtocols: new Prisma.Decimal(10),
+  supportSystems: new Prisma.Decimal(10),
+  formationTactics: new Prisma.Decimal(10),
   currentHP: 250,
   maxHP: 250,
   currentShield: 20,
@@ -47,6 +47,7 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   elo: 1200,
   totalBattles: 0,
   wins: 0,
+  draws: 0,
   losses: 0,
   damageDealtLifetime: 0,
   damageTakenLifetime: 0,
@@ -54,6 +55,7 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   currentLeague: 'bronze',
   leagueId: 'bronze_1',
   leaguePoints: 0,
+  cyclesInCurrentLeague: 0,
   fame: 0,
   titles: null,
   repairCost: 0,
@@ -99,50 +101,50 @@ describe('Stance Modifiers', () => {
     it('should calculate offensive stance modifiers correctly', () => {
       const robot = createMockRobot({ 
         stance: 'offensive',
-        combatPower: 20,
-        attackSpeed: 15,
-        counterProtocols: 15,
-        evasionThrusters: 18,
+        combatPower: new Prisma.Decimal(20),
+        attackSpeed: new Prisma.Decimal(15),
+        counterProtocols: new Prisma.Decimal(15),
+        evasionThrusters: new Prisma.Decimal(18),
       });
       
       const stats = calculateEffectiveStatsWithStance(robot);
       
       // +15% to combatPower: 20 * 1.15 = 23
       expect(stats.combatPower).toBe(23);
-      // +10% to attackSpeed: 15 * 1.10 = 16.5 -> 16
-      expect(stats.attackSpeed).toBe(16);
-      // -10% to counterProtocols: 15 * 0.90 = 13.5 -> 13
-      expect(stats.counterProtocols).toBe(13);
-      // -10% to evasionThrusters: 18 * 0.90 = 16.2 -> 16
-      expect(stats.evasionThrusters).toBe(16);
+      // +10% to attackSpeed: 15 * 1.10 = 16.5 (rounded to 2 decimals)
+      expect(stats.attackSpeed).toBe(16.5);
+      // -10% to counterProtocols: 15 * 0.90 = 13.5 (rounded to 2 decimals)
+      expect(stats.counterProtocols).toBe(13.5);
+      // -10% to evasionThrusters: 18 * 0.90 = 16.2 (rounded to 2 decimals)
+      expect(stats.evasionThrusters).toBe(16.2);
     });
 
     it('should calculate defensive stance modifiers correctly', () => {
       const robot = createMockRobot({ 
         stance: 'defensive',
-        armorPlating: 20,
-        counterProtocols: 15,
-        combatPower: 20,
-        attackSpeed: 15,
+        armorPlating: new Prisma.Decimal(20),
+        counterProtocols: new Prisma.Decimal(15),
+        combatPower: new Prisma.Decimal(20),
+        attackSpeed: new Prisma.Decimal(15),
       });
       
       const stats = calculateEffectiveStatsWithStance(robot);
       
       // +15% to armorPlating: 20 * 1.15 = 23
       expect(stats.armorPlating).toBe(23);
-      // +15% to counterProtocols: 15 * 1.15 = 17.25 -> 17
-      expect(stats.counterProtocols).toBe(17);
+      // +15% to counterProtocols: 15 * 1.15 = 17.25 (rounded to 2 decimals)
+      expect(stats.counterProtocols).toBe(17.25);
       // -10% to combatPower: 20 * 0.90 = 18
       expect(stats.combatPower).toBe(18);
-      // -10% to attackSpeed: 15 * 0.90 = 13.5 -> 13
-      expect(stats.attackSpeed).toBe(13);
+      // -10% to attackSpeed: 15 * 0.90 = 13.5 (rounded to 2 decimals)
+      expect(stats.attackSpeed).toBe(13.5);
     });
 
     it('should not apply modifiers for balanced stance', () => {
       const robot = createMockRobot({ 
         stance: 'balanced',
-        combatPower: 20,
-        attackSpeed: 15,
+        combatPower: new Prisma.Decimal(20),
+        attackSpeed: new Prisma.Decimal(15),
       });
       
       const stats = calculateEffectiveStatsWithStance(robot);
@@ -155,15 +157,15 @@ describe('Stance Modifiers', () => {
       const robot = createMockRobot({ 
         stance: 'offensive',
         loadoutType: 'two_handed',
-        combatPower: 20, // base
+        combatPower: new Prisma.Decimal(20), // base
         // two_handed gives +25% combatPower: 20 * 1.25 = 25
         // offensive gives +15% combatPower: 25 * 1.15 = 28.75 -> 28
       });
       
       const stats = calculateEffectiveStatsWithStance(robot);
       
-      // Should be 28 (20 * 1.25 * 1.15 = 28.75 -> 28)
-      expect(stats.combatPower).toBe(28);
+      // Should be 28.75 (20 * 1.25 * 1.15 = 28.75, rounded to 2 decimals)
+      expect(stats.combatPower).toBe(28.75);
     });
   });
 });
@@ -273,29 +275,29 @@ describe('Repair Cost Calculations', () => {
   describe('calculateAttributeSum', () => {
     it('should sum all 23 attributes correctly', () => {
       const robot = createMockRobot({
-        combatPower: 10,
-        targetingSystems: 10,
-        criticalSystems: 10,
-        penetration: 10,
-        weaponControl: 10,
-        attackSpeed: 10,
-        armorPlating: 10,
-        shieldCapacity: 10,
-        evasionThrusters: 10,
-        damageDampeners: 10,
-        counterProtocols: 10,
-        hullIntegrity: 10,
-        servoMotors: 10,
-        gyroStabilizers: 10,
-        hydraulicSystems: 10,
-        powerCore: 10,
-        combatAlgorithms: 10,
-        threatAnalysis: 10,
-        adaptiveAI: 10,
-        logicCores: 10,
-        syncProtocols: 10,
-        supportSystems: 10,
-        formationTactics: 10,
+        combatPower: new Prisma.Decimal(10),
+        targetingSystems: new Prisma.Decimal(10),
+        criticalSystems: new Prisma.Decimal(10),
+        penetration: new Prisma.Decimal(10),
+        weaponControl: new Prisma.Decimal(10),
+        attackSpeed: new Prisma.Decimal(10),
+        armorPlating: new Prisma.Decimal(10),
+        shieldCapacity: new Prisma.Decimal(10),
+        evasionThrusters: new Prisma.Decimal(10),
+        damageDampeners: new Prisma.Decimal(10),
+        counterProtocols: new Prisma.Decimal(10),
+        hullIntegrity: new Prisma.Decimal(10),
+        servoMotors: new Prisma.Decimal(10),
+        gyroStabilizers: new Prisma.Decimal(10),
+        hydraulicSystems: new Prisma.Decimal(10),
+        powerCore: new Prisma.Decimal(10),
+        combatAlgorithms: new Prisma.Decimal(10),
+        threatAnalysis: new Prisma.Decimal(10),
+        adaptiveAI: new Prisma.Decimal(10),
+        logicCores: new Prisma.Decimal(10),
+        syncProtocols: new Prisma.Decimal(10),
+        supportSystems: new Prisma.Decimal(10),
+        formationTactics: new Prisma.Decimal(10),
       });
       
       expect(calculateAttributeSum(robot)).toBe(230); // 23 * 10
@@ -303,9 +305,9 @@ describe('Repair Cost Calculations', () => {
 
     it('should handle different attribute values', () => {
       const robot = createMockRobot({
-        combatPower: 25,
-        targetingSystems: 30,
-        criticalSystems: 15,
+        combatPower: new Prisma.Decimal(25),
+        targetingSystems: new Prisma.Decimal(30),
+        criticalSystems: new Prisma.Decimal(15),
         // ... rest default to lower values
       });
       

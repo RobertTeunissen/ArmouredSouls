@@ -1,0 +1,148 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+# Set minimal permissions by default, override per job if needed
+permissions:
+  contents: read
+
+jobs:
+  backend-tests:
+    name: Backend Tests & Lint
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write  # For PR comments if needed
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: armouredsouls_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: prototype/backend/package-lock.json
+      
+      - name: Install backend dependencies
+        working-directory: ./prototype/backend
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        working-directory: ./prototype/backend
+        run: npm run prisma:generate
+      
+      - name: Run database migrations
+        working-directory: ./prototype/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
+        run: npx prisma migrate deploy
+      
+      - name: Lint backend code
+        working-directory: ./prototype/backend
+        run: npm run lint
+      
+      - name: Build backend
+        working-directory: ./prototype/backend
+        run: npm run build
+      
+      - name: Run backend tests
+        working-directory: ./prototype/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
+          JWT_SECRET: test-secret-key-for-ci
+          NODE_ENV: test
+        run: npm test
+
+  frontend-tests:
+    name: Frontend Tests & Lint
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write  # For PR comments if needed
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: prototype/frontend/package-lock.json
+      
+      - name: Install frontend dependencies
+        working-directory: ./prototype/frontend
+        run: npm ci
+      
+      - name: Lint frontend code
+        working-directory: ./prototype/frontend
+        run: npm run lint
+      
+      - name: Build frontend
+        working-directory: ./prototype/frontend
+        run: npm run build
+      
+      - name: Install Playwright browsers
+        working-directory: ./prototype/frontend
+        run: npx playwright install --with-deps chromium
+      
+      - name: Run E2E tests
+        working-directory: ./prototype/frontend
+        run: npm run test:e2e
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: prototype/frontend/playwright-report/
+          retention-days: 30
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      security-events: write  # For security scanning results
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Audit backend dependencies
+        working-directory: ./prototype/backend
+        run: npm audit --audit-level=moderate || true
+      
+      - name: Audit frontend dependencies
+        working-directory: ./prototype/frontend
+        run: npm audit --audit-level=moderate || true
