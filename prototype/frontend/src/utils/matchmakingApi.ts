@@ -64,6 +64,8 @@ export interface BattleHistory {
     id: number;
     name: string;
     userId: number;
+    currentLeague?: string;
+    leagueId?: string;
     user: {
       username: string;
     };
@@ -72,6 +74,8 @@ export interface BattleHistory {
     id: number;
     name: string;
     userId: number;
+    currentLeague?: string;
+    leagueId?: string;
     user: {
       username: string;
     };
@@ -200,6 +204,18 @@ export const getLeagueTierColor = (tier: string): string => {
     champion: 'text-purple-500'
   };
   return colors[tier] || 'text-gray-400';
+};
+
+export const getLeagueTierIcon = (tier: string): string => {
+  const icons: { [key: string]: string } = {
+    bronze: '🥉',
+    silver: '🥈',
+    gold: '🥇',
+    platinum: '💎',
+    diamond: '💠',
+    champion: '👑',
+  };
+  return icons[tier.toLowerCase()] || '⚔️';
 };
 
 export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' | 'loss' | 'draw' => {

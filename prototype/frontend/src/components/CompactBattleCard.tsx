@@ -1,5 +1,5 @@
 import React from 'react';
-import { BattleHistory, getTournamentRoundName } from '../utils/matchmakingApi';
+import { BattleHistory, getTournamentRoundName, getLeagueTierName } from '../utils/matchmakingApi';
 import { formatDateTime } from '../utils/matchmakingApi';
 
 interface CompactBattleCardProps {
@@ -47,8 +47,10 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         : '';
       return `Tournament${roundName ? ` • ${roundName}` : ''}`;
     }
-    // For league matches, we could show league tier here if available in the data
-    // Currently the BattleHistory interface doesn't include robot league information
+    // For league matches, show league tier if available
+    if (myRobot.currentLeague) {
+      return `${getLeagueTierName(myRobot.currentLeague)} League`;
+    }
     return 'League Match';
   };
   

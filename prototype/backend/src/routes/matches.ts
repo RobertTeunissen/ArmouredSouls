@@ -295,6 +295,8 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
         id: battle.robot1.id,
         name: battle.robot1.name,
         userId: battle.robot1.userId,
+        currentLeague: battle.robot1.currentLeague,
+        leagueId: battle.robot1.leagueId,
         user: {
           username: battle.robot1.user.username,
         },
@@ -303,6 +305,8 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
         id: battle.robot2.id,
         name: battle.robot2.name,
         userId: battle.robot2.userId,
+        currentLeague: battle.robot2.currentLeague,
+        leagueId: battle.robot2.leagueId,
         user: {
           username: battle.robot2.user.username,
         },

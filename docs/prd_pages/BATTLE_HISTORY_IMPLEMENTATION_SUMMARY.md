@@ -1,7 +1,7 @@
-# Battle History Page - Priority Issues Implementation Summary
+# Battle History Page - Implementation Summary
 
 **Date**: February 9, 2026  
-**Status**: Phase 2 Complete ✅
+**Status**: Phase 1 & 2 Complete ✅
 
 ## What Was Implemented
 
@@ -45,38 +45,63 @@
   - Combined display: "Tournament Name • Round Name"
 - Improved text formatting for better readability
 
+### 4. League Tier Display ✅ COMPLETE
+**Files Modified**:
+- `prototype/backend/src/routes/matches.ts` (lines 275-320)
+- `prototype/frontend/src/utils/matchmakingApi.ts` (BattleHistory interface + getLeagueTierIcon helper)
+- `prototype/frontend/src/components/CompactBattleCard.tsx` (display logic)
+
+**Backend Changes**:
+- Added `currentLeague` and `leagueId` to robot data in battle history API response
+- No schema changes required (fields already exist in database)
+
+**Frontend Changes**:
+- Updated `BattleHistory` interface with optional league fields
+- Added `getLeagueTierIcon()` helper function for league tier icons
+- Updated `getBattleTypeText()` to display league tier (e.g., "Bronze League", "Gold League")
+
+**Display Examples**:
+- League matches: "Bronze League", "Silver League", "Gold League", etc.
+- Tournament matches: "Tournament Name • Finals", "Tournament • Semi-Finals"
+
 ## What Still Needs Work
 
-### 1. League Tier Information ⏳
-**Issue**: League tier (Bronze, Silver, Gold, etc.) not shown for league matches
-
-**Root Cause**: The `BattleHistory` interface doesn't include robot league information. The backend API response needs to be enhanced.
-
-**Required Changes**:
-1. **Backend**: Update battle history API to include `robot1.currentLeague` and `robot2.currentLeague`
-2. **Frontend**: Update `BattleHistory` interface in `matchmakingApi.ts`
-3. **Frontend**: Update `CompactBattleCard` to display league tier for league matches
-
-**Example Display**: "Bronze League" or "Gold League" instead of just "League Match"
-
-### 2. Top Bar Statistics Refresh Issue ⏳
-**Issue**: Summary statistics recalculate on every page load, including pagination
+### 1. Statistics Refresh on Pagination ⏳
+**Issue**: Summary statistics recalculate based on visible battles (current page only), not all battles.
 
 **Current Behavior**: 
 - Streaks are calculated from visible battles only (not true streaks)
 - Statistics change when paginating
+- This is documented behavior, not a bug
 
 **Potential Solutions**:
-1. Fetch all battles for statistics calculation (performance concern)
-2. Backend endpoint for aggregate statistics
-3. Document current behavior as "page-level statistics"
+1. **Backend endpoint for aggregate statistics** (recommended)
+   - Create `/api/matchmaking/history/stats` endpoint
+   - Returns total battles, W/L/D, true streak, avg ELO, total credits
+   - Separate from paginated battle list
+2. Fetch all battles for statistics calculation (performance concern)
+3. Document current behavior as "page-level statistics" (current approach)
 
 **Recommendation**: Add backend endpoint `/api/matchmaking/history/stats` that returns:
-- Total battles across all pages
-- Overall W/L/D record
-- True current streak
-- Average ELO change
-- Total credits earned
+```typescript
+{
+  totalBattles: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winRate: number;
+  avgELOChange: number;
+  totalCreditsEarned: number;
+  currentStreak: { type: 'win' | 'loss'; count: number };
+}
+```
+
+### 2. Draw Display in Statistics ⏳
+**Issue**: Unclear whether draws will be shown when count is 0
+
+**Current Behavior**: Draws only appear in record if draws > 0 (e.g., "45W / 23L / 2D")
+
+**Solution**: Document behavior or always show draws count (e.g., "45W / 23L / 0D")
 
 ### 3. URL State Persistence (Future Enhancement)
 **Feature**: Persist filter/sort state in URL query parameters
@@ -112,7 +137,9 @@
 - [x] Tournament name displays correctly
 - [x] Tournament round displays correctly
 - [x] Battle type icons show correctly
-- [ ] League tier displays (pending backend changes)
+- [x] League tier displays correctly (e.g., "Bronze League")
+- [ ] Statistics refresh issue documented
+- [ ] Draw display behavior documented
 
 ### Browser Testing
 - [ ] Chrome (desktop)
@@ -157,13 +184,14 @@
 ## Related Files
 
 ### Modified Files
-- `prototype/frontend/src/pages/BattleHistoryPage.tsx` - Main page with filters
-- `prototype/frontend/src/components/CompactBattleCard.tsx` - Enhanced battle display
-- `docs/prd_pages/PRD_BATTLE_HISTORY_PAGE.md` - Updated with implementation status
+- `prototype/frontend/src/pages/BattleHistoryPage.tsx` - Main page with filters and sorting
+- `prototype/frontend/src/components/CompactBattleCard.tsx` - Enhanced battle display with league tier
+- `prototype/backend/src/routes/matches.ts` - Added league tier to API response
+- `prototype/frontend/src/utils/matchmakingApi.ts` - Updated BattleHistory interface, added getLeagueTierIcon
+- `docs/prd_pages/PRD_BATTLE_HISTORY_PAGE.md` - Complete PRD restructure (v2.0)
 
 ### Related Files (No Changes)
-- `prototype/frontend/src/components/BattleHistorySummary.tsx` - Already implemented
-- `prototype/frontend/src/utils/matchmakingApi.ts` - API utilities
+- `prototype/frontend/src/components/BattleHistorySummary.tsx` - Already implemented in Phase 1
 
 ## GitHub Issue
 
