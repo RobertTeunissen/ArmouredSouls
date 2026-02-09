@@ -1,26 +1,35 @@
-# Armoured Souls - Complete Database Schema 
+# Complete Database Schema 
 
-**Last Updated**: January 27, 2026  
-**Status**: Complete Database Schema, implemented on January 27, 2026 with commit acbcefc
+**Project**: Armoured Souls  
+**Document Type**: Product Requirements Document (PRD)  
+**Last Updated**: February 9, 2026  
+**Status**: Current Implementation  
+**Version**: v1.2
 
-**Purpose**: This document defines the COMPLETE database schema with ALL features from ROBOT_ATTRIBUTES.md, STABLE_SYSTEM.md, and all requirements discussed
+---
+
+## Version History
+- v1.0 - First draft
+- v1.1 - Review done by Robert Teunissen
+- v1.2 - Updated to match current implementation (Decimal attributes, HP formula, tournament system, v1.2 weapon pricing)
 
 ---
 
 ## Document Purpose
 
-This is the **comprehensive future-state database schema** that includes:
-- ✅ All 23 robot attributes from ROBOT_ATTRIBUTES.md
-- ✅ All 14 facilities with 10 levels from STABLE_SYSTEM.md
-- ✅ Complete weapon system with all 11 weapons and full stats
+This document defines the **complete database schema** for Armoured Souls, including:
+- ✅ All 23 robot attributes (Decimal type for fractional values)
+- ✅ All 14 facilities with 10 levels
+- ✅ Complete weapon system (23 weapons in catalog)
 - ✅ League tracking, damage tracking, repair costs, yield thresholds, stances
 - ✅ All combat state fields (current HP, shields, damage taken)
 - ✅ Loadout system (single, weapon+shield, two-handed, dual-wield)
 - ✅ User stable system with prestige, credits, statistics
 - ✅ Battle system with complete tracking
-- ✅ Everything discussed in our conversation
+- ✅ Tournament system (single elimination, brackets, matches)
+- ✅ Matchmaking system (scheduled matches, cycle metadata)
 
-**This schema represents the COMPLETE implementation - not just what's currently working in frontend and backend, but what NEEDS to be in the database for full functionality.**
+**This schema represents the CURRENT implementation** as of February 9, 2026.
 
 ---
 
@@ -47,7 +56,7 @@ model User {
   role            String   @default("user") @db.VarChar(20)  // "user", "admin"
   
   // ===== RESOURCES =====
-  currency        Int      @default(2000000)    // Credits (₡) - Starting: ₡2,000,000
+  currency        Int      @default(3000000)    // Credits (₡) - Starting: ₡3,000,000
   prestige        Int      @default(0)          // Stable reputation (earned, never spent) - See PRD_PRESTIGE_AND_FAME.md
   
   // ===== STABLE STATISTICS (Aggregated from robots) =====
@@ -71,7 +80,6 @@ model User {
 ```
 
 **Notes**:
-- Starting currency: ₡2,000,000 (allows 1-2 robots + facilities + weapons)
 - Prestige: Earned from victories, never spent - used as unlock threshold
 - Statistics are aggregated from all robots for stable-level tracking
 - No stable-level league - leagues are per robot
@@ -90,44 +98,44 @@ model Robot {
   frameId         Int      @default(1)          // Chassis appearance ID
   paintJob        String?  @db.VarChar(100)     // Cosmetic customization
   
-  // ===== 23 CORE ATTRIBUTES (Range: 1-50) =====
+  // ===== 23 CORE ATTRIBUTES (Range: 1.00-50.00, precision 2 decimals) =====
   
   // Combat Systems (6 attributes)
-  combatPower         Int  @default(1)          // Base damage multiplier (all weapons)
-  targetingSystems    Int  @default(1)          // Hit chance, accuracy
-  criticalSystems     Int  @default(1)          // Critical hit chance
-  penetration         Int  @default(1)          // Bypasses armor/shields
-  weaponControl       Int  @default(1)          // Weapon handling, damage multiplier
-  attackSpeed         Int  @default(1)          // Cooldown reduction
+  combatPower         Decimal  @default(1.00) @db.Decimal(5, 2)  // Base damage multiplier (all weapons)
+  targetingSystems    Decimal  @default(1.00) @db.Decimal(5, 2)  // Hit chance, accuracy
+  criticalSystems     Decimal  @default(1.00) @db.Decimal(5, 2)  // Critical hit chance
+  penetration         Decimal  @default(1.00) @db.Decimal(5, 2)  // Bypasses armor/shields
+  weaponControl       Decimal  @default(1.00) @db.Decimal(5, 2)  // Weapon handling, damage multiplier
+  attackSpeed         Decimal  @default(1.00) @db.Decimal(5, 2)  // Cooldown reduction
   
   // Defensive Systems (5 attributes)
-  armorPlating        Int  @default(1)          // Physical damage reduction
-  shieldCapacity      Int  @default(1)          // Max energy shield HP
-  evasionThrusters    Int  @default(1)          // Dodge chance
-  damageDampeners     Int  @default(1)          // Critical damage reduction
-  counterProtocols    Int  @default(1)          // Counter-attack chance
+  armorPlating        Decimal  @default(1.00) @db.Decimal(5, 2)  // Physical damage reduction
+  shieldCapacity      Decimal  @default(1.00) @db.Decimal(5, 2)  // Max energy shield HP
+  evasionThrusters    Decimal  @default(1.00) @db.Decimal(5, 2)  // Dodge chance
+  damageDampeners     Decimal  @default(1.00) @db.Decimal(5, 2)  // Critical damage reduction
+  counterProtocols    Decimal  @default(1.00) @db.Decimal(5, 2)  // Counter-attack chance
   
   // Chassis & Mobility (5 attributes)
-  hullIntegrity       Int  @default(1)          // Max HP (30 + hull × 8 formula)
-  servoMotors         Int  @default(1)          // Movement speed, positioning
-  gyroStabilizers     Int  @default(1)          // Balance, reaction time
-  hydraulicSystems    Int  @default(1)          // Melee damage bonus, force
-  powerCore           Int  @default(1)          // Energy shield regen rate
+  hullIntegrity       Decimal  @default(1.00) @db.Decimal(5, 2)  // Max HP (50 + hull × 5 formula)
+  servoMotors         Decimal  @default(1.00) @db.Decimal(5, 2)  // Movement speed, positioning
+  gyroStabilizers     Decimal  @default(1.00) @db.Decimal(5, 2)  // Balance, reaction time
+  hydraulicSystems    Decimal  @default(1.00) @db.Decimal(5, 2)  // Melee damage bonus, force
+  powerCore           Decimal  @default(1.00) @db.Decimal(5, 2)  // Energy shield regen rate
   
   // AI Processing (4 attributes)
-  combatAlgorithms    Int  @default(1)          // Decision quality
-  threatAnalysis      Int  @default(1)          // Target priority, positioning
-  adaptiveAI          Int  @default(1)          // Learning over time
-  logicCores          Int  @default(1)          // Performance under pressure
+  combatAlgorithms    Decimal  @default(1.00) @db.Decimal(5, 2)  // Decision quality
+  threatAnalysis      Decimal  @default(1.00) @db.Decimal(5, 2)  // Target priority, positioning
+  adaptiveAI          Decimal  @default(1.00) @db.Decimal(5, 2)  // Learning over time
+  logicCores          Decimal  @default(1.00) @db.Decimal(5, 2)  // Performance under pressure
   
   // Team Coordination (3 attributes) - for 2v2, 3v3+ arena battles
-  syncProtocols       Int  @default(1)          // Team damage multipliers
-  supportSystems      Int  @default(1)          // Buff adjacent allies
-  formationTactics    Int  @default(1)          // Formation bonuses
+  syncProtocols       Decimal  @default(1.00) @db.Decimal(5, 2)  // Team damage multipliers
+  supportSystems      Decimal  @default(1.00) @db.Decimal(5, 2)  // Buff adjacent allies
+  formationTactics    Decimal  @default(1.00) @db.Decimal(5, 2)  // Formation bonuses
   
   // ===== COMBAT STATE =====
-  currentHP           Int                       // Current health (max = 30 + hullIntegrity × 8)
-  maxHP               Int                       // Max HP (calculated: 30 + hullIntegrity × 8)
+  currentHP           Int                       // Current health (max = 50 + hullIntegrity × 5)
+  maxHP               Int                       // Max HP (calculated: 50 + hullIntegrity × 5)
   currentShield       Int                       // Current energy shield HP
   maxShield           Int                       // Max shield (calculated: shieldCapacity × 2)
   damageTaken         Int  @default(0)          // Damage since last repair
@@ -136,17 +144,19 @@ model Robot {
   elo                 Int  @default(1200)       // Individual skill rating
   totalBattles        Int  @default(0)          // Lifetime battle count
   wins                Int  @default(0)          // Victory count
+  draws               Int  @default(0)          // Draw count
   losses              Int  @default(0)          // Defeat count
   damageDealtLifetime Int  @default(0)          // Total damage output
   damageTakenLifetime Int  @default(0)          // Total damage received
   kills               Int  @default(0)          // Opponents destroyed (0 HP)
   
   // ===== LEAGUE & FAME =====
-  currentLeague       String  @default("bronze") @db.VarChar(20)     // bronze/silver/gold/platinum/diamond/champion
-  leagueId            String  @default("bronze_1") @db.VarChar(30)   // Specific league instance (supports multiple Bronze leagues)
-  leaguePoints        Int     @default(0)                             // Points for promotion/demotion
-  fame                Int     @default(0)                             // Individual robot reputation - See PRD_PRESTIGE_AND_FAME.md
-  titles              String? @db.Text                                // Comma-separated achievements
+  currentLeague         String  @default("bronze") @db.VarChar(20)     // bronze/silver/gold/platinum/diamond/champion
+  leagueId              String  @default("bronze_1") @db.VarChar(30)   // Specific league instance (supports multiple Bronze leagues)
+  leaguePoints          Int     @default(0)                             // Points for promotion/demotion
+  cyclesInCurrentLeague Int     @default(0)                             // Number of cycles robot has been in current league
+  fame                  Int     @default(0)                             // Individual robot reputation - See PRD_PRESTIGE_AND_FAME.md
+  titles                String? @db.Text                                // Comma-separated achievements
   
   // ===== ECONOMIC STATE =====
   repairCost          Int  @default(0)          // Cost to fully repair (formula-based)
@@ -167,24 +177,35 @@ model Robot {
   updatedAt           DateTime @updatedAt
   
   // ===== RELATIONS =====
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mainWeapon          WeaponInventory?  @relation("MainWeapon", fields: [mainWeaponId], references: [id])
-  offhandWeapon       WeaponInventory?  @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
-  battlesAsRobot1     Battle[] @relation("Robot1")
-  battlesAsRobot2     Battle[] @relation("Robot2")
+  user                      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mainWeapon                WeaponInventory?  @relation("MainWeapon", fields: [mainWeaponId], references: [id])
+  offhandWeapon             WeaponInventory?  @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
+  battlesAsRobot1           Battle[]          @relation("Robot1")
+  battlesAsRobot2           Battle[]          @relation("Robot2")
+  scheduledMatchesAsRobot1  ScheduledMatch[]  @relation("ScheduledRobot1")
+  scheduledMatchesAsRobot2  ScheduledMatch[]  @relation("ScheduledRobot2")
+  tournamentsWon            Tournament[]      @relation("TournamentWinner")
+  tournamentMatchesAsRobot1 TournamentMatch[] @relation("TournamentRobot1")
+  tournamentMatchesAsRobot2 TournamentMatch[] @relation("TournamentRobot2")
+  tournamentMatchesWon      TournamentMatch[] @relation("TournamentMatchWinner")
   
+  @@unique([userId, name])
   @@index([userId])
   @@index([elo])
   @@index([currentLeague])
+  @@index([currentLeague, leagueId])
 }
 ```
 
-**Key Changes from Current Schema**:
-- Added `maxHP` and `maxShield` fields (calculated fields, stored for performance)
-- Added `mainWeaponId` and `offhandWeaponId` for loadout system
-- Added `loadoutType` field for loadout configuration
-- Added `leagueId` for multiple league instances (e.g., bronze_1, bronze_2)
-- All 23 attributes present with correct names from ROBOT_ATTRIBUTES.md
+**Key Schema Features**:
+- All 23 attributes use `Decimal(5,2)` type for fractional values (e.g., 1.50, 10.25)
+- `maxHP` and `maxShield` fields stored for performance (calculated from attributes)
+- `mainWeaponId` and `offhandWeaponId` for loadout system
+- `loadoutType` field for loadout configuration
+- `leagueId` for multiple league instances (e.g., bronze_1, bronze_2)
+- `cyclesInCurrentLeague` tracks league tenure for promotion/demotion
+- `draws` field added for draw tracking
+- Unique constraint on `[userId, name]` ensures unique robot names per user
 - Complete combat state tracking (damage, repair costs, battle readiness)
 - League and fame tracking at robot level
 
@@ -196,8 +217,14 @@ Example: Level 1→2 = ₡2,000, Level 49→50 = ₡50,000
 
 **HP Calculation**:
 ```
-maxHP = 30 + (hullIntegrity × 8)
+maxHP = 50 + (hullIntegrity × 5)
 maxShield = shieldCapacity × 2
+
+Examples:
+- Hull Integrity 1.00: HP = 50 + 5 = 55
+- Hull Integrity 10.00: HP = 50 + 50 = 100
+- Shield Capacity 1.00: Shield = 2
+- Shield Capacity 10.00: Shield = 20
 ```
 
 **Repair Cost Formula**:
@@ -221,7 +248,12 @@ repairCost = base_repair × damage_percentage × multiplier
 
 Represents weapon types available for purchase. Players buy weapons into inventory.
 
-**For complete weapon details and specifications, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+**Current Implementation**: 23 weapons across all loadout types (v1.2 pricing)
+
+**For complete weapon specifications, damage values, and pricing methodology, see:**
+- **[WEAPONS_AND_LOADOUT.md](../WEAPONS_AND_LOADOUT.md)** - Complete weapon catalog with v1.2 pricing
+- **[PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
+- **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)** - Complete seed data including all 23 weapons
 
 ```prisma
 model Weapon {
@@ -280,11 +312,18 @@ model Weapon {
 ```
 
 **Notes**:
-- This is the **catalog** of available weapons
+- This is the **catalog** of available weapons (23 total in current implementation)
 - Players purchase weapons from this catalog into their inventory
 - `loadoutType` indicates which loadouts can use this weapon
 - All 23 attribute bonuses match Robot attribute names exactly
 - Bonuses can be negative for weapon trade-offs
+- Weapons are populated during database seeding (see SEED_DATA_SPECIFICATION.md)
+
+**Weapon Distribution by Loadout Type**:
+- **Single Loadout**: 15 one-handed weapons (Practice Sword, Machine Pistol, Laser Pistol, Combat Knife, Machine Gun, Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle, Plasma Blade, Plasma Rifle, Power Sword, and others)
+- **Weapon + Shield**: 15 one-handed weapons + 3 shields (Light Shield, Combat Shield, Reactive Shield)
+- **Two-Handed**: 8 weapons (Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam)
+- **Dual-Wield**: 15 one-handed weapons (same as single loadout)
 
 ---
 
@@ -321,8 +360,9 @@ model WeaponInventory {
 1. User buys weapon from Weapon catalog (costs Credits)
 2. Creates WeaponInventory entry
 3. User equips weapon from inventory to robot via robot detail page
-4. Same weapon instance can be equipped to multiple robots (buy multiple copies if needed)
-5. Storage Facility limits how many weapons can be in inventory
+4. Each weapon instance can only be equipped to ONE robot at a time
+5. To use same weapon on multiple robots, purchase multiple copies
+6. Storage Facility limits how many weapons can be in inventory (5 base + 5 per level)
 
 ---
 
@@ -355,9 +395,9 @@ model Facility {
 
 **14 Facility Types** (from STABLE_SYSTEM.md):
 
-1. **repair_bay** - Reduces repair costs (10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 55%)
+1. **repair_bay** - Reduces repair costs (5%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 50%)
 2. **training_facility** - Reduces attribute upgrade costs (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%)
-3. **weapons_workshop** - Weapon purchase discounts (10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 55%)
+3. **weapons_workshop** - Weapon purchase discounts (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%)
 4. **research_lab** - Battle analytics, loadout presets (3→8 presets)
 5. **medical_bay** - Critical damage cost reduction (15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95%, 100%)
 6. **roster_expansion** - Robot roster slots (1→10 robots, Level 0-9)
@@ -371,7 +411,6 @@ model Facility {
 14. **income_generator** - Additional revenue streams (merchandising + streaming)
 
 **Facility Costs**: See STABLE_SYSTEM.md for complete cost breakdown per level
-
 **Operating Costs**: Each facility has daily operating cost that scales with level
 
 ---
@@ -387,28 +426,38 @@ model Battle {
   robot1Id        Int                           // First combatant
   robot2Id        Int                           // Second combatant
   winnerId        Int?                          // Winner's robot ID (null if draw)
-  battleType      String   @db.VarChar(20)     // "1v1", "2v2", "3v3", "tournament"
+  battleType      String   @db.VarChar(20)     // "league", "tournament"
   leagueType      String   @db.VarChar(20)     // "bronze", "silver", "gold", etc.
+  
+  // ===== TOURNAMENT REFERENCE (optional) =====
+  tournamentId    Int?                          // Links to tournament if this is a tournament battle
+  tournamentRound Int?                          // Round number in tournament
   
   // ===== TIME-BASED COMBAT DATA =====
   battleLog       Json                          // Complete time-based combat simulation (events with timestamps)
   durationSeconds Int                           // Battle length in seconds
   
   // ===== ECONOMIC DATA =====
-  winnerReward    Int?                          // Credits awarded to winner
-  loserReward     Int?                          // Credits awarded to loser (can earn on loss)
+  winnerReward     Int?                         // Credits awarded to winner
+  loserReward      Int?                         // Credits awarded to loser (can earn on loss)
   robot1RepairCost Int?                         // Repair cost for robot 1
   robot2RepairCost Int?                         // Repair cost for robot 2
   
+  // ===== BATTLE REWARDS TRACKING =====
+  robot1PrestigeAwarded Int @default(0)        // Prestige awarded to robot 1's user
+  robot2PrestigeAwarded Int @default(0)        // Prestige awarded to robot 2's user
+  robot1FameAwarded     Int @default(0)        // Fame awarded to robot 1
+  robot2FameAwarded     Int @default(0)        // Fame awarded to robot 2
+  
   // ===== FINAL STATE =====
-  robot1FinalHP   Int                           // Ending HP
-  robot2FinalHP   Int                           // Ending HP
+  robot1FinalHP     Int                         // Ending HP
+  robot2FinalHP     Int                         // Ending HP
   robot1FinalShield Int                         // Ending energy shield HP
   robot2FinalShield Int                         // Ending energy shield HP
-  robot1Yielded   Boolean @default(false)       // Did robot 1 surrender?
-  robot2Yielded   Boolean @default(false)       // Did robot 2 surrender?
-  robot1Destroyed Boolean @default(false)       // Did robot 1 reach 0 HP?
-  robot2Destroyed Boolean @default(false)       // Did robot 2 reach 0 HP?
+  robot1Yielded     Boolean @default(false)     // Did robot 1 surrender?
+  robot2Yielded     Boolean @default(false)     // Did robot 2 surrender?
+  robot1Destroyed   Boolean @default(false)     // Did robot 1 reach 0 HP?
+  robot2Destroyed   Boolean @default(false)     // Did robot 2 reach 0 HP?
   
   // ===== DAMAGE TRACKING =====
   robot1DamageDealt Int                         // Total damage dealt by robot 1
@@ -425,14 +474,18 @@ model Battle {
   createdAt       DateTime @default(now())
   
   // ===== RELATIONS =====
-  user            User   @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
-  robot1          Robot  @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2          Robot  @relation("Robot2", fields: [robot2Id], references: [id])
+  user              User              @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
+  robot1            Robot             @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2            Robot             @relation("Robot2", fields: [robot2Id], references: [id])
+  tournament        Tournament?       @relation("TournamentBattles", fields: [tournamentId], references: [id])
+  scheduledMatch    ScheduledMatch[]
+  tournamentMatches TournamentMatch[]
   
   @@index([userId])
   @@index([robot1Id])
   @@index([robot2Id])
   @@index([createdAt])
+  @@index([tournamentId])
 }
 ```
 
@@ -472,166 +525,155 @@ model Battle {
 
 ---
 
-## Complete Weapon Catalog (Seed Data)
+## ScheduledMatch Model
 
-All 11 weapons from [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) with complete specifications for database seeding:
+Tracks scheduled matchmaking battles for league play.
 
-### Energy Weapons
+```prisma
+model ScheduledMatch {
+  id           Int      @id @default(autoincrement())
+  robot1Id     Int                           // First combatant
+  robot2Id     Int                           // Second combatant
+  leagueType   String   @db.VarChar(20)     // "bronze", "silver", "gold", etc.
+  scheduledFor DateTime                      // When the match should be executed
+  status       String   @default("scheduled") @db.VarChar(20)  // "scheduled", "completed", "cancelled"
+  battleId     Int?                          // Links to Battle after completion
+  createdAt    DateTime @default(now())
+  
+  // ===== RELATIONS =====
+  robot1 Robot   @relation("ScheduledRobot1", fields: [robot1Id], references: [id])
+  robot2 Robot   @relation("ScheduledRobot2", fields: [robot2Id], references: [id])
+  battle Battle? @relation(fields: [battleId], references: [id])
+  
+  @@index([robot1Id])
+  @@index([robot2Id])
+  @@index([scheduledFor, status])
+  @@index([status])
+}
+```
 
-**1. Laser Rifle** (₡150,000)
-- Base Damage: 20
-- Cooldown: 3 seconds
-- Weapon Type: energy
-- Hands Required: one
-- Damage Type: energy
-- Loadout Type: single, weapon_shield, dual_wield
-- Attribute Bonuses:
-  - targetingSystemsBonus: +3
-  - weaponControlBonus: +4
-  - attackSpeedBonus: +2
-- Special: +15% accuracy bonus
-
-**2. Plasma Cannon** (₡300,000)
-- Base Damage: 40
-- Cooldown: 5 seconds
-- Weapon Type: energy
-- Hands Required: two
-- Damage Type: energy
-- Loadout Type: two_handed
-- Attribute Bonuses:
-  - combatPowerBonus: +5
-  - criticalSystemsBonus: +4
-  - powerCoreBonus: -3
-- Special: +20% vs energy shields
-
-**3. Ion Beam** (₡400,000)
-- Base Damage: 30
-- Cooldown: 4 seconds
-- Weapon Type: energy
-- Hands Required: two
-- Damage Type: energy
-- Loadout Type: two_handed
-- Attribute Bonuses:
-  - penetrationBonus: +8
-  - shieldCapacityBonus: +4
-  - attackSpeedBonus: +3
-- Special: Disables enemy energy shields for 2 seconds on crit
-
-### Ballistic Weapons
-
-**4. Machine Gun** (₡100,000)
-- Base Damage: 12
-- Cooldown: 2 seconds
-- Weapon Type: ballistic
-- Hands Required: one
-- Damage Type: ballistic
-- Loadout Type: single, weapon_shield, dual_wield
-- Attribute Bonuses:
-  - combatPowerBonus: +2
-  - attackSpeedBonus: +6
-  - weaponControlBonus: +3
-- Special: Can fire burst (3 shots at 40% damage each)
-
-**5. Railgun** (₡350,000)
-- Base Damage: 50
-- Cooldown: 6 seconds
-- Weapon Type: ballistic
-- Hands Required: two
-- Damage Type: ballistic
-- Loadout Type: two_handed
-- Attribute Bonuses:
-  - penetrationBonus: +12
-  - targetingSystemsBonus: +5
-  - attackSpeedBonus: -3
-- Special: Ignores 50% of armor
-
-**6. Shotgun** (₡120,000)
-- Base Damage: 35
-- Cooldown: 4 seconds
-- Weapon Type: ballistic
-- Hands Required: two
-- Damage Type: ballistic
-- Loadout Type: two_handed
-- Attribute Bonuses:
-  - combatPowerBonus: +4
-  - criticalSystemsBonus: +5
-  - targetingSystemsBonus: -3
-- Special: +30% damage at close range
-
-### Melee Weapons
-
-**7. Power Sword** (₡180,000)
-- Base Damage: 28
-- Cooldown: 3 seconds
-- Weapon Type: melee
-- Hands Required: one
-- Damage Type: melee
-- Loadout Type: single, weapon_shield, dual_wield
-- Attribute Bonuses:
-  - hydraulicSystemsBonus: +6
-  - counterProtocolsBonus: +5
-  - gyroStabilizersBonus: +3
-- Special: +25% counter damage
-
-**8. Hammer** (₡200,000)
-- Base Damage: 42
-- Cooldown: 5 seconds
-- Weapon Type: melee
-- Hands Required: two
-- Damage Type: melee
-- Loadout Type: two_handed
-- Attribute Bonuses:
-  - hydraulicSystemsBonus: +8
-  - combatPowerBonus: +6
-  - servoMotorsBonus: -2
-- Special: High impact force
-
-**9. Plasma Blade** (₡250,000)
-- Base Damage: 24
-- Cooldown: 2.5 seconds
-- Weapon Type: melee
-- Hands Required: one
-- Damage Type: melee
-- Loadout Type: single, weapon_shield, dual_wield
-- Attribute Bonuses:
-  - hydraulicSystemsBonus: +4
-  - attackSpeedBonus: +5
-  - criticalSystemsBonus: +3
-- Special: Burns through energy shields (70% effective vs shields)
-
-### Shield Weapons
-
-**10. Combat Shield** (₡100,000)
-- Base Damage: 0
-- Cooldown: 0 (defensive only)
-- Weapon Type: shield
-- Hands Required: shield
-- Damage Type: none
-- Loadout Type: weapon_shield
-- Attribute Bonuses:
-  - armorPlatingBonus: +8
-  - counterProtocolsBonus: +6
-  - evasionThrustersBonus: -2
-  - shieldCapacityBonus: +5
-- Special: 25% chance to block ranged attacks
+**Notes**:
+- Created by matchmaking system during cycle execution
+- Links to Battle record after match is executed
+- Status tracks lifecycle: scheduled → completed/cancelled
 
 ---
 
-## Seed Data Specification
+## CycleMetadata Model
 
-### Users (6 test accounts)
-- **admin** / admin123 (role: admin, credits: ₡10,000,000, prestige: 50000)
-- **player1** / password123 (role: user, credits: ₡2,000,000, prestige: 0)
-- **player2** / password123 (role: user, credits: ₡2,000,000, prestige: 0)
-- **player3** / password123 (role: user, credits: ₡2,000,000, prestige: 0)
-- **player4** / password123 (role: user, credits: ₡2,000,000, prestige: 0)
-- **player5** / password123 (role: user, credits: ₡2,000,000, prestige: 0)
+Singleton table tracking global cycle state for admin operations.
 
-### Weapons (11 weapons from catalog above)
-All 11 weapons should be created in the Weapon table with complete specifications
+```prisma
+model CycleMetadata {
+  id          Int       @id @default(1)      // Singleton: always ID 1
+  totalCycles Int       @default(0)          // Total cycles executed
+  lastCycleAt DateTime?                      // Timestamp of last cycle
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+```
 
-### Facilities
-Create on-demand when user upgrades (starts at level 0 = not purchased)
+**Notes**:
+- Singleton table (only one record with id=1)
+- Tracks cycle execution for matchmaking system
+- Created during seed, auto-created if missing in admin routes
+
+---
+
+## Tournament System Models
+
+### Tournament Model
+
+Tracks competitive elimination tournaments.
+
+```prisma
+model Tournament {
+  id             Int    @id @default(autoincrement())
+  name           String @db.VarChar(100)     // "Tournament #1", "Grand Championship"
+  tournamentType String @db.VarChar(50)      // "single_elimination", "double_elimination", "swiss"
+  status         String @default("pending") @db.VarChar(20)  // "pending", "active", "completed"
+  
+  // ===== PROGRESSION TRACKING =====
+  currentRound      Int @default(1)          // Current round number (1-based)
+  maxRounds         Int                      // Total rounds (calculated from participants)
+  totalParticipants Int                      // Number of robots at start
+  
+  // ===== WINNER TRACKING =====
+  winnerId Int?                              // Winner's robot ID (null until completed)
+  
+  // ===== TIMESTAMPS =====
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?                      // When first round started
+  completedAt DateTime?                      // When tournament finished
+  
+  // ===== RELATIONS =====
+  winner  Robot?            @relation("TournamentWinner", fields: [winnerId], references: [id])
+  matches TournamentMatch[]
+  battles Battle[]          @relation("TournamentBattles")
+  
+  @@index([status])
+  @@index([winnerId])
+}
+```
+
+### TournamentMatch Model
+
+Tracks individual battles within a tournament bracket.
+
+```prisma
+model TournamentMatch {
+  id           Int @id @default(autoincrement())
+  tournamentId Int                           // Parent tournament
+  round        Int                           // Round number (1 = first round, 2 = quarter-finals, etc.)
+  matchNumber  Int                           // Position in round (1, 2, 3, ...)
+  
+  // ===== PARTICIPANTS =====
+  robot1Id Int?                              // Null for placeholder matches
+  robot2Id Int?                              // Null for bye matches or placeholders
+  
+  // ===== RESULT =====
+  winnerId   Int?                            // Winner's robot ID (null until completed)
+  battleId   Int?    @unique                 // Links to Battle record
+  status     String  @default("pending") @db.VarChar(20)  // "pending", "scheduled", "completed"
+  isByeMatch Boolean @default(false)         // True if robot advances without battle
+  
+  // ===== TIMESTAMPS =====
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  
+  // ===== RELATIONS =====
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  robot1     Robot?     @relation("TournamentRobot1", fields: [robot1Id], references: [id])
+  robot2     Robot?     @relation("TournamentRobot2", fields: [robot2Id], references: [id])
+  winner     Robot?     @relation("TournamentMatchWinner", fields: [winnerId], references: [id])
+  battle     Battle?    @relation(fields: [battleId], references: [id])
+  
+  @@index([tournamentId, round])
+  @@index([status])
+  @@index([robot1Id])
+  @@index([robot2Id])
+}
+```
+
+**Notes**:
+- Tournament system supports single elimination brackets
+- Bye matches handle odd-number participants
+- Each match links to a Battle record for combat details
+- Cascade delete ensures cleanup when tournament is deleted
+
+---
+
+## Seed Data
+
+For complete seed data specifications including all 23 weapons, test users, and initial data, see:
+
+**[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)**
+
+**Summary**:
+- 23 weapons in catalog (v1.2 pricing)
+- 144 user accounts (admin, players, test users, attribute-focused, loadout-focused, bye-robot)
+- 471 robots for testing
+- CycleMetadata singleton initialized
 
 ---
 
@@ -704,16 +746,20 @@ npx prisma db seed
 - Weapon.handsRequired: "one", "two", "shield"
 - Weapon.damageType: "energy", "ballistic", "melee", "explosive", "none"
 - Weapon.loadoutType: "single", "weapon_shield", "two_handed", "dual_wield", "any"
-- Battle.battleType: "1v1", "2v2", "3v3", "tournament"
+- Battle.battleType: "league", "tournament"
+- ScheduledMatch.status: "scheduled", "completed", "cancelled"
+- Tournament.status: "pending", "active", "completed"
+- Tournament.tournamentType: "single_elimination", "double_elimination", "swiss"
+- TournamentMatch.status: "pending", "scheduled", "completed"
 - Facility.facilityType: See 14 facility types above
 
-### Integer Ranges
-- Robot Attributes (all 23): 1-50
-- Robot.yieldThreshold: 0-50 (percentage)
-- Robot.battleReadiness: 0-100 (percentage)
-- Robot.elo: 800-2500 (typical range, no hard limits)
-- Facility.level: 0-10 (0 = not purchased, 1-10 = upgrade levels)
-- Facility.maxLevel: 10 for most facilities, 9 for roster_expansion
+### Numeric Ranges
+- Robot Attributes (all 23): 1.00-50.00 (Decimal with 2 decimal places)
+- Robot.yieldThreshold: 0-50 (percentage, integer)
+- Robot.battleReadiness: 0-100 (percentage, integer)
+- Robot.elo: 800-2500 (typical range, no hard limits, integer)
+- Facility.level: 0-10 (0 = not purchased, 1-10 = upgrade levels, integer)
+- Facility.maxLevel: 10 for most facilities, 9 for roster_expansion (integer)
 
 ---
 
@@ -741,22 +787,32 @@ These are calculated in application code:
 
 ## Future Enhancements (Not in Current Schema)
 
-These features are documented but not yet in the schema:
+These features are planned but not yet implemented:
 
-1. **Energy Barrier Shield Weapon** (₡200,000) - Not yet added to weapons
-2. **Tournament System** - Separate Tournament model
-3. **Team Battles** - 2v2, 3v3 team management
-4. **Achievement System** - Achievement tracking
-5. **Daily Income/Expense Report** - Income tracking
-6. **Custom Weapon Design** - Weapon crafting system
+1. **Team Battles** - 2v2, 3v3 team management models
+2. **Achievement System** - Achievement tracking tables
+3. **Daily Income/Expense Report** - Income tracking and reporting
+4. **Custom Weapon Design** - Weapon crafting system
+5. **Double Elimination Tournaments** - Extended tournament bracket support
+6. **Swiss Tournament Format** - Round-robin style tournament support
 
 ---
 
-## References
+## Related Documentation
 
-- **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Complete weapon system, loadout configurations, weapon catalog
-- **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Complete attribute system, combat formulas
-- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: ⭐ **AUTHORITATIVE** - Prestige and Fame system specification
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: 14 facilities, prestige formulas, daily income/expenses
-- **[ROADMAP.md](ROADMAP.md)**: Implementation phases and priorities
+### Core Schema Documents
+- **[COMBAT_FORMULAS.md](COMBAT_FORMULAS.md)** - Combat calculations and damage formulas
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture overview
+- **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)** - Complete seed data specification
+
+### Feature Specifications
+- **[WEAPONS_AND_LOADOUT.md](../WEAPONS_AND_LOADOUT.md)** - Complete weapon system, loadout configurations
+- **[ROBOT_ATTRIBUTES.md](../ROBOT_ATTRIBUTES.md)** - 23 robot attributes and combat mechanics
+- **[STABLE_SYSTEM.md](../STABLE_SYSTEM.md)** - 14 facilities, prestige formulas, stable management
+- **[PRD_PRESTIGE_AND_FAME.md](../PRD_PRESTIGE_AND_FAME.md)** - Prestige and Fame system specification
+
+### Implementation Details
+- **[PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Weapon pricing methodology
+- **[MATCHMAKING_SYSTEM_GUIDE.md](../MATCHMAKING_SYSTEM_GUIDE.md)** - Matchmaking and cycle system
+- **[ROADMAP.md](../ROADMAP.md)** - Implementation phases and priorities
 
