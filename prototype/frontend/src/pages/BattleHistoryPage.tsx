@@ -25,10 +25,21 @@ function BattleHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [battleFilter, setBattleFilter] = useState<'overall' | 'league' | 'tournament'>('overall');
+  
+  // Filter and sort state
+  const [outcomeFilter, setOutcomeFilter] = useState<'all' | 'win' | 'loss' | 'draw'>('all');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'elo-desc' | 'elo-asc' | 'reward-desc' | 'reward-asc'>('date-desc');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [resultsPerPage, setResultsPerPage] = useState(20);
 
   useEffect(() => {
     fetchBattles(1);
   }, []);
+
+  useEffect(() => {
+    // Refetch when results per page changes
+    fetchBattles(1);
+  }, [resultsPerPage]);
 
   const fetchBattles = async (page: number) => {
     try {
@@ -44,7 +55,7 @@ function BattleHistoryPage() {
       }
       
       console.log('[BattleHistory] Fetching battle history, page:', page);
-      const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, 20);
+      const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, resultsPerPage);
       console.log('[BattleHistory] Received data:', data);
       
       setBattles(data.data);
@@ -211,6 +222,73 @@ function BattleHistoryPage() {
     };
   }, [battles]);
 
+  // Filter and sort battles
+  const filteredAndSortedBattles = useMemo(() => {
+    let filtered = battles;
+
+    // Apply battle type filter (league/tournament)
+    if (battleFilter === 'league') {
+      filtered = filtered.filter(b => b.battleType !== 'tournament');
+    } else if (battleFilter === 'tournament') {
+      filtered = filtered.filter(b => b.battleType === 'tournament');
+    }
+
+    // Apply outcome filter
+    if (outcomeFilter !== 'all') {
+      filtered = filtered.filter(b => {
+        const { outcome } = getMatchData(b);
+        return outcome === outcomeFilter;
+      });
+    }
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(b => {
+        const { myRobot, opponent } = getMatchData(b);
+        return (
+          myRobot.name.toLowerCase().includes(search) ||
+          opponent.name.toLowerCase().includes(search) ||
+          opponent.user.username.toLowerCase().includes(search)
+        );
+      });
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      const aData = getMatchData(a);
+      const bData = getMatchData(b);
+      
+      switch (sortBy) {
+        case 'date-desc':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'date-asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'elo-desc':
+          return bData.eloChange - aData.eloChange;
+        case 'elo-asc':
+          return aData.eloChange - bData.eloChange;
+        case 'reward-desc':
+          return getReward(b, bData.myRobotId) - getReward(a, aData.myRobotId);
+        case 'reward-asc':
+          return getReward(a, aData.myRobotId) - getReward(b, bData.myRobotId);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [battles, battleFilter, outcomeFilter, searchTerm, sortBy]);
+
+  const clearFilters = () => {
+    setOutcomeFilter('all');
+    setBattleFilter('overall');
+    setSearchTerm('');
+    setSortBy('date-desc');
+  };
+
+  const hasActiveFilters = outcomeFilter !== 'all' || battleFilter !== 'overall' || searchTerm.trim() !== '' || sortBy !== 'date-desc';
+
   if (!user) {
     return null;
   }
@@ -249,16 +327,97 @@ function BattleHistoryPage() {
               onViewChange={setBattleFilter}
             />
 
+            {/* Filter and Sort Controls */}
+            <div className="bg-[#252b38] border border-gray-700 rounded-lg p-4 mb-4">
+              <div className="flex flex-wrap gap-3">
+                {/* Outcome Filter */}
+                <select 
+                  value={outcomeFilter}
+                  onChange={(e) => setOutcomeFilter(e.target.value as any)}
+                  className="bg-[#1a1f29] border border-gray-700 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                >
+                  <option value="all">All Outcomes</option>
+                  <option value="win">Wins Only</option>
+                  <option value="loss">Losses Only</option>
+                  <option value="draw">Draws Only</option>
+                </select>
+
+                {/* Sort Control */}
+                <select 
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-[#1a1f29] border border-gray-700 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                >
+                  <option value="date-desc">Sort: Newest First</option>
+                  <option value="date-asc">Sort: Oldest First</option>
+                  <option value="elo-desc">Sort: Highest ELO Gain</option>
+                  <option value="elo-asc">Sort: Biggest ELO Loss</option>
+                  <option value="reward-desc">Sort: Highest Reward</option>
+                  <option value="reward-asc">Sort: Lowest Reward</option>
+                </select>
+
+                {/* Search Input */}
+                <input 
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search robot or opponent..."
+                  className="bg-[#1a1f29] border border-gray-700 rounded px-3 py-2 text-sm text-[#e6edf3] placeholder-[#57606a] flex-1 min-w-[200px] hover:border-[#58a6ff]/50 focus:border-[#58a6ff] focus:outline-none transition-colors"
+                />
+
+                {/* Results Per Page */}
+                <select 
+                  value={resultsPerPage}
+                  onChange={(e) => setResultsPerPage(Number(e.target.value))}
+                  className="bg-[#1a1f29] border border-gray-700 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                >
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+
+                {/* Clear Filters Button */}
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="px-4 py-2 bg-[#1a1f29] border border-gray-700 rounded text-sm text-[#8b949e] hover:bg-[#252b38] hover:text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+
+              {/* Filter Results Count */}
+              {(hasActiveFilters || filteredAndSortedBattles.length !== battles.length) && (
+                <div className="mt-3 text-sm text-[#8b949e]">
+                  Showing {filteredAndSortedBattles.length} of {battles.length} battles
+                  {battleFilter !== 'overall' && ` (${battleFilter} only)`}
+                </div>
+              )}
+            </div>
+
             {/* Battle List */}
             <div className="mb-6">
-              {battles
-                .filter((battle) => {
-                  if (battleFilter === 'overall') return true;
-                  if (battleFilter === 'league') return battle.battleType !== 'tournament';
-                  if (battleFilter === 'tournament') return battle.battleType === 'tournament';
-                  return true;
-                })
-                .map((battle) => {
+              {filteredAndSortedBattles.length === 0 ? (
+                <div className="bg-[#252b38] border border-gray-700 rounded-lg p-12 text-center">
+                  <div className="text-6xl mb-4 opacity-30">⚔️</div>
+                  <h3 className="text-xl font-bold mb-2">No Battles Found</h3>
+                  <p className="text-[#8b949e] mb-4">
+                    {hasActiveFilters 
+                      ? "Try adjusting your filters to see more results."
+                      : "Your first match is coming soon!"}
+                  </p>
+                  {hasActiveFilters && (
+                    <button 
+                      onClick={clearFilters}
+                      className="px-4 py-2 bg-[#58a6ff] hover:bg-[#58a6ff]/80 rounded transition-colors text-white font-medium"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filteredAndSortedBattles.map((battle) => {
                   const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
                   const reward = getReward(battle, myRobotId);
 
@@ -273,9 +432,10 @@ function BattleHistoryPage() {
                       myRobotId={myRobotId}
                       reward={reward}
                       onClick={() => navigate(`/battle/${battle.id}`)}
-                  />
-                );
-              })}
+                    />
+                  );
+                })
+              )}
             </div>
 
             {/* Pagination */}

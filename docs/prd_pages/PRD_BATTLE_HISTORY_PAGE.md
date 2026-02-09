@@ -2,10 +2,10 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.2  
-**Date**: February 6, 2026  
+**Version**: v1.3  
+**Date**: February 9, 2026  
 **Author**: GitHub Copilot  
-**Status**: Updated - Comments Addressed
+**Status**: Mostly Implemented - Review Comments added
 
 ---
 
@@ -18,6 +18,14 @@
   - Clarified implementation choice (compact cards over table)
   - Fixed incorrect checkmarks (Phase 2-3 features marked as not implemented)
   - Added battle type to summary statistics requirements
+- v1.3 - Additional review done as part of great documents cleanup
+- v1.4 - Priority issues implementation (February 9, 2026)
+  - ✅ Implemented filtering and sorting controls (Phase 2)
+  - ✅ Added results per page selector
+  - ✅ Implemented search functionality
+  - ✅ Added clear filters button and empty state
+  - ✅ Enhanced tournament information display
+  - ⏳ League tier display pending (requires backend changes)
 
 ---
 
@@ -26,7 +34,7 @@
 The Battle History Page (`/battle-history`) is a critical player-facing feature that provides match history, performance tracking, and strategic insights. The current implementation suffers from poor information density with large colored blocks consuming excessive vertical space, showing only 3 battles on a laptop screen. This PRD outlines comprehensive improvements to transform the page into an efficient, scannable interface that aligns with the Armoured Souls design system.
 
 **Key Goals:**
-- Dramatically improve information density (target: 15-20 battles per screen vs. current 3)
+- Dramatically improve information density (20 battles per screen)
   - **Rationale**: With 3 robots each fighting one league match and two tournament matches (9 battles/cycle), players need to see at least 15-20 battles to review 2+ full cycles at once
 - Reduce visual noise from oversized colored blocks
 - Enhance scannability with compact, tabular layout
@@ -36,9 +44,13 @@ The Battle History Page (`/battle-history`) is a critical player-facing feature 
 - Improve mobile responsiveness
 - Maintain quick access to detailed battle reports
 
-
 **Problem Statement:**  
 Players need to review multiple battles to analyze performance patterns, but the current UI only shows 3 battles per screen on a laptop due to large green/red blocks. This forces excessive scrolling and makes pattern recognition difficult.
+
+
+## References
+- **Design System**: [docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md](../docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md)
+- **Example PRD**: [docs/PRD_ADMIN_PAGE_UX_IMPROVEMENTS.md](../docs/PRD_ADMIN_PAGE_UX_IMPROVEMENTS.md)
 
 ---
 
@@ -60,12 +72,7 @@ The Battle History Page displays a paginated list of a player's robot battle res
 - Opponent's username
 - ELO change (with +/- indicator)
 - Reward amount (credits)
-- Battle duration
-- ELO progression (before → after)
-- Final HP percentages (both robots)
-- Battle ID
 - Tournament information (if applicable)
-- "View Detailed Battle Report" button
 
 ### Current Implementation Strengths
 
@@ -78,77 +85,66 @@ The Battle History Page displays a paginated list of a player's robot battle res
 
 ### Current Pain Points & Priority Issues
 
-#### 1. **Poor Information Density** ⭐ CRITICAL PRIORITY
-- **Issue**: Each battle occupies ~250-300px of vertical height due to:
-  - Large padding (p-4 on outer container)
-  - Full-width layout with extensive spacing
-  - Multi-row layout for information that could be columnar
-  - Oversized text (2xl for outcome)
-  - Extensive detailed stats section
-- **Impact**: Only 3 battles visible on 1080p laptop screen (1920×1080)
-- **User Feedback**: "Not practical" - cannot see enough battles at once
-- **Solution**: Compact table-based or card-based layout targeting 80-100px per battle
+#### 1. **Limited Filtering or Sorting** - ✅ IMPLEMENTED
+- **Type**: Can filter on League or Tournament, Outcome (Win/Loss/Draw), and search by robot/opponent name
+- **Features Added**:
+  - Outcome filter (All/Wins/Losses/Draws)
+  - Battle type filter (Overall/League/Tournament) - integrated with summary toggle
+  - Sort controls (Date newest/oldest, ELO highest/lowest, Reward highest/lowest)
+  - Search input (robot name, opponent name, opponent username)
+  - Results per page selector (20/50/100)
+  - Clear filters button
+  - Filter results count display
+- **Impact**: Players can now analyze specific subsets of battles
+- **Solution**: ✅ Filter controls and sorting options implemented
 
-#### 2. **Overwhelming Color Blocks** ⭐ HIGH PRIORITY
-- **Issue**: Full background colors (bg-green-900, bg-red-900) create visual noise
-- **Current Colors**:
-  - Victory: `bg-green-900 border-green-600 text-green-400`
-  - Defeat: `bg-red-900 border-red-600 text-red-400`
-  - Draw: `bg-gray-700 border-gray-500 text-gray-400`
-- **Impact**: Makes page feel "shouty" and hard to scan quickly
-- **Design System Misalignment**: Should use surface colors with subtle accent borders
-- **Solution**: Neutral background with colored left border accent (4px)
+#### 2. **Top Bar does not work like inteneded**
+- **Issue**: Top bar refreshes with every page load (also within pagination)
+  - Streaks are not really streaks / Streaks are total, not per robots
+  - Unclear whether Draws will be shown (layout does not say "0 Draws"). This needs to be documented. 
+- **Impact**: Statistics not utilized effectively
+- **Solution**: Update overview / bar
+- **GitHub Issue**: https://github.com/RobertTeunissen/ArmouredSouls/issues/152
 
-#### 3. **No Filtering or Sorting**
-- **Issue**: Cannot filter by:
-  - Outcome (wins/losses/draws)
-  - Battle type (league match vs. tournament)
-  - Date range
-  - Opponent
-  - Robot
-- **Impact**: Cannot analyze specific subsets of battles
-- **Solution**: Filter controls and sorting options
+#### 3. **Page Structure not fully implemented** - ✅ IMPLEMENTED
+- **Issue**: Page Structure as described below not completely implemented:
+  - ✅ Filter Controls implemented
+  - ✅ Sort Controls implemented
+  - ✅ Results Per Page Selector implemented
+  - ✅ Search functionality implemented
+  - ✅ Empty state with clear filters button
+- **Impact**: Design and implementation now align
+- **Solution**: ✅ Implementation updated to match design
+- **GitHub Issue**: https://github.com/RobertTeunissen/ArmouredSouls/issues/152
 
-#### 4. **Inefficient Information Layout**
-- **Issue**: Information spread across multiple rows when it could be tabular
-- **Example**: "ELO Change" section shows `1500 → 1525` which could be more compact
-- **Impact**: Wastes vertical space
-- **Solution**: Tabular layout with compact columns
+#### 4. **Statistics Differentiation** - ✅ IMPLEMENTED
+- **Issue**: Summary stats broken down by battle type
+- **Implementation**: 
+  - ✅ Overall stats (all battles combined)
+  - ✅ League match stats (W/L/D, avg ELO for league only)
+  - ✅ Tournament stats (W/L/D, avg ELO for tournament only)
+  - ✅ Tabs/toggle to switch between overall/league/tournament views
+  - ✅ Filter integration with summary toggle
+- **Impact**: Players can now see performance breakdown by battle type
+- **Solution**: ✅ Statistics differentiation fully implemented
 
-#### 5. **Missing Quick Stats Summary**
-- **Issue**: No aggregate statistics at page top
-- **Impact**: Cannot see overall performance at a glance
-- **Solution**: Summary card showing W/L/D record, average ELO change, total credits earned
-
-#### 6. **Large "View Detailed Battle Report" Button**
-- **Issue**: Full-width button for every battle adds 40-50px height
-- **Impact**: Contributes to poor density
-- **Solution**: Make entire battle row clickable or use small icon button
-
-#### 7. **Design System Misalignment**
-- **Issue**: Using Tailwind defaults (gray-900, gray-800) instead of design system colors
-- **Design System Colors**:
-  - Background: `#0a0e14` (Deep space black)
-  - Surface: `#1a1f29` (Dark panel)
-  - Surface Elevated: `#252b38` (Raised cards)
-  - Primary: `#58a6ff` (Cyan-blue)
-  - Success: `#3fb950` (Green)
-  - Warning: `#d29922` (Amber)
-  - Error: `#f85149` (Red)
-- **Solution**: Update to use design system color palette
-
-#### 8. **No Mobile Optimization**
-- **Issue**: Layout doesn't optimize well for narrow screens
-- **Impact**: Poor mobile experience
-- **Solution**: Responsive table/card switching
+#### 5. **Battle Information** - ⏳ PARTIALLY IMPLEMENTED
+- **Issues**: Not easily to see what kind of battle has been fought
+- **Implementation Status**:
+  - ✅ Battle type icons (⚔️ for league, 🏆 for tournament)
+  - ✅ Tournament name and round information displayed
+  - ⚠️ League tier information NOT available in BattleHistory data
+    - Backend needs to include robot.currentLeague in battle history response
+    - Would show "Bronze League", "Silver League", etc. for league matches
+- **Impact**: Better information at a glance for tournament battles; league tier still missing
+- **Solution**: ✅ Tournament info shown; ⏳ League tier requires backend changes
+ 
 
 ---
 
-## Proposed Battle History Page Structure
+## Battle History Page Structure
 
-### Layout Options Analysis
-
-#### Option A: Compact Table Layout (RECOMMENDED)
+### Option A: Compact Table Layout
 **Best for desktop, moderate information density, excellent scannability**
 
 ```
@@ -180,7 +176,7 @@ Sortable by: Battle type, outcome, date, ELO, duration
 - 2v2 matches (future): 👥 icon badge
 - Sorting dropdown includes "Battle Type" option 
 
-#### Option B: Compact Card Layout (ALTERNATIVE)
+#### Option B: Compact Card Layout 
 **Good for mobile, balanced approach**
 
 ```
@@ -208,10 +204,8 @@ Expected visible battles (1080p): 7-9 battles
 
 ## Detailed Design Specifications
 
-### Page Structure
-
 ```
-/battle-history Page Layout (Revised)
+/battle-history Page Layout 
 
 ├── Navigation Bar (global)
 ├── Page Header
@@ -239,8 +233,6 @@ Expected visible battles (1080p): 7-9 battles
 │   │   ├── Date/Time
 │   │   ├── ELO Change (with progression)
 │   │   ├── Reward Amount
-│   │   ├── Duration
-│   │   └── Quick Stats (HP, Battle ID)
 │   └── Empty State (if no battles match filter)
 └── Pagination Controls
     ├── Previous/Next Buttons
@@ -257,7 +249,7 @@ Expected visible battles (1080p): 7-9 battles
 
 ### Component Specifications
 
-#### 1. Summary Statistics Card
+#### 1. Summary Statistics Card - ✅ IMPLEMENTED
 
 **Purpose**: Provide at-a-glance performance overview
 
@@ -297,7 +289,7 @@ Expected visible battles (1080p): 7-9 battles
 </div>
 ```
 
-#### 2. Filter and Sort Controls
+#### 2. Filter and Sort Controls - ❌ NOT YET IMPLEMENTED
 
 **Purpose**: Allow users to narrow down battle list
 
@@ -312,6 +304,28 @@ Expected visible battles (1080p): 7-9 battles
 - **ELO Change**: Highest Gains / Highest Losses
 - **Duration**: Longest / Shortest
 - **Reward**: Highest / Lowest
+
+### Enhancements
+
+1. **Persist Filter Selection**
+   - Save filter choice to localStorage
+   - Restore on page reload
+   - Remember user preference
+
+2. **Filter Animation**
+   - Smooth transition when battles appear/disappear
+   - Fade in/out effect
+   - Height transition for smooth layout shift
+
+3. **Battle Count Indicator**
+   - Show "X of Y battles" when filtered
+   - e.g., "Showing 4 of 8 battles (League only)"
+
+4. **URL State**
+   - Reflect filter in URL query params
+   - Enable deep linking to filtered view
+   - Browser back/forward support
+
 
 **Visual Design**:
 ```jsx
@@ -344,7 +358,7 @@ Expected visible battles (1080p): 7-9 battles
 </div>
 ```
 
-#### 3. Compact Battle Card (Desktop Layout)
+#### 3. Compact Battle Card (Desktop Layout) 
 
 **Purpose**: Display battle information in minimal vertical space
 
@@ -565,7 +579,7 @@ text-tertiary: #57606a  /* Muted gray */
 
 ### Phase 1: Critical Layout Overhaul 
 
-#### 1.1 Implement Compact Battle Card Layout ⭐ CRITICAL
+#### 1.1 Implement Compact Battle Card Layout 
 **Problem Solved**: Dramatically increase information density
 
 **Implementation**:
@@ -583,7 +597,7 @@ text-tertiary: #57606a  /* Muted gray */
 
 **Expected Result**: 15-20 battles visible on 1080p screen (vs. current 3)
 
-#### 1.2 Replace Full Background Colors with Border Accents ⭐ HIGH PRIORITY
+#### 1.2 Replace Full Background Colors with Border Accents
 **Problem Solved**: Reduce visual noise, improve scannability
 
 **Implementation**:
@@ -765,7 +779,7 @@ text-tertiary: #57606a  /* Muted gray */
 
 **Risk**: Low - standard filtering/sorting implementation
 
-### Phase 3: Polish (Week 3)
+### Phase 3: Polish
 **Goal**: Enhance user experience with polish and optimization
 
 **Tasks**:
@@ -889,6 +903,44 @@ Response: {
 - Accessibility testing (keyboard navigation, screen reader)
 - Performance testing (1000+ battle list)
 
+#### Testing Checklist
+
+##### Manual Testing Required
+- [ ] Verify league matches show ⚔️ icon
+- [ ] Verify tournament matches show 🏆 icon
+- [ ] Verify tournament name displays correctly
+- [ ] Verify tournament round displays correctly (Finals, etc.)
+- [ ] Verify yellow border on tournament matches
+- [ ] Verify outcome-colored border on league matches
+- [ ] Verify statistics toggle switches views
+- [ ] Verify league stats calculate correctly
+- [ ] Verify tournament stats calculate correctly
+- [ ] Verify overall stats show combined data
+- [ ] Verify 12-15 battles visible on 1080p screen
+- [ ] Verify mobile layout shows icons correctly
+- [ ] Verify hover effects still work
+- [ ] Verify clicking cards navigates to detail page
+- [ ] Test with no battles (empty state)
+- [ ] Test with only league battles
+- [ ] Test with only tournament battles
+- [ ] Test with mixed league/tournament battles
+
+###### Browser Testing
+- [ ] Chrome (desktop)
+- [ ] Firefox (desktop)
+- [ ] Safari (desktop)
+- [ ] Chrome (mobile)
+- [ ] Safari (iOS)
+
+###### Performance Testing
+- [ ] Test with 20 battles
+- [ ] Test with 100 battles
+- [ ] Test with 500 battles
+- [ ] Verify no lag when toggling stats views
+- [ ] Verify smooth scrolling
+- [ ] Verify fast page load
+
+
 ---
 
 ## Design Mockups and Examples
@@ -1011,12 +1063,16 @@ badge-text: #f85149;                 /* error */
 - ⏳ Battle type indicators/badges (in progress)
 - ⏳ Battle type differentiation in summary stats (planned)
 
-### Should Have (Phase 2) - NOT YET IMPLEMENTED
-- ❌ Outcome filter working (All/Wins/Losses/Draws)
-- ❌ Battle type filter working (All/League/Tournament/2v2)
-- ❌ Sort controls functional (date, ELO, duration, reward, battle type)
-- ❌ Search functionality implemented
-- ❌ Filter state persisted (URL params and localStorage)
+### Should Have (Phase 2) - ✅ IMPLEMENTED
+- ✅ Outcome filter working (All/Wins/Losses/Draws)
+- ✅ Battle type filter working (All/League/Tournament) - integrated with summary toggle
+- ✅ Sort controls functional (date, ELO, reward)
+- ✅ Search functionality implemented (robot name, opponent name, username)
+- ✅ Filter state persisted in component state (URL params can be added later)
+- ✅ Results per page selector (20/50/100)
+- ✅ Clear filters button with active filter detection
+- ✅ Empty state for no results with clear filters option
+
 
 ### Nice to Have (Phase 3) - NOT YET IMPLEMENTED
 - ❌ Loading skeletons implemented
@@ -1024,6 +1080,10 @@ badge-text: #f85149;                 /* error */
 - ❌ Performance optimized for large lists
 - ❌ Export functionality working
 - ❌ WCAG AA accessibility compliance
+- ❌ Export to CSV functionality
+- ❌ Performance optimization for 1000+ battles
+- ❌ Virtual scrolling for large lists
+- ❌ 2v2 match type support (👥 icon)
 
 ---
 

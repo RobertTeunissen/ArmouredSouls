@@ -1,4 +1,39 @@
-# Quick Fix: Admin Page Database Error
+# QUICK FIX ADMIN ERROR - Troubleshooting Guide
+
+This document consolidates known issues and their resolutions for QUICK FIX ADMIN ERROR.
+
+**Source Documents:**
+- QUICK_FIX_ADMIN_ERROR.md
+- QUICK_FIX_ADMIN_ERROR.md
+
+---
+
+## Table of Contents
+
+- [Issue 1: Quick Fix: Admin Page Database Error](#issue-1-quick-fix-admin-page-database-error)
+- [The Problem You're Seeing](#the-problem-youre-seeing)
+- [Why This Happened](#why-this-happened)
+- [How to Fix It (Takes 30 seconds)](#how-to-fix-it-takes-30-seconds)
+  - [Option 1: Run the Migration Script (Easiest)](#option-1-run-the-migration-script-easiest)
+  - [Option 2: Use Prisma Migrate](#option-2-use-prisma-migrate)
+- [After Running the Migration](#after-running-the-migration)
+- [What Changed](#what-changed)
+- [Need Help?](#need-help)
+- [TL;DR](#tldr)
+- [Issue 2: Quick Fix: Admin Page Database Error](#issue-2-quick-fix-admin-page-database-error)
+- [The Problem You're Seeing](#the-problem-youre-seeing)
+- [Why This Happened](#why-this-happened)
+- [How to Fix It (Takes 30 seconds)](#how-to-fix-it-takes-30-seconds)
+  - [Option 1: Run the Migration Script (Easiest)](#option-1-run-the-migration-script-easiest)
+  - [Option 2: Use Prisma Migrate](#option-2-use-prisma-migrate)
+- [After Running the Migration](#after-running-the-migration)
+- [What Changed](#what-changed)
+- [Need Help?](#need-help)
+- [TL;DR](#tldr)
+
+## Issue 1: Quick Fix: Admin Page Database Error
+
+**Date:** 2026-02-08
 
 ## The Problem You're Seeing
 
@@ -69,3 +104,9 @@ cd prototype/backend
 ```
 
 Then refresh `/admin` - it should work! ✨
+
+---
+
+## Issue 2: Quick Fix: Admin Page Database Error
+
+**Date:** 2026-02-04

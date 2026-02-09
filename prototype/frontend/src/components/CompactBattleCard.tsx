@@ -36,12 +36,20 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   
   const getBattleTypeText = () => {
     if (isTournament && battle.tournamentName) {
-      return battle.tournamentName;
+      const roundName = battle.tournamentRound && battle.tournamentMaxRounds 
+        ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
+        : '';
+      return `${battle.tournamentName}${roundName ? ` • ${roundName}` : ''}`;
     }
     if (isTournament) {
-      return 'Tournament';
+      const roundName = battle.tournamentRound && battle.tournamentMaxRounds 
+        ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
+        : '';
+      return `Tournament${roundName ? ` • ${roundName}` : ''}`;
     }
-    return 'League';
+    // For league matches, we could show league tier here if available in the data
+    // Currently the BattleHistory interface doesn't include robot league information
+    return 'League Match';
   };
   
   const getBorderColor = () => {
@@ -102,9 +110,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
             <span className="text-[#e6edf3]">{opponent.name}</span>
           </div>
           <div className="text-xs text-[#8b949e] truncate">
-            {getBattleTypeText()} {isTournament && battle.tournamentRound && battle.tournamentMaxRounds && 
-              `• ${getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)}`
-            }
+            {getBattleTypeText()}
           </div>
         </div>
         
@@ -155,9 +161,6 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           </div>
           <div className="text-xs text-[#8b949e]">
             {getBattleTypeText()}
-            {isTournament && battle.tournamentRound && battle.tournamentMaxRounds && 
-              ` • ${getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)}`
-            }
           </div>
         </div>
         
