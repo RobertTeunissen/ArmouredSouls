@@ -160,6 +160,18 @@ export function calculateBattleWinnings(baseReward: number, prestige: number): n
 }
 
 /**
+ * Get next prestige tier information
+ * Returns null if already at max tier (50,000+)
+ */
+export function getNextPrestigeTier(currentPrestige: number): { threshold: number; bonus: string } | null {
+  if (currentPrestige < 5000) return { threshold: 5000, bonus: '+5%' };
+  if (currentPrestige < 10000) return { threshold: 10000, bonus: '+10%' };
+  if (currentPrestige < 25000) return { threshold: 25000, bonus: '+15%' };
+  if (currentPrestige < 50000) return { threshold: 50000, bonus: '+20%' };
+  return null; // Max tier reached
+}
+
+/**
  * Get merchandising base rate by Income Generator level
  */
 export function getMerchandisingBaseRate(incomeGeneratorLevel: number): number {

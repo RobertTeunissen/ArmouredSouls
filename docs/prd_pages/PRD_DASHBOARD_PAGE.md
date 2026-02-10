@@ -19,6 +19,12 @@
   - ✅ Consolidated all DASHBOARD_ documents
   - ✅ Clear documentation of current state vs future enhancements
   - ✅ Removed redundant sections for implemented features
+- **v2.1 (Feb 9, 2026): Enhanced prestige display requirements added**
+  - **Added Phase 2 Enhancement: Enhanced Prestige Display (NOT IMPLEMENTED)**
+  - Documented prestige rank tiers and progression display
+  - Specified UI requirements for progress bars and next unlock preview
+  - Added tooltip mockups and implementation notes
+  - Cross-referenced with PRD_PRESTIGE_AND_FAME.md
 
 ---
 
@@ -532,6 +538,127 @@ This section addresses all review comments from v1.1:
 - Achievement badges display
 - Trophy icons for milestones
 - Notification toasts for achievements
+
+**5. Enhanced Prestige Display** ❌ **NOT IMPLEMENTED**
+
+**Status**: ❌ **NOT IMPLEMENTED**
+
+**Reference**: See [PRD_PRESTIGE_AND_FAME.md](../prd_core/PRD_PRESTIGE_AND_FAME.md) for complete prestige system specification.
+
+**Current Implementation**:
+- Prestige displayed as numeric value in Financial Summary component
+- Shows: "Prestige: 1,250"
+- No additional context or progression information
+
+**User Story**: "As a player, I want to understand my prestige rank and see my progress toward the next tier so I can track my stable's reputation growth."
+
+**Required Enhancements**:
+
+**a) Prestige Rank Title Display**
+- Show rank tier based on prestige value
+- Rank tiers (from PRD_PRESTIGE_AND_FAME.md):
+  - Novice: 0-999 prestige
+  - Established: 1,000-4,999 prestige
+  - Veteran: 5,000-9,999 prestige
+  - Elite: 10,000-24,999 prestige
+  - Champion: 25,000-49,999 prestige
+  - Legendary: 50,000+ prestige
+
+**Example Display**:
+```
+Prestige: 1,250 ⭐ (Established)
+```
+
+**b) Progress Bar to Next Threshold**
+- Visual progress bar showing advancement to next tier
+- Display current/required prestige
+- Color-coded by tier (bronze → silver → gold → platinum → diamond → legendary)
+
+**Example Display**:
+```
+Prestige: 1,250 ⭐ (Established)
+▓▓░░░░░░░░ 25% to Veteran (1,250 / 5,000)
+```
+
+**c) Next Unlock Preview**
+- Show closest facility level that requires prestige
+- Display prestige requirement and benefit
+- Link to facilities page
+
+**Example Display**:
+```
+Prestige: 1,250 ⭐ (Established)
+▓▓░░░░░░░░ 25% to Veteran (1,250 / 5,000)
+
+Next Unlock: Training Facility Level 4 (requires 1,000 prestige) ✓
+Coming Soon: Roster Expansion Level 4 (requires 1,000 prestige) ✓
+```
+
+**d) Explanatory Tooltip**
+- Hover/click tooltip explaining prestige system
+- Show how to earn prestige
+- Link to prestige leaderboard
+
+**Tooltip Content**:
+```
+╔═══════════════════════════════════════╗
+║ PRESTIGE SYSTEM                       ║
+╠═══════════════════════════════════════╣
+║ Prestige represents your stable's    ║
+║ reputation and success.               ║
+║                                       ║
+║ Your rank: Established (1,250)        ║
+║ Next tier: Veteran (5,000)            ║
+║                                       ║
+║ Earn prestige by:                     ║
+║ • Winning battles (5-75 per win)      ║
+║ • Tournament victories (100-2,500)    ║
+║ • Reaching milestones (50-500)        ║
+║                                       ║
+║ Benefits:                             ║
+║ • Unlock advanced facility levels     ║
+║ • Increase battle winnings (+5-20%)   ║
+║ • Boost merchandising income          ║
+║                                       ║
+║ [View Prestige Leaderboard →]        ║
+╚═══════════════════════════════════════╝
+```
+
+**UI Mockup - Enhanced Financial Summary**:
+```
+┌───────────────────────────────────────┐
+│ Financial Overview                    │
+├───────────────────────────────────────┤
+│ Balance: ₡250,000                     │
+│ Daily Net: +₡5,000                    │
+│                                       │
+│ Prestige: 1,250 ⭐ (Established) ℹ️   │
+│ ▓▓░░░░░░░░ 25% to Veteran            │
+│                                       │
+│ Battle Bonus: +5%                     │
+│                                       │
+│ Next Unlock:                          │
+│ Training Facility Lvl 4 ✓             │
+└───────────────────────────────────────┘
+```
+
+**Implementation Requirements**:
+
+**Backend**:
+- No changes needed (prestige already in User model)
+- Optional: Add `/api/user/prestige-info` endpoint with rank calculation
+
+**Frontend**:
+- Update `FinancialSummary.tsx` component
+- Add prestige rank calculation function
+- Add progress bar component
+- Add tooltip component
+- Fetch facility prestige requirements for "Next Unlock"
+
+**Priority**: P2 (Medium - Quality of Life)
+
+**Estimated Effort**: 1-2 days
+- Frontend: 1-2 days (UI components, calculations, tooltips)
 
 ### Phase 3: Advanced Features (NOT IMPLEMENTED)
 

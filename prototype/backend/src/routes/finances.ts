@@ -9,6 +9,11 @@ import {
   calculateBattleWinnings,
   generatePerRobotFinancialReport,
   calculateFacilityROI,
+  getNextPrestigeTier,
+  getMerchandisingBaseRate,
+  getStreamingBaseRate,
+  calculateMerchandisingIncome,
+  calculateStreamingIncome,
 } from '../utils/economyCalculations';
 
 const router = express.Router();
@@ -22,13 +27,23 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
   try {
     const userId = req.user!.userId;
 
+    // Get user for prestige
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { prestige: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     // Calculate recent battle winnings from last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const userRobots = await prisma.robot.findMany({
       where: { userId },
-      select: { id: true },
+      select: { id: true, totalBattles: true, fame: true },
     });
 
     const robotIds = userRobots.map(r => r.id);
@@ -64,7 +79,60 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
 
     const report = await generateFinancialReport(userId, recentBattleWinnings);
 
-    res.json(report);
+    // Add multiplier breakdown
+    const passiveIncome = await calculateDailyPassiveIncome(userId);
+    const prestigeMultiplier = getPrestigeMultiplier(user.prestige);
+    
+    // Get Income Generator level
+    const incomeGenerator = await prisma.facility.findUnique({
+      where: {
+        userId_facilityType: {
+          userId,
+          facilityType: 'income_generator',
+        },
+      },
+    });
+    const incomeGeneratorLevel = incomeGenerator?.level || 0;
+    
+    // Calculate merchandising breakdown
+    const merchandisingBase = getMerchandisingBaseRate(incomeGeneratorLevel);
+    const merchandisingMultiplier = 1 + (user.prestige / 10000);
+    
+    // Calculate streaming breakdown
+    const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
+    const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
+    const streamingBase = getStreamingBaseRate(incomeGeneratorLevel);
+    const battleMultiplier = 1 + (totalBattles / 1000);
+    const fameMultiplier = 1 + (totalFame / 5000);
+    
+    const multiplierBreakdown = {
+      prestige: {
+        current: user.prestige,
+        multiplier: prestigeMultiplier,
+        bonusPercent: Math.round((prestigeMultiplier - 1) * 100),
+        nextTier: getNextPrestigeTier(user.prestige),
+      },
+      merchandising: {
+        baseRate: merchandisingBase,
+        prestigeMultiplier: merchandisingMultiplier,
+        total: passiveIncome.merchandising,
+        formula: `₡${merchandisingBase.toLocaleString()} × ${merchandisingMultiplier.toFixed(2)}`,
+      },
+      streaming: {
+        baseRate: streamingBase,
+        battleMultiplier: battleMultiplier,
+        fameMultiplier: fameMultiplier,
+        totalBattles,
+        totalFame,
+        total: passiveIncome.streaming,
+        formula: `₡${streamingBase.toLocaleString()} × ${battleMultiplier.toFixed(2)} × ${fameMultiplier.toFixed(2)}`,
+      },
+    };
+
+    res.json({
+      ...report,
+      multiplierBreakdown,
+    });
   } catch (error) {
     console.error('Daily financial report error:', error);
     res.status(500).json({ error: 'Internal server error' });

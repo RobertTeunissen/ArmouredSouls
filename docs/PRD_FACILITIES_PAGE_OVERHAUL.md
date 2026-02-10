@@ -39,6 +39,12 @@
   - Fixed Repair Bay discount inconsistency (10% → 5% for Level 1)
   - Updated implementation roadmap status
   - WebP generation marked as optional enhancement (SVGs sufficient)
+- **v1.4 - Prestige gates documentation added (February 9, 2026)**
+  - **Added Section 6: Prestige Requirements & Gating (NOT IMPLEMENTED)**
+  - Documented prestige unlock requirements for facility levels
+  - Specified UI requirements for prestige lock indicators
+  - Added backend validation requirements
+  - Cross-referenced with PRD_PRESTIGE_AND_FAME.md and STABLE_SYSTEM.md
 
 ---
 
@@ -511,6 +517,318 @@ No icon / image on the Visual Example?
 - ARIA labels for implementation status badges
 - Color-blind friendly status indicators (not color-only)
 - Screen reader announcements for upgrade actions
+
+---
+
+## 6. Prestige Requirements & Gating
+
+**Status**: ❌ **NOT IMPLEMENTED**
+
+**Reference**: See [PRD_PRESTIGE_AND_FAME.md](prd_core/PRD_PRESTIGE_AND_FAME.md) and [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for complete prestige system specification.
+
+### 6.1 Overview
+
+Many facility levels require prestige thresholds to unlock. Players must earn prestige through battles, tournaments, and milestones before they can purchase these facility upgrades. This creates a progression system that rewards long-term play and stable success.
+
+**User Story**: "As a player, I want to see which facility levels require prestige so I can plan my progression and understand what I need to unlock advanced upgrades."
+
+### 6.2 Prestige Requirements by Facility
+
+**Facilities with Prestige Gates** (from STABLE_SYSTEM.md):
+
+**Repair Bay:**
+- Level 4: 1,000 prestige
+- Level 7: 5,000 prestige
+- Level 9: 10,000 prestige
+
+**Training Facility:**
+- Level 4: 1,000 prestige
+- Level 7: 5,000 prestige
+- Level 9: 10,000 prestige
+
+**Weapons Workshop:**
+- Level 4: 1,500 prestige
+- Level 7: 5,000 prestige
+- Level 9: 10,000 prestige
+
+**Research Lab:**
+- Level 4: 2,000 prestige
+- Level 7: 7,500 prestige
+- Level 9: 15,000 prestige
+
+**Medical Bay:**
+- Level 4: 2,000 prestige
+- Level 7: 7,500 prestige
+- Level 9: 15,000 prestige
+
+**Roster Expansion:**
+- Level 4: 1,000 prestige
+- Level 7: 5,000 prestige
+- Level 9: 10,000 prestige
+
+**Coaching Staff:**
+- Level 3: 2,000 prestige
+- Level 6: 5,000 prestige
+- Level 9: 10,000 prestige
+
+**Booking Office:**
+- Level 1: 1,000 prestige
+- Level 2: 2,500 prestige
+- Level 3: 5,000 prestige
+- Level 4: 10,000 prestige
+- Level 5: 15,000 prestige
+- Level 6: 20,000 prestige
+- Level 7: 25,000 prestige
+- Level 8: 35,000 prestige
+- Level 9: 45,000 prestige
+- Level 10: 50,000 prestige
+
+**Combat Training Academy:**
+- Level 3: 2,000 prestige
+- Level 5: 4,000 prestige
+- Level 7: 7,000 prestige
+- Level 9: 10,000 prestige
+- Level 10: 15,000 prestige
+
+**Defense Training Academy:**
+- Level 3: 2,000 prestige
+- Level 5: 4,000 prestige
+- Level 7: 7,000 prestige
+- Level 9: 10,000 prestige
+- Level 10: 15,000 prestige
+
+**Mobility Training Academy:**
+- Level 3: 2,000 prestige
+- Level 5: 4,000 prestige
+- Level 7: 7,000 prestige
+- Level 9: 10,000 prestige
+- Level 10: 15,000 prestige
+
+**AI Training Academy:**
+- Level 3: 2,000 prestige
+- Level 5: 4,000 prestige
+- Level 7: 7,000 prestige
+- Level 9: 10,000 prestige
+- Level 10: 15,000 prestige
+
+**Income Generator:**
+- Level 4: 3,000 prestige
+- Level 7: 7,500 prestige
+- Level 9: 15,000 prestige
+
+### 6.3 UI Requirements
+
+#### 6.3.1 Prestige Lock Indicators
+
+**Locked Facility Levels:**
+- Display lock icon (🔒) next to level indicator
+- Show prestige requirement in red text: "Requires 5,000 prestige"
+- Disable upgrade button with "Locked" state
+- Reduce card opacity to 0.7 to indicate unavailable
+
+**Visual Example:**
+```
+┌──────────────────────────────────────────────────── [✓ Active]
+│ 🏋️  Training Facility                       ▓▓▓░░░░░░░ 3/10
+│     Reduces costs for upgrading robot attributes
+│ 
+│ ✓ Current:  💰 15% discount on attribute upgrades
+│ → Next:     💰 20% discount on attribute upgrades
+│ 
+│ Cost: ₡1,200,000                              
+│ 🔒 Requires 1,000 prestige (You have: 750)
+│                                          [Locked]
+└─────────────────────────────────────────────────────────────
+```
+
+**Unlocked Facility Levels:**
+- No lock icon
+- Normal opacity
+- Upgrade button enabled (if credits available)
+- Show prestige requirement met: "✓ Prestige requirement met"
+
+#### 6.3.2 Prestige Progress Tooltip
+
+**Hover/Click Tooltip:**
+- Show current prestige: "Your prestige: 750"
+- Show required prestige: "Required: 1,000"
+- Show progress bar: `▓▓▓▓▓▓▓░░░ 75%`
+- Show how to earn prestige: "Earn prestige by winning battles and tournaments"
+- Link to prestige leaderboard: "View Prestige Leaderboard →"
+
+#### 6.3.3 Prestige Indicator in Facility Card Header
+
+**Add to each facility card:**
+- Small prestige icon (⭐) next to level indicator if any levels require prestige
+- Tooltip on hover: "Some levels require prestige to unlock"
+
+### 6.4 Backend Requirements
+
+#### 6.4.1 FacilityConfig Interface Update
+
+**Current Interface** (in `facilities.ts`):
+```typescript
+export interface FacilityConfig {
+  type: string;
+  name: string;
+  description: string;
+  maxLevel: number;
+  costs: number[];
+  benefits: string[];
+  implemented: boolean;
+}
+```
+
+**Required Update**:
+```typescript
+export interface FacilityConfig {
+  type: string;
+  name: string;
+  description: string;
+  maxLevel: number;
+  costs: number[];
+  benefits: string[];
+  implemented: boolean;
+  prestigeRequirements?: number[]; // NEW: Prestige required for each level (sparse array)
+}
+```
+
+**Example Implementation**:
+```typescript
+{
+  type: 'training_facility',
+  name: 'Training Facility',
+  description: 'Reduces costs for upgrading robot attributes',
+  maxLevel: 10,
+  costs: [150000, 300000, 450000, 600000, 750000, 900000, 1100000, 1400000, 1750000, 2250000],
+  benefits: [...],
+  implemented: true,
+  prestigeRequirements: [
+    undefined, // Level 1: no prestige required
+    undefined, // Level 2: no prestige required
+    undefined, // Level 3: no prestige required
+    1000,      // Level 4: 1,000 prestige required
+    undefined, // Level 5: no prestige required
+    undefined, // Level 6: no prestige required
+    5000,      // Level 7: 5,000 prestige required
+    undefined, // Level 8: no prestige required
+    10000,     // Level 9: 10,000 prestige required
+    undefined, // Level 10: no prestige required
+  ],
+}
+```
+
+#### 6.4.2 Upgrade Validation
+
+**Update `POST /api/facilities/upgrade` endpoint:**
+
+```typescript
+// Pseudo-code for validation
+async function upgradeFacility(userId: string, facilityType: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const facility = await getUserFacility(userId, facilityType);
+  const config = getFacilityConfig(facilityType);
+  
+  const targetLevel = facility.level + 1;
+  
+  // NEW: Check prestige requirement
+  if (config.prestigeRequirements && config.prestigeRequirements[targetLevel - 1]) {
+    const requiredPrestige = config.prestigeRequirements[targetLevel - 1];
+    if (user.prestige < requiredPrestige) {
+      throw new Error(
+        `Insufficient prestige. Required: ${requiredPrestige}, You have: ${user.prestige}`
+      );
+    }
+  }
+  
+  // Existing credit validation
+  const cost = config.costs[targetLevel - 1];
+  if (user.credits < cost) {
+    throw new Error('Insufficient credits');
+  }
+  
+  // Perform upgrade...
+}
+```
+
+#### 6.4.3 API Response Enhancement
+
+**Update `GET /api/facilities` response:**
+
+```typescript
+interface FacilityResponse {
+  type: string;
+  name: string;
+  description: string;
+  currentLevel: number;
+  maxLevel: number;
+  currentBenefit: string | null;
+  nextLevelBenefit: string | null;
+  upgradeCost: number | null;
+  implemented: boolean;
+  // NEW fields:
+  prestigeRequired: number | null;  // Prestige required for next level
+  prestigeMet: boolean;              // Whether user has enough prestige
+  canUpgrade: boolean;               // Credits AND prestige requirements met
+}
+```
+
+### 6.5 Frontend Requirements
+
+#### 6.5.1 Component Updates
+
+**FacilityCard Component:**
+- Display lock icon if `prestigeRequired > 0 && !prestigeMet`
+- Show prestige requirement text
+- Disable upgrade button if `!canUpgrade`
+- Add prestige progress tooltip
+
+**FacilitiesPage Component:**
+- Fetch user prestige from API
+- Pass prestige data to facility cards
+- Display user's current prestige in page header
+
+#### 6.5.2 User Prestige Display
+
+**Add to page header:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Facilities                                                   │
+│ Your Prestige: 750 ⭐ (Novice)                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 6.6 Testing Requirements
+
+**Unit Tests:**
+- Prestige validation logic
+- FacilityConfig with prestigeRequirements
+- API response includes prestige fields
+
+**Integration Tests:**
+- Upgrade blocked when prestige insufficient
+- Upgrade succeeds when prestige sufficient
+- Error messages display correctly
+
+**UI Tests:**
+- Lock icons display on locked facilities
+- Tooltips show prestige requirements
+- Upgrade button disabled state
+
+### 6.7 Implementation Priority
+
+**Priority**: P0 (Critical)
+
+**Rationale**: 
+- Prestige gates are documented in STABLE_SYSTEM.md as core progression mechanic
+- Without enforcement, players can bypass intended progression
+- Creates strategic depth and long-term goals
+
+**Estimated Effort**: 2-3 days
+- Backend: 1 day (config updates, validation, API changes)
+- Frontend: 1-2 days (UI components, tooltips, testing)
+
+---
 
 ### 5. Technical Implementation
 

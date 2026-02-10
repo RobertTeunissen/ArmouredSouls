@@ -9,6 +9,7 @@ import Navigation from '../components/Navigation';
 import DailyStableReport from '../components/DailyStableReport';
 import PerRobotBreakdown from '../components/PerRobotBreakdown';
 import InvestmentsTab from '../components/InvestmentsTab';
+import MultiplierBreakdown from '../components/MultiplierBreakdown';
 import {
   getDailyFinancialReport,
   getFinancialProjections,
@@ -170,9 +171,12 @@ function FinancialReportPage() {
         {/* Tab Content */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column: Daily Stable Report */}
-            <div>
+            {/* Left Column: Daily Stable Report and Multipliers */}
+            <div className="space-y-6">
               <DailyStableReport report={report} />
+              {report.multiplierBreakdown && (
+                <MultiplierBreakdown multiplierData={report.multiplierBreakdown} />
+              )}
             </div>
 
             {/* Right Column: Projections and Recommendations */}

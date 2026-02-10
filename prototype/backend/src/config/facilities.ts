@@ -7,6 +7,16 @@ export interface FacilityConfig {
   costs: number[]; // Cost for each level (index 0 = level 1, etc.)
   benefits: string[]; // Benefit description for each level
   implemented: boolean; // Whether backend logic is implemented
+  /**
+   * Prestige requirements for each level (optional)
+   * Array index corresponds to level (index 0 = level 1, index 1 = level 2, etc.)
+   * Value of 0 or undefined means no prestige requirement for that level
+   * Example: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0] means:
+   *   - Level 4 requires 1,000 prestige
+   *   - Level 7 requires 5,000 prestige
+   *   - Level 9 requires 10,000 prestige
+   */
+  prestigeRequirements?: number[];
 }
 
 export const FACILITY_TYPES: FacilityConfig[] = [
@@ -29,6 +39,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '50% discount on repair costs, automatic minor repairs',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0], // L4: 1000, L7: 5000, L9: 10000
   },
   {
     type: 'training_facility',
@@ -49,6 +60,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '50% discount on attribute upgrades, unlock special training programs',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0], // L4: 1000, L7: 5000, L9: 10000
   },
   {
     type: 'weapons_workshop',
@@ -69,6 +81,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '50% discount on weapon purchases',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 0, 1500, 0, 0, 5000, 0, 10000, 0], // L4: 1500, L7: 5000, L9: 10000
   },
   {
     type: 'research_lab',
@@ -89,6 +102,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Unlock robot cloning',
     ],
     implemented: false,
+    prestigeRequirements: [0, 0, 0, 2000, 0, 0, 7500, 0, 15000, 0], // L4: 2000, L7: 7500, L9: 15000
   },
   {
     type: 'medical_bay',
@@ -109,6 +123,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Eliminate critical damage penalties entirely',
     ],
     implemented: false,
+    prestigeRequirements: [0, 0, 0, 2000, 0, 0, 7500, 0, 15000, 0], // L4: 2000, L7: 7500, L9: 15000
   },
   {
     type: 'roster_expansion',
@@ -128,6 +143,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '10 robot slots (maximum)',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000], // L4: 1000, L7: 5000, L9: 10000
   },
   {
     type: 'storage_facility',
@@ -148,6 +164,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '55 weapons storage (5 base + 50 from facility - maximum)',
     ],
     implemented: true,
+    // No prestige requirements for Storage Facility
   },
   {
     type: 'coaching_staff',
@@ -168,6 +185,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Master Coach (combine two coach bonuses at 75% effectiveness)',
     ],
     implemented: false,
+    prestigeRequirements: [0, 0, 2000, 0, 0, 5000, 0, 0, 10000, 0], // L3: 2000, L6: 5000, L9: 10000
   },
   {
     type: 'booking_office',
@@ -188,6 +206,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Access to World Championship, custom arena design',
     ],
     implemented: false,
+    prestigeRequirements: [1000, 2500, 5000, 10000, 15000, 20000, 25000, 35000, 45000, 50000], // All levels have requirements
   },
   {
     type: 'combat_training_academy',
@@ -208,6 +227,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Combat Systems cap to level 50 (maximum)',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000], // L3: 2000, L5: 4000, L7: 7000, L9: 10000, L10: 15000
   },
   {
     type: 'defense_training_academy',
@@ -228,6 +248,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Defensive Systems cap to level 50 (maximum)',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000], // L3: 2000, L5: 4000, L7: 7000, L9: 10000, L10: 15000
   },
   {
     type: 'mobility_training_academy',
@@ -248,6 +269,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Chassis & Mobility cap to level 50 (maximum)',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000], // L3: 2000, L5: 4000, L7: 7000, L9: 10000, L10: 15000
   },
   {
     type: 'ai_training_academy',
@@ -268,6 +290,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'AI & Team cap to level 50 (maximum)',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000], // L3: 2000, L5: 4000, L7: 7000, L9: 10000, L10: 15000
   },
   {
     type: 'income_generator',
@@ -288,6 +311,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Master Income (₡35,000/day merchandising, ₡22,000/day streaming)',
     ],
     implemented: true,
+    prestigeRequirements: [0, 0, 0, 3000, 0, 0, 7500, 0, 15000, 0], // L4: 3000, L7: 7500, L9: 15000
   },
 ];
 

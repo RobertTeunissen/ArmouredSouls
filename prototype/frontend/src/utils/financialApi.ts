@@ -65,6 +65,29 @@ export interface FinancialReport {
   financialHealth: 'excellent' | 'good' | 'stable' | 'warning' | 'critical';
   profitMargin: number;
   daysToBankruptcy: number;
+  multiplierBreakdown?: {
+    prestige: {
+      current: number;
+      multiplier: number;
+      bonusPercent: number;
+      nextTier: { threshold: number; bonus: string } | null;
+    };
+    merchandising: {
+      baseRate: number;
+      prestigeMultiplier: number;
+      total: number;
+      formula: string;
+    };
+    streaming: {
+      baseRate: number;
+      battleMultiplier: number;
+      fameMultiplier: number;
+      totalBattles: number;
+      totalFame: number;
+      total: number;
+      formula: string;
+    };
+  };
 }
 
 export const getDailyFinancialReport = async (

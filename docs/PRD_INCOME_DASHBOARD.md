@@ -17,6 +17,12 @@
 - v1.4 - Phase 4 MVP implementation complete (Investments & ROI Calculator)
 - v1.5 - **Critical bug fix**: Database field name correction (league → currentLeague). All tabs tested and working.
 - v1.6 - **Overview tab refinements**: UI improvements based on user feedback (duplicate metrics, battle winnings, facility levels, two-column layout)
+- **v1.7 - Prestige/fame income multipliers documentation added (February 9, 2026)**
+  - **Added Phase 7: Prestige & Fame Income Multipliers (NOT IMPLEMENTED)**
+  - Documented income multiplier formulas for prestige and fame
+  - Specified UI requirements for displaying reputation bonuses
+  - Added tooltip mockups and implementation notes
+  - Cross-referenced with PRD_PRESTIGE_AND_FAME.md and STABLE_SYSTEM.md
 
 ---
 
@@ -750,6 +756,155 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 - [ ] Add actionable links from alerts to relevant pages
 
 **Risk**: Medium - requires backend alert logic and frontend UI
+
+### Phase 7: Prestige & Fame Income Multipliers (Week 7)
+
+**Status**: ❌ **NOT IMPLEMENTED**
+
+**Reference**: See [PRD_PRESTIGE_AND_FAME.md](prd_core/PRD_PRESTIGE_AND_FAME.md) and [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for complete prestige/fame system specification.
+
+**Goal**: Display how prestige and fame affect income streams, providing transparency into reputation-based bonuses.
+
+**User Story**: "As a player, I want to see how my prestige and fame increase my income so I understand the value of building my reputation."
+
+**Tasks**:
+- [ ] Backend: Verify income multiplier formulas are applied correctly
+  - Prestige bonus on battle winnings
+  - Merchandising prestige multiplier
+  - Streaming fame multiplier
+- [ ] Backend: Add multiplier breakdown to API responses
+  - Include base amount, multiplier, and final amount for each income stream
+- [ ] Frontend: Display prestige bonus on battle winnings
+  - Show base winnings and prestige bonus separately
+  - Example: "Battle Winnings: ₡45,000 (base) + ₡4,500 (10% prestige bonus)"
+- [ ] Frontend: Show merchandising prestige multiplier
+  - Display formula: `base × (1 + prestige / 10,000)`
+  - Example: "Merchandising: ₡30,000 (₡12,000 base × 2.5 prestige multiplier)"
+- [ ] Frontend: Show streaming fame multiplier
+  - Display formula: `base × (1 + battles / 1,000) × (1 + total_fame / 5,000)`
+  - Example: "Streaming: ₡27,000 (₡6,000 base × 1.5 battles × 3.0 fame)"
+- [ ] Frontend: Add tooltips explaining reputation bonuses
+  - Prestige tooltip: "Your prestige of 15,000 provides a 1.5× multiplier to merchandising income"
+  - Fame tooltip: "Your robots' combined fame of 10,000 provides a 3.0× multiplier to streaming income"
+- [ ] Frontend: Add prestige/fame progress indicators
+  - Show next prestige tier and income benefit
+  - Show fame milestones and streaming impact
+
+**Income Multiplier Formulas** (from STABLE_SYSTEM.md):
+
+**Prestige Bonus on Battle Winnings:**
+- 5,000+ Prestige: +5% to battle winnings
+- 10,000+ Prestige: +10% to battle winnings
+- 25,000+ Prestige: +15% to battle winnings
+- 50,000+ Prestige: +20% to battle winnings
+
+**Merchandising (Income Generator facility):**
+```
+merchandising_income = base_merchandising × (1 + prestige / 10000)
+
+Example:
+- Income Generator Level 4: ₡12,000/day base
+- Prestige 15,000
+- Merchandising = ₡12,000 × (1 + 15000/10000) = ₡12,000 × 2.5 = ₡30,000/day
+```
+
+**Streaming Revenue (Income Generator facility):**
+```
+streaming_income = base_streaming × (1 + (total_battles / 1000)) × (1 + (total_fame / 5000))
+
+// total_battles = aggregate of all robot battles in stable
+// total_fame = sum of fame values from all robots in stable
+
+Example:
+- Income Generator Level 5: ₡6,000/day base
+- Total battles: 500 (across all robots)
+- Total fame: 10,000 (sum of all robot fame values)
+- Streaming = ₡6,000 × (1 + 0.5) × (1 + 2.0) = ₡6,000 × 1.5 × 3.0 = ₡27,000/day
+```
+
+**UI Mockup - Daily Stable Report with Multipliers:**
+```
+═══════════════════════════════════════
+         DAILY STABLE REPORT
+         [Date: February 7, 2026]
+═══════════════════════════════════════
+
+REVENUE STREAMS:
+  Battle Winnings:         ₡45,000
+    Base:                  ₡40,909
+    Prestige Bonus (10%):  ₡4,091  ⭐
+  
+  Merchandising:           ₡30,000
+    Base (Lvl 4):          ₡12,000
+    Prestige Multiplier:   ×2.5    ⭐
+    (15,000 prestige)
+  
+  Streaming:               ₡27,000
+    Base (Lvl 5):          ₡6,000
+    Battles Multiplier:    ×1.5    (500 battles)
+    Fame Multiplier:       ×3.0    ⭐ (10,000 fame)
+  ─────────────────────────────────
+  Total Revenue:           ₡102,000
+  
+  ⭐ = Reputation bonus (prestige/fame)
+
+[...]
+```
+
+**Tooltip Examples:**
+
+**Prestige Bonus Tooltip:**
+```
+╔═══════════════════════════════════════╗
+║ PRESTIGE BONUS                        ║
+╠═══════════════════════════════════════╣
+║ Your prestige: 15,000 (Elite)         ║
+║ Current tier: +10% battle winnings    ║
+║                                       ║
+║ Next tier at 25,000 prestige:         ║
+║ +15% battle winnings (+₡2,045/day)    ║
+║                                       ║
+║ Earn prestige by:                     ║
+║ • Winning battles                     ║
+║ • Tournament victories                ║
+║ • Reaching milestones                 ║
+║                                       ║
+║ [View Prestige Leaderboard →]        ║
+╚═══════════════════════════════════════╝
+```
+
+**Fame Multiplier Tooltip:**
+```
+╔═══════════════════════════════════════╗
+║ FAME MULTIPLIER                       ║
+╠═══════════════════════════════════════╣
+║ Total robot fame: 10,000              ║
+║ Current multiplier: ×3.0              ║
+║                                       ║
+║ Streaming income breakdown:           ║
+║ Base (Lvl 5):      ₡6,000             ║
+║ × Battles (500):   ×1.5 = ₡9,000      ║
+║ × Fame (10,000):   ×3.0 = ₡27,000     ║
+║                                       ║
+║ Next milestone at 15,000 fame:        ║
+║ ×4.0 multiplier (+₡9,000/day)         ║
+║                                       ║
+║ Earn fame by:                         ║
+║ • Winning battles with robots         ║
+║ • Higher league = more fame           ║
+║                                       ║
+║ [View Fame Leaderboard →]            ║
+╚═══════════════════════════════════════╝
+```
+
+**Implementation Notes:**
+- Multipliers should be calculated and displayed separately from base amounts
+- Use ⭐ icon to indicate reputation-based bonuses
+- Tooltips should be educational and show progression path
+- Link to leaderboards to encourage competitive play
+- Show "next tier" benefits to motivate prestige/fame earning
+
+**Risk**: Low - mostly frontend display changes, backend formulas already exist (need verification)
 
 ---
 

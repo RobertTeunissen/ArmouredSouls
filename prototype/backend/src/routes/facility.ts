@@ -1,7 +1,7 @@
 import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { FACILITY_TYPES, getFacilityUpgradeCost } from '../config/facilities';
+import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -11,7 +11,16 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
-    // Get user's current facilities
+    // Get user's current facilities and prestige
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { prestige: true, currency: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     const userFacilities = await prisma.facility.findMany({
       where: { userId },
     });
@@ -23,14 +32,33 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     }, {} as Record<string, number>);
 
     // Combine with facility configs
-    const facilities = FACILITY_TYPES.map((config) => ({
-      ...config,
-      currentLevel: facilityLevels[config.type] || 0,
-      upgradeCost: getFacilityUpgradeCost(config.type, facilityLevels[config.type] || 0),
-      canUpgrade: (facilityLevels[config.type] || 0) < config.maxLevel,
-    }));
+    const facilities = FACILITY_TYPES.map((config) => {
+      const currentLevel = facilityLevels[config.type] || 0;
+      const nextLevel = currentLevel + 1;
+      const upgradeCost = getFacilityUpgradeCost(config.type, currentLevel);
+      
+      // Check prestige requirement for next level
+      let nextLevelPrestigeRequired = 0;
+      if (config.prestigeRequirements && nextLevel <= config.maxLevel) {
+        nextLevelPrestigeRequired = config.prestigeRequirements[nextLevel - 1] || 0;
+      }
 
-    res.json(facilities);
+      return {
+        ...config,
+        currentLevel,
+        upgradeCost,
+        canUpgrade: currentLevel < config.maxLevel,
+        nextLevelPrestigeRequired,
+        hasPrestige: user.prestige >= nextLevelPrestigeRequired,
+        canAfford: user.currency >= upgradeCost,
+      };
+    });
+
+    res.json({
+      facilities,
+      userPrestige: user.prestige,
+      userCurrency: user.currency,
+    });
   } catch (error) {
     console.error('Facility list error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -47,7 +75,13 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
       return res.status(400).json({ error: 'Facility type is required' });
     }
 
-    // Get user's current currency and facility level
+    // Get facility config
+    const config = getFacilityConfig(facilityType);
+    if (!config) {
+      return res.status(400).json({ error: 'Invalid facility type' });
+    }
+
+    // Get user's current currency, prestige, and facility level
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -67,6 +101,25 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
     });
 
     const currentLevel = facility?.level || 0;
+    const targetLevel = currentLevel + 1;
+
+    // Check if already at max level
+    if (currentLevel >= config.maxLevel) {
+      return res.status(400).json({ error: 'Facility is already at maximum level' });
+    }
+
+    // Validate prestige requirement
+    if (config.prestigeRequirements && config.prestigeRequirements[targetLevel - 1]) {
+      const requiredPrestige = config.prestigeRequirements[targetLevel - 1];
+      if (user.prestige < requiredPrestige) {
+        return res.status(403).json({
+          error: 'Insufficient prestige',
+          required: requiredPrestige,
+          current: user.prestige,
+          message: `${config.name} Level ${targetLevel} requires ${requiredPrestige.toLocaleString()} prestige`,
+        });
+      }
+    }
 
     // Calculate upgrade cost
     const upgradeCost = getFacilityUpgradeCost(facilityType, currentLevel);

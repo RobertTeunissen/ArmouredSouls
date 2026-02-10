@@ -15,6 +15,9 @@ interface Facility {
   upgradeCost: number;
   canUpgrade: boolean;
   implemented: boolean;
+  nextLevelPrestigeRequired?: number;
+  hasPrestige?: boolean;
+  canAfford?: boolean;
 }
 
 // Facility category definitions
@@ -60,6 +63,7 @@ const FACILITY_CATEGORIES: CategoryInfo[] = [
 function FacilitiesPage() {
   const { user, refreshUser } = useAuth();
   const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [userPrestige, setUserPrestige] = useState(0);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -74,7 +78,8 @@ function FacilitiesPage() {
   const fetchFacilities = async () => {
     try {
       const response = await axios.get('http://localhost:3001/api/facilities');
-      setFacilities(response.data);
+      setFacilities(response.data.facilities || response.data);
+      setUserPrestige(response.data.userPrestige || 0);
     } catch (err) {
       setError('Failed to load facilities');
       console.error(err);
@@ -95,7 +100,12 @@ function FacilitiesPage() {
       // Refresh facilities and user data
       await Promise.all([fetchFacilities(), refreshUser()]);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Upgrade failed');
+      if (err.response?.status === 403) {
+        const { current, message } = err.response.data;
+        setError(`${message}. You have ${current?.toLocaleString()} prestige.`);
+      } else {
+        setError(err.response?.data?.error || 'Upgrade failed');
+      }
     } finally {
       setUpgrading(null);
     }
@@ -236,6 +246,32 @@ function FacilitiesPage() {
                                 </div>
                               </div>
 
+                              {/* Prestige Requirement Display */}
+                              {facility.nextLevelPrestigeRequired && facility.nextLevelPrestigeRequired > 0 && (
+                                <div className={`mb-4 p-3 rounded border ${
+                                  facility.hasPrestige 
+                                    ? 'bg-green-900/20 border-green-700/50' 
+                                    : 'bg-red-900/20 border-red-700/50'
+                                }`}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-sm">
+                                      <span className="text-gray-400">Prestige Required: </span>
+                                      <span className={facility.hasPrestige ? 'text-green-400' : 'text-red-400'}>
+                                        {facility.nextLevelPrestigeRequired.toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <span className="text-xl">
+                                      {facility.hasPrestige ? '✓' : '🔒'}
+                                    </span>
+                                  </div>
+                                  {!facility.hasPrestige && (
+                                    <div className="text-xs text-gray-400 mt-1">
+                                      Current: {userPrestige.toLocaleString()} prestige
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
                               <div className="flex justify-between items-center">
                                 <div className="text-lg">
                                   Cost: <span className="text-green-400 font-semibold">
@@ -244,8 +280,17 @@ function FacilitiesPage() {
                                 </div>
                                 <button
                                   onClick={() => handleUpgrade(facility.type)}
-                                  disabled={upgrading !== null || user.currency < facility.upgradeCost}
+                                  disabled={
+                                    upgrading !== null || 
+                                    (user.currency < facility.upgradeCost) ||
+                                    !!(facility.nextLevelPrestigeRequired && !facility.hasPrestige)
+                                  }
                                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-2 rounded transition-colors"
+                                  title={
+                                    facility.nextLevelPrestigeRequired && !facility.hasPrestige
+                                      ? `Requires ${facility.nextLevelPrestigeRequired.toLocaleString()} prestige`
+                                      : undefined
+                                  }
                                 >
                                   {upgrading === facility.type ? 'Upgrading...' : 'Upgrade'}
                                 </button>
@@ -254,6 +299,11 @@ function FacilitiesPage() {
                               {user.currency < facility.upgradeCost && (
                                 <div className="mt-2 text-sm text-red-400">
                                   Insufficient credits
+                                </div>
+                              )}
+                              {facility.nextLevelPrestigeRequired && !facility.hasPrestige && (
+                                <div className="mt-2 text-sm text-red-400">
+                                  Insufficient prestige (need {facility.nextLevelPrestigeRequired.toLocaleString()})
                                 </div>
                               )}
                             </>
