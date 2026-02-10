@@ -129,12 +129,15 @@ function WeaponShopPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
         // Fetch weapons
-        const weaponsResponse = await axios.get('http://localhost:3001/api/weapons');
+        const weaponsResponse = await axios.get('http://localhost:3001/api/weapons', { headers });
         setWeapons(weaponsResponse.data);
 
         // Fetch owned weapons inventory
-        const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory');
+        const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory', { headers });
         const inventory = inventoryResponse.data;
         
         // Count owned weapons by weapon ID
@@ -152,16 +155,23 @@ function WeaponShopPage() {
         setEquippedWeaponsCount(equippedCount);
 
         // Fetch facilities to get Weapon Workshop level
-        const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities');
-        const weaponWorkshop = facilitiesResponse.data.find((f: Facility) => f.type === 'weapons_workshop');
+        const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities', { headers });
+        const facilities = facilitiesResponse.data.facilities || facilitiesResponse.data;
+        const weaponWorkshop = facilities.find((f: Facility) => f.type === 'weapons_workshop');
         setWeaponWorkshopLevel(weaponWorkshop?.currentLevel || 0);
 
         // Fetch storage status
-        const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
+        const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status', { headers });
         setStorageStatus(storageResponse.data);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to fetch data:', err);
-        setError('Failed to load weapons');
+        
+        // Check if it's an authentication error
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setError('Authentication failed. Please log out and log back in.');
+        } else {
+          setError('Failed to load weapons. Please try refreshing the page.');
+        }
       } finally {
         setLoading(false);
       }
@@ -375,17 +385,20 @@ function WeaponShopPage() {
         
         setPurchasing(weaponId);
         try {
+          const token = localStorage.getItem('token');
+          const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
           await axios.post('http://localhost:3001/api/weapon-inventory/purchase', {
             weaponId,
-          });
+          }, { headers });
           await refreshUser();
           
           // Refresh storage status after purchase
-          const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status');
+          const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status', { headers });
           setStorageStatus(storageResponse.data);
           
           // Refresh owned weapons
-          const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory');
+          const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory', { headers });
           const inventory = inventoryResponse.data;
           const ownedMap = new Map<number, number>();
           inventory.forEach((item: any) => {
@@ -596,7 +609,13 @@ function WeaponShopPage() {
 
         {error && (
           <div className="bg-red-900 border border-red-600 text-red-200 p-4 rounded mb-6">
-            {error}
+            <p className="mb-2">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-sm transition-colors"
+            >
+              Retry
+            </button>
           </div>
         )}
 

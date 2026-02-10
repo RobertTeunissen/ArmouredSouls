@@ -1,9 +1,15 @@
-# League Standings Page - Complete Documentation
+# Product Requirements Document: League Standings Page
 
-**Status**: ✅ Complete  
+**Project**: Armoured Souls  
+**Document Type**: Product Requirements Document (PRD)  
+**Version**: v1.0 
 **Date**: February 5, 2026  
-**Version**: 1.1  
-**PR**: copilot/update-league-standings-page
+**Status**: ✅ Implemented & Verified
+
+---
+
+## Version History
+- v1.0 - Initial draft by GitHub Copilot (February 5, 2026)
 
 ---
 
@@ -368,16 +374,3 @@ Potential improvements for future iterations (not in current scope):
 - **Module Structure**: [MODULE_STRUCTURE.md](MODULE_STRUCTURE.md)
 
 ---
-
-## Commits
-
-1. **f18d34a** - Initial plan
-2. **8a486e9** - feat(league-standings): add collapsible instances, tier colors, improve formatting, remove HP column
-3. **6e1f2bc** - docs: add visual changes guide for league standings UI update
-
----
-
-**Implementation Complete**: February 5, 2026  
-**Developer**: GitHub Copilot Developer Agent  
-**All Requirements Met**: ✅
-
