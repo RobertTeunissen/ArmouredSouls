@@ -169,7 +169,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 - **[PRD_WEAPON_SHOP.md](PRD_WEAPON_SHOP.md)**: Reference for filtering, grouping, and view modes
 - **[PRD_BATTLE_HISTORY_PAGE_OVERHAUL.md](PRD_BATTLE_HISTORY_PAGE_OVERHAUL.md)**: Reference for information density and visual hierarchy
 - **[PRD_MY_ROBOTS_LIST_PAGE.md](PRD_MY_ROBOTS_LIST_PAGE.md)**: Reference for card-based UI patterns
-- **[ECONOMY_IMPLEMENTATION.md](ECONOMY_IMPLEMENTATION.md)**: Economic context for facility investments
+- **[PRD_ECONOMY_SYSTEM.md](prd_core/PRD_ECONOMY_SYSTEM.md)**: Economic context for facility investments (see Implementation History section)
 
 ### Why This Matters
 
@@ -1484,7 +1484,7 @@ const categoryEmojis = {
 
 ### Core Documentation
 - [STABLE_SYSTEM.md](STABLE_SYSTEM.md) - Complete facility system mechanics
-- [ECONOMY_IMPLEMENTATION.md](ECONOMY_IMPLEMENTATION.md) - Economic context
+- [PRD_ECONOMY_SYSTEM.md](prd_core/PRD_ECONOMY_SYSTEM.md) - Economic context (see Implementation History section)
 - [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md) - Attribute caps and training academies
 
 ### Design References

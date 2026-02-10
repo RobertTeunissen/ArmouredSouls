@@ -543,9 +543,9 @@ export function calculateEffectiveStats(robot: RobotWithWeapons): Record<string,
 3. Ensure all formulas preserve decimal precision throughout calculation chain
 4. Update type definitions to reflect `Decimal` in Prisma types
 
-**Upgrade Cost Calculation (No Changes Needed):**
-- Upgrade costs remain based on level (integer): `(currentLevel + 1) * 1000`
-- When base attribute is 25.50, upgrade cost is still `Math.floor(26) * 1000 = ₡26,000`
+**Upgrade Cost Calculation (Updated Feb 8, 2026):**
+- Upgrade costs based on level (integer): `(currentLevel + 1) * 1500` (increased from 1000)
+- When base attribute is 25.50, upgrade cost is `Math.floor(26) * 1500 = ₡39,000`
 - Level is determined by `Math.floor(attribute)` for upgrade purposes
 
 ### FR-7: Frontend Display Updates

@@ -18,7 +18,7 @@ A **Stable** is the player's collection and management system for their robots. 
 ### Core Resources
 
 **Credits (₡)** - Primary currency
-- Starting balance: ₡2,000,000 (increased to accommodate facility system)
+- Starting balance: ₡3,000,000 (increased Feb 8, 2026 - see [OPTION_C_IMPLEMENTATION.md](OPTION_C_IMPLEMENTATION.md))
 - Used for: Robot purchases, upgrades, weapons, repairs, facility upgrades
 - Earned from: Battles, tournaments, achievements, daily income streams
 

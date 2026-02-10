@@ -5,6 +5,25 @@
 **Owner**: Robert Teunissen  
 **Epic**: Economy System Implementation
 
+---
+
+## Table of Contents
+
+1. [Implementation Status](#implementation-status)
+2. [Executive Summary](#executive-summary)
+3. [Background & Context](#background--context)
+4. [Economy Overview](#economy-overview)
+5. [Cost Centers (What Costs Money)](#cost-centers-what-costs-money)
+6. [Revenue Streams (How Stables Earn Money)](#revenue-streams-how-stables-earn-money)
+7. [Prestige & Fame System](#prestige--fame-system)
+8. [Daily Financial System](#daily-financial-system)
+9. [Economic Balance & Progression](#economic-balance--progression)
+10. [Implementation Recommendations](#implementation-recommendations)
+11. [Success Metrics](#success-metrics)
+12. [Appendices](#appendices)
+
+---
+
 ## Implementation Status
 
 ### ✅ Phase 1: Backend Implementation (COMPLETE)
@@ -47,6 +66,128 @@
 - ✅ Per-user financial summaries
 - ✅ Integrated into bulk cycle controls
 
+### Implementation Files
+
+**Backend (5 files + 2 enhancements):**
+1. `prototype/backend/src/utils/economyCalculations.ts` (620+ lines)
+   - All economic formulas and calculations
+   - Facility operating costs
+   - Revenue streams (battle rewards, passive income)
+   - Repair cost formulas
+   - Financial health indicators
+   - Daily financial processing functions:
+     - `processDailyFinances(userId)` - Process single user
+     - `processAllDailyFinances()` - Batch process all users
+     - Deducts operating costs, detects bankruptcy
+
+2. `prototype/backend/src/routes/finances.ts` (165 lines)
+   - `GET /api/finances/summary` - Quick overview
+   - `GET /api/finances/daily` - Full report
+   - `GET /api/finances/operating-costs` - Cost breakdown
+   - `GET /api/finances/revenue-streams` - Income sources
+   - `GET /api/finances/projections` - Forecasts
+
+3. `prototype/backend/src/services/battleOrchestrator.ts` (enhanced)
+   - League-based battle rewards
+   - Prestige multipliers (5%-20%)
+   - Participation rewards (30% of base)
+   - Detailed reward breakdown in battle logs:
+     - Shows league base with min/max range
+     - Displays prestige bonus percentage and amount
+     - Breaks down winner/loser rewards separately
+
+4. `prototype/backend/src/routes/admin.ts` (enhanced)
+   - `POST /api/admin/daily-finances/process` endpoint
+   - Integrated financial processing into bulk cycles
+   - Shows costs deducted, users processed, bankruptcies
+
+5. `prototype/backend/src/utils/robotCalculations.ts` (modified)
+   - Medical Bay support for repair costs
+
+6. `prototype/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests ✅)
+
+**Frontend (4 files + 1 enhanced):**
+1. `prototype/frontend/src/utils/financialApi.ts` (200 lines)
+   - TypeScript interfaces
+   - API client functions
+   - Helper functions (formatting, colors)
+
+2. `prototype/frontend/src/components/FinancialSummary.tsx` (140 lines)
+   - Dashboard widget
+   - Shows: balance, daily net, prestige bonus
+   - Financial warnings
+
+3. `prototype/frontend/src/pages/FinancialReportPage.tsx` (280 lines)
+   - Full financial report page
+   - Revenue/expense breakdown
+   - Operating costs by facility
+   - Projections and recommendations
+
+4. `prototype/frontend/src/pages/AdminPage.tsx` (enhanced)
+   - Displays financial data in bulk cycle results
+   - Shows costs deducted per cycle
+   - Bankruptcy alerts highlighted in red
+
+5. `prototype/frontend/src/App.tsx` (modified)
+   - Added `/finances` route
+
+### Key Features
+
+**1. Financial Reward Details in Battle Logs**
+Battle logs now include comprehensive reward breakdowns showing exactly how rewards are calculated:
+
+**Example Battle Log:**
+```
+💰 Financial Rewards Summary
+   Winner (RobotName): ₡12,750
+      • League Base (gold): ₡30,000 (range: ₡20,000-₡40,000)
+      • Prestige Bonus (10%): +₡3,000
+      • Participation: ₡6,000
+   Loser (OpponentName): ₡6,000
+      • Participation: ₡6,000
+```
+
+**Features:**
+- Shows league base reward with min/max range
+- Displays prestige multiplier percentage and bonus amount
+- Breaks down participation vs win rewards
+- Separate display for winner and loser
+- Special handling for draws
+
+**2. Daily Financial System**
+Automated daily financial processing that:
+- Deducts operating costs from all user balances
+- Tracks repair costs (for reference)
+- Detects bankruptcy scenarios
+- Provides detailed financial summaries
+
+**New Functions:**
+- `processDailyFinances(userId)` - Process one user
+- `processAllDailyFinances()` - Process all users
+
+**New Endpoint:**
+- `POST /api/admin/daily-finances/process` - Trigger daily processing
+
+**Integration:**
+Integrated into bulk cycle flow for testing:
+1. Repair robots (optional)
+2. Run matchmaking
+3. Execute battles
+4. **Process daily finances** ← NEW
+5. Rebalance leagues
+
+**Example Cycle Output:**
+```
+Cycle 3:
+- Repaired: 15 robots
+- Matches: 42 created
+- Battles: 42/42 successful
+- Finances: ₡145,000 deducted
+  • 10 users processed
+  • ⚠️ 2 bankruptcies!
+- Rebalancing: 5 promoted, 3 demoted
+```
+
 ### ✅ Phase 2: Frontend Implementation (COMPLETE)
 **Implementation Date**: February 3-4, 2026
 
@@ -83,11 +224,364 @@
   - Winner highlighted with green border
   - Loser shows credits only (no prestige/fame for losing)
 
+### API Usage Examples
+
+This section provides curl command examples and expected responses for the economy system's key API endpoints.
+
+#### Process Daily Finances
+
+Trigger daily financial processing for all users (admin endpoint).
+
+**Request:**
+```bash
+curl -X POST -H "Authorization: Bearer <token>" \
+  http://localhost:3001/api/admin/daily-finances/process
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "summary": {
+    "usersProcessed": 10,
+    "totalCostsDeducted": 145000,
+    "bankruptUsers": 2,
+    "summaries": [
+      {
+        "userId": 1,
+        "username": "player1",
+        "startingBalance": 500000,
+        "operatingCosts": {
+          "total": 15000,
+          "breakdown": [
+            {
+              "facilityType": "INCOME_GENERATOR",
+              "level": 5,
+              "cost": 5000
+            },
+            {
+              "facilityType": "REPAIR_BAY",
+              "level": 3,
+              "cost": 3000
+            }
+          ]
+        },
+        "totalCosts": 15000,
+        "endingBalance": 485000,
+        "balanceChange": -15000,
+        "isBankrupt": false,
+        "canAffordCosts": true
+      }
+    ]
+  }
+}
+```
+
+**Description:**
+- Processes daily operating costs for all users
+- Deducts facility costs from user balances
+- Detects bankruptcy scenarios (balance ≤ 0)
+- Returns detailed per-user financial summaries
+- Integrated into bulk cycle flow for testing
+
+#### Get Financial Summary
+
+Retrieve quick financial overview for dashboard display.
+
+**Request:**
+```bash
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:3001/api/finances/summary
+```
+
+**Response:**
+```json
+{
+  "currentBalance": 1904000,
+  "prestige": 12000,
+  "dailyOperatingCosts": 29000,
+  "dailyPassiveIncome": 57000,
+  "netPassiveIncome": 28000,
+  "prestigeMultiplier": 1.10
+}
+```
+
+**Description:**
+- Provides quick snapshot of financial status
+- Shows current balance and prestige level
+- Calculates daily operating costs from all facilities
+- Calculates daily passive income (merchandising + streaming)
+- Computes net passive income (income - costs)
+- Returns prestige multiplier for battle rewards
+
+#### Get Daily Financial Report
+
+Retrieve comprehensive financial report with all details.
+
+**Request:**
+```bash
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:3001/api/finances/daily?battleWinnings=45000
+```
+
+**Query Parameters:**
+- `battleWinnings` (optional): Battle earnings from last 7 days for accurate projections
+
+**Response:**
+```json
+{
+  "currentBalance": 1904000,
+  "prestige": 12000,
+  "prestigeMultiplier": 1.10,
+  "revenueStreams": {
+    "battleWinnings": 45000,
+    "merchandising": {
+      "daily": 32000,
+      "weekly": 224000,
+      "monthly": 960000
+    },
+    "streaming": {
+      "daily": 25000,
+      "weekly": 175000,
+      "monthly": 750000
+    },
+    "totalDaily": 102000,
+    "totalWeekly": 714000,
+    "totalMonthly": 3060000
+  },
+  "operatingCosts": {
+    "total": 29000,
+    "breakdown": [
+      {
+        "facilityType": "INCOME_GENERATOR",
+        "level": 5,
+        "cost": 5000
+      },
+      {
+        "facilityType": "REPAIR_BAY",
+        "level": 3,
+        "cost": 3000
+      }
+    ]
+  },
+  "netIncome": {
+    "daily": 73000,
+    "weekly": 511000,
+    "monthly": 2190000
+  },
+  "financialHealth": {
+    "status": "Excellent",
+    "profitMargin": 71.6,
+    "daysUntilBankruptcy": null
+  },
+  "projections": {
+    "weekly": 511000,
+    "monthly": 2190000,
+    "balanceIn30Days": 4094000
+  },
+  "recommendations": [
+    "Your stable is highly profitable. Consider upgrading facilities.",
+    "Strong passive income streams. Merchandising and streaming are performing well."
+  ]
+}
+```
+
+**Description:**
+- Complete financial report with all revenue and expense details
+- Revenue streams broken down by source (battles, merchandising, streaming)
+- Operating costs with per-facility breakdown
+- Net income calculations (daily, weekly, monthly)
+- Financial health status with profit margin
+- Bankruptcy projection (days until funds depleted, if applicable)
+- AI-powered recommendations based on financial status
+
+#### Get Operating Costs Breakdown
+
+Retrieve detailed breakdown of all operating costs.
+
+**Request:**
+```bash
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:3001/api/finances/operating-costs
+```
+
+**Response:**
+```json
+{
+  "total": 29000,
+  "breakdown": [
+    {
+      "facilityType": "INCOME_GENERATOR",
+      "level": 5,
+      "cost": 5000,
+      "description": "Generates passive income from merchandising and streaming"
+    },
+    {
+      "facilityType": "REPAIR_BAY",
+      "level": 3,
+      "cost": 3000,
+      "description": "Reduces repair costs by 15%"
+    },
+    {
+      "facilityType": "TRAINING_FACILITY",
+      "level": 4,
+      "cost": 4000,
+      "description": "Enables robot attribute training"
+    }
+  ]
+}
+```
+
+**Description:**
+- Lists all facilities with their operating costs
+- Shows facility type, level, and daily cost
+- Includes facility descriptions
+- Total daily operating cost sum
+
+#### Get Revenue Streams
+
+Retrieve detailed breakdown of all revenue sources.
+
+**Request:**
+```bash
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:3001/api/finances/revenue-streams
+```
+
+**Response:**
+```json
+{
+  "merchandising": {
+    "daily": 32000,
+    "weekly": 224000,
+    "monthly": 960000,
+    "formula": "base_rate × (1 + prestige/10000)",
+    "prestigeBonus": 1.20
+  },
+  "streaming": {
+    "daily": 25000,
+    "weekly": 175000,
+    "monthly": 750000,
+    "formula": "base_rate × (1 + battles/1000) × (1 + fame/5000)",
+    "battlesBonus": 1.15,
+    "fameBonus": 1.08
+  },
+  "totalPassiveDaily": 57000,
+  "totalPassiveWeekly": 399000,
+  "totalPassiveMonthly": 1710000
+}
+```
+
+**Description:**
+- Detailed breakdown of passive income sources
+- Shows daily, weekly, and monthly projections
+- Includes formulas used for calculations
+- Shows bonus multipliers from prestige, battles, and fame
+- Total passive income across all sources
+
+#### Get Financial Projections
+
+Retrieve financial forecasts and recommendations.
+
+**Request:**
+```bash
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:3001/api/finances/projections
+```
+
+**Response:**
+```json
+{
+  "weekly": {
+    "revenue": 714000,
+    "costs": 203000,
+    "netIncome": 511000
+  },
+  "monthly": {
+    "revenue": 3060000,
+    "costs": 870000,
+    "netIncome": 2190000
+  },
+  "balanceProjections": {
+    "in7Days": 2415000,
+    "in30Days": 4094000,
+    "in90Days": 10474000
+  },
+  "recommendations": [
+    "Your stable is highly profitable. Consider upgrading facilities.",
+    "Strong passive income streams. Merchandising and streaming are performing well.",
+    "You can afford to expand your roster or upgrade weapons."
+  ]
+}
+```
+
+**Description:**
+- Financial projections for 7, 30, and 90 days
+- Revenue, costs, and net income forecasts
+- Projected balance at future dates
+- AI-powered recommendations based on financial trajectory
+- Helps with strategic planning and investment decisions
+
 ### ❌ Phase 3: Advanced Features (NOT STARTED)
 - ❌ Historical financial tracking
 - ❌ Economic alerts and notifications
 - ❌ Tutorial/onboarding system
 - ❌ Budget planning tools
+
+### Implementation History
+
+This section tracks the chronological evolution of the economy system implementation.
+
+#### Phase 1: Backend Implementation (February 3, 2026)
+
+**Core Components Implemented:**
+- Economic calculation utilities (`economyCalculations.ts`)
+- Financial API endpoints (`/api/finances/*`)
+- Battle reward system with league-based rewards
+- Repair cost system with Medical Bay support
+- Comprehensive unit tests (27 tests passing)
+- Daily financial processing system
+- Reward calculation details in battle logs
+
+**Files Created/Modified:**
+- `prototype/backend/src/utils/economyCalculations.ts` (620+ lines)
+- `prototype/backend/src/routes/finances.ts` (165 lines)
+- `prototype/backend/src/services/battleOrchestrator.ts` (enhanced)
+- `prototype/backend/src/routes/admin.ts` (enhanced)
+- `prototype/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests)
+
+#### Phase 2: Frontend Implementation (February 4, 2026)
+
+**Core Components Implemented:**
+- Financial API utilities (`financialApi.ts`)
+- FinancialSummary dashboard widget
+- FinancialReportPage for comprehensive reporting
+- Battle rewards display in admin modal
+- Daily finances manual control button
+- Bulk cycle checkbox for daily finances integration
+
+**Files Created/Modified:**
+- `prototype/frontend/src/utils/financialApi.ts` (200 lines)
+- `prototype/frontend/src/components/FinancialSummary.tsx` (140 lines)
+- `prototype/frontend/src/pages/FinancialReportPage.tsx` (280 lines)
+- `prototype/frontend/src/pages/AdminPage.tsx` (enhanced)
+- `prototype/frontend/src/App.tsx` (modified)
+
+#### Key Milestones
+
+- ✅ Complete backend economy calculation system
+- ✅ Full financial reporting API
+- ✅ Frontend dashboard integration
+- ✅ Daily financial processing automation
+- ✅ Battle reward system with prestige multipliers
+- ✅ Comprehensive testing coverage
+
+#### Future Enhancements
+
+- Historical financial tracking
+- Economic alerts and notifications
+- Tutorial/onboarding system
+- Budget planning tools
 
 ---
 
@@ -101,14 +595,25 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 ## Table of Contents
 
-1. [Background & Context](#background--context)
-2. [Economy Overview](#economy-overview)
-3. [Cost Centers (What Costs Money)](#cost-centers-what-costs-money)
-4. [Revenue Streams (How Stables Earn Money)](#revenue-streams-how-stables-earn-money)
-5. [Daily Financial System](#daily-financial-system)
-6. [Economic Balance & Progression](#economic-balance--progression)
-7. [Implementation Recommendations](#implementation-recommendations)
-8. [Success Metrics](#success-metrics)
+1. [Implementation Status](#implementation-status)
+   - [Phase 1: Backend Implementation](#-phase-1-backend-implementation-complete)
+   - [Implementation Files](#implementation-files)
+   - [Key Features](#key-features)
+   - [API Usage Examples](#api-usage-examples)
+   - [Phase 2: Frontend Implementation](#-phase-2-frontend-implementation-complete)
+   - [Phase 3: Advanced Features](#-phase-3-advanced-features-not-started)
+   - [Implementation History](#implementation-history)
+2. [Executive Summary](#executive-summary)
+3. [Background & Context](#background--context)
+4. [Economy Overview](#economy-overview)
+5. [Cost Centers (What Costs Money)](#cost-centers-what-costs-money)
+6. [Revenue Streams (How Stables Earn Money)](#revenue-streams-how-stables-earn-money)
+7. [Prestige & Fame System](#prestige--fame-system)
+8. [Daily Financial System](#daily-financial-system)
+9. [Economic Balance & Progression](#economic-balance--progression)
+10. [Implementation Recommendations](#implementation-recommendations)
+11. [Success Metrics](#success-metrics)
+12. [Appendices](#appendices)
 
 ---
 
@@ -179,7 +684,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 **Primary Currency: Credits (₡)**
 - Symbol: ₡ (Costa Rican colón symbol, chosen for robotic/technical aesthetic)
-- Starting balance: **₡2,000,000** per player
+- Starting balance: **₡3,000,000** per player (increased Feb 8, 2026 - see [OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md))
 - Precision: Whole numbers only (no decimals)
 - Range: 0 to 999,999,999,999 (database supports up to ~2 billion)
 
@@ -229,7 +734,7 @@ robot_purchase_cost = 500,000 Credits
 ```
 
 #### Attribute Upgrades
-- **Formula**: `(current_level + 1) × 1,000` Credits per level
+- **Formula**: `(current_level + 1) × 1,500` Credits per level (increased Feb 8, 2026)
 - **Range**: Level 1 → 50
 - **23 Attributes Total** (see ROBOT_ATTRIBUTES.md for complete list)
 
@@ -258,7 +763,7 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 - Formula with discount:
   ```
   discount = training_facility_level × 5  // 0% to 50%
-  upgrade_cost = (current_level + 1) × 1,000 × (1 - discount/100)
+  upgrade_cost = (current_level + 1) × 1,500 × (1 - discount/100)  // Updated Feb 8, 2026
   ```
 
 **Training Facility ROI Analysis**:
@@ -444,6 +949,7 @@ repair_cost_before_discounts = base_repair × damage_percentage × multiplier
   - Saves ₡460-₡690 per battle
   - Payback: 290-435 battles
   - At 7 battles/week: **41-62 weeks** to break even
+  - **Multi-robot benefit**: With 3 robots (21 battles/week total), payback reduces to **14-21 weeks**
 - **Repair Bay Level 5** (₡1M total, 25% discount):
   - Saves ₡2,300-₡3,450 per battle
   - Incremental cost from Level 1: ₡800K
@@ -589,9 +1095,9 @@ All revenue is earned in Credits (₡). This section consolidates every way play
 
 **Victory Rewards by League**:
 
-| League | Win Reward Range | Fame per Win | Prestige per Win |
-|--------|-----------------|-------------|------------------|
-| Bronze | ₡5,000 - ₡10,000 | +5 | +5 |
+| League | Win Reward Range | Prestige per Win |
+|--------|-----------------|------------------|
+| Bronze | ₡5,000 - ₡10,000 | +5 |
 | Silver | ₡10,000 - ₡20,000 | +10 | +10 |
 | Gold | ₡20,000 - ₡40,000 | +20 | +20 |
 | Platinum | ₡40,000 - ₡80,000 | +30 | +30 |
@@ -1153,7 +1659,7 @@ Recommendations:
 
 ### Early Game Economics (Days 1-30)
 
-**Starting Budget**: ₡2,000,000
+**Starting Budget**: ₡3,000,000 (increased Feb 8, 2026 - see [OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md))
 
 **Recommended Spending**:
 - 1 Robot: ₡500,000
@@ -1239,11 +1745,7 @@ Recommendations:
 **Payback Period Examples** (Revised with correct battle frequency):
 
 1. **Repair Bay Level 1** (₡200,000):
-   - Saves ~5% on repairs (₡175 per battle with ₡3,500 avg repair)
-   - **Battle frequency**: 7 battles/week per robot
-   - Payback: 1,143 battles ÷ 7 = **163 weeks** (3.1 years)
-   - **Multi-robot benefit**: With 3 robots, 21 battles/week → **54 weeks** (1 year)
-   - **Conclusion**: Better value with multiple robots or as long-term investment
+   > **For complete repair cost formulas, facility discounts, and ROI analysis**: See **Section 5 "Repair Costs"** in the Cost Centers section above. Includes detailed payback calculations for single and multi-robot scenarios, Medical Bay integration, and worked examples.
   
 2. **Training Facility Level 1** (₡300,000):
    - Saves 5% on upgrades (varies: ₡2K-₡50K saved depending on level)
@@ -1412,8 +1914,8 @@ Recommendations:
 // Robot purchase
 robot_cost = 500000;
 
-// Attribute upgrade
-upgrade_cost = (current_level + 1) * 1000 * (1 - training_facility_discount);
+// Attribute upgrade (Updated Feb 8, 2026)
+upgrade_cost = (current_level + 1) * 1500 * (1 - training_facility_discount);
 
 // Weapon purchase
 weapon_cost = base_price * (1 - weapons_workshop_discount);

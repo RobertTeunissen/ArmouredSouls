@@ -4,7 +4,6 @@ This document consolidates the development history of UNIQUE ROBOT NAMES CONSOLI
 
 **Source Documents:**
 - UNIQUE_ROBOT_NAMES_COMPLETE.md
-- UNIQUE_ROBOT_NAMES_COMPLETE.md
 
 ---
 

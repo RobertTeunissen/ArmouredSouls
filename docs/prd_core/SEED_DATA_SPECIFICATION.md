@@ -241,11 +241,11 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.2 rebalancing w
 
 Manual testing accounts with full starting resources:
 
-- **player1** / password123 - ₡2,000,000
-- **player2** / password123 - ₡2,000,000
-- **player3** / password123 - ₡2,000,000
-- **player4** / password123 - ₡2,000,000
-- **player5** / password123 - ₡2,000,000
+- **player1** / password123 - ₡3,000,000
+- **player2** / password123 - ₡3,000,000
+- **player3** / password123 - ₡3,000,000
+- **player4** / password123 - ₡3,000,000
+- **player5** / password123 - ₡3,000,000
 
 ### Test User Accounts (100)
 
@@ -269,7 +269,7 @@ Manual testing accounts with full starting resources:
 
 **Username Format**: test_attr_<attribute_name>  
 **Password**: testpass123  
-**Currency**: ₡500,000 each  
+**Currency**: ₡100,000 each  
 **Purpose**: Attribute balance testing
 
 **One user per attribute:**
@@ -311,7 +311,7 @@ Manual testing accounts with full starting resources:
 
 **Username Format**: loadout_<weapon>_<type>  
 **Password**: testpass123  
-**Currency**: ₡1,000,000 each  
+**Currency**: ₡100,000 each  
 **Purpose**: Weapon economy and loadout balance testing
 
 **Single Loadout (4 users):**

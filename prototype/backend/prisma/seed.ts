@@ -599,35 +599,35 @@ async function main() {
       data: {
         username: 'player1',
         passwordHash: hashedPassword,
-        currency: 2000000, // ₡2 million starting balance
+        currency: 3000000, // ₡3 million starting balance
       },
     }),
     prisma.user.create({
       data: {
         username: 'player2',
         passwordHash: hashedPassword,
-        currency: 2000000,
+        currency: 3000000,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player3',
         passwordHash: hashedPassword,
-        currency: 2000000,
+        currency: 3000000,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player4',
         passwordHash: hashedPassword,
-        currency: 2000000,
+        currency: 3000000,
       },
     }),
     prisma.user.create({
       data: {
         username: 'player5',
         passwordHash: hashedPassword,
-        currency: 2000000,
+        currency: 3000000,
       },
     }),
   ]);
@@ -768,7 +768,7 @@ async function main() {
       data: {
         username,
         passwordHash: testHashedPassword,
-        currency: 500000, // ₡500,000 for attribute testing
+        currency: 100000, // ₡100,000 for attribute testing
       },
     });
 
@@ -872,9 +872,8 @@ async function main() {
   const machineGun = weapons.find(w => w.name === 'Machine Gun');
   const lightShield = weapons.find(w => w.name === 'Light Shield');
   const shotgun = weapons.find(w => w.name === 'Shotgun');
-  const assaultRifle = weapons.find(w => w.name === 'Assault Rifle');
   
-  if (!machinePistol || !laserPistol || !combatKnife || !machineGun || !lightShield || !shotgun || !assaultRifle) {
+  if (!machinePistol || !laserPistol || !combatKnife || !machineGun || !lightShield || !shotgun) {
     throw new Error('Required weapons not found for loadout testing');
   }
 
@@ -933,7 +932,7 @@ async function main() {
     
     // Two-Handed (2 users)
     { username: 'loadout_shotgun_two_handed', loadoutType: 'two_handed', mainWeapon: shotgun, offhandWeapon: null, displayName: 'Shotgun 2H' },
-    { username: 'loadout_assault_rifle_two_handed', loadoutType: 'two_handed', mainWeapon: assaultRifle, offhandWeapon: null, displayName: 'Assault Rifle 2H' },
+    { username: 'loadout_assault_rifle_two_handed', loadoutType: 'single', mainWeapon: machineGun, offhandWeapon: null, displayName: 'MG Single' },
   ];
 
   const loadoutTestUsers = [];
@@ -944,7 +943,7 @@ async function main() {
       data: {
         username: config.username,
         passwordHash: testHashedPassword,
-        currency: 1000000, // ₡1,000,000 for loadout testing
+        currency: 100000, // ₡100,000 for loadout testing
       },
     });
 
@@ -1098,10 +1097,10 @@ async function main() {
   console.log('📊 System Overview:');
   console.log('   💰 Currency: Credits (₡)');
   console.log('   👤 Admin: ₡10,000,000 (username: admin, password: admin123)');
-  console.log('   👤 Player users: ₡2,000,000 each (player1-5, password: password123)');
+  console.log('   👤 Player users: ₡3,000,000 each (player1-5, password: password123)');
   console.log('   👤 Test users: ₡100,000 each (test_user_001-100, password: testpass123)');
-  console.log('   👤 Attribute test users: ₡500,000 each (test_attr_*, password: testpass123)');
-  console.log('   👤 Loadout test users: ₡1,000,000 each (loadout_*, password: testpass123)');
+  console.log('   👤 Attribute test users: ₡100,000 each (test_attr_*, password: testpass123)');
+  console.log('   👤 Loadout test users: ₡100,000 each (loadout_*, password: testpass123)');
   console.log('   🤖 Robots: 100 test robots + 230 attribute test robots + 140 loadout test robots + 1 bye-robot');
   console.log('   ⚔️  Practice Sword: FREE (equipped on all test robots)');
   console.log('   🏆 League: All robots start in Bronze (bronze_1)');
@@ -1149,7 +1148,7 @@ async function main() {
   console.log('   - 14 users (testing weapon economy) with 10 robots each = 140 robots');
   console.log('   - All robots have ALL 23 attributes set to 5.00 (HP: 75, Shield: 10)');
   console.log('   - Loadout types: 4 single, 4 weapon+shield, 4 dual-wield, 2 two-handed');
-  console.log('   - Weapons tested: Machine Pistol, Laser Pistol, Combat Knife, Machine Gun, Light Shield, Shotgun, Assault Rifle');
+  console.log('   - Weapons tested: Machine Pistol, Laser Pistol, Combat Knife, Machine Gun, Light Shield, Shotgun');
   console.log('   - Usernames: loadout_<weapon>_<type> (e.g., loadout_machine_pistol_single)');
   console.log('   - Roster Expansion facility maxed out (level 9) for each user');
   console.log('');

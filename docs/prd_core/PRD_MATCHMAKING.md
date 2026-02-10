@@ -252,8 +252,25 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 **Current Behavior**:
 - Matchmaking processes tiers sequentially (Bronze → Champion)
 - Scheduled match query is global (not filtered by tier/time)
-- Battle readiness threshold is 75% HP (ensures no immediate yield)
+- Battle readiness requires: HP ≥75% AND HP > yield threshold AND weapons equipped
 - Rebalancing runs every cycle (checks eligibility each time)
+
+**Why Byes Occur** (Analysis from February 2026):
+- **Primary Cause**: Odd robot counts in league instances (unavoidable)
+  - Example: 31 robots → 15 matches + 1 bye per cycle
+  - Over 102 cycles: ~102 byes distributed among robots
+- **Secondary Cause**: High yield thresholds (>75%) combined with battle damage
+  - Robot with 80% yield threshold needs >80% HP to participate
+  - Typical battle damage (10-15% per win) may drop below threshold
+  - Gets excluded until next auto-repair cycle
+- **Not a Cause**: Sequential tier processing (each tier/instance is independent)
+  - No robots get "stolen" by earlier tiers
+  - Already-scheduled check works correctly per instance
+
+**Recommendations to Minimize Byes**:
+- Balance robot counts to even numbers (30, 32 vs 31)
+- Run auto-repair BEFORE matchmaking (ensures all robots at 100% HP)
+- Monitor robots with very high yield thresholds (40-50%)
 
 ---
 
@@ -455,8 +472,9 @@ The scheduled batch model allows:
 
 **Acceptance Criteria:**
 - Queue includes all robots with battleReadiness ≥ 75%
-- Battle readiness checks:
+- Battle readiness checks (ALL must pass):
   - HP ≥ 75% of maximum
+  - HP > yield threshold (prevents immediate surrender at battle start)
   - All required weapons equipped based on loadout type:
     - Single weapon: mainWeapon required
     - Dual-wield: mainWeapon AND offhandWeapon required
@@ -466,6 +484,8 @@ The scheduled batch model allows:
 - Exclude robots that have yielded/been destroyed until repaired
 - Queue sorted by: Priority (league points) → ELO → Random tiebreaker
 - Queue refreshes before each matchmaking cycle
+
+**Critical Yield Threshold Check**: A robot with 55% HP and 60% yield threshold would surrender immediately at battle start, creating a pointless battle. The yield threshold check prevents this by ensuring HP percentage is strictly greater than the yield threshold before allowing matchmaking.
 
 **Battle Readiness Warnings**: Display on robot list page (icon/badge), robot detail page (banner at top), and dashboard (notification area). Multiple touchpoints ensure players see warnings.
 

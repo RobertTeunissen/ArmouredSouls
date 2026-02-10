@@ -209,10 +209,10 @@ model Robot {
 - Complete combat state tracking (damage, repair costs, battle readiness)
 - League and fame tracking at robot level
 
-**Attribute Upgrade Cost Formula**:
+**Attribute Upgrade Cost Formula** (Updated Feb 8, 2026):
 ```
-cost = (current_level + 1) × 1,000
-Example: Level 1→2 = ₡2,000, Level 49→50 = ₡50,000
+cost = (current_level + 1) × 1,500
+Example: Level 1→2 = ₡3,000, Level 49→50 = ₡75,000
 ```
 
 **HP Calculation**:

@@ -748,7 +748,7 @@ npm run dev
 
 ### Economy
 - Robot frame: ₡500,000
-- Attribute upgrade: (level + 1) × 1,000 Credits
+- Attribute upgrade: (level + 1) × 1,500 Credits (increased Feb 8, 2026 - see [OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md))
 - 23 attributes per robot (Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination)
 
 --> Old seed data, not up to date!

@@ -1,31 +1,62 @@
-# Robot Attributes System
+# Product Requirements Document: Robot Attributes System
 
-**Last Updated**: February 5, 2026  
-**Status**: Design Document - Complete Time-Based Combat System
+**Project**: Armoured Souls  
+**Document Type**: Product Requirements Document (PRD)  
+**Version**: v1.3
+**Date**: February 10, 2026  
+**Status**: ✅ Implemented & Verified 
 
-**Recent Updates (Feb 5, 2026):**
-- Armor Plating now uses percentage-based reduction (1.5% per point, no cap)
-- Energy Shield Capacity renamed (was "Shield Capacity") for clarity
-- Combat formulas updated - see [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for details
+---
+
+## Version History
+- v1.0 - Initial Implemented Version by GitHub Copilot (January 26, 2026)
+- v1.1 - Consolidated Version (February 5, 2026)
+  - Armor Plating now uses percentage-based reduction (1.5% per point, no cap)
+  - Energy Shield Capacity renamed (was "Shield Capacity") for clarity
+  - Combat formulas updated - see [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for details
+- v1.2 - Balance Updates (February 6, 2026)
+  - Two-Handed loadout: Combat Power bonus reduced from +25% to +10%
+  - Two-Handed loadout: Damage multiplier reduced from 1.25x to 1.10x
+  - Weapon Control: Now provides malfunction reduction + damage multiplier (1 + WC/150)
+  - Damage Dampeners: Added pre-shield mitigation (0.2% per point, capped at 15%)
+- v1.3 - Documentation Review (February 10, 2026)
+  - Verified all formulas match current implementation
+  - Confirmed HP calculation: 50 + (hull_integrity × 5)
+  - Confirmed all 23 attributes are implemented correctly
+  - All combat formulas verified against combatSimulator.ts
+
+---
+
+## Implementation Verification (February 10, 2026)
+
+This document has been thoroughly reviewed against the current codebase implementation. All formulas, attributes, and mechanics documented here match the actual implementation in:
+
+### Verified Files:
+- `prototype/backend/prisma/schema.prisma` - All 23 robot attributes present and correctly typed
+- `prototype/backend/src/services/combatSimulator.ts` - Combat formulas match documentation
+- `prototype/backend/src/utils/robotCalculations.ts` - HP, shield, and stat calculations verified
+- `prototype/backend/src/routes/robots.ts` - Attribute upgrade system verified
+
+### Key Verifications:
+✅ **HP Formula**: `50 + (hull_integrity × 5)` - Correctly implemented  
+✅ **Shield Formula**: `shield_capacity × 2` - Correctly implemented  
+✅ **Weapon Control**: Malfunction reduction + damage multiplier (1 + WC/150) - Correctly implemented  
+✅ **Damage Dampeners**: Pre-shield mitigation (0.2% per point, capped at 15%) + crit reduction - Correctly implemented  
+✅ **Armor Plating**: 1.5% damage reduction per point (no cap) - Correctly implemented  
+✅ **Two-Handed Loadout**: +10% Combat Power, 1.10x damage multiplier - Correctly implemented  
+✅ **Stance Modifiers**: Offensive (+15% Combat Power, +10% Attack Speed), Defensive (+15% Armor, +15% Counter), Balanced (no modifiers) - Correctly implemented  
+✅ **All 23 Attributes**: Present in schema and used in combat calculations - Verified
+
+### Database Schema Alignment:
+All robot attributes use `Decimal(5, 2)` type with range 1.00-50.00 as documented. Combat state fields (currentHP, maxHP, currentShield, maxShield) are correctly typed as integers.
+
+---
 
 ## Overview
 
 Armoured Souls uses a comprehensive attribute system with **23 core attributes** that define robot combat capabilities. All attributes are robot-themed and have specific mechanical effects in combat. The system supports weapon-type specialization (melee vs ranged), loadout configurations, battle stances, and uses **time-based combat** exclusively.
 
 **Database Schema**: See DATABASE_SCHEMA.md for authoritative field definitions and relationships.
-
----
-
-## Currency System
-
-**Currency Name**: **Credits** (₡)
-
-- **Starting Balance**: ₡2,000,000
-- **Robot Frame Cost**: ₡500,000 (bare metal, all attributes at 1)
-- **Upgrade Formula**: `(current_level + 1) × 1,000` Credits
-  - Level 1→2: ₡2,000
-  - Level 2→3: ₡3,000
-  - Level 49→50: ₡50,000
 
 ---
 
