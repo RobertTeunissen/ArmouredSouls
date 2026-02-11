@@ -1,9 +1,14 @@
-# Stable System
+# Design Document: Stable System
 
-**Last Updated**: January 30, 2026  
-**Status**: Design Document
+**Project**: Armoured Souls  
+**Document Type**: Design Document  
+**Version**: v1.0  
+**Last Updated**: February 10, 2026  
+**Status**: ✅ Implemented 
 
-> **📋 For Prestige and Fame System Details**: See **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - the authoritative document for prestige earning, fame mechanics, and reputation benefits. This document provides prestige formulas and facility unlock requirements but PRD_PRESTIGE_AND_FAME.md is the official specification.
+## Version History
+
+- **v1.0** (Jan 30, 2026): Initial draft
 
 ## Overview
 
@@ -18,7 +23,7 @@ A **Stable** is the player's collection and management system for their robots. 
 ### Core Resources
 
 **Credits (₡)** - Primary currency
-- Starting balance: ₡3,000,000 (increased Feb 8, 2026 - see [OPTION_C_IMPLEMENTATION.md](OPTION_C_IMPLEMENTATION.md))
+- Starting balance: ₡3,000,000 (increased Feb 8, 2026) 
 - Used for: Robot purchases, upgrades, weapons, repairs, facility upgrades
 - Earned from: Battles, tournaments, achievements, daily income streams
 
@@ -226,7 +231,7 @@ Example:
 
 **10. Combat Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
 - **Level 0**: Combat Systems attributes (6) capped at level 10
-- **Level 1** (₡400,000): Unlock Combat Systems cap to level 15
+- **Level 1** (₡200,000): Unlock Combat Systems cap to level 15
 - **Level 2** (₡600,000): Unlock Combat Systems cap to level 20
 - **Level 3** (₡800,000, requires 2,000 prestige): Unlock Combat Systems cap to level 25
 - **Level 4** (₡1,000,000): Unlock Combat Systems cap to level 30
@@ -239,7 +244,7 @@ Example:
 
 **11. Defense Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
 - **Level 0**: Defensive Systems attributes (5) capped at level 10
-- **Level 1** (₡400,000): Unlock Defensive Systems cap to level 15
+- **Level 1** (₡200,000): Unlock Defensive Systems cap to level 15
 - **Level 2** (₡600,000): Unlock Defensive Systems cap to level 20
 - **Level 3** (₡800,000, requires 2,000 prestige): Unlock Defensive Systems cap to level 25
 - **Level 4** (₡1,000,000): Unlock Defensive Systems cap to level 30
@@ -252,7 +257,7 @@ Example:
 
 **12. Mobility Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
 - **Level 0**: Chassis & Mobility attributes (5) capped at level 10
-- **Level 1** (₡400,000): Unlock Chassis & Mobility cap to level 15
+- **Level 1** (₡200,000): Unlock Chassis & Mobility cap to level 15
 - **Level 2** (₡600,000): Unlock Chassis & Mobility cap to level 20
 - **Level 3** (₡800,000, requires 2,000 prestige): Unlock Chassis & Mobility cap to level 25
 - **Level 4** (₡1,000,000): Unlock Chassis & Mobility cap to level 30
@@ -265,7 +270,7 @@ Example:
 
 **13. AI Training Academy** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
 - **Level 0**: AI Processing + Team Coordination attributes (7) capped at level 10
-- **Level 1** (₡500,000): Unlock AI & Team cap to level 15
+- **Level 1** (₡250,000): Unlock AI & Team cap to level 15
 - **Level 2** (₡750,000): Unlock AI & Team cap to level 20
 - **Level 3** (₡1,000,000, requires 2,000 prestige): Unlock AI & Team cap to level 25
 - **Level 4** (₡1,250,000): Unlock AI & Team cap to level 30
@@ -396,6 +401,8 @@ Example:
 
 ### Daily Summary Presentation
 
+- See **[PRD_INCOME_DASHBOARD.md](PRD_INCOME_DASHBOARD.md)** for the implementation of the income system and daily financial summary
+
 **Daily Report Format**:
 ```
 ═══════════════════════════════════════
@@ -444,6 +451,8 @@ CURRENT BALANCE:           ₡1,847,000
 
 ## Stable Management Interface
 
+- See **[PRD_DASHBOARD_PAGE.md](PRD_DASHBOARD_PAGE.md)** for the implementation of of the stable management interface
+
 ### Dashboard View
 - Total Credits
 - Current Prestige & Prestige Rank
@@ -490,7 +499,7 @@ CURRENT BALANCE:           ₡1,847,000
 
 ## Progression Strategy
 
-### Early Game (₡2M starting budget)
+### Early Game (₡3M starting budget)
 1. Build 1 robot with basic weapon (₡500K + ₡150K = ₡650K)
 2. Upgrade key attributes (₡300K)
 3. Save for Repair Bay Level 1 (₡200K) - reduces long-term costs
@@ -517,32 +526,6 @@ CURRENT BALANCE:           ₡1,847,000
 4. Compete in high-tier tournaments (Diamond/Champion)
 5. Build legendary custom weapons
 6. Optimize daily income streams (Income Generator Level 10)
-
----
-
-## Economic Balance
-
-**Starting Phase**:
-- ₡2,000,000 starting Credits (increased from ₡1M)
-- Can afford: 1 robot (₡500K) + good weapon (₡300K) + upgrades (₡500K) + facility (₡200K) = ₡1.5M, leaving ₡500K buffer
-- Or: 2 robots (₡1M) + basic weapons (₡200K each) + minimal upgrades (₡400K) + facility (₡200K) = ₡2M exactly
-
-**Facility Investment Payoff** (estimated):
-- Repair Bay Level 1: Pays for itself after ~40 battles (₡200K / ₡5K avg savings per battle)
-- Training Facility Level 1: Pays for itself after upgrading ~600 attribute levels (₡300K / ₡500 avg savings)
-- Income Generator Level 1: Pays for itself after ~27 days (₡800K / (₡5K/day - ₡1K/day operating))
-- Weapons Workshop Level 1: Pays for itself after buying ~8 weapons (₡250K / ₡30K avg savings per weapon)
-
-**Prestige Unlocks**:
-- Encourage long-term play
-- Provide goals beyond Credits
-- Create aspirational content (World Championship at 50,000 prestige)
-- Reward consistent performance
-
-**Operating Costs**:
-- Scale with facility levels (~₡20K-₡40K/day for mid-game stable)
-- Balanced by income streams (₡30K-₡60K/day from battles + passive income)
-- Creates strategic decisions (which facilities to upgrade vs operating cost burden)
 
 ---
 
