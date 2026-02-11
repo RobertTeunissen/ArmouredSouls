@@ -219,7 +219,8 @@ function RobotsPage() {
       });
 
       if (response.ok) {
-        const facilities = await response.json();
+        const data = await response.json();
+        const facilities = data.facilities || data; // Handle both response formats
         const repairBay = facilities.find((f: any) => f.type === 'repair_bay');
         if (repairBay) {
           setRepairBayLevel(repairBay.currentLevel || 0);

@@ -213,7 +213,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Combat Training Academy',
     description: 'Increases Combat Systems attribute caps',
     maxLevel: 10,
-    costs: [200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1250000],
+    costs: [200000, 600000, 800000, 1000000, 1200000, 1400000, 1600000, 1800000, 2000000, 2500000],
     benefits: [
       'Combat Systems cap to level 15',
       'Combat Systems cap to level 20',
@@ -234,7 +234,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Defense Training Academy',
     description: 'Increases Defensive Systems attribute caps',
     maxLevel: 10,
-    costs: [200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1250000],
+    costs: [200000, 600000, 800000, 1000000, 1200000, 1400000, 1600000, 1800000, 2000000, 2500000],
     benefits: [
       'Defensive Systems cap to level 15',
       'Defensive Systems cap to level 20',
@@ -255,7 +255,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'Mobility Training Academy',
     description: 'Increases Chassis & Mobility attribute caps',
     maxLevel: 10,
-    costs: [200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1250000],
+    costs: [200000, 600000, 800000, 1000000, 1200000, 1400000, 1600000, 1800000, 2000000, 2500000],
     benefits: [
       'Chassis & Mobility cap to level 15',
       'Chassis & Mobility cap to level 20',
@@ -276,7 +276,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     name: 'AI Training Academy',
     description: 'Increases AI Processing + Team Coordination attribute caps',
     maxLevel: 10,
-    costs: [250000, 375000, 500000, 625000, 750000, 875000, 1000000, 1125000, 1250000, 1500000],
+    costs: [250000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000, 2250000, 2500000, 3000000],
     benefits: [
       'AI & Team cap to level 15',
       'AI & Team cap to level 20',

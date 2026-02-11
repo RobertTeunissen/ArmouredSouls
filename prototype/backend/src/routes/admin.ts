@@ -6,6 +6,7 @@ import { rebalanceLeagues } from '../services/leagueRebalancingService';
 import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { calculateMaxHP } from '../utils/robotCalculations';
+import { repairAllRobots } from '../services/repairService';
 import { PrismaClient } from '@prisma/client';
 import tournamentRoutes from './adminTournaments';
 import { 
@@ -144,47 +145,86 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
         userId: true,
         currentHP: true,
         maxHP: true,
+        maxShield: true,
       },
     });
 
     const repairs = [];
     const REPAIR_COST_PER_HP = 50; // 50 credits per HP
 
+    // Group robots by user to apply facility discounts
+    const robotsByUser = new Map<number, typeof robots>();
     for (const robot of robots) {
-      const hpToRestore = robot.maxHP - robot.currentHP;
-      const repairCost = hpToRestore * REPAIR_COST_PER_HP;
+      if (!robotsByUser.has(robot.userId)) {
+        robotsByUser.set(robot.userId, []);
+      }
+      robotsByUser.get(robot.userId)!.push(robot);
+    }
 
-      // Update robot HP
-      await prisma.robot.update({
-        where: { id: robot.id },
-        data: { currentHP: robot.maxHP },
+    for (const [userId, userRobots] of robotsByUser.entries()) {
+      // Get repair bay facility for discount
+      const repairBay = await prisma.facility.findUnique({
+        where: {
+          userId_facilityType: {
+            userId,
+            facilityType: 'repair_bay',
+          },
+        },
       });
 
+      const repairBayLevel = repairBay?.level || 0;
+      const discount = repairBayLevel * 5; // 5% per level
+
+      let totalUserRepairCost = 0;
+
+      for (const robot of userRobots) {
+        const hpToRestore = robot.maxHP - robot.currentHP;
+        const baseCost = hpToRestore * REPAIR_COST_PER_HP;
+        const repairCost = Math.floor(baseCost * (1 - discount / 100));
+
+        // Update robot HP and set battle ready
+        await prisma.robot.update({
+          where: { id: robot.id },
+          data: { 
+            currentHP: robot.maxHP,
+            currentShield: robot.maxShield,
+            repairCost: 0,
+            battleReadiness: 100,
+          },
+        });
+
+        totalUserRepairCost += repairCost;
+
+        repairs.push({
+          robotId: robot.id,
+          robotName: robot.name,
+          userId: robot.userId,
+          hpRestored: hpToRestore,
+          baseCost,
+          discount,
+          finalCost: repairCost,
+          costDeducted: deductCosts,
+        });
+      }
+
       // Deduct costs if requested
-      if (deductCosts) {
+      if (deductCosts && totalUserRepairCost > 0) {
         await prisma.user.update({
-          where: { id: robot.userId },
+          where: { id: userId },
           data: {
             currency: {
-              decrement: repairCost,
+              decrement: totalUserRepairCost,
             },
           },
         });
       }
-
-      repairs.push({
-        robotId: robot.id,
-        robotName: robot.name,
-        hpRestored: hpToRestore,
-        cost: repairCost,
-        costDeducted: deductCosts,
-      });
     }
 
     res.json({
       success: true,
       robotsRepaired: robots.length,
-      totalCost: repairs.reduce((sum, r) => sum + r.cost, 0),
+      totalBaseCost: repairs.reduce((sum, r) => sum + r.baseCost, 0),
+      totalFinalCost: repairs.reduce((sum, r) => sum + r.finalCost, 0),
       costsDeducted: deductCosts,
       repairs,
       timestamp: new Date().toISOString(),
@@ -298,22 +338,28 @@ router.post('/daily-finances/process', authenticateToken, requireAdmin, async (r
 
 /**
  * POST /api/admin/cycles/bulk
- * Run multiple complete cycles (matchmaking → battles → rebalancing)
- * Optional: Generate new users per cycle (1 user cycle 1, 2 users cycle 2, etc.)
+ * Run multiple complete cycles with the following flow:
+ * 1. Repair All Robots (costs deducted)
+ * 2. Tournament Execution / Scheduling
+ * 3. Repair All Robots (costs deducted)
+ * 4. Execute League Battles
+ * 5. Rebalance Leagues
+ * 6. Auto Generate New Users (battle ready)
+ * 7. Repair All Robots (costs deducted)
+ * 8. Matchmaking for Leagues
  */
 router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { 
       cycles = 1, 
-      autoRepair = false, 
-      includeDailyFinances = true, 
+      includeDailyFinances = false, // Deprecated, kept for backwards compatibility
       generateUsersPerCycle = false,
-      includeTournaments = true // NEW: Enable tournament execution
+      includeTournaments = true
     } = req.body;
     const maxCycles = 100;
     const cycleCount = Math.min(Math.max(1, cycles), maxCycles);
 
-    console.log(`[Admin] Running ${cycleCount} bulk cycles (autoRepair: ${autoRepair}, includeDailyFinances: ${includeDailyFinances}, includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
+    console.log(`[Admin] Running ${cycleCount} bulk cycles (includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
 
     // Get or create cycle metadata (singleton pattern)
     // Note: This initialization is also in seed.ts. Both locations create the same
@@ -336,42 +382,12 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       console.log(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
 
       try {
-        // Step 0: Generate users (if enabled)
-        let userGenerationSummary = null;
-        if (generateUsersPerCycle) {
-          try {
-            userGenerationSummary = await generateBattleReadyUsers(currentCycleNumber);
-            console.log(`[Admin] Generated ${userGenerationSummary.usersCreated} users for cycle ${currentCycleNumber}`);
-          } catch (error) {
-            console.error(`[Admin] Error generating users:`, error);
-            userGenerationSummary = {
-              error: error instanceof Error ? error.message : String(error),
-            };
-          }
-        }
+        // Step 1: Repair All Robots (costs deducted)
+        console.log(`[Admin] Step 1: Repair All Robots (pre-tournament)`);
+        const repair1Summary = await repairAllRobots(true);
 
-        // Step 1: Auto-repair robots (before tournaments)
-        let repairSummaryPreTournament = null;
-        if (autoRepair) {
-          const robots = await prisma.robot.findMany({
-            where: {
-              currentHP: { lt: prisma.robot.fields.maxHP },
-              NOT: { name: 'Bye Robot' },
-            },
-          });
-
-          for (const robot of robots) {
-            await prisma.robot.update({
-              where: { id: robot.id },
-              data: { currentHP: robot.maxHP },
-            });
-          }
-
-          repairSummaryPreTournament = { robotsRepaired: robots.length };
-          console.log(`[Admin] Pre-tournament repair: ${robots.length} robots repaired`);
-        }
-
-        // Step 2: Execute tournament rounds (if enabled)
+        // Step 2: Tournament Execution / Scheduling
+        console.log(`[Admin] Step 2: Tournament Execution / Scheduling`);
         let tournamentSummary = null;
         if (includeTournaments) {
           try {
@@ -445,50 +461,47 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           }
         }
 
-        // Step 3: Auto-repair robots (before leagues)
-        let repairSummaryPreLeague = null;
-        if (autoRepair) {
-          const robots = await prisma.robot.findMany({
-            where: {
-              currentHP: { lt: prisma.robot.fields.maxHP },
-              NOT: { name: 'Bye Robot' },
-            },
-          });
+        // Step 3: Repair All Robots (costs deducted)
+        console.log(`[Admin] Step 3: Repair All Robots (post-tournament)`);
+        const repair2Summary = await repairAllRobots(true);
 
-          for (const robot of robots) {
-            await prisma.robot.update({
-              where: { id: robot.id },
-              data: { currentHP: robot.maxHP },
-            });
+        // Step 4: Execute League Battles
+        console.log(`[Admin] Step 4: Execute League Battles`);
+        const battleSummary = await executeScheduledBattles(new Date());
+
+        // Step 5: Rebalance Leagues
+        console.log(`[Admin] Step 5: Rebalance Leagues`);
+        const rebalancingSummary = await rebalanceLeagues();
+
+        // Step 6: Auto Generate New Users (battle ready)
+        console.log(`[Admin] Step 6: Auto Generate New Users`);
+        let userGenerationSummary = null;
+        if (generateUsersPerCycle) {
+          try {
+            userGenerationSummary = await generateBattleReadyUsers(currentCycleNumber);
+            console.log(`[Admin] Generated ${userGenerationSummary.usersCreated} users for cycle ${currentCycleNumber}`);
+          } catch (error) {
+            console.error(`[Admin] Error generating users:`, error);
+            userGenerationSummary = {
+              error: error instanceof Error ? error.message : String(error),
+            };
           }
-
-          repairSummaryPreLeague = { robotsRepaired: robots.length };
-          console.log(`[Admin] Pre-league repair: ${robots.length} robots repaired`);
         }
 
-        // Step 4: Matchmaking
+        // Step 7: Repair All Robots (costs deducted)
+        console.log(`[Admin] Step 7: Repair All Robots (post-league)`);
+        const repair3Summary = await repairAllRobots(true);
+
+        // Step 8: Matchmaking for Leagues
+        console.log(`[Admin] Step 8: Matchmaking for Leagues`);
         const scheduledFor = new Date(Date.now() + 1000); // 1 second ahead
         const matchesCreated = await runMatchmaking(scheduledFor);
         const matchmakingSummary = { matchesCreated };
 
-        // Small delay to ensure time passes
+        // Small delay to ensure time passes for next cycle
         await new Promise(resolve => setTimeout(resolve, 1100));
 
-        // Step 5: Execute league battles
-        const battleSummary = await executeScheduledBattles(new Date());
-
-        // Step 6: Process daily finances (if enabled)
-        let financeSummary = null;
-        if (includeDailyFinances) {
-          financeSummary = await processAllDailyFinances();
-        }
-
-        // Step 7: Rebalance leagues (every cycle)
-        let rebalancingSummary = null;
-        rebalancingSummary = await rebalanceLeagues();
-
-        // Step 8: Increment cyclesInCurrentLeague for all robots (after rebalancing)
-        // This ensures robots that were promoted/demoted start at 0 in their new league
+        // Increment cyclesInCurrentLeague for all robots (after rebalancing)
         await prisma.robot.updateMany({
           where: {
             NOT: { name: 'Bye Robot' },
@@ -502,14 +515,14 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
 
         cycleResults.push({
           cycle: currentCycleNumber,
-          userGeneration: userGenerationSummary,
-          repairPreTournament: repairSummaryPreTournament,
+          repair1: repair1Summary,
           tournaments: tournamentSummary,
-          repairPreLeague: repairSummaryPreLeague,
-          matchmaking: matchmakingSummary,
+          repair2: repair2Summary,
           battles: battleSummary,
-          finances: financeSummary,
           rebalancing: rebalancingSummary,
+          userGeneration: userGenerationSummary,
+          repair3: repair3Summary,
+          matchmaking: matchmakingSummary,
           duration: Date.now() - cycleStart,
         });
       } catch (error) {
@@ -537,9 +550,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       success: true,
       cyclesCompleted: cycleCount,
       totalCyclesInSystem: currentCycleNumber,
-      autoRepairEnabled: autoRepair,
-      includeDailyFinances,
-      includeTournaments, // NEW
+      includeTournaments,
       generateUsersPerCycleEnabled: generateUsersPerCycle,
       totalDuration,
       averageCycleDuration: Math.round(totalDuration / cycleCount),

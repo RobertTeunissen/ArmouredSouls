@@ -33,7 +33,12 @@ function UpcomingMatches() {
       
       console.log('[UpcomingMatches] Fetching upcoming matches...');
       const data = await getUpcomingMatches();
-      console.log('[UpcomingMatches] Received data:', data);
+      console.log('[UpcomingMatches] Received matches:', {
+        total: data.length,
+        leagueMatches: data.filter(m => m.matchType === 'league').length,
+        tournamentMatches: data.filter(m => m.matchType === 'tournament').length,
+        matches: data,
+      });
       
       setMatches(data);
       setError(null);
@@ -64,25 +69,36 @@ function UpcomingMatches() {
   const getMatchResult = (match: ScheduledMatch) => {
     // Basic validation
     if (!match) {
+      console.warn('[UpcomingMatches] Null match encountered');
       return null;
     }
     
     // For tournament matches, robot1 or robot2 might be null (placeholder matches)
     if (match.matchType === 'tournament' && (!match.robot1 || !match.robot2)) {
+      console.log('[UpcomingMatches] Skipping incomplete tournament match:', match.id);
       return null; // Don't display incomplete tournament matches
     }
     
     // For league matches, both robots should be present
     if (!match.robot1 || !match.robot2) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Invalid match data - missing robots:', match);
-      }
+      console.error('[UpcomingMatches] Invalid match data - missing robots:', {
+        matchId: match.id,
+        matchType: match.matchType,
+        robot1: match.robot1,
+        robot2: match.robot2,
+      });
       return null;
     }
     
-    // IMPORTANT: League matches don't always have user data pre-loaded
-    // Only filter out if BOTH robot AND user are completely missing
-    // If user is missing, we'll use UNKNOWN_USER fallback
+    // Validate that we have the minimum required data
+    if (!match.robot1.userId || !match.robot2.userId) {
+      console.error('[UpcomingMatches] Invalid match data - missing userId:', {
+        matchId: match.id,
+        robot1UserId: match.robot1.userId,
+        robot2UserId: match.robot2.userId,
+      });
+      return null;
+    }
     
     const myRobot = isMyRobot(match.robot1.userId) ? match.robot1 : match.robot2;
     const opponent = isMyRobot(match.robot1.userId) ? match.robot2 : match.robot1;
@@ -133,6 +149,12 @@ function UpcomingMatches() {
           
           // Skip invalid matches safely
           if (!matchResult) {
+            console.log('[UpcomingMatches] Filtering out match:', {
+              id: match.id,
+              matchType: match.matchType,
+              hasRobot1: !!match.robot1,
+              hasRobot2: !!match.robot2,
+            });
             return null;
           }
           

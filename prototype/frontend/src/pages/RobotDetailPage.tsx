@@ -299,19 +299,24 @@ function RobotDetailPage() {
       });
 
       if (facilitiesResponse.ok) {
-        const facilities = await facilitiesResponse.json();
+        const data = await facilitiesResponse.json();
+        const facilities = data.facilities || data; // Handle both response formats
+        console.log('Facilities API Response:', data);
+        console.log('Facilities Array:', facilities);
         
         // Always set training level (even if 0)
         const trainingFacility = facilities.find((f: any) => f.type === 'training_facility');
         setTrainingLevel(trainingFacility?.currentLevel || 0);
 
         // Always set academy levels (even if 0)
-        setAcademyLevels({
+        const newAcademyLevels = {
           combat_training_academy: facilities.find((f: any) => f.type === 'combat_training_academy')?.currentLevel || 0,
           defense_training_academy: facilities.find((f: any) => f.type === 'defense_training_academy')?.currentLevel || 0,
           mobility_training_academy: facilities.find((f: any) => f.type === 'mobility_training_academy')?.currentLevel || 0,
           ai_training_academy: facilities.find((f: any) => f.type === 'ai_training_academy')?.currentLevel || 0,
-        });
+        };
+        console.log('Academy Levels:', newAcademyLevels);
+        setAcademyLevels(newAcademyLevels);
       }
     } catch (err) {
       setError('Failed to load robot details');

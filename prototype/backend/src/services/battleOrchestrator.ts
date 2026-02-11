@@ -480,9 +480,7 @@ async function updateRobotStats(
   
   // Award credits to user based on battle outcome
   // Winner gets winnerReward, loser gets loserReward (both include participation)
-  const reward = isRobot1 
-    ? (battle.winnerId === battle.robot1Id ? battle.winnerReward : battle.loserReward)
-    : (battle.winnerId === battle.robot2Id ? battle.winnerReward : battle.loserReward);
+  const reward = isWinner ? battle.winnerReward : battle.loserReward;
   
   if (reward !== null && reward > 0) {
     await prisma.user.update({

@@ -648,12 +648,12 @@ async function main() {
   console.log('✅ Created bye-robot user');
 
   // Create 100 test users with robots
-  console.log('Creating 100 test users with robots...');
+  console.log('Creating 100 test users with WimpBot robots...');
   const testUsersWithRobots = [];
   
   for (let i = 1; i <= 100; i++) {
     const username = `test_user_${String(i).padStart(3, '0')}`;
-    const robotName = generateRobotName(i - 1);
+    const robotName = `WimpBot ${i}`; // Changed from generated names to WimpBot 1-100
     
     // Create user
     const user = await prisma.user.create({
@@ -712,326 +712,953 @@ async function main() {
     testUsersWithRobots.push({ user, robot });
     
     if (i % 10 === 0) {
-      console.log(`   Created ${i}/100 test users with robots...`);
+      console.log(`   Created ${i}/100 test users with WimpBot robots...`);
     }
   }
 
-  console.log(`✅ Created 100 test users with robots`);
+  console.log(`✅ Created 100 test users with WimpBot robots`);
   console.log(`   - Username format: test_user_001 to test_user_100`);
   console.log(`   - Password: testpass123`);
+  console.log(`   - Robot names: WimpBot 1 through WimpBot 100`);
   console.log(`   - All robots equipped with Practice Sword`);
   console.log(`   - All robots in Bronze League (bronze_1)`);
   console.log(`   - All robots have ELO 1200`);
+  console.log(`   - Purpose: Easily defeated mob for tournaments`);
 
-  // Create 23 attribute-focused test users for balance testing
-  console.log('Creating 23 attribute-focused test users for balance testing...');
+  // Create Player Archetype Test Users (17 users with specific builds)
+  console.log('Creating 17 player archetype test users...');
   
-  // Define all 23 attributes in order by category
-  const attributeList = [
-    // Combat Systems (6)
-    'combatPower',
-    'targetingSystems',
-    'criticalSystems',
-    'penetration',
-    'weaponControl',
-    'attackSpeed',
-    // Defensive Systems (5)
-    'armorPlating',
-    'shieldCapacity',
-    'evasionThrusters',
-    'damageDampeners',
-    'counterProtocols',
-    // Chassis & Mobility (5)
-    'hullIntegrity',
-    'servoMotors',
-    'gyroStabilizers',
-    'hydraulicSystems',
-    'powerCore',
-    // AI Processing (4)
-    'combatAlgorithms',
-    'threatAnalysis',
-    'adaptiveAI',
-    'logicCores',
-    // Team Coordination (3)
-    'syncProtocols',
-    'supportSystems',
-    'formationTactics',
-  ];
-
-  const attributeTestUsers = [];
-  
-  for (const attribute of attributeList) {
-    const username = `test_attr_${attribute.replace(/([A-Z])/g, '_$1').toLowerCase()}`;
-    
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        username,
-        passwordHash: testHashedPassword,
-        currency: 100000, // ₡100,000 for attribute testing
-      },
-    });
-
-    // Create Roster Expansion facility at max level (9) to enable 10 robots
-    await prisma.facility.create({
-      data: {
-        userId: user.id,
-        facilityType: 'roster_expansion',
-        level: 9, // Max level is 9 for Roster Expansion (enables 10 robots)
-        maxLevel: 9,
-      },
-    });
-
-    // Create 10 robots for this user, each with the focused attribute at 10.0
-    const robots = [];
-    for (let i = 0; i < 10; i++) {
-      const robotName = `${attribute.charAt(0).toUpperCase() + attribute.slice(1)} Bot ${i + 1}`;
-      
-      // Build attributes object with all at 1.0 except the focused one at 10.0
-      const robotAttributes = { ...DEFAULT_ROBOT_ATTRIBUTES };
-      robotAttributes[attribute as keyof typeof DEFAULT_ROBOT_ATTRIBUTES] = 10.0;
-      
-      // Calculate HP and shield based on attributes
-      // HP formula: 50 + (hullIntegrity × 5)
-      const hullIntegrityValue = robotAttributes.hullIntegrity;
-      const maxHP = Math.floor(50 + (hullIntegrityValue * 5));
-      const currentHP = maxHP;
-      
-      // Shield formula: shieldCapacity × 2
-      const shieldCapacityValue = robotAttributes.shieldCapacity;
-      const maxShield = Math.floor(shieldCapacityValue * 2);
-      const currentShield = maxShield;
-
-      // Create weapon inventory entry for Practice Sword
-      const weaponInventory = await prisma.weaponInventory.create({
-        data: {
-          userId: user.id,
-          weaponId: practiceSword.id,
-        },
-      });
-
-      // Create robot
-      const robot = await prisma.robot.create({
-        data: {
-          userId: user.id,
-          name: robotName,
-          frameId: 1,
-          
-          // Apply attributes with focused attribute at 10.0
-          ...robotAttributes,
-          
-          // Combat state
-          currentHP,
-          maxHP,
-          currentShield,
-          maxShield,
-          
-          // Performance tracking
-          elo: 1200, // Starting ELO
-          
-          // League
-          currentLeague: 'bronze',
-          leagueId: 'bronze_1',
-          leaguePoints: 0,
-          
-          // Loadout - single weapon with Practice Sword
-          loadoutType: 'single',
-          mainWeaponId: weaponInventory.id,
-          
-          // Stance - balanced as specified
-          stance: 'balanced',
-          
-          // Battle readiness
-          battleReadiness: 100,
-          yieldThreshold: 10,
-        },
-      });
-      
-      robots.push(robot);
-    }
-    
-    attributeTestUsers.push({ user, robots });
-    console.log(`   Created ${username} with 10 robots (focused on ${attribute})`);
-  }
-
-  console.log(`✅ Created 23 attribute-focused test users with 230 robots total`);
-  console.log(`   - Username format: test_attr_<attribute_name>`);
-  console.log(`   - Password: testpass123`);
-  console.log(`   - Each user has Roster Expansion facility at level 9 (enables 10 robots)`);
-  console.log(`   - Each user has 10 robots with focused attribute at 10.0, all others at 1.0`);
-  console.log(`   - All robots equipped with Practice Sword (single loadout)`);
-  console.log(`   - All robots in balanced stance`);
-
-  // Create weapon loadout test users (14 users with 10 robots each, all stats at 5.00)
-  console.log('Creating 14 weapon loadout test users...');
-  
-  // Find weapons needed for loadout testing
-  const machinePistol = weapons.find(w => w.name === 'Machine Pistol');
-  const laserPistol = weapons.find(w => w.name === 'Laser Pistol');
-  const combatKnife = weapons.find(w => w.name === 'Combat Knife');
+  // Find weapons needed for archetypes
+  const powerSword = weapons.find(w => w.name === 'Power Sword');
+  const combatShield = weapons.find(w => w.name === 'Combat Shield');
+  const plasmaCannon = weapons.find(w => w.name === 'Plasma Cannon');
+  const railgun = weapons.find(w => w.name === 'Railgun');
+  const heavyHammer = weapons.find(w => w.name === 'Heavy Hammer');
   const machineGun = weapons.find(w => w.name === 'Machine Gun');
-  const lightShield = weapons.find(w => w.name === 'Light Shield');
-  const shotgun = weapons.find(w => w.name === 'Shotgun');
+  const plasmaRifle = weapons.find(w => w.name === 'Plasma Rifle');
   
-  if (!machinePistol || !laserPistol || !combatKnife || !machineGun || !lightShield || !shotgun) {
-    throw new Error('Required weapons not found for loadout testing');
+  if (!powerSword || !combatShield || !plasmaCannon || !railgun || !heavyHammer || !machineGun || !plasmaRifle) {
+    throw new Error('Required weapons not found for archetype testing');
   }
 
-  // Attributes set to 5.00 for all loadout test robots
-  const LOADOUT_TEST_ATTRIBUTES = {
-    combatPower: 5.0,
-    targetingSystems: 5.0,
-    criticalSystems: 5.0,
-    penetration: 5.0,
-    weaponControl: 5.0,
-    attackSpeed: 5.0,
-    armorPlating: 5.0,
-    shieldCapacity: 5.0,
-    evasionThrusters: 5.0,
-    damageDampeners: 5.0,
-    counterProtocols: 5.0,
-    hullIntegrity: 5.0,
-    servoMotors: 5.0,
-    gyroStabilizers: 5.0,
-    hydraulicSystems: 5.0,
-    powerCore: 5.0,
-    combatAlgorithms: 5.0,
-    threatAnalysis: 5.0,
-    adaptiveAI: 5.0,
-    logicCores: 5.0,
-    syncProtocols: 5.0,
-    supportSystems: 5.0,
-    formationTactics: 5.0,
-  };
+  const archetypeUsers = [];
 
-  // Calculate HP and Shield for 5.00 attributes
-  // HP formula: 50 + (hullIntegrity × 5) = 50 + (5.00 × 5) = 75
-  // Shield formula: shieldCapacity × 2 = 5.00 × 2 = 10
-  const loadoutTestMaxHP = 75;
-  const loadoutTestMaxShield = 10;
-
-  // Define loadout configurations
-  const loadoutConfigs = [
-    // Single loadout (4 users)
-    { username: 'loadout_machine_pistol_single', loadoutType: 'single', mainWeapon: machinePistol, offhandWeapon: null, displayName: 'MP Single' },
-    { username: 'loadout_laser_pistol_single', loadoutType: 'single', mainWeapon: laserPistol, offhandWeapon: null, displayName: 'LP Single' },
-    { username: 'loadout_combat_knife_single', loadoutType: 'single', mainWeapon: combatKnife, offhandWeapon: null, displayName: 'CK Single' },
-    { username: 'loadout_machine_gun_single', loadoutType: 'single', mainWeapon: machineGun, offhandWeapon: null, displayName: 'MG Single' },
-    
-    // Weapon + Shield (4 users)
-    { username: 'loadout_machine_pistol_shield', loadoutType: 'weapon_shield', mainWeapon: machinePistol, offhandWeapon: lightShield, displayName: 'MP + Shield' },
-    { username: 'loadout_laser_pistol_shield', loadoutType: 'weapon_shield', mainWeapon: laserPistol, offhandWeapon: lightShield, displayName: 'LP + Shield' },
-    { username: 'loadout_combat_knife_shield', loadoutType: 'weapon_shield', mainWeapon: combatKnife, offhandWeapon: lightShield, displayName: 'CK + Shield' },
-    { username: 'loadout_machine_gun_shield', loadoutType: 'weapon_shield', mainWeapon: machineGun, offhandWeapon: lightShield, displayName: 'MG + Shield' },
-    
-    // Dual-Wield (4 users)
-    { username: 'loadout_machine_pistol_dual', loadoutType: 'dual_wield', mainWeapon: machinePistol, offhandWeapon: machinePistol, displayName: 'MP Dual' },
-    { username: 'loadout_laser_pistol_dual', loadoutType: 'dual_wield', mainWeapon: laserPistol, offhandWeapon: laserPistol, displayName: 'LP Dual' },
-    { username: 'loadout_combat_knife_dual', loadoutType: 'dual_wield', mainWeapon: combatKnife, offhandWeapon: combatKnife, displayName: 'CK Dual' },
-    { username: 'loadout_machine_gun_dual', loadoutType: 'dual_wield', mainWeapon: machineGun, offhandWeapon: machineGun, displayName: 'MG Dual' },
-    
-    // Two-Handed (2 users)
-    { username: 'loadout_shotgun_two_handed', loadoutType: 'two_handed', mainWeapon: shotgun, offhandWeapon: null, displayName: 'Shotgun 2H' },
-    { username: 'loadout_assault_rifle_two_handed', loadoutType: 'single', mainWeapon: machineGun, offhandWeapon: null, displayName: 'MG Single' },
-  ];
-
-  const loadoutTestUsers = [];
-
-  for (const config of loadoutConfigs) {
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        username: config.username,
-        passwordHash: testHashedPassword,
-        currency: 100000, // ₡100,000 for loadout testing
-      },
-    });
-
-    // Create Roster Expansion facility at max level (9) to enable 10 robots
-    await prisma.facility.create({
-      data: {
-        userId: user.id,
-        facilityType: 'roster_expansion',
-        level: 9,
-        maxLevel: 9,
-      },
-    });
-
-    // Create weapon inventory entries
-    const mainWeaponInventory = await prisma.weaponInventory.create({
-      data: {
-        userId: user.id,
-        weaponId: config.mainWeapon.id,
-      },
-    });
-
-    let offhandWeaponInventory = null;
-    if (config.offhandWeapon) {
-      offhandWeaponInventory = await prisma.weaponInventory.create({
-        data: {
-          userId: user.id,
-          weaponId: config.offhandWeapon.id,
-        },
-      });
-    }
-
-    // Create 10 robots for this user
-    const robots = [];
-    for (let i = 0; i < 10; i++) {
-      const robotName = `${config.displayName} Bot ${i + 1}`;
-
-      const robot = await prisma.robot.create({
-        data: {
-          userId: user.id,
-          name: robotName,
-          frameId: 1,
-          
-          // All 23 attributes set to 5.00
-          ...LOADOUT_TEST_ATTRIBUTES,
-          
-          // Combat state
-          currentHP: loadoutTestMaxHP,
-          maxHP: loadoutTestMaxHP,
-          currentShield: loadoutTestMaxShield,
-          maxShield: loadoutTestMaxShield,
-          
-          // Performance tracking
-          elo: 1200,
-          
-          // League
-          currentLeague: 'bronze',
-          leagueId: 'bronze_1',
-          leaguePoints: 0,
-          
-          // Loadout configuration
-          loadoutType: config.loadoutType,
-          mainWeaponId: mainWeaponInventory.id,
-          offhandWeaponId: offhandWeaponInventory ? offhandWeaponInventory.id : null,
-          
-          // Stance
-          stance: 'balanced',
-          
-          // Battle readiness
-          battleReadiness: 100,
-          yieldThreshold: 10,
-        },
-      });
-
-      robots.push(robot);
-    }
-
-    loadoutTestUsers.push({ user, robots });
-    console.log(`   Created ${config.username} with 10 robots (${config.displayName})`);
+  // Helper function to calculate attribute upgrade cost
+  function calculateAttributeCost(targetLevel: number): number {
+    return 1500 * (targetLevel * (targetLevel + 1) / 2);
   }
 
-  console.log(`✅ Created 14 weapon loadout test users with 140 robots total`);
-  console.log(`   - Username format: loadout_<weapon>_<type>`);
-  console.log(`   - Password: testpass123`);
-  console.log(`   - Each user has Roster Expansion facility at level 9 (enables 10 robots)`);
-  console.log(`   - All robots have ALL 23 attributes set to 5.00`);
-  console.log(`   - HP: 75 (50 + 5.00 × 5), Shield: 10 (5.00 × 2)`);
-  console.log(`   - Loadouts: 4 single, 4 weapon+shield, 4 dual-wield, 2 two-handed`);
-  console.log(`   - All robots in balanced stance with ELO 1200`);
+  // ARCHETYPE 1: Tank Fortress
+  console.log('   Creating Tank Fortress archetype...');
+  const tankFortressUser = await prisma.user.create({
+    data: {
+      username: 'archetype_tank_fortress',
+      passwordHash: testHashedPassword,
+      currency: 756000, // Remaining after purchases
+      prestige: 0,
+    },
+  });
+
+  // Create facilities for Tank Fortress
+  await prisma.facility.create({
+    data: {
+      userId: tankFortressUser.id,
+      facilityType: 'defense_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+  await prisma.facility.create({
+    data: {
+      userId: tankFortressUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  // Create weapon inventory for Tank Fortress
+  const tankPowerSwordInv = await prisma.weaponInventory.create({
+    data: { userId: tankFortressUser.id, weaponId: powerSword.id },
+  });
+  const tankCombatShieldInv = await prisma.weaponInventory.create({
+    data: { userId: tankFortressUser.id, weaponId: combatShield.id },
+  });
+
+  // Create Tank Fortress robot
+  const tankFortressRobot = await prisma.robot.create({
+    data: {
+      userId: tankFortressUser.id,
+      name: 'Tank Fortress C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      hullIntegrity: 15.0,
+      armorPlating: 14.0,
+      shieldCapacity: 14.0,
+      counterProtocols: 12.0,
+      combatPower: 12.0,
+      damageDampeners: 10.0,
+      weaponControl: 10.0,
+      currentHP: 125, // 50 + 15×5
+      maxHP: 125,
+      currentShield: 28, // 14×2
+      maxShield: 28,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'weapon_shield',
+      mainWeaponId: tankPowerSwordInv.id,
+      offhandWeaponId: tankCombatShieldInv.id,
+      stance: 'defensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: tankFortressUser, robots: [tankFortressRobot] });
+  console.log('   ✅ Tank Fortress created');
+
+  // ARCHETYPE 2A: Glass Cannon with Plasma Cannon
+  console.log('   Creating Glass Cannon A (Plasma Cannon)...');
+  const glassCannonAUser = await prisma.user.create({
+    data: {
+      username: 'archetype_glass_cannon_a',
+      passwordHash: testHashedPassword,
+      currency: 946500,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: glassCannonAUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const gcaPlasmaCannonInv = await prisma.weaponInventory.create({
+    data: { userId: glassCannonAUser.id, weaponId: plasmaCannon.id },
+  });
+
+  const glassCannonARobot = await prisma.robot.create({
+    data: {
+      userId: glassCannonAUser.id,
+      name: 'Glass Cannon A C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 15.0,
+      criticalSystems: 15.0,
+      penetration: 14.0,
+      weaponControl: 13.0,
+      targetingSystems: 12.0,
+      hullIntegrity: 10.0,
+      currentHP: 100,
+      maxHP: 100,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'two_handed',
+      mainWeaponId: gcaPlasmaCannonInv.id,
+      stance: 'offensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: glassCannonAUser, robots: [glassCannonARobot] });
+  console.log('   ✅ Glass Cannon A created');
+
+  // ARCHETYPE 2B: Glass Cannon with Railgun
+  console.log('   Creating Glass Cannon B (Railgun)...');
+  const glassCannonBUser = await prisma.user.create({
+    data: {
+      username: 'archetype_glass_cannon_b',
+      passwordHash: testHashedPassword,
+      currency: 996500,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: glassCannonBUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const gcbRailgunInv = await prisma.weaponInventory.create({
+    data: { userId: glassCannonBUser.id, weaponId: railgun.id },
+  });
+
+  const glassCannonBRobot = await prisma.robot.create({
+    data: {
+      userId: glassCannonBUser.id,
+      name: 'Glass Cannon B C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 15.0,
+      criticalSystems: 15.0,
+      penetration: 14.0,
+      weaponControl: 13.0,
+      targetingSystems: 12.0,
+      hullIntegrity: 10.0,
+      currentHP: 100,
+      maxHP: 100,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'two_handed',
+      mainWeaponId: gcbRailgunInv.id,
+      stance: 'offensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: glassCannonBUser, robots: [glassCannonBRobot] });
+  console.log('   ✅ Glass Cannon B created');
+
+  // ARCHETYPE 2C: Glass Cannon with Heavy Hammer
+  console.log('   Creating Glass Cannon C (Heavy Hammer)...');
+  const glassCannonCUser = await prisma.user.create({
+    data: {
+      username: 'archetype_glass_cannon_c',
+      passwordHash: testHashedPassword,
+      currency: 1046500,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: glassCannonCUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const gccHeavyHammerInv = await prisma.weaponInventory.create({
+    data: { userId: glassCannonCUser.id, weaponId: heavyHammer.id },
+  });
+
+  const glassCannonCRobot = await prisma.robot.create({
+    data: {
+      userId: glassCannonCUser.id,
+      name: 'Glass Cannon C C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 15.0,
+      criticalSystems: 15.0,
+      penetration: 14.0,
+      weaponControl: 13.0,
+      targetingSystems: 12.0,
+      hullIntegrity: 10.0,
+      currentHP: 100,
+      maxHP: 100,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'two_handed',
+      mainWeaponId: gccHeavyHammerInv.id,
+      stance: 'offensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: glassCannonCUser, robots: [glassCannonCRobot] });
+  console.log('   ✅ Glass Cannon C created');
+
+  // Find additional weapons needed for remaining archetypes
+  const plasmaBlade = weapons.find(w => w.name === 'Plasma Blade');
+  const lightShield = weapons.find(w => w.name === 'Light Shield');
+  
+  if (!plasmaBlade || !lightShield) {
+    throw new Error('Required weapons not found for remaining archetypes');
+  }
+
+  // ARCHETYPE 3A: Speed Demon with Dual Machine Guns
+  console.log('   Creating Speed Demon A (Dual Machine Guns)...');
+  const speedDemonAUser = await prisma.user.create({
+    data: {
+      username: 'archetype_speed_demon_a',
+      passwordHash: testHashedPassword,
+      currency: 66500,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: speedDemonAUser.id,
+      facilityType: 'mobility_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+  await prisma.facility.create({
+    data: {
+      userId: speedDemonAUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const sdaMachineGun1Inv = await prisma.weaponInventory.create({
+    data: { userId: speedDemonAUser.id, weaponId: machineGun.id },
+  });
+  const sdaMachineGun2Inv = await prisma.weaponInventory.create({
+    data: { userId: speedDemonAUser.id, weaponId: machineGun.id },
+  });
+
+  const speedDemonARobot = await prisma.robot.create({
+    data: {
+      userId: speedDemonAUser.id,
+      name: 'Speed Demon A C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      attackSpeed: 15.0,
+      servoMotors: 15.0,
+      weaponControl: 15.0,
+      combatPower: 15.0,
+      gyroStabilizers: 14.0,
+      hullIntegrity: 14.0,
+      armorPlating: 13.0,
+      evasionThrusters: 12.0,
+      targetingSystems: 12.0,
+      penetration: 11.0,
+      shieldCapacity: 10.0,
+      currentHP: 120,
+      maxHP: 120,
+      currentShield: 20,
+      maxShield: 20,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'dual_wield',
+      mainWeaponId: sdaMachineGun1Inv.id,
+      offhandWeaponId: sdaMachineGun2Inv.id,
+      stance: 'offensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: speedDemonAUser, robots: [speedDemonARobot] });
+  console.log('   ✅ Speed Demon A created');
+
+  // ARCHETYPE 3B: Speed Demon with Dual Plasma Blades
+  console.log('   Creating Speed Demon B (Dual Plasma Blades)...');
+  const speedDemonBUser = await prisma.user.create({
+    data: {
+      username: 'archetype_speed_demon_b',
+      passwordHash: testHashedPassword,
+      currency: 100000,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: speedDemonBUser.id,
+      facilityType: 'mobility_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+  await prisma.facility.create({
+    data: {
+      userId: speedDemonBUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const sdbPlasmaBlade1Inv = await prisma.weaponInventory.create({
+    data: { userId: speedDemonBUser.id, weaponId: plasmaBlade.id },
+  });
+  const sdbPlasmaBlade2Inv = await prisma.weaponInventory.create({
+    data: { userId: speedDemonBUser.id, weaponId: plasmaBlade.id },
+  });
+
+  const speedDemonBRobot = await prisma.robot.create({
+    data: {
+      userId: speedDemonBUser.id,
+      name: 'Speed Demon B C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      attackSpeed: 15.0,
+      servoMotors: 15.0,
+      weaponControl: 15.0,
+      combatPower: 15.0,
+      gyroStabilizers: 14.0,
+      hullIntegrity: 14.0,
+      armorPlating: 13.0,
+      evasionThrusters: 12.0,
+      targetingSystems: 12.0,
+      penetration: 11.0,
+      shieldCapacity: 10.0,
+      currentHP: 120,
+      maxHP: 120,
+      currentShield: 20,
+      maxShield: 20,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'dual_wield',
+      mainWeaponId: sdbPlasmaBlade1Inv.id,
+      offhandWeaponId: sdbPlasmaBlade2Inv.id,
+      stance: 'offensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: speedDemonBUser, robots: [speedDemonBRobot] });
+  console.log('   ✅ Speed Demon B created');
+
+  // ARCHETYPE 3C: Speed Demon with Mixed Loadout
+  console.log('   Creating Speed Demon C (Mixed Loadout)...');
+  const speedDemonCUser = await prisma.user.create({
+    data: {
+      username: 'archetype_speed_demon_c',
+      passwordHash: testHashedPassword,
+      currency: 31000,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: speedDemonCUser.id,
+      facilityType: 'mobility_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+  await prisma.facility.create({
+    data: {
+      userId: speedDemonCUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const sdcMachineGunInv = await prisma.weaponInventory.create({
+    data: { userId: speedDemonCUser.id, weaponId: machineGun.id },
+  });
+  const sdcPlasmaBladeInv = await prisma.weaponInventory.create({
+    data: { userId: speedDemonCUser.id, weaponId: plasmaBlade.id },
+  });
+
+  const speedDemonCRobot = await prisma.robot.create({
+    data: {
+      userId: speedDemonCUser.id,
+      name: 'Speed Demon C C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      attackSpeed: 15.0,
+      servoMotors: 15.0,
+      weaponControl: 15.0,
+      combatPower: 15.0,
+      gyroStabilizers: 14.0,
+      hullIntegrity: 14.0,
+      armorPlating: 13.0,
+      evasionThrusters: 12.0,
+      targetingSystems: 12.0,
+      penetration: 11.0,
+      shieldCapacity: 10.0,
+      currentHP: 120,
+      maxHP: 120,
+      currentShield: 20,
+      maxShield: 20,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'dual_wield',
+      mainWeaponId: sdcMachineGunInv.id,
+      offhandWeaponId: sdcPlasmaBladeInv.id,
+      stance: 'balanced',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: speedDemonCUser, robots: [speedDemonCRobot] });
+  console.log('   ✅ Speed Demon C created');
+
+  // ARCHETYPE 4: Balanced Brawler
+  console.log('   Creating Balanced Brawler...');
+  const balancedBrawlerUser = await prisma.user.create({
+    data: {
+      username: 'archetype_balanced_brawler',
+      passwordHash: testHashedPassword,
+      currency: 500000,
+      prestige: 0,
+    },
+  });
+
+  const bbPowerSwordInv = await prisma.weaponInventory.create({
+    data: { userId: balancedBrawlerUser.id, weaponId: powerSword.id },
+  });
+
+  const balancedBrawlerRobot = await prisma.robot.create({
+    data: {
+      userId: balancedBrawlerUser.id,
+      name: 'Balanced Brawler C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 10.0,
+      hullIntegrity: 10.0,
+      attackSpeed: 10.0,
+      armorPlating: 10.0,
+      weaponControl: 10.0,
+      servoMotors: 10.0,
+      damageDampeners: 10.0,
+      currentHP: 100,
+      maxHP: 100,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'single',
+      mainWeaponId: bbPowerSwordInv.id,
+      stance: 'balanced',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: balancedBrawlerUser, robots: [balancedBrawlerRobot] });
+  console.log('   ✅ Balanced Brawler created');
+
+  // ARCHETYPE 5: Facility Investor
+  console.log('   Creating Facility Investor...');
+  const facilityInvestorUser = await prisma.user.create({
+    data: {
+      username: 'archetype_facility_investor',
+      passwordHash: testHashedPassword,
+      currency: 250000,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: facilityInvestorUser.id,
+      facilityType: 'income_generator',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+  await prisma.facility.create({
+    data: {
+      userId: facilityInvestorUser.id,
+      facilityType: 'repair_bay',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+  await prisma.facility.create({
+    data: {
+      userId: facilityInvestorUser.id,
+      facilityType: 'training_facility',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const fiMachineGunInv = await prisma.weaponInventory.create({
+    data: { userId: facilityInvestorUser.id, weaponId: machineGun.id },
+  });
+
+  const facilityInvestorRobot = await prisma.robot.create({
+    data: {
+      userId: facilityInvestorUser.id,
+      name: 'Facility Investor C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 6.0,
+      hullIntegrity: 6.0,
+      attackSpeed: 5.0,
+      armorPlating: 5.0,
+      weaponControl: 5.0,
+      currentHP: 80,
+      maxHP: 80,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'single',
+      mainWeaponId: fiMachineGunInv.id,
+      stance: 'defensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: facilityInvestorUser, robots: [facilityInvestorRobot] });
+  console.log('   ✅ Facility Investor created');
+
+  // ARCHETYPE 6: Two-Robot Specialist
+  console.log('   Creating Two-Robot Specialist...');
+  const twoRobotUser = await prisma.user.create({
+    data: {
+      username: 'archetype_two_robot',
+      passwordHash: testHashedPassword,
+      currency: 200000,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: twoRobotUser.id,
+      facilityType: 'roster_expansion',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const trPlasmaRifleInv = await prisma.weaponInventory.create({
+    data: { userId: twoRobotUser.id, weaponId: plasmaRifle.id },
+  });
+  const trPowerSwordInv = await prisma.weaponInventory.create({
+    data: { userId: twoRobotUser.id, weaponId: powerSword.id },
+  });
+  const trCombatShieldInv = await prisma.weaponInventory.create({
+    data: { userId: twoRobotUser.id, weaponId: combatShield.id },
+  });
+
+  const twoRobotAlpha = await prisma.robot.create({
+    data: {
+      userId: twoRobotUser.id,
+      name: 'Two-Robot Alpha C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 10.0,
+      hullIntegrity: 10.0,
+      attackSpeed: 8.0,
+      armorPlating: 8.0,
+      weaponControl: 8.0,
+      currentHP: 100,
+      maxHP: 100,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'single',
+      mainWeaponId: trPlasmaRifleInv.id,
+      stance: 'offensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  const twoRobotBeta = await prisma.robot.create({
+    data: {
+      userId: twoRobotUser.id,
+      name: 'Two-Robot Beta C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 10.0,
+      hullIntegrity: 10.0,
+      attackSpeed: 8.0,
+      armorPlating: 8.0,
+      weaponControl: 8.0,
+      currentHP: 100,
+      maxHP: 100,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'weapon_shield',
+      mainWeaponId: trPowerSwordInv.id,
+      offhandWeaponId: trCombatShieldInv.id,
+      stance: 'defensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: twoRobotUser, robots: [twoRobotAlpha, twoRobotBeta] });
+  console.log('   ✅ Two-Robot Specialist created');
+
+  // ARCHETYPE 7: Melee Specialist
+  console.log('   Creating Melee Specialist...');
+  const meleeSpecialistUser = await prisma.user.create({
+    data: {
+      username: 'archetype_melee_specialist',
+      passwordHash: testHashedPassword,
+      currency: 350000,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: meleeSpecialistUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const msHeavyHammerInv = await prisma.weaponInventory.create({
+    data: { userId: meleeSpecialistUser.id, weaponId: heavyHammer.id },
+  });
+
+  const meleeSpecialistRobot = await prisma.robot.create({
+    data: {
+      userId: meleeSpecialistUser.id,
+      name: 'Melee Specialist C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 15.0,
+      hydraulicSystems: 15.0,
+      hullIntegrity: 14.0,
+      armorPlating: 13.0,
+      weaponControl: 12.0,
+      criticalSystems: 12.0,
+      gyroStabilizers: 11.0,
+      servoMotors: 10.0,
+      currentHP: 120,
+      maxHP: 120,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'two_handed',
+      mainWeaponId: msHeavyHammerInv.id,
+      stance: 'offensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: meleeSpecialistUser, robots: [meleeSpecialistRobot] });
+  console.log('   ✅ Melee Specialist created');
+
+  // ARCHETYPE 8: Ranged Sniper
+  console.log('   Creating Ranged Sniper...');
+  const rangedSniperUser = await prisma.user.create({
+    data: {
+      username: 'archetype_ranged_sniper',
+      passwordHash: testHashedPassword,
+      currency: 350000,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: rangedSniperUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const rsRailgunInv = await prisma.weaponInventory.create({
+    data: { userId: rangedSniperUser.id, weaponId: railgun.id },
+  });
+
+  const rangedSniperRobot = await prisma.robot.create({
+    data: {
+      userId: rangedSniperUser.id,
+      name: 'Ranged Sniper C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 15.0,
+      targetingSystems: 15.0,
+      penetration: 14.0,
+      criticalSystems: 13.0,
+      weaponControl: 12.0,
+      hullIntegrity: 12.0,
+      armorPlating: 10.0,
+      currentHP: 110,
+      maxHP: 110,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'two_handed',
+      mainWeaponId: rsRailgunInv.id,
+      stance: 'defensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: rangedSniperUser, robots: [rangedSniperRobot] });
+  console.log('   ✅ Ranged Sniper created');
+
+  // ARCHETYPE 9: AI Tactician
+  console.log('   Creating AI Tactician...');
+  const aiTacticianUser = await prisma.user.create({
+    data: {
+      username: 'archetype_ai_tactician',
+      passwordHash: testHashedPassword,
+      currency: 504500,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: aiTacticianUser.id,
+      facilityType: 'ai_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const atPlasmaRifleInv = await prisma.weaponInventory.create({
+    data: { userId: aiTacticianUser.id, weaponId: plasmaRifle.id },
+  });
+
+  const aiTacticianRobot = await prisma.robot.create({
+    data: {
+      userId: aiTacticianUser.id,
+      name: 'AI Tactician C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatAlgorithms: 15.0,
+      threatAnalysis: 15.0,
+      adaptiveAI: 15.0,
+      logicCores: 15.0,
+      combatPower: 12.0,
+      hullIntegrity: 12.0,
+      attackSpeed: 10.0,
+      armorPlating: 10.0,
+      weaponControl: 10.0,
+      currentHP: 110,
+      maxHP: 110,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'single',
+      mainWeaponId: atPlasmaRifleInv.id,
+      stance: 'balanced',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: aiTacticianUser, robots: [aiTacticianRobot] });
+  console.log('   ✅ AI Tactician created');
+
+  // ARCHETYPE 10: Prestige Rusher
+  console.log('   Creating Prestige Rusher...');
+  const prestigeRusherUser = await prisma.user.create({
+    data: {
+      username: 'archetype_prestige_rusher',
+      passwordHash: testHashedPassword,
+      currency: 300500,
+      prestige: 0,
+    },
+  });
+
+  await prisma.facility.create({
+    data: {
+      userId: prestigeRusherUser.id,
+      facilityType: 'combat_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+  await prisma.facility.create({
+    data: {
+      userId: prestigeRusherUser.id,
+      facilityType: 'defense_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+  await prisma.facility.create({
+    data: {
+      userId: prestigeRusherUser.id,
+      facilityType: 'mobility_training_academy',
+      level: 1,
+      maxLevel: 10,
+    },
+  });
+
+  const prPlasmaCannonInv = await prisma.weaponInventory.create({
+    data: { userId: prestigeRusherUser.id, weaponId: plasmaCannon.id },
+  });
+
+  const prestigeRusherRobot = await prisma.robot.create({
+    data: {
+      userId: prestigeRusherUser.id,
+      name: 'Prestige Rusher C000',
+      frameId: 1,
+      ...DEFAULT_ROBOT_ATTRIBUTES,
+      combatPower: 15.0,
+      hullIntegrity: 15.0,
+      attackSpeed: 15.0,
+      armorPlating: 15.0,
+      weaponControl: 15.0,
+      criticalSystems: 12.0,
+      penetration: 10.0,
+      currentHP: 125,
+      maxHP: 125,
+      currentShield: 2,
+      maxShield: 2,
+      elo: 1200,
+      currentLeague: 'bronze',
+      leagueId: 'bronze_1',
+      leaguePoints: 0,
+      loadoutType: 'two_handed',
+      mainWeaponId: prPlasmaCannonInv.id,
+      stance: 'offensive',
+      battleReadiness: 100,
+      yieldThreshold: 10,
+    },
+  });
+
+  archetypeUsers.push({ user: prestigeRusherUser, robots: [prestigeRusherRobot] });
+  console.log('   ✅ Prestige Rusher created');
+
+  console.log(`✅ Created ${archetypeUsers.length} archetype users with ${archetypeUsers.reduce((sum, a) => sum + a.robots.length, 0)} robots`);
+  console.log(`   - All 17 archetype variations implemented`);
+  console.log(`   - All robots configured per PLAYER_ARCHETYPES_GUIDE.md specifications`);
 
   // Create Bye-Robot (special robot for odd-number matchmaking)
   console.log('Creating Bye-Robot...');
@@ -1086,27 +1713,27 @@ async function main() {
   const users = [
     adminUser,
     ...playerUsers,
-    ...testUsersWithRobots.map(t => t.user)
+    ...testUsersWithRobots.map(t => t.user),
+    ...archetypeUsers.map(t => t.user)
   ];
 
-  console.log(`✅ Total users created: ${users.length + 1 + attributeTestUsers.length + loadoutTestUsers.length} (including bye-robot user)`);
+  console.log(`✅ Total users created: ${users.length + 1} (including bye-robot user)`);
 
   console.log('');
-  console.log('✅ Database seeded successfully with matchmaking test data!');
+  console.log('✅ Database seeded successfully with archetype test data!');
   console.log('');
   console.log('📊 System Overview:');
   console.log('   💰 Currency: Credits (₡)');
   console.log('   👤 Admin: ₡10,000,000 (username: admin, password: admin123)');
   console.log('   👤 Player users: ₡3,000,000 each (player1-5, password: password123)');
   console.log('   👤 Test users: ₡100,000 each (test_user_001-100, password: testpass123)');
-  console.log('   👤 Attribute test users: ₡100,000 each (test_attr_*, password: testpass123)');
-  console.log('   👤 Loadout test users: ₡100,000 each (loadout_*, password: testpass123)');
-  console.log('   🤖 Robots: 100 test robots + 230 attribute test robots + 140 loadout test robots + 1 bye-robot');
-  console.log('   ⚔️  Practice Sword: FREE (equipped on all test robots)');
+  console.log('   👤 Archetype users: Various amounts (archetype_*, password: testpass123)');
+  console.log('   🤖 Robots: 100 WimpBot robots + 18 archetype robots + 1 bye-robot');
+  console.log('   ⚔️  Practice Sword: FREE (equipped on all WimpBot robots)');
   console.log('   🏆 League: All robots start in Bronze (bronze_1)');
   console.log('   📈 ELO: Test robots at 1200, Bye-Robot at 1000');
   console.log('');
-  console.log('🤖 Robot Attributes: 23 total (all set to 1.00 for test robots)');
+  console.log('🤖 Robot Attributes: 23 total');
   console.log('   ⚡ Combat Systems (6): combatPower, targetingSystems, criticalSystems, penetration, weaponControl, attackSpeed');
   console.log('   🛡️  Defensive Systems (5): armorPlating, shieldCapacity, evasionThrusters, damageDampeners, counterProtocols');
   console.log('   🔧 Chassis & Mobility (5): hullIntegrity, servoMotors, gyroStabilizers, hydraulicSystems, powerCore');
@@ -1126,31 +1753,37 @@ async function main() {
   console.log('🛡️  Shield Formula: maxShield = shieldCapacity × 2');
   console.log('');
   console.log('🎯 Matchmaking Test Data:');
-  console.log(`   - 100 test robots with creative names (e.g., "${testUsersWithRobots[0].robot.name}")`);
+  console.log(`   - 100 WimpBot robots (WimpBot 1 through WimpBot 100)`);
   console.log(`   - Bye-Robot ID: ${byeRobot.id} for odd-number matching`);
-  console.log('   - All robots battle-ready with Practice Sword equipped');
+  console.log('   - All WimpBots battle-ready with Practice Sword equipped');
+  console.log('   - Purpose: Easily defeated mob for tournaments');
   console.log('');
   console.log('🔐 Login Credentials:');
   console.log('   - Admin: admin / admin123');
   console.log('   - Players: player1-5 / password123 (for manual testing)');
-  console.log('   - Test users: test_user_001-100 / testpass123');
-  console.log('   - Attribute test users: test_attr_combat_power, test_attr_targeting_systems, etc. / testpass123');
-  console.log('   - Loadout test users: loadout_machine_pistol_single, loadout_laser_pistol_shield, etc. / testpass123');
+  console.log('   - Test users: test_user_001-100 / testpass123 (WimpBot mob)');
+  console.log('   - Archetype users: archetype_tank_fortress, archetype_glass_cannon_a, etc. / testpass123');
   console.log('');
-  console.log('🧪 Attribute Balance Testing:');
-  console.log('   - 23 users (one per attribute) with 10 robots each = 230 robots');
-  console.log('   - Each user focuses on ONE attribute (set to 10.0, all others at 1.0)');
-  console.log('   - Usernames clearly indicate focused attribute (e.g., test_attr_hull_integrity)');
-  console.log('   - All robots have Practice Sword, single loadout, balanced stance');
-  console.log('   - Roster Expansion facility maxed out (level 9) for each user');
+  console.log('🎮 Player Archetypes:');
+  console.log('   - 17 archetype users representing 10 distinct playstyles');
+  console.log('   - Tank Fortress: Defensive powerhouse with high HP and armor');
+  console.log('   - Glass Cannon (3 options): Maximum offense with Plasma Cannon, Railgun, or Heavy Hammer');
+  console.log('   - Speed Demon (3 options): High attack speed with dual weapons (Machine Guns, Plasma Blades, or Mixed)');
+  console.log('   - Balanced Brawler: Well-rounded generalist');
+  console.log('   - Facility Investor: Economic focus with Income Generator');
+  console.log('   - Two-Robot Specialist: 2 robots with different loadouts');
+  console.log('   - Melee Specialist: Heavy Hammer focused');
+  console.log('   - Ranged Sniper: Railgun precision build');
+  console.log('   - AI Tactician: AI-focused strategic build');
+  console.log('   - Prestige Rusher: Win-optimized with all 3 training academies');
+  console.log('   - All configured per PLAYER_ARCHETYPES_GUIDE.md specifications');
   console.log('');
-  console.log('⚔️  Weapon Loadout Testing:');
-  console.log('   - 14 users (testing weapon economy) with 10 robots each = 140 robots');
-  console.log('   - All robots have ALL 23 attributes set to 5.00 (HP: 75, Shield: 10)');
-  console.log('   - Loadout types: 4 single, 4 weapon+shield, 4 dual-wield, 2 two-handed');
-  console.log('   - Weapons tested: Machine Pistol, Laser Pistol, Combat Knife, Machine Gun, Light Shield, Shotgun');
-  console.log('   - Usernames: loadout_<weapon>_<type> (e.g., loadout_machine_pistol_single)');
-  console.log('   - Roster Expansion facility maxed out (level 9) for each user');
+  console.log('🔄 Dynamic User Generation:');
+  console.log('   - When cycles run, new archetype users will be created');
+  console.log('   - Cycle N creates N users (Cycle 1 = 1 user, Cycle 2 = 2 users, etc.)');
+  console.log('   - Cycles through all 14 archetype variations in order');
+  console.log('   - Format: archetype_<name>_<cycle_number>');
+  console.log('   - Example: Cycle 1 creates Tank Fortress, Cycle 2 creates Glass Cannon A + B');
   console.log('');
 }
 

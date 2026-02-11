@@ -109,11 +109,11 @@ export const createTournament = async (token: string): Promise<CreateTournamentR
 };
 
 /**
- * List all tournaments
+ * List all tournaments (public endpoint for all authenticated users)
  */
 export const listTournaments = async (token: string): Promise<{ tournaments: Tournament[] }> => {
   const response = await axios.get(
-    `${API_BASE_URL}/admin/tournaments`,
+    `${API_BASE_URL}/tournaments`,
     {
       headers: { Authorization: `Bearer ${token}` }
     }
@@ -122,26 +122,25 @@ export const listTournaments = async (token: string): Promise<{ tournaments: Tou
 };
 
 /**
- * Get tournament details by ID
+ * Get tournament details by ID (public endpoint for all authenticated users)
  */
 export const getTournamentDetails = async (
   token: string,
   tournamentId: number
 ): Promise<{ tournament: TournamentDetails }> => {
   const response = await axios.get(
-    `${API_BASE_URL}/admin/tournaments/${tournamentId}`,
+    `${API_BASE_URL}/tournaments/${tournamentId}`,
     {
       headers: { Authorization: `Bearer ${token}` }
     }
   );
   
-  // Backend returns tournament and currentRoundMatches separately
-  // Merge them for easier frontend consumption
-  const { tournament, currentRoundMatches } = response.data;
+  // Backend returns tournament directly
+  const { tournament } = response.data;
   return {
     tournament: {
       ...tournament,
-      currentRoundMatches: currentRoundMatches || [],
+      currentRoundMatches: tournament.matches?.filter((m: TournamentMatch) => m.round === tournament.currentRound) || [],
     }
   };
 };

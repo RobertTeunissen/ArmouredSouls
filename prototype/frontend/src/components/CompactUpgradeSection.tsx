@@ -112,9 +112,15 @@ function CompactUpgradeSection({
                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {attributes.map(({ key, label }) => {
                     const info = getAttributeInfo(key);
-                    const canUpgrade = info.currentLevel < 50 && info.currentLevel < cap;
+                    const nextLevel = info.currentLevel + 1;
+                    const canUpgrade = nextLevel <= 50 && nextLevel <= cap;
                     const canAfford = currency >= info.upgradeCost;
-                    const atCap = info.currentLevel >= cap;
+                    const atCap = nextLevel > cap;
+
+                    // Debug logging
+                    if (key === 'combatPower' || key === 'armorPlating') {
+                      console.log(`[${label}] current: ${info.currentLevel}, next: ${nextLevel}, cap: ${cap}, canUpgrade: ${canUpgrade}, atCap: ${atCap}`);
+                    }
 
                     return (
                       <div

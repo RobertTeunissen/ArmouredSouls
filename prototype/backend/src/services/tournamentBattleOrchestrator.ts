@@ -268,8 +268,8 @@ async function createTournamentBattleRecord(
       durationSeconds: combatResult.durationSeconds,
 
       // Economic data
-      winnerReward: isRobot1Winner ? rewards.winnerReward : rewards.loserReward,
-      loserReward: isRobot1Winner ? rewards.loserReward : rewards.winnerReward,
+      winnerReward: rewards.winnerReward, // Always winner's reward
+      loserReward: rewards.loserReward,   // Always loser's reward
       robot1RepairCost: Math.floor(combatResult.robot1Damage * REPAIR_COST_PER_HP),
       robot2RepairCost: Math.floor(combatResult.robot2Damage * REPAIR_COST_PER_HP),
 
@@ -360,13 +360,7 @@ async function updateRobotStatsForTournament(
   }
 
   // Award credits
-  const reward = isRobot1
-    ? battle.winnerId === battle.robot1Id
-      ? battle.winnerReward
-      : battle.loserReward
-    : battle.winnerId === battle.robot2Id
-      ? battle.winnerReward
-      : battle.loserReward;
+  const reward = isWinner ? battle.winnerReward : battle.loserReward;
 
   if (reward && reward > 0) {
     await prisma.user.update({

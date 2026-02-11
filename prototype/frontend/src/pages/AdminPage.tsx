@@ -417,7 +417,7 @@ function AdminPage() {
     setLoading(true);
     try {
       const response = await axios.post('/api/admin/repair/all', {
-        deductCosts: false,
+        deductCosts: true,
       });
       showMessage('success', `Repaired ${response.data.robotsRepaired} robots`);
       fetchStats();
@@ -455,18 +455,14 @@ function AdminPage() {
     setLoading(true);
     setBulkResults(null);
     addSessionLog('info', `Starting bulk cycle run: ${bulkCycles} cycle(s)`, {
-      autoRepair,
       includeTournaments,
-      includeDailyFinances,
       generateUsersPerCycle
     });
 
     try {
       const response = await axios.post('/api/admin/cycles/bulk', {
         cycles: bulkCycles,
-        autoRepair,
         includeTournaments,
-        includeDailyFinances,
         generateUsersPerCycle,
       });
       setBulkResults(response.data);
@@ -474,84 +470,72 @@ function AdminPage() {
       // Add detailed session log entries for each cycle
       if (response.data.results && response.data.results.length > 0) {
         response.data.results.forEach((result: CycleResult) => {
-          // User generation
-          if (result.userGeneration) {
-            if (result.userGeneration.error) {
-              addSessionLog('error', `Cycle ${result.cycle}: User generation failed`, result.userGeneration);
-            } else {
-              addSessionLog('success', `Cycle ${result.cycle}: Generated ${result.userGeneration.usersCreated} new user(s)`);
-            }
+          // Step 1: Pre-tournament repair
+          if (result.repair1) {
+            addSessionLog('info', `Cycle ${result.cycle}: Step 1 - Repaired ${result.repair1.robotsRepaired} robot(s) for ₡${result.repair1.totalFinalCost.toLocaleString()}`);
           }
 
-          // Pre-tournament auto-repair
-          if (result.repairPreTournament) {
-            addSessionLog('info', `Cycle ${result.cycle}: Pre-tournament repair - ${result.repairPreTournament.robotsRepaired} robot(s) repaired`);
-          }
-
-          // Tournament execution
+          // Step 2: Tournament execution
           if (result.tournaments) {
             if (result.tournaments.error) {
-              addSessionLog('error', `Cycle ${result.cycle}: Tournament execution failed`, result.tournaments);
+              addSessionLog('error', `Cycle ${result.cycle}: Step 2 - Tournament execution failed`, result.tournaments);
             } else {
               const t = result.tournaments;
               const details = [
-                t.tournamentsExecuted ? `${t.tournamentsExecuted} tournament(s) executed` : null,
-                t.roundsExecuted ? `${t.roundsExecuted} round(s) executed` : null,
-                t.matchesExecuted ? `${t.matchesExecuted} match(es) processed` : null,
-                t.tournamentsCompleted ? `${t.tournamentsCompleted} tournament(s) completed` : null,
-                t.tournamentsCreated ? `${t.tournamentsCreated} new tournament(s) created` : null,
+                t.tournamentsExecuted ? `${t.tournamentsExecuted} tournament(s)` : null,
+                t.roundsExecuted ? `${t.roundsExecuted} round(s)` : null,
+                t.matchesExecuted ? `${t.matchesExecuted} match(es)` : null,
+                t.tournamentsCompleted ? `${t.tournamentsCompleted} completed` : null,
+                t.tournamentsCreated ? `${t.tournamentsCreated} created` : null,
               ].filter(Boolean).join(', ');
               
               if (details) {
                 addSessionLog(
                   t.errors && t.errors.length > 0 ? 'warning' : 'success',
-                  `Cycle ${result.cycle}: Tournaments - ${details}`,
+                  `Cycle ${result.cycle}: Step 2 - Tournaments: ${details}`,
                   t.errors && t.errors.length > 0 ? { errors: t.errors } : undefined
                 );
               }
             }
           }
 
-          // Pre-league auto-repair
-          if (result.repairPreLeague) {
-            addSessionLog('info', `Cycle ${result.cycle}: Pre-league repair - ${result.repairPreLeague.robotsRepaired} robot(s) repaired`);
+          // Step 3: Post-tournament repair
+          if (result.repair2) {
+            addSessionLog('info', `Cycle ${result.cycle}: Step 3 - Repaired ${result.repair2.robotsRepaired} robot(s) for ₡${result.repair2.totalFinalCost.toLocaleString()}`);
           }
 
-          // Auto-repair (legacy, for backwards compatibility)
-          if (result.repair && !result.repairPreTournament && !result.repairPreLeague) {
-            addSessionLog('info', `Cycle ${result.cycle}: Repaired ${result.repair.robotsRepaired} robot(s)`);
-          }
-
-          // Matchmaking
-          if (result.matchmaking) {
-            addSessionLog('success', `Cycle ${result.cycle}: Created ${result.matchmaking.matchesCreated} match(es)`);
-          }
-
-          // Battle execution
+          // Step 4: Battle execution
           if (result.battles) {
             const { totalBattles, successfulBattles, failedBattles } = result.battles;
             addSessionLog(
               failedBattles > 0 ? 'warning' : 'success',
-              `Cycle ${result.cycle}: Executed ${totalBattles} battle(s) - ${successfulBattles} successful, ${failedBattles} failed`
+              `Cycle ${result.cycle}: Step 4 - Executed ${totalBattles} battle(s) (${successfulBattles} successful, ${failedBattles} failed)`
             );
           }
 
-          // Finance processing
-          if (result.finances) {
-            const { usersProcessed, totalCostsDeducted, bankruptUsers } = result.finances;
-            const bankruptcyMsg = bankruptUsers > 0 ? `, ${bankruptUsers} bankruptcies` : '';
-            const financeMsg = `Cycle ${result.cycle}: Processed finances for ${usersProcessed} user(s) - ` +
-              `₡${totalCostsDeducted.toLocaleString()} deducted${bankruptcyMsg}`;
-            addSessionLog(
-              bankruptUsers > 0 ? 'warning' : 'info',
-              financeMsg
-            );
-          }
-
-          // League rebalancing
+          // Step 5: League rebalancing
           if (result.rebalancing && result.rebalancing.summary) {
             const { totalPromoted, totalDemoted } = result.rebalancing.summary;
-            addSessionLog('info', `Cycle ${result.cycle}: Rebalanced leagues - ${totalPromoted} promoted, ${totalDemoted} demoted`);
+            addSessionLog('info', `Cycle ${result.cycle}: Step 5 - Rebalanced: ${totalPromoted} promoted, ${totalDemoted} demoted`);
+          }
+
+          // Step 6: User generation
+          if (result.userGeneration) {
+            if (result.userGeneration.error) {
+              addSessionLog('error', `Cycle ${result.cycle}: Step 6 - User generation failed`, result.userGeneration);
+            } else {
+              addSessionLog('success', `Cycle ${result.cycle}: Step 6 - Generated ${result.userGeneration.usersCreated} new user(s)`);
+            }
+          }
+
+          // Step 7: Post-league repair
+          if (result.repair3) {
+            addSessionLog('info', `Cycle ${result.cycle}: Step 7 - Repaired ${result.repair3.robotsRepaired} robot(s) for ₡${result.repair3.totalFinalCost.toLocaleString()}`);
+          }
+
+          // Step 8: Matchmaking
+          if (result.matchmaking) {
+            addSessionLog('success', `Cycle ${result.cycle}: Step 8 - Created ${result.matchmaking.matchesCreated} match(es)`);
           }
         });
       }
@@ -562,12 +546,8 @@ function AdminPage() {
         'success',
         `Completed ${response.data.cyclesCompleted} cycles in ${response.data.totalDuration?.toFixed(2) || 0}s`
       );
-      // Refresh stats and user data if daily finances were processed
-      if (includeDailyFinances) {
-        await Promise.all([fetchStats(), refreshUser()]);
-      } else {
-        await fetchStats();
-      }
+      // Refresh stats and user data (repairs deduct costs)
+      await Promise.all([fetchStats(), refreshUser()]);
     } catch (error: any) {
       addSessionLog('error', 'Bulk cycle run failed', error.response?.data);
       showMessage('error', error.response?.data?.error || 'Bulk cycles failed');

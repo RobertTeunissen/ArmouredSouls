@@ -247,7 +247,7 @@ function FacilitiesPage() {
                               </div>
 
                               {/* Prestige Requirement Display */}
-                              {facility.nextLevelPrestigeRequired && facility.nextLevelPrestigeRequired > 0 && (
+                              {!!(facility.nextLevelPrestigeRequired && facility.nextLevelPrestigeRequired > 0) && (
                                 <div className={`mb-4 p-3 rounded border ${
                                   facility.hasPrestige 
                                     ? 'bg-green-900/20 border-green-700/50' 
@@ -301,7 +301,7 @@ function FacilitiesPage() {
                                   Insufficient credits
                                 </div>
                               )}
-                              {facility.nextLevelPrestigeRequired && !facility.hasPrestige && (
+                              {!!(facility.nextLevelPrestigeRequired && !facility.hasPrestige) && (
                                 <div className="mt-2 text-sm text-red-400">
                                   Insufficient prestige (need {facility.nextLevelPrestigeRequired.toLocaleString()})
                                 </div>
