@@ -8,6 +8,7 @@ import RecentMatches from '../components/RecentMatches';
 import FinancialSummary from '../components/FinancialSummary';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import StableStatistics from '../components/StableStatistics';
+import TagTeamReadinessWarning from '../components/TagTeamReadinessWarning';
 
 interface Robot {
   id: number;
@@ -194,6 +195,11 @@ function DashboardPage() {
 
           {/* Financial Summary */}
           <FinancialSummary />
+        </div>
+
+        {/* Tag Team Readiness Warning */}
+        <div className="mb-6">
+          <TagTeamReadinessWarning compact={true} />
         </div>
 
         {/* Matchmaking Section */}

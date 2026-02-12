@@ -4,19 +4,22 @@ const API_BASE_URL = 'http://localhost:3001/api';
 
 // Types
 export interface ScheduledMatch {
-  id: number | string; // Can be number for league or "tournament-X" string for tournaments
-  matchType?: 'league' | 'tournament';
+  id: number | string; // Can be number for league or "tournament-X" string for tournaments or "tag-team-X" for tag teams
+  matchType?: 'league' | 'tournament' | 'tag_team';
   tournamentId?: number;
   tournamentName?: string;
   tournamentRound?: number;
   currentRound?: number;
   maxRounds?: number;
-  robot1Id: number;
-  robot2Id: number;
+  robot1Id?: number;
+  robot2Id?: number;
+  team1Id?: number;
+  team2Id?: number;
+  tagTeamLeague?: string;
   leagueType: string;
   scheduledFor: string;
   status: string;
-  robot1: {
+  robot1?: {
     id: number;
     name: string;
     elo: number;
@@ -27,7 +30,7 @@ export interface ScheduledMatch {
       username: string;
     };
   } | null;
-  robot2: {
+  robot2?: {
     id: number;
     name: string;
     elo: number;
@@ -38,6 +41,58 @@ export interface ScheduledMatch {
       username: string;
     };
   } | null;
+  team1?: {
+    id: number;
+    activeRobot: {
+      id: number;
+      name: string;
+      elo: number;
+      currentHP: number;
+      maxHP: number;
+      userId: number;
+      user: {
+        username: string;
+      };
+    };
+    reserveRobot: {
+      id: number;
+      name: string;
+      elo: number;
+      currentHP: number;
+      maxHP: number;
+      userId: number;
+      user: {
+        username: string;
+      };
+    };
+    combinedELO: number;
+  };
+  team2?: {
+    id: number;
+    activeRobot: {
+      id: number;
+      name: string;
+      elo: number;
+      currentHP: number;
+      maxHP: number;
+      userId: number;
+      user: {
+        username: string;
+      };
+    };
+    reserveRobot: {
+      id: number;
+      name: string;
+      elo: number;
+      currentHP: number;
+      maxHP: number;
+      userId: number;
+      user: {
+        username: string;
+      };
+    };
+    combinedELO: number;
+  };
 }
 
 export interface BattleHistory {
@@ -55,11 +110,20 @@ export interface BattleHistory {
   robot2FinalHP: number;
   winnerReward: number;
   loserReward: number;
-  battleType?: string; // "league" or "tournament"
+  battleType?: string; // "league", "tournament", or "tag_team"
   tournamentId?: number | null;
   tournamentRound?: number | null;
   tournamentName?: string | null;
   tournamentMaxRounds?: number | null;
+  // Tag team specific fields
+  team1Id?: number | null;
+  team2Id?: number | null;
+  team1ActiveRobotId?: number | null;
+  team1ReserveRobotId?: number | null;
+  team2ActiveRobotId?: number | null;
+  team2ReserveRobotId?: number | null;
+  team1TagOutTime?: number | null;
+  team2TagOutTime?: number | null;
   robot1: {
     id: number;
     name: string;
@@ -220,6 +284,21 @@ export const getLeagueTierIcon = (tier: string): string => {
 
 export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' | 'loss' | 'draw' => {
   if (!battle.winnerId) return 'draw';
+  
+  // For tag team battles, winnerId is the team ID, not robot ID
+  if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
+    // Determine which team the robot belongs to
+    const isTeam1Robot = battle.robot1Id === robotId;
+    const isTeam2Robot = battle.robot2Id === robotId;
+    
+    if (isTeam1Robot) {
+      return battle.winnerId === battle.team1Id ? 'win' : 'loss';
+    } else if (isTeam2Robot) {
+      return battle.winnerId === battle.team2Id ? 'win' : 'loss';
+    }
+  }
+  
+  // For 1v1 battles, winnerId is the robot ID
   return battle.winnerId === robotId ? 'win' : 'loss';
 };
 
@@ -266,6 +345,7 @@ export interface BattleLogEvent {
 export interface BattleLogResponse {
   battleId: number;
   createdAt: string;
+  battleType?: string;
   leagueType: string;
   duration: number;
   robot1: {
@@ -295,6 +375,35 @@ export interface BattleLogResponse {
   winner: 'robot1' | 'robot2' | null;
   battleLog: {
     events: BattleLogEvent[];
+  };
+  // Tag team specific fields
+  tagTeam?: {
+    team1: {
+      activeRobot: {
+        id: number;
+        name: string;
+        owner: string;
+      } | null;
+      reserveRobot: {
+        id: number;
+        name: string;
+        owner: string;
+      } | null;
+      tagOutTime: number | null;
+    };
+    team2: {
+      activeRobot: {
+        id: number;
+        name: string;
+        owner: string;
+      } | null;
+      reserveRobot: {
+        id: number;
+        name: string;
+        owner: string;
+      } | null;
+      tagOutTime: number | null;
+    };
   };
 }
 

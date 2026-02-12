@@ -46,6 +46,19 @@ export interface RewardEvent {
   fame?: number;
 }
 
+export interface TagOutEvent {
+  robotName: string;
+  teamName: string;
+  reason: 'yield' | 'destruction';
+  finalHP: number;
+}
+
+export interface TagInEvent {
+  robotName: string;
+  teamName: string;
+  hp: number;
+}
+
 /**
  * Combat Message Generator Service
  */
@@ -235,6 +248,44 @@ export class CombatMessageGenerator {
     '🎖️ {robotName}\'s renown increases by {fame} fame',
   ];
 
+  // Tag-Out Messages (yield)
+  private static tagOutYieldMessages = [
+    '🏳️ {robotName} reaches their yield threshold and tags out! {teamName} calls in their reserve!',
+    '✋ {robotName} yields! {teamName}\'s reserve robot prepares to enter the arena!',
+    '🛑 {robotName} signals for a tag-out - {teamName}\'s backup is ready!',
+    '⚠️ {robotName} has taken enough damage and tags out! {teamName} switches fighters!',
+    '🏳️ {robotName} retreats to avoid destruction - {teamName} brings in fresh reinforcements!',
+    '✋ Tag-out! {robotName} yields the arena to their teammate!',
+    '🛑 {robotName} concedes and tags out - {teamName}\'s reserve enters the fight!',
+    '⚠️ {robotName} reaches critical damage and calls for backup!',
+  ];
+
+  // Tag-Out Messages (destruction)
+  private static tagOutDestructionMessages = [
+    '💥 {robotName} is destroyed! {teamName}\'s reserve robot rushes to continue the fight!',
+    '🔥 {robotName} falls in combat! {teamName} sends in their backup!',
+    '💢 {robotName} has been eliminated! {teamName}\'s reserve takes over!',
+    '⚡ {robotName} is taken down! {teamName}\'s second fighter enters the arena!',
+    '💥 Destruction! {robotName} is out - {teamName}\'s reserve steps up!',
+    '🔥 {robotName} is defeated! {teamName} calls in their remaining fighter!',
+    '💢 {robotName} falls! {teamName}\'s backup robot charges into battle!',
+    '⚡ {robotName} is eliminated from combat! {teamName}\'s reserve activates!',
+  ];
+
+  // Tag-In Messages (reserve activation)
+  private static tagInMessages = [
+    '🔄 {robotName} enters the arena for {teamName} at full strength!',
+    '⚡ Fresh fighter! {robotName} tags in for {teamName} with {hp} HP!',
+    '🎯 {robotName} joins the battle for {teamName} - weapons ready!',
+    '💪 {robotName} charges into the arena to fight for {teamName}!',
+    '🔄 Tag-in complete! {robotName} takes over for {teamName}!',
+    '⚡ {robotName} enters combat for {teamName} with full energy!',
+    '🎯 Reserve activated! {robotName} steps up for {teamName}!',
+    '💪 {robotName} rushes in to continue the fight for {teamName}!',
+    '🔄 {teamName}\'s {robotName} enters the arena at maximum combat readiness!',
+    '⚡ {robotName} tags in - {teamName} brings fresh firepower to the battle!',
+  ];
+
   /**
    * Replace placeholders in message template
    */
@@ -368,6 +419,41 @@ export class CombatMessageGenerator {
   static generateFame(robotName: string, fame: number): string {
     const template = this.selectRandom(this.fameMessages);
     return this.interpolate(template, { robotName, fame });
+  }
+
+  /**
+   * Generate tag-out message (yield)
+   */
+  static generateTagOutYield(event: TagOutEvent): string {
+    const template = this.selectRandom(this.tagOutYieldMessages);
+    return this.interpolate(template, event);
+  }
+
+  /**
+   * Generate tag-out message (destruction)
+   */
+  static generateTagOutDestruction(event: TagOutEvent): string {
+    const template = this.selectRandom(this.tagOutDestructionMessages);
+    return this.interpolate(template, event);
+  }
+
+  /**
+   * Generate tag-out message (automatically selects yield or destruction)
+   */
+  static generateTagOut(event: TagOutEvent): string {
+    if (event.reason === 'yield') {
+      return this.generateTagOutYield(event);
+    } else {
+      return this.generateTagOutDestruction(event);
+    }
+  }
+
+  /**
+   * Generate tag-in message (reserve activation)
+   */
+  static generateTagIn(event: TagInEvent): string {
+    const template = this.selectRandom(this.tagInMessages);
+    return this.interpolate(template, event);
   }
 
   /**

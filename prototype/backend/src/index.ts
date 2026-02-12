@@ -14,6 +14,7 @@ import leaderboardsRoutes from './routes/leaderboards';
 import financesRoutes from './routes/finances';
 import recordsRoutes from './routes/records';
 import tournamentsRoutes from './routes/tournaments';
+import tagTeamsRoutes from './routes/tagTeams';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/leaderboards', leaderboardsRoutes);
 app.use('/api/finances', financesRoutes);
 app.use('/api/records', recordsRoutes);
 app.use('/api/tournaments', tournamentsRoutes);
+app.use('/api/tag-teams', tagTeamsRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);

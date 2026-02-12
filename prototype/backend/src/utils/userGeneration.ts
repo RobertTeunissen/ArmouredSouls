@@ -470,7 +470,7 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
   for (let i = 0; i < count; i++) {
     try {
       const archetype = ARCHETYPE_SPECS[archetypePosition % TOTAL_ARCHETYPES];
-      const username = `${archetype.username}_${cycleNumber}`;
+      const username = `${archetype.username}_${cycleNumber}_${i + 1}`;
 
       console.log(`[UserGeneration] Creating user ${i + 1}/${count}: ${username} (archetype: ${archetype.name})`);
 
@@ -532,6 +532,7 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
         }
 
         // Create robots
+        const createdRobots = [];
         for (let robotIndex = 0; robotIndex < archetype.robots.length; robotIndex++) {
           const robotSpec = archetype.robots[robotIndex];
           
@@ -559,7 +560,7 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
           }
 
           // Create robot
-          await tx.robot.create({
+          const robot = await tx.robot.create({
             data: {
               userId: user.id,
               name: robotName,
@@ -582,7 +583,22 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
             },
           });
 
+          createdRobots.push(robot);
           totalRobotsCreated++;
+        }
+
+        // Create tag team for Two-Robot Specialist archetype
+        if (archetype.name === 'two_robot' && createdRobots.length === 2) {
+          await tx.tagTeam.create({
+            data: {
+              stableId: user.id,
+              activeRobotId: createdRobots[0].id,
+              reserveRobotId: createdRobots[1].id,
+              tagTeamLeague: 'bronze',
+              tagTeamLeagueId: 'bronze_1',
+            },
+          });
+          console.log(`[UserGeneration] Created tag team for ${username}`);
         }
       });
 

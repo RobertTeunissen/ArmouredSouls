@@ -73,6 +73,23 @@ function UpcomingMatches() {
       return null;
     }
     
+    // Handle tag team matches
+    if (match.matchType === 'tag_team') {
+      if (!match.team1 || !match.team2) {
+        console.error('[UpcomingMatches] Invalid tag team match data:', match);
+        return null;
+      }
+      
+      const myTeam = isMyRobot(match.team1.activeRobot.userId) ? match.team1 : match.team2;
+      const opponentTeam = isMyRobot(match.team1.activeRobot.userId) ? match.team2 : match.team1;
+      
+      return { 
+        myTeam, 
+        opponentTeam,
+        isTagTeam: true,
+      };
+    }
+    
     // For tournament matches, robot1 or robot2 might be null (placeholder matches)
     if (match.matchType === 'tournament' && (!match.robot1 || !match.robot2)) {
       console.log('[UpcomingMatches] Skipping incomplete tournament match:', match.id);
@@ -102,7 +119,7 @@ function UpcomingMatches() {
     
     const myRobot = isMyRobot(match.robot1.userId) ? match.robot1 : match.robot2;
     const opponent = isMyRobot(match.robot1.userId) ? match.robot2 : match.robot1;
-    return { myRobot, opponent };
+    return { myRobot, opponent, isTagTeam: false };
   };
 
   const getRoundName = (round: number, maxRounds: number) => {
@@ -158,8 +175,82 @@ function UpcomingMatches() {
             return null;
           }
           
-          const { myRobot, opponent } = matchResult;
+          const isTagTeam = matchResult.isTagTeam;
           const isTournament = match.matchType === 'tournament';
+          
+          // Handle tag team matches
+          if (isTagTeam && matchResult.myTeam && matchResult.opponentTeam) {
+            const tierColor = getLeagueTierColor(match.tagTeamLeague || 'bronze');
+            const tierName = getLeagueTierName(match.tagTeamLeague || 'bronze');
+            
+            return (
+              <div 
+                key={match.id} 
+                className={`
+                  bg-surface-elevated border border-gray-700 rounded-lg p-2
+                  border-l-4 border-l-cyan-400
+                  hover:bg-surface hover:border-primary/50
+                  transition-all duration-150
+                `}
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🤝</span>
+                    <span className={`text-xs font-semibold ${tierColor}`}>
+                      {tierName} Tag Team
+                    </span>
+                    <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400">
+                      2v2
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {formatDateTime(match.scheduledFor)}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 items-center text-xs mb-1">
+                  {/* Your Team */}
+                  <div className="text-right">
+                    <div className="font-semibold text-primary text-xs truncate">
+                      {matchResult.myTeam.activeRobot.name}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">
+                      + {matchResult.myTeam.reserveRobot.name}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      ELO: {matchResult.myTeam.combinedELO}
+                    </div>
+                  </div>
+                  
+                  {/* VS */}
+                  <div className="text-center">
+                    <span className="text-gray-500 font-bold text-xs">VS</span>
+                  </div>
+                  
+                  {/* Opponent Team */}
+                  <div className="text-left">
+                    <div className="font-semibold text-white text-xs truncate">
+                      {matchResult.opponentTeam.activeRobot.name}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">
+                      + {matchResult.opponentTeam.reserveRobot.name}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      ELO: {matchResult.opponentTeam.combinedELO}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>Your Team</span>
+                  <span>{matchResult.opponentTeam.activeRobot.user.username}</span>
+                </div>
+              </div>
+            );
+          }
+          
+          // Handle 1v1 matches (league and tournament)
+          const { myRobot, opponent } = matchResult;
           const tierColor = isTournament ? 'text-warning' : getLeagueTierColor(match.leagueType);
           const tierName = isTournament ? 'Tournament' : getLeagueTierName(match.leagueType);
           

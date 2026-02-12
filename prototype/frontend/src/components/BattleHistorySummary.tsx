@@ -26,12 +26,20 @@ interface SummaryStats {
     winRate: number;
     avgELOChange: number;
   };
+  tagTeamStats?: {
+    battles: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+    avgELOChange: number;
+  };
 }
 
 interface BattleHistorySummaryProps {
   stats: SummaryStats;
-  view: 'overall' | 'league' | 'tournament';
-  onViewChange: (view: 'overall' | 'league' | 'tournament') => void;
+  view: 'overall' | 'league' | 'tournament' | 'tag_team';
+  onViewChange: (view: 'overall' | 'league' | 'tournament' | 'tag_team') => void;
 }
 
 const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view, onViewChange }) => {
@@ -57,6 +65,16 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         avgELOChange: stats.tournamentStats.avgELOChange,
       };
     }
+    if (view === 'tag_team' && stats.tagTeamStats) {
+      return {
+        battles: stats.tagTeamStats.battles,
+        wins: stats.tagTeamStats.wins,
+        losses: stats.tagTeamStats.losses,
+        draws: stats.tagTeamStats.draws,
+        winRate: stats.tagTeamStats.winRate,
+        avgELOChange: stats.tagTeamStats.avgELOChange,
+      };
+    }
     // Overall
     return {
       battles: stats.totalBattles,
@@ -69,7 +87,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
   };
   
   const displayStats = getDisplayStats();
-  const hasBreakdown = stats.leagueStats && stats.tournamentStats;
+  const hasBreakdown = (stats.leagueStats || stats.tournamentStats || stats.tagTeamStats);
   
   return (
     <div className="bg-[#252b38] border border-gray-700 rounded-lg p-4 mb-4">
@@ -86,26 +104,42 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           >
             Overall
           </button>
-          <button
-            onClick={() => onViewChange('league')}
-            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              view === 'league' 
-                ? 'bg-[#58a6ff] text-white' 
-                : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
-            }`}
-          >
-            ⚔️ League
-          </button>
-          <button
-            onClick={() => onViewChange('tournament')}
-            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              view === 'tournament' 
-                ? 'bg-[#58a6ff] text-white' 
-                : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
-            }`}
-          >
-            🏆 Tournament
-          </button>
+          {stats.leagueStats && (
+            <button
+              onClick={() => onViewChange('league')}
+              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                view === 'league' 
+                  ? 'bg-[#58a6ff] text-white' 
+                  : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              }`}
+            >
+              ⚔️ League
+            </button>
+          )}
+          {stats.tournamentStats && (
+            <button
+              onClick={() => onViewChange('tournament')}
+              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                view === 'tournament' 
+                  ? 'bg-[#58a6ff] text-white' 
+                  : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              }`}
+            >
+              🏆 Tournament
+            </button>
+          )}
+          {stats.tagTeamStats && (
+            <button
+              onClick={() => onViewChange('tag_team')}
+              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                view === 'tag_team' 
+                  ? 'bg-[#58a6ff] text-white' 
+                  : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              }`}
+            >
+              🤝 Tag Team
+            </button>
+          )}
         </div>
       )}
       
@@ -113,7 +147,10 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         {/* Total Battles */}
         <div>
           <div className="text-sm text-[#8b949e]">
-            {view === 'overall' ? 'Total Battles' : view === 'league' ? 'League Battles' : 'Tournament Battles'}
+            {view === 'overall' ? 'Total Battles' : 
+             view === 'league' ? 'League Battles' : 
+             view === 'tournament' ? 'Tournament Battles' : 
+             'Tag Team Battles'}
           </div>
           <div className="text-2xl font-bold text-[#58a6ff]">{displayStats.battles}</div>
         </div>

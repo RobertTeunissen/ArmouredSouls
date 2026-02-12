@@ -1413,6 +1413,18 @@ async function main() {
   archetypeUsers.push({ user: twoRobotUser, robots: [twoRobotAlpha, twoRobotBeta] });
   console.log('   ✅ Two-Robot Specialist created');
 
+  // Create tag team for Two-Robot Specialist
+  const twoRobotTeam = await prisma.tagTeam.create({
+    data: {
+      stableId: twoRobotUser.id,
+      activeRobotId: twoRobotAlpha.id,
+      reserveRobotId: twoRobotBeta.id,
+      tagTeamLeague: 'bronze',
+      tagTeamLeagueId: 'bronze_1',
+    },
+  });
+  console.log(`   ✅ Tag team created for Two-Robot Specialist (ID: ${twoRobotTeam.id})`);
+
   // ARCHETYPE 7: Melee Specialist
   console.log('   Creating Melee Specialist...');
   const meleeSpecialistUser = await prisma.user.create({
@@ -1729,6 +1741,7 @@ async function main() {
   console.log('   👤 Test users: ₡100,000 each (test_user_001-100, password: testpass123)');
   console.log('   👤 Archetype users: Various amounts (archetype_*, password: testpass123)');
   console.log('   🤖 Robots: 100 WimpBot robots + 18 archetype robots + 1 bye-robot');
+  console.log('   👥 Tag Teams: 1 team (Two-Robot Specialist archetype)');
   console.log('   ⚔️  Practice Sword: FREE (equipped on all WimpBot robots)');
   console.log('   🏆 League: All robots start in Bronze (bronze_1)');
   console.log('   📈 ELO: Test robots at 1200, Bye-Robot at 1000');
@@ -1772,6 +1785,9 @@ async function main() {
   console.log('   - Balanced Brawler: Well-rounded generalist');
   console.log('   - Facility Investor: Economic focus with Income Generator');
   console.log('   - Two-Robot Specialist: 2 robots with different loadouts');
+  console.log('     * Automatically creates tag team with both robots');
+  console.log('     * Active robot: Specialist Alpha (offensive), Reserve robot: Specialist Beta (defensive)');
+  console.log('     * Ready for tag team matches immediately');
   console.log('   - Melee Specialist: Heavy Hammer focused');
   console.log('   - Ranged Sniper: Railgun precision build');
   console.log('   - AI Tactician: AI-focused strategic build');

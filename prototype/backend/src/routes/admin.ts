@@ -3,6 +3,9 @@ import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { executeScheduledBattles } from '../services/battleOrchestrator';
 import { runMatchmaking } from '../services/matchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';
+import { rebalanceTagTeamLeagues } from '../services/tagTeamLeagueRebalancingService';
+import { shouldRunTagTeamMatchmaking, runTagTeamMatchmaking } from '../services/tagTeamMatchmakingService';
+import { executeScheduledTagTeamBattles } from '../services/tagTeamBattleOrchestrator';
 import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { calculateMaxHP } from '../utils/robotCalculations';
@@ -382,12 +385,31 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       console.log(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
 
       try {
-        // Step 1: Repair All Robots (costs deducted)
-        console.log(`[Admin] Step 1: Repair All Robots (pre-tournament)`);
+        // Step 1: Execute League Battles (1v1) - matches scheduled in previous cycle
+        console.log(`[Admin] Step 1: Execute League Battles (1v1)`);
+        const battleSummary = await executeScheduledBattles(new Date());
+
+        // Step 2: Repair All Robots (costs deducted) - after league battles
+        console.log(`[Admin] Step 2: Repair All Robots (post-league)`);
         const repair1Summary = await repairAllRobots(true);
 
-        // Step 2: Tournament Execution / Scheduling
-        console.log(`[Admin] Step 2: Tournament Execution / Scheduling`);
+        // Step 3: Execute Tag Team Battles (odd cycles only, after 1v1)
+        // Requirement 11.4: Process 1v1 matches before tag team matches
+        let tagTeamBattleSummary = null;
+        const shouldRunTagTeam = currentCycleNumber % 2 === 1; // Odd cycles only
+        if (shouldRunTagTeam) {
+          console.log(`[Admin] Step 3: Execute Tag Team Battles (Cycle ${currentCycleNumber})`);
+          tagTeamBattleSummary = await executeScheduledTagTeamBattles(new Date());
+        } else {
+          console.log(`[Admin] Step 3: Skipping Tag Team Battles (even cycle ${currentCycleNumber})`);
+        }
+
+        // Step 4: Repair All Robots (costs deducted) - after tag team battles
+        console.log(`[Admin] Step 4: Repair All Robots (post-tag-team)`);
+        const repair2Summary = await repairAllRobots(true);
+
+        // Step 5: Tournament Execution / Scheduling
+        console.log(`[Admin] Step 5: Tournament Execution / Scheduling`);
         let tournamentSummary = null;
         if (includeTournaments) {
           try {
@@ -461,20 +483,25 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           }
         }
 
-        // Step 3: Repair All Robots (costs deducted)
-        console.log(`[Admin] Step 3: Repair All Robots (post-tournament)`);
-        const repair2Summary = await repairAllRobots(true);
+        // Step 6: Repair All Robots (costs deducted) - after tournaments
+        console.log(`[Admin] Step 6: Repair All Robots (post-tournament)`);
+        const repair3Summary = await repairAllRobots(true);
 
-        // Step 4: Execute League Battles
-        console.log(`[Admin] Step 4: Execute League Battles`);
-        const battleSummary = await executeScheduledBattles(new Date());
-
-        // Step 5: Rebalance Leagues
-        console.log(`[Admin] Step 5: Rebalance Leagues`);
+        // Step 7: Rebalance Leagues
+        console.log(`[Admin] Step 7: Rebalance Leagues`);
         const rebalancingSummary = await rebalanceLeagues();
 
-        // Step 6: Auto Generate New Users (battle ready)
-        console.log(`[Admin] Step 6: Auto Generate New Users`);
+        // Step 7.5: Rebalance Tag Team Leagues (odd cycles only)
+        let tagTeamRebalancingSummary = null;
+        if (shouldRunTagTeam) {
+          console.log(`[Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle ${currentCycleNumber})`);
+          tagTeamRebalancingSummary = await rebalanceTagTeamLeagues();
+        } else {
+          console.log(`[Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle ${currentCycleNumber})`);
+        }
+
+        // Step 8: Auto Generate New Users (battle ready)
+        console.log(`[Admin] Step 8: Auto Generate New Users`);
         let userGenerationSummary = null;
         if (generateUsersPerCycle) {
           try {
@@ -488,18 +515,33 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           }
         }
 
-        // Step 7: Repair All Robots (costs deducted)
-        console.log(`[Admin] Step 7: Repair All Robots (post-league)`);
-        const repair3Summary = await repairAllRobots(true);
-
-        // Step 8: Matchmaking for Leagues
-        console.log(`[Admin] Step 8: Matchmaking for Leagues`);
+        // Step 9: Matchmaking for Leagues (1v1) - schedule for next cycle
+        console.log(`[Admin] Step 9: Matchmaking for Leagues (1v1)`);
         const scheduledFor = new Date(Date.now() + 1000); // 1 second ahead
         const matchesCreated = await runMatchmaking(scheduledFor);
         const matchmakingSummary = { matchesCreated };
 
-        // Small delay to ensure time passes for next cycle
-        await new Promise(resolve => setTimeout(resolve, 1100));
+        // Step 9.5: Matchmaking for Tag Teams (odd cycles only)
+        let tagTeamMatchmakingSummary = null;
+        if (shouldRunTagTeam) {
+          console.log(`[Admin] Step 9.5: Matchmaking for Tag Teams (Cycle ${currentCycleNumber})`);
+          const tagTeamMatchesCreated = await runTagTeamMatchmaking(scheduledFor);
+          tagTeamMatchmakingSummary = { matchesCreated: tagTeamMatchesCreated };
+        } else {
+          console.log(`[Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle ${currentCycleNumber})`);
+        }
+
+        // Step 10: Increment Cycle Counters
+        console.log(`[Admin] Step 10: Increment Cycle Counters`);
+        
+        // Update cycle metadata with current cycle number
+        await prisma.cycleMetadata.update({
+          where: { id: 1 },
+          data: {
+            totalCycles: currentCycleNumber,
+            lastCycleAt: new Date(),
+          },
+        });
 
         // Increment cyclesInCurrentLeague for all robots (after rebalancing)
         await prisma.robot.updateMany({
@@ -513,16 +555,32 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           },
         });
 
+        // Increment cyclesInTagTeamLeague for all tag teams (after rebalancing)
+        await prisma.tagTeam.updateMany({
+          data: {
+            cyclesInTagTeamLeague: {
+              increment: 1,
+            },
+          },
+        });
+
+        // Step 11: Wait (1.1 second delay)
+        console.log(`[Admin] Step 11: Wait (1.1 second delay)`);
+        await new Promise(resolve => setTimeout(resolve, 1100));
+
         cycleResults.push({
           cycle: currentCycleNumber,
-          repair1: repair1Summary,
-          tournaments: tournamentSummary,
-          repair2: repair2Summary,
           battles: battleSummary,
-          rebalancing: rebalancingSummary,
-          userGeneration: userGenerationSummary,
+          repair1: repair1Summary,
+          tagTeamBattles: tagTeamBattleSummary,
+          repair2: repair2Summary,
+          tournaments: tournamentSummary,
           repair3: repair3Summary,
+          rebalancing: rebalancingSummary,
+          tagTeamRebalancing: tagTeamRebalancingSummary,
+          userGeneration: userGenerationSummary,
           matchmaking: matchmakingSummary,
+          tagTeamMatchmaking: tagTeamMatchmakingSummary,
           duration: Date.now() - cycleStart,
         });
       } catch (error) {
@@ -534,15 +592,6 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         });
       }
     }
-
-    // Update cycle metadata with total cycles completed
-    await prisma.cycleMetadata.update({
-      where: { id: 1 },
-      data: {
-        totalCycles: currentCycleNumber,
-        lastCycleAt: new Date(),
-      },
-    });
 
     const totalDuration = Date.now() - startTime;
 
@@ -1064,6 +1113,14 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
       robot1FameAwarded: battle.robot1FameAwarded,
       robot2FameAwarded: battle.robot2FameAwarded,
       
+      // Tag Team specific fields (null for non-tag-team battles)
+      team1ActiveRobotId: battle.team1ActiveRobotId,
+      team1ReserveRobotId: battle.team1ReserveRobotId,
+      team2ActiveRobotId: battle.team2ActiveRobotId,
+      team2ReserveRobotId: battle.team2ReserveRobotId,
+      team1TagOutTime: battle.team1TagOutTime ? Number(battle.team1TagOutTime) / 1000 : null, // Convert to seconds
+      team2TagOutTime: battle.team2TagOutTime ? Number(battle.team2TagOutTime) / 1000 : null, // Convert to seconds
+      
       // Combat log with detailed events
       battleLog: battle.battleLog,
     });
@@ -1344,6 +1401,82 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
     console.error('[Admin] Robot stats error:', error);
     res.status(500).json({
       error: 'Failed to retrieve robot statistics',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
+ * POST /api/admin/tag-teams/matchmaking
+ * Manually trigger tag team matchmaking
+ */
+router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { scheduledFor } = req.body;
+    const targetTime = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    console.log('[Admin] Triggering tag team matchmaking...');
+    const totalMatches = await runTagTeamMatchmaking(targetTime);
+
+    res.json({
+      success: true,
+      matchesCreated: totalMatches,
+      scheduledFor: targetTime.toISOString(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Admin] Tag team matchmaking error:', error);
+    res.status(500).json({
+      error: 'Failed to run tag team matchmaking',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
+ * POST /api/admin/tag-teams/battles
+ * Manually execute scheduled tag team battles
+ */
+router.post('/tag-teams/battles', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { scheduledFor } = req.body;
+    const targetTime = scheduledFor ? new Date(scheduledFor) : undefined;
+
+    console.log('[Admin] Executing tag team battles...');
+    const summary = await executeScheduledTagTeamBattles(targetTime);
+
+    res.json({
+      success: true,
+      summary,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Admin] Tag team battle execution error:', error);
+    res.status(500).json({
+      error: 'Failed to execute tag team battles',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
+ * POST /api/admin/tag-teams/rebalance
+ * Manually trigger tag team league rebalancing
+ */
+router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    console.log('[Admin] Triggering tag team league rebalancing...');
+    const summary = await rebalanceTagTeamLeagues();
+
+    res.json({
+      success: true,
+      summary,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Admin] Tag team rebalancing error:', error);
+    res.status(500).json({
+      error: 'Failed to rebalance tag team leagues',
       message: error instanceof Error ? error.message : String(error),
     });
   }

@@ -661,6 +661,12 @@ Manual testing accounts with full starting resources:
 - **Stance**: Defensive
 - **Weapons**: Power Sword (₡350,000) + Combat Shield (₡100,000)
 
+**Tag Team**: "Specialist Team"
+- **Members**: Robot 1 (Specialist Alpha - Active) + Robot 2 (Specialist Beta - Reserve)
+- **League**: Bronze (bronze_1)
+- **Status**: Active
+- **Note**: Automatically created during seed for Two-Robot Specialist archetype
+
 **Budget Breakdown**:
 - Robots: ₡1,000,000 (2×₡500,000)
 - Facilities: ₡300,000
@@ -668,7 +674,7 @@ Manual testing accounts with full starting resources:
 - Weapons: ₡725,000
 - Reserve: ₡175,000
 
-**Note**: Adjusted to ₡200,000 reserve as per guide.
+**Note**: Adjusted to ₡200,000 reserve as per guide. Tag team automatically created with both robots.
 
 #### Archetype 7: Melee Specialist
 
@@ -916,6 +922,13 @@ Manual testing accounts with full starting resources:
 - After 20 cycles: 210 users
 - After 50 cycles: 1,275 users
 
+**Tag Team Creation for Two-Robot Specialist**:
+- When creating a Two-Robot Specialist archetype user (either at seed time or during dynamic generation), automatically create a tag team with both robots
+- Active robot: First robot (offensive build - Plasma Rifle)
+- Reserve robot: Second robot (defensive build - Power Sword + Combat Shield)
+- Tag team starts in same league as the robots (bronze_1)
+- This ensures Two-Robot Specialist users can immediately participate in tag team matches
+
 ---
 
 ## Robot Attribute Defaults
@@ -979,12 +992,16 @@ Examples:
 - 1 bye-robot user
 - 17 player archetype test users (10 archetypes with some having multiple options = 14 unique variations)
 
-**Note**: Additional archetype users will be dynamically generated during cycles, cycling through the 14 archetype variations to ensure even distribution over time.
+**Note**: Additional archetype users will be dynamically generated during cycles, cycling through the 14 archetype variations to ensure even distribution over time. Two-Robot Specialist users automatically get tag teams created.
 
 **Robots**: 119 total (at initial seed)
 - 100 WimpBot robots (1 per test user)
 - 1 bye-robot
 - 18 archetype robots (16 single-robot archetypes + 2 robots for Two-Robot Specialist)
+
+**Tag Teams**: 1 total (at initial seed)
+- 1 tag team for Two-Robot Specialist archetype user
+- Additional tag teams created automatically during cycles for Two-Robot Specialist users
 
 **Weapons**: 23 in catalog
 

@@ -23,6 +23,14 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
 
     const robotIds = userRobots.map(r => r.id);
 
+    // Get user's tag teams
+    const userTeams = await prisma.tagTeam.findMany({
+      where: { stableId: req.user.userId },
+      select: { id: true },
+    });
+
+    const teamIds = userTeams.map(t => t.id);
+
     // Get scheduled league matches involving user's robots
     const leagueMatches = await prisma.scheduledMatch.findMany({
       where: {
@@ -174,14 +182,142 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       } : null,
     }));
 
-    // Combine both types of matches
-    const allMatches = [...formattedLeagueMatches, ...formattedTournamentMatches];
+    // Get scheduled tag team matches involving user's teams
+    const tagTeamMatches = await prisma.tagTeamMatch.findMany({
+      where: {
+        status: 'scheduled',
+        OR: [
+          { team1Id: { in: teamIds } },
+          { team2Id: { in: teamIds } },
+        ],
+      },
+      include: {
+        team1: {
+          include: {
+            activeRobot: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
+                },
+              },
+            },
+            reserveRobot: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        team2: {
+          include: {
+            activeRobot: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
+                },
+              },
+            },
+            reserveRobot: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        scheduledFor: 'asc',
+      },
+    });
+
+    // Format tag team matches
+    const formattedTagTeamMatches = tagTeamMatches.map(match => ({
+      id: `tag-team-${match.id}`,
+      matchType: 'tag_team',
+      team1Id: match.team1Id,
+      team2Id: match.team2Id,
+      tagTeamLeague: match.tagTeamLeague,
+      scheduledFor: match.scheduledFor,
+      status: match.status,
+      team1: {
+        id: match.team1.id,
+        activeRobot: {
+          id: match.team1.activeRobot.id,
+          name: match.team1.activeRobot.name,
+          elo: match.team1.activeRobot.elo,
+          currentHP: match.team1.activeRobot.currentHP,
+          maxHP: match.team1.activeRobot.maxHP,
+          userId: match.team1.activeRobot.userId,
+          user: {
+            username: match.team1.activeRobot.user.username,
+          },
+        },
+        reserveRobot: {
+          id: match.team1.reserveRobot.id,
+          name: match.team1.reserveRobot.name,
+          elo: match.team1.reserveRobot.elo,
+          currentHP: match.team1.reserveRobot.currentHP,
+          maxHP: match.team1.reserveRobot.maxHP,
+          userId: match.team1.reserveRobot.userId,
+          user: {
+            username: match.team1.reserveRobot.user.username,
+          },
+        },
+        combinedELO: match.team1.activeRobot.elo + match.team1.reserveRobot.elo,
+      },
+      team2: {
+        id: match.team2.id,
+        activeRobot: {
+          id: match.team2.activeRobot.id,
+          name: match.team2.activeRobot.name,
+          elo: match.team2.activeRobot.elo,
+          currentHP: match.team2.activeRobot.currentHP,
+          maxHP: match.team2.activeRobot.maxHP,
+          userId: match.team2.activeRobot.userId,
+          user: {
+            username: match.team2.activeRobot.user.username,
+          },
+        },
+        reserveRobot: {
+          id: match.team2.reserveRobot.id,
+          name: match.team2.reserveRobot.name,
+          elo: match.team2.reserveRobot.elo,
+          currentHP: match.team2.reserveRobot.currentHP,
+          maxHP: match.team2.reserveRobot.maxHP,
+          userId: match.team2.reserveRobot.userId,
+          user: {
+            username: match.team2.reserveRobot.user.username,
+          },
+        },
+        combinedELO: match.team2.activeRobot.elo + match.team2.reserveRobot.elo,
+      },
+    }));
+
+    // Combine all types of matches
+    const allMatches = [...formattedLeagueMatches, ...formattedTournamentMatches, ...formattedTagTeamMatches];
 
     res.json({
       matches: allMatches,
       total: allMatches.length,
       leagueMatches: formattedLeagueMatches.length,
       tournamentMatches: formattedTournamentMatches.length,
+      tagTeamMatches: formattedTagTeamMatches.length,
     });
   } catch (error) {
     console.error('[Matches API] Error fetching upcoming matches:', error);
@@ -271,46 +407,64 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
     });
 
     // Format response to match frontend BattleHistory interface
-    const formattedBattles = battles.map(battle => ({
-      id: battle.id,
-      robot1Id: battle.robot1Id,
-      robot2Id: battle.robot2Id,
-      winnerId: battle.winnerId,
-      createdAt: battle.createdAt,
-      durationSeconds: battle.durationSeconds,
-      robot1ELOBefore: battle.robot1ELOBefore,
-      robot1ELOAfter: battle.robot1ELOAfter,
-      robot2ELOBefore: battle.robot2ELOBefore,
-      robot2ELOAfter: battle.robot2ELOAfter,
-      robot1FinalHP: battle.robot1FinalHP,
-      robot2FinalHP: battle.robot2FinalHP,
-      winnerReward: battle.winnerReward,
-      loserReward: battle.loserReward,
-      battleType: battle.battleType,
-      tournamentId: battle.tournamentId,
-      tournamentRound: battle.tournamentRound,
-      tournamentName: battle.tournament?.name,
-      tournamentMaxRounds: battle.tournament?.maxRounds,
-      robot1: {
-        id: battle.robot1.id,
-        name: battle.robot1.name,
-        userId: battle.robot1.userId,
-        currentLeague: battle.robot1.currentLeague,
-        leagueId: battle.robot1.leagueId,
-        user: {
-          username: battle.robot1.user.username,
+    const formattedBattles = await Promise.all(battles.map(async (battle) => {
+      const baseData = {
+        id: battle.id,
+        robot1Id: battle.robot1Id,
+        robot2Id: battle.robot2Id,
+        winnerId: battle.winnerId,
+        createdAt: battle.createdAt,
+        durationSeconds: battle.durationSeconds,
+        robot1ELOBefore: battle.robot1ELOBefore,
+        robot1ELOAfter: battle.robot1ELOAfter,
+        robot2ELOBefore: battle.robot2ELOBefore,
+        robot2ELOAfter: battle.robot2ELOAfter,
+        robot1FinalHP: battle.robot1FinalHP,
+        robot2FinalHP: battle.robot2FinalHP,
+        winnerReward: battle.winnerReward,
+        loserReward: battle.loserReward,
+        battleType: battle.battleType,
+        tournamentId: battle.tournamentId,
+        tournamentRound: battle.tournamentRound,
+        tournamentName: battle.tournament?.name,
+        tournamentMaxRounds: battle.tournament?.maxRounds,
+        robot1: {
+          id: battle.robot1.id,
+          name: battle.robot1.name,
+          userId: battle.robot1.userId,
+          currentLeague: battle.robot1.currentLeague,
+          leagueId: battle.robot1.leagueId,
+          user: {
+            username: battle.robot1.user.username,
+          },
         },
-      },
-      robot2: {
-        id: battle.robot2.id,
-        name: battle.robot2.name,
-        userId: battle.robot2.userId,
-        currentLeague: battle.robot2.currentLeague,
-        leagueId: battle.robot2.leagueId,
-        user: {
-          username: battle.robot2.user.username,
+        robot2: {
+          id: battle.robot2.id,
+          name: battle.robot2.name,
+          userId: battle.robot2.userId,
+          currentLeague: battle.robot2.currentLeague,
+          leagueId: battle.robot2.leagueId,
+          user: {
+            username: battle.robot2.user.username,
+          },
         },
-      },
+      };
+
+      // Add tag team specific data if it's a tag team battle
+      if (battle.battleType === 'tag_team') {
+        const tagTeamMatch = await prisma.tagTeamMatch.findFirst({
+          where: { battleId: battle.id },
+          select: { team1Id: true, team2Id: true },
+        });
+
+        return {
+          ...baseData,
+          team1Id: tagTeamMatch?.team1Id || null,
+          team2Id: tagTeamMatch?.team2Id || null,
+        };
+      }
+
+      return baseData;
     }));
 
     res.json({
@@ -368,6 +522,14 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       return res.status(404).json({ error: 'Battle not found' });
     }
 
+    // Convert BigInt fields to numbers immediately after fetching
+    // Tag out times are stored in milliseconds, convert to seconds for display
+    const battleData = {
+      ...battle,
+      team1TagOutTime: battle.team1TagOutTime ? Number(battle.team1TagOutTime) / 1000 : null,
+      team2TagOutTime: battle.team2TagOutTime ? Number(battle.team2TagOutTime) / 1000 : null,
+    };
+
     // Get user's robots to verify access
     const userRobots = await prisma.robot.findMany({
       where: { userId: req.user.userId },
@@ -377,43 +539,152 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
     const robotIds = userRobots.map(r => r.id);
 
     // Verify user has access to this battle
-    if (!robotIds.includes(battle.robot1Id) && !robotIds.includes(battle.robot2Id)) {
-      return res.status(403).json({ error: 'Access denied to battle data' });
+    if (!robotIds.includes(battleData.robot1Id) && !robotIds.includes(battleData.robot2Id)) {
+      // For tag team battles, also check if user owns any of the team robots
+      const isTagTeamBattle = battleData.battleType === 'tag_team';
+      if (isTagTeamBattle) {
+        const hasAccess = 
+          (battleData.team1ActiveRobotId && robotIds.includes(battleData.team1ActiveRobotId)) ||
+          (battleData.team1ReserveRobotId && robotIds.includes(battleData.team1ReserveRobotId)) ||
+          (battleData.team2ActiveRobotId && robotIds.includes(battleData.team2ActiveRobotId)) ||
+          (battleData.team2ReserveRobotId && robotIds.includes(battleData.team2ReserveRobotId));
+        
+        if (!hasAccess) {
+          return res.status(403).json({ error: 'Access denied to battle data' });
+        }
+      } else {
+        return res.status(403).json({ error: 'Access denied to battle data' });
+      }
+    }
+
+    // Build response based on battle type
+    const baseResponse: any = {
+      battleId: battleData.id,
+      createdAt: battleData.createdAt,
+      battleType: battleData.battleType,
+      leagueType: battleData.leagueType,
+      duration: battleData.durationSeconds,
+      battleLog: typeof battleData.battleLog === 'object' && battleData.battleLog !== null 
+        ? JSON.parse(JSON.stringify(battleData.battleLog, (key, value) =>
+            typeof value === 'bigint' ? Number(value) : value
+          ))
+        : battleData.battleLog,
+    };
+
+    // Add tag team specific fields if it's a tag team battle
+    if (battleData.battleType === 'tag_team' && battleData.team1ActiveRobotId && battleData.team2ActiveRobotId) {
+      // Fetch tag team robots separately since they're scalar fields
+      const [team1Active, team1Reserve, team2Active, team2Reserve] = await Promise.all([
+        battleData.team1ActiveRobotId ? prisma.robot.findUnique({
+          where: { id: battleData.team1ActiveRobotId },
+          include: { user: { select: { id: true, username: true } } },
+        }) : null,
+        battleData.team1ReserveRobotId ? prisma.robot.findUnique({
+          where: { id: battleData.team1ReserveRobotId },
+          include: { user: { select: { id: true, username: true } } },
+        }) : null,
+        battleData.team2ActiveRobotId ? prisma.robot.findUnique({
+          where: { id: battleData.team2ActiveRobotId },
+          include: { user: { select: { id: true, username: true } } },
+        }) : null,
+        battleData.team2ReserveRobotId ? prisma.robot.findUnique({
+          where: { id: battleData.team2ReserveRobotId },
+          include: { user: { select: { id: true, username: true } } },
+        }) : null,
+      ]);
+
+      // Get the tag team match to find team IDs
+      const tagTeamMatch = await prisma.tagTeamMatch.findFirst({
+        where: { battleId: battleData.id },
+        select: { team1Id: true, team2Id: true },
+      });
+
+      baseResponse.tagTeam = {
+        team1: {
+          teamId: tagTeamMatch?.team1Id || null,
+          activeRobot: team1Active ? {
+            id: team1Active.id,
+            name: team1Active.name,
+            owner: team1Active.user.username,
+          } : null,
+          reserveRobot: team1Reserve ? {
+            id: team1Reserve.id,
+            name: team1Reserve.name,
+            owner: team1Reserve.user.username,
+          } : null,
+          tagOutTime: battleData.team1TagOutTime, // Already converted to seconds
+        },
+        team2: {
+          teamId: tagTeamMatch?.team2Id || null,
+          activeRobot: team2Active ? {
+            id: team2Active.id,
+            name: team2Active.name,
+            owner: team2Active.user.username,
+          } : null,
+          reserveRobot: team2Reserve ? {
+            id: team2Reserve.id,
+            name: team2Reserve.name,
+            owner: team2Reserve.user.username,
+          } : null,
+          tagOutTime: battleData.team2TagOutTime, // Already converted to seconds
+        },
+      };
+    }
+
+    // Add standard robot fields (for 1v1 and tournament battles, or as fallback)
+    // For tag team battles, determine rewards based on team winner
+    let robot1IsWinner = false;
+    let robot2IsWinner = false;
+    
+    if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {
+      const team1Id = baseResponse.tagTeam.team1.teamId;
+      const team2Id = baseResponse.tagTeam.team2.teamId;
+      robot1IsWinner = battleData.winnerId === team1Id;
+      robot2IsWinner = battleData.winnerId === team2Id;
+    } else {
+      robot1IsWinner = battleData.winnerId === battleData.robot1Id;
+      robot2IsWinner = battleData.winnerId === battleData.robot2Id;
+    }
+
+    baseResponse.robot1 = {
+      id: battleData.robot1.id,
+      name: battleData.robot1.name,
+      owner: battleData.robot1.user.username,
+      eloBefore: battleData.robot1ELOBefore,
+      eloAfter: battleData.robot1ELOAfter,
+      finalHP: battleData.robot1FinalHP,
+      damageDealt: battleData.robot1DamageDealt,
+      reward: robot1IsWinner ? battleData.winnerReward : battleData.loserReward,
+      prestige: battleData.robot1PrestigeAwarded,
+      fame: battleData.robot1FameAwarded,
+    };
+
+    baseResponse.robot2 = {
+      id: battleData.robot2.id,
+      name: battleData.robot2.name,
+      owner: battleData.robot2.user.username,
+      eloBefore: battleData.robot2ELOBefore,
+      eloAfter: battleData.robot2ELOAfter,
+      finalHP: battleData.robot2FinalHP,
+      damageDealt: battleData.robot2DamageDealt,
+      reward: robot2IsWinner ? battleData.winnerReward : battleData.loserReward,
+      prestige: battleData.robot2PrestigeAwarded,
+      fame: battleData.robot2FameAwarded,
+    };
+
+    // Determine winner based on battle type
+    if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {
+      // For tag team battles, winnerId is the team ID, not robot ID
+      const team1Id = baseResponse.tagTeam.team1.teamId;
+      const team2Id = baseResponse.tagTeam.team2.teamId;
+      baseResponse.winner = battleData.winnerId === team1Id ? 'robot1' : battleData.winnerId === team2Id ? 'robot2' : null;
+    } else {
+      // For 1v1 battles, winnerId is the robot ID
+      baseResponse.winner = battleData.winnerId === battleData.robot1Id ? 'robot1' : battleData.winnerId === battleData.robot2Id ? 'robot2' : null;
     }
 
     // Format battle log response
-    res.json({
-      battleId: battle.id,
-      createdAt: battle.createdAt,
-      leagueType: battle.leagueType,
-      duration: battle.durationSeconds,
-      robot1: {
-        id: battle.robot1.id,
-        name: battle.robot1.name,
-        owner: battle.robot1.user.username,
-        eloBefore: battle.robot1ELOBefore,
-        eloAfter: battle.robot1ELOAfter,
-        finalHP: battle.robot1FinalHP,
-        damageDealt: battle.robot1DamageDealt,
-        reward: battle.winnerId === battle.robot1Id ? battle.winnerReward : battle.loserReward,
-        prestige: battle.robot1PrestigeAwarded,
-        fame: battle.robot1FameAwarded,
-      },
-      robot2: {
-        id: battle.robot2.id,
-        name: battle.robot2.name,
-        owner: battle.robot2.user.username,
-        eloBefore: battle.robot2ELOBefore,
-        eloAfter: battle.robot2ELOAfter,
-        finalHP: battle.robot2FinalHP,
-        damageDealt: battle.robot2DamageDealt,
-        reward: battle.winnerId === battle.robot2Id ? battle.winnerReward : battle.loserReward,
-        prestige: battle.robot2PrestigeAwarded,
-        fame: battle.robot2FameAwarded,
-      },
-      winner: battle.winnerId === battle.robot1Id ? 'robot1' : battle.winnerId === battle.robot2Id ? 'robot2' : null,
-      battleLog: battle.battleLog,
-    });
+    res.json(baseResponse);
   } catch (error) {
     console.error('[Matches API] Error fetching battle log:', error);
     res.status(500).json({

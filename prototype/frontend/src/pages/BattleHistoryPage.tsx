@@ -24,7 +24,7 @@ function BattleHistoryPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [battleFilter, setBattleFilter] = useState<'overall' | 'league' | 'tournament'>('overall');
+  const [battleFilter, setBattleFilter] = useState<'overall' | 'league' | 'tournament' | 'tag_team'>('overall');
   
   // Filter and sort state
   const [outcomeFilter, setOutcomeFilter] = useState<'all' | 'win' | 'loss' | 'draw'>('all');
@@ -93,6 +93,19 @@ function BattleHistoryPage() {
   };
 
   const getReward = (battle: BattleHistory, robotId: number) => {
+    // For tag team battles, determine reward based on team winner
+    if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
+      const isTeam1Robot = battle.robot1Id === robotId;
+      const isTeam2Robot = battle.robot2Id === robotId;
+      
+      if (isTeam1Robot) {
+        return battle.winnerId === battle.team1Id ? battle.winnerReward : battle.loserReward;
+      } else if (isTeam2Robot) {
+        return battle.winnerId === battle.team2Id ? battle.winnerReward : battle.loserReward;
+      }
+    }
+    
+    // For 1v1 battles, winnerId is the robot ID
     return battle.winnerId === robotId ? battle.winnerReward : battle.loserReward;
   };
 
@@ -122,26 +135,31 @@ function BattleHistoryPage() {
     let firstBattleOutcome: 'win' | 'loss' | 'draw' | null = null;
     let streakBroken = false; // Flag to stop counting once streak is broken
 
-    // League vs Tournament breakdown
+    // League vs Tournament vs Tag Team breakdown
     let leagueWins = 0, leagueLosses = 0, leagueDraws = 0, leagueELOChange = 0, leagueBattles = 0;
     let tournamentWins = 0, tournamentLosses = 0, tournamentDraws = 0, tournamentELOChange = 0, tournamentBattles = 0;
+    let tagTeamWins = 0, tagTeamLosses = 0, tagTeamDraws = 0, tagTeamELOChange = 0, tagTeamBattles = 0;
 
     battles.forEach((battle, index) => {
       const { outcome, eloChange, myRobotId } = getMatchData(battle);
       const reward = getReward(battle, myRobotId);
       const isTournament = battle.battleType === 'tournament';
+      const isTagTeam = battle.battleType === 'tag_team';
 
       if (outcome === 'win') {
         wins++;
         if (isTournament) tournamentWins++;
+        else if (isTagTeam) tagTeamWins++;
         else leagueWins++;
       } else if (outcome === 'loss') {
         losses++;
         if (isTournament) tournamentLosses++;
+        else if (isTagTeam) tagTeamLosses++;
         else leagueLosses++;
       } else if (outcome === 'draw') {
         draws++;
         if (isTournament) tournamentDraws++;
+        else if (isTagTeam) tagTeamDraws++;
         else leagueDraws++;
       }
 
@@ -151,6 +169,9 @@ function BattleHistoryPage() {
       if (isTournament) {
         tournamentBattles++;
         tournamentELOChange += eloChange;
+      } else if (isTagTeam) {
+        tagTeamBattles++;
+        tagTeamELOChange += eloChange;
       } else {
         leagueBattles++;
         leagueELOChange += eloChange;
@@ -194,6 +215,9 @@ function BattleHistoryPage() {
     const tournamentWinRate = tournamentBattles > 0 ? tournamentWins / tournamentBattles : 0;
     const tournamentAvgELO = tournamentBattles > 0 ? tournamentELOChange / tournamentBattles : 0;
 
+    const tagTeamWinRate = tagTeamBattles > 0 ? tagTeamWins / tagTeamBattles : 0;
+    const tagTeamAvgELO = tagTeamBattles > 0 ? tagTeamELOChange / tagTeamBattles : 0;
+
     return {
       totalBattles,
       wins,
@@ -219,6 +243,14 @@ function BattleHistoryPage() {
         winRate: tournamentWinRate,
         avgELOChange: tournamentAvgELO,
       } : undefined,
+      tagTeamStats: tagTeamBattles > 0 ? {
+        battles: tagTeamBattles,
+        wins: tagTeamWins,
+        losses: tagTeamLosses,
+        draws: tagTeamDraws,
+        winRate: tagTeamWinRate,
+        avgELOChange: tagTeamAvgELO,
+      } : undefined,
     };
   }, [battles]);
 
@@ -226,11 +258,13 @@ function BattleHistoryPage() {
   const filteredAndSortedBattles = useMemo(() => {
     let filtered = battles;
 
-    // Apply battle type filter (league/tournament)
+    // Apply battle type filter (league/tournament/tag_team)
     if (battleFilter === 'league') {
-      filtered = filtered.filter(b => b.battleType !== 'tournament');
+      filtered = filtered.filter(b => b.battleType !== 'tournament' && b.battleType !== 'tag_team');
     } else if (battleFilter === 'tournament') {
       filtered = filtered.filter(b => b.battleType === 'tournament');
+    } else if (battleFilter === 'tag_team') {
+      filtered = filtered.filter(b => b.battleType === 'tag_team');
     }
 
     // Apply outcome filter

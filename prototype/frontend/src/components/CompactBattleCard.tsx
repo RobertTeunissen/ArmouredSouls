@@ -25,11 +25,15 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   onClick,
 }) => {
   const isTournament = battle.battleType === 'tournament';
+  const isTagTeam = battle.battleType === 'tag_team';
   // Note: isLeague can be derived but not currently used in display logic
   
   const getBattleTypeIcon = () => {
     if (isTournament) {
       return '🏆';
+    }
+    if (isTagTeam) {
+      return '🤝';
     }
     return '⚔️'; // League match
   };
@@ -47,6 +51,13 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         : '';
       return `Tournament${roundName ? ` • ${roundName}` : ''}`;
     }
+    if (isTagTeam) {
+      // For tag team matches, show league tier if available
+      if (myRobot.currentLeague) {
+        return `Tag Team • ${getLeagueTierName(myRobot.currentLeague)} League`;
+      }
+      return 'Tag Team Match';
+    }
     // For league matches, show league tier if available
     if (myRobot.currentLeague) {
       return `${getLeagueTierName(myRobot.currentLeague)} League`;
@@ -57,6 +68,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   const getBorderColor = () => {
     // Tournament battles get yellow border regardless of outcome
     if (isTournament) return 'border-l-[#d29922]';
+    // Tag team battles get cyan border regardless of outcome
+    if (isTagTeam) return 'border-l-cyan-400';
     // League battles use outcome color
     switch (outcome) {
       case 'win': return 'border-l-[#3fb950]';

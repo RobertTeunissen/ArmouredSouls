@@ -19,6 +19,8 @@ const implementedPages = new Set([
   '/battle-history',
   '/league-standings',
   '/tournaments',
+  '/tag-teams',
+  '/tag-teams/standings',
   '/admin',
   '/leaderboards/fame',
   '/leaderboards/prestige',
@@ -43,6 +45,8 @@ const allPages = {
     items: [
       { path: '/battle-history', label: 'Battle History' },
       { path: '/league-standings', label: 'League Standings' },
+      { path: '/tag-teams', label: 'Tag Team Management' },
+      { path: '/tag-teams/standings', label: 'Tag Team Standings' },
       { path: '/matchmaking', label: 'Matchmaking Queue' },
       { path: '/practice', label: 'Practice Arena' },
       { path: '/tournaments', label: 'Tournament Hub' },

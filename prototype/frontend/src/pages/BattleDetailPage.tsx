@@ -48,6 +48,13 @@ function BattleDetailPage() {
   const getWinnerText = () => {
     if (!battleLog) return '';
     if (!battleLog.winner) return 'DRAW';
+    
+    // For tag team battles, show team victory
+    if (battleLog.battleType === 'tag_team' && battleLog.tagTeam) {
+      const winningTeam = battleLog.winner === 'robot1' ? battleLog.tagTeam.team1 : battleLog.tagTeam.team2;
+      return `TEAM ${winningTeam.activeRobot?.name || 'Unknown'} WINS`;
+    }
+    
     const winner = battleLog.winner === 'robot1' ? battleLog.robot1 : battleLog.robot2;
     return `${winner.name} WINS`;
   };
@@ -121,9 +128,61 @@ function BattleDetailPage() {
             {getWinnerText()}
           </div>
           <div className="text-gray-300 text-sm">
-            {getLeagueTierName(battleLog.leagueType)} League • Duration: {formatDuration(battleLog.duration)}
+            {battleLog.battleType === 'tag_team' ? (
+              <>🤝 Tag Team Battle • Duration: {formatDuration(battleLog.duration)}</>
+            ) : (
+              <>{getLeagueTierName(battleLog.leagueType)} League • Duration: {formatDuration(battleLog.duration)}</>
+            )}
           </div>
         </div>
+
+        {/* Tag Team Info (if applicable) */}
+        {battleLog.battleType === 'tag_team' && battleLog.tagTeam && (
+          <div className="bg-cyan-900/20 border border-cyan-600 rounded-lg mb-3 p-3">
+            <h3 className="text-lg font-bold text-cyan-400 mb-2">Tag Team Battle</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {/* Team 1 */}
+              <div className="space-y-1">
+                <div className="font-semibold text-white">Team 1</div>
+                {battleLog.tagTeam.team1.activeRobot && (
+                  <div className="text-gray-300">
+                    <span className="text-primary">Active:</span> {battleLog.tagTeam.team1.activeRobot.name}
+                  </div>
+                )}
+                {battleLog.tagTeam.team1.reserveRobot && (
+                  <div className="text-gray-300">
+                    <span className="text-white">Reserve:</span> {battleLog.tagTeam.team1.reserveRobot.name}
+                  </div>
+                )}
+                {battleLog.tagTeam.team1.tagOutTime !== null && (
+                  <div className="text-xs text-cyan-400">
+                    Tagged out at {battleLog.tagTeam.team1.tagOutTime.toFixed(1)}s
+                  </div>
+                )}
+              </div>
+              
+              {/* Team 2 */}
+              <div className="space-y-1">
+                <div className="font-semibold text-white">Team 2</div>
+                {battleLog.tagTeam.team2.activeRobot && (
+                  <div className="text-gray-300">
+                    <span className="text-primary">Active:</span> {battleLog.tagTeam.team2.activeRobot.name}
+                  </div>
+                )}
+                {battleLog.tagTeam.team2.reserveRobot && (
+                  <div className="text-gray-300">
+                    <span className="text-white">Reserve:</span> {battleLog.tagTeam.team2.reserveRobot.name}
+                  </div>
+                )}
+                {battleLog.tagTeam.team2.tagOutTime !== null && (
+                  <div className="text-xs text-cyan-400">
+                    Tagged out at {battleLog.tagTeam.team2.tagOutTime.toFixed(1)}s
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Battle Summary - Horizontal Compact Layout */}
         <div className="bg-gray-800 rounded-lg mb-3 p-3">
@@ -264,6 +323,7 @@ function BattleDetailPage() {
                 // Determine event color based on type
                 let eventColor = 'border-gray-600';
                 let bgColor = 'bg-gray-700';
+                let icon = '';
                 
                 if (event.type === 'battle_start') {
                   eventColor = 'border-blue-500';
@@ -271,6 +331,14 @@ function BattleDetailPage() {
                 } else if (event.type === 'battle_end') {
                   eventColor = 'border-green-500';
                   bgColor = 'bg-green-900/20';
+                } else if (event.type === 'tag_out') {
+                  eventColor = 'border-orange-500';
+                  bgColor = 'bg-orange-900/20';
+                  icon = '🔄';
+                } else if (event.type === 'tag_in') {
+                  eventColor = 'border-cyan-500';
+                  bgColor = 'bg-cyan-900/20';
+                  icon = '⚡';
                 } else if (event.type === 'attack' && event.message.includes('CRITICAL')) {
                   eventColor = 'border-red-500';
                   bgColor = 'bg-red-900/20';
@@ -287,6 +355,7 @@ function BattleDetailPage() {
                     <div className="text-gray-400 text-sm font-mono whitespace-nowrap flex-shrink-0 min-w-[50px]">
                       {event.timestamp.toFixed(1)}s
                     </div>
+                    {icon && <div className="text-lg flex-shrink-0">{icon}</div>}
                     <div className="flex-1 text-sm leading-relaxed">{event.message}</div>
                   </div>
                 );

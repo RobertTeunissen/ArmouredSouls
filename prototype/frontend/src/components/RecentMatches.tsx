@@ -130,9 +130,11 @@ function RecentMatches() {
           const { myRobot, opponent, outcome, eloChange } = getMatchData(battle);
           const outcomeColor = getOutcomeColor(outcome);
           const isTournament = battle.battleType === 'tournament';
+          const isTagTeam = battle.battleType === 'tag_team';
           
           const getBorderColor = () => {
             if (isTournament) return 'border-l-warning';
+            if (isTagTeam) return 'border-l-cyan-400';
             switch (outcome) {
               case 'win': return 'border-l-success';
               case 'loss': return 'border-l-error';
@@ -155,9 +157,15 @@ function RecentMatches() {
               <div className="flex justify-between items-start mb-1">
                 <div className="flex items-center gap-2">
                   {isTournament && <span className="text-sm">🏆</span>}
+                  {isTagTeam && <span className="text-sm">🤝</span>}
                   <span className={`text-xs font-bold ${outcomeColor}`}>
                     {getOutcomeText(outcome)}
                   </span>
+                  {isTagTeam && (
+                    <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400">
+                      Tag Team
+                    </span>
+                  )}
                 </div>
                 <span className="text-xs text-gray-400">
                   {formatDateTime(battle.createdAt)}
