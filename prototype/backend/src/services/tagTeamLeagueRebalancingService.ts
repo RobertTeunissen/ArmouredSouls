@@ -1,12 +1,11 @@
-import { PrismaClient, TagTeam } from '@prisma/client';
+import { TagTeam } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { 
   assignTagTeamLeagueInstance, 
   rebalanceTagTeamInstances,
   TAG_TEAM_LEAGUE_TIERS,
   TagTeamLeagueTier 
 } from './tagTeamLeagueInstanceService';
-
-const prisma = new PrismaClient();
 
 // Promotion/Demotion thresholds
 const PROMOTION_PERCENTAGE = 0.10; // Top 10%

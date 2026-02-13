@@ -1,7 +1,7 @@
-import { PrismaClient, Robot } from '@prisma/client';
+import { Robot } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from './leagueInstanceService';
 
-const prisma = new PrismaClient();
 
 // Matchmaking configuration
 export const ELO_MATCH_IDEAL = 150; // Ideal ELO difference for a fair match

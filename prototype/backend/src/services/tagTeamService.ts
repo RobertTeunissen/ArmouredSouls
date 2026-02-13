@@ -1,8 +1,8 @@
-import { PrismaClient, Robot, TagTeam } from '@prisma/client';
+import { Robot, TagTeam } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { checkBattleReadiness } from './matchmakingService';
 import { assignTagTeamLeagueInstance } from './tagTeamLeagueInstanceService';
 
-const prisma = new PrismaClient();
 
 export interface ValidationResult {
   isValid: boolean;

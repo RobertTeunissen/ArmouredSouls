@@ -1,10 +1,9 @@
-import { PrismaClient, Robot, TagTeam, TagTeamMatch, Battle, Prisma } from '@prisma/client';
+import { Robot, TagTeam, TagTeamMatch, Battle, Prisma } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { simulateBattle } from './combatSimulator';
 import { getLeagueBaseReward, getParticipationReward } from '../utils/economyCalculations';
 import { CombatMessageGenerator } from './combatMessageGenerator';
 import { repairAllRobots } from './repairService';
-
-const prisma = new PrismaClient();
 
 // Battle constants
 const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds

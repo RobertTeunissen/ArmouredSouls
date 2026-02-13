@@ -1,9 +1,8 @@
 import express, { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Get all available weapons
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {

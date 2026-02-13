@@ -3,10 +3,9 @@
  * Handles tournament creation, bracket generation, and progression logic
  */
 
-import { PrismaClient, Robot, Tournament, TournamentMatch } from '@prisma/client';
+import { Robot, Tournament, TournamentMatch } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { checkBattleReadiness } from './matchmakingService';
-
-const prisma = new PrismaClient();
 
 // Tournament configuration constants
 const MIN_TOURNAMENT_PARTICIPANTS = 4; // Minimum robots needed to start a tournament

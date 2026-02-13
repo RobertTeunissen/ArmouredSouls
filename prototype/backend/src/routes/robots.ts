@@ -1,11 +1,10 @@
 import express, { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable } from '../utils/weaponValidation';
 import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 const ROBOT_CREATION_COST = 500000;
 const MAX_ATTRIBUTE_LEVEL = 50;

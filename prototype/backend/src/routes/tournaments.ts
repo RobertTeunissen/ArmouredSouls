@@ -1,10 +1,9 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
 import { getActiveTournaments } from '../services/tournamentService';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * GET /api/tournaments

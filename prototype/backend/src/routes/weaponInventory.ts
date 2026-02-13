@@ -1,7 +1,7 @@
 import express, { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
+import prisma from '../lib/prisma';
 // import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 
 // Temporary stub implementations
@@ -14,7 +14,6 @@ const applyDiscount = (cost: number, discountPercent: number): number => {
 };
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Get user's weapon inventory
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {

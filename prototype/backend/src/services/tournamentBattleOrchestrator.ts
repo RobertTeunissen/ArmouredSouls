@@ -7,7 +7,8 @@
  * and DO create battles with participation rewards.
  */
 
-import { PrismaClient, Robot, TournamentMatch, Battle } from '@prisma/client';
+import { Robot, TournamentMatch, Battle } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { simulateBattle } from './combatSimulator';
 import { CombatMessageGenerator } from './combatMessageGenerator';
 import { calculateELOChange } from './battleOrchestrator';
@@ -15,8 +16,6 @@ import {
   calculateTournamentBattleRewards,
   getTournamentRewardBreakdown,
 } from '../utils/tournamentRewards';
-
-const prisma = new PrismaClient();
 
 // Economic constants
 const REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP

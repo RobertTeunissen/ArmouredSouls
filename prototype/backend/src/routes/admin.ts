@@ -10,7 +10,7 @@ import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { calculateMaxHP } from '../utils/robotCalculations';
 import { repairAllRobots } from '../services/repairService';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import tournamentRoutes from './adminTournaments';
 import { 
   getActiveTournaments, 
@@ -21,7 +21,6 @@ import { processTournamentBattle } from '../services/tournamentBattleOrchestrato
 import { advanceWinnersToNextRound } from '../services/tournamentService';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Mount tournament routes
 router.use('/tournaments', tournamentRoutes);

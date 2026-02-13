@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import prisma from '../lib/prisma';
 import {
   generateFinancialReport,
   calculateTotalDailyOperatingCosts,
@@ -17,7 +17,6 @@ import {
 } from '../utils/economyCalculations';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * GET /api/finances/daily

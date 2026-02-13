@@ -1,10 +1,9 @@
 import express, { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Get all facility types and user's current levels
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {

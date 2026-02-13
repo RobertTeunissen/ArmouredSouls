@@ -137,7 +137,7 @@ function DashboardPage() {
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700">
           <h1 className="text-3xl font-bold text-white">Command Center</h1>
           <div className="text-lg text-gray-400">
-            <span className="font-semibold text-white">{user.username}</span>'s Stable
+            <span className="font-semibold text-white">{user.stableName || user.username}</span>'s Stable
           </div>
         </div>
 

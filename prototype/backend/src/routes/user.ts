@@ -1,9 +1,10 @@
 import express, { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { validateStableName, isStableNameUnique, validatePassword } from '../utils/validation';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Get current user profile
 router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
@@ -17,6 +18,17 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
         currency: true,
         prestige: true,
         createdAt: true,
+        // Statistics fields
+        totalBattles: true,
+        totalWins: true,
+        highestELO: true,
+        championshipTitles: true,
+        // Profile fields
+        stableName: true,
+        profileVisibility: true,
+        notificationsBattle: true,
+        notificationsLeague: true,
+        themePreference: true,
       },
     });
 
@@ -24,7 +36,13 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(user);
+    // Handle null stableName - return username as fallback
+    const response = {
+      ...user,
+      stableName: user.stableName || user.username,
+    };
+
+    res.json(response);
   } catch (error) {
     console.error('Profile fetch error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -116,6 +134,168 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
   }
 });
 
-// Stable name endpoint removed - feature not yet implemented
+// Update user profile
+router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const {
+      stableName,
+      profileVisibility,
+      notificationsBattle,
+      notificationsLeague,
+      themePreference,
+      currentPassword,
+      newPassword,
+    } = req.body;
+
+    console.log('Profile update request:', { userId, body: req.body });
+
+    // Validation errors object
+    const validationErrors: Record<string, string> = {};
+
+    // Validate stableName if provided
+    if (stableName !== undefined) {
+      const stableNameValidation = validateStableName(stableName);
+      if (!stableNameValidation.valid) {
+        validationErrors.stableName = stableNameValidation.error!;
+      } else {
+        // Check uniqueness
+        const isUnique = await isStableNameUnique(stableName, userId);
+        if (!isUnique) {
+          return res.status(409).json({ error: 'This stable name is already taken' });
+        }
+      }
+    }
+
+    // Validate profileVisibility if provided
+    if (profileVisibility !== undefined) {
+      if (profileVisibility !== 'public' && profileVisibility !== 'private') {
+        validationErrors.profileVisibility = "Profile visibility must be 'public' or 'private'";
+      }
+    }
+
+    // Validate themePreference if provided
+    if (themePreference !== undefined) {
+      if (themePreference !== 'dark' && themePreference !== 'light' && themePreference !== 'auto') {
+        validationErrors.themePreference = "Theme must be 'dark', 'light', or 'auto'";
+      }
+    }
+
+    // Handle password change
+    let hashedPassword: string | undefined;
+    if (newPassword !== undefined) {
+      // Require current password for password change
+      if (!currentPassword) {
+        validationErrors.currentPassword = 'Current password is required to change password';
+      } else {
+        // Verify current password
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { passwordHash: true },
+        });
+
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        const validPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!validPassword) {
+          return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+
+        // Validate new password
+        const passwordValidation = validatePassword(newPassword);
+        if (!passwordValidation.valid) {
+          validationErrors.newPassword = passwordValidation.error!;
+        } else {
+          // Hash new password
+          hashedPassword = await bcrypt.hash(newPassword, 10);
+        }
+      }
+    }
+
+    // Return validation errors if any
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: validationErrors,
+      });
+    }
+
+    // Build update data object (only include provided fields)
+    const updateData: any = {};
+    // Only include stableName if it's explicitly provided and not an empty string
+    if (stableName !== undefined && stableName !== null) {
+      // Trim whitespace and only update if non-empty
+      const trimmedName = stableName.trim();
+      if (trimmedName.length > 0) {
+        updateData.stableName = trimmedName;
+      } else {
+        // Allow clearing stable name by setting to null
+        updateData.stableName = null;
+      }
+    }
+    if (profileVisibility !== undefined) updateData.profileVisibility = profileVisibility;
+    if (notificationsBattle !== undefined) updateData.notificationsBattle = notificationsBattle;
+    if (notificationsLeague !== undefined) updateData.notificationsLeague = notificationsLeague;
+    if (themePreference !== undefined) updateData.themePreference = themePreference;
+    if (hashedPassword !== undefined) updateData.passwordHash = hashedPassword;
+
+    console.log('Update data:', updateData);
+
+    // Check if there are any updates
+    if (Object.keys(updateData).length === 0) {
+      console.log('No updates to apply');
+      return res.status(400).json({ error: 'No updates provided' });
+    }
+
+    // Update user in database
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        currency: true,
+        prestige: true,
+        createdAt: true,
+        totalBattles: true,
+        totalWins: true,
+        highestELO: true,
+        championshipTitles: true,
+        stableName: true,
+        profileVisibility: true,
+        notificationsBattle: true,
+        notificationsLeague: true,
+        themePreference: true,
+      },
+    });
+
+    // Handle null stableName - return username as fallback
+    const response = {
+      ...updatedUser,
+      stableName: updatedUser.stableName || updatedUser.username,
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Profile update error:', error);
+    
+    // Provide more detailed error information
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
+    });
+  }
+});
 
 export default router;

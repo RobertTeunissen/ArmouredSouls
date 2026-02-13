@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 
-const prisma = new PrismaClient();
 
 export interface RepairSummary {
   robotsRepaired: number;

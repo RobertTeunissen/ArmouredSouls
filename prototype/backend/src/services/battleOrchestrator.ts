@@ -1,4 +1,5 @@
-import { PrismaClient, Robot, ScheduledMatch, Battle } from '@prisma/client';
+import { Robot, ScheduledMatch, Battle } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { CombatMessageGenerator } from './combatMessageGenerator';
 import { simulateBattle } from './combatSimulator';
 import {
@@ -7,8 +8,6 @@ import {
   calculateBattleWinnings,
   getPrestigeMultiplier,
 } from '../utils/economyCalculations';
-
-const prisma = new PrismaClient();
 
 // ELO calculation constant
 const ELO_K_FACTOR = 32;

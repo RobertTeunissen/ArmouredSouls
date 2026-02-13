@@ -1,8 +1,18 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
+// Helper to get display name (stableName or username fallback)
+const getUserDisplayName = (user: { username: string; stableName?: string | null }) => {
+  return user.stableName || user.username;
+};
+
+// User select for records (includes stableName)
+const userSelect = {
+  username: true,
+  stableName: true,
+};
 
 /**
  * GET /api/records
@@ -23,10 +33,10 @@ router.get('/', async (req: Request, res: Response) => {
       orderBy: { durationSeconds: 'asc' },
       include: {
         robot1: {
-          include: { user: { select: { username: true } } }
+          include: { user: { select: userSelect } }
         },
         robot2: {
-          include: { user: { select: { username: true } } }
+          include: { user: { select: userSelect } }
         },
       },
     });
@@ -39,10 +49,10 @@ router.get('/', async (req: Request, res: Response) => {
       orderBy: { durationSeconds: 'desc' },
       include: {
         robot1: {
-          include: { user: { select: { username: true } } }
+          include: { user: { select: userSelect } }
         },
         robot2: {
-          include: { user: { select: { username: true } } }
+          include: { user: { select: userSelect } }
         },
       },
     });
@@ -83,10 +93,10 @@ router.get('/', async (req: Request, res: Response) => {
         where: { id: mostDamageBattle.id },
         include: {
           robot1: {
-            include: { user: { select: { username: true } } }
+            include: { user: { select: userSelect } }
           },
           robot2: {
-            include: { user: { select: { username: true } } }
+            include: { user: { select: userSelect } }
           },
         },
       });
@@ -136,10 +146,10 @@ router.get('/', async (req: Request, res: Response) => {
         where: { id: narrowestBattleId },
         include: {
           robot1: {
-            include: { user: { select: { username: true } } }
+            include: { user: { select: userSelect } }
           },
           robot2: {
-            include: { user: { select: { username: true } } }
+            include: { user: { select: userSelect } }
           },
         },
       });
@@ -191,10 +201,10 @@ router.get('/', async (req: Request, res: Response) => {
         where: { id: biggestUpsetBattleId },
         include: {
           robot1: {
-            include: { user: { select: { username: true } } }
+            include: { user: { select: userSelect } }
           },
           robot2: {
-            include: { user: { select: { username: true } } }
+            include: { user: { select: userSelect } }
           },
         },
       });
@@ -209,10 +219,10 @@ router.get('/', async (req: Request, res: Response) => {
       orderBy: { eloChange: 'desc' },
       include: {
         robot1: {
-          include: { user: { select: { username: true } } }
+          include: { user: { select: userSelect } }
         },
         robot2: {
-          include: { user: { select: { username: true } } }
+          include: { user: { select: userSelect } }
         },
       },
     });
@@ -226,10 +236,10 @@ router.get('/', async (req: Request, res: Response) => {
       orderBy: { eloChange: 'desc' },
       include: {
         robot1: {
-          include: { user: { select: { username: true } } }
+          include: { user: { select: userSelect } }
         },
         robot2: {
-          include: { user: { select: { username: true } } }
+          include: { user: { select: userSelect } }
         },
       },
     });
@@ -245,7 +255,7 @@ router.get('/', async (req: Request, res: Response) => {
       },
       orderBy: { totalBattles: 'desc' },
       include: {
-        user: { select: { username: true } }
+        user: { select: userSelect }
       },
     });
 
@@ -262,7 +272,7 @@ router.get('/', async (req: Request, res: Response) => {
         totalBattles: true,
         elo: true,
         currentLeague: true,
-        user: { select: { username: true } },
+        user: { select: userSelect },
       },
     });
 
@@ -284,7 +294,7 @@ router.get('/', async (req: Request, res: Response) => {
       },
       orderBy: { damageDealtLifetime: 'desc' },
       include: {
-        user: { select: { username: true } }
+        user: { select: userSelect }
       },
     });
 
@@ -295,7 +305,7 @@ router.get('/', async (req: Request, res: Response) => {
       },
       orderBy: { elo: 'desc' },
       include: {
-        user: { select: { username: true } }
+        user: { select: userSelect }
       },
     });
 
@@ -306,7 +316,7 @@ router.get('/', async (req: Request, res: Response) => {
       },
       orderBy: { kills: 'desc' },
       include: {
-        user: { select: { username: true } }
+        user: { select: userSelect }
       },
     });
 
@@ -340,10 +350,10 @@ router.get('/', async (req: Request, res: Response) => {
         where: { id: mostExpensiveBattleId },
         include: {
           robot1: {
-            include: { user: { select: { username: true } } }
+            include: { user: { select: userSelect } }
           },
           robot2: {
-            include: { user: { select: { username: true } } }
+            include: { user: { select: userSelect } }
           },
         },
       });
@@ -356,7 +366,7 @@ router.get('/', async (req: Request, res: Response) => {
       },
       orderBy: { fame: 'desc' },
       include: {
-        user: { select: { username: true } }
+        user: { select: userSelect }
       },
     });
 
@@ -427,12 +437,12 @@ router.get('/', async (req: Request, res: Response) => {
           winner: {
             id: fastestVictory.winnerId === fastestVictory.robot1Id ? fastestVictory.robot1.id : fastestVictory.robot2.id,
             name: fastestVictory.winnerId === fastestVictory.robot1Id ? fastestVictory.robot1.name : fastestVictory.robot2.name,
-            username: fastestVictory.winnerId === fastestVictory.robot1Id ? fastestVictory.robot1.user.username : fastestVictory.robot2.user.username,
+            username: fastestVictory.winnerId === fastestVictory.robot1Id ? getUserDisplayName(fastestVictory.robot1.user) : getUserDisplayName(fastestVictory.robot2.user),
           },
           loser: {
             id: fastestVictory.winnerId === fastestVictory.robot1Id ? fastestVictory.robot2.id : fastestVictory.robot1.id,
             name: fastestVictory.winnerId === fastestVictory.robot1Id ? fastestVictory.robot2.name : fastestVictory.robot1.name,
-            username: fastestVictory.winnerId === fastestVictory.robot1Id ? fastestVictory.robot2.user.username : fastestVictory.robot1.user.username,
+            username: fastestVictory.winnerId === fastestVictory.robot1Id ? getUserDisplayName(fastestVictory.robot2.user) : getUserDisplayName(fastestVictory.robot1.user),
           },
           date: fastestVictory.createdAt,
         } : null,
@@ -442,12 +452,12 @@ router.get('/', async (req: Request, res: Response) => {
           winner: {
             id: longestBattle.winnerId === longestBattle.robot1Id ? longestBattle.robot1.id : longestBattle.robot2.id,
             name: longestBattle.winnerId === longestBattle.robot1Id ? longestBattle.robot1.name : longestBattle.robot2.name,
-            username: longestBattle.winnerId === longestBattle.robot1Id ? longestBattle.robot1.user.username : longestBattle.robot2.user.username,
+            username: longestBattle.winnerId === longestBattle.robot1Id ? getUserDisplayName(longestBattle.robot1.user) : getUserDisplayName(longestBattle.robot2.user),
           },
           loser: {
             id: longestBattle.winnerId === longestBattle.robot1Id ? longestBattle.robot2.id : longestBattle.robot1.id,
             name: longestBattle.winnerId === longestBattle.robot1Id ? longestBattle.robot2.name : longestBattle.robot1.name,
-            username: longestBattle.winnerId === longestBattle.robot1Id ? longestBattle.robot2.user.username : longestBattle.robot1.user.username,
+            username: longestBattle.winnerId === longestBattle.robot1Id ? getUserDisplayName(longestBattle.robot2.user) : getUserDisplayName(longestBattle.robot1.user),
           },
           date: longestBattle.createdAt,
         } : null,
@@ -457,12 +467,12 @@ router.get('/', async (req: Request, res: Response) => {
           robot: {
             id: mostDamageData.robot?.id,
             name: mostDamageData.robot?.name,
-            username: mostDamageData.robot?.user.username,
+            username: mostDamageData.robot?.user ? getUserDisplayName(mostDamageData.robot.user) : '',
           },
           opponent: {
             id: mostDamageData.opponent?.id,
             name: mostDamageData.opponent?.name,
-            username: mostDamageData.opponent?.user.username,
+            username: mostDamageData.opponent?.user ? getUserDisplayName(mostDamageData.opponent.user) : '',
           },
           durationSeconds: mostDamageData.battle?.durationSeconds,
           date: mostDamageData.battle?.createdAt,
@@ -473,12 +483,12 @@ router.get('/', async (req: Request, res: Response) => {
           winner: {
             id: narrowestVictory.winnerId === narrowestVictory.robot1Id ? narrowestVictory.robot1.id : narrowestVictory.robot2.id,
             name: narrowestVictory.winnerId === narrowestVictory.robot1Id ? narrowestVictory.robot1.name : narrowestVictory.robot2.name,
-            username: narrowestVictory.winnerId === narrowestVictory.robot1Id ? narrowestVictory.robot1.user.username : narrowestVictory.robot2.user.username,
+            username: narrowestVictory.winnerId === narrowestVictory.robot1Id ? getUserDisplayName(narrowestVictory.robot1.user) : getUserDisplayName(narrowestVictory.robot2.user),
           },
           loser: {
             id: narrowestVictory.winnerId === narrowestVictory.robot1Id ? narrowestVictory.robot2.id : narrowestVictory.robot1.id,
             name: narrowestVictory.winnerId === narrowestVictory.robot1Id ? narrowestVictory.robot2.name : narrowestVictory.robot1.name,
-            username: narrowestVictory.winnerId === narrowestVictory.robot1Id ? narrowestVictory.robot2.user.username : narrowestVictory.robot1.user.username,
+            username: narrowestVictory.winnerId === narrowestVictory.robot1Id ? getUserDisplayName(narrowestVictory.robot2.user) : getUserDisplayName(narrowestVictory.robot1.user),
           },
           date: narrowestVictory.createdAt,
         } : null,
@@ -490,13 +500,13 @@ router.get('/', async (req: Request, res: Response) => {
           underdog: {
             id: biggestUpset.winnerId === biggestUpset.robot1Id ? biggestUpset.robot1.id : biggestUpset.robot2.id,
             name: biggestUpset.winnerId === biggestUpset.robot1Id ? biggestUpset.robot1.name : biggestUpset.robot2.name,
-            username: biggestUpset.winnerId === biggestUpset.robot1Id ? biggestUpset.robot1.user.username : biggestUpset.robot2.user.username,
+            username: biggestUpset.winnerId === biggestUpset.robot1Id ? getUserDisplayName(biggestUpset.robot1.user) : getUserDisplayName(biggestUpset.robot2.user),
             eloBefore: biggestUpset.winnerId === biggestUpset.robot1Id ? biggestUpset.robot1ELOBefore : biggestUpset.robot2ELOBefore,
           },
           favorite: {
             id: biggestUpset.winnerId === biggestUpset.robot1Id ? biggestUpset.robot2.id : biggestUpset.robot1.id,
             name: biggestUpset.winnerId === biggestUpset.robot1Id ? biggestUpset.robot2.name : biggestUpset.robot1.name,
-            username: biggestUpset.winnerId === biggestUpset.robot1Id ? biggestUpset.robot2.user.username : biggestUpset.robot1.user.username,
+            username: biggestUpset.winnerId === biggestUpset.robot1Id ? getUserDisplayName(biggestUpset.robot2.user) : getUserDisplayName(biggestUpset.robot1.user),
             eloBefore: biggestUpset.winnerId === biggestUpset.robot1Id ? biggestUpset.robot2ELOBefore : biggestUpset.robot1ELOBefore,
           },
           date: biggestUpset.createdAt,
@@ -507,14 +517,14 @@ router.get('/', async (req: Request, res: Response) => {
           winner: {
             id: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot1.id : biggestEloGain.robot2.id,
             name: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot1.name : biggestEloGain.robot2.name,
-            username: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot1.user.username : biggestEloGain.robot2.user.username,
+            username: biggestEloGain.winnerId === biggestEloGain.robot1Id ? getUserDisplayName(biggestEloGain.robot1.user) : getUserDisplayName(biggestEloGain.robot2.user),
             eloBefore: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot1ELOBefore : biggestEloGain.robot2ELOBefore,
             eloAfter: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot1ELOAfter : biggestEloGain.robot2ELOAfter,
           },
           loser: {
             id: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot2.id : biggestEloGain.robot1.id,
             name: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot2.name : biggestEloGain.robot1.name,
-            username: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot2.user.username : biggestEloGain.robot1.user.username,
+            username: biggestEloGain.winnerId === biggestEloGain.robot1Id ? getUserDisplayName(biggestEloGain.robot2.user) : getUserDisplayName(biggestEloGain.robot1.user),
             eloBefore: biggestEloGain.winnerId === biggestEloGain.robot1Id ? biggestEloGain.robot2ELOBefore : biggestEloGain.robot1ELOBefore,
           },
           date: biggestEloGain.createdAt,
@@ -525,14 +535,14 @@ router.get('/', async (req: Request, res: Response) => {
           loser: {
             id: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? biggestEloLoss.robot2.id : biggestEloLoss.robot1.id,
             name: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? biggestEloLoss.robot2.name : biggestEloLoss.robot1.name,
-            username: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? biggestEloLoss.robot2.user.username : biggestEloLoss.robot1.user.username,
+            username: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? getUserDisplayName(biggestEloLoss.robot2.user) : getUserDisplayName(biggestEloLoss.robot1.user),
             eloBefore: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? biggestEloLoss.robot2ELOBefore : biggestEloLoss.robot1ELOBefore,
             eloAfter: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? biggestEloLoss.robot2ELOAfter : biggestEloLoss.robot1ELOAfter,
           },
           winner: {
             id: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? biggestEloLoss.robot1.id : biggestEloLoss.robot2.id,
             name: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? biggestEloLoss.robot1.name : biggestEloLoss.robot2.name,
-            username: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? biggestEloLoss.robot1.user.username : biggestEloLoss.robot2.user.username,
+            username: biggestEloLoss.winnerId === biggestEloLoss.robot1Id ? getUserDisplayName(biggestEloLoss.robot1.user) : getUserDisplayName(biggestEloLoss.robot2.user),
           },
           date: biggestEloLoss.createdAt,
         } : null,
@@ -541,7 +551,7 @@ router.get('/', async (req: Request, res: Response) => {
         mostBattles: mostBattles ? {
           robotId: mostBattles.id,
           robotName: mostBattles.name,
-          username: mostBattles.user.username,
+          username: getUserDisplayName(mostBattles.user),
           totalBattles: mostBattles.totalBattles,
           wins: mostBattles.wins,
           losses: mostBattles.losses,
@@ -552,7 +562,7 @@ router.get('/', async (req: Request, res: Response) => {
         highestWinRate: highestWinRate ? {
           robotId: highestWinRate.id,
           robotName: highestWinRate.name,
-          username: highestWinRate.user.username,
+          username: getUserDisplayName(highestWinRate.user),
           totalBattles: highestWinRate.totalBattles,
           wins: highestWinRate.wins,
           winRate: Number((maxWinRate * 100).toFixed(1)),
@@ -562,7 +572,7 @@ router.get('/', async (req: Request, res: Response) => {
         mostLifetimeDamage: mostLifetimeDamage ? {
           robotId: mostLifetimeDamage.id,
           robotName: mostLifetimeDamage.name,
-          username: mostLifetimeDamage.user.username,
+          username: getUserDisplayName(mostLifetimeDamage.user),
           damageDealt: mostLifetimeDamage.damageDealtLifetime,
           totalBattles: mostLifetimeDamage.totalBattles,
           avgDamagePerBattle: mostLifetimeDamage.totalBattles > 0 
@@ -572,7 +582,7 @@ router.get('/', async (req: Request, res: Response) => {
         highestElo: highestElo ? {
           robotId: highestElo.id,
           robotName: highestElo.name,
-          username: highestElo.user.username,
+          username: getUserDisplayName(highestElo.user),
           elo: highestElo.elo,
           league: highestElo.currentLeague,
           wins: highestElo.wins,
@@ -582,7 +592,7 @@ router.get('/', async (req: Request, res: Response) => {
         mostKills: mostKills ? {
           robotId: mostKills.id,
           robotName: mostKills.name,
-          username: mostKills.user.username,
+          username: getUserDisplayName(mostKills.user),
           kills: mostKills.kills,
           totalBattles: mostKills.totalBattles,
           killRate: mostKills.totalBattles > 0 ? Number((mostKills.kills / mostKills.totalBattles * 100).toFixed(1)) : 0,
@@ -595,13 +605,13 @@ router.get('/', async (req: Request, res: Response) => {
           robot1: {
             id: mostExpensiveBattle.robot1.id,
             name: mostExpensiveBattle.robot1.name,
-            username: mostExpensiveBattle.robot1.user.username,
+            username: getUserDisplayName(mostExpensiveBattle.robot1.user),
             repairCost: mostExpensiveBattle.robot1RepairCost,
           },
           robot2: {
             id: mostExpensiveBattle.robot2.id,
             name: mostExpensiveBattle.robot2.name,
-            username: mostExpensiveBattle.robot2.user.username,
+            username: getUserDisplayName(mostExpensiveBattle.robot2.user),
             repairCost: mostExpensiveBattle.robot2RepairCost,
           },
           winnerId: mostExpensiveBattle.winnerId,
@@ -610,7 +620,7 @@ router.get('/', async (req: Request, res: Response) => {
         highestFame: highestFame ? {
           robotId: highestFame.id,
           robotName: highestFame.name,
-          username: highestFame.user.username,
+          username: getUserDisplayName(highestFame.user),
           fame: highestFame.fame,
           league: highestFame.currentLeague,
           elo: highestFame.elo,

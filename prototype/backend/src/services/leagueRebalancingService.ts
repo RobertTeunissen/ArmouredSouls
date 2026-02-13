@@ -1,12 +1,11 @@
-import { PrismaClient, Robot } from '@prisma/client';
+import { Robot } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { 
   assignLeagueInstance, 
   rebalanceInstances, 
   LEAGUE_TIERS,
   LeagueTier 
 } from './leagueInstanceService';
-
-const prisma = new PrismaClient();
 
 // Promotion/Demotion thresholds
 const PROMOTION_PERCENTAGE = 0.10; // Top 10%

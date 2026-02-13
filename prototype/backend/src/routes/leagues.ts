@@ -1,9 +1,8 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/leagueInstanceService';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * GET /api/leagues/:tier/standings

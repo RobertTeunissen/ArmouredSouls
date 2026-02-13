@@ -1,7 +1,7 @@
-import { PrismaClient, Robot, Prisma } from '@prisma/client';
+import { Robot, Prisma } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { checkTeamReadiness, calculateCombinedELO, TagTeamWithRobots } from './tagTeamService';
 
-const prisma = new PrismaClient();
 
 // Matchmaking configuration
 export const TAG_TEAM_ELO_MATCH_IDEAL = 300; // Ideal combined ELO difference

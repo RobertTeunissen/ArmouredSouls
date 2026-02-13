@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 // Default robot attributes (all set to 1.00)
 const DEFAULT_ROBOT_ATTRIBUTES = {

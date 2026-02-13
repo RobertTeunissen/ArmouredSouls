@@ -20,6 +20,7 @@ import HallOfRecordsPage from './pages/HallOfRecordsPage';
 import TournamentsPage from './pages/TournamentsPage';
 import TagTeamManagementPage from './pages/TagTeamManagementPage';
 import TagTeamStandingsPage from './pages/TagTeamStandingsPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -172,6 +173,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TagTeamStandingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

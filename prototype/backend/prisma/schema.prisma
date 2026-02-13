@@ -26,6 +26,13 @@ model User {
   highestELO         Int @default(1200) @map("highest_elo") // Best ELO achieved by any robot in stable
   championshipTitles Int @default(0) @map("championship_titles") // Tournament victories
 
+  // ===== PROFILE FIELDS =====
+  stableName            String?  @unique @map("stable_name") @db.VarChar(30)
+  profileVisibility     String   @default("public") @map("profile_visibility") @db.VarChar(10)
+  notificationsBattle   Boolean  @default(true) @map("notifications_battle")
+  notificationsLeague   Boolean  @default(true) @map("notifications_league")
+  themePreference       String   @default("dark") @map("theme_preference") @db.VarChar(20)
+
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

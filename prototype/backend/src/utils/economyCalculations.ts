@@ -4,10 +4,9 @@
  */
 
 import { User, Facility, Robot } from '@prisma/client';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { getFacilityConfig } from '../config/facilities';
-
-const prisma = new PrismaClient();
 
 /**
  * Convert Prisma Decimal to JavaScript number for calculations

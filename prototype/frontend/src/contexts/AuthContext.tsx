@@ -7,6 +7,7 @@ interface User {
   role: string;
   currency: number;
   prestige: number;
+  stableName?: string | null;
 }
 
 interface AuthContextType {

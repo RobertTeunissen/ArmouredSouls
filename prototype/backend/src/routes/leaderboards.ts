@@ -1,8 +1,7 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * Get fame tier name based on fame value
@@ -72,7 +71,7 @@ router.get('/fame', async (req: Request, res: Response) => {
       take: limit,
       include: {
         user: {
-          select: { id: true, username: true }
+          select: { id: true, username: true, stableName: true }
         }
       }
     });
@@ -85,7 +84,7 @@ router.get('/fame', async (req: Request, res: Response) => {
       fame: robot.fame,
       fameTier: getFameTier(robot.fame),
       stableId: robot.userId,
-      stableName: robot.user.username,
+      stableName: robot.user.stableName || robot.user.username,
       currentLeague: robot.currentLeague,
       elo: robot.elo,
       totalBattles: robot.totalBattles,
@@ -157,7 +156,8 @@ router.get('/losses', async (req: Request, res: Response) => {
         user: {
           select: {
             id: true,
-            username: true
+            username: true,
+            stableName: true
           }
         }
       }
@@ -170,7 +170,7 @@ router.get('/losses', async (req: Request, res: Response) => {
       robotName: robot.name,
       totalLosses: robot.kills, // Opponents destroyed
       stableId: robot.userId,
-      stableName: robot.user.username,
+      stableName: robot.user.stableName || robot.user.username,
       currentLeague: robot.currentLeague,
       elo: robot.elo,
       totalBattles: robot.totalBattles,
@@ -223,7 +223,12 @@ router.get('/prestige', async (req: Request, res: Response) => {
     // Get all users (we'll filter after counting robots)
     const users = await prisma.user.findMany({
       orderBy: { prestige: 'desc' },
-      include: {
+      select: {
+        id: true,
+        username: true,
+        stableName: true,
+        prestige: true,
+        championshipTitles: true,
         robots: {
           where: {
             NOT: { name: 'Bye Robot' }
@@ -254,7 +259,7 @@ router.get('/prestige', async (req: Request, res: Response) => {
         return {
           userId: user.id,
           username: user.username,
-          stableName: user.username, // TODO: Add dedicated stable name field in future
+          stableName: user.stableName || user.username, // Use stableName if set, otherwise username
           prestige: user.prestige,
           prestigeRank: getPrestigeRank(user.prestige),
           totalRobots: user.robots.length,

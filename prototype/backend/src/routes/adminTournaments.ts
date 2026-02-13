@@ -5,7 +5,7 @@
 
 import express, { Request, Response } from 'express';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import {
   createSingleEliminationTournament,
   getActiveTournaments,
@@ -18,7 +18,6 @@ import {
 import { processTournamentBattle } from '../services/tournamentBattleOrchestrator';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * Middleware to check if user is admin
