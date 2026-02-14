@@ -213,6 +213,11 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
                 },
               },
             },
+            stable: {
+              select: {
+                stableName: true,
+              },
+            },
           },
         },
         team2: {
@@ -237,6 +242,11 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
                 },
               },
             },
+            stable: {
+              select: {
+                stableName: true,
+              },
+            },
           },
         },
       },
@@ -246,7 +256,9 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
     });
 
     // Format tag team matches
-    const formattedTagTeamMatches = tagTeamMatches.map(match => ({
+    const formattedTagTeamMatches = tagTeamMatches
+      .filter(match => match.team2 !== null) // Filter out bye matches for upcoming matches
+      .map(match => ({
       id: `tag-team-${match.id}`,
       matchType: 'tag_team',
       team1Id: match.team1Id,
@@ -256,6 +268,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       status: match.status,
       team1: {
         id: match.team1.id,
+        stableName: match.team1.stable?.stableName || null,
         activeRobot: {
           id: match.team1.activeRobot.id,
           name: match.team1.activeRobot.name,
@@ -281,30 +294,31 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
         combinedELO: match.team1.activeRobot.elo + match.team1.reserveRobot.elo,
       },
       team2: {
-        id: match.team2.id,
+        id: match.team2!.id,
+        stableName: match.team2!.stable?.stableName || null,
         activeRobot: {
-          id: match.team2.activeRobot.id,
-          name: match.team2.activeRobot.name,
-          elo: match.team2.activeRobot.elo,
-          currentHP: match.team2.activeRobot.currentHP,
-          maxHP: match.team2.activeRobot.maxHP,
-          userId: match.team2.activeRobot.userId,
+          id: match.team2!.activeRobot.id,
+          name: match.team2!.activeRobot.name,
+          elo: match.team2!.activeRobot.elo,
+          currentHP: match.team2!.activeRobot.currentHP,
+          maxHP: match.team2!.activeRobot.maxHP,
+          userId: match.team2!.activeRobot.userId,
           user: {
-            username: match.team2.activeRobot.user.username,
+            username: match.team2!.activeRobot.user.username,
           },
         },
         reserveRobot: {
-          id: match.team2.reserveRobot.id,
-          name: match.team2.reserveRobot.name,
-          elo: match.team2.reserveRobot.elo,
-          currentHP: match.team2.reserveRobot.currentHP,
-          maxHP: match.team2.reserveRobot.maxHP,
-          userId: match.team2.reserveRobot.userId,
+          id: match.team2!.reserveRobot.id,
+          name: match.team2!.reserveRobot.name,
+          elo: match.team2!.reserveRobot.elo,
+          currentHP: match.team2!.reserveRobot.currentHP,
+          maxHP: match.team2!.reserveRobot.maxHP,
+          userId: match.team2!.reserveRobot.userId,
           user: {
-            username: match.team2.reserveRobot.user.username,
+            username: match.team2!.reserveRobot.user.username,
           },
         },
-        combinedELO: match.team2.activeRobot.elo + match.team2.reserveRobot.elo,
+        combinedELO: match.team2!.activeRobot.elo + match.team2!.reserveRobot.elo,
       },
     }));
 
@@ -423,6 +437,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
         winnerReward: battle.winnerReward,
         loserReward: battle.loserReward,
         battleType: battle.battleType,
+        leagueType: battle.leagueType, // League at time of battle
         tournamentId: battle.tournamentId,
         tournamentRound: battle.tournamentRound,
         tournamentName: battle.tournament?.name,
@@ -453,13 +468,50 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
       if (battle.battleType === 'tag_team') {
         const tagTeamMatch = await prisma.tagTeamMatch.findFirst({
           where: { battleId: battle.id },
-          select: { team1Id: true, team2Id: true },
+          include: {
+            team1: {
+              include: {
+                stable: {
+                  select: { stableName: true },
+                },
+                activeRobot: {
+                  select: { id: true, name: true },
+                },
+                reserveRobot: {
+                  select: { id: true, name: true },
+                },
+              },
+            },
+            team2: {
+              include: {
+                stable: {
+                  select: { stableName: true },
+                },
+                activeRobot: {
+                  select: { id: true, name: true },
+                },
+                reserveRobot: {
+                  select: { id: true, name: true },
+                },
+              },
+            },
+          },
         });
 
         return {
           ...baseData,
           team1Id: tagTeamMatch?.team1Id || null,
           team2Id: tagTeamMatch?.team2Id || null,
+          team1StableName: tagTeamMatch?.team1?.stable?.stableName || null,
+          team2StableName: tagTeamMatch?.team2?.stable?.stableName || null,
+          team1ActiveRobotId: battle.team1ActiveRobotId,
+          team1ReserveRobotId: battle.team1ReserveRobotId,
+          team2ActiveRobotId: battle.team2ActiveRobotId,
+          team2ReserveRobotId: battle.team2ReserveRobotId,
+          team1ActiveRobotName: tagTeamMatch?.team1?.activeRobot?.name || null,
+          team1ReserveRobotName: tagTeamMatch?.team1?.reserveRobot?.name || null,
+          team2ActiveRobotName: tagTeamMatch?.team2?.activeRobot?.name || null,
+          team2ReserveRobotName: tagTeamMatch?.team2?.reserveRobot?.name || null,
         };
       }
 
@@ -598,9 +650,30 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         select: { team1Id: true, team2Id: true },
       });
 
+      // Get team details including stable names
+      const [team1Details, team2Details] = await Promise.all([
+        tagTeamMatch?.team1Id ? prisma.tagTeam.findUnique({
+          where: { id: tagTeamMatch.team1Id },
+          include: {
+            stable: {
+              select: { stableName: true },
+            },
+          },
+        }) : null,
+        tagTeamMatch?.team2Id ? prisma.tagTeam.findUnique({
+          where: { id: tagTeamMatch.team2Id },
+          include: {
+            stable: {
+              select: { stableName: true },
+            },
+          },
+        }) : null,
+      ]);
+
       baseResponse.tagTeam = {
         team1: {
           teamId: tagTeamMatch?.team1Id || null,
+          stableName: team1Details?.stable?.stableName || null,
           activeRobot: team1Active ? {
             id: team1Active.id,
             name: team1Active.name,
@@ -615,6 +688,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         },
         team2: {
           teamId: tagTeamMatch?.team2Id || null,
+          stableName: team2Details?.stable?.stableName || null,
           activeRobot: team2Active ? {
             id: team2Active.id,
             name: team2Active.name,

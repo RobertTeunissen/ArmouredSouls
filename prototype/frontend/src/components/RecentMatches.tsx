@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getMatchHistory, BattleHistory, getBattleOutcome, getELOChange, formatDateTime, getTournamentRoundName } from '../utils/matchmakingApi';
+import { getMatchHistory, BattleHistory, getBattleOutcome, getELOChange } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import CompactBattleCard from './CompactBattleCard';
 
 function RecentMatches() {
   const { user, logout } = useAuth();
@@ -65,25 +66,24 @@ function RecentMatches() {
     const outcome = getBattleOutcome(battle, myRobotId);
     const eloChange = getELOChange(battle, myRobotId);
     
-    return { myRobot, opponent, outcome, eloChange };
+    return { myRobot, opponent, outcome, eloChange, myRobotId };
   };
 
-  const getOutcomeColor = (outcome: string) => {
-    switch (outcome) {
-      case 'win': return 'text-green-400';
-      case 'loss': return 'text-red-400';
-      case 'draw': return 'text-gray-400';
-      default: return 'text-gray-400';
+  const getReward = (battle: BattleHistory, robotId: number) => {
+    // For tag team battles, determine reward based on team winner
+    if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
+      const isTeam1Robot = battle.robot1Id === robotId;
+      const isTeam2Robot = battle.robot2Id === robotId;
+      
+      if (isTeam1Robot) {
+        return battle.winnerId === battle.team1Id ? battle.winnerReward : battle.loserReward;
+      } else if (isTeam2Robot) {
+        return battle.winnerId === battle.team2Id ? battle.winnerReward : battle.loserReward;
+      }
     }
-  };
-
-  const getOutcomeText = (outcome: string) => {
-    switch (outcome) {
-      case 'win': return 'VICTORY';
-      case 'loss': return 'DEFEAT';
-      case 'draw': return 'DRAW';
-      default: return 'N/A';
-    }
+    
+    // For 1v1 battles, winnerId is the robot ID
+    return battle.winnerId === robotId ? battle.winnerReward : battle.loserReward;
   };
 
   if (loading) {
@@ -125,75 +125,23 @@ function RecentMatches() {
         </button>
       </div>
       
-      <div className="space-y-1.5 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+      <div className="space-y-0 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {matches.map((battle) => {
-          const { myRobot, opponent, outcome, eloChange } = getMatchData(battle);
-          const outcomeColor = getOutcomeColor(outcome);
-          const isTournament = battle.battleType === 'tournament';
-          const isTagTeam = battle.battleType === 'tag_team';
-          
-          const getBorderColor = () => {
-            if (isTournament) return 'border-l-warning';
-            if (isTagTeam) return 'border-l-cyan-400';
-            switch (outcome) {
-              case 'win': return 'border-l-success';
-              case 'loss': return 'border-l-error';
-              case 'draw': return 'border-l-gray-500';
-              default: return 'border-l-gray-700';
-            }
-          };
-          
+          const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
+          const reward = getReward(battle, myRobotId);
+
           return (
-            <div 
-              key={battle.id} 
-              className={`
-                bg-surface-elevated border border-gray-700 rounded-lg p-2
-                border-l-4 ${getBorderColor()}
-                hover:bg-surface hover:border-primary/50 cursor-pointer 
-                transition-all duration-150
-              `}
+            <CompactBattleCard
+              key={battle.id}
+              battle={battle}
+              myRobot={myRobot}
+              opponent={opponent}
+              outcome={outcome}
+              eloChange={eloChange}
+              myRobotId={myRobotId}
+              reward={reward}
               onClick={() => navigate(`/battle/${battle.id}`)}
-            >
-              <div className="flex justify-between items-start mb-1">
-                <div className="flex items-center gap-2">
-                  {isTournament && <span className="text-sm">🏆</span>}
-                  {isTagTeam && <span className="text-sm">🤝</span>}
-                  <span className={`text-xs font-bold ${outcomeColor}`}>
-                    {getOutcomeText(outcome)}
-                  </span>
-                  {isTagTeam && (
-                    <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400">
-                      Tag Team
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs text-gray-400">
-                  {formatDateTime(battle.createdAt)}
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 items-center text-xs mb-1">
-                <div className="text-right font-semibold text-primary truncate">
-                  {myRobot.name}
-                </div>
-                <div className="text-center text-gray-500">vs</div>
-                <div className="text-left font-semibold text-white truncate">
-                  {opponent.name}
-                </div>
-              </div>
-              
-              <div className="flex justify-between text-xs text-gray-400">
-                <span className={eloChange >= 0 ? 'text-success' : 'text-error'}>
-                  ELO: {eloChange > 0 ? '+' : ''}{eloChange}
-                </span>
-                {isTournament && battle.tournamentRound && battle.tournamentMaxRounds && (
-                  <span className="text-warning text-xs">
-                    {getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)}
-                  </span>
-                )}
-                <span>{battle.durationSeconds}s</span>
-              </div>
-            </div>
+            />
           );
         })}
       </div>

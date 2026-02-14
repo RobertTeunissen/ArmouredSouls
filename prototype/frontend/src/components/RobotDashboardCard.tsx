@@ -2,17 +2,19 @@
  * RobotDashboardCard Component
  * 
  * Visual card for displaying robot information on the dashboard
- * Includes portrait placeholder, HP bar, stats, and battle readiness
+ * Includes portrait, HP bar, stats, and battle readiness
  */
 
 import { useNavigate } from 'react-router-dom';
 import HPBar from './HPBar';
 import BattleReadinessBadge from './BattleReadinessBadge';
+import RobotImage from './RobotImage';
 
 interface RobotDashboardCardProps {
   robot: {
     id: number;
     name: string;
+    imageUrl: string | null;
     elo: number;
     currentHP: number;
     maxHP: number;
@@ -82,22 +84,13 @@ function RobotDashboardCard({ robot }: RobotDashboardCardProps) {
       onClick={() => navigate(`/robots/${robot.id}`)}
     >
       <div className="flex gap-3">
-        {/* Portrait Placeholder (96x96 - reduced from 128) */}
-        <div className="flex-shrink-0 w-24 h-24 bg-surface-elevated rounded-lg flex items-center justify-center border border-gray-600">
-          <svg 
-            className="w-12 h-12 text-gray-500" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" 
-            />
-          </svg>
-        </div>
+        {/* Robot Portrait (96x96) */}
+        <RobotImage
+          imageUrl={robot.imageUrl}
+          robotName={robot.name}
+          size="medium"
+          className="flex-shrink-0"
+        />
         
         {/* Info Section */}
         <div className="flex-1 min-w-0 overflow-hidden">

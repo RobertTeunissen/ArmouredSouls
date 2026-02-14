@@ -36,6 +36,8 @@ interface TagTeamBattleResult {
   team1ReserveFinalHP: number;
   team2ActiveFinalHP: number;
   team2ReserveFinalHP: number;
+  team1ReserveUsed: boolean; // Track if reserve was used
+  team2ReserveUsed: boolean; // Track if reserve was used
   battleLog: any[]; // Complete battle log with all events
 }
 
@@ -68,6 +70,7 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
     name: 'Bye Robot 1',
     frameId: 1,
     paintJob: null,
+    imageUrl: null,
     // Combat Systems - minimal stats
     combatPower: new Prisma.Decimal(10),
     targetingSystems: new Prisma.Decimal(10),
@@ -236,6 +239,16 @@ export async function executeTagTeamBattle(match: TagTeamMatch): Promise<TagTeam
 
   // Simulate the tag team battle
   const result = await simulateTagTeamBattle(team1 as TagTeamWithRobots, team2 as TagTeamWithRobots);
+  
+  // Map robot winner ID to team winner ID if needed
+  if (result.winnerId) {
+    // Check which team the winning robot belongs to
+    if (result.winnerId === team1.activeRobotId || result.winnerId === team1.reserveRobotId) {
+      result.winnerId = team1.id;
+    } else if (result.winnerId === team2.activeRobotId || result.winnerId === team2.reserveRobotId) {
+      result.winnerId = team2.id;
+    }
+  }
 
   // Create battle record
   const battle = await createTagTeamBattleRecord(match, team1 as TagTeamWithRobots, team2 as TagTeamWithRobots, result);
@@ -285,6 +298,9 @@ async function simulateTagTeamBattle(
   currentTime = phase1Result.durationSeconds;
   team1CurrentRobot.currentHP = phase1Result.robot1FinalHP;
   team2CurrentRobot.currentHP = phase1Result.robot2FinalHP;
+  
+  // Track if phase 1 had a decisive winner (destruction or yield)
+  let phase1Winner: number | null = phase1Result.winnerId;
   
   // Collect combat events from phase 1 (Requirement 7.1)
   if (phase1Result.events && Array.isArray(phase1Result.events)) {
@@ -709,25 +725,44 @@ async function simulateTagTeamBattle(
   }
 
   // Determine winner (Requirements 3.6, 3.7, 3.8)
+  // Winner is determined by the final state after all phases complete
   let winnerId: number | null = null;
   let isDraw = false;
+
+  // Calculate final HP for each robot on each team
+  const team1ActiveFinalHP = team1.activeRobot.currentHP;
+  const team1ReserveFinalHP = team1ReserveUsed ? team1CurrentRobot.currentHP : team1.reserveRobot.maxHP;
+  const team2ActiveFinalHP = team2.activeRobot.currentHP;
+  const team2ReserveFinalHP = team2ReserveUsed ? team2CurrentRobot.currentHP : team2.reserveRobot.maxHP;
+
+  // Determine which robot is currently fighting for each team (the one that finished the battle)
+  const team1CurrentFighterHP = team1ReserveUsed ? team1ReserveFinalHP : team1ActiveFinalHP;
+  const team2CurrentFighterHP = team2ReserveUsed ? team2ReserveFinalHP : team2ActiveFinalHP;
+  const team1CurrentFighterId = team1ReserveUsed ? team1.reserveRobotId : team1.activeRobotId;
+  const team2CurrentFighterId = team2ReserveUsed ? team2.reserveRobotId : team2.activeRobotId;
 
   // Requirement 3.8: Battle timeout draw
   if (currentTime >= maxTime) {
     isDraw = true;
   }
-  // Requirement 3.7: Simultaneous destruction draw
-  else if (
-    team1CurrentRobot.currentHP <= 0 &&
-    team2CurrentRobot.currentHP <= 0
-  ) {
+  // Requirement 3.7: Simultaneous destruction/yield draw (both at 0 HP)
+  else if (team1CurrentFighterHP <= 0 && team2CurrentFighterHP <= 0) {
     isDraw = true;
   }
-  // Requirement 3.6: Team defeat when both robots down
-  else if (team1CurrentRobot.currentHP <= 0) {
-    winnerId = team2.id;
-  } else if (team2CurrentRobot.currentHP <= 0) {
-    winnerId = team1.id;
+  // Requirement 3.6: Team defeat - winner is the team whose fighter has more HP
+  // This covers both destruction (HP = 0) and yield (HP > 0 but yielded)
+  else if (team1CurrentFighterHP <= 0) {
+    winnerId = team2CurrentFighterId;
+  } else if (team2CurrentFighterHP <= 0) {
+    winnerId = team1CurrentFighterId;
+  } else if (team1CurrentFighterHP > team2CurrentFighterHP) {
+    // Both robots still have HP, winner is the one with more HP (yield case)
+    winnerId = team1CurrentFighterId;
+  } else if (team2CurrentFighterHP > team1CurrentFighterHP) {
+    winnerId = team2CurrentFighterId;
+  } else {
+    // Equal HP - draw
+    isDraw = true;
   }
 
   return {
@@ -737,14 +772,12 @@ async function simulateTagTeamBattle(
     durationSeconds: Math.min(currentTime, maxTime),
     team1TagOutTime,
     team2TagOutTime,
-    team1ActiveFinalHP: team1.activeRobot.currentHP,
-    team1ReserveFinalHP: team1ReserveUsed
-      ? team1CurrentRobot.currentHP
-      : team1.reserveRobot.maxHP,
-    team2ActiveFinalHP: team2.activeRobot.currentHP,
-    team2ReserveFinalHP: team2ReserveUsed
-      ? team2CurrentRobot.currentHP
-      : team2.reserveRobot.maxHP,
+    team1ActiveFinalHP,
+    team1ReserveFinalHP,
+    team2ActiveFinalHP,
+    team2ReserveFinalHP,
+    team1ReserveUsed,
+    team2ReserveUsed,
     battleLog: battleEvents, // Complete battle log with all events (Requirement 7.1)
   };
 }
@@ -815,15 +848,16 @@ async function createTagTeamBattleRecord(
       robot1RepairCost: 0,
       robot2RepairCost: 0,
 
-      // Final state
-      robot1FinalHP: result.team1ActiveFinalHP,
-      robot2FinalHP: result.team2ActiveFinalHP,
+      // Final state - store the HP of the robots that were fighting at the end
+      // For tag team battles, this could be either active or reserve robots
+      robot1FinalHP: result.team1ReserveUsed ? result.team1ReserveFinalHP : result.team1ActiveFinalHP,
+      robot2FinalHP: result.team2ReserveUsed ? result.team2ReserveFinalHP : result.team2ActiveFinalHP,
       robot1FinalShield: 0,
       robot2FinalShield: 0,
       robot1Yielded: false,
       robot2Yielded: false,
-      robot1Destroyed: result.team1ActiveFinalHP === 0,
-      robot2Destroyed: result.team2ActiveFinalHP === 0,
+      robot1Destroyed: result.team1ReserveUsed ? result.team1ReserveFinalHP === 0 : result.team1ActiveFinalHP === 0,
+      robot2Destroyed: result.team2ReserveUsed ? result.team2ReserveFinalHP === 0 : result.team2ActiveFinalHP === 0,
 
       // Damage tracking (placeholder)
       robot1DamageDealt: 0,
@@ -1086,7 +1120,7 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
         // Requirement 11.3: Dynamic eligibility checking
         // Check if both teams are ready (may have taken damage in earlier matches)
         const team1Ready = await checkTeamReadinessForBattle(match.team1);
-        const team2Ready = await checkTeamReadinessForBattle(match.team2);
+        const team2Ready = match.team2 ? await checkTeamReadinessForBattle(match.team2) : true; // Bye matches are always ready
 
         if (!team1Ready || !team2Ready) {
           console.log(
@@ -1217,20 +1251,20 @@ async function updateTagTeamBattleResults(
     },
   });
 
-  const team2 = team2IsBye ? null : await prisma.tagTeam.findUnique({
+  const team2 = team2IsBye ? null : (match.team2Id ? await prisma.tagTeam.findUnique({
     where: { id: match.team2Id },
     include: {
       activeRobot: true,
       reserveRobot: true,
       stable: true,
     },
-  });
+  }) : null);
 
   // For bye-team matches, only update the real team
   if (isByeMatch) {
     const realTeam = team1 || team2;
-    if (!realTeam) {
-      throw new Error(`Real team not found for bye-match ${match.id}`);
+    if (!realTeam || !realTeam.activeRobot || !realTeam.reserveRobot) {
+      throw new Error(`Real team or robots not found for bye-match ${match.id}`);
     }
 
     const realTeamWon = result.winnerId === realTeam.id;
@@ -1374,6 +1408,11 @@ async function updateTagTeamBattleResults(
   const team1Won = result.winnerId === team1.id;
   const team2Won = result.winnerId === team2.id;
   const isDraw = result.isDraw;
+
+  // Validate teams have robots loaded
+  if (!team1.activeRobot || !team1.reserveRobot || !team2.activeRobot || !team2.reserveRobot) {
+    throw new Error(`Teams missing robot data for match ${match.id}`);
+  }
 
   // Calculate ELO changes (Requirements 5.1, 5.2)
   const team1CombinedELO = team1.activeRobot.elo + team1.reserveRobot.elo;

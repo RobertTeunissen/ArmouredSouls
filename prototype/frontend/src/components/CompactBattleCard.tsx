@@ -1,5 +1,6 @@
 import React from 'react';
-import { BattleHistory, getTournamentRoundName, getLeagueTierName } from '../utils/matchmakingApi';
+import { BattleHistory, getTournamentRoundName, getLeagueTierName, getLeagueTierColor } from '../utils/matchmakingApi';
+import { getTeamNameFromMatch } from '../utils/tagTeamApi';
 import { formatDateTime } from '../utils/matchmakingApi';
 
 interface CompactBattleCardProps {
@@ -19,14 +20,12 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   opponent,
   outcome,
   eloChange,
-  // myRobotId is used in commented-out ELO calculations
-  // myRobotId,
+  myRobotId,
   reward,
   onClick,
 }) => {
   const isTournament = battle.battleType === 'tournament';
   const isTagTeam = battle.battleType === 'tag_team';
-  // Note: isLeague can be derived but not currently used in display logic
   
   const getBattleTypeIcon = () => {
     if (isTournament) {
@@ -52,15 +51,19 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       return `Tournament${roundName ? ` • ${roundName}` : ''}`;
     }
     if (isTagTeam) {
-      // For tag team matches, show league tier if available
-      if (myRobot.currentLeague) {
-        return `Tag Team • ${getLeagueTierName(myRobot.currentLeague)} League`;
-      }
-      return 'Tag Team Match';
+      // For tag team matches, show league tier from battle record
+      const leagueAtBattleTime = battle.leagueType || 'bronze';
+      const tierColor = getLeagueTierColor(leagueAtBattleTime);
+      const tierName = getLeagueTierName(leagueAtBattleTime);
+      return (
+        <span className={tierColor}>
+          {tierName} Tag Team
+        </span>
+      );
     }
-    // For league matches, show league tier if available
-    if (myRobot.currentLeague) {
-      return `${getLeagueTierName(myRobot.currentLeague)} League`;
+    // For league matches, show league tier from battle record
+    if (battle.leagueType) {
+      return `${getLeagueTierName(battle.leagueType)} League`;
     }
     return 'League Match';
   };
@@ -88,9 +91,39 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
     }
   };
 
-  // ELO values available if needed for future display
-  // const myRobotELOBefore = battle.robot1Id === myRobotId ? battle.robot1ELOBefore : battle.robot2ELOBefore;
-  // const myRobotELOAfter = battle.robot1Id === myRobotId ? battle.robot1ELOAfter : battle.robot2ELOAfter;
+  // For tag team battles, determine team names and robot names
+  let myTeamName = myRobot.name;
+  let opponentTeamName = opponent.name;
+  let myTeamRobots = myRobot.name;
+  let opponentTeamRobots = opponent.name;
+  
+  if (isTagTeam && battle.team1Id && battle.team2Id) {
+    const isTeam1 = battle.team1ActiveRobotId === myRobotId || battle.team1ReserveRobotId === myRobotId;
+    const myTeamId = isTeam1 ? battle.team1Id : battle.team2Id;
+    const myTeamStableName = isTeam1 ? battle.team1StableName : battle.team2StableName;
+    const opponentTeamId = isTeam1 ? battle.team2Id : battle.team1Id;
+    const opponentTeamStableName = isTeam1 ? battle.team2StableName : battle.team1StableName;
+    
+    myTeamName = getTeamNameFromMatch(myTeamId, myTeamStableName);
+    opponentTeamName = getTeamNameFromMatch(opponentTeamId, opponentTeamStableName);
+    
+    // Get both robot names for each team
+    if (isTeam1) {
+      myTeamRobots = battle.team1ActiveRobotName && battle.team1ReserveRobotName
+        ? `${battle.team1ActiveRobotName} & ${battle.team1ReserveRobotName}`
+        : myRobot.name;
+      opponentTeamRobots = battle.team2ActiveRobotName && battle.team2ReserveRobotName
+        ? `${battle.team2ActiveRobotName} & ${battle.team2ReserveRobotName}`
+        : opponent.name;
+    } else {
+      myTeamRobots = battle.team2ActiveRobotName && battle.team2ReserveRobotName
+        ? `${battle.team2ActiveRobotName} & ${battle.team2ReserveRobotName}`
+        : myRobot.name;
+      opponentTeamRobots = battle.team1ActiveRobotName && battle.team1ReserveRobotName
+        ? `${battle.team1ActiveRobotName} & ${battle.team1ReserveRobotName}`
+        : opponent.name;
+    }
+  }
   
   return (
     <div 
@@ -117,17 +150,38 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           </div>
         </div>
         
-        {/* Matchup */}
-        <div className="flex-1 min-w-0">
-          <div className="font-medium text-xs truncate">
-            <span className="text-[#58a6ff]">{myRobot.name}</span>
-            <span className="text-[#57606a] mx-1.5">vs</span>
-            <span className="text-[#e6edf3]">{opponent.name}</span>
+        {isTagTeam && battle.team1Id && battle.team2Id ? (
+          /* Tag Team Layout */
+          <>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
+                  2v2
+                </span>
+                <div className="text-xs text-[#8b949e]">
+                  {getBattleTypeText()}
+                </div>
+              </div>
+              <div className="font-medium text-xs truncate">
+                <span className="text-[#58a6ff]">{myTeamRobots}</span>
+                <span className="text-[#57606a] mx-1.5">vs</span>
+                <span className="text-[#e6edf3]">{opponentTeamRobots}</span>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Standard 1v1 Layout */
+          <div className="flex-1 min-w-0">
+            <div className="text-xs text-[#8b949e] mb-0.5">
+              {getBattleTypeText()}
+            </div>
+            <div className="font-medium text-xs truncate">
+              <span className="text-[#58a6ff]">{myRobot.name}</span>
+              <span className="text-[#57606a] mx-1.5">vs</span>
+              <span className="text-[#e6edf3]">{opponent.name}</span>
+            </div>
           </div>
-          <div className="text-xs text-[#8b949e] truncate">
-            {getBattleTypeText()}
-          </div>
-        </div>
+        )}
         
         {/* Date */}
         <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
@@ -161,22 +215,44 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
             <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getOutcomeBadgeClass()}`}>
               {outcome === 'win' ? 'WIN' : outcome === 'loss' ? 'LOSS' : 'DRAW'}
             </div>
+            {isTagTeam && (
+              <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
+                2v2
+              </span>
+            )}
           </div>
           <div className="text-xs text-[#8b949e]">
             {formatDateTime(battle.createdAt)}
           </div>
         </div>
         
+        {/* Battle Type */}
+        <div className="text-xs text-[#8b949e] mb-1.5">
+          {getBattleTypeText()}
+        </div>
+        
+        {/* Battle Type */}
+        <div className="text-xs text-[#8b949e] mb-1.5">
+          {getBattleTypeText()}
+        </div>
+        
         {/* Matchup Row */}
         <div className="mb-1.5">
-          <div className="text-sm font-medium">
-            <span className="text-[#58a6ff]">{myRobot.name}</span>
-            <span className="text-[#57606a] mx-1.5">vs</span>
-            <span className="text-[#e6edf3]">{opponent.name}</span>
-          </div>
-          <div className="text-xs text-[#8b949e]">
-            {getBattleTypeText()}
-          </div>
+          {isTagTeam && battle.team1Id && battle.team2Id ? (
+            <>
+              <div className="text-sm font-medium mb-1">
+                <span className="text-[#58a6ff]">{myTeamRobots}</span>
+                <span className="text-[#57606a] mx-1.5">vs</span>
+                <span className="text-[#e6edf3]">{opponentTeamRobots}</span>
+              </div>
+            </>
+          ) : (
+            <div className="text-sm font-medium">
+              <span className="text-[#58a6ff]">{myRobot.name}</span>
+              <span className="text-[#57606a] mx-1.5">vs</span>
+              <span className="text-[#e6edf3]">{opponent.name}</span>
+            </div>
+          )}
         </div>
         
         {/* Stats Row */}

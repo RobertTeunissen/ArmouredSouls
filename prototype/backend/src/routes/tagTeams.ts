@@ -227,6 +227,17 @@ router.get('/leagues/:tier/standings', authenticateToken, async (req: AuthReques
 
     // Get standings for the tier
     const allStandings = await getStandingsForTier(tier);
+    
+    // Debug: Log first team to see if stable is included
+    if (allStandings.length > 0) {
+      console.log('[TagTeams API] Sample standing:', {
+        id: allStandings[0].id,
+        stableId: allStandings[0].stableId,
+        stable: allStandings[0].stable,
+        hasStable: !!allStandings[0].stable,
+        stableName: allStandings[0].stable?.stableName,
+      });
+    }
 
     // Apply pagination
     const total = allStandings.length;
@@ -247,6 +258,7 @@ router.get('/leagues/:tier/standings', authenticateToken, async (req: AuthReques
       losses: team.totalTagTeamLosses,
       draws: team.totalTagTeamDraws,
       totalMatches: team.totalTagTeamWins + team.totalTagTeamLosses + team.totalTagTeamDraws,
+      stableName: team.stable?.stableName || null,
       activeRobot: {
         id: team.activeRobot.id,
         name: team.activeRobot.name,

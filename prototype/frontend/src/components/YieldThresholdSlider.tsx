@@ -137,9 +137,9 @@ function YieldThresholdSlider({
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-300 uppercase tracking-wide">
         🏳️ Yield Threshold
-        <span className="text-sm text-gray-400 font-normal">
+        <span className="text-sm text-gray-400 font-normal normal-case">
           (HP % where robot will try to surrender)
         </span>
       </h3>
@@ -150,12 +150,12 @@ function YieldThresholdSlider({
         </div>
       )}
 
-      <div className="bg-gray-700 p-4 rounded-lg">
+      <div className="bg-gradient-to-br from-gray-700 to-gray-750 p-5 rounded-lg border border-gray-600 shadow-lg">
         {/* Current Threshold Display */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-2xl font-bold">{threshold}%</span>
-            <span className={`text-sm font-semibold ${riskLevel.color}`}>
+            <span className="text-3xl font-bold">{threshold}%</span>
+            <span className={`text-sm font-semibold px-3 py-1 rounded ${riskLevel.color} bg-gray-800`}>
               {riskLevel.text}
             </span>
           </div>
@@ -179,7 +179,7 @@ function YieldThresholdSlider({
 
         {/* Repair Cost Preview */}
         <div className="mt-4 border-t border-gray-600 pt-4">
-          <h4 className="font-semibold mb-2 text-sm">Repair Cost Scenarios</h4>
+          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-gray-300">Repair Cost Scenarios</h4>
           {repairBayLevel > 0 && (
             <p className="text-xs text-gray-400 mb-2">
               Repair Bay Level {repairBayLevel}: {repairBayLevel * 5}% discount
@@ -191,10 +191,10 @@ function YieldThresholdSlider({
               return (
                 <div
                   key={idx}
-                  className="flex justify-between items-center text-sm bg-gray-800 p-2 rounded"
+                  className="flex justify-between items-center text-sm bg-gray-800 p-2 rounded border border-gray-700"
                 >
                   <span className="text-gray-300">{scenario.label}</span>
-                  <span className="font-mono text-green-400">₡{cost.toLocaleString()}</span>
+                  <span className="font-mono text-green-400 font-semibold">₡{cost.toLocaleString()}</span>
                 </div>
               );
             })}
@@ -221,7 +221,7 @@ function YieldThresholdSlider({
           <button
             onClick={handleSave}
             disabled={loading}
-            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors"
+            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors duration-150"
           >
             {loading ? 'Saving...' : 'Save Yield Threshold'}
           </button>

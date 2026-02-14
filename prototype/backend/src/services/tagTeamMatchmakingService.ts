@@ -83,7 +83,9 @@ export async function getEligibleTeams(
   const alreadyScheduledIds = new Set<number>();
   scheduledMatches.forEach(match => {
     alreadyScheduledIds.add(match.team1Id);
-    alreadyScheduledIds.add(match.team2Id);
+    if (match.team2Id !== null) {
+      alreadyScheduledIds.add(match.team2Id);
+    }
   });
 
   // Filter out already scheduled teams
@@ -120,10 +122,10 @@ async function getRecentOpponents(teamId: number, limit: number = TAG_TEAM_RECEN
     },
   });
 
-  // Extract opponent IDs
-  const opponentIds = recentMatches.map(match =>
-    match.team1Id === teamId ? match.team2Id : match.team1Id
-  );
+  // Extract opponent IDs (filter out nulls from bye matches)
+  const opponentIds = recentMatches
+    .map(match => match.team1Id === teamId ? match.team2Id : match.team1Id)
+    .filter((id): id is number => id !== null);
 
   return opponentIds;
 }
@@ -212,6 +214,7 @@ function createByeTeam(league: string, leagueId: string): TagTeamWithRobots {
     name: 'Bye Robot 1',
     frameId: 1,
     paintJob: null,
+    imageUrl: null,
     // Combat Systems
     combatPower: new Prisma.Decimal(10),
     targetingSystems: new Prisma.Decimal(10),

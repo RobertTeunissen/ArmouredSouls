@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import RobotImage from '../components/RobotImage';
 
 interface Robot {
   id: number;
   name: string;
+  imageUrl: string | null;
   elo: number;
   currentLeague: string;
   leaguePoints: number;
@@ -417,11 +419,13 @@ function RobotsPage() {
                   className="bg-[#252b38] p-6 rounded-lg border-2 border-[#3d444d] hover:border-[#58a6ff] transition-colors cursor-pointer"
                   onClick={() => navigate(`/robots/${robot.id}`)}
                 >
-                  {/* Portrait Placeholder */}
-                  <div className="w-32 h-32 mx-auto mb-4 bg-[#1a1f29] border border-[#3d444d] rounded-lg flex items-center justify-center">
-                    <span className="text-6xl font-bold text-[#58a6ff]">
-                      {robot.name.charAt(0).toUpperCase()}
-                    </span>
+                  {/* Robot Portrait */}
+                  <div className="flex justify-center mb-4">
+                    <RobotImage
+                      imageUrl={robot.imageUrl}
+                      robotName={robot.name}
+                      size="medium"
+                    />
                   </div>
 
                   {/* Robot Info */}

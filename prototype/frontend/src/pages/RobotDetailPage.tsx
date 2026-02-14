@@ -1,23 +1,31 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
-import LoadoutSelector from '../components/LoadoutSelector';
-import WeaponSlot from '../components/WeaponSlot';
-import WeaponSelectionModal from '../components/WeaponSelectionModal';
-import StanceSelector from '../components/StanceSelector';
-import YieldThresholdSlider from '../components/YieldThresholdSlider';
+import TabNavigation from '../components/TabNavigation';
+import BattleConfigTab from '../components/BattleConfigTab';
 import PerformanceStats from '../components/PerformanceStats';
-import EffectiveStatsTable from '../components/EffectiveStatsTable';
+import EffectiveStatsDisplay from '../components/EffectiveStatsDisplay';
 import CompactUpgradeSection from '../components/CompactUpgradeSection';
+import RobotImage from '../components/RobotImage';
+import RobotImageSelector from '../components/RobotImageSelector';
+import StatisticalRankings from '../components/StatisticalRankings';
+import PerformanceByContext from '../components/PerformanceByContext';
+import RecentBattles from '../components/RecentBattles';
+import UpcomingMatches from '../components/UpcomingMatches';
+import UpgradePlanner from '../components/UpgradePlanner';
+import Toast from '../components/Toast';
+import { getMatchHistory } from '../utils/matchmakingApi';
 
 interface Robot {
   id: number;
   name: string;
   userId: number;
+  imageUrl: string | null;
   elo: number;
   currentLeague: string;
+  leagueId: string;
   leaguePoints: number;
   fame: number;
   mainWeaponId: number | null;
@@ -27,6 +35,10 @@ interface Robot {
   yieldThreshold: number;
   mainWeapon: WeaponInventory | null;
   offhandWeapon: WeaponInventory | null;
+  user?: {
+    username: string;
+    stableName: string | null;
+  };
   // 23 Core Attributes
   combatPower: number;
   targetingSystems: number;
@@ -105,6 +117,7 @@ interface Weapon {
 function RobotDetailPage() {
   const { id } = useParams();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [robot, setRobot] = useState<Robot | null>(null);
   const [weapons, setWeapons] = useState<WeaponInventory[]>([]);
   const [currency, setCurrency] = useState(0);
@@ -118,10 +131,21 @@ function RobotDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [showWeaponModal, setShowWeaponModal] = useState(false);
-  const [weaponSlotToEquip, setWeaponSlotToEquip] = useState<'main' | 'offhand'>('main');
+  const [showImageSelector, setShowImageSelector] = useState(false);
+  const [recentBattles, setRecentBattles] = useState<any[]>([]);
+  const [battleReadiness, setBattleReadiness] = useState<any>({ isReady: true, warnings: [] });
+  const [leagueRank, setLeagueRank] = useState<{ rank: number; total: number; percentile: number } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
+
+  // Tab state management from URL
+  const tabParam = searchParams.get('tab') as 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | null;
+  const activeTab = tabParam || 'overview';
+
+  const handleTabChange = (tab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats') => {
+    setSearchParams({ tab });
+  };
 
   // Max attribute level cap (from STABLE_SYSTEM.md)
   // const MAX_ATTRIBUTE_LEVEL = 50;
@@ -279,6 +303,31 @@ function RobotDetailPage() {
       console.log('Robot data received:', robotData.name);
       setRobot(robotData);
 
+      // Fetch league rank for this robot
+      try {
+        const leagueResponse = await fetch(`http://localhost:3001/api/leagues/${robotData.currentLeague}/standings?instance=${robotData.leagueId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (leagueResponse.ok) {
+          const leagueData = await leagueResponse.json();
+          const standings = leagueData.data || [];
+          const robotIndex = standings.findIndex((r: any) => r.id === parseInt(id!));
+          
+          if (robotIndex !== -1) {
+            const rank = robotIndex + 1;
+            const total = standings.length;
+            const percentile = total > 0 ? ((total - rank) / total) * 100 : 0;
+            setLeagueRank({ rank, total, percentile });
+          }
+        }
+      } catch (leagueError) {
+        console.error('Failed to fetch league rank:', leagueError);
+        // Don't fail the entire page if league rank fails
+      }
+
       // Fetch weapon inventory
       const weaponsResponse = await fetch('http://localhost:3001/api/weapon-inventory', {
         headers: {
@@ -318,6 +367,41 @@ function RobotDetailPage() {
         console.log('Academy Levels:', newAcademyLevels);
         setAcademyLevels(newAcademyLevels);
       }
+
+      // Fetch recent battles using the same API as battle history
+      const recentBattlesData = await getMatchHistory(1, 10);
+      
+      // Filter for this specific robot
+      const robotBattles = recentBattlesData.data.filter((battle: any) => {
+        // Check if this robot participated in the battle
+        if (battle.battleType === 'tag_team') {
+          return (
+            battle.team1ActiveRobotId === parseInt(id!) ||
+            battle.team1ReserveRobotId === parseInt(id!) ||
+            battle.team2ActiveRobotId === parseInt(id!) ||
+            battle.team2ReserveRobotId === parseInt(id!)
+          );
+        } else {
+          return battle.robot1Id === parseInt(id!) || battle.robot2Id === parseInt(id!);
+        }
+      });
+      
+      setRecentBattles(robotBattles);
+
+      // Calculate battle readiness
+      const hpPercentage = (robotData.currentHP / robotData.maxHP) * 100;
+      const hasWeapons = robotData.mainWeaponId !== null;
+      const isReady = hpPercentage >= 50 && hasWeapons;
+      const warnings: string[] = [];
+      
+      if (hpPercentage < 50) {
+        warnings.push('HP below 50%');
+      }
+      if (!hasWeapons) {
+        warnings.push('No weapons equipped');
+      }
+      
+      setBattleReadiness({ isReady, warnings });
     } catch (err) {
       setError('Failed to load robot details');
       console.error(err);
@@ -379,55 +463,115 @@ function RobotDetailPage() {
     }
   };
 
-  const handleEquipWeapon = async (weaponInventoryId: number) => {
-    if (!robot) return;
-
-    setError('');
-    setSuccessMessage('');
-
-    try {
-      const endpoint =
-        weaponSlotToEquip === 'main'
-          ? `http://localhost:3001/api/robots/${id}/equip-main-weapon`
-          : `http://localhost:3001/api/robots/${id}/equip-offhand-weapon`;
-
-      const response = await axios.put(endpoint, { weaponInventoryId });
-      setRobot(response.data.robot);
-      setSuccessMessage('Weapon equipped successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err: any) {
-      console.error('Failed to equip weapon:', err);
-      setError(err.response?.data?.error || 'Failed to equip weapon');
-    }
-  };
-
-  const handleUnequipWeapon = async (slot: 'main' | 'offhand') => {
-    if (!robot) return;
-
-    setError('');
-    setSuccessMessage('');
-
-    try {
-      const endpoint =
-        slot === 'main'
-          ? `http://localhost:3001/api/robots/${id}/unequip-main-weapon`
-          : `http://localhost:3001/api/robots/${id}/unequip-offhand-weapon`;
-
-      const response = await axios.delete(endpoint);
-      setRobot(response.data.robot);
-      setSuccessMessage('Weapon unequipped!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err: any) {
-      console.error('Failed to unequip weapon:', err);
-      setError(err.response?.data?.error || 'Failed to unequip weapon');
-    }
-  };
-
   const handleLoadoutChange = (newLoadout: string) => {
     if (!robot) return;
     fetchRobotAndWeapons(); // Refresh to get updated robot data
     setSuccessMessage(`Loadout changed to ${newLoadout}!`);
     setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleAppearanceChange = async (imageUrl: string) => {
+    if (!robot) return;
+
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Updating robot appearance:', { robotId: id, imageUrl });
+      
+      const response = await axios.put(
+        `http://localhost:3001/api/robots/${id}/appearance`,
+        { imageUrl },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log('Update response:', response.data);
+      setRobot(response.data.robot);
+      setSuccessMessage('Robot image updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err: any) {
+      console.error('Failed to update appearance:', err);
+      console.error('Error response:', err.response?.data);
+      setError(err.response?.data?.error || 'Failed to update robot image');
+    }
+  };
+
+  const handleCommitUpgrades = async (upgradePlan: any) => {
+    if (!robot) return;
+
+    setError('');
+    setSuccessMessage('');
+
+    // Store original robot state for rollback
+    const originalRobot = { ...robot };
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      console.log('Committing upgrade plan:', upgradePlan);
+      console.log('Robot ID:', id);
+      console.log('Current robot state:', robot);
+      
+      // Optimistic UI update: immediately apply upgrades to robot state
+      const optimisticRobot = { ...robot };
+      for (const [attribute, plan] of Object.entries(upgradePlan)) {
+        const { plannedLevel } = plan as any;
+        (optimisticRobot as any)[attribute] = plannedLevel;
+      }
+      setRobot(optimisticRobot);
+
+      // Call bulk upgrades endpoint
+      const response = await axios.post(
+        `http://localhost:3001/api/robots/${id}/upgrades`,
+        { upgrades: upgradePlan },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log('Upgrade response:', response.data);
+
+      // Update state with actual robot data from server
+      setRobot(response.data.robot);
+      await refreshUser();
+      
+      const upgradeCount = Object.keys(upgradePlan).length;
+      setToast({
+        message: `Successfully upgraded ${upgradeCount} attribute${upgradeCount > 1 ? 's' : ''}!`,
+        type: 'success',
+      });
+    } catch (err: any) {
+      console.error('Failed to commit upgrades:', err);
+      console.error('Error response:', err.response);
+      console.error('Error response data:', err.response?.data);
+      console.error('Error message:', err.message);
+      
+      // Rollback optimistic update
+      setRobot(originalRobot);
+      
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to commit upgrades';
+      const errorDetails = err.response?.data?.required 
+        ? ` (Required: ₡${err.response.data.required.toLocaleString()}, Current: ₡${err.response.data.current.toLocaleString()})`
+        : '';
+      
+      setToast({
+        message: errorMessage + errorDetails,
+        type: 'error',
+      });
+      
+      // Refresh robot data to ensure consistency
+      await fetchRobotAndWeapons();
+      
+      // Re-throw error so UpgradePlanner knows the commit failed
+      throw err;
+    }
   };
 
 
@@ -466,60 +610,114 @@ function RobotDetailPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Robot Header - Visible to All Users */}
         <div className="mb-8">
-          <div className="flex justify-between items-start mb-4">
+          <div className="mb-4">
             <button
               onClick={() => navigate('/robots')}
               className="text-blue-400 hover:text-blue-300"
             >
               ← Back to Robots
             </button>
-            <button
-              onClick={() => {
-                setLoading(true);
-                fetchRobotAndWeapons();
-              }}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-sm"
-              title="Refresh robot data"
-            >
-              🔄 Refresh
-            </button>
           </div>
           
           {/* Robot Header Card */}
           <div className="bg-gray-800 p-6 rounded-lg">
             <div className="flex items-start gap-6">
-              {/* Image Placeholder */}
-              <div className="w-48 h-48 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                <div className="text-center">
-                  <div className="text-6xl mb-2">🤖</div>
-                  <div className="text-gray-400 text-sm">Frame #{(robot as any).frameId || 1}</div>
-                </div>
-              </div>
+              {/* Robot Image with Edit Button */}
+              <RobotImage
+                imageUrl={robot.imageUrl}
+                robotName={robot.name}
+                size="hero"
+                showEdit={isOwner}
+                onEditClick={() => setShowImageSelector(true)}
+              />
               
-              {/* Robot Info */}
+              {/* Robot Info - Compact Layout */}
               <div className="flex-1">
-                <h1 className="text-4xl font-bold mb-4">{robot.name}</h1>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-gray-400">ELO Rating:</span>
-                    <span className="ml-2 text-white font-semibold">{robot.elo}</span>
+                <div className="flex items-start justify-between mb-3">
+                  <h1 className="text-3xl font-bold">{robot.name}</h1>
+                  {robot.user && (
+                    <div className="text-right text-sm">
+                      <div className="text-gray-400">Owner</div>
+                      <div className="text-white font-semibold">
+                        {robot.user.stableName || robot.user.username}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">ELO:</span>
+                    <span className="text-white font-semibold">{robot.elo}</span>
                   </div>
-                  <div>
-                    <span className="text-gray-400">League:</span>
-                    <span className="ml-2 text-white font-semibold capitalize">{robot.currentLeague}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Current League:</span>
+                    <span className="text-white font-semibold capitalize">
+                      {robot.currentLeague} {robot.leagueId ? robot.leagueId.split('_')[1] : ''}
+                    </span>
                   </div>
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span className="text-gray-400">Win Rate:</span>
-                    <span className="ml-2 text-white font-semibold">
+                    <span className="text-white font-semibold">
                       {robot.totalBattles > 0 
                         ? ((robot.wins / robot.totalBattles) * 100).toFixed(1) 
                         : '0.0'}%
                     </span>
                   </div>
-                  <div>
-                    <span className="text-gray-400">Total Battles:</span>
-                    <span className="ml-2 text-white font-semibold">{robot.totalBattles}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Battles:</span>
+                    <span className="text-white font-semibold">{robot.totalBattles}</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Record:</span>
+                    <span className="text-white font-semibold">
+                      {robot.wins}W - {robot.losses}L - {robot.draws}D
+                    </span>
+                  </div>
+                </div>
+
+                {/* Performance Stats - Compact Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                  <div className="bg-gray-700 p-2 rounded">
+                    <div className="text-gray-400 mb-1">League Points</div>
+                    <div className="text-white font-semibold">
+                      {robot.leaguePoints}
+                      {leagueRank && (
+                        <span className="text-gray-400 text-xs ml-1">
+                          (#{leagueRank.rank}/{leagueRank.total}, Top {leagueRank.percentile.toFixed(0)}%)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-gray-700 p-2 rounded">
+                    <div className="text-gray-400 mb-1">Fame</div>
+                    <div className="text-yellow-400 font-semibold">{robot.fame}</div>
+                  </div>
+                  <div className="bg-gray-700 p-2 rounded">
+                    <div className="text-gray-400 mb-1">Damage (Dealt / Taken)</div>
+                    <div className="text-white font-semibold">
+                      {robot.damageDealtLifetime.toLocaleString()} / {robot.damageTakenLifetime.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-gray-700 p-2 rounded">
+                    <div className="text-gray-400 mb-1">Destroyed / Ratio</div>
+                    <div className="text-green-400 font-semibold">
+                      {robot.kills} / {robot.losses > 0 
+                        ? (robot.kills / robot.losses).toFixed(2) 
+                        : robot.kills.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="bg-gray-700 p-2 rounded">
+                    <div className="text-gray-400 mb-1">Lifetime Repairs</div>
+                    <div className="text-white font-semibold">₡{robot.totalRepairsPaid.toLocaleString()}</div>
+                  </div>
+                  {robot.titles && robot.titles.trim() && (
+                    <div className="bg-gray-700 p-2 rounded">
+                      <div className="text-gray-400 mb-1">Titles</div>
+                      <div className="text-yellow-400 font-semibold text-xs truncate">
+                        {robot.titles.split(',').length} earned
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -539,180 +737,117 @@ function RobotDetailPage() {
           </div>
         )}
 
-        {/* Performance & Statistics - Visible to All Users */}
-        <div className="mb-6">
-          <PerformanceStats robot={robot} />
-        </div>
+        {/* Tab Navigation */}
+        <TabNavigation 
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          isOwner={isOwner}
+        />
 
-        {/* Owner-Only Sections */}
-        {isOwner ? (
-          <>
-            {/* Battle Configuration Section */}
-            <div className="bg-gray-800 p-6 rounded-lg mb-6">
-              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-                ⚔️ Battle Configuration
-              </h2>
-
-              {/* Current State Display */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-700 p-4 rounded-lg">
-                <div>
-                  <div className="text-gray-400 text-sm">Current HP</div>
-                  <div className="text-xl font-semibold">
-                    {robot.currentHP} / {robot.maxHP}
-                    <span className="text-sm text-gray-400 ml-2">
-                      ({Math.round((robot.currentHP / robot.maxHP) * 100)}%)
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Max HP = 50 + (Hull Integrity × 5)
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400 text-sm">Energy Shield</div>
-                  <div className="text-xl font-semibold">
-                    {robot.maxShield}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Shield Capacity × 2
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400 text-sm">Battle Readiness</div>
-                  <div className="text-xl font-semibold">
-                    {robot.battleReadiness}%
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400 text-sm">Repair Cost</div>
-                  <div className="text-xl font-semibold text-yellow-400">
-                    ₡{robot.repairCost.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Weapon Loadout and Equipment */}
-              <div className="mb-6">
-                {/* Loadout Type Selector */}
-                <LoadoutSelector
-                  robotId={robot.id}
-                  currentLoadout={robot.loadoutType}
-                  onLoadoutChange={handleLoadoutChange}
-                />
-                
-                {/* Weapon Slots */}
-                <div className="mt-4">
-                  <h4 className="text-md font-semibold mb-3">Equipped Weapons</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <WeaponSlot
-                      label="Main Weapon"
-                      weapon={robot.mainWeapon}
-                      onEquip={() => {
-                        setWeaponSlotToEquip('main');
-                        setShowWeaponModal(true);
-                      }}
-                      onUnequip={() => handleUnequipWeapon('main')}
-                    />
-                    {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
-                      <WeaponSlot
-                        label="Offhand Weapon"
-                        weapon={robot.offhandWeapon}
-                        onEquip={() => {
-                          setWeaponSlotToEquip('offhand');
-                          setShowWeaponModal(true);
-                        }}
-                        onUnequip={() => handleUnequipWeapon('offhand')}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Battle Stance */}
-              <div className="mb-6">
-                <StanceSelector
-                  robotId={robot.id}
-                  currentStance={robot.stance}
-                  onStanceChange={(newStance) => {
-                    setRobot({ ...robot, stance: newStance });
-                    setSuccessMessage(`Stance updated to ${newStance}`);
-                    setTimeout(() => setSuccessMessage(''), 3000);
-                  }}
-                />
-              </div>
-
-              {/* Yield Threshold */}
-              <div>
-                <YieldThresholdSlider
-                  robotId={robot.id}
-                  currentThreshold={robot.yieldThreshold}
-                  robotAttributes={robot}
-                  repairBayLevel={0}
-                  onThresholdChange={(newThreshold) => {
-                    setRobot({ ...robot, yieldThreshold: newThreshold });
-                    setSuccessMessage(`Yield threshold updated to ${newThreshold}%`);
-                    setTimeout(() => setSuccessMessage(''), 3000);
-                  }}
-                />
-              </div>
+        {/* Tab Content */}
+        <div role="tabpanel" id={`${activeTab}-panel`} aria-labelledby={`${activeTab}-tab`} className="animate-fade-in">
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              <StatisticalRankings robotId={robot.id} />
+              <PerformanceByContext robotId={robot.id} />
             </div>
+          )}
 
-            {/* Effective Stats Overview */}
-            <div className="mb-6">
-              <EffectiveStatsTable robot={robot} />
+          {activeTab === 'matches' && (
+            <div className="space-y-6">
+              <RecentBattles battles={recentBattles} robotId={robot.id} />
+              <UpcomingMatches robotId={robot.id} battleReadiness={battleReadiness} />
             </div>
+          )}
 
-            {/* Upgrade Robot Section */}
-            <CompactUpgradeSection
-              categories={Object.entries(attributeCategories).map(([category, config]) => {
-                const academyType = config.academy as keyof typeof academyLevels;
-                const academyLevel = academyLevels[academyType];
-                const attributeCap = getCapForLevel(academyLevel);
-                
-                return {
-                  category,
-                  attributes: config.attributes,
-                  cap: attributeCap,
-                  academyLevel,
-                };
-              })}
+          {activeTab === 'battle-config' && isOwner && (
+            <BattleConfigTab
               robot={robot}
+              weapons={weapons}
+              onRobotUpdate={(updates) => {
+                setRobot({ ...robot, ...updates });
+                setSuccessMessage('Configuration updated successfully!');
+                setTimeout(() => setSuccessMessage(''), 3000);
+              }}
+              onEquipWeapon={async (slot, weaponInventoryId) => {
+                const endpoint =
+                  slot === 'main'
+                    ? `http://localhost:3001/api/robots/${id}/equip-main-weapon`
+                    : `http://localhost:3001/api/robots/${id}/equip-offhand-weapon`;
+
+                const response = await axios.put(endpoint, { weaponInventoryId });
+                setRobot(response.data.robot);
+                setSuccessMessage('Weapon equipped successfully!');
+                setTimeout(() => setSuccessMessage(''), 3000);
+              }}
+              onUnequipWeapon={async (slot) => {
+                const endpoint =
+                  slot === 'main'
+                    ? `http://localhost:3001/api/robots/${id}/unequip-main-weapon`
+                    : `http://localhost:3001/api/robots/${id}/unequip-offhand-weapon`;
+
+                const response = await axios.delete(endpoint);
+                setRobot(response.data.robot);
+                setSuccessMessage('Weapon unequipped!');
+                setTimeout(() => setSuccessMessage(''), 3000);
+              }}
+            />
+          )}
+
+          {activeTab === 'upgrades' && isOwner && (
+            <UpgradePlanner
+              robot={robot}
+              currentCredits={currency}
               trainingLevel={trainingLevel}
-              currency={currency}
-              onUpgrade={handleUpgrade}
+              academyLevels={academyLevels}
+              onCommit={handleCommitUpgrades}
               onNavigateToFacilities={() => navigate('/facilities')}
             />
-          </>
-        ) : (
-          /* Non-Owner View */
-          <div className="bg-gray-800 p-6 rounded-lg text-center">
-            <p className="text-gray-400 text-lg">
-              You can only view battle configuration and upgrades for your own robots.
-            </p>
-            <button
-              onClick={() => navigate('/robots')}
-              className="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded"
-            >
-              View My Robots
-            </button>
-          </div>
-        )}
+          )}
 
-        {/* Weapon Selection Modal */}
+          {activeTab === 'stats' && (
+            <div className="mb-6">
+              <EffectiveStatsDisplay robot={robot} />
+            </div>
+          )}
+
+          {/* Non-Owner View for owner-only tabs */}
+          {!isOwner && (activeTab === 'battle-config' || activeTab === 'upgrades' || activeTab === 'stats') && (
+            <div className="bg-gray-800 p-6 rounded-lg text-center">
+              <p className="text-gray-400 text-lg">
+                {activeTab === 'stats' 
+                  ? 'Detailed stats are only visible to the robot owner.'
+                  : 'You can only view battle configuration and upgrades for your own robots.'}
+              </p>
+              <button
+                onClick={() => navigate('/robots')}
+                className="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded"
+              >
+                View My Robots
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Robot Image Selector Modal */}
         {isOwner && (
-          <WeaponSelectionModal
-            isOpen={showWeaponModal}
-            onClose={() => setShowWeaponModal(false)}
-            onSelect={handleEquipWeapon}
-            weapons={weapons}
-            currentWeaponId={
-              weaponSlotToEquip === 'main' ? robot.mainWeaponId : robot.offhandWeaponId
-            }
-            title={`Select ${weaponSlotToEquip === 'main' ? 'Main' : 'Offhand'} Weapon`}
-            slot={weaponSlotToEquip}
-            robotLoadoutType={robot.loadoutType}
+          <RobotImageSelector
+            isOpen={showImageSelector}
+            currentImageUrl={robot.imageUrl}
+            onSelect={handleAppearanceChange}
+            onClose={() => setShowImageSelector(false)}
           />
         )}
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

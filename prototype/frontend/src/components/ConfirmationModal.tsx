@@ -3,7 +3,7 @@ import React from 'react';
 interface ConfirmationModalProps {
   isOpen: boolean;
   title: string;
-  message: string;
+  message: string | React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   confirmButtonClass?: string;
@@ -32,7 +32,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 border border-gray-700">
+      <div className="relative bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 border border-gray-700 animate-scale-in">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-700">
           <h3 className="text-xl font-semibold text-white">{title}</h3>
@@ -40,7 +40,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         
         {/* Body */}
         <div className="px-6 py-4">
-          <p className="text-gray-300">{message}</p>
+          {typeof message === 'string' ? (
+            <p className="text-gray-300">{message}</p>
+          ) : (
+            message
+          )}
         </div>
         
         {/* Footer */}

@@ -12,6 +12,7 @@ const STANCES = [
     id: 'offensive',
     name: 'Offensive',
     emoji: '⚔️',
+    icon: '⚡', // Additional icon for 64×64px equivalent
     description: 'Prioritize attacks and aggressive positioning',
     bonuses: [
       { attr: 'Combat Power', value: '+15%', positive: true },
@@ -24,6 +25,7 @@ const STANCES = [
     id: 'defensive',
     name: 'Defensive',
     emoji: '🛡️',
+    icon: '🛡️', // Shield icon for 64×64px equivalent
     description: 'Prioritize survival and cautious positioning',
     bonuses: [
       { attr: 'Armor Plating', value: '+15%', positive: true },
@@ -37,6 +39,7 @@ const STANCES = [
     id: 'balanced',
     name: 'Balanced',
     emoji: '⚖️',
+    icon: '⚖️', // Balance scales icon for 64×64px equivalent
     description: 'Adaptive tactics based on situation',
     bonuses: [
       { attr: 'No stat modifiers', value: '', positive: true },
@@ -77,9 +80,9 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-300 uppercase tracking-wide">
         Battle Stance
-        <span className="text-sm text-gray-400 font-normal">
+        <span className="text-sm text-gray-400 font-normal normal-case">
           (Applied before battle)
         </span>
       </h3>
@@ -97,17 +100,17 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
           return (
             <div
               key={stance.id}
-              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+              className={`border rounded-lg p-4 cursor-pointer transition-all duration-150 hover:-translate-y-0.5 ${
                 isSelected
-                  ? 'border-blue-500 bg-blue-900 bg-opacity-30 ring-2 ring-blue-500'
-                  : 'border-gray-600 bg-gray-700 hover:border-gray-500 hover:bg-gray-650'
+                  ? 'border-blue-500 bg-blue-900 bg-opacity-30 ring-2 ring-blue-500 shadow-lg'
+                  : 'border-gray-600 bg-gradient-to-br from-gray-700 to-gray-750 hover:border-gray-500 hover:bg-gray-650 hover:shadow-md'
               } ${loading ? 'opacity-50 cursor-wait' : ''}`}
               onClick={() => !loading && handleStanceChange(stance.id)}
             >
-              {/* Stance Header */}
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{stance.emoji}</span>
-                <div className="flex-1">
+              {/* Stance Header with Icon */}
+              <div className="flex flex-col items-center gap-2 mb-3">
+                <span className="text-5xl">{stance.icon}</span>
+                <div className="text-center">
                   <h4 className="font-bold text-lg">{stance.name}</h4>
                   {isSelected && (
                     <span className="text-xs text-blue-400">✓ Active</span>
@@ -116,15 +119,15 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
               </div>
 
               {/* Description */}
-              <p className="text-sm text-gray-300 mb-3">{stance.description}</p>
+              <p className="text-sm text-gray-300 mb-3 text-center">{stance.description}</p>
 
               {/* Bonuses */}
-              <div className="space-y-1">
+              <div className="space-y-1 border-t border-gray-600 pt-3">
                 {stance.bonuses.map((bonus, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-sm">
                     {bonus.value && (
                       <span
-                        className={`font-mono ${
+                        className={`font-mono font-semibold ${
                           bonus.positive ? 'text-green-400' : 'text-red-400'
                         }`}
                       >

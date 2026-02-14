@@ -11,6 +11,7 @@ import {
   getTagTeamLeagueTierName,
   getTagTeamLeagueTierColor,
   getTagTeamLeagueTierIcon,
+  getTeamName,
 } from '../utils/tagTeamApi';
 
 function TagTeamStandingsPage() {
@@ -42,6 +43,7 @@ function TagTeamStandingsPage() {
       }
       
       const data = await getTagTeamStandings(selectedTier, page, 50);
+      console.log('Standings API response - first team:', JSON.stringify(data.standings[0], null, 2));
       setStandings(data.standings);
       setTotalPages(data.pagination.totalPages);
     } catch (err: any) {
@@ -177,12 +179,15 @@ function TagTeamStandingsPage() {
                           {/* Team */}
                           <td className="px-4 py-3">
                             <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-primary font-semibold">{team.activeRobot.name}</span>
+                              <div className="font-semibold text-white text-base">
+                                {getTeamName(team)}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className="text-primary">{team.activeRobot.name}</span>
                                 <span className="text-xs text-gray-500">(Active)</span>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-white font-semibold">{team.reserveRobot.name}</span>
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className="text-white">{team.reserveRobot.name}</span>
                                 <span className="text-xs text-gray-500">(Reserve)</span>
                               </div>
                               <div className="text-xs text-gray-400">

@@ -48,6 +48,9 @@ export interface TagTeam {
   reserveRobot: TagTeamRobot;
   readiness?: ReadinessStatus;
   combinedELO?: number;
+  stable?: {
+    stableName: string | null;
+  };
 }
 
 export interface TagTeamStanding {
@@ -61,6 +64,7 @@ export interface TagTeamStanding {
   losses: number;
   draws: number;
   totalMatches: number;
+  stableName: string | null;
   activeRobot: {
     id: number;
     name: string;
@@ -166,3 +170,60 @@ export const getTagTeamLeagueTierIcon = (tier: string): string => {
 
 export const TAG_TEAM_LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 export type TagTeamLeagueTier = typeof TAG_TEAM_LEAGUE_TIERS[number];
+
+/**
+ * Generate a team name based on stable name and team ID
+ * If stable has a name, use "StableName 1", "StableName 2", etc.
+ * Otherwise, use "Team {teamId}"
+ */
+export const getTeamName = (team: TagTeam | TagTeamStanding, allTeamsFromStable?: (TagTeam | TagTeamStanding)[]): string => {
+  // Get stable name - check both possible locations
+  let stableName: string | null = null;
+  
+  // TagTeamStanding has stableName directly
+  if ('stableName' in team && team.stableName) {
+    stableName = team.stableName;
+  }
+  // TagTeam has it nested in stable object
+  else if ('stable' in team && team.stable?.stableName) {
+    stableName = team.stable.stableName;
+  }
+  
+  if (!stableName) {
+    return `Team ${('teamId' in team ? team.teamId : team.id)}`;
+  }
+  
+  // If we have all teams from the stable, calculate the team number
+  if (allTeamsFromStable && allTeamsFromStable.length > 1) {
+    // Sort teams by ID to get consistent numbering
+    const sortedTeams = [...allTeamsFromStable].sort((a, b) => {
+      const aId = 'teamId' in a ? a.teamId : a.id;
+      const bId = 'teamId' in b ? b.teamId : b.id;
+      return aId - bId;
+    });
+    
+    const teamId = 'teamId' in team ? team.teamId : team.id;
+    const teamIndex = sortedTeams.findIndex(t => {
+      const tId = 'teamId' in t ? t.teamId : t.id;
+      return tId === teamId;
+    });
+    
+    if (teamIndex >= 0) {
+      return `${stableName} ${teamIndex + 1}`;
+    }
+  }
+  
+  // Default to just the stable name if we can't determine the number
+  return stableName;
+};
+
+/**
+ * Generate a team name from match team data
+ * Used for upcoming/recent matches where we have team info but not full TagTeam object
+ */
+export const getTeamNameFromMatch = (teamId: number, stableName: string | null): string => {
+  if (stableName) {
+    return stableName;
+  }
+  return `Team ${teamId}`;
+};

@@ -30,6 +30,9 @@ export interface TeamReadinessResult {
 export type TagTeamWithRobots = TagTeam & {
   activeRobot: Robot;
   reserveRobot: Robot;
+  stable?: {
+    stableName: string | null;
+  };
 };
 
 /**
@@ -195,6 +198,11 @@ export async function getTeamById(teamId: number): Promise<TagTeamWithRobots | n
     include: {
       activeRobot: true,
       reserveRobot: true,
+      stable: {
+        select: {
+          stableName: true,
+        },
+      },
     },
   });
 }
@@ -209,6 +217,11 @@ export async function getTeamsByStable(stableId: number): Promise<TagTeamWithRob
     include: {
       activeRobot: true,
       reserveRobot: true,
+      stable: {
+        select: {
+          stableName: true,
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',

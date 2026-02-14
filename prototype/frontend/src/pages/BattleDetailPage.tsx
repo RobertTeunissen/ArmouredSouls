@@ -49,10 +49,11 @@ function BattleDetailPage() {
     if (!battleLog) return '';
     if (!battleLog.winner) return 'DRAW';
     
-    // For tag team battles, show team victory
+    // For tag team battles, show team victory with team name
     if (battleLog.battleType === 'tag_team' && battleLog.tagTeam) {
       const winningTeam = battleLog.winner === 'robot1' ? battleLog.tagTeam.team1 : battleLog.tagTeam.team2;
-      return `TEAM ${winningTeam.activeRobot?.name || 'Unknown'} WINS`;
+      const teamName = winningTeam.stableName || `Team ${winningTeam.teamId}`;
+      return `${teamName.toUpperCase()} WINS`;
     }
     
     const winner = battleLog.winner === 'robot1' ? battleLog.robot1 : battleLog.robot2;
@@ -143,7 +144,9 @@ function BattleDetailPage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               {/* Team 1 */}
               <div className="space-y-1">
-                <div className="font-semibold text-white">Team 1</div>
+                <div className="font-semibold text-white text-base">
+                  {battleLog.tagTeam.team1.stableName || `Team ${battleLog.tagTeam.team1.teamId}`}
+                </div>
                 {battleLog.tagTeam.team1.activeRobot && (
                   <div className="text-gray-300">
                     <span className="text-primary">Active:</span> {battleLog.tagTeam.team1.activeRobot.name}
@@ -163,7 +166,9 @@ function BattleDetailPage() {
               
               {/* Team 2 */}
               <div className="space-y-1">
-                <div className="font-semibold text-white">Team 2</div>
+                <div className="font-semibold text-white text-base">
+                  {battleLog.tagTeam.team2.stableName || `Team ${battleLog.tagTeam.team2.teamId}`}
+                </div>
                 {battleLog.tagTeam.team2.activeRobot && (
                   <div className="text-gray-300">
                     <span className="text-primary">Active:</span> {battleLog.tagTeam.team2.activeRobot.name}

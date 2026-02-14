@@ -78,7 +78,7 @@ This implementation plan breaks down the player profile editor feature into disc
     - Test default visibility for new users
     - _Requirements: 3.2, 6.2, 6.3, 6.4, 4.2_
 
-- [ ] 3. Checkpoint - Backend API complete
+- [x] 3. Checkpoint - Backend API complete
   - Ensure all backend tests pass
   - Manually test endpoints with curl or Postman
   - Verify database migrations applied correctly
@@ -93,7 +93,7 @@ This implementation plan breaks down the player profile editor feature into disc
     - Implement `updateProfile(updates: ProfileUpdateRequest)` function
     - _Requirements: 6.1, 6.2, 6.5, 6.6_
   
-  - [ ] 4.2 Write unit tests for API client
+  - [x] 4.2 Write unit tests for API client
     - Test getProfile makes correct API call
     - Test updateProfile sends correct request body
     - Test error handling for network failures
@@ -144,7 +144,7 @@ This implementation plan breaks down the player profile editor feature into disc
     - Add navigation guard to prompt confirmation when navigating away
     - _Requirements: 7.7_
   
-  - [ ] 5.7 Write unit tests for ProfilePage component
+  - [x] 5.7 Write unit tests for ProfilePage component
     - Test component renders all sections
     - Test form validation displays errors
     - Test save button enabled when form is dirty
@@ -163,7 +163,7 @@ This implementation plan breaks down the player profile editor feature into disc
     - Add route: `<Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />`
     - _Requirements: 7.1_
 
-- [ ] 7. Final checkpoint and integration testing
+- [x] 7. Final checkpoint and integration testing
   - Ensure all tests pass (backend and frontend)
   - Test complete user flow: login → navigate to profile → edit fields → save → verify changes
   - Test error scenarios: duplicate stable name, weak password, unauthenticated access

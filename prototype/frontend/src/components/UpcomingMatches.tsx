@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getUpcomingMatches, ScheduledMatch, formatDateTime, getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
+import { getTeamNameFromMatch } from '../utils/tagTeamApi';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -7,7 +8,17 @@ import axios from 'axios';
 // Constants
 const UNKNOWN_USER = 'Unknown';
 
-function UpcomingMatches() {
+interface BattleReadiness {
+  isReady: boolean;
+  warnings: string[];
+}
+
+interface UpcomingMatchesProps {
+  robotId?: number; // Optional: filter matches for specific robot
+  battleReadiness?: BattleReadiness; // Optional: show battle readiness warnings
+}
+
+function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [matches, setMatches] = useState<ScheduledMatch[]>([]);
@@ -40,7 +51,24 @@ function UpcomingMatches() {
         matches: data,
       });
       
-      setMatches(data);
+      // Filter by robotId if provided
+      let filteredMatches = data;
+      if (robotId) {
+        filteredMatches = data.filter((match) => {
+          if (match.matchType === 'tag_team') {
+            return (
+              match.team1?.activeRobot?.id === robotId ||
+              match.team1?.reserveRobot?.id === robotId ||
+              match.team2?.activeRobot?.id === robotId ||
+              match.team2?.reserveRobot?.id === robotId
+            );
+          } else {
+            return match.robot1?.id === robotId || match.robot2?.id === robotId;
+          }
+        });
+      }
+      
+      setMatches(filteredMatches);
       setError(null);
     } catch (err: any) {
       // Handle 401 Unauthorized errors
@@ -77,6 +105,19 @@ function UpcomingMatches() {
     if (match.matchType === 'tag_team') {
       if (!match.team1 || !match.team2) {
         console.error('[UpcomingMatches] Invalid tag team match data:', match);
+        return null;
+      }
+      
+      // Validate team robots exist
+      if (!match.team1.activeRobot || !match.team2.activeRobot || 
+          !match.team1.reserveRobot || !match.team2.reserveRobot) {
+        console.error('[UpcomingMatches] Missing robots in tag team match:', match);
+        return null;
+      }
+      
+      // Validate user IDs exist
+      if (!match.team1.activeRobot.userId || !match.team2.activeRobot.userId) {
+        console.error('[UpcomingMatches] Missing userId in tag team robots:', match);
         return null;
       }
       
@@ -130,6 +171,27 @@ function UpcomingMatches() {
     return `Round ${round}/${maxRounds}`;
   };
 
+  const getReadinessWarningColor = () => {
+    if (battleReadiness && !battleReadiness.isReady) {
+      const hasLowHP = battleReadiness.warnings.some(w => w.includes('HP'));
+      const hasNoWeapons = battleReadiness.warnings.some(w => w.includes('weapons'));
+      
+      if (hasLowHP) return 'text-[#f85149]';
+      if (hasNoWeapons) return 'text-[#d29922]';
+      return 'text-[#d29922]';
+    }
+    return 'text-[#3fb950]';
+  };
+
+  const getReadinessIcon = () => {
+    if (battleReadiness && !battleReadiness.isReady) {
+      const hasLowHP = battleReadiness.warnings.some(w => w.includes('HP'));
+      if (hasLowHP) return '🔴';
+      return '🟡';
+    }
+    return '🟢';
+  };
+
   if (loading) {
     return (
       <div className="bg-surface p-4 rounded-lg border border-gray-700">
@@ -159,8 +221,25 @@ function UpcomingMatches() {
 
   return (
     <div className="bg-surface p-4 rounded-lg border border-gray-700">
-      <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
-      <div className="space-y-1.5 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold">Upcoming Matches</h2>
+        {battleReadiness && !battleReadiness.isReady && (
+          <div className={`flex items-center gap-2 ${getReadinessWarningColor()}`}>
+            <span>{getReadinessIcon()}</span>
+            <span className="text-sm font-medium">Not Battle Ready</span>
+          </div>
+        )}
+      </div>
+      {battleReadiness && !battleReadiness.isReady && battleReadiness.warnings.length > 0 && (
+        <div className="mb-3 text-sm">
+          {battleReadiness.warnings.map((warning, index) => (
+            <div key={index} className={getReadinessWarningColor()}>
+              ⚠️ {warning}
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="space-y-0 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {matches.map((match) => {
           const matchResult = getMatchResult(match);
           
@@ -187,63 +266,113 @@ function UpcomingMatches() {
               <div 
                 key={match.id} 
                 className={`
-                  bg-surface-elevated border border-gray-700 rounded-lg p-2
+                  bg-[#252b38] border border-gray-700 rounded-lg p-2 mb-1.5
                   border-l-4 border-l-cyan-400
-                  hover:bg-surface hover:border-primary/50
-                  transition-all duration-150
+                  hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
+                  transition-all duration-150 ease-out
+                  hover:-translate-y-0.5
                 `}
               >
-                <div className="flex justify-between items-start mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">🤝</span>
-                    <span className={`text-xs font-semibold ${tierColor}`}>
-                      {tierName} Tag Team
-                    </span>
-                    <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400">
-                      2v2
-                    </span>
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
+                  {/* Icon */}
+                  <div className="flex-shrink-0 w-6 text-center text-base">
+                    🤝
                   </div>
-                  <span className="text-xs text-gray-400">
+                  
+                  {/* Status Badge */}
+                  <div className="flex-shrink-0 w-16">
+                    <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-blue-500/20 text-blue-400">
+                      PENDING
+                    </div>
+                  </div>
+                  
+                  {/* Match Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
+                        2v2
+                      </span>
+                      <div className={`text-xs ${tierColor}`}>
+                        {tierName} Tag Team
+                      </div>
+                    </div>
+                    <div className="font-medium text-xs truncate">
+                      <span className="text-[#58a6ff]">
+                        {matchResult.myTeam.activeRobot.name} & {matchResult.myTeam.reserveRobot.name}
+                      </span>
+                      <span className="text-[#57606a] mx-1.5">vs</span>
+                      <span className="text-[#e6edf3]">
+                        {matchResult.opponentTeam.activeRobot.name} & {matchResult.opponentTeam.reserveRobot.name}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Date */}
+                  <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
                     {formatDateTime(match.scheduledFor)}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-2 items-center text-xs mb-1">
-                  {/* Your Team */}
-                  <div className="text-right">
-                    <div className="font-semibold text-primary text-xs truncate">
-                      {matchResult.myTeam.activeRobot.name}
-                    </div>
-                    <div className="text-xs text-gray-500 truncate">
-                      + {matchResult.myTeam.reserveRobot.name}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      ELO: {matchResult.myTeam.combinedELO}
+                  </div>
+                  
+                  {/* ELO */}
+                  <div className="flex-shrink-0 w-20 text-center">
+                    <div className="text-xs text-[#8b949e]">
+                      {matchResult.myTeam.combinedELO} vs {matchResult.opponentTeam.combinedELO}
                     </div>
                   </div>
                   
-                  {/* VS */}
-                  <div className="text-center">
-                    <span className="text-gray-500 font-bold text-xs">VS</span>
-                  </div>
-                  
-                  {/* Opponent Team */}
-                  <div className="text-left">
-                    <div className="font-semibold text-white text-xs truncate">
-                      {matchResult.opponentTeam.activeRobot.name}
-                    </div>
-                    <div className="text-xs text-gray-500 truncate">
-                      + {matchResult.opponentTeam.reserveRobot.name}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      ELO: {matchResult.opponentTeam.combinedELO}
-                    </div>
+                  {/* Arrow Icon */}
+                  <div className="flex-shrink-0 w-6 text-center text-[#58a6ff] text-sm">
+                    →
                   </div>
                 </div>
                 
-                <div className="flex justify-between text-xs text-gray-400">
-                  <span>Your Team</span>
-                  <span>{matchResult.opponentTeam.activeRobot.user.username}</span>
+                {/* Mobile Layout */}
+                <div className="md:hidden">
+                  {/* Header Row */}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base">🤝</span>
+                      <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                        PENDING
+                      </div>
+                      <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
+                        2v2
+                      </span>
+                    </div>
+                    <div className="text-xs text-[#8b949e]">
+                      {formatDateTime(match.scheduledFor)}
+                    </div>
+                  </div>
+                  
+                  {/* Battle Type */}
+                  <div className={`text-xs ${tierColor} mb-1.5`}>
+                    {tierName} Tag Team
+                  </div>
+                  
+                  {/* Matchup Row */}
+                  <div className="mb-1.5">
+                    <div className="text-sm font-medium">
+                      <span className="text-[#58a6ff]">
+                        {matchResult.myTeam.activeRobot.name} & {matchResult.myTeam.reserveRobot.name}
+                      </span>
+                      <span className="text-[#57606a] mx-1.5">vs</span>
+                      <span className="text-[#e6edf3]">
+                        {matchResult.opponentTeam.activeRobot.name} & {matchResult.opponentTeam.reserveRobot.name}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Stats Row */}
+                  <div className="flex justify-between text-xs">
+                    <div>
+                      <span className="text-[#57606a]">ELO: </span>
+                      <span className="text-[#e6edf3]">{matchResult.myTeam.combinedELO}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#57606a]">vs </span>
+                      <span className="text-[#e6edf3]">{matchResult.opponentTeam.combinedELO}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
@@ -251,67 +380,112 @@ function UpcomingMatches() {
           
           // Handle 1v1 matches (league and tournament)
           const { myRobot, opponent } = matchResult;
-          const tierColor = isTournament ? 'text-warning' : getLeagueTierColor(match.leagueType);
-          const tierName = isTournament ? 'Tournament' : getLeagueTierName(match.leagueType);
+          const tierColor = isTournament ? 'text-[#d29922]' : getLeagueTierColor(match.leagueType);
+          const tierName = isTournament 
+            ? (match.tournamentRound && match.maxRounds 
+                ? `${match.tournamentName || 'Tournament'} • ${getRoundName(match.tournamentRound, match.maxRounds)}`
+                : match.tournamentName || 'Tournament')
+            : `${getLeagueTierName(match.leagueType)} League`;
           
           const getBorderColor = () => {
-            return isTournament ? 'border-l-warning' : 'border-l-primary';
+            return isTournament ? 'border-l-[#d29922]' : 'border-l-[#58a6ff]';
           };
           
           return (
             <div 
               key={match.id} 
               className={`
-                bg-surface-elevated border border-gray-700 rounded-lg p-2
+                bg-[#252b38] border border-gray-700 rounded-lg p-2 mb-1.5
                 border-l-4 ${getBorderColor()}
-                hover:bg-surface hover:border-primary/50
-                transition-all duration-150
+                hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
+                transition-all duration-150 ease-out
+                hover:-translate-y-0.5
               `}
             >
-              <div className="flex justify-between items-start mb-1">
-                <div className="flex items-center gap-2">
-                  {isTournament && <span className="text-sm">🏆</span>}
-                  <span className={`text-xs font-semibold ${tierColor}`}>
+              {/* Desktop Layout */}
+              <div className="hidden md:flex items-center gap-3">
+                {/* Icon */}
+                <div className="flex-shrink-0 w-6 text-center text-base">
+                  {isTournament ? '🏆' : '⚔️'}
+                </div>
+                
+                {/* Status Badge */}
+                <div className="flex-shrink-0 w-16">
+                  <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-blue-500/20 text-blue-400">
+                    PENDING
+                  </div>
+                </div>
+                
+                {/* Match Info */}
+                <div className="flex-1 min-w-0">
+                  <div className={`text-xs ${tierColor} mb-0.5`}>
                     {tierName}
-                    {!isTournament && ' League'}
-                  </span>
-                  {isTournament && match.tournamentRound && match.maxRounds && (
-                    <span className="text-xs px-1.5 py-0.5 bg-warning/20 rounded text-warning">
-                      {getRoundName(match.tournamentRound, match.maxRounds)}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs text-gray-400">
-                  {isTournament ? 'Pending' : formatDateTime(match.scheduledFor)}
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 items-center text-xs mb-1">
-                {/* Your Robot */}
-                <div className="text-right">
-                  <div className="font-semibold text-primary truncate">{myRobot.name}</div>
-                  <div className="text-xs text-gray-400">
-                    ELO: {myRobot.elo}
+                  </div>
+                  <div className="font-medium text-xs truncate">
+                    <span className="text-[#58a6ff]">{myRobot.name}</span>
+                    <span className="text-[#57606a] mx-1.5">vs</span>
+                    <span className="text-[#e6edf3]">{opponent.name}</span>
                   </div>
                 </div>
                 
-                {/* VS */}
-                <div className="text-center">
-                  <span className="text-gray-500 font-bold text-xs">VS</span>
+                {/* Date */}
+                <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
+                  {isTournament ? 'TBD' : formatDateTime(match.scheduledFor)}
                 </div>
                 
-                {/* Opponent */}
-                <div className="text-left">
-                  <div className="font-semibold text-white truncate">{opponent.name}</div>
-                  <div className="text-xs text-gray-400">
-                    ELO: {opponent.elo}
+                {/* ELO */}
+                <div className="flex-shrink-0 w-20 text-center">
+                  <div className="text-xs text-[#8b949e]">
+                    {myRobot.elo} vs {opponent.elo}
                   </div>
+                </div>
+                
+                {/* Arrow Icon */}
+                <div className="flex-shrink-0 w-6 text-center text-[#58a6ff] text-sm">
+                  →
                 </div>
               </div>
               
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>HP: {myRobot.currentHP}/{myRobot.maxHP}</span>
-                <span>{opponent.user?.username || UNKNOWN_USER}</span>
+              {/* Mobile Layout */}
+              <div className="md:hidden">
+                {/* Header Row */}
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base">{isTournament ? '🏆' : '⚔️'}</span>
+                    <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                      PENDING
+                    </div>
+                  </div>
+                  <div className="text-xs text-[#8b949e]">
+                    {isTournament ? 'TBD' : formatDateTime(match.scheduledFor)}
+                  </div>
+                </div>
+                
+                {/* Battle Type */}
+                <div className={`text-xs ${tierColor} mb-1.5`}>
+                  {tierName}
+                </div>
+                
+                {/* Matchup Row */}
+                <div className="mb-1.5">
+                  <div className="text-sm font-medium">
+                    <span className="text-[#58a6ff]">{myRobot.name}</span>
+                    <span className="text-[#57606a] mx-1.5">vs</span>
+                    <span className="text-[#e6edf3]">{opponent.name}</span>
+                  </div>
+                </div>
+                
+                {/* Stats Row */}
+                <div className="flex justify-between text-xs">
+                  <div>
+                    <span className="text-[#57606a]">ELO: </span>
+                    <span className="text-[#e6edf3]">{myRobot.elo}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#57606a]">vs </span>
+                    <span className="text-[#e6edf3]">{opponent.elo}</span>
+                  </div>
+                </div>
               </div>
             </div>
           );

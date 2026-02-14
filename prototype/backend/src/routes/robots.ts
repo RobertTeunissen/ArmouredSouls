@@ -9,6 +9,15 @@ const router = express.Router();
 const ROBOT_CREATION_COST = 500000;
 const MAX_ATTRIBUTE_LEVEL = 50;
 
+// Get cap for academy level (from STABLE_SYSTEM.md)
+const getCapForLevel = (level: number): number => {
+  const capMap: { [key: number]: number } = {
+    0: 10, 1: 15, 2: 20, 3: 25, 4: 30,
+    5: 35, 6: 40, 7: 42, 8: 45, 9: 48, 10: 50
+  };
+  return capMap[level] || 10;
+};
+
 // Map attribute to its group and corresponding training academy
 const attributeToAcademy: { [key: string]: string } = {
   // Combat Systems
@@ -247,6 +256,12 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
         offhandWeapon: {
           include: {
             weapon: true,
+          },
+        },
+        user: {
+          select: {
+            username: true,
+            stableName: true,
           },
         },
       },
@@ -1335,6 +1350,999 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
   } catch (error) {
     console.error('Repair all robots error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get robot rankings
+router.get('/:id/rankings', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robotId = parseInt(req.params.id);
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Verify robot exists
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Get all robots for ranking calculations
+    const allRobots = await prisma.robot.findMany({
+      select: {
+        id: true,
+        // Combat category attributes
+        combatPower: true,
+        targetingSystems: true,
+        criticalSystems: true,
+        penetration: true,
+        weaponControl: true,
+        attackSpeed: true,
+        // Defense category attributes
+        armorPlating: true,
+        shieldCapacity: true,
+        evasionThrusters: true,
+        damageDampeners: true,
+        counterProtocols: true,
+        // Chassis category attributes
+        hullIntegrity: true,
+        servoMotors: true,
+        gyroStabilizers: true,
+        hydraulicSystems: true,
+        powerCore: true,
+        // AI category attributes
+        combatAlgorithms: true,
+        threatAnalysis: true,
+        adaptiveAI: true,
+        logicCores: true,
+        // Team category attributes
+        syncProtocols: true,
+        supportSystems: true,
+        formationTactics: true,
+        // Performance metrics
+        damageDealtLifetime: true,
+        wins: true,
+        losses: true,
+        elo: true,
+        kills: true,
+      },
+    });
+
+    const totalRobots = allRobots.length;
+
+    // Helper function to calculate category sum
+    const calculateCategorySum = (robot: any, attributes: string[]) => {
+      return attributes.reduce((sum, attr) => {
+        const value = robot[attr];
+        return sum + (typeof value === 'number' ? value : value.toNumber());
+      }, 0);
+    };
+
+    // Calculate category sums for all robots
+    const robotsWithScores = allRobots.map(r => {
+      const combatSum = calculateCategorySum(r, [
+        'combatPower', 'targetingSystems', 'criticalSystems', 
+        'penetration', 'weaponControl', 'attackSpeed'
+      ]);
+      const defenseSum = calculateCategorySum(r, [
+        'armorPlating', 'shieldCapacity', 'evasionThrusters', 
+        'damageDampeners', 'counterProtocols'
+      ]);
+      const chassisSum = calculateCategorySum(r, [
+        'hullIntegrity', 'servoMotors', 'gyroStabilizers', 
+        'hydraulicSystems', 'powerCore'
+      ]);
+      const aiSum = calculateCategorySum(r, [
+        'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores'
+      ]);
+      const teamSum = calculateCategorySum(r, [
+        'syncProtocols', 'supportSystems', 'formationTactics'
+      ]);
+
+      const totalBattles = r.wins + r.losses;
+      const winRate = totalBattles > 0 ? (r.wins / totalBattles) * 100 : 0;
+      const kdRatio = r.losses > 0 ? r.kills / r.losses : r.kills;
+
+      return {
+        id: r.id,
+        combatSum,
+        defenseSum,
+        chassisSum,
+        aiSum,
+        teamSum,
+        damageDealt: r.damageDealtLifetime,
+        winRate,
+        elo: r.elo,
+        kdRatio,
+      };
+    });
+
+    // Helper function to calculate rank and percentile
+    const calculateRanking = (value: number, allValues: number[]) => {
+      const sortedValues = [...allValues].sort((a, b) => b - a); // Descending order
+      const rank = sortedValues.findIndex(v => v === value) + 1;
+      const percentile = (1 - (rank - 1) / totalRobots) * 100;
+      return { rank, total: totalRobots, percentile, value };
+    };
+
+    // Find current robot's scores
+    const currentRobotScores = robotsWithScores.find(r => r.id === robotId);
+    
+    if (!currentRobotScores) {
+      return res.status(404).json({ error: 'Robot scores not found' });
+    }
+
+    // Calculate rankings for each category
+    const rankings = {
+      combatCategory: calculateRanking(
+        currentRobotScores.combatSum,
+        robotsWithScores.map(r => r.combatSum)
+      ),
+      defenseCategory: calculateRanking(
+        currentRobotScores.defenseSum,
+        robotsWithScores.map(r => r.defenseSum)
+      ),
+      chassisCategory: calculateRanking(
+        currentRobotScores.chassisSum,
+        robotsWithScores.map(r => r.chassisSum)
+      ),
+      aiCategory: calculateRanking(
+        currentRobotScores.aiSum,
+        robotsWithScores.map(r => r.aiSum)
+      ),
+      teamCategory: calculateRanking(
+        currentRobotScores.teamSum,
+        robotsWithScores.map(r => r.teamSum)
+      ),
+      totalDamageDealt: calculateRanking(
+        currentRobotScores.damageDealt,
+        robotsWithScores.map(r => r.damageDealt)
+      ),
+      winRate: calculateRanking(
+        currentRobotScores.winRate,
+        robotsWithScores.map(r => r.winRate)
+      ),
+      elo: calculateRanking(
+        currentRobotScores.elo,
+        robotsWithScores.map(r => r.elo)
+      ),
+      kdRatio: calculateRanking(
+        currentRobotScores.kdRatio,
+        robotsWithScores.map(r => r.kdRatio)
+      ),
+    };
+
+    res.json(rankings);
+  } catch (error) {
+    console.error('Robot rankings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get robot performance by context (leagues, tournaments, tag teams)
+router.get('/:id/performance-context', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robotId = parseInt(req.params.id);
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Verify robot exists
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+      select: { id: true, name: true },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Get all battles for this robot (including tag team battles where robot is active or reserve)
+    const battles = await prisma.battle.findMany({
+      where: {
+        OR: [
+          { robot1Id: robotId },
+          { robot2Id: robotId },
+          { team1ActiveRobotId: robotId },
+          { team1ReserveRobotId: robotId },
+          { team2ActiveRobotId: robotId },
+          { team2ReserveRobotId: robotId },
+        ],
+      },
+      select: {
+        id: true,
+        battleType: true,
+        leagueType: true,
+        tournamentId: true,
+        robot1Id: true,
+        robot2Id: true,
+        winnerId: true,
+        robot1DamageDealt: true,
+        robot2DamageDealt: true,
+        robot1FinalHP: true,
+        robot2FinalHP: true,
+        robot1ELOBefore: true,
+        robot1ELOAfter: true,
+        robot2ELOBefore: true,
+        robot2ELOAfter: true,
+        team1ActiveRobotId: true,
+        team1ReserveRobotId: true,
+        team2ActiveRobotId: true,
+        team2ReserveRobotId: true,
+        createdAt: true,
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            totalParticipants: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Helper to determine if robot won, lost, or drew
+    const getBattleResult = (battle: any) => {
+      if (battle.winnerId === null) return 'draw';
+      
+      // For tag team battles, check team membership and ELO change
+      if (battle.battleType === 'tag_team') {
+        const isTeam1 = battle.team1ActiveRobotId === robotId || battle.team1ReserveRobotId === robotId;
+        const isTeam2 = battle.team2ActiveRobotId === robotId || battle.team2ReserveRobotId === robotId;
+        
+        // Check ELO change to determine win/loss
+        let eloChange = 0;
+        if (isTeam1) {
+          eloChange = battle.robot1ELOAfter - battle.robot1ELOBefore;
+        } else if (isTeam2) {
+          eloChange = battle.robot2ELOAfter - battle.robot2ELOBefore;
+        }
+        
+        if (eloChange > 0) return 'win';
+        if (eloChange < 0) return 'loss';
+        return 'draw';
+      }
+      
+      return battle.winnerId === robotId ? 'win' : 'loss';
+    };
+
+    // Helper to get robot's damage dealt and taken
+    const getBattleStats = (battle: any) => {
+      if (battle.battleType === 'tag_team') {
+        // For tag team battles, use the team's stats
+        const isTeam1 = battle.team1ActiveRobotId === robotId || battle.team1ReserveRobotId === robotId;
+        const isTeam2 = battle.team2ActiveRobotId === robotId || battle.team2ReserveRobotId === robotId;
+        
+        if (isTeam1) {
+          return {
+            damageDealt: battle.robot1DamageDealt,
+            damageTaken: battle.robot2DamageDealt,
+            eloChange: battle.robot1ELOAfter - battle.robot1ELOBefore,
+          };
+        } else if (isTeam2) {
+          return {
+            damageDealt: battle.robot2DamageDealt,
+            damageTaken: battle.robot1DamageDealt,
+            eloChange: battle.robot2ELOAfter - battle.robot2ELOBefore,
+          };
+        }
+      }
+      
+      const isRobot1 = battle.robot1Id === robotId;
+      return {
+        damageDealt: isRobot1 ? battle.robot1DamageDealt : battle.robot2DamageDealt,
+        damageTaken: isRobot1 
+          ? battle.robot2DamageDealt 
+          : battle.robot1DamageDealt,
+        eloChange: isRobot1 
+          ? battle.robot1ELOAfter - battle.robot1ELOBefore 
+          : battle.robot2ELOAfter - battle.robot2ELOBefore,
+      };
+    };
+
+    // Process league battles
+    const leagueBattles = battles.filter(b => b.battleType === 'league');
+    const leagueStatsMap = new Map<string, any>();
+
+    leagueBattles.forEach(battle => {
+      const leagueName = battle.leagueType;
+      if (!leagueStatsMap.has(leagueName)) {
+        leagueStatsMap.set(leagueName, {
+          leagueName,
+          leagueIcon: `🏆`, // Could be customized per league
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          damageDealt: 0,
+          damageTaken: 0,
+          eloChange: 0,
+          battlesPlayed: 0,
+        });
+      }
+
+      const stats = leagueStatsMap.get(leagueName);
+      const result = getBattleResult(battle);
+      const battleStats = getBattleStats(battle);
+
+      if (result === 'win') stats.wins++;
+      else if (result === 'loss') stats.losses++;
+      else stats.draws++;
+
+      stats.damageDealt += battleStats.damageDealt;
+      stats.damageTaken += battleStats.damageTaken;
+      stats.eloChange += battleStats.eloChange;
+      stats.battlesPlayed++;
+    });
+
+    const leagueStats = Array.from(leagueStatsMap.values()).map(stats => ({
+      ...stats,
+      winRate: stats.battlesPlayed > 0 
+        ? ((stats.wins / stats.battlesPlayed) * 100).toFixed(1) 
+        : '0.0',
+    }));
+
+    // Process tournament battles
+    const tournamentBattles = battles.filter(b => b.battleType === 'tournament' && b.tournamentId);
+    const tournamentStatsMap = new Map<number, any>();
+
+    tournamentBattles.forEach(battle => {
+      const tournamentId = battle.tournamentId!;
+      if (!tournamentStatsMap.has(tournamentId)) {
+        tournamentStatsMap.set(tournamentId, {
+          tournamentId,
+          tournamentName: battle.tournament?.name || `Tournament #${tournamentId}`,
+          tournamentDate: battle.createdAt,
+          totalParticipants: battle.tournament?.totalParticipants || 0,
+          wins: 0,
+          losses: 0,
+          damageDealt: 0,
+          damageTaken: 0,
+          placement: null, // Will be calculated later
+        });
+      }
+
+      const stats = tournamentStatsMap.get(tournamentId);
+      const result = getBattleResult(battle);
+      const battleStats = getBattleStats(battle);
+
+      if (result === 'win') stats.wins++;
+      else if (result === 'loss') stats.losses++;
+
+      stats.damageDealt += battleStats.damageDealt;
+      stats.damageTaken += battleStats.damageTaken;
+    });
+
+    // Calculate tournament placements
+    const tournamentStats = await Promise.all(
+      Array.from(tournamentStatsMap.values()).map(async (stats) => {
+        // Get tournament matches to determine placement
+        const tournamentMatches = await prisma.tournamentMatch.findMany({
+          where: {
+            tournamentId: stats.tournamentId,
+            OR: [
+              { robot1Id: robotId },
+              { robot2Id: robotId },
+            ],
+          },
+          orderBy: {
+            round: 'desc',
+          },
+        });
+
+        // Determine placement based on highest round reached
+        let placement = stats.totalParticipants; // Default to last place
+        if (tournamentMatches.length > 0) {
+          const highestRound = tournamentMatches[0].round;
+          const wonFinal = tournamentMatches.some(m => m.winnerId === robotId && m.round === highestRound);
+          
+          // Simple placement logic: 2^(maxRounds - round) gives approximate placement
+          if (wonFinal && highestRound === Math.ceil(Math.log2(stats.totalParticipants))) {
+            placement = 1; // Won the tournament
+          } else if (highestRound === Math.ceil(Math.log2(stats.totalParticipants))) {
+            placement = 2; // Lost in finals
+          } else if (highestRound === Math.ceil(Math.log2(stats.totalParticipants)) - 1) {
+            placement = 3; // Lost in semi-finals (approximate)
+          } else {
+            placement = Math.pow(2, Math.ceil(Math.log2(stats.totalParticipants)) - highestRound + 1);
+          }
+        }
+
+        return {
+          ...stats,
+          placement,
+        };
+      })
+    );
+
+    // Process tag team battles
+    const tagTeamBattles = battles.filter(b => b.battleType === 'tag_team');
+    const tagTeamStats = {
+      totalBattles: tagTeamBattles.length,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      damageDealt: 0,
+      damageTaken: 0,
+    };
+
+    tagTeamBattles.forEach(battle => {
+      const result = getBattleResult(battle);
+      const battleStats = getBattleStats(battle);
+
+      if (result === 'win') tagTeamStats.wins++;
+      else if (result === 'loss') tagTeamStats.losses++;
+      else tagTeamStats.draws++;
+
+      tagTeamStats.damageDealt += battleStats.damageDealt;
+      tagTeamStats.damageTaken += battleStats.damageTaken;
+    });
+
+    const tagTeamStatsWithWinRate = {
+      ...tagTeamStats,
+      winRate: tagTeamStats.totalBattles > 0 
+        ? ((tagTeamStats.wins / tagTeamStats.totalBattles) * 100).toFixed(1) 
+        : '0.0',
+    };
+
+    res.json({
+      leagues: leagueStats,
+      tournaments: tournamentStats,
+      tagTeam: tagTeamStatsWithWinRate,
+    });
+  } catch (error) {
+    console.error('Robot performance context error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update robot appearance (imageUrl)
+router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+    const { imageUrl } = req.body;
+
+    console.log('Appearance update request:', { userId, robotId, imageUrl });
+
+    // Validate input
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      console.log('Invalid imageUrl:', imageUrl);
+      return res.status(400).json({ error: 'Invalid imageUrl' });
+    }
+
+    // Basic validation - must be a path to our assets
+    if (!imageUrl.startsWith('/src/assets/robots/')) {
+      console.log('Invalid image path:', imageUrl);
+      return res.status(400).json({ error: 'Invalid image path' });
+    }
+
+    // Check robot ownership
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+    });
+
+    if (!robot) {
+      console.log('Robot not found:', robotId);
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    if (robot.userId !== userId) {
+      console.log('Ownership mismatch:', { robotUserId: robot.userId, requestUserId: userId });
+      return res.status(403).json({ error: 'You do not own this robot' });
+    }
+
+    console.log('Updating robot with imageUrl...');
+    
+    // Update appearance
+    const updatedRobot = await prisma.robot.update({
+      where: { id: robotId },
+      data: {
+        imageUrl,
+      },
+      include: {
+        mainWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+        offhandWeapon: {
+          include: {
+            weapon: true,
+          },
+        },
+      },
+    });
+
+    console.log('Robot updated successfully');
+
+    res.json({
+      success: true,
+      robot: updatedRobot,
+      message: 'Robot image updated successfully',
+    });
+  } catch (error) {
+    console.error('Update robot appearance error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get recent battles for a robot
+// Get upcoming matches for a robot
+router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robotId = parseInt(req.params.id);
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    // Verify robot exists and get battle readiness info
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+      include: {
+        mainWeapon: true,
+        offhandWeapon: true,
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Calculate battle readiness
+    const hpPercentage = (robot.currentHP / robot.maxHP) * 100;
+    const hasWeapons = robot.mainWeaponId !== null;
+    const isReady = hpPercentage >= 50 && hasWeapons;
+    const warnings: string[] = [];
+    
+    if (hpPercentage < 50) {
+      warnings.push('HP below 50%');
+    }
+    if (!hasWeapons) {
+      warnings.push('No weapons equipped');
+    }
+
+    // Fetch scheduled league matches
+    const scheduledMatches = await prisma.scheduledMatch.findMany({
+      where: {
+        OR: [
+          { robot1Id: robotId },
+          { robot2Id: robotId },
+        ],
+        status: 'scheduled',
+        scheduledFor: {
+          gte: new Date(),
+        },
+      },
+      include: {
+        robot1: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+        robot2: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        scheduledFor: 'asc',
+      },
+    });
+
+    // Fetch upcoming tournament matches
+    const tournamentMatches = await prisma.tournamentMatch.findMany({
+      where: {
+        OR: [
+          { robot1Id: robotId },
+          { robot2Id: robotId },
+        ],
+        status: 'scheduled',
+      },
+      include: {
+        robot1: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+        robot2: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    // Fetch upcoming tag team matches where this robot is involved
+    const tagTeamMatches = await prisma.tagTeamMatch.findMany({
+      where: {
+        OR: [
+          {
+            team1: {
+              OR: [
+                { activeRobotId: robotId },
+                { reserveRobotId: robotId },
+              ],
+            },
+          },
+          {
+            team2: {
+              OR: [
+                { activeRobotId: robotId },
+                { reserveRobotId: robotId },
+              ],
+            },
+          },
+        ],
+        status: 'scheduled',
+        scheduledFor: {
+          gte: new Date(),
+        },
+      },
+      include: {
+        team1: {
+          include: {
+            activeRobot: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+              },
+            },
+            reserveRobot: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
+        team2: {
+          include: {
+            activeRobot: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+              },
+            },
+            reserveRobot: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        scheduledFor: 'asc',
+      },
+    });
+
+    // Format matches for response
+    const formattedMatches = [
+      // League matches
+      ...scheduledMatches.map(match => {
+        const opponent = match.robot1Id === robotId ? match.robot2 : match.robot1;
+        return {
+          matchId: match.id,
+          opponentName: opponent.name,
+          opponentPortrait: opponent.imageUrl || '/src/assets/robots/robot-1.png',
+          scheduledTime: match.scheduledFor.toISOString(),
+          battleType: 'league' as const,
+          leagueContext: match.leagueType,
+        };
+      }),
+      // Tournament matches
+      ...tournamentMatches.map(match => {
+        const opponent = match.robot1Id === robotId ? match.robot2 : match.robot1;
+        return {
+          matchId: match.id,
+          opponentName: opponent?.name || 'TBD',
+          opponentPortrait: opponent?.imageUrl || '/src/assets/robots/robot-1.png',
+          scheduledTime: new Date().toISOString(), // Tournament matches don't have specific scheduled times
+          battleType: 'tournament' as const,
+          tournamentContext: match.tournament.name,
+        };
+      }),
+      // Tag team matches
+      ...tagTeamMatches.filter(match => match.team1 && match.team2).map(match => {
+        const isTeam1 = match.team1!.activeRobotId === robotId || match.team1!.reserveRobotId === robotId;
+        
+        let teammates: string[];
+        let opponentTeam: string[];
+        
+        if (isTeam1) {
+          teammates = [
+            match.team1!.activeRobotId === robotId ? match.team1!.reserveRobot.name : match.team1!.activeRobot.name,
+          ];
+          opponentTeam = [match.team2!.activeRobot.name, match.team2!.reserveRobot.name];
+        } else {
+          teammates = [
+            match.team2!.activeRobotId === robotId ? match.team2!.reserveRobot.name : match.team2!.activeRobot.name,
+          ];
+          opponentTeam = [match.team1!.activeRobot.name, match.team1!.reserveRobot.name];
+        }
+
+        return {
+          matchId: match.id,
+          opponentName: opponentTeam[0], // Show first opponent
+          opponentPortrait: '/src/assets/robots/robot-1.png',
+          scheduledTime: match.scheduledFor.toISOString(),
+          battleType: 'tag_team' as const,
+          leagueContext: match.tagTeamLeague,
+          teammates,
+          opponentTeam,
+        };
+      }),
+    ].sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
+
+    res.json({
+      matches: formattedMatches,
+      battleReadiness: {
+        isReady,
+        warnings,
+      },
+    });
+  } catch (error) {
+    console.error('Upcoming matches error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Bulk upgrade robot attributes (atomic transaction)
+router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const robotId = parseInt(req.params.id);
+    const { upgrades } = req.body;
+
+    console.log('Bulk upgrade request:', { userId, robotId, upgrades });
+
+    if (isNaN(robotId)) {
+      return res.status(400).json({ error: 'Invalid robot ID' });
+    }
+
+    if (!upgrades || typeof upgrades !== 'object' || Object.keys(upgrades).length === 0) {
+      console.log('Invalid upgrades object:', upgrades);
+      return res.status(400).json({ error: 'Upgrades object is required' });
+    }
+
+    // Get robot
+    const robot = await prisma.robot.findFirst({
+      where: {
+        id: robotId,
+        userId, // Ensure user owns this robot
+      },
+    });
+
+    if (!robot) {
+      return res.status(404).json({ error: 'Robot not found' });
+    }
+
+    // Get user's current currency and Training Facility level
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        facilities: {
+          where: { 
+            facilityType: {
+              in: ['training_facility', 'combat_training_academy', 'defense_training_academy', 'mobility_training_academy', 'ai_training_academy']
+            }
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get facility levels
+    const trainingLevel = user.facilities.find(f => f.facilityType === 'training_facility')?.level || 0;
+    const academyLevels = {
+      combat_training_academy: user.facilities.find(f => f.facilityType === 'combat_training_academy')?.level || 0,
+      defense_training_academy: user.facilities.find(f => f.facilityType === 'defense_training_academy')?.level || 0,
+      mobility_training_academy: user.facilities.find(f => f.facilityType === 'mobility_training_academy')?.level || 0,
+      ai_training_academy: user.facilities.find(f => f.facilityType === 'ai_training_academy')?.level || 0,
+    };
+
+    // Validate all upgrades and calculate total cost
+    const validAttributes = [
+      'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
+      'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
+      'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
+      'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
+      'syncProtocols', 'supportSystems', 'formationTactics',
+    ];
+
+    let totalCost = 0;
+    const upgradeOperations: Array<{ attribute: string; fromLevel: number; toLevel: number; cost: number }> = [];
+
+    for (const [attribute, upgrade] of Object.entries(upgrades)) {
+      if (!validAttributes.includes(attribute)) {
+        return res.status(400).json({ error: `Invalid attribute: ${attribute}` });
+      }
+
+      const { currentLevel, plannedLevel } = upgrade as any;
+
+      if (typeof currentLevel !== 'number' || typeof plannedLevel !== 'number') {
+        return res.status(400).json({ error: `Invalid upgrade data for ${attribute}` });
+      }
+
+      if (plannedLevel <= currentLevel) {
+        return res.status(400).json({ error: `Planned level must be greater than current level for ${attribute}` });
+      }
+
+      // Get current level from robot
+      const robotCurrentLevelValue = robot[attribute as keyof typeof robot];
+      const robotCurrentLevel = typeof robotCurrentLevelValue === 'number' 
+        ? robotCurrentLevelValue 
+        : (robotCurrentLevelValue as any).toNumber();
+
+      // Verify current level matches
+      if (Math.floor(robotCurrentLevel) !== Math.floor(currentLevel)) {
+        return res.status(400).json({ 
+          error: `Current level mismatch for ${attribute}. Expected ${Math.floor(robotCurrentLevel)}, got ${Math.floor(currentLevel)}` 
+        });
+      }
+
+      // Check academy cap
+      const academyType = attributeToAcademy[attribute];
+      const academyLevel = academyLevels[academyType as keyof typeof academyLevels] || 0;
+      const cap = getCapForLevel(academyLevel);
+
+      if (plannedLevel > cap) {
+        return res.status(400).json({ 
+          error: `Attribute ${attribute} exceeds cap of ${cap}. Upgrade the corresponding academy to increase the cap.` 
+        });
+      }
+
+      // Calculate cost for this attribute
+      const discountPercent = trainingLevel * 5; // 5% per level
+      let attributeCost = 0;
+
+      for (let level = Math.floor(currentLevel); level < plannedLevel; level++) {
+        const baseCost = (level + 1) * 1500;
+        const discountedCost = Math.floor(baseCost * (1 - discountPercent / 100));
+        attributeCost += discountedCost;
+      }
+
+      totalCost += attributeCost;
+      upgradeOperations.push({
+        attribute,
+        fromLevel: Math.floor(currentLevel),
+        toLevel: plannedLevel,
+        cost: attributeCost,
+      });
+    }
+
+    // Check if user has enough currency
+    if (user.currency < totalCost) {
+      return res.status(400).json({ 
+        error: 'Insufficient credits',
+        required: totalCost,
+        current: user.currency,
+      });
+    }
+
+    // Perform all upgrades in a single atomic transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Deduct currency
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: { currency: user.currency - totalCost },
+      });
+
+      // Build update data object
+      const updateData: any = {};
+      for (const op of upgradeOperations) {
+        updateData[op.attribute] = op.toLevel;
+      }
+
+      // Update all attributes at once
+      const updatedRobot = await tx.robot.update({
+        where: { id: robotId },
+        data: updateData,
+        include: {
+          mainWeapon: {
+            include: {
+              weapon: true,
+            },
+          },
+          offhandWeapon: {
+            include: {
+              weapon: true,
+            },
+          },
+        },
+      });
+
+      // If hullIntegrity or shieldCapacity was upgraded, recalculate maxHP/maxShield
+      const needsHPUpdate = upgradeOperations.some(op => op.attribute === 'hullIntegrity' || op.attribute === 'shieldCapacity');
+      
+      if (needsHPUpdate) {
+        const maxHP = calculateMaxHP(updatedRobot);
+        const maxShield = calculateMaxShield(updatedRobot);
+
+        // Calculate current HP/Shield proportionally to maintain same percentage
+        const hpPercentage = robot.maxHP > 0 ? robot.currentHP / robot.maxHP : 1;
+        const shieldPercentage = robot.maxShield > 0 ? robot.currentShield / robot.maxShield : 1;
+
+        const newCurrentHP = Math.round(maxHP * hpPercentage);
+        const newCurrentShield = Math.round(maxShield * shieldPercentage);
+
+        // Update robot with new HP/Shield values
+        const finalRobot = await tx.robot.update({
+          where: { id: robotId },
+          data: {
+            maxHP,
+            maxShield,
+            currentHP: Math.min(newCurrentHP, maxHP),
+            currentShield: Math.min(newCurrentShield, maxShield),
+          },
+          include: {
+            mainWeapon: {
+              include: {
+                weapon: true,
+              },
+            },
+            offhandWeapon: {
+              include: {
+                weapon: true,
+              },
+            },
+          },
+        });
+
+        return { user: updatedUser, robot: finalRobot };
+      }
+
+      return { user: updatedUser, robot: updatedRobot };
+    });
+
+    res.json({
+      success: true,
+      robot: result.robot,
+      currency: result.user.currency,
+      totalCost,
+      upgradesApplied: upgradeOperations.length,
+      message: `Successfully upgraded ${upgradeOperations.length} attribute${upgradeOperations.length > 1 ? 's' : ''}`,
+    });
+  } catch (error) {
+    console.error('Bulk robot upgrade error:', error);
+    console.error('Error details:', error instanceof Error ? error.message : error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) });
   }
 });
 

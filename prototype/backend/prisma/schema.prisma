@@ -158,6 +158,9 @@ model Robot {
   mainWeaponId    Int? @map("main_weapon_id") // Primary weapon (all loadouts)
   offhandWeaponId Int? @map("offhand_weapon_id") // Secondary weapon (dual-wield, weapon+shield)
 
+  // ===== APPEARANCE (Optional - null means use default icon) =====
+  imageUrl String? @map("image_url") @db.VarChar(255) // Path to selected image, null = no image selected
+
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

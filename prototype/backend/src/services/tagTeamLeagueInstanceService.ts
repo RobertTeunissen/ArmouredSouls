@@ -415,6 +415,11 @@ export async function getStandingsForTier(tier: TagTeamLeagueTier): Promise<any[
           elo: true,
         },
       },
+      stable: {
+        select: {
+          stableName: true,
+        },
+      },
     },
   });
 

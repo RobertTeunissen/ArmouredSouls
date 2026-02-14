@@ -111,6 +111,7 @@ export interface BattleHistory {
   winnerReward: number;
   loserReward: number;
   battleType?: string; // "league", "tournament", or "tag_team"
+  leagueType?: string; // League at time of battle: "bronze", "silver", "gold", etc.
   tournamentId?: number | null;
   tournamentRound?: number | null;
   tournamentName?: string | null;
@@ -118,10 +119,16 @@ export interface BattleHistory {
   // Tag team specific fields
   team1Id?: number | null;
   team2Id?: number | null;
+  team1StableName?: string | null;
+  team2StableName?: string | null;
   team1ActiveRobotId?: number | null;
   team1ReserveRobotId?: number | null;
   team2ActiveRobotId?: number | null;
   team2ReserveRobotId?: number | null;
+  team1ActiveRobotName?: string | null;
+  team1ReserveRobotName?: string | null;
+  team2ActiveRobotName?: string | null;
+  team2ReserveRobotName?: string | null;
   team1TagOutTime?: number | null;
   team2TagOutTime?: number | null;
   robot1: {

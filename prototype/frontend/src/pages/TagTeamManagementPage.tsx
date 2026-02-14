@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
-import { getMyTagTeams, disbandTagTeam, TagTeam } from '../utils/tagTeamApi';
+import { getMyTagTeams, disbandTagTeam, TagTeam, getTeamName } from '../utils/tagTeamApi';
 import { getTagTeamLeagueTierName, getTagTeamLeagueTierColor, getTagTeamLeagueTierIcon } from '../utils/tagTeamApi';
 import TeamCreationModal from '../components/TeamCreationModal';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -182,16 +182,22 @@ function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
   const isReady = team.readiness?.isReady ?? true;
   const activeRobotReady = team.readiness?.activeRobotReady ?? true;
   const reserveRobotReady = team.readiness?.reserveRobotReady ?? true;
+  
+  // Get team name
+  const teamName = getTeamName(team);
 
   return (
     <div className="bg-surface-elevated border border-gray-700 rounded-lg p-6 hover:border-primary/50 transition-all">
-      {/* Header */}
+      {/* Header with Team Name */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{tierIcon}</span>
-          <span className={`text-lg font-semibold ${tierColor}`}>
-            {tierName} League
-          </span>
+        <div>
+          <h3 className="text-xl font-bold text-white mb-1">{teamName}</h3>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{tierIcon}</span>
+            <span className={`text-sm font-semibold ${tierColor}`}>
+              {tierName} League
+            </span>
+          </div>
         </div>
         <button
           onClick={onDisband}

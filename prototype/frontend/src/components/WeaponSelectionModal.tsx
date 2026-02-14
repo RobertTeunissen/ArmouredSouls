@@ -29,6 +29,8 @@ interface Weapon {
 interface WeaponInventory {
   id: number;
   weapon: Weapon;
+  robotsMain?: Array<{ id: number; name: string }>;
+  robotsOffhand?: Array<{ id: number; name: string }>;
 }
 
 interface WeaponSelectionModalProps {
@@ -37,6 +39,7 @@ interface WeaponSelectionModalProps {
   onSelect: (weaponInventoryId: number) => void;
   weapons: WeaponInventory[];
   currentWeaponId?: number | null;
+  currentRobotId?: number;
   title?: string;
   slot?: 'main' | 'offhand';
   robotLoadoutType?: string;
@@ -48,6 +51,7 @@ function WeaponSelectionModal({
   onSelect,
   weapons,
   currentWeaponId,
+  currentRobotId,
   title = 'Select Weapon',
   slot = 'main',
   robotLoadoutType = 'single',
@@ -63,6 +67,18 @@ function WeaponSelectionModal({
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  // Helper function to check if weapon is equipped by another robot
+  const isEquippedByOtherRobot = (inv: WeaponInventory): boolean => {
+    const equippedRobots = [
+      ...(inv.robotsMain || []),
+      ...(inv.robotsOffhand || []),
+    ];
+    
+    // Filter out the current robot - we only care if OTHER robots have it equipped
+    const otherRobots = equippedRobots.filter(robot => robot.id !== currentRobotId);
+    return otherRobots.length > 0;
+  };
 
   // Helper function to check if weapon is compatible with slot and loadout
   const isWeaponCompatible = (weapon: Weapon): boolean => {
@@ -142,7 +158,8 @@ function WeaponSelectionModal({
     const matchesName = inv.weapon.name.toLowerCase().includes(filter.toLowerCase());
     const matchesType = typeFilter === 'all' || inv.weapon.weaponType === typeFilter;
     const isCompatible = isWeaponCompatible(inv.weapon);
-    return matchesName && matchesType && isCompatible;
+    const notEquippedElsewhere = !isEquippedByOtherRobot(inv);
+    return matchesName && matchesType && isCompatible && notEquippedElsewhere;
   });
 
   const availableTypes = Array.from(new Set(weapons.map((inv) => inv.weapon.weaponType)));
