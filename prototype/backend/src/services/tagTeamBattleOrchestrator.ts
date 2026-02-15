@@ -4,6 +4,7 @@ import { simulateBattle } from './combatSimulator';
 import { getLeagueBaseReward, getParticipationReward } from '../utils/economyCalculations';
 import { CombatMessageGenerator } from './combatMessageGenerator';
 import { repairAllRobots } from './repairService';
+import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 
 // Battle constants
 const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
@@ -38,6 +39,14 @@ interface TagTeamBattleResult {
   team2ReserveFinalHP: number;
   team1ReserveUsed: boolean; // Track if reserve was used
   team2ReserveUsed: boolean; // Track if reserve was used
+  team1ActiveDamageDealt: number; // Damage dealt by team1 active robot
+  team1ReserveDamageDealt: number; // Damage dealt by team1 reserve robot
+  team2ActiveDamageDealt: number; // Damage dealt by team2 active robot
+  team2ReserveDamageDealt: number; // Damage dealt by team2 reserve robot
+  team1ActiveSurvivalTime: number; // Time in combat for team1 active robot
+  team1ReserveSurvivalTime: number; // Time in combat for team1 reserve robot
+  team2ActiveSurvivalTime: number; // Time in combat for team2 active robot
+  team2ReserveSurvivalTime: number; // Time in combat for team2 reserve robot
   battleLog: any[]; // Complete battle log with all events
 }
 
@@ -275,6 +284,7 @@ export async function executeTagTeamBattle(match: TagTeamMatch): Promise<TagTeam
  * Simulate a tag team battle with tag-out mechanics
  * Requirements 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8
  * Requirement 7.1, 7.2, 7.3: Record all combat events with timestamps, tag-out/tag-in events
+ * Requirement 10.7: Track damage dealt and survival time for fame calculation
  */
 async function simulateTagTeamBattle(
   team1: TagTeamWithRobots,
@@ -293,11 +303,28 @@ async function simulateTagTeamBattle(
   let currentTime = 0;
   const maxTime = BATTLE_TIME_LIMIT;
 
+  // Track damage dealt and survival time for each robot
+  let team1ActiveDamageDealt = 0;
+  let team1ReserveDamageDealt = 0;
+  let team2ActiveDamageDealt = 0;
+  let team2ReserveDamageDealt = 0;
+  let team1ActiveSurvivalTime = 0;
+  let team1ReserveSurvivalTime = 0;
+  let team2ActiveSurvivalTime = 0;
+  let team2ReserveSurvivalTime = 0;
+
   // Phase 1: Active robots fight
   const phase1Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-  currentTime = phase1Result.durationSeconds;
+  const phase1Duration = phase1Result.durationSeconds;
+  currentTime = phase1Duration;
   team1CurrentRobot.currentHP = phase1Result.robot1FinalHP;
   team2CurrentRobot.currentHP = phase1Result.robot2FinalHP;
+  
+  // Track phase 1 damage and survival time
+  team1ActiveDamageDealt += phase1Result.robot1DamageDealt;
+  team2ActiveDamageDealt += phase1Result.robot2DamageDealt;
+  team1ActiveSurvivalTime += phase1Duration;
+  team2ActiveSurvivalTime += phase1Duration;
   
   // Track if phase 1 had a decisive winner (destruction or yield)
   let phase1Winner: number | null = phase1Result.winnerId;
@@ -421,9 +448,16 @@ async function simulateTagTeamBattle(
     if (currentTime < maxTime) {
       const phase2StartTime = currentTime;
       const phase2Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-      currentTime += phase2Result.durationSeconds;
+      const phase2Duration = phase2Result.durationSeconds;
+      currentTime += phase2Duration;
       team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
       team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
+      
+      // Track phase 2 damage and survival time
+      team1ReserveDamageDealt += phase2Result.robot1DamageDealt;
+      team2ReserveDamageDealt += phase2Result.robot2DamageDealt;
+      team1ReserveSurvivalTime += phase2Duration;
+      team2ReserveSurvivalTime += phase2Duration;
       
       // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
       if (phase2Result.events && Array.isArray(phase2Result.events)) {
@@ -492,9 +526,16 @@ async function simulateTagTeamBattle(
     if (currentTime < maxTime) {
       const phase2StartTime = currentTime;
       const phase2Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-      currentTime += phase2Result.durationSeconds;
+      const phase2Duration = phase2Result.durationSeconds;
+      currentTime += phase2Duration;
       team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
       team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
+      
+      // Track phase 2 damage and survival time
+      team1ReserveDamageDealt += phase2Result.robot1DamageDealt;
+      team2ActiveDamageDealt += phase2Result.robot2DamageDealt;
+      team1ReserveSurvivalTime += phase2Duration;
+      team2ActiveSurvivalTime += phase2Duration;
       
       // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
       if (phase2Result.events && Array.isArray(phase2Result.events)) {
@@ -563,9 +604,16 @@ async function simulateTagTeamBattle(
         if (currentTime < maxTime) {
           const phase3StartTime = currentTime;
           const phase3Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-          currentTime += phase3Result.durationSeconds;
+          const phase3Duration = phase3Result.durationSeconds;
+          currentTime += phase3Duration;
           team1CurrentRobot.currentHP = phase3Result.robot1FinalHP;
           team2CurrentRobot.currentHP = phase3Result.robot2FinalHP;
+          
+          // Track phase 3 damage and survival time
+          team1ReserveDamageDealt += phase3Result.robot1DamageDealt;
+          team2ReserveDamageDealt += phase3Result.robot2DamageDealt;
+          team1ReserveSurvivalTime += phase3Duration;
+          team2ReserveSurvivalTime += phase3Duration;
           
           // Collect combat events from phase 3 with timestamp offset (Requirement 7.1)
           if (phase3Result.events && Array.isArray(phase3Result.events)) {
@@ -636,9 +684,16 @@ async function simulateTagTeamBattle(
     if (currentTime < maxTime) {
       const phase2StartTime = currentTime;
       const phase2Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-      currentTime += phase2Result.durationSeconds;
+      const phase2Duration = phase2Result.durationSeconds;
+      currentTime += phase2Duration;
       team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
       team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
+      
+      // Track phase 2 damage and survival time
+      team1ActiveDamageDealt += phase2Result.robot1DamageDealt;
+      team2ReserveDamageDealt += phase2Result.robot2DamageDealt;
+      team1ActiveSurvivalTime += phase2Duration;
+      team2ReserveSurvivalTime += phase2Duration;
       
       // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
       if (phase2Result.events && Array.isArray(phase2Result.events)) {
@@ -707,9 +762,16 @@ async function simulateTagTeamBattle(
         if (currentTime < maxTime) {
           const phase3StartTime = currentTime;
           const phase3Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-          currentTime += phase3Result.durationSeconds;
+          const phase3Duration = phase3Result.durationSeconds;
+          currentTime += phase3Duration;
           team1CurrentRobot.currentHP = phase3Result.robot1FinalHP;
           team2CurrentRobot.currentHP = phase3Result.robot2FinalHP;
+          
+          // Track phase 3 damage and survival time
+          team1ReserveDamageDealt += phase3Result.robot1DamageDealt;
+          team2ReserveDamageDealt += phase3Result.robot2DamageDealt;
+          team1ReserveSurvivalTime += phase3Duration;
+          team2ReserveSurvivalTime += phase3Duration;
           
           // Collect combat events from phase 3 with timestamp offset (Requirement 7.1)
           if (phase3Result.events && Array.isArray(phase3Result.events)) {
@@ -778,10 +840,17 @@ async function simulateTagTeamBattle(
     team2ReserveFinalHP,
     team1ReserveUsed,
     team2ReserveUsed,
+    team1ActiveDamageDealt,
+    team1ReserveDamageDealt,
+    team2ActiveDamageDealt,
+    team2ReserveDamageDealt,
+    team1ActiveSurvivalTime,
+    team1ReserveSurvivalTime,
+    team2ActiveSurvivalTime,
+    team2ReserveSurvivalTime,
     battleLog: battleEvents, // Complete battle log with all events (Requirement 7.1)
   };
 }
-
 /**
  * Check if a robot should tag out
  * Requirement 3.3: Tag-out when HP ≤ yield threshold OR HP ≤ 0
@@ -906,31 +975,6 @@ export function calculateTagTeamRewards(
 }
 
 /**
- * Calculate repair costs for a robot
- * Requirements 4.4, 4.5, 4.6, 4.7
- */
-export function calculateRepairCost(
-  robot: Robot,
-  finalHP: number,
-  isDestroyed: boolean,
-  repairBayDiscount: number = 0
-): number {
-  const damageTaken = robot.maxHP - finalHP;
-  let baseCost = damageTaken * REPAIR_COST_PER_HP;
-
-  // Apply destruction multiplier if robot was destroyed
-  if (isDestroyed) {
-    baseCost *= DESTRUCTION_MULTIPLIER;
-  }
-
-  // Apply Repair Bay discount (0-100%)
-  const discountMultiplier = 1 - repairBayDiscount / 100;
-  const finalCost = Math.round(baseCost * discountMultiplier);
-
-  return Math.max(0, finalCost);
-}
-
-/**
  * Calculate expected ELO score
  */
 function calculateExpectedScore(ratingA: number, ratingB: number): number {
@@ -1011,6 +1055,7 @@ export function calculateTagTeamPrestige(
 /**
  * Calculate fame award based on contribution
  * Requirement 10.7: Fame based on damage dealt and survival time
+ * Fame is only awarded to robots on the WINNING team
  */
 export function calculateTagTeamFame(
   robot: Robot,
@@ -1020,8 +1065,9 @@ export function calculateTagTeamFame(
   isWinner: boolean,
   isDraw: boolean
 ): number {
-  if (isDraw) {
-    return 0; // No fame for draws
+  // Only winners get fame (consistent with 1v1 battles)
+  if (isDraw || !isWinner) {
+    return 0;
   }
 
   // Base fame by league
@@ -1036,6 +1082,11 @@ export function calculateTagTeamFame(
 
   let baseFame = baseFameByLeague[robot.currentLeague] || 0;
 
+  // If robot didn't participate (0 survival time), they still get base fame as part of winning team
+  if (survivalTime === 0) {
+    return baseFame;
+  }
+
   // Contribution multiplier based on damage dealt (0.5x to 1.5x)
   const damageMultiplier = Math.min(1.5, Math.max(0.5, damageDealt / 100));
 
@@ -1045,11 +1096,8 @@ export function calculateTagTeamFame(
     Math.max(0.5, survivalTime / totalBattleTime)
   );
 
-  // Winner bonus
-  const winnerMultiplier = isWinner ? 1.2 : 0.8;
-
-  const finalFame =
-    baseFame * damageMultiplier * survivalMultiplier * winnerMultiplier;
+  // Apply contribution multipliers
+  const finalFame = baseFame * damageMultiplier * survivalMultiplier;
 
   return Math.round(finalFame);
 }
@@ -1294,27 +1342,80 @@ async function updateTagTeamBattleResults(
         },
       },
     });
-    const discount = repairBay ? repairBay.level * 5 : 0;
+    const medicalBay = await prisma.facility.findUnique({
+      where: {
+        userId_facilityType: {
+          userId: realTeam.stableId,
+          facilityType: 'medical_bay',
+        },
+      },
+    });
+    const activeRobotCount = await prisma.robot.count({
+      where: {
+        userId: realTeam.stableId,
+        NOT: { name: 'Bye Robot' }
+      }
+    });
+
+    const repairBayLevel = repairBay ? repairBay.level : 0;
+    const medicalBayLevel = medicalBay ? medicalBay.level : 0;
 
     const activeFinalHP = team1IsBye ? result.team2ActiveFinalHP : result.team1ActiveFinalHP;
     const reserveFinalHP = team1IsBye ? result.team2ReserveFinalHP : result.team1ReserveFinalHP;
     const tagOutTime = team1IsBye ? result.team2TagOutTime : result.team1TagOutTime;
 
+    // Calculate repair cost for active robot using canonical function
+    const activeSumOfAllAttributes = calculateAttributeSum(realTeam.activeRobot);
+    const activeDamagePercent = ((realTeam.activeRobot.maxHP - activeFinalHP) / realTeam.activeRobot.maxHP) * 100;
+    const activeHpPercent = (activeFinalHP / realTeam.activeRobot.maxHP) * 100;
     const activeRepairCost = calculateRepairCost(
-      realTeam.activeRobot,
-      activeFinalHP,
-      activeFinalHP === 0,
-      discount
+      activeSumOfAllAttributes,
+      activeDamagePercent,
+      activeHpPercent,
+      repairBayLevel,
+      medicalBayLevel,
+      activeRobotCount
     );
+
+    // Calculate repair cost for reserve robot using canonical function
+    const reserveSumOfAllAttributes = calculateAttributeSum(realTeam.reserveRobot);
+    const reserveDamagePercent = ((realTeam.reserveRobot.maxHP - reserveFinalHP) / realTeam.reserveRobot.maxHP) * 100;
+    const reserveHpPercent = (reserveFinalHP / realTeam.reserveRobot.maxHP) * 100;
     const reserveRepairCost = calculateRepairCost(
-      realTeam.reserveRobot,
-      reserveFinalHP,
-      reserveFinalHP === 0,
-      discount
+      reserveSumOfAllAttributes,
+      reserveDamagePercent,
+      reserveHpPercent,
+      repairBayLevel,
+      medicalBayLevel,
+      activeRobotCount
     );
 
     // Calculate prestige
     const prestige = calculateTagTeamPrestige(match.tagTeamLeague, realTeamWon, isDraw);
+
+    // Calculate fame (Requirement 10.7) based on damage dealt and survival time
+    const totalBattleTime = result.durationSeconds;
+    const activeDamageDealt = team1IsBye ? result.team2ActiveDamageDealt : result.team1ActiveDamageDealt;
+    const reserveDamageDealt = team1IsBye ? result.team2ReserveDamageDealt : result.team1ReserveDamageDealt;
+    const activeSurvivalTime = team1IsBye ? result.team2ActiveSurvivalTime : result.team1ActiveSurvivalTime;
+    const reserveSurvivalTime = team1IsBye ? result.team2ReserveSurvivalTime : result.team1ReserveSurvivalTime;
+
+    const activeFame = calculateTagTeamFame(
+      realTeam.activeRobot,
+      activeDamageDealt,
+      activeSurvivalTime,
+      totalBattleTime,
+      realTeamWon,
+      isDraw
+    );
+    const reserveFame = calculateTagTeamFame(
+      realTeam.reserveRobot,
+      reserveDamageDealt,
+      reserveSurvivalTime,
+      totalBattleTime,
+      realTeamWon,
+      isDraw
+    );
 
     // Update robots
     await prisma.robot.update({
@@ -1323,6 +1424,7 @@ async function updateTagTeamBattleResults(
         elo: { increment: realTeamELOChange },
         currentHP: activeFinalHP,
         damageTaken: { increment: realTeam.activeRobot.maxHP - activeFinalHP },
+        fame: { increment: activeFame },
         totalTagTeamBattles: { increment: 1 },
         totalTagTeamWins: realTeamWon ? { increment: 1 } : undefined,
         totalTagTeamLosses: !realTeamWon && !isDraw ? { increment: 1 } : undefined,
@@ -1339,6 +1441,7 @@ async function updateTagTeamBattleResults(
         damageTaken: tagOutTime !== undefined 
           ? { increment: realTeam.reserveRobot.maxHP - reserveFinalHP }
           : undefined,
+        fame: { increment: reserveFame },
         totalTagTeamBattles: { increment: 1 },
         totalTagTeamWins: realTeamWon ? { increment: 1 } : undefined,
         totalTagTeamLosses: !realTeamWon && !isDraw ? { increment: 1 } : undefined,
@@ -1445,40 +1548,133 @@ async function updateTagTeamBattleResults(
       },
     },
   });
+  const team1MedicalBay = await prisma.facility.findUnique({
+    where: {
+      userId_facilityType: {
+        userId: team1.stableId,
+        facilityType: 'medical_bay',
+      },
+    },
+  });
+  const team2MedicalBay = await prisma.facility.findUnique({
+    where: {
+      userId_facilityType: {
+        userId: team2.stableId,
+        facilityType: 'medical_bay',
+      },
+    },
+  });
 
-  const team1Discount = team1RepairBay ? team1RepairBay.level * 5 : 0;
-  const team2Discount = team2RepairBay ? team2RepairBay.level * 5 : 0;
+  const team1ActiveRobotCount = await prisma.robot.count({
+    where: {
+      userId: team1.stableId,
+      NOT: { name: 'Bye Robot' }
+    }
+  });
+  const team2ActiveRobotCount = await prisma.robot.count({
+    where: {
+      userId: team2.stableId,
+      NOT: { name: 'Bye Robot' }
+    }
+  });
 
+  const team1RepairBayLevel = team1RepairBay ? team1RepairBay.level : 0;
+  const team2RepairBayLevel = team2RepairBay ? team2RepairBay.level : 0;
+  const team1MedicalBayLevel = team1MedicalBay ? team1MedicalBay.level : 0;
+  const team2MedicalBayLevel = team2MedicalBay ? team2MedicalBay.level : 0;
+
+  // Calculate repair cost for team1 active robot using canonical function
+  const team1ActiveSumOfAllAttributes = calculateAttributeSum(team1.activeRobot);
+  const team1ActiveDamagePercent = ((team1.activeRobot.maxHP - result.team1ActiveFinalHP) / team1.activeRobot.maxHP) * 100;
+  const team1ActiveHpPercent = (result.team1ActiveFinalHP / team1.activeRobot.maxHP) * 100;
   const team1ActiveRepairCost = calculateRepairCost(
-    team1.activeRobot,
-    result.team1ActiveFinalHP,
-    result.team1ActiveFinalHP === 0,
-    team1Discount
+    team1ActiveSumOfAllAttributes,
+    team1ActiveDamagePercent,
+    team1ActiveHpPercent,
+    team1RepairBayLevel,
+    team1MedicalBayLevel,
+    team1ActiveRobotCount
   );
+
+  // Calculate repair cost for team1 reserve robot using canonical function
+  const team1ReserveSumOfAllAttributes = calculateAttributeSum(team1.reserveRobot);
+  const team1ReserveDamagePercent = ((team1.reserveRobot.maxHP - result.team1ReserveFinalHP) / team1.reserveRobot.maxHP) * 100;
+  const team1ReserveHpPercent = (result.team1ReserveFinalHP / team1.reserveRobot.maxHP) * 100;
   const team1ReserveRepairCost = calculateRepairCost(
-    team1.reserveRobot,
-    result.team1ReserveFinalHP,
-    result.team1ReserveFinalHP === 0,
-    team1Discount
+    team1ReserveSumOfAllAttributes,
+    team1ReserveDamagePercent,
+    team1ReserveHpPercent,
+    team1RepairBayLevel,
+    team1MedicalBayLevel,
+    team1ActiveRobotCount
   );
+
+  // Calculate repair cost for team2 active robot using canonical function
+  const team2ActiveSumOfAllAttributes = calculateAttributeSum(team2.activeRobot);
+  const team2ActiveDamagePercent = ((team2.activeRobot.maxHP - result.team2ActiveFinalHP) / team2.activeRobot.maxHP) * 100;
+  const team2ActiveHpPercent = (result.team2ActiveFinalHP / team2.activeRobot.maxHP) * 100;
   const team2ActiveRepairCost = calculateRepairCost(
-    team2.activeRobot,
-    result.team2ActiveFinalHP,
-    result.team2ActiveFinalHP === 0,
-    team2Discount
+    team2ActiveSumOfAllAttributes,
+    team2ActiveDamagePercent,
+    team2ActiveHpPercent,
+    team2RepairBayLevel,
+    team2MedicalBayLevel,
+    team2ActiveRobotCount
   );
+
+  // Calculate repair cost for team2 reserve robot using canonical function
+  const team2ReserveSumOfAllAttributes = calculateAttributeSum(team2.reserveRobot);
+  const team2ReserveDamagePercent = ((team2.reserveRobot.maxHP - result.team2ReserveFinalHP) / team2.reserveRobot.maxHP) * 100;
+  const team2ReserveHpPercent = (result.team2ReserveFinalHP / team2.reserveRobot.maxHP) * 100;
   const team2ReserveRepairCost = calculateRepairCost(
-    team2.reserveRobot,
-    result.team2ReserveFinalHP,
-    result.team2ReserveFinalHP === 0,
-    team2Discount
+    team2ReserveSumOfAllAttributes,
+    team2ReserveDamagePercent,
+    team2ReserveHpPercent,
+    team2RepairBayLevel,
+    team2MedicalBayLevel,
+    team2ActiveRobotCount
   );
 
   // Calculate prestige (Requirements 10.1-10.6)
   const team1Prestige = calculateTagTeamPrestige(match.tagTeamLeague, team1Won, isDraw);
   const team2Prestige = calculateTagTeamPrestige(match.tagTeamLeague, team2Won, isDraw);
 
-  // Update robots (ELO, league points, HP, statistics)
+  // Calculate fame (Requirement 10.7) based on damage dealt and survival time
+  const totalBattleTime = result.durationSeconds;
+  const team1ActiveFame = calculateTagTeamFame(
+    team1.activeRobot,
+    result.team1ActiveDamageDealt,
+    result.team1ActiveSurvivalTime,
+    totalBattleTime,
+    team1Won,
+    isDraw
+  );
+  const team1ReserveFame = calculateTagTeamFame(
+    team1.reserveRobot,
+    result.team1ReserveDamageDealt,
+    result.team1ReserveSurvivalTime,
+    totalBattleTime,
+    team1Won,
+    isDraw
+  );
+  const team2ActiveFame = calculateTagTeamFame(
+    team2.activeRobot,
+    result.team2ActiveDamageDealt,
+    result.team2ActiveSurvivalTime,
+    totalBattleTime,
+    team2Won,
+    isDraw
+  );
+  const team2ReserveFame = calculateTagTeamFame(
+    team2.reserveRobot,
+    result.team2ReserveDamageDealt,
+    result.team2ReserveSurvivalTime,
+    totalBattleTime,
+    team2Won,
+    isDraw
+  );
+
+  // Update robots (ELO, league points, HP, statistics, fame)
   // Requirement 11.2: Apply cumulative damage
   await prisma.robot.update({
     where: { id: team1.activeRobotId },
@@ -1486,6 +1682,7 @@ async function updateTagTeamBattleResults(
       elo: { increment: eloChanges.team1Change },
       currentHP: result.team1ActiveFinalHP,
       damageTaken: { increment: team1.activeRobot.maxHP - result.team1ActiveFinalHP },
+      fame: { increment: team1ActiveFame },
       totalTagTeamBattles: { increment: 1 },
       totalTagTeamWins: team1Won ? { increment: 1 } : undefined,
       totalTagTeamLosses: team2Won ? { increment: 1 } : undefined,
@@ -1502,6 +1699,7 @@ async function updateTagTeamBattleResults(
       damageTaken: result.team1TagOutTime !== undefined 
         ? { increment: team1.reserveRobot.maxHP - result.team1ReserveFinalHP }
         : undefined,
+      fame: { increment: team1ReserveFame },
       totalTagTeamBattles: { increment: 1 },
       totalTagTeamWins: team1Won ? { increment: 1 } : undefined,
       totalTagTeamLosses: team2Won ? { increment: 1 } : undefined,
@@ -1516,6 +1714,7 @@ async function updateTagTeamBattleResults(
       elo: { increment: eloChanges.team2Change },
       currentHP: result.team2ActiveFinalHP,
       damageTaken: { increment: team2.activeRobot.maxHP - result.team2ActiveFinalHP },
+      fame: { increment: team2ActiveFame },
       totalTagTeamBattles: { increment: 1 },
       totalTagTeamWins: team2Won ? { increment: 1 } : undefined,
       totalTagTeamLosses: team1Won ? { increment: 1 } : undefined,
@@ -1532,6 +1731,7 @@ async function updateTagTeamBattleResults(
       damageTaken: result.team2TagOutTime !== undefined 
         ? { increment: team2.reserveRobot.maxHP - result.team2ReserveFinalHP }
         : undefined,
+      fame: { increment: team2ReserveFame },
       totalTagTeamBattles: { increment: 1 },
       totalTagTeamWins: team2Won ? { increment: 1 } : undefined,
       totalTagTeamLosses: team1Won ? { increment: 1 } : undefined,
@@ -1601,12 +1801,22 @@ async function updateTagTeamBattleResults(
       robot2RepairCost: team2ActiveRepairCost + team2ReserveRepairCost,
       robot1PrestigeAwarded: team1Prestige,
       robot2PrestigeAwarded: team2Prestige,
+      robot1FameAwarded: team1ActiveFame + team1ReserveFame,
+      robot2FameAwarded: team2ActiveFame + team2ReserveFame,
       robot1ELOAfter: team1.activeRobot.elo + eloChanges.team1Change,
       robot2ELOAfter: team2.activeRobot.elo + eloChanges.team2Change,
       eloChange: Math.abs(eloChanges.team1Change),
-      // Note: damage dealt is not tracked in tag team battles yet
-      robot1DamageDealt: 0,
-      robot2DamageDealt: 0,
+      robot1DamageDealt: result.team1ActiveDamageDealt + result.team1ReserveDamageDealt,
+      robot2DamageDealt: result.team2ActiveDamageDealt + result.team2ReserveDamageDealt,
+      // Per-robot stats for tag team battles
+      team1ActiveDamageDealt: result.team1ActiveDamageDealt,
+      team1ReserveDamageDealt: result.team1ReserveDamageDealt,
+      team2ActiveDamageDealt: result.team2ActiveDamageDealt,
+      team2ReserveDamageDealt: result.team2ReserveDamageDealt,
+      team1ActiveFameAwarded: team1ActiveFame,
+      team1ReserveFameAwarded: team1ReserveFame,
+      team2ActiveFameAwarded: team2ActiveFame,
+      team2ReserveFameAwarded: team2ReserveFame,
     },
   });
 
@@ -1615,4 +1825,18 @@ async function updateTagTeamBattleResults(
     `Team ${team1.id} ELO ${eloChanges.team1Change > 0 ? '+' : ''}${eloChanges.team1Change}, ` +
     `Team ${team2.id} ELO ${eloChanges.team2Change > 0 ? '+' : ''}${eloChanges.team2Change}`
   );
+  
+  // Log fame awards
+  if (team1ActiveFame > 0 || team1ReserveFame > 0) {
+    console.log(
+      `[TagTeamBattles] Fame awarded - Team ${team1.id}: ` +
+      `${team1.activeRobot.name} +${team1ActiveFame}, ${team1.reserveRobot.name} +${team1ReserveFame}`
+    );
+  }
+  if (team2ActiveFame > 0 || team2ReserveFame > 0) {
+    console.log(
+      `[TagTeamBattles] Fame awarded - Team ${team2.id}: ` +
+      `${team2.activeRobot.name} +${team2ActiveFame}, ${team2.reserveRobot.name} +${team2ReserveFame}`
+    );
+  }
 }

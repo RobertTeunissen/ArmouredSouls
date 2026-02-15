@@ -84,24 +84,31 @@ export async function validateTeam(
     errors.push(`Reserve robot not ready: ${reserveReadiness.reasons.join(', ')}`);
   }
 
-  // Check for duplicate teams (same robot pair in either order)
-  const existingTeam = await prisma.tagTeam.findFirst({
+  // Check if either robot is already in ANY team
+  const activeRobotInTeam = await prisma.tagTeam.findFirst({
     where: {
       OR: [
-        {
-          activeRobotId: activeRobotId,
-          reserveRobotId: reserveRobotId,
-        },
-        {
-          activeRobotId: reserveRobotId,
-          reserveRobotId: activeRobotId,
-        },
+        { activeRobotId: activeRobotId },
+        { reserveRobotId: activeRobotId },
       ],
     },
   });
 
-  if (existingTeam) {
-    errors.push('A team with these robots already exists');
+  if (activeRobotInTeam) {
+    errors.push(`${activeRobot!.name} is already in another tag team`);
+  }
+
+  const reserveRobotInTeam = await prisma.tagTeam.findFirst({
+    where: {
+      OR: [
+        { activeRobotId: reserveRobotId },
+        { reserveRobotId: reserveRobotId },
+      ],
+    },
+  });
+
+  if (reserveRobotInTeam) {
+    errors.push(`${reserveRobot!.name} is already in another tag team`);
   }
 
   // Requirement 1.5: Check roster limit (max teams = roster size / 2)

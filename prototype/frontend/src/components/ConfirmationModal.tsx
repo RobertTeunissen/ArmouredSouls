@@ -1,28 +1,26 @@
 import React from 'react';
 
 interface ConfirmationModalProps {
-  isOpen: boolean;
   title: string;
   message: string | React.ReactNode;
-  confirmText?: string;
-  cancelText?: string;
-  confirmButtonClass?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  isDestructive?: boolean;
+  isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
-  isOpen,
   title,
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
-  confirmButtonClass = 'bg-blue-600 hover:bg-blue-700',
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  isDestructive = false,
+  isLoading = false,
   onConfirm,
   onCancel,
 }) => {
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
@@ -51,15 +49,21 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <div className="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors font-medium"
+            disabled={isLoading}
+            className="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {cancelText}
+            {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`px-4 py-2 rounded-lg text-white transition-colors font-medium ${confirmButtonClass}`}
+            disabled={isLoading}
+            className={`px-4 py-2 rounded-lg text-white transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+              isDestructive 
+                ? 'bg-error hover:bg-error/80' 
+                : 'bg-primary hover:bg-primary-dark'
+            }`}
           >
-            {confirmText}
+            {isLoading ? 'Processing...' : confirmLabel}
           </button>
         </div>
       </div>

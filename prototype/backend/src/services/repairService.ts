@@ -81,7 +81,18 @@ export async function repairAllRobots(deductCosts: boolean = true): Promise<Repa
     
     const repairBayLevel = repairBay?.level || 0;
     const medicalBayLevel = medicalBay?.level || 0;
-    const repairBayDiscount = Math.min(repairBayLevel * 5, 50); // 5% per level, max 50%
+    
+    // Query active robot count for multi-robot discount (exclude "Bye Robot")
+    const activeRobotCount = await prisma.robot.count({
+      where: {
+        userId,
+        NOT: { name: 'Bye Robot' }
+      }
+    });
+    
+    // Calculate discount using new formula: repairBayLevel × (5 + activeRobotCount), capped at 90%
+    const rawDiscount = repairBayLevel * (5 + activeRobotCount);
+    const repairBayDiscount = Math.min(rawDiscount, 90);
 
     let userBaseCost = 0;
     let userFinalCost = 0;
@@ -103,7 +114,8 @@ export async function repairAllRobots(deductCosts: boolean = true): Promise<Repa
         damagePercent,
         hpPercent,
         repairBayLevel,
-        medicalBayLevel
+        medicalBayLevel,
+        activeRobotCount
       );
       
       // Calculate base cost (without discounts) for reporting

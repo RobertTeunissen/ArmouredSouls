@@ -314,8 +314,19 @@ model Battle {
   robot2Destroyed   Boolean @default(false) @map("robot2_destroyed") // Did robot 2 reach 0 HP?
 
   // ===== DAMAGE TRACKING =====
-  robot1DamageDealt Int @map("robot1_damage_dealt") // Total damage dealt by robot 1
-  robot2DamageDealt Int @map("robot2_damage_dealt") // Total damage dealt by robot 2
+  robot1DamageDealt Int @map("robot1_damage_dealt") // Total damage dealt by robot 1 (or team 1 total for tag team)
+  robot2DamageDealt Int @map("robot2_damage_dealt") // Total damage dealt by robot 2 (or team 2 total for tag team)
+
+  // ===== TAG TEAM PER-ROBOT STATS =====
+  // Individual robot contributions for tag team battles (0 for non-tag-team battles)
+  team1ActiveDamageDealt   Int @default(0) @map("team1_active_damage_dealt")
+  team1ReserveDamageDealt  Int @default(0) @map("team1_reserve_damage_dealt")
+  team2ActiveDamageDealt   Int @default(0) @map("team2_active_damage_dealt")
+  team2ReserveDamageDealt  Int @default(0) @map("team2_reserve_damage_dealt")
+  team1ActiveFameAwarded   Int @default(0) @map("team1_active_fame_awarded")
+  team1ReserveFameAwarded  Int @default(0) @map("team1_reserve_fame_awarded")
+  team2ActiveFameAwarded   Int @default(0) @map("team2_active_fame_awarded")
+  team2ReserveFameAwarded  Int @default(0) @map("team2_reserve_fame_awarded")
 
   // ===== ELO TRACKING =====
   robot1ELOBefore Int @map("robot1_elo_before") // ELO before battle

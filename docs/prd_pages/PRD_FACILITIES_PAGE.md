@@ -1199,9 +1199,19 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Type**: `repair_bay`
 - **Max Level**: 10
 - **Cost Range**: ₡200K - ₡3M (total: ₡12.7M)
-- **Benefits**: 10% - 55% discount on repair costs + automatic minor repairs at max level
-- **Strategic Value**: Important - Critical for managing battle damage repair costs
-- **Implementation Status**: Fully implemented, discount applies to robot repair costs after battles
+- **Benefits**: Multi-robot discount on repair costs (formula: Level × (5 + Active Robots), capped at 90%)
+  - **Single Robot**: 5%-50% discount (Level 1-10)
+  - **Multiple Robots**: Discount increases with roster size
+  - **Examples**:
+    - Level 1 + 4 robots = 9% discount
+    - Level 5 + 7 robots = 60% discount
+    - Level 6 + 10 robots = 90% discount (cap reached)
+  - **⚠️ 90% Cap Warning**: Further investment provides no additional benefit once cap is reached
+    - With 10 robots: Stop at Level 6 (saves ₡4.5M on Levels 7-10)
+    - With 9 robots: Stop at Level 7 (saves ₡3M on Levels 8-10)
+    - With 8 robots: Stop at Level 8 (saves ₡1.5M on Levels 9-10)
+- **Strategic Value**: Important - Critical for managing battle damage repair costs, especially valuable with multiple robots
+- **Implementation Status**: Fully implemented with multi-robot discount formula, discount applies to robot repair costs after battles
 
 #### Income Generator (✅ Implemented)
 - **Type**: `income_generator`

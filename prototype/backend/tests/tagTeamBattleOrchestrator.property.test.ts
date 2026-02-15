@@ -14,6 +14,7 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     name: `Test Robot ${Math.random()}`,
     frameId: 1,
     paintJob: null,
+    imageUrl: null,
     // Combat Systems
     combatPower: new Prisma.Decimal(10),
     targetingSystems: new Prisma.Decimal(10),

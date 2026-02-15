@@ -11,7 +11,6 @@ import {
   calculateMerchandisingIncome,
   getStreamingBaseRate,
   calculateStreamingIncome,
-  calculateRepairCostWithDiscounts,
   calculateFinancialHealth,
   getLeagueBaseReward,
   getParticipationReward,
@@ -125,50 +124,6 @@ describe('Economy Calculations', () => {
       // fame_mult = 1 + (2500/5000) = 1.5
       // result = 3000 * 1.5 * 1.5 = 6750
       expect(calculateStreamingIncome(3, 500, 2500)).toBe(6750);
-    });
-  });
-
-  describe('Repair Costs', () => {
-    it('should calculate base repair cost without discounts', () => {
-      // Sum of attributes: 230, damage: 50%, HP > 10%
-      // Base: 230 * 100 = 23000
-      // Cost: 23000 * 0.5 * 1.0 = 11500
-      expect(calculateRepairCostWithDiscounts(230, 50, 50, 0, 0)).toBe(11500);
-    });
-
-    it('should apply Repair Bay discount', () => {
-      // Base: 23000 * 0.5 * 1.0 = 11500
-      // With 5% discount (level 1): 11500 * 0.95 = 10925
-      expect(calculateRepairCostWithDiscounts(230, 50, 50, 1, 0)).toBe(10925);
-      
-      // With 25% discount (level 5): 11500 * 0.75 = 8625
-      expect(calculateRepairCostWithDiscounts(230, 50, 50, 5, 0)).toBe(8625);
-    });
-
-    it('should apply critical damage multiplier (HP = 0)', () => {
-      // Base: 230 * 100 = 23000
-      // Critical multiplier: 2.0
-      // Cost: 23000 * 1.0 * 2.0 = 46000
-      expect(calculateRepairCostWithDiscounts(230, 100, 0, 0, 0)).toBe(46000);
-    });
-
-    it('should reduce critical damage multiplier with Medical Bay', () => {
-      // Base: 230 * 100 = 23000
-      // Critical multiplier with Medical Bay 3: 2.0 * (1 - 0.3) = 1.4
-      // Cost: 23000 * 1.0 * 1.4 = 32200
-      expect(calculateRepairCostWithDiscounts(230, 100, 0, 0, 3)).toBe(32200);
-      
-      // Medical Bay 10: 2.0 * (1 - 1.0) = 0.0 -> eliminates penalty
-      // Cost: 23000 * 1.0 * 0.0 = 0
-      expect(calculateRepairCostWithDiscounts(230, 100, 0, 0, 10)).toBe(0);
-    });
-
-    it('should combine Repair Bay and Medical Bay discounts', () => {
-      // Base: 230 * 100 = 23000
-      // Critical multiplier with Medical Bay 3: 2.0 * (1 - 0.3) = 1.4
-      // Before discount: 23000 * 1.0 * 1.4 = 32200
-      // With Repair Bay 5 (25% discount): 32200 * 0.75 = 24150
-      expect(calculateRepairCostWithDiscounts(230, 100, 0, 5, 3)).toBe(24150);
     });
   });
 

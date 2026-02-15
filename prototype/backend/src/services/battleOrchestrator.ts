@@ -8,6 +8,7 @@ import {
   calculateBattleWinnings,
   getPrestigeMultiplier,
 } from '../utils/economyCalculations';
+import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 
 // ELO calculation constant
 const ELO_K_FACTOR = 32;
@@ -24,9 +25,6 @@ const BYE_BATTLE_DAMAGE_PERCENT = 0.08; // Bye battles: 8% HP loss
 const MIN_BATTLE_DURATION = 20; // Minimum battle duration in seconds
 const BATTLE_DURATION_VARIANCE = 25; // Random variance added to duration
 const BYE_BATTLE_DURATION = 15; // Fixed duration for bye battles
-
-// Economic constants
-const REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
 
 // Bye-robot identifier
 const BYE_ROBOT_NAME = 'Bye Robot';
@@ -242,6 +240,53 @@ async function createBattleRecord(
   const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId } });
   const robot2User = await prisma.user.findUnique({ where: { id: robot2.userId } });
   
+  // Query facility levels and robot count for repair cost calculation
+  const robot1Facilities = await prisma.facility.findMany({
+    where: { userId: robot1.userId, facilityType: { in: ['Repair Bay', 'Medical Bay'] } }
+  });
+  const robot2Facilities = await prisma.facility.findMany({
+    where: { userId: robot2.userId, facilityType: { in: ['Repair Bay', 'Medical Bay'] } }
+  });
+  
+  const robot1RepairBayLevel = robot1Facilities.find(f => f.facilityType === 'Repair Bay')?.level || 0;
+  const robot1MedicalBayLevel = robot1Facilities.find(f => f.facilityType === 'Medical Bay')?.level || 0;
+  const robot2RepairBayLevel = robot2Facilities.find(f => f.facilityType === 'Repair Bay')?.level || 0;
+  const robot2MedicalBayLevel = robot2Facilities.find(f => f.facilityType === 'Medical Bay')?.level || 0;
+  
+  const robot1ActiveRobotCount = await prisma.robot.count({
+    where: { userId: robot1.userId, NOT: { name: 'Bye Robot' } }
+  });
+  const robot2ActiveRobotCount = await prisma.robot.count({
+    where: { userId: robot2.userId, NOT: { name: 'Bye Robot' } }
+  });
+  
+  // Calculate repair costs using canonical function
+  const robot1SumOfAttributes = calculateAttributeSum(robot1);
+  const robot2SumOfAttributes = calculateAttributeSum(robot2);
+  
+  const robot1DamagePercent = (result.robot1Damage / robot1.maxHP) * 100;
+  const robot1HPPercent = (result.robot1FinalHP / robot1.maxHP) * 100;
+  const robot2DamagePercent = (result.robot2Damage / robot2.maxHP) * 100;
+  const robot2HPPercent = (result.robot2FinalHP / robot2.maxHP) * 100;
+  
+  const robot1RepairCost = calculateRepairCost(
+    robot1SumOfAttributes,
+    robot1DamagePercent,
+    robot1HPPercent,
+    robot1RepairBayLevel,
+    robot1MedicalBayLevel,
+    robot1ActiveRobotCount
+  );
+  
+  const robot2RepairCost = calculateRepairCost(
+    robot2SumOfAttributes,
+    robot2DamagePercent,
+    robot2HPPercent,
+    robot2RepairBayLevel,
+    robot2MedicalBayLevel,
+    robot2ActiveRobotCount
+  );
+  
   // Winner gets midpoint of league range + participation reward, with prestige bonus
   // Loser gets only participation reward
   let robot1Reward = participationReward;
@@ -371,8 +416,8 @@ async function createBattleRecord(
       // Economic data
       winnerReward: isRobot1Winner ? robot1Reward : robot2Reward,
       loserReward: isRobot1Winner ? robot2Reward : robot1Reward,
-      robot1RepairCost: Math.floor(result.robot1Damage * REPAIR_COST_PER_HP),
-      robot2RepairCost: Math.floor(result.robot2Damage * REPAIR_COST_PER_HP),
+      robot1RepairCost,
+      robot2RepairCost,
       
       // Final state
       robot1FinalHP: result.robot1FinalHP,

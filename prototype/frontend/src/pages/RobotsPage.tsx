@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import RobotImage from '../components/RobotImage';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 interface Robot {
   id: number;
@@ -148,6 +149,8 @@ function RobotsPage() {
   const [error, setError] = useState('');
   const [repairBayLevel, setRepairBayLevel] = useState(0);
   const [rosterLevel, setRosterLevel] = useState(0);
+  const [showRepairConfirmation, setShowRepairConfirmation] = useState(false);
+  const [repairCostInfo, setRepairCostInfo] = useState({ discountedCost: 0, discount: 0 });
   const { logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -256,7 +259,9 @@ function RobotsPage() {
       return sum;
     }, 0);
     
-    const discount = repairBayLevel * 5; // 5% per level
+    // New formula: discount = repairBayLevel × (5 + activeRobotCount), capped at 90%
+    const activeRobotCount = robots.filter(r => r.name !== 'Bye Robot').length;
+    const discount = Math.min(90, repairBayLevel * (5 + activeRobotCount));
     const discountedCost = Math.floor(totalBaseCost * (1 - discount / 100));
     
     // Debug logging
@@ -268,6 +273,7 @@ function RobotsPage() {
     
     console.log('Repair cost calculation:', {
       robotCount: robots.length,
+      activeRobotCount,
       robotsNeedingRepair: robotsNeedingRepair.length,
       robotsWithRepairCost: robots.filter(r => (r.repairCost || 0) > 0).length,
       robotsWithHPDamage: robots.filter(r => r.currentHP < r.maxHP).length,
@@ -288,9 +294,13 @@ function RobotsPage() {
       return;
     }
 
-    if (!confirm(`Repair all robots for ₡${discountedCost.toLocaleString()}${discount > 0 ? ` (${discount}% off)` : ''}?`)) {
-      return;
-    }
+    // Store cost info and show confirmation modal
+    setRepairCostInfo({ discountedCost, discount });
+    setShowRepairConfirmation(true);
+  };
+
+  const confirmRepairAll = async () => {
+    const { discountedCost } = repairCostInfo;
 
     try {
       const token = localStorage.getItem('token');
@@ -312,17 +322,19 @@ function RobotsPage() {
 
       if (!response.ok) {
         alert(`Repair failed: ${data.error}`);
+        setShowRepairConfirmation(false);
         return;
       }
 
-      // Show success message
-      alert(data.message);
+      // Close modal and refresh
+      setShowRepairConfirmation(false);
       
       // Refresh robots list to show updated status and user credits
       await Promise.all([fetchRobots(), refreshUser()]);
     } catch (err) {
       console.error('Repair all error:', err);
       alert('Failed to repair robots. Please try again.');
+      setShowRepairConfirmation(false);
     }
   };
 
@@ -514,6 +526,38 @@ function RobotsPage() {
           </div>
         )}
       </div>
+
+      {/* Repair Confirmation Modal */}
+      {showRepairConfirmation && (
+        <ConfirmationModal
+          title="Confirm Repair"
+          message={
+            <div>
+              <p className="mb-2">
+                Are you sure you want to repair all robots?
+              </p>
+              <div className="bg-gray-700 p-3 rounded mt-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Total Cost:</span>
+                  <span className="text-xl font-bold text-green-400">
+                    ₡{repairCostInfo.discountedCost.toLocaleString()}
+                  </span>
+                </div>
+                {repairCostInfo.discount > 0 && (
+                  <div className="flex justify-between items-center mt-1 text-sm">
+                    <span className="text-gray-500">Repair Bay Discount:</span>
+                    <span className="text-blue-400">{repairCostInfo.discount}% off</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          }
+          confirmLabel="Repair All"
+          cancelLabel="Cancel"
+          onConfirm={confirmRepairAll}
+          onCancel={() => setShowRepairConfirmation(false)}
+        />
+      )}
     </div>
   );
 }

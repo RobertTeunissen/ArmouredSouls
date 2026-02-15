@@ -232,7 +232,7 @@ function FacilitiesPage() {
                             <div className="mb-4 p-3 bg-gray-700 rounded">
                               <div className="text-sm text-gray-400 mb-1">Current Benefit:</div>
                               <div className="text-green-400">
-                                {facility.benefits[facility.currentLevel - 1]}
+                                {facility.currentBenefit || facility.benefits[facility.currentLevel - 1]}
                               </div>
                             </div>
                           )}
@@ -242,7 +242,7 @@ function FacilitiesPage() {
                               <div className="mb-4 p-3 bg-gray-700/50 rounded border border-gray-600">
                                 <div className="text-sm text-gray-400 mb-1">Next Level Benefit:</div>
                                 <div className="text-blue-400">
-                                  {facility.benefits[facility.currentLevel]}
+                                  {facility.nextBenefit || facility.benefits[facility.currentLevel]}
                                 </div>
                               </div>
 

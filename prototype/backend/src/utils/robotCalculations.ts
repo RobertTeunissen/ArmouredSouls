@@ -238,16 +238,18 @@ export function isValidYieldThreshold(threshold: number): boolean {
 }
 
 /**
- * Calculate repair cost based on damage, HP, Repair Bay level, and Medical Bay level
+ * Calculate repair cost based on damage, HP, Repair Bay level, Medical Bay level, and active robot count
  * Formula: baseRepairCost × (damagePercent / 100) × multiplier × (1 - repairBayDiscount)
  * Medical Bay reduces critical damage multiplier (HP = 0)
+ * Multi-robot discount: repairBayLevel × (5 + activeRobotCount), capped at 90%
  */
 export function calculateRepairCost(
   sumOfAllAttributes: number,
   damagePercent: number,
   hpPercent: number,
   repairBayLevel: number = 0,
-  medicalBayLevel: number = 0
+  medicalBayLevel: number = 0,
+  activeRobotCount: number = 0
 ): number {
   const baseRepairCost = sumOfAllAttributes * 100;
   
@@ -269,8 +271,10 @@ export function calculateRepairCost(
   // Calculate raw cost
   const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
   
-  // Apply Repair Bay discount (5% per level, max 50% at level 10)
-  const repairBayDiscount = Math.min(repairBayLevel * 5, 50) / 100;
+  // Apply Repair Bay discount with multi-robot bonus
+  // Formula: repairBayLevel × (5 + activeRobotCount), capped at 90%
+  const rawDiscount = repairBayLevel * (5 + activeRobotCount);
+  const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
   const finalCost = rawCost * (1 - repairBayDiscount);
   
   return Math.round(finalCost);

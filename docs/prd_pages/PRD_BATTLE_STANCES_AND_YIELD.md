@@ -154,8 +154,9 @@ Acceptance Criteria:
 - Visual indicator shows risk level (green/yellow/red) for threshold
 - Tooltip explains 2.0x multiplier for total destruction
 - Calculator factors in my robot's total attribute points
-- Calculator applies Repair Bay discount if facility is upgraded (5% per level)
+- Calculator applies Repair Bay multi-robot discount if facility is upgraded (Level × (5 + Active Robots), capped at 90%)
 - Display shows both base cost and discounted cost when Repair Bay is active
+- Display shows how discount increases with robot count
 - Clear explanation that yielding prevents destruction multiplier
 ```
 
@@ -271,7 +272,7 @@ Calculate estimated repair costs for different HP scenarios based on yield thres
 baseRepairCost = sumOfAllAttributes * 100
 
 // Scenario calculations
-function calculateRepairCost(damagePercent, hpPercent, repairBayLevel = 0) {
+function calculateRepairCost(damagePercent, hpPercent, repairBayLevel = 0, activeRobotCount = 0) {
   let multiplier = 1.0;
   
   if (hpPercent === 0) {
@@ -285,25 +286,26 @@ function calculateRepairCost(damagePercent, hpPercent, repairBayLevel = 0) {
   // Calculate base repair cost
   const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
   
-  // Apply Repair Bay discount (5% per level, max 50% at level 10)
-  const repairBayDiscount = Math.min(repairBayLevel * 5, 50) / 100;
+  // Apply Repair Bay multi-robot discount (capped at 90%)
+  const rawDiscount = repairBayLevel * (5 + activeRobotCount);
+  const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
   const finalCost = rawCost * (1 - repairBayDiscount);
   
   return finalCost;
 }
 
-// Examples for display (assuming no Repair Bay)
+// Examples for display (single robot, no Repair Bay)
 - At 100% damage (destroyed): baseRepairCost × 1.0 × 2.0
 - At 95% damage (5% HP): baseRepairCost × 0.95 × 1.5
 - At 85% damage (15% HP): baseRepairCost × 0.85 × 1.0
 - At 60% damage (40% HP): baseRepairCost × 0.60 × 1.0
 
-// Examples with Repair Bay Level 5 (25% discount)
-- At 100% damage (destroyed): baseRepairCost × 1.0 × 2.0 × 0.75 = ₡34,500 (vs ₡46,000)
-- At 85% damage (15% HP): baseRepairCost × 0.85 × 1.0 × 0.75 = ₡14,662 (vs ₡19,550)
+// Examples with Repair Bay Level 5 + 7 robots (60% discount)
+- At 100% damage (destroyed): baseRepairCost × 1.0 × 2.0 × 0.40 = ₡18,400 (vs ₡46,000)
+- At 85% damage (15% HP): baseRepairCost × 0.85 × 1.0 × 0.40 = ₡7,820 (vs ₡19,550)
 ```
 
-**Note**: The Repair Bay discount is applied AFTER the damage and destruction multipliers are calculated. This means the discount reduces the final repair bill, making it valuable for all damage scenarios.
+**Note**: The Repair Bay discount is applied AFTER the damage and destruction multipliers are calculated. The multi-robot discount formula (Level × (5 + Active Robots), capped at 90%) makes the Repair Bay significantly more valuable for players with multiple robots.
 
 ### FR-5: Default Values
 
@@ -1306,7 +1308,7 @@ For Phase 1, analytics events will be logged but not displayed to players. The d
 
 **Repair Cost Multiplier:** A penalty multiplier applied to repair costs when a robot is destroyed (2.0x) or heavily damaged <10% HP (1.5x).
 
-**Repair Bay:** A stable facility that provides repair cost discounts. Discount formula: Level × 5% (max 50% at Level 10). The discount applies after damage and destruction multipliers are calculated.
+**Repair Bay:** A stable facility that provides repair cost discounts. Discount formula: Level × (5 + Active Robot Count), capped at 90%. The discount applies after damage and destruction multipliers are calculated. With multiple robots, the discount becomes significantly more valuable.
 
 **Logic Cores:** A robot attribute that reduces penalties when HP is low, making robots more effective under pressure.
 
@@ -1347,8 +1349,9 @@ else:
 
 rawCost = baseRepairCost × (damagePercent / 100) × multiplier
 
-// Apply Repair Bay discount
-repairBayDiscount = Math.min(repairBayLevel × 5, 50) / 100
+// Apply Repair Bay multi-robot discount
+rawDiscount = repairBayLevel × (5 + activeRobotCount)
+repairBayDiscount = Math.min(rawDiscount, 90) / 100  // Cap at 90%
 finalRepairCost = rawCost × (1 - repairBayDiscount)
 ```
 
@@ -1365,25 +1368,25 @@ finalRepairCost = rawCost × (1 - repairBayDiscount)
 | Heavily Damaged (5%)  | 95%      | 5%   | 1.5x       | ₡23,000   | ₡32,775    |
 | Total Destruction     | 100%     | 0%   | 2.0x       | ₡23,000   | ₡46,000    |
 
-**With Repair Bay Level 5 (25% discount):**
+**With Repair Bay Level 5 + 7 robots (60% discount):**
 
 | Scenario              | Damage % | HP % | Multiplier | Raw Cost  | Discount | Final Cost |
 |-----------------------|----------|------|------------|-----------|----------|------------|
-| Victory               | 60%      | 40%  | 1.0x       | ₡13,800   | -25%     | ₡10,350    |
-| Yield at 15%          | 85%      | 15%  | 1.0x       | ₡19,550   | -25%     | ₡14,663    |
-| Heavily Damaged (5%)  | 95%      | 5%   | 1.5x       | ₡32,775   | -25%     | ₡24,581    |
-| Total Destruction     | 100%     | 0%   | 2.0x       | ₡46,000   | -25%     | ₡34,500    |
+| Victory               | 60%      | 40%  | 1.0x       | ₡13,800   | -60%     | ₡5,520     |
+| Yield at 15%          | 85%      | 15%  | 1.0x       | ₡19,550   | -60%     | ₡7,820     |
+| Heavily Damaged (5%)  | 95%      | 5%   | 1.5x       | ₡32,775   | -60%     | ₡13,110    |
+| Total Destruction     | 100%     | 0%   | 2.0x       | ₡46,000   | -60%     | ₡18,400    |
 
-**With Repair Bay Level 10 (50% discount - maximum):**
+**With Repair Bay Level 6 + 10 robots (90% discount - maximum):**
 
 | Scenario              | Damage % | HP % | Multiplier | Raw Cost  | Discount | Final Cost |
 |-----------------------|----------|------|------------|-----------|----------|------------|
-| Victory               | 60%      | 40%  | 1.0x       | ₡13,800   | -50%     | ₡6,900     |
-| Yield at 15%          | 85%      | 15%  | 1.0x       | ₡19,550   | -50%     | ₡9,775     |
-| Heavily Damaged (5%)  | 95%      | 5%   | 1.5x       | ₡32,775   | -50%     | ₡16,388    |
-| Total Destruction     | 100%     | 0%   | 2.0x       | ₡46,000   | -50%     | ₡23,000    |
+| Victory               | 60%      | 40%  | 1.0x       | ₡13,800   | -90%     | ₡1,380     |
+| Yield at 15%          | 85%      | 15%  | 1.0x       | ₡19,550   | -90%     | ₡1,955     |
+| Heavily Damaged (5%)  | 95%      | 5%   | 1.5x       | ₡32,775   | -90%     | ₡3,278     |
+| Total Destruction     | 100%     | 0%   | 2.0x       | ₡46,000   | -90%     | ₡4,600     |
 
-**Key Takeaway:** Repair Bay discount applies AFTER damage and destruction multipliers, making it valuable for all scenarios. Higher Repair Bay levels provide significant cost savings, especially for frequent battles or high-damage scenarios.
+**Key Takeaway:** Repair Bay multi-robot discount applies AFTER damage and destruction multipliers, making it exceptionally valuable for all scenarios. With a large roster (7-10 robots), repair costs become minimal even for total destruction. The 90% discount cap is reached with Level 6 Repair Bay + 10 robots.
 
 ---
 

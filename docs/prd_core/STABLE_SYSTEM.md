@@ -87,18 +87,30 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 
 **1. Repair Bay** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
 - **Level 0**: No discount
-- **Level 1** (₡200,000): 5% discount on repair costs
-- **Level 2** (₡400,000): 10% discount on repair costs
-- **Level 3** (₡600,000): 15% discount on repair costs
-- **Level 4** (₡800,000, requires 1,000 prestige): 20% discount on repair costs
-- **Level 5** (₡1,000,000): 25% discount on repair costs
-- **Level 6** (₡1,200,000): 30% discount on repair costs
-- **Level 7** (₡1,500,000, requires 5,000 prestige): 35% discount on repair costs
-- **Level 8** (₡2,000,000): 40% discount on repair costs
-- **Level 9** (₡2,500,000, requires 10,000 prestige): 45% discount on repair costs
-- **Level 10** (₡3,000,000): 50% discount on repair costs, automatic minor repairs
+- **Level 1** (₡200,000): 9% discount on repair costs (1 robot)
+- **Level 2** (₡400,000): 14% discount on repair costs (1 robot)
+- **Level 3** (₡600,000): 21% discount on repair costs (1 robot)
+- **Level 4** (₡800,000, requires 1,000 prestige): 28% discount on repair costs (1 robot)
+- **Level 5** (₡1,000,000): 35% discount on repair costs (1 robot)
+- **Level 6** (₡1,200,000): 42% discount on repair costs (1 robot)
+- **Level 7** (₡1,500,000, requires 5,000 prestige): 49% discount on repair costs (1 robot)
+- **Level 8** (₡2,000,000): 56% discount on repair costs (1 robot)
+- **Level 9** (₡2,500,000, requires 10,000 prestige): 63% discount on repair costs (1 robot)
+- **Level 10** (₡3,000,000): 70% discount on repair costs (1 robot), automatic minor repairs
 
-**Discount Formula**: Discount % = Repair Bay Level × 5
+**Discount Formula**: Discount % = Repair Bay Level × (5 + Active Robot Count), capped at 90%
+
+**Multi-Robot Discount Examples**:
+- Level 1 + 4 robots: 1 × (5 + 4) = 9% discount
+- Level 3 + 2 robots: 3 × (5 + 2) = 21% discount
+- Level 5 + 7 robots: 5 × (5 + 7) = 60% discount
+- Level 6 + 10 robots: 6 × (5 + 10) = 90% discount (capped)
+- Level 10 + 10 robots: 10 × (5 + 10) = 150% → 90% discount (capped)
+
+**⚠️ 90% Discount Cap**: Once you reach 90% discount, further Repair Bay or Roster Expansion investment provides no additional repair cost benefit. Plan your investments accordingly:
+- With 10 robots: Level 6 Repair Bay reaches the 90% cap
+- With 5 robots: Level 10 Repair Bay reaches the 75% discount (15 × 5 = 75%)
+- Maximum benefit requires both high Repair Bay level AND large robot roster
 
 **2. Training Facility** (Operating Cost: ₡1,500/day at Level 1, +₡750/day per level)
 - **Level 1** (₡300,000): 5% discount on attribute upgrade costs
@@ -502,7 +514,7 @@ CURRENT BALANCE:           ₡1,847,000
 ### Early Game (₡3M starting budget)
 1. Build 1 robot with basic weapon (₡500K + ₡150K = ₡650K)
 2. Upgrade key attributes (₡300K)
-3. Save for Repair Bay Level 1 (₡200K) - reduces long-term costs
+3. Save for Repair Bay Level 1 (₡200K) - provides 9% discount with 4 robots
 4. Focus on battles to earn Credits and prestige
 5. Remaining: ~₡850K for additional upgrades or second robot
 
@@ -510,6 +522,13 @@ CURRENT BALANCE:           ₡1,847,000
 - Build 2 robots (₡1M) with cheap weapons (₡200K total)
 - Leaves ₡800K for initial upgrades and facility
 - Riskier but allows testing different builds
+- **Multi-Robot Benefit**: With 2 robots, Repair Bay Level 1 provides 7% discount (1 × (5 + 2))
+
+**Repair Bay ROI with Multiple Robots**:
+- **Single Robot**: Level 1 provides 5% discount (1 × (5 + 0)) - long payback period
+- **Two Robots**: Level 1 provides 7% discount (1 × (5 + 2)) - faster payback
+- **Four Robots**: Level 1 provides 9% discount (1 × (5 + 4)) - significantly faster payback
+- **Recommendation**: Repair Bay investment becomes more valuable as you expand your roster
 
 ### Mid Game (₡5M+ total earned)
 1. Upgrade key facilities (Repair Bay, Training Facility to Level 3-4)
@@ -519,6 +538,11 @@ CURRENT BALANCE:           ₡1,847,000
 5. Invest in better weapons (₡300K-₡400K range)
 6. Participate in Silver/Gold tournaments
 
+**Multi-Robot Discount Strategy**:
+- With 3-4 robots, Repair Bay Level 3 provides 24-27% discount
+- Combined with Roster Expansion, repair costs become much more manageable
+- Each additional robot increases the discount from all Repair Bay levels
+
 ### Late Game (₡20M+ total earned)
 1. Max out critical facilities (Repair Bay, Medical Bay, all 4 Training Academies)
 2. Build specialized arena teams
@@ -526,6 +550,12 @@ CURRENT BALANCE:           ₡1,847,000
 4. Compete in high-tier tournaments (Diamond/Champion)
 5. Build legendary custom weapons
 6. Optimize daily income streams (Income Generator Level 10)
+
+**Optimal Multi-Robot Configuration**:
+- **10 robots + Repair Bay Level 6**: Reaches 90% discount cap (6 × (5 + 10) = 90%)
+- **10 robots + Repair Bay Level 10**: Still 90% discount (capped) - no additional benefit
+- **5 robots + Repair Bay Level 10**: 75% discount (10 × (5 + 5) = 75%)
+- **Strategic Insight**: Balance Repair Bay upgrades with Roster Expansion for maximum efficiency
 
 ---
 

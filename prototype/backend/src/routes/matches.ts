@@ -678,11 +678,15 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
             id: team1Active.id,
             name: team1Active.name,
             owner: team1Active.user.username,
+            damageDealt: battleData.team1ActiveDamageDealt,
+            fameAwarded: battleData.team1ActiveFameAwarded,
           } : null,
           reserveRobot: team1Reserve ? {
             id: team1Reserve.id,
             name: team1Reserve.name,
             owner: team1Reserve.user.username,
+            damageDealt: battleData.team1ReserveDamageDealt,
+            fameAwarded: battleData.team1ReserveFameAwarded,
           } : null,
           tagOutTime: battleData.team1TagOutTime, // Already converted to seconds
         },
@@ -693,19 +697,23 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
             id: team2Active.id,
             name: team2Active.name,
             owner: team2Active.user.username,
+            damageDealt: battleData.team2ActiveDamageDealt,
+            fameAwarded: battleData.team2ActiveFameAwarded,
           } : null,
           reserveRobot: team2Reserve ? {
             id: team2Reserve.id,
             name: team2Reserve.name,
             owner: team2Reserve.user.username,
+            damageDealt: battleData.team2ReserveDamageDealt,
+            fameAwarded: battleData.team2ReserveFameAwarded,
           } : null,
           tagOutTime: battleData.team2TagOutTime, // Already converted to seconds
         },
       };
     }
 
-    // Add standard robot fields (for 1v1 and tournament battles, or as fallback)
-    // For tag team battles, determine rewards based on team winner
+    // Add standard robot fields (for 1v1 and tournament battles)
+    // For tag team battles, these represent team-level aggregates
     let robot1IsWinner = false;
     let robot2IsWinner = false;
     
@@ -714,36 +722,52 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       const team2Id = baseResponse.tagTeam.team2.teamId;
       robot1IsWinner = battleData.winnerId === team1Id;
       robot2IsWinner = battleData.winnerId === team2Id;
+      
+      // For tag team battles, provide team-level summary (not per-robot)
+      baseResponse.team1Summary = {
+        reward: robot1IsWinner ? battleData.winnerReward : battleData.loserReward,
+        prestige: battleData.robot1PrestigeAwarded,
+        totalDamage: battleData.robot1DamageDealt,
+        totalFame: battleData.robot1FameAwarded,
+      };
+      
+      baseResponse.team2Summary = {
+        reward: robot2IsWinner ? battleData.winnerReward : battleData.loserReward,
+        prestige: battleData.robot2PrestigeAwarded,
+        totalDamage: battleData.robot2DamageDealt,
+        totalFame: battleData.robot2FameAwarded,
+      };
     } else {
+      // For 1v1 and tournament battles, provide robot-level details
       robot1IsWinner = battleData.winnerId === battleData.robot1Id;
       robot2IsWinner = battleData.winnerId === battleData.robot2Id;
+      
+      baseResponse.robot1 = {
+        id: battleData.robot1.id,
+        name: battleData.robot1.name,
+        owner: battleData.robot1.user.username,
+        eloBefore: battleData.robot1ELOBefore,
+        eloAfter: battleData.robot1ELOAfter,
+        finalHP: battleData.robot1FinalHP,
+        damageDealt: battleData.robot1DamageDealt,
+        reward: robot1IsWinner ? battleData.winnerReward : battleData.loserReward,
+        prestige: battleData.robot1PrestigeAwarded,
+        fame: battleData.robot1FameAwarded,
+      };
+
+      baseResponse.robot2 = {
+        id: battleData.robot2.id,
+        name: battleData.robot2.name,
+        owner: battleData.robot2.user.username,
+        eloBefore: battleData.robot2ELOBefore,
+        eloAfter: battleData.robot2ELOAfter,
+        finalHP: battleData.robot2FinalHP,
+        damageDealt: battleData.robot2DamageDealt,
+        reward: robot2IsWinner ? battleData.winnerReward : battleData.loserReward,
+        prestige: battleData.robot2PrestigeAwarded,
+        fame: battleData.robot2FameAwarded,
+      };
     }
-
-    baseResponse.robot1 = {
-      id: battleData.robot1.id,
-      name: battleData.robot1.name,
-      owner: battleData.robot1.user.username,
-      eloBefore: battleData.robot1ELOBefore,
-      eloAfter: battleData.robot1ELOAfter,
-      finalHP: battleData.robot1FinalHP,
-      damageDealt: battleData.robot1DamageDealt,
-      reward: robot1IsWinner ? battleData.winnerReward : battleData.loserReward,
-      prestige: battleData.robot1PrestigeAwarded,
-      fame: battleData.robot1FameAwarded,
-    };
-
-    baseResponse.robot2 = {
-      id: battleData.robot2.id,
-      name: battleData.robot2.name,
-      owner: battleData.robot2.user.username,
-      eloBefore: battleData.robot2ELOBefore,
-      eloAfter: battleData.robot2ELOAfter,
-      finalHP: battleData.robot2FinalHP,
-      damageDealt: battleData.robot2DamageDealt,
-      reward: robot2IsWinner ? battleData.winnerReward : battleData.loserReward,
-      prestige: battleData.robot2PrestigeAwarded,
-      fame: battleData.robot2FameAwarded,
-    };
 
     // Determine winner based on battle type
     if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {

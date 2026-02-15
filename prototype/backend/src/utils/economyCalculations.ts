@@ -288,46 +288,6 @@ export async function calculateDailyPassiveIncome(userId: number): Promise<{
   };
 }
 
-// ==================== REPAIR COSTS ====================
-
-/**
- * Calculate repair cost with all discounts applied
- * Based on robotCalculations.ts but includes Medical Bay discount
- */
-export function calculateRepairCostWithDiscounts(
-  sumOfAllAttributes: number,
-  damagePercent: number,
-  hpPercent: number,
-  repairBayLevel: number = 0,
-  medicalBayLevel: number = 0
-): number {
-  const baseRepairCost = sumOfAllAttributes * 100;
-  
-  // Determine multiplier based on HP percentage
-  let multiplier = 1.0;
-  if (hpPercent === 0) {
-    // Total destruction - apply Medical Bay reduction to 2.0x multiplier
-    if (medicalBayLevel > 0) {
-      const medicalReduction = medicalBayLevel * 0.1;
-      multiplier = 2.0 * (1 - medicalReduction);
-    } else {
-      multiplier = 2.0;
-    }
-  } else if (hpPercent < 10) {
-    // Heavily damaged
-    multiplier = 1.5;
-  }
-  
-  // Calculate raw cost
-  const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
-  
-  // Apply Repair Bay discount (5% per level, max 50% at level 10)
-  const repairBayDiscount = Math.min(repairBayLevel * 5, 50) / 100;
-  const finalCost = rawCost * (1 - repairBayDiscount);
-  
-  return Math.round(finalCost);
-}
-
 // ==================== FINANCIAL REPORT ====================
 
 export interface FinancialReport {

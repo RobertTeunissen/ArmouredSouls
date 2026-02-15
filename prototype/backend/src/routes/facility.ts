@@ -24,6 +24,14 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       where: { userId },
     });
 
+    // Get robot count for repair bay discount calculation
+    const robotCount = await prisma.robot.count({
+      where: { 
+        userId,
+        name: { not: 'Bye Robot' } // Exclude system robots
+      },
+    });
+
     // Create a map of facility types to levels
     const facilityLevels = userFacilities.reduce((acc, facility) => {
       acc[facility.facilityType] = facility.level;
@@ -42,6 +50,20 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         nextLevelPrestigeRequired = config.prestigeRequirements[nextLevel - 1] || 0;
       }
 
+      // Calculate dynamic benefits for repair bay
+      let currentBenefit = config.benefits[currentLevel - 1] || 'No benefit yet';
+      let nextBenefit = config.benefits[nextLevel - 1] || 'Maximum level reached';
+      
+      if (config.type === 'repair_bay' && currentLevel > 0) {
+        const currentDiscount = Math.min(90, currentLevel * (5 + robotCount));
+        currentBenefit = `${currentDiscount}% discount on repair costs`;
+        
+        if (nextLevel <= config.maxLevel) {
+          const nextDiscount = Math.min(90, nextLevel * (5 + robotCount));
+          nextBenefit = `${nextDiscount}% discount on repair costs`;
+        }
+      }
+
       return {
         ...config,
         currentLevel,
@@ -50,6 +72,8 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         nextLevelPrestigeRequired,
         hasPrestige: user.prestige >= nextLevelPrestigeRequired,
         canAfford: user.currency >= upgradeCost,
+        currentBenefit,
+        nextBenefit,
       };
     });
 
@@ -57,6 +81,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       facilities,
       userPrestige: user.prestige,
       userCurrency: user.currency,
+      robotCount, // Include for frontend display
     });
   } catch (error) {
     console.error('Facility list error:', error);

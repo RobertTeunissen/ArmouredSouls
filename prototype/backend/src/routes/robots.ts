@@ -1268,12 +1268,17 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
     });
 
     const repairBayLevel = repairBay?.level || 0;
-    const discount = repairBayLevel * 5; // 5% per level
 
     // Get all user's robots (we'll filter by HP damage)
     const allRobots = await prisma.robot.findMany({
       where: { userId },
     });
+
+    // Count active robots (excluding system robots like "Bye Robot")
+    const activeRobotCount = allRobots.filter(r => r.name !== 'Bye Robot').length;
+
+    // New formula: discount = repairBayLevel × (5 + activeRobotCount), capped at 90%
+    const discount = Math.min(90, repairBayLevel * (5 + activeRobotCount));
 
     // Repair cost per HP point (matches frontend calculation)
     const REPAIR_COST_PER_HP = 50;

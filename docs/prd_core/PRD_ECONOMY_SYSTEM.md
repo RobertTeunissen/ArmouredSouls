@@ -58,7 +58,7 @@
 
 **Facility Discounts:**
 - ✅ Medical Bay: Reduces critical damage multiplier (HP=0) by 10%-100%
-- ✅ Repair Bay: 5%-50% discount on all repairs
+- ✅ Repair Bay: Multi-robot discount formula (Level × (5 + Active Robots), capped at 90%)
 
 **Daily Financial System:**
 - ✅ Automatic operating cost deduction
@@ -934,28 +934,78 @@ repair_cost_before_discounts = base_repair × damage_percentage × multiplier
 **Facility Discounts**:
 
 1. **Repair Bay** (all repairs):
-   - Discount: 5% to 50% (Level 1-10)
-   - Formula: `discount = repair_bay_level × 5%`
+   - Discount: Multi-robot formula (Level 1-10 with 0-10 robots)
+   - Formula: `discount = repair_bay_level × (5 + active_robot_count)`, capped at 90%
+   - **Single Robot Examples**:
+     - Level 1: 5% discount (1 × (5 + 0))
+     - Level 5: 25% discount (5 × (5 + 0))
+     - Level 10: 50% discount (10 × (5 + 0))
+   - **Multi-Robot Examples**:
+     - Level 1 + 4 robots: 9% discount (1 × (5 + 4))
+     - Level 3 + 2 robots: 21% discount (3 × (5 + 2))
+     - Level 5 + 7 robots: 60% discount (5 × (5 + 7))
+     - Level 6 + 10 robots: 90% discount (6 × (5 + 10), capped)
+     - Level 10 + 10 robots: 90% discount (10 × (5 + 10) = 150%, capped at 90%)
 
 2. **Medical Bay** (critical damage only, HP = 0):
    - Reduces critical damage multiplier (2.0x) by 10%-100%
    - Formula: `effective_multiplier = 2.0 × (1 - medical_bay_level × 0.1)`
    - Level 10: Eliminates critical damage penalty entirely
 
-**Repair Bay ROI Analysis**:
+**Repair Bay ROI Analysis with Multi-Robot Discount**:
 - Average robot (230 total attributes): Base repair cost = ₡23,000
 - Average damage per battle: 40-60% HP (₡9,200-₡13,800 repair cost)
+
+**Single Robot Scenario**:
 - **Repair Bay Level 1** (₡200K, 5% discount):
   - Saves ₡460-₡690 per battle
   - Payback: 290-435 battles
   - At 7 battles/week: **41-62 weeks** to break even
-  - **Multi-robot benefit**: With 3 robots (21 battles/week total), payback reduces to **14-21 weeks**
-- **Repair Bay Level 5** (₡1M total, 25% discount):
-  - Saves ₡2,300-₡3,450 per battle
-  - Incremental cost from Level 1: ₡800K
-  - Payback for incremental investment: 232-348 battles (**33-50 weeks**)
+  - **Conclusion**: Poor ROI for single robot
 
-**Conclusion**: Repair Bay provides long-term value but requires sustained play to recoup investment. Most beneficial for players with multiple robots or those planning long-term engagement.
+**Multi-Robot Scenario (3 robots)**:
+- **Repair Bay Level 1** (₡200K, 8% discount with 3 robots):
+  - Saves ₡736-₡1,104 per battle per robot
+  - With 3 robots (21 battles/week total): Saves ₡15,456-₡23,184/week
+  - Payback: **9-13 weeks** to break even
+  - **Conclusion**: Excellent ROI with multiple robots
+
+**Multi-Robot Scenario (10 robots)**:
+- **Repair Bay Level 6** (₡1.2M total, 90% discount with 10 robots):
+  - Saves ₡8,280-₡12,420 per battle per robot
+  - With 10 robots (70 battles/week total): Saves ₡579,600-₡869,400/week
+  - Payback: **1-2 weeks** to break even
+  - **Conclusion**: Exceptional ROI with large roster, reaches 90% cap
+
+**90% Discount Cap Warning**:
+Once you reach 90% discount, further Repair Bay or Roster Expansion investment provides no additional repair cost benefit. Plan your investments carefully to avoid wasting credits.
+
+**Cap Scenarios - When Further Investment Provides No Benefit**:
+
+| Repair Bay Level | Robot Count | Discount Calculation | Actual Discount | Further Investment Benefit |
+|------------------|-------------|----------------------|-----------------|---------------------------|
+| 6 | 10 | 6 × (5 + 10) = 90% | 90% | ❌ None - cap reached |
+| 7 | 10 | 7 × (5 + 10) = 105% | 90% (capped) | ❌ None - already at cap |
+| 10 | 10 | 10 × (5 + 10) = 150% | 90% (capped) | ❌ None - already at cap |
+| 9 | 9 | 9 × (5 + 9) = 126% | 90% (capped) | ❌ None - already at cap |
+| 10 | 8 | 10 × (5 + 8) = 130% | 90% (capped) | ❌ None - already at cap |
+
+**Optimal Investment Strategies**:
+- **10 robots**: Stop at Repair Bay Level 6 (saves ₡4.5M on Levels 7-10)
+- **9 robots**: Stop at Repair Bay Level 7 (saves ₡3M on Levels 8-10)
+- **8 robots**: Stop at Repair Bay Level 8 (saves ₡1.5M on Levels 9-10)
+- **7 robots**: Stop at Repair Bay Level 9 (saves ₡500K on Level 10)
+- **6 robots or fewer**: Level 10 Repair Bay provides 65-75% discount (not capped)
+
+**Example Waste Scenario**:
+- Player has 10 robots and Repair Bay Level 6 (90% discount)
+- Upgrading to Level 7 costs ₡1,500,000
+- New discount: 7 × (5 + 10) = 105% → still 90% (capped)
+- **Result**: ₡1,500,000 wasted with zero benefit
+
+**Recommendation**: Check your current discount before upgrading. If you're at or near 90%, invest credits elsewhere (weapons, attributes, other facilities).
+
+**Conclusion**: Repair Bay provides exceptional value with multiple robots. The multi-robot discount makes it one of the most valuable facilities for players with large rosters, but be mindful of the 90% cap to avoid wasted investments.
 
 **Final Repair Cost Formula**:
 ```
@@ -969,16 +1019,17 @@ if HP = 0 AND medical_bay_level > 0:
     effective_multiplier = 2.0 × (1 - medical_reduction)
     repair_before_discounts = base_repair × damage_percentage × effective_multiplier
 
-// Step 3: Apply Repair Bay discount
-repair_bay_discount = repair_bay_level × 0.05
+// Step 3: Apply Repair Bay multi-robot discount
+raw_discount = repair_bay_level × (5 + active_robot_count)
+repair_bay_discount = Math.min(raw_discount, 90) / 100  // Cap at 90%
 final_repair_cost = repair_before_discounts × (1 - repair_bay_discount)
 ```
 
-**Example**:
+**Example (Single Robot)**:
 - Robot with 230 total attributes (sum of all 23)
 - Started battle with 100 HP
 - Took 100 damage during battle (reduced to 0 HP = destroyed)
-- Repair Bay Level 5, Medical Bay Level 3
+- Repair Bay Level 5, Medical Bay Level 3, 1 robot (active_robot_count = 0)
 
 ```
 base_repair = 230 × 100 = ₡23,000
@@ -990,9 +1041,30 @@ effective_multiplier = 2.0 × (1 - 0.3) = 1.4
 
 repair_before_discount = 23,000 × 1.0 × 1.4 = ₡32,200
 
-// Repair Bay discount
-repair_bay_discount = 5 × 0.05 = 0.25
+// Repair Bay multi-robot discount
+raw_discount = 5 × (5 + 0) = 25%
+repair_bay_discount = Math.min(25, 90) / 100 = 0.25
 final_repair_cost = 32,200 × (1 - 0.25) = ₡24,150
+```
+
+**Example (Multiple Robots)**:
+- Same robot with 230 total attributes
+- Same damage scenario (destroyed, 0 HP)
+- Repair Bay Level 5, Medical Bay Level 3, 7 robots total (active_robot_count = 7)
+
+```
+base_repair = 230 × 100 = ₡23,000
+damage_percentage = 1.0
+effective_multiplier = 1.4 (with Medical Bay Level 3)
+
+repair_before_discount = 23,000 × 1.0 × 1.4 = ₡32,200
+
+// Repair Bay multi-robot discount
+raw_discount = 5 × (5 + 7) = 60%
+repair_bay_discount = Math.min(60, 90) / 100 = 0.60
+final_repair_cost = 32,200 × (1 - 0.60) = ₡12,880
+
+// Savings vs single robot: ₡24,150 - ₡12,880 = ₡11,270 (47% additional savings)
 ```
 
 **Repair Timing**:

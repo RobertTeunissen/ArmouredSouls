@@ -853,20 +853,16 @@ function WeaponShopPage() {
         )}
 
         {/* Confirmation Modal */}
-        <ConfirmationModal
-          isOpen={confirmationModal.isOpen}
-          title={confirmationModal.title}
-          message={confirmationModal.message}
-          confirmText={confirmationModal.title === 'Confirm Purchase' ? 'Purchase' : 'OK'}
-          cancelText="Cancel"
-          confirmButtonClass={
-            confirmationModal.title === 'Confirm Purchase' 
-              ? 'bg-green-600 hover:bg-green-700' 
-              : 'bg-blue-600 hover:bg-blue-700'
-          }
-          onConfirm={confirmationModal.onConfirm}
-          onCancel={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
-        />
+        {confirmationModal.isOpen && (
+          <ConfirmationModal
+            title={confirmationModal.title}
+            message={confirmationModal.message}
+            confirmLabel={confirmationModal.title === 'Confirm Purchase' ? 'Purchase' : 'OK'}
+            cancelLabel="Cancel"
+            onConfirm={confirmationModal.onConfirm}
+            onCancel={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+          />
+        )}
       </div>
     </div>
   );
