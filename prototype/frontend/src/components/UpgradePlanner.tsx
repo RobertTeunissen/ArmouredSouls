@@ -424,52 +424,52 @@ function UpgradePlanner({
       </div>
 
       {/* Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showConfirmModal}
-        title="Confirm Upgrades"
-        message={
-          <div className="space-y-3">
-            <p className="text-gray-300">
-              You are about to upgrade {Object.keys(upgradePlan).length} attribute{Object.keys(upgradePlan).length > 1 ? 's' : ''}:
-            </p>
-            <div className="bg-gray-900/50 rounded p-3 max-h-48 overflow-y-auto space-y-1">
-              {Object.entries(upgradePlan).map(([attr, plan]) => {
-                const category = Object.entries(attributeCategories).find(([_, config]) =>
-                  config.attributes.some(a => a.key === attr)
-                );
-                const attrConfig = category?.[1].attributes.find(a => a.key === attr);
-                return (
-                  <div key={attr} className="flex justify-between text-sm">
-                    <span className="text-gray-400">
-                      {attrConfig?.icon} {attrConfig?.label}
-                    </span>
-                    <span className="text-blue-400">
-                      {plan.currentLevel} → {plan.plannedLevel}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="border-t border-gray-700 pt-3 space-y-2">
-              <div className="flex justify-between text-base">
-                <span className="text-gray-300">Total Cost:</span>
-                <span className="text-yellow-400 font-bold">₡{totalPlannedCost.toLocaleString()}</span>
+      {showConfirmModal && (
+        <ConfirmationModal
+          title="Confirm Upgrades"
+          message={
+            <div className="space-y-3">
+              <p className="text-gray-300">
+                You are about to upgrade {Object.keys(upgradePlan).length} attribute{Object.keys(upgradePlan).length > 1 ? 's' : ''}:
+              </p>
+              <div className="bg-gray-900/50 rounded p-3 max-h-48 overflow-y-auto space-y-1">
+                {Object.entries(upgradePlan).map(([attr, plan]) => {
+                  const category = Object.entries(attributeCategories).find(([_, config]) =>
+                    config.attributes.some(a => a.key === attr)
+                  );
+                  const attrConfig = category?.[1].attributes.find(a => a.key === attr);
+                  return (
+                    <div key={attr} className="flex justify-between text-sm">
+                      <span className="text-gray-400">
+                        {attrConfig?.icon} {attrConfig?.label}
+                      </span>
+                      <span className="text-blue-400">
+                        {plan.currentLevel} → {plan.plannedLevel}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex justify-between text-base">
-                <span className="text-gray-300">Remaining Credits:</span>
-                <span className={`font-bold ${remainingCredits >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  ₡{remainingCredits.toLocaleString()}
-                </span>
+              <div className="border-t border-gray-700 pt-3 space-y-2">
+                <div className="flex justify-between text-base">
+                  <span className="text-gray-300">Total Cost:</span>
+                  <span className="text-yellow-400 font-bold">₡{totalPlannedCost.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-base">
+                  <span className="text-gray-300">Remaining Credits:</span>
+                  <span className={`font-bold ${remainingCredits >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    ₡{remainingCredits.toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        }
-        confirmText="Confirm"
-        cancelText="Cancel"
-        confirmButtonClass="bg-blue-600 hover:bg-blue-700"
-        onConfirm={handleCommit}
-        onCancel={() => setShowConfirmModal(false)}
-      />
+          }
+          confirmLabel="Confirm"
+          cancelLabel="Cancel"
+          onConfirm={handleCommit}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
     </div>
   );
 }

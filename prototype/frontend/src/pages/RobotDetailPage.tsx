@@ -16,6 +16,7 @@ import RecentBattles from '../components/RecentBattles';
 import UpcomingMatches from '../components/UpcomingMatches';
 import UpgradePlanner from '../components/UpgradePlanner';
 import Toast from '../components/Toast';
+import RobotPerformanceAnalytics from '../components/RobotPerformanceAnalytics';
 import { getMatchHistory } from '../utils/matchmakingApi';
 
 interface Robot {
@@ -122,6 +123,8 @@ function RobotDetailPage() {
   const [weapons, setWeapons] = useState<WeaponInventory[]>([]);
   const [currency, setCurrency] = useState(0);
   const [trainingLevel, setTrainingLevel] = useState(0);
+  const [repairBayLevel, setRepairBayLevel] = useState(0);
+  const [activeRobotCount, setActiveRobotCount] = useState(1);
   const [academyLevels, setAcademyLevels] = useState({
     combat_training_academy: 0,
     defense_training_academy: 0,
@@ -140,10 +143,10 @@ function RobotDetailPage() {
   const navigate = useNavigate();
 
   // Tab state management from URL
-  const tabParam = searchParams.get('tab') as 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | null;
+  const tabParam = searchParams.get('tab') as 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics' | null;
   const activeTab = tabParam || 'overview';
 
-  const handleTabChange = (tab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats') => {
+  const handleTabChange = (tab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics') => {
     setSearchParams({ tab });
   };
 
@@ -357,6 +360,10 @@ function RobotDetailPage() {
         const trainingFacility = facilities.find((f: any) => f.type === 'training_facility');
         setTrainingLevel(trainingFacility?.currentLevel || 0);
 
+        // Set repair bay level
+        const repairBay = facilities.find((f: any) => f.type === 'repair_bay');
+        setRepairBayLevel(repairBay?.currentLevel || 0);
+
         // Always set academy levels (even if 0)
         const newAcademyLevels = {
           combat_training_academy: facilities.find((f: any) => f.type === 'combat_training_academy')?.currentLevel || 0,
@@ -366,6 +373,18 @@ function RobotDetailPage() {
         };
         console.log('Academy Levels:', newAcademyLevels);
         setAcademyLevels(newAcademyLevels);
+
+        // Fetch active robot count for repair cost calculation
+        const robotsResponse = await fetch('http://localhost:3001/api/robots', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (robotsResponse.ok) {
+          const robotsData = await robotsResponse.json();
+          const activeCount = robotsData.filter((r: any) => r.name !== 'Bye Robot').length;
+          setActiveRobotCount(activeCount);
+        }
       }
 
       // Fetch recent battles using the same API as battle history
@@ -760,10 +779,16 @@ function RobotDetailPage() {
             </div>
           )}
 
+          {activeTab === 'analytics' && (
+            <RobotPerformanceAnalytics robotId={robot.id} lastNCycles={10} />
+          )}
+
           {activeTab === 'battle-config' && isOwner && (
             <BattleConfigTab
               robot={robot}
               weapons={weapons}
+              repairBayLevel={repairBayLevel}
+              activeRobotCount={activeRobotCount}
               onRobotUpdate={(updates) => {
                 setRobot({ ...robot, ...updates });
                 setSuccessMessage('Configuration updated successfully!');

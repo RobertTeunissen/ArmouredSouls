@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma';
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
+import { eventLogger } from '../services/eventLogger';
 
 
 export interface RepairSummary {
@@ -141,6 +142,15 @@ export async function repairAllRobots(deductCosts: boolean = true): Promise<Repa
           battleReadiness: 100,
         },
       });
+
+      // Log repair event for analytics
+      await eventLogger.logRobotRepair(
+        userId,
+        robot.id,
+        repairCost,
+        damageTaken,
+        repairBayDiscount
+      );
     }
 
     totalBaseCost += userBaseCost;

@@ -1,17 +1,18 @@
 import { useEffect, useRef } from 'react';
 
 interface TabNavigationProps {
-  activeTab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats';
-  onTabChange: (tab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats') => void;
+  activeTab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics';
+  onTabChange: (tab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics') => void;
   isOwner: boolean;
 }
 
 const tabs = [
   { id: 'overview' as const, label: 'Overview', icon: '📊', ownerOnly: false },
   { id: 'matches' as const, label: 'Matches', icon: '⚔️', ownerOnly: false },
+  { id: 'analytics' as const, label: 'Analytics', icon: '📈', ownerOnly: false },
   { id: 'battle-config' as const, label: 'Battle Config', icon: '⚙️', ownerOnly: true },
   { id: 'upgrades' as const, label: 'Upgrades', icon: '⬆️', ownerOnly: true },
-  { id: 'stats' as const, label: 'Stats', icon: '📈', ownerOnly: true },
+  { id: 'stats' as const, label: 'Stats', icon: '🔧', ownerOnly: true },
 ];
 
 function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) {

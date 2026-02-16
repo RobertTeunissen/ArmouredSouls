@@ -38,12 +38,14 @@ interface WeaponInventory {
 interface BattleConfigTabProps {
   robot: Robot;
   weapons: WeaponInventory[];
+  repairBayLevel?: number;
+  activeRobotCount?: number;
   onRobotUpdate: (updatedRobot: Partial<Robot>) => void;
   onEquipWeapon: (slot: 'main' | 'offhand', weaponInventoryId: number) => Promise<void>;
   onUnequipWeapon: (slot: 'main' | 'offhand') => Promise<void>;
 }
 
-function BattleConfigTab({ robot, weapons, onRobotUpdate, onEquipWeapon, onUnequipWeapon }: BattleConfigTabProps) {
+function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount = 1, onRobotUpdate, onEquipWeapon, onUnequipWeapon }: BattleConfigTabProps) {
   const [showWeaponModal, setShowWeaponModal] = useState(false);
   const [weaponSlotToEquip, setWeaponSlotToEquip] = useState<'main' | 'offhand'>('main');
 
@@ -233,7 +235,8 @@ function BattleConfigTab({ robot, weapons, onRobotUpdate, onEquipWeapon, onUnequ
           robotId={robot.id}
           currentThreshold={robot.yieldThreshold}
           robotAttributes={robot}
-          repairBayLevel={0}
+          repairBayLevel={repairBayLevel}
+          activeRobotCount={activeRobotCount}
           onThresholdChange={handleThresholdChange}
         />
       </div>

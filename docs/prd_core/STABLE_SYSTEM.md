@@ -87,16 +87,16 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 
 **1. Repair Bay** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
 - **Level 0**: No discount
-- **Level 1** (₡200,000): 9% discount on repair costs (1 robot)
-- **Level 2** (₡400,000): 14% discount on repair costs (1 robot)
-- **Level 3** (₡600,000): 21% discount on repair costs (1 robot)
-- **Level 4** (₡800,000, requires 1,000 prestige): 28% discount on repair costs (1 robot)
-- **Level 5** (₡1,000,000): 35% discount on repair costs (1 robot)
-- **Level 6** (₡1,200,000): 42% discount on repair costs (1 robot)
-- **Level 7** (₡1,500,000, requires 5,000 prestige): 49% discount on repair costs (1 robot)
-- **Level 8** (₡2,000,000): 56% discount on repair costs (1 robot)
-- **Level 9** (₡2,500,000, requires 10,000 prestige): 63% discount on repair costs (1 robot)
-- **Level 10** (₡3,000,000): 70% discount on repair costs (1 robot), automatic minor repairs
+- **Level 1** (₡200,000): 6% discount on repair costs (1 robot)
+- **Level 2** (₡400,000): 12% discount on repair costs (1 robot)
+- **Level 3** (₡600,000): 18% discount on repair costs (1 robot)
+- **Level 4** (₡800,000, requires 1,000 prestige): 24% discount on repair costs (1 robot)
+- **Level 5** (₡1,000,000): 30% discount on repair costs (1 robot)
+- **Level 6** (₡1,200,000): 36% discount on repair costs (1 robot)
+- **Level 7** (₡1,500,000, requires 5,000 prestige): 42% discount on repair costs (1 robot)
+- **Level 8** (₡2,000,000): 48% discount on repair costs (1 robot)
+- **Level 9** (₡2,500,000, requires 10,000 prestige): 54% discount on repair costs (1 robot)
+- **Level 10** (₡3,000,000): 60% discount on repair costs (1 robot), automatic minor repairs
 
 **Discount Formula**: Discount % = Repair Bay Level × (5 + Active Robot Count), capped at 90%
 

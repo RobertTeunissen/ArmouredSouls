@@ -392,6 +392,64 @@ model CycleMetadata {
   @@map("cycle_metadata")
 }
 
+// Audit log table for event sourcing - stores all game events with flexible JSONB payload
+model AuditLog {
+  id              BigInt   @id @default(autoincrement())
+  cycleNumber     Int      @map("cycle_number")
+  eventType       String   @map("event_type") @db.VarChar(100)
+  eventTimestamp  DateTime @default(now()) @map("event_timestamp")
+  sequenceNumber  Int      @map("sequence_number") // Unique within cycle for ordering
+  
+  // References (nullable for system-wide events)
+  userId          Int?     @map("user_id")
+  robotId         Int?     @map("robot_id")
+  
+  // Flexible event data
+  payload         Json
+  
+  // Optional calculation metadata for debugging
+  metadata        Json?
+  
+  @@unique([cycleNumber, sequenceNumber], name: "audit_logs_cycle_sequence")
+  @@index([cycleNumber])
+  @@index([userId])
+  @@index([robotId])
+  @@index([eventType])
+  @@index([eventTimestamp])
+  @@index([cycleNumber, userId])
+  @@index([cycleNumber, robotId])
+  @@index([cycleNumber, eventType])
+  @@map("audit_logs")
+}
+
+// Cycle snapshot table for pre-aggregated metrics for fast historical queries
+model CycleSnapshot {
+  id                     Int      @id @default(autoincrement())
+  cycleNumber            Int      @unique @map("cycle_number")
+  triggerType            String   @map("trigger_type") @db.VarChar(20) // "manual" or "scheduled"
+  
+  // Timing
+  startTime              DateTime @map("start_time")
+  endTime                DateTime @map("end_time")
+  durationMs             Int      @map("duration_ms")
+  
+  // Aggregated data (computed from audit_logs and existing tables)
+  stableMetrics          Json     @map("stable_metrics")
+  robotMetrics           Json     @map("robot_metrics")
+  stepDurations          Json     @map("step_durations")
+  
+  // Summary statistics (for quick filtering)
+  totalBattles           Int      @default(0) @map("total_battles")
+  totalCreditsTransacted BigInt   @default(0) @map("total_credits_transacted")
+  totalPrestigeAwarded   Int      @default(0) @map("total_prestige_awarded")
+  
+  createdAt              DateTime @default(now()) @map("created_at")
+  
+  @@index([cycleNumber])
+  @@index([startTime])
+  @@map("cycle_snapshots")
+}
+
 // Tournament model for tracking competitive elimination events
 model Tournament {
   id             Int    @id @default(autoincrement())

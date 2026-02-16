@@ -6,6 +6,7 @@ interface YieldThresholdSliderProps {
   currentThreshold: number;
   robotAttributes: any; // Full robot object with all attributes
   repairBayLevel?: number;
+  activeRobotCount?: number;
   onThresholdChange: (newThreshold: number) => void;
 }
 
@@ -14,12 +15,22 @@ function YieldThresholdSlider({
   currentThreshold,
   robotAttributes,
   repairBayLevel = 0,
+  activeRobotCount = 1,
   onThresholdChange,
 }: YieldThresholdSliderProps) {
   const [threshold, setThreshold] = useState(currentThreshold);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    console.log('[YieldThresholdSlider] Props received:', {
+      robotId,
+      currentThreshold,
+      repairBayLevel,
+      activeRobotCount
+    });
+  }, [robotId, currentThreshold, repairBayLevel, activeRobotCount]);
 
   useEffect(() => {
     setThreshold(currentThreshold);
@@ -108,9 +119,22 @@ function YieldThresholdSlider({
 
     const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
 
-    // Apply Repair Bay discount (5% per level, max 50%)
-    const repairBayDiscount = Math.min(repairBayLevel * 5, 50) / 100;
-    const finalCost = rawCost * (1 - repairBayDiscount);
+    // NEW FORMULA: discount = repairBayLevel × (5 + activeRobotCount), capped at 90%
+    const discount = Math.min(repairBayLevel * (5 + activeRobotCount), 90);
+    const finalCost = rawCost * (1 - discount / 100);
+
+    console.log('[YieldThresholdSlider] Repair Cost Calculation:', {
+      damagePercent,
+      hpPercent,
+      sumOfAttributes,
+      baseRepairCost,
+      multiplier,
+      rawCost,
+      repairBayLevel,
+      activeRobotCount,
+      discount,
+      finalCost: Math.round(finalCost)
+    });
 
     return Math.round(finalCost);
   };
@@ -182,7 +206,7 @@ function YieldThresholdSlider({
           <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-gray-300">Repair Cost Scenarios</h4>
           {repairBayLevel > 0 && (
             <p className="text-xs text-gray-400 mb-2">
-              Repair Bay Level {repairBayLevel}: {repairBayLevel * 5}% discount
+              Repair Bay Level {repairBayLevel}: {Math.min(repairBayLevel * (5 + activeRobotCount), 90)}% discount ({activeRobotCount} robot{activeRobotCount !== 1 ? 's' : ''})
             </p>
           )}
           <div className="space-y-2">

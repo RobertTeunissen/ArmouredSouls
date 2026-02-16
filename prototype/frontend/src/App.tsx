@@ -21,6 +21,10 @@ import TournamentsPage from './pages/TournamentsPage';
 import TagTeamManagementPage from './pages/TagTeamManagementPage';
 import TagTeamStandingsPage from './pages/TagTeamStandingsPage';
 import ProfilePage from './pages/ProfilePage';
+import CycleSummaryPage from './pages/CycleSummaryPage';
+import CycleComparisonPage from './pages/CycleComparisonPage';
+import FacilityInvestmentAdvisorPage from './pages/FacilityInvestmentAdvisorPage';
+import SystemHealthPage from './pages/SystemHealthPage';
 
 function App() {
   return (
@@ -181,6 +185,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cycle-summary"
+            element={
+              <ProtectedRoute>
+                <CycleSummaryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cycle-comparison"
+            element={
+              <ProtectedRoute>
+                <CycleComparisonPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/facility-advisor"
+            element={
+              <ProtectedRoute>
+                <FacilityInvestmentAdvisorPage />
               </ProtectedRoute>
             }
           />

@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
 import prisma from '../lib/prisma';
+import { eventLogger } from '../services/eventLogger';
 
 const router = express.Router();
 
@@ -184,6 +185,29 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
 
       return { user: updatedUser, facility: updatedFacility };
     });
+
+    // Log facility transaction event
+    try {
+      // Get current cycle number
+      const cycleMetadata = await prisma.cycleMetadata.findUnique({
+        where: { id: 1 },
+      });
+      const currentCycle = cycleMetadata?.totalCycles || 0;
+
+      // Log the facility upgrade/purchase event
+      await eventLogger.logFacilityTransaction(
+        currentCycle,
+        userId,
+        facilityType,
+        currentLevel,
+        targetLevel,
+        upgradeCost,
+        currentLevel === 0 ? 'purchase' : 'upgrade'
+      );
+    } catch (logError) {
+      console.error('Failed to log facility transaction event:', logError);
+      // Don't fail the request if logging fails
+    }
 
     res.json({
       facility: result.facility,

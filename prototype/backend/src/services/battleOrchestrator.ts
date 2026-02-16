@@ -9,6 +9,7 @@ import {
   getPrestigeMultiplier,
 } from '../utils/economyCalculations';
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
+import { eventLogger, EventType } from './eventLogger';
 
 // ELO calculation constant
 const ELO_K_FACTOR = 32;
@@ -28,6 +29,21 @@ const BYE_BATTLE_DURATION = 15; // Fixed duration for bye battles
 
 // Bye-robot identifier
 const BYE_ROBOT_NAME = 'Bye Robot';
+
+/**
+ * Get the current cycle number from metadata
+ * Returns 0 if metadata doesn't exist (e.g., during tests)
+ */
+async function getCurrentCycleNumber(): Promise<number> {
+  try {
+    const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+    return metadata?.totalCycles || 0;
+  } catch (error) {
+    // If cycleMetadata table doesn't exist or query fails, return 0
+    console.warn('[BattleOrchestrator] Could not fetch cycle number, defaulting to 0:', error);
+    return 0;
+  }
+}
 
 export interface BattleResult {
   battleId: number;
@@ -499,6 +515,7 @@ async function updateRobotStats(
     where: { id: robot.id },
     data: {
       currentHP: finalHP,
+      repairCost: (isRobot1 ? battle.robot1RepairCost : battle.robot2RepairCost) || 0, // Store calculated repair cost
       elo: newELO,
       leaguePoints: Math.max(0, robot.leaguePoints + leaguePointsChange), // Min 0
       totalBattles: robot.totalBattles + 1,
@@ -597,6 +614,63 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
   // Create battle record
   const battle = await createBattleRecord(scheduledMatch, robot1, robot2, result);
   result.battleId = battle.id;
+  
+  // Log battle_complete event to audit log
+  const cycleNumber = await getCurrentCycleNumber();
+  await eventLogger.logEvent(
+    cycleNumber,
+    EventType.BATTLE_COMPLETE,
+    {
+      battleId: battle.id,
+      robot1Id: robot1.id,
+      robot2Id: robot2.id,
+      winnerId: result.winnerId,
+      
+      // ELO tracking
+      robot1ELOBefore: battle.robot1ELOBefore,
+      robot1ELOAfter: battle.robot1ELOAfter,
+      robot2ELOBefore: battle.robot2ELOBefore,
+      robot2ELOAfter: battle.robot2ELOAfter,
+      eloChange: battle.eloChange,
+      
+      // Damage tracking
+      robot1DamageDealt: battle.robot1DamageDealt,
+      robot2DamageDealt: battle.robot2DamageDealt,
+      robot1FinalHP: battle.robot1FinalHP,
+      robot2FinalHP: battle.robot2FinalHP,
+      robot1FinalShield: battle.robot1FinalShield,
+      robot2FinalShield: battle.robot2FinalShield,
+      
+      // Rewards
+      winnerReward: battle.winnerReward,
+      loserReward: battle.loserReward,
+      robot1PrestigeAwarded: 0, // Will be updated after updateRobotStats
+      robot2PrestigeAwarded: 0,
+      robot1FameAwarded: 0,
+      robot2FameAwarded: 0,
+      
+      // Costs
+      robot1RepairCost: battle.robot1RepairCost,
+      robot2RepairCost: battle.robot2RepairCost,
+      
+      // Battle details
+      durationSeconds: battle.durationSeconds,
+      battleType: battle.battleType,
+      leagueType: battle.leagueType,
+      robot1Yielded: battle.robot1Yielded,
+      robot2Yielded: battle.robot2Yielded,
+      robot1Destroyed: battle.robot1Destroyed,
+      robot2Destroyed: battle.robot2Destroyed,
+      
+      // Metadata
+      isDraw: result.isDraw,
+      isByeMatch: result.isByeMatch,
+    },
+    {
+      userId: robot1.userId,
+      robotId: robot1.id,
+    }
+  );
   
   // Update robot stats and award prestige/fame
   const stats1 = await updateRobotStats(robot1, battle, true, isByeMatch);

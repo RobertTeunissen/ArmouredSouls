@@ -28,6 +28,10 @@ const implementedPages = new Set([
   '/hall-of-records',
   '/income',
   '/profile',
+  '/cycle-summary',
+  '/cycle-comparison',
+  '/facility-advisor',
+  '/system-health',
 ]);
 
 const allPages = {
@@ -106,6 +110,9 @@ const allPages = {
     label: 'Analytics',
     items: [
       { path: '/analytics', label: 'Analytics Dashboard' },
+      { path: '/cycle-summary', label: 'Cycle Summary' },
+      { path: '/cycle-comparison', label: 'Cycle Comparison' },
+      { path: '/facility-advisor', label: 'Facility Advisor' },
       { path: '/analytics/battles', label: 'Battle Analytics' },
       { path: '/analytics/economy', label: 'Economy Analytics' },
       { path: '/simulator', label: 'Battle Simulator' },

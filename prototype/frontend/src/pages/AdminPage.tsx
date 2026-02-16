@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import BattleDetailsModal from '../components/BattleDetailsModal';
 import TournamentManagement from '../components/TournamentManagement';
+import SystemHealthPage from './SystemHealthPage';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
-type TabType = 'dashboard' | 'cycles' | 'battles' | 'tournaments' | 'stats';
+type TabType = 'dashboard' | 'cycles' | 'battles' | 'tournaments' | 'stats' | 'system-health';
 
 interface SessionLogEntry {
   timestamp: string;
@@ -247,11 +248,11 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     // Get tab from localStorage or URL hash
     const hash = window.location.hash.replace('#', '');
-    if (['dashboard', 'cycles', 'battles', 'tournaments', 'stats'].includes(hash)) {
+    if (['dashboard', 'cycles', 'battles', 'tournaments', 'stats', 'system-health'].includes(hash)) {
       return hash as TabType;
     }
     const stored = localStorage.getItem('adminActiveTab');
-    return (stored && ['dashboard', 'cycles', 'battles', 'tournaments', 'stats'].includes(stored)) 
+    return (stored && ['dashboard', 'cycles', 'battles', 'tournaments', 'stats', 'system-health'].includes(stored)) 
       ? stored as TabType 
       : 'dashboard';
   });
@@ -716,6 +717,20 @@ function AdminPage() {
               }`}
             >
               🤖 Robot Stats
+            </button>
+            <button
+              id="system-health-tab"
+              role="tab"
+              aria-selected={activeTab === 'system-health'}
+              aria-controls="system-health-panel"
+              onClick={() => switchTab('system-health')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'system-health'
+                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              🏥 System Health
             </button>
           </div>
         </div>
@@ -1656,6 +1671,13 @@ function AdminPage() {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* System Health Tab */}
+        {activeTab === 'system-health' && (
+          <div role="tabpanel" id="system-health-panel" aria-labelledby="system-health-tab">
+            <SystemHealthPage />
           </div>
         )}
 

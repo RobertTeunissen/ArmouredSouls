@@ -8,7 +8,7 @@ import { shouldRunTagTeamMatchmaking, runTagTeamMatchmaking } from '../services/
 import { executeScheduledTagTeamBattles } from '../services/tagTeamBattleOrchestrator';
 import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
-import { calculateMaxHP } from '../utils/robotCalculations';
+import { calculateMaxHP, calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { repairAllRobots } from '../services/repairService';
 import prisma from '../lib/prisma';
 import tournamentRoutes from './adminTournaments';
@@ -19,8 +19,10 @@ import {
 } from '../services/tournamentService';
 import { processTournamentBattle } from '../services/tournamentBattleOrchestrator';
 import { advanceWinnersToNextRound } from '../services/tournamentService';
+import { EventLogger } from '../services/eventLogger';
 
 const router = express.Router();
+const eventLogger = new EventLogger();
 
 // Mount tournament routes
 router.use('/tournaments', tournamentRoutes);
@@ -152,7 +154,6 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
     });
 
     const repairs = [];
-    const REPAIR_COST_PER_HP = 50; // 50 credits per HP
 
     // Group robots by user to apply facility discounts
     const robotsByUser = new Map<number, typeof robots>();
@@ -164,25 +165,56 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
     }
 
     for (const [userId, userRobots] of robotsByUser.entries()) {
-      // Get repair bay facility for discount
-      const repairBay = await prisma.facility.findUnique({
+      // Get repair bay and medical bay facilities for discounts
+      const facilities = await prisma.facility.findMany({
         where: {
-          userId_facilityType: {
-            userId,
-            facilityType: 'repair_bay',
+          userId,
+          facilityType: {
+            in: ['repair_bay', 'medical_bay'],
           },
         },
       });
 
+      const repairBay = facilities.find(f => f.facilityType === 'repair_bay');
+      const medicalBay = facilities.find(f => f.facilityType === 'medical_bay');
+      
       const repairBayLevel = repairBay?.level || 0;
-      const discount = repairBayLevel * 5; // 5% per level
+      const medicalBayLevel = medicalBay?.level || 0;
+      
+      // Query active robot count for multi-robot discount
+      const activeRobotCount = await prisma.robot.count({
+        where: {
+          userId,
+          NOT: { name: 'Bye Robot' }
+        }
+      });
 
       let totalUserRepairCost = 0;
 
       for (const robot of userRobots) {
+        // Fetch full robot data for attribute calculation
+        const fullRobot = await prisma.robot.findUnique({
+          where: { id: robot.id },
+        });
+        
+        if (!fullRobot) continue;
+        
+        // Use the SAME calculation as repairService.ts
+        const sumOfAllAttributes = calculateAttributeSum(fullRobot);
+        const damageTaken = fullRobot.maxHP - fullRobot.currentHP;
+        const damagePercent = (damageTaken / fullRobot.maxHP) * 100;
+        const hpPercent = (fullRobot.currentHP / fullRobot.maxHP) * 100;
+        
+        const repairCost = calculateRepairCost(
+          sumOfAllAttributes,
+          damagePercent,
+          hpPercent,
+          repairBayLevel,
+          medicalBayLevel,
+          activeRobotCount
+        );
+        
         const hpToRestore = robot.maxHP - robot.currentHP;
-        const baseCost = hpToRestore * REPAIR_COST_PER_HP;
-        const repairCost = Math.floor(baseCost * (1 - discount / 100));
 
         // Update robot HP and set battle ready
         await prisma.robot.update({
@@ -202,8 +234,8 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
           robotName: robot.name,
           userId: robot.userId,
           hpRestored: hpToRestore,
-          baseCost,
-          discount,
+          baseCost: repairCost,
+          discount: 0, // Discount already included in calculation
           finalCost: repairCost,
           costDeducted: deductCosts,
         });
@@ -384,13 +416,32 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       console.log(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
 
       try {
+        // Log cycle start
+        await eventLogger.logCycleStart(currentCycleNumber, 'manual');
+
         // Step 1: Execute League Battles (1v1) - matches scheduled in previous cycle
         console.log(`[Admin] Step 1: Execute League Battles (1v1)`);
+        const step1Start = Date.now();
         const battleSummary = await executeScheduledBattles(new Date());
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'execute_league_battles',
+          1,
+          Date.now() - step1Start,
+          { battlesExecuted: battleSummary.totalBattles }
+        );
 
         // Step 2: Repair All Robots (costs deducted) - after league battles
         console.log(`[Admin] Step 2: Repair All Robots (post-league)`);
+        const step2Start = Date.now();
         const repair1Summary = await repairAllRobots(true);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'repair_post_league',
+          2,
+          Date.now() - step2Start,
+          { robotsRepaired: repair1Summary.robotsRepaired, totalCost: repair1Summary.totalFinalCost }
+        );
 
         // Step 3: Execute Tag Team Battles (odd cycles only, after 1v1)
         // Requirement 11.4: Process 1v1 matches before tag team matches
@@ -398,17 +449,34 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         const shouldRunTagTeam = currentCycleNumber % 2 === 1; // Odd cycles only
         if (shouldRunTagTeam) {
           console.log(`[Admin] Step 3: Execute Tag Team Battles (Cycle ${currentCycleNumber})`);
+          const step3Start = Date.now();
           tagTeamBattleSummary = await executeScheduledTagTeamBattles(new Date());
+          await eventLogger.logCycleStepComplete(
+            currentCycleNumber,
+            'execute_tag_team_battles',
+            3,
+            Date.now() - step3Start,
+            { battlesExecuted: tagTeamBattleSummary?.totalBattles || 0 }
+          );
         } else {
           console.log(`[Admin] Step 3: Skipping Tag Team Battles (even cycle ${currentCycleNumber})`);
         }
 
         // Step 4: Repair All Robots (costs deducted) - after tag team battles
         console.log(`[Admin] Step 4: Repair All Robots (post-tag-team)`);
+        const step4Start = Date.now();
         const repair2Summary = await repairAllRobots(true);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'repair_post_tag_team',
+          4,
+          Date.now() - step4Start,
+          { robotsRepaired: repair2Summary.robotsRepaired, totalCost: repair2Summary.totalFinalCost }
+        );
 
         // Step 5: Tournament Execution / Scheduling
         console.log(`[Admin] Step 5: Tournament Execution / Scheduling`);
+        const step5Start = Date.now();
         let tournamentSummary = null;
         if (includeTournaments) {
           try {
@@ -481,26 +549,61 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             };
           }
         }
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'tournament_execution',
+          5,
+          Date.now() - step5Start,
+          { 
+            tournamentsExecuted: tournamentSummary?.tournamentsExecuted || 0,
+            matchesExecuted: tournamentSummary?.matchesExecuted || 0
+          }
+        );
 
         // Step 6: Repair All Robots (costs deducted) - after tournaments
         console.log(`[Admin] Step 6: Repair All Robots (post-tournament)`);
+        const step6Start = Date.now();
         const repair3Summary = await repairAllRobots(true);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'repair_post_tournament',
+          6,
+          Date.now() - step6Start,
+          { robotsRepaired: repair3Summary.robotsRepaired, totalCost: repair3Summary.totalFinalCost }
+        );
 
         // Step 7: Rebalance Leagues
         console.log(`[Admin] Step 7: Rebalance Leagues`);
+        const step7Start = Date.now();
         const rebalancingSummary = await rebalanceLeagues();
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'rebalance_leagues',
+          7,
+          Date.now() - step7Start,
+          { promotions: rebalancingSummary.totalPromoted, demotions: rebalancingSummary.totalDemoted }
+        );
 
         // Step 7.5: Rebalance Tag Team Leagues (odd cycles only)
         let tagTeamRebalancingSummary = null;
         if (shouldRunTagTeam) {
           console.log(`[Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle ${currentCycleNumber})`);
+          const step7_5Start = Date.now();
           tagTeamRebalancingSummary = await rebalanceTagTeamLeagues();
+          await eventLogger.logCycleStepComplete(
+            currentCycleNumber,
+            'rebalance_tag_team_leagues',
+            8,
+            Date.now() - step7_5Start,
+            { promotions: tagTeamRebalancingSummary.totalPromoted, demotions: tagTeamRebalancingSummary.totalDemoted }
+          );
         } else {
           console.log(`[Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle ${currentCycleNumber})`);
         }
 
         // Step 8: Auto Generate New Users (battle ready)
         console.log(`[Admin] Step 8: Auto Generate New Users`);
+        const step8Start = Date.now();
         let userGenerationSummary = null;
         if (generateUsersPerCycle) {
           try {
@@ -513,25 +616,49 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             };
           }
         }
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'auto_generate_users',
+          9,
+          Date.now() - step8Start,
+          { usersCreated: userGenerationSummary?.usersCreated || 0 }
+        );
 
         // Step 9: Matchmaking for Leagues (1v1) - schedule for next cycle
         console.log(`[Admin] Step 9: Matchmaking for Leagues (1v1)`);
+        const step9Start = Date.now();
         const scheduledFor = new Date(Date.now() + 1000); // 1 second ahead
         const matchesCreated = await runMatchmaking(scheduledFor);
         const matchmakingSummary = { matchesCreated };
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'matchmaking_leagues',
+          10,
+          Date.now() - step9Start,
+          { matchesCreated }
+        );
 
         // Step 9.5: Matchmaking for Tag Teams (odd cycles only)
         let tagTeamMatchmakingSummary = null;
         if (shouldRunTagTeam) {
           console.log(`[Admin] Step 9.5: Matchmaking for Tag Teams (Cycle ${currentCycleNumber})`);
+          const step9_5Start = Date.now();
           const tagTeamMatchesCreated = await runTagTeamMatchmaking(scheduledFor);
           tagTeamMatchmakingSummary = { matchesCreated: tagTeamMatchesCreated };
+          await eventLogger.logCycleStepComplete(
+            currentCycleNumber,
+            'matchmaking_tag_teams',
+            11,
+            Date.now() - step9_5Start,
+            { matchesCreated: tagTeamMatchesCreated }
+          );
         } else {
           console.log(`[Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle ${currentCycleNumber})`);
         }
 
         // Step 10: Increment Cycle Counters
         console.log(`[Admin] Step 10: Increment Cycle Counters`);
+        const step10Start = Date.now();
         
         // Update cycle metadata with current cycle number
         await prisma.cycleMetadata.update({
@@ -562,10 +689,173 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             },
           },
         });
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'increment_cycle_counters',
+          12,
+          Date.now() - step10Start,
+          {}
+        );
 
-        // Step 11: Wait (1.1 second delay)
-        console.log(`[Admin] Step 11: Wait (1.1 second delay)`);
+        // Step 11: Calculate and Log Passive Income & Operating Costs
+        console.log(`[Admin] Step 11: Calculate Passive Income & Operating Costs`);
+        const step11Start = Date.now();
+        const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../utils/economyCalculations');
+        
+        // Get all users
+        const allUsers = await prisma.user.findMany({
+          where: {
+            NOT: { username: 'bye_robot_user' }, // Exclude system users
+          },
+          select: { id: true, prestige: true },
+        });
+
+        let totalPassiveIncome = 0;
+        let totalOperatingCosts = 0;
+
+        for (const user of allUsers) {
+          // Calculate passive income
+          const passiveIncome = await calculateDailyPassiveIncome(user.id);
+          
+          // Get user's facilities for operating costs
+          const facilities = await prisma.facility.findMany({
+            where: { userId: user.id },
+          });
+
+          // Get user's robots to calculate roster costs
+          const userRobots = await prisma.robot.findMany({
+            where: { userId: user.id },
+            select: { totalBattles: true, fame: true },
+          });
+
+          const facilityCosts = facilities.map(f => ({
+            facilityType: f.facilityType,
+            level: f.level,
+            cost: calculateFacilityOperatingCost(f.facilityType, f.level),
+          }));
+
+          let totalCost = facilityCosts.reduce((sum, f) => sum + f.cost, 0);
+
+          // Add roster expansion cost: ₡500/day per robot beyond first
+          if (userRobots.length > 1) {
+            const rosterCost = (userRobots.length - 1) * 500;
+            facilityCosts.push({
+              facilityType: 'roster_expansion',
+              level: 0, // Not level-based
+              cost: rosterCost,
+            });
+            totalCost += rosterCost;
+          }
+
+          const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
+          const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
+
+          const incomeGenerator = await prisma.facility.findUnique({
+            where: {
+              userId_facilityType: {
+                userId: user.id,
+                facilityType: 'income_generator',
+              },
+            },
+          });
+
+          // Log passive income event and credit user account
+          if (passiveIncome.total > 0) {
+            await eventLogger.logPassiveIncome(
+              currentCycleNumber,
+              user.id,
+              passiveIncome.merchandising,
+              passiveIncome.streaming,
+              incomeGenerator?.level || 0,
+              user.prestige,
+              totalBattles,
+              totalFame
+            );
+            
+            // Credit the passive income to user's account
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                currency: {
+                  increment: passiveIncome.total,
+                },
+              },
+            });
+            
+            totalPassiveIncome += passiveIncome.total;
+          }
+
+          // Log operating costs event and debit user account
+          if (totalCost > 0) {
+            await eventLogger.logOperatingCosts(
+              currentCycleNumber,
+              user.id,
+              facilityCosts.filter(f => f.cost > 0),
+              totalCost
+            );
+            
+            // Deduct operating costs from user's account
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                currency: {
+                  decrement: totalCost,
+                },
+              },
+            });
+            
+            totalOperatingCosts += totalCost;
+          }
+        }
+
+        console.log(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
+        
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'calculate_passive_income_and_costs',
+          11,
+          Date.now() - step11Start,
+          { 
+            usersProcessed: allUsers.length,
+            totalPassiveIncome,
+            totalOperatingCosts,
+          }
+        );
+
+        // Step 12: Wait (1.1 second delay)
+        console.log(`[Admin] Step 12: Wait (1.1 second delay)`);
+        const step12Start = Date.now();
         await new Promise(resolve => setTimeout(resolve, 1100));
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'wait_delay',
+          12,
+          Date.now() - step12Start,
+          {}
+        );
+
+        // Log cycle complete
+        const cycleDuration = Date.now() - cycleStart;
+        await eventLogger.logCycleComplete(currentCycleNumber, cycleDuration);
+
+        // Step 13: Create Cycle Snapshot for analytics
+        console.log(`[Admin] Step 13: Create Cycle Snapshot`);
+        const step13Start = Date.now();
+        try {
+          const { cycleSnapshotService } = await import('../services/cycleSnapshotService');
+          await cycleSnapshotService.createSnapshot(currentCycleNumber);
+          console.log(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
+          await eventLogger.logCycleStepComplete(
+            currentCycleNumber,
+            'create_cycle_snapshot',
+            13,
+            Date.now() - step13Start,
+            {}
+          );
+        } catch (snapshotError) {
+          console.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
+          // Don't fail the entire cycle if snapshot creation fails
+        }
 
         cycleResults.push({
           cycle: currentCycleNumber,
@@ -609,6 +899,72 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
     console.error('[Admin] Bulk cycles error:', error);
     res.status(500).json({
       error: 'Failed to run bulk cycles',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
+ * POST /api/admin/snapshots/backfill
+ * Backfill cycle snapshots for cycles that don't have them
+ */
+router.post('/snapshots/backfill', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    console.log('[Admin] Backfilling cycle snapshots...');
+    
+    const { cycleSnapshotService } = await import('../services/cycleSnapshotService');
+    
+    // Get current cycle number
+    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+    if (!cycleMetadata || cycleMetadata.totalCycles === 0) {
+      return res.json({
+        success: true,
+        message: 'No cycles to backfill',
+        snapshotsCreated: 0,
+      });
+    }
+
+    const totalCycles = cycleMetadata.totalCycles;
+    const snapshotsCreated = [];
+    const errors = [];
+
+    // Check which cycles already have snapshots
+    const existingSnapshots = await prisma.cycleSnapshot.findMany({
+      select: { cycleNumber: true },
+    });
+    const existingCycles = new Set(existingSnapshots.map(s => s.cycleNumber));
+
+    // Create snapshots for missing cycles
+    for (let cycle = 1; cycle <= totalCycles; cycle++) {
+      if (existingCycles.has(cycle)) {
+        console.log(`[Admin] Snapshot already exists for cycle ${cycle}, skipping`);
+        continue;
+      }
+
+      try {
+        console.log(`[Admin] Creating snapshot for cycle ${cycle}`);
+        await cycleSnapshotService.createSnapshot(cycle);
+        snapshotsCreated.push(cycle);
+      } catch (error) {
+        console.error(`[Admin] Failed to create snapshot for cycle ${cycle}:`, error);
+        errors.push({
+          cycle,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      totalCycles,
+      snapshotsCreated: snapshotsCreated.length,
+      cycles: snapshotsCreated,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error('[Admin] Backfill snapshots error:', error);
+    res.status(500).json({
+      error: 'Failed to backfill snapshots',
       message: error instanceof Error ? error.message : String(error),
     });
   }

@@ -1423,6 +1423,7 @@ async function updateTagTeamBattleResults(
       data: {
         elo: { increment: realTeamELOChange },
         currentHP: activeFinalHP,
+        repairCost: activeRepairCost, // Store calculated repair cost
         damageTaken: { increment: realTeam.activeRobot.maxHP - activeFinalHP },
         fame: { increment: activeFame },
         totalTagTeamBattles: { increment: 1 },
@@ -1438,6 +1439,7 @@ async function updateTagTeamBattleResults(
       data: {
         elo: { increment: realTeamELOChange },
         currentHP: reserveFinalHP,
+        repairCost: reserveRepairCost, // Store calculated repair cost
         damageTaken: tagOutTime !== undefined 
           ? { increment: realTeam.reserveRobot.maxHP - reserveFinalHP }
           : undefined,
@@ -1681,6 +1683,7 @@ async function updateTagTeamBattleResults(
     data: {
       elo: { increment: eloChanges.team1Change },
       currentHP: result.team1ActiveFinalHP,
+      repairCost: team1ActiveRepairCost, // Store calculated repair cost
       damageTaken: { increment: team1.activeRobot.maxHP - result.team1ActiveFinalHP },
       fame: { increment: team1ActiveFame },
       totalTagTeamBattles: { increment: 1 },
@@ -1696,6 +1699,7 @@ async function updateTagTeamBattleResults(
     data: {
       elo: { increment: eloChanges.team1Change },
       currentHP: result.team1ReserveFinalHP,
+      repairCost: team1ReserveRepairCost, // Store calculated repair cost
       damageTaken: result.team1TagOutTime !== undefined 
         ? { increment: team1.reserveRobot.maxHP - result.team1ReserveFinalHP }
         : undefined,
@@ -1713,6 +1717,7 @@ async function updateTagTeamBattleResults(
     data: {
       elo: { increment: eloChanges.team2Change },
       currentHP: result.team2ActiveFinalHP,
+      repairCost: team2ActiveRepairCost, // Store calculated repair cost
       damageTaken: { increment: team2.activeRobot.maxHP - result.team2ActiveFinalHP },
       fame: { increment: team2ActiveFame },
       totalTagTeamBattles: { increment: 1 },
@@ -1728,6 +1733,7 @@ async function updateTagTeamBattleResults(
     data: {
       elo: { increment: eloChanges.team2Change },
       currentHP: result.team2ReserveFinalHP,
+      repairCost: team2ReserveRepairCost, // Store calculated repair cost
       damageTaken: result.team2TagOutTime !== undefined 
         ? { increment: team2.reserveRobot.maxHP - result.team2ReserveFinalHP }
         : undefined,

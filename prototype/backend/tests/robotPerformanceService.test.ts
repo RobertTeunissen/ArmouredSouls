@@ -1,0 +1,1126 @@
+/**
+ * Unit tests for RobotPerformanceService
+ * 
+ * Tests robot performance queries, aggregation, and ELO progression
+ */
+
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import prisma from '../src/lib/prisma';
+import { robotPerformanceService } from '../src/services/robotPerformanceService';
+import { eventLogger } from '../src/services/eventLogger';
+import { cycleSnapshotService } from '../src/services/cycleSnapshotService';
+
+describe('RobotPerformanceService', () => {
+  let testUserId: number;
+  let testRobotId: number;
+  let testRobot2Id: number;
+
+  beforeAll(async () => {
+    // Create test user
+    const user = await prisma.user.create({
+      data: {
+        username: `test_robot_perf_${Date.now()}`,
+        passwordHash: 'test',
+        currency: 1000000,
+      },
+    });
+    testUserId = user.id;
+
+    // Create test robots
+    const robot1 = await prisma.robot.create({
+      data: {
+        userId: testUserId,
+        name: 'TestRobot1',
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 20,
+        maxShield: 20,
+        elo: 1200,
+      },
+    });
+    testRobotId = robot1.id;
+
+    const robot2 = await prisma.robot.create({
+      data: {
+        userId: testUserId,
+        name: 'TestRobot2',
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 20,
+        maxShield: 20,
+        elo: 1200,
+      },
+    });
+    testRobot2Id = robot2.id;
+  });
+
+  afterAll(async () => {
+    // Cleanup
+    await prisma.battle.deleteMany({ where: { userId: testUserId } });
+    await prisma.robot.deleteMany({ where: { userId: testUserId } });
+    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.auditLog.deleteMany({ where: { cycleNumber: { gte: 1000 } } });
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: { gte: 1000 } } });
+  });
+
+  beforeEach(async () => {
+    // Clean up test data before each test
+    await prisma.battle.deleteMany({ where: { userId: testUserId } });
+    await prisma.auditLog.deleteMany({ where: { cycleNumber: { gte: 1000 } } });
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: { gte: 1000 } } });
+  });
+
+  describe('getRobotPerformanceSummary', () => {
+    it('should return empty summary when no battles exist', async () => {
+      // Create cycle events
+      const cycleNumber = 1000;
+      await eventLogger.logCycleStart(cycleNumber, 'manual');
+      await eventLogger.logCycleComplete(cycleNumber, 1000);
+
+      const summary = await robotPerformanceService.getRobotPerformanceSummary(
+        testRobotId,
+        [cycleNumber, cycleNumber]
+      );
+
+      expect(summary.robotId).toBe(testRobotId);
+      expect(summary.battlesParticipated).toBe(0);
+      expect(summary.wins).toBe(0);
+      expect(summary.losses).toBe(0);
+      expect(summary.draws).toBe(0);
+      expect(summary.winRate).toBe(0);
+      expect(summary.damageDealt).toBe(0);
+      expect(summary.damageReceived).toBe(0);
+      expect(summary.totalCreditsEarned).toBe(0);
+    });
+
+    it('should aggregate battle statistics correctly', async () => {
+      const cycleNumber = 1001;
+      
+      // Create cycle events
+      await eventLogger.logCycleStart(cycleNumber, 'manual');
+
+      // Create battles
+      const battle1 = await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+
+      const battle2 = await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobot2Id,
+          robot2Id: testRobotId,
+          winnerId: testRobot2Id,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 150,
+          robot2RepairCost: 250,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 30,
+          robot2FinalHP: 0,
+          robot1FinalShield: 5,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 120,
+          robot2DamageDealt: 70,
+          robot1ELOBefore: 1180,
+          robot1ELOAfter: 1200,
+          robot2ELOBefore: 1220,
+          robot2ELOAfter: 1200,
+          eloChange: 20,
+        },
+      });
+
+      await eventLogger.logCycleComplete(cycleNumber, 2000);
+
+      const summary = await robotPerformanceService.getRobotPerformanceSummary(
+        testRobotId,
+        [cycleNumber, cycleNumber]
+      );
+
+      expect(summary.robotId).toBe(testRobotId);
+      expect(summary.battlesParticipated).toBe(2);
+      expect(summary.wins).toBe(1);
+      expect(summary.losses).toBe(1);
+      expect(summary.draws).toBe(0);
+      expect(summary.winRate).toBe(50); // 1 win out of 2 battles
+      expect(summary.damageDealt).toBe(170); // 100 + 70
+      expect(summary.damageReceived).toBe(170); // 50 + 120
+      expect(summary.totalCreditsEarned).toBe(1500); // 1000 (win) + 500 (loss)
+      expect(summary.totalFameEarned).toBe(30); // 20 + 10
+      expect(summary.eloChange).toBe(0); // +20 - 20
+      expect(summary.eloStart).toBe(1200);
+      expect(summary.eloEnd).toBe(1200);
+    });
+
+    it('should calculate win rate correctly with draws', async () => {
+      const cycleNumber = 1002;
+      
+      await eventLogger.logCycleStart(cycleNumber, 'manual');
+
+      // Create a draw battle
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: null, // Draw
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 0,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 100,
+          robot1PrestigeAwarded: 5,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 10,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 10,
+          robot2FinalHP: 10,
+          robot1FinalShield: 0,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 90,
+          robot2DamageDealt: 90,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1200,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1200,
+          eloChange: 0,
+        },
+      });
+
+      await eventLogger.logCycleComplete(cycleNumber, 1000);
+
+      const summary = await robotPerformanceService.getRobotPerformanceSummary(
+        testRobotId,
+        [cycleNumber, cycleNumber]
+      );
+
+      expect(summary.battlesParticipated).toBe(1);
+      expect(summary.wins).toBe(0);
+      expect(summary.losses).toBe(0);
+      expect(summary.draws).toBe(1);
+      expect(summary.winRate).toBe(0); // 0 wins out of 1 battle
+    });
+
+    it('should aggregate across multiple cycles', async () => {
+      const cycle1 = 1003;
+      const cycle2 = 1004;
+
+      // Cycle 1
+      await eventLogger.logCycleStart(cycle1, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle1, 1000);
+
+      // Cycle 2
+      await eventLogger.logCycleStart(cycle2, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 60,
+          robot2FinalHP: 0,
+          robot1FinalShield: 15,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 40,
+          robot1ELOBefore: 1220,
+          robot1ELOAfter: 1240,
+          robot2ELOBefore: 1180,
+          robot2ELOAfter: 1160,
+          eloChange: 20,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle2, 1000);
+
+      const summary = await robotPerformanceService.getRobotPerformanceSummary(
+        testRobotId,
+        [cycle1, cycle2]
+      );
+
+      expect(summary.battlesParticipated).toBe(2);
+      expect(summary.wins).toBe(2);
+      expect(summary.losses).toBe(0);
+      expect(summary.winRate).toBe(100);
+      expect(summary.damageDealt).toBe(200);
+      expect(summary.damageReceived).toBe(90);
+      expect(summary.totalCreditsEarned).toBe(2000);
+      expect(summary.eloChange).toBe(40);
+      expect(summary.eloStart).toBe(1200);
+      expect(summary.eloEnd).toBe(1240);
+    });
+  });
+
+  describe('getELOProgression', () => {
+    it('should return empty progression when no battles exist', async () => {
+      const cycleNumber = 1005;
+      await eventLogger.logCycleStart(cycleNumber, 'manual');
+      await eventLogger.logCycleComplete(cycleNumber, 1000);
+
+      const progression = await robotPerformanceService.getELOProgression(
+        testRobotId,
+        [cycleNumber, cycleNumber]
+      );
+
+      expect(progression.robotId).toBe(testRobotId);
+      expect(progression.dataPoints).toHaveLength(0);
+      expect(progression.startElo).toBe(0);
+      expect(progression.endElo).toBe(0);
+      expect(progression.totalChange).toBe(0);
+    });
+
+    it('should track ELO progression across cycles', async () => {
+      const cycle1 = 1006;
+      const cycle2 = 1007;
+
+      // Cycle 1 - Win
+      await eventLogger.logCycleStart(cycle1, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle1, 1000);
+
+      // Cycle 2 - Loss
+      await eventLogger.logCycleStart(cycle2, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobot2Id,
+          robot2Id: testRobotId,
+          winnerId: testRobot2Id,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 150,
+          robot2RepairCost: 250,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 30,
+          robot2FinalHP: 0,
+          robot1FinalShield: 5,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 120,
+          robot2DamageDealt: 70,
+          robot1ELOBefore: 1180,
+          robot1ELOAfter: 1195,
+          robot2ELOBefore: 1220,
+          robot2ELOAfter: 1205,
+          eloChange: 15,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle2, 1000);
+
+      const progression = await robotPerformanceService.getELOProgression(
+        testRobotId,
+        [cycle1, cycle2]
+      );
+
+      expect(progression.robotId).toBe(testRobotId);
+      expect(progression.dataPoints).toHaveLength(2);
+      expect(progression.startElo).toBe(1200);
+      expect(progression.endElo).toBe(1205);
+      expect(progression.totalChange).toBe(5); // +20 - 15
+
+      // Check data points
+      expect(progression.dataPoints[0].cycleNumber).toBe(cycle1);
+      expect(progression.dataPoints[0].elo).toBe(1220);
+      expect(progression.dataPoints[0].change).toBe(20);
+
+      expect(progression.dataPoints[1].cycleNumber).toBe(cycle2);
+      expect(progression.dataPoints[1].elo).toBe(1205);
+      expect(progression.dataPoints[1].change).toBe(-15);
+    });
+
+    it('should handle multiple battles in a single cycle', async () => {
+      const cycleNumber = 1008;
+
+      await eventLogger.logCycleStart(cycleNumber, 'manual');
+
+      // Battle 1 - Win
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+
+      // Battle 2 - Win
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 60,
+          robot2FinalHP: 0,
+          robot1FinalShield: 15,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 40,
+          robot1ELOBefore: 1220,
+          robot1ELOAfter: 1235,
+          robot2ELOBefore: 1180,
+          robot2ELOAfter: 1165,
+          eloChange: 15,
+        },
+      });
+
+      await eventLogger.logCycleComplete(cycleNumber, 2000);
+
+      const progression = await robotPerformanceService.getELOProgression(
+        testRobotId,
+        [cycleNumber, cycleNumber]
+      );
+
+      expect(progression.dataPoints).toHaveLength(1);
+      expect(progression.dataPoints[0].cycleNumber).toBe(cycleNumber);
+      expect(progression.dataPoints[0].elo).toBe(1235);
+      expect(progression.dataPoints[0].change).toBe(35); // 20 + 15
+      expect(progression.totalChange).toBe(35);
+    });
+  });
+
+  describe('getRobotMetricProgression', () => {
+    it('should track ELO progression (same as getELOProgression)', async () => {
+      const cycle1 = 2001;
+      const cycle2 = 2002;
+
+      // Cycle 1 - Win
+      await eventLogger.logCycleStart(cycle1, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle1, 1000);
+
+      // Cycle 2 - Loss
+      await eventLogger.logCycleStart(cycle2, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobot2Id,
+          robot2Id: testRobotId,
+          winnerId: testRobot2Id,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 150,
+          robot2RepairCost: 250,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 30,
+          robot2FinalHP: 0,
+          robot1FinalShield: 5,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 120,
+          robot2DamageDealt: 70,
+          robot1ELOBefore: 1180,
+          robot1ELOAfter: 1195,
+          robot2ELOBefore: 1220,
+          robot2ELOAfter: 1205,
+          eloChange: 15,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle2, 1000);
+
+      const progression = await robotPerformanceService.getRobotMetricProgression(
+        testRobotId,
+        'elo',
+        [cycle1, cycle2]
+      );
+
+      expect(progression.robotId).toBe(testRobotId);
+      expect(progression.metric).toBe('elo');
+      expect(progression.dataPoints).toHaveLength(2);
+      expect(progression.startValue).toBe(1200);
+      expect(progression.endValue).toBe(1205);
+      expect(progression.totalChange).toBe(5); // +20 - 15
+      expect(progression.movingAverage).toBeDefined();
+    });
+
+    it('should track fame progression', async () => {
+      const cycle1 = 2003;
+      const cycle2 = 2004;
+
+      await eventLogger.logCycleStart(cycle1, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 50,
+          robot2FameAwarded: 25,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle1, 1000);
+
+      await eventLogger.logCycleStart(cycle2, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 75,
+          robot2FameAwarded: 30,
+          robot1FinalHP: 60,
+          robot2FinalHP: 0,
+          robot1FinalShield: 15,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 40,
+          robot1ELOBefore: 1220,
+          robot1ELOAfter: 1240,
+          robot2ELOBefore: 1180,
+          robot2ELOAfter: 1160,
+          eloChange: 20,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle2, 1000);
+
+      const progression = await robotPerformanceService.getRobotMetricProgression(
+        testRobotId,
+        'fame',
+        [cycle1, cycle2]
+      );
+
+      expect(progression.metric).toBe('fame');
+      expect(progression.dataPoints).toHaveLength(2);
+      expect(progression.dataPoints[0].value).toBe(50);
+      expect(progression.dataPoints[0].change).toBe(50);
+      expect(progression.dataPoints[1].value).toBe(125); // 50 + 75
+      expect(progression.dataPoints[1].change).toBe(75);
+      expect(progression.totalChange).toBe(125);
+    });
+
+    it('should track damage dealt progression', async () => {
+      const cycleNumber = 2005;
+
+      await eventLogger.logCycleStart(cycleNumber, 'manual');
+      
+      // Battle 1
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 150,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+
+      // Battle 2
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 60,
+          robot2FinalHP: 0,
+          robot1FinalShield: 15,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 200,
+          robot2DamageDealt: 40,
+          robot1ELOBefore: 1220,
+          robot1ELOAfter: 1235,
+          robot2ELOBefore: 1180,
+          robot2ELOAfter: 1165,
+          eloChange: 15,
+        },
+      });
+
+      await eventLogger.logCycleComplete(cycleNumber, 2000);
+
+      const progression = await robotPerformanceService.getRobotMetricProgression(
+        testRobotId,
+        'damageDealt',
+        [cycleNumber, cycleNumber]
+      );
+
+      expect(progression.metric).toBe('damageDealt');
+      expect(progression.dataPoints).toHaveLength(1);
+      expect(progression.dataPoints[0].value).toBe(350); // 150 + 200
+      expect(progression.dataPoints[0].change).toBe(350);
+      expect(progression.totalChange).toBe(350);
+    });
+
+    it('should track wins progression', async () => {
+      const cycleNumber = 2006;
+
+      await eventLogger.logCycleStart(cycleNumber, 'manual');
+      
+      // Win
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+
+      // Loss
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobot2Id,
+          robot2Id: testRobotId,
+          winnerId: testRobot2Id,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 150,
+          robot2RepairCost: 250,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 30,
+          robot2FinalHP: 0,
+          robot1FinalShield: 5,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 120,
+          robot2DamageDealt: 70,
+          robot1ELOBefore: 1180,
+          robot1ELOAfter: 1195,
+          robot2ELOBefore: 1220,
+          robot2ELOAfter: 1205,
+          eloChange: 15,
+        },
+      });
+
+      // Win
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 60,
+          robot2FinalHP: 0,
+          robot1FinalShield: 15,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 40,
+          robot1ELOBefore: 1205,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1195,
+          robot2ELOAfter: 1180,
+          eloChange: 15,
+        },
+      });
+
+      await eventLogger.logCycleComplete(cycleNumber, 3000);
+
+      const progression = await robotPerformanceService.getRobotMetricProgression(
+        testRobotId,
+        'wins',
+        [cycleNumber, cycleNumber]
+      );
+
+      expect(progression.metric).toBe('wins');
+      expect(progression.dataPoints).toHaveLength(1);
+      expect(progression.dataPoints[0].value).toBe(2); // 2 wins
+      expect(progression.dataPoints[0].change).toBe(2);
+      expect(progression.totalChange).toBe(2);
+    });
+
+    it('should track credits earned progression', async () => {
+      const cycleNumber = 2007;
+
+      await eventLogger.logCycleStart(cycleNumber, 'manual');
+      
+      // Win - 1000 credits
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+
+      // Loss - 500 credits
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobot2Id,
+          robot2Id: testRobotId,
+          winnerId: testRobot2Id,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 150,
+          robot2RepairCost: 250,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 30,
+          robot2FinalHP: 0,
+          robot1FinalShield: 5,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 120,
+          robot2DamageDealt: 70,
+          robot1ELOBefore: 1180,
+          robot1ELOAfter: 1195,
+          robot2ELOBefore: 1220,
+          robot2ELOAfter: 1205,
+          eloChange: 15,
+        },
+      });
+
+      await eventLogger.logCycleComplete(cycleNumber, 2000);
+
+      const progression = await robotPerformanceService.getRobotMetricProgression(
+        testRobotId,
+        'creditsEarned',
+        [cycleNumber, cycleNumber]
+      );
+
+      expect(progression.metric).toBe('creditsEarned');
+      expect(progression.dataPoints).toHaveLength(1);
+      expect(progression.dataPoints[0].value).toBe(1500); // 1000 + 500
+      expect(progression.dataPoints[0].change).toBe(1500);
+      expect(progression.totalChange).toBe(1500);
+    });
+
+    it('should calculate moving averages correctly', async () => {
+      const cycle1 = 2008;
+      const cycle2 = 2009;
+      const cycle3 = 2010;
+
+      // Create 3 cycles with different ELO changes
+      await eventLogger.logCycleStart(cycle1, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot1ELOAfter: 1220,
+          robot2ELOBefore: 1200,
+          robot2ELOAfter: 1180,
+          eloChange: 20,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle1, 1000);
+
+      await eventLogger.logCycleStart(cycle2, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 60,
+          robot2FinalHP: 0,
+          robot1FinalShield: 15,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 40,
+          robot1ELOBefore: 1220,
+          robot1ELOAfter: 1250,
+          robot2ELOBefore: 1180,
+          robot2ELOAfter: 1150,
+          eloChange: 30,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle2, 1000);
+
+      await eventLogger.logCycleStart(cycle3, 'manual');
+      await prisma.battle.create({
+        data: {
+          userId: testUserId,
+          robot1Id: testRobotId,
+          robot2Id: testRobot2Id,
+          winnerId: testRobotId,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 30,
+          winnerReward: 1000,
+          loserReward: 500,
+          robot1RepairCost: 100,
+          robot2RepairCost: 200,
+          robot1PrestigeAwarded: 10,
+          robot2PrestigeAwarded: 5,
+          robot1FameAwarded: 20,
+          robot2FameAwarded: 10,
+          robot1FinalHP: 70,
+          robot2FinalHP: 0,
+          robot1FinalShield: 20,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 30,
+          robot1ELOBefore: 1250,
+          robot1ELOAfter: 1260,
+          robot2ELOBefore: 1150,
+          robot2ELOAfter: 1140,
+          eloChange: 10,
+        },
+      });
+      await eventLogger.logCycleComplete(cycle3, 1000);
+
+      const progression = await robotPerformanceService.getRobotMetricProgression(
+        testRobotId,
+        'elo',
+        [cycle1, cycle3]
+      );
+
+      expect(progression.dataPoints).toHaveLength(3);
+      expect(progression.movingAverage).toHaveLength(3);
+      
+      // First two points should equal their values (not enough data for average)
+      expect(progression.movingAverage![0]).toBe(1220);
+      expect(progression.movingAverage![1]).toBe(1250);
+      
+      // Third point should be average of all three
+      const expectedAvg = (1220 + 1250 + 1260) / 3;
+      expect(progression.movingAverage![2]).toBeCloseTo(expectedAvg, 1);
+    });
+  });
+});
