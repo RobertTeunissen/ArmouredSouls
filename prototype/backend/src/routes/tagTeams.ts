@@ -69,6 +69,9 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     // Get team with robot details
     const teamWithRobots = await getTeamById(result.team!.id);
 
+    // Console log for cycle logs
+    console.log(`[TagTeam] User ${req.user.userId} | Created team | Active: ${activeRobotId} (${activeRobot.name}) | Reserve: ${reserveRobotId} (${reserveRobot.name})`);
+
     res.status(201).json({
       team: teamWithRobots,
       message: 'Tag team created successfully',
@@ -187,6 +190,9 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
     if (!success) {
       return res.status(404).json({ error: 'Team not found or you do not own this team' });
     }
+
+    // Console log for cycle logs
+    console.log(`[TagTeam] User ${req.user.userId} | Disbanded team | Team ID: ${teamId}`);
 
     res.json({
       message: 'Team disbanded successfully',

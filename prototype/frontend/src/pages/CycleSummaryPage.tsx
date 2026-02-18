@@ -14,13 +14,19 @@ interface CycleData {
   cycleNumber: number;
   income: number;
   expenses: number;
+  purchases: number;
   netProfit: number;
+  balance: number; // Balance at end of cycle
   breakdown: {
     battleCredits: number;
     merchandising: number;
     streaming: number;
     repairCosts: number;
     operatingCosts: number;
+    weaponPurchases: number;
+    facilityPurchases: number;
+    robotPurchases: number;
+    attributeUpgrades: number;
   };
 }
 
@@ -29,6 +35,7 @@ interface CycleSummaryData {
   cycleRange: [number, number];
   totalIncome: number;
   totalExpenses: number;
+  totalPurchases: number;
   netProfit: number;
   cycles: CycleData[];
 }
@@ -76,7 +83,9 @@ function CycleSummaryPage() {
   };
 
   const formatCurrency = (amount: number): string => {
-    return `₡${Math.floor(amount).toLocaleString()}`;
+    // Handle NaN, null, undefined
+    const safeAmount = Number(amount) || 0;
+    return `₡${Math.floor(safeAmount).toLocaleString()}`;
   };
 
   const getBarHeight = (value: number, maxValue: number): number => {
@@ -113,10 +122,6 @@ function CycleSummaryPage() {
       </div>
     );
   }
-
-  const avgNetProfit = data.cycles.length > 0 
-    ? data.cycles.reduce((sum, c) => sum + c.netProfit, 0) / data.cycles.length 
-    : 0;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -166,15 +171,15 @@ function CycleSummaryPage() {
             </div>
           </div>
           <div className="bg-gray-800 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Net Profit</div>
-            <div className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {data.netProfit >= 0 ? '+' : ''}{formatCurrency(data.netProfit)}
+            <div className="text-sm text-gray-400 mb-2">Total Purchases</div>
+            <div className="text-2xl font-bold text-orange-400">
+              {formatCurrency(data.totalPurchases)}
             </div>
           </div>
           <div className="bg-gray-800 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Avg Net Profit/Cycle</div>
-            <div className={`text-2xl font-bold ${avgNetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {avgNetProfit >= 0 ? '+' : ''}{formatCurrency(avgNetProfit)}
+            <div className="text-sm text-gray-400 mb-2">Net Profit</div>
+            <div className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {data.netProfit >= 0 ? '+' : ''}{formatCurrency(data.netProfit)}
             </div>
           </div>
         </div>
@@ -299,7 +304,13 @@ function CycleSummaryPage() {
                     Total Expenses
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Purchases
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Net Profit
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Balance
                   </th>
                 </tr>
               </thead>
@@ -330,10 +341,28 @@ function CycleSummaryPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-red-400">
                       {formatCurrency(cycle.expenses)}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-300">
+                      <div className="group relative">
+                        <span className="font-medium text-orange-400 cursor-help">
+                          {formatCurrency(cycle.purchases)}
+                        </span>
+                        {cycle.purchases > 0 && (
+                          <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-2 px-3 whitespace-nowrap z-10 border border-gray-700">
+                            <div>Weapons: {formatCurrency(cycle.breakdown.weaponPurchases)}</div>
+                            <div>Facilities: {formatCurrency(cycle.breakdown.facilityPurchases)}</div>
+                            <div>Robots: {formatCurrency(cycle.breakdown.robotPurchases || 0)}</div>
+                            <div>Upgrades: {formatCurrency(cycle.breakdown.attributeUpgrades)}</div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-bold ${
                       cycle.netProfit >= 0 ? 'text-green-400' : 'text-red-400'
                     }`}>
                       {cycle.netProfit >= 0 ? '+' : ''}{formatCurrency(cycle.netProfit)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-400">
+                      {formatCurrency(cycle.balance)}
                     </td>
                   </tr>
                 ))}

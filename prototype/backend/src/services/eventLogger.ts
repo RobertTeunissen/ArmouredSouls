@@ -47,6 +47,7 @@ export enum EventType {
   CYCLE_START = 'cycle_start',
   CYCLE_STEP_COMPLETE = 'cycle_step_complete',
   CYCLE_COMPLETE = 'cycle_complete',
+  CYCLE_END_BALANCE = 'cycle_end_balance',
 }
 
 /**
@@ -311,7 +312,9 @@ export class EventLogger {
     oldLevel: number,
     newLevel: number,
     cost: number,
-    action: 'purchase' | 'upgrade'
+    action: 'purchase' | 'upgrade',
+    balanceBefore?: number,
+    balanceAfter?: number
   ): Promise<void> {
     await this.logEvent(
       cycleNumber,
@@ -322,6 +325,8 @@ export class EventLogger {
         newLevel,
         cost,
         action,
+        ...(balanceBefore !== undefined && { balanceBefore }),
+        ...(balanceAfter !== undefined && { balanceAfter }),
       },
       { userId }
     );
@@ -471,7 +476,8 @@ export class EventLogger {
     attributeName: string,
     oldValue: number,
     newValue: number,
-    cost: number
+    cost: number,
+    userId?: number
   ): Promise<void> {
     await this.logEvent(
       cycleNumber,
@@ -482,7 +488,7 @@ export class EventLogger {
         newValue,
         cost,
       },
-      { robotId }
+      { robotId, userId }
     );
   }
   
@@ -494,16 +500,20 @@ export class EventLogger {
     robotId: number,
     cost: number,
     damageRepaired: number,
-    discountPercent: number
+    discountPercent: number,
+    cycleNumber?: number
   ): Promise<void> {
-    // Get current cycle number
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({
-      where: { id: 1 },
-    });
-    const cycleNumber = cycleMetadata?.totalCycles || 0;
+    // Use provided cycle number, or get current cycle number from metadata
+    let actualCycleNumber = cycleNumber;
+    if (actualCycleNumber === undefined) {
+      const cycleMetadata = await prisma.cycleMetadata.findUnique({
+        where: { id: 1 },
+      });
+      actualCycleNumber = cycleMetadata?.totalCycles || 0;
+    }
     
     await this.logEvent(
-      cycleNumber,
+      actualCycleNumber,
       EventType.ROBOT_REPAIR,
       {
         cost,

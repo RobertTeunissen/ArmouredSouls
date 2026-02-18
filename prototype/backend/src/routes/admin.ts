@@ -10,6 +10,7 @@ import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { calculateMaxHP, calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { repairAllRobots } from '../services/repairService';
+import { cycleLogger } from '../utils/cycleLogger';
 import prisma from '../lib/prisma';
 import tournamentRoutes from './adminTournaments';
 import { 
@@ -413,6 +414,11 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
     for (let i = 1; i <= cycleCount; i++) {
       const cycleStart = Date.now();
       currentCycleNumber++;
+      
+      // Start cycle logging
+      cycleLogger.startCycle(currentCycleNumber);
+      cycleLogger.log('INFO', `Cycle ${currentCycleNumber} (${i}/${cycleCount})`);
+
       console.log(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
 
       try {
@@ -434,7 +440,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // Step 2: Repair All Robots (costs deducted) - after league battles
         console.log(`[Admin] Step 2: Repair All Robots (post-league)`);
         const step2Start = Date.now();
-        const repair1Summary = await repairAllRobots(true);
+        const repair1Summary = await repairAllRobots(true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'repair_post_league',
@@ -465,7 +471,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // Step 4: Repair All Robots (costs deducted) - after tag team battles
         console.log(`[Admin] Step 4: Repair All Robots (post-tag-team)`);
         const step4Start = Date.now();
-        const repair2Summary = await repairAllRobots(true);
+        const repair2Summary = await repairAllRobots(true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'repair_post_tag_team',
@@ -563,7 +569,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // Step 6: Repair All Robots (costs deducted) - after tournaments
         console.log(`[Admin] Step 6: Repair All Robots (post-tournament)`);
         const step6Start = Date.now();
-        const repair3Summary = await repairAllRobots(true);
+        const repair3Summary = await repairAllRobots(true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'repair_post_tournament',
@@ -795,6 +801,11 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             );
             
             // Deduct operating costs from user's account
+            const userBeforeDeduction = await prisma.user.findUnique({
+              where: { id: user.id },
+              select: { currency: true },
+            });
+            
             await prisma.user.update({
               where: { id: user.id },
               data: {
@@ -803,6 +814,10 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
                 },
               },
             });
+            
+            // Console log for cycle logs
+            const facilityList = facilityCosts.filter(f => f.cost > 0).map(f => `${f.facilityType}(L${f.level}): ₡${f.cost}`).join(', ');
+            console.log(`[OperatingCosts] User ${user.id} | Total: ₡${totalCost.toLocaleString()} | Facilities: ${facilityList}`);
             
             totalOperatingCosts += totalCost;
           }
@@ -857,6 +872,27 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           // Don't fail the entire cycle if snapshot creation fails
         }
 
+        // Step 14: Log End-of-Cycle Balances
+        console.log(`[Admin] Step 14: Log End-of-Cycle Balances`);
+        console.log(`[Admin] === End of Cycle ${currentCycleNumber} Balances ===`);
+        const endOfCycleUsers = await prisma.user.findMany({
+          where: {
+            NOT: { username: 'bye_robot_user' },
+          },
+          select: {
+            id: true,
+            username: true,
+            stableName: true,
+            currency: true,
+          },
+          orderBy: { id: 'asc' },
+        });
+
+        for (const user of endOfCycleUsers) {
+          console.log(`[Balance] User ${user.id} | Stable: ${user.stableName || user.username} | Balance: ₡${user.currency.toLocaleString()}`);
+        }
+        console.log(`[Admin] ===================================`);
+
         cycleResults.push({
           cycle: currentCycleNumber,
           battles: battleSummary,
@@ -872,8 +908,14 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           tagTeamMatchmaking: tagTeamMatchmakingSummary,
           duration: Date.now() - cycleStart,
         });
+
+        // End cycle logging
+        cycleLogger.endCycle();
       } catch (error) {
         console.error(`[Admin] Error in cycle ${currentCycleNumber}:`, error);
+        cycleLogger.log('ERROR', `Cycle ${currentCycleNumber} failed`, { error: error instanceof Error ? error.message : String(error) });
+        cycleLogger.endCycle();
+        
         cycleResults.push({
           cycle: currentCycleNumber,
           error: error instanceof Error ? error.message : String(error),
@@ -1136,6 +1178,194 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     console.error('[Admin] Stats error:', error);
     res.status(500).json({
       error: 'Failed to retrieve stats',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
+ * GET /api/admin/users/at-risk
+ * Get list of users at risk of bankruptcy with financial history
+ */
+router.get('/users/at-risk', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    // Get current cycle number
+    const cycleMetadata = await prisma.cycleMetadata.findUnique({
+      where: { id: 1 },
+    });
+    const currentCycle = cycleMetadata?.totalCycles || 0;
+
+    // Get users below bankruptcy threshold
+    const atRiskUsers = await prisma.user.findMany({
+      where: {
+        currency: {
+          lt: BANKRUPTCY_RISK_THRESHOLD,
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        stableName: true,
+        currency: true,
+        createdAt: true,
+        robots: {
+          select: {
+            id: true,
+            name: true,
+            currentHP: true,
+            maxHP: true,
+            repairCost: true,
+            battleReadiness: true,
+          },
+        },
+      },
+      orderBy: {
+        currency: 'asc', // Most at risk first
+      },
+    });
+
+    // For each user, get their financial history from audit logs
+    const usersWithHistory = await Promise.all(
+      atRiskUsers.map(async (user) => {
+        // Get all financial events from audit logs
+        const financialEvents = await prisma.auditLog.findMany({
+          where: {
+            userId: user.id,
+            eventType: {
+              in: ['credit_change', 'operating_costs', 'passive_income', 'robot_repair'],
+            },
+            cycleNumber: {
+              gte: Math.max(1, currentCycle - 30), // Last 30 cycles
+            },
+          },
+          select: {
+            cycleNumber: true,
+            eventTimestamp: true,
+            eventType: true,
+            payload: true,
+            sequenceNumber: true,
+          },
+          orderBy: [
+            { cycleNumber: 'desc' },
+            { sequenceNumber: 'desc' },
+          ],
+        });
+
+        // Calculate balance for each cycle by working backwards from current balance
+        const cycleMap = new Map<number, { costs: number; income: number; repairs: number }>();
+        
+        for (const event of financialEvents) {
+          const cycle = event.cycleNumber;
+          if (!cycleMap.has(cycle)) {
+            cycleMap.set(cycle, { costs: 0, income: 0, repairs: 0 });
+          }
+          
+          const cycleData = cycleMap.get(cycle)!;
+          
+          if (event.eventType === 'operating_costs') {
+            cycleData.costs += (event.payload as any)?.totalCost || 0;
+          } else if (event.eventType === 'passive_income') {
+            cycleData.income += (event.payload as any)?.totalIncome || 0;
+          } else if (event.eventType === 'robot_repair') {
+            cycleData.repairs += (event.payload as any)?.cost || 0;
+          } else if (event.eventType === 'credit_change') {
+            // Track credit changes (battle rewards, etc.)
+            const amount = (event.payload as any)?.amount || 0;
+            if (amount > 0) {
+              cycleData.income += amount;
+            } else {
+              cycleData.costs += Math.abs(amount);
+            }
+          }
+        }
+
+        // Build balance history by working backwards from current balance
+        const cycles = Array.from(cycleMap.keys()).sort((a, b) => b - a); // Descending order
+        const balanceHistory: Array<{
+          cycle: number;
+          timestamp: Date;
+          balance: number;
+          dailyCost: number;
+          dailyIncome: number;
+        }> = [];
+        
+        let runningBalance = user.currency; // Start with current balance (end of most recent cycle)
+        
+        for (const cycle of cycles) {
+          const data = cycleMap.get(cycle)!;
+          const totalCosts = data.costs + data.repairs;
+          const netChange = data.income - totalCosts;
+          
+          // Store the balance at the END of this cycle
+          balanceHistory.push({
+            cycle,
+            timestamp: financialEvents.find(e => e.cycleNumber === cycle)?.eventTimestamp || new Date(),
+            balance: runningBalance,
+            dailyCost: totalCosts,
+            dailyIncome: data.income,
+          });
+          
+          // Work backwards: subtract the net change to get balance at END of previous cycle
+          runningBalance -= netChange;
+        }
+        
+        // Sort by cycle descending (most recent first) and limit to 10
+        balanceHistory.sort((a, b) => b.cycle - a.cycle);
+        const recentHistory = balanceHistory.slice(0, 10);
+
+        // Determine when they first went below threshold
+        let cyclesAtRisk = 0;
+        let firstAtRiskCycle = null;
+        
+        // Check balance history in reverse chronological order
+        for (let i = 0; i < balanceHistory.length; i++) {
+          if (balanceHistory[i].balance < BANKRUPTCY_RISK_THRESHOLD) {
+            cyclesAtRisk++;
+            firstAtRiskCycle = balanceHistory[i].cycle;
+          } else {
+            // Found a cycle where they were above threshold, stop counting
+            break;
+          }
+        }
+
+        // Calculate total repair costs needed
+        const totalRepairCost = user.robots.reduce((sum, robot) => sum + robot.repairCost, 0);
+
+        // Calculate days of runway (assuming average daily cost)
+        const avgDailyCost = recentHistory.length > 0
+          ? recentHistory.reduce((sum, h) => sum + h.dailyCost, 0) / recentHistory.length
+          : 0;
+        const daysOfRunway = avgDailyCost > 0 ? Math.floor(user.currency / avgDailyCost) : 999;
+
+        return {
+          userId: user.id,
+          username: user.username,
+          stableName: user.stableName || user.username,
+          currentBalance: user.currency,
+          totalRepairCost,
+          netBalance: user.currency - totalRepairCost,
+          cyclesAtRisk,
+          firstAtRiskCycle,
+          daysOfRunway,
+          robotCount: user.robots.length,
+          damagedRobots: user.robots.filter(r => r.battleReadiness < 100).length,
+          balanceHistory: recentHistory,
+          createdAt: user.createdAt,
+        };
+      })
+    );
+
+    res.json({
+      threshold: BANKRUPTCY_RISK_THRESHOLD,
+      currentCycle,
+      totalAtRisk: usersWithHistory.length,
+      users: usersWithHistory,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Admin] At-risk users error:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve at-risk users',
       message: error instanceof Error ? error.message : String(error),
     });
   }

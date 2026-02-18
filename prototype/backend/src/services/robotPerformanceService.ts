@@ -272,22 +272,39 @@ export class RobotPerformanceService {
         totalCreditsEarned += isRobot1 ? (battle.loserReward || 0) : (battle.loserReward || 0);
       }
 
-      // Track damage, repair costs, kills, and destructions
+      // Track damage, kills, and destructions
       if (isRobot1) {
         damageDealt += battle.robot1DamageDealt;
         damageReceived += battle.robot2DamageDealt;
         totalFameEarned += battle.robot1FameAwarded;
-        totalRepairCosts += battle.robot1RepairCost || 0;
+        // Note: Repair costs now tracked via audit log, not battle table
         if (battle.robot2Destroyed) kills++;
         if (battle.robot1Destroyed) destructions++;
       } else {
         damageDealt += battle.robot2DamageDealt;
         damageReceived += battle.robot1DamageDealt;
         totalFameEarned += battle.robot2FameAwarded;
-        totalRepairCosts += battle.robot2RepairCost || 0;
+        // Note: Repair costs now tracked via audit log, not battle table
         if (battle.robot1Destroyed) kills++;
         if (battle.robot2Destroyed) destructions++;
       }
+    });
+
+    // Get repair costs from audit log
+    const repairEvents = await prisma.auditLog.findMany({
+      where: {
+        robotId,
+        eventType: 'robot_repair',
+        eventTimestamp: {
+          gte: startTime,
+          lte: endTime,
+        },
+      },
+    });
+
+    repairEvents.forEach((event: any) => {
+      const payload = event.payload as any;
+      totalRepairCosts += payload.cost || 0;
     });
 
     // Calculate win rate

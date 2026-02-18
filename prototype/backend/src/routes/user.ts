@@ -49,15 +49,36 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
   }
 });
 
+// Helper function to get prestige rank title
+function getPrestigeRank(prestige: number): string {
+  if (prestige < 1000) return "Novice";
+  if (prestige < 5000) return "Established";
+  if (prestige < 10000) return "Veteran";
+  if (prestige < 25000) return "Elite";
+  if (prestige < 50000) return "Champion";
+  return "Legendary";
+}
+
 // Get user's stable statistics (aggregate across all robots)
 router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
+    // Get user data including prestige
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { prestige: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     // Get all user's robots with their battle data
     const robots = await prisma.robot.findMany({
       where: { userId },
       select: {
+        id: true,
         elo: true,
         totalBattles: true,
         wins: true,
@@ -70,6 +91,84 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
       },
     });
 
+    // Get user's tag teams for highest tag team league
+    const tagTeams = await prisma.tagTeam.findMany({
+      where: { stableId: userId },
+      select: {
+        tagTeamLeague: true,
+      },
+    });
+
+    // Get latest cycle snapshot for comparison data
+    const latestSnapshot = await prisma.cycleSnapshot.findFirst({
+      orderBy: { cycleNumber: 'desc' },
+      select: { cycleNumber: true },
+    });
+
+    let cycleChanges = null;
+    if (latestSnapshot && latestSnapshot.cycleNumber > 1) {
+      // Get current and previous cycle snapshots
+      const [currentSnapshot, previousSnapshot] = await Promise.all([
+        prisma.cycleSnapshot.findUnique({
+          where: { cycleNumber: latestSnapshot.cycleNumber },
+          select: { stableMetrics: true, robotMetrics: true },
+        }),
+        prisma.cycleSnapshot.findUnique({
+          where: { cycleNumber: latestSnapshot.cycleNumber - 1 },
+          select: { stableMetrics: true, robotMetrics: true },
+        }),
+      ]);
+
+      if (currentSnapshot && previousSnapshot) {
+        // Extract user's metrics from snapshots
+        const currentStableMetrics = (currentSnapshot.stableMetrics as any[]).find(
+          (m: any) => m.userId === userId
+        );
+        const previousStableMetrics = (previousSnapshot.stableMetrics as any[]).find(
+          (m: any) => m.userId === userId
+        );
+
+        // Get robot IDs for this user
+        const robotIds = robots.map(r => r.id);
+
+        // Calculate aggregate robot stats from snapshots
+        const currentRobotMetrics = (currentSnapshot.robotMetrics as any[]).filter(
+          (m: any) => robotIds.includes(m.robotId)
+        );
+        const previousRobotMetrics = (previousSnapshot.robotMetrics as any[]).filter(
+          (m: any) => robotIds.includes(m.robotId)
+        );
+
+        const currentWins = currentRobotMetrics.reduce((sum: number, m: any) => sum + (m.wins || 0), 0);
+        const currentLosses = currentRobotMetrics.reduce((sum: number, m: any) => sum + (m.losses || 0), 0);
+        const previousWins = previousRobotMetrics.reduce((sum: number, m: any) => sum + (m.wins || 0), 0);
+        const previousLosses = previousRobotMetrics.reduce((sum: number, m: any) => sum + (m.losses || 0), 0);
+
+        // Get highest ELO change - compare current highest with previous highest
+        const currentHighestElo = robots.length > 0 ? Math.max(...robots.map(r => r.elo)) : 0;
+        
+        // For previous highest ELO, we need to reconstruct it from the ELO changes in the snapshot
+        let previousHighestElo = currentHighestElo;
+        if (previousRobotMetrics.length > 0) {
+          // Find the robot with current highest ELO and get its previous value
+          const highestEloRobot = robots.find(r => r.elo === currentHighestElo);
+          if (highestEloRobot) {
+            const robotMetric = currentRobotMetrics.find((m: any) => m.robotId === highestEloRobot.id);
+            if (robotMetric && robotMetric.eloChange !== undefined) {
+              previousHighestElo = currentHighestElo - robotMetric.eloChange;
+            }
+          }
+        }
+
+        cycleChanges = {
+          prestige: currentStableMetrics?.totalPrestigeEarned || 0,
+          wins: currentWins - previousWins,
+          losses: currentLosses - previousLosses,
+          highestElo: currentHighestElo - previousHighestElo,
+        };
+      }
+    }
+
     // If no robots, return zeros
     if (robots.length === 0) {
       return res.json({
@@ -78,17 +177,15 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
         losses: 0,
         draws: 0,
         winRate: 0,
-        avgELO: 0,
+        highestELO: 0,
         highestLeague: null,
+        highestTagTeamLeague: null,
         totalRobots: 0,
-        robotsReady: 0,
+        prestige: user.prestige,
+        prestigeRank: getPrestigeRank(user.prestige),
+        cycleChanges,
       });
     }
-
-    // Calculate robot readiness
-    const robotsReady = robots.filter(r => 
-      r.currentHP === r.maxHP && r.mainWeapon !== null
-    ).length;
 
     // Calculate aggregate stats
     const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
@@ -96,7 +193,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
     const losses = robots.reduce((sum, r) => sum + r.losses, 0);
     const draws = robots.reduce((sum, r) => sum + r.draws, 0);
     const winRate = totalBattles > 0 ? (wins / totalBattles) * 100 : 0;
-    const avgELO = Math.round(robots.reduce((sum, r) => sum + r.elo, 0) / robots.length);
+    const highestELO = Math.max(...robots.map(r => r.elo));
 
     // Determine highest league (league hierarchy)
     const leagueHierarchy = [
@@ -117,16 +214,30 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
         return indexB - indexA; // Higher index = higher league
       })[0] || null;
 
+    // Determine highest tag team league
+    const highestTagTeamLeague = tagTeams.length > 0
+      ? tagTeams
+          .map(t => t.tagTeamLeague)
+          .sort((a, b) => {
+            const indexA = leagueHierarchy.indexOf(a);
+            const indexB = leagueHierarchy.indexOf(b);
+            return indexB - indexA;
+          })[0]
+      : null;
+
     res.json({
       totalBattles,
       wins,
       losses,
       draws,
       winRate: Math.round(winRate * 10) / 10, // Round to 1 decimal
-      avgELO,
+      highestELO,
       highestLeague,
+      highestTagTeamLeague,
       totalRobots: robots.length,
-      robotsReady,
+      prestige: user.prestige,
+      prestigeRank: getPrestigeRank(user.prestige),
+      cycleChanges,
     });
   } catch (error) {
     console.error('Stats fetch error:', error);

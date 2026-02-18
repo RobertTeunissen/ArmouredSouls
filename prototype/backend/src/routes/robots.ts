@@ -3,6 +3,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable } from '../utils/weaponValidation';
 import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
 import prisma from '../lib/prisma';
+import { eventLogger } from '../services/eventLogger';
 
 const router = express.Router();
 
@@ -214,6 +215,36 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       return { user: updatedUser, robot };
     });
 
+    // Log robot creation event
+    try {
+      const cycleMetadata = await prisma.cycleMetadata.findUnique({
+        where: { id: 1 },
+      });
+      const currentCycle = cycleMetadata?.totalCycles || 0;
+
+      // Log robot purchase (we don't have a ROBOT_PURCHASE event type, so use credit_change)
+      await eventLogger.logCreditChange(
+        currentCycle,
+        userId,
+        -ROBOT_CREATION_COST,
+        result.user.currency,
+        'other'
+      );
+
+      // Get user's stable name for logging
+      const userForLog = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { stableName: true },
+      });
+      const stableInfo = userForLog?.stableName ? ` (${userForLog.stableName})` : '';
+
+      // Console log for cycle logs
+      console.log(`[Robot] | User ${userId}${stableInfo} | Created: "${name}" | Cost: ₡${ROBOT_CREATION_COST.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+    } catch (logError) {
+      console.error('Failed to log robot creation event:', logError);
+      // Don't fail the request if logging fails
+    }
+
     res.status(201).json({
       robot: result.robot,
       currency: result.user.currency,
@@ -280,205 +311,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
   }
 });
 
-// Upgrade a robot attribute
-router.put('/:id/upgrade', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const robotId = parseInt(req.params.id);
-    const { attribute } = req.body;
 
-    if (isNaN(robotId)) {
-      return res.status(400).json({ error: 'Invalid robot ID' });
-    }
-
-    if (!attribute || typeof attribute !== 'string') {
-      return res.status(400).json({ error: 'Attribute name is required' });
-    }
-
-    // Get robot
-    const robot = await prisma.robot.findFirst({
-      where: {
-        id: robotId,
-        userId, // Ensure user owns this robot
-      },
-    });
-
-    if (!robot) {
-      return res.status(404).json({ error: 'Robot not found' });
-    }
-
-    // Validate attribute exists
-    const validAttributes = [
-      'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
-      'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
-      'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
-      'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
-      'syncProtocols', 'supportSystems', 'formationTactics',
-    ];
-
-    if (!validAttributes.includes(attribute)) {
-      return res.status(400).json({ error: 'Invalid attribute name' });
-    }
-
-    // Get current level (convert Decimal to number)
-    const currentLevelValue = robot[attribute as keyof typeof robot];
-    const currentLevel = typeof currentLevelValue === 'number' 
-      ? currentLevelValue 
-      : (currentLevelValue as any).toNumber();
-
-    if (typeof currentLevel !== 'number' || currentLevel >= MAX_ATTRIBUTE_LEVEL) {
-      return res.status(400).json({ error: 'Attribute is already at maximum level or invalid' });
-    }
-
-    // Calculate upgrade cost based on floor of current level: (floor(current_level) + 1) × 1,500
-    // This means 25.50 upgrades to 26.50 for the same cost as 25 to 26
-    const baseCost = (Math.floor(currentLevel) + 1) * 1500;
-
-    // Get user's current currency and Training Facility level
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        facilities: {
-          where: { facilityType: 'training_facility' },
-        },
-      },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Apply Training Facility discount
-    const trainingLevel = user.facilities[0]?.level || 0;
-    const discountPercent = trainingLevel * 5; // 5% per level
-    const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
-
-    // Get cap for academy level (from STABLE_SYSTEM.md)
-    const getCapForLevel = (level: number): number => {
-      const capMap: { [key: number]: number } = {
-        0: 10, 1: 15, 2: 20, 3: 25, 4: 30,
-        5: 35, 6: 40, 7: 42, 8: 45, 9: 48, 10: 50
-      };
-      return capMap[level] || 10;
-    };
-
-    // Check Training Academy cap for this attribute
-    const academyType = attributeToAcademy[attribute];
-    let attributeCap = 10; // Base cap without any academy (Level 0)
-    let academyName = 'Training Academy';
-
-    if (academyType) {
-      const academy = await prisma.facility.findFirst({
-        where: {
-          userId,
-          facilityType: academyType,
-        },
-      });
-
-      const academyLevel = academy?.level || 0;
-      attributeCap = getCapForLevel(academyLevel);
-      
-      // Format academy name for error message
-      academyName = academyType
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-        .replace('Ai ', 'AI '); // Fix AI capitalization
-    }
-
-    const newLevel = Math.floor(currentLevel) + 1;
-
-    // Enforce cap for ALL attributes (base 10, or increased by academy)
-    if (newLevel > attributeCap) {
-      return res.status(400).json({ 
-        error: `Attribute cap of ${attributeCap} reached. Upgrade ${academyName} to increase cap.` 
-      });
-    }
-
-    // Check if user has enough currency
-    if (user.currency < upgradeCost) {
-      return res.status(400).json({ error: 'Insufficient credits' });
-    }
-
-    // Perform upgrade in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Deduct currency
-      const updatedUser = await tx.user.update({
-        where: { id: userId },
-        data: { currency: user.currency - upgradeCost },
-      });
-
-      // Upgrade attribute (increment by 1, preserving decimal part from bonuses)
-      const updatedRobot = await tx.robot.update({
-        where: { id: robotId },
-        data: {
-          [attribute]: Math.floor(currentLevel) + 1,
-        },
-        include: {
-          mainWeapon: {
-            include: {
-              weapon: true,
-            },
-          },
-          offhandWeapon: {
-            include: {
-              weapon: true,
-            },
-          },
-        },
-      });
-
-      // If hullIntegrity or shieldCapacity was upgraded, recalculate maxHP/maxShield
-      if (attribute === 'hullIntegrity' || attribute === 'shieldCapacity') {
-        const maxHP = calculateMaxHP(updatedRobot);
-        const maxShield = calculateMaxShield(updatedRobot);
-
-        // Calculate current HP/Shield proportionally to maintain same percentage
-        const hpPercentage = robot.maxHP > 0 ? robot.currentHP / robot.maxHP : 1;
-        const shieldPercentage = robot.maxShield > 0 ? robot.currentShield / robot.maxShield : 1;
-
-        const newCurrentHP = Math.round(maxHP * hpPercentage);
-        const newCurrentShield = Math.round(maxShield * shieldPercentage);
-
-        // Update robot with new HP/Shield values
-        const finalRobot = await tx.robot.update({
-          where: { id: robotId },
-          data: {
-            maxHP,
-            maxShield,
-            currentHP: Math.min(newCurrentHP, maxHP),
-            currentShield: Math.min(newCurrentShield, maxShield),
-          },
-          include: {
-            mainWeapon: {
-              include: {
-                weapon: true,
-              },
-            },
-            offhandWeapon: {
-              include: {
-                weapon: true,
-              },
-            },
-          },
-        });
-
-        return { user: updatedUser, robot: finalRobot };
-      }
-
-      return { user: updatedUser, robot: updatedRobot };
-    });
-
-    res.json({
-      robot: result.robot,
-      currency: result.user.currency,
-      message: 'Attribute upgraded successfully',
-    });
-  } catch (error) {
-    console.error('Robot upgrade error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Equip main weapon
 router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
@@ -2131,8 +1964,6 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
     const robotId = parseInt(req.params.id);
     const { upgrades } = req.body;
 
-    console.log('Bulk upgrade request:', { userId, robotId, upgrades });
-
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
     }
@@ -2334,6 +2165,35 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
 
       return { user: updatedUser, robot: updatedRobot };
     });
+
+    // Log attribute upgrade events
+    try {
+      const cycleMetadata = await prisma.cycleMetadata.findUnique({
+        where: { id: 1 },
+      });
+      // Attribute upgrades done between cycles should be logged to the NEXT cycle
+      // because the current cycle's snapshot has already been created
+      const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
+
+      console.log(`[AttributeUpgrade] User ${userId} | Robot ${robotId} (${robot.name}) | Attributes: ${upgradeOperations.length} | Total Cost: ₡${totalCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+
+      // Log each attribute upgrade
+      for (const op of upgradeOperations) {
+        await eventLogger.logAttributeUpgrade(
+          currentCycle,
+          robotId,
+          op.attribute,
+          op.fromLevel,
+          op.toLevel,
+          op.cost,
+          userId  // Pass userId so it can be aggregated properly
+        );
+        console.log(`[AttributeUpgrade]   ${op.attribute} | ${op.fromLevel}→${op.toLevel} | ₡${op.cost.toLocaleString()}`);
+      }
+    } catch (logError) {
+      console.error('[AttributeUpgrade] ERROR logging upgrades:', logError);
+      // Don't fail the request if logging fails
+    }
 
     res.json({
       success: true,

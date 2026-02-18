@@ -1,0 +1,504 @@
+Timestamp | Level | Message
+2026-02-18T13:09:23.513Z | INFO | [Admin] Running 2 bulk cycles (includeTournaments: true, generateUsersPerCycle: true)...
+2026-02-18T13:09:23.522Z | INFO | === Cycle 6 Started ===
+2026-02-18T13:09:23.522Z | INFO | Cycle 6 (1/2)
+2026-02-18T13:09:23.522Z | INFO |  [Admin] === Cycle 6 (1/2) ===
+2026-02-18T13:09:23.532Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-18T13:09:23.532Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-18T13:09:23.532Z
+2026-02-18T13:09:23.536Z | INFO | [BattleOrchestrator] Found 67 matches to execute
+2026-02-18T13:09:23.606Z | INFO | [Battle] League: bronze | WimpBot 28 (User 35) vs WimpBot 41 (User 48) | Winner: WimpBot 28 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:23.651Z | INFO | [Battle] League: bronze | WimpBot 12 (User 19) vs Glass Cannon B C002 (User 124) | Winner: Glass Cannon B C002 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Glass Cannon B C002
+2026-02-18T13:09:23.696Z | INFO | [Battle] League: bronze | WimpBot 46 (User 53) vs WimpBot 39 (User 46) | Winner: WimpBot 39 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:23.744Z | INFO | [Battle] League: bronze | WimpBot 26 (User 33) vs WimpBot 51 (User 58) | Winner: WimpBot 26 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:23.788Z | INFO | [Battle] League: bronze | WimpBot 38 (User 45) vs WimpBot 23 (User 30) | Winner: WimpBot 38 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:23.830Z | INFO | [Battle] League: bronze | WimpBot 57 (User 64) vs WimpBot 5 (User 12) | Winner: WimpBot 5 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:23.872Z | INFO | [Battle] League: bronze | WimpBot 14 (User 21) vs WimpBot 40 (User 47) | Winner: WimpBot 40 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:23.920Z | INFO | [Battle] League: bronze | WimpBot 4 (User 11) vs WimpBot 25 (User 32) | Winner: WimpBot 4 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:23.956Z | INFO | [Battle] League: bronze | WimpBot 49 (User 56) vs WimpBot 56 (User 63) | Winner: WimpBot 49 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:23.987Z | INFO | [Battle] League: bronze | WimpBot 16 (User 23) vs Specialist Alpha C004 (User 131) | Winner: Specialist Alpha C004 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:24.021Z | INFO | [Battle] League: bronze | WimpBot 20 (User 27) vs Glass Cannon A C002 (User 123) | Winner: Glass Cannon A C002 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4 | Kill: Glass Cannon A C002
+2026-02-18T13:09:24.069Z | INFO | [Battle] League: bronze | Velocity Beta C003 (User 127) vs Velocity Alpha C003 (User 126) | Winner: Velocity Alpha C003 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.104Z | INFO | [Battle] League: bronze | WimpBot 13 (User 20) vs WimpBot 24 (User 31) | Winner: WimpBot 24 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.146Z | INFO | [Battle] League: bronze | WimpBot 32 (User 39) vs WimpBot 6 (User 13) | Winner: WimpBot 32 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.181Z | INFO | [Battle] League: bronze | WimpBot 58 (User 65) vs Glass Cannon C C003 (User 125) | Winner: Glass Cannon C C003 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Glass Cannon C C003
+2026-02-18T13:09:24.222Z | INFO | [Battle] League: bronze | Fortress Prime C001 (User 122) vs WimpBot 37 (User 44) | Winner: Fortress Prime C001 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4 | Kill: Fortress Prime C001
+2026-02-18T13:09:24.271Z | INFO | [Battle] League: bronze | WimpBot 18 (User 25) vs WimpBot 22 (User 29) | Winner: WimpBot 22 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.312Z | INFO | [Battle] League: bronze | WimpBot 8 (User 15) vs WimpBot 27 (User 34) | Winner: WimpBot 8 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.347Z | INFO | [Battle] League: bronze | WimpBot 11 (User 18) vs WimpBot 29 (User 36) | Winner: WimpBot 29 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.381Z | INFO | [Battle] League: bronze | WimpBot 33 (User 40) vs Velocity Gamma C004 (User 128) | Winner: Velocity Gamma C004 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4 | Kill: Velocity Gamma C004
+2026-02-18T13:09:24.415Z | INFO | [Battle] League: bronze | WimpBot 42 (User 49) vs Fortress Prime C005 (User 136) | Winner: Fortress Prime C005 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4 | Kill: Fortress Prime C005
+2026-02-18T13:09:24.456Z | INFO | [Battle] League: bronze | WimpBot 36 (User 43) vs Brawler Prime C005 (User 132) | Winner: Brawler Prime C005 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.493Z | INFO | [Battle] League: bronze | WimpBot 44 (User 51) vs Investor One C004 (User 130) | Winner: Investor One C004 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.528Z | INFO | [Battle] League: bronze | WimpBot 54 (User 61) vs WimpBot 17 (User 24) | Winner: WimpBot 54 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.557Z | INFO | [Battle] League: bronze | WimpBot 47 (User 54) vs WimpBot 31 (User 38) | Winner: WimpBot 31 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.578Z | INFO | [Battle] League: bronze | WimpBot 52 (User 59) vs Equilibrium C004 (User 129) | Winner: Equilibrium C004 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Equilibrium C004
+2026-02-18T13:09:24.599Z | INFO | [Battle] League: bronze | Specialist Beta C004 (User 131) vs Longshot C005 (User 133) | Winner: Longshot C005 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Longshot C005
+2026-02-18T13:09:24.624Z | INFO | [Battle] League: bronze | WimpBot 10 (User 17) vs WimpBot 3 (User 10) | Winner: WimpBot 10 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: WimpBot 10
+2026-02-18T13:09:24.647Z | INFO | [Battle] League: bronze | WimpBot 48 (User 55) vs WimpBot 30 (User 37) | Winner: WimpBot 30 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.669Z | INFO | [Battle] League: bronze | WimpBot 34 (User 41) vs WimpBot 59 (User 66) | Winner: WimpBot 34 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.693Z | INFO | [Battle] League: bronze | WimpBot 50 (User 57) vs WimpBot 43 (User 50) | Winner: WimpBot 50 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.718Z | INFO | [Battle] League: bronze | WimpBot 35 (User 42) vs WimpBot 15 (User 22) | Winner: WimpBot 15 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.744Z | INFO | [Battle] League: bronze | WimpBot 2 (User 9) vs WimpBot 21 (User 28) | Winner: WimpBot 21 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.769Z | INFO | [Battle] League: bronze | Strategist C005 (User 134) vs Prestige Hunter C005 (User 135) | Winner: Prestige Hunter C005 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Prestige Hunter C005
+2026-02-18T13:09:24.800Z | INFO | [Battle] League: bronze | WimpBot 7 (User 14) vs WimpBot 53 (User 60) | Winner: WimpBot 7 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.826Z | INFO | [Battle] League: bronze | WimpBot 9 (User 16) vs WimpBot 1 (User 8) | Winner: WimpBot 1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.856Z | INFO | [Battle] League: bronze | WimpBot 45 (User 52) vs WimpBot 19 (User 26) | Winner: WimpBot 19 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.876Z | INFO | [Battle] League: bronze | WimpBot 55 (User 62) vs Bye Robot (User 7) | Winner: WimpBot 55 | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0 | Kill: WimpBot 55
+2026-02-18T13:09:24.910Z | INFO | [Battle] League: bronze | WimpBot 75 (User 82) vs WimpBot 93 (User 100) | Winner: WimpBot 93 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:24.945Z | INFO | [Battle] League: bronze | Speed Demon A C000 (User 112) vs Prestige Rusher C000 (User 121) | Winner: Speed Demon A C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:24.975Z | INFO | [Battle] League: bronze | Speed Demon B C000 (User 113) vs Two-Robot Beta C000 (User 117) | Winner: Speed Demon B C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4
+2026-02-18T13:09:25.010Z | INFO | [Battle] League: bronze | Speed Demon C C000 (User 114) vs Glass Cannon C C000 (User 111) | Winner: Speed Demon C C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.041Z | INFO | [Battle] League: bronze | WimpBot 92 (User 99) vs Tank Fortress C000 (User 108) | Winner: Tank Fortress C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Tank Fortress C000
+2026-02-18T13:09:25.067Z | INFO | [Battle] League: bronze | Afternoon Ride (User 2) vs WimpBot 62 (User 69) | Winner: Afternoon Ride | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4
+2026-02-18T13:09:25.094Z | INFO | [Battle] League: bronze | Melee Specialist C000 (User 118) vs WimpBot 97 (User 104) | Winner: Melee Specialist C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:25.136Z | INFO | [Battle] League: bronze | Ranged Sniper C000 (User 119) vs WimpBot 94 (User 101) | Winner: Ranged Sniper C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Ranged Sniper C000
+2026-02-18T13:09:25.176Z | INFO | [Battle] League: bronze | WimpBot 89 (User 96) vs WimpBot 66 (User 73) | Winner: WimpBot 66 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.206Z | INFO | [Battle] League: bronze | Glass Cannon B C000 (User 110) vs WimpBot 70 (User 77) | Winner: Glass Cannon B C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Glass Cannon B C000
+2026-02-18T13:09:25.238Z | INFO | [Battle] League: bronze | WimpBot 81 (User 88) vs Lunch Ride (User 2) | Winner: Lunch Ride | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:25.271Z | INFO | [Battle] League: bronze | Balanced Brawler C000 (User 115) vs Facility Investor C000 (User 116) | Winner: Balanced Brawler C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Balanced Brawler C000
+2026-02-18T13:09:25.317Z | INFO | [Battle] League: bronze | WimpBot 74 (User 81) vs WimpBot 100 (User 107) | Winner: WimpBot 100 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.368Z | INFO | [Battle] League: bronze | WimpBot 71 (User 78) vs WimpBot 96 (User 103) | Winner: WimpBot 96 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: WimpBot 96
+2026-02-18T13:09:25.413Z | INFO | [Battle] League: bronze | AI Tactician C000 (User 120) vs WimpBot 82 (User 89) | Winner: AI Tactician C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: AI Tactician C000
+2026-02-18T13:09:25.457Z | INFO | [Battle] League: bronze | WimpBot 90 (User 97) vs WimpBot 95 (User 102) | Winner: WimpBot 90 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.505Z | INFO | [Battle] League: bronze | WimpBot 64 (User 71) vs WimpBot 68 (User 75) | Winner: WimpBot 68 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:25.543Z | INFO | [Battle] League: bronze | Two-Robot Alpha C000 (User 117) vs WimpBot 61 (User 68) | Winner: Two-Robot Alpha C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4
+2026-02-18T13:09:25.587Z | INFO | [Battle] League: bronze | WimpBot 88 (User 95) vs WimpBot 78 (User 85) | Winner: WimpBot 78 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:25.625Z | INFO | [Battle] League: bronze | WimpBot 86 (User 93) vs Glass Cannon A C000 (User 109) | Winner: Glass Cannon A C000 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Glass Cannon A C000
+2026-02-18T13:09:25.668Z | INFO | [Battle] League: bronze | WimpBot 99 (User 106) vs WimpBot 65 (User 72) | Winner: WimpBot 65 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.715Z | INFO | [Battle] League: bronze | WimpBot 60 (User 67) vs WimpBot 87 (User 94) | Winner: WimpBot 60 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:25.753Z | INFO | [Battle] League: bronze | WimpBot 73 (User 80) vs WimpBot 98 (User 105) | Winner: WimpBot 98 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.778Z | INFO | [Battle] League: bronze | WimpBot 77 (User 84) vs WimpBot 85 (User 92) | Winner: WimpBot 77 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.815Z | INFO | [Battle] League: bronze | WimpBot 76 (User 83) vs WimpBot 67 (User 74) | Winner: WimpBot 76 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-18T13:09:25.850Z | INFO | [Battle] League: bronze | WimpBot 91 (User 98) vs WimpBot 80 (User 87) | Winner: WimpBot 80 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.887Z | INFO | [Battle] League: bronze | WimpBot 72 (User 79) vs WimpBot 63 (User 70) | Winner: WimpBot 72 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.918Z | INFO | [Battle] League: bronze | WimpBot 83 (User 90) vs WimpBot 79 (User 86) | Winner: WimpBot 83 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.949Z | INFO | [Battle] League: bronze | WimpBot 69 (User 76) vs WimpBot 84 (User 91) | Winner: WimpBot 84 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-18T13:09:25.950Z | INFO | [BattleOrchestrator] Execution complete: 67 successful, 0 failed, 1 bye-matches
+2026-02-18T13:09:25.950Z | INFO | [BattleOrchestrator] Reputation: 330 prestige, 164 fame awarded
+2026-02-18T13:09:25.952Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-18T13:09:25.975Z | INFO | [RepairService] | User 30 | Robot 23 (WimpBot 23) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:25.990Z | INFO | [RepairService] | User 23 | Robot 16 (WimpBot 16) | Cost: ₡3,136 | Discount: 0%
+2026-02-18T13:09:25.999Z | INFO | [RepairService] | User 29 | Robot 22 (WimpBot 22) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.005Z | INFO | [RepairService] | User 18 | Robot 11 (WimpBot 11) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.015Z | INFO | [RepairService] | User 49 | Robot 42 (WimpBot 42) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.021Z | INFO | [RepairService] | User 43 | Robot 36 (WimpBot 36) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.027Z | INFO | [RepairService] | User 42 | Robot 35 (WimpBot 35) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.036Z | INFO | [RepairService] | User 69 | Robot 62 (WimpBot 62) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.042Z | INFO | [RepairService] | User 89 | Robot 82 (WimpBot 82) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.048Z | INFO | [RepairService] | User 100 | Robot 93 (WimpBot 93) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.057Z | INFO | [RepairService] | User 97 | Robot 90 (WimpBot 90) | Cost: ₡1,213 | Discount: 0%
+2026-02-18T13:09:26.064Z | INFO | [RepairService] | User 75 | Robot 68 (WimpBot 68) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.071Z | INFO | [RepairService] | User 93 | Robot 86 (WimpBot 86) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.079Z | INFO | [RepairService] | User 106 | Robot 99 (WimpBot 99) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.085Z | INFO | [RepairService] | User 72 | Robot 65 (WimpBot 65) | Cost: ₡1,505 | Discount: 0%
+2026-02-18T13:09:26.096Z | INFO | [RepairService] | User 80 | Robot 73 (WimpBot 73) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.105Z | INFO | [RepairService] | User 83 | Robot 76 (WimpBot 76) | Cost: ₡3,136 | Discount: 0%
+2026-02-18T13:09:26.110Z | INFO | [RepairService] | User 86 | Robot 79 (WimpBot 79) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.124Z | INFO | [RepairService] | User 131 | Robot 128 (Specialist Alpha C004) | Cost: ₡372 | Discount: 0%
+2026-02-18T13:09:26.131Z | INFO | [RepairService] | User 131 | Robot 129 (Specialist Beta C004) | Cost: ₡12,400 | Discount: 0%
+2026-02-18T13:09:26.138Z | INFO | [RepairService] | User 127 | Robot 124 (Velocity Beta C003) | Cost: ₡21,528 | Discount: 0%
+2026-02-18T13:09:26.144Z | INFO | [RepairService] | User 126 | Robot 123 (Velocity Alpha C003) | Cost: ₡4,872 | Discount: 0%
+2026-02-18T13:09:26.155Z | INFO | [RepairService] | User 36 | Robot 29 (WimpBot 29) | Cost: ₡1,798 | Discount: 0%
+2026-02-18T13:09:26.161Z | INFO | [RepairService] | User 38 | Robot 31 (WimpBot 31) | Cost: ₡1,756 | Discount: 0%
+2026-02-18T13:09:26.170Z | INFO | [RepairService] | User 129 | Robot 126 (Equilibrium C004) | Cost: ₡1,548 | Discount: 0%
+2026-02-18T13:09:26.177Z | INFO | [RepairService] | User 57 | Robot 50 (WimpBot 50) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.184Z | INFO | [RepairService] | User 46 | Robot 39 (WimpBot 39) | Cost: ₡1,213 | Discount: 0%
+2026-02-18T13:09:26.192Z | INFO | [RepairService] | User 58 | Robot 51 (WimpBot 51) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.200Z | INFO | [RepairService] | User 56 | Robot 49 (WimpBot 49) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.210Z | INFO | [RepairService] | User 53 | Robot 46 (WimpBot 46) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.219Z | INFO | [RepairService] | User 51 | Robot 44 (WimpBot 44) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.229Z | INFO | [RepairService] | User 111 | Robot 104 (Glass Cannon C C000) | Cost: ₡13,104 | Discount: 0%
+2026-02-18T13:09:26.237Z | INFO | [RepairService] | User 103 | Robot 96 (WimpBot 96) | Cost: ₡2,049 | Discount: 0%
+2026-02-18T13:09:26.247Z | INFO | [RepairService] | User 35 | Robot 28 (WimpBot 28) | Cost: ₡1,505 | Discount: 0%
+2026-02-18T13:09:26.256Z | INFO | [RepairService] | User 33 | Robot 26 (WimpBot 26) | Cost: ₡1,756 | Discount: 0%
+2026-02-18T13:09:26.264Z | INFO | [RepairService] | User 45 | Robot 38 (WimpBot 38) | Cost: ₡1,965 | Discount: 0%
+2026-02-18T13:09:26.275Z | INFO | [RepairService] | User 61 | Robot 54 (WimpBot 54) | Cost: ₡544 | Discount: 0%
+2026-02-18T13:09:26.283Z | INFO | [RepairService] | User 50 | Robot 43 (WimpBot 43) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.293Z | INFO | [RepairService] | User 82 | Robot 75 (WimpBot 75) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.302Z | INFO | [RepairService] | User 102 | Robot 95 (WimpBot 95) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.315Z | INFO | [RepairService] | User 85 | Robot 78 (WimpBot 78) | Cost: ₡1,882 | Discount: 0%
+2026-02-18T13:09:26.324Z | INFO | [RepairService] | User 31 | Robot 24 (WimpBot 24) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.339Z | INFO | [RepairService] | User 39 | Robot 32 (WimpBot 32) | Cost: ₡1,505 | Discount: 0%
+2026-02-18T13:09:26.348Z | INFO | [RepairService] | User 13 | Robot 6 (WimpBot 6) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.360Z | INFO | [RepairService] | User 15 | Robot 8 (WimpBot 8) | Cost: ₡1,547 | Discount: 0%
+2026-02-18T13:09:26.374Z | INFO | [RepairService] | User 54 | Robot 47 (WimpBot 47) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.388Z | INFO | [RepairService] | User 55 | Robot 48 (WimpBot 48) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.400Z | INFO | [RepairService] | User 37 | Robot 30 (WimpBot 30) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.417Z | INFO | [RepairService] | User 41 | Robot 34 (WimpBot 34) | Cost: ₡1,464 | Discount: 0%
+2026-02-18T13:09:26.428Z | INFO | [RepairService] | User 14 | Robot 7 (WimpBot 7) | Cost: ₡1,798 | Discount: 0%
+2026-02-18T13:09:26.436Z | INFO | [RepairService] | User 16 | Robot 9 (WimpBot 9) | Cost: ₡3,325 | Discount: 0%
+2026-02-18T13:09:26.444Z | INFO | [RepairService] | User 52 | Robot 45 (WimpBot 45) | Cost: ₡3,136 | Discount: 0%
+2026-02-18T13:09:26.450Z | INFO | [RepairService] | User 47 | Robot 40 (WimpBot 40) | Cost: ₡1,756 | Discount: 0%
+2026-02-18T13:09:26.456Z | INFO | [RepairService] | User 9 | Robot 2 (WimpBot 2) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.461Z | INFO | [RepairService] | User 99 | Robot 92 (WimpBot 92) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.468Z | INFO | [RepairService] | User 104 | Robot 97 (WimpBot 97) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.475Z | INFO | [RepairService] | User 11 | Robot 4 (WimpBot 4) | Cost: ₡1,505 | Discount: 0%
+2026-02-18T13:09:26.482Z | INFO | [RepairService] | User 40 | Robot 33 (WimpBot 33) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.489Z | INFO | [RepairService] | User 17 | Robot 10 (WimpBot 10) | Cost: ₡1,422 | Discount: 0%
+2026-02-18T13:09:26.494Z | INFO | [RepairService] | User 60 | Robot 53 (WimpBot 53) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.500Z | INFO | [RepairService] | User 12 | Robot 5 (WimpBot 5) | Cost: ₡878 | Discount: 0%
+2026-02-18T13:09:26.506Z | INFO | [RepairService] | User 10 | Robot 3 (WimpBot 3) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.512Z | INFO | [RepairService] | User 8 | Robot 1 (WimpBot 1) | Cost: ₡544 | Discount: 0%
+2026-02-18T13:09:26.517Z | INFO | [RepairService] | User 121 | Robot 115 (Prestige Rusher C000) | Cost: ₡16,408 | Discount: 0%
+2026-02-18T13:09:26.523Z | INFO | [RepairService] | User 108 | Robot 101 (Tank Fortress C000) | Cost: ₡165 | Discount: 0%
+2026-02-18T13:09:26.528Z | INFO | [RepairService] | User 115 | Robot 108 (Balanced Brawler C000) | Cost: ₡2,494 | Discount: 0%
+2026-02-18T13:09:26.533Z | INFO | [RepairService] | User 107 | Robot 100 (WimpBot 100) | Cost: ₡544 | Discount: 0%
+2026-02-18T13:09:26.539Z | INFO | [RepairService] | User 67 | Robot 60 (WimpBot 60) | Cost: ₡2,007 | Discount: 0%
+2026-02-18T13:09:26.546Z | INFO | [RepairService] | User 76 | Robot 69 (WimpBot 69) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.552Z | INFO | [RepairService] | User 64 | Robot 57 (WimpBot 57) | Cost: ₡3,325 | Discount: 0%
+2026-02-18T13:09:26.558Z | INFO | [RepairService] | User 20 | Robot 13 (WimpBot 13) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.566Z | INFO | [RepairService] | User 65 | Robot 58 (WimpBot 58) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.574Z | INFO | [RepairService] | User 94 | Robot 87 (WimpBot 87) | Cost: ₡3,136 | Discount: 0%
+2026-02-18T13:09:26.580Z | INFO | [RepairService] | User 21 | Robot 14 (WimpBot 14) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.586Z | INFO | [RepairService] | User 19 | Robot 12 (WimpBot 12) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.592Z | INFO | [RepairService] | User 27 | Robot 20 (WimpBot 20) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.598Z | INFO | [RepairService] | User 28 | Robot 21 (WimpBot 21) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.604Z | INFO | [RepairService] | User 26 | Robot 19 (WimpBot 19) | Cost: ₡1,756 | Discount: 0%
+2026-02-18T13:09:26.613Z | INFO | [RepairService] | User 112 | Robot 105 (Speed Demon A C000) | Cost: ₡14,088 | Discount: 0%
+2026-02-18T13:09:26.618Z | INFO | [RepairService] | User 117 | Robot 111 (Two-Robot Beta C000) | Cost: ₡12,400 | Discount: 0%
+2026-02-18T13:09:26.626Z | INFO | [RepairService] | User 68 | Robot 61 (WimpBot 61) | Cost: ₡3,136 | Discount: 0%
+2026-02-18T13:09:26.636Z | INFO | [RepairService] | User 92 | Robot 85 (WimpBot 85) | Cost: ₡3,325 | Discount: 0%
+2026-02-18T13:09:26.643Z | INFO | [RepairService] | User 63 | Robot 56 (WimpBot 56) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.652Z | INFO | [RepairService] | User 44 | Robot 37 (WimpBot 37) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.659Z | INFO | [RepairService] | User 132 | Robot 130 (Brawler Prime C005) | Cost: ₡2,340 | Discount: 0%
+2026-02-18T13:09:26.670Z | INFO | [RepairService] | User 133 | Robot 131 (Longshot C005) | Cost: ₡1,556 | Discount: 0%
+2026-02-18T13:09:26.676Z | INFO | [RepairService] | User 118 | Robot 112 (Melee Specialist C000) | Cost: ₡1,170 | Discount: 0%
+2026-02-18T13:09:26.683Z | INFO | [RepairService] | User 101 | Robot 94 (WimpBot 94) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.692Z | INFO | [RepairService] | User 81 | Robot 74 (WimpBot 74) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.699Z | INFO | [RepairService] | User 84 | Robot 77 (WimpBot 77) | Cost: ₡920 | Discount: 0%
+2026-02-18T13:09:26.711Z | INFO | [RepairService] | User 70 | Robot 63 (WimpBot 63) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.717Z | INFO | [RepairService] | User 95 | Robot 88 (WimpBot 88) | Cost: ₡3,325 | Discount: 0%
+2026-02-18T13:09:26.732Z | INFO | [RepairService] | User 105 | Robot 98 (WimpBot 98) | Cost: ₡1,464 | Discount: 0%
+2026-02-18T13:09:26.747Z | INFO | [RepairService] | User 32 | Robot 25 (WimpBot 25) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.753Z | INFO | [RepairService] | User 125 | Robot 122 (Glass Cannon C C003) | Cost: ₡1,344 | Discount: 0%
+2026-02-18T13:09:26.759Z | INFO | [RepairService] | User 25 | Robot 18 (WimpBot 18) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.768Z | INFO | [RepairService] | User 34 | Robot 27 (WimpBot 27) | Cost: ₡3,325 | Discount: 0%
+2026-02-18T13:09:26.777Z | INFO | [RepairService] | User 130 | Robot 127 (Investor One C004) | Cost: ₡1,110 | Discount: 6%
+2026-02-18T13:09:26.782Z | INFO | [RepairService] | User 59 | Robot 52 (WimpBot 52) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.790Z | INFO | [RepairService] | User 22 | Robot 15 (WimpBot 15) | Cost: ₡1,380 | Discount: 0%
+2026-02-18T13:09:26.796Z | INFO | [RepairService] | User 119 | Robot 113 (Ranged Sniper C000) | Cost: ₡1,167 | Discount: 0%
+2026-02-18T13:09:26.802Z | INFO | [RepairService] | User 2 | Robot 118 (Lunch Ride) | Cost: ₡630 | Discount: 14%
+2026-02-18T13:09:26.809Z | INFO | [RepairService] | User 79 | Robot 72 (WimpBot 72) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.814Z | INFO | [RepairService] | User 91 | Robot 84 (WimpBot 84) | Cost: ₡878 | Discount: 0%
+2026-02-18T13:09:26.819Z | INFO | [RepairService] | User 124 | Robot 121 (Glass Cannon B C002) | Cost: ₡1,248 | Discount: 0%
+2026-02-18T13:09:26.827Z | INFO | [RepairService] | User 66 | Robot 59 (WimpBot 59) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.833Z | INFO | [RepairService] | User 62 | Robot 55 (WimpBot 55) | Cost: ₡167 | Discount: 0%
+2026-02-18T13:09:26.839Z | INFO | [RepairService] | User 96 | Robot 89 (WimpBot 89) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.845Z | INFO | [RepairService] | User 73 | Robot 66 (WimpBot 66) | Cost: ₡1,213 | Discount: 0%
+2026-02-18T13:09:26.854Z | INFO | [RepairService] | User 77 | Robot 70 (WimpBot 70) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.860Z | INFO | [RepairService] | User 88 | Robot 81 (WimpBot 81) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.867Z | INFO | [RepairService] | User 78 | Robot 71 (WimpBot 71) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:26.876Z | INFO | [RepairService] | User 120 | Robot 114 (AI Tactician C000) | Cost: ₡3,025 | Discount: 0%
+2026-02-18T13:09:26.883Z | INFO | [RepairService] | User 71 | Robot 64 (WimpBot 64) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.892Z | INFO | [RepairService] | User 90 | Robot 83 (WimpBot 83) | Cost: ₡1,840 | Discount: 0%
+2026-02-18T13:09:26.898Z | INFO | [RepairService] | User 48 | Robot 41 (WimpBot 41) | Cost: ₡3,325 | Discount: 0%
+2026-02-18T13:09:26.904Z | INFO | [RepairService] | User 24 | Robot 17 (WimpBot 17) | Cost: ₡3,262 | Discount: 0%
+2026-02-18T13:09:26.916Z | INFO | [RepairService] | User 134 | Robot 132 (Strategist C005) | Cost: ₡25,600 | Discount: 0%
+2026-02-18T13:09:26.921Z | INFO | [RepairService] | User 135 | Robot 133 (Prestige Hunter C005) | Cost: ₡1,537 | Discount: 0%
+2026-02-18T13:09:26.927Z | INFO | [RepairService] | User 114 | Robot 107 (Speed Demon C C000) | Cost: ₡4,477 | Discount: 0%
+2026-02-18T13:09:26.934Z | INFO | [RepairService] | User 110 | Robot 103 (Glass Cannon B C000) | Cost: ₡672 | Discount: 0%
+2026-02-18T13:09:26.940Z | INFO | [RepairService] | User 116 | Robot 109 (Facility Investor C000) | Cost: ₡8,460 | Discount: 6%
+2026-02-18T13:09:26.945Z | INFO | [RepairService] | User 109 | Robot 102 (Glass Cannon A C000) | Cost: ₡3,648 | Discount: 0%
+2026-02-18T13:09:26.957Z | INFO | [RepairService] | User 74 | Robot 67 (WimpBot 67) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.964Z | INFO | [RepairService] | User 98 | Robot 91 (WimpBot 91) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:26.969Z | INFO | [RepairService] | User 87 | Robot 80 (WimpBot 80) | Cost: ₡1,380 | Discount: 0%
+2026-02-18T13:09:26.971Z | INFO | [Admin] Step 3: Skipping Tag Team Battles (even cycle 6)
+2026-02-18T13:09:26.971Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-18T13:09:26.973Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-18T13:09:27.003Z | INFO | [Battle] Tournament: Round 5 | WimpBot 5 (User 12) vs Prestige Rusher C000 (User 121) | Winner: Prestige Rusher C000 | Rewards: ₡21,916 / ₡6,575 | Prestige: +16 | Fame: +76 | Kill: Prestige Rusher C000
+2026-02-18T13:09:27.025Z | INFO | [Battle] Tournament: Round 5 | Melee Specialist C000 (User 118) vs Glass Cannon C C000 (User 111) | Winner: Glass Cannon C C000 | Rewards: ₡21,916 / ₡6,575 | Prestige: +16 | Fame: +38 | Kill: Glass Cannon C C000
+2026-02-18T13:09:27.053Z | INFO | [Battle] Tournament: Round 5 | WimpBot 37 (User 44) vs WimpBot 83 (User 90) | Winner: WimpBot 83 | Rewards: ₡21,916 / ₡6,575 | Prestige: +16 | Fame: +38
+2026-02-18T13:09:27.079Z | INFO | [Battle] Tournament: Round 5 | WimpBot 78 (User 85) vs WimpBot 61 (User 68) | Winner: WimpBot 61 | Rewards: ₡21,916 / ₡6,575 | Prestige: +16 | Fame: +38
+2026-02-18T13:09:27.087Z | INFO | [Tournament] Advanced to round 6 with 4 winners
+2026-02-18T13:09:27.090Z | INFO | [Tournament] Active tournament exists. Skipping auto-creation.
+2026-02-18T13:09:27.090Z | INFO | [Admin] Tournaments: 1 executed, 1 rounds, 4 matches
+2026-02-18T13:09:27.091Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-18T13:09:27.100Z | INFO | [RepairService] | User 111 | Robot 104 (Glass Cannon C C000) | Cost: ₡4,896 | Discount: 0%
+2026-02-18T13:09:27.108Z | INFO | [RepairService] | User 85 | Robot 78 (WimpBot 78) | Cost: ₡3,199 | Discount: 0%
+2026-02-18T13:09:27.115Z | INFO | [RepairService] | User 12 | Robot 5 (WimpBot 5) | Cost: ₡4,600 | Discount: 0%
+2026-02-18T13:09:27.121Z | INFO | [RepairService] | User 68 | Robot 61 (WimpBot 61) | Cost: ₡1,547 | Discount: 0%
+2026-02-18T13:09:27.127Z | INFO | [RepairService] | User 118 | Robot 112 (Melee Specialist C000) | Cost: ₡23,400 | Discount: 0%
+2026-02-18T13:09:27.134Z | INFO | [RepairService] | User 44 | Robot 37 (WimpBot 37) | Cost: ₡3,136 | Discount: 0%
+2026-02-18T13:09:27.140Z | INFO | [RepairService] | User 90 | Robot 83 (WimpBot 83) | Cost: ₡1,547 | Discount: 0%
+2026-02-18T13:09:27.141Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-02-18T13:09:27.141Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-18T13:09:27.141Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-02-18T13:09:27.141Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-18T13:09:27.143Z | INFO | [Rebalancing] Total robots in system: 133
+2026-02-18T13:09:27.143Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-02-18T13:09:27.146Z | INFO | [Rebalancing] bronze: 133 total robots, 118 eligible for rebalancing
+2026-02-18T13:09:27.155Z | INFO | [Rebalancing] bronze: 11 robots eligible for promotion (top 10% of 118)
+2026-02-18T13:09:27.160Z | INFO | [Rebalancing] Promoted: Speed Demon C C000 (bronze → silver)
+2026-02-18T13:09:27.164Z | INFO | [Rebalancing] Promoted: Speed Demon A C000 (bronze → silver)
+2026-02-18T13:09:27.166Z | INFO | [Rebalancing] Promoted: Fortress Prime C001 (bronze → silver)
+2026-02-18T13:09:27.170Z | INFO | [Rebalancing] Promoted: Speed Demon B C000 (bronze → silver)
+2026-02-18T13:09:27.173Z | INFO | [Rebalancing] Promoted: WimpBot 39 (bronze → silver)
+2026-02-18T13:09:27.176Z | INFO | [Rebalancing] Promoted: Afternoon Ride (bronze → silver)
+2026-02-18T13:09:27.179Z | INFO | [Rebalancing] Promoted: Melee Specialist C000 (bronze → silver)
+2026-02-18T13:09:27.182Z | INFO | [Rebalancing] Promoted: Ranged Sniper C000 (bronze → silver)
+2026-02-18T13:09:27.185Z | INFO | [Rebalancing] Promoted: WimpBot 26 (bronze → silver)
+2026-02-18T13:09:27.188Z | INFO | [Rebalancing] Promoted: WimpBot 38 (bronze → silver)
+2026-02-18T13:09:27.191Z | INFO | [Rebalancing] Promoted: Tank Fortress C000 (bronze → silver)
+2026-02-18T13:09:27.191Z | INFO | [Rebalancing] bronze: Promoted 11, Demoted 0
+2026-02-18T13:09:27.191Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-02-18T13:09:27.193Z | INFO | [Rebalancing] silver: 11 total robots, 0 eligible for rebalancing
+2026-02-18T13:09:27.193Z | INFO | [Rebalancing] silver: Skipping (not enough eligible robots)
+2026-02-18T13:09:27.193Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-02-18T13:09:27.195Z | INFO | [Rebalancing] gold: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:09:27.195Z | INFO | [Rebalancing] gold: Skipping (not enough eligible robots)
+2026-02-18T13:09:27.195Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-02-18T13:09:27.196Z | INFO | [Rebalancing] platinum: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:09:27.197Z | INFO | [Rebalancing] platinum: Skipping (not enough eligible robots)
+2026-02-18T13:09:27.197Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-02-18T13:09:27.198Z | INFO | [Rebalancing] diamond: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:09:27.198Z | INFO | [Rebalancing] diamond: Skipping (not enough eligible robots)
+2026-02-18T13:09:27.198Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-02-18T13:09:27.200Z | INFO | [Rebalancing] champion: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:09:27.200Z | INFO | [Rebalancing] champion: Skipping (not enough eligible robots)
+2026-02-18T13:09:27.200Z | INFO |  [Rebalancing] Balancing instances...
+2026-02-18T13:09:27.201Z | INFO | [LeagueInstance] bronze instances balanced, no action needed
+2026-02-18T13:09:27.202Z | INFO | [LeagueInstance] silver instances balanced, no action needed
+2026-02-18T13:09:27.203Z | INFO | [LeagueInstance] gold instances balanced, no action needed
+2026-02-18T13:09:27.203Z | INFO | [LeagueInstance] platinum instances balanced, no action needed
+2026-02-18T13:09:27.204Z | INFO | [LeagueInstance] diamond instances balanced, no action needed
+2026-02-18T13:09:27.205Z | INFO | [LeagueInstance] champion instances balanced, no action needed
+2026-02-18T13:09:27.205Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-18T13:09:27.205Z | INFO | [Rebalancing] League rebalancing complete!
+2026-02-18T13:09:27.205Z | INFO |   Total promoted: 11
+2026-02-18T13:09:27.205Z | INFO |   Total demoted: 0
+2026-02-18T13:09:27.205Z | INFO |   Errors: 0
+2026-02-18T13:09:27.206Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-18T13:09:27.207Z | INFO | [Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle 6)
+2026-02-18T13:09:27.207Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-02-18T13:09:27.207Z | INFO | [UserGeneration] Generating 6 archetype users for Cycle 6...
+2026-02-18T13:09:27.207Z | INFO | [UserGeneration] Creating user 1/6: archetype_glass_cannon_a_6_1 (archetype: glass_cannon_a)
+2026-02-18T13:09:27.295Z | INFO | [UserGeneration] Creating user 2/6: archetype_glass_cannon_b_6_2 (archetype: glass_cannon_b)
+2026-02-18T13:09:27.367Z | INFO | [UserGeneration] Creating user 3/6: archetype_glass_cannon_c_6_3 (archetype: glass_cannon_c)
+2026-02-18T13:09:27.434Z | INFO | [UserGeneration] Creating user 4/6: archetype_speed_demon_a_6_4 (archetype: speed_demon_a)
+2026-02-18T13:09:27.505Z | INFO | [UserGeneration] Creating user 5/6: archetype_speed_demon_b_6_5 (archetype: speed_demon_b)
+2026-02-18T13:09:27.572Z | INFO | [UserGeneration] Created 5/6 users...
+2026-02-18T13:09:27.572Z | INFO | [UserGeneration] Creating user 6/6: archetype_speed_demon_c_6_6 (archetype: speed_demon_c)
+2026-02-18T13:09:27.636Z | INFO | [UserGeneration] Created 6/6 users...
+2026-02-18T13:09:27.636Z | INFO | [UserGeneration] ✅ Created 6 users with 6 robots in 429ms
+2026-02-18T13:09:27.636Z | INFO | [UserGeneration] Archetype position after this cycle: 7
+2026-02-18T13:09:27.636Z | INFO | [Admin] Generated 6 users for cycle 6
+2026-02-18T13:09:27.637Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-02-18T13:09:27.637Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-02-18T13:09:27.637Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-18T13:09:28.637Z
+2026-02-18T13:09:27.637Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-02-18T13:09:27.638Z | INFO | [Matchmaking] Processing bronze_1...
+2026-02-18T13:09:27.646Z | INFO | [Matchmaking] Queue for bronze_1: 77 robots available (77 total, 77 ready)
+2026-02-18T13:09:27.671Z | INFO | [Matchmaking] Bye-match created for WimpBot 45
+2026-02-18T13:09:27.676Z | INFO | [Matchmaking] Created 39 scheduled matches
+2026-02-18T13:09:27.676Z | INFO | [Matchmaking] Processing bronze_2...
+2026-02-18T13:09:27.683Z | INFO | [Matchmaking] Queue for bronze_2: 51 robots available (51 total, 51 ready)
+2026-02-18T13:09:27.692Z | INFO | [Matchmaking] Bye-match created for WimpBot 75
+2026-02-18T13:09:27.696Z | INFO | [Matchmaking] Created 26 scheduled matches
+2026-02-18T13:09:27.696Z | INFO | [Matchmaking] BRONZE: Created 65 matches across 2 instances
+2026-02-18T13:09:27.696Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-02-18T13:09:27.697Z | INFO | [Matchmaking] Processing silver_1...
+2026-02-18T13:09:27.700Z | INFO | [Matchmaking] Queue for silver_1: 11 robots available (11 total, 11 ready)
+2026-02-18T13:09:27.705Z | INFO | [Matchmaking] Bye-match created for WimpBot 38
+2026-02-18T13:09:27.707Z | INFO | [Matchmaking] Created 6 scheduled matches
+2026-02-18T13:09:27.707Z | INFO | [Matchmaking] SILVER: Created 6 matches across 1 instances
+2026-02-18T13:09:27.707Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-02-18T13:09:27.709Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-02-18T13:09:27.709Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-02-18T13:09:27.709Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-02-18T13:09:27.709Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-02-18T13:09:27.710Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-02-18T13:09:27.710Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-02-18T13:09:27.711Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-02-18T13:09:27.711Z | INFO | [Matchmaking] ========================================
+2026-02-18T13:09:27.711Z | INFO | [Matchmaking] COMPLETE: 71 total matches created
+2026-02-18T13:09:27.711Z | INFO | [Matchmaking] ========================================
+2026-02-18T13:09:27.713Z | INFO | [Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle 6)
+2026-02-18T13:09:27.713Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-02-18T13:09:27.718Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-02-18T13:09:28.001Z | INFO | [OperatingCosts] User 125 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.008Z | INFO | [OperatingCosts] User 122 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-18T13:09:28.014Z | INFO | [OperatingCosts] User 124 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.030Z | INFO | [OperatingCosts] User 112 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.039Z | INFO | [OperatingCosts] User 110 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.045Z | INFO | [OperatingCosts] User 2 | Total: ₡2,000 | Facilities: repair_bay(L2): ₡1500, roster_expansion(L0): ₡500
+2026-02-18T13:09:28.053Z | INFO | [OperatingCosts] User 113 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.057Z | INFO | [OperatingCosts] User 117 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-18T13:09:28.061Z | INFO | [OperatingCosts] User 119 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.065Z | INFO | [OperatingCosts] User 123 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.069Z | INFO | [OperatingCosts] User 109 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.075Z | INFO | [OperatingCosts] User 116 | Total: ₡3,500 | Facilities: income_generator(L1): ₡1000, repair_bay(L1): ₡1000, training_facility(L1): ₡1500
+2026-02-18T13:09:28.083Z | INFO | [OperatingCosts] User 121 | Total: ₡2,400 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.094Z | INFO | [OperatingCosts] User 120 | Total: ₡1,000 | Facilities: ai_training_academy(L1): ₡1000
+2026-02-18T13:09:28.099Z | INFO | [OperatingCosts] User 118 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.105Z | INFO | [OperatingCosts] User 126 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.116Z | INFO | [OperatingCosts] User 128 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.120Z | INFO | [OperatingCosts] User 111 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.124Z | INFO | [OperatingCosts] User 108 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-18T13:09:28.130Z | INFO | [OperatingCosts] User 136 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-18T13:09:28.134Z | INFO | [OperatingCosts] User 131 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-18T13:09:28.138Z | INFO | [OperatingCosts] User 127 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.141Z | INFO | [OperatingCosts] User 132 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.145Z | INFO | [OperatingCosts] User 133 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.151Z | INFO | [OperatingCosts] User 130 | Total: ₡3,500 | Facilities: income_generator(L1): ₡1000, repair_bay(L1): ₡1000, training_facility(L1): ₡1500
+2026-02-18T13:09:28.155Z | INFO | [OperatingCosts] User 134 | Total: ₡1,000 | Facilities: ai_training_academy(L1): ₡1000
+2026-02-18T13:09:28.158Z | INFO | [OperatingCosts] User 135 | Total: ₡2,400 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.163Z | INFO | [OperatingCosts] User 114 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.166Z | INFO | [OperatingCosts] User 137 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.170Z | INFO | [OperatingCosts] User 138 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.174Z | INFO | [OperatingCosts] User 139 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:09:28.178Z | INFO | [OperatingCosts] User 140 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.182Z | INFO | [OperatingCosts] User 141 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.186Z | INFO | [OperatingCosts] User 142 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:09:28.186Z | INFO | [Admin] Passive income: ₡10,010, Operating costs: ₡46,400
+2026-02-18T13:09:28.187Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-02-18T13:09:29.304Z | INFO | [Admin] Step 13: Create Cycle Snapshot
+2026-02-18T13:09:29.306Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 6
+2026-02-18T13:09:29.317Z | WARN | [CycleSnapshotService] No battle_complete events found for cycle 6, querying battles by timestamp
+2026-02-18T13:09:29.387Z | INFO | [CycleSnapshotService] Found 71 battles by timestamp for cycle 6
+2026-02-18T13:09:29.463Z | INFO | [CycleSnapshotService] Snapshot created for cycle 6
+2026-02-18T13:09:29.463Z | INFO | [Admin] Cycle snapshot created for cycle 6
+2026-02-18T13:09:29.465Z | INFO | [Admin] Step 14: Log End-of-Cycle Balances
+2026-02-18T13:09:29.465Z | INFO | [Admin] === End of Cycle 6 Balances ===
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 1 | Stable: admin | Balance: ₡10,000,000
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 2 | Stable: player2 | Balance: ₡26,599
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 3 | Stable: player4 | Balance: ₡3,000,000
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 4 | Stable: player1 | Balance: ₡3,000,000
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 5 | Stable: player5 | Balance: ₡3,000,000
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 6 | Stable: player3 | Balance: ₡3,000,000
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 8 | Stable: test_user_001 | Balance: ₡118,650
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 9 | Stable: test_user_002 | Balance: ₡98,874
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 10 | Stable: test_user_003 | Balance: ₡111,529
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 11 | Stable: test_user_004 | Balance: ₡123,905
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 12 | Stable: test_user_005 | Balance: ₡157,099
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 13 | Stable: test_user_006 | Balance: ₡105,057
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 14 | Stable: test_user_007 | Balance: ₡115,368
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 15 | Stable: test_user_008 | Balance: ₡117,178
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 16 | Stable: test_user_009 | Balance: ₡105,798
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 17 | Stable: test_user_010 | Balance: ₡109,218
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 18 | Stable: test_user_011 | Balance: ₡108,444
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 19 | Stable: test_user_012 | Balance: ₡124,597
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 20 | Stable: test_user_013 | Balance: ₡106,607
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 21 | Stable: test_user_014 | Balance: ₡115,801
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 22 | Stable: test_user_015 | Balance: ₡106,502
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 23 | Stable: test_user_016 | Balance: ₡116,094
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 24 | Stable: test_user_017 | Balance: ₡105,959
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 25 | Stable: test_user_018 | Balance: ₡105,289
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 26 | Stable: test_user_019 | Balance: ₡98,250
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 27 | Stable: test_user_020 | Balance: ₡114,964
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 28 | Stable: test_user_021 | Balance: ₡105,792
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 29 | Stable: test_user_022 | Balance: ₡115,382
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 30 | Stable: test_user_023 | Balance: ₡115,738
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 31 | Stable: test_user_024 | Balance: ₡115,383
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 32 | Stable: test_user_025 | Balance: ₡114,358
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 33 | Stable: test_user_026 | Balance: ₡124,221
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 34 | Stable: test_user_027 | Balance: ₡105,122
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 35 | Stable: test_user_028 | Balance: ₡115,717
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 36 | Stable: test_user_029 | Balance: ₡116,637
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 37 | Stable: test_user_030 | Balance: ₡104,892
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 38 | Stable: test_user_031 | Balance: ₡117,639
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 39 | Stable: test_user_032 | Balance: ₡110,538
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 40 | Stable: test_user_033 | Balance: ₡116,322
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 41 | Stable: test_user_034 | Balance: ₡106,335
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 42 | Stable: test_user_035 | Balance: ₡99,316
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 43 | Stable: test_user_036 | Balance: ₡111,301
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 44 | Stable: test_user_037 | Balance: ₡149,821
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 45 | Stable: test_user_038 | Balance: ₡125,267
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 46 | Stable: test_user_039 | Balance: ₡136,592
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 47 | Stable: test_user_040 | Balance: ₡126,437
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 48 | Stable: test_user_041 | Balance: ₡107,171
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 49 | Stable: test_user_042 | Balance: ₡110,548
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 50 | Stable: test_user_043 | Balance: ₡98,458
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 51 | Stable: test_user_044 | Balance: ₡105,352
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 52 | Stable: test_user_045 | Balance: ₡89,307
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 53 | Stable: test_user_046 | Balance: ₡123,677
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 54 | Stable: test_user_047 | Balance: ₡106,460
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 55 | Stable: test_user_048 | Balance: ₡98,123
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 56 | Stable: test_user_049 | Balance: ₡124,973
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 57 | Stable: test_user_050 | Balance: ₡107,443
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 58 | Stable: test_user_051 | Balance: ₡114,567
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 59 | Stable: test_user_052 | Balance: ₡103,637
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 60 | Stable: test_user_053 | Balance: ₡111,877
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 61 | Stable: test_user_054 | Balance: ₡119,416
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 62 | Stable: test_user_055 | Balance: ₡89,599
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 63 | Stable: test_user_056 | Balance: ₡116,009
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 64 | Stable: test_user_057 | Balance: ₡127,418
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 65 | Stable: test_user_058 | Balance: ₡108,039
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 66 | Stable: test_user_059 | Balance: ₡96,555
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 67 | Stable: test_user_060 | Balance: ₡119,157
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 68 | Stable: test_user_061 | Balance: ₡160,798
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 69 | Stable: test_user_062 | Balance: ₡120,704
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 70 | Stable: test_user_063 | Balance: ₡101,134
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 71 | Stable: test_user_064 | Balance: ₡105,791
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 72 | Stable: test_user_065 | Balance: ₡119,931
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 73 | Stable: test_user_066 | Balance: ₡127,481
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 74 | Stable: test_user_067 | Balance: ₡95,720
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 75 | Stable: test_user_068 | Balance: ₡115,006
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 76 | Stable: test_user_069 | Balance: ₡97,100
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 77 | Stable: test_user_070 | Balance: ₡129,490
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 78 | Stable: test_user_071 | Balance: ₡106,983
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 79 | Stable: test_user_072 | Balance: ₡105,917
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 80 | Stable: test_user_073 | Balance: ₡107,484
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 81 | Stable: test_user_074 | Balance: ₡109,733
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 82 | Stable: test_user_075 | Balance: ₡91,763
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 83 | Stable: test_user_076 | Balance: ₡105,959
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 84 | Stable: test_user_077 | Balance: ₡111,531
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 85 | Stable: test_user_078 | Balance: ₡153,167
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 86 | Stable: test_user_079 | Balance: ₡98,854
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 87 | Stable: test_user_080 | Balance: ₡109,503
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 88 | Stable: test_user_081 | Balance: ₡120,140
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 89 | Stable: test_user_082 | Balance: ₡117,221
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 90 | Stable: test_user_083 | Balance: ₡170,870
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 91 | Stable: test_user_084 | Balance: ₡110,674
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 92 | Stable: test_user_085 | Balance: ₡98,866
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 93 | Stable: test_user_086 | Balance: ₡116,385
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 94 | Stable: test_user_087 | Balance: ₡106,460
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 95 | Stable: test_user_088 | Balance: ₡132,563
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 96 | Stable: test_user_089 | Balance: ₡116,574
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 97 | Stable: test_user_090 | Balance: ₡120,474
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 98 | Stable: test_user_091 | Balance: ₡98,406
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 99 | Stable: test_user_092 | Balance: ₡124,472
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 100 | Stable: test_user_093 | Balance: ₡98,354
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 101 | Stable: test_user_094 | Balance: ₡130,702
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 102 | Stable: test_user_095 | Balance: ₡108,687
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 103 | Stable: test_user_096 | Balance: ₡116,866
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 104 | Stable: test_user_097 | Balance: ₡131,288
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 105 | Stable: test_user_098 | Balance: ₡110,778
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 106 | Stable: test_user_099 | Balance: ₡117,891
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 107 | Stable: test_user_100 | Balance: ₡120,767
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 108 | Stable: archetype_tank_fortress | Balance: ₡759,546
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 109 | Stable: archetype_glass_cannon_a | Balance: ₡920,777
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 110 | Stable: archetype_glass_cannon_b | Balance: ₡995,125
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 111 | Stable: archetype_glass_cannon_c | Balance: ₡1,083,782
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 112 | Stable: archetype_speed_demon_a | Balance: ₡68,303
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 113 | Stable: archetype_speed_demon_b | Balance: ₡115,487
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 114 | Stable: archetype_speed_demon_c | Balance: ₡4,079
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 115 | Stable: archetype_balanced_brawler | Balance: ₡491,132
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 116 | Stable: archetype_facility_investor | Balance: ₡253,193
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 117 | Stable: archetype_two_robot | Balance: ₡215,148
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 118 | Stable: archetype_melee_specialist | Balance: ₡371,484
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 119 | Stable: archetype_ranged_sniper | Balance: ₡333,490
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 120 | Stable: archetype_ai_tactician | Balance: ₡466,235
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 121 | Stable: archetype_prestige_rusher | Balance: ₡313,955
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 122 | Stable: archetype_tank_fortress_1_1 | Balance: ₡791,400
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 123 | Stable: archetype_glass_cannon_a_2_1 | Balance: ₡949,784
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 124 | Stable: archetype_glass_cannon_b_2_2 | Balance: ₡1,019,764
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 125 | Stable: archetype_glass_cannon_c_3_1 | Balance: ₡1,041,584
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 126 | Stable: archetype_speed_demon_a_3_2 | Balance: ₡81,701
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 127 | Stable: archetype_speed_demon_b_3_3 | Balance: ₡86,568
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 128 | Stable: archetype_speed_demon_c_4_1 | Balance: ₡40,908
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 129 | Stable: archetype_balanced_brawler_4_2 | Balance: ₡497,213
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 130 | Stable: archetype_facility_investor_4_3 | Balance: ₡258,024
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 131 | Stable: archetype_two_robot_4_4 | Balance: ₡213,546
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 132 | Stable: archetype_melee_specialist_5_1 | Balance: ₡355,060
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 133 | Stable: archetype_ranged_sniper_5_2 | Balance: ₡355,844
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 134 | Stable: archetype_ai_tactician_5_3 | Balance: ₡478,400
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 135 | Stable: archetype_prestige_rusher_5_4 | Balance: ₡303,163
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 136 | Stable: archetype_tank_fortress_5_5 | Balance: ₡761,800
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 137 | Stable: archetype_glass_cannon_a_6_1 | Balance: ₡945,700
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 138 | Stable: archetype_glass_cannon_b_6_2 | Balance: ₡995,700
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 139 | Stable: archetype_glass_cannon_c_6_3 | Balance: ₡1,045,700
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 140 | Stable: archetype_speed_demon_a_6_4 | Balance: ₡64,900
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 141 | Stable: archetype_speed_demon_b_6_5 | Balance: ₡98,400
+2026-02-18T13:09:29.467Z | INFO | [Balance] User 142 | Stable: archetype_speed_demon_c_6_6 | Balance: ₡29,400
+2026-02-18T13:09:29.467Z | INFO | [Admin] ===================================
+2026-02-18T13:09:29.467Z | INFO | === Cycle 6 Ended ===

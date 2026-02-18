@@ -28,10 +28,18 @@ export interface StableStatistics {
   losses: number;
   draws: number;
   winRate: number; // Percentage
-  avgELO: number;
+  highestELO: number;
   highestLeague: string | null;
+  highestTagTeamLeague: string | null;
   totalRobots: number;
-  robotsReady: number;
+  prestige: number;
+  prestigeRank: string;
+  cycleChanges: {
+    prestige: number;
+    wins: number;
+    losses: number;
+    highestElo: number;
+  } | null;
 }
 
 export const getStableStatistics = async (): Promise<StableStatistics> => {

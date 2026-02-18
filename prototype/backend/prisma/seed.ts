@@ -1,11 +1,30 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
+import { eventLogger } from '../src/services/eventLogger';
 
 // Load environment variables
 dotenv.config();
 
 const prisma = new PrismaClient();
+
+const ROBOT_CREATION_COST = 500000;
+
+// Helper function to log robot creation
+async function logRobotCreation(userId: number, robotId: number, robotName: string) {
+  try {
+    await eventLogger.logCreditChange(
+      0, // cycle 0 for seed data
+      userId,
+      -ROBOT_CREATION_COST,
+      0, // We don't track balance during seeding
+      'other'
+    );
+    console.log(`  [Event] Logged robot creation: ${robotName} (₡${ROBOT_CREATION_COST.toLocaleString()})`);
+  } catch (error) {
+    console.error(`  [Event] Failed to log robot creation for ${robotName}:`, error);
+  }
+}
 
 // Default robot attributes (all set to 1.00)
 const DEFAULT_ROBOT_ATTRIBUTES = {

@@ -123,8 +123,53 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
       });
     }
 
-    // Extract metrics for the specified user
-    const cycles = snapshots.map(snapshot => {
+    // Get cycle 0 purchases (purchases made before first cycle) to include in cycle 1
+    const cycle0Purchases = await prisma.auditLog.findMany({
+      where: {
+        cycleNumber: 0,
+        userId,
+        eventType: { in: ['weapon_purchase', 'facility_purchase', 'facility_upgrade', 'attribute_upgrade'] },
+      },
+    });
+
+    // Also get robot creation events (logged as credit_change with source='other')
+    const cycle0RobotCreations = await prisma.auditLog.findMany({
+      where: {
+        cycleNumber: 0,
+        userId,
+        eventType: 'credit_change',
+        payload: {
+          path: ['source'],
+          equals: 'other'
+        }
+      },
+    });
+
+    const cycle0WeaponPurchases = cycle0Purchases
+      .filter(e => e.eventType === 'weapon_purchase')
+      .reduce((sum, e) => sum + (Number((e.payload as any).cost) || 0), 0);
+    
+    const cycle0FacilityPurchases = cycle0Purchases
+      .filter(e => e.eventType === 'facility_purchase' || e.eventType === 'facility_upgrade')
+      .reduce((sum, e) => sum + (Number((e.payload as any).cost) || 0), 0);
+    
+    const cycle0AttributeUpgrades = cycle0Purchases
+      .filter(e => e.eventType === 'attribute_upgrade')
+      .reduce((sum, e) => sum + (Number((e.payload as any).cost) || 0), 0);
+
+    const cycle0RobotPurchases = cycle0RobotCreations
+      .reduce((sum, e) => sum + Math.abs(Number((e.payload as any).amount) || 0), 0);
+
+    const cycle0TotalPurchases = cycle0WeaponPurchases + cycle0FacilityPurchases + cycle0AttributeUpgrades + cycle0RobotPurchases;
+
+    // Get user's current balance to calculate starting balance
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true }
+    });
+    
+    // First pass: calculate cycles without balance
+    const cyclesWithoutBalance = snapshots.map(snapshot => {
       const userMetrics = snapshot.stableMetrics.find(m => m.userId === userId);
 
       if (!userMetrics) {
@@ -133,6 +178,7 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
           cycleNumber: snapshot.cycleNumber,
           income: 0,
           expenses: 0,
+          purchases: 0,
           netProfit: 0,
           breakdown: {
             battleCredits: 0,
@@ -140,6 +186,9 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
             streaming: 0,
             repairCosts: 0,
             operatingCosts: 0,
+            weaponPurchases: 0,
+            facilityPurchases: 0,
+            attributeUpgrades: 0,
           },
         };
       }
@@ -148,25 +197,101 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
                      userMetrics.merchandisingIncome + 
                      userMetrics.streamingIncome;
       const expenses = userMetrics.totalRepairCosts + userMetrics.operatingCosts;
+      const weaponPurchases = Number(userMetrics.weaponPurchases) || 0;
+      const facilityPurchases = Number(userMetrics.facilityPurchases) || 0;
+      const attributeUpgrades = Number(userMetrics.attributeUpgrades) || 0;
+      
+      // Include cycle 0 purchases in cycle 1
+      const isCycle1 = snapshot.cycleNumber === 1;
+      const finalWeaponPurchases = weaponPurchases + (isCycle1 ? cycle0WeaponPurchases : 0);
+      const finalFacilityPurchases = facilityPurchases + (isCycle1 ? cycle0FacilityPurchases : 0);
+      const finalAttributeUpgrades = attributeUpgrades + (isCycle1 ? cycle0AttributeUpgrades : 0);
+      const finalRobotPurchases = (isCycle1 ? cycle0RobotPurchases : 0);
+      const purchases = finalWeaponPurchases + finalFacilityPurchases + finalAttributeUpgrades + finalRobotPurchases;
+
+      // Adjust net profit for cycle 1 to include cycle 0 purchases
+      const adjustedNetProfit = isCycle1 
+        ? userMetrics.netProfit - cycle0TotalPurchases 
+        : userMetrics.netProfit;
 
       return {
         cycleNumber: snapshot.cycleNumber,
         income,
         expenses,
-        netProfit: userMetrics.netProfit,
+        purchases,
+        netProfit: adjustedNetProfit,
         breakdown: {
           battleCredits: userMetrics.totalCreditsEarned,
           merchandising: userMetrics.merchandisingIncome,
           streaming: userMetrics.streamingIncome,
           repairCosts: userMetrics.totalRepairCosts,
           operatingCosts: userMetrics.operatingCosts,
+          weaponPurchases: finalWeaponPurchases,
+          facilityPurchases: finalFacilityPurchases,
+          attributeUpgrades: finalAttributeUpgrades,
+          robotPurchases: finalRobotPurchases,
         },
+      };
+    });
+
+    // Calculate starting balance
+    // For cycle 1, start with ₡3,000,000 (cycle 0 purchases are already included in cycle 1's purchases)
+    // For other cycles, get from previous cycle's snapshot
+    let startingBalance = 0;
+    
+    if (startCycle === 1) {
+      // Starting balance is ₡3,000,000 (cycle 0 purchases are included in cycle 1 data)
+      startingBalance = 3000000;
+    } else {
+      // Get balance from previous cycle's snapshot
+      const previousCycle = startCycle - 1;
+      const previousSnapshot = await prisma.cycleSnapshot.findUnique({
+        where: { cycleNumber: previousCycle },
+      });
+      
+      if (previousSnapshot && previousSnapshot.stableMetrics) {
+        const userMetric = (previousSnapshot.stableMetrics as any[]).find((m: any) => m.userId === userId);
+        if (userMetric) {
+          // Calculate balance after previous cycle
+          // We need to calculate cumulative balance from cycle 1 to previous cycle
+          const allPreviousSnapshots = await cycleSnapshotService.getSnapshotRange(1, previousCycle);
+          let runningBalance = 3000000; // Starting balance
+          
+          for (const snapshot of allPreviousSnapshots) {
+            const metric = snapshot.stableMetrics.find(m => m.userId === userId);
+            if (metric) {
+              const income = metric.totalCreditsEarned + metric.merchandisingIncome + metric.streamingIncome;
+              const expenses = metric.totalRepairCosts + metric.operatingCosts;
+              const purchases = metric.weaponPurchases + metric.facilityPurchases + metric.attributeUpgrades;
+              runningBalance += income - expenses - purchases;
+            }
+          }
+          
+          startingBalance = runningBalance;
+        } else {
+          // User didn't exist in previous cycles, use default
+          startingBalance = 3000000;
+        }
+      } else {
+        // No previous snapshot, use default
+        startingBalance = 3000000;
+      }
+    }
+
+    // Second pass: add balance to each cycle
+    let runningBalance = startingBalance;
+    const cycles = cyclesWithoutBalance.map(cycle => {
+      runningBalance += cycle.income - cycle.expenses - cycle.purchases;
+      return {
+        ...cycle,
+        balance: runningBalance,
       };
     });
 
     // Calculate totals
     const totalIncome = cycles.reduce((sum, c) => sum + c.income, 0);
     const totalExpenses = cycles.reduce((sum, c) => sum + c.expenses, 0);
+    const totalPurchases = cycles.reduce((sum, c) => sum + c.purchases, 0);
     const netProfit = cycles.reduce((sum, c) => sum + c.netProfit, 0);
 
     return res.json({
@@ -174,6 +299,7 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
       cycleRange: [startCycle, endCycle],
       totalIncome,
       totalExpenses,
+      totalPurchases,
       netProfit,
       cycles,
     });

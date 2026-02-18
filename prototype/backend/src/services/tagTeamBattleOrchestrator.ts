@@ -1364,31 +1364,9 @@ async function updateTagTeamBattleResults(
     const reserveFinalHP = team1IsBye ? result.team2ReserveFinalHP : result.team1ReserveFinalHP;
     const tagOutTime = team1IsBye ? result.team2TagOutTime : result.team1TagOutTime;
 
-    // Calculate repair cost for active robot using canonical function
-    const activeSumOfAllAttributes = calculateAttributeSum(realTeam.activeRobot);
-    const activeDamagePercent = ((realTeam.activeRobot.maxHP - activeFinalHP) / realTeam.activeRobot.maxHP) * 100;
-    const activeHpPercent = (activeFinalHP / realTeam.activeRobot.maxHP) * 100;
-    const activeRepairCost = calculateRepairCost(
-      activeSumOfAllAttributes,
-      activeDamagePercent,
-      activeHpPercent,
-      repairBayLevel,
-      medicalBayLevel,
-      activeRobotCount
-    );
-
-    // Calculate repair cost for reserve robot using canonical function
-    const reserveSumOfAllAttributes = calculateAttributeSum(realTeam.reserveRobot);
-    const reserveDamagePercent = ((realTeam.reserveRobot.maxHP - reserveFinalHP) / realTeam.reserveRobot.maxHP) * 100;
-    const reserveHpPercent = (reserveFinalHP / realTeam.reserveRobot.maxHP) * 100;
-    const reserveRepairCost = calculateRepairCost(
-      reserveSumOfAllAttributes,
-      reserveDamagePercent,
-      reserveHpPercent,
-      repairBayLevel,
-      medicalBayLevel,
-      activeRobotCount
-    );
+    // NOTE: Repair costs are NOT calculated here anymore
+    // They are calculated by RepairService when repairs are actually triggered
+    // This ensures accurate costs based on current damage and facility levels
 
     // Calculate prestige
     const prestige = calculateTagTeamPrestige(match.tagTeamLeague, realTeamWon, isDraw);
@@ -1423,7 +1401,7 @@ async function updateTagTeamBattleResults(
       data: {
         elo: { increment: realTeamELOChange },
         currentHP: activeFinalHP,
-        repairCost: activeRepairCost, // Store calculated repair cost
+        repairCost: 0, // Deprecated: repair costs calculated by RepairService
         damageTaken: { increment: realTeam.activeRobot.maxHP - activeFinalHP },
         fame: { increment: activeFame },
         totalTagTeamBattles: { increment: 1 },
@@ -1439,7 +1417,7 @@ async function updateTagTeamBattleResults(
       data: {
         elo: { increment: realTeamELOChange },
         currentHP: reserveFinalHP,
-        repairCost: reserveRepairCost, // Store calculated repair cost
+        repairCost: 0, // Deprecated: repair costs calculated by RepairService
         damageTaken: tagOutTime !== undefined 
           ? { increment: realTeam.reserveRobot.maxHP - reserveFinalHP }
           : undefined,
@@ -1470,10 +1448,11 @@ async function updateTagTeamBattleResults(
     });
 
     // Update stable
+    // Note: Repair costs are deducted separately by RepairService, not here
     await prisma.user.update({
       where: { id: realTeam.stableId },
       data: {
-        currency: { increment: realTeamRewards - activeRepairCost - reserveRepairCost },
+        currency: { increment: realTeamRewards },
         prestige: { increment: prestige },
       },
     });
@@ -1487,8 +1466,8 @@ async function updateTagTeamBattleResults(
       data: {
         winnerReward,
         loserReward,
-        robot1RepairCost: team1IsBye ? 0 : activeRepairCost,
-        robot2RepairCost: team2IsBye ? 0 : activeRepairCost,
+        robot1RepairCost: 0, // Deprecated: repair costs calculated by RepairService
+        robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
         robot1PrestigeAwarded: team1IsBye ? 0 : prestige,
         robot2PrestigeAwarded: team2IsBye ? 0 : prestige,
         robot1ELOAfter: team1IsBye ? 1000 : realTeam.activeRobot.elo + realTeamELOChange,
@@ -1585,57 +1564,9 @@ async function updateTagTeamBattleResults(
   const team1MedicalBayLevel = team1MedicalBay ? team1MedicalBay.level : 0;
   const team2MedicalBayLevel = team2MedicalBay ? team2MedicalBay.level : 0;
 
-  // Calculate repair cost for team1 active robot using canonical function
-  const team1ActiveSumOfAllAttributes = calculateAttributeSum(team1.activeRobot);
-  const team1ActiveDamagePercent = ((team1.activeRobot.maxHP - result.team1ActiveFinalHP) / team1.activeRobot.maxHP) * 100;
-  const team1ActiveHpPercent = (result.team1ActiveFinalHP / team1.activeRobot.maxHP) * 100;
-  const team1ActiveRepairCost = calculateRepairCost(
-    team1ActiveSumOfAllAttributes,
-    team1ActiveDamagePercent,
-    team1ActiveHpPercent,
-    team1RepairBayLevel,
-    team1MedicalBayLevel,
-    team1ActiveRobotCount
-  );
-
-  // Calculate repair cost for team1 reserve robot using canonical function
-  const team1ReserveSumOfAllAttributes = calculateAttributeSum(team1.reserveRobot);
-  const team1ReserveDamagePercent = ((team1.reserveRobot.maxHP - result.team1ReserveFinalHP) / team1.reserveRobot.maxHP) * 100;
-  const team1ReserveHpPercent = (result.team1ReserveFinalHP / team1.reserveRobot.maxHP) * 100;
-  const team1ReserveRepairCost = calculateRepairCost(
-    team1ReserveSumOfAllAttributes,
-    team1ReserveDamagePercent,
-    team1ReserveHpPercent,
-    team1RepairBayLevel,
-    team1MedicalBayLevel,
-    team1ActiveRobotCount
-  );
-
-  // Calculate repair cost for team2 active robot using canonical function
-  const team2ActiveSumOfAllAttributes = calculateAttributeSum(team2.activeRobot);
-  const team2ActiveDamagePercent = ((team2.activeRobot.maxHP - result.team2ActiveFinalHP) / team2.activeRobot.maxHP) * 100;
-  const team2ActiveHpPercent = (result.team2ActiveFinalHP / team2.activeRobot.maxHP) * 100;
-  const team2ActiveRepairCost = calculateRepairCost(
-    team2ActiveSumOfAllAttributes,
-    team2ActiveDamagePercent,
-    team2ActiveHpPercent,
-    team2RepairBayLevel,
-    team2MedicalBayLevel,
-    team2ActiveRobotCount
-  );
-
-  // Calculate repair cost for team2 reserve robot using canonical function
-  const team2ReserveSumOfAllAttributes = calculateAttributeSum(team2.reserveRobot);
-  const team2ReserveDamagePercent = ((team2.reserveRobot.maxHP - result.team2ReserveFinalHP) / team2.reserveRobot.maxHP) * 100;
-  const team2ReserveHpPercent = (result.team2ReserveFinalHP / team2.reserveRobot.maxHP) * 100;
-  const team2ReserveRepairCost = calculateRepairCost(
-    team2ReserveSumOfAllAttributes,
-    team2ReserveDamagePercent,
-    team2ReserveHpPercent,
-    team2RepairBayLevel,
-    team2MedicalBayLevel,
-    team2ActiveRobotCount
-  );
+  // NOTE: Repair costs are NOT calculated here anymore
+  // They are calculated by RepairService when repairs are actually triggered
+  // This ensures accurate costs based on current damage and facility levels
 
   // Calculate prestige (Requirements 10.1-10.6)
   const team1Prestige = calculateTagTeamPrestige(match.tagTeamLeague, team1Won, isDraw);
@@ -1683,7 +1614,7 @@ async function updateTagTeamBattleResults(
     data: {
       elo: { increment: eloChanges.team1Change },
       currentHP: result.team1ActiveFinalHP,
-      repairCost: team1ActiveRepairCost, // Store calculated repair cost
+      repairCost: 0, // Deprecated: repair costs calculated by RepairService
       damageTaken: { increment: team1.activeRobot.maxHP - result.team1ActiveFinalHP },
       fame: { increment: team1ActiveFame },
       totalTagTeamBattles: { increment: 1 },
@@ -1699,7 +1630,7 @@ async function updateTagTeamBattleResults(
     data: {
       elo: { increment: eloChanges.team1Change },
       currentHP: result.team1ReserveFinalHP,
-      repairCost: team1ReserveRepairCost, // Store calculated repair cost
+      repairCost: 0, // Deprecated: repair costs calculated by RepairService
       damageTaken: result.team1TagOutTime !== undefined 
         ? { increment: team1.reserveRobot.maxHP - result.team1ReserveFinalHP }
         : undefined,
@@ -1717,7 +1648,7 @@ async function updateTagTeamBattleResults(
     data: {
       elo: { increment: eloChanges.team2Change },
       currentHP: result.team2ActiveFinalHP,
-      repairCost: team2ActiveRepairCost, // Store calculated repair cost
+      repairCost: 0, // Deprecated: repair costs calculated by RepairService
       damageTaken: { increment: team2.activeRobot.maxHP - result.team2ActiveFinalHP },
       fame: { increment: team2ActiveFame },
       totalTagTeamBattles: { increment: 1 },
@@ -1733,7 +1664,7 @@ async function updateTagTeamBattleResults(
     data: {
       elo: { increment: eloChanges.team2Change },
       currentHP: result.team2ReserveFinalHP,
-      repairCost: team2ReserveRepairCost, // Store calculated repair cost
+      repairCost: 0, // Deprecated: repair costs calculated by RepairService
       damageTaken: result.team2TagOutTime !== undefined 
         ? { increment: team2.reserveRobot.maxHP - result.team2ReserveFinalHP }
         : undefined,
@@ -1781,10 +1712,11 @@ async function updateTagTeamBattleResults(
   });
 
   // Update stables (currency, prestige)
+  // Note: Repair costs are deducted separately by RepairService, not here
   await prisma.user.update({
     where: { id: team1.stableId },
     data: {
-      currency: { increment: team1Rewards - team1ActiveRepairCost - team1ReserveRepairCost },
+      currency: { increment: team1Rewards },
       prestige: { increment: team1Prestige },
     },
   });
@@ -1792,7 +1724,7 @@ async function updateTagTeamBattleResults(
   await prisma.user.update({
     where: { id: team2.stableId },
     data: {
-      currency: { increment: team2Rewards - team2ActiveRepairCost - team2ReserveRepairCost },
+      currency: { increment: team2Rewards },
       prestige: { increment: team2Prestige },
     },
   });
@@ -1803,8 +1735,8 @@ async function updateTagTeamBattleResults(
     data: {
       winnerReward: team1Won ? team1Rewards : team2Won ? team2Rewards : 0,
       loserReward: team1Won ? team2Rewards : team2Won ? team1Rewards : (isDraw ? team1Rewards : 0),
-      robot1RepairCost: team1ActiveRepairCost + team1ReserveRepairCost,
-      robot2RepairCost: team2ActiveRepairCost + team2ReserveRepairCost,
+      robot1RepairCost: 0, // Deprecated: repair costs calculated by RepairService
+      robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
       robot1PrestigeAwarded: team1Prestige,
       robot2PrestigeAwarded: team2Prestige,
       robot1FameAwarded: team1ActiveFame + team1ReserveFame,

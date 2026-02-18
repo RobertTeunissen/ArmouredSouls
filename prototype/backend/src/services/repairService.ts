@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma';
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { eventLogger } from '../services/eventLogger';
+import { cycleLogger } from '../utils/cycleLogger';
 
 
 export interface RepairSummary {
@@ -25,11 +26,10 @@ export interface RepairSummary {
  * repair_cost = base_repair × damage_percentage × multiplier × (1 - repair_bay_discount)
  * 
  * @param deductCosts - Whether to deduct repair costs from user currency
+ * @param cycleNumber - The current cycle number for logging (optional, will query if not provided)
  * @returns Summary of repairs performed
  */
-export async function repairAllRobots(deductCosts: boolean = true): Promise<RepairSummary> {
-  console.log(`[RepairService] Starting repair process (deductCosts: ${deductCosts})...`);
-
+export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?: number): Promise<RepairSummary> {
   // Get all robots that need repair with all attributes for cost calculation
   const robots = await prisma.robot.findMany({
     where: {
@@ -43,7 +43,6 @@ export async function repairAllRobots(deductCosts: boolean = true): Promise<Repa
   });
 
   if (robots.length === 0) {
-    console.log('[RepairService] No robots need repair');
     return {
       robotsRepaired: 0,
       totalBaseCost: 0,
@@ -144,13 +143,28 @@ export async function repairAllRobots(deductCosts: boolean = true): Promise<Repa
       });
 
       // Log repair event for analytics
-      await eventLogger.logRobotRepair(
-        userId,
-        robot.id,
-        repairCost,
-        damageTaken,
-        repairBayDiscount
-      );
+      try {
+        await eventLogger.logRobotRepair(
+          userId,
+          robot.id,
+          repairCost,
+          damageTaken,
+          repairBayDiscount,
+          cycleNumber
+        );
+        
+        // Get user's stable name for logging
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { stableName: true },
+        });
+        const stableInfo = user?.stableName ? ` (${user.stableName})` : '';
+        
+        // Single consolidated log per robot
+        console.log(`[RepairService] | User ${userId}${stableInfo} | Robot ${robot.id} (${robot.name}) | Cost: ₡${repairCost.toLocaleString()} | Discount: ${repairBayDiscount}%`);
+      } catch (logError) {
+        console.error(`[RepairService] | ERROR | User ${userId} | Robot ${robot.id} | Failed to log repair event:`, logError instanceof Error ? logError.message : logError);
+      }
     }
 
     totalBaseCost += userBaseCost;
@@ -174,11 +188,7 @@ export async function repairAllRobots(deductCosts: boolean = true): Promise<Repa
       totalCost: userFinalCost,
       repairBayDiscount,
     });
-
-    console.log(`[RepairService] User ${userId}: Repaired ${userRobots.length} robot(s) for ₡${userFinalCost.toLocaleString()} (${repairBayDiscount}% discount)`);
   }
-
-  console.log(`[RepairService] Completed: ${robots.length} robots repaired, ₡${totalFinalCost.toLocaleString()} total cost`);
 
   return {
     robotsRepaired: robots.length,

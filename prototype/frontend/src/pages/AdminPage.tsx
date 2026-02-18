@@ -140,6 +140,36 @@ interface RobotStats {
   bottomPerformers: Record<string, any[]>;
 }
 
+interface AtRiskUser {
+  userId: number;
+  username: string;
+  stableName: string;
+  currentBalance: number;
+  totalRepairCost: number;
+  netBalance: number;
+  cyclesAtRisk: number;
+  firstAtRiskCycle: number | null;
+  daysOfRunway: number;
+  robotCount: number;
+  damagedRobots: number;
+  balanceHistory: Array<{
+    cycle: number;
+    timestamp: string;
+    balance: number;
+    dailyCost: number;
+    dailyIncome: number;
+  }>;
+  createdAt: string;
+}
+
+interface AtRiskUsersResponse {
+  threshold: number;
+  currentCycle: number;
+  totalAtRisk: number;
+  users: AtRiskUser[];
+  timestamp: string;
+}
+
 // Helper function for quintile labels
 const getQuintileLabel = (quintileNumber: number): string => {
   switch (quintileNumber) {
@@ -305,6 +335,11 @@ function AdminPage() {
   const [robotStatsLoading, setRobotStatsLoading] = useState(false);
   const [showRobotStats, setShowRobotStats] = useState(false);
   const [selectedAttribute, setSelectedAttribute] = useState<string>('combatPower');
+
+  // At-risk users state
+  const [atRiskUsers, setAtRiskUsers] = useState<AtRiskUsersResponse | null>(null);
+  const [atRiskLoading, setAtRiskLoading] = useState(false);
+  const [showAtRiskUsers, setShowAtRiskUsers] = useState(false);
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -603,6 +638,24 @@ function AdminPage() {
     }
   };
 
+  const fetchAtRiskUsers = async () => {
+    setAtRiskLoading(true);
+    try {
+      const response = await axios.get('/api/admin/users/at-risk');
+      setAtRiskUsers(response.data);
+      setShowAtRiskUsers(true);
+      addSessionLog('success', `Loaded ${response.data.totalAtRisk} at-risk users`);
+      showMessage('success', `Found ${response.data.totalAtRisk} users at risk`);
+    } catch (error: any) {
+      console.error('At-risk users fetch error:', error);
+      const errorMsg = error.response?.data?.error || error.message || 'Failed to fetch at-risk users';
+      addSessionLog('error', `Failed to fetch at-risk users: ${errorMsg}`, error.response?.data);
+      showMessage('error', errorMsg);
+    } finally {
+      setAtRiskLoading(false);
+    }
+  };
+
   // Auto-load stats and battles when component mounts
   useEffect(() => {
     fetchStats(); // Load system statistics by default
@@ -898,6 +951,159 @@ function AdminPage() {
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* At-Risk Users Section */}
+            {stats && stats.finances.usersAtRisk > 0 && (
+              <div className="bg-gray-800 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-red-400">⚠️ Users At Risk of Bankruptcy</h2>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Users with balance below ₡10,000 (threshold for financial stability)
+                    </p>
+                  </div>
+                  <button
+                    onClick={fetchAtRiskUsers}
+                    disabled={atRiskLoading}
+                    className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+                  >
+                    {atRiskLoading ? 'Loading...' : showAtRiskUsers ? 'Refresh' : 'View Details'}
+                  </button>
+                </div>
+
+                {showAtRiskUsers && atRiskUsers && (
+                  <div className="space-y-4">
+                    <div className="bg-gray-700 rounded p-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-400">Total At Risk</p>
+                          <p className="text-2xl font-bold text-red-400">{atRiskUsers.totalAtRisk}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Threshold</p>
+                          <p className="text-2xl font-bold">₡{atRiskUsers.threshold.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Current Cycle</p>
+                          <p className="text-2xl font-bold">{atRiskUsers.currentCycle}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">% of Users</p>
+                          <p className="text-2xl font-bold">
+                            {stats.finances.totalUsers > 0 
+                              ? ((atRiskUsers.totalAtRisk / stats.finances.totalUsers) * 100).toFixed(1)
+                              : 0}%
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* User List */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-700">
+                          <tr>
+                            <th className="p-3 text-left">Stable</th>
+                            <th className="p-3 text-left">Balance</th>
+                            <th className="p-3 text-left">Repair Costs</th>
+                            <th className="p-3 text-left">Net Balance</th>
+                            <th className="p-3 text-left">Days of Runway</th>
+                            <th className="p-3 text-left">Cycles At Risk</th>
+                            <th className="p-3 text-left">Robots</th>
+                            <th className="p-3 text-left">History</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {atRiskUsers.users.map((user) => (
+                            <tr key={user.userId} className="border-t border-gray-700 hover:bg-gray-750">
+                              <td className="p-3">
+                                <div>
+                                  <p className="font-semibold">{user.stableName}</p>
+                                  <p className="text-xs text-gray-400">@{user.username}</p>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <span className={user.currentBalance < 5000 ? 'text-red-400 font-bold' : 'text-yellow-400'}>
+                                  ₡{user.currentBalance.toLocaleString()}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <span className="text-orange-400">
+                                  ₡{user.totalRepairCost.toLocaleString()}
+                                </span>
+                                {user.damagedRobots > 0 && (
+                                  <p className="text-xs text-gray-400">
+                                    {user.damagedRobots} damaged
+                                  </p>
+                                )}
+                              </td>
+                              <td className="p-3">
+                                <span className={user.netBalance < 0 ? 'text-red-500 font-bold' : 'text-gray-300'}>
+                                  ₡{user.netBalance.toLocaleString()}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <span className={
+                                  user.daysOfRunway < 3 ? 'text-red-500 font-bold' :
+                                  user.daysOfRunway < 7 ? 'text-yellow-400' :
+                                  'text-green-400'
+                                }>
+                                  {user.daysOfRunway < 999 ? `${user.daysOfRunway} days` : '∞'}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <div>
+                                  <span className="font-semibold">{user.cyclesAtRisk}</span>
+                                  {user.firstAtRiskCycle && (
+                                    <p className="text-xs text-gray-400">
+                                      Since cycle {user.firstAtRiskCycle}
+                                    </p>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <span>{user.robotCount} robots</span>
+                              </td>
+                              <td className="p-3">
+                                {user.balanceHistory.length > 0 ? (
+                                  <details className="cursor-pointer">
+                                    <summary className="text-blue-400 hover:underline">
+                                      View ({user.balanceHistory.length})
+                                    </summary>
+                                    <div className="mt-2 space-y-1 text-xs bg-gray-800 p-2 rounded">
+                                      {user.balanceHistory.map((h) => (
+                                        <div key={h.cycle} className="flex justify-between gap-2">
+                                          <span className="text-gray-400">Cycle {h.cycle}:</span>
+                                          <span>₡{h.balance.toLocaleString()}</span>
+                                          {h.dailyIncome > 0 && (
+                                            <span className="text-green-400">+₡{h.dailyIncome.toLocaleString()}</span>
+                                          )}
+                                          {h.dailyCost > 0 && (
+                                            <span className="text-red-400">-₡{h.dailyCost.toLocaleString()}</span>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </details>
+                                ) : (
+                                  <span className="text-gray-500">No history</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {!showAtRiskUsers && (
+                  <div className="text-center py-8 text-gray-400">
+                    <p>Click "View Details" to see which users are at risk and their financial history</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

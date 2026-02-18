@@ -52,7 +52,6 @@ function FinancialSummary() {
   }
 
   const isPositive = summary.netPassiveIncome >= 0;
-  const prestigeBonusPercent = Math.round((summary.prestigeMultiplier - 1) * 100);
 
   return (
     <div className="bg-surface p-4 rounded-lg border border-gray-700">
@@ -86,35 +85,6 @@ function FinancialSummary() {
             Costs: {formatCurrency(summary.dailyOperatingCosts)}
           </div>
         </div>
-
-        {/* Prestige & Bonus */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <div className="text-xs text-gray-400 mb-1">Prestige</div>
-            <div className="text-base font-semibold text-info">
-              {summary.prestige.toLocaleString()}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-400 mb-1">Battle Bonus</div>
-            <div className="text-base font-semibold text-primary">
-              {prestigeBonusPercent > 0 ? `+${prestigeBonusPercent}%` : '0%'}
-            </div>
-          </div>
-        </div>
-
-        {/* Financial Tips */}
-        {summary.netPassiveIncome < 0 && (
-          <div className="mt-3 p-2 bg-error/20 border border-error rounded text-xs text-error">
-            ⚠️ Facilities cost more than passive income. Win battles to stay profitable!
-          </div>
-        )}
-        
-        {summary.currentBalance < 100000 && (
-          <div className="mt-3 p-2 bg-warning/20 border border-warning rounded text-xs text-warning">
-            ⚠️ Low balance. Consider reducing costs or winning more battles.
-          </div>
-        )}
       </div>
     </div>
   );

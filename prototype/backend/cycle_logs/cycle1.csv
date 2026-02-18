@@ -1,0 +1,348 @@
+Timestamp | Level | Message
+2026-02-18T13:03:47.799Z | INFO | 🚀 Backend server running on http://localhost:3001
+2026-02-18T13:03:54.847Z | INFO | [Facility] User 2 | Purchased: Repair Bay | Level: 1 | Cost: ₡100,000 | Balance: ₡3,000,000 → ₡2,900,000
+2026-02-18T13:03:55.486Z | INFO | [Facility] User 2 | Upgraded: Repair Bay | Level: 2 | Cost: ₡200,000 | Balance: ₡2,900,000 → ₡2,700,000
+2026-02-18T13:03:57.370Z | INFO | [Facility] User 2 | Purchased: Roster Expansion | Level: 1 | Cost: ₡150,000 | Balance: ₡2,700,000 → ₡2,550,000
+2026-02-18T13:04:03.907Z | INFO | [Weapon] User 2 | Purchased: Assault Rifle | Cost: ₡188,000 | Balance: ₡2,550,000 → ₡2,362,000
+2026-02-18T13:04:06.389Z | INFO | [Weapon] User 2 | Purchased: Assault Rifle | Cost: ₡188,000 | Balance: ₡2,362,000 → ₡2,174,000
+2026-02-18T13:04:08.546Z | INFO | [Weapon] User 2 | Purchased: Assault Rifle | Cost: ₡188,000 | Balance: ₡2,174,000 → ₡1,986,000
+2026-02-18T13:04:11.402Z | INFO | [Weapon] User 2 | Purchased: Assault Rifle | Cost: ₡188,000 | Balance: ₡1,986,000 → ₡1,798,000
+2026-02-18T13:04:16.148Z | INFO | [Robot] | User 2 | Created: ""Afternoon Ride"" | Cost: ₡500,000 | Balance: ₡1,798,000 → ₡1,298,000
+2026-02-18T13:04:16.271Z | INFO | Fetching robot with ID: 117
+2026-02-18T13:04:16.280Z | INFO | Successfully fetched robot: Afternoon Ride (ID: 117)
+2026-02-18T13:04:18.134Z | INFO | Fetching robot with ID: 117
+2026-02-18T13:04:18.144Z | INFO | Successfully fetched robot: Afternoon Ride (ID: 117)
+2026-02-18T13:04:30.589Z | INFO | Fetching robot with ID: 117
+2026-02-18T13:04:30.601Z | INFO | Successfully fetched robot: Afternoon Ride (ID: 117)
+2026-02-18T13:04:30.951Z | INFO | Fetching robot with ID: 117
+2026-02-18T13:04:30.964Z | INFO | Successfully fetched robot: Afternoon Ride (ID: 117)
+2026-02-18T13:04:49.459Z | INFO | [AttributeUpgrade] User 2 | Robot 117 (Afternoon Ride) | Attributes: 13 | Total Cost: ₡390,000 | Balance: ₡1,298,000 → ₡908,000
+2026-02-18T13:04:49.464Z | INFO | [AttributeUpgrade]   combatPower | 1→6 | ₡30,000
+2026-02-18T13:04:49.466Z | INFO | [AttributeUpgrade]   targetingSystems | 1→6 | ₡30,000
+2026-02-18T13:04:49.467Z | INFO | [AttributeUpgrade]   criticalSystems | 1→6 | ₡30,000
+2026-02-18T13:04:49.469Z | INFO | [AttributeUpgrade]   penetration | 1→6 | ₡30,000
+2026-02-18T13:04:49.471Z | INFO | [AttributeUpgrade]   weaponControl | 1→6 | ₡30,000
+2026-02-18T13:04:49.472Z | INFO | [AttributeUpgrade]   attackSpeed | 1→6 | ₡30,000
+2026-02-18T13:04:49.473Z | INFO | [AttributeUpgrade]   armorPlating | 1→6 | ₡30,000
+2026-02-18T13:04:49.474Z | INFO | [AttributeUpgrade]   shieldCapacity | 1→6 | ₡30,000
+2026-02-18T13:04:49.475Z | INFO | [AttributeUpgrade]   evasionThrusters | 1→6 | ₡30,000
+2026-02-18T13:04:49.476Z | INFO | [AttributeUpgrade]   damageDampeners | 1→6 | ₡30,000
+2026-02-18T13:04:49.477Z | INFO | [AttributeUpgrade]   counterProtocols | 1→6 | ₡30,000
+2026-02-18T13:04:49.478Z | INFO | [AttributeUpgrade]   hullIntegrity | 1→6 | ₡30,000
+2026-02-18T13:04:49.480Z | INFO | [AttributeUpgrade]   powerCore | 1→6 | ₡30,000
+2026-02-18T13:04:54.668Z | INFO | [Robot] | User 2 | Created: ""Lunch Ride"" | Cost: ₡500,000 | Balance: ₡908,000 → ₡408,000
+2026-02-18T13:04:54.794Z | INFO | Fetching robot with ID: 118
+2026-02-18T13:04:54.804Z | INFO | Successfully fetched robot: Lunch Ride (ID: 118)
+2026-02-18T13:04:56.517Z | INFO | Fetching robot with ID: 118
+2026-02-18T13:04:56.528Z | INFO | Successfully fetched robot: Lunch Ride (ID: 118)
+2026-02-18T13:05:10.025Z | INFO | Fetching robot with ID: 118
+2026-02-18T13:05:10.040Z | INFO | Successfully fetched robot: Lunch Ride (ID: 118)
+2026-02-18T13:05:39.197Z | INFO | [AttributeUpgrade] User 2 | Robot 118 (Lunch Ride) | Attributes: 13 | Total Cost: ₡390,000 | Balance: ₡408,000 → ₡18,000
+2026-02-18T13:05:39.200Z | INFO | [AttributeUpgrade]   combatPower | 1→6 | ₡30,000
+2026-02-18T13:05:39.203Z | INFO | [AttributeUpgrade]   targetingSystems | 1→6 | ₡30,000
+2026-02-18T13:05:39.210Z | INFO | [AttributeUpgrade]   criticalSystems | 1→6 | ₡30,000
+2026-02-18T13:05:39.212Z | INFO | [AttributeUpgrade]   penetration | 1→6 | ₡30,000
+2026-02-18T13:05:39.215Z | INFO | [AttributeUpgrade]   weaponControl | 1→6 | ₡30,000
+2026-02-18T13:05:39.221Z | INFO | [AttributeUpgrade]   attackSpeed | 1→6 | ₡30,000
+2026-02-18T13:05:39.224Z | INFO | [AttributeUpgrade]   armorPlating | 1→6 | ₡30,000
+2026-02-18T13:05:39.226Z | INFO | [AttributeUpgrade]   shieldCapacity | 1→6 | ₡30,000
+2026-02-18T13:05:39.227Z | INFO | [AttributeUpgrade]   evasionThrusters | 1→6 | ₡30,000
+2026-02-18T13:05:39.230Z | INFO | [AttributeUpgrade]   damageDampeners | 1→6 | ₡30,000
+2026-02-18T13:05:39.243Z | INFO | [AttributeUpgrade]   counterProtocols | 1→6 | ₡30,000
+2026-02-18T13:05:39.244Z | INFO | [AttributeUpgrade]   hullIntegrity | 1→6 | ₡30,000
+2026-02-18T13:05:39.245Z | INFO | [AttributeUpgrade]   powerCore | 1→6 | ₡30,000
+2026-02-18T13:05:41.470Z | INFO | Fetching robot with ID: 117
+2026-02-18T13:05:41.483Z | INFO | Successfully fetched robot: Afternoon Ride (ID: 117)
+2026-02-18T13:05:43.232Z | INFO | Fetching robot with ID: 117
+2026-02-18T13:05:43.246Z | INFO | Successfully fetched robot: Afternoon Ride (ID: 117)
+2026-02-18T13:05:48.783Z | INFO | Fetching robot with ID: 118
+2026-02-18T13:05:48.796Z | INFO | Successfully fetched robot: Lunch Ride (ID: 118)
+2026-02-18T13:05:50.434Z | INFO | Fetching robot with ID: 118
+2026-02-18T13:05:50.443Z | INFO | Successfully fetched robot: Lunch Ride (ID: 118)
+2026-02-18T13:06:06.517Z | INFO | [TagTeam] Created team 2 for stable 2 in instance bronze_1
+2026-02-18T13:06:06.527Z | INFO | [TagTeam] User 2 | Created team | Active: 117 (Afternoon Ride) | Reserve: 118 (Lunch Ride)
+2026-02-18T13:06:15.251Z | INFO | [Admin] Running 2 bulk cycles (includeTournaments: true, generateUsersPerCycle: true)...
+2026-02-18T13:06:15.256Z | INFO | === Cycle 1 Started ===
+2026-02-18T13:06:15.256Z | INFO | Cycle 1 (1/2)
+2026-02-18T13:06:15.256Z | INFO |  [Admin] === Cycle 1 (1/2) ===
+2026-02-18T13:06:15.264Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-18T13:06:15.264Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-18T13:06:15.264Z
+2026-02-18T13:06:15.267Z | INFO | [BattleOrchestrator] Found 0 matches to execute
+2026-02-18T13:06:15.267Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
+2026-02-18T13:06:15.267Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
+2026-02-18T13:06:15.269Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-18T13:06:15.274Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 1)
+2026-02-18T13:06:15.278Z | INFO | [TagTeamBattles] Found 0 scheduled tag team matches
+2026-02-18T13:06:15.278Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-02-18T13:06:15.280Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-18T13:06:15.285Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-18T13:06:15.332Z | INFO | [Tournament] Auto-creating tournament with 117 eligible robots
+2026-02-18T13:06:15.414Z | INFO | [Tournament] Created Tournament #1 with 117 participants (7 rounds)
+2026-02-18T13:06:15.414Z | INFO | [Admin] Auto-created tournament: Tournament #1
+2026-02-18T13:06:15.414Z | INFO | [Admin] Tournaments: 0 executed, 0 rounds, 0 matches
+2026-02-18T13:06:15.416Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-18T13:06:15.420Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-02-18T13:06:15.421Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-18T13:06:15.421Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-02-18T13:06:15.421Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-18T13:06:15.423Z | INFO | [Rebalancing] Total robots in system: 117
+2026-02-18T13:06:15.423Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-02-18T13:06:15.427Z | INFO | [Rebalancing] bronze: 117 total robots, 0 eligible for rebalancing
+2026-02-18T13:06:15.427Z | INFO | [Rebalancing] bronze: Skipping (not enough eligible robots)
+2026-02-18T13:06:15.427Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-02-18T13:06:15.430Z | INFO | [Rebalancing] silver: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:06:15.430Z | INFO | [Rebalancing] silver: Skipping (not enough eligible robots)
+2026-02-18T13:06:15.430Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-02-18T13:06:15.432Z | INFO | [Rebalancing] gold: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:06:15.432Z | INFO | [Rebalancing] gold: Skipping (not enough eligible robots)
+2026-02-18T13:06:15.432Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-02-18T13:06:15.435Z | INFO | [Rebalancing] platinum: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:06:15.435Z | INFO | [Rebalancing] platinum: Skipping (not enough eligible robots)
+2026-02-18T13:06:15.435Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-02-18T13:06:15.438Z | INFO | [Rebalancing] diamond: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:06:15.438Z | INFO | [Rebalancing] diamond: Skipping (not enough eligible robots)
+2026-02-18T13:06:15.438Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-02-18T13:06:15.441Z | INFO | [Rebalancing] champion: 0 total robots, 0 eligible for rebalancing
+2026-02-18T13:06:15.441Z | INFO | [Rebalancing] champion: Skipping (not enough eligible robots)
+2026-02-18T13:06:15.441Z | INFO |  [Rebalancing] Balancing instances...
+2026-02-18T13:06:15.445Z | INFO | [LeagueInstance] Rebalancing bronze instances...
+2026-02-18T13:06:15.445Z | INFO |   Total robots: 117
+2026-02-18T13:06:15.445Z | INFO |   Instances: 1
+2026-02-18T13:06:15.445Z | INFO |   Average per instance: 117.0
+2026-02-18T13:06:15.459Z | INFO |   Target instances: 2
+2026-02-18T13:06:15.459Z | INFO |   Robots per instance: 59
+2026-02-18T13:06:15.517Z | INFO | [LeagueInstance] Rebalanced 58 robots across 2 instances
+2026-02-18T13:06:15.519Z | INFO | [LeagueInstance] silver instances balanced, no action needed
+2026-02-18T13:06:15.520Z | INFO | [LeagueInstance] gold instances balanced, no action needed
+2026-02-18T13:06:15.521Z | INFO | [LeagueInstance] platinum instances balanced, no action needed
+2026-02-18T13:06:15.521Z | INFO | [LeagueInstance] diamond instances balanced, no action needed
+2026-02-18T13:06:15.522Z | INFO | [LeagueInstance] champion instances balanced, no action needed
+2026-02-18T13:06:15.522Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-18T13:06:15.522Z | INFO | [Rebalancing] League rebalancing complete!
+2026-02-18T13:06:15.522Z | INFO |   Total promoted: 0
+2026-02-18T13:06:15.522Z | INFO |   Total demoted: 0
+2026-02-18T13:06:15.522Z | INFO |   Errors: 0
+2026-02-18T13:06:15.522Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-18T13:06:15.524Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 1)
+2026-02-18T13:06:15.524Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-18T13:06:15.524Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
+2026-02-18T13:06:15.524Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-18T13:06:15.525Z | INFO | [TagTeamRebalancing] Total teams in system: 2
+2026-02-18T13:06:15.525Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
+2026-02-18T13:06:15.526Z | INFO | [TagTeamRebalancing] bronze: 2 total teams, 0 eligible for rebalancing
+2026-02-18T13:06:15.526Z | INFO | [TagTeamRebalancing] bronze: Skipping (not enough eligible teams)
+2026-02-18T13:06:15.526Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
+2026-02-18T13:06:15.527Z | INFO | [TagTeamRebalancing] silver: 0 total teams, 0 eligible for rebalancing
+2026-02-18T13:06:15.527Z | INFO | [TagTeamRebalancing] silver: Skipping (not enough eligible teams)
+2026-02-18T13:06:15.527Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
+2026-02-18T13:06:15.528Z | INFO | [TagTeamRebalancing] gold: 0 total teams, 0 eligible for rebalancing
+2026-02-18T13:06:15.528Z | INFO | [TagTeamRebalancing] gold: Skipping (not enough eligible teams)
+2026-02-18T13:06:15.529Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
+2026-02-18T13:06:15.529Z | INFO | [TagTeamRebalancing] platinum: 0 total teams, 0 eligible for rebalancing
+2026-02-18T13:06:15.529Z | INFO | [TagTeamRebalancing] platinum: Skipping (not enough eligible teams)
+2026-02-18T13:06:15.529Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
+2026-02-18T13:06:15.530Z | INFO | [TagTeamRebalancing] diamond: 0 total teams, 0 eligible for rebalancing
+2026-02-18T13:06:15.530Z | INFO | [TagTeamRebalancing] diamond: Skipping (not enough eligible teams)
+2026-02-18T13:06:15.530Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
+2026-02-18T13:06:15.531Z | INFO | [TagTeamRebalancing] champion: 0 total teams, 0 eligible for rebalancing
+2026-02-18T13:06:15.531Z | INFO | [TagTeamRebalancing] champion: Skipping (not enough eligible teams)
+2026-02-18T13:06:15.531Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-18T13:06:15.531Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
+2026-02-18T13:06:15.531Z | INFO |   Total promoted: 0
+2026-02-18T13:06:15.531Z | INFO |   Total demoted: 0
+2026-02-18T13:06:15.531Z | INFO |   Errors: 0
+2026-02-18T13:06:15.531Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-18T13:06:15.531Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
+2026-02-18T13:06:15.532Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
+2026-02-18T13:06:15.533Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
+2026-02-18T13:06:15.533Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
+2026-02-18T13:06:15.534Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
+2026-02-18T13:06:15.534Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
+2026-02-18T13:06:15.535Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
+2026-02-18T13:06:15.535Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-02-18T13:06:15.536Z | INFO | [UserGeneration] Generating 1 archetype users for Cycle 1...
+2026-02-18T13:06:15.536Z | INFO | [UserGeneration] Creating user 1/1: archetype_tank_fortress_1_1 (archetype: tank_fortress)
+2026-02-18T13:06:15.606Z | INFO | [UserGeneration] Created 1/1 users...
+2026-02-18T13:06:15.606Z | INFO | [UserGeneration] ✅ Created 1 users with 1 robots in 70ms
+2026-02-18T13:06:15.606Z | INFO | [UserGeneration] Archetype position after this cycle: 1
+2026-02-18T13:06:15.606Z | INFO | [Admin] Generated 1 users for cycle 1
+2026-02-18T13:06:15.607Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-02-18T13:06:15.607Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-02-18T13:06:15.607Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-18T13:06:16.607Z
+2026-02-18T13:06:15.607Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-02-18T13:06:15.608Z | INFO | [Matchmaking] Processing bronze_1...
+2026-02-18T13:06:15.616Z | INFO | [Matchmaking] Queue for bronze_1: 60 robots available (60 total, 60 ready)
+2026-02-18T13:06:15.636Z | INFO | [Matchmaking] Created 30 scheduled matches
+2026-02-18T13:06:15.636Z | INFO | [Matchmaking] Processing bronze_2...
+2026-02-18T13:06:15.642Z | INFO | [Matchmaking] Queue for bronze_2: 58 robots available (58 total, 58 ready)
+2026-02-18T13:06:15.658Z | INFO | [Matchmaking] Created 29 scheduled matches
+2026-02-18T13:06:15.658Z | INFO | [Matchmaking] BRONZE: Created 59 matches across 2 instances
+2026-02-18T13:06:15.658Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-02-18T13:06:15.661Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
+2026-02-18T13:06:15.661Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-02-18T13:06:15.662Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-02-18T13:06:15.662Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-02-18T13:06:15.662Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-02-18T13:06:15.662Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-02-18T13:06:15.663Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-02-18T13:06:15.663Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-02-18T13:06:15.664Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-02-18T13:06:15.664Z | INFO | [Matchmaking] ========================================
+2026-02-18T13:06:15.664Z | INFO | [Matchmaking] COMPLETE: 59 total matches created
+2026-02-18T13:06:15.664Z | INFO | [Matchmaking] ========================================
+2026-02-18T13:06:15.666Z | INFO | [Admin] Step 9.5: Matchmaking for Tag Teams (Cycle 1)
+2026-02-18T13:06:15.666Z | INFO | [TagTeamMatchmaking] Starting tag team matchmaking for all tiers...
+2026-02-18T13:06:15.677Z | INFO | [TagTeamMatchmaking] bronze_1: 2 eligible teams (2 total, 2 ready, 0 already scheduled)
+2026-02-18T13:06:15.687Z | INFO | [TagTeamMatchmaking] Scheduled 1 tag team matches
+2026-02-18T13:06:15.687Z | INFO | [TagTeamMatchmaking] bronze_1: Created 1 matches
+2026-02-18T13:06:15.689Z | INFO | [TagTeamMatchmaking] Complete: 1 total matches created
+2026-02-18T13:06:15.691Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-02-18T13:06:15.698Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-02-18T13:06:16.074Z | INFO | [OperatingCosts] User 108 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-18T13:06:16.081Z | INFO | [OperatingCosts] User 109 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:06:16.086Z | INFO | [OperatingCosts] User 110 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:06:16.091Z | INFO | [OperatingCosts] User 111 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:06:16.096Z | INFO | [OperatingCosts] User 112 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:06:16.101Z | INFO | [OperatingCosts] User 113 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:06:16.108Z | INFO | [OperatingCosts] User 114 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:06:16.127Z | INFO | [OperatingCosts] User 116 | Total: ₡3,500 | Facilities: income_generator(L1): ₡1000, repair_bay(L1): ₡1000, training_facility(L1): ₡1500
+2026-02-18T13:06:16.136Z | INFO | [OperatingCosts] User 117 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-18T13:06:16.143Z | INFO | [OperatingCosts] User 118 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:06:16.153Z | INFO | [OperatingCosts] User 119 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-18T13:06:16.159Z | INFO | [OperatingCosts] User 120 | Total: ₡1,000 | Facilities: ai_training_academy(L1): ₡1000
+2026-02-18T13:06:16.166Z | INFO | [OperatingCosts] User 121 | Total: ₡2,400 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-18T13:06:16.172Z | INFO | [OperatingCosts] User 2 | Total: ₡2,000 | Facilities: repair_bay(L2): ₡1500, roster_expansion(L0): ₡500
+2026-02-18T13:06:16.178Z | INFO | [OperatingCosts] User 122 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-18T13:06:16.179Z | INFO | [Admin] Passive income: ₡5,000, Operating costs: ₡21,400
+2026-02-18T13:06:16.180Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-02-18T13:06:17.299Z | INFO | [Admin] Step 13: Create Cycle Snapshot
+2026-02-18T13:06:17.308Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 1
+2026-02-18T13:06:17.321Z | WARN | [CycleSnapshotService] No battle_complete events found for cycle 1, querying battles by timestamp
+2026-02-18T13:06:17.331Z | INFO | [CycleSnapshotService] Found 0 battles by timestamp for cycle 1
+2026-02-18T13:06:17.425Z | INFO | [CycleSnapshotService] Snapshot created for cycle 1
+2026-02-18T13:06:17.425Z | INFO | [Admin] Cycle snapshot created for cycle 1
+2026-02-18T13:06:17.429Z | INFO | [Admin] Step 14: Log End-of-Cycle Balances
+2026-02-18T13:06:17.429Z | INFO | [Admin] === End of Cycle 1 Balances ===
+2026-02-18T13:06:17.432Z | INFO | [Balance] User 1 | Stable: admin | Balance: ₡10,000,000
+2026-02-18T13:06:17.432Z | INFO | [Balance] User 2 | Stable: player2 | Balance: ₡16,000
+2026-02-18T13:06:17.432Z | INFO | [Balance] User 3 | Stable: player4 | Balance: ₡3,000,000
+2026-02-18T13:06:17.432Z | INFO | [Balance] User 4 | Stable: player1 | Balance: ₡3,000,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 5 | Stable: player5 | Balance: ₡3,000,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 6 | Stable: player3 | Balance: ₡3,000,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 8 | Stable: test_user_001 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 9 | Stable: test_user_002 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 10 | Stable: test_user_003 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 11 | Stable: test_user_004 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 12 | Stable: test_user_005 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 13 | Stable: test_user_006 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 14 | Stable: test_user_007 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 15 | Stable: test_user_008 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 16 | Stable: test_user_009 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 17 | Stable: test_user_010 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 18 | Stable: test_user_011 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 19 | Stable: test_user_012 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 20 | Stable: test_user_013 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 21 | Stable: test_user_014 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 22 | Stable: test_user_015 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 23 | Stable: test_user_016 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 24 | Stable: test_user_017 | Balance: ₡100,000
+2026-02-18T13:06:17.433Z | INFO | [Balance] User 25 | Stable: test_user_018 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 26 | Stable: test_user_019 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 27 | Stable: test_user_020 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 28 | Stable: test_user_021 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 29 | Stable: test_user_022 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 30 | Stable: test_user_023 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 31 | Stable: test_user_024 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 32 | Stable: test_user_025 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 33 | Stable: test_user_026 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 34 | Stable: test_user_027 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 35 | Stable: test_user_028 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 36 | Stable: test_user_029 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 37 | Stable: test_user_030 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 38 | Stable: test_user_031 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 39 | Stable: test_user_032 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 40 | Stable: test_user_033 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 41 | Stable: test_user_034 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 42 | Stable: test_user_035 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 43 | Stable: test_user_036 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 44 | Stable: test_user_037 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 45 | Stable: test_user_038 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 46 | Stable: test_user_039 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 47 | Stable: test_user_040 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 48 | Stable: test_user_041 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 49 | Stable: test_user_042 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 50 | Stable: test_user_043 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 51 | Stable: test_user_044 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 52 | Stable: test_user_045 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 53 | Stable: test_user_046 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 54 | Stable: test_user_047 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 55 | Stable: test_user_048 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 56 | Stable: test_user_049 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 57 | Stable: test_user_050 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 58 | Stable: test_user_051 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 59 | Stable: test_user_052 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 60 | Stable: test_user_053 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 61 | Stable: test_user_054 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 62 | Stable: test_user_055 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 63 | Stable: test_user_056 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 64 | Stable: test_user_057 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 65 | Stable: test_user_058 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 66 | Stable: test_user_059 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 67 | Stable: test_user_060 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 68 | Stable: test_user_061 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 69 | Stable: test_user_062 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 70 | Stable: test_user_063 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 71 | Stable: test_user_064 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 72 | Stable: test_user_065 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 73 | Stable: test_user_066 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 74 | Stable: test_user_067 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 75 | Stable: test_user_068 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 76 | Stable: test_user_069 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 77 | Stable: test_user_070 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 78 | Stable: test_user_071 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 79 | Stable: test_user_072 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 80 | Stable: test_user_073 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 81 | Stable: test_user_074 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 82 | Stable: test_user_075 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 83 | Stable: test_user_076 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 84 | Stable: test_user_077 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 85 | Stable: test_user_078 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 86 | Stable: test_user_079 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 87 | Stable: test_user_080 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 88 | Stable: test_user_081 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 89 | Stable: test_user_082 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 90 | Stable: test_user_083 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 91 | Stable: test_user_084 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 92 | Stable: test_user_085 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 93 | Stable: test_user_086 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 94 | Stable: test_user_087 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 95 | Stable: test_user_088 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 96 | Stable: test_user_089 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 97 | Stable: test_user_090 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 98 | Stable: test_user_091 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 99 | Stable: test_user_092 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 100 | Stable: test_user_093 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 101 | Stable: test_user_094 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 102 | Stable: test_user_095 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 103 | Stable: test_user_096 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 104 | Stable: test_user_097 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 105 | Stable: test_user_098 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 106 | Stable: test_user_099 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 107 | Stable: test_user_100 | Balance: ₡100,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 108 | Stable: archetype_tank_fortress | Balance: ₡754,400
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 109 | Stable: archetype_glass_cannon_a | Balance: ₡945,700
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 110 | Stable: archetype_glass_cannon_b | Balance: ₡995,700
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 111 | Stable: archetype_glass_cannon_c | Balance: ₡1,045,700
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 112 | Stable: archetype_speed_demon_a | Balance: ₡64,900
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 113 | Stable: archetype_speed_demon_b | Balance: ₡98,400
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 114 | Stable: archetype_speed_demon_c | Balance: ₡29,400
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 115 | Stable: archetype_balanced_brawler | Balance: ₡500,000
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 116 | Stable: archetype_facility_investor | Balance: ₡251,500
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 117 | Stable: archetype_two_robot | Balance: ₡199,500
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 118 | Stable: archetype_melee_specialist | Balance: ₡349,200
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 119 | Stable: archetype_ranged_sniper | Balance: ₡349,200
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 120 | Stable: archetype_ai_tactician | Balance: ₡503,500
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 121 | Stable: archetype_prestige_rusher | Balance: ₡298,100
+2026-02-18T13:06:17.434Z | INFO | [Balance] User 122 | Stable: archetype_tank_fortress_1_1 | Balance: ₡754,400
+2026-02-18T13:06:17.434Z | INFO | [Admin] ===================================
+2026-02-18T13:06:17.435Z | INFO | === Cycle 1 Ended ===

@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
 import prisma from '../lib/prisma';
+import { eventLogger } from '../services/eventLogger';
 // import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 
 // Temporary stub implementations
@@ -143,6 +144,28 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 
       return { user: updatedUser, weaponInventory };
     });
+
+    // Log weapon purchase event
+    try {
+      const cycleMetadata = await prisma.cycleMetadata.findUnique({
+        where: { id: 1 },
+      });
+      const currentCycle = cycleMetadata?.totalCycles || 0;
+
+      await eventLogger.logWeaponPurchase(
+        currentCycle,
+        userId,
+        weaponIdNum,
+        finalCost
+      );
+
+      // Console log for cycle logs
+      const discountInfo = discountPercent > 0 ? ` | Discount: ${discountPercent}% (base: ₡${weapon.cost.toLocaleString()})` : '';
+      console.log(`[Weapon] User ${userId} | Purchased: ${weapon.name} | Cost: ₡${finalCost.toLocaleString()}${discountInfo} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+    } catch (logError) {
+      console.error('Failed to log weapon purchase event:', logError);
+      // Don't fail the request if logging fails
+    }
 
     res.status(201).json({
       weaponInventory: result.weaponInventory,

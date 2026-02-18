@@ -277,31 +277,9 @@ async function createBattleRecord(
   });
   
   // Calculate repair costs using canonical function
-  const robot1SumOfAttributes = calculateAttributeSum(robot1);
-  const robot2SumOfAttributes = calculateAttributeSum(robot2);
-  
-  const robot1DamagePercent = (result.robot1Damage / robot1.maxHP) * 100;
-  const robot1HPPercent = (result.robot1FinalHP / robot1.maxHP) * 100;
-  const robot2DamagePercent = (result.robot2Damage / robot2.maxHP) * 100;
-  const robot2HPPercent = (result.robot2FinalHP / robot2.maxHP) * 100;
-  
-  const robot1RepairCost = calculateRepairCost(
-    robot1SumOfAttributes,
-    robot1DamagePercent,
-    robot1HPPercent,
-    robot1RepairBayLevel,
-    robot1MedicalBayLevel,
-    robot1ActiveRobotCount
-  );
-  
-  const robot2RepairCost = calculateRepairCost(
-    robot2SumOfAttributes,
-    robot2DamagePercent,
-    robot2HPPercent,
-    robot2RepairBayLevel,
-    robot2MedicalBayLevel,
-    robot2ActiveRobotCount
-  );
+  // NOTE: Repair costs are NOT calculated here anymore
+  // They are calculated by RepairService when repairs are actually triggered
+  // This ensures accurate costs based on current damage and facility levels
   
   // Winner gets midpoint of league range + participation reward, with prestige bonus
   // Loser gets only participation reward
@@ -432,8 +410,8 @@ async function createBattleRecord(
       // Economic data
       winnerReward: isRobot1Winner ? robot1Reward : robot2Reward,
       loserReward: isRobot1Winner ? robot2Reward : robot1Reward,
-      robot1RepairCost,
-      robot2RepairCost,
+      robot1RepairCost: 0, // Deprecated: repair costs calculated by RepairService
+      robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
       
       // Final state
       robot1FinalHP: result.robot1FinalHP,
@@ -503,7 +481,6 @@ async function updateRobotStats(
           totalWins: { increment: 1 },
         },
       });
-      console.log(`[Battle] Prestige: +${prestigeAwarded} → user ${robot.userId} (${robot.currentLeague} league win)`);
     }
   }
   
@@ -529,16 +506,6 @@ async function updateRobotStats(
     },
   });
   
-  if (isWinner && fameAwarded > 0) {
-    const fameTier = getFameTier(robot.fame + fameAwarded);
-    const hpPercent = (finalHP / robot.maxHP * 100).toFixed(0);
-    console.log(`[Battle] Fame: +${fameAwarded} → ${robot.name} (${hpPercent}% HP remaining, tier: ${fameTier})`);
-  }
-  
-  if (opponentDestroyed) {
-    console.log(`[Battle] Kill: ${robot.name} destroyed opponent (total kills: ${robot.kills + 1})`);
-  }
-  
   // Award credits to user based on battle outcome
   // Winner gets winnerReward, loser gets loserReward (both include participation)
   const reward = isWinner ? battle.winnerReward : battle.loserReward;
@@ -550,7 +517,6 @@ async function updateRobotStats(
         currency: { increment: reward }
       },
     });
-    console.log(`[Battle] Credits: +₡${reward.toLocaleString()} → user ${robot.userId} (${isWinner ? 'winner' : 'loser'})`);
   }
   
   return { prestigeAwarded, fameAwarded };
@@ -699,7 +665,17 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
     },
   });
   
-  console.log(`[Battle] Completed: ${robot1.name} vs ${robot2.name} (Winner: ${result.winnerId ? (result.winnerId === robot1.id ? robot1.name : robot2.name) : 'Draw'})`);
+  // Consolidated battle completion log
+  const winnerName = result.winnerId ? (result.winnerId === robot1.id ? robot1.name : robot2.name) : 'Draw';
+  const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId }, select: { id: true } });
+  const robot2User = await prisma.user.findUnique({ where: { id: robot2.userId }, select: { id: true } });
+  
+  // Check for kills
+  const robot1Killed = battle.robot2Destroyed;
+  const robot2Killed = battle.robot1Destroyed;
+  const killInfo = robot1Killed ? ` | Kill: ${robot1.name}` : (robot2Killed ? ` | Kill: ${robot2.name}` : '');
+  
+  console.log(`[Battle] League: ${battle.leagueType} | ${robot1.name} (User ${robot1User?.id}) vs ${robot2.name} (User ${robot2User?.id}) | Winner: ${winnerName} | Rewards: ₡${battle.winnerReward?.toLocaleString() || 0} / ₡${battle.loserReward?.toLocaleString() || 0} | Prestige: +${totalPrestige} | Fame: +${totalFame}${killInfo}`);
   
   return {
     ...result,

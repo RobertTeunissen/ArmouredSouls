@@ -142,8 +142,20 @@ export async function processTournamentBattle(
     },
   });
 
+  // Get user IDs for logging
+  const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId }, select: { id: true } });
+  const robot2User = await prisma.user.findUnique({ where: { id: robot2.userId }, select: { id: true } });
+  
+  // Check for kills
+  const robot1Killed = battle.robot2Destroyed;
+  const robot2Killed = battle.robot1Destroyed;
+  const killInfo = robot1Killed ? ` | Kill: ${robot1.name}` : (robot2Killed ? ` | Kill: ${robot2.name}` : '');
+  
+  const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
+  const totalFame = stats1.fameAwarded + stats2.fameAwarded;
+  
   console.log(
-    `[Tournament] Battle completed: ${robot1.name} vs ${robot2.name} (Winner: ${battle.winnerId === robot1.id ? robot1.name : robot2.name}) [Round ${tournament.currentRound}]`
+    `[Battle] Tournament: Round ${tournament.currentRound} | ${robot1.name} (User ${robot1User?.id}) vs ${robot2.name} (User ${robot2User?.id}) | Winner: ${battle.winnerId === robot1.id ? robot1.name : robot2.name} | Rewards: ₡${battle.winnerReward?.toLocaleString() || 0} / ₡${battle.loserReward?.toLocaleString() || 0} | Prestige: +${totalPrestige} | Fame: +${totalFame}${killInfo}`
   );
 
   return {
@@ -269,8 +281,8 @@ async function createTournamentBattleRecord(
       // Economic data
       winnerReward: rewards.winnerReward, // Always winner's reward
       loserReward: rewards.loserReward,   // Always loser's reward
-      robot1RepairCost: Math.floor(combatResult.robot1Damage * REPAIR_COST_PER_HP),
-      robot2RepairCost: Math.floor(combatResult.robot2Damage * REPAIR_COST_PER_HP),
+      robot1RepairCost: 0, // Deprecated: repair costs calculated by RepairService
+      robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
 
       // Rewards tracking
       robot1PrestigeAwarded: isRobot1Winner ? rewards.winnerPrestige : rewards.loserPrestige,
@@ -353,9 +365,6 @@ async function updateRobotStatsForTournament(
         totalWins: { increment: 1 },
       },
     });
-    console.log(
-      `[Tournament] Prestige: +${prestigeAwarded} → user ${robot.userId} (Round ${round}, ${robot.currentLeague} league)`
-    );
   }
 
   // Award credits
@@ -368,20 +377,6 @@ async function updateRobotStatsForTournament(
         currency: { increment: reward },
       },
     });
-    console.log(
-      `[Tournament] Credits: +₡${reward.toLocaleString()} → user ${robot.userId} (${isWinner ? 'winner' : 'loser'})`
-    );
-  }
-
-  if (isWinner && fameAwarded > 0) {
-    const hpPercent = ((finalHP / robot.maxHP) * 100).toFixed(0);
-    console.log(
-      `[Tournament] Fame: +${fameAwarded} → ${robot.name} (${hpPercent}% HP remaining, Round ${round})`
-    );
-  }
-
-  if (opponentDestroyed) {
-    console.log(`[Tournament] Kill: ${robot.name} destroyed opponent (total kills: ${robot.kills + 1})`);
   }
 
   return { prestigeAwarded, fameAwarded };

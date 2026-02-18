@@ -194,7 +194,7 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
       });
       const currentCycle = cycleMetadata?.totalCycles || 0;
 
-      // Log the facility upgrade/purchase event
+      // Log the facility upgrade/purchase event with balance tracking
       await eventLogger.logFacilityTransaction(
         currentCycle,
         userId,
@@ -202,8 +202,14 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
         currentLevel,
         targetLevel,
         upgradeCost,
-        currentLevel === 0 ? 'purchase' : 'upgrade'
+        currentLevel === 0 ? 'purchase' : 'upgrade',
+        user.currency,
+        result.user.currency
       );
+
+      // Console log for cycle logs
+      const action = currentLevel === 0 ? 'Purchased' : 'Upgraded';
+      console.log(`[Facility] User ${userId} | ${action}: ${config.name} | Level: ${targetLevel} | Cost: ₡${upgradeCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
     } catch (logError) {
       console.error('Failed to log facility transaction event:', logError);
       // Don't fail the request if logging fails
