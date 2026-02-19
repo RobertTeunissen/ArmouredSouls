@@ -28,6 +28,7 @@ interface StableMetric {
   attributeUpgrades: number;
   totalPurchases: number;
   netProfit: number;
+  balance: number;
 }
 
 interface RobotMetric {
@@ -245,6 +246,7 @@ export class CycleSnapshotService {
           attributeUpgrades: 0,
           totalPurchases: 0,
           netProfit: 0,
+          balance: 0,
         });
       });
 
@@ -304,6 +306,7 @@ export class CycleSnapshotService {
             attributeUpgrades: 0,
             totalPurchases: 0,
             netProfit: 0,
+            balance: 0,
           };
           metricsMap.set(event.userId, metric);
         }
@@ -313,71 +316,40 @@ export class CycleSnapshotService {
         // Note: streaming is no longer part of passive_income, it's awarded per-battle
       });
 
-      // Add streaming revenue from battle_complete events
-      // We need to map robot IDs to user IDs from the cycleBattles array
-      const robotToUserMap = new Map<number, number>();
-      cycleBattles.forEach((battle: any) => {
-        robotToUserMap.set(battle.robot1Id, battle.robot1.userId);
-        robotToUserMap.set(battle.robot2Id, battle.robot2.userId);
+      // Add streaming revenue from RobotStreamingRevenue table
+      // This is more reliable than battle_complete audit events which may be incomplete
+      const streamingRevenueRecords = await prisma.robotStreamingRevenue.findMany({
+        where: { cycleNumber },
+        include: {
+          robot: {
+            select: { userId: true }
+          }
+        }
       });
 
-      battleCompleteEvents.forEach((event: any) => {
-        const payload = event.payload as any;
-        if (!payload) return;
-
-        // Check robot1 streaming revenue
-        if (payload.robot1Id && payload.streamingRevenue1) {
-          const userId = robotToUserMap.get(payload.robot1Id);
-          if (userId) {
-            let metric = metricsMap.get(userId);
-            if (!metric) {
-              metric = {
-                userId,
-                battlesParticipated: 0,
-                totalCreditsEarned: 0,
-                totalPrestigeEarned: 0,
-                totalRepairCosts: 0,
-                merchandisingIncome: 0,
-                streamingIncome: 0,
-                operatingCosts: 0,
-                weaponPurchases: 0,
-                facilityPurchases: 0,
-                attributeUpgrades: 0,
-                totalPurchases: 0,
-                netProfit: 0,
-              };
-              metricsMap.set(userId, metric);
-            }
-            metric.streamingIncome += payload.streamingRevenue1;
-          }
+      streamingRevenueRecords.forEach((record) => {
+        const userId = record.robot.userId;
+        let metric = metricsMap.get(userId);
+        if (!metric) {
+          metric = {
+            userId,
+            battlesParticipated: 0,
+            totalCreditsEarned: 0,
+            totalPrestigeEarned: 0,
+            totalRepairCosts: 0,
+            merchandisingIncome: 0,
+            streamingIncome: 0,
+            operatingCosts: 0,
+            weaponPurchases: 0,
+            facilityPurchases: 0,
+            attributeUpgrades: 0,
+            totalPurchases: 0,
+            netProfit: 0,
+            balance: 0,
+          };
+          metricsMap.set(userId, metric);
         }
-
-        // Check robot2 streaming revenue
-        if (payload.robot2Id && payload.streamingRevenue2) {
-          const userId = robotToUserMap.get(payload.robot2Id);
-          if (userId) {
-            let metric = metricsMap.get(userId);
-            if (!metric) {
-              metric = {
-                userId,
-                battlesParticipated: 0,
-                totalCreditsEarned: 0,
-                totalPrestigeEarned: 0,
-                totalRepairCosts: 0,
-                merchandisingIncome: 0,
-                streamingIncome: 0,
-                operatingCosts: 0,
-                weaponPurchases: 0,
-                facilityPurchases: 0,
-                attributeUpgrades: 0,
-                totalPurchases: 0,
-                netProfit: 0,
-              };
-              metricsMap.set(userId, metric);
-            }
-            metric.streamingIncome += payload.streamingRevenue2;
-          }
-        }
+        metric.streamingIncome += record.streamingRevenue;
       });
 
       // Add operating costs
@@ -401,6 +373,7 @@ export class CycleSnapshotService {
             attributeUpgrades: 0,
             totalPurchases: 0,
             netProfit: 0,
+            balance: 0,
           };
           metricsMap.set(event.userId, metric);
         }
@@ -436,6 +409,7 @@ export class CycleSnapshotService {
             attributeUpgrades: 0,
             totalPurchases: 0,
             netProfit: 0,
+            balance: 0,
           };
           metricsMap.set(event.userId, metric);
         }
@@ -487,6 +461,7 @@ export class CycleSnapshotService {
             attributeUpgrades: 0,
             totalPurchases: 0,
             netProfit: 0,
+            balance: 0,
           };
           metricsMap.set(event.userId, metric);
         }
@@ -515,6 +490,7 @@ export class CycleSnapshotService {
             attributeUpgrades: 0,
             totalPurchases: 0,
             netProfit: 0,
+            balance: 0,
           };
           metricsMap.set(event.userId, metric);
         }
@@ -553,6 +529,7 @@ export class CycleSnapshotService {
             attributeUpgrades: 0,
             totalPurchases: 0,
             netProfit: 0,
+            balance: 0,
           };
           metricsMap.set(userId, metric);
         }
@@ -561,7 +538,15 @@ export class CycleSnapshotService {
         metric.attributeUpgrades += payload.cost || 0;
       }
 
-      // Calculate total purchases and net profit
+      // Calculate total purchases and net profit, and fetch final balances
+      const userIds = Array.from(metricsMap.keys());
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, currency: true }
+      });
+      
+      const balanceMap = new Map(users.map(u => [u.id, u.currency]));
+      
       metricsMap.forEach(metric => {
         metric.totalPurchases = 
           metric.weaponPurchases +
@@ -575,6 +560,9 @@ export class CycleSnapshotService {
           metric.totalRepairCosts -
           metric.operatingCosts -
           metric.totalPurchases;
+        
+        // Store the user's balance at the end of this cycle
+        metric.balance = balanceMap.get(metric.userId) || 0;
       });
 
       return Array.from(metricsMap.values());

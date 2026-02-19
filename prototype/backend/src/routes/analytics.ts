@@ -234,57 +234,17 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
       };
     });
 
-    // Calculate starting balance
-    // For cycle 1, start with ₡3,000,000 (cycle 0 purchases are already included in cycle 1's purchases)
-    // For other cycles, get from previous cycle's snapshot
-    let startingBalance = 0;
-    
-    if (startCycle === 1) {
-      // Starting balance is ₡3,000,000 (cycle 0 purchases are included in cycle 1 data)
-      startingBalance = 3000000;
-    } else {
-      // Get balance from previous cycle's snapshot
-      const previousCycle = startCycle - 1;
-      const previousSnapshot = await prisma.cycleSnapshot.findUnique({
-        where: { cycleNumber: previousCycle },
-      });
+    // Use stored balance from snapshots instead of recalculating
+    const cycles = cyclesWithoutBalance.map((cycle, index) => {
+      const snapshot = snapshots[index];
+      const userMetrics = snapshot.stableMetrics.find(m => m.userId === userId);
       
-      if (previousSnapshot && previousSnapshot.stableMetrics) {
-        const userMetric = (previousSnapshot.stableMetrics as any[]).find((m: any) => m.userId === userId);
-        if (userMetric) {
-          // Calculate balance after previous cycle
-          // We need to calculate cumulative balance from cycle 1 to previous cycle
-          const allPreviousSnapshots = await cycleSnapshotService.getSnapshotRange(1, previousCycle);
-          let runningBalance = 3000000; // Starting balance
-          
-          for (const snapshot of allPreviousSnapshots) {
-            const metric = snapshot.stableMetrics.find(m => m.userId === userId);
-            if (metric) {
-              const income = metric.totalCreditsEarned + metric.merchandisingIncome + metric.streamingIncome;
-              const expenses = metric.totalRepairCosts + metric.operatingCosts;
-              const purchases = metric.weaponPurchases + metric.facilityPurchases + metric.attributeUpgrades;
-              runningBalance += income - expenses - purchases;
-            }
-          }
-          
-          startingBalance = runningBalance;
-        } else {
-          // User didn't exist in previous cycles, use default
-          startingBalance = 3000000;
-        }
-      } else {
-        // No previous snapshot, use default
-        startingBalance = 3000000;
-      }
-    }
-
-    // Second pass: add balance to each cycle
-    let runningBalance = startingBalance;
-    const cycles = cyclesWithoutBalance.map(cycle => {
-      runningBalance += cycle.income - cycle.expenses - cycle.purchases;
+      // Use the stored balance if available, otherwise fallback to 0
+      const balance = userMetrics?.balance ?? 0;
+      
       return {
         ...cycle,
-        balance: runningBalance,
+        balance,
       };
     });
 
