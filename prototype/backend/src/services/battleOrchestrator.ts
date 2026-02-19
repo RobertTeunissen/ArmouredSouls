@@ -627,7 +627,6 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
       // Battle outcome
       result: robot1Result,
       opponentId: robot2.id,
-      isDraw: result.isDraw,
       isByeMatch: result.isByeMatch,
       
       // ELO changes
@@ -671,7 +670,6 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
       // Battle outcome
       result: robot2Result,
       opponentId: robot1.id,
-      isDraw: result.isDraw,
       isByeMatch: result.isByeMatch,
       
       // ELO changes

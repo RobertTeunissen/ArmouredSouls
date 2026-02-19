@@ -168,7 +168,6 @@ export async function processTournamentBattle(
       // Battle outcome
       result: robot1Result,
       opponentId: robot2.id,
-      isDraw: isDraw,
       isByeMatch: false,
       
       // ELO changes
@@ -194,7 +193,7 @@ export async function processTournamentBattle(
       
       // Battle metadata
       battleType: 'tournament',
-      leagueType: battle.leagueType,
+      leagueType: null, // Tournaments don't have leagues
       durationSeconds: battle.durationSeconds,
     },
     {
@@ -212,7 +211,6 @@ export async function processTournamentBattle(
       // Battle outcome
       result: robot2Result,
       opponentId: robot1.id,
-      isDraw: isDraw,
       isByeMatch: false,
       
       // ELO changes
@@ -238,7 +236,7 @@ export async function processTournamentBattle(
       
       // Battle metadata
       battleType: 'tournament',
-      leagueType: battle.leagueType,
+      leagueType: null, // Tournaments don't have leagues
       durationSeconds: battle.durationSeconds,
     },
     {
@@ -380,7 +378,7 @@ async function createTournamentBattleRecord(
       robot2Id: robot2.id,
       winnerId: combatResult.winnerId,
       battleType: 'tournament',
-      leagueType: robot1.currentLeague,
+      leagueType: null, // Tournaments don't have leagues
       tournamentId: tournamentMatch.tournamentId,
       tournamentRound: round,
 
