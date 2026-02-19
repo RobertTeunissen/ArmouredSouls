@@ -890,6 +890,15 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
 
         for (const user of endOfCycleUsers) {
           console.log(`[Balance] User ${user.id} | Stable: ${user.stableName || user.username} | Balance: ₡${user.currency.toLocaleString()}`);
+          
+          // Log end-of-cycle balance to audit log
+          await eventLogger.logCycleEndBalance(
+            currentCycleNumber,
+            user.id,
+            user.username,
+            user.stableName,
+            user.currency
+          );
         }
         console.log(`[Admin] ===================================`);
 

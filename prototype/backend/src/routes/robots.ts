@@ -222,13 +222,15 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       });
       const currentCycle = cycleMetadata?.totalCycles || 0;
 
-      // Log robot purchase (we don't have a ROBOT_PURCHASE event type, so use credit_change)
-      await eventLogger.logCreditChange(
+      // Log robot purchase with new dedicated event type
+      await eventLogger.logRobotPurchase(
         currentCycle,
         userId,
-        -ROBOT_CREATION_COST,
-        result.user.currency,
-        'other'
+        result.robot.id,
+        name,
+        ROBOT_CREATION_COST,
+        user.currency,
+        result.user.currency
       );
 
       // Get user's stable name for logging

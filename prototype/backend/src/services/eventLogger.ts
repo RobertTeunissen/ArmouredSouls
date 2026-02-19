@@ -18,12 +18,14 @@ export enum EventType {
   BATTLE_COMPLETE = 'battle_complete',
   
   // Robot events
+  ROBOT_PURCHASE = 'robot_purchase',
   ROBOT_REPAIR = 'robot_repair',
   ROBOT_ATTRIBUTE_UPGRADE = 'attribute_upgrade',
   ROBOT_LEAGUE_CHANGE = 'league_change',
   
   // Stable/User events
-  CREDIT_CHANGE = 'credit_change',
+  USER_CREATED = 'user_created',
+  CREDIT_CHANGE = 'credit_change', // For manual admin adjustments only
   PRESTIGE_CHANGE = 'prestige_change',
   PASSIVE_INCOME = 'passive_income',
   OPERATING_COSTS = 'operating_costs',
@@ -555,6 +557,73 @@ export class EventLogger {
           output,
         },
       }
+    );
+  }
+  
+  /**
+   * Log user creation
+   */
+  async logUserCreated(
+    cycleNumber: number,
+    userId: number,
+    username: string,
+    startingBalance: number
+  ): Promise<void> {
+    await this.logEvent(
+      cycleNumber,
+      EventType.USER_CREATED,
+      {
+        username,
+        startingBalance,
+      },
+      { userId }
+    );
+  }
+  
+  /**
+   * Log robot purchase
+   */
+  async logRobotPurchase(
+    cycleNumber: number,
+    userId: number,
+    robotId: number,
+    robotName: string,
+    cost: number,
+    balanceBefore: number,
+    balanceAfter: number
+  ): Promise<void> {
+    await this.logEvent(
+      cycleNumber,
+      EventType.ROBOT_PURCHASE,
+      {
+        robotName,
+        cost,
+        balanceBefore,
+        balanceAfter,
+      },
+      { userId, robotId }
+    );
+  }
+  
+  /**
+   * Log end-of-cycle balance
+   */
+  async logCycleEndBalance(
+    cycleNumber: number,
+    userId: number,
+    username: string,
+    stableName: string | null,
+    balance: number
+  ): Promise<void> {
+    await this.logEvent(
+      cycleNumber,
+      EventType.CYCLE_END_BALANCE,
+      {
+        username,
+        stableName,
+        balance,
+      },
+      { userId }
     );
   }
 }
