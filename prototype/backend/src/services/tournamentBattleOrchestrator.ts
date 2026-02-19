@@ -373,7 +373,6 @@ async function createTournamentBattleRecord(
   // Create battle record
   const battle = await prisma.battle.create({
     data: {
-      userId: robot1.userId,
       robot1Id: robot1.id,
       robot2Id: robot2.id,
       winnerId: combatResult.winnerId,
@@ -396,8 +395,6 @@ async function createTournamentBattleRecord(
       // Economic data
       winnerReward: rewards.winnerReward, // Always winner's reward
       loserReward: rewards.loserReward,   // Always loser's reward
-      robot1RepairCost: 0, // Deprecated: repair costs calculated by RepairService
-      robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
 
       // Rewards tracking
       robot1PrestigeAwarded: isRobot1Winner ? rewards.winnerPrestige : rewards.loserPrestige,
@@ -408,8 +405,6 @@ async function createTournamentBattleRecord(
       // Final state
       robot1FinalHP: combatResult.robot1FinalHP,
       robot2FinalHP: combatResult.robot2FinalHP,
-      robot1FinalShield: 0,
-      robot2FinalShield: 0,
       robot1Yielded: combatResult.winnerId !== robot1.id && combatResult.robot1FinalHP > 0,
       robot2Yielded: combatResult.winnerId !== robot2.id && combatResult.robot2FinalHP > 0,
       robot1Destroyed: combatResult.robot1FinalHP === 0,

@@ -21,9 +21,6 @@ model User {
   prestige Int @default(0) // Stable reputation (earned, never spent)
 
   // ===== STABLE STATISTICS (Aggregated from robots) =====
-  totalBattles       Int @default(0) @map("total_battles") // Lifetime battle count across all robots
-  totalWins          Int @default(0) @map("total_wins") // Victory count across all robots
-  highestELO         Int @default(1200) @map("highest_elo") // Best ELO achieved by any robot in stable
   championshipTitles Int @default(0) @map("championship_titles") // Tournament victories
 
   // ===== PROFILE FIELDS =====
@@ -41,7 +38,6 @@ model User {
   robots          Robot[]
   facilities      Facility[]
   weaponInventory WeaponInventory[]
-  battles         Battle[]          @relation("UserBattles")
   tagTeams        TagTeam[]
 
   @@map("users")
@@ -269,7 +265,6 @@ model Weapon {
 
 model Battle {
   id         Int    @id @default(autoincrement())
-  userId     Int    @map("user_id") // Owner of this battle record
   robot1Id   Int    @map("robot1_id") // First combatant
   robot2Id   Int    @map("robot2_id") // Second combatant
   winnerId   Int?   @map("winner_id") // Winner's robot ID (null if draw)
@@ -293,10 +288,8 @@ model Battle {
   durationSeconds Int  @map("duration_seconds") // Battle length in seconds
 
   // ===== ECONOMIC DATA =====
-  winnerReward     Int? @map("winner_reward") // Credits awarded to winner
-  loserReward      Int? @map("loser_reward") // Credits awarded to loser (can earn on loss)
-  robot1RepairCost Int? @map("robot1_repair_cost") // Repair cost for robot 1
-  robot2RepairCost Int? @map("robot2_repair_cost") // Repair cost for robot 2
+  winnerReward Int? @map("winner_reward") // Credits awarded to winner
+  loserReward  Int? @map("loser_reward") // Credits awarded to loser (can earn on loss)
 
   // Battle rewards tracking
   robot1PrestigeAwarded Int @default(0) @map("robot1_prestige_awarded") // Prestige awarded to robot 1's user
@@ -305,14 +298,12 @@ model Battle {
   robot2FameAwarded     Int @default(0) @map("robot2_fame_awarded") // Fame awarded to robot 2
 
   // ===== FINAL STATE =====
-  robot1FinalHP     Int     @map("robot1_final_hp") // Ending HP
-  robot2FinalHP     Int     @map("robot2_final_hp") // Ending HP
-  robot1FinalShield Int     @map("robot1_final_shield") // Ending energy shield HP
-  robot2FinalShield Int     @map("robot2_final_shield") // Ending energy shield HP
-  robot1Yielded     Boolean @default(false) @map("robot1_yielded") // Did robot 1 surrender?
-  robot2Yielded     Boolean @default(false) @map("robot2_yielded") // Did robot 2 surrender?
-  robot1Destroyed   Boolean @default(false) @map("robot1_destroyed") // Did robot 1 reach 0 HP?
-  robot2Destroyed   Boolean @default(false) @map("robot2_destroyed") // Did robot 2 reach 0 HP?
+  robot1FinalHP   Int     @map("robot1_final_hp") // Ending HP
+  robot2FinalHP   Int     @map("robot2_final_hp") // Ending HP
+  robot1Yielded   Boolean @default(false) @map("robot1_yielded") // Did robot 1 surrender?
+  robot2Yielded   Boolean @default(false) @map("robot2_yielded") // Did robot 2 surrender?
+  robot1Destroyed Boolean @default(false) @map("robot1_destroyed") // Did robot 1 reach 0 HP?
+  robot2Destroyed Boolean @default(false) @map("robot2_destroyed") // Did robot 2 reach 0 HP?
 
   // ===== DAMAGE TRACKING =====
   robot1DamageDealt Int @map("robot1_damage_dealt") // Total damage dealt by robot 1 (or team 1 total for tag team)
@@ -340,7 +331,6 @@ model Battle {
   createdAt DateTime @default(now()) @map("created_at")
 
   // ===== RELATIONS =====
-  user              User              @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
   robot1            Robot             @relation("Robot1", fields: [robot1Id], references: [id])
   robot2            Robot             @relation("Robot2", fields: [robot2Id], references: [id])
   tournament        Tournament?       @relation("TournamentBattles", fields: [tournamentId], references: [id])

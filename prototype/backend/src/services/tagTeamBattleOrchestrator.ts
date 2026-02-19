@@ -890,7 +890,6 @@ async function createTagTeamBattleRecord(
   // Create battle record with tag team fields
   const battle = await prisma.battle.create({
     data: {
-      userId: team1.stableId,
       robot1Id: team1.activeRobotId,
       robot2Id: team2.activeRobotId,
       winnerId: result.winnerId,
@@ -917,15 +916,11 @@ async function createTagTeamBattleRecord(
       // Economic data (placeholder)
       winnerReward: 0,
       loserReward: 0,
-      robot1RepairCost: 0,
-      robot2RepairCost: 0,
 
       // Final state - store the HP of the robots that were fighting at the end
       // For tag team battles, this could be either active or reserve robots
       robot1FinalHP: result.team1ReserveUsed ? result.team1ReserveFinalHP : result.team1ActiveFinalHP,
       robot2FinalHP: result.team2ReserveUsed ? result.team2ReserveFinalHP : result.team2ActiveFinalHP,
-      robot1FinalShield: 0,
-      robot2FinalShield: 0,
       robot1Yielded: result.winnerId !== team1.id && (result.team1ReserveUsed ? result.team1ReserveFinalHP : result.team1ActiveFinalHP) > 0,
       robot2Yielded: result.winnerId !== team2.id && (result.team2ReserveUsed ? result.team2ReserveFinalHP : result.team2ActiveFinalHP) > 0,
       robot1Destroyed: result.team1ReserveUsed ? result.team1ReserveFinalHP === 0 : result.team1ActiveFinalHP === 0,
