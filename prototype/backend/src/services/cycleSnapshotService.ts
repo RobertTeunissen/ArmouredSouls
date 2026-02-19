@@ -144,9 +144,9 @@ export class CycleSnapshotService {
    * Aggregate stable (user) metrics from Battle table and AuditLog gap events
    */
   private async aggregateStableMetrics(cycleNumber: number): Promise<StableMetric[]> {
-      // FIXED: Query battles directly using timestamp range instead of relying on incomplete audit logs
-      // The audit log battle_complete events may be incomplete, so we fall back to timestamp-based queries
-
+      // All balance-changing events are audited via eventLogger
+      // Use audit log as single source of truth for cycle data
+      
       const battleCompleteEvents = await prisma.auditLog.findMany({
         where: {
           cycleNumber,
@@ -154,56 +154,23 @@ export class CycleSnapshotService {
         },
       });
 
+      console.log(`[CycleSnapshotService] Found ${battleCompleteEvents.length} battle_complete events for cycle ${cycleNumber}`);
+
+      // Get battle details from audit log
       const battleIdsInCycle = new Set(
         battleCompleteEvents.map((e: any) => (e.payload as any)?.battleId).filter(Boolean)
       );
 
-      // If no audit log events, fall back to getting battles by timestamp
-      // This handles the case where audit logging wasn't working properly
-      let cycleBattles: any[];
-      if (battleIdsInCycle.size === 0) {
-        console.warn(`[CycleSnapshotService] No battle_complete events found for cycle ${cycleNumber}, querying battles by timestamp`);
-
-        // Get cycle timing from audit log
-        const cycleStartEvent = await prisma.auditLog.findFirst({
-          where: { cycleNumber, eventType: 'cycle_start' },
-        });
-        const cycleCompleteEvent = await prisma.auditLog.findFirst({
-          where: { cycleNumber, eventType: 'cycle_complete' },
-        });
-
-        if (cycleStartEvent && cycleCompleteEvent) {
-          // Query battles by timestamp range
-          cycleBattles = await prisma.battle.findMany({
-            where: {
-              createdAt: {
-                gte: cycleStartEvent.eventTimestamp,
-                lte: cycleCompleteEvent.eventTimestamp,
-              },
-            },
-            include: {
-              robot1: { select: { userId: true } },
-              robot2: { select: { userId: true } },
-            },
-          });
-          console.log(`[CycleSnapshotService] Found ${cycleBattles.length} battles by timestamp for cycle ${cycleNumber}`);
-        } else {
-          console.warn(`[CycleSnapshotService] No cycle timing events for cycle ${cycleNumber}`);
-          cycleBattles = [];
-        }
-      } else {
-        // Use battles from audit log events
-        const battles = await prisma.battle.findMany({
-          where: {
-            id: { in: Array.from(battleIdsInCycle) },
-          },
-          include: {
-            robot1: { select: { userId: true } },
-            robot2: { select: { userId: true } },
-          },
-        });
-        cycleBattles = battles;
-      }
+      // Get battles for user mapping
+      const cycleBattles = await prisma.battle.findMany({
+        where: {
+          id: { in: Array.from(battleIdsInCycle) },
+        },
+        include: {
+          robot1: { select: { userId: true } },
+          robot2: { select: { userId: true } },
+        },
+      });
 
       // Get all users involved in battles (from robot ownership)
       const userIds = new Set<number>();
