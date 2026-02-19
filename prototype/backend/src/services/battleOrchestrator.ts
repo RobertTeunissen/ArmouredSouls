@@ -420,8 +420,8 @@ async function createBattleRecord(
       robot2FinalHP: result.robot2FinalHP,
       robot1FinalShield: 0, // Simplified: shields depleted in battle
       robot2FinalShield: 0,
-      robot1Yielded: false,
-      robot2Yielded: false,
+      robot1Yielded: result.winnerId !== robot1.id && result.robot1FinalHP > 0,
+      robot2Yielded: result.winnerId !== robot2.id && result.robot2FinalHP > 0,
       robot1Destroyed: result.robot1FinalHP === 0,
       robot2Destroyed: result.robot2FinalHP === 0,
       

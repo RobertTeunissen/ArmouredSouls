@@ -926,8 +926,8 @@ async function createTagTeamBattleRecord(
       robot2FinalHP: result.team2ReserveUsed ? result.team2ReserveFinalHP : result.team2ActiveFinalHP,
       robot1FinalShield: 0,
       robot2FinalShield: 0,
-      robot1Yielded: false,
-      robot2Yielded: false,
+      robot1Yielded: result.winnerId !== team1.id && (result.team1ReserveUsed ? result.team1ReserveFinalHP : result.team1ActiveFinalHP) > 0,
+      robot2Yielded: result.winnerId !== team2.id && (result.team2ReserveUsed ? result.team2ReserveFinalHP : result.team2ActiveFinalHP) > 0,
       robot1Destroyed: result.team1ReserveUsed ? result.team1ReserveFinalHP === 0 : result.team1ActiveFinalHP === 0,
       robot2Destroyed: result.team2ReserveUsed ? result.team2ReserveFinalHP === 0 : result.team2ActiveFinalHP === 0,
 

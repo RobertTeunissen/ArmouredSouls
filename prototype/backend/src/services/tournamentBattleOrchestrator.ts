@@ -150,66 +150,101 @@ export async function processTournamentBattle(
     console.log(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Tournament Battle #${battle.id}`);
   }
 
-  // Log battle_complete event to audit log for tournament battles
+  // Log battle_complete events to audit log - ONE EVENT PER ROBOT (new format)
   const eventLogger = new EventLogger();
+  
+  // Determine results for each robot
+  const robot1IsWinner = battle.winnerId === robot1.id;
+  const robot2IsWinner = battle.winnerId === robot2.id;
+  const isDraw = battle.winnerId === null;
+  const robot1Result = isDraw ? 'draw' : (robot1IsWinner ? 'win' : 'loss');
+  const robot2Result = isDraw ? 'draw' : (robot2IsWinner ? 'win' : 'loss');
+  
+  // Event 1: Robot 1's perspective
   await eventLogger.logEvent(
     cycleNumber,
     EventType.BATTLE_COMPLETE,
     {
-      battleId: battle.id,
-      robot1Id: robot1.id,
-      robot2Id: robot2.id,
-      winnerId: battle.winnerId,
+      // Battle outcome
+      result: robot1Result,
+      opponentId: robot2.id,
+      isDraw: isDraw,
+      isByeMatch: false,
       
-      // ELO tracking
-      robot1ELOBefore: battle.robot1ELOBefore,
-      robot1ELOAfter: battle.robot1ELOAfter,
-      robot2ELOBefore: battle.robot2ELOBefore,
-      robot2ELOAfter: battle.robot2ELOAfter,
-      eloChange: battle.eloChange,
+      // ELO changes
+      eloBefore: battle.robot1ELOBefore,
+      eloAfter: battle.robot1ELOAfter,
+      eloChange: robot1IsWinner ? battle.eloChange : -battle.eloChange,
       
-      // Damage tracking
-      robot1DamageDealt: battle.robot1DamageDealt,
-      robot2DamageDealt: battle.robot2DamageDealt,
-      robot1FinalHP: battle.robot1FinalHP,
-      robot2FinalHP: battle.robot2FinalHP,
-      robot1FinalShield: battle.robot1FinalShield,
-      robot2FinalShield: battle.robot2FinalShield,
+      // Combat stats
+      damageDealt: battle.robot1DamageDealt,
+      finalHP: battle.robot1FinalHP,
+      finalShield: battle.robot1FinalShield,
+      yielded: battle.winnerId !== robot1.id && battle.robot1FinalHP > 0,
+      destroyed: battle.robot1FinalHP === 0,
       
-      // Rewards
-      winnerReward: battle.winnerReward,
-      loserReward: battle.loserReward,
-      robot1PrestigeAwarded: stats1.prestigeAwarded,
-      robot2PrestigeAwarded: stats2.prestigeAwarded,
-      robot1FameAwarded: stats1.fameAwarded,
-      robot2FameAwarded: stats2.fameAwarded,
+      // Rewards (credits attributed to user/stable)
+      credits: robot1IsWinner ? battle.winnerReward : battle.loserReward,
+      prestige: stats1.prestigeAwarded,
+      fame: stats1.fameAwarded,
+      streamingRevenue: streamingRevenue1?.totalRevenue || 0,
       
-      // Streaming revenue
-      streamingRevenue1: streamingRevenue1?.totalRevenue || 0,
-      streamingRevenue2: streamingRevenue2?.totalRevenue || 0,
-      streamingRevenueDetails1: streamingRevenue1 ? {
-        baseAmount: streamingRevenue1.baseAmount,
-        battleMultiplier: streamingRevenue1.battleMultiplier,
-        fameMultiplier: streamingRevenue1.fameMultiplier,
-        studioMultiplier: streamingRevenue1.studioMultiplier,
-        robotBattles: streamingRevenue1.robotBattles,
-        robotFame: streamingRevenue1.robotFame,
-        studioLevel: streamingRevenue1.studioLevel,
-      } : null,
-      streamingRevenueDetails2: streamingRevenue2 ? {
-        baseAmount: streamingRevenue2.baseAmount,
-        battleMultiplier: streamingRevenue2.battleMultiplier,
-        fameMultiplier: streamingRevenue2.fameMultiplier,
-        studioMultiplier: streamingRevenue2.studioMultiplier,
-        robotBattles: streamingRevenue2.robotBattles,
-        robotFame: streamingRevenue2.robotFame,
-        studioLevel: streamingRevenue2.studioLevel,
-      } : null,
+      // Costs
+      repairCost: battle.robot1RepairCost,
       
       // Battle metadata
       battleType: 'tournament',
       leagueType: battle.leagueType,
       durationSeconds: battle.durationSeconds,
+    },
+    {
+      userId: robot1.userId,
+      robotId: robot1.id,
+      battleId: battle.id,
+    }
+  );
+  
+  // Event 2: Robot 2's perspective
+  await eventLogger.logEvent(
+    cycleNumber,
+    EventType.BATTLE_COMPLETE,
+    {
+      // Battle outcome
+      result: robot2Result,
+      opponentId: robot1.id,
+      isDraw: isDraw,
+      isByeMatch: false,
+      
+      // ELO changes
+      eloBefore: battle.robot2ELOBefore,
+      eloAfter: battle.robot2ELOAfter,
+      eloChange: robot2IsWinner ? battle.eloChange : -battle.eloChange,
+      
+      // Combat stats
+      damageDealt: battle.robot2DamageDealt,
+      finalHP: battle.robot2FinalHP,
+      finalShield: battle.robot2FinalShield,
+      yielded: battle.winnerId !== robot2.id && battle.robot2FinalHP > 0,
+      destroyed: battle.robot2FinalHP === 0,
+      
+      // Rewards (credits attributed to user/stable)
+      credits: robot2IsWinner ? battle.winnerReward : battle.loserReward,
+      prestige: stats2.prestigeAwarded,
+      fame: stats2.fameAwarded,
+      streamingRevenue: streamingRevenue2?.totalRevenue || 0,
+      
+      // Costs
+      repairCost: battle.robot2RepairCost,
+      
+      // Battle metadata
+      battleType: 'tournament',
+      leagueType: battle.leagueType,
+      durationSeconds: battle.durationSeconds,
+    },
+    {
+      userId: robot2.userId,
+      robotId: robot2.id,
+      battleId: battle.id,
     }
   );
 
@@ -377,8 +412,8 @@ async function createTournamentBattleRecord(
       robot2FinalHP: combatResult.robot2FinalHP,
       robot1FinalShield: 0,
       robot2FinalShield: 0,
-      robot1Yielded: false,
-      robot2Yielded: false,
+      robot1Yielded: combatResult.winnerId !== robot1.id && combatResult.robot1FinalHP > 0,
+      robot2Yielded: combatResult.winnerId !== robot2.id && combatResult.robot2FinalHP > 0,
       robot1Destroyed: combatResult.robot1FinalHP === 0,
       robot2Destroyed: combatResult.robot2FinalHP === 0,
 
