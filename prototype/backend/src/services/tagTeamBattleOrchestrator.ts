@@ -1834,73 +1834,209 @@ async function updateTagTeamBattleResults(
     `(Battles from ${streamingRevenue.team2MaxBattlesRobot.name}, Fame from ${streamingRevenue.team2MaxFameRobot.name})`
   );
 
-  // Log battle_complete event to audit log for tag team battles
-  // Fetch the updated battle record to get all the data
+  // Log battle_complete events to audit log - ONE EVENT PER ROBOT (4 total)
+  // Tag team battles now follow the same pattern as 1v1 battles:
+  // - Create separate event for each robot
+  // - Split team credits 50/50 between active and reserve robots
+  // - Split team streaming revenue 50/50 between robots
+  
   const battle = await prisma.battle.findUnique({
     where: { id: result.battleId },
   });
 
   if (battle) {
     const eventLogger = new EventLogger();
+    
+    // Determine result for each team
+    const team1Result = team1Won ? 'win' : (team2Won ? 'loss' : 'draw');
+    const team2Result = team2Won ? 'win' : (team1Won ? 'loss' : 'draw');
+    
+    // Split team rewards 50/50 between robots
+    const team1CreditsPerRobot = Math.floor(team1Rewards / 2);
+    const team1StreamingPerRobot = Math.floor(streamingRevenue.team1Revenue.totalRevenue / 2);
+    const team1PrestigePerRobot = Math.floor(team1Prestige / 2);
+    
+    const team2CreditsPerRobot = Math.floor(team2Rewards / 2);
+    const team2StreamingPerRobot = Math.floor(streamingRevenue.team2Revenue.totalRevenue / 2);
+    const team2PrestigePerRobot = Math.floor(team2Prestige / 2);
+    
+    // Event 1: Team 1 Active Robot
     await eventLogger.logEvent(
       cycleNumber,
       EventType.BATTLE_COMPLETE,
       {
-        battleId: battle.id,
-        robot1Id: battle.robot1Id,
-        robot2Id: battle.robot2Id,
-        winnerId: battle.winnerId,
+        // Battle outcome
+        result: team1Result,
+        opponentTeam: team2.id,
+        isTagTeam: true,
+        role: 'active',
+        partnerRobotId: team1.reserveRobotId,
         
-        // ELO tracking
-        robot1ELOBefore: battle.robot1ELOBefore,
-        robot1ELOAfter: battle.robot1ELOAfter,
-        robot2ELOBefore: battle.robot2ELOBefore,
-        robot2ELOAfter: battle.robot2ELOAfter,
-        eloChange: battle.eloChange,
+        // Combat stats
+        damageDealt: result.team1ActiveDamageDealt,
+        survivalTime: result.team1ActiveSurvivalTime,
+        finalHP: result.team1ActiveFinalHP,
+        finalShield: 0, // Tag team battles don't track shields
+        yielded: result.team1TagOutTime !== undefined,
+        destroyed: result.team1ActiveFinalHP === 0,
         
-        // Damage tracking
-        robot1DamageDealt: battle.robot1DamageDealt,
-        robot2DamageDealt: battle.robot2DamageDealt,
-        robot1FinalHP: battle.robot1FinalHP,
-        robot2FinalHP: battle.robot2FinalHP,
-        robot1FinalShield: battle.robot1FinalShield,
-        robot2FinalShield: battle.robot2FinalShield,
+        // Rewards (split 50/50 with partner)
+        credits: team1CreditsPerRobot,
+        prestige: team1PrestigePerRobot,
+        fame: team1ActiveFame,
+        streamingRevenue: team1StreamingPerRobot,
         
-        // Rewards
-        winnerReward: battle.winnerReward,
-        loserReward: battle.loserReward,
-        robot1PrestigeAwarded: battle.robot1PrestigeAwarded,
-        robot2PrestigeAwarded: battle.robot2PrestigeAwarded,
-        robot1FameAwarded: battle.robot1FameAwarded,
-        robot2FameAwarded: battle.robot2FameAwarded,
-        
-        // Streaming revenue
-        streamingRevenue1: streamingRevenue.team1Revenue.totalRevenue,
-        streamingRevenue2: streamingRevenue.team2Revenue.totalRevenue,
-        streamingRevenueDetails1: {
-          baseAmount: streamingRevenue.team1Revenue.baseAmount,
-          battleMultiplier: streamingRevenue.team1Revenue.battleMultiplier,
-          fameMultiplier: streamingRevenue.team1Revenue.fameMultiplier,
-          studioMultiplier: streamingRevenue.team1Revenue.studioMultiplier,
-          robotBattles: streamingRevenue.team1Revenue.robotBattles,
-          robotFame: streamingRevenue.team1Revenue.robotFame,
-          studioLevel: streamingRevenue.team1Revenue.studioLevel,
-        },
-        streamingRevenueDetails2: {
-          baseAmount: streamingRevenue.team2Revenue.baseAmount,
-          battleMultiplier: streamingRevenue.team2Revenue.battleMultiplier,
-          fameMultiplier: streamingRevenue.team2Revenue.fameMultiplier,
-          studioMultiplier: streamingRevenue.team2Revenue.studioMultiplier,
-          robotBattles: streamingRevenue.team2Revenue.robotBattles,
-          robotFame: streamingRevenue.team2Revenue.robotFame,
-          studioLevel: streamingRevenue.team2Revenue.studioLevel,
-        },
+        // ELO changes (applied to active robot)
+        eloBefore: battle.robot1ELOBefore,
+        eloAfter: battle.robot1ELOAfter,
+        eloChange: eloChanges.team1Change,
         
         // Battle metadata
         battleType: 'tag_team',
         leagueType: battle.leagueType,
         durationSeconds: battle.durationSeconds,
+      },
+      {
+        userId: team1.activeRobot.userId,
+        robotId: team1.activeRobotId,
+        battleId: battle.id,
       }
+    );
+    
+    // Event 2: Team 1 Reserve Robot
+    await eventLogger.logEvent(
+      cycleNumber,
+      EventType.BATTLE_COMPLETE,
+      {
+        // Battle outcome
+        result: team1Result,
+        opponentTeam: team2.id,
+        isTagTeam: true,
+        role: 'reserve',
+        partnerRobotId: team1.activeRobotId,
+        wasTaggedIn: result.team1TagOutTime !== undefined,
+        
+        // Combat stats (only if tagged in)
+        damageDealt: result.team1ReserveDamageDealt,
+        survivalTime: result.team1ReserveSurvivalTime,
+        finalHP: result.team1ReserveFinalHP,
+        finalShield: 0,
+        yielded: false, // Reserve doesn't yield, either wins or is destroyed
+        destroyed: result.team1ReserveFinalHP === 0 && result.team1TagOutTime !== undefined,
+        
+        // Rewards (split 50/50 with partner)
+        credits: team1CreditsPerRobot,
+        prestige: team1PrestigePerRobot,
+        fame: team1ReserveFame,
+        streamingRevenue: team1StreamingPerRobot,
+        
+        // ELO (reserve doesn't get ELO changes)
+        eloBefore: team1.reserveRobot.elo,
+        eloAfter: team1.reserveRobot.elo,
+        eloChange: 0,
+        
+        // Battle metadata
+        battleType: 'tag_team',
+        leagueType: battle.leagueType,
+        durationSeconds: battle.durationSeconds,
+      },
+      {
+        userId: team1.reserveRobot.userId,
+        robotId: team1.reserveRobotId,
+        battleId: battle.id,
+      }
+    );
+    
+    // Event 3: Team 2 Active Robot
+    await eventLogger.logEvent(
+      cycleNumber,
+      EventType.BATTLE_COMPLETE,
+      {
+        // Battle outcome
+        result: team2Result,
+        opponentTeam: team1.id,
+        isTagTeam: true,
+        role: 'active',
+        partnerRobotId: team2.reserveRobotId,
+        
+        // Combat stats
+        damageDealt: result.team2ActiveDamageDealt,
+        survivalTime: result.team2ActiveSurvivalTime,
+        finalHP: result.team2ActiveFinalHP,
+        finalShield: 0,
+        yielded: result.team2TagOutTime !== undefined,
+        destroyed: result.team2ActiveFinalHP === 0,
+        
+        // Rewards (split 50/50 with partner)
+        credits: team2CreditsPerRobot,
+        prestige: team2PrestigePerRobot,
+        fame: team2ActiveFame,
+        streamingRevenue: team2StreamingPerRobot,
+        
+        // ELO changes (applied to active robot)
+        eloBefore: battle.robot2ELOBefore,
+        eloAfter: battle.robot2ELOAfter,
+        eloChange: eloChanges.team2Change,
+        
+        // Battle metadata
+        battleType: 'tag_team',
+        leagueType: battle.leagueType,
+        durationSeconds: battle.durationSeconds,
+      },
+      {
+        userId: team2.activeRobot.userId,
+        robotId: team2.activeRobotId,
+        battleId: battle.id,
+      }
+    );
+    
+    // Event 4: Team 2 Reserve Robot
+    await eventLogger.logEvent(
+      cycleNumber,
+      EventType.BATTLE_COMPLETE,
+      {
+        // Battle outcome
+        result: team2Result,
+        opponentTeam: team1.id,
+        isTagTeam: true,
+        role: 'reserve',
+        partnerRobotId: team2.activeRobotId,
+        wasTaggedIn: result.team2TagOutTime !== undefined,
+        
+        // Combat stats (only if tagged in)
+        damageDealt: result.team2ReserveDamageDealt,
+        survivalTime: result.team2ReserveSurvivalTime,
+        finalHP: result.team2ReserveFinalHP,
+        finalShield: 0,
+        yielded: false,
+        destroyed: result.team2ReserveFinalHP === 0 && result.team2TagOutTime !== undefined,
+        
+        // Rewards (split 50/50 with partner)
+        credits: team2CreditsPerRobot,
+        prestige: team2PrestigePerRobot,
+        fame: team2ReserveFame,
+        streamingRevenue: team2StreamingPerRobot,
+        
+        // ELO (reserve doesn't get ELO changes)
+        eloBefore: team2.reserveRobot.elo,
+        eloAfter: team2.reserveRobot.elo,
+        eloChange: 0,
+        
+        // Battle metadata
+        battleType: 'tag_team',
+        leagueType: battle.leagueType,
+        durationSeconds: battle.durationSeconds,
+      },
+      {
+        userId: team2.reserveRobot.userId,
+        robotId: team2.reserveRobotId,
+        battleId: battle.id,
+      }
+    );
+    
+    console.log(
+      `[TagTeamBattles] Created 4 audit log events for tag team battle ${battle.id} ` +
+      `(one per robot, rewards split 50/50 per team)`
     );
   }
 }
