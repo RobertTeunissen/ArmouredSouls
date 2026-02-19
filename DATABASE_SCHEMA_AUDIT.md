@@ -27,6 +27,8 @@ User identified several unused, broken, or confusing fields in the database sche
 
 **Recommendation:** **REMOVE** - Redundant with Robot.totalBattles aggregation
 
+--> Agreed. Remove. Update code where needed. 
+
 ---
 
 ### 2. `totalWins` - Shows 2, No Draws/Losses ⚠️ INCOMPLETE
@@ -49,6 +51,8 @@ User identified several unused, broken, or confusing fields in the database sche
 - **Option C**: Keep as achievement/highlight stat (wins only)
 
 **Recommendation:** **Option B** - Remove, aggregate from robots (single source of truth)
+
+--> Agreed. Remove. Update code. 
 
 ---
 
@@ -81,6 +85,8 @@ const highestELO = Math.max(...robots.map(r => r.elo));
 
 **Recommendation:** **Option A** - Remove, calculate when needed (simpler, single source of truth)
 
+--> Agreed. Remove. Update the code. 
+
 ---
 
 ### 4. `battles` Relation - Only Shows Robot1 Battles ❌ BROKEN
@@ -107,6 +113,9 @@ const highestELO = Math.max(...robots.map(r => r.elo));
 - **Option C**: Store BOTH user IDs (userId1, userId2)
 
 **Recommendation:** **Option A** - Remove Battle.userId field (redundant with robot relations)
+
+--> Agreed. Remove. What then happens to the "user" field? 
+--> Which files need to be changed to remove this from the code as well? 
 
 ---
 
@@ -139,6 +148,8 @@ Battle.userId  // Set to robot1's owner
 - Already have robot1Id and robot2Id
 - Can get user IDs via `robot1.userId` and `robot2.userId`
 - Simpler schema, no duplication
+
+--> Agreed. Remove. Isn't there any code that relies on this that needs to be changed?
 
 ---
 
@@ -175,6 +186,8 @@ Battle.userId  // Set to robot1's owner
 - Separate fields make code clearer
 - No real problem, just different use cases
 
+--> So if we're going to make 3v3 battles then we again are going to add additional columns for everything? And then again for 5v5?
+
 ---
 
 ### 3. ELO Tracking Only for 2 Robots ⚠️ TAG TEAM LIMITATION
@@ -205,6 +218,9 @@ robot2ELOBefore, robot2ELOAfter  // Robot 2
 - ELO changes now logged in audit events (one per robot)
 - Battle table doesn't need all 4 robot ELOs
 - Audit log is source of truth
+
+--> I don't agree. Either we change the logic to capture the ELO changes for ALL robots OR we track ALL ELO changes from the audit log events. We don't have different processes just because the battle type is different. 
+--> In this case these changes occur BECAUSE of the battle that was being fought. They need to be in the Battle table (as well).
 
 ---
 
@@ -240,6 +256,8 @@ robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
 - Update economyCalculations to not reference these
 - Migration to drop columns
 
+--> Agreed. Remove. 
+
 ---
 
 ### 5. No Streaming Revenue in Battle Table ✅ CORRECT
@@ -257,6 +275,8 @@ robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
 - Better normalized in separate table
 
 **Recommendation:** **Keep as-is** - Proper normalization
+
+--> Do not agree. As above, this is the actual effect of the battle. It needs to be captured in the battle table, otherwise it holds no value to capture the ELO changes, or the credits for winning or losing. What is the purpose of the Battle table?
 
 ---
 
@@ -296,6 +316,8 @@ robot2FinalShield: 0,
 - If shields always reset, final shield is meaningless
 - Adds no value (always 0)
 - Can add back if mechanics change
+
+--> Agreed. Remove. 
 
 ---
 
