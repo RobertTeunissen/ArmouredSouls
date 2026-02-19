@@ -404,6 +404,7 @@ model AuditLog {
   // References (nullable for system-wide events)
   userId          Int?     @map("user_id")
   robotId         Int?     @map("robot_id")
+  battleId        Int?     @map("battle_id") // For battle_complete events
   
   // Flexible event data
   payload         Json
@@ -415,10 +416,12 @@ model AuditLog {
   @@index([cycleNumber])
   @@index([userId])
   @@index([robotId])
+  @@index([battleId])
   @@index([eventType])
   @@index([eventTimestamp])
   @@index([cycleNumber, userId])
   @@index([cycleNumber, robotId])
+  @@index([cycleNumber, battleId])
   @@index([cycleNumber, eventType])
   @@map("audit_logs")
 }

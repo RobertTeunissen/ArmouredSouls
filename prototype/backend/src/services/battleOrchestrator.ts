@@ -610,82 +610,100 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
     }
   }
   
-  // Log battle_complete event to audit log
+  // Log battle_complete events to audit log - ONE EVENT PER ROBOT
   const cycleNumber = await getCurrentCycleNumber();
+  
+  // Determine results for each robot
+  const robot1IsWinner = result.winnerId === robot1.id;
+  const robot2IsWinner = result.winnerId === robot2.id;
+  const robot1Result = result.isDraw ? 'draw' : (robot1IsWinner ? 'win' : 'loss');
+  const robot2Result = result.isDraw ? 'draw' : (robot2IsWinner ? 'win' : 'loss');
+  
+  // Event 1: Robot 1's perspective
   await eventLogger.logEvent(
     cycleNumber,
     EventType.BATTLE_COMPLETE,
     {
-      battleId: battle.id,
-      robot1Id: robot1.id,
-      robot2Id: robot2.id,
-      winnerId: result.winnerId,
-      
-      // ELO tracking
-      robot1ELOBefore: battle.robot1ELOBefore,
-      robot1ELOAfter: battle.robot1ELOAfter,
-      robot2ELOBefore: battle.robot2ELOBefore,
-      robot2ELOAfter: battle.robot2ELOAfter,
-      eloChange: battle.eloChange,
-      
-      // Damage tracking
-      robot1DamageDealt: battle.robot1DamageDealt,
-      robot2DamageDealt: battle.robot2DamageDealt,
-      robot1FinalHP: battle.robot1FinalHP,
-      robot2FinalHP: battle.robot2FinalHP,
-      robot1FinalShield: battle.robot1FinalShield,
-      robot2FinalShield: battle.robot2FinalShield,
-      
-      // Rewards
-      winnerReward: battle.winnerReward,
-      loserReward: battle.loserReward,
-      robot1PrestigeAwarded: stats1.prestigeAwarded,
-      robot2PrestigeAwarded: stats2.prestigeAwarded,
-      robot1FameAwarded: stats1.fameAwarded,
-      robot2FameAwarded: stats2.fameAwarded,
-      
-      // Streaming revenue
-      streamingRevenue1: streamingRevenue1?.totalRevenue || 0,
-      streamingRevenue2: streamingRevenue2?.totalRevenue || 0,
-      streamingRevenueDetails1: streamingRevenue1 ? {
-        baseAmount: streamingRevenue1.baseAmount,
-        battleMultiplier: streamingRevenue1.battleMultiplier,
-        fameMultiplier: streamingRevenue1.fameMultiplier,
-        studioMultiplier: streamingRevenue1.studioMultiplier,
-        robotBattles: streamingRevenue1.robotBattles,
-        robotFame: streamingRevenue1.robotFame,
-        studioLevel: streamingRevenue1.studioLevel,
-      } : null,
-      streamingRevenueDetails2: streamingRevenue2 ? {
-        baseAmount: streamingRevenue2.baseAmount,
-        battleMultiplier: streamingRevenue2.battleMultiplier,
-        fameMultiplier: streamingRevenue2.fameMultiplier,
-        studioMultiplier: streamingRevenue2.studioMultiplier,
-        robotBattles: streamingRevenue2.robotBattles,
-        robotFame: streamingRevenue2.robotFame,
-        studioLevel: streamingRevenue2.studioLevel,
-      } : null,
-      
-      // Costs
-      robot1RepairCost: battle.robot1RepairCost,
-      robot2RepairCost: battle.robot2RepairCost,
-      
-      // Battle details
-      durationSeconds: battle.durationSeconds,
-      battleType: battle.battleType,
-      leagueType: battle.leagueType,
-      robot1Yielded: battle.robot1Yielded,
-      robot2Yielded: battle.robot2Yielded,
-      robot1Destroyed: battle.robot1Destroyed,
-      robot2Destroyed: battle.robot2Destroyed,
-      
-      // Metadata
+      // Battle outcome
+      result: robot1Result,
+      opponentId: robot2.id,
       isDraw: result.isDraw,
       isByeMatch: result.isByeMatch,
+      
+      // ELO changes
+      eloBefore: battle.robot1ELOBefore,
+      eloAfter: battle.robot1ELOAfter,
+      eloChange: robot1IsWinner ? battle.eloChange : -battle.eloChange,
+      
+      // Combat stats
+      damageDealt: battle.robot1DamageDealt,
+      finalHP: battle.robot1FinalHP,
+      finalShield: battle.robot1FinalShield,
+      yielded: battle.robot1Yielded,
+      destroyed: battle.robot1Destroyed,
+      
+      // Rewards (credits attributed to user/stable)
+      credits: robot1IsWinner ? battle.winnerReward : battle.loserReward,
+      prestige: stats1.prestigeAwarded,
+      fame: stats1.fameAwarded,
+      streamingRevenue: streamingRevenue1?.totalRevenue || 0,
+      
+      // Costs
+      repairCost: battle.robot1RepairCost,
+      
+      // Battle metadata
+      battleType: battle.battleType,
+      leagueType: battle.leagueType,
+      durationSeconds: battle.durationSeconds,
     },
     {
       userId: robot1.userId,
       robotId: robot1.id,
+      battleId: battle.id,
+    }
+  );
+  
+  // Event 2: Robot 2's perspective
+  await eventLogger.logEvent(
+    cycleNumber,
+    EventType.BATTLE_COMPLETE,
+    {
+      // Battle outcome
+      result: robot2Result,
+      opponentId: robot1.id,
+      isDraw: result.isDraw,
+      isByeMatch: result.isByeMatch,
+      
+      // ELO changes
+      eloBefore: battle.robot2ELOBefore,
+      eloAfter: battle.robot2ELOAfter,
+      eloChange: robot2IsWinner ? battle.eloChange : -battle.eloChange,
+      
+      // Combat stats
+      damageDealt: battle.robot2DamageDealt,
+      finalHP: battle.robot2FinalHP,
+      finalShield: battle.robot2FinalShield,
+      yielded: battle.robot2Yielded,
+      destroyed: battle.robot2Destroyed,
+      
+      // Rewards (credits attributed to user/stable)
+      credits: robot2IsWinner ? battle.winnerReward : battle.loserReward,
+      prestige: stats2.prestigeAwarded,
+      fame: stats2.fameAwarded,
+      streamingRevenue: streamingRevenue2?.totalRevenue || 0,
+      
+      // Costs
+      repairCost: battle.robot2RepairCost,
+      
+      // Battle metadata
+      battleType: battle.battleType,
+      leagueType: battle.leagueType,
+      durationSeconds: battle.durationSeconds,
+    },
+    {
+      userId: robot2.userId,
+      robotId: robot2.id,
+      battleId: battle.id,
     }
   );
   

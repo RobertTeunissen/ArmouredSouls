@@ -145,8 +145,9 @@ export class CycleSnapshotService {
    */
   private async aggregateStableMetrics(cycleNumber: number): Promise<StableMetric[]> {
       // Use audit log as SINGLE source of truth - all data comes from events
+      // NEW: Each battle_complete event represents ONE robot's battle
       
-      // Get battle_complete events - these contain ALL battle data
+      // Get battle_complete events - each event is for one robot
       const battleCompleteEvents = await prisma.auditLog.findMany({
         where: {
           cycleNumber,
@@ -199,65 +200,20 @@ export class CycleSnapshotService {
         return metric;
       };
 
-      // Process battle_complete events - extract ALL data from audit log
-      // First pass: Get robot -> user mapping
-      const robotToUserMap = new Map<number, number>();
-      
-      for (const event of battleCompleteEvents) {
-        const payload = event.payload as any;
-        if (!payload.robot1Id || !payload.robot2Id) continue;
-
-        // Get robot ownership
-        const robot1 = await prisma.robot.findUnique({
-          where: { id: payload.robot1Id },
-          select: { userId: true },
-        });
-        const robot2 = await prisma.robot.findUnique({
-          where: { id: payload.robot2Id },
-          select: { userId: true },
-        });
-
-        if (robot1) robotToUserMap.set(payload.robot1Id, robot1.userId);
-        if (robot2) robotToUserMap.set(payload.robot2Id, robot2.userId);
-      }
-
-      // Second pass: Aggregate all data from battle_complete events
+      // Process battle_complete events - MUCH SIMPLER NOW!
+      // Each event is for ONE robot, with userId and robotId in columns
       battleCompleteEvents.forEach((event: any) => {
+        if (!event.userId) return; // Skip invalid events
+        
+        const metric = getOrCreateMetric(event.userId);
         const payload = event.payload as any;
-        if (!payload.robot1Id || !payload.robot2Id) return;
-
-        const robot1UserId = robotToUserMap.get(payload.robot1Id);
-        const robot2UserId = robotToUserMap.get(payload.robot2Id);
-
-        if (!robot1UserId || !robot2UserId) return;
-
-        // Robot 1 owner metrics
-        const metric1 = getOrCreateMetric(robot1UserId);
-        metric1.battlesParticipated++;
-        metric1.totalPrestigeEarned += payload.robot1PrestigeAwarded || 0;
-        metric1.streamingIncome += payload.streamingRevenue1 || 0;
-        metric1.totalRepairCosts += payload.robot1RepairCost || 0;
-
-        // Credits earned by robot1
-        if (payload.winnerId === payload.robot1Id) {
-          metric1.totalCreditsEarned += payload.winnerReward || 0;
-        } else if (!payload.isDraw) {
-          metric1.totalCreditsEarned += payload.loserReward || 0;
-        }
-
-        // Robot 2 owner metrics
-        const metric2 = getOrCreateMetric(robot2UserId);
-        metric2.battlesParticipated++;
-        metric2.totalPrestigeEarned += payload.robot2PrestigeAwarded || 0;
-        metric2.streamingIncome += payload.streamingRevenue2 || 0;
-        metric2.totalRepairCosts += payload.robot2RepairCost || 0;
-
-        // Credits earned by robot2
-        if (payload.winnerId === payload.robot2Id) {
-          metric2.totalCreditsEarned += payload.winnerReward || 0;
-        } else if (!payload.isDraw) {
-          metric2.totalCreditsEarned += payload.loserReward || 0;
-        }
+        
+        // Aggregate data from this battle
+        metric.battlesParticipated++;
+        metric.totalCreditsEarned += payload.credits || 0;
+        metric.totalPrestigeEarned += payload.prestige || 0;
+        metric.streamingIncome += payload.streamingRevenue || 0;
+        metric.totalRepairCosts += payload.repairCost || 0;
       });
 
       // Add passive income (merchandising)

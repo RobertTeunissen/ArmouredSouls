@@ -76,6 +76,7 @@ interface EventLogEntry {
   sequenceNumber: number;
   userId?: number | null;
   robotId?: number | null;
+  battleId?: number | null;
   payload: BaseEventPayload;
   metadata?: EventMetadata | null;
 }
@@ -166,6 +167,7 @@ export class EventLogger {
     options?: {
       userId?: number;
       robotId?: number;
+      battleId?: number;
       metadata?: EventMetadata;
       timestamp?: Date;
     }
@@ -184,6 +186,7 @@ export class EventLogger {
       sequenceNumber,
       userId: options?.userId || null,
       robotId: options?.robotId || null,
+      battleId: options?.battleId || null,
       payload,
       metadata: options?.metadata || null,
     };
@@ -197,6 +200,7 @@ export class EventLogger {
         sequenceNumber: entry.sequenceNumber,
         userId: entry.userId,
         robotId: entry.robotId,
+        battleId: entry.battleId,
         payload: entry.payload as Prisma.JsonObject,
         metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
       },
