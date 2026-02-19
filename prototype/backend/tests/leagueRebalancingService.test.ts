@@ -51,7 +51,7 @@ describe('League Rebalancing Service', () => {
   });
 
   describe('determinePromotions', () => {
-    it('should return top 10% of robots with ≥5 cycles in current league', async () => {
+    it('should return top 10% of robots with ≥5 cycles AND ≥25 league points', async () => {
       // Create 20 robots in bronze league with varying league points
       const robots = [];
       for (let i = 0; i < 20; i++) {
@@ -70,7 +70,7 @@ describe('League Rebalancing Service', () => {
             currentShield: 2,
             maxShield: 2,
             elo: 1200,
-            leaguePoints: i * 10, // 0, 10, 20, ..., 190
+            leaguePoints: i * 5, // 0, 5, 10, ..., 95 (robots 5+ have ≥25 points)
             totalBattles: 10,
             cyclesInCurrentLeague: 10, // All have enough cycles in current league
             loadoutType: 'single',
@@ -82,10 +82,13 @@ describe('League Rebalancing Service', () => {
 
       const toPromote = await determinePromotions('bronze');
 
-      // Should get top 10% = 2 robots (with highest league points)
+      // Should get top 10% of 20 = 2 robots, but only from those with ≥25 points
+      // Robots 5-19 have ≥25 points (15 robots), top 2 are robots 19 and 18
       expect(toPromote.length).toBe(2);
-      expect(toPromote[0].name).toBe('Bronze Robot 19'); // 190 points
-      expect(toPromote[1].name).toBe('Bronze Robot 18'); // 180 points
+      expect(toPromote[0].name).toBe('Bronze Robot 19'); // 95 points
+      expect(toPromote[1].name).toBe('Bronze Robot 18'); // 90 points
+      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
+      expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(25);
 
       // Clean up
       for (const robot of robots) {
@@ -112,7 +115,7 @@ describe('League Rebalancing Service', () => {
             currentShield: 2,
             maxShield: 2,
             elo: 1200,
-            leaguePoints: i * 10,
+            leaguePoints: i * 5, // 0, 5, 10, ..., 95
             totalBattles: 10,
             cyclesInCurrentLeague: i < 10 ? 3 : 10, // First 10 have too few cycles in league
             loadoutType: 'single',
@@ -125,9 +128,12 @@ describe('League Rebalancing Service', () => {
       const toPromote = await determinePromotions('bronze');
 
       // Should only consider robots with ≥5 cycles in current league (last 10 robots)
-      // 10% of 10 = 1 robot
+      // 10% of 10 = 1 robot, and must have ≥25 points
+      // Robots 10-19 have ≥5 cycles, robots 5-19 have ≥25 points
+      // So robots 10-19 meet both criteria (10 robots), top 10% = 1 robot
       expect(toPromote.length).toBe(1);
       expect(toPromote[0].cyclesInCurrentLeague).toBeGreaterThanOrEqual(5);
+      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
 
       // Clean up
       for (const robot of robots) {
@@ -139,6 +145,45 @@ describe('League Rebalancing Service', () => {
     it('should return empty array for champion tier', async () => {
       const toPromote = await determinePromotions('champion');
       expect(toPromote).toEqual([]);
+    });
+
+    it('should return empty array when no robots have ≥25 league points', async () => {
+      // Create 20 robots but none with ≥25 league points
+      const robots = [];
+      for (let i = 0; i < 20; i++) {
+        const weaponInv = await prisma.weaponInventory.create({
+          data: { userId: testUser.id, weaponId: practiceSword.id },
+        });
+
+        const robot = await prisma.robot.create({
+          data: {
+            userId: testUser.id,
+            name: `Low Points Robot ${i}`,
+            leagueId: 'bronze_1',
+            currentLeague: 'bronze',
+            currentHP: 10,
+            maxHP: 10,
+            currentShield: 2,
+            maxShield: 2,
+            elo: 1200,
+            leaguePoints: i, // 0-19 points, all below 25
+            totalBattles: 10,
+            cyclesInCurrentLeague: 10,
+            loadoutType: 'single',
+            mainWeaponId: weaponInv.id,
+          },
+        });
+        robots.push(robot);
+      }
+
+      const toPromote = await determinePromotions('bronze');
+      expect(toPromote).toEqual([]);
+
+      // Clean up
+      for (const robot of robots) {
+        await prisma.robot.delete({ where: { id: robot.id } });
+      }
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
 
     it('should return empty array when too few robots', async () => {

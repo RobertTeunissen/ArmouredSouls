@@ -857,7 +857,7 @@ This format is used across:
   - Win/Loss/Draw record
   - Recent form indicator (last 5 battles: W/L/D icons)
 - **Zone Indicators**:
-  - Promotion zone (top 10%): Green background highlight
+  - Promotion zone (top 10% AND ≥25 league points): Green background highlight
   - Safe zone (middle 80%): Standard background
   - Demotion zone (bottom 10%): Red/orange background highlight
 - **Own Robot Highlighting**:
@@ -1738,7 +1738,7 @@ Visual representation of equipment slots:
 - Diamond League (diamond frame, #b9f2ff)
 - Master League (animated, #ff00ff)
 
-**Important**: League progression uses League Points earned through battles. ELO rating is separate and used for matchmaking. A high ELO does not automatically promote to higher leagues - players must earn League Points through consistent performance.
+**Important**: League progression uses League Points earned through battles. ELO rating is separate and used for matchmaking. A high ELO does not automatically promote to higher leagues - players must earn 25+ League Points AND be in the top 10% of their league through consistent performance.
 
 **Format**: PNG with transparency (32px, 64px, 128px variants)
 

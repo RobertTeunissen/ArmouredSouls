@@ -7,7 +7,6 @@ import { PrismaClient } from '@prisma/client';
 import {
   getPrestigeMultiplier,
   calculateMerchandisingIncome,
-  calculateStreamingIncome,
   getNextPrestigeTier,
 } from '../../utils/economyCalculations';
 import { getFacilityConfig } from '../../config/facilities';
@@ -58,23 +57,19 @@ describe('Prestige Features Integration', () => {
     test('should calculate complete income breakdown for a user', () => {
       const userPrestige = 15000;
       const incomeGeneratorLevel = 4;
-      const totalBattles = 500;
-      const totalFame = 10000;
       
       // Calculate all income streams
       const prestigeMultiplier = getPrestigeMultiplier(userPrestige);
       const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige);
-      const streaming = calculateStreamingIncome(incomeGeneratorLevel, totalBattles, totalFame);
       const nextTier = getNextPrestigeTier(userPrestige);
       
       // Verify calculations
       expect(prestigeMultiplier).toBe(1.10); // 10% bonus
       expect(merchandising).toBe(30000); // 12000 * 2.5
-      expect(streaming).toBe(13500); // 3000 * 1.5 * 3.0 (Level 4 has streaming at 3000 base)
       expect(nextTier).toEqual({ threshold: 25000, bonus: '+15%' });
       
-      const totalPassiveIncome = merchandising + streaming;
-      expect(totalPassiveIncome).toBe(43500);
+      const totalPassiveIncome = merchandising;
+      expect(totalPassiveIncome).toBe(30000);
     });
 
     test('should show progression through prestige tiers', () => {
@@ -101,20 +96,14 @@ describe('Prestige Features Integration', () => {
       // Realistic mid-game scenario
       const userPrestige = 7500;
       const incomeGeneratorLevel = 5;
-      const totalBattles = 300;
-      const totalFame = 8000;
       
       const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige);
-      const streaming = calculateStreamingIncome(incomeGeneratorLevel, totalBattles, totalFame);
       
       // Expected: 12000 * (1 + 7500/10000) = 12000 * 1.75 = 21000
       expect(merchandising).toBe(21000);
       
-      // Expected: 6000 * (1 + 300/1000) * (1 + 8000/5000) = 6000 * 1.3 * 2.6 = 20280
-      expect(streaming).toBe(20280);
-      
-      const totalIncome = merchandising + streaming;
-      expect(totalIncome).toBe(41280);
+      const totalIncome = merchandising;
+      expect(totalIncome).toBe(21000);
     });
   });
 
@@ -146,18 +135,14 @@ describe('Prestige Features Integration', () => {
     test('should handle user at max prestige tier', () => {
       const userPrestige = 75000;
       const incomeGeneratorLevel = 10;
-      const totalBattles = 2000;
-      const totalFame = 50000;
       
       const prestigeMultiplier = getPrestigeMultiplier(userPrestige);
       const nextTier = getNextPrestigeTier(userPrestige);
       const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige);
-      const streaming = calculateStreamingIncome(incomeGeneratorLevel, totalBattles, totalFame);
       
       expect(prestigeMultiplier).toBe(1.20); // Max tier
       expect(nextTier).toBeNull(); // No next tier
       expect(merchandising).toBeGreaterThan(0);
-      expect(streaming).toBeGreaterThan(0);
       
       // User should have access to all facilities
       const bookingOfficeConfig = getFacilityConfig('booking_office');

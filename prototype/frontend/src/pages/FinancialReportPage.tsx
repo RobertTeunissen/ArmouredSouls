@@ -174,6 +174,27 @@ function FinancialReportPage() {
             {/* Left Column: Daily Stable Report and Multipliers */}
             <div className="space-y-6">
               <DailyStableReport report={report} />
+              
+              {/* Streaming Revenue Explanation */}
+              <div className="bg-blue-900/20 border border-blue-700/50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-blue-400 mb-2 flex items-center">
+                  <span className="mr-2">📺</span>
+                  Streaming Revenue
+                </h3>
+                <p className="text-sm text-gray-300 mb-2">
+                  Streaming revenue is awarded after every battle based on your robot's fame, battle experience, and your Streaming Studio facility level.
+                </p>
+                <div className="text-xs text-gray-400 space-y-1">
+                  <div>• Base rate: ₡1,000 per battle</div>
+                  <div>• Battle multiplier: Increases with robot's total battles (1 + battles/1,000)</div>
+                  <div>• Fame multiplier: Increases with robot's fame (1 + fame/5,000)</div>
+                  <div>• Studio multiplier: +10% per Streaming Studio level</div>
+                </div>
+                <p className="text-xs text-gray-400 mt-2 italic">
+                  Tip: Upgrade your Streaming Studio facility to boost streaming revenue from all battles!
+                </p>
+              </div>
+              
               {report.multiplierBreakdown && (
                 <MultiplierBreakdown multiplierData={report.multiplierBreakdown} />
               )}

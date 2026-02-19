@@ -11,11 +11,13 @@ import { Robot, TournamentMatch, Battle } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { simulateBattle } from './combatSimulator';
 import { CombatMessageGenerator } from './combatMessageGenerator';
-import { calculateELOChange } from './battleOrchestrator';
+import { calculateELOChange, getCurrentCycleNumber } from './battleOrchestrator';
 import {
   calculateTournamentBattleRewards,
   getTournamentRewardBreakdown,
 } from '../utils/tournamentRewards';
+import { calculateStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
+import { EventLogger, EventType } from './eventLogger';
 
 // Economic constants
 const REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
@@ -129,6 +131,86 @@ export async function processTournamentBattle(
     false,
     tournament.currentRound,
     tournament.maxRounds
+  );
+
+  // Calculate and award streaming revenue (Requirement 16.1-16.7)
+  // Tournament battles award streaming revenue using the same formula as 1v1 battles
+  // No streaming revenue for bye matches (handled by isByeMatch check at function start)
+  const cycleNumber = await getCurrentCycleNumber();
+  
+  const streamingRevenue1 = await calculateStreamingRevenue(robot1.id, robot1.userId, false);
+  const streamingRevenue2 = await calculateStreamingRevenue(robot2.id, robot2.userId, false);
+  
+  if (streamingRevenue1) {
+    await awardStreamingRevenue(robot1.userId, streamingRevenue1, cycleNumber);
+    console.log(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Tournament Battle #${battle.id}`);
+  }
+  if (streamingRevenue2) {
+    await awardStreamingRevenue(robot2.userId, streamingRevenue2, cycleNumber);
+    console.log(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Tournament Battle #${battle.id}`);
+  }
+
+  // Log battle_complete event to audit log for tournament battles
+  const eventLogger = new EventLogger();
+  await eventLogger.logEvent(
+    cycleNumber,
+    EventType.BATTLE_COMPLETE,
+    {
+      battleId: battle.id,
+      robot1Id: robot1.id,
+      robot2Id: robot2.id,
+      winnerId: battle.winnerId,
+      
+      // ELO tracking
+      robot1ELOBefore: battle.robot1ELOBefore,
+      robot1ELOAfter: battle.robot1ELOAfter,
+      robot2ELOBefore: battle.robot2ELOBefore,
+      robot2ELOAfter: battle.robot2ELOAfter,
+      eloChange: battle.eloChange,
+      
+      // Damage tracking
+      robot1DamageDealt: battle.robot1DamageDealt,
+      robot2DamageDealt: battle.robot2DamageDealt,
+      robot1FinalHP: battle.robot1FinalHP,
+      robot2FinalHP: battle.robot2FinalHP,
+      robot1FinalShield: battle.robot1FinalShield,
+      robot2FinalShield: battle.robot2FinalShield,
+      
+      // Rewards
+      winnerReward: battle.winnerReward,
+      loserReward: battle.loserReward,
+      robot1PrestigeAwarded: stats1.prestigeAwarded,
+      robot2PrestigeAwarded: stats2.prestigeAwarded,
+      robot1FameAwarded: stats1.fameAwarded,
+      robot2FameAwarded: stats2.fameAwarded,
+      
+      // Streaming revenue
+      streamingRevenue1: streamingRevenue1?.totalRevenue || 0,
+      streamingRevenue2: streamingRevenue2?.totalRevenue || 0,
+      streamingRevenueDetails1: streamingRevenue1 ? {
+        baseAmount: streamingRevenue1.baseAmount,
+        battleMultiplier: streamingRevenue1.battleMultiplier,
+        fameMultiplier: streamingRevenue1.fameMultiplier,
+        studioMultiplier: streamingRevenue1.studioMultiplier,
+        robotBattles: streamingRevenue1.robotBattles,
+        robotFame: streamingRevenue1.robotFame,
+        studioLevel: streamingRevenue1.studioLevel,
+      } : null,
+      streamingRevenueDetails2: streamingRevenue2 ? {
+        baseAmount: streamingRevenue2.baseAmount,
+        battleMultiplier: streamingRevenue2.battleMultiplier,
+        fameMultiplier: streamingRevenue2.fameMultiplier,
+        studioMultiplier: streamingRevenue2.studioMultiplier,
+        robotBattles: streamingRevenue2.robotBattles,
+        robotFame: streamingRevenue2.robotFame,
+        studioLevel: streamingRevenue2.studioLevel,
+      } : null,
+      
+      // Battle metadata
+      battleType: 'tournament',
+      leagueType: battle.leagueType,
+      durationSeconds: battle.durationSeconds,
+    }
   );
 
   // Update tournament match with result

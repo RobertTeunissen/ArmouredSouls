@@ -141,37 +141,52 @@ describe('Tag Team League Rebalancing', () => {
       expect(promotions).toEqual([]);
     });
 
-    it('should promote top 10% of eligible teams', async () => {
+    it('should promote top 10% of eligible teams with ≥25 league points', async () => {
       // Create 20 teams in bronze with 5+ cycles
       for (let i = 0; i < 20; i++) {
-        await createTestTeam('bronze', i * 10, 5);
+        await createTestTeam('bronze', i * 5, 5); // 0, 5, 10, ..., 95 points
       }
 
       const promotions = await determinePromotions('bronze');
       
-      // Top 10% of 20 = 2 teams
+      // Top 10% of 20 = 2 teams, but only from those with ≥25 points
+      // Teams 5-19 have ≥25 points (15 teams), top 2 are teams with 95 and 90 points
       expect(promotions).toHaveLength(2);
       
-      // Should be the teams with highest league points
-      expect(promotions[0].tagTeamLeaguePoints).toBe(190);
-      expect(promotions[1].tagTeamLeaguePoints).toBe(180);
+      // Should be the teams with highest league points (≥25)
+      expect(promotions[0].tagTeamLeaguePoints).toBe(95);
+      expect(promotions[1].tagTeamLeaguePoints).toBe(90);
+      expect(promotions[0].tagTeamLeaguePoints).toBeGreaterThanOrEqual(25);
+      expect(promotions[1].tagTeamLeaguePoints).toBeGreaterThanOrEqual(25);
+    });
+
+    it('should return empty array when no teams have ≥25 league points', async () => {
+      // Create 20 teams in bronze with 5+ cycles but low points
+      for (let i = 0; i < 20; i++) {
+        await createTestTeam('bronze', i, 5); // 0-19 points, all below 25
+      }
+
+      const promotions = await determinePromotions('bronze');
+      expect(promotions).toEqual([]);
     });
 
     it('should exclude teams in excludeTeamIds set', async () => {
       // Create 20 teams in bronze with 5+ cycles
       const teams = [];
       for (let i = 0; i < 20; i++) {
-        const team = await createTestTeam('bronze', i * 10, 5);
+        const team = await createTestTeam('bronze', i * 5, 5); // 0, 5, 10, ..., 95 points
         teams.push(team);
       }
 
-      // Exclude the top 2 teams
+      // Exclude the top 2 teams (95 and 90 points)
       const excludeSet = new Set([teams[19].id, teams[18].id]);
       const promotions = await determinePromotions('bronze', excludeSet);
       
       // With 18 remaining teams, 10% = 1.8, rounds down to 1
+      // Next highest with ≥25 points is team with 85 points
       expect(promotions).toHaveLength(1);
-      expect(promotions[0].tagTeamLeaguePoints).toBe(170);
+      expect(promotions[0].tagTeamLeaguePoints).toBe(85);
+      expect(promotions[0].tagTeamLeaguePoints).toBeGreaterThanOrEqual(25);
     });
   });
 
@@ -396,26 +411,30 @@ describe('Tag Team League Rebalancing', () => {
     it('should handle exactly 10 teams (minimum for rebalancing)', async () => {
       // Create exactly 10 teams in bronze with 5+ cycles
       for (let i = 0; i < 10; i++) {
-        await createTestTeam('bronze', i * 10, 5);
+        await createTestTeam('bronze', i * 10, 5); // 0, 10, 20, ..., 90 points
       }
 
       const promotions = await determinePromotions('bronze');
       
-      // 10% of 10 = 1 team
+      // 10% of 10 = 1 team, but only from those with ≥25 points
+      // Teams 3-9 have ≥25 points (7 teams), top 1 is team with 90 points
       expect(promotions).toHaveLength(1);
       expect(promotions[0].tagTeamLeaguePoints).toBe(90);
+      expect(promotions[0].tagTeamLeaguePoints).toBeGreaterThanOrEqual(25);
     });
 
     it('should handle 11 teams (10% rounds down to 1)', async () => {
       // Create 11 teams in bronze with 5+ cycles
       for (let i = 0; i < 11; i++) {
-        await createTestTeam('bronze', i * 10, 5);
+        await createTestTeam('bronze', i * 10, 5); // 0, 10, 20, ..., 100 points
       }
 
       const promotions = await determinePromotions('bronze');
       
       // 10% of 11 = 1.1, rounds down to 1
+      // Teams 3-10 have ≥25 points, top 1 is team with 100 points
       expect(promotions).toHaveLength(1);
+      expect(promotions[0].tagTeamLeaguePoints).toBeGreaterThanOrEqual(25);
     });
 
     it('should handle teams with same league points (tiebreaker)', async () => {

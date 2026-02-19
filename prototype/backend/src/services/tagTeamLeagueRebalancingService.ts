@@ -8,6 +8,7 @@ import {
 } from './tagTeamLeagueInstanceService';
 
 // Promotion/Demotion thresholds
+const MIN_LEAGUE_POINTS_FOR_PROMOTION = 25; // Must have 25+ league points for promotion
 const PROMOTION_PERCENTAGE = 0.10; // Top 10%
 const DEMOTION_PERCENTAGE = 0.10; // Bottom 10%
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5; // Must be in current league for 5+ cycles
@@ -34,7 +35,7 @@ export interface FullTagTeamRebalancingSummary {
 
 /**
  * Determine which teams should be promoted from a tier
- * Requirement 6.3: Promote top 10% of eligible teams (≥5 cycles in tier)
+ * Requirement 6.3: Promote top 10% of eligible teams (≥5 cycles in tier AND ≥25 league points)
  * @param tier - The league tier to evaluate
  * @param excludeTeamIds - Set of team IDs to exclude (already processed in this cycle)
  */
@@ -47,12 +48,15 @@ export async function determinePromotions(
     return [];
   }
 
-  // Get all teams in this tier with minimum cycles in current league
-  const teams = await prisma.tagTeam.findMany({
+  // Get all teams in this tier with minimum cycles AND minimum league points
+  const teamsWithMinPoints = await prisma.tagTeam.findMany({
     where: {
       tagTeamLeague: tier,
       cyclesInTagTeamLeague: {
         gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
+      },
+      tagTeamLeaguePoints: {
+        gte: MIN_LEAGUE_POINTS_FOR_PROMOTION,
       },
       NOT: {
         id: { in: Array.from(excludeTeamIds) },
@@ -64,27 +68,50 @@ export async function determinePromotions(
     ],
   });
 
-  // Skip if too few teams (Requirement 6.3: ≥10 teams in tier)
-  if (teams.length < MIN_TEAMS_FOR_REBALANCING) {
+  // If no teams meet the minimum points threshold, skip
+  if (teamsWithMinPoints.length === 0) {
     console.log(
-      `[TagTeamRebalancing] ${tier}: Too few teams (${teams.length} < ${MIN_TEAMS_FOR_REBALANCING}), skipping promotions`
+      `[TagTeamRebalancing] ${tier}: No teams with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`
     );
     return [];
   }
 
-  // Calculate top 10%
-  const promotionCount = Math.floor(teams.length * PROMOTION_PERCENTAGE);
+  // Get total eligible teams (for calculating top 10%)
+  const totalEligibleTeams = await prisma.tagTeam.count({
+    where: {
+      tagTeamLeague: tier,
+      cyclesInTagTeamLeague: {
+        gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
+      },
+      NOT: {
+        id: { in: Array.from(excludeTeamIds) },
+      },
+    },
+  });
+
+  // Skip if too few teams (Requirement 6.3: ≥10 teams in tier)
+  if (totalEligibleTeams < MIN_TEAMS_FOR_REBALANCING) {
+    console.log(
+      `[TagTeamRebalancing] ${tier}: Too few eligible teams (${totalEligibleTeams} < ${MIN_TEAMS_FOR_REBALANCING}), skipping promotions`
+    );
+    return [];
+  }
+
+  // Calculate top 10% of all eligible teams
+  const promotionCount = Math.floor(totalEligibleTeams * PROMOTION_PERCENTAGE);
 
   if (promotionCount === 0) {
     console.log(
-      `[TagTeamRebalancing] ${tier}: Promotion count is 0 (${teams.length} teams), skipping`
+      `[TagTeamRebalancing] ${tier}: Promotion count is 0 (${totalEligibleTeams} eligible teams), skipping`
     );
     return [];
   }
 
-  const toPromote = teams.slice(0, promotionCount);
+  // Take the top 10%, but only from teams with ≥25 league points
+  const toPromote = teamsWithMinPoints.slice(0, Math.min(promotionCount, teamsWithMinPoints.length));
+  
   console.log(
-    `[TagTeamRebalancing] ${tier}: ${toPromote.length} teams eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${teams.length})`
+    `[TagTeamRebalancing] ${tier}: ${toPromote.length} teams eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleTeams} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${teamsWithMinPoints.length} met points threshold)`
   );
 
   return toPromote;

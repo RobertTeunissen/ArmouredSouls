@@ -99,7 +99,7 @@ The feature integrates with the existing battle system: when the first robot rea
 
 1. THE System SHALL maintain six tag team league tiers (Bronze, Silver, Gold, Platinum, Diamond, Champion)
 2. WHEN a new tag team is formed, THE System SHALL place it in the Bronze tag team league
-3. WHEN tag team league rebalancing occurs, THE System SHALL promote the top 10% of teams (minimum 5 cycles in current tier)
+3. WHEN tag team league rebalancing occurs, THE System SHALL promote teams in the top 10% with ≥25 tag team league points (minimum 5 cycles in current tier)
 4. WHEN tag team league rebalancing occurs, THE System SHALL demote the bottom 10% of teams (minimum 5 cycles in current tier)
 5. WHEN a team is promoted or demoted, THE System SHALL reset their tag team league points to 0
 6. WHEN a team is promoted or demoted, THE System SHALL reset their cycles counter to 0

@@ -71,7 +71,7 @@ Key design principles:
    ELO updated (all 4 robots) → League points awarded → Credits distributed → Repair costs calculated → Battle log stored
 
 5. League Rebalancing (Every Other Cycle)
-   If odd cycle: Tag team league points evaluated → Top 10% promoted → Bottom 10% demoted → Instances rebalanced
+   If odd cycle: Tag team league points evaluated → Top 10% with ≥25 league points promoted → Bottom 10% demoted → Instances rebalanced
 ```
 
 ### Integration Points
@@ -415,7 +415,7 @@ Before writing correctness properties, I need to analyze the acceptance criteria
 **Validates: Requirements 6.2**
 
 ### Property 19: League Rebalancing Percentages
-*For any* tag team league tier with at least 10 teams, rebalancing should promote the top 10% of eligible teams (≥5 cycles in tier) and demote the bottom 10% of eligible teams (≥5 cycles in tier).
+*For any* tag team league tier with at least 10 teams, rebalancing should promote the top 10% of eligible teams (≥5 cycles in tier AND ≥25 league points) and demote the bottom 10% of eligible teams (≥5 cycles in tier).
 **Validates: Requirements 6.3, 6.4**
 
 ### Property 20: Tier Change Resets
@@ -678,7 +678,7 @@ test('combined ELO equals sum of robot ELOs', () => {
 
 **League Management** (15-20 tests):
 - Place new teams in Bronze
-- Promote top 10% of eligible teams
+- Promote top 10% of eligible teams with ≥25 league points
 - Demote bottom 10% of eligible teams
 - Reset points and cycles on tier change
 - Create new instance at 51 teams

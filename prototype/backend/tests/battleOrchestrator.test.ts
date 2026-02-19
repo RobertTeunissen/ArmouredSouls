@@ -12,9 +12,11 @@ describe('Battle Orchestrator', () => {
   let practiceSword: any;
 
   beforeAll(async () => {
-    // Clean up
+    // Clean up in correct order to respect foreign key constraints
     await prisma.scheduledMatch.deleteMany({});
+    await prisma.tagTeamMatch.deleteMany({}); // Delete tag team matches before tag teams
     await prisma.battle.deleteMany({});
+    await prisma.tagTeam.deleteMany({}); // Delete tag teams before robots
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});
@@ -420,6 +422,374 @@ describe('Battle Orchestrator', () => {
         await prisma.robot.delete({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+    });
+  });
+
+  describe('Streaming Revenue Integration', () => {
+    it('should calculate and award streaming revenue after battle', async () => {
+      // Create test robots with some fame and battles
+      const weaponInv1 = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+      const weaponInv2 = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+
+      const robot1 = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Streaming Test Robot 1',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv1.id,
+          totalBattles: 100, // 100 battles
+          fame: 500, // 500 fame
+        },
+      });
+
+      const robot2 = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Streaming Test Robot 2',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv2.id,
+          totalBattles: 50, // 50 battles
+          fame: 250, // 250 fame
+        },
+      });
+
+      // Get initial user balance
+      const userBefore = await prisma.user.findUnique({ where: { id: testUser.id } });
+      const initialBalance = userBefore!.currency;
+
+      // Create scheduled match
+      const scheduledMatch = await prisma.scheduledMatch.create({
+        data: {
+          robot1Id: robot1.id,
+          robot2Id: robot2.id,
+          leagueType: 'bronze',
+          scheduledFor: new Date(),
+          status: 'scheduled',
+        },
+      });
+
+      // Execute battle
+      const result = await processBattle(scheduledMatch);
+
+      // Verify user balance increased (battle winnings + streaming revenue)
+      const userAfter = await prisma.user.findUnique({ where: { id: testUser.id } });
+      expect(userAfter!.currency).toBeGreaterThan(initialBalance);
+
+      // Calculate expected streaming revenue for both robots
+      // Robot 1: 1000 × (1 + 101/1000) × (1 + 500/5000) × 1.0 = 1000 × 1.101 × 1.1 × 1.0 = 1211.1 = 1211
+      // Robot 2: 1000 × (1 + 51/1000) × (1 + 250/5000) × 1.0 = 1000 × 1.051 × 1.05 × 1.0 = 1103.55 = 1103
+      // Total streaming revenue: 1211 + 1103 = 2314
+
+      // The balance increase should include both battle winnings and streaming revenue
+      const balanceIncrease = userAfter!.currency - initialBalance;
+      expect(balanceIncrease).toBeGreaterThan(2000); // Should be at least streaming revenue
+
+      // Clean up
+      await prisma.battle.delete({ where: { id: result.battleId } });
+      await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
+      await prisma.robot.delete({ where: { id: robot1.id } });
+      await prisma.robot.delete({ where: { id: robot2.id } });
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+    });
+
+    it('should not award streaming revenue for bye matches', async () => {
+      // Create player robot
+      const weaponInv = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+
+      const playerRobot = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Bye Test Player',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv.id,
+          totalBattles: 100,
+          fame: 500,
+        },
+      });
+
+      // Create bye-robot
+      const byeUser = await prisma.user.create({
+        data: {
+          username: 'bye_streaming_test',
+          passwordHash: 'hash',
+          currency: 10000,
+        },
+      });
+
+      const byeWeaponInv = await prisma.weaponInventory.create({
+        data: { userId: byeUser.id, weaponId: practiceSword.id },
+      });
+
+      const byeRobot = await prisma.robot.create({
+        data: {
+          userId: byeUser.id,
+          name: 'Bye Robot',
+          leagueId: 'bronze_bye',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1000,
+          loadoutType: 'single',
+          mainWeaponId: byeWeaponInv.id,
+        },
+      });
+
+      // Get initial balances
+      const playerUserBefore = await prisma.user.findUnique({ where: { id: testUser.id } });
+      const byeUserBefore = await prisma.user.findUnique({ where: { id: byeUser.id } });
+
+      // Create scheduled bye-match
+      const scheduledMatch = await prisma.scheduledMatch.create({
+        data: {
+          robot1Id: playerRobot.id,
+          robot2Id: byeRobot.id,
+          leagueType: 'bronze',
+          scheduledFor: new Date(),
+          status: 'scheduled',
+        },
+      });
+
+      // Execute battle
+      const result = await processBattle(scheduledMatch);
+
+      // Verify it was a bye match
+      expect(result.isByeMatch).toBe(true);
+
+      // Get final balances
+      const playerUserAfter = await prisma.user.findUnique({ where: { id: testUser.id } });
+      const byeUserAfter = await prisma.user.findUnique({ where: { id: byeUser.id } });
+
+      // Calculate balance changes
+      const playerBalanceChange = playerUserAfter!.currency - playerUserBefore!.currency;
+      const byeBalanceChange = byeUserAfter!.currency - byeUserBefore!.currency;
+
+      // Player should only get battle winnings (no streaming revenue)
+      // Expected streaming revenue would be: 1000 × (1 + 101/1000) × (1 + 500/5000) × 1.0 = 1211
+      // But since it's a bye match, no streaming revenue should be awarded
+      // The balance change should be less than if streaming revenue was included
+      expect(playerBalanceChange).toBeGreaterThan(0); // Should get battle winnings
+      expect(playerBalanceChange).toBeLessThan(2000); // Should not include streaming revenue
+
+      // Bye robot should get participation reward only (no streaming revenue)
+      expect(byeBalanceChange).toBeGreaterThanOrEqual(0);
+
+      // Clean up
+      await prisma.battle.deleteMany({});
+      await prisma.scheduledMatch.deleteMany({});
+      await prisma.robot.delete({ where: { id: playerRobot.id } });
+      await prisma.robot.delete({ where: { id: byeRobot.id } });
+      await prisma.weaponInventory.deleteMany({});
+      await prisma.user.delete({ where: { id: byeUser.id } });
+    });
+
+    it('should add streaming revenue to audit log', async () => {
+      // Create test robots
+      const weaponInv1 = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+      const weaponInv2 = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+
+      const robot1 = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Audit Log Test 1',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv1.id,
+          totalBattles: 100,
+          fame: 500,
+        },
+      });
+
+      const robot2 = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Audit Log Test 2',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv2.id,
+          totalBattles: 50,
+          fame: 250,
+        },
+      });
+
+      // Create scheduled match
+      const scheduledMatch = await prisma.scheduledMatch.create({
+        data: {
+          robot1Id: robot1.id,
+          robot2Id: robot2.id,
+          leagueType: 'bronze',
+          scheduledFor: new Date(),
+          status: 'scheduled',
+        },
+      });
+
+      // Execute battle
+      const result = await processBattle(scheduledMatch);
+
+      // Find the battle_complete event in audit log
+      const auditEvent = await prisma.auditLog.findFirst({
+        where: {
+          eventType: 'battle_complete',
+          payload: {
+            path: ['battleId'],
+            equals: result.battleId,
+          },
+        },
+      });
+
+      expect(auditEvent).toBeDefined();
+
+      // Verify streaming revenue is in the event payload
+      const payload = auditEvent!.payload as any;
+      expect(payload.streamingRevenue1).toBeDefined();
+      expect(payload.streamingRevenue2).toBeDefined();
+      expect(payload.streamingRevenue1).toBeGreaterThan(0);
+      expect(payload.streamingRevenue2).toBeGreaterThan(0);
+
+      // Clean up
+      await prisma.auditLog.deleteMany({ where: { id: auditEvent!.id } });
+      await prisma.battle.delete({ where: { id: result.battleId } });
+      await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
+      await prisma.robot.delete({ where: { id: robot1.id } });
+      await prisma.robot.delete({ where: { id: robot2.id } });
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+    });
+
+    it('should log streaming revenue to terminal', async () => {
+      // Create test robots
+      const weaponInv1 = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+      const weaponInv2 = await prisma.weaponInventory.create({
+        data: { userId: testUser.id, weaponId: practiceSword.id },
+      });
+
+      const robot1 = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Terminal Log Test 1',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv1.id,
+          totalBattles: 100,
+          fame: 500,
+        },
+      });
+
+      const robot2 = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: 'Terminal Log Test 2',
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          elo: 1200,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv2.id,
+          totalBattles: 50,
+          fame: 250,
+        },
+      });
+
+      // Create scheduled match
+      const scheduledMatch = await prisma.scheduledMatch.create({
+        data: {
+          robot1Id: robot1.id,
+          robot2Id: robot2.id,
+          leagueType: 'bronze',
+          scheduledFor: new Date(),
+          status: 'scheduled',
+        },
+      });
+
+      // Capture console.log output
+      const originalLog = console.log;
+      const logMessages: string[] = [];
+      console.log = (...args: any[]) => {
+        logMessages.push(args.join(' '));
+        originalLog(...args);
+      };
+
+      try {
+        // Execute battle
+        const result = await processBattle(scheduledMatch);
+
+        // Verify terminal log contains streaming revenue messages
+        const streamingLogs = logMessages.filter(msg => msg.includes('[Streaming]'));
+        expect(streamingLogs.length).toBeGreaterThanOrEqual(2); // One for each robot
+
+        // Verify log format: "[Streaming] RobotName earned ₡X,XXX from Battle #123"
+        const robot1Log = streamingLogs.find(msg => msg.includes(robot1.name));
+        const robot2Log = streamingLogs.find(msg => msg.includes(robot2.name));
+
+        expect(robot1Log).toBeDefined();
+        expect(robot2Log).toBeDefined();
+        expect(robot1Log).toMatch(/\[Streaming\].*earned ₡[\d,]+.*from Battle #\d+/);
+        expect(robot2Log).toMatch(/\[Streaming\].*earned ₡[\d,]+.*from Battle #\d+/);
+
+        // Clean up
+        await prisma.battle.delete({ where: { id: result.battleId } });
+        await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
+        await prisma.robot.delete({ where: { id: robot1.id } });
+        await prisma.robot.delete({ where: { id: robot2.id } });
+        await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+      } finally {
+        // Restore console.log
+        console.log = originalLog;
+      }
     });
   });
 });

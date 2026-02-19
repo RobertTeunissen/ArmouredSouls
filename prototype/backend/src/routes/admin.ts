@@ -771,7 +771,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
               currentCycleNumber,
               user.id,
               passiveIncome.merchandising,
-              passiveIncome.streaming,
+              0, // Streaming revenue is now per-battle, not passive income
               incomeGenerator?.level || 0,
               user.prestige,
               totalBattles,
@@ -893,6 +893,15 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         }
         console.log(`[Admin] ===================================`);
 
+        // Display Cycle Summary
+        console.log(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
+        console.log(`[Admin] Battles: ${battleSummary.totalBattles}`);
+        const totalStreamingRevenue = (battleSummary.totalStreamingRevenue || 0) + (tagTeamBattleSummary?.totalStreamingRevenue || 0);
+        if (totalStreamingRevenue > 0) {
+          console.log(`[Admin] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()}`);
+        }
+        console.log(`[Admin] ===================================`);
+
         cycleResults.push({
           cycle: currentCycleNumber,
           battles: battleSummary,
@@ -906,6 +915,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           userGeneration: userGenerationSummary,
           matchmaking: matchmakingSummary,
           tagTeamMatchmaking: tagTeamMatchmakingSummary,
+          totalStreamingRevenue,
           duration: Date.now() - cycleStart,
         });
 

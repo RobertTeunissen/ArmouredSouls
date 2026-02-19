@@ -329,6 +329,47 @@ export class FacilityRecommendationService {
       projectedROI = 0.3; // Strategic value
       reason = `Increase attribute cap to level ${this.getAcademyCapLevel(nextLevel)}`;
       priority = 'medium';
+    } else if (facilityType === 'streaming_studio') {
+      // Streaming Studio increases streaming revenue per battle
+      const currentMultiplier = 1 + (currentLevel * 0.1);
+      const nextMultiplier = 1 + (nextLevel * 0.1);
+      const multiplierIncrease = nextMultiplier - currentMultiplier;
+      
+      // Calculate average streaming revenue per battle based on user's robots
+      const avgStreamingRevenuePerBattle = await this.calculateAverageStreamingRevenue(
+        user.id,
+        currentLevel
+      );
+      
+      // Calculate projected revenue increase per battle
+      const revenueIncreasePerBattle = avgStreamingRevenuePerBattle * (multiplierIncrease / currentMultiplier);
+      
+      // Calculate total revenue increase per cycle based on battle frequency
+      const projectedRevenueIncreasePerCycle = revenueIncreasePerBattle * activityMetrics.avgBattlesPerCycle;
+      
+      // Calculate operating cost increase (daily)
+      const operatingCostIncrease = nextLevel * 100 - currentLevel * 100;
+      
+      // Calculate net benefit per cycle (revenue increase - operating cost increase)
+      const netBenefitPerCycle = projectedRevenueIncreasePerCycle - operatingCostIncrease;
+      
+      if (activityMetrics.avgBattlesPerCycle === 0) {
+        // No battle history, provide estimate
+        projectedROI = 0.2;
+        reason = `Increases streaming revenue by ${((multiplierIncrease / currentMultiplier) * 100).toFixed(0)}% per battle (no battle history to estimate ROI)`;
+        priority = 'medium';
+      } else if (netBenefitPerCycle > 0 && projectedRevenueIncreasePerCycle > 0) {
+        projectedPayoffCycles = Math.ceil(upgradeCost / netBenefitPerCycle);
+        projectedROI = (netBenefitPerCycle * 30 - upgradeCost) / upgradeCost;
+        
+        const percentIncrease = ((nextMultiplier / currentMultiplier - 1) * 100).toFixed(0);
+        reason = `Increases streaming revenue by ${percentIncrease}% per battle (₡${revenueIncreasePerBattle.toFixed(0)} more per battle, ₡${operatingCostIncrease}/day operating cost)`;
+        priority = projectedPayoffCycles <= 15 ? 'high' : projectedPayoffCycles <= 30 ? 'medium' : 'low';
+      } else {
+        // Net benefit is negative or zero (operating costs exceed revenue increase)
+        // Don't recommend this upgrade
+        return null;
+      }
     } else if (facilityType === 'storage_facility') {
       // Storage facility increases weapon storage
       projectedROI = 0.1; // Low strategic value
@@ -353,6 +394,48 @@ export class FacilityRecommendationService {
       reason,
       priority,
     };
+  }
+
+  /**
+   * Calculate average streaming revenue per battle for a user's robots
+   * Takes into account robot fame, battle count, and current studio level
+   */
+  private async calculateAverageStreamingRevenue(
+    userId: number,
+    currentStudioLevel: number
+  ): Promise<number> {
+    // Get all user's robots (excluding bye robots)
+    const robots = await prisma.robot.findMany({
+      where: {
+        userId,
+        NOT: { name: 'Bye Robot' },
+      },
+      select: {
+        id: true,
+        totalBattles: true,
+        totalTagTeamBattles: true,
+        fame: true,
+      },
+    });
+
+    if (robots.length === 0) {
+      // No robots, return base amount with current studio multiplier
+      return 1000 * (1 + currentStudioLevel * 0.1);
+    }
+
+    // Calculate streaming revenue for each robot and average
+    const studioMultiplier = 1 + (currentStudioLevel * 0.1);
+    let totalRevenue = 0;
+
+    for (const robot of robots) {
+      const totalBattleCount = robot.totalBattles + robot.totalTagTeamBattles;
+      const battleMultiplier = 1 + (totalBattleCount / 1000);
+      const fameMultiplier = 1 + (robot.fame / 5000);
+      const revenue = 1000 * battleMultiplier * fameMultiplier * studioMultiplier;
+      totalRevenue += revenue;
+    }
+
+    return totalRevenue / robots.length;
   }
 
   /**

@@ -5,6 +5,9 @@ import { getLeagueBaseReward, getParticipationReward } from '../utils/economyCal
 import { CombatMessageGenerator } from './combatMessageGenerator';
 import { repairAllRobots } from './repairService';
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
+import { calculateTagTeamStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
+import { getCurrentCycleNumber } from './battleOrchestrator';
+import { EventLogger, EventType } from './eventLogger';
 
 // Battle constants
 const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
@@ -1118,6 +1121,7 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
   draws: number;
   losses: number;
   skippedDueToUnreadyRobots: number;
+  totalStreamingRevenue?: number;
 }> {
   // Query scheduled tag team matches
   const whereClause: any = {
@@ -1158,6 +1162,7 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
   let draws = 0;
   let losses = 0;
   let skippedDueToUnreadyRobots = 0;
+  let totalStreamingRevenue = 0;
 
   for (const match of scheduledMatches) {
     try {
@@ -1199,6 +1204,27 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
         losses++;
       }
 
+      // Track streaming revenue from audit log
+      if (!isByeMatch) {
+        const battleCompleteEvent = await prisma.auditLog.findFirst({
+          where: {
+            eventType: 'tag_team_battle',
+            payload: {
+              path: ['battleId'],
+              equals: result.battleId,
+            },
+          },
+          orderBy: { id: 'desc' },
+        });
+        
+        if (battleCompleteEvent) {
+          const payload = battleCompleteEvent.payload as any;
+          const streamingRevenue1 = payload?.streamingRevenue1 || 0;
+          const streamingRevenue2 = payload?.streamingRevenue2 || 0;
+          totalStreamingRevenue += streamingRevenue1 + streamingRevenue2;
+        }
+      }
+
       // Update robot stats and apply rewards
       await updateTagTeamBattleResults(match, result);
 
@@ -1218,6 +1244,9 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
     `${wins} wins, ${draws} draws, ${losses} losses, ` +
     `${skippedDueToUnreadyRobots} skipped due to unready robots`
   );
+  if (totalStreamingRevenue > 0) {
+    console.log(`[TagTeamBattles] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()} total earned`);
+  }
 
   return {
     totalBattles,
@@ -1225,6 +1254,7 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
     draws,
     losses,
     skippedDueToUnreadyRobots,
+    totalStreamingRevenue,
   };
 }
 
@@ -1775,6 +1805,102 @@ async function updateTagTeamBattleResults(
     console.log(
       `[TagTeamBattles] Fame awarded - Team ${team2.id}: ` +
       `${team2.activeRobot.name} +${team2ActiveFame}, ${team2.reserveRobot.name} +${team2ReserveFame}`
+    );
+  }
+
+  // Calculate and award streaming revenue for both teams
+  // Requirements 7.1-7.6: Use highest battle count and highest fame from each team
+  const streamingRevenue = await calculateTagTeamStreamingRevenue(
+    [team1.activeRobotId, team1.reserveRobotId],
+    team1.stableId,
+    [team2.activeRobotId, team2.reserveRobotId],
+    team2.stableId
+  );
+
+  // Get current cycle number for analytics tracking
+  const cycleNumber = await getCurrentCycleNumber();
+
+  // Award streaming revenue to both teams
+  await awardStreamingRevenue(team1.stableId, streamingRevenue.team1Revenue, cycleNumber);
+  await awardStreamingRevenue(team2.stableId, streamingRevenue.team2Revenue, cycleNumber);
+
+  // Log streaming revenue with details about which robots' stats were used
+  console.log(
+    `[Streaming] Team ${team1.id} earned ₡${streamingRevenue.team1Revenue.totalRevenue.toLocaleString()} ` +
+    `(Battles from ${streamingRevenue.team1MaxBattlesRobot.name}, Fame from ${streamingRevenue.team1MaxFameRobot.name})`
+  );
+  console.log(
+    `[Streaming] Team ${team2.id} earned ₡${streamingRevenue.team2Revenue.totalRevenue.toLocaleString()} ` +
+    `(Battles from ${streamingRevenue.team2MaxBattlesRobot.name}, Fame from ${streamingRevenue.team2MaxFameRobot.name})`
+  );
+
+  // Log battle_complete event to audit log for tag team battles
+  // Fetch the updated battle record to get all the data
+  const battle = await prisma.battle.findUnique({
+    where: { id: result.battleId },
+  });
+
+  if (battle) {
+    const eventLogger = new EventLogger();
+    await eventLogger.logEvent(
+      cycleNumber,
+      EventType.BATTLE_COMPLETE,
+      {
+        battleId: battle.id,
+        robot1Id: battle.robot1Id,
+        robot2Id: battle.robot2Id,
+        winnerId: battle.winnerId,
+        
+        // ELO tracking
+        robot1ELOBefore: battle.robot1ELOBefore,
+        robot1ELOAfter: battle.robot1ELOAfter,
+        robot2ELOBefore: battle.robot2ELOBefore,
+        robot2ELOAfter: battle.robot2ELOAfter,
+        eloChange: battle.eloChange,
+        
+        // Damage tracking
+        robot1DamageDealt: battle.robot1DamageDealt,
+        robot2DamageDealt: battle.robot2DamageDealt,
+        robot1FinalHP: battle.robot1FinalHP,
+        robot2FinalHP: battle.robot2FinalHP,
+        robot1FinalShield: battle.robot1FinalShield,
+        robot2FinalShield: battle.robot2FinalShield,
+        
+        // Rewards
+        winnerReward: battle.winnerReward,
+        loserReward: battle.loserReward,
+        robot1PrestigeAwarded: battle.robot1PrestigeAwarded,
+        robot2PrestigeAwarded: battle.robot2PrestigeAwarded,
+        robot1FameAwarded: battle.robot1FameAwarded,
+        robot2FameAwarded: battle.robot2FameAwarded,
+        
+        // Streaming revenue
+        streamingRevenue1: streamingRevenue.team1Revenue.totalRevenue,
+        streamingRevenue2: streamingRevenue.team2Revenue.totalRevenue,
+        streamingRevenueDetails1: {
+          baseAmount: streamingRevenue.team1Revenue.baseAmount,
+          battleMultiplier: streamingRevenue.team1Revenue.battleMultiplier,
+          fameMultiplier: streamingRevenue.team1Revenue.fameMultiplier,
+          studioMultiplier: streamingRevenue.team1Revenue.studioMultiplier,
+          robotBattles: streamingRevenue.team1Revenue.robotBattles,
+          robotFame: streamingRevenue.team1Revenue.robotFame,
+          studioLevel: streamingRevenue.team1Revenue.studioLevel,
+        },
+        streamingRevenueDetails2: {
+          baseAmount: streamingRevenue.team2Revenue.baseAmount,
+          battleMultiplier: streamingRevenue.team2Revenue.battleMultiplier,
+          fameMultiplier: streamingRevenue.team2Revenue.fameMultiplier,
+          studioMultiplier: streamingRevenue.team2Revenue.studioMultiplier,
+          robotBattles: streamingRevenue.team2Revenue.robotBattles,
+          robotFame: streamingRevenue.team2Revenue.robotFame,
+          studioLevel: streamingRevenue.team2Revenue.studioLevel,
+        },
+        
+        // Battle metadata
+        battleType: 'tag_team',
+        leagueType: battle.leagueType,
+        durationSeconds: battle.durationSeconds,
+      }
     );
   }
 }

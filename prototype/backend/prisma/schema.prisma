@@ -176,9 +176,10 @@ model Robot {
   tournamentsWon            Tournament[]      @relation("TournamentWinner")
   tournamentMatchesAsRobot1 TournamentMatch[] @relation("TournamentRobot1")
   tournamentMatchesAsRobot2 TournamentMatch[] @relation("TournamentRobot2")
-  tournamentMatchesWon      TournamentMatch[] @relation("TournamentMatchWinner")
-  tagTeamsAsActive          TagTeam[]         @relation("TagTeamActiveRobot")
-  tagTeamsAsReserve         TagTeam[]         @relation("TagTeamReserveRobot")
+  tournamentMatchesWon      TournamentMatch[]         @relation("TournamentMatchWinner")
+  tagTeamsAsActive          TagTeam[]                 @relation("TagTeamActiveRobot")
+  tagTeamsAsReserve         TagTeam[]                 @relation("TagTeamReserveRobot")
+  streamingRevenue          RobotStreamingRevenue[]
 
   @@unique([userId, name])
   @@index([userId])
@@ -573,4 +574,23 @@ model TagTeamMatch {
   @@index([scheduledFor, status])
   @@index([status])
   @@map("tag_team_matches")
+}
+
+// Robot Streaming Revenue tracking table for analytics
+// Tracks streaming revenue earned per robot per cycle
+model RobotStreamingRevenue {
+  id               Int      @id @default(autoincrement())
+  robotId          Int      @map("robot_id")
+  cycleNumber      Int      @map("cycle_number")
+  streamingRevenue Float    @map("streaming_revenue")
+  battlesInCycle   Int      @map("battles_in_cycle")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  robot Robot @relation(fields: [robotId], references: [id], onDelete: Cascade)
+
+  @@unique([robotId, cycleNumber])
+  @@index([robotId])
+  @@index([cycleNumber])
+  @@map("robot_streaming_revenue")
 }

@@ -9,8 +9,6 @@ import {
   calculateBattleWinnings,
   getMerchandisingBaseRate,
   calculateMerchandisingIncome,
-  getStreamingBaseRate,
-  calculateStreamingIncome,
   calculateFinancialHealth,
   getLeagueBaseReward,
   getParticipationReward,
@@ -33,6 +31,13 @@ describe('Economy Calculations', () => {
     it('should calculate Income Generator operating costs correctly', () => {
       expect(calculateFacilityOperatingCost('income_generator', 1)).toBe(1000);
       expect(calculateFacilityOperatingCost('income_generator', 10)).toBe(5500); // 1000 + (9 * 500)
+    });
+
+    it('should calculate Streaming Studio operating costs correctly', () => {
+      expect(calculateFacilityOperatingCost('streaming_studio', 0)).toBe(0); // Not purchased
+      expect(calculateFacilityOperatingCost('streaming_studio', 1)).toBe(100); // level × 100
+      expect(calculateFacilityOperatingCost('streaming_studio', 5)).toBe(500); // level × 100
+      expect(calculateFacilityOperatingCost('streaming_studio', 10)).toBe(1000); // level × 100
     });
 
     it('should return 0 for facilities with no operating cost', () => {
@@ -108,25 +113,6 @@ describe('Economy Calculations', () => {
     });
   });
 
-  describe('Streaming Income', () => {
-    it('should return 0 when Income Generator below level 3', () => {
-      expect(calculateStreamingIncome(0, 1000, 5000)).toBe(0);
-      expect(calculateStreamingIncome(2, 1000, 5000)).toBe(0);
-    });
-
-    it('should calculate base streaming income at level 3', () => {
-      expect(calculateStreamingIncome(3, 0, 0)).toBe(3000); // Base rate, no battles/fame
-    });
-
-    it('should scale streaming with battles and fame', () => {
-      // Level 3: Base 3000, 500 battles, 2500 fame
-      // battle_mult = 1 + (500/1000) = 1.5
-      // fame_mult = 1 + (2500/5000) = 1.5
-      // result = 3000 * 1.5 * 1.5 = 6750
-      expect(calculateStreamingIncome(3, 500, 2500)).toBe(6750);
-    });
-  });
-
   describe('Financial Health', () => {
     it('should return critical for balance < 50K', () => {
       expect(calculateFinancialHealth(40000, 5000)).toBe('critical');
@@ -155,6 +141,41 @@ describe('Economy Calculations', () => {
     it('should return excellent for balance >= 1M with positive income', () => {
       expect(calculateFinancialHealth(1000000, 10000)).toBe('excellent');
       expect(calculateFinancialHealth(5000000, 50000)).toBe('excellent');
+    });
+  });
+
+  describe('Passive Income Calculations (Requirements 13.1-13.8)', () => {
+    it('should only include merchandising income from Income Generator', () => {
+      // Level 1: Base 5000, no prestige
+      expect(calculateMerchandisingIncome(1, 0)).toBe(5000);
+      
+      // Level 5: Base 12000, prestige 10000
+      expect(calculateMerchandisingIncome(5, 10000)).toBe(24000);
+      
+      // Level 10: Base 35000, prestige 20000
+      expect(calculateMerchandisingIncome(10, 20000)).toBe(105000);
+    });
+
+    it('should not include streaming revenue in merchandising calculation', () => {
+      // Merchandising income should only depend on Income Generator level and prestige
+      // It should NOT include any streaming revenue component
+      
+      // Test that merchandising formula is: base_rate × (1 + prestige/10000)
+      // NOT: base_rate × (1 + prestige/10000) + streaming_component
+      
+      const level = 5;
+      const prestige = 15000;
+      const baseRate = getMerchandisingBaseRate(level); // 12000
+      const expectedMerchandising = Math.round(baseRate * (1 + prestige / 10000)); // 12000 * 2.5 = 30000
+      
+      expect(calculateMerchandisingIncome(level, prestige)).toBe(expectedMerchandising);
+      expect(calculateMerchandisingIncome(level, prestige)).toBe(30000);
+    });
+
+    it('should return 0 merchandising when Income Generator not purchased', () => {
+      expect(calculateMerchandisingIncome(0, 0)).toBe(0);
+      expect(calculateMerchandisingIncome(0, 10000)).toBe(0);
+      expect(calculateMerchandisingIncome(0, 50000)).toBe(0);
     });
   });
 });

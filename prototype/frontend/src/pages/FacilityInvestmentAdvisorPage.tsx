@@ -56,7 +56,7 @@ const FacilityInvestmentAdvisorPage: React.FC = () => {
       setError(null);
 
       // Fetch ROI data for all facility types
-      const facilityTypes = ['income_generator', 'repair_bay', 'training_facility'];
+      const facilityTypes = ['income_generator', 'streaming_studio', 'repair_bay', 'training_facility'];
       const roiPromises = facilityTypes.map(async (type) => {
         try {
           const response = await fetch(`http://localhost:3001/api/analytics/facility/${user.id}/roi?facilityType=${type}`);
@@ -103,6 +103,7 @@ const FacilityInvestmentAdvisorPage: React.FC = () => {
   const getFacilityDisplayName = (type: string): string => {
     const names: Record<string, string> = {
       income_generator: 'Income Generator',
+      streaming_studio: 'Streaming Studio',
       repair_bay: 'Repair Bay',
       training_facility: 'Training Facility',
     };
@@ -369,7 +370,8 @@ const FacilityInvestmentAdvisorPage: React.FC = () => {
         <h3 className="font-semibold text-blue-300 mb-2">Investment Tips</h3>
         <ul className="text-sm text-blue-200 space-y-1">
           <li>• Focus on facilities with positive projected ROI and short payoff times</li>
-          <li>• Income Generators provide passive income every cycle</li>
+          <li>• Income Generators provide passive merchandising income every cycle</li>
+          <li>• Streaming Studios increase streaming revenue earned per battle (awarded after every battle)</li>
           <li>• Repair Bays reduce repair costs for your robots</li>
           <li>• Training Facilities improve robot performance over time</li>
           <li>• Higher priority recommendations offer better returns on investment</li>

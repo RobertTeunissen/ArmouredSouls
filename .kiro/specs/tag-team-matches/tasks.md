@@ -286,7 +286,7 @@ The implementation integrates with existing systems (matchmaking, battle orchest
   
   - [x] 10.3 Implement league rebalancing
     - Run rebalancing every other cycle (odd cycles only)
-    - Promote top 10% of eligible teams (≥5 cycles in tier, ≥10 teams in tier)
+    - Promote top 10% of eligible teams with ≥25 league points (≥5 cycles in tier, ≥10 teams in tier)
     - Demote bottom 10% of eligible teams (≥5 cycles in tier, ≥10 teams in tier)
     - Skip promotion for Champion tier
     - Skip demotion for Bronze tier

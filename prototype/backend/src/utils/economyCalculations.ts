@@ -72,6 +72,10 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
     case 'income_generator':
       return 1000 + (level - 1) * 500;
     
+    case 'streaming_studio':
+      // Operating cost: level × 100 credits per day
+      return level * 100;
+    
     default:
       return 0;
   }
@@ -203,48 +207,11 @@ export function calculateMerchandisingIncome(incomeGeneratorLevel: number, prest
 }
 
 /**
- * Get streaming base rate by Income Generator level
- */
-export function getStreamingBaseRate(incomeGeneratorLevel: number): number {
-  if (incomeGeneratorLevel < 3) return 0; // Unlocked at level 3
-  
-  const rates: { [key: number]: number } = {
-    3: 3000,
-    4: 3000,
-    5: 6000,
-    6: 6000,
-    7: 10000,
-    8: 10000,
-    9: 15000,
-    10: 22000,
-  };
-  return rates[incomeGeneratorLevel] || 0;
-}
-
-/**
- * Calculate daily streaming income
- * Formula: base_rate × (1 + total_battles/1000) × (1 + total_fame/5000)
- */
-export function calculateStreamingIncome(
-  incomeGeneratorLevel: number,
-  totalBattles: number,
-  totalFame: number
-): number {
-  if (incomeGeneratorLevel < 3) return 0; // Unlocked at level 3
-  
-  const baseRate = getStreamingBaseRate(incomeGeneratorLevel);
-  const battleMultiplier = 1 + (totalBattles / 1000);
-  const fameMultiplier = 1 + (totalFame / 5000);
-  
-  return Math.round(baseRate * battleMultiplier * fameMultiplier);
-}
-
-/**
  * Calculate total daily passive income from Income Generator
+ * Note: Streaming revenue is now awarded per-battle via Streaming Studio facility
  */
 export async function calculateDailyPassiveIncome(userId: number): Promise<{
   merchandising: number;
-  streaming: number;
   total: number;
 }> {
   const user = await prisma.user.findUnique({
@@ -252,7 +219,7 @@ export async function calculateDailyPassiveIncome(userId: number): Promise<{
   });
 
   if (!user) {
-    return { merchandising: 0, streaming: 0, total: 0 };
+    return { merchandising: 0, total: 0 };
   }
 
   const incomeGenerator = await prisma.facility.findUnique({
@@ -269,22 +236,9 @@ export async function calculateDailyPassiveIncome(userId: number): Promise<{
   // Calculate merchandising (available at level 1+)
   const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, user.prestige);
 
-  // Calculate streaming (available at level 3+)
-  // Need total battles and fame across all robots
-  const robots = await prisma.robot.findMany({
-    where: { userId },
-    select: { totalBattles: true, fame: true },
-  });
-
-  const totalBattles = robots.reduce((sum, robot) => sum + robot.totalBattles, 0);
-  const totalFame = robots.reduce((sum, robot) => sum + robot.fame, 0);
-
-  const streaming = calculateStreamingIncome(incomeGeneratorLevel, totalBattles, totalFame);
-
   return {
     merchandising,
-    streaming,
-    total: merchandising + streaming,
+    total: merchandising,
   };
 }
 
@@ -296,6 +250,7 @@ export interface FinancialReport {
     prestigeBonus: number;
     merchandising: number;
     streaming: number;
+    streamingBattleCount: number;
     total: number;
   };
   expenses: {
@@ -362,6 +317,53 @@ export async function generateFinancialReport(
   // Calculate prestige bonus on battle winnings
   const prestigeBonus = Math.round(recentBattleWinnings * (getPrestigeMultiplier(user.prestige) - 1));
 
+  // Calculate streaming revenue from recent battles (last 7 days)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  // Get user's robots to identify which streaming revenue belongs to them
+  const userRobots = await prisma.robot.findMany({
+    where: { userId },
+    select: { id: true },
+  });
+  const userRobotIds = new Set(userRobots.map(r => r.id));
+
+  // Get streaming revenue from battle_complete events in audit log
+  const battleCompleteEvents = await prisma.auditLog.findMany({
+    where: {
+      eventType: 'battle_complete',
+      eventTimestamp: {
+        gte: sevenDaysAgo,
+      },
+    },
+    select: {
+      payload: true,
+    },
+  });
+
+  let totalStreamingRevenue = 0;
+  let streamingBattleCount = 0;
+
+  for (const event of battleCompleteEvents) {
+    const payload = event.payload as any;
+    
+    // Check if robot1 belongs to this user
+    if (payload.robot1Id && userRobotIds.has(payload.robot1Id)) {
+      if (payload.streamingRevenue1 && payload.streamingRevenue1 > 0) {
+        totalStreamingRevenue += payload.streamingRevenue1;
+        streamingBattleCount++;
+      }
+    }
+    
+    // Check if robot2 belongs to this user
+    if (payload.robot2Id && userRobotIds.has(payload.robot2Id)) {
+      if (payload.streamingRevenue2 && payload.streamingRevenue2 > 0) {
+        totalStreamingRevenue += payload.streamingRevenue2;
+        streamingBattleCount++;
+      }
+    }
+  }
+
   // Calculate repair costs from recent battles (last 7 days)
   const recentBattles = await prisma.battle.findMany({
     where: {
@@ -384,8 +386,8 @@ export async function generateFinancialReport(
   // Calculate daily average repair cost
   const dailyRepairCost = recentBattles.length > 0 ? Math.round(totalRepairCosts / 7) : 0;
 
-  // Total revenue
-  const totalRevenue = recentBattleWinnings + passiveIncome.total;
+  // Total revenue (including streaming)
+  const totalRevenue = recentBattleWinnings + passiveIncome.total + totalStreamingRevenue;
 
   // Total expenses (operating costs + repairs)
   const totalExpenses = operatingCosts.total + dailyRepairCost;
@@ -407,7 +409,8 @@ export async function generateFinancialReport(
       battleWinnings: recentBattleWinnings,
       prestigeBonus,
       merchandising: passiveIncome.merchandising,
-      streaming: passiveIncome.streaming,
+      streaming: totalStreamingRevenue,
+      streamingBattleCount,
       total: totalRevenue,
     },
     expenses: {
@@ -634,7 +637,6 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
     revenue: {
       battleWinnings: number;
       merchandising: number;
-      streaming: number;
       total: number;
     };
     costs: {
@@ -727,7 +729,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
 
   // Calculate total passive income
   const totalMerchandising = calculateMerchandisingIncome(incomeGeneratorLevel, user.prestige);
-  const totalStreaming = calculateStreamingIncome(incomeGeneratorLevel, totalBattles, totalFame);
+  // Note: Streaming revenue is now awarded per-battle via Streaming Studio facility
 
   // Process each robot
   const robotReports = await Promise.all(
@@ -792,14 +794,11 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
         ? Math.round((robot.fame / totalFame) * totalMerchandising)
         : 0;
 
-      // Calculate streaming contribution (proportional to battles and fame)
-      const streamingContribution = totalBattles > 0 && totalFame > 0
-        ? ((robot.totalBattles / totalBattles) + (robot.fame / totalFame)) / 2
-        : 0;
-      const streaming = Math.round(streamingContribution * totalStreaming);
+      // Note: Streaming revenue is now awarded per-battle via Streaming Studio facility
+      // and is not included in passive income calculations
 
       // Calculate totals
-      const totalRevenue = battleWinnings + merchandising + streaming;
+      const totalRevenue = battleWinnings + merchandising;
       const totalCosts = repairCosts + allocatedFacilityCostPerRobot;
       const netIncome = totalRevenue - totalCosts;
       const roi = totalCosts > 0 ? (netIncome / totalCosts) * 100 : 0;
@@ -823,7 +822,6 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
         revenue: {
           battleWinnings,
           merchandising,
-          streaming,
           total: totalRevenue,
         },
         costs: {
@@ -921,13 +919,12 @@ export function calculateDailyBenefitIncrease(
     return 0; // Other facilities provide indirect benefits (discounts, caps, etc.)
   }
 
-  // Calculate income at current level
-  const incomeBefore = calculateMerchandisingIncome(fromLevel, userPrestige) +
-    calculateStreamingIncome(fromLevel, totalBattles, totalFame);
+  // Calculate income at current level (merchandising only)
+  // Note: Streaming revenue is now awarded per-battle via Streaming Studio facility
+  const incomeBefore = calculateMerchandisingIncome(fromLevel, userPrestige);
 
-  // Calculate income at target level
-  const incomeAfter = calculateMerchandisingIncome(toLevel, userPrestige) +
-    calculateStreamingIncome(toLevel, totalBattles, totalFame);
+  // Calculate income at target level (merchandising only)
+  const incomeAfter = calculateMerchandisingIncome(toLevel, userPrestige);
 
   return incomeAfter - incomeBefore;
 }

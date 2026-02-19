@@ -265,6 +265,12 @@ function BattleDetailPage() {
                   <span className="font-bold text-yellow-400">+{battleLog.robot1.fame}</span>
                 </div>
               )}
+              {battleLog.robot1.streamingRevenue !== undefined && battleLog.robot1.streamingRevenue > 0 && (
+                <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                  <span className="text-gray-400">📺 Streaming</span>
+                  <span className="font-bold text-cyan-400">₡{battleLog.robot1.streamingRevenue.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
                 <span className="text-gray-400">Final HP</span>
                 <span>{battleLog.robot1.finalHP}%</span>
@@ -295,6 +301,12 @@ function BattleDetailPage() {
                   <span className="font-bold text-yellow-400">+{battleLog.robot2.fame}</span>
                 </div>
               )}
+              {battleLog.robot2.streamingRevenue !== undefined && battleLog.robot2.streamingRevenue > 0 && (
+                <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
+                  <span className="text-gray-400">📺 Streaming</span>
+                  <span className="font-bold text-cyan-400">₡{battleLog.robot2.streamingRevenue.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
                 <span className="text-gray-400">Final HP</span>
                 <span>{battleLog.robot2.finalHP}%</span>
@@ -305,6 +317,55 @@ function BattleDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Streaming Revenue Details */}
+          {(battleLog.robot1.streamingRevenueDetails || battleLog.robot2.streamingRevenueDetails) && (
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold text-cyan-400">📺 Streaming Revenue Breakdown</h3>
+                <div className="text-xs text-gray-400 italic">
+                  Earned per battle based on robot stats & Streaming Studio
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                {/* Robot 1 Streaming Details */}
+                {battleLog.robot1.streamingRevenueDetails && (
+                  <div className="bg-gray-900 rounded px-2 py-2 space-y-1">
+                    <div className="font-semibold text-white mb-1">{battleLog.robot1.name}</div>
+                    <div className="text-gray-400">
+                      Base: ₡{battleLog.robot1.streamingRevenueDetails.baseAmount.toLocaleString()} × 
+                      Battles: {battleLog.robot1.streamingRevenueDetails.battleMultiplier.toFixed(2)} × 
+                      Fame: {battleLog.robot1.streamingRevenueDetails.fameMultiplier.toFixed(2)} × 
+                      Studio: {battleLog.robot1.streamingRevenueDetails.studioMultiplier.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      ({battleLog.robot1.streamingRevenueDetails.robotBattles} battles, 
+                      {battleLog.robot1.streamingRevenueDetails.robotFame} fame, 
+                      Studio L{battleLog.robot1.streamingRevenueDetails.studioLevel})
+                    </div>
+                  </div>
+                )}
+                
+                {/* Robot 2 Streaming Details */}
+                {battleLog.robot2.streamingRevenueDetails && (
+                  <div className="bg-gray-900 rounded px-2 py-2 space-y-1">
+                    <div className="font-semibold text-white mb-1">{battleLog.robot2.name}</div>
+                    <div className="text-gray-400">
+                      Base: ₡{battleLog.robot2.streamingRevenueDetails.baseAmount.toLocaleString()} × 
+                      Battles: {battleLog.robot2.streamingRevenueDetails.battleMultiplier.toFixed(2)} × 
+                      Fame: {battleLog.robot2.streamingRevenueDetails.fameMultiplier.toFixed(2)} × 
+                      Studio: {battleLog.robot2.streamingRevenueDetails.studioMultiplier.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      ({battleLog.robot2.streamingRevenueDetails.robotBattles} battles, 
+                      {battleLog.robot2.streamingRevenueDetails.robotFame} fame, 
+                      Studio L{battleLog.robot2.streamingRevenueDetails.studioLevel})
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Combat Log */}

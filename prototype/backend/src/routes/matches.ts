@@ -608,6 +608,24 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       }
     }
 
+    // Get streaming revenue data from audit log
+    const battleCompleteEvent = await prisma.auditLog.findFirst({
+      where: {
+        eventType: 'battle_complete',
+        payload: {
+          path: ['battleId'],
+          equals: battleId,
+        },
+      },
+      orderBy: { id: 'desc' },
+    });
+
+    const payload = battleCompleteEvent?.payload as any;
+    const streamingRevenue1 = payload?.streamingRevenue1 || 0;
+    const streamingRevenue2 = payload?.streamingRevenue2 || 0;
+    const streamingRevenueDetails1 = payload?.streamingRevenueDetails1 || null;
+    const streamingRevenueDetails2 = payload?.streamingRevenueDetails2 || null;
+
     // Build response based on battle type
     const baseResponse: any = {
       battleId: battleData.id,
@@ -729,6 +747,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         prestige: battleData.robot1PrestigeAwarded,
         totalDamage: battleData.robot1DamageDealt,
         totalFame: battleData.robot1FameAwarded,
+        streamingRevenue: streamingRevenue1,
+        streamingRevenueDetails: streamingRevenueDetails1,
       };
       
       baseResponse.team2Summary = {
@@ -736,6 +756,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         prestige: battleData.robot2PrestigeAwarded,
         totalDamage: battleData.robot2DamageDealt,
         totalFame: battleData.robot2FameAwarded,
+        streamingRevenue: streamingRevenue2,
+        streamingRevenueDetails: streamingRevenueDetails2,
       };
     } else {
       // For 1v1 and tournament battles, provide robot-level details
@@ -753,6 +775,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         reward: robot1IsWinner ? battleData.winnerReward : battleData.loserReward,
         prestige: battleData.robot1PrestigeAwarded,
         fame: battleData.robot1FameAwarded,
+        streamingRevenue: streamingRevenue1,
+        streamingRevenueDetails: streamingRevenueDetails1,
       };
 
       baseResponse.robot2 = {
@@ -766,6 +790,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         reward: robot2IsWinner ? battleData.winnerReward : battleData.loserReward,
         prestige: battleData.robot2PrestigeAwarded,
         fame: battleData.robot2FameAwarded,
+        streamingRevenue: streamingRevenue2,
+        streamingRevenueDetails: streamingRevenueDetails2,
       };
     }
 

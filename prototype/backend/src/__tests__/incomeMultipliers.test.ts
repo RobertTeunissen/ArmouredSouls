@@ -7,10 +7,8 @@ import {
   getPrestigeMultiplier,
   calculateBattleWinnings,
   calculateMerchandisingIncome,
-  calculateStreamingIncome,
   getNextPrestigeTier,
   getMerchandisingBaseRate,
-  getStreamingBaseRate,
 } from '../utils/economyCalculations';
 
 describe('Income Multipliers', () => {
@@ -117,41 +115,6 @@ describe('Income Multipliers', () => {
     });
   });
 
-  describe('calculateStreamingIncome', () => {
-    test('should return 0 for level below 3', () => {
-      expect(calculateStreamingIncome(0, 1000, 5000)).toBe(0);
-      expect(calculateStreamingIncome(1, 1000, 5000)).toBe(0);
-      expect(calculateStreamingIncome(2, 1000, 5000)).toBe(0);
-    });
-
-    test('should calculate correctly for level 3 with no battles or fame', () => {
-      const result = calculateStreamingIncome(3, 0, 0);
-      const expected = Math.round(3000 * (1 + 0 / 1000) * (1 + 0 / 5000)); // 3000 * 1.0 * 1.0
-      expect(result).toBe(3000);
-    });
-
-    test('should calculate correctly for level 5 with 500 battles and 10000 fame', () => {
-      const result = calculateStreamingIncome(5, 500, 10000);
-      const expected = Math.round(6000 * (1 + 500 / 1000) * (1 + 10000 / 5000)); // 6000 * 1.5 * 3.0 = 27000
-      expect(result).toBe(27000);
-    });
-
-    test('should scale with both battles and fame', () => {
-      const level = 5;
-      const baseRate = 6000;
-      
-      // Double battles
-      const result1 = calculateStreamingIncome(level, 1000, 5000);
-      const expected1 = Math.round(baseRate * 2.0 * 2.0); // 24000
-      expect(result1).toBe(expected1);
-      
-      // Double fame
-      const result2 = calculateStreamingIncome(level, 500, 10000);
-      const expected2 = Math.round(baseRate * 1.5 * 3.0); // 27000
-      expect(result2).toBe(expected2);
-    });
-  });
-
   describe('getNextPrestigeTier', () => {
     test('should return 5000 threshold for prestige below 5000', () => {
       const result = getNextPrestigeTier(0);
@@ -202,19 +165,6 @@ describe('Income Multipliers', () => {
       expect(getMerchandisingBaseRate(4)).toBe(12000);
       expect(getMerchandisingBaseRate(10)).toBe(35000);
     });
-
-    test('getStreamingBaseRate should return 0 for level < 3', () => {
-      expect(getStreamingBaseRate(0)).toBe(0);
-      expect(getStreamingBaseRate(1)).toBe(0);
-      expect(getStreamingBaseRate(2)).toBe(0);
-    });
-
-    test('getStreamingBaseRate should return correct rates for level >= 3', () => {
-      expect(getStreamingBaseRate(3)).toBe(3000);
-      expect(getStreamingBaseRate(5)).toBe(6000);
-      expect(getStreamingBaseRate(7)).toBe(10000);
-      expect(getStreamingBaseRate(10)).toBe(22000);
-    });
   });
 
   describe('Edge Cases and Boundary Conditions', () => {
@@ -229,26 +179,12 @@ describe('Income Multipliers', () => {
       expect(result).toBeGreaterThan(0);
     });
 
-    test('should handle zero battles and fame', () => {
-      const result = calculateStreamingIncome(5, 0, 0);
-      expect(result).toBe(6000); // Base rate only
-    });
-
-    test('should handle very high battles and fame', () => {
-      const result = calculateStreamingIncome(5, 100000, 500000);
-      expect(result).toBeGreaterThan(0);
-      expect(Number.isFinite(result)).toBe(true);
-    });
-
     test('should always return integers', () => {
       const result1 = calculateBattleWinnings(10001, 5000);
       expect(Number.isInteger(result1)).toBe(true);
       
       const result2 = calculateMerchandisingIncome(4, 15555);
       expect(Number.isInteger(result2)).toBe(true);
-      
-      const result3 = calculateStreamingIncome(5, 777, 3333);
-      expect(Number.isInteger(result3)).toBe(true);
     });
   });
 });

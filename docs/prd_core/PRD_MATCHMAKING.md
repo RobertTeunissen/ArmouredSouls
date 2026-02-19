@@ -54,7 +54,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **ELO-Based Matchmaking**: Pairs robots within ±150 ELO (±300 fallback) for fair matches
 - **League Instance System**: Max 100 robots per instance with auto-balancing
 - **Battle Scheduling**: Daily cycle with 24-hour adjustment period
-- **League Progression**: 10% promotion/demotion every cycle (min 5 cycles in tier)
+- **League Progression**: Top 10% promotion AND ≥25 league points (min 5 cycles in tier), bottom 10% demotion
 - **Battle Readiness**: HP ≥75% + HP > yield threshold + all weapons equipped
 - **Bye-Robot System**: Handles odd numbers (ELO 1000, full rewards)
 - **Combat Logs**: Action-by-action with 50+ message templates
@@ -110,7 +110,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
    - Files: `battleOrchestrator.ts` (7 tests passing)
 
 5. **League Rebalancing** 
-   - Top 10% promoted (≥5 cycles in league, ≥10 robots/tier)
+   - Top 10% with ≥25 league points promoted (≥5 cycles in league, ≥10 robots/tier)
    - Bottom 10% demoted (same requirements)
    - Runs every cycle
    - League points reset on tier change
@@ -340,7 +340,7 @@ The scheduled batch model allows:
 
 - Matchmaking successfully pairs robots within ±150 ELO range (with fallbacks)
 - Battles execute on schedule without errors
-- League rebalancing occurs correctly (10% promotion, 10% demotion)
+- League rebalancing occurs correctly (top 10% with ≥25 league points promotion, bottom 10% demotion)
 - League instances balanced (max 100 robots per instance)
 - Players can view upcoming matches and recent battle history
 - "First day" initialization seeds initial matches successfully
@@ -549,7 +549,7 @@ The scheduled batch model allows:
 
 **Acceptance Criteria:**
 - League rebalancing runs after every cycle (battles complete)
-- Promotion threshold: Top 10% of robots in league (minimum 5 cycles in current league)
+- Promotion threshold: Top 10% of robots in league AND ≥25 league points (minimum 5 cycles in current league)
 - Demotion threshold: Bottom 10% of robots in league (minimum 5 cycles in current league)
 - Champion league has no promotion (highest tier)
 - Bronze league has no demotion (lowest tier)
@@ -558,7 +558,7 @@ The scheduled batch model allows:
 - ELO carries over between leagues
 - Instance balancing after promotions/demotions if deviation >20 robots
 
-**Design Decision**: 10% promotion/demotion provides slower, more stable league progression. Robots need minimum 5 cycles in their current league to be eligible, preventing premature tier changes and ensuring robots have established themselves in their tier before moving up or down.
+**Design Decision**: Top 10% promotion with ≥25 league points threshold provides slower, more stable league progression. Robots need minimum 5 cycles in their current league AND accumulate 25+ league points AND be in the top 10% to be eligible for promotion. This dual criteria prevents premature tier changes, ensures robots have established themselves in their tier, and levels the playing field between single and multi-robot strategies by making prestige progression slower.
 
 **US-10: League Points Calculation**
 - **As the** game system
@@ -856,10 +856,10 @@ async function createScheduledMatches(
 ### League Rebalancing Specification
 
 **Promotion/Demotion Thresholds:**
-- **Promotion**: Top 10% of robots in league (minimum 5 cycles in current league)
+- **Promotion**: Top 10% of robots in league AND ≥25 league points (minimum 5 cycles in current league)
 - **Demotion**: Bottom 10% of robots in league (minimum 5 cycles in current league)
 - **Frequency**: Rebalancing runs every cycle to check eligibility
-- **Alternative approach**: Fixed league points thresholds (e.g., 15 points = promotion, 0 points after 10 battles = demotion) - Not currently implemented
+- **Rationale**: Dual criteria (percentage + points threshold) slows progression, requiring both consistent performance (top 10%) and accumulated points (25+), making league advancement more meaningful and dampening prestige effects on single-robot strategies
 
 **League Tiers:**
 ```typescript
@@ -1084,7 +1084,7 @@ async function initializeFirstDay(): Promise<void> {
 │  🔴 13   Bronze Bot       player1    1280    2   3-11     │
 │  🔴 14   Old Fighter     player3    1250    1   2-12      │
 │                                                           │
-│  🟢 Promotion Zone (Top 10%)  |  🔴 Demotion Zone (Bottom 10%)  │
+│  🟢 Promotion Zone (Top 10% AND ≥25 pts)  |  🔴 Demotion Zone (Bottom 10%)  │
 │                                                           │
 └───────────────────────────────────────────────────────────┘
 ```
@@ -1093,7 +1093,7 @@ async function initializeFirstDay(): Promise<void> {
 - All 6 league tiers shown in tabs
 - Player's leagues highlighted (where they have active robots)
 - Player's own robots: Bold name + background highlight + icon badge (🎯)
-- Promotion zone: Green (🟢) - Top 10%
+- Promotion zone: Green (🟢) - Top 10% AND ≥25 league points
 - Demotion zone: Red (🔴) - Bottom 10%
 
 ### Dashboard - Last 5 Matches per Robot
@@ -1313,7 +1313,7 @@ See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for 100+ message templates and comp
 ### Phase 6: League Rebalancing
 
 **Tasks:**
-- [ ] Promotion/demotion algorithm (10% thresholds)
+- [ ] Promotion/demotion algorithm (top 10% AND ≥25 league points for promotion, bottom 10% for demotion)
 - [ ] Instance balancing after tier changes
 - [ ] League point reset
 - [ ] Minimum 5 battles eligibility check
@@ -1539,7 +1539,7 @@ All critical questions have been answered and documented:
 - League instances: 100 per instance with auto-balancing ✅
 - Scheduled times: Flexible admin triggers for prototype ✅
 - Draw mechanics: Max battle time ✅
-- Promotion/demotion: 10% thresholds ✅
+- Promotion/demotion: Top 10% with ≥25 league points promoted, bottom 10% demoted ✅
 - Battle readiness: HP + weapons ✅
 - Battle log: Action-by-action textual ✅
 
@@ -2436,8 +2436,9 @@ LOSER_DAMAGE_PERCENT = 0.40     // Losers lose 35-40% HP
 
 ```typescript
 // Promotion/demotion thresholds
-PROMOTION_THRESHOLD = 0.10      // Top 10% promoted
-DEMOTION_THRESHOLD = 0.10       // Bottom 10% demoted
+MIN_LEAGUE_POINTS_FOR_PROMOTION = 25  // Must have 25+ league points
+PROMOTION_PERCENTAGE = 0.10           // Top 10% promoted
+DEMOTION_PERCENTAGE = 0.10            // Bottom 10% demoted
 
 // Eligibility requirements
 MIN_BATTLES_FOR_REBALANCE = 5   // Minimum cycles in current league
@@ -2482,12 +2483,14 @@ const LEAGUE_HIERARCHY = {
 - Increase ELO_MATCH_IDEAL (tighter ideal range)
 
 **If league progression too fast**:
-- Decrease PROMOTION_THRESHOLD (e.g., 0.05 = top 5%)
-- Increase MIN_BATTLES_FOR_REBALANCE (e.g., 10 cycles)
+- Increase MIN_LEAGUE_POINTS_FOR_PROMOTION (e.g., 30 or 35 points)
+- Decrease PROMOTION_PERCENTAGE (e.g., 0.05 = top 5%)
+- Increase MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING (e.g., 7 or 10 cycles)
 
 **If league progression too slow**:
-- Increase PROMOTION_THRESHOLD (e.g., 0.15 = top 15%)
-- Decrease MIN_BATTLES_FOR_REBALANCE (e.g., 3 cycles)
+- Decrease MIN_LEAGUE_POINTS_FOR_PROMOTION (e.g., 20 or 15 points)
+- Increase PROMOTION_PERCENTAGE (e.g., 0.15 = top 15%)
+- Decrease MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING (e.g., 3 cycles)
 
 **If too many same-stable matches**:
 - Increase same_stable_penalty (e.g., 1000)
@@ -2664,14 +2667,15 @@ New ELO (B) = 1300 + 32 * (1 - 0.64) = 1312
 - Upset penalty (loss against >300 ELO lower): -1 point
 
 **Promotion Threshold:**
-- Fixed approach: 15 league points
-- Percentage approach: Top 20% of league
+- Current implementation: Top 10% of league AND ≥25 league points
+- Alternative: Fixed points only (e.g., 25 points = automatic promotion)
+- Alternative: Percentage only (e.g., top 20% regardless of points)
 
 **Demotion Threshold:**
-- Fixed approach: 0 league points after 10+ battles
-- Percentage approach: Bottom 10% of league
+- Current implementation: Bottom 10% of league
+- Alternative: Fixed points (e.g., 0 points after 10+ battles)
 
-**Recommendation:** Use percentage approach (10%) for Phase 1 to auto-balance leagues.
+**Recommendation:** Dual criteria (percentage + points) balances competitive pressure with achievement milestones, slowing progression appropriately.
 
 ### Appendix C: Matchmaking Priority
 
@@ -2735,7 +2739,7 @@ The Armoured Souls matchmaking system is **fully implemented and operational** a
 **🎯 Success Criteria Met**:
 - ✅ Fair matchmaking (ELO-based with ±150 ideal, ±300 fallback)
 - ✅ Automated scheduling (daily cycle workflow)
-- ✅ League progression (10% promotion/demotion, min 5 cycles)
+- ✅ League progression (top 10% promotion AND ≥25 league points, bottom 10% demotion, min 5 cycles)
 - ✅ Transparent display (upcoming matches, history, standings)
 - ✅ First day solution (all robots start in Bronze)
 - ✅ Edge cases handled (odd numbers, no opponents, same-stable, etc.)

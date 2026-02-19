@@ -145,8 +145,9 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     // Step 3: Verify promotions
     console.log('[Test] Step 3: Verifying promotions...');
     
-    // Top 10% = 2 teams (teams with highest points: 95, 90)
-    const expectedPromotions = Math.floor(testTeams.length * 0.1);
+    // Top 10% of 20 = 2 teams, but only from those with ≥25 points
+    // Teams 5-19 have ≥25 points (15 teams), top 2 are teams with 95 and 90 points
+    const expectedPromotions = 2;
     expect(rebalanceResult.totalPromoted).toBe(expectedPromotions);
 
     const promotedTeams = await prisma.tagTeam.findMany({

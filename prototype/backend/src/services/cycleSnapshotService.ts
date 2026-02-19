@@ -310,7 +310,74 @@ export class CycleSnapshotService {
 
         const payload = event.payload as any;
         metric.merchandisingIncome += payload.merchandising || 0;
-        metric.streamingIncome += payload.streaming || 0;
+        // Note: streaming is no longer part of passive_income, it's awarded per-battle
+      });
+
+      // Add streaming revenue from battle_complete events
+      // We need to map robot IDs to user IDs from the cycleBattles array
+      const robotToUserMap = new Map<number, number>();
+      cycleBattles.forEach((battle: any) => {
+        robotToUserMap.set(battle.robot1Id, battle.robot1.userId);
+        robotToUserMap.set(battle.robot2Id, battle.robot2.userId);
+      });
+
+      battleCompleteEvents.forEach((event: any) => {
+        const payload = event.payload as any;
+        if (!payload) return;
+
+        // Check robot1 streaming revenue
+        if (payload.robot1Id && payload.streamingRevenue1) {
+          const userId = robotToUserMap.get(payload.robot1Id);
+          if (userId) {
+            let metric = metricsMap.get(userId);
+            if (!metric) {
+              metric = {
+                userId,
+                battlesParticipated: 0,
+                totalCreditsEarned: 0,
+                totalPrestigeEarned: 0,
+                totalRepairCosts: 0,
+                merchandisingIncome: 0,
+                streamingIncome: 0,
+                operatingCosts: 0,
+                weaponPurchases: 0,
+                facilityPurchases: 0,
+                attributeUpgrades: 0,
+                totalPurchases: 0,
+                netProfit: 0,
+              };
+              metricsMap.set(userId, metric);
+            }
+            metric.streamingIncome += payload.streamingRevenue1;
+          }
+        }
+
+        // Check robot2 streaming revenue
+        if (payload.robot2Id && payload.streamingRevenue2) {
+          const userId = robotToUserMap.get(payload.robot2Id);
+          if (userId) {
+            let metric = metricsMap.get(userId);
+            if (!metric) {
+              metric = {
+                userId,
+                battlesParticipated: 0,
+                totalCreditsEarned: 0,
+                totalPrestigeEarned: 0,
+                totalRepairCosts: 0,
+                merchandisingIncome: 0,
+                streamingIncome: 0,
+                operatingCosts: 0,
+                weaponPurchases: 0,
+                facilityPurchases: 0,
+                attributeUpgrades: 0,
+                totalPurchases: 0,
+                netProfit: 0,
+              };
+              metricsMap.set(userId, metric);
+            }
+            metric.streamingIncome += payload.streamingRevenue2;
+          }
+        }
       });
 
       // Add operating costs

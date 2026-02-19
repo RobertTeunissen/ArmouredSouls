@@ -53,8 +53,15 @@ function DailyStableReport({ report }: DailyStableReportProps) {
               <span className="text-gray-100">{formatCurrency(report.revenue.merchandising)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-300">Streaming:</span>
-              <span className="text-gray-100">{formatCurrency(report.revenue.streaming)}</span>
+              <span className="text-gray-300">Streaming (per battle):</span>
+              <span className="text-gray-100">
+                {formatCurrency(report.revenue.streaming)}
+                {report.revenue.streamingBattleCount > 0 && (
+                  <span className="text-gray-400 text-xs ml-1">
+                    (from {report.revenue.streamingBattleCount} {report.revenue.streamingBattleCount === 1 ? 'battle' : 'battles'})
+                  </span>
+                )}
+              </span>
             </div>
             <div className="border-t border-gray-600 my-2"></div>
             <div className="flex justify-between font-bold">

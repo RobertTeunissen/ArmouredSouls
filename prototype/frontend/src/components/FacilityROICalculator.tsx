@@ -9,6 +9,7 @@ import { calculateFacilityROI, FacilityROIData, formatCurrency } from '../utils/
 // Facility options for the calculator
 const FACILITY_OPTIONS = [
   { type: 'income_generator', name: 'Income Generator' },
+  { type: 'streaming_studio', name: 'Streaming Studio' },
   { type: 'training_facility', name: 'Training Facility' },
   { type: 'repair_bay', name: 'Repair Bay' },
   { type: 'weapons_workshop', name: 'Weapons Workshop' },

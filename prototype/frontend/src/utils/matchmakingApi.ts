@@ -366,6 +366,16 @@ export interface BattleLogResponse {
     reward?: number;
     prestige?: number;
     fame?: number;
+    streamingRevenue?: number;
+    streamingRevenueDetails?: {
+      baseAmount: number;
+      battleMultiplier: number;
+      fameMultiplier: number;
+      studioMultiplier: number;
+      robotBattles: number;
+      robotFame: number;
+      studioLevel: number;
+    } | null;
   };
   robot2: {
     id: number;
@@ -378,6 +388,16 @@ export interface BattleLogResponse {
     reward?: number;
     prestige?: number;
     fame?: number;
+    streamingRevenue?: number;
+    streamingRevenueDetails?: {
+      baseAmount: number;
+      battleMultiplier: number;
+      fameMultiplier: number;
+      studioMultiplier: number;
+      robotBattles: number;
+      robotFame: number;
+      studioLevel: number;
+    } | null;
   };
   winner: 'robot1' | 'robot2' | null;
   battleLog: {
@@ -411,6 +431,38 @@ export interface BattleLogResponse {
       } | null;
       tagOutTime: number | null;
     };
+  };
+  team1Summary?: {
+    reward: number;
+    prestige: number;
+    totalDamage: number;
+    totalFame: number;
+    streamingRevenue?: number;
+    streamingRevenueDetails?: {
+      baseAmount: number;
+      battleMultiplier: number;
+      fameMultiplier: number;
+      studioMultiplier: number;
+      robotBattles: number;
+      robotFame: number;
+      studioLevel: number;
+    } | null;
+  };
+  team2Summary?: {
+    reward: number;
+    prestige: number;
+    totalDamage: number;
+    totalFame: number;
+    streamingRevenue?: number;
+    streamingRevenueDetails?: {
+      baseAmount: number;
+      battleMultiplier: number;
+      fameMultiplier: number;
+      studioMultiplier: number;
+      robotBattles: number;
+      robotFame: number;
+      studioLevel: number;
+    } | null;
   };
 }
 

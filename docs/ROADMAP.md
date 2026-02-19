@@ -216,7 +216,7 @@ Note: the overview above is not up to date, more facilities are actually working
 - ✅ **League instances**: Multiple instances per tier (max 100 robots each)
 - ✅ **ELO rating system**: K=32 formula, starting 1200
 - ✅ **League points tracking**: +3 win, -1 loss, +1 draw
-- ✅ **Automated promotion/demotion**: Top 10% promoted, bottom 10% demoted
+- ✅ **Automated promotion/demotion**: Top 10% promoted (with ≥25 league points), bottom 10% demoted
 - ✅ **League rebalancing**: Maintains even distribution across instances
 - ✅ **Economic rewards**: 1000 credits for win, 300 for loss
 - ✅ **W-D-L statistics**: Wins-Draws-Losses format with color coding

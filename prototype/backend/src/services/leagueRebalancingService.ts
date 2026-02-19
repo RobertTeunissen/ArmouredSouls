@@ -8,6 +8,7 @@ import {
 } from './leagueInstanceService';
 
 // Promotion/Demotion thresholds
+const MIN_LEAGUE_POINTS_FOR_PROMOTION = 25; // Must have 25+ league points for promotion
 const PROMOTION_PERCENTAGE = 0.10; // Top 10%
 const DEMOTION_PERCENTAGE = 0.10; // Bottom 10%
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5; // Must be in current league for 5+ cycles
@@ -31,6 +32,7 @@ export interface FullRebalancingSummary {
 
 /**
  * Determine which robots should be promoted from a tier
+ * Robots must have ≥25 league points AND be in top 10% AND ≥5 cycles in current league
  * @param tier - The league tier to evaluate
  * @param excludeRobotIds - Set of robot IDs to exclude (already processed in this cycle)
  */
@@ -40,12 +42,15 @@ export async function determinePromotions(tier: LeagueTier, excludeRobotIds: Set
     return [];
   }
 
-  // Get all robots in this tier with minimum cycles in current league
-  const robots = await prisma.robot.findMany({
+  // Get all robots in this tier with minimum cycles AND minimum league points
+  const robotsWithMinPoints = await prisma.robot.findMany({
     where: {
       currentLeague: tier,
       cyclesInCurrentLeague: {
         gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
+      },
+      leaguePoints: {
+        gte: MIN_LEAGUE_POINTS_FOR_PROMOTION,
       },
       NOT: [
         { name: 'Bye Robot' },
@@ -58,22 +63,44 @@ export async function determinePromotions(tier: LeagueTier, excludeRobotIds: Set
     ],
   });
 
-  // Skip if too few robots
-  if (robots.length < MIN_ROBOTS_FOR_REBALANCING) {
-    console.log(`[Rebalancing] ${tier}: Too few robots (${robots.length} < ${MIN_ROBOTS_FOR_REBALANCING}), skipping promotions`);
+  // If no robots meet the minimum points threshold, skip
+  if (robotsWithMinPoints.length === 0) {
+    console.log(`[Rebalancing] ${tier}: No robots with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`);
     return [];
   }
 
-  // Calculate top 10%
-  const promotionCount = Math.floor(robots.length * PROMOTION_PERCENTAGE);
+  // Get total eligible robots (for calculating top 10%)
+  const totalEligibleRobots = await prisma.robot.count({
+    where: {
+      currentLeague: tier,
+      cyclesInCurrentLeague: {
+        gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
+      },
+      NOT: [
+        { name: 'Bye Robot' },
+        { id: { in: Array.from(excludeRobotIds) } },
+      ],
+    },
+  });
+
+  // Skip if too few robots
+  if (totalEligibleRobots < MIN_ROBOTS_FOR_REBALANCING) {
+    console.log(`[Rebalancing] ${tier}: Too few eligible robots (${totalEligibleRobots} < ${MIN_ROBOTS_FOR_REBALANCING}), skipping promotions`);
+    return [];
+  }
+
+  // Calculate top 10% of all eligible robots
+  const promotionCount = Math.floor(totalEligibleRobots * PROMOTION_PERCENTAGE);
   
   if (promotionCount === 0) {
-    console.log(`[Rebalancing] ${tier}: Promotion count is 0 (${robots.length} robots), skipping`);
+    console.log(`[Rebalancing] ${tier}: Promotion count is 0 (${totalEligibleRobots} eligible robots), skipping`);
     return [];
   }
 
-  const toPromote = robots.slice(0, promotionCount);
-  console.log(`[Rebalancing] ${tier}: ${toPromote.length} robots eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${robots.length})`);
+  // Take the top 10%, but only from robots with ≥25 league points
+  const toPromote = robotsWithMinPoints.slice(0, Math.min(promotionCount, robotsWithMinPoints.length));
+  
+  console.log(`[Rebalancing] ${tier}: ${toPromote.length} robots eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleRobots} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${robotsWithMinPoints.length} met points threshold)`);
   
   return toPromote;
 }

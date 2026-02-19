@@ -10,6 +10,7 @@ import {
 } from '../utils/economyCalculations';
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { eventLogger, EventType } from './eventLogger';
+import { calculateStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
 
 // ELO calculation constant
 const ELO_K_FACTOR = 32;
@@ -34,7 +35,7 @@ const BYE_ROBOT_NAME = 'Bye Robot';
  * Get the current cycle number from metadata
  * Returns 0 if metadata doesn't exist (e.g., during tests)
  */
-async function getCurrentCycleNumber(): Promise<number> {
+export async function getCurrentCycleNumber(): Promise<number> {
   try {
     const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
     return metadata?.totalCycles || 0;
@@ -64,6 +65,7 @@ export interface BattleExecutionSummary {
   failedBattles: number;
   byeBattles: number;
   errors: string[];
+  totalStreamingRevenue?: number;
   reputationSummary?: {
     totalPrestigeAwarded: number;
     totalFameAwarded: number;
@@ -581,6 +583,33 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
   const battle = await createBattleRecord(scheduledMatch, robot1, robot2, result);
   result.battleId = battle.id;
   
+  // Update robot stats and award prestige/fame
+  const stats1 = await updateRobotStats(robot1, battle, true, isByeMatch);
+  const stats2 = await updateRobotStats(robot2, battle, false, isByeMatch);
+  
+  const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
+  const totalFame = stats1.fameAwarded + stats2.fameAwarded;
+  
+  // Calculate and award streaming revenue
+  let streamingRevenue1 = null;
+  let streamingRevenue2 = null;
+  
+  if (!isByeMatch) {
+    streamingRevenue1 = await calculateStreamingRevenue(robot1.id, robot1.userId, false);
+    streamingRevenue2 = await calculateStreamingRevenue(robot2.id, robot2.userId, false);
+    
+    const cycleNumber = await getCurrentCycleNumber();
+    
+    if (streamingRevenue1) {
+      await awardStreamingRevenue(robot1.userId, streamingRevenue1, cycleNumber);
+      console.log(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
+    }
+    if (streamingRevenue2) {
+      await awardStreamingRevenue(robot2.userId, streamingRevenue2, cycleNumber);
+      console.log(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
+    }
+  }
+  
   // Log battle_complete event to audit log
   const cycleNumber = await getCurrentCycleNumber();
   await eventLogger.logEvent(
@@ -610,10 +639,32 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
       // Rewards
       winnerReward: battle.winnerReward,
       loserReward: battle.loserReward,
-      robot1PrestigeAwarded: 0, // Will be updated after updateRobotStats
-      robot2PrestigeAwarded: 0,
-      robot1FameAwarded: 0,
-      robot2FameAwarded: 0,
+      robot1PrestigeAwarded: stats1.prestigeAwarded,
+      robot2PrestigeAwarded: stats2.prestigeAwarded,
+      robot1FameAwarded: stats1.fameAwarded,
+      robot2FameAwarded: stats2.fameAwarded,
+      
+      // Streaming revenue
+      streamingRevenue1: streamingRevenue1?.totalRevenue || 0,
+      streamingRevenue2: streamingRevenue2?.totalRevenue || 0,
+      streamingRevenueDetails1: streamingRevenue1 ? {
+        baseAmount: streamingRevenue1.baseAmount,
+        battleMultiplier: streamingRevenue1.battleMultiplier,
+        fameMultiplier: streamingRevenue1.fameMultiplier,
+        studioMultiplier: streamingRevenue1.studioMultiplier,
+        robotBattles: streamingRevenue1.robotBattles,
+        robotFame: streamingRevenue1.robotFame,
+        studioLevel: streamingRevenue1.studioLevel,
+      } : null,
+      streamingRevenueDetails2: streamingRevenue2 ? {
+        baseAmount: streamingRevenue2.baseAmount,
+        battleMultiplier: streamingRevenue2.battleMultiplier,
+        fameMultiplier: streamingRevenue2.fameMultiplier,
+        studioMultiplier: streamingRevenue2.studioMultiplier,
+        robotBattles: streamingRevenue2.robotBattles,
+        robotFame: streamingRevenue2.robotFame,
+        studioLevel: streamingRevenue2.studioLevel,
+      } : null,
       
       // Costs
       robot1RepairCost: battle.robot1RepairCost,
@@ -637,13 +688,6 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
       robotId: robot1.id,
     }
   );
-  
-  // Update robot stats and award prestige/fame
-  const stats1 = await updateRobotStats(robot1, battle, true, isByeMatch);
-  const stats2 = await updateRobotStats(robot2, battle, false, isByeMatch);
-  
-  const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
-  const totalFame = stats1.fameAwarded + stats2.fameAwarded;
   
   // Update battle record with prestige/fame awards for display purposes
   await prisma.battle.update({
@@ -722,6 +766,7 @@ export async function executeScheduledBattles(scheduledFor?: Date): Promise<Batt
     failedBattles: 0,
     byeBattles: 0,
     errors: [],
+    totalStreamingRevenue: 0,
     reputationSummary: {
       totalPrestigeAwarded: 0,
       totalFameAwarded: 0,
@@ -738,6 +783,27 @@ export async function executeScheduledBattles(scheduledFor?: Date): Promise<Batt
       
       if (result.isByeMatch) {
         summary.byeBattles++;
+      }
+      
+      // Track streaming revenue from audit log
+      if (!result.isByeMatch) {
+        const battleCompleteEvent = await prisma.auditLog.findFirst({
+          where: {
+            eventType: 'battle_complete',
+            payload: {
+              path: ['battleId'],
+              equals: result.battleId,
+            },
+          },
+          orderBy: { id: 'desc' },
+        });
+        
+        if (battleCompleteEvent) {
+          const payload = battleCompleteEvent.payload as any;
+          const streamingRevenue1 = payload?.streamingRevenue1 || 0;
+          const streamingRevenue2 = payload?.streamingRevenue2 || 0;
+          summary.totalStreamingRevenue = (summary.totalStreamingRevenue || 0) + streamingRevenue1 + streamingRevenue2;
+        }
       }
       
       // Track reputation awards
@@ -772,6 +838,9 @@ export async function executeScheduledBattles(scheduledFor?: Date): Promise<Batt
   
   console.log(`[BattleOrchestrator] Execution complete: ${summary.successfulBattles} successful, ${summary.failedBattles} failed, ${summary.byeBattles} bye-matches`);
   console.log(`[BattleOrchestrator] Reputation: ${summary.reputationSummary?.totalPrestigeAwarded} prestige, ${summary.reputationSummary?.totalFameAwarded} fame awarded`);
+  if (summary.totalStreamingRevenue && summary.totalStreamingRevenue > 0) {
+    console.log(`[BattleOrchestrator] Streaming Revenue: ₡${summary.totalStreamingRevenue.toLocaleString()} total earned`);
+  }
   
   return summary;
 }

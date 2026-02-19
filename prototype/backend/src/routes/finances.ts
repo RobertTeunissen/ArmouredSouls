@@ -11,9 +11,7 @@ import {
   calculateFacilityROI,
   getNextPrestigeTier,
   getMerchandisingBaseRate,
-  getStreamingBaseRate,
   calculateMerchandisingIncome,
-  calculateStreamingIncome,
 } from '../utils/economyCalculations';
 
 const router = express.Router();
@@ -98,11 +96,27 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
     const merchandisingMultiplier = 1 + (user.prestige / 10000);
     
     // Calculate streaming breakdown
+    // Get aggregate stats from user's robots
     const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
     const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
-    const streamingBase = getStreamingBaseRate(incomeGeneratorLevel);
-    const battleMultiplier = 1 + (totalBattles / 1000);
-    const fameMultiplier = 1 + (totalFame / 5000);
+    
+    // Get Streaming Studio level
+    const streamingStudio = await prisma.facility.findUnique({
+      where: {
+        userId_facilityType: {
+          userId,
+          facilityType: 'streaming_studio',
+        },
+      },
+    });
+    const streamingStudioLevel = streamingStudio?.level || 0;
+    
+    // Calculate streaming multipliers (using same formula as streamingRevenueService)
+    const baseRate = 1000; // Base streaming revenue per battle
+    const battleMultiplier = Math.min(1 + (totalBattles / 100) * 0.1, 3.0);
+    const fameMultiplier = Math.min(1 + (totalFame / 500) * 0.1, 2.0);
+    const studioMultiplier = 1 + (streamingStudioLevel * 0.15);
+    const streamingTotal = report.revenue.streaming || 0;
     
     const multiplierBreakdown = {
       prestige: {
@@ -118,13 +132,14 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
         formula: `₡${merchandisingBase.toLocaleString()} × ${merchandisingMultiplier.toFixed(2)}`,
       },
       streaming: {
-        baseRate: streamingBase,
-        battleMultiplier: battleMultiplier,
-        fameMultiplier: fameMultiplier,
+        baseRate,
+        battleMultiplier,
+        fameMultiplier,
+        studioMultiplier,
         totalBattles,
         totalFame,
-        total: passiveIncome.streaming,
-        formula: `₡${streamingBase.toLocaleString()} × ${battleMultiplier.toFixed(2)} × ${fameMultiplier.toFixed(2)}`,
+        total: streamingTotal,
+        formula: `₡${baseRate.toLocaleString()} × ${battleMultiplier.toFixed(2)} × ${fameMultiplier.toFixed(2)} × ${studioMultiplier.toFixed(2)}`,
       },
     };
 
@@ -219,7 +234,7 @@ router.get('/revenue-streams', authenticateToken, async (req: AuthRequest, res: 
     res.json({
       passive: {
         merchandising: passiveIncome.merchandising,
-        streaming: passiveIncome.streaming,
+        streaming: 0, // Streaming revenue is now awarded per-battle via Streaming Studio
         total: passiveIncome.total,
       },
       battleMultipliers: {

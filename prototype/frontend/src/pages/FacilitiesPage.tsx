@@ -35,7 +35,7 @@ const FACILITY_CATEGORIES: CategoryInfo[] = [
     name: 'Economy & Discounts',
     icon: '💰',
     description: 'Reduce operational costs and unlock passive income',
-    facilityTypes: ['training_facility', 'weapons_workshop', 'repair_bay', 'income_generator']
+    facilityTypes: ['training_facility', 'weapons_workshop', 'repair_bay', 'income_generator', 'streaming_studio']
   },
   {
     id: 'capacity',
