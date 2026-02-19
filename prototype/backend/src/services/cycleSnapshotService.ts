@@ -145,7 +145,7 @@ export class CycleSnapshotService {
    */
   private async aggregateStableMetrics(cycleNumber: number): Promise<StableMetric[]> {
       // All balance-changing events are audited via eventLogger
-      // Use audit log as single source of truth for cycle data
+      // Use audit log as primary source, with timestamp fallback for robustness
       
       const battleCompleteEvents = await prisma.auditLog.findMany({
         where: {
@@ -156,21 +156,56 @@ export class CycleSnapshotService {
 
       console.log(`[CycleSnapshotService] Found ${battleCompleteEvents.length} battle_complete events for cycle ${cycleNumber}`);
 
-      // Get battle details from audit log
+      // Get battle IDs from audit log
       const battleIdsInCycle = new Set(
         battleCompleteEvents.map((e: any) => (e.payload as any)?.battleId).filter(Boolean)
       );
 
-      // Get battles for user mapping
-      const cycleBattles = await prisma.battle.findMany({
-        where: {
-          id: { in: Array.from(battleIdsInCycle) },
-        },
-        include: {
-          robot1: { select: { userId: true } },
-          robot2: { select: { userId: true } },
-        },
-      });
+      // Get battles - use audit log IDs if available, otherwise query by cycle timing
+      let cycleBattles: any[];
+      
+      if (battleIdsInCycle.size > 0) {
+        // Primary path: use battle IDs from audit log
+        cycleBattles = await prisma.battle.findMany({
+          where: {
+            id: { in: Array.from(battleIdsInCycle) },
+          },
+          include: {
+            robot1: { select: { userId: true } },
+            robot2: { select: { userId: true } },
+          },
+        });
+        console.log(`[CycleSnapshotService] Retrieved ${cycleBattles.length} battles from audit log IDs`);
+      } else {
+        // Fallback: query by timestamp (in case audit log events are incomplete)
+        console.warn(`[CycleSnapshotService] No battle IDs in audit log for cycle ${cycleNumber}, using timestamp fallback`);
+        
+        const cycleStartEvent = await prisma.auditLog.findFirst({
+          where: { cycleNumber, eventType: 'cycle_start' },
+        });
+        const cycleCompleteEvent = await prisma.auditLog.findFirst({
+          where: { cycleNumber, eventType: 'cycle_complete' },
+        });
+
+        if (cycleStartEvent && cycleCompleteEvent) {
+          cycleBattles = await prisma.battle.findMany({
+            where: {
+              createdAt: {
+                gte: cycleStartEvent.eventTimestamp,
+                lte: cycleCompleteEvent.eventTimestamp,
+              },
+            },
+            include: {
+              robot1: { select: { userId: true } },
+              robot2: { select: { userId: true } },
+            },
+          });
+          console.log(`[CycleSnapshotService] Retrieved ${cycleBattles.length} battles by timestamp`);
+        } else {
+          console.error(`[CycleSnapshotService] No cycle timing events for cycle ${cycleNumber}`);
+          cycleBattles = [];
+        }
+      }
 
       // Get all users involved in battles (from robot ownership)
       const userIds = new Set<number>();
