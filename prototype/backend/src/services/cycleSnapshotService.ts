@@ -144,9 +144,9 @@ export class CycleSnapshotService {
    * Aggregate stable (user) metrics from Battle table and AuditLog gap events
    */
   private async aggregateStableMetrics(cycleNumber: number): Promise<StableMetric[]> {
-      // All balance-changing events are audited via eventLogger
-      // Use audit log as primary source, with timestamp fallback for robustness
+      // Use audit log as SINGLE source of truth - all data comes from events
       
+      // Get battle_complete events - these contain ALL battle data
       const battleCompleteEvents = await prisma.auditLog.findMany({
         where: {
           cycleNumber,
@@ -155,64 +155,6 @@ export class CycleSnapshotService {
       });
 
       console.log(`[CycleSnapshotService] Found ${battleCompleteEvents.length} battle_complete events for cycle ${cycleNumber}`);
-
-      // Get battle IDs from audit log
-      const battleIdsInCycle = new Set(
-        battleCompleteEvents.map((e: any) => (e.payload as any)?.battleId).filter(Boolean)
-      );
-
-      // Get battles - use audit log IDs if available, otherwise query by cycle timing
-      let cycleBattles: any[];
-      
-      if (battleIdsInCycle.size > 0) {
-        // Primary path: use battle IDs from audit log
-        cycleBattles = await prisma.battle.findMany({
-          where: {
-            id: { in: Array.from(battleIdsInCycle) },
-          },
-          include: {
-            robot1: { select: { userId: true } },
-            robot2: { select: { userId: true } },
-          },
-        });
-        console.log(`[CycleSnapshotService] Retrieved ${cycleBattles.length} battles from audit log IDs`);
-      } else {
-        // Fallback: query by timestamp (in case audit log events are incomplete)
-        console.warn(`[CycleSnapshotService] No battle IDs in audit log for cycle ${cycleNumber}, using timestamp fallback`);
-        
-        const cycleStartEvent = await prisma.auditLog.findFirst({
-          where: { cycleNumber, eventType: 'cycle_start' },
-        });
-        const cycleCompleteEvent = await prisma.auditLog.findFirst({
-          where: { cycleNumber, eventType: 'cycle_complete' },
-        });
-
-        if (cycleStartEvent && cycleCompleteEvent) {
-          cycleBattles = await prisma.battle.findMany({
-            where: {
-              createdAt: {
-                gte: cycleStartEvent.eventTimestamp,
-                lte: cycleCompleteEvent.eventTimestamp,
-              },
-            },
-            include: {
-              robot1: { select: { userId: true } },
-              robot2: { select: { userId: true } },
-            },
-          });
-          console.log(`[CycleSnapshotService] Retrieved ${cycleBattles.length} battles by timestamp`);
-        } else {
-          console.error(`[CycleSnapshotService] No cycle timing events for cycle ${cycleNumber}`);
-          cycleBattles = [];
-        }
-      }
-
-      // Get all users involved in battles (from robot ownership)
-      const userIds = new Set<number>();
-      cycleBattles.forEach((b: any) => {
-        userIds.add(b.robot1.userId);
-        userIds.add(b.robot2.userId);
-      });
 
       // Get passive income and operating costs from audit log
       const passiveIncomeEvents = await prisma.auditLog.findMany({
@@ -232,105 +174,8 @@ export class CycleSnapshotService {
       // Build metrics per user
       const metricsMap = new Map<number, StableMetric>();
 
-      // Initialize metrics for all users
-      userIds.forEach(userId => {
-        metricsMap.set(userId, {
-          userId,
-          battlesParticipated: 0,
-          totalCreditsEarned: 0,
-          totalPrestigeEarned: 0,
-          totalRepairCosts: 0,
-          merchandisingIncome: 0,
-          streamingIncome: 0,
-          operatingCosts: 0,
-          weaponPurchases: 0,
-          facilityPurchases: 0,
-          attributeUpgrades: 0,
-          totalPurchases: 0,
-          netProfit: 0,
-          balance: 0,
-        });
-      });
-
-      // Aggregate battle data - track per robot owner
-      cycleBattles.forEach((battle: any) => {
-        const robot1Owner = battle.robot1.userId;
-        const robot2Owner = battle.robot2.userId;
-
-        // Robot 1 owner metrics
-        const metric1 = metricsMap.get(robot1Owner);
-        if (metric1) {
-          metric1.battlesParticipated++;
-          metric1.totalPrestigeEarned += battle.robot1PrestigeAwarded;
-          // Note: Repair costs now tracked via audit log, not battle table
-
-          // Credits earned by robot1
-          if (battle.winnerId === battle.robot1Id) {
-            metric1.totalCreditsEarned += battle.winnerReward || 0;
-          } else {
-            metric1.totalCreditsEarned += battle.loserReward || 0;
-          }
-        }
-
-        // Robot 2 owner metrics
-        const metric2 = metricsMap.get(robot2Owner);
-        if (metric2) {
-          metric2.battlesParticipated++;
-          metric2.totalPrestigeEarned += battle.robot2PrestigeAwarded;
-          // Note: Repair costs now tracked via audit log, not battle table
-
-          // Credits earned by robot2
-          if (battle.winnerId === battle.robot2Id) {
-            metric2.totalCreditsEarned += battle.winnerReward || 0;
-          } else {
-            metric2.totalCreditsEarned += battle.loserReward || 0;
-          }
-        }
-      });
-
-      // Add passive income
-      passiveIncomeEvents.forEach((event: any) => {
-        if (!event.userId) return;
-
-        let metric = metricsMap.get(event.userId);
-        if (!metric) {
-          metric = {
-            userId: event.userId,
-            battlesParticipated: 0,
-            totalCreditsEarned: 0,
-            totalPrestigeEarned: 0,
-            totalRepairCosts: 0,
-            merchandisingIncome: 0,
-            streamingIncome: 0,
-            operatingCosts: 0,
-            weaponPurchases: 0,
-            facilityPurchases: 0,
-            attributeUpgrades: 0,
-            totalPurchases: 0,
-            netProfit: 0,
-            balance: 0,
-          };
-          metricsMap.set(event.userId, metric);
-        }
-
-        const payload = event.payload as any;
-        metric.merchandisingIncome += payload.merchandising || 0;
-        // Note: streaming is no longer part of passive_income, it's awarded per-battle
-      });
-
-      // Add streaming revenue from RobotStreamingRevenue table
-      // This is more reliable than battle_complete audit events which may be incomplete
-      const streamingRevenueRecords = await prisma.robotStreamingRevenue.findMany({
-        where: { cycleNumber },
-        include: {
-          robot: {
-            select: { userId: true }
-          }
-        }
-      });
-
-      streamingRevenueRecords.forEach((record) => {
-        const userId = record.robot.userId;
+      // Helper to get or create metric for a user
+      const getOrCreateMetric = (userId: number): StableMetric => {
         let metric = metricsMap.get(userId);
         if (!metric) {
           metric = {
@@ -351,40 +196,87 @@ export class CycleSnapshotService {
           };
           metricsMap.set(userId, metric);
         }
-        metric.streamingIncome += record.streamingRevenue;
+        return metric;
+      };
+
+      // Process battle_complete events - extract ALL data from audit log
+      // First pass: Get robot -> user mapping
+      const robotToUserMap = new Map<number, number>();
+      
+      for (const event of battleCompleteEvents) {
+        const payload = event.payload as any;
+        if (!payload.robot1Id || !payload.robot2Id) continue;
+
+        // Get robot ownership
+        const robot1 = await prisma.robot.findUnique({
+          where: { id: payload.robot1Id },
+          select: { userId: true },
+        });
+        const robot2 = await prisma.robot.findUnique({
+          where: { id: payload.robot2Id },
+          select: { userId: true },
+        });
+
+        if (robot1) robotToUserMap.set(payload.robot1Id, robot1.userId);
+        if (robot2) robotToUserMap.set(payload.robot2Id, robot2.userId);
+      }
+
+      // Second pass: Aggregate all data from battle_complete events
+      battleCompleteEvents.forEach((event: any) => {
+        const payload = event.payload as any;
+        if (!payload.robot1Id || !payload.robot2Id) return;
+
+        const robot1UserId = robotToUserMap.get(payload.robot1Id);
+        const robot2UserId = robotToUserMap.get(payload.robot2Id);
+
+        if (!robot1UserId || !robot2UserId) return;
+
+        // Robot 1 owner metrics
+        const metric1 = getOrCreateMetric(robot1UserId);
+        metric1.battlesParticipated++;
+        metric1.totalPrestigeEarned += payload.robot1PrestigeAwarded || 0;
+        metric1.streamingIncome += payload.streamingRevenue1 || 0;
+        metric1.totalRepairCosts += payload.robot1RepairCost || 0;
+
+        // Credits earned by robot1
+        if (payload.winnerId === payload.robot1Id) {
+          metric1.totalCreditsEarned += payload.winnerReward || 0;
+        } else if (!payload.isDraw) {
+          metric1.totalCreditsEarned += payload.loserReward || 0;
+        }
+
+        // Robot 2 owner metrics
+        const metric2 = getOrCreateMetric(robot2UserId);
+        metric2.battlesParticipated++;
+        metric2.totalPrestigeEarned += payload.robot2PrestigeAwarded || 0;
+        metric2.streamingIncome += payload.streamingRevenue2 || 0;
+        metric2.totalRepairCosts += payload.robot2RepairCost || 0;
+
+        // Credits earned by robot2
+        if (payload.winnerId === payload.robot2Id) {
+          metric2.totalCreditsEarned += payload.winnerReward || 0;
+        } else if (!payload.isDraw) {
+          metric2.totalCreditsEarned += payload.loserReward || 0;
+        }
+      });
+
+      // Add passive income (merchandising)
+      passiveIncomeEvents.forEach((event: any) => {
+        if (!event.userId) return;
+        const metric = getOrCreateMetric(event.userId);
+        const payload = event.payload as any;
+        metric.merchandisingIncome += payload.merchandising || 0;
       });
 
       // Add operating costs
       operatingCostsEvents.forEach((event: any) => {
         if (!event.userId) return;
-
-        let metric = metricsMap.get(event.userId);
-        if (!metric) {
-          // User has operating costs but no battles - create metric entry
-          metric = {
-            userId: event.userId,
-            battlesParticipated: 0,
-            totalCreditsEarned: 0,
-            totalPrestigeEarned: 0,
-            totalRepairCosts: 0,
-            merchandisingIncome: 0,
-            streamingIncome: 0,
-            operatingCosts: 0,
-            weaponPurchases: 0,
-            facilityPurchases: 0,
-            attributeUpgrades: 0,
-            totalPurchases: 0,
-            netProfit: 0,
-            balance: 0,
-          };
-          metricsMap.set(event.userId, metric);
-        }
-
+        const metric = getOrCreateMetric(event.userId);
         const payload = event.payload as any;
         metric.operatingCosts += payload.totalCost || 0;
       });
 
-      // Add repair costs from audit log
+      // Add repair costs from audit log (if not already in battle_complete)
       const repairEvents = await prisma.auditLog.findMany({
         where: {
           cycleNumber,
@@ -394,31 +286,9 @@ export class CycleSnapshotService {
 
       repairEvents.forEach((event: any) => {
         if (!event.userId) return;
-
-        let metric = metricsMap.get(event.userId);
-        if (!metric) {
-          metric = {
-            userId: event.userId,
-            battlesParticipated: 0,
-            totalCreditsEarned: 0,
-            totalPrestigeEarned: 0,
-            totalRepairCosts: 0,
-            merchandisingIncome: 0,
-            streamingIncome: 0,
-            operatingCosts: 0,
-            weaponPurchases: 0,
-            facilityPurchases: 0,
-            attributeUpgrades: 0,
-            totalPurchases: 0,
-            netProfit: 0,
-            balance: 0,
-          };
-          metricsMap.set(event.userId, metric);
-        }
-
+        const metric = getOrCreateMetric(event.userId);
         const payload = event.payload as any;
-        const cost = payload.cost || 0;
-        metric.totalRepairCosts += cost;
+        metric.totalRepairCosts += payload.cost || 0;
       });
 
       // Add purchase costs (weapons, facilities, attribute upgrades)
@@ -446,28 +316,7 @@ export class CycleSnapshotService {
       // Aggregate weapon purchases
       weaponPurchaseEvents.forEach((event: any) => {
         if (!event.userId) return;
-
-        let metric = metricsMap.get(event.userId);
-        if (!metric) {
-          metric = {
-            userId: event.userId,
-            battlesParticipated: 0,
-            totalCreditsEarned: 0,
-            totalPrestigeEarned: 0,
-            totalRepairCosts: 0,
-            merchandisingIncome: 0,
-            streamingIncome: 0,
-            operatingCosts: 0,
-            weaponPurchases: 0,
-            facilityPurchases: 0,
-            attributeUpgrades: 0,
-            totalPurchases: 0,
-            netProfit: 0,
-            balance: 0,
-          };
-          metricsMap.set(event.userId, metric);
-        }
-
+        const metric = getOrCreateMetric(event.userId);
         const payload = event.payload as any;
         metric.weaponPurchases += payload.cost || 0;
       });
@@ -475,28 +324,7 @@ export class CycleSnapshotService {
       // Aggregate facility purchases
       facilityPurchaseEvents.forEach((event: any) => {
         if (!event.userId) return;
-
-        let metric = metricsMap.get(event.userId);
-        if (!metric) {
-          metric = {
-            userId: event.userId,
-            battlesParticipated: 0,
-            totalCreditsEarned: 0,
-            totalPrestigeEarned: 0,
-            totalRepairCosts: 0,
-            merchandisingIncome: 0,
-            streamingIncome: 0,
-            operatingCosts: 0,
-            weaponPurchases: 0,
-            facilityPurchases: 0,
-            attributeUpgrades: 0,
-            totalPurchases: 0,
-            netProfit: 0,
-            balance: 0,
-          };
-          metricsMap.set(event.userId, metric);
-        }
-
+        const metric = getOrCreateMetric(event.userId);
         const payload = event.payload as any;
         metric.facilityPurchases += payload.cost || 0;
       });
@@ -513,29 +341,7 @@ export class CycleSnapshotService {
 
         if (!robot) continue;
 
-        const userId = robot.userId;
-
-        let metric = metricsMap.get(userId);
-        if (!metric) {
-          metric = {
-            userId,
-            battlesParticipated: 0,
-            totalCreditsEarned: 0,
-            totalPrestigeEarned: 0,
-            totalRepairCosts: 0,
-            merchandisingIncome: 0,
-            streamingIncome: 0,
-            operatingCosts: 0,
-            weaponPurchases: 0,
-            facilityPurchases: 0,
-            attributeUpgrades: 0,
-            totalPurchases: 0,
-            netProfit: 0,
-            balance: 0,
-          };
-          metricsMap.set(userId, metric);
-        }
-
+        const metric = getOrCreateMetric(robot.userId);
         const payload = event.payload as any;
         metric.attributeUpgrades += payload.cost || 0;
       }
