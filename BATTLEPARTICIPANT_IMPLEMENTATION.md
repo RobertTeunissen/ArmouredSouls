@@ -789,6 +789,12 @@ async function backfillBattleParticipants() {
         const team1Credits = Math.floor((battle.winnerId === 1 ? battle.winnerReward : battle.loserReward) / 2);
         const team2Credits = Math.floor((battle.winnerId === 2 ? battle.winnerReward : battle.loserReward) / 2);
         
+        // IMPORTANT: Battle table HAS individual robot stats for tag teams!
+        // - team1ActiveDamageDealt, team1ReserveDamageDealt
+        // - team2ActiveDamageDealt, team2ReserveDamageDealt
+        // - team1ActiveFameAwarded, team1ReserveFameAwarded
+        // - team2ActiveFameAwarded, team2ReserveFameAwarded
+        
         participants.push(
           // Team 1 Active
           {
@@ -801,9 +807,9 @@ async function backfillBattleParticipants() {
             eloBefore: battle.robot1ELOBefore,
             eloAfter: battle.robot1ELOAfter,
             prestigeAwarded: Math.floor(battle.robot1PrestigeAwarded / 2),
-            fameAwarded: battle.robot1Fame || 0,
-            damageDealt: battle.robot1DamageDealt,
-            finalHP: battle.robot1FinalHP,
+            fameAwarded: battle.team1ActiveFameAwarded,  // CORRECTED: Use individual field
+            damageDealt: battle.team1ActiveDamageDealt,   // CORRECTED: Use individual field
+            finalHP: battle.robot1FinalHP,  // Active robot HP
             yielded: battle.robot1Yielded,
             destroyed: battle.robot1Destroyed,
           },
@@ -815,14 +821,14 @@ async function backfillBattleParticipants() {
             role: 'reserve',
             credits: team1Credits,
             streamingRevenue: 0, // TODO: Get from RobotStreamingRevenue
-            eloBefore: 0, // Not tracked for reserve
+            eloBefore: 0, // Reserve doesn't get ELO changes
             eloAfter: 0,
             prestigeAwarded: Math.floor(battle.robot1PrestigeAwarded / 2),
-            fameAwarded: 0,
-            damageDealt: 0,
-            finalHP: 100, // Assume full HP for reserve
-            yielded: false,
-            destroyed: false,
+            fameAwarded: battle.team1ReserveFameAwarded,    // CORRECTED: Use individual field
+            damageDealt: battle.team1ReserveDamageDealt,     // CORRECTED: Use individual field
+            finalHP: battle.robot2FinalHP,  // Reserve robot HP (if tagged in)
+            yielded: false, // Reserve doesn't yield
+            destroyed: battle.robot2Destroyed && battle.team1TagOutTime !== null,  // Only destroyed if tagged in
           },
           // Team 2 Active
           {
@@ -835,9 +841,9 @@ async function backfillBattleParticipants() {
             eloBefore: battle.robot2ELOBefore,
             eloAfter: battle.robot2ELOAfter,
             prestigeAwarded: Math.floor(battle.robot2PrestigeAwarded / 2),
-            fameAwarded: battle.robot2Fame || 0,
-            damageDealt: battle.robot2DamageDealt,
-            finalHP: battle.robot2FinalHP,
+            fameAwarded: battle.team2ActiveFameAwarded,  // CORRECTED: Use individual field
+            damageDealt: battle.team2ActiveDamageDealt,   // CORRECTED: Use individual field
+            finalHP: battle.robot1FinalHP,  // For team 2, robot1 might be active if robot2 is reserve
             yielded: battle.robot2Yielded,
             destroyed: battle.robot2Destroyed,
           },
@@ -852,11 +858,11 @@ async function backfillBattleParticipants() {
             eloBefore: 0,
             eloAfter: 0,
             prestigeAwarded: Math.floor(battle.robot2PrestigeAwarded / 2),
-            fameAwarded: 0,
-            damageDealt: 0,
-            finalHP: 100,
+            fameAwarded: battle.team2ReserveFameAwarded,    // CORRECTED: Use individual field
+            damageDealt: battle.team2ReserveDamageDealt,     // CORRECTED: Use individual field
+            finalHP: battle.robot2FinalHP,  // Reserve robot HP
             yielded: false,
-            destroyed: false,
+            destroyed: battle.robot1Destroyed && battle.team2TagOutTime !== null,  // Only destroyed if tagged in
           }
         );
       }
