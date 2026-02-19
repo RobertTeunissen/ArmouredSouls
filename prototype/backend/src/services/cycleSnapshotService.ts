@@ -539,9 +539,9 @@ export class CycleSnapshotService {
       }
 
       // Calculate total purchases and net profit, and fetch final balances
-      const userIds = Array.from(metricsMap.keys());
+      const userIdsArray = Array.from(metricsMap.keys());
       const users = await prisma.user.findMany({
-        where: { id: { in: userIds } },
+        where: { id: { in: userIdsArray } },
         select: { id: true, currency: true }
       });
       
