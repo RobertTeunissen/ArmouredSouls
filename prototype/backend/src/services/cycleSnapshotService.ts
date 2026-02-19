@@ -302,14 +302,24 @@ export class CycleSnapshotService {
         metric.attributeUpgrades += payload.cost || 0;
       }
 
-      // Calculate total purchases and net profit, and fetch final balances
-      const userIdsArray = Array.from(metricsMap.keys());
-      const users = await prisma.user.findMany({
-        where: { id: { in: userIdsArray } },
-        select: { id: true, currency: true }
+      // Calculate total purchases and net profit, and fetch end-of-cycle balances from audit log
+      // NEW: Read balances from cycle_end_balance events (logged before snapshot creation)
+      const cycleEndBalanceEvents = await prisma.auditLog.findMany({
+        where: {
+          cycleNumber,
+          eventType: 'cycle_end_balance',
+        },
       });
-      
-      const balanceMap = new Map(users.map(u => [u.id, u.currency]));
+
+      // Create map of userId -> balance from cycle_end_balance events
+      const balanceMap = new Map<number, number>();
+      cycleEndBalanceEvents.forEach((event: any) => {
+        if (event.userId && event.payload) {
+          balanceMap.set(event.userId, event.payload.balance || 0);
+        }
+      });
+
+      console.log(`[CycleSnapshotService] Found ${cycleEndBalanceEvents.length} cycle_end_balance events for cycle ${cycleNumber}`);
       
       metricsMap.forEach(metric => {
         metric.totalPurchases = 
@@ -325,7 +335,7 @@ export class CycleSnapshotService {
           metric.operatingCosts -
           metric.totalPurchases;
         
-        // Store the user's balance at the end of this cycle
+        // Store the user's balance at the end of this cycle FROM AUDIT LOG
         metric.balance = balanceMap.get(metric.userId) || 0;
       });
 

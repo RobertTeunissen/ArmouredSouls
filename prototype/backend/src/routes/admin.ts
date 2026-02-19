@@ -853,28 +853,10 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         const cycleDuration = Date.now() - cycleStart;
         await eventLogger.logCycleComplete(currentCycleNumber, cycleDuration);
 
-        // Step 13: Create Cycle Snapshot for analytics
-        console.log(`[Admin] Step 13: Create Cycle Snapshot`);
-        const step13Start = Date.now();
-        try {
-          const { cycleSnapshotService } = await import('../services/cycleSnapshotService');
-          await cycleSnapshotService.createSnapshot(currentCycleNumber);
-          console.log(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
-          await eventLogger.logCycleStepComplete(
-            currentCycleNumber,
-            'create_cycle_snapshot',
-            13,
-            Date.now() - step13Start,
-            {}
-          );
-        } catch (snapshotError) {
-          console.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
-          // Don't fail the entire cycle if snapshot creation fails
-        }
-
-        // Step 14: Log End-of-Cycle Balances
-        console.log(`[Admin] Step 14: Log End-of-Cycle Balances`);
+        // Step 13: Log End-of-Cycle Balances
+        console.log(`[Admin] Step 13: Log End-of-Cycle Balances`);
         console.log(`[Admin] === End of Cycle ${currentCycleNumber} Balances ===`);
+        const step13Start = Date.now();
         const endOfCycleUsers = await prisma.user.findMany({
           where: {
             NOT: { username: 'bye_robot_user' },
@@ -901,6 +883,32 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           );
         }
         console.log(`[Admin] ===================================`);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'log_end_of_cycle_balances',
+          13,
+          Date.now() - step13Start,
+          { usersLogged: endOfCycleUsers.length }
+        );
+
+        // Step 14: Create Cycle Snapshot for analytics (LAST STEP - aggregates all data including balances)
+        console.log(`[Admin] Step 14: Create Cycle Snapshot`);
+        const step14Start = Date.now();
+        try {
+          const { cycleSnapshotService } = await import('../services/cycleSnapshotService');
+          await cycleSnapshotService.createSnapshot(currentCycleNumber);
+          console.log(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
+          await eventLogger.logCycleStepComplete(
+            currentCycleNumber,
+            'create_cycle_snapshot',
+            14,
+            Date.now() - step14Start,
+            {}
+          );
+        } catch (snapshotError) {
+          console.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
+          // Don't fail the entire cycle if snapshot creation fails
+        }
 
         // Display Cycle Summary
         console.log(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
