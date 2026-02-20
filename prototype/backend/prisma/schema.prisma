@@ -338,7 +338,6 @@ model Battle {
   tournamentMatches TournamentMatch[]
   tagTeamMatches    TagTeamMatch[]    @relation("TagTeamBattle")
 
-  @@index([userId])
   @@index([robot1Id])
   @@index([robot2Id])
   @@index([createdAt])
