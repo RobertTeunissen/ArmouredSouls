@@ -175,7 +175,7 @@ model Robot {
   tournamentMatchesWon      TournamentMatch[]         @relation("TournamentMatchWinner")
   tagTeamsAsActive          TagTeam[]                 @relation("TagTeamActiveRobot")
   tagTeamsAsReserve         TagTeam[]                 @relation("TagTeamReserveRobot")
-  streamingRevenue          RobotStreamingRevenue[]
+  battleParticipations      BattleParticipant[]
 
   @@unique([userId, name])
   @@index([userId])
@@ -263,6 +263,43 @@ model Weapon {
   @@map("weapons")
 }
 
+model BattleParticipant {
+  id               Int     @id @default(autoincrement())
+  battleId         Int     @map("battle_id")
+  robotId          Int     @map("robot_id")
+  team             Int     // 1 or 2
+  role             String? @db.VarChar(20) // "active" or "reserve" for tag team, null for 1v1
+  
+  // Economic effects
+  credits          Int
+  streamingRevenue Int     @default(0) @map("streaming_revenue")
+  
+  // Stat changes
+  eloBefore        Int     @map("elo_before")
+  eloAfter         Int     @map("elo_after")
+  prestigeAwarded  Int     @default(0) @map("prestige_awarded")
+  fameAwarded      Int     @default(0) @map("fame_awarded")
+  
+  // Battle stats
+  damageDealt      Int     @default(0) @map("damage_dealt")
+  finalHP          Int     @map("final_hp")
+  yielded          Boolean @default(false)
+  destroyed        Boolean @default(false)
+  
+  // Timestamp
+  createdAt        DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  battle  Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  robot   Robot  @relation(fields: [robotId], references: [id])
+  
+  @@unique([battleId, robotId])
+  @@index([battleId])
+  @@index([robotId])
+  @@index([battleId, team])
+  @@map("battle_participants")
+}
+
 model Battle {
   id         Int    @id @default(autoincrement())
   robot1Id   Int    @map("robot1_id") // First combatant
@@ -291,24 +328,6 @@ model Battle {
   winnerReward Int? @map("winner_reward") // Credits awarded to winner
   loserReward  Int? @map("loser_reward") // Credits awarded to loser (can earn on loss)
 
-  // Battle rewards tracking
-  robot1PrestigeAwarded Int @default(0) @map("robot1_prestige_awarded") // Prestige awarded to robot 1's user
-  robot2PrestigeAwarded Int @default(0) @map("robot2_prestige_awarded") // Prestige awarded to robot 2's user
-  robot1FameAwarded     Int @default(0) @map("robot1_fame_awarded") // Fame awarded to robot 1
-  robot2FameAwarded     Int @default(0) @map("robot2_fame_awarded") // Fame awarded to robot 2
-
-  // ===== FINAL STATE =====
-  robot1FinalHP   Int     @map("robot1_final_hp") // Ending HP
-  robot2FinalHP   Int     @map("robot2_final_hp") // Ending HP
-  robot1Yielded   Boolean @default(false) @map("robot1_yielded") // Did robot 1 surrender?
-  robot2Yielded   Boolean @default(false) @map("robot2_yielded") // Did robot 2 surrender?
-  robot1Destroyed Boolean @default(false) @map("robot1_destroyed") // Did robot 1 reach 0 HP?
-  robot2Destroyed Boolean @default(false) @map("robot2_destroyed") // Did robot 2 reach 0 HP?
-
-  // ===== DAMAGE TRACKING =====
-  robot1DamageDealt Int @map("robot1_damage_dealt") // Total damage dealt by robot 1 (or team 1 total for tag team)
-  robot2DamageDealt Int @map("robot2_damage_dealt") // Total damage dealt by robot 2 (or team 2 total for tag team)
-
   // ===== TAG TEAM PER-ROBOT STATS =====
   // Individual robot contributions for tag team battles (0 for non-tag-team battles)
   team1ActiveDamageDealt   Int @default(0) @map("team1_active_damage_dealt")
@@ -320,7 +339,7 @@ model Battle {
   team2ActiveFameAwarded   Int @default(0) @map("team2_active_fame_awarded")
   team2ReserveFameAwarded  Int @default(0) @map("team2_reserve_fame_awarded")
 
-  // ===== ELO TRACKING =====
+  // ===== ELO TRACKING (kept for backward compatibility and aggregate queries) =====
   robot1ELOBefore Int @map("robot1_elo_before") // ELO before battle
   robot2ELOBefore Int @map("robot2_elo_before") // ELO before battle
   robot1ELOAfter  Int @map("robot1_elo_after") // ELO after battle
@@ -331,12 +350,13 @@ model Battle {
   createdAt DateTime @default(now()) @map("created_at")
 
   // ===== RELATIONS =====
-  robot1            Robot             @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2            Robot             @relation("Robot2", fields: [robot2Id], references: [id])
-  tournament        Tournament?       @relation("TournamentBattles", fields: [tournamentId], references: [id])
+  robot1            Robot                @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2            Robot                @relation("Robot2", fields: [robot2Id], references: [id])
+  tournament        Tournament?          @relation("TournamentBattles", fields: [tournamentId], references: [id])
   scheduledMatch    ScheduledMatch[]
   tournamentMatches TournamentMatch[]
-  tagTeamMatches    TagTeamMatch[]    @relation("TagTeamBattle")
+  tagTeamMatches    TagTeamMatch[]       @relation("TagTeamBattle")
+  participants      BattleParticipant[]  // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
 
   @@index([robot1Id])
   @@index([robot2Id])
@@ -566,23 +586,4 @@ model TagTeamMatch {
   @@index([scheduledFor, status])
   @@index([status])
   @@map("tag_team_matches")
-}
-
-// Robot Streaming Revenue tracking table for analytics
-// Tracks streaming revenue earned per robot per cycle
-model RobotStreamingRevenue {
-  id               Int      @id @default(autoincrement())
-  robotId          Int      @map("robot_id")
-  cycleNumber      Int      @map("cycle_number")
-  streamingRevenue Float    @map("streaming_revenue")
-  battlesInCycle   Int      @map("battles_in_cycle")
-  createdAt        DateTime @default(now()) @map("created_at")
-
-  // Relations
-  robot Robot @relation(fields: [robotId], references: [id], onDelete: Cascade)
-
-  @@unique([robotId, cycleNumber])
-  @@index([robotId])
-  @@index([cycleNumber])
-  @@map("robot_streaming_revenue")
 }

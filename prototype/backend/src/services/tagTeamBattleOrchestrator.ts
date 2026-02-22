@@ -917,19 +917,6 @@ async function createTagTeamBattleRecord(
       winnerReward: 0,
       loserReward: 0,
 
-      // Final state - store the HP of the robots that were fighting at the end
-      // For tag team battles, this could be either active or reserve robots
-      robot1FinalHP: result.team1ReserveUsed ? result.team1ReserveFinalHP : result.team1ActiveFinalHP,
-      robot2FinalHP: result.team2ReserveUsed ? result.team2ReserveFinalHP : result.team2ActiveFinalHP,
-      robot1Yielded: result.winnerId !== team1.id && (result.team1ReserveUsed ? result.team1ReserveFinalHP : result.team1ActiveFinalHP) > 0,
-      robot2Yielded: result.winnerId !== team2.id && (result.team2ReserveUsed ? result.team2ReserveFinalHP : result.team2ActiveFinalHP) > 0,
-      robot1Destroyed: result.team1ReserveUsed ? result.team1ReserveFinalHP === 0 : result.team1ActiveFinalHP === 0,
-      robot2Destroyed: result.team2ReserveUsed ? result.team2ReserveFinalHP === 0 : result.team2ActiveFinalHP === 0,
-
-      // Damage tracking (placeholder)
-      robot1DamageDealt: 0,
-      robot2DamageDealt: 0,
-
       // ELO tracking (placeholder)
       robot1ELOBefore: team1.activeRobot.elo,
       robot2ELOBefore: team2.activeRobot.elo,
@@ -937,6 +924,81 @@ async function createTagTeamBattleRecord(
       robot2ELOAfter: team2.activeRobot.elo,
       eloChange: 0,
     },
+  });
+
+  // Create BattleParticipant records for all 4 robots
+  // Note: Credits, prestige, and fame will be updated later in updateTagTeamStats
+  await prisma.battleParticipant.createMany({
+    data: [
+      // Team 1 Active
+      {
+        battleId: battle.id,
+        robotId: team1.activeRobotId,
+        team: 1,
+        role: 'active',
+        credits: 0, // Will be updated later
+        streamingRevenue: 0,
+        eloBefore: team1.activeRobot.elo,
+        eloAfter: team1.activeRobot.elo, // Will be updated later
+        prestigeAwarded: 0, // Will be updated later
+        fameAwarded: 0, // Will be updated later
+        damageDealt: result.team1ActiveDamageDealt || 0,
+        finalHP: result.team1ActiveFinalHP,
+        yielded: false,
+        destroyed: result.team1ActiveFinalHP === 0,
+      },
+      // Team 1 Reserve
+      {
+        battleId: battle.id,
+        robotId: team1.reserveRobotId,
+        team: 1,
+        role: 'reserve',
+        credits: 0, // Will be updated later
+        streamingRevenue: 0,
+        eloBefore: team1.reserveRobot.elo,
+        eloAfter: team1.reserveRobot.elo, // Will be updated later
+        prestigeAwarded: 0, // Will be updated later
+        fameAwarded: 0, // Will be updated later
+        damageDealt: result.team1ReserveDamageDealt || 0,
+        finalHP: result.team1ReserveFinalHP,
+        yielded: false,
+        destroyed: result.team1ReserveFinalHP === 0,
+      },
+      // Team 2 Active
+      {
+        battleId: battle.id,
+        robotId: team2.activeRobotId,
+        team: 2,
+        role: 'active',
+        credits: 0, // Will be updated later
+        streamingRevenue: 0,
+        eloBefore: team2.activeRobot.elo,
+        eloAfter: team2.activeRobot.elo, // Will be updated later
+        prestigeAwarded: 0, // Will be updated later
+        fameAwarded: 0, // Will be updated later
+        damageDealt: result.team2ActiveDamageDealt || 0,
+        finalHP: result.team2ActiveFinalHP,
+        yielded: false,
+        destroyed: result.team2ActiveFinalHP === 0,
+      },
+      // Team 2 Reserve
+      {
+        battleId: battle.id,
+        robotId: team2.reserveRobotId,
+        team: 2,
+        role: 'reserve',
+        credits: 0, // Will be updated later
+        streamingRevenue: 0,
+        eloBefore: team2.reserveRobot.elo,
+        eloAfter: team2.reserveRobot.elo, // Will be updated later
+        prestigeAwarded: 0, // Will be updated later
+        fameAwarded: 0, // Will be updated later
+        damageDealt: result.team2ReserveDamageDealt || 0,
+        finalHP: result.team2ReserveFinalHP,
+        yielded: false,
+        destroyed: result.team2ReserveFinalHP === 0,
+      },
+    ],
   });
 
   return battle;
@@ -1491,10 +1553,6 @@ async function updateTagTeamBattleResults(
       data: {
         winnerReward,
         loserReward,
-        robot1RepairCost: 0, // Deprecated: repair costs calculated by RepairService
-        robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
-        robot1PrestigeAwarded: team1IsBye ? 0 : prestige,
-        robot2PrestigeAwarded: team2IsBye ? 0 : prestige,
         robot1ELOAfter: team1IsBye ? 1000 : realTeam.activeRobot.elo + realTeamELOChange,
         robot2ELOAfter: team2IsBye ? 1000 : realTeam.activeRobot.elo + realTeamELOChange,
         eloChange: Math.abs(realTeamELOChange),
@@ -1760,17 +1818,9 @@ async function updateTagTeamBattleResults(
     data: {
       winnerReward: team1Won ? team1Rewards : team2Won ? team2Rewards : 0,
       loserReward: team1Won ? team2Rewards : team2Won ? team1Rewards : (isDraw ? team1Rewards : 0),
-      robot1RepairCost: 0, // Deprecated: repair costs calculated by RepairService
-      robot2RepairCost: 0, // Deprecated: repair costs calculated by RepairService
-      robot1PrestigeAwarded: team1Prestige,
-      robot2PrestigeAwarded: team2Prestige,
-      robot1FameAwarded: team1ActiveFame + team1ReserveFame,
-      robot2FameAwarded: team2ActiveFame + team2ReserveFame,
       robot1ELOAfter: team1.activeRobot.elo + eloChanges.team1Change,
       robot2ELOAfter: team2.activeRobot.elo + eloChanges.team2Change,
       eloChange: Math.abs(eloChanges.team1Change),
-      robot1DamageDealt: result.team1ActiveDamageDealt + result.team1ReserveDamageDealt,
-      robot2DamageDealt: result.team2ActiveDamageDealt + result.team2ReserveDamageDealt,
       // Per-robot stats for tag team battles
       team1ActiveDamageDealt: result.team1ActiveDamageDealt,
       team1ReserveDamageDealt: result.team1ReserveDamageDealt,
@@ -1828,6 +1878,30 @@ async function updateTagTeamBattleResults(
     `[Streaming] Team ${team2.id} earned ₡${streamingRevenue.team2Revenue.totalRevenue.toLocaleString()} ` +
     `(Battles from ${streamingRevenue.team2MaxBattlesRobot.name}, Fame from ${streamingRevenue.team2MaxFameRobot.name})`
   );
+
+  // Update BattleParticipant records with streaming revenue (split 50/50 per team)
+  const team1StreamingPerRobot = Math.floor(streamingRevenue.team1Revenue.totalRevenue / 2);
+  const team2StreamingPerRobot = Math.floor(streamingRevenue.team2Revenue.totalRevenue / 2);
+  
+  await prisma.battleParticipant.updateMany({
+    where: {
+      battleId: result.battleId,
+      robotId: { in: [team1.activeRobotId, team1.reserveRobotId] },
+    },
+    data: {
+      streamingRevenue: team1StreamingPerRobot,
+    },
+  });
+  
+  await prisma.battleParticipant.updateMany({
+    where: {
+      battleId: result.battleId,
+      robotId: { in: [team2.activeRobotId, team2.reserveRobotId] },
+    },
+    data: {
+      streamingRevenue: team2StreamingPerRobot,
+    },
+  });
 
   // Log battle_complete events to audit log - ONE EVENT PER ROBOT (4 total)
   // Tag team battles now follow the same pattern as 1v1 battles:

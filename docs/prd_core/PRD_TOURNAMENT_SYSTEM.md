@@ -695,28 +695,159 @@ finalReward *= roundBonus;
 4. **Calculate Byes**: `byes = bracketSize - participants`
    - Top-seeded robots receive byes (advance without battle)
    - Example: 350 participants → 162 byes for seeds #1-#162
-5. **Generate Pairings**: Traditional bracket structure for non-bye matches
-   - Remaining robots pair: highest vs lowest seeds
-6. **Create Placeholder Matches**: Future rounds have null robot IDs until winners determined
-7. **Entire Bracket Known Upfront**: All TournamentMatch records created at tournament start, enables full bracket visualization
+5. **Generate Seed Order**: Use recursive interleaving algorithm (see detailed algorithm below)
+6. **Create Bracket Matches**: Pair seeds according to generated order
+7. **Create Placeholder Matches**: Future rounds have null robot IDs until winners determined
+8. **Entire Bracket Known Upfront**: All TournamentMatch records created at tournament start, enables full bracket visualization
 
 **Robots are fully repaired at start of tournament and before each round via daily cycle auto-repair. If a robot is damaged between rounds, the daily cycle repair ensures it's ready for the next match.**
 
-**Example Bracket (8 participants):**
-```
-Round 1 (4 matches):
-  Match 1: Seed #1 vs Seed #8
-  Match 2: Seed #4 vs Seed #5
-  Match 3: Seed #2 vs Seed #7
-  Match 4: Seed #3 vs Seed #6
+#### Detailed Seeding Algorithm
 
-Round 2 (2 matches):
-  Match 5: Winner Match 1 vs Winner Match 2
-  Match 6: Winner Match 3 vs Winner Match 4
+The bracket uses a **recursive interleaving algorithm with conditional swapping** that ensures proper tournament topology where:
+- Seed 1 and Seed 2 can only meet in the Finals
+- Seeds 1-4 are distributed into separate quarters of the bracket
+- Semifinals are always: 1 vs 4 and 2 vs 3
+- Each seed is paired with its complement: `seed + opponent = bracketSize + 1`
 
-Round 3 (1 match):
-  Match 7: Winner Match 5 vs Winner Match 6 (FINALS)
+**Algorithm (Recursive Interleaving with Conditional Swap):**
+
+```typescript
+function generateStandardSeedOrder(bracketSize: number): number[] {
+  if (bracketSize === 2) {
+    return [1, 2];
+  }
+  
+  const prevBracket = generateStandardSeedOrder(bracketSize / 2);
+  
+  const result: number[] = [];
+  const shouldSwapOddIndices = bracketSize <= 8;
+  
+  for (let i = 0; i < prevBracket.length; i++) {
+    const seed = prevBracket[i];
+    const complement = bracketSize + 1 - seed;
+    
+    // Swap at odd indices only for 4-slot and 8-slot brackets
+    if (shouldSwapOddIndices && i % 2 === 1) {
+      result.push(complement);
+      result.push(seed);
+    } else {
+      result.push(seed);
+      result.push(complement);
+    }
+  }
+  
+  return result;
+}
 ```
+
+**How It Works:**
+- Start with base case: 2-slot = `[1, 2]`
+- For each larger bracket, take previous bracket and interleave with complements
+- Complement formula: `opponent = bracketSize + 1 - seed`
+- **Special rule**: For 4-slot and 8-slot brackets, swap pairs at odd indices (positions 1, 3, 5, ...)
+- For 16+ slot brackets, no swapping (straight interleaving)
+
+**Build Progression:**
+```
+2-slot:  [1, 2]
+4-slot:  [1, 4, 3, 2]           (index 1 swapped: 2→3,2 instead of 2,3)
+8-slot:  [1, 8, 5, 4, 3, 6, 7, 2]  (indices 1,3 swapped)
+16-slot: [1, 16, 8, 9, 5, 12, 4, 13, 3, 14, 6, 11, 7, 10, 2, 15]  (no swaps)
+32-slot: [1, 32, 16, 17, 8, 25, 9, 24, 5, 28, 12, 21, 4, 29, 13, 20, 
+          3, 30, 14, 19, 6, 27, 11, 22, 7, 26, 10, 23, 2, 31, 15, 18]  (no swaps)
+```
+
+**Example: 16-Slot Bracket**
+
+Seed order: `[1, 16, 8, 9, 5, 12, 4, 13, 3, 14, 6, 11, 7, 10, 2, 15]`
+
+```
+Round 1 (8 matches):
+  Match 1: Seed 1 vs Seed 16
+  Match 2: Seed 8 vs Seed 9
+  Match 3: Seed 5 vs Seed 12
+  Match 4: Seed 4 vs Seed 13
+  Match 5: Seed 3 vs Seed 14
+  Match 6: Seed 6 vs Seed 11
+  Match 7: Seed 7 vs Seed 10
+  Match 8: Seed 2 vs Seed 15
+
+Round 2 - Quarterfinals (4 matches):
+  QF1: Winner M1 vs Winner M2 → Seed 1 vs Seed 8
+  QF2: Winner M3 vs Winner M4 → Seed 5 vs Seed 4
+  QF3: Winner M5 vs Winner M6 → Seed 3 vs Seed 6
+  QF4: Winner M7 vs Winner M8 → Seed 7 vs Seed 2
+
+Round 3 - Semifinals (2 matches):
+  SF1: Winner QF1 vs Winner QF2 → Seed 1 vs Seed 4 ✅
+  SF2: Winner QF3 vs Winner QF4 → Seed 3 vs Seed 2 ✅
+
+Round 4 - Finals (1 match):
+  F: Winner SF1 vs Winner SF2 → Seed 1 vs Seed 2 ✅
+```
+
+**Key Properties:**
+- Seed 1 always in Match 1 (top of bracket)
+- Seed 2 always in last match (bottom of bracket)
+- Top 4 seeds placed in separate quarters
+- Algorithm scales to any bracket size (tested up to 1024 slots)
+- Works correctly with byes (seeds > participant count are treated as empty slots)
+
+**Example: 28-Robot Tournament (32-Slot Bracket)**
+
+With 28 robots in a 32-slot bracket, seeds 29-32 are empty (4 byes):
+
+```
+Round 1 (16 matches):
+  M1:  Seed 1 vs Seed 32 (BYE) → Seed 1 advances
+  M2:  Seed 16 vs Seed 17 → Seed 16 advances
+  M3:  Seed 8 vs Seed 25 → Seed 8 advances
+  M4:  Seed 9 vs Seed 24 → Seed 9 advances
+  M5:  Seed 4 vs Seed 29 (BYE) → Seed 4 advances
+  M6:  Seed 13 vs Seed 20 → Seed 13 advances
+  M7:  Seed 5 vs Seed 28 → Seed 5 advances
+  M8:  Seed 12 vs Seed 21 → Seed 12 advances
+  M9:  Seed 2 vs Seed 31 (BYE) → Seed 2 advances
+  M10: Seed 15 vs Seed 18 → Seed 15 advances
+  M11: Seed 7 vs Seed 26 → Seed 7 advances
+  M12: Seed 10 vs Seed 23 → Seed 10 advances
+  M13: Seed 3 vs Seed 30 (BYE) → Seed 3 advances
+  M14: Seed 14 vs Seed 19 → Seed 14 advances
+  M15: Seed 6 vs Seed 27 → Seed 6 advances
+  M16: Seed 11 vs Seed 22 → Seed 11 advances
+
+Round 2 - Round of 16 (8 matches):
+  M1: Seed 1 vs Seed 16 → Seed 1 advances
+  M2: Seed 8 vs Seed 9 → Seed 8 advances
+  M3: Seed 4 vs Seed 13 → Seed 4 advances
+  M4: Seed 5 vs Seed 12 → Seed 5 advances
+  M5: Seed 2 vs Seed 15 → Seed 2 advances
+  M6: Seed 7 vs Seed 10 → Seed 7 advances
+  M7: Seed 3 vs Seed 14 → Seed 3 advances
+  M8: Seed 6 vs Seed 11 → Seed 6 advances
+
+Round 3 - Quarterfinals (4 matches):
+  QF1: Seed 1 vs Seed 8 → Seed 1 advances
+  QF2: Seed 4 vs Seed 5 → Seed 4 advances
+  QF3: Seed 2 vs Seed 7 → Seed 2 advances
+  QF4: Seed 3 vs Seed 6 → Seed 3 advances
+
+Round 4 - Semifinals (2 matches):
+  SF1: Seed 1 vs Seed 4 ✅
+  SF2: Seed 2 vs Seed 3 ✅
+
+Round 5 - Finals (1 match):
+  F: Seed 1 vs Seed 2 ✅
+```
+
+**Why This Algorithm Works:**
+- Each iteration doubles the bracket size
+- Seeds are paired with their mathematical complement
+- Recursive structure ensures proper quarter distribution
+- Top seeds are maximally separated in the bracket
+- Works for any power-of-2 bracket size (4, 8, 16, 32, 64, 128, 256, 512, 1024+)
+- Byes are handled naturally (empty slots in seed order)
 
 ### Tournament Progression Flow
 

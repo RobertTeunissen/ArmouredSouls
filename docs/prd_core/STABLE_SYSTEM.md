@@ -294,33 +294,47 @@ Example:
 - **Level 9** (₡2,500,000, requires 10,000 prestige): Unlock AI & Team cap to level 48
 - **Level 10** (₡3,000,000, requires 15,000 prestige): Unlock AI & Team cap to level 50 (maximum)
 
-**14. Income Generator** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
-- **Level 0**: No additional income streams
-- **Level 1** (₡800,000): Unlock Merchandising (₡5,000/day base, scales with prestige)
-- **Level 2** (₡1,200,000): Improve Merchandising (₡8,000/day base)
-- **Level 3** (₡1,600,000): Improve Merchandising (₡11,000/day base)
-- **Level 4** (₡2,000,000, requires 3,000 prestige): Improve Merchandising (₡12,000/day base)
-- **Level 5** (₡2,400,000): Improve Merchandising (₡15,000/day base)
-- **Level 6** (₡2,800,000): Improve Merchandising (₡18,000/day base)
-- **Level 7** (₡3,200,000, requires 7,500 prestige): Improve Merchandising (₡20,000/day base)
-- **Level 8** (₡3,600,000): Improve Merchandising (₡25,000/day base)
-- **Level 9** (₡4,000,000, requires 15,000 prestige): Improve Merchandising (₡30,000/day base)
-- **Level 10** (₡5,000,000): Master Income (₡35,000/day base for merchandising)
+**14. Merchandising Hub** (Operating Cost: ₡200/day per level)
+- **Level 0**: No merchandising income
+- **Level 1** (₡150,000): Unlock Merchandising (₡5,000/day base, scales with prestige)
+- **Level 2** (₡300,000): Improve Merchandising (₡10,000/day base)
+- **Level 3** (₡450,000): Improve Merchandising (₡15,000/day base)
+- **Level 4** (₡600,000, requires 3,000 prestige): Improve Merchandising (₡20,000/day base)
+- **Level 5** (₡750,000): Improve Merchandising (₡25,000/day base)
+- **Level 6** (₡900,000): Improve Merchandising (₡30,000/day base)
+- **Level 7** (₡1,050,000, requires 7,500 prestige): Improve Merchandising (₡35,000/day base)
+- **Level 8** (₡1,200,000): Improve Merchandising (₡40,000/day base)
+- **Level 9** (₡1,350,000, requires 15,000 prestige): Improve Merchandising (₡45,000/day base)
+- **Level 10** (₡1,500,000): Master Merchandising (₡50,000/day base)
 
-**Note**: Streaming revenue is now awarded per battle. See Streaming Studio facility.
+**Operating Cost Formula**: Operating Cost = Level × ₡200/day
 
-**15. Streaming Studio** (Operating Cost: ₡100/day at Level 1, +₡100/day per level)
+**Merchandising Income Formula**: 
+```
+merchandising_income = (level × ₡5,000) × (1 + prestige / 10,000)
+```
+
+**Break-Even Analysis**:
+- Level 1: ~31 cycles with 100 prestige (₡150K investment, ₡4,800/day net income)
+- Passive income - works with any strategy
+- Scales linearly with level and prestige
+
+**Note**: Streaming revenue is awarded per battle. See Streaming Studio facility.
+
+**15. Streaming Studio** (Operating Cost: ₡100/day per level)
 - **Level 0**: No streaming revenue bonus (base 1.0× multiplier)
-- **Level 1** (₡100,000): +10% streaming revenue per battle (1.1× multiplier)
-- **Level 2** (₡200,000): +20% streaming revenue per battle (1.2× multiplier)
-- **Level 3** (₡300,000): +30% streaming revenue per battle (1.3× multiplier)
-- **Level 4** (₡400,000, requires 1,000 prestige): +40% streaming revenue per battle (1.4× multiplier)
-- **Level 5** (₡500,000, requires 2,500 prestige): +50% streaming revenue per battle (1.5× multiplier)
-- **Level 6** (₡600,000, requires 5,000 prestige): +60% streaming revenue per battle (1.6× multiplier)
-- **Level 7** (₡700,000, requires 10,000 prestige): +70% streaming revenue per battle (1.7× multiplier)
-- **Level 8** (₡800,000, requires 15,000 prestige): +80% streaming revenue per battle (1.8× multiplier)
-- **Level 9** (₡900,000, requires 25,000 prestige): +90% streaming revenue per battle (1.9× multiplier)
-- **Level 10** (₡1,000,000, requires 50,000 prestige): +100% streaming revenue per battle (2.0× multiplier - double base rate)
+- **Level 1** (₡100,000): Double streaming revenue per battle (2.0× multiplier, ₡100/day operating cost)
+- **Level 2** (₡200,000): Triple streaming revenue per battle (3.0× multiplier, ₡200/day operating cost)
+- **Level 3** (₡300,000): Quadruple streaming revenue per battle (4.0× multiplier, ₡300/day operating cost)
+- **Level 4** (₡400,000, requires 1,000 prestige): 5× streaming revenue per battle (₡400/day operating cost)
+- **Level 5** (₡500,000, requires 2,500 prestige): 6× streaming revenue per battle (₡500/day operating cost)
+- **Level 6** (₡600,000, requires 5,000 prestige): 7× streaming revenue per battle (₡600/day operating cost)
+- **Level 7** (₡700,000, requires 10,000 prestige): 8× streaming revenue per battle (₡700/day operating cost)
+- **Level 8** (₡800,000, requires 15,000 prestige): 9× streaming revenue per battle (₡800/day operating cost)
+- **Level 9** (₡900,000, requires 25,000 prestige): 10× streaming revenue per battle (₡900/day operating cost)
+- **Level 10** (₡1,000,000, requires 50,000 prestige): 11× streaming revenue per battle (₡1,000/day operating cost)
+
+**Operating Cost Formula**: Operating Cost = Level × ₡100/day
 
 **Streaming Revenue Formula**:
 ```
@@ -329,13 +343,22 @@ streaming_revenue = 1000 × battle_multiplier × fame_multiplier × studio_multi
 Where:
   battle_multiplier = 1 + (robot_total_battles / 1000)
   fame_multiplier = 1 + (robot_fame / 5000)
-  studio_multiplier = 1 + (streaming_studio_level × 0.1)
+  studio_multiplier = 1 + (streaming_studio_level × 1.0)
 ```
+
+**Break-Even Analysis**:
+- Level 1 with 3 robots (5 battles/day): ~17 cycles (₡100K investment)
+- Level 1 with 2 robots (3.6 battles/day): ~25 cycles (₡100K investment)
+- Level 1 with 1 robot (2.2 battles/day): ~42 cycles (₡100K investment)
+- Rewards active multi-robot play
+- Scales infinitely with battles and fame
 
 **Examples**:
 - New robot (0 battles, 0 fame) with Level 0 Studio: ₡1,000 per battle
-- Veteran robot (1000 battles, 5000 fame) with Level 0 Studio: ₡4,000 per battle
-- Veteran robot (1000 battles, 5000 fame) with Level 10 Studio: ₡8,000 per battle
+- New robot (0 battles, 0 fame) with Level 1 Studio: ₡2,000 per battle (DOUBLE!)
+- Veteran robot (100 battles, 500 fame) with Level 1 Studio: ₡2,420 per battle
+- Veteran robot (1000 battles, 5000 fame) with Level 1 Studio: ₡4,840 per battle
+- Veteran robot (1000 battles, 5000 fame) with Level 10 Studio: ₡26,620 per battle (11×!)
 
 **Key Features**:
 - Streaming revenue awarded after every battle (1v1, Tag Team, Tournament)
@@ -343,6 +366,7 @@ Where:
 - No revenue for bye matches
 - Studio multiplier applies to all robots in the stable
 - For Tag Team matches, uses highest battles and highest fame from each team
+- Each level adds 100% to the multiplier (L1 = 2×, L2 = 3×, L3 = 4×, etc.)
 
 ---
 
@@ -409,14 +433,14 @@ The game presents players with a **daily income/expense sheet** showing all reve
 - 25,000+ Prestige: +15% to battle winnings
 - 50,000+ Prestige: +20% to battle winnings
 
-**Merchandising** (from Income Generator facility):
+**Merchandising** (from Merchandising Hub facility):
 ```
-merchandising_income = base_merchandising × (1 + prestige / 10000)
+merchandising_income = (level × ₡5,000) × (1 + prestige / 10000)
 
 Example:
-- Income Generator Level 4: ₡12,000/day base
+- Merchandising Hub Level 4: ₡20,000/day base (4 × ₡5,000)
 - Prestige 15,000
-- Merchandising = ₡12,000 × (1 + 15000/10000) = ₡12,000 × 2.5 = ₡30,000/day
+- Merchandising = ₡20,000 × (1 + 15000/10000) = ₡20,000 × 2.5 = ₡50,000/day
 ```
 
 **Streaming Revenue** (from Streaming Studio facility):

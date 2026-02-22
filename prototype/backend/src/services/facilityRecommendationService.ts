@@ -240,8 +240,8 @@ export class FacilityRecommendationService {
     let reason = '';
     let priority: 'high' | 'medium' | 'low' = 'low';
 
-    if (facilityType === 'income_generator') {
-      // Income generator provides passive income
+    if (facilityType === 'merchandising_hub') {
+      // Merchandising Hub provides passive income
       const baseIncome = this.getIncomeGeneratorBaseIncome(nextLevel);
       const projectedIncomePerCycle = baseIncome * 1.5; // Estimate with scaling
       projectedPayoffCycles = Math.ceil(upgradeCost / projectedIncomePerCycle);
@@ -424,7 +424,7 @@ export class FacilityRecommendationService {
     }
 
     // Calculate streaming revenue for each robot and average
-    const studioMultiplier = 1 + (currentStudioLevel * 0.1);
+    const studioMultiplier = 1 + (currentStudioLevel * 1.0); // 100% per level
     let totalRevenue = 0;
 
     for (const robot of robots) {

@@ -28,9 +28,9 @@ describe('Economy Calculations', () => {
       expect(calculateFacilityOperatingCost('training_facility', 5)).toBe(4500); // 1500 + (4 * 750)
     });
 
-    it('should calculate Income Generator operating costs correctly', () => {
-      expect(calculateFacilityOperatingCost('income_generator', 1)).toBe(1000);
-      expect(calculateFacilityOperatingCost('income_generator', 10)).toBe(5500); // 1000 + (9 * 500)
+    it('should calculate Merchandising Hub operating costs correctly', () => {
+      expect(calculateFacilityOperatingCost('merchandising_hub', 1)).toBe(200);
+      expect(calculateFacilityOperatingCost('merchandising_hub', 10)).toBe(2000); // 200 * 10
     });
 
     it('should calculate Streaming Studio operating costs correctly', () => {

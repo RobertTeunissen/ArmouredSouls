@@ -69,11 +69,10 @@ export async function getTagTeamLeagueInstanceStats(tier: TagTeamLeagueTier): Pr
   const totalTeams = instances.reduce((sum, inst) => sum + inst.currentTeams, 0);
   const averagePerInstance = instances.length > 0 ? totalTeams / instances.length : 0;
 
-  // Check if rebalancing is needed (Requirement 6.8):
-  // 1. Any instance deviates more than threshold (20) from average
-  // 2. Any instance exceeds the maximum team limit (50)
+  // Check if rebalancing is needed:
+  // Only when any instance exceeds the maximum team limit
+  // (Deviation check not needed since assignTagTeamLeagueInstance fills evenly)
   const needsRebalancing = instances.some((inst) => 
-    Math.abs(inst.currentTeams - averagePerInstance) > REBALANCE_THRESHOLD ||
     inst.currentTeams > MAX_TEAMS_PER_INSTANCE
   );
 
@@ -274,17 +273,17 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
   // Use at least the current number of instances to avoid consolidation during rebalancing
   const minInstanceCount = Math.ceil(stats.totalTeams / MAX_TEAMS_PER_INSTANCE);
   const targetInstanceCount = Math.max(minInstanceCount, stats.instances.length);
-  const teamsPerInstance = Math.ceil(stats.totalTeams / targetInstanceCount);
 
   console.log(`  Target instances: ${targetInstanceCount}`);
-  console.log(`  Teams per instance: ${teamsPerInstance}`);
 
-  // Redistribute teams evenly
+  // Redistribute teams ROUND-ROBIN to maintain competitive balance
+  // This ensures each instance has a mix of high, medium, and low LP teams
   const updates: Promise<any>[] = [];
   
   for (let i = 0; i < allTeams.length; i++) {
     const team = allTeams[i];
-    const targetInstanceNumber = Math.floor(i / teamsPerInstance) + 1;
+    // Round-robin distribution: team 0→instance 1, team 1→instance 2, ..., team N→instance 1, ...
+    const targetInstanceNumber = (i % targetInstanceCount) + 1;
     const targetLeagueId = `${tier}_${targetInstanceNumber}`;
 
     if (team.tagTeamLeagueId !== targetLeagueId) {

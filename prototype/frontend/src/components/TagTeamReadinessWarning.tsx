@@ -39,15 +39,24 @@ function TagTeamReadinessWarning({ compact = false }: TagTeamReadinessWarningPro
   if (compact) {
     return (
       <div 
-        className="bg-warning/10 border border-warning rounded-lg p-3 cursor-pointer hover:bg-warning/15 transition-colors"
+        className="bg-warning/10 border-l-4 border-warning rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-warning/15 transition-colors"
         onClick={() => navigate('/tag-teams')}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-warning">⚠️</span>
-          <span className="text-warning font-semibold text-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚠️</span>
+          <span className="text-warning font-semibold">
             {unreadyTeams.length} tag team{unreadyTeams.length > 1 ? 's' : ''} not battle-ready
           </span>
         </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/tag-teams');
+          }}
+          className="bg-warning hover:bg-warning/90 text-gray-900 font-semibold py-2 px-4 rounded text-sm transition-colors"
+        >
+          Manage Tag Teams
+        </button>
       </div>
     );
   }

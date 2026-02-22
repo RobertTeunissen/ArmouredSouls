@@ -69,8 +69,8 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
     case 'ai_training_academy':
       return 1000 + (level - 1) * 500;
     
-    case 'income_generator':
-      return 1000 + (level - 1) * 500;
+    case 'merchandising_hub':
+      return 200 * level;
     
     case 'streaming_studio':
       // Operating cost: level × 100 credits per day
@@ -175,39 +175,39 @@ export function getNextPrestigeTier(currentPrestige: number): { threshold: numbe
 }
 
 /**
- * Get merchandising base rate by Income Generator level
+ * Get merchandising base rate by Merchandising Hub level
  */
-export function getMerchandisingBaseRate(incomeGeneratorLevel: number): number {
+export function getMerchandisingBaseRate(merchandisingHubLevel: number): number {
   const rates: { [key: number]: number } = {
     1: 5000,
-    2: 8000,
-    3: 8000,
-    4: 12000,
-    5: 12000,
-    6: 18000,
-    7: 18000,
-    8: 25000,
-    9: 25000,
-    10: 35000,
+    2: 10000,
+    3: 15000,
+    4: 20000,
+    5: 25000,
+    6: 30000,
+    7: 35000,
+    8: 40000,
+    9: 45000,
+    10: 50000,
   };
-  return rates[incomeGeneratorLevel] || 0;
+  return rates[merchandisingHubLevel] || 0;
 }
 
 /**
  * Calculate daily merchandising income
  * Formula: base_rate × (1 + prestige/10000)
  */
-export function calculateMerchandisingIncome(incomeGeneratorLevel: number, prestige: number): number {
-  if (incomeGeneratorLevel === 0) return 0;
-  
-  const baseRate = getMerchandisingBaseRate(incomeGeneratorLevel);
+export function calculateMerchandisingIncome(merchandisingHubLevel: number, prestige: number): number {
+  if (merchandisingHubLevel === 0) return 0;
+
+  const baseRate = getMerchandisingBaseRate(merchandisingHubLevel);
   const prestigeMultiplier = 1 + (prestige / 10000);
-  
+
   return Math.round(baseRate * prestigeMultiplier);
 }
 
 /**
- * Calculate total daily passive income from Income Generator
+ * Calculate total daily passive income from Merchandising Hub
  * Note: Streaming revenue is now awarded per-battle via Streaming Studio facility
  */
 export async function calculateDailyPassiveIncome(userId: number): Promise<{
@@ -222,19 +222,19 @@ export async function calculateDailyPassiveIncome(userId: number): Promise<{
     return { merchandising: 0, total: 0 };
   }
 
-  const incomeGenerator = await prisma.facility.findUnique({
+  const merchandisingHub = await prisma.facility.findUnique({
     where: {
       userId_facilityType: {
         userId,
-        facilityType: 'income_generator',
+        facilityType: 'merchandising_hub',
       },
     },
   });
 
-  const incomeGeneratorLevel = incomeGenerator?.level || 0;
+  const merchandisingHubLevel = merchandisingHub?.level || 0;
 
   // Calculate merchandising (available at level 1+)
-  const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, user.prestige);
+  const merchandising = calculateMerchandisingIncome(merchandisingHubLevel, user.prestige);
 
   return {
     merchandising,
@@ -364,27 +364,22 @@ export async function generateFinancialReport(
     }
   }
 
-  // Calculate repair costs from recent battles (last 7 days)
-  const recentBattles = await prisma.battle.findMany({
-    where: {
-      userId,
-      createdAt: {
-        gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-      },
-    },
+  // Calculate repair costs from robot's current repair costs
+  const userRobotsWithRepairCost = await prisma.robot.findMany({
+    where: { userId },
     select: {
-      robot1RepairCost: true,
-      robot2RepairCost: true,
+      id: true,
+      repairCost: true,
     },
   });
 
-  // Sum all repair costs from battles
-  const totalRepairCosts = recentBattles.reduce((sum, battle) => {
-    return sum + (battle.robot1RepairCost || 0) + (battle.robot2RepairCost || 0);
+  // Sum all current repair costs
+  const totalRepairCosts = userRobotsWithRepairCost.reduce((sum, robot) => {
+    return sum + (robot.repairCost || 0);
   }, 0);
 
-  // Calculate daily average repair cost
-  const dailyRepairCost = recentBattles.length > 0 ? Math.round(totalRepairCosts / 7) : 0;
+  // For daily average, we'll use current repair costs as an estimate
+  const dailyRepairCost = totalRepairCosts;
 
   // Total revenue (including streaming)
   const totalRevenue = recentBattleWinnings + passiveIncome.total + totalStreamingRevenue;
@@ -447,7 +442,8 @@ function getFacilityName(type: string): string {
     defense_training_academy: 'Defense Training Academy',
     mobility_training_academy: 'Mobility Training Academy',
     ai_training_academy: 'AI Training Academy',
-    income_generator: 'Income Generator',
+    merchandising_hub: 'Merchandising Hub',
+    streaming_studio: 'Streaming Studio',
   };
   return names[type] || type;
 }
@@ -682,6 +678,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       fame: true,
       totalBattles: true,
       wins: true,
+      repairCost: true,
     },
   });
 
@@ -703,16 +700,16 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
   const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
   const allocatedFacilityCostPerRobot = operatingCosts.total / robots.length;
 
-  // Get Income Generator level for passive income calculations
-  const incomeGenerator = await prisma.facility.findUnique({
+  // Get Merchandising Hub level for passive income calculations
+  const merchandisingHub = await prisma.facility.findUnique({
     where: {
       userId_facilityType: {
         userId,
-        facilityType: 'income_generator',
+        facilityType: 'merchandising_hub',
       },
     },
   });
-  const incomeGeneratorLevel = incomeGenerator?.level || 0;
+  const merchandisingHubLevel = merchandisingHub?.level || 0;
 
   // Calculate totals for distribution calculations
   const totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
@@ -728,7 +725,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
   }
 
   // Calculate total passive income
-  const totalMerchandising = calculateMerchandisingIncome(incomeGeneratorLevel, user.prestige);
+  const totalMerchandising = calculateMerchandisingIncome(merchandisingHubLevel, user.prestige);
   // Note: Streaming revenue is now awarded per-battle via Streaming Studio facility
 
   // Process each robot
@@ -737,7 +734,6 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       // Calculate battle winnings from recent battles
       const recentBattles = await prisma.battle.findMany({
         where: {
-          userId,
           OR: [
             { robot1Id: robot.id },
             { robot2Id: robot.id },
@@ -753,8 +749,6 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
           loserReward: true,
           robot1Id: true,
           robot2Id: true,
-          robot1RepairCost: true,
-          robot2RepairCost: true,
           battleType: true,
           createdAt: true,
         },
@@ -763,31 +757,28 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
         },
       });
 
-      // Calculate battle winnings and repair costs, and build battle details array
+      // Calculate battle winnings and build battle details array
       let battleWinnings = 0;
-      let repairCosts = 0;
       const battleDetails = [];
 
       for (const battle of recentBattles) {
-        const isRobot1 = battle.robot1Id === robot.id;
         const isWinner = battle.winnerId === robot.id;
         const reward = isWinner ? (battle.winnerReward || 0) : (battle.loserReward || 0);
-        const repairCost = isRobot1 
-          ? (battle.robot1RepairCost || 0) 
-          : (battle.robot2RepairCost || 0);
 
         battleWinnings += reward;
-        repairCosts += repairCost;
 
         battleDetails.push({
           id: battle.id,
           isWinner,
           reward,
-          repairCost,
+          repairCost: 0, // Repair costs tracked on robot, not battle
           battleType: battle.battleType || 'league', // Default to league if not set
           createdAt: battle.createdAt,
         });
       }
+
+      // Use robot's current repair cost
+      const repairCosts = robot.repairCost || 0;
 
       // Calculate merchandising contribution (proportional to fame)
       const merchandising = totalFame > 0
@@ -914,8 +905,8 @@ export function calculateDailyBenefitIncrease(
   totalBattles: number,
   totalFame: number
 ): number {
-  // Only Income Generator provides direct daily income benefit
-  if (facilityType !== 'income_generator') {
+  // Only Merchandising Hub provides direct daily income benefit
+  if (facilityType !== 'merchandising_hub') {
     return 0; // Other facilities provide indirect benefits (discounts, caps, etc.)
   }
 
@@ -1024,8 +1015,8 @@ export async function calculateFacilityROI(
   if (!affordable) {
     recommendation = `You need ₡${(upgradeCost - user.currency).toLocaleString()} more credits to afford this upgrade.`;
     recommendationType = 'not_affordable';
-  } else if (facilityType === 'income_generator') {
-    // Income generator - calculate ROI
+  } else if (facilityType === 'merchandising_hub') {
+    // Merchandising Hub - calculate ROI
     if (breakevenDays && breakevenDays <= 30) {
       recommendation = `Excellent investment! Pays for itself in ${breakevenDays} days with ₡${netDailyChange.toLocaleString()}/day net gain.`;
       recommendationType = 'excellent';

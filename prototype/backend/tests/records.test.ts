@@ -44,6 +44,11 @@ describe('Records Routes', () => {
       expect(combatRecords).toHaveProperty('fastestVictory');
       expect(combatRecords).toHaveProperty('longestBattle');
       expect(combatRecords).toHaveProperty('mostDamageInBattle');
+      
+      // Verify arrays
+      expect(Array.isArray(combatRecords.fastestVictory)).toBe(true);
+      expect(Array.isArray(combatRecords.longestBattle)).toBe(true);
+      expect(Array.isArray(combatRecords.mostDamageInBattle)).toBe(true);
     });
 
     it('should have career records section', async () => {
@@ -59,6 +64,13 @@ describe('Records Routes', () => {
       expect(careerRecords).toHaveProperty('mostBattles');
       expect(careerRecords).toHaveProperty('mostKills');
       expect(careerRecords).toHaveProperty('mostLifetimeDamage');
+      
+      // Verify arrays
+      expect(Array.isArray(careerRecords.highestElo)).toBe(true);
+      expect(Array.isArray(careerRecords.highestWinRate)).toBe(true);
+      expect(Array.isArray(careerRecords.mostBattles)).toBe(true);
+      expect(Array.isArray(careerRecords.mostKills)).toBe(true);
+      expect(Array.isArray(careerRecords.mostLifetimeDamage)).toBe(true);
     });
 
     it('should have economic records section', async () => {
@@ -71,6 +83,10 @@ describe('Records Routes', () => {
       const economicRecords = response.body.economic;
       expect(economicRecords).toHaveProperty('highestFame');
       expect(economicRecords).toHaveProperty('richestStables');
+      
+      // Verify arrays
+      expect(Array.isArray(economicRecords.highestFame)).toBe(true);
+      expect(Array.isArray(economicRecords.richestStables)).toBe(true);
     });
 
     it('should have prestige records section', async () => {
@@ -82,6 +98,9 @@ describe('Records Routes', () => {
       
       const prestigeRecords = response.body.prestige;
       expect(prestigeRecords).toHaveProperty('highestPrestige');
+      
+      // Verify arrays
+      expect(Array.isArray(prestigeRecords.highestPrestige)).toBe(true);
     });
 
     it('should have upsets section', async () => {
@@ -95,6 +114,11 @@ describe('Records Routes', () => {
       expect(upsets).toHaveProperty('biggestUpset');
       expect(upsets).toHaveProperty('biggestEloGain');
       expect(upsets).toHaveProperty('biggestEloLoss');
+      
+      // Verify arrays
+      expect(Array.isArray(upsets.biggestUpset)).toBe(true);
+      expect(Array.isArray(upsets.biggestEloGain)).toBe(true);
+      expect(Array.isArray(upsets.biggestEloLoss)).toBe(true);
     });
 
     it('should handle empty database gracefully', async () => {
@@ -116,6 +140,41 @@ describe('Records Routes', () => {
       expect(typeof response.body).toBe('object');
       expect(Object.keys(response.body).length).toBeGreaterThan(0);
       expect(response.body).toHaveProperty('timestamp');
+    });
+
+    it('should return up to 10 records per category', async () => {
+      const response = await request(app)
+        .get('/api/records');
+
+      expect(response.status).toBe(200);
+      
+      // Check that arrays don't exceed 10 items
+      const { combat, upsets, career, economic, prestige } = response.body;
+      
+      expect(combat.fastestVictory.length).toBeLessThanOrEqual(10);
+      expect(combat.longestBattle.length).toBeLessThanOrEqual(10);
+      expect(combat.mostDamageInBattle.length).toBeLessThanOrEqual(10);
+      expect(combat.narrowestVictory.length).toBeLessThanOrEqual(10);
+      
+      expect(upsets.biggestUpset.length).toBeLessThanOrEqual(10);
+      expect(upsets.biggestEloGain.length).toBeLessThanOrEqual(10);
+      expect(upsets.biggestEloLoss.length).toBeLessThanOrEqual(10);
+      
+      expect(career.mostBattles.length).toBeLessThanOrEqual(10);
+      expect(career.highestWinRate.length).toBeLessThanOrEqual(10);
+      expect(career.mostLifetimeDamage.length).toBeLessThanOrEqual(10);
+      expect(career.highestElo.length).toBeLessThanOrEqual(10);
+      expect(career.mostKills.length).toBeLessThanOrEqual(10);
+      
+      expect(Array.isArray(economic.highestFame)).toBe(true);
+      expect(economic.highestFame.length).toBeLessThanOrEqual(10);
+      expect(Array.isArray(economic.richestStables)).toBe(true);
+      expect(economic.richestStables.length).toBeLessThanOrEqual(10);
+      
+      expect(Array.isArray(prestige.highestPrestige)).toBe(true);
+      expect(prestige.highestPrestige.length).toBeLessThanOrEqual(10);
+      expect(Array.isArray(prestige.mostTitles)).toBe(true);
+      expect(prestige.mostTitles.length).toBeLessThanOrEqual(10);
     });
   });
 });

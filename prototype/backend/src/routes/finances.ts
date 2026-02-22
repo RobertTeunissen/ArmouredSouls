@@ -80,19 +80,19 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
     const passiveIncome = await calculateDailyPassiveIncome(userId);
     const prestigeMultiplier = getPrestigeMultiplier(user.prestige);
     
-    // Get Income Generator level
-    const incomeGenerator = await prisma.facility.findUnique({
+    // Get Merchandising Hub level
+    const merchandisingHub = await prisma.facility.findUnique({
       where: {
         userId_facilityType: {
           userId,
-          facilityType: 'income_generator',
+          facilityType: 'merchandising_hub',
         },
       },
     });
-    const incomeGeneratorLevel = incomeGenerator?.level || 0;
+    const merchandisingHubLevel = merchandisingHub?.level || 0;
     
     // Calculate merchandising breakdown
-    const merchandisingBase = getMerchandisingBaseRate(incomeGeneratorLevel);
+    const merchandisingBase = getMerchandisingBaseRate(merchandisingHubLevel);
     const merchandisingMultiplier = 1 + (user.prestige / 10000);
     
     // Calculate streaming breakdown
@@ -115,7 +115,7 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
     const baseRate = 1000; // Base streaming revenue per battle
     const battleMultiplier = Math.min(1 + (totalBattles / 100) * 0.1, 3.0);
     const fameMultiplier = Math.min(1 + (totalFame / 500) * 0.1, 2.0);
-    const studioMultiplier = 1 + (streamingStudioLevel * 0.15);
+    const studioMultiplier = 1 + (streamingStudioLevel * 1.0); // 100% per level
     const streamingTotal = report.revenue.streaming || 0;
     
     const multiplierBreakdown = {
@@ -293,22 +293,22 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
       recommendations.push('Critical: Less than 2 weeks of operating costs remaining');
     }
 
-    // Check if Income Generator could help
-    const incomeGenerator = await prisma.facility.findUnique({
+    // Check if Merchandising Hub could help
+    const merchandisingHub = await prisma.facility.findUnique({
       where: {
         userId_facilityType: {
           userId,
-          facilityType: 'income_generator',
+          facilityType: 'merchandising_hub',
         },
       },
     });
 
-    if (!incomeGenerator || incomeGenerator.level === 0) {
+    if (!merchandisingHub || merchandisingHub.level === 0) {
       if (user.currency >= 800000 && user.prestige >= 1000) {
-        recommendations.push('Consider purchasing Income Generator to unlock passive income streams');
+        recommendations.push('Consider purchasing Merchandising Hub to unlock passive income streams');
       }
-    } else if (incomeGenerator.level < 5 && user.prestige >= 5000) {
-      recommendations.push('Your prestige is high - upgrading Income Generator would significantly increase merchandising income');
+    } else if (merchandisingHub.level < 5 && user.prestige >= 5000) {
+      recommendations.push('Your prestige is high - upgrading Merchandising Hub would significantly increase merchandising income');
     }
 
     res.json({

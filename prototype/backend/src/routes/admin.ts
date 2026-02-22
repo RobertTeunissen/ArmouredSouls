@@ -760,7 +760,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             where: {
               userId_facilityType: {
                 userId: user.id,
-                facilityType: 'income_generator',
+                facilityType: 'merchandising_hub',
               },
             },
           });
@@ -1100,8 +1100,7 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
         robot1Id: true,
         robot2Id: true,
         durationSeconds: true,
-        robot1FinalHP: true,
-        robot2FinalHP: true,
+        participants: true, // Get BattleParticipant data
       },
     });
 
@@ -1114,9 +1113,9 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     // Count kill outcomes (where loser has 0 HP - not including draws)
     const killCount = battles.filter(b => {
       if (!b.winnerId) return false; // Not a draw
-      // Check if the loser has 0 HP
-      const loserHP = b.winnerId === b.robot1Id ? b.robot2FinalHP : b.robot1FinalHP;
-      return loserHP === 0;
+      // Check if the loser has 0 HP from BattleParticipant data
+      const loserParticipant = b.participants.find(p => p.robotId !== b.winnerId);
+      return loserParticipant?.finalHP === 0;
     }).length;
 
     // Financial statistics
@@ -1551,31 +1550,37 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
             userId: true,
           },
         },
+        participants: true, // Include BattleParticipant data
       },
     });
 
     res.json({
-      battles: battles.map(battle => ({
-        id: battle.id,
-        robot1: battle.robot1,
-        robot2: battle.robot2,
-        winnerId: battle.winnerId,
-        winnerName:
-          battle.winnerId === battle.robot1.id
-            ? battle.robot1.name
-            : battle.winnerId === battle.robot2.id
-            ? battle.robot2.name
-            : 'Draw',
-        leagueType: battle.leagueType,
-        durationSeconds: battle.durationSeconds,
-        robot1FinalHP: battle.robot1FinalHP,
-        robot2FinalHP: battle.robot2FinalHP,
-        robot1ELOBefore: battle.robot1ELOBefore,
-        robot2ELOBefore: battle.robot2ELOBefore,
-        robot1ELOAfter: battle.robot1ELOAfter,
-        robot2ELOAfter: battle.robot2ELOAfter,
-        createdAt: battle.createdAt,
-      })),
+      battles: battles.map(battle => {
+        const robot1Participant = battle.participants.find(p => p.robotId === battle.robot1Id);
+        const robot2Participant = battle.participants.find(p => p.robotId === battle.robot2Id);
+        
+        return {
+          id: battle.id,
+          robot1: battle.robot1,
+          robot2: battle.robot2,
+          winnerId: battle.winnerId,
+          winnerName:
+            battle.winnerId === battle.robot1.id
+              ? battle.robot1.name
+              : battle.winnerId === battle.robot2.id
+              ? battle.robot2.name
+              : 'Draw',
+          leagueType: battle.leagueType,
+          durationSeconds: battle.durationSeconds,
+          robot1FinalHP: robot1Participant?.finalHP || 0,
+          robot2FinalHP: robot2Participant?.finalHP || 0,
+          robot1ELOBefore: robot1Participant?.eloBefore || 0,
+          robot2ELOBefore: robot2Participant?.eloBefore || 0,
+          robot1ELOAfter: robot1Participant?.eloAfter || 0,
+          robot2ELOAfter: robot2Participant?.eloAfter || 0,
+          createdAt: battle.createdAt,
+        };
+      }),
       pagination: {
         page,
         limit,
@@ -1695,35 +1700,39 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
         stance: battle.robot2.stance,
       },
       
-      // Battle results
-      winnerId: battle.winnerId,
-      robot1FinalHP: battle.robot1FinalHP,
-      robot2FinalHP: battle.robot2FinalHP,
-      robot1FinalShield: battle.robot1FinalShield,
-      robot2FinalShield: battle.robot2FinalShield,
-      robot1DamageDealt: battle.robot1DamageDealt,
-      robot2DamageDealt: battle.robot2DamageDealt,
-      robot1Yielded: battle.robot1Yielded,
-      robot2Yielded: battle.robot2Yielded,
-      robot1Destroyed: battle.robot1Destroyed,
-      robot2Destroyed: battle.robot2Destroyed,
+      // Get participant data from BattleParticipant table
+      participants: await prisma.battleParticipant.findMany({
+        where: { battleId: battle.id },
+        select: {
+          robotId: true,
+          team: true,
+          role: true,
+          credits: true,
+          streamingRevenue: true,
+          eloBefore: true,
+          eloAfter: true,
+          prestigeAwarded: true,
+          fameAwarded: true,
+          damageDealt: true,
+          finalHP: true,
+          yielded: true,
+          destroyed: true,
+        },
+      }),
       
-      // ELO changes
+      // Battle results (kept for backward compatibility)
+      winnerId: battle.winnerId,
+      
+      // ELO changes (from Battle table for now)
       robot1ELOBefore: battle.robot1ELOBefore,
       robot2ELOBefore: battle.robot2ELOBefore,
       robot1ELOAfter: battle.robot1ELOAfter,
       robot2ELOAfter: battle.robot2ELOAfter,
       eloChange: battle.eloChange,
       
-      // Economic
+      // Economic (from Battle table for now)
       winnerReward: battle.winnerReward,
       loserReward: battle.loserReward,
-      robot1RepairCost: battle.robot1RepairCost,
-      robot2RepairCost: battle.robot2RepairCost,
-      robot1PrestigeAwarded: battle.robot1PrestigeAwarded,
-      robot2PrestigeAwarded: battle.robot2PrestigeAwarded,
-      robot1FameAwarded: battle.robot1FameAwarded,
-      robot2FameAwarded: battle.robot2FameAwarded,
       
       // Tag Team specific fields (null for non-tag-team battles)
       team1ActiveRobotId: battle.team1ActiveRobotId,

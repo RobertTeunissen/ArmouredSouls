@@ -355,6 +355,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 20));
     const robotId = req.query.robotId ? parseInt(req.query.robotId as string) : undefined;
+    const battleType = req.query.battleType as string | undefined;
 
     // Get user's robots
     const userRobots = await prisma.robot.findMany({
@@ -376,6 +377,17 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
         { robot2Id: { in: robotId !== undefined ? [robotId] : robotIds } },
       ],
     };
+
+    // Add battle type filter if specified
+    if (battleType === 'league') {
+      whereClause.AND = [
+        { battleType: { notIn: ['tournament', 'tag_team'] } }
+      ];
+    } else if (battleType === 'tournament') {
+      whereClause.battleType = 'tournament';
+    } else if (battleType === 'tag_team') {
+      whereClause.battleType = 'tag_team';
+    }
 
     // Get total count
     const total = await prisma.battle.count({ where: whereClause });
@@ -411,6 +423,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
             maxRounds: true,
           },
         },
+        participants: true, // Include BattleParticipant data
       },
       orderBy: {
         createdAt: 'desc',
@@ -421,6 +434,9 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
 
     // Format response to match frontend BattleHistory interface
     const formattedBattles = await Promise.all(battles.map(async (battle) => {
+      const robot1Participant = battle.participants.find(p => p.robotId === battle.robot1Id);
+      const robot2Participant = battle.participants.find(p => p.robotId === battle.robot2Id);
+      
       const baseData = {
         id: battle.id,
         robot1Id: battle.robot1Id,
@@ -428,12 +444,12 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
         winnerId: battle.winnerId,
         createdAt: battle.createdAt,
         durationSeconds: battle.durationSeconds,
-        robot1ELOBefore: battle.robot1ELOBefore,
-        robot1ELOAfter: battle.robot1ELOAfter,
-        robot2ELOBefore: battle.robot2ELOBefore,
-        robot2ELOAfter: battle.robot2ELOAfter,
-        robot1FinalHP: battle.robot1FinalHP,
-        robot2FinalHP: battle.robot2FinalHP,
+        robot1ELOBefore: robot1Participant?.eloBefore || 0,
+        robot1ELOAfter: robot1Participant?.eloAfter || 0,
+        robot2ELOBefore: robot2Participant?.eloBefore || 0,
+        robot2ELOAfter: robot2Participant?.eloAfter || 0,
+        robot1FinalHP: robot1Participant?.finalHP || 0,
+        robot2FinalHP: robot2Participant?.finalHP || 0,
         winnerReward: battle.winnerReward,
         loserReward: battle.loserReward,
         battleType: battle.battleType,
@@ -581,50 +597,23 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       team2TagOutTime: battle.team2TagOutTime ? Number(battle.team2TagOutTime) / 1000 : null,
     };
 
-    // Get user's robots to verify access
-    const userRobots = await prisma.robot.findMany({
-      where: { userId: req.user.userId },
-      select: { id: true },
+    // All battles are public - no access restriction needed for Hall of Records
+
+    // Get streaming revenue data from BattleParticipant table
+    const battleParticipants = await prisma.battleParticipant.findMany({
+      where: { battleId },
     });
 
-    const robotIds = userRobots.map(r => r.id);
+    // Map participants by robotId for easy lookup
+    const participantMap = new Map(
+      battleParticipants.map(p => [p.robotId, p])
+    );
 
-    // Verify user has access to this battle
-    if (!robotIds.includes(battleData.robot1Id) && !robotIds.includes(battleData.robot2Id)) {
-      // For tag team battles, also check if user owns any of the team robots
-      const isTagTeamBattle = battleData.battleType === 'tag_team';
-      if (isTagTeamBattle) {
-        const hasAccess = 
-          (battleData.team1ActiveRobotId && robotIds.includes(battleData.team1ActiveRobotId)) ||
-          (battleData.team1ReserveRobotId && robotIds.includes(battleData.team1ReserveRobotId)) ||
-          (battleData.team2ActiveRobotId && robotIds.includes(battleData.team2ActiveRobotId)) ||
-          (battleData.team2ReserveRobotId && robotIds.includes(battleData.team2ReserveRobotId));
-        
-        if (!hasAccess) {
-          return res.status(403).json({ error: 'Access denied to battle data' });
-        }
-      } else {
-        return res.status(403).json({ error: 'Access denied to battle data' });
-      }
-    }
-
-    // Get streaming revenue data from audit log
-    const battleCompleteEvent = await prisma.auditLog.findFirst({
-      where: {
-        eventType: 'battle_complete',
-        payload: {
-          path: ['battleId'],
-          equals: battleId,
-        },
-      },
-      orderBy: { id: 'desc' },
-    });
-
-    const payload = battleCompleteEvent?.payload as any;
-    const streamingRevenue1 = payload?.streamingRevenue1 || 0;
-    const streamingRevenue2 = payload?.streamingRevenue2 || 0;
-    const streamingRevenueDetails1 = payload?.streamingRevenueDetails1 || null;
-    const streamingRevenueDetails2 = payload?.streamingRevenueDetails2 || null;
+    const robot1Participant = participantMap.get(battle.robot1Id);
+    const robot2Participant = participantMap.get(battle.robot2Id);
+    
+    const streamingRevenue1 = robot1Participant?.streamingRevenue || 0;
+    const streamingRevenue2 = robot2Participant?.streamingRevenue || 0;
 
     // Build response based on battle type
     const baseResponse: any = {
@@ -742,25 +731,42 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       robot2IsWinner = battleData.winnerId === team2Id;
       
       // For tag team battles, provide team-level summary (not per-robot)
+      // For tag teams, sum up data from all team members using BattleParticipant
+      const team1Participants = battleParticipants.filter(p => p.team === 1);
+      const team2Participants = battleParticipants.filter(p => p.team === 2);
+      
+      const team1StreamingRevenue = team1Participants.reduce((sum, p) => sum + (p.streamingRevenue || 0), 0);
+      const team2StreamingRevenue = team2Participants.reduce((sum, p) => sum + (p.streamingRevenue || 0), 0);
+      
+      const team1Credits = team1Participants.reduce((sum, p) => sum + (p.credits || 0), 0);
+      const team2Credits = team2Participants.reduce((sum, p) => sum + (p.credits || 0), 0);
+      
+      const team1Prestige = team1Participants.reduce((sum, p) => sum + (p.prestigeAwarded || 0), 0);
+      const team2Prestige = team2Participants.reduce((sum, p) => sum + (p.prestigeAwarded || 0), 0);
+      
+      const team1Fame = team1Participants.reduce((sum, p) => sum + (p.fameAwarded || 0), 0);
+      const team2Fame = team2Participants.reduce((sum, p) => sum + (p.fameAwarded || 0), 0);
+      
+      const team1Damage = team1Participants.reduce((sum, p) => sum + (p.damageDealt || 0), 0);
+      const team2Damage = team2Participants.reduce((sum, p) => sum + (p.damageDealt || 0), 0);
+      
       baseResponse.team1Summary = {
-        reward: robot1IsWinner ? battleData.winnerReward : battleData.loserReward,
-        prestige: battleData.robot1PrestigeAwarded,
-        totalDamage: battleData.robot1DamageDealt,
-        totalFame: battleData.robot1FameAwarded,
-        streamingRevenue: streamingRevenue1,
-        streamingRevenueDetails: streamingRevenueDetails1,
+        reward: team1Credits,
+        prestige: team1Prestige,
+        totalDamage: team1Damage,
+        totalFame: team1Fame,
+        streamingRevenue: team1StreamingRevenue,
       };
       
       baseResponse.team2Summary = {
-        reward: robot2IsWinner ? battleData.winnerReward : battleData.loserReward,
-        prestige: battleData.robot2PrestigeAwarded,
-        totalDamage: battleData.robot2DamageDealt,
-        totalFame: battleData.robot2FameAwarded,
-        streamingRevenue: streamingRevenue2,
-        streamingRevenueDetails: streamingRevenueDetails2,
+        reward: team2Credits,
+        prestige: team2Prestige,
+        totalDamage: team2Damage,
+        totalFame: team2Fame,
+        streamingRevenue: team2StreamingRevenue,
       };
     } else {
-      // For 1v1 and tournament battles, provide robot-level details
+      // For 1v1 and tournament battles, provide robot-level details from BattleParticipant
       robot1IsWinner = battleData.winnerId === battleData.robot1Id;
       robot2IsWinner = battleData.winnerId === battleData.robot2Id;
       
@@ -768,30 +774,28 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         id: battleData.robot1.id,
         name: battleData.robot1.name,
         owner: battleData.robot1.user.username,
-        eloBefore: battleData.robot1ELOBefore,
-        eloAfter: battleData.robot1ELOAfter,
-        finalHP: battleData.robot1FinalHP,
-        damageDealt: battleData.robot1DamageDealt,
-        reward: robot1IsWinner ? battleData.winnerReward : battleData.loserReward,
-        prestige: battleData.robot1PrestigeAwarded,
-        fame: battleData.robot1FameAwarded,
+        eloBefore: robot1Participant?.eloBefore || 0,
+        eloAfter: robot1Participant?.eloAfter || 0,
+        finalHP: robot1Participant?.finalHP ?? 0,
+        damageDealt: robot1Participant?.damageDealt ?? 0,
+        reward: robot1Participant?.credits ?? 0,
+        prestige: robot1Participant?.prestigeAwarded ?? 0,
+        fame: robot1Participant?.fameAwarded ?? 0,
         streamingRevenue: streamingRevenue1,
-        streamingRevenueDetails: streamingRevenueDetails1,
       };
 
       baseResponse.robot2 = {
         id: battleData.robot2.id,
         name: battleData.robot2.name,
         owner: battleData.robot2.user.username,
-        eloBefore: battleData.robot2ELOBefore,
-        eloAfter: battleData.robot2ELOAfter,
-        finalHP: battleData.robot2FinalHP,
-        damageDealt: battleData.robot2DamageDealt,
-        reward: robot2IsWinner ? battleData.winnerReward : battleData.loserReward,
-        prestige: battleData.robot2PrestigeAwarded,
-        fame: battleData.robot2FameAwarded,
+        eloBefore: robot2Participant?.eloBefore || 0,
+        eloAfter: robot2Participant?.eloAfter || 0,
+        finalHP: robot2Participant?.finalHP ?? 0,
+        damageDealt: robot2Participant?.damageDealt ?? 0,
+        reward: robot2Participant?.credits ?? 0,
+        prestige: robot2Participant?.prestigeAwarded ?? 0,
+        fame: robot2Participant?.fameAwarded ?? 0,
         streamingRevenue: streamingRevenue2,
-        streamingRevenueDetails: streamingRevenueDetails2,
       };
     }
 

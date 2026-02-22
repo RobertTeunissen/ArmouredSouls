@@ -121,8 +121,8 @@ function BattleDetailPage() {
         {/* Battle Result Banner */}
         <div className={`mb-3 p-3 rounded-lg text-center ${
           !battleLog.winner ? 'bg-yellow-900/20 border-2 border-yellow-600' :
-          battleLog.winner === 'robot1' && battleLog.robot1.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
-          battleLog.winner === 'robot2' && battleLog.robot2.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
+          battleLog.winner === 'robot1' && battleLog.robot1?.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
+          battleLog.winner === 'robot2' && battleLog.robot2?.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
           'bg-red-900/20 border-2 border-red-600'
         }`}>
           <div className={`text-3xl font-bold mb-1 ${getWinnerColor()}`}>
@@ -195,11 +195,15 @@ function BattleDetailPage() {
           <div className="grid grid-cols-2 gap-4 mb-2 pb-2 border-b border-gray-700">
             <div>
               <h3 className="text-lg font-bold text-blue-400">{battleLog.robot1.name}</h3>
-              <p className="text-gray-400 text-xs">Pilot: {battleLog.robot1.owner}</p>
+              {battleLog.robot1.owner && (
+                <p className="text-gray-400 text-xs">Pilot: {battleLog.robot1.owner}</p>
+              )}
             </div>
             <div className="text-right">
               <h3 className="text-lg font-bold text-blue-400">{battleLog.robot2.name}</h3>
-              <p className="text-gray-400 text-xs">Pilot: {battleLog.robot2.owner}</p>
+              {battleLog.robot2.owner && (
+                <p className="text-gray-400 text-xs">Pilot: {battleLog.robot2.owner}</p>
+              )}
             </div>
           </div>
 

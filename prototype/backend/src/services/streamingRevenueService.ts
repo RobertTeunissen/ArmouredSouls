@@ -4,11 +4,12 @@
  * Calculates and awards streaming revenue for battles based on robot fame,
  * battle count, and Streaming Studio facility level.
  * 
- * Formula: 1000 × (1 + battles/1000) × (1 + fame/5000) × (1 + level×0.1)
+ * Formula: 1000 × (1 + battles/1000) × (1 + fame/5000) × (1 + level×1.0)
+ * 
+ * Studio Multiplier: Each level adds 100% (L1 = 2×, L2 = 3×, L3 = 4×, etc.)
  */
 
 import prisma from '../lib/prisma';
-import { trackStreamingRevenue } from './robotAnalyticsService';
 
 /**
  * Streaming revenue calculation result for a single robot
@@ -17,7 +18,7 @@ export interface StreamingRevenueCalculation {
   baseAmount: number;              // Always 1000
   battleMultiplier: number;        // 1 + (battles / 1000)
   fameMultiplier: number;          // 1 + (fame / 5000)
-  studioMultiplier: number;        // 1 + (level * 0.1)
+  studioMultiplier: number;        // 1 + (level * 1.0) - Each level doubles, triples, etc.
   totalRevenue: number;            // Final calculated amount
   robotId: number;                 // Robot that earned the revenue
   robotName: string;               // For logging
@@ -101,7 +102,7 @@ export async function calculateStreamingRevenue(
   const baseAmount = 1000;
   const battleMultiplier = 1 + (totalBattleCount / 1000);
   const fameMultiplier = 1 + (robot.fame / 5000);
-  const studioMultiplier = 1 + (studioLevel * 0.1);
+  const studioMultiplier = 1 + (studioLevel * 1.0); // 100% per level: L1=2×, L2=3×, L3=4×, etc.
 
   // Calculate total revenue
   const totalRevenue = Math.floor(
@@ -199,7 +200,7 @@ export async function calculateTagTeamStreamingRevenue(
   const baseAmount = 1000;
   const team1BattleMultiplier = 1 + (team1MaxBattlesRobot.battles / 1000);
   const team1FameMultiplier = 1 + (team1MaxFameRobot.fame / 5000);
-  const team1StudioMultiplier = 1 + (team1StudioLevel * 0.1);
+  const team1StudioMultiplier = 1 + (team1StudioLevel * 1.0); // 100% per level
   const team1TotalRevenue = Math.floor(
     baseAmount * team1BattleMultiplier * team1FameMultiplier * team1StudioMultiplier
   );
@@ -207,7 +208,7 @@ export async function calculateTagTeamStreamingRevenue(
   // Calculate streaming revenue for team 2
   const team2BattleMultiplier = 1 + (team2MaxBattlesRobot.battles / 1000);
   const team2FameMultiplier = 1 + (team2MaxFameRobot.fame / 5000);
-  const team2StudioMultiplier = 1 + (team2StudioLevel * 0.1);
+  const team2StudioMultiplier = 1 + (team2StudioLevel * 1.0); // 100% per level
   const team2TotalRevenue = Math.floor(
     baseAmount * team2BattleMultiplier * team2FameMultiplier * team2StudioMultiplier
   );
@@ -265,10 +266,5 @@ export async function awardStreamingRevenue(
     },
   });
 
-  // Track streaming revenue for analytics
-  await trackStreamingRevenue(
-    calculation.robotId,
-    cycleNumber,
-    calculation.totalRevenue
-  );
+  // Streaming revenue is tracked in BattleParticipant table
 }

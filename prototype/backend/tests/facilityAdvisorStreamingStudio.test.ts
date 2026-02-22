@@ -25,9 +25,6 @@ describe('Facility Advisor - Streaming Studio', () => {
   afterEach(async () => {
     // Clean up test data
     for (const userId of testUserIds) {
-      await prisma.robotStreamingRevenue.deleteMany({ 
-        where: { robot: { userId } } 
-      });
       await prisma.auditLog.deleteMany({ where: { userId } });
       await prisma.facility.deleteMany({ where: { userId } });
       await prisma.robot.deleteMany({ where: { userId } });

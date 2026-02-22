@@ -156,7 +156,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           const expectedBaseAmount = 1000;
           const expectedBattleMultiplier = 1 + (battles / 1000);
           const expectedFameMultiplier = 1 + (fame / 5000);
-          const expectedStudioMultiplier = 1 + (studioLevel * 0.1);
+          const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
           const expectedTotalRevenue = Math.floor(
             expectedBaseAmount * 
             expectedBattleMultiplier * 
@@ -281,7 +281,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           expect(result!.fameMultiplier).toBe(1.0);
 
           // Property: Total revenue should be base amount times studio multiplier
-          const expectedRevenue = Math.floor(1000 * (1 + studioLevel * 0.1));
+          const expectedRevenue = Math.floor(1000 * (1 + studioLevel * 1.0));
           expect(result!.totalRevenue).toBe(expectedRevenue);
 
           // Clean up robot for next iteration
@@ -437,7 +437,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           const expectedTotalBattles = oneVOneAndTournamentBattles + tagTeamBattles;
           const expectedBattleMultiplier = 1 + (expectedTotalBattles / 1000);
           const expectedFameMultiplier = 1 + (fame / 5000);
-          const expectedStudioMultiplier = 1 + (studioLevel * 0.1);
+          const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
           const expectedTotalRevenue = Math.floor(
             1000 * 
             expectedBattleMultiplier * 
@@ -680,7 +680,7 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           expect(result2!.studioLevel).toBe(studioLevel);
 
           // Property: Studio multiplier should match the formula
-          const expectedStudioMultiplier = 1 + (studioLevel * 0.1);
+          const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
           expect(result1!.studioMultiplier).toBeCloseTo(expectedStudioMultiplier, 10);
           expect(result2!.studioMultiplier).toBeCloseTo(expectedStudioMultiplier, 10);
 
@@ -933,7 +933,7 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           });
 
           // Property: Studio multiplier should match the formula
-          const expectedStudioMultiplier = 1 + (studioLevel * 0.1);
+          const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
           results.forEach(result => {
             expect(result!.studioMultiplier).toBeCloseTo(expectedStudioMultiplier, 10);
           });
@@ -1750,7 +1750,7 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
             1000 * 
             (1 + team1MaxBattles / 1000) * 
             (1 + team1MaxFame / 5000) * 
-            (1 + team1StudioLevel * 0.1)
+            (1 + team1StudioLevel * 1.0)
           );
 
           const team2MaxBattles = Math.max(team2Robot1Battles, team2Robot2Battles);
@@ -1759,7 +1759,7 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
             1000 * 
             (1 + team2MaxBattles / 1000) * 
             (1 + team2MaxFame / 5000) * 
-            (1 + team2StudioLevel * 0.1)
+            (1 + team2StudioLevel * 1.0)
           );
 
           // Property: Each stable should receive exactly ONE payment
@@ -1861,7 +1861,7 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
             1000 * 
             (1 + battles / 1000) * 
             (1 + fame / 5000) * 
-            (1 + studioLevel * 0.1)
+            (1 + studioLevel * 1.0)
           );
 
           // Property: Balance should increase by exactly ONE payment amount
@@ -1947,7 +1947,7 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
             1000 * 
             (1 + maxBattles / 1000) * 
             (1 + maxFame / 5000) * 
-            (1 + studioLevel * 0.1)
+            (1 + studioLevel * 1.0)
           );
 
           // Calculate what revenue would be if we summed the stats (WRONG approach)
@@ -1957,7 +1957,7 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
             1000 * 
             (1 + sumBattles / 1000) * 
             (1 + sumFame / 5000) * 
-            (1 + studioLevel * 0.1)
+            (1 + studioLevel * 1.0)
           );
 
           // Property: Balance should increase by revenue calculated from MAX values
@@ -2153,8 +2153,8 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           expect(result.team2Revenue.fameMultiplier).toBeCloseTo(expectedTeam2FameMultiplier, 10);
 
           // Property: Studio multiplier should match the team's studio level
-          const expectedTeam1StudioMultiplier = 1 + (studioLevel1 * 0.1);
-          const expectedTeam2StudioMultiplier = 1 + (studioLevel2 * 0.1);
+          const expectedTeam1StudioMultiplier = 1 + (studioLevel1 * 1.0);
+          const expectedTeam2StudioMultiplier = 1 + (studioLevel2 * 1.0);
           expect(result.team1Revenue.studioMultiplier).toBeCloseTo(expectedTeam1StudioMultiplier, 10);
           expect(result.team2Revenue.studioMultiplier).toBeCloseTo(expectedTeam2StudioMultiplier, 10);
 
@@ -2239,10 +2239,10 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
 
           // Property: This should result in higher revenue than using either robot alone
           const robot1AloneRevenue = Math.floor(
-            1000 * (1 + (1000 + battlesDiff) / 1000) * (1 + 1000 / 5000) * (1 + studioLevel * 0.1)
+            1000 * (1 + (1000 + battlesDiff) / 1000) * (1 + 1000 / 5000) * (1 + studioLevel * 1.0)
           );
           const robot2AloneRevenue = Math.floor(
-            1000 * (1 + 1000 / 1000) * (1 + (1000 + fameDiff) / 5000) * (1 + studioLevel * 0.1)
+            1000 * (1 + 1000 / 1000) * (1 + (1000 + fameDiff) / 5000) * (1 + studioLevel * 1.0)
           );
           expect(result.team1Revenue.totalRevenue).toBeGreaterThanOrEqual(robot1AloneRevenue);
           expect(result.team1Revenue.totalRevenue).toBeGreaterThanOrEqual(robot2AloneRevenue);
@@ -2312,7 +2312,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
 
           // Property: Revenue should be calculated correctly with shared stats
           const expectedRevenue = Math.floor(
-            1000 * (1 + battles / 1000) * (1 + fame / 5000) * (1 + studioLevel * 0.1)
+            1000 * (1 + battles / 1000) * (1 + fame / 5000) * (1 + studioLevel * 1.0)
           );
           expect(result.team1Revenue.totalRevenue).toBe(expectedRevenue);
 
@@ -2459,7 +2459,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
 
           // Calculate what revenue would be if using weak robot alone
           const weakRobotRevenue = Math.floor(
-            1000 * (1 + weakBattles / 1000) * (1 + weakFame / 5000) * (1 + studioLevel * 0.1)
+            1000 * (1 + weakBattles / 1000) * (1 + weakFame / 5000) * (1 + studioLevel * 1.0)
           );
 
           // Property: Tag Team revenue should be at least as high as weak robot alone
@@ -2471,7 +2471,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
 
           // Property: Tag Team revenue should equal using max values
           const expectedRevenue = Math.floor(
-            1000 * (1 + strongBattles / 1000) * (1 + strongFame / 5000) * (1 + studioLevel * 0.1)
+            1000 * (1 + strongBattles / 1000) * (1 + strongFame / 5000) * (1 + studioLevel * 1.0)
           );
           expect(result.team1Revenue.totalRevenue).toBe(expectedRevenue);
 
@@ -2547,7 +2547,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           expect(result.team2Revenue.fameMultiplier).toBe(1.0);
 
           // Property: Total revenue should be base amount times studio multiplier
-          const expectedRevenue = Math.floor(1000 * (1 + studioLevel * 0.1));
+          const expectedRevenue = Math.floor(1000 * (1 + studioLevel * 1.0));
           expect(result.team1Revenue.totalRevenue).toBe(expectedRevenue);
 
           // Clean up robots for next iteration
@@ -2691,7 +2691,7 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           const team1MaxFame = Math.max(t1r1Fame, t1r2Fame);
           const expectedTeam1BattleMultiplier = 1 + (team1MaxBattles / 1000);
           const expectedTeam1FameMultiplier = 1 + (team1MaxFame / 5000);
-          const expectedTeam1StudioMultiplier = 1 + (t1StudioLevel * 0.1);
+          const expectedTeam1StudioMultiplier = 1 + (t1StudioLevel * 1.0);
           const expectedTeam1Revenue = Math.floor(
             1000 * expectedTeam1BattleMultiplier * expectedTeam1FameMultiplier * expectedTeam1StudioMultiplier
           );
@@ -2701,7 +2701,7 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           const team2MaxFame = Math.max(t2r1Fame, t2r2Fame);
           const expectedTeam2BattleMultiplier = 1 + (team2MaxBattles / 1000);
           const expectedTeam2FameMultiplier = 1 + (team2MaxFame / 5000);
-          const expectedTeam2StudioMultiplier = 1 + (t2StudioLevel * 0.1);
+          const expectedTeam2StudioMultiplier = 1 + (t2StudioLevel * 1.0);
           const expectedTeam2Revenue = Math.floor(
             1000 * expectedTeam2BattleMultiplier * expectedTeam2FameMultiplier * expectedTeam2StudioMultiplier
           );
@@ -2921,8 +2921,8 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           // Property: But different studio multipliers
           expect(result.team1Revenue.studioLevel).toBe(t1StudioLevel);
           expect(result.team2Revenue.studioLevel).toBe(t2StudioLevel);
-          expect(result.team1Revenue.studioMultiplier).toBeCloseTo(1 + (t1StudioLevel * 0.1), 10);
-          expect(result.team2Revenue.studioMultiplier).toBeCloseTo(1 + (t2StudioLevel * 0.1), 10);
+          expect(result.team1Revenue.studioMultiplier).toBeCloseTo(1 + (t1StudioLevel * 1.0), 10);
+          expect(result.team2Revenue.studioMultiplier).toBeCloseTo(1 + (t2StudioLevel * 1.0), 10);
 
           // Property: Team with higher studio level gets more revenue
           if (t1StudioLevel > t2StudioLevel) {
@@ -3022,7 +3022,7 @@ describe('Property 11: Tag Team Separate Calculations', () => {
             1000 * 
             (1 + team1MaxBattles / 1000) * 
             (1 + team1MaxFame / 5000) * 
-            (1 + t1StudioLevel * 0.1)
+            (1 + t1StudioLevel * 1.0)
           );
 
           // Property: Team 1's revenue is always the same regardless of team 2's composition

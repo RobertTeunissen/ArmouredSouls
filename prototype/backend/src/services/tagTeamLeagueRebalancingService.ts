@@ -34,24 +34,26 @@ export interface FullTagTeamRebalancingSummary {
 }
 
 /**
- * Determine which teams should be promoted from a tier
+ * Determine which teams should be promoted from a SPECIFIC INSTANCE
  * Requirement 6.3: Promote top 10% of eligible teams (≥5 cycles in tier AND ≥25 league points)
- * @param tier - The league tier to evaluate
+ * @param instanceId - The specific league instance to evaluate (e.g., "bronze_1")
  * @param excludeTeamIds - Set of team IDs to exclude (already processed in this cycle)
  */
 export async function determinePromotions(
-  tier: TagTeamLeagueTier,
+  instanceId: string,
   excludeTeamIds: Set<number> = new Set()
 ): Promise<TagTeam[]> {
+  const tier = instanceId.split('_')[0] as TagTeamLeagueTier;
+  
   // Champion tier has no promotions
   if (tier === 'champion') {
     return [];
   }
 
-  // Get all teams in this tier with minimum cycles AND minimum league points
+  // Get all teams in this INSTANCE with minimum cycles AND minimum league points
   const teamsWithMinPoints = await prisma.tagTeam.findMany({
     where: {
-      tagTeamLeague: tier,
+      tagTeamLeagueId: instanceId, // CHANGED: Query by instance, not tier
       cyclesInTagTeamLeague: {
         gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
       },
@@ -71,15 +73,15 @@ export async function determinePromotions(
   // If no teams meet the minimum points threshold, skip
   if (teamsWithMinPoints.length === 0) {
     console.log(
-      `[TagTeamRebalancing] ${tier}: No teams with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`
+      `[TagTeamRebalancing] ${instanceId}: No teams with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`
     );
     return [];
   }
 
-  // Get total eligible teams (for calculating top 10%)
+  // Get total eligible teams in this INSTANCE (for calculating top 10%)
   const totalEligibleTeams = await prisma.tagTeam.count({
     where: {
-      tagTeamLeague: tier,
+      tagTeamLeagueId: instanceId, // CHANGED: Query by instance, not tier
       cyclesInTagTeamLeague: {
         gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
       },
@@ -89,20 +91,20 @@ export async function determinePromotions(
     },
   });
 
-  // Skip if too few teams (Requirement 6.3: ≥10 teams in tier)
+  // Skip if too few teams (Requirement 6.3: ≥10 teams in instance)
   if (totalEligibleTeams < MIN_TEAMS_FOR_REBALANCING) {
     console.log(
-      `[TagTeamRebalancing] ${tier}: Too few eligible teams (${totalEligibleTeams} < ${MIN_TEAMS_FOR_REBALANCING}), skipping promotions`
+      `[TagTeamRebalancing] ${instanceId}: Too few eligible teams (${totalEligibleTeams} < ${MIN_TEAMS_FOR_REBALANCING}), skipping promotions`
     );
     return [];
   }
 
-  // Calculate top 10% of all eligible teams
+  // Calculate top 10% of all eligible teams in this INSTANCE
   const promotionCount = Math.floor(totalEligibleTeams * PROMOTION_PERCENTAGE);
 
   if (promotionCount === 0) {
     console.log(
-      `[TagTeamRebalancing] ${tier}: Promotion count is 0 (${totalEligibleTeams} eligible teams), skipping`
+      `[TagTeamRebalancing] ${instanceId}: Promotion count is 0 (${totalEligibleTeams} eligible teams), skipping`
     );
     return [];
   }
@@ -111,31 +113,33 @@ export async function determinePromotions(
   const toPromote = teamsWithMinPoints.slice(0, Math.min(promotionCount, teamsWithMinPoints.length));
   
   console.log(
-    `[TagTeamRebalancing] ${tier}: ${toPromote.length} teams eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleTeams} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${teamsWithMinPoints.length} met points threshold)`
+    `[TagTeamRebalancing] ${instanceId}: ${toPromote.length} teams eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleTeams} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${teamsWithMinPoints.length} met points threshold)`
   );
 
   return toPromote;
 }
 
 /**
- * Determine which teams should be demoted from a tier
+ * Determine which teams should be demoted from a SPECIFIC INSTANCE
  * Requirement 6.4: Demote bottom 10% of eligible teams (≥5 cycles in tier)
- * @param tier - The league tier to evaluate
+ * @param instanceId - The specific league instance to evaluate (e.g., "silver_1")
  * @param excludeTeamIds - Set of team IDs to exclude (already processed in this cycle)
  */
 export async function determineDemotions(
-  tier: TagTeamLeagueTier,
+  instanceId: string,
   excludeTeamIds: Set<number> = new Set()
 ): Promise<TagTeam[]> {
+  const tier = instanceId.split('_')[0] as TagTeamLeagueTier;
+  
   // Bronze tier has no demotions
   if (tier === 'bronze') {
     return [];
   }
 
-  // Get all teams in this tier with minimum cycles in current league
+  // Get all teams in this INSTANCE with minimum cycles in current league
   const teams = await prisma.tagTeam.findMany({
     where: {
-      tagTeamLeague: tier,
+      tagTeamLeagueId: instanceId, // CHANGED: Query by instance, not tier
       cyclesInTagTeamLeague: {
         gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
       },
@@ -149,27 +153,27 @@ export async function determineDemotions(
     ],
   });
 
-  // Skip if too few teams (Requirement 6.4: ≥10 teams in tier)
+  // Skip if too few teams (Requirement 6.4: ≥10 teams in instance)
   if (teams.length < MIN_TEAMS_FOR_REBALANCING) {
     console.log(
-      `[TagTeamRebalancing] ${tier}: Too few teams (${teams.length} < ${MIN_TEAMS_FOR_REBALANCING}), skipping demotions`
+      `[TagTeamRebalancing] ${instanceId}: Too few teams (${teams.length} < ${MIN_TEAMS_FOR_REBALANCING}), skipping demotions`
     );
     return [];
   }
 
-  // Calculate bottom 10%
+  // Calculate bottom 10% of this INSTANCE
   const demotionCount = Math.floor(teams.length * DEMOTION_PERCENTAGE);
 
   if (demotionCount === 0) {
     console.log(
-      `[TagTeamRebalancing] ${tier}: Demotion count is 0 (${teams.length} teams), skipping`
+      `[TagTeamRebalancing] ${instanceId}: Demotion count is 0 (${teams.length} teams), skipping`
     );
     return [];
   }
 
   const toDemote = teams.slice(0, demotionCount);
   console.log(
-    `[TagTeamRebalancing] ${tier}: ${toDemote.length} teams eligible for demotion (bottom ${DEMOTION_PERCENTAGE * 100}% of ${teams.length})`
+    `[TagTeamRebalancing] ${instanceId}: ${toDemote.length} teams eligible for demotion (bottom ${DEMOTION_PERCENTAGE * 100}% of ${teams.length})`
   );
 
   return toDemote;
@@ -199,7 +203,7 @@ function getNextTierDown(currentTier: TagTeamLeagueTier): TagTeamLeagueTier | nu
 
 /**
  * Promote a team to the next tier
- * Requirement 6.5: Reset league points to 0
+ * CHANGED: LP retention - league points are NOT reset to 0
  * Requirement 6.6: Reset cycles counter to 0
  * Requirement 6.7, 6.8: Assign to appropriate instance
  */
@@ -215,25 +219,25 @@ export async function promoteTeam(team: TagTeam): Promise<void> {
   // Assign to new instance (handles max 50 teams per instance)
   const newLeagueId = await assignTagTeamLeagueInstance(nextTier);
 
-  // Update team
+  // Update team - RETAIN league points
   await prisma.tagTeam.update({
     where: { id: team.id },
     data: {
       tagTeamLeague: nextTier,
       tagTeamLeagueId: newLeagueId,
-      tagTeamLeaguePoints: 0, // Reset league points
+      // tagTeamLeaguePoints: REMOVED - LP retained across promotions
       cyclesInTagTeamLeague: 0, // Reset cycles counter for new league
     },
   });
 
   console.log(
-    `[TagTeamRebalancing] Promoted: Team ${team.id} (${team.tagTeamLeague} → ${nextTier}, instance ${newLeagueId})`
+    `[TagTeamRebalancing] Promoted: Team ${team.id} (${team.tagTeamLeague} → ${nextTier}, instance ${newLeagueId}, LP: ${team.tagTeamLeaguePoints} retained)`
   );
 }
 
 /**
  * Demote a team to the previous tier
- * Requirement 6.5: Reset league points to 0
+ * CHANGED: LP retention - league points are NOT reset to 0
  * Requirement 6.6: Reset cycles counter to 0
  * Requirement 6.7, 6.8: Assign to appropriate instance
  */
@@ -249,24 +253,25 @@ export async function demoteTeam(team: TagTeam): Promise<void> {
   // Assign to new instance (handles max 50 teams per instance)
   const newLeagueId = await assignTagTeamLeagueInstance(previousTier);
 
-  // Update team
+  // Update team - RETAIN league points
   await prisma.tagTeam.update({
     where: { id: team.id },
     data: {
       tagTeamLeague: previousTier,
       tagTeamLeagueId: newLeagueId,
-      tagTeamLeaguePoints: 0, // Reset league points
+      // tagTeamLeaguePoints: REMOVED - LP retained across demotions
       cyclesInTagTeamLeague: 0, // Reset cycles counter for new league
     },
   });
 
   console.log(
-    `[TagTeamRebalancing] Demoted: Team ${team.id} (${team.tagTeamLeague} → ${previousTier}, instance ${newLeagueId})`
+    `[TagTeamRebalancing] Demoted: Team ${team.id} (${team.tagTeamLeague} → ${previousTier}, instance ${newLeagueId}, LP: ${team.tagTeamLeaguePoints} retained)`
   );
 }
 
 /**
- * Rebalance a single league tier
+ * Rebalance a single league tier - INSTANCE-BASED
+ * CHANGED: Process each instance separately instead of entire tier
  * @param tier - The league tier to rebalance
  * @param excludeTeamIds - Set of team IDs already processed in this cycle
  */
@@ -283,65 +288,79 @@ async function rebalanceTier(
     },
   });
 
-  // Count eligible teams (≥5 cycles in current league and not already processed)
-  const eligibleTeams = await prisma.tagTeam.count({
-    where: {
-      tagTeamLeague: tier,
-      cyclesInTagTeamLeague: { gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING },
-      NOT: {
-        id: { in: Array.from(excludeTeamIds) },
-      },
-    },
-  });
-
-  console.log(
-    `[TagTeamRebalancing] ${tier}: ${totalInTier} total teams, ${eligibleTeams} eligible for rebalancing`
-  );
-
   const summary: TagTeamRebalancingSummary = {
     tier,
     teamsInTier: totalInTier,
     promoted: 0,
     demoted: 0,
-    eligibleTeams,
+    eligibleTeams: 0,
   };
 
-  // Skip if too few teams
-  if (eligibleTeams < MIN_TEAMS_FOR_REBALANCING) {
-    console.log(`[TagTeamRebalancing] ${tier}: Skipping (not enough eligible teams)`);
-    return summary;
-  }
+  // Get all instances for this tier
+  const instances = await prisma.tagTeam.findMany({
+    where: { tagTeamLeague: tier },
+    select: { tagTeamLeagueId: true },
+    distinct: ['tagTeamLeagueId'],
+  });
 
-  // Determine promotions
-  const toPromote = await determinePromotions(tier, excludeTeamIds);
+  const instanceIds = instances.map(i => i.tagTeamLeagueId);
+  
+  console.log(`[TagTeamRebalancing] ${tier}: ${totalInTier} total teams across ${instanceIds.length} instances`);
 
-  // Determine demotions
-  const toDemote = await determineDemotions(tier, excludeTeamIds);
+  // Process each instance separately
+  for (const instanceId of instanceIds) {
+    console.log(`[TagTeamRebalancing] Processing ${instanceId}...`);
+    
+    // Count eligible teams in this instance
+    const eligibleInInstance = await prisma.tagTeam.count({
+      where: {
+        tagTeamLeagueId: instanceId,
+        cyclesInTagTeamLeague: { gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING },
+        NOT: {
+          id: { in: Array.from(excludeTeamIds) },
+        },
+      },
+    });
+    
+    summary.eligibleTeams += eligibleInInstance;
 
-  // Execute promotions
-  for (const team of toPromote) {
-    try {
-      await promoteTeam(team);
-      excludeTeamIds.add(team.id); // Mark as processed
-      summary.promoted++;
-    } catch (error) {
-      console.error(`[TagTeamRebalancing] Error promoting team ${team.id}:`, error);
+    // Skip if too few teams in this instance
+    if (eligibleInInstance < MIN_TEAMS_FOR_REBALANCING) {
+      console.log(`[TagTeamRebalancing] ${instanceId}: Skipping (${eligibleInInstance} eligible, need ${MIN_TEAMS_FOR_REBALANCING})`);
+      continue;
     }
-  }
 
-  // Execute demotions
-  for (const team of toDemote) {
-    try {
-      await demoteTeam(team);
-      excludeTeamIds.add(team.id); // Mark as processed
-      summary.demoted++;
-    } catch (error) {
-      console.error(`[TagTeamRebalancing] Error demoting team ${team.id}:`, error);
+    // Determine promotions for this instance
+    const toPromote = await determinePromotions(instanceId, excludeTeamIds);
+
+    // Determine demotions for this instance
+    const toDemote = await determineDemotions(instanceId, excludeTeamIds);
+
+    // Execute promotions
+    for (const team of toPromote) {
+      try {
+        await promoteTeam(team);
+        excludeTeamIds.add(team.id); // Mark as processed
+        summary.promoted++;
+      } catch (error) {
+        console.error(`[TagTeamRebalancing] Error promoting team ${team.id}:`, error);
+      }
+    }
+
+    // Execute demotions
+    for (const team of toDemote) {
+      try {
+        await demoteTeam(team);
+        excludeTeamIds.add(team.id); // Mark as processed
+        summary.demoted++;
+      } catch (error) {
+        console.error(`[TagTeamRebalancing] Error demoting team ${team.id}:`, error);
+      }
     }
   }
 
   console.log(
-    `[TagTeamRebalancing] ${tier}: Promoted ${summary.promoted}, Demoted ${summary.demoted}`
+    `[TagTeamRebalancing] ${tier}: Promoted ${summary.promoted}, Demoted ${summary.demoted} across ${instanceIds.length} instances`
   );
 
   return summary;

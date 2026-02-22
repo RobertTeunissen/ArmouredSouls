@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LogoB from '../assets/logos/logo-b.svg?react';
@@ -8,6 +8,11 @@ import SwordsIcon from '../assets/icons/swords.svg?react';
 import CartIcon from '../assets/icons/cart.svg?react';
 import MenuIcon from '../assets/icons/menu.svg?react';
 import CloseIcon from '../assets/icons/close.svg?react';
+
+interface UserRobot {
+  id: number;
+  name: string;
+}
 
 // Complete page inventory - all 70 pages
 const implementedPages = new Set([
@@ -29,8 +34,6 @@ const implementedPages = new Set([
   '/income',
   '/profile',
   '/cycle-summary',
-  '/cycle-comparison',
-  '/facility-advisor',
   '/system-health',
 ]);
 
@@ -40,8 +43,6 @@ const allPages = {
     items: [
       { path: '/robots', label: 'My Robots' },
       { path: '/robots/compare', label: 'Compare Robots' },
-      { path: '/robots/training', label: 'Training Planner' },
-      { path: '/robots/loadouts', label: 'Loadout Presets' },
       { path: '/robots/create', label: 'Create Robot' },
     ]
   },
@@ -52,13 +53,10 @@ const allPages = {
       { path: '/league-standings', label: 'League Standings' },
       { path: '/tag-teams', label: 'Tag Team Management' },
       { path: '/tag-teams/standings', label: 'Tag Team Standings' },
-      { path: '/matchmaking', label: 'Matchmaking Queue' },
       { path: '/practice', label: 'Practice Arena' },
       { path: '/tournaments', label: 'Tournament Hub' },
       { path: '/events', label: 'Events Calendar' },
       { path: '/challenges', label: 'Daily Challenges' },
-      { path: '/team/matchmaking', label: 'Team Matchmaking' },
-      { path: '/team/history', label: 'Team Battle History' },
       { path: '/battle-royale', label: 'Battle Royale' },
       { path: '/guild-wars', label: 'Guild Wars' },
       { path: '/story', label: 'Story Mode' },
@@ -75,6 +73,7 @@ const allPages = {
       { path: '/crafting', label: 'Weapon Crafting' },
       { path: '/blueprints', label: 'Blueprint Library' },
       { path: '/income', label: 'Income Dashboard' },
+      { path: '/cycle-summary', label: 'Cycle Summary' },
       { path: '/prestige-store', label: 'Prestige Store' },
     ]
   },
@@ -104,20 +103,6 @@ const allPages = {
       { path: '/customize/stable', label: 'Stable Customization' },
       { path: '/customize/poses', label: 'Victory Poses' },
       { path: '/customize/emotes', label: 'Emotes & Taunts' },
-    ]
-  },
-  analytics: {
-    label: 'Analytics',
-    items: [
-      { path: '/analytics', label: 'Analytics Dashboard' },
-      { path: '/cycle-summary', label: 'Cycle Summary' },
-      { path: '/cycle-comparison', label: 'Cycle Comparison' },
-      { path: '/facility-advisor', label: 'Facility Advisor' },
-      { path: '/analytics/battles', label: 'Battle Analytics' },
-      { path: '/analytics/economy', label: 'Economy Analytics' },
-      { path: '/simulator', label: 'Battle Simulator' },
-      { path: '/calculator', label: 'Build Calculator' },
-      { path: '/meta', label: 'Meta Reports' },
     ]
   },
 };
@@ -164,7 +149,7 @@ function NavLink({ to, children, isActive, onClick, disabled = false }: NavLinkP
 
 interface DropdownMenuProps {
   label: string;
-  items: Array<{ path: string; label: string }>;
+  items: Array<{ path: string; label: string; indent?: boolean }>;
   isActive: boolean;
   checkActive: (path: string) => boolean;
 }
@@ -190,6 +175,14 @@ function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps
     setCloseTimer(timer);
   };
 
+  const isPageImplemented = (path: string) => {
+    // Allow any robot detail page (/robots/:id)
+    if (path.match(/^\/robots\/\d+$/)) {
+      return true;
+    }
+    return implementedPages.has(path);
+  };
+
   return (
     <div
       className="relative"
@@ -212,7 +205,7 @@ function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps
       {isOpen && (
         <div className="absolute top-full left-0 mt-0 w-56 bg-surface-elevated border border-white/10 rounded-md shadow-xl z-50 py-2">
           {items.map(item => {
-            const disabled = !implementedPages.has(item.path);
+            const disabled = !isPageImplemented(item.path);
             const active = checkActive(item.path);
             
             return (
@@ -228,6 +221,7 @@ function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps
                 disabled={disabled}
                 className={`
                   w-full px-4 py-2 text-left transition-colors text-sm
+                  ${item.indent ? 'pl-8' : ''}
                   ${disabled
                     ? 'text-tertiary cursor-not-allowed opacity-60'
                     : active
@@ -280,6 +274,34 @@ function Navigation() {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [userRobots, setUserRobots] = useState<UserRobot[]>([]);
+
+  // Fetch user's robots
+  useEffect(() => {
+    const fetchRobots = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch('http://localhost:3001/api/robots', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserRobots(data.map((robot: any) => ({ id: robot.id, name: robot.name })));
+        }
+      } catch (error) {
+        console.error('Failed to fetch robots:', error);
+      }
+    };
+
+    if (user) {
+      fetchRobots();
+    }
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -330,7 +352,15 @@ function Navigation() {
               
               <DropdownMenu
                 label={allPages.robots.label}
-                items={allPages.robots.items}
+                items={[
+                  allPages.robots.items[0], // My Robots
+                  ...userRobots.map(robot => ({
+                    path: `/robots/${robot.id}`,
+                    label: robot.name,
+                    indent: true,
+                  })),
+                  ...allPages.robots.items.slice(1), // Rest of the items
+                ]}
                 isActive={isCategoryActive(allPages.robots.items)}
                 checkActive={isActive}
               />
@@ -360,13 +390,6 @@ function Navigation() {
                 label={allPages.customize.label}
                 items={allPages.customize.items}
                 isActive={isCategoryActive(allPages.customize.items)}
-                checkActive={isActive}
-              />
-              
-              <DropdownMenu
-                label={allPages.analytics.label}
-                items={allPages.analytics.items}
-                isActive={isCategoryActive(allPages.analytics.items)}
                 checkActive={isActive}
               />
               
@@ -500,7 +523,33 @@ function Navigation() {
                     🤖 Robots
                   </h3>
                   <nav className="space-y-1">
-                    {allPages.robots.items.map(item => (
+                    {/* My Robots link */}
+                    <DrawerMenuItem
+                      label={allPages.robots.items[0].label}
+                      onClick={() => {
+                        navigate(allPages.robots.items[0].path);
+                        setDrawerOpen(false);
+                      }}
+                      isActive={isActive(allPages.robots.items[0].path)}
+                      disabled={!implementedPages.has(allPages.robots.items[0].path)}
+                    />
+                    
+                    {/* Individual robot entries - always enabled */}
+                    {userRobots.map(robot => (
+                      <DrawerMenuItem
+                        key={robot.id}
+                        label={robot.name}
+                        onClick={() => {
+                          navigate(`/robots/${robot.id}`);
+                          setDrawerOpen(false);
+                        }}
+                        isActive={isActive(`/robots/${robot.id}`)}
+                        indent={true}
+                      />
+                    ))}
+                    
+                    {/* Rest of robot menu items */}
+                    {allPages.robots.items.slice(1).map(item => (
                       <DrawerMenuItem
                         key={item.path}
                         label={item.label}
@@ -599,27 +648,6 @@ function Navigation() {
                   </nav>
                 </div>
 
-                {/* ANALYTICS Section */}
-                <div className="mb-6">
-                  <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    📊 Analytics & Tools
-                  </h3>
-                  <nav className="space-y-1">
-                    {allPages.analytics.items.map(item => (
-                      <DrawerMenuItem
-                        key={item.path}
-                        label={item.label}
-                        onClick={() => {
-                          navigate(item.path);
-                          setDrawerOpen(false);
-                        }}
-                        isActive={isActive(item.path)}
-                        disabled={!implementedPages.has(item.path)}
-                      />
-                    ))}
-                  </nav>
-                </div>
-
                 {/* SETTINGS & ADMIN Section */}
                 <div className="border-t border-white/10 pt-4">
                   <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">
@@ -672,15 +700,17 @@ interface DrawerMenuItemProps {
   onClick: () => void;
   isActive: boolean;
   disabled?: boolean;
+  indent?: boolean;
 }
 
-function DrawerMenuItem({ label, onClick, isActive, disabled = false }: DrawerMenuItemProps) {
+function DrawerMenuItem({ label, onClick, isActive, disabled = false, indent = false }: DrawerMenuItemProps) {
   return (
     <button
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       className={`
-        w-full px-4 py-3 text-left transition-colors
+        w-full py-3 text-left transition-colors
+        ${indent ? 'pl-8 pr-4' : 'px-4'}
         ${disabled
           ? 'text-tertiary cursor-not-allowed opacity-60'
           : isActive 

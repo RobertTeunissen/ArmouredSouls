@@ -8,7 +8,7 @@ import { calculateFacilityROI, FacilityROIData, formatCurrency } from '../utils/
 
 // Facility options for the calculator
 const FACILITY_OPTIONS = [
-  { type: 'income_generator', name: 'Income Generator' },
+  { type: 'merchandising_hub', name: 'Merchandising Hub' },
   { type: 'streaming_studio', name: 'Streaming Studio' },
   { type: 'training_facility', name: 'Training Facility' },
   { type: 'repair_bay', name: 'Repair Bay' },
@@ -26,7 +26,7 @@ const FACILITY_OPTIONS = [
 ];
 
 function FacilityROICalculator() {
-  const [selectedFacility, setSelectedFacility] = useState<string>('income_generator');
+  const [selectedFacility, setSelectedFacility] = useState<string>('merchandising_hub');
   const [targetLevel, setTargetLevel] = useState<number>(1);
   const [roiData, setRoiData] = useState<FacilityROIData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);

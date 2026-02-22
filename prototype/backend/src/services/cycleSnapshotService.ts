@@ -25,6 +25,7 @@ interface StableMetric {
   operatingCosts: number;
   weaponPurchases: number;
   facilityPurchases: number;
+  robotPurchases: number;
   attributeUpgrades: number;
   totalPurchases: number;
   netProfit: number;
@@ -190,6 +191,7 @@ export class CycleSnapshotService {
             operatingCosts: 0,
             weaponPurchases: 0,
             facilityPurchases: 0,
+            robotPurchases: 0,
             attributeUpgrades: 0,
             totalPurchases: 0,
             netProfit: 0,
@@ -203,10 +205,16 @@ export class CycleSnapshotService {
       // Process battle_complete events - MUCH SIMPLER NOW!
       // Each event is for ONE robot, with userId and robotId in columns
       battleCompleteEvents.forEach((event: any) => {
-        if (!event.userId) return; // Skip invalid events
+        if (!event.userId) {
+          console.log(`[CycleSnapshotService] WARNING: battle_complete event ${event.id} has no userId`);
+          return; // Skip invalid events
+        }
         
         const metric = getOrCreateMetric(event.userId);
         const payload = event.payload as any;
+        
+        // Debug logging
+        console.log(`[CycleSnapshotService] Processing battle_complete for user ${event.userId}: credits=${payload.credits}, streaming=${payload.streamingRevenue}, prestige=${payload.prestige}`);
         
         // Aggregate data from this battle
         metric.battlesParticipated++;
@@ -247,7 +255,7 @@ export class CycleSnapshotService {
         metric.totalRepairCosts += payload.cost || 0;
       });
 
-      // Add purchase costs (weapons, facilities, attribute upgrades)
+      // Add purchase costs (weapons, facilities, robots, attribute upgrades)
       const weaponPurchaseEvents = await prisma.auditLog.findMany({
         where: {
           cycleNumber,
@@ -259,6 +267,13 @@ export class CycleSnapshotService {
         where: {
           cycleNumber,
           eventType: { in: ['facility_purchase', 'facility_upgrade'] },
+        },
+      });
+
+      const robotPurchaseEvents = await prisma.auditLog.findMany({
+        where: {
+          cycleNumber,
+          eventType: 'robot_purchase',
         },
       });
 
@@ -283,6 +298,14 @@ export class CycleSnapshotService {
         const metric = getOrCreateMetric(event.userId);
         const payload = event.payload as any;
         metric.facilityPurchases += payload.cost || 0;
+      });
+
+      // Aggregate robot purchases
+      robotPurchaseEvents.forEach((event: any) => {
+        if (!event.userId) return;
+        const metric = getOrCreateMetric(event.userId);
+        const payload = event.payload as any;
+        metric.robotPurchases += payload.cost || 0;
       });
 
       // Aggregate attribute upgrades
@@ -325,6 +348,7 @@ export class CycleSnapshotService {
         metric.totalPurchases = 
           metric.weaponPurchases +
           metric.facilityPurchases +
+          metric.robotPurchases +
           metric.attributeUpgrades;
 
         metric.netProfit = 
@@ -343,16 +367,15 @@ export class CycleSnapshotService {
     }
 
   /**
-   * Aggregate robot metrics from Battle table
+   * Aggregate robot metrics from AuditLog battle_complete events
+   * Single source of truth: AuditLog
    */
   private async aggregateRobotMetrics(cycleNumber: number): Promise<RobotMetric[]> {
-    // Get all battles for this cycle
-    const battles = await prisma.battle.findMany({
+    // Get battle_complete events - each event is for one robot
+    const battleCompleteEvents = await prisma.auditLog.findMany({
       where: {
-        createdAt: {
-          gte: await this.getCycleStartTime(cycleNumber),
-          lte: await this.getCycleEndTime(cycleNumber),
-        },
+        cycleNumber,
+        eventType: 'battle_complete',
       },
     });
 
@@ -375,60 +398,36 @@ export class CycleSnapshotService {
       fameChange: 0,
     });
 
-    battles.forEach(battle => {
-      // Process robot1
-      let robot1Metric = metricsMap.get(battle.robot1Id);
-      if (!robot1Metric) {
-        robot1Metric = initMetric(battle.robot1Id);
-        metricsMap.set(battle.robot1Id, robot1Metric);
+    // Process each battle_complete event
+    battleCompleteEvents.forEach((event: any) => {
+      if (!event.robotId) return; // Skip invalid events
+      
+      let robotMetric = metricsMap.get(event.robotId);
+      if (!robotMetric) {
+        robotMetric = initMetric(event.robotId);
+        metricsMap.set(event.robotId, robotMetric);
       }
 
-      robot1Metric.battlesParticipated++;
-      robot1Metric.damageDealt += battle.robot1DamageDealt;
-      robot1Metric.damageReceived += battle.robot2DamageDealt;
-      // Note: Repair costs now tracked via audit log, not battle table
-      robot1Metric.eloChange += battle.robot1ELOAfter - battle.robot1ELOBefore;
-      robot1Metric.fameChange += battle.robot1FameAwarded;
-      if (battle.robot2Destroyed) robot1Metric.kills++;
-      if (battle.robot1Destroyed) robot1Metric.destructions++;
-
-      if (battle.winnerId === battle.robot1Id) {
-        robot1Metric.wins++;
-        robot1Metric.creditsEarned += battle.winnerReward || 0;
-      } else if (battle.winnerId === null) {
-        robot1Metric.draws++;
-        robot1Metric.creditsEarned += battle.loserReward || 0;
-      } else {
-        robot1Metric.losses++;
-        robot1Metric.creditsEarned += battle.loserReward || 0;
-      }
-
-      // Process robot2
-      let robot2Metric = metricsMap.get(battle.robot2Id);
-      if (!robot2Metric) {
-        robot2Metric = initMetric(battle.robot2Id);
-        metricsMap.set(battle.robot2Id, robot2Metric);
-      }
-
-      robot2Metric.battlesParticipated++;
-      robot2Metric.damageDealt += battle.robot2DamageDealt;
-      robot2Metric.damageReceived += battle.robot1DamageDealt;
-      // Note: Repair costs now tracked via audit log, not battle table
-      robot2Metric.eloChange += battle.robot2ELOAfter - battle.robot2ELOBefore;
-      robot2Metric.fameChange += battle.robot2FameAwarded;
-      if (battle.robot1Destroyed) robot2Metric.kills++;
-      if (battle.robot2Destroyed) robot2Metric.destructions++;
-
-      if (battle.winnerId === battle.robot2Id) {
-        robot2Metric.wins++;
-        robot2Metric.creditsEarned += battle.winnerReward || 0;
-      } else if (battle.winnerId === null) {
-        robot2Metric.draws++;
-        robot2Metric.creditsEarned += battle.loserReward || 0;
-      } else {
-        robot2Metric.losses++;
-        robot2Metric.creditsEarned += battle.loserReward || 0;
-      }
+      const payload = event.payload as any;
+      
+      // Aggregate battle participation
+      robotMetric.battlesParticipated++;
+      
+      // Aggregate results
+      if (payload.result === 'win') robotMetric.wins++;
+      else if (payload.result === 'loss') robotMetric.losses++;
+      else if (payload.result === 'draw') robotMetric.draws++;
+      
+      // Aggregate combat stats
+      robotMetric.damageDealt += payload.damageDealt || 0;
+      robotMetric.creditsEarned += payload.credits || 0;
+      robotMetric.eloChange += payload.eloChange || 0;
+      robotMetric.fameChange += payload.fame || 0;
+      
+      // Track kills and destructions
+      if (payload.destroyed) robotMetric.destructions++;
+      // Note: kills are tracked when opponent is destroyed, which we can't determine from single event
+      // We'll need to query opponent events or accept this limitation
     });
 
     // Add repair costs from audit log
@@ -447,6 +446,45 @@ export class CycleSnapshotService {
         const payload = event.payload as any;
         robotMetric.repairCosts += payload.cost || 0;
       }
+    });
+    
+    // Calculate damage received by looking at opponent's damageDealt
+    // For each battle, we need to find the opponent's event
+    const battleEventsByBattle = new Map<number, any[]>();
+    battleCompleteEvents.forEach((event: any) => {
+      const battleId = event.battleId;
+      if (!battleId) return;
+      
+      if (!battleEventsByBattle.has(battleId)) {
+        battleEventsByBattle.set(battleId, []);
+      }
+      battleEventsByBattle.get(battleId)!.push(event);
+    });
+    
+    // Now process damage received and kills
+    battleEventsByBattle.forEach((events) => {
+      if (events.length !== 2 && events.length !== 4) return; // Should be 2 for 1v1/tournament, 4 for tag team
+      
+      events.forEach((event: any) => {
+        const robotMetric = metricsMap.get(event.robotId);
+        if (!robotMetric) return;
+        
+        const payload = event.payload as any;
+        
+        // Find opponent(s) in the same battle
+        const opponents = events.filter(e => e.robotId !== event.robotId);
+        opponents.forEach((oppEvent: any) => {
+          const oppPayload = oppEvent.payload as any;
+          
+          // Add opponent's damage as damage received
+          robotMetric.damageReceived += oppPayload.damageDealt || 0;
+          
+          // If opponent was destroyed, count as a kill
+          if (oppPayload.destroyed) {
+            robotMetric.kills++;
+          }
+        });
+      });
     });
 
     return Array.from(metricsMap.values());

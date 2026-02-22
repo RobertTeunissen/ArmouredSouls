@@ -265,7 +265,7 @@ const ARCHETYPE_SPECS: ArchetypeSpec[] = [
     username: 'archetype_facility_investor',
     currency: 250000,
     facilities: [
-      { type: 'income_generator', level: 1 },
+      { type: 'merchandising_hub', level: 1 },
       { type: 'repair_bay', level: 1 },
       { type: 'training_facility', level: 1 },
     ],

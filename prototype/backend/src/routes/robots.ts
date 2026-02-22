@@ -220,7 +220,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       const cycleMetadata = await prisma.cycleMetadata.findUnique({
         where: { id: 1 },
       });
-      const currentCycle = cycleMetadata?.totalCycles || 0;
+      const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
 
       // Log robot purchase with new dedicated event type
       await eventLogger.logRobotPurchase(
@@ -929,6 +929,7 @@ router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Resp
             },
           },
         },
+        participants: true, // Include BattleParticipant data
       },
       orderBy: {
         createdAt: 'desc',
@@ -943,6 +944,11 @@ router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Resp
       const thisRobot = isRobot1 ? battle.robot1 : battle.robot2;
       const opponent = isRobot1 ? battle.robot2 : battle.robot1;
       const won = battle.winnerId === robotId;
+      
+      // Get participant data
+      const thisParticipant = battle.participants.find(p => p.robotId === robotId);
+      const opponentId = isRobot1 ? battle.robot2Id : battle.robot1Id;
+      const opponentParticipant = battle.participants.find(p => p.robotId === opponentId);
 
       return {
         battleId: battle.id,
@@ -954,17 +960,17 @@ router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Resp
           duration: battle.durationSeconds,
         },
         thisRobot: {
-          finalHP: isRobot1 ? battle.robot1FinalHP : battle.robot2FinalHP,
-          damageDealt: isRobot1 ? battle.robot1DamageDealt : battle.robot2DamageDealt,
-          eloBefore: isRobot1 ? battle.robot1ELOBefore : battle.robot2ELOBefore,
-          eloAfter: isRobot1 ? battle.robot1ELOAfter : battle.robot2ELOAfter,
+          finalHP: thisParticipant?.finalHP || 0,
+          damageDealt: thisParticipant?.damageDealt || 0,
+          eloBefore: thisParticipant?.eloBefore || 0,
+          eloAfter: thisParticipant?.eloAfter || 0,
         },
         opponent: {
           id: opponent.id,
           name: opponent.name,
           owner: opponent.user.username,
-          finalHP: isRobot1 ? battle.robot2FinalHP : battle.robot1FinalHP,
-          damageDealt: isRobot1 ? battle.robot2DamageDealt : battle.robot1DamageDealt,
+          finalHP: opponentParticipant?.finalHP || 0,
+          damageDealt: opponentParticipant?.damageDealt || 0,
         },
       };
     });
@@ -1402,19 +1408,12 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
         robot1Id: true,
         robot2Id: true,
         winnerId: true,
-        robot1DamageDealt: true,
-        robot2DamageDealt: true,
-        robot1FinalHP: true,
-        robot2FinalHP: true,
-        robot1ELOBefore: true,
-        robot1ELOAfter: true,
-        robot2ELOBefore: true,
-        robot2ELOAfter: true,
         team1ActiveRobotId: true,
         team1ReserveRobotId: true,
         team2ActiveRobotId: true,
         team2ReserveRobotId: true,
         createdAt: true,
+        participants: true, // Get BattleParticipant data
         tournament: {
           select: {
             id: true,
@@ -1434,17 +1433,10 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
       
       // For tag team battles, check team membership and ELO change
       if (battle.battleType === 'tag_team') {
-        const isTeam1 = battle.team1ActiveRobotId === robotId || battle.team1ReserveRobotId === robotId;
-        const isTeam2 = battle.team2ActiveRobotId === robotId || battle.team2ReserveRobotId === robotId;
+        const participant = battle.participants.find((p: any) => p.robotId === robotId);
+        if (!participant) return 'draw';
         
-        // Check ELO change to determine win/loss
-        let eloChange = 0;
-        if (isTeam1) {
-          eloChange = battle.robot1ELOAfter - battle.robot1ELOBefore;
-        } else if (isTeam2) {
-          eloChange = battle.robot2ELOAfter - battle.robot2ELOBefore;
-        }
-        
+        const eloChange = participant.eloAfter - participant.eloBefore;
         if (eloChange > 0) return 'win';
         if (eloChange < 0) return 'loss';
         return 'draw';
@@ -1455,35 +1447,29 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
 
     // Helper to get robot's damage dealt and taken
     const getBattleStats = (battle: any) => {
-      if (battle.battleType === 'tag_team') {
-        // For tag team battles, use the team's stats
-        const isTeam1 = battle.team1ActiveRobotId === robotId || battle.team1ReserveRobotId === robotId;
-        const isTeam2 = battle.team2ActiveRobotId === robotId || battle.team2ReserveRobotId === robotId;
-        
-        if (isTeam1) {
-          return {
-            damageDealt: battle.robot1DamageDealt,
-            damageTaken: battle.robot2DamageDealt,
-            eloChange: battle.robot1ELOAfter - battle.robot1ELOBefore,
-          };
-        } else if (isTeam2) {
-          return {
-            damageDealt: battle.robot2DamageDealt,
-            damageTaken: battle.robot1DamageDealt,
-            eloChange: battle.robot2ELOAfter - battle.robot2ELOBefore,
-          };
-        }
+      const participant = battle.participants.find((p: any) => p.robotId === robotId);
+      if (!participant) {
+        return { damageDealt: 0, damageTaken: 0, eloChange: 0 };
       }
       
-      const isRobot1 = battle.robot1Id === robotId;
+      // Get opponent's damage (damage taken by this robot)
+      let damageTaken = 0;
+      if (battle.battleType === 'tag_team') {
+        // For tag team, sum damage from all opponents
+        const opponentTeam = participant.team === 1 ? 2 : 1;
+        damageTaken = battle.participants
+          .filter((p: any) => p.team === opponentTeam)
+          .reduce((sum: number, p: any) => sum + p.damageDealt, 0);
+      } else {
+        // For 1v1, get opponent's damage
+        const opponent = battle.participants.find((p: any) => p.robotId !== robotId);
+        damageTaken = opponent?.damageDealt || 0;
+      }
+      
       return {
-        damageDealt: isRobot1 ? battle.robot1DamageDealt : battle.robot2DamageDealt,
-        damageTaken: isRobot1 
-          ? battle.robot2DamageDealt 
-          : battle.robot1DamageDealt,
-        eloChange: isRobot1 
-          ? battle.robot1ELOAfter - battle.robot1ELOBefore 
-          : battle.robot2ELOAfter - battle.robot2ELOBefore,
+        damageDealt: participant.damageDealt,
+        damageTaken,
+        eloChange: participant.eloAfter - participant.eloBefore,
       };
     };
 

@@ -52,6 +52,7 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
           select: {
             id: true,
             username: true,
+            stableName: true,
           },
         },
       },
@@ -79,6 +80,7 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
       userId: robot.user.id,
       user: {
         username: robot.user.username,
+        stableName: robot.user.stableName,
       },
     }));
 

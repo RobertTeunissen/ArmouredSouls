@@ -10,7 +10,7 @@ interface SummaryStats {
   totalCreditsEarned: number;
   currentStreak?: { type: 'win' | 'loss'; count: number };
   // Battle type breakdown
-  leagueStats?: {
+  leagueStats: {
     battles: number;
     wins: number;
     losses: number;
@@ -18,7 +18,7 @@ interface SummaryStats {
     winRate: number;
     avgELOChange: number;
   };
-  tournamentStats?: {
+  tournamentStats: {
     battles: number;
     wins: number;
     losses: number;
@@ -26,7 +26,7 @@ interface SummaryStats {
     winRate: number;
     avgELOChange: number;
   };
-  tagTeamStats?: {
+  tagTeamStats: {
     battles: number;
     wins: number;
     losses: number;
@@ -45,7 +45,7 @@ interface BattleHistorySummaryProps {
 const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view, onViewChange }) => {
   
   const getDisplayStats = () => {
-    if (view === 'league' && stats.leagueStats) {
+    if (view === 'league') {
       return {
         battles: stats.leagueStats.battles,
         wins: stats.leagueStats.wins,
@@ -55,7 +55,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         avgELOChange: stats.leagueStats.avgELOChange,
       };
     }
-    if (view === 'tournament' && stats.tournamentStats) {
+    if (view === 'tournament') {
       return {
         battles: stats.tournamentStats.battles,
         wins: stats.tournamentStats.wins,
@@ -65,7 +65,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         avgELOChange: stats.tournamentStats.avgELOChange,
       };
     }
-    if (view === 'tag_team' && stats.tagTeamStats) {
+    if (view === 'tag_team') {
       return {
         battles: stats.tagTeamStats.battles,
         wins: stats.tagTeamStats.wins,
@@ -87,61 +87,53 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
   };
   
   const displayStats = getDisplayStats();
-  const hasBreakdown = (stats.leagueStats || stats.tournamentStats || stats.tagTeamStats);
+  const hasBreakdown = (stats.leagueStats.battles > 0 || stats.tournamentStats.battles > 0 || stats.tagTeamStats.battles > 0);
   
   return (
     <div className="bg-[#252b38] border border-gray-700 rounded-lg p-4 mb-4">
       {/* View Toggle */}
-      {hasBreakdown && (
-        <div className="flex gap-2 mb-4 pb-3 border-b border-gray-700">
-          <button
-            onClick={() => onViewChange('overall')}
-            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              view === 'overall' 
-                ? 'bg-[#58a6ff] text-white' 
-                : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
-            }`}
-          >
-            Overall
-          </button>
-          {stats.leagueStats && (
-            <button
-              onClick={() => onViewChange('league')}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                view === 'league' 
-                  ? 'bg-[#58a6ff] text-white' 
-                  : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
-              }`}
-            >
-              ⚔️ League
-            </button>
-          )}
-          {stats.tournamentStats && (
-            <button
-              onClick={() => onViewChange('tournament')}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                view === 'tournament' 
-                  ? 'bg-[#58a6ff] text-white' 
-                  : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
-              }`}
-            >
-              🏆 Tournament
-            </button>
-          )}
-          {stats.tagTeamStats && (
-            <button
-              onClick={() => onViewChange('tag_team')}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                view === 'tag_team' 
-                  ? 'bg-[#58a6ff] text-white' 
-                  : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
-              }`}
-            >
-              🤝 Tag Team
-            </button>
-          )}
-        </div>
-      )}
+      <div className="flex gap-2 mb-4 pb-3 border-b border-gray-700">
+        <button
+          onClick={() => onViewChange('overall')}
+          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            view === 'overall' 
+              ? 'bg-[#58a6ff] text-white' 
+              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+          }`}
+        >
+          Overall
+        </button>
+        <button
+          onClick={() => onViewChange('league')}
+          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            view === 'league' 
+              ? 'bg-[#58a6ff] text-white' 
+              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+          }`}
+        >
+          ⚔️ League
+        </button>
+        <button
+          onClick={() => onViewChange('tournament')}
+          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            view === 'tournament' 
+              ? 'bg-[#58a6ff] text-white' 
+              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+          }`}
+        >
+          🏆 Tournament
+        </button>
+        <button
+          onClick={() => onViewChange('tag_team')}
+          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            view === 'tag_team' 
+              ? 'bg-[#58a6ff] text-white' 
+              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+          }`}
+        >
+          🤝 Tag Team
+        </button>
+      </div>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total Battles */}
@@ -190,17 +182,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           </div>
         )}
         
-        {/* Battle Type Count for filtered views */}
-        {view !== 'overall' && hasBreakdown && (
-          <div>
-            <div className="text-sm text-[#8b949e]">
-              {view === 'league' ? 'Tournament Battles' : 'League Battles'}
-            </div>
-            <div className="text-xl font-medium text-[#8b949e]">
-              {view === 'league' ? stats.tournamentStats!.battles : stats.leagueStats!.battles}
-            </div>
-          </div>
-        )}
+        {/* Battle Type Count for filtered views - removed since we're now filtering on backend */}
       </div>
       
       {/* Current Streak */}

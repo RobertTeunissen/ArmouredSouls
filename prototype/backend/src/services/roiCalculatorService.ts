@@ -91,14 +91,22 @@ export class ROICalculatorService {
     // Calculate returns based on facility type
     let totalReturns = 0;
 
-    if (facilityType === 'income_generator') {
-      // Income generator provides passive income
+    if (facilityType === 'merchandising_hub') {
+      // Merchandising Hub provides passive income
       const income = await this.calculateIncomeGeneratorReturns(
         userId,
         purchaseCycle,
         currentCycle
       );
       totalReturns = income.total;
+    } else if (facilityType === 'streaming_studio') {
+      // Streaming studio increases streaming revenue per battle
+      const streamingIncome = await this.calculateStreamingStudioReturns(
+        userId,
+        purchaseCycle,
+        currentCycle
+      );
+      totalReturns = streamingIncome;
     } else if (
       facilityType === 'repair_bay' ||
       facilityType === 'training_facility' ||
@@ -185,6 +193,61 @@ export class ROICalculatorService {
   }
 
   /**
+   * Calculate returns from streaming studio facility
+   * Streaming studio increases streaming revenue earned per battle
+   */
+  private async calculateStreamingStudioReturns(
+    userId: number,
+    startCycle: number,
+    endCycle: number
+  ): Promise<number> {
+    // Get all battle participants for this user's robots in the cycle range
+    // Note: cycleNumber is stored in audit logs, not in battles directly
+    // We'll sum up streaming revenue from all battles for this user's robots
+    
+    // Get battles from audit logs to find which cycles they occurred in
+    const battleEvents = await prisma.auditLog.findMany({
+      where: {
+        userId,
+        eventType: 'battle_complete',
+        cycleNumber: {
+          gte: startCycle,
+          lte: endCycle,
+        },
+      },
+    });
+
+    let totalStreamingRevenue = 0;
+
+    // For each battle event, get the streaming revenue
+    for (const event of battleEvents) {
+      const payload = event.payload as any;
+      const battleId = payload.battleId;
+      
+      if (battleId) {
+        // Get streaming revenue for this user's robot in this battle
+        const participant = await prisma.battleParticipant.findFirst({
+          where: {
+            battleId,
+            robot: {
+              userId,
+            },
+          },
+          select: {
+            streamingRevenue: true,
+          },
+        });
+
+        if (participant) {
+          totalStreamingRevenue += participant.streamingRevenue;
+        }
+      }
+    }
+
+    return totalStreamingRevenue;
+  }
+
+  /**
    * Calculate savings from discount facilities (repair_bay, training_facility, weapons_workshop)
    * This is an estimate based on the discount percentage and actual spending
    */
@@ -226,6 +289,9 @@ export class ROICalculatorService {
           transactionCount++;
         }
       }
+      
+      // Round repair bay savings to whole credits
+      totalSavings = Math.round(totalSavings);
     } else if (facilityType === 'training_facility') {
       // Calculate attribute upgrade savings
       const upgradeEvents = await prisma.auditLog.findMany({
@@ -352,6 +418,50 @@ export class ROICalculatorService {
       },
     });
 
+    // For streaming studio, we need battle data grouped by cycle
+    let battleStreamingByCycle: Map<number, number> = new Map();
+    if (facilityType === 'streaming_studio') {
+      const battleEvents = await prisma.auditLog.findMany({
+        where: {
+          userId,
+          eventType: 'battle_complete',
+          cycleNumber: {
+            gte: startCycle,
+            lte: endCycle,
+          },
+        },
+        orderBy: {
+          cycleNumber: 'asc',
+        },
+      });
+
+      // Get streaming revenue for each battle
+      for (const event of battleEvents) {
+        const payload = event.payload as any;
+        const battleId = payload.battleId;
+        const cycle = event.cycleNumber;
+
+        if (battleId) {
+          const participant = await prisma.battleParticipant.findFirst({
+            where: {
+              battleId,
+              robot: {
+                userId,
+              },
+            },
+            select: {
+              streamingRevenue: true,
+            },
+          });
+
+          if (participant) {
+            const current = battleStreamingByCycle.get(cycle) || 0;
+            battleStreamingByCycle.set(cycle, current + participant.streamingRevenue);
+          }
+        }
+      }
+    }
+
     let cumulativeReturns = 0;
     let cumulativeOperatingCosts = 0;
 
@@ -359,8 +469,12 @@ export class ROICalculatorService {
       const payload = event.payload as any;
 
       // Add returns
-      if (event.eventType === 'passive_income' && facilityType === 'income_generator') {
+      if (event.eventType === 'passive_income' && facilityType === 'merchandising_hub') {
         cumulativeReturns += (payload.merchandising || 0) + (payload.streaming || 0);
+      } else if (facilityType === 'streaming_studio') {
+        // Add streaming revenue for this cycle
+        const cycleStreaming = battleStreamingByCycle.get(event.cycleNumber) || 0;
+        cumulativeReturns += cycleStreaming;
       } else if (
         event.eventType === 'robot_repair' &&
         facilityType === 'repair_bay'

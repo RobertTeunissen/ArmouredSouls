@@ -268,8 +268,8 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
             const expectedOperatingCostIncrease = nextLevel * 100 - currentLevel * 100;
 
             // Calculate expected streaming revenue
-            const currentMultiplier = 1 + (currentLevel * 0.1);
-            const nextMultiplier = 1 + (nextLevel * 0.1);
+            const currentMultiplier = 1 + (currentLevel * 1.0);
+            const nextMultiplier = 1 + (nextLevel * 1.0);
             const multiplierIncrease = nextMultiplier - currentMultiplier;
 
             // Calculate average streaming revenue per battle
@@ -473,8 +473,8 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
 
           if (studioRec) {
             const nextLevel = currentLevel + 1;
-            const currentMultiplier = 1 + (currentLevel * 0.1);
-            const nextMultiplier = 1 + (nextLevel * 0.1);
+            const currentMultiplier = 1 + (currentLevel * 1.0);
+            const nextMultiplier = 1 + (nextLevel * 1.0);
             const multiplierIncrease = nextMultiplier - currentMultiplier;
 
             // Calculate expected streaming revenue

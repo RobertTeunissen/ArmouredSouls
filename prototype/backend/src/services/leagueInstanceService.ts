@@ -73,10 +73,9 @@ export async function getLeagueInstanceStats(tier: LeagueTier): Promise<LeagueIn
   const averagePerInstance = instances.length > 0 ? totalRobots / instances.length : 0;
 
   // Check if rebalancing is needed:
-  // 1. Any instance deviates more than threshold from average
-  // 2. Any instance exceeds the maximum robot limit
+  // Only when any instance exceeds the maximum robot limit
+  // (Deviation check not needed since assignLeagueInstance fills evenly)
   const needsRebalancing = instances.some((inst) => 
-    Math.abs(inst.currentRobots - averagePerInstance) > REBALANCE_THRESHOLD ||
     inst.currentRobots > MAX_ROBOTS_PER_INSTANCE
   );
 
@@ -146,17 +145,17 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
 
   // Calculate how many instances we need
   const targetInstanceCount = Math.ceil(stats.totalRobots / MAX_ROBOTS_PER_INSTANCE);
-  const robotsPerInstance = Math.ceil(stats.totalRobots / targetInstanceCount);
 
   console.log(`  Target instances: ${targetInstanceCount}`);
-  console.log(`  Robots per instance: ${robotsPerInstance}`);
 
-  // Redistribute robots evenly
+  // Redistribute robots ROUND-ROBIN to maintain competitive balance
+  // This ensures each instance has a mix of high, medium, and low LP robots
   const updates: Promise<any>[] = [];
   
   for (let i = 0; i < allRobots.length; i++) {
     const robot = allRobots[i];
-    const targetInstanceNumber = Math.floor(i / robotsPerInstance) + 1;
+    // Round-robin: robot 0→instance 1, robot 1→instance 2, ..., robot N→instance 1, ...
+    const targetInstanceNumber = (i % targetInstanceCount) + 1;
     const targetLeagueId = `${tier}_${targetInstanceNumber}`;
 
     if (robot.leagueId !== targetLeagueId) {

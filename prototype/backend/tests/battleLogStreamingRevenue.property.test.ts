@@ -252,7 +252,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           const baseAmount = 1000;
           const battleMultiplier1 = 1 + (battles1 / 1000);
           const fameMultiplier1 = 1 + (fame1 / 5000);
-          const studioMultiplier = 1 + (studioLevel * 0.1);
+          const studioMultiplier = 1 + (studioLevel * 1.0);
           const totalRevenue1 = Math.floor(
             baseAmount * battleMultiplier1 * fameMultiplier1 * studioMultiplier
           );
@@ -424,7 +424,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
 
           // Calculate expected streaming revenue
           const baseAmount = 1000;
-          const studioMultiplier = 1 + (studioLevel * 0.1);
+          const studioMultiplier = 1 + (studioLevel * 1.0);
           
           const totalRevenue1 = Math.floor(
             baseAmount * (1 + battles1 / 1000) * (1 + fame1 / 5000) * studioMultiplier
@@ -543,7 +543,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
 
           // Calculate expected streaming revenue
           const baseAmount = 1000;
-          const studioMultiplier = 1 + (studioLevel * 0.1);
+          const studioMultiplier = 1 + (studioLevel * 1.0);
           
           const totalRevenue1 = Math.floor(
             baseAmount * (1 + battles1 / 1000) * (1 + fame1 / 5000) * studioMultiplier
@@ -650,7 +650,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
 
           // Calculate expected streaming revenue
           const baseAmount = 1000;
-          const studioMultiplier = 1 + (studioLevel * 0.1);
+          const studioMultiplier = 1 + (studioLevel * 1.0);
           const expectedRevenue = Math.floor(baseAmount * studioMultiplier);
 
           const streamingRevenueDetails = {
