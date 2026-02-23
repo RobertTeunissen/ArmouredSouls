@@ -91,6 +91,10 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
 }
 
 describe('Tag Team Battle Orchestrator - Property Tests', () => {
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
   describe('Property 8: Tag-Out Trigger Conditions', () => {
     /**
      * **Validates: Requirements 3.3**

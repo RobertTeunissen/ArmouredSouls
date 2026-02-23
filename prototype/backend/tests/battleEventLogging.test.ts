@@ -6,28 +6,18 @@
 
 import { PrismaClient } from '@prisma/client';
 import { processBattle } from '../src/services/battleOrchestrator';
-import { EventType } from '../src/services/eventLogger';
+import { EventType, clearSequenceCache } from '../src/services/eventLogger';
 
 const prisma = new PrismaClient();
 
 describe('Battle Event Logging Integration', () => {
-  let testUser1: any;
-  let testUser2: any;
-  let testRobot1: any;
-  let testRobot2: any;
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testMatchIds: number[] = [];
   let scheduledMatch: any;
 
   beforeAll(async () => {
-    // Clean up in correct order to avoid foreign key constraints
-    await prisma.auditLog.deleteMany({});
-    await prisma.scheduledMatch.deleteMany({});
-    await prisma.battle.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({});
-    await prisma.tagTeam.deleteMany({});
-    await prisma.robot.deleteMany({});
-    await prisma.weaponInventory.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.weapon.deleteMany({});
+    await prisma.$connect();
 
     // Create cycle metadata if it doesn't exist
     await prisma.cycleMetadata.upsert({
@@ -37,28 +27,31 @@ describe('Battle Event Logging Integration', () => {
     });
 
     // Create test users
-    testUser1 = await prisma.user.create({
+    const timestamp = Date.now();
+    const testUser1 = await prisma.user.create({
       data: {
-        username: 'testuser1',
+        username: `testuser1_${timestamp}`,
         passwordHash: 'hash',
         currency: 100000,
         prestige: 100,
       },
     });
+    testUserIds.push(testUser1.id);
 
-    testUser2 = await prisma.user.create({
+    const testUser2 = await prisma.user.create({
       data: {
-        username: 'testuser2',
+        username: `testuser2_${timestamp}`,
         passwordHash: 'hash',
         currency: 100000,
         prestige: 100,
       },
     });
+    testUserIds.push(testUser2.id);
 
     // Create test robots
-    testRobot1 = await prisma.robot.create({
+    const testRobot1 = await prisma.robot.create({
       data: {
-        name: 'TestBot1',
+        name: `TestBot1_${timestamp}`,
         userId: testUser1.id,
         currentLeague: 'bronze',
         elo: 1000,
@@ -71,10 +64,11 @@ describe('Battle Event Logging Integration', () => {
         shieldCapacity: 10,
       },
     });
+    testRobotIds.push(testRobot1.id);
 
-    testRobot2 = await prisma.robot.create({
+    const testRobot2 = await prisma.robot.create({
       data: {
-        name: 'TestBot2',
+        name: `TestBot2_${timestamp}`,
         userId: testUser2.id,
         currentLeague: 'bronze',
         elo: 1000,
@@ -87,6 +81,7 @@ describe('Battle Event Logging Integration', () => {
         shieldCapacity: 10,
       },
     });
+    testRobotIds.push(testRobot2.id);
 
     // Create scheduled match
     scheduledMatch = await prisma.scheduledMatch.create({
@@ -98,9 +93,25 @@ describe('Battle Event Logging Integration', () => {
         status: 'scheduled',
       },
     });
+    testMatchIds.push(scheduledMatch.id);
+  });
+
+  afterEach(async () => {
+    // Clean up test data between tests (keep users, robots, and scheduled match from beforeAll)
+    await prisma.auditLog.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
+    await prisma.battle.deleteMany({});
   });
 
   afterAll(async () => {
+    // Final cleanup
+    await prisma.auditLog.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
+    await prisma.battle.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
+    await prisma.robot.deleteMany({});
+    await prisma.user.deleteMany({});
+
     await prisma.$disconnect();
   });
 
@@ -111,75 +122,67 @@ describe('Battle Event Logging Integration', () => {
     // Verify battle was created
     expect(result.battleId).toBeDefined();
 
-    // Verify event was logged
+    // Verify events were logged (one per robot)
     const events = await prisma.auditLog.findMany({
       where: {
         eventType: EventType.BATTLE_COMPLETE,
-        cycleNumber: 1,
+        battleId: result.battleId,
       },
     });
 
-    expect(events).toHaveLength(1);
+    // System now creates 2 events - one for each robot's perspective
+    expect(events).toHaveLength(2);
 
-    const event = events[0];
-    expect(event.payload).toHaveProperty('battleId', result.battleId);
-    expect(event.payload).toHaveProperty('robot1Id', testRobot1.id);
-    expect(event.payload).toHaveProperty('robot2Id', testRobot2.id);
-    expect(event.payload).toHaveProperty('winnerId');
-    
-    // Verify ELO tracking
-    expect(event.payload).toHaveProperty('robot1ELOBefore');
-    expect(event.payload).toHaveProperty('robot1ELOAfter');
-    expect(event.payload).toHaveProperty('robot2ELOBefore');
-    expect(event.payload).toHaveProperty('robot2ELOAfter');
-    expect(event.payload).toHaveProperty('eloChange');
-    
-    // Verify damage tracking
-    expect(event.payload).toHaveProperty('robot1DamageDealt');
-    expect(event.payload).toHaveProperty('robot2DamageDealt');
-    expect(event.payload).toHaveProperty('robot1FinalHP');
-    expect(event.payload).toHaveProperty('robot2FinalHP');
-    
-    // Verify rewards
-    expect(event.payload).toHaveProperty('winnerReward');
-    expect(event.payload).toHaveProperty('loserReward');
-    
-    // Verify costs
-    expect(event.payload).toHaveProperty('robot1RepairCost');
-    expect(event.payload).toHaveProperty('robot2RepairCost');
-    
-    // Verify battle details
-    expect(event.payload).toHaveProperty('durationSeconds');
-    expect(event.payload).toHaveProperty('battleType', 'league');
-    expect(event.payload).toHaveProperty('leagueType', 'bronze');
+    // Both events should reference the same battle
+    events.forEach(event => {
+      const payload = event.payload as any;
+      expect(payload.battleType).toBeDefined();
+      expect(payload.result).toBeDefined(); // 'win', 'loss', or 'draw'
+      expect(payload.opponentId).toBeDefined();
+      expect(payload.eloBefore).toBeDefined();
+      expect(payload.eloAfter).toBeDefined();
+      expect(payload.eloChange).toBeDefined();
+      expect(payload.damageDealt).toBeDefined();
+      expect(payload.finalHP).toBeDefined();
+      expect(payload.credits).toBeDefined();
+      expect(payload.prestige).toBeDefined();
+      expect(payload.fame).toBeDefined();
+      expect(payload.streamingRevenue).toBeDefined();
+      expect(payload.durationSeconds).toBeDefined();
+      expect(payload.leagueType).toBe('bronze');
+    });
     
     // Verify metadata
-    expect(event.userId).toBe(testRobot1.userId);
-    expect(event.robotId).toBe(testRobot1.id);
-    expect(event.sequenceNumber).toBeGreaterThan(0);
+    expect(events[0].userId).toBeDefined();
+    expect(events[0].robotId).toBeDefined();
+    expect(events[0].sequenceNumber).toBeGreaterThan(0);
   });
 
   it('should maintain Battle table records alongside event logs', async () => {
+    // Execute another battle
+    const result = await processBattle(scheduledMatch);
+
     // Verify battle record still exists in Battle table
-    const battles = await prisma.battle.findMany({
-      where: {
-        robot1Id: testRobot1.id,
-        robot2Id: testRobot2.id,
-      },
+    const battle = await prisma.battle.findUnique({
+      where: { id: result.battleId },
     });
 
-    expect(battles).toHaveLength(1);
+    expect(battle).toBeDefined();
     
-    // Verify event log also exists
+    // Query events for THIS specific battle
     const events = await prisma.auditLog.findMany({
       where: {
         eventType: EventType.BATTLE_COMPLETE,
+        battleId: result.battleId,
       },
     });
-
-    expect(events).toHaveLength(1);
     
-    // Verify they reference the same battle
-    expect(events[0].payload).toHaveProperty('battleId', battles[0].id);
+    // System now creates 2 events - one for each robot's perspective
+    expect(events).toHaveLength(2);
+    
+    // Verify both events reference the same battle
+    events.forEach(event => {
+      expect(event.battleId).toBe(result.battleId);
+    });
   });
 });

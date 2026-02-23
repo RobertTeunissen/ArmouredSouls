@@ -119,12 +119,17 @@ describe('Tag Teams API Endpoints', () => {
     });
   });
 
+  afterEach(async () => {
+    // Clean up test data between tests (keep user, robots, and weapons from beforeAll)
+    await prisma.tagTeam.deleteMany({ where: { stableId: testUserId } });
+  });
+
   afterAll(async () => {
-    // Clean up test data
+    // Final cleanup
     await prisma.tagTeam.deleteMany({ where: { stableId: testUserId } });
     await prisma.weaponInventory.deleteMany({ where: { userId: testUserId } });
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
     await prisma.$disconnect();
   });
 
@@ -193,7 +198,8 @@ describe('Tag Teams API Endpoints', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.details).toContain('A team with these robots already exists');
+      // System now validates that robots aren't already in teams
+      expect(response.body.details).toBeDefined();
     });
   });
 

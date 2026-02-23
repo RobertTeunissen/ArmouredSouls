@@ -17,27 +17,28 @@ app.use(express.json());
 app.use('/api/finances', financesRoutes);
 
 describe('Finances Routes', () => {
-  let testUser: any;
-  let testRobot: any;
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
   let authToken: string;
 
   beforeAll(async () => {
     await prisma.$connect();
     
     // Create test user for this test suite
-    testUser = await prisma.user.create({
+    const testUser = await prisma.user.create({
       data: {
-        username: `test_finances_${Date.now()}`,
+        username: `test_finances_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         passwordHash: '$2b$10$abcdefghijklmnopqrstuv', // hashed 'password'
         prestige: 1000,
         currency: 5000,
       },
     });
+    testUserIds.push(testUser.id);
 
     // Create a test robot
-    testRobot = await prisma.robot.create({
+    const testRobot = await prisma.robot.create({
       data: {
-        name: `TestRobot_${Date.now()}`,
+        name: `TestRobot_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: testUser.id,
         currentHP: 100,
         maxHP: 100,
@@ -69,6 +70,7 @@ describe('Finances Routes', () => {
         formationTactics: 5,
       },
     });
+    testRobotIds.push(testRobot.id);
 
     // Generate JWT token
     authToken = jwt.sign(
@@ -77,14 +79,34 @@ describe('Finances Routes', () => {
     );
   });
 
+  afterEach(async () => {
+    // Cleanup after each test in correct dependency order
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+    if (testUserIds.length > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+    testRobotIds = [];
+    testUserIds = [];
+  });
+
   afterAll(async () => {
-    // Cleanup: delete test robot and user
-    if (testRobot) {
-      await prisma.robot.delete({ where: { id: testRobot.id } }).catch(() => {});
-    }
-    if (testUser) {
-      await prisma.user.delete({ where: { id: testUser.id } }).catch(() => {});
-    }
     await prisma.$disconnect();
   });
 

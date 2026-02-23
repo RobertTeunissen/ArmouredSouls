@@ -110,6 +110,10 @@ const createMockWeapon = (overrides?: Partial<Weapon>): Weapon => ({
 });
 
 describe('Robot Calculations', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   describe('calculateEffectiveStats', () => {
     it('should calculate base stats without weapons or loadout bonuses', () => {
       const robot = createMockRobot({ loadoutType: 'single' });

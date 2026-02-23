@@ -18,18 +18,83 @@ import { executeScheduledTagTeamBattles } from '../../src/services/tagTeamBattle
 const prisma = new PrismaClient();
 
 describe('Tag Team Auto-Repair Integration Test', () => {
-  let testUsers: any[] = [];
-  let testRobots: any[] = [];
-  let testTeams: any[] = [];
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testTeamIds: number[] = [];
+  let weapon: any;
 
   beforeAll(async () => {
     await prisma.$connect();
 
     // Get a weapon for robots
-    const weapon = await prisma.weapon.findFirst();
+    weapon = await prisma.weapon.findFirst();
     if (!weapon) {
       throw new Error('No weapons found. Run seed first.');
     }
+  });
+
+  afterEach(async () => {
+    // Clean up in correct order
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+    }
+
+    if (testTeamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTeamIds } },
+            { team2Id: { in: testTeamIds } },
+          ],
+        },
+      });
+      await prisma.tagTeam.deleteMany({
+        where: { id: { in: testTeamIds } },
+      });
+    }
+
+    if (testRobotIds.length > 0) {
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.facility.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    testTeamIds = [];
+    testRobotIds = [];
+    testUserIds = [];
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it('should auto-repair damaged robots before battle and deduct costs', async () => {
+    console.log('[Test] Step 1: Creating test users and robots...');
+    
+    const testUsers: any[] = [];
+    const testRobots: any[] = [];
 
     // Create 2 test users with different currency amounts
     for (let i = 0; i < 2; i++) {
@@ -41,6 +106,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
         },
       });
       testUsers.push(user);
+      testUserIds.push(user.id);
 
       // Create Repair Bay facility for user 0 (10% discount)
       if (i === 0) {
@@ -82,52 +148,11 @@ describe('Tag Team Auto-Repair Integration Test', () => {
           },
         });
         testRobots.push(robot);
+        testRobotIds.push(robot.id);
       }
     }
-  });
 
-  afterAll(async () => {
-    // Clean up
-    await prisma.battle.deleteMany({
-      where: {
-        robot1Id: { in: testRobots.map(r => r.id) },
-      },
-    });
-    await prisma.tagTeamMatch.deleteMany({
-      where: {
-        OR: testTeams.map(t => ({ team1Id: t.id })),
-      },
-    });
-    await prisma.facility.deleteMany({
-      where: {
-        userId: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.tagTeam.deleteMany({
-      where: {
-        id: { in: testTeams.map(t => t.id) },
-      },
-    });
-    await prisma.robot.deleteMany({
-      where: {
-        id: { in: testRobots.map(r => r.id) },
-      },
-    });
-    await prisma.weaponInventory.deleteMany({
-      where: {
-        userId: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.user.deleteMany({
-      where: {
-        id: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.$disconnect();
-  });
-
-  it('should auto-repair damaged robots before battle and deduct costs', async () => {
-    console.log('[Test] Step 1: Creating tag teams...');
+    console.log('[Test] Step 2: Creating tag teams...');
     
     const team1Result = await createTeam(
       testUsers[0].id,
@@ -142,9 +167,9 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     expect(team1Result.success).toBe(true);
     expect(team2Result.success).toBe(true);
-    testTeams.push(team1Result.team!, team2Result.team!);
+    testTeamIds.push(team1Result.team!.id, team2Result.team!.id);
 
-    console.log('[Test] Step 2: Damaging robots below 75% HP...');
+    console.log('[Test] Step 3: Damaging robots below 75% HP...');
     
     // Damage team 1 robots to 70% HP (below 75% threshold)
     await prisma.robot.update({

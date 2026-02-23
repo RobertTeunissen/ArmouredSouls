@@ -3,11 +3,16 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 describe('Tag Team Model Integration Tests', () => {
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testTeamIds: number[] = [];
   let testUserId: number;
   let testRobot1Id: number;
   let testRobot2Id: number;
 
   beforeAll(async () => {
+    await prisma.$connect();
+    
     // Create a test user
     const user = await prisma.user.create({
       data: {
@@ -17,6 +22,7 @@ describe('Tag Team Model Integration Tests', () => {
       },
     });
     testUserId = user.id;
+    testUserIds.push(user.id);
 
     // Create two test robots
     const robot1 = await prisma.robot.create({
@@ -30,6 +36,7 @@ describe('Tag Team Model Integration Tests', () => {
       },
     });
     testRobot1Id = robot1.id;
+    testRobotIds.push(robot1.id);
 
     const robot2 = await prisma.robot.create({
       data: {
@@ -42,19 +49,66 @@ describe('Tag Team Model Integration Tests', () => {
       },
     });
     testRobot2Id = robot2.id;
+    testRobotIds.push(robot2.id);
+  });
+
+  afterEach(async () => {
+    // Clean up teams created in tests
+    if (testTeamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTeamIds } },
+            { team2Id: { in: testTeamIds } },
+          ],
+        },
+      });
+      await prisma.tagTeam.deleteMany({
+        where: { id: { in: testTeamIds } },
+      });
+      testTeamIds = [];
+    }
   });
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.tagTeam.deleteMany({
-      where: { stableId: testUserId },
-    });
-    await prisma.robot.deleteMany({
-      where: { userId: testUserId },
-    });
-    await prisma.user.delete({
-      where: { id: testUserId },
-    });
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+    
+    if (testUserIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.facility.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+    
     await prisma.$disconnect();
   });
 
@@ -67,6 +121,7 @@ describe('Tag Team Model Integration Tests', () => {
           reserveRobotId: testRobot2Id,
         },
       });
+      testTeamIds.push(tagTeam.id);
 
       expect(tagTeam).toBeDefined();
       expect(tagTeam.id).toBeDefined();

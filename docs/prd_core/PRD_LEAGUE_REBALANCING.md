@@ -66,7 +66,7 @@ This PRD defines the league instance rebalancing system that maintains balanced 
 
 ## Executive Summary
 
-The League Instance Rebalancing System maintains balanced populations across league instances by redistributing robots when instances become overcrowded (>100 robots) or imbalanced (deviation >20 from average).
+The League Instance Rebalancing System maintains balanced populations across league instances by redistributing robots when instances become overcrowded (>100 robots). The system uses a simple trigger: rebalancing only occurs when any instance exceeds MAX_ROBOTS_PER_INSTANCE (100 robots).
 
 **Core Mechanics**:
 - **Trigger**: Rebalancing occurs when any instance exceeds 100 robots
@@ -130,14 +130,14 @@ Instance rebalancing is **critical for competitive integrity** because:
 
 1. **Balanced Populations**: Maintain reasonable instance sizes (target: <100 robots)
 2. **Fair Redistribution**: Use LP+ELO sorting to preserve competitive groupings
-3. **Minimal Disruption**: Rebalance only when necessary (>100 robots or deviation >20)
+3. **Minimal Disruption**: Rebalance only when necessary (instance >100 robots)
 4. **Transparent Process**: Players understand why rebalancing occurs
 5. **Scalable System**: Support growth from 100 to 10,000+ robots
 
 ### Success Metrics
 
 - Instance population: Most instances between 50-100 robots (no hard enforcement)
-- Rebalancing frequency: Only when needed (instance >100 or deviation >20)
+- Rebalancing frequency: Only when needed (instance >100 robots)
 - Competitive balance: ELO variance within instances reasonable
 - Matchmaking quality: Sufficient opponents for fair matches
 
@@ -296,10 +296,10 @@ model InstanceChange {
 // Maximum robots per league instance
 export const MAX_ROBOTS_PER_INSTANCE = 100;
 
-// Threshold for triggering instance rebalancing
-// Rebalancing occurs when deviation from average exceeds this value
-// OR when any instance exceeds MAX_ROBOTS_PER_INSTANCE
-export const REBALANCE_THRESHOLD = 20;
+// Note: REBALANCE_THRESHOLD constant exists but is not currently used in trigger logic
+// Rebalancing triggers only when an instance exceeds MAX_ROBOTS_PER_INSTANCE
+// The deviation-based rebalancing was simplified to reduce unnecessary redistributions
+export const REBALANCE_THRESHOLD = 20; // Historical constant, not actively used
 
 export const LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 ```
@@ -1065,7 +1065,7 @@ Response:
 
 ### Functional Requirements ✅ COMPLETE
 
-- [x] Rebalancing triggers when instance >100 robots OR deviation >20
+- [x] Rebalancing triggers when instance >100 robots
 - [x] Robots sorted by LP (primary) and ELO (secondary)
 - [x] Instances balanced based on total robots / 100
 - [x] LP and ELO preserved during rebalancing

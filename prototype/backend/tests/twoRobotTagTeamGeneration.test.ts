@@ -10,21 +10,8 @@ const prisma = new PrismaClient();
 
 describe('Two-Robot Specialist Tag Team Generation', () => {
   beforeAll(async () => {
-    // Clean up test data
-    await prisma.tagTeam.deleteMany();
-    await prisma.scheduledMatch.deleteMany();
-    await prisma.battle.deleteMany();
-    await prisma.weaponInventory.deleteMany();
-    await prisma.robot.deleteMany();
-    await prisma.facility.deleteMany();
-    await prisma.user.deleteMany({
-      where: {
-        username: {
-          startsWith: 'archetype_',
-        },
-      },
-    });
-
+    await prisma.$connect();
+    
     // Ensure weapons exist
     const practiceSword = await prisma.weapon.findFirst({
       where: { name: 'Practice Sword' },
@@ -32,6 +19,70 @@ describe('Two-Robot Specialist Tag Team Generation', () => {
 
     if (!practiceSword) {
       throw new Error('Practice Sword weapon not found. Run seed first.');
+    }
+  });
+
+  afterEach(async () => {
+    // Clean up archetype users and their data after each test
+    const archetypeUsers = await prisma.user.findMany({
+      where: { username: { startsWith: 'archetype_' } },
+      select: { id: true },
+    });
+    
+    const userIds = archetypeUsers.map(u => u.id);
+    
+    if (userIds.length > 0) {
+      const robots = await prisma.robot.findMany({
+        where: { userId: { in: userIds } },
+        select: { id: true },
+      });
+      const robotIds = robots.map(r => r.id);
+      
+      if (robotIds.length > 0) {
+        await prisma.tagTeamMatch.deleteMany({
+          where: {
+            OR: [
+              { team1: { stableId: { in: userIds } } },
+              { team2: { stableId: { in: userIds } } },
+            ],
+          },
+        });
+        await prisma.tagTeam.deleteMany({
+          where: { stableId: { in: userIds } },
+        });
+        await prisma.battleParticipant.deleteMany({
+          where: { robotId: { in: robotIds } },
+        });
+        await prisma.battle.deleteMany({
+          where: {
+            OR: [
+              { robot1Id: { in: robotIds } },
+              { robot2Id: { in: robotIds } },
+            ],
+          },
+        });
+        await prisma.scheduledMatch.deleteMany({
+          where: {
+            OR: [
+              { robot1Id: { in: robotIds } },
+              { robot2Id: { in: robotIds } },
+            ],
+          },
+        });
+      }
+      
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: userIds } },
+      });
+      await prisma.facility.deleteMany({
+        where: { userId: { in: userIds } },
+      });
+      await prisma.robot.deleteMany({
+        where: { userId: { in: userIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: userIds } },
+      });
     }
   });
 
@@ -75,17 +126,6 @@ describe('Two-Robot Specialist Tag Team Generation', () => {
   });
 
   it('should create tag team for Two-Robot Specialist in cycle 1 (position 9 wraps to cycle 10)', async () => {
-    // Clean up previous test data
-    await prisma.tagTeam.deleteMany();
-    await prisma.robot.deleteMany();
-    await prisma.user.deleteMany({
-      where: {
-        username: {
-          startsWith: 'archetype_',
-        },
-      },
-    });
-
     // Cycle 10 creates 10 users at positions 36-45
     // Position 36 % 14 = 8 (Facility Investor)
     // Position 37 % 14 = 9 (Two-Robot Specialist)
@@ -110,17 +150,6 @@ describe('Two-Robot Specialist Tag Team Generation', () => {
   });
 
   it('should not create tag teams for single-robot archetypes', async () => {
-    // Clean up previous test data
-    await prisma.tagTeam.deleteMany();
-    await prisma.robot.deleteMany();
-    await prisma.user.deleteMany({
-      where: {
-        username: {
-          startsWith: 'archetype_',
-        },
-      },
-    });
-
     // Cycle 1 creates 1 user at position 0 (Tank Fortress - single robot)
     const result = await generateBattleReadyUsers(1);
 
@@ -142,17 +171,6 @@ describe('Two-Robot Specialist Tag Team Generation', () => {
   });
 
   it('should create tag teams with correct robot assignments', async () => {
-    // Clean up previous test data
-    await prisma.tagTeam.deleteMany();
-    await prisma.robot.deleteMany();
-    await prisma.user.deleteMany({
-      where: {
-        username: {
-          startsWith: 'archetype_',
-        },
-      },
-    });
-
     // Cycle 4 to get Two-Robot Specialist at position 9
     await generateBattleReadyUsers(4);
 

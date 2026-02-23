@@ -11,6 +11,7 @@ import prisma from '../src/lib/prisma';
 describe('Cycle Performance Monitoring Service', () => {
   let service: CyclePerformanceMonitoringService;
   let eventLogger: EventLogger;
+  let testCycleNumbers: number[] = [];
 
   beforeAll(() => {
     service = new CyclePerformanceMonitoringService();
@@ -23,6 +24,12 @@ describe('Cycle Performance Monitoring Service', () => {
   });
 
   afterAll(async () => {
+    // Clean up any test data
+    if (testCycleNumbers.length > 0) {
+      await prisma.auditLog.deleteMany({
+        where: { cycleNumber: { in: testCycleNumbers } },
+      });
+    }
     await prisma.$disconnect();
   });
 
@@ -144,8 +151,13 @@ describe('Cycle Performance Monitoring Service', () => {
       const alerts = await service.detectAllStepDegradations(10, 100);
 
       expect(alerts.length).toBe(2); // Only step1 and step3 should be flagged
-      expect(alerts[0].stepName).toBe('step3'); // Highest degradation first
-      expect(alerts[1].stepName).toBe('step1');
+      // Both have 100% degradation, so order may vary - just check both are present
+      const stepNames = alerts.map(a => a.stepName);
+      expect(stepNames).toContain('step1');
+      expect(stepNames).toContain('step3');
+      // Both should have same degradation percentage
+      expect(alerts[0].degradationPercentage).toBe(100);
+      expect(alerts[1].degradationPercentage).toBe(100);
     });
   });
 

@@ -18,9 +18,10 @@ import { executeScheduledTagTeamBattles } from '../../src/services/tagTeamBattle
 const prisma = new PrismaClient();
 
 describe('Tag Team Multi-Match Cycle Integration Test', () => {
-  let testUsers: any[] = [];
-  let testRobots: any[] = [];
-  let testTeams: any[] = [];
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testTeamIds: number[] = [];
+  let weapon: any;
 
   beforeAll(async () => {
     await prisma.$connect();
@@ -37,10 +38,75 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     });
 
     // Get a weapon for robots
-    const weapon = await prisma.weapon.findFirst();
+    weapon = await prisma.weapon.findFirst();
     if (!weapon) {
       throw new Error('No weapons found. Run seed first.');
     }
+  });
+
+  afterEach(async () => {
+    // Clean up in correct order
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          robot1Id: { in: testRobotIds },
+        },
+      });
+    }
+
+    if (testTeamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTeamIds } },
+            { team2Id: { in: testTeamIds } },
+          ],
+        },
+      });
+      await prisma.tagTeam.deleteMany({
+        where: { id: { in: testTeamIds } },
+      });
+    }
+
+    if (testRobotIds.length > 0) {
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          robot1Id: { in: testRobotIds },
+        },
+      });
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    testTeamIds = [];
+    testRobotIds = [];
+    testUserIds = [];
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it('should handle robot in both 1v1 and tag team match with cumulative damage', async () => {
+    // Step 1: Create test users and robots
+    console.log('[Test] Step 1: Creating test users and robots...');
+    
+    const testUsers: any[] = [];
+    const testRobots: any[] = [];
+    const testTeams: any[] = [];
 
     // Create 2 test users
     for (let i = 0; i < 2; i++) {
@@ -52,6 +118,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
         },
       });
       testUsers.push(user);
+      testUserIds.push(user.id);
 
       // Create 2 robots per user
       for (let j = 0; j < 2; j++) {
@@ -81,53 +148,12 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
           },
         });
         testRobots.push(robot);
+        testRobotIds.push(robot.id);
       }
     }
-  });
 
-  afterAll(async () => {
-    // Clean up
-    await prisma.tagTeamMatch.deleteMany({
-      where: {
-        OR: testTeams.map(t => ({ team1Id: t.id })),
-      },
-    });
-    await prisma.scheduledMatch.deleteMany({
-      where: {
-        robot1Id: { in: testRobots.map(r => r.id) },
-      },
-    });
-    await prisma.battle.deleteMany({
-      where: {
-        robot1Id: { in: testRobots.map(r => r.id) },
-      },
-    });
-    await prisma.tagTeam.deleteMany({
-      where: {
-        id: { in: testTeams.map(t => t.id) },
-      },
-    });
-    await prisma.robot.deleteMany({
-      where: {
-        id: { in: testRobots.map(r => r.id) },
-      },
-    });
-    await prisma.weaponInventory.deleteMany({
-      where: {
-        userId: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.user.deleteMany({
-      where: {
-        id: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.$disconnect();
-  });
-
-  it('should handle robot in both 1v1 and tag team match with cumulative damage', async () => {
-    // Step 1: Create tag teams
-    console.log('[Test] Step 1: Creating tag teams...');
+    // Step 2: Create tag teams
+    console.log('[Test] Step 2: Creating tag teams...');
     
     const team1Result = await createTeam(
       testUsers[0].id,
@@ -420,7 +446,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
         OR: teams.map(t => ({ team1Id: t.id })),
       },
     });
-    await prisma.scheduledMatch.delete({ where: { id: oneVOneMatch.id } });
+    await prisma.scheduledMatch.deleteMany({ where: { id: oneVOneMatch.id } });
     await prisma.tagTeam.deleteMany({
       where: { id: { in: teams.map(t => t.id) } },
     });

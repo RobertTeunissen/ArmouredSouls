@@ -101,17 +101,8 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
     testUserId = user.id;
   });
 
-  afterAll(async () => {
-    // Clean up test data
-    await prisma.robot.deleteMany({ where: { userId: testUserId } });
-    await prisma.auditLog.deleteMany({ where: { userId: testUserId } });
-    await prisma.facility.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
-    await prisma.$disconnect();
-  });
-
-  beforeEach(async () => {
-    // Clean up robots, facilities, and audit logs before each test
+  afterEach(async () => {
+    // Clean up test data after each test
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
     await prisma.auditLog.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ 
@@ -120,6 +111,12 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
         facilityType: 'streaming_studio'
       } 
     });
+  });
+
+  afterAll(async () => {
+    // Final cleanup of user
+    await prisma.user.deleteMany({ where: { id: testUserId } });
+    await prisma.$disconnect();
   });
 
   /**
@@ -222,7 +219,7 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
           expect(report.revenue.streamingBattleCount).toBeGreaterThanOrEqual(0);
 
           // Clean up robot
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 100 }
@@ -394,9 +391,9 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
             expect(report.revenue.streaming).toBeGreaterThanOrEqual(0);
           } finally {
             // Clean up
-            await prisma.robot.delete({ where: { id: otherRobot.id } });
+            await prisma.robot.deleteMany({ where: { id: otherRobot.id } });
             await prisma.auditLog.deleteMany({ where: { userId: otherUser.id } });
-            await prisma.user.delete({ where: { id: otherUser.id } });
+            await prisma.user.deleteMany({ where: { id: otherUser.id } });
           }
         }
       ),
@@ -462,7 +459,7 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
           expect(report.revenue.total).toBeGreaterThanOrEqual(expectedStreamingRevenue);
 
           // Clean up robot
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 50 }
@@ -548,7 +545,7 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
 
           // Clean up robots
           for (const robot of robots) {
-            await prisma.robot.delete({ where: { id: robot.id } });
+            await prisma.robot.deleteMany({ where: { id: robot.id } });
           }
         }
       ),

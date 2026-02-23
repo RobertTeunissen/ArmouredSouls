@@ -15,7 +15,11 @@ describe('Facility Transaction Logging', () => {
   const testCycleNumber = 1;
 
   beforeAll(async () => {
-    // Clean up any existing audit logs for this test
+    await prisma.$connect();
+  });
+
+  afterEach(async () => {
+    // Clean up test data after each test
     await prisma.auditLog.deleteMany({
       where: {
         userId: testUserId,
@@ -25,13 +29,6 @@ describe('Facility Transaction Logging', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
-    await prisma.auditLog.deleteMany({
-      where: {
-        userId: testUserId,
-        eventType: { in: ['facility_purchase', 'facility_upgrade'] },
-      },
-    });
     await prisma.$disconnect();
   });
 

@@ -33,16 +33,16 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
     testUserId = user.id;
   });
 
+  afterEach(async () => {
+    // Clean up facilities after each test
+    await prisma.facility.deleteMany({ where: { userId: testUserId } });
+  });
+
   afterAll(async () => {
     // Clean up test data
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
     await prisma.$disconnect();
-  });
-
-  beforeEach(async () => {
-    // Clean up facilities before each test
-    await prisma.facility.deleteMany({ where: { userId: testUserId } });
   });
 
   /**
@@ -60,7 +60,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           await prisma.facility.deleteMany({
             where: {
               userId: testUserId,
-              facilityType: 'income_generator',
+              facilityType: 'merchandising_hub',
             },
           });
 
@@ -74,7 +74,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           await prisma.facility.create({
             data: {
               userId: testUserId,
-              facilityType: 'income_generator',
+              facilityType: 'merchandising_hub',
               level: incomeGeneratorLevel,
             },
           });
@@ -106,10 +106,10 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           expect(result.total).not.toBeGreaterThan(result.merchandising);
 
           // Property: Merchandising should scale with prestige
-          // Base rates by level (from economyCalculations.ts):
+          // Base rates by level (from facilities.ts merchandising_hub):
           const baseRates: { [key: number]: number } = {
-            1: 5000, 2: 8000, 3: 8000, 4: 12000, 5: 12000,
-            6: 18000, 7: 18000, 8: 25000, 9: 25000, 10: 35000,
+            1: 5000, 2: 10000, 3: 15000, 4: 20000, 5: 25000,
+            6: 30000, 7: 35000, 8: 40000, 9: 45000, 10: 50000,
           };
           const expectedBaseRate = baseRates[incomeGeneratorLevel];
           const expectedPrestigeMultiplier = 1 + (prestige / 10000);
@@ -139,7 +139,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           await prisma.facility.deleteMany({
             where: {
               userId: testUserId,
-              facilityType: 'income_generator',
+              facilityType: 'merchandising_hub',
             },
           });
 
@@ -191,7 +191,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           await prisma.facility.deleteMany({
             where: {
               userId: testUserId,
-              facilityType: 'income_generator',
+              facilityType: 'merchandising_hub',
             },
           });
 
@@ -205,7 +205,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           await prisma.facility.create({
             data: {
               userId: testUserId,
-              facilityType: 'income_generator',
+              facilityType: 'merchandising_hub',
               level: incomeGeneratorLevel,
             },
           });
@@ -244,7 +244,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           await prisma.facility.deleteMany({
             where: {
               userId: testUserId,
-              facilityType: 'income_generator',
+              facilityType: 'merchandising_hub',
             },
           });
 
@@ -252,7 +252,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           await prisma.facility.create({
             data: {
               userId: testUserId,
-              facilityType: 'income_generator',
+              facilityType: 'merchandising_hub',
               level: incomeGeneratorLevel,
             },
           });
@@ -309,7 +309,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
             await prisma.facility.deleteMany({
               where: {
                 userId: testUserId,
-                facilityType: 'income_generator',
+                facilityType: 'merchandising_hub',
               },
             });
 
@@ -317,7 +317,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
             await prisma.facility.create({
               data: {
                 userId: testUserId,
-                facilityType: 'income_generator',
+                facilityType: 'merchandising_hub',
                 level,
               },
             });

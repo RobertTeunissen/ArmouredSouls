@@ -10,6 +10,9 @@ import {
 const prisma = new PrismaClient();
 
 describe('TagTeamService', () => {
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testTeamIds: number[] = [];
   let testUserId: number;
   let testRobot1Id: number;
   let testRobot2Id: number;
@@ -18,16 +21,75 @@ describe('TagTeamService', () => {
   let otherUserId: number;
   let otherRobotId: number;
 
-  // Clean up teams after each test
+  beforeAll(async () => {
+    await prisma.$connect();
+  });
+
   afterEach(async () => {
-    await prisma.tagTeam.deleteMany({
-      where: {
-        OR: [{ stableId: testUserId }, { stableId: otherUserId }],
-      },
-    });
+    // Clean up in correct order
+    if (testTeamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTeamIds } },
+            { team2Id: { in: testTeamIds } },
+          ],
+        },
+      });
+      await prisma.tagTeam.deleteMany({
+        where: { id: { in: testTeamIds } },
+      });
+    }
+
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.facility.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    testTeamIds = [];
+    testRobotIds = [];
+    testUserIds = [];
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
   });
 
   beforeAll(async () => {
+    await prisma.$connect();
+    
     // Create test user
     const testUser = await prisma.user.create({
       data: {
@@ -37,6 +99,7 @@ describe('TagTeamService', () => {
       },
     });
     testUserId = testUser.id;
+    testUserIds.push(testUser.id);
 
     // Create another user for cross-stable tests
     const otherUser = await prisma.user.create({
@@ -47,6 +110,7 @@ describe('TagTeamService', () => {
       },
     });
     otherUserId = otherUser.id;
+    testUserIds.push(otherUser.id);
 
     // Create test weapons
     const weapon = await prisma.weapon.findFirst();
@@ -87,6 +151,7 @@ describe('TagTeamService', () => {
       },
     });
     testRobot1Id = robot1.id;
+    testRobotIds.push(robot1.id);
 
     const robot2 = await prisma.robot.create({
       data: {
@@ -103,6 +168,7 @@ describe('TagTeamService', () => {
       },
     });
     testRobot2Id = robot2.id;
+    testRobotIds.push(robot2.id);
 
     const robot3 = await prisma.robot.create({
       data: {
@@ -119,6 +185,7 @@ describe('TagTeamService', () => {
       },
     });
     testRobot3Id = robot3.id;
+    testRobotIds.push(robot3.id);
 
     const robot4 = await prisma.robot.create({
       data: {
@@ -135,6 +202,7 @@ describe('TagTeamService', () => {
       },
     });
     testRobot4Id = robot4.id;
+    testRobotIds.push(robot4.id);
 
     const otherRobot = await prisma.robot.create({
       data: {
@@ -218,8 +286,8 @@ describe('TagTeamService', () => {
       expect(result.errors.some(e => e.includes('Reserve robot not ready'))).toBe(true);
 
       // Clean up
-      await prisma.robot.delete({ where: { id: unreadyRobot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+      await prisma.robot.deleteMany({ where: { id: unreadyRobot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
     it('should reject duplicate teams', async () => {
@@ -230,7 +298,9 @@ describe('TagTeamService', () => {
       // Try to create the same team again
       const result = await validateTeam(testRobot1Id, testRobot2Id);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('A team with these robots already exists');
+      // System now reports that each robot is already in a team
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors.some(e => e.includes('already in another tag team'))).toBe(true);
     });
 
     it('should reject duplicate teams in reverse order', async () => {
@@ -241,7 +311,9 @@ describe('TagTeamService', () => {
       // Try to create the same team with reversed positions
       const result = await validateTeam(testRobot2Id, testRobot1Id);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('A team with these robots already exists');
+      // System now reports that each robot is already in a team
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors.some(e => e.includes('already in another tag team'))).toBe(true);
     });
 
     it('should enforce roster limit (max teams = roster size / 2)', async () => {
@@ -444,7 +516,8 @@ describe('TagTeamService', () => {
       // Verify we cannot create another team with the same robots
       const createResult2 = await createTeam(testUserId, testRobot1Id, testRobot2Id);
       expect(createResult2.success).toBe(false);
-      expect(createResult2.errors).toContain('A team with these robots already exists');
+      // System now reports that each robot is already in a team
+      expect(createResult2.errors!.some(e => e.includes('already in another tag team'))).toBe(true);
 
       // Disband the team
       const disbandResult = await disbandTeam(teamId, testUserId);

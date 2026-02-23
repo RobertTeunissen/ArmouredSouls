@@ -10,6 +10,9 @@ describe('Facility Advisor - Streaming Studio', () => {
   beforeEach(async () => {
     testUserIds = [];
     
+    // Clean up cycle snapshots from previous tests
+    await prisma.cycleSnapshot.deleteMany({});
+    
     // Ensure cycle metadata exists
     await prisma.cycleMetadata.upsert({
       where: { id: 1 },
@@ -28,7 +31,7 @@ describe('Facility Advisor - Streaming Studio', () => {
       await prisma.auditLog.deleteMany({ where: { userId } });
       await prisma.facility.deleteMany({ where: { userId } });
       await prisma.robot.deleteMany({ where: { userId } });
-      await prisma.user.delete({ where: { id: userId } }).catch(() => {});
+      await prisma.user.deleteMany({ where: { id: userId } }).catch(() => {});
     }
     // Clean up cycle snapshots
     await prisma.cycleSnapshot.deleteMany({});

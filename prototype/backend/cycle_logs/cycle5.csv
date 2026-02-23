@@ -1,0 +1,20 @@
+Timestamp | Level | Message
+2026-02-23T16:02:01.090Z | INFO | === Cycle 5 Started ===
+2026-02-23T16:02:01.090Z | INFO | Cycle 5 (5/5)
+2026-02-23T16:02:01.090Z | INFO |  [Admin] === Cycle 5 (5/5) ===
+2026-02-23T16:02:01.094Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-23T16:02:01.094Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-23T16:02:01.094Z
+2026-02-23T16:02:01.096Z | INFO | [BattleOrchestrator] Found 2 matches to execute
+2026-02-23T16:02:01.164Z | INFO | [Streaming] TestRobot1_1771862520949_0.06587774342322883 earned ₡21,303 from Battle #77065
+2026-02-23T16:02:01.166Z | INFO | [Streaming] TestRobot2_1771862520952_0.7807037195258767 earned ₡8,992 from Battle #77065
+2026-02-23T16:02:01.169Z | ERROR | [BattleOrchestrator] Failed to process match 53108: {""name"":""PrismaClientKnownRequestError"",""code"":""P2025"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""BattleParticipant"",""cause"":""Record to update not found.""}}
+2026-02-23T16:02:01.259Z | INFO | [Streaming] TestRobot1_1771862521056_0.46168355598667343 earned ₡9,379 from Battle #77067
+2026-02-23T16:02:01.262Z | INFO | [Streaming] TestRobot2_1771862521060_0.3952858822181865 earned ₡19,590 from Battle #77067
+2026-02-23T16:02:01.265Z | ERROR | [BattleOrchestrator] Failed to process match 53109: {""name"":""PrismaClientKnownRequestError"",""code"":""P2025"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""BattleParticipant"",""cause"":""Record to update not found.""}}
+2026-02-23T16:02:01.265Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 2 failed, 0 bye-matches
+2026-02-23T16:02:01.265Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
+2026-02-23T16:02:01.267Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-23T16:02:01.282Z | INFO | [RepairService] | User 48055 | Robot 738926 (Velocity Alpha C052) | Cost: ₡23,108 | Discount: 0%
+2026-02-23T16:02:01.299Z | ERROR | [Admin] Error in cycle 5: {""name"":""PrismaClientKnownRequestError"",""code"":""P2025"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""Robot"",""cause"":""Record to update not found.""}}
+2026-02-23T16:02:01.300Z | ERROR | Cycle 5 failed
+2026-02-23T16:02:01.300Z | INFO | === Cycle 5 Ended ===

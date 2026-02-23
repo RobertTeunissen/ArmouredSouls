@@ -14,8 +14,8 @@ import { robotPerformanceService, RobotMetric } from '../src/services/robotPerfo
 const prisma = new PrismaClient();
 
 describe('Metric Progression Property-Based Tests', () => {
-  beforeEach(async () => {
-    // Clean up test data before each test
+  afterEach(async () => {
+    // Clean up test data after each test in correct dependency order
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.user.deleteMany({});

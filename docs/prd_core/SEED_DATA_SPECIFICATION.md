@@ -598,7 +598,7 @@ Manual testing accounts with full starting resources:
 **Creation Cycle**: 0
 
 **Facilities**:
-- Income Generator Level 1 (₡800,000)
+- Merchandising Hub Level 1 (₡150,000) - Generates passive income
 - Repair Bay Level 1 (₡200,000)
 - Training Facility Level 1 (₡300,000)
 
@@ -1007,7 +1007,7 @@ Examples:
 
 **Weapon Inventory Entries**: Varies by user type
 
-**Facilities**: Created on-demand for archetype users (various Training Academies, Income Generator, Repair Bay, Roster Expansion, etc.)
+**Facilities**: Created on-demand for archetype users (various Training Academies, Merchandising Hub, Repair Bay, Roster Expansion, etc.)
 
 ---
 

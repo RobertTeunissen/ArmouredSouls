@@ -11,12 +11,20 @@ const prisma = new PrismaClient();
 const eventLogger = new EventLogger();
 
 describe('EventLogger Service', () => {
-  beforeEach(async () => {
-    // Clean up audit logs before each test
-    await prisma.auditLog.deleteMany({});
+  let testCycleNumber: number;
+
+  beforeEach(() => {
+    // Use a unique cycle number for each test to avoid conflicts
+    testCycleNumber = 100000 + Math.floor(Math.random() * 100000);
+  });
+
+  afterEach(async () => {
+    // Clean up audit logs for this test's cycle number
+    await prisma.auditLog.deleteMany({
+      where: { cycleNumber: testCycleNumber },
+    });
     // Clear sequence cache
-    clearSequenceCache(1);
-    clearSequenceCache(2);
+    clearSequenceCache(testCycleNumber);
   });
 
   afterAll(async () => {
@@ -25,13 +33,12 @@ describe('EventLogger Service', () => {
 
   describe('Single Event Logging', () => {
     it('should log a single event with correct sequence number', async () => {
-      const cycleNumber = 1;
       const payload = { test: 'data', value: 123 };
 
-      await eventLogger.logEvent(cycleNumber, EventType.CYCLE_START, payload);
+      await eventLogger.logEvent(testCycleNumber, EventType.CYCLE_START, payload);
 
       const events = await prisma.auditLog.findMany({
-        where: { cycleNumber },
+        where: { cycleNumber: testCycleNumber },
       });
 
       expect(events).toHaveLength(1);
@@ -41,14 +48,12 @@ describe('EventLogger Service', () => {
     });
 
     it('should increment sequence numbers correctly', async () => {
-      const cycleNumber = 1;
-
-      await eventLogger.logEvent(cycleNumber, EventType.CYCLE_START, { step: 1 });
-      await eventLogger.logEvent(cycleNumber, EventType.CYCLE_STEP_COMPLETE, { step: 2 });
-      await eventLogger.logEvent(cycleNumber, EventType.CYCLE_COMPLETE, { step: 3 });
+      await eventLogger.logEvent(testCycleNumber, EventType.CYCLE_START, { step: 1 });
+      await eventLogger.logEvent(testCycleNumber, EventType.CYCLE_STEP_COMPLETE, { step: 2 });
+      await eventLogger.logEvent(testCycleNumber, EventType.CYCLE_COMPLETE, { step: 3 });
 
       const events = await prisma.auditLog.findMany({
-        where: { cycleNumber },
+        where: { cycleNumber: testCycleNumber },
         orderBy: { sequenceNumber: 'asc' },
       });
 
@@ -59,19 +64,18 @@ describe('EventLogger Service', () => {
     });
 
     it('should store userId and robotId when provided', async () => {
-      const cycleNumber = 1;
       const userId = 42;
       const robotId = 100;
 
       await eventLogger.logEvent(
-        cycleNumber,
+        testCycleNumber,
         EventType.CREDIT_CHANGE,
         { amount: 1000, newBalance: 5000 },
         { userId, robotId }
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber },
+        where: { cycleNumber: testCycleNumber },
       });
 
       expect(event).not.toBeNull();
@@ -80,7 +84,7 @@ describe('EventLogger Service', () => {
     });
 
     it('should store metadata when provided', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const metadata = {
         formula: 'income = base * multiplier',
         inputs: { base: 100, multiplier: 1.5 },
@@ -88,14 +92,14 @@ describe('EventLogger Service', () => {
       };
 
       await eventLogger.logEvent(
-        cycleNumber,
+        testCycleNumber,
         EventType.PASSIVE_INCOME,
         { income: 150 },
         { userId: 1, metadata }
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber },
+        where: { cycleNumber: testCycleNumber },
       });
 
       expect(event).not.toBeNull();
@@ -103,27 +107,27 @@ describe('EventLogger Service', () => {
     });
 
     it('should throw error for invalid payload', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
 
       await expect(
-        eventLogger.logEvent(cycleNumber, EventType.CYCLE_START, null as any)
+        eventLogger.logEvent(testCycleNumber, EventType.CYCLE_START, null as any)
       ).rejects.toThrow('Invalid payload');
     });
   });
 
   describe('Batch Event Logging', () => {
     it('should log multiple events in a batch', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const events = [
         { eventType: EventType.CYCLE_START, payload: { step: 1 } },
         { eventType: EventType.CYCLE_STEP_COMPLETE, payload: { step: 2 } },
         { eventType: EventType.CYCLE_COMPLETE, payload: { step: 3 } },
       ];
 
-      await eventLogger.logEventBatch(cycleNumber, events);
+      await eventLogger.logEventBatch(testCycleNumber, events);
 
       const storedEvents = await prisma.auditLog.findMany({
-        where: { cycleNumber },
+        where: { cycleNumber: testCycleNumber },
         orderBy: { sequenceNumber: 'asc' },
       });
 
@@ -134,31 +138,31 @@ describe('EventLogger Service', () => {
     });
 
     it('should handle empty batch gracefully', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
 
-      await eventLogger.logEventBatch(cycleNumber, []);
+      await eventLogger.logEventBatch(testCycleNumber, []);
 
       const events = await prisma.auditLog.findMany({
-        where: { cycleNumber },
+        where: { cycleNumber: testCycleNumber },
       });
 
       expect(events).toHaveLength(0);
     });
 
     it('should validate all payloads before inserting', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const events = [
         { eventType: EventType.CYCLE_START, payload: { step: 1 } },
         { eventType: EventType.CYCLE_STEP_COMPLETE, payload: null as any },
       ];
 
       await expect(
-        eventLogger.logEventBatch(cycleNumber, events)
+        eventLogger.logEventBatch(testCycleNumber, events)
       ).rejects.toThrow('Invalid payload');
 
       // Verify no events were inserted
       const storedEvents = await prisma.auditLog.findMany({
-        where: { cycleNumber },
+        where: { cycleNumber: testCycleNumber },
       });
       expect(storedEvents).toHaveLength(0);
     });
@@ -166,12 +170,12 @@ describe('EventLogger Service', () => {
 
   describe('Cycle Event Helpers', () => {
     it('should log cycle start event', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
 
-      await eventLogger.logCycleStart(cycleNumber, 'manual');
+      await eventLogger.logCycleStart(testCycleNumber, 'manual');
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.CYCLE_START },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.CYCLE_START },
       });
 
       expect(event).not.toBeNull();
@@ -180,10 +184,10 @@ describe('EventLogger Service', () => {
     });
 
     it('should log cycle step complete event', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
 
       await eventLogger.logCycleStepComplete(
-        cycleNumber,
+        testCycleNumber,
         'repair_robots',
         1,
         1500,
@@ -191,7 +195,7 @@ describe('EventLogger Service', () => {
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.CYCLE_STEP_COMPLETE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.CYCLE_STEP_COMPLETE },
       });
 
       expect(event).not.toBeNull();
@@ -204,17 +208,17 @@ describe('EventLogger Service', () => {
     });
 
     it('should log cycle complete event and clear cache', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
 
       // Log some events first
-      await eventLogger.logCycleStart(cycleNumber, 'manual');
-      await eventLogger.logCycleStepComplete(cycleNumber, 'step1', 1, 1000);
+      await eventLogger.logCycleStart(testCycleNumber, 'manual');
+      await eventLogger.logCycleStepComplete(testCycleNumber, 'step1', 1, 1000);
 
       // Complete the cycle
-      await eventLogger.logCycleComplete(cycleNumber, 5000);
+      await eventLogger.logCycleComplete(testCycleNumber, 5000);
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.CYCLE_COMPLETE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.CYCLE_COMPLETE },
       });
 
       expect(event).not.toBeNull();
@@ -225,11 +229,11 @@ describe('EventLogger Service', () => {
 
   describe('Facility Event Helpers', () => {
     it('should log facility purchase', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const userId = 1;
 
       await eventLogger.logFacilityTransaction(
-        cycleNumber,
+        testCycleNumber,
         userId,
         'training_academy',
         0,
@@ -239,7 +243,7 @@ describe('EventLogger Service', () => {
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.FACILITY_PURCHASE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.FACILITY_PURCHASE },
       });
 
       expect(event).not.toBeNull();
@@ -254,11 +258,11 @@ describe('EventLogger Service', () => {
     });
 
     it('should log facility upgrade', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const userId = 1;
 
       await eventLogger.logFacilityTransaction(
-        cycleNumber,
+        testCycleNumber,
         userId,
         'training_academy',
         1,
@@ -268,7 +272,7 @@ describe('EventLogger Service', () => {
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.FACILITY_UPGRADE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.FACILITY_UPGRADE },
       });
 
       expect(event).not.toBeNull();
@@ -285,11 +289,11 @@ describe('EventLogger Service', () => {
 
   describe('Economic Event Helpers', () => {
     it('should log passive income', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const userId = 1;
 
       await eventLogger.logPassiveIncome(
-        cycleNumber,
+        testCycleNumber,
         userId,
         5000,
         3000,
@@ -300,7 +304,7 @@ describe('EventLogger Service', () => {
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.PASSIVE_INCOME },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.PASSIVE_INCOME },
       });
 
       expect(event).not.toBeNull();
@@ -317,17 +321,17 @@ describe('EventLogger Service', () => {
     });
 
     it('should log operating costs', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const userId = 1;
       const costs = [
         { facilityType: 'training_academy', level: 5, cost: 500 },
         { facilityType: 'repair_bay', level: 3, cost: 300 },
       ];
 
-      await eventLogger.logOperatingCosts(cycleNumber, userId, costs, 800);
+      await eventLogger.logOperatingCosts(testCycleNumber, userId, costs, 800);
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.OPERATING_COSTS },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.OPERATING_COSTS },
       });
 
       expect(event).not.toBeNull();
@@ -339,11 +343,11 @@ describe('EventLogger Service', () => {
     });
 
     it('should log credit change', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const userId = 1;
 
       await eventLogger.logCreditChange(
-        cycleNumber,
+        testCycleNumber,
         userId,
         1000,
         5000,
@@ -352,7 +356,7 @@ describe('EventLogger Service', () => {
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.CREDIT_CHANGE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.CREDIT_CHANGE },
       });
 
       expect(event).not.toBeNull();
@@ -366,11 +370,11 @@ describe('EventLogger Service', () => {
     });
 
     it('should log prestige change', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const userId = 1;
 
       await eventLogger.logPrestigeChange(
-        cycleNumber,
+        testCycleNumber,
         userId,
         50,
         1050,
@@ -378,7 +382,7 @@ describe('EventLogger Service', () => {
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.PRESTIGE_CHANGE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.PRESTIGE_CHANGE },
       });
 
       expect(event).not.toBeNull();
@@ -393,13 +397,13 @@ describe('EventLogger Service', () => {
 
   describe('Weapon Event Helpers', () => {
     it('should log weapon purchase', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const userId = 1;
 
-      await eventLogger.logWeaponPurchase(cycleNumber, userId, 5, 2000);
+      await eventLogger.logWeaponPurchase(testCycleNumber, userId, 5, 2000);
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.WEAPON_PURCHASE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.WEAPON_PURCHASE },
       });
 
       expect(event).not.toBeNull();
@@ -411,13 +415,13 @@ describe('EventLogger Service', () => {
     });
 
     it('should log weapon sale', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const userId = 1;
 
-      await eventLogger.logWeaponSale(cycleNumber, userId, 5, 1000);
+      await eventLogger.logWeaponSale(testCycleNumber, userId, 5, 1000);
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.WEAPON_SALE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.WEAPON_SALE },
       });
 
       expect(event).not.toBeNull();
@@ -431,11 +435,11 @@ describe('EventLogger Service', () => {
 
   describe('Robot Event Helpers', () => {
     it('should log attribute upgrade', async () => {
-      const cycleNumber = 1;
+      // Use testCycleNumber from beforeEach
       const robotId = 10;
 
       await eventLogger.logAttributeUpgrade(
-        cycleNumber,
+        testCycleNumber,
         robotId,
         'combatPower',
         10.5,
@@ -444,7 +448,7 @@ describe('EventLogger Service', () => {
       );
 
       const event = await prisma.auditLog.findFirst({
-        where: { cycleNumber, eventType: EventType.ROBOT_ATTRIBUTE_UPGRADE },
+        where: { cycleNumber: testCycleNumber, eventType: EventType.ROBOT_ATTRIBUTE_UPGRADE },
       });
 
       expect(event).not.toBeNull();
@@ -489,7 +493,7 @@ describe('EventLogger Service', () => {
       // Simulate existing events in database
       await prisma.auditLog.create({
         data: {
-          cycleNumber: 1,
+          cycleNumber: testCycleNumber,
           eventType: EventType.CYCLE_START,
           sequenceNumber: 1,
           payload: { test: 'existing' },
@@ -498,7 +502,7 @@ describe('EventLogger Service', () => {
 
       await prisma.auditLog.create({
         data: {
-          cycleNumber: 1,
+          cycleNumber: testCycleNumber,
           eventType: EventType.CYCLE_STEP_COMPLETE,
           sequenceNumber: 2,
           payload: { test: 'existing' },
@@ -506,13 +510,13 @@ describe('EventLogger Service', () => {
       });
 
       // Clear cache to simulate restart
-      clearSequenceCache(1);
+      clearSequenceCache(testCycleNumber);
 
       // Log new event
-      await eventLogger.logEvent(1, EventType.CYCLE_COMPLETE, { test: 'new' });
+      await eventLogger.logEvent(testCycleNumber, EventType.CYCLE_COMPLETE, { test: 'new' });
 
       const events = await prisma.auditLog.findMany({
-        where: { cycleNumber: 1 },
+        where: { cycleNumber: testCycleNumber },
         orderBy: { sequenceNumber: 'asc' },
       });
 

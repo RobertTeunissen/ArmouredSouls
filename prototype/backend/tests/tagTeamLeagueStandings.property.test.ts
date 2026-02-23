@@ -194,7 +194,7 @@ describe('Tag Team League Standings Property Tests', () => {
           expect(updatedTeam!.tagTeamLeagueId).toBe(`${config.tagTeamLeague}_1`);
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: teamId } });
+          await prisma.tagTeam.deleteMany({ where: { id: teamId } });
           await prisma.robot.deleteMany({
             where: { id: { in: [robot1.id, robot2.id] } },
           });
@@ -334,7 +334,7 @@ describe('Tag Team League Standings Property Tests', () => {
           expect(updatedRobot2!.leagueId).toBe(`${config.robot1v1League}_1`);
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: teamId } });
+          await prisma.tagTeam.deleteMany({ where: { id: teamId } });
           await prisma.robot.deleteMany({
             where: { id: { in: [robot1.id, robot2.id] } },
           });
@@ -454,7 +454,7 @@ describe('Tag Team League Standings Property Tests', () => {
           expect(finalRobot2!.currentLeague).toBeDefined();
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: teamId } });
+          await prisma.tagTeam.deleteMany({ where: { id: teamId } });
           await prisma.robot.deleteMany({
             where: { id: { in: [robot1.id, robot2.id] } },
           });

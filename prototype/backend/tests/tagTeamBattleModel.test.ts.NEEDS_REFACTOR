@@ -1,0 +1,25 @@
+# tagTeamBattleModel.test.ts - NEEDS REFACTORING
+
+## Issue
+This test file uses the old Battle model schema with fields like:
+- robot1FinalHP, robot2FinalHP
+- robot1FinalShield, robot2FinalShield
+- robot1DamageDealt, robot2DamageDealt
+- robot1ELOBefore, robot2ELOBefore, robot1ELOAfter, robot2ELOAfter
+
+These fields have been migrated to the BattleParticipant model as part of the schema refactoring.
+
+Additionally, robot creation is missing the userId field (needs to be added back).
+
+## Required Changes
+The test needs to be refactored to:
+1. Add userId back to robot.create() calls
+2. Create BattleParticipant records instead of using old Battle fields
+3. Use the new BattleParticipant structure for all test data
+4. Follow the pattern in the migration docs: docs/migrations/BATTLEPARTICIPANT_MIGRATION_COMPLETE.md
+
+## Priority
+Medium - Tests the tag team battle model which is important functionality.
+
+## Estimated Effort
+2-3 hours to refactor all test cases to use the new schema.

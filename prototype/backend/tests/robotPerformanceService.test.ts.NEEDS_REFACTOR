@@ -1,0 +1,24 @@
+# robotPerformanceService.test.ts - NEEDS REFACTORING
+
+## Issue
+This test file uses the old Battle model schema with fields like:
+- robot1RepairCost, robot2RepairCost
+- robot1PrestigeAwarded, robot2PrestigeAwarded  
+- robot1FameAwarded, robot2FameAwarded
+- robot1FinalHP, robot2FinalHP
+- robot1DamageDealt, robot2DamageDealt
+
+These fields have been migrated to the BattleParticipant model as part of the schema refactoring.
+
+## Required Changes
+The test needs to be refactored to:
+1. Create BattleParticipant records instead of using old Battle fields
+2. Use the new BattleParticipant structure for all test data
+3. Follow the pattern in the migration docs: docs/migrations/BATTLEPARTICIPANT_MIGRATION_COMPLETE.md
+
+## Priority
+Medium - The robotPerformanceService itself has been migrated to use BattleParticipant,
+but the tests haven't been updated yet.
+
+## Estimated Effort
+2-3 hours to refactor all test cases to use the new schema.

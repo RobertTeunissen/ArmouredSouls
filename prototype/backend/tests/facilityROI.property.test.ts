@@ -22,28 +22,12 @@ describe('Property 7: Facility ROI Calculation Accuracy', () => {
   let testUserId: number;
   let testRobotId: number;
 
-  beforeEach(async () => {
-    // Clean up before each test
+  afterEach(async () => {
+    // Clean up after each test in correct dependency order
     await prisma.auditLog.deleteMany({});
     await prisma.facility.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.user.deleteMany({});
-
-    // Create test user and robot
-    const user = await createTestUser();
-    testUserId = user.id;
-    const robot = await createTestRobot(testUserId);
-    testRobotId = robot.id;
-
-    // Ensure cycle metadata exists
-    await prisma.cycleMetadata.upsert({
-      where: { id: 1 },
-      update: { totalCycles: 1 },
-      create: {
-        id: 1,
-        totalCycles: 1,
-      },
-    });
   });
 
   afterAll(async () => {

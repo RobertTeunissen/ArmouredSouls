@@ -7,12 +7,21 @@ const queryService = new QueryService();
 const eventLogger = new EventLogger();
 
 describe('QueryService', () => {
+  let testCycleNumbers: number[] = [];
+
   beforeEach(async () => {
     // Clean up test data
     await prisma.auditLog.deleteMany({});
+    testCycleNumbers = [];
   });
 
   afterAll(async () => {
+    // Final cleanup
+    if (testCycleNumbers.length > 0) {
+      await prisma.auditLog.deleteMany({
+        where: { cycleNumber: { in: testCycleNumbers } },
+      });
+    }
     await prisma.$disconnect();
   });
 

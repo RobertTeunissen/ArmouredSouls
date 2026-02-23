@@ -7,14 +7,37 @@ const integrityService = new DataIntegrityService();
 const eventLogger = new EventLogger();
 
 describe('DataIntegrityService', () => {
-  beforeEach(async () => {
-    // Clean up test data
-    await prisma.auditLog.deleteMany({});
-    await prisma.cycleSnapshot.deleteMany({});
+  let testCycleNumbers: number[] = [];
+  let testUserIds: number[] = [];
+  let cycleCounter = 10000; // Start from a safe base number
+
+  beforeAll(async () => {
+    await prisma.$connect();
   });
 
   afterAll(async () => {
     await prisma.$disconnect();
+  });
+
+  afterEach(async () => {
+    // Clean up test data in correct order
+    if (testCycleNumbers.length > 0) {
+      await prisma.auditLog.deleteMany({
+        where: { cycleNumber: { in: testCycleNumbers } },
+      });
+      await prisma.cycleSnapshot.deleteMany({
+        where: { cycleNumber: { in: testCycleNumbers } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    testCycleNumbers = [];
+    testUserIds = [];
   });
 
   describe('validateCycleIntegrity', () => {
@@ -22,7 +45,8 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.2, 9.4
      */
     it('should pass validation for a complete, valid cycle', async () => {
-      const cycleNumber = 1;
+      const cycleNumber = cycleCounter++;
+      testCycleNumbers.push(cycleNumber);
 
       // Create complete cycle events
       await eventLogger.logCycleStart(cycleNumber, 'manual');
@@ -48,7 +72,8 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.2
      */
     it('should detect missing cycle_start event', async () => {
-      const cycleNumber = 2;
+      const cycleNumber = cycleCounter++;
+      testCycleNumbers.push(cycleNumber);
 
       // Create cycle without start event
       await eventLogger.logCycleStepComplete(cycleNumber, 'step_1', 1, 100);
@@ -69,7 +94,8 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.2
      */
     it('should detect missing cycle_complete event', async () => {
-      const cycleNumber = 3;
+      const cycleNumber = cycleCounter++;
+      testCycleNumbers.push(cycleNumber);
 
       // Create cycle without complete event
       await eventLogger.logCycleStart(cycleNumber, 'manual');
@@ -89,7 +115,8 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.2
      */
     it('should detect incomplete cycle steps', async () => {
-      const cycleNumber = 4;
+      const cycleNumber = cycleCounter++;
+      testCycleNumbers.push(cycleNumber);
 
       // Create cycle with only 3 steps (expect at least 8)
       await eventLogger.logCycleStart(cycleNumber, 'manual');
@@ -115,7 +142,8 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.3
      */
     it('should detect sequence number gaps', async () => {
-      const cycleNumber = 5;
+      const cycleNumber = cycleCounter++;
+      testCycleNumbers.push(cycleNumber);
 
       // Create events with gaps in sequence numbers
       await prisma.auditLog.create({
@@ -161,7 +189,8 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.3
      */
     it('should pass with continuous sequence numbers', async () => {
-      const cycleNumber = 6;
+      const cycleNumber = cycleCounter++;
+      testCycleNumbers.push(cycleNumber);
 
       // Create events with continuous sequence numbers
       for (let i = 1; i <= 5; i++) {
@@ -188,8 +217,10 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.4
      */
     it('should detect credit sum mismatch', async () => {
-      const cycleNumber = 7;
-      const userId = 1;
+      const cycleNumber = cycleCounter++;
+      const userId = 900000 + cycleNumber; // Unique user ID
+      testCycleNumbers.push(cycleNumber);
+      testUserIds.push(userId);
 
       // Create cycle snapshot with expected metrics
       await prisma.cycleSnapshot.create({
@@ -231,8 +262,10 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.4
      */
     it('should pass with matching credit sums', async () => {
-      const cycleNumber = 8;
-      const userId = 2;
+      const cycleNumber = cycleCounter++;
+      const userId = 900000 + cycleNumber; // Unique user ID
+      testCycleNumbers.push(cycleNumber);
+      testUserIds.push(userId);
 
       // Create cycle snapshot
       await prisma.cycleSnapshot.create({
@@ -271,8 +304,10 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.4
      */
     it('should allow 1 credit tolerance for rounding', async () => {
-      const cycleNumber = 9;
-      const userId = 3;
+      const cycleNumber = cycleCounter++;
+      const userId = 900000 + cycleNumber; // Unique user ID
+      testCycleNumbers.push(cycleNumber);
+      testUserIds.push(userId);
 
       // Create cycle snapshot
       await prisma.cycleSnapshot.create({
@@ -311,19 +346,23 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.2, 9.4
      */
     it('should validate multiple cycles', async () => {
+      const baseCycle = cycleCounter;
+      const cycles = [cycleCounter++, cycleCounter++, cycleCounter++];
+      testCycleNumbers.push(...cycles);
+
       // Create 3 cycles
-      for (let cycle = 1; cycle <= 3; cycle++) {
+      for (const cycle of cycles) {
         await eventLogger.logCycleStart(cycle, 'manual');
         await eventLogger.logCycleStepComplete(cycle, 'step_1', 1, 100);
         await eventLogger.logCycleComplete(cycle, 100);
       }
 
-      const reports = await integrityService.validateCycleRange(1, 3);
+      const reports = await integrityService.validateCycleRange(cycles[0], cycles[2]);
 
       expect(reports).toHaveLength(3);
-      expect(reports[0].cycleNumber).toBe(1);
-      expect(reports[1].cycleNumber).toBe(2);
-      expect(reports[2].cycleNumber).toBe(3);
+      expect(reports[0].cycleNumber).toBe(cycles[0]);
+      expect(reports[1].cycleNumber).toBe(cycles[1]);
+      expect(reports[2].cycleNumber).toBe(cycles[2]);
     });
   });
 
@@ -332,21 +371,26 @@ describe('DataIntegrityService', () => {
      * Validates: Requirements 9.2, 9.4
      */
     it('should provide summary of integrity issues', async () => {
+      const cycle1 = cycleCounter++;
+      const cycle2 = cycleCounter++;
+      const cycle3 = cycleCounter++;
+      testCycleNumbers.push(cycle1, cycle2, cycle3);
+
       // Create cycle 1 with no issues
-      await eventLogger.logCycleStart(1, 'manual');
+      await eventLogger.logCycleStart(cycle1, 'manual');
       for (let i = 1; i <= 13; i++) {
-        await eventLogger.logCycleStepComplete(1, `step_${i}`, i, 100);
+        await eventLogger.logCycleStepComplete(cycle1, `step_${i}`, i, 100);
       }
-      await eventLogger.logCycleComplete(1, 1300);
+      await eventLogger.logCycleComplete(cycle1, 1300);
 
       // Create cycle 2 with missing start event
-      await eventLogger.logCycleStepComplete(2, 'step_1', 1, 100);
-      await eventLogger.logCycleComplete(2, 100);
+      await eventLogger.logCycleStepComplete(cycle2, 'step_1', 1, 100);
+      await eventLogger.logCycleComplete(cycle2, 100);
 
       // Create cycle 3 with sequence gap
       await prisma.auditLog.create({
         data: {
-          cycleNumber: 3,
+          cycleNumber: cycle3,
           eventType: 'cycle_start',
           eventTimestamp: new Date(),
           sequenceNumber: 1,
@@ -355,7 +399,7 @@ describe('DataIntegrityService', () => {
       });
       await prisma.auditLog.create({
         data: {
-          cycleNumber: 3,
+          cycleNumber: cycle3,
           eventType: 'cycle_complete',
           eventTimestamp: new Date(),
           sequenceNumber: 3, // Gap: missing sequence 2
@@ -363,7 +407,7 @@ describe('DataIntegrityService', () => {
         },
       });
 
-      const summary = await integrityService.getIntegritySummary(1, 3);
+      const summary = await integrityService.getIntegritySummary(cycle1, cycle3);
 
       expect(summary.totalCycles).toBe(3);
       expect(summary.validCycles).toBeGreaterThanOrEqual(1); // At least cycle 1 is valid

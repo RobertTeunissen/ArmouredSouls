@@ -1,0 +1,325 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+describe('Battle Model - Tag Team Extension', () => {
+  let testUser: any;
+  let testRobot1: any;
+  let testRobot2: any;
+  let testRobot3: any;
+  let testRobot4: any;
+
+  beforeAll(async () => {
+    // Create test user
+    testUser = await prisma.user.create({
+      data: {
+        username: `tag_team_test_${Date.now()}`,
+        passwordHash: 'test_hash',
+        currency: 1000000,
+      },
+    });
+
+    // Create test robots
+    testRobot1 = await prisma.robot.create({
+      data: {
+        
+        name: 'TagTeamRobot1',
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 20,
+        maxShield: 20,
+      },
+    });
+
+    testRobot2 = await prisma.robot.create({
+      data: {
+        
+        name: 'TagTeamRobot2',
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 20,
+        maxShield: 20,
+      },
+    });
+
+    testRobot3 = await prisma.robot.create({
+      data: {
+        
+        name: 'TagTeamRobot3',
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 20,
+        maxShield: 20,
+      },
+    });
+
+    testRobot4 = await prisma.robot.create({
+      data: {
+        
+        name: 'TagTeamRobot4',
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 20,
+        maxShield: 20,
+      },
+    });
+  });
+
+  afterAll(async () => {
+    // Clean up test data
+    const robotIds = [testRobot1.id, testRobot2.id, testRobot3.id, testRobot4.id];
+    await prisma.battle.deleteMany({
+      where: {
+        OR: [
+          { robot1Id: { in: robotIds } },
+          { robot2Id: { in: robotIds } },
+        ],
+      },
+    });
+    await prisma.robot.deleteMany({ where: { userId: testUser.id } });
+    await prisma.user.delete({ where: { id: testUser.id } });
+    await prisma.$disconnect();
+  });
+
+  describe('Tag Team Battle Type', () => {
+    it('should create a battle with battleType "tag_team"', async () => {
+      const battle = await prisma.battle.create({
+        data: {
+          robot1Id: testRobot1.id,
+          robot2Id: testRobot2.id,
+          battleType: 'tag_team',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 60,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot2ELOBefore: 1200,
+          robot1ELOAfter: 1216,
+          robot2ELOAfter: 1184,
+          eloChange: 16,
+          winnerId: testRobot1.id,
+        },
+      });
+
+      expect(battle.battleType).toBe('tag_team');
+      expect(battle.id).toBeDefined();
+    });
+  });
+
+  describe('Tag Team Robot Fields', () => {
+    it('should store tag team robot IDs', async () => {
+      const battle = await prisma.battle.create({
+        data: {
+          robot1Id: testRobot1.id,
+          robot2Id: testRobot2.id,
+          battleType: 'tag_team',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 60,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot2ELOBefore: 1200,
+          robot1ELOAfter: 1216,
+          robot2ELOAfter: 1184,
+          eloChange: 16,
+          winnerId: testRobot1.id,
+          team1ActiveRobotId: testRobot1.id,
+          team1ReserveRobotId: testRobot2.id,
+          team2ActiveRobotId: testRobot3.id,
+          team2ReserveRobotId: testRobot4.id,
+        },
+      });
+
+      expect(battle.team1ActiveRobotId).toBe(testRobot1.id);
+      expect(battle.team1ReserveRobotId).toBe(testRobot2.id);
+      expect(battle.team2ActiveRobotId).toBe(testRobot3.id);
+      expect(battle.team2ReserveRobotId).toBe(testRobot4.id);
+    });
+
+    it('should allow null values for tag team robot fields in non-tag-team battles', async () => {
+      const battle = await prisma.battle.create({
+        data: {
+          robot1Id: testRobot1.id,
+          robot2Id: testRobot2.id,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 60,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot2ELOBefore: 1200,
+          robot1ELOAfter: 1216,
+          robot2ELOAfter: 1184,
+          eloChange: 16,
+          winnerId: testRobot1.id,
+        },
+      });
+
+      expect(battle.team1ActiveRobotId).toBeNull();
+      expect(battle.team1ReserveRobotId).toBeNull();
+      expect(battle.team2ActiveRobotId).toBeNull();
+      expect(battle.team2ReserveRobotId).toBeNull();
+    });
+  });
+
+  describe('Tag-Out Timestamp Fields', () => {
+    it('should store tag-out timestamps', async () => {
+      const tagOutTime1 = BigInt(30000); // 30 seconds
+      const tagOutTime2 = BigInt(45000); // 45 seconds
+
+      const battle = await prisma.battle.create({
+        data: {
+          robot1Id: testRobot1.id,
+          robot2Id: testRobot2.id,
+          battleType: 'tag_team',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 60,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot2ELOBefore: 1200,
+          robot1ELOAfter: 1216,
+          robot2ELOAfter: 1184,
+          eloChange: 16,
+          winnerId: testRobot1.id,
+          team1ActiveRobotId: testRobot1.id,
+          team1ReserveRobotId: testRobot2.id,
+          team2ActiveRobotId: testRobot3.id,
+          team2ReserveRobotId: testRobot4.id,
+          team1TagOutTime: tagOutTime1,
+          team2TagOutTime: tagOutTime2,
+        },
+      });
+
+      expect(battle.team1TagOutTime).toBe(tagOutTime1);
+      expect(battle.team2TagOutTime).toBe(tagOutTime2);
+    });
+
+    it('should allow null values for tag-out timestamps when no tag-out occurs', async () => {
+      const battle = await prisma.battle.create({
+        data: {
+          robot1Id: testRobot1.id,
+          robot2Id: testRobot2.id,
+          battleType: 'tag_team',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 60,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot2ELOBefore: 1200,
+          robot1ELOAfter: 1216,
+          robot2ELOAfter: 1184,
+          eloChange: 16,
+          winnerId: testRobot1.id,
+          team1ActiveRobotId: testRobot1.id,
+          team1ReserveRobotId: testRobot2.id,
+          team2ActiveRobotId: testRobot3.id,
+          team2ReserveRobotId: testRobot4.id,
+        },
+      });
+
+      expect(battle.team1TagOutTime).toBeNull();
+      expect(battle.team2TagOutTime).toBeNull();
+    });
+  });
+
+  describe('Battle Type Index', () => {
+    it('should efficiently query battles by battleType', async () => {
+      // Create multiple battles with different types
+      await prisma.battle.create({
+        data: {
+          robot1Id: testRobot1.id,
+          robot2Id: testRobot2.id,
+          battleType: 'league',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 60,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot2ELOBefore: 1200,
+          robot1ELOAfter: 1216,
+          robot2ELOAfter: 1184,
+          eloChange: 16,
+          winnerId: testRobot1.id,
+        },
+      });
+
+      await prisma.battle.create({
+        data: {
+          robot1Id: testRobot1.id,
+          robot2Id: testRobot2.id,
+          battleType: 'tag_team',
+          leagueType: 'bronze',
+          battleLog: {},
+          durationSeconds: 60,
+          robot1FinalHP: 50,
+          robot2FinalHP: 0,
+          robot1FinalShield: 10,
+          robot2FinalShield: 0,
+          robot1DamageDealt: 100,
+          robot2DamageDealt: 50,
+          robot1ELOBefore: 1200,
+          robot2ELOBefore: 1200,
+          robot1ELOAfter: 1216,
+          robot2ELOAfter: 1184,
+          eloChange: 16,
+          winnerId: testRobot1.id,
+          team1ActiveRobotId: testRobot1.id,
+          team1ReserveRobotId: testRobot2.id,
+          team2ActiveRobotId: testRobot3.id,
+          team2ReserveRobotId: testRobot4.id,
+        },
+      });
+
+      // Query by battleType
+      const tagTeamBattles = await prisma.battle.findMany({
+        where: {
+          
+          battleType: 'tag_team',
+        },
+      });
+
+      const leagueBattles = await prisma.battle.findMany({
+        where: {
+          
+          battleType: 'league',
+        },
+      });
+
+      expect(tagTeamBattles.length).toBeGreaterThan(0);
+      expect(leagueBattles.length).toBeGreaterThan(0);
+      expect(tagTeamBattles.every(b => b.battleType === 'tag_team')).toBe(true);
+      expect(leagueBattles.every(b => b.battleType === 'league')).toBe(true);
+    });
+  });
+});

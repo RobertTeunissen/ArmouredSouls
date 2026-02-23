@@ -753,9 +753,16 @@ async function upgradeFacility(userId: string, facilityType: string) {
 
 #### 6.4.3 API Response Enhancement
 
-**Update `GET /api/facilities` response:**
+**`GET /api/facility` response structure:**
 
 ```typescript
+interface FacilityAPIResponse {
+  facilities: FacilityResponse[];  // Array of facility objects
+  userPrestige: number;             // User's current prestige
+  userCurrency: number;             // User's current currency
+  robotCount: number;               // Number of robots (for repair bay discount calculation)
+}
+
 interface FacilityResponse {
   type: string;
   name: string;
@@ -766,11 +773,16 @@ interface FacilityResponse {
   nextLevelBenefit: string | null;
   upgradeCost: number | null;
   implemented: boolean;
-  // NEW fields:
+  // Prestige fields:
   prestigeRequired: number | null;  // Prestige required for next level
   prestigeMet: boolean;              // Whether user has enough prestige
   canUpgrade: boolean;               // Credits AND prestige requirements met
+  canAfford: boolean;                // Whether user has enough currency
+  hasPrestige: boolean;              // Whether user meets prestige requirement
 }
+```
+
+**Note**: The endpoint returns an object containing the facilities array plus user context data, not a bare array. This enables the frontend to display user prestige and currency without additional API calls.
 ```
 
 ### 6.5 Frontend Requirements

@@ -18,6 +18,7 @@ app.use(express.json());
 app.use('/api/leagues', leaguesRoutes);
 
 describe('Leagues Routes', () => {
+  let testUserIds: number[] = [];
   let testUser: any;
   let authToken: string;
 
@@ -26,6 +27,7 @@ describe('Leagues Routes', () => {
     
     // Create test user
     testUser = await createTestUser();
+    testUserIds.push(testUser.id);
 
     // Generate JWT token
     authToken = jwt.sign(
@@ -36,8 +38,10 @@ describe('Leagues Routes', () => {
 
   afterAll(async () => {
     // Cleanup
-    if (testUser) {
-      await deleteTestUser(testUser.id);
+    if (testUserIds.length > 0) {
+      for (const userId of testUserIds) {
+        await deleteTestUser(userId);
+      }
     }
     await prisma.$disconnect();
   });

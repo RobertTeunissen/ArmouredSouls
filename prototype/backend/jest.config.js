@@ -17,4 +17,6 @@ module.exports = {
       },
     }],
   },
+  // Increase timeout for property-based tests (30 seconds)
+  testTimeout: 30000,
 };

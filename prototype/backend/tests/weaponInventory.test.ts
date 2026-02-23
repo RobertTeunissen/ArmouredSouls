@@ -18,6 +18,7 @@ app.use(express.json());
 app.use('/api/weapon-inventory', weaponInventoryRoutes);
 
 describe('Weapon Inventory Routes', () => {
+  let testUserIds: number[] = [];
   let testUser: any;
   let authToken: string;
   let testWeapon: any;
@@ -27,6 +28,7 @@ describe('Weapon Inventory Routes', () => {
     
     // Create test user
     testUser = await createTestUser();
+    testUserIds.push(testUser.id);
 
     // Get a weapon for testing (from seed data - weapons are global)
     testWeapon = await prisma.weapon.findFirst({
@@ -42,8 +44,10 @@ describe('Weapon Inventory Routes', () => {
 
   afterAll(async () => {
     // Cleanup
-    if (testUser) {
-      await deleteTestUser(testUser.id);
+    if (testUserIds.length > 0) {
+      for (const userId of testUserIds) {
+        await deleteTestUser(userId);
+      }
     }
     await prisma.$disconnect();
   });

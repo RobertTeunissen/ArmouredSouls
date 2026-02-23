@@ -5,6 +5,10 @@ import {
 } from '../src/utils/storageCalculations';
 
 describe('Storage Calculations', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   describe('calculateStorageCapacity', () => {
     it('should return base capacity of 5 at level 0', () => {
       expect(calculateStorageCapacity(0)).toBe(5);

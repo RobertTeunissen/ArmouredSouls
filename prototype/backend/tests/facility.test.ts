@@ -18,6 +18,7 @@ app.use(express.json());
 app.use('/api/facility', facilityRoutes);
 
 describe('Facility Routes', () => {
+  let testUserIds: number[] = [];
   let testUser: any;
   let authToken: string;
 
@@ -26,6 +27,7 @@ describe('Facility Routes', () => {
     
     // Create test user
     testUser = await createTestUser();
+    testUserIds.push(testUser.id);
 
     // Generate JWT token
     authToken = jwt.sign(
@@ -36,8 +38,10 @@ describe('Facility Routes', () => {
 
   afterAll(async () => {
     // Cleanup
-    if (testUser) {
-      await deleteTestUser(testUser.id);
+    if (testUserIds.length > 0) {
+      for (const userId of testUserIds) {
+        await deleteTestUser(userId);
+      }
     }
     await prisma.$disconnect();
   });
@@ -49,11 +53,15 @@ describe('Facility Routes', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveProperty('facilities');
+      expect(Array.isArray(response.body.facilities)).toBe(true);
+      expect(response.body).toHaveProperty('userPrestige');
+      expect(response.body).toHaveProperty('userCurrency');
+      expect(response.body).toHaveProperty('robotCount');
       
       // Verify facility structure
-      if (response.body.length > 0) {
-        const facility = response.body[0];
+      if (response.body.facilities.length > 0) {
+        const facility = response.body.facilities[0];
         expect(facility).toHaveProperty('type');
         expect(facility).toHaveProperty('name');
         expect(facility).toHaveProperty('currentLevel');
@@ -108,11 +116,15 @@ describe('Facility Routes', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({ facilityType: 'roster_expansion' });
 
-      // Should either succeed or indicate max level reached
-      expect([200, 400]).toContain(response.status);
+      // Should either succeed, indicate max level reached, or insufficient credits
+      expect([200, 400, 403]).toContain(response.status);
       
       if (response.status === 400) {
-        expect(response.body.error).toMatch(/max level|already at maximum/i);
+        // Accept either max level or insufficient credits as valid responses
+        expect(response.body.error).toMatch(/max level|already at maximum|insufficient credits/i);
+      } else if (response.status === 403) {
+        // Prestige requirement not met
+        expect(response.body.error).toMatch(/insufficient prestige/i);
       } else {
         expect(response.body).toHaveProperty('facility');
       }

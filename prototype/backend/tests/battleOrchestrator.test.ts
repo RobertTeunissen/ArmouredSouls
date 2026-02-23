@@ -8,6 +8,11 @@ import {
 const prisma = new PrismaClient();
 
 describe('Battle Orchestrator', () => {
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testWeaponIds: number[] = [];
+  let testWeaponInvIds: number[] = [];
+  let testBattleIds: number[] = [];
   let testUser: any;
   let practiceSword: any;
 
@@ -25,16 +30,17 @@ describe('Battle Orchestrator', () => {
     // Create test user
     testUser = await prisma.user.create({
       data: {
-        username: 'battle_test_user',
+        username: `battle_test_user_${Date.now()}`,
         passwordHash: 'hash',
         currency: 1000000,
       },
     });
+    testUserIds.push(testUser.id);
 
     // Create practice sword
     practiceSword = await prisma.weapon.create({
       data: {
-        name: 'Test Sword',
+        name: `Test Sword ${Date.now()}`,
         weaponType: 'melee',
         baseDamage: 5,
         cooldown: 3,
@@ -44,9 +50,43 @@ describe('Battle Orchestrator', () => {
         loadoutType: 'single',
       },
     });
+    testWeaponIds.push(practiceSword.id);
+  });
+
+  afterEach(async () => {
+    // Clean up test data between tests
+    await prisma.auditLog.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
+    await prisma.battle.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
+    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.tagTeam.deleteMany({});
+    await prisma.robot.deleteMany({
+      where: { userId: testUser.id },
+    });
+    await prisma.weaponInventory.deleteMany({
+      where: { userId: testUser.id },
+    });
+    await prisma.user.deleteMany({
+      where: { 
+        id: { not: testUser.id },
+      },
+    });
   });
 
   afterAll(async () => {
+    // Final cleanup
+    await prisma.auditLog.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
+    await prisma.battle.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
+    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.tagTeam.deleteMany({});
+    await prisma.robot.deleteMany({});
+    await prisma.weaponInventory.deleteMany({});
+    await prisma.user.deleteMany({});
+    await prisma.weapon.deleteMany({});
+
     await prisma.$disconnect();
   });
 
@@ -163,13 +203,6 @@ describe('Battle Orchestrator', () => {
       // One should have won
       expect(updatedRobot1!.wins + updatedRobot2!.wins).toBe(1);
       expect(updatedRobot1!.losses + updatedRobot2!.losses).toBe(1);
-
-      // Clean up
-      await prisma.battle.delete({ where: { id: result.battleId } });
-      await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
-      await prisma.robot.delete({ where: { id: robot1.id } });
-      await prisma.robot.delete({ where: { id: robot2.id } });
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
 
     it('should handle bye-robot battles correctly', async () => {
@@ -250,14 +283,6 @@ describe('Battle Orchestrator', () => {
       // Verify player won the battle
       expect(updatedPlayer?.wins).toBe(1);
       expect(updatedPlayer?.losses).toBe(0);
-
-      // Clean up
-      await prisma.battle.deleteMany({});
-      await prisma.scheduledMatch.deleteMany({});
-      await prisma.robot.delete({ where: { id: playerRobot.id } });
-      await prisma.robot.delete({ where: { id: byeRobot.id } });
-      await prisma.weaponInventory.deleteMany({});
-      await prisma.user.delete({ where: { id: byeUser.id } });
     });
 
     it('should increment kills when a robot destroys its opponent', async () => {
@@ -321,14 +346,21 @@ describe('Battle Orchestrator', () => {
       const updatedRobot1 = await prisma.robot.findUnique({ where: { id: robot1.id } });
       const updatedRobot2 = await prisma.robot.findUnique({ where: { id: robot2.id } });
 
-      // Get battle details to check who was destroyed
-      const battle = await prisma.battle.findUnique({ where: { id: result.battleId } });
+      // Get battle with participants to check who was destroyed
+      const battle = await prisma.battle.findUnique({
+        where: { id: result.battleId },
+        include: { participants: true },
+      });
+      
+      // Find destroyed participants
+      const robot1Participant = battle?.participants.find(p => p.robotId === robot1.id);
+      const robot2Participant = battle?.participants.find(p => p.robotId === robot2.id);
       
       // Verify that the winner's kills incremented if opponent was destroyed
-      if (result.winnerId === robot1.id && battle?.robot2Destroyed) {
+      if (result.winnerId === robot1.id && robot2Participant?.destroyed) {
         expect(updatedRobot1?.kills).toBe(6); // Should increment from 5 to 6
         expect(updatedRobot2?.kills).toBe(3); // Should stay at 3
-      } else if (result.winnerId === robot2.id && battle?.robot1Destroyed) {
+      } else if (result.winnerId === robot2.id && robot1Participant?.destroyed) {
         expect(updatedRobot2?.kills).toBe(4); // Should increment from 3 to 4
         expect(updatedRobot1?.kills).toBe(5); // Should stay at 5
       } else {
@@ -339,14 +371,7 @@ describe('Battle Orchestrator', () => {
       }
 
       // Verify one of the robots was marked as destroyed (in most cases)
-      expect(battle?.robot1Destroyed || battle?.robot2Destroyed).toBeTruthy();
-
-      // Clean up
-      await prisma.battle.delete({ where: { id: result.battleId } });
-      await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
-      await prisma.robot.delete({ where: { id: robot1.id } });
-      await prisma.robot.delete({ where: { id: robot2.id } });
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+      expect(robot1Participant?.destroyed || robot2Participant?.destroyed).toBeTruthy();
     });
   });
 
@@ -414,14 +439,6 @@ describe('Battle Orchestrator', () => {
         where: { status: 'completed' },
       });
       expect(completedMatches.length).toBe(2);
-
-      // Clean up
-      await prisma.battle.deleteMany({});
-      await prisma.scheduledMatch.deleteMany({});
-      for (const robot of robots) {
-        await prisma.robot.delete({ where: { id: robot.id } });
-      }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
   });
 
@@ -501,13 +518,6 @@ describe('Battle Orchestrator', () => {
       // The balance increase should include both battle winnings and streaming revenue
       const balanceIncrease = userAfter!.currency - initialBalance;
       expect(balanceIncrease).toBeGreaterThan(2000); // Should be at least streaming revenue
-
-      // Clean up
-      await prisma.battle.delete({ where: { id: result.battleId } });
-      await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
-      await prisma.robot.delete({ where: { id: robot1.id } });
-      await prisma.robot.delete({ where: { id: robot2.id } });
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
 
     it('should not award streaming revenue for bye matches', async () => {
@@ -601,14 +611,6 @@ describe('Battle Orchestrator', () => {
 
       // Bye robot should get participation reward only (no streaming revenue)
       expect(byeBalanceChange).toBeGreaterThanOrEqual(0);
-
-      // Clean up
-      await prisma.battle.deleteMany({});
-      await prisma.scheduledMatch.deleteMany({});
-      await prisma.robot.delete({ where: { id: playerRobot.id } });
-      await prisma.robot.delete({ where: { id: byeRobot.id } });
-      await prisma.weaponInventory.deleteMany({});
-      await prisma.user.delete({ where: { id: byeUser.id } });
     });
 
     it('should add streaming revenue to audit log', async () => {
@@ -670,33 +672,23 @@ describe('Battle Orchestrator', () => {
       // Execute battle
       const result = await processBattle(scheduledMatch);
 
-      // Find the battle_complete event in audit log
-      const auditEvent = await prisma.auditLog.findFirst({
+      // Find the battle_complete events in audit log (one per robot)
+      const auditEvents = await prisma.auditLog.findMany({
         where: {
           eventType: 'battle_complete',
-          payload: {
-            path: ['battleId'],
-            equals: result.battleId,
-          },
+          battleId: result.battleId,
         },
       });
 
-      expect(auditEvent).toBeDefined();
+      // Should have two events (one per robot)
+      expect(auditEvents).toHaveLength(2);
 
-      // Verify streaming revenue is in the event payload
-      const payload = auditEvent!.payload as any;
-      expect(payload.streamingRevenue1).toBeDefined();
-      expect(payload.streamingRevenue2).toBeDefined();
-      expect(payload.streamingRevenue1).toBeGreaterThan(0);
-      expect(payload.streamingRevenue2).toBeGreaterThan(0);
-
-      // Clean up
-      await prisma.auditLog.deleteMany({ where: { id: auditEvent!.id } });
-      await prisma.battle.delete({ where: { id: result.battleId } });
-      await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
-      await prisma.robot.delete({ where: { id: robot1.id } });
-      await prisma.robot.delete({ where: { id: robot2.id } });
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+      // Verify streaming revenue is in both event payloads
+      auditEvents.forEach((event) => {
+        const payload = event.payload as any;
+        expect(payload.streamingRevenue).toBeDefined();
+        expect(payload.streamingRevenue).toBeGreaterThan(0);
+      });
     });
 
     it('should log streaming revenue to terminal', async () => {
@@ -779,13 +771,6 @@ describe('Battle Orchestrator', () => {
         expect(robot2Log).toBeDefined();
         expect(robot1Log).toMatch(/\[Streaming\].*earned ₡[\d,]+.*from Battle #\d+/);
         expect(robot2Log).toMatch(/\[Streaming\].*earned ₡[\d,]+.*from Battle #\d+/);
-
-        // Clean up
-        await prisma.battle.delete({ where: { id: result.battleId } });
-        await prisma.scheduledMatch.delete({ where: { id: scheduledMatch.id } });
-        await prisma.robot.delete({ where: { id: robot1.id } });
-        await prisma.robot.delete({ where: { id: robot2.id } });
-        await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
       } finally {
         // Restore console.log
         console.log = originalLog;

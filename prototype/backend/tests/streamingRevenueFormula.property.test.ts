@@ -106,7 +106,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
     // Clean up test data
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
     await prisma.$disconnect();
   });
 
@@ -188,7 +188,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           expect(result!.studioLevel).toBe(studioLevel);
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 100 }
@@ -234,7 +234,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           expect(result).toBeNull();
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 50 }
@@ -285,7 +285,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           expect(result!.totalRevenue).toBe(expectedRevenue);
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 50 }
@@ -339,8 +339,8 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           expect(result2!.totalRevenue).toBeGreaterThanOrEqual(result1!.totalRevenue);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -374,7 +374,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
     // Clean up test data
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
     await prisma.$disconnect();
   });
 
@@ -459,7 +459,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           expect(result!.totalRevenue).toBe(expectedTotalRevenue);
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 100 }
@@ -485,7 +485,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           expect(result!.robotBattles).toBe(oneVOneBattles);
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 50 }
@@ -519,7 +519,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           expect(result!.robotBattles).toBe(tagTeamBattles);
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 50 }
@@ -581,8 +581,8 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           expect(result2!.robotBattles).toBeGreaterThan(result1!.robotBattles);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -617,7 +617,7 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
     // Clean up test data
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
     await prisma.$disconnect();
   });
 
@@ -697,8 +697,8 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           }
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 100 }
@@ -760,9 +760,9 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           }
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
-          await prisma.robot.delete({ where: { id: robot3.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot3.id } });
         }
       ),
       { numRuns: 50 }
@@ -866,8 +866,8 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           expect(afterResult2!.totalRevenue).toBeGreaterThan(beforeResult2!.totalRevenue);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -985,8 +985,8 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
     await prisma.robot.deleteMany({ where: { userId: testUserId2 } });
     await prisma.facility.deleteMany({ where: { userId: testUserId1 } });
     await prisma.facility.deleteMany({ where: { userId: testUserId2 } });
-    await prisma.user.delete({ where: { id: testUserId1 } });
-    await prisma.user.delete({ where: { id: testUserId2 } });
+    await prisma.user.deleteMany({ where: { id: testUserId1 } });
+    await prisma.user.deleteMany({ where: { id: testUserId2 } });
     await prisma.$disconnect();
   });
 
@@ -1080,8 +1080,8 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           expect(result2!.studioLevel).toBe(studioLevel2);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 100 }
@@ -1152,8 +1152,8 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           expect(result1!.studioMultiplier).toBeCloseTo(result2!.studioMultiplier, 10);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -1208,8 +1208,8 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           }
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -1250,8 +1250,8 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           expect(result2!.studioMultiplier).toBe(1.0);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 20 }
@@ -1337,8 +1337,8 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           }
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -1372,7 +1372,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
     // Clean up test data
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
     await prisma.$disconnect();
   });
 
@@ -1422,7 +1422,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           expect(result).toBeNull();
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 100 }
@@ -1471,7 +1471,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           expect(nonByeResult!.totalRevenue).toBeGreaterThan(1000);
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 50 }
@@ -1524,7 +1524,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           expect(nonByeResult!.totalRevenue).toBeGreaterThan(0);
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 100 }
@@ -1549,7 +1549,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           expect(result).toBeNull();
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 20 }
@@ -1592,7 +1592,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           expect(result).toBeNull();
 
           // Clean up robot for next iteration
-          await prisma.robot.delete({ where: { id: robot.id } });
+          await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
       { numRuns: 50 }
@@ -1638,8 +1638,8 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
     await prisma.robot.deleteMany({ where: { userId: testUser2Id } });
     await prisma.facility.deleteMany({ where: { userId: testUser1Id } });
     await prisma.facility.deleteMany({ where: { userId: testUser2Id } });
-    await prisma.user.delete({ where: { id: testUser1Id } });
-    await prisma.user.delete({ where: { id: testUser2Id } });
+    await prisma.user.deleteMany({ where: { id: testUser1Id } });
+    await prisma.user.deleteMany({ where: { id: testUser2Id } });
     await prisma.$disconnect();
   });
 
@@ -1790,10 +1790,10 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
           expect(result.team2Revenue.robotFame).toBe(team2MaxFame);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 100 }
@@ -1872,10 +1872,10 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
           expect(balanceIncrease).not.toBe(expectedRevenue * 2);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -1975,10 +1975,10 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
           expect(result.team1MaxFameRobot.fame).toBe(maxFame);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -2024,8 +2024,8 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
     await prisma.robot.deleteMany({ where: { userId: testUserId2 } });
     await prisma.facility.deleteMany({ where: { userId: testUserId1 } });
     await prisma.facility.deleteMany({ where: { userId: testUserId2 } });
-    await prisma.user.delete({ where: { id: testUserId1 } });
-    await prisma.user.delete({ where: { id: testUserId2 } });
+    await prisma.user.deleteMany({ where: { id: testUserId1 } });
+    await prisma.user.deleteMany({ where: { id: testUserId2 } });
     await prisma.$disconnect();
   });
 
@@ -2169,10 +2169,10 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           expect(result.team2Revenue.totalRevenue).toBe(expectedTeam2Revenue);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 100 }
@@ -2248,10 +2248,10 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           expect(result.team1Revenue.totalRevenue).toBeGreaterThanOrEqual(robot2AloneRevenue);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -2322,10 +2322,10 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           expect(selectedRobotIds).toContain(result.team1MaxFameRobot.id);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -2396,10 +2396,10 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           expect(team2RobotIds).toContain(result.team2MaxFameRobot.id);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 100 }
@@ -2476,10 +2476,10 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           expect(result.team1Revenue.totalRevenue).toBe(expectedRevenue);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: weakRobot.id } });
-          await prisma.robot.delete({ where: { id: strongRobot.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: weakRobot.id } });
+          await prisma.robot.deleteMany({ where: { id: strongRobot.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -2551,10 +2551,10 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           expect(result.team1Revenue.totalRevenue).toBe(expectedRevenue);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -2599,8 +2599,8 @@ describe('Property 11: Tag Team Separate Calculations', () => {
     await prisma.robot.deleteMany({ where: { userId: testUserId2 } });
     await prisma.facility.deleteMany({ where: { userId: testUserId1 } });
     await prisma.facility.deleteMany({ where: { userId: testUserId2 } });
-    await prisma.user.delete({ where: { id: testUserId1 } });
-    await prisma.user.delete({ where: { id: testUserId2 } });
+    await prisma.user.deleteMany({ where: { id: testUserId1 } });
+    await prisma.user.deleteMany({ where: { id: testUserId2 } });
     await prisma.$disconnect();
   });
 
@@ -2751,10 +2751,10 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           expect(result.team2MaxFameRobot.fame).toBe(team2MaxFame);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 100 }
@@ -2837,10 +2837,10 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           expect(result.team1Revenue.studioMultiplier).toBe(result.team2Revenue.studioMultiplier);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -2932,10 +2932,10 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           }
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -3037,10 +3037,10 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           expect(result.team1Revenue.robotFame).not.toBe(Math.max(t2r1Fame, t2r2Fame));
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -3135,10 +3135,10 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           expect(result.team2Revenue.baseAmount).toBe(1000);
 
           // Clean up robots for next iteration
-          await prisma.robot.delete({ where: { id: team1Robot1.id } });
-          await prisma.robot.delete({ where: { id: team1Robot2.id } });
-          await prisma.robot.delete({ where: { id: team2Robot1.id } });
-          await prisma.robot.delete({ where: { id: team2Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team1Robot2.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
       { numRuns: 100 }

@@ -12,6 +12,10 @@ import fc from 'fast-check';
 import { getFacilityConfig, getFacilityUpgradeCost } from '../src/config/facilities';
 
 describe('Property 7: Streaming Studio Upgrade Cost Formula', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   /**
    * Property 7: For any Streaming Studio at level N (where N < 10), 
    * the cost to upgrade to level N+1 equals (N + 1) × 100,000

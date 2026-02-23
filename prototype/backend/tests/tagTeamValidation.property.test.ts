@@ -198,10 +198,10 @@ describe('Tag Team Validation Property Tests', () => {
           });
 
           if (weapon1Inv) {
-            await prisma.weaponInventory.delete({ where: { id: weapon1Inv.id } });
+            await prisma.weaponInventory.deleteMany({ where: { id: weapon1Inv.id } });
           }
           if (weapon2Inv) {
-            await prisma.weaponInventory.delete({ where: { id: weapon2Inv.id } });
+            await prisma.weaponInventory.deleteMany({ where: { id: weapon2Inv.id } });
           }
         }
       ),
@@ -403,10 +403,10 @@ describe('Tag Team Validation Property Tests', () => {
             where: { id: { in: [robot1.id, robot2.id] } },
           });
           if (weapon1Inv) {
-            await prisma.weaponInventory.delete({ where: { id: weapon1Inv.id } });
+            await prisma.weaponInventory.deleteMany({ where: { id: weapon1Inv.id } });
           }
           if (weapon2Inv) {
-            await prisma.weaponInventory.delete({ where: { id: weapon2Inv.id } });
+            await prisma.weaponInventory.deleteMany({ where: { id: weapon2Inv.id } });
           }
         }
       ),
@@ -491,7 +491,7 @@ describe('Tag Team Validation Property Tests', () => {
           expect(retrievedTeam!.reserveRobotId).toBe(robot2.id);
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: teamId } });
+          await prisma.tagTeam.deleteMany({ where: { id: teamId } });
           await prisma.robot.deleteMany({
             where: { id: { in: [robot1.id, robot2.id] } },
           });
@@ -585,7 +585,7 @@ describe('Tag Team Validation Property Tests', () => {
           expect(createResult.team!.totalTagTeamDraws).toBe(0);
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: createResult.team!.id } });
+          await prisma.tagTeam.deleteMany({ where: { id: createResult.team!.id } });
           await prisma.robot.deleteMany({
             where: { id: { in: [robot1.id, robot2.id] } },
           });
@@ -777,7 +777,7 @@ describe('Tag Team Validation Property Tests', () => {
           expect(newTeamResult.team!.reserveRobotId).toBe(robot2.id);
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: newTeamResult.team!.id } });
+          await prisma.tagTeam.deleteMany({ where: { id: newTeamResult.team!.id } });
           await prisma.robot.deleteMany({
             where: { id: { in: [robot1.id, robot2.id] } },
           });
@@ -884,8 +884,8 @@ describe('Tag Team Validation Property Tests', () => {
             await prisma.robot.deleteMany({
               where: { id: { in: [createdRobot1.id, createdRobot2.id] } },
             });
-            if (weapon1Inv) await prisma.weaponInventory.delete({ where: { id: weapon1Inv.id } });
-            if (weapon2Inv) await prisma.weaponInventory.delete({ where: { id: weapon2Inv.id } });
+            if (weapon1Inv) await prisma.weaponInventory.deleteMany({ where: { id: weapon1Inv.id } });
+            if (weapon2Inv) await prisma.weaponInventory.deleteMany({ where: { id: weapon2Inv.id } });
             return;
           }
 
@@ -920,15 +920,15 @@ describe('Tag Team Validation Property Tests', () => {
           }
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: team.id } });
+          await prisma.tagTeam.deleteMany({ where: { id: team.id } });
           await prisma.robot.deleteMany({
             where: { id: { in: [createdRobot1.id, createdRobot2.id] } },
           });
           if (weapon1Inv) {
-            await prisma.weaponInventory.delete({ where: { id: weapon1Inv.id } });
+            await prisma.weaponInventory.deleteMany({ where: { id: weapon1Inv.id } });
           }
           if (weapon2Inv) {
-            await prisma.weaponInventory.delete({ where: { id: weapon2Inv.id } });
+            await prisma.weaponInventory.deleteMany({ where: { id: weapon2Inv.id } });
           }
         }
       ),
@@ -1009,7 +1009,7 @@ describe('Tag Team Validation Property Tests', () => {
           expect(combinedELO).toBe(expectedCombinedELO);
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: teamId } });
+          await prisma.tagTeam.deleteMany({ where: { id: teamId } });
           await prisma.robot.deleteMany({
             where: { id: { in: [robot1.id, robot2.id] } },
           });
@@ -1457,7 +1457,7 @@ describe('Tag Team Matchmaking Eligible Teams Property Tests', () => {
           expect(eligibleTeamIds).not.toContain(team.id);
 
           // Clean up
-          await prisma.tagTeam.delete({ where: { id: team.id } });
+          await prisma.tagTeam.deleteMany({ where: { id: team.id } });
           await prisma.robot.deleteMany({
             where: { id: { in: [robot1.id, robot2.id] } },
           });

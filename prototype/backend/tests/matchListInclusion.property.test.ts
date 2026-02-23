@@ -43,8 +43,19 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
     );
   });
 
-  afterAll(async () => {
-    // Clean up test data
+  afterEach(async () => {
+    // Clean up test data after each test
+    await prisma.battleParticipant.deleteMany({
+      where: { robot: { userId: testUserId } },
+    });
+    await prisma.battle.deleteMany({
+      where: {
+        OR: [
+          { robot1: { userId: testUserId } },
+          { robot2: { userId: testUserId } },
+        ],
+      },
+    });
     await prisma.tagTeamMatch.deleteMany({ 
       where: { 
         OR: [
@@ -61,18 +72,14 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
         ],
       },
     });
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUserId } },
-          { robot2: { userId: testUserId } },
-        ],
-      },
-    });
     await prisma.tagTeam.deleteMany({ where: { stableId: testUserId } });
     await prisma.weaponInventory.deleteMany({ where: { userId: testUserId } });
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+  });
+
+  afterAll(async () => {
+    // Final cleanup of user
+    await prisma.user.deleteMany({ where: { id: testUserId } });
     await prisma.$disconnect();
   });
 

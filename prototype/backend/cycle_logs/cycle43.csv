@@ -1,0 +1,35 @@
+Timestamp | Level | Message
+2026-02-23T15:59:24.263Z | INFO | === Cycle 43 Started ===
+2026-02-23T15:59:24.263Z | INFO | Cycle 43 (3/3)
+2026-02-23T15:59:24.263Z | INFO |  [Admin] === Cycle 43 (3/3) ===
+2026-02-23T15:59:24.268Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-23T15:59:24.268Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-23T15:59:24.268Z
+2026-02-23T15:59:24.270Z | INFO | [BattleOrchestrator] Found 2 matches to execute
+2026-02-23T15:59:24.374Z | INFO | [Streaming] Robot1_1771862364236_0.625425960681322 earned ₡15,224 from Battle #76662
+2026-02-23T15:59:24.376Z | INFO | [Streaming] Robot2_1771862364236_0.6570291244567703 earned ₡10,239 from Battle #76662
+2026-02-23T15:59:24.400Z | INFO | [Battle] League: bronze | Robot1_1771862364236_0.625425960681322 (User 47567) vs Robot2_1771862364236_0.6570291244567703 (User 47568) | Winner: Robot1_1771862364236_0.625425960681322 | Rewards: ₡9,375 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T15:59:24.410Z | ERROR | [BattleOrchestrator] Failed to process match 52785: {}
+2026-02-23T15:59:24.411Z | INFO | [BattleOrchestrator] Execution complete: 1 successful, 1 failed, 0 bye-matches
+2026-02-23T15:59:24.411Z | INFO | [BattleOrchestrator] Reputation: 5 prestige, 2 fame awarded
+2026-02-23T15:59:24.414Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-23T15:59:24.430Z | INFO | [RepairService] | User 47568 | Robot 736555 (Robot2_1771862364236_0.6570291244567703) | Cost: ₡33,465 | Discount: 0%
+2026-02-23T15:59:24.443Z | INFO | [RepairService] | User 47567 | Robot 736552 (Robot1_1771862364236_0.625425960681322) | Cost: ₡14,490 | Discount: 0%
+2026-02-23T15:59:24.448Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 43)
+2026-02-23T15:59:24.464Z | INFO | [TagTeamBattles] Found 2 scheduled tag team matches
+2026-02-23T15:59:24.545Z | INFO | [TagTeamBattle] Completed: Team 103572 vs Team 103573 (Winner: Team 103572)
+2026-02-23T15:59:24.605Z | INFO | [TagTeamBattles] Updated results for match 2816: Team 103572 ELO +16, Team 103573 ELO -16
+2026-02-23T15:59:24.606Z | INFO | [TagTeamBattles] Fame awarded - Team 103572: Specialist Alpha C041 +2, Specialist Beta C041 +1
+2026-02-23T15:59:24.617Z | INFO | [Streaming] Team 103572 earned ₡1,003 (Battles from Specialist Alpha C041, Fame from Specialist Alpha C041)
+2026-02-23T15:59:24.618Z | INFO | [Streaming] Team 103573 earned ₡1,004 (Battles from Specialist Alpha C041, Fame from Specialist Alpha C041)
+2026-02-23T15:59:24.642Z | ERROR | [TagTeamBattles] Error executing match 2816: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T15:59:24.672Z | ERROR | [TagTeamBattles] Error executing match 2817: {""name"":""PrismaClientKnownRequestError"",""code"":""P2003"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""Battle"",""field_name"":""battles_robot2_id_fkey (index)""}}
+2026-02-23T15:59:24.675Z | INFO | [TagTeamBattles] Execution complete: 1 battles, 1 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-02-23T15:59:24.677Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-23T15:59:24.692Z | INFO | [RepairService] | User 47574 | Robot 734538 (Specialist Alpha C041) | Cost: ₡8,463 | Discount: 0%
+2026-02-23T15:59:24.698Z | INFO | [RepairService] | User 47574 | Robot 734540 (Specialist Beta C041) | Cost: ₡3,410 | Discount: 0%
+2026-02-23T15:59:24.709Z | INFO | [RepairService] | User 47767 | Robot 736763 (TestRobot1_1771862364512_0.4163428691089841) | Cost: ₡31,740 | Discount: 0%
+2026-02-23T15:59:24.716Z | INFO | [RepairService] | User 47767 | Robot 736798 (TestRobot1_1771862364604_0.7104543828598783) | Cost: ₡32,775 | Discount: 0%
+2026-02-23T15:59:24.730Z | INFO | [RepairService] | User 47768 | Robot 736766 (TestRobot2_1771862364514_0.5204067471404767) | Cost: ₡13,800 | Discount: 0%
+2026-02-23T15:59:24.733Z | ERROR | [Admin] Error in cycle 43: {""name"":""PrismaClientKnownRequestError"",""code"":""P2025"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""Robot"",""cause"":""Record to update not found.""}}
+2026-02-23T15:59:24.734Z | ERROR | Cycle 43 failed
+2026-02-23T15:59:24.734Z | INFO | === Cycle 43 Ended ===

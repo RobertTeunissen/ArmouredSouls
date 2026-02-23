@@ -148,8 +148,13 @@ describe('RobotStatsViewService', () => {
     }
   });
 
-  afterAll(async () => {
-    // Clean up test data
+  afterEach(async () => {
+    // Clean up test data after each test in correct dependency order
+    await prisma.battleParticipant.deleteMany({
+      where: {
+        robotId: { in: [testRobotId1, testRobotId2] },
+      },
+    });
     await prisma.battle.deleteMany({
       where: {
         OR: [
@@ -164,6 +169,9 @@ describe('RobotStatsViewService', () => {
     await prisma.user.deleteMany({
       where: { id: testUserId },
     });
+  });
+
+  afterAll(async () => {
     await prisma.$disconnect();
   });
 

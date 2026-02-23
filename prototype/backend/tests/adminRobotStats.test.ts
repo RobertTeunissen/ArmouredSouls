@@ -20,18 +20,18 @@ app.use('/api/auth', authRoutes);
 
 describe('Admin Robot Statistics Endpoint', () => {
   let adminToken: string;
-  let adminUser: any;
-  let testRobots: any[] = [];
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
 
   beforeAll(async () => {
     await prisma.$connect();
 
     // Create admin user
-    const adminUsername = `admin_${Date.now()}`;
+    const adminUsername = `admin_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const adminPassword = 'adminpass123';
     const passwordHash = await bcrypt.hash(adminPassword, 10);
 
-    adminUser = await prisma.user.create({
+    const adminUser = await prisma.user.create({
       data: {
         username: adminUsername,
         passwordHash,
@@ -39,6 +39,7 @@ describe('Admin Robot Statistics Endpoint', () => {
         currency: 1000000,
       },
     });
+    testUserIds.push(adminUser.id);
 
     // Login to get admin token
     const loginResponse = await request(app)
@@ -53,7 +54,7 @@ describe('Admin Robot Statistics Endpoint', () => {
     // Create test robots with varying attributes for testing statistics
     const robotData = [
       {
-        name: 'HighCombatPower',
+        name: `HighCombatPower_${Date.now()}`,
         combatPower: 45.00, // Outlier high
         targetingSystems: 20.00,
         hullIntegrity: 15.00,
@@ -61,7 +62,7 @@ describe('Admin Robot Statistics Endpoint', () => {
         currentLeague: 'gold',
       },
       {
-        name: 'LowCombatPower',
+        name: `LowCombatPower_${Date.now()}`,
         combatPower: 2.00, // Outlier low
         targetingSystems: 10.00,
         hullIntegrity: 10.00,
@@ -69,7 +70,7 @@ describe('Admin Robot Statistics Endpoint', () => {
         currentLeague: 'bronze',
       },
       {
-        name: 'AverageRobot1',
+        name: `AverageRobot1_${Date.now()}`,
         combatPower: 15.00,
         targetingSystems: 15.00,
         hullIntegrity: 15.00,
@@ -77,7 +78,7 @@ describe('Admin Robot Statistics Endpoint', () => {
         currentLeague: 'silver',
       },
       {
-        name: 'AverageRobot2',
+        name: `AverageRobot2_${Date.now()}`,
         combatPower: 16.00,
         targetingSystems: 16.00,
         hullIntegrity: 14.00,
@@ -85,7 +86,7 @@ describe('Admin Robot Statistics Endpoint', () => {
         currentLeague: 'silver',
       },
       {
-        name: 'WinnerRobot',
+        name: `WinnerRobot_${Date.now()}`,
         combatPower: 25.00,
         targetingSystems: 25.00,
         hullIntegrity: 20.00,
@@ -116,18 +117,41 @@ describe('Admin Robot Statistics Endpoint', () => {
           losses: data.losses || 0,
         },
       });
-      testRobots.push(robot);
+      testRobotIds.push(robot.id);
+    }
+  });
+
+  afterEach(async () => {
+    // Cleanup after each test in correct order
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
     }
   });
 
   afterAll(async () => {
-    // Cleanup
-    for (const robot of testRobots) {
-      await prisma.robot.delete({ where: { id: robot.id } }).catch(() => {});
+    // Final cleanup
+    if (testRobotIds.length > 0) {
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
     }
-    if (adminUser) {
-      await prisma.user.delete({ where: { id: adminUser.id } }).catch(() => {});
+
+    if (testUserIds.length > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
     }
+
     await prisma.$disconnect();
   });
 
@@ -141,7 +165,7 @@ describe('Admin Robot Statistics Endpoint', () => {
 
     it('should require admin role', async () => {
       // Create a regular user token
-      const regularUsername = `user_${Date.now()}`;
+      const regularUsername = `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
       const regularPassword = 'userpass123';
       const passwordHash = await bcrypt.hash(regularPassword, 10);
 
@@ -152,6 +176,7 @@ describe('Admin Robot Statistics Endpoint', () => {
           role: 'user',
         },
       });
+      testUserIds.push(regularUser.id);
 
       const loginResponse = await request(app)
         .post('/api/auth/login')
@@ -167,9 +192,6 @@ describe('Admin Robot Statistics Endpoint', () => {
         .set('Authorization', `Bearer ${userToken}`);
 
       expect(response.status).toBe(403);
-
-      // Cleanup
-      await prisma.user.delete({ where: { id: regularUser.id } }).catch(() => {});
     });
 
     it('should return comprehensive robot statistics', async () => {

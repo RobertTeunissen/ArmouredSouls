@@ -192,22 +192,26 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
     );
   });
 
-  afterAll(async () => {
-    // Clean up test data
-    await prisma.auditLog.deleteMany({ where: { eventType: 'battle_complete' } });
-    await prisma.battle.deleteMany({});
-    await prisma.robot.deleteMany({ where: { userId: testUser.id } });
-    await prisma.facility.deleteMany({ where: { userId: testUser.id } });
-    await prisma.user.delete({ where: { id: testUser.id } });
-    await prisma.$disconnect();
-  });
-
   beforeEach(async () => {
     // Clean up battles, robots, and facilities before each test
     await prisma.auditLog.deleteMany({ where: { eventType: 'battle_complete' } });
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({ where: { userId: testUser.id } });
     await prisma.facility.deleteMany({ where: { userId: testUser.id } });
+  });
+
+  afterEach(async () => {
+    // Clean up after each test
+    await prisma.auditLog.deleteMany({ where: { eventType: 'battle_complete' } });
+    await prisma.battle.deleteMany({});
+    await prisma.robot.deleteMany({ where: { userId: testUser.id } });
+    await prisma.facility.deleteMany({ where: { userId: testUser.id } });
+  });
+
+  afterAll(async () => {
+    // Final cleanup
+    await prisma.user.deleteMany({ where: { id: testUser.id } }).catch(() => {});
+    await prisma.$disconnect();
   });
 
   /**
@@ -379,9 +383,9 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
 
           // Clean up battle and robots for next iteration
           await prisma.auditLog.deleteMany({ where: { eventType: 'battle_complete' } });
-          await prisma.battle.delete({ where: { id: battle.id } });
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.battle.deleteMany({ where: { id: battle.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 100 }
@@ -497,9 +501,9 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
 
           // Clean up
           await prisma.auditLog.deleteMany({ where: { eventType: 'battle_complete' } });
-          await prisma.battle.delete({ where: { id: battle.id } });
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.battle.deleteMany({ where: { id: battle.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -608,9 +612,9 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
 
           // Clean up
           await prisma.auditLog.deleteMany({ where: { eventType: 'battle_complete' } });
-          await prisma.battle.delete({ where: { id: battle.id } });
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.battle.deleteMany({ where: { id: battle.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }
@@ -698,9 +702,9 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
 
           // Clean up
           await prisma.auditLog.deleteMany({ where: { eventType: 'battle_complete' } });
-          await prisma.battle.delete({ where: { id: battle.id } });
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.battle.deleteMany({ where: { id: battle.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 50 }

@@ -16,7 +16,10 @@ describe('Tag Team League Rebalancing', () => {
   let testTeamIds: number[] = [];
 
   beforeEach(async () => {
-    // Create a test stable
+    // Clean up any existing test data and create a test stable
+    testTeamIds = [];
+    testRobotIds = [];
+    
     const stable = await prisma.user.create({
       data: {
         username: `test_stable_${Date.now()}`,
@@ -29,11 +32,13 @@ describe('Tag Team League Rebalancing', () => {
 
   afterEach(async () => {
     // Clean up test data in correct order
+    // Only clean up teams and robots created by this test (tracked in arrays)
     if (testTeamIds.length > 0) {
       await prisma.tagTeam.deleteMany({
         where: { id: { in: testTeamIds } },
       });
     }
+    
     if (testRobotIds.length > 0) {
       await prisma.weaponInventory.deleteMany({
         where: { userId: testStableId },
@@ -117,37 +122,52 @@ describe('Tag Team League Rebalancing', () => {
 
   describe('determinePromotions', () => {
     it('should return empty array for champion tier', async () => {
-      const promotions = await determinePromotions('champion');
+      const promotions = await determinePromotions('champion_1');
       expect(promotions).toEqual([]);
     });
 
     it('should return empty array when fewer than 10 teams', async () => {
+      // Clean up any existing teams in bronze_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'bronze_1' },
+      });
+      
       // Create 5 teams in bronze with 5+ cycles
       for (let i = 0; i < 5; i++) {
         await createTestTeam('bronze', 10 + i, 5);
       }
 
-      const promotions = await determinePromotions('bronze');
+      const promotions = await determinePromotions('bronze_1');
       expect(promotions).toEqual([]);
     });
 
     it('should return empty array when no teams have 5+ cycles', async () => {
+      // Clean up any existing teams in bronze_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'bronze_1' },
+      });
+      
       // Create 15 teams in bronze with < 5 cycles
       for (let i = 0; i < 15; i++) {
         await createTestTeam('bronze', 10 + i, 3);
       }
 
-      const promotions = await determinePromotions('bronze');
+      const promotions = await determinePromotions('bronze_1');
       expect(promotions).toEqual([]);
     });
 
     it('should promote top 10% of eligible teams with ≥25 league points', async () => {
+      // Clean up any existing teams in bronze_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'bronze_1' },
+      });
+      
       // Create 20 teams in bronze with 5+ cycles
       for (let i = 0; i < 20; i++) {
         await createTestTeam('bronze', i * 5, 5); // 0, 5, 10, ..., 95 points
       }
 
-      const promotions = await determinePromotions('bronze');
+      const promotions = await determinePromotions('bronze_1');
       
       // Top 10% of 20 = 2 teams, but only from those with ≥25 points
       // Teams 5-19 have ≥25 points (15 teams), top 2 are teams with 95 and 90 points
@@ -161,16 +181,26 @@ describe('Tag Team League Rebalancing', () => {
     });
 
     it('should return empty array when no teams have ≥25 league points', async () => {
+      // Clean up any existing teams in bronze_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'bronze_1' },
+      });
+      
       // Create 20 teams in bronze with 5+ cycles but low points
       for (let i = 0; i < 20; i++) {
         await createTestTeam('bronze', i, 5); // 0-19 points, all below 25
       }
 
-      const promotions = await determinePromotions('bronze');
+      const promotions = await determinePromotions('bronze_1');
       expect(promotions).toEqual([]);
     });
 
     it('should exclude teams in excludeTeamIds set', async () => {
+      // Clean up any existing teams in bronze_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'bronze_1' },
+      });
+      
       // Create 20 teams in bronze with 5+ cycles
       const teams = [];
       for (let i = 0; i < 20; i++) {
@@ -180,7 +210,7 @@ describe('Tag Team League Rebalancing', () => {
 
       // Exclude the top 2 teams (95 and 90 points)
       const excludeSet = new Set([teams[19].id, teams[18].id]);
-      const promotions = await determinePromotions('bronze', excludeSet);
+      const promotions = await determinePromotions('bronze_1', excludeSet);
       
       // With 18 remaining teams, 10% = 1.8, rounds down to 1
       // Next highest with ≥25 points is team with 85 points
@@ -192,37 +222,52 @@ describe('Tag Team League Rebalancing', () => {
 
   describe('determineDemotions', () => {
     it('should return empty array for bronze tier', async () => {
-      const demotions = await determineDemotions('bronze');
+      const demotions = await determineDemotions('bronze_1');
       expect(demotions).toEqual([]);
     });
 
     it('should return empty array when fewer than 10 teams', async () => {
+      // Clean up any existing teams in silver_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'silver_1' },
+      });
+      
       // Create 5 teams in silver with 5+ cycles
       for (let i = 0; i < 5; i++) {
         await createTestTeam('silver', 10 + i, 5);
       }
 
-      const demotions = await determineDemotions('silver');
+      const demotions = await determineDemotions('silver_1');
       expect(demotions).toEqual([]);
     });
 
     it('should return empty array when no teams have 5+ cycles', async () => {
+      // Clean up any existing teams in silver_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'silver_1' },
+      });
+      
       // Create 15 teams in silver with < 5 cycles
       for (let i = 0; i < 15; i++) {
         await createTestTeam('silver', 10 + i, 3);
       }
 
-      const demotions = await determineDemotions('silver');
+      const demotions = await determineDemotions('silver_1');
       expect(demotions).toEqual([]);
     });
 
     it('should demote bottom 10% of eligible teams', async () => {
+      // Clean up any existing teams in silver_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'silver_1' },
+      });
+      
       // Create 20 teams in silver with 5+ cycles
       for (let i = 0; i < 20; i++) {
         await createTestTeam('silver', i * 10, 5);
       }
 
-      const demotions = await determineDemotions('silver');
+      const demotions = await determineDemotions('silver_1');
       
       // Bottom 10% of 20 = 2 teams
       expect(demotions).toHaveLength(2);
@@ -233,6 +278,11 @@ describe('Tag Team League Rebalancing', () => {
     });
 
     it('should exclude teams in excludeTeamIds set', async () => {
+      // Clean up any existing teams in silver_1 from previous tests
+      await prisma.tagTeam.deleteMany({
+        where: { tagTeamLeagueId: 'silver_1' },
+      });
+      
       // Create 20 teams in silver with 5+ cycles
       const teams = [];
       for (let i = 0; i < 20; i++) {
@@ -242,7 +292,7 @@ describe('Tag Team League Rebalancing', () => {
 
       // Exclude the bottom 2 teams
       const excludeSet = new Set([teams[0].id, teams[1].id]);
-      const demotions = await determineDemotions('silver', excludeSet);
+      const demotions = await determineDemotions('silver_1', excludeSet);
       
       // With 18 remaining teams, 10% = 1.8, rounds down to 1
       expect(demotions).toHaveLength(1);
@@ -262,7 +312,7 @@ describe('Tag Team League Rebalancing', () => {
 
       expect(updatedTeam?.tagTeamLeague).toBe('silver');
       expect(updatedTeam?.tagTeamLeagueId).toBe('silver_1');
-      expect(updatedTeam?.tagTeamLeaguePoints).toBe(0);
+      expect(updatedTeam?.tagTeamLeaguePoints).toBe(100); // LP retained across promotions
       expect(updatedTeam?.cyclesInTagTeamLeague).toBe(0);
     });
 
@@ -276,7 +326,7 @@ describe('Tag Team League Rebalancing', () => {
       });
 
       expect(updatedTeam?.tagTeamLeague).toBe('gold');
-      expect(updatedTeam?.tagTeamLeaguePoints).toBe(0);
+      expect(updatedTeam?.tagTeamLeaguePoints).toBe(100); // LP retained across promotions
       expect(updatedTeam?.cyclesInTagTeamLeague).toBe(0);
     });
 
@@ -301,7 +351,7 @@ describe('Tag Team League Rebalancing', () => {
 
       expect(updatedTeam?.tagTeamLeague).toBe('bronze');
       expect(updatedTeam?.tagTeamLeagueId).toBe('bronze_1');
-      expect(updatedTeam?.tagTeamLeaguePoints).toBe(0);
+      expect(updatedTeam?.tagTeamLeaguePoints).toBe(100); // LP retained across demotions
       expect(updatedTeam?.cyclesInTagTeamLeague).toBe(0);
     });
 
@@ -315,7 +365,7 @@ describe('Tag Team League Rebalancing', () => {
       });
 
       expect(updatedTeam?.tagTeamLeague).toBe('silver');
-      expect(updatedTeam?.tagTeamLeaguePoints).toBe(0);
+      expect(updatedTeam?.tagTeamLeaguePoints).toBe(100); // LP retained across demotions
       expect(updatedTeam?.cyclesInTagTeamLeague).toBe(0);
     });
 
@@ -414,7 +464,7 @@ describe('Tag Team League Rebalancing', () => {
         await createTestTeam('bronze', i * 10, 5); // 0, 10, 20, ..., 90 points
       }
 
-      const promotions = await determinePromotions('bronze');
+      const promotions = await determinePromotions('bronze_1');
       
       // 10% of 10 = 1 team, but only from those with ≥25 points
       // Teams 3-9 have ≥25 points (7 teams), top 1 is team with 90 points
@@ -429,7 +479,7 @@ describe('Tag Team League Rebalancing', () => {
         await createTestTeam('bronze', i * 10, 5); // 0, 10, 20, ..., 100 points
       }
 
-      const promotions = await determinePromotions('bronze');
+      const promotions = await determinePromotions('bronze_1');
       
       // 10% of 11 = 1.1, rounds down to 1
       // Teams 3-10 have ≥25 points, top 1 is team with 100 points
@@ -443,7 +493,7 @@ describe('Tag Team League Rebalancing', () => {
         await createTestTeam('bronze', 100, 5);
       }
 
-      const promotions = await determinePromotions('bronze');
+      const promotions = await determinePromotions('bronze_1');
       
       // Should still get 2 teams (10% of 20)
       expect(promotions).toHaveLength(2);

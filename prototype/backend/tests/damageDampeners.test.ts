@@ -10,6 +10,10 @@
 
 // Since applyDamage is not exported, we'll test the mitigation formula directly
 describe('Damage Dampeners - Pre-Shield Mitigation', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   describe('Mitigation Formula', () => {
     it('should calculate correct mitigation percentage for various dampener values', () => {
       // Formula: clamp(damageDampeners * 0.2, 0, 15)
