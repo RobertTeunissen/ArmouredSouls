@@ -29,7 +29,7 @@ Armoured Souls features deep economic and progression systems with 23 attributes
 
 ### Key Philosophy
 
-This guide emphasizes **practical, actionable advice with concrete numbers**. Every strategy includes specific costs, realistic projections, and step-by-step calculations. You won't find vague suggestions like "invest in facilities" - instead, you'll see "Purchase Training Facility Level 1 (₡300,000) before attribute upgrades to save 5% on all future upgrades."
+This guide emphasizes **practical, actionable advice with concrete numbers**. Every strategy includes specific costs, realistic projections, and step-by-step calculations. You won't find vague suggestions like "invest in facilities" - instead, you'll see "Purchase Training Facility Level 1 (see [STABLE_SYSTEM.md](docs/prd_core/STABLE_SYSTEM.md) for pricing) before attribute upgrades to save 5% on all future upgrades."
 
 ---
 
@@ -118,14 +118,14 @@ Each loadout type provides different bonuses. For example, Weapon+Shield provide
 
 ### Facilities and Infrastructure
 
-**Facilities** provide discounts, unlocks, passive income, or other benefits. Key facilities include:
+**Facilities** provide discounts, unlocks, passive income, or other benefits. See [STABLE_SYSTEM.md](docs/prd_core/STABLE_SYSTEM.md) for complete facility pricing. Key facilities include:
 
-- **Training Facility** (₡150,000) - 5% discount on attribute upgrades at Level 1
-- **Repair Bay** (₡100,000) - 5% discount on repairs at Level 1
-- **Weapons Workshop** (₡125,000) - 5% discount on weapon purchases at Level 1
-- **Income Generator** (₡400,000) - Generates passive income daily
-- **Roster Expansion** (₡150,000) - **REQUIRED** to own more than 1 robot
-- **Storage Facility** (₡75,000) - Increases weapon storage capacity from 5 to 10
+- **Training Facility** - 5% discount on attribute upgrades at Level 1
+- **Repair Bay** - Repair cost discount (scales with robot count)
+- **Weapons Workshop** - 5% discount on weapon purchases at Level 1
+- **Income Generator** - Generates passive income daily
+- **Roster Expansion** - **REQUIRED** to own more than 1 robot
+- **Storage Facility** - Increases weapon storage capacity from 5 to 10
 
 **Operating Costs**: All facilities have daily operating costs. For example:
 - Training Facility Level 1: ₡1,500/day (₡10,500/week)
@@ -947,9 +947,9 @@ The Facility Investor strategy revolves around long-term economic optimization:
 The core of Facility Investor is building an economic engine that runs itself:
 
 **Phase 1: Foundation (Weeks 1-4)**
-- Purchase Income Generator (₡800,000) - your primary investment
-- Purchase Training Facility (₡300,000) - saves on all future upgrades
-- Purchase Repair Bay (₡200,000) - saves on all future repairs
+- Purchase Income Generator - your primary investment (see [STABLE_SYSTEM.md](docs/prd_core/STABLE_SYSTEM.md) for pricing)
+- Purchase Training Facility - saves on all future upgrades
+- Purchase Repair Bay - saves on all future repairs
 - Accept negative ROI in the short term - you're building for the future
 - Maintain 45-50% win rate with minimal robot to fund operations
 
@@ -3624,7 +3624,7 @@ At 0 prestige (game start):
 
 5. **Risk Reduction**: Passive income provides economic stability during losing streaks. Even if you lose every battle, you still earn ₡28K/week.
 
-**Training Facility Level 1** - ₡300,000
+**Training Facility Level 1** - See [STABLE_SYSTEM.md](docs/prd_core/STABLE_SYSTEM.md) for pricing
 
 **Facility Details**:
 - **Purchase Cost**: ₡300,000
@@ -3677,9 +3677,9 @@ Repair Bay's value comes from scaling:
 **Total Facility Cost: ₡1,300,000**
 
 **Facility Purchase Order**:
-1. **Income Generator Level 1** (₡800,000) - Purchase first for passive income
-2. **Training Facility Level 1** (₡300,000) - Purchase second for upgrade discounts
-3. **Repair Bay Level 1** (₡200,000) - Purchase third for repair discounts
+1. **Income Generator Level 1** - Purchase first for passive income (see [STABLE_SYSTEM.md](docs/prd_core/STABLE_SYSTEM.md) for all facility pricing)
+2. **Training Facility Level 1** - Purchase second for upgrade discounts
+3. **Repair Bay Level 1** - Purchase third for repair discounts
 
 #### Attribute Upgrades (with 5% Training Facility discount)
 

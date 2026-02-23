@@ -598,9 +598,9 @@ Manual testing accounts with full starting resources:
 **Creation Cycle**: 0
 
 **Facilities**:
-- Merchandising Hub Level 1 (₡150,000) - Generates passive income
-- Repair Bay Level 1 (₡200,000)
-- Training Facility Level 1 (₡300,000)
+- Merchandising Hub Level 1: See [STABLE_SYSTEM.md](../STABLE_SYSTEM.md) - Generates passive income
+- Repair Bay Level 1: See [STABLE_SYSTEM.md](../STABLE_SYSTEM.md)
+- Training Facility Level 1: See [STABLE_SYSTEM.md](../STABLE_SYSTEM.md)
 
 **Robot**: "Investor One"
 - **Attributes** (minimal investment):

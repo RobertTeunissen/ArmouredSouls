@@ -773,7 +773,7 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 - Total for all 23 attributes: 23 × ₡54,000 = **₡1,242,000**
 
 *With Training Facility Level 1 (5% discount):*
-- Training Facility cost: ₡300,000
+- Training Facility cost: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for facility pricing
 - Cost per attribute (1→10) with discount: ₡54,000 × 0.95 = ₡51,300
 - Total for all 23 attributes: 23 × ₡51,300 = ₡1,179,900
 - **Savings**: ₡1,242,000 - ₡1,179,900 = ₡62,100
@@ -787,22 +787,22 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 
 **14 Facility Types**, most with **10 upgrade levels** (Level 0 = not purchased, Levels 1-10 = upgraded). Some levels require prestige thresholds (Roster Expansion is the only facility with 9 levels. 
 
-**Purchase Costs Summary** (Level 1 costs for each facility):
+**Purchase Costs Summary**: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for authoritative facility pricing and upgrade costs.
 
-| Facility | Level 1 Cost | Operating Cost/Day |
-|----------|-------------|-------------------|
-| 1. Repair Bay | ₡200,000 | ₡1,000 |
-| 2. Training Facility | ₡300,000 | ₡1,500 |
-| 3. Weapons Workshop | ₡250,000 | ₡1,000 |
-| 4. Research Lab | ₡400,000 | ₡2,000 |
-| 5. Medical Bay | ₡350,000 | ₡2,000 |
-| 6. Roster Expansion | ₡300,000 | ₡500/slot |
-| 7. Storage Facility | ₡150,000 | ₡500 |
-| 8. Coaching Staff | ₡500,000 | ₡3,000 when active |
-| 9. Booking Office | ₡500,000 | ₡0 (generates prestige) |
-| 10. Combat Training Academy | ₡400,000 | ₡800 |
-| 11. Defense Training Academy | ₡400,000 | ₡800 |
-| 12. Mobility Training Academy | ₡400,000 | ₡800 |
+| Facility | Operating Cost/Day |
+|----------|-------------------|
+| 1. Repair Bay | ₡1,000 |
+| 2. Training Facility | ₡1,500 |
+| 3. Weapons Workshop | ₡1,000 |
+| 4. Research Lab | ₡2,000 |
+| 5. Medical Bay | ₡2,000 |
+| 6. Roster Expansion | ₡500/slot |
+| 7. Storage Facility | ₡500 |
+| 8. Coaching Staff | ₡3,000 when active |
+| 9. Booking Office | ₡0 (generates prestige) |
+| 10. Combat Training Academy | ₡800 |
+| 11. Defense Training Academy | ₡800 |
+| 12. Mobility Training Academy | ₡800 |
 | 13. AI Training Academy | ₡500,000 | ₡1,000 |
 | 14. Merchandising Hub | ₡150,000 | ₡200/level |
 | 15. Streaming Studio | ₡100,000 | ₡100/level |
@@ -1197,8 +1197,8 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 **Balanced Startup** (₡1,970,000 spent, ₡30K buffer - recommended):
 - 1 Robot: ₡500,000
 - 1 Mid-tier weapon (e.g., Power Sword): ₡200,000
-- Repair Bay Level 1: ₡200,000
-- Training Facility Level 1: ₡300,000
+- Repair Bay Level 1: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md)
+- Training Facility Level 1: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md)
 - Attribute upgrades focused on key stats (150 levels): ~₡770,000
 - **Buffer**: ₡30,000 (1 repair)
 
@@ -1852,8 +1852,8 @@ Recommendations:
 **Recommended Spending**:
 - 1 Robot: ₡500,000
 - 1 Good weapon: ₡150,000-₡300,000
-- Repair Bay Level 1: ₡200,000
-- Training Facility Level 1: ₡300,000 (optional but recommended)
+- Repair Bay Level 1: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md)
+- Training Facility Level 1: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) (optional but recommended)
 - Attribute upgrades: ₡300,000-₡500,000
 - Reserve for operations: ₡500,000
 
@@ -1940,7 +1940,7 @@ Recommendations:
 1. **Repair Bay Level 1** (₡200,000):
    > **For complete repair cost formulas, facility discounts, and ROI analysis**: See **Section 5 "Repair Costs"** in the Cost Centers section above. Includes detailed payback calculations for single and multi-robot scenarios, Medical Bay integration, and worked examples.
   
-2. **Training Facility Level 1** (₡300,000):
+2. **Training Facility Level 1**: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for pricing
    - Saves 5% on upgrades (varies: ₡2K-₡50K saved depending on level)
    - Example: Upgrading 1→10 saves ₡2,700 per attribute (₡54K × 5%)
    - For 23 attributes (1→10): Saves ₡62,100

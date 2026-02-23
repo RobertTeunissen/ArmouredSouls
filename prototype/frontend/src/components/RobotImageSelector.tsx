@@ -8,7 +8,7 @@ interface RobotImageSelectorProps {
 }
 
 // Dynamically import all .webp images from the robots directory
-const imageModules = import.meta.glob('/src/assets/robots/*.webp', { eager: true, as: 'url' });
+const imageModules = import.meta.glob('/src/assets/robots/*.webp', { eager: true, query: '?url', import: 'default' });
 
 // Helper function to format image name from filename
 function formatImageName(filename: string): { name: string; description: string } {
@@ -186,7 +186,7 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                     }`}
                   >
-                    <div className="aspect-square mb-2 bg-gray-800 rounded overflow-hidden">
+                    <div className="aspect-square bg-gray-800 rounded overflow-hidden">
                       <img
                         src={image.url}
                         alt={image.name}
@@ -194,8 +194,6 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
                         onError={() => handleImageError(image.url)}
                       />
                     </div>
-                    <div className="text-white font-semibold text-sm">{image.name}</div>
-                    <div className="text-gray-400 text-xs mt-1">{image.description}</div>
                   </button>
                 ))}
               </div>
