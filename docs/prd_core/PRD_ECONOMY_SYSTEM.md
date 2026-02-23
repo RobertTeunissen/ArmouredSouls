@@ -804,8 +804,8 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 | 11. Defense Training Academy | ₡400,000 | ₡800 |
 | 12. Mobility Training Academy | ₡400,000 | ₡800 |
 | 13. AI Training Academy | ₡500,000 | ₡1,000 |
-| 14. Income Generator | ₡800,000 | ₡1,000 |
-| 15. Streaming Studio | ₡100,000 | ₡100 |
+| 14. Merchandising Hub | ₡150,000 | ₡200/level |
+| 15. Streaming Studio | ₡100,000 | ₡100/level |
 
 **Total Cost to Purchase All Facilities (Level 1)**: ₡5,550,000
 
@@ -814,9 +814,9 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 - Higher levels (7-10) often have prestige requirements
 - Total cost to max one facility: ~₡2M-₡5M (varies by facility)
 
-**Streaming Studio Facility** (NEW):
+**Streaming Studio Facility**:
 
-The Streaming Studio is a new facility that increases streaming revenue earned per battle. Unlike the old system where streaming was gated behind Income Generator Level 3+, the Streaming Studio provides a direct multiplier to per-battle streaming income.
+The Streaming Studio dramatically increases streaming revenue earned per battle with a 100% multiplier per level.
 
 **Costs and Benefits**:
 - **Level 1 Cost**: ₡100,000
@@ -843,37 +843,42 @@ The Streaming Studio is a new facility that increases streaming revenue earned p
 - Level 10: 50,000 prestige
 
 **Revenue Multiplier**:
-- **Formula**: studio_multiplier = 1 + (level × 0.1)
+- **Formula**: studio_multiplier = 1 + (level × 1.0)
   - Level 0: 1.0× (no bonus)
-  - Level 1: 1.1× (+10%)
-  - Level 5: 1.5× (+50%)
-  - Level 10: 2.0× (+100%, doubles base streaming revenue)
+  - Level 1: 2.0× (DOUBLE!)
+  - Level 2: 3.0× (TRIPLE!)
+  - Level 5: 6.0× (6×!)
+  - Level 10: 11.0× (11×!)
+
+**Break-Even Analysis**:
+- Level 1 with 3 robots (5 battles/day): ~17 cycles (₡100K investment)
+- Level 1 with 2 robots (3.6 battles/day): ~25 cycles (₡100K investment)
+- Level 1 with 1 robot (2.2 battles/day): ~42 cycles (₡100K investment)
+- Rewards active multi-robot play
+- Scales infinitely with battles and fame
 
 **ROI Analysis**:
-*Scenario: Mid-game robot (500 battles, 2,500 fame)*
-- Base streaming per battle (no studio): ₡1,000 × 1.5 × 1.5 = ₡2,250
-- With Studio Level 1: ₡2,250 × 1.1 = ₡2,475 (+₡225 per battle)
+*Scenario: New robot (0 battles, 0 fame)*
+- Base streaming per battle (no studio): ₡1,000
+- With Studio Level 1: ₡2,000 (DOUBLE!)
+- Net gain per battle: ₡1,000
 - Studio Level 1 cost: ₡100,000
-- Operating cost: ₡100/day = ₡700/week
-- Net gain per battle: ₡225
-- Battles to break even: ₡100,000 / ₡225 = 445 battles
-- At 7 battles/week: **64 weeks to break even**
+- Operating cost: ₡100/day
+- Battles to break even: ~100 battles
 
-*Scenario: Veteran robot (1,000 battles, 5,000 fame)*
-- Base streaming per battle (no studio): ₡1,000 × 2.0 × 2.0 = ₡4,000
-- With Studio Level 5: ₡4,000 × 1.5 = ₡6,000 (+₡2,000 per battle)
-- Studio Level 1-5 total cost: ₡1,500,000
-- Operating cost: ₡500/day = ₡3,500/week
-- Net gain per battle: ₡2,000
-- Weekly gain: (7 × ₡2,000) - ₡3,500 = ₡10,500/week
-- Weeks to break even: ₡1,500,000 / ₡10,500 = **143 weeks**
+*Scenario: Veteran robot (100 battles, 500 fame)*
+- Base streaming per battle (no studio): ₡1,210
+- With Studio Level 1: ₡2,420 (DOUBLE!)
+- Net gain per battle: ₡1,210
+- Battles to break even: ~83 battles
 
-*Scenario: Multiple active robots (3 robots, 7 battles each/week = 21 total)*
-- Average streaming per battle with Studio Level 5: ₡6,000
-- Weekly gain: (21 × ₡2,000) - ₡3,500 = ₡38,500/week
-- Weeks to break even: ₡1,500,000 / ₡38,500 = **39 weeks**
+*Scenario: Multiple active robots (3 robots, 5 battles each/day = 15 total)*
+- Average streaming per battle with Studio Level 1: ₡2,000+
+- Daily gain: 15 × ₡1,000+ = ₡15,000+/day
+- Days to break even: ₡100,000 / ₡15,000 = ~7 days
+- **Cycles to break even: ~17 cycles** ✓✓✓
 
-**Conclusion**: Streaming Studio provides better ROI with:
+**Conclusion**: Streaming Studio is now highly cost-effective for active players with multiple robots. The 100% per level multiplier makes it break even in 17-25 cycles for 2-3 robot strategies, making it one of the best early-to-mid game investments.ing Studio provides better ROI with:
 - Multiple active robots (more battles per week)
 - Higher robot stats (battles and fame increase base streaming)
 - Long-term investment horizon (payback period is 6-12+ months)
@@ -1372,57 +1377,67 @@ final_battle_reward = base_reward × prestige_multiplier
 - Final reward: ₡7,500 × 1.10 = ₡8,250
 - **Note**: Base reward midpoint is determined by ELO matchup. Closer matches → higher base (closer to ₡10K). Mismatched opponents → lower base (closer to ₡5K).
 
-### 3. Merchandising Income (Income Generator Facility)
+### 3. Merchandising Income (Merchandising Hub Facility)
 
 > **For complete prestige earning and benefits**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
 
 **Requirements**:
-- Income Generator Level 1+ (unlocks merchandising)
+- Merchandising Hub Level 1+ (unlocks merchandising)
 
-**Note**: The Income Generator facility no longer provides streaming revenue. Streaming revenue is now awarded per battle to all players. See "Streaming Revenue (Per-Battle)" section above and the Streaming Studio facility for details.
+**Note**: The Merchandising Hub (formerly Income Generator) has been rebalanced with lower costs and linear scaling. Streaming revenue is awarded per battle via the Streaming Studio facility.
 
 **Base Income by Level**:
 - Level 1: ₡5,000/day
-- Level 2: ₡8,000/day
-- Level 4: ₡12,000/day
-- Level 6: ₡18,000/day
-- Level 8: ₡25,000/day
-- Level 10: ₡35,000/day
+- Level 2: ₡10,000/day
+- Level 3: ₡15,000/day
+- Level 4: ₡20,000/day
+- Level 5: ₡25,000/day
+- Level 6: ₡30,000/day
+- Level 7: ₡35,000/day
+- Level 8: ₡40,000/day
+- Level 9: ₡45,000/day
+- Level 10: ₡50,000/day
 
 **Scaling Formula**:
 ```
-base_merchandising = income_generator_base_rate  // Based on level
+base_merchandising = level × ₡5,000  // Linear scaling
 prestige_multiplier = 1 + (stable_prestige / 10000)
 
 merchandising_income = base_merchandising × prestige_multiplier
 ```
 
-**Design Rationale**: Merchandising scales with **stable prestige** (not individual robot fame) because it represents the stable's overall brand value and reputation. Higher prestige stables can charge more for merchandise and attract more fans.
+**Operating Costs**:
+```
+operating_cost = level × ₡200/day
+```
+
+**Design Rationale**: Merchandising scales with **stable prestige** (not individual robot fame) because it represents the stable's overall brand value and reputation. Higher prestige stables can charge more for merchandise and attract more fans. The new linear scaling makes progression more predictable.
 
 **Examples**:
 *Early Game (Low Prestige):*
-- Income Generator Level 1: ₡5,000/day base
+- Merchandising Hub Level 1: ₡5,000/day base
 - Stable prestige: 1,000
 - Prestige multiplier: 1 + (1000/10000) = 1.1
 - Daily income: ₡5,000 × 1.1 = ₡5,500/day
-- Operating cost: ₡1,000/day
-- **Net**: ₡4,500/day
+- Operating cost: ₡200/day
+- **Net**: ₡5,300/day
+- **Break-even**: ~28 cycles (₡150K investment)
 
 *Mid Game (Moderate Prestige):*
-- Income Generator Level 4: ₡12,000/day base
+- Merchandising Hub Level 4: ₡20,000/day base
 - Stable prestige: 15,000
 - Prestige multiplier: 1 + (15000/10000) = 2.5
-- Daily income: ₡12,000 × 2.5 = ₡30,000/day
-- Operating cost: ₡3,000/day
-- **Net**: ₡27,000/day
+- Daily income: ₡20,000 × 2.5 = ₡50,000/day
+- Operating cost: ₡800/day
+- **Net**: ₡49,200/day
 
 *Late Game (High Prestige):*
-- Income Generator Level 10: ₡35,000/day base
+- Merchandising Hub Level 10: ₡50,000/day base
 - Stable prestige: 50,000
 - Prestige multiplier: 1 + (50000/10000) = 6.0
-- Daily income: ₡35,000 × 6.0 = ₡210,000/day
-- Operating cost: ₡5,500/day
-- **Net**: ₡204,500/day
+- Daily income: ₡50,000 × 6.0 = ₡300,000/day
+- Operating cost: ₡2,000/day
+- **Net**: ₡298,000/day
 
 **Operating Cost**: ₡1,000/day at Level 1, +₡500/day per level
 
@@ -1441,18 +1456,18 @@ merchandising_income = base_merchandising × prestige_multiplier
 base_streaming = 1,000  // Fixed base rate per battle
 battle_multiplier = 1 + (robot_battles / 1000)  // Individual robot's battle count
 fame_multiplier = 1 + (robot_fame / 5000)  // Individual robot's fame
-studio_multiplier = 1 + (streaming_studio_level × 0.1)  // Facility bonus (0-10)
+studio_multiplier = 1 + (streaming_studio_level × 1.0)  // Facility bonus (0-10)
 
 streaming_revenue = base_streaming × battle_multiplier × fame_multiplier × studio_multiplier
 ```
 
-**Design Rationale**: Streaming revenue is now awarded **per battle** rather than as daily passive income. This democratizes streaming income by making it available to all players immediately, and rewards active participation. Each robot earns streaming revenue based on their individual battle count and fame, scaled by the stable's Streaming Studio facility.
+**Design Rationale**: Streaming revenue is awarded **per battle** rather than as daily passive income. This democratizes streaming income by making it available to all players immediately, and rewards active participation. Each robot earns streaming revenue based on their individual battle count and fame, scaled by the stable's Streaming Studio facility. The 100% per level multiplier makes the facility highly effective.
 
 **Key Changes from Old System**:
 - ✅ **No facility requirement**: All players earn streaming revenue from first battle
 - ✅ **Per-battle award**: Revenue earned after each battle completion (1v1, Tag Team, Tournament)
 - ✅ **Individual robot stats**: Uses individual robot's battles and fame (not aggregate)
-- ✅ **New facility**: Streaming Studio (replaces Income Generator Level 3+ requirement)
+- ✅ **New facility**: Streaming Studio with 100% per level multiplier
 - ✅ **Both participants earn**: Winner and loser both receive streaming revenue
 - ❌ **No revenue for byes**: Bye matches do not award streaming revenue
 
@@ -1464,25 +1479,32 @@ streaming_revenue = base_streaming × battle_multiplier × fame_multiplier × st
 - No Streaming Studio → studio_multiplier = 1.0
 - **Streaming revenue**: ₡1,000 × 1.0 × 1.0 × 1.0 = **₡1,000**
 
+*New Robot with Studio Level 1:*
+- Base: ₡1,000
+- Battles: 0 → battle_multiplier = 1.0
+- Fame: 0 → fame_multiplier = 1.0
+- Streaming Studio Level 1 → studio_multiplier = 1 + (1 × 1.0) = 2.0
+- **Streaming revenue**: ₡1,000 × 1.0 × 1.0 × 2.0 = **₡2,000 (DOUBLE!)**
+
 *Experienced Robot (mid game):*
 - Base: ₡1,000
 - Battles: 500 → battle_multiplier = 1 + (500/1000) = 1.5
 - Fame: 2,500 → fame_multiplier = 1 + (2500/5000) = 1.5
-- Streaming Studio Level 5 → studio_multiplier = 1 + (5 × 0.1) = 1.5
-- **Streaming revenue**: ₡1,000 × 1.5 × 1.5 × 1.5 = **₡3,375 per battle**
+- Streaming Studio Level 5 → studio_multiplier = 1 + (5 × 1.0) = 6.0
+- **Streaming revenue**: ₡1,000 × 1.5 × 1.5 × 6.0 = **₡13,500 per battle (6×!)**
 
 *Veteran Robot (late game):*
 - Base: ₡1,000
 - Battles: 1,000 → battle_multiplier = 1 + (1000/1000) = 2.0
 - Fame: 5,000 → fame_multiplier = 1 + (5000/5000) = 2.0
-- Streaming Studio Level 10 → studio_multiplier = 1 + (10 × 0.1) = 2.0
-- **Streaming revenue**: ₡1,000 × 2.0 × 2.0 × 2.0 = **₡8,000 per battle**
+- Streaming Studio Level 10 → studio_multiplier = 1 + (10 × 1.0) = 11.0
+- **Streaming revenue**: ₡1,000 × 2.0 × 2.0 × 11.0 = **₡44,000 per battle (11×!)**
 
 *Legendary Robot (maximum):*
 - Base: ₡1,000
 - Battles: 5,000 → battle_multiplier = 1 + (5000/1000) = 6.0
 - Fame: 25,000 → fame_multiplier = 1 + (25000/5000) = 6.0
-- Streaming Studio Level 10 → studio_multiplier = 2.0
+- Streaming Studio Level 10 → studio_multiplier = 11.0
 - **Streaming revenue**: ₡1,000 × 6.0 × 6.0 × 2.0 = **₡72,000 per battle**
 
 **Tag Team Streaming Revenue**:
@@ -1688,7 +1710,7 @@ OPERATING COSTS:
   Defense Academy (Lvl 2): ₡1,200
   Mobility Academy (Lvl 2): ₡1,200
   AI Academy (Lvl 1):      ₡1,000
-  Income Generator (Lvl 5): ₡3,500
+  Merchandising Hub (Lvl 5): ₡1,000
   Streaming Studio (Lvl 5): ₡500
   ─────────────────────────────────
   Total Operating Costs:   ₡29,500
@@ -1798,7 +1820,7 @@ Recommendations:
 - Win more battles to increase income
 - Consider disabling expensive coach (₡3,000/day)
 - Repair only critical robots
-- Upgrade Income Generator for passive income
+- Upgrade Merchandising Hub for passive income
 ```
 
 ### Dashboard Presentation
@@ -1867,15 +1889,15 @@ Recommendations:
 - Expand to 3-4 robots: ₡1,500,000-₡2,000,000
 - Upgrade key facilities to Level 3-5: ₡2,000,000-₡4,000,000
 - Purchase premium weapons: ₡800,000-₡1,500,000
-- Unlock Income Generator: ₡800,000 (provides merchandising passive income)
-- Optional: Streaming Studio Level 1-3: ₡600,000 (boosts per-battle streaming)
+- Unlock Merchandising Hub: ₡150,000 (provides merchandising passive income, breaks even in ~31 cycles)
+- Optional: Streaming Studio Level 1-3: ₡600,000 (boosts per-battle streaming, breaks even in 17-25 cycles with 2-3 robots)
 
 **Income Sources**:
 - Gold/Platinum league battles: ₡20,000-₡60,000 per win
-- Per-battle streaming: ₡2,000-₡4,000 per battle (experienced robots, Studio Level 3)
-- Merchandising income: ₡10,000-₡25,000/day (from Income Generator)
+- Per-battle streaming: ₡5,000-₡15,000 per battle (experienced robots, Studio Level 3)
+- Merchandising income: ₡15,000-₡40,000/day (from Merchandising Hub Level 3-5)
 - Tournament winnings: ₡50,000-₡300,000 (occasional)
-- **Total**: ₡40,000-₡80,000/day
+- **Total**: ₡50,000-₡100,000/day
 
 **Operating Costs**:
 - Facilities: ₡15,000-₡25,000/day
@@ -1899,10 +1921,10 @@ Recommendations:
 **Income Sources**:
 - Diamond/Champion league battles: ₡80,000-₡250,000 per win
 - High-prestige multiplier: +15-20% on all winnings
-- Per-battle streaming: ₡6,000-₡12,000 per battle (veteran robots, Studio Level 10)
-- Merchandising income: ₡40,000-₡80,000/day (from Income Generator)
+- Per-battle streaming: ₡20,000-₡50,000 per battle (veteran robots, Studio Level 10)
+- Merchandising income: ₡100,000-₡300,000/day (from Merchandising Hub Level 10)
 - Tournament winnings: ₡500,000-₡2,000,000 (weekly)
-- **Total**: ₡150,000-₡400,000/day
+- **Total**: ₡200,000-₡500,000/day
 
 **Operating Costs**:
 - Facilities: ₡40,000-₡60,000/day
@@ -1926,25 +1948,25 @@ Recommendations:
    - **Best for**: Players planning multiple robots or high-level upgrades (15-50)
    - **Early game**: Not cost-effective (as calculated in section 1)
    
-3. **Income Generator Level 1** (₡800,000):
-   - **Merchandising**: ₡5,000/day base - ₡1,000 operating cost = ₡4,000 net/day
-   - Scales with prestige: At 10K prestige → ₡5,000 × 2.0 = ₡10,000/day (₡9,000 net)
-   - **Base payback**: 200 days (with no prestige scaling)
-   - **Realistic payback** (moderate prestige): 89-100 days
-   - **With high prestige** (50K): 40-50 days
-   - **Note**: Income Generator no longer provides streaming revenue (now per-battle)
-   - **Combined assessment**: Strong mid-game investment, scales well with prestige
-   - **Recommendation**: Purchase when prestige reaches 5,000-10,000 range
+3. **Merchandising Hub Level 1** (₡150,000):
+   - **Merchandising**: ₡5,000/day base - ₡200 operating cost = ₡4,800 net/day
+   - Scales with prestige: At 10K prestige → ₡5,000 × 2.0 = ₡10,000/day (₡9,800 net)
+   - **Base payback**: 31 days (with no prestige scaling)
+   - **Realistic payback** (moderate prestige): 15-20 days
+   - **With high prestige** (50K): 5-10 days
+   - **Note**: Passive income - works with any strategy
+   - **Combined assessment**: Excellent early-to-mid game investment
+   - **Recommendation**: Purchase early (after first robot + basic upgrades)
 
 4. **Streaming Studio Level 1** (₡100,000):
-   - Provides +10% to per-battle streaming revenue
-   - Example: Robot earning ₡2,000/battle → +₡200/battle
-   - At 7 battles/week: +₡1,400/week gain
+   - Provides 2× multiplier (DOUBLES streaming revenue!)
+   - Example: Robot earning ₡1,000/battle → ₡2,000/battle (+₡1,000)
+   - At 15 battles/week (3 robots): +₡15,000/week gain
    - Operating cost: ₡100/day = ₡700/week
-   - Net weekly gain: ₡700/week
-   - **Payback**: ₡100,000 / ₡700 = 143 weeks
-   - **Better with**: Multiple robots (more battles/week) or higher robot stats
-   - **Recommendation**: Mid-to-late game investment after Income Generator
+   - Net weekly gain: ₡14,300/week
+   - **Payback**: ₡100,000 / ₡14,300 = 7 weeks (~17 cycles)
+   - **Better with**: Multiple robots (more battles/week) or active play
+   - **Recommendation**: Excellent early investment for active players with 2-3 robots
    
 5. **Weapons Workshop Level 1** (₡250,000):
    - Saves 5% on weapons (₡5K-₡20K per weapon)
@@ -1963,8 +1985,9 @@ Recommendations:
 **Early Game Priority**:
 1. **Repair Bay** - Only if planning 2+ robots soon
 2. **One Academy** - Only if stuck at level 10 cap in key attributes
-3. **Skip Income Generator** - Requires prestige to be effective
-4. **Focus on robot power first** - Attributes and weapons
+3. **Merchandising Hub** - Good early investment (breaks even in ~31 cycles)
+4. **Streaming Studio** - Excellent for active players with 2-3 robots (breaks even in 17-25 cycles)
+5. **Focus on robot power first** - Attributes and weapons
 
 ---
 
@@ -2137,14 +2160,16 @@ prestige_multiplier = (prestige >= 50000) ? 1.20 :
 battle_reward = base_reward * prestige_multiplier;
 
 // Merchandising income
-base_merchandising = [defined by Income Generator level];
+base_merchandising = level × ₡5,000;  // Linear scaling
 prestige_mult = 1 + (prestige / 10000);
 merchandising_daily = base_merchandising * prestige_mult;
 
-// Streaming income
-base_streaming = [defined by Income Generator level];
+// Streaming income (per battle)
+base_streaming = 1000;
 battle_mult = 1 + (total_battles / 1000);
 fame_mult = 1 + (total_fame / 5000);
+studio_mult = 1 + (streaming_studio_level × 1.0);  // 100% per level
+streaming_per_battle = base_streaming * battle_mult * fame_mult * studio_mult;
 streaming_daily = base_streaming * battle_mult * fame_mult;
 
 // Total daily revenue

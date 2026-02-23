@@ -93,7 +93,7 @@ This PRD defines the requirements for implementing the Prestige and Fame systems
 - ❌ **Robot-specific milestones**: ELO achievements, kill counts, damage milestones, battle count rewards
 
 **Fame Benefits - NOT Implemented:**
-- ❌ **Streaming revenue formula**: `base × (1 + battles/1000) × (1 + fame/5000)` not integrated with Income Generator facility
+- ❌ **Streaming revenue formula**: `base × (1 + battles/1000) × (1 + fame/5000)` not integrated with Merchandising Hub facility
 - ❌ **Matchmaking quality**: Famous robots (1,000+ fame) not affecting match pairing or opponent quality
 - ❌ **Featured Matches section**: High-fame robot battles not highlighted
 - ❌ **Spectator prioritization**: Famous robot matches not given viewing priority

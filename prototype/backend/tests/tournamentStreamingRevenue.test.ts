@@ -4,66 +4,68 @@ import { processTournamentBattle } from '../src/services/tournamentBattleOrchest
 const prisma = new PrismaClient();
 
 describe('Tournament Streaming Revenue', () => {
-  let testUser1: any;
-  let testUser2: any;
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testWeaponIds: number[] = [];
+  let testWeaponInvIds: number[] = [];
+  let testTournamentIds: number[] = [];
+  let testFacilityIds: number[] = [];
   let practiceSword: any;
   let tournament: any;
 
   beforeAll(async () => {
-    // Clean up in correct order to respect foreign key constraints
-    await prisma.tournamentMatch.deleteMany({});
-    await prisma.tournament.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({});
-    await prisma.battle.deleteMany({});
-    await prisma.tagTeam.deleteMany({});
-    await prisma.robot.deleteMany({});
-    await prisma.weaponInventory.deleteMany({});
-    await prisma.facility.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.weapon.deleteMany({});
-    await prisma.cycleMetadata.deleteMany({});
+    await prisma.$connect();
 
     // Create cycle metadata
-    await prisma.cycleMetadata.create({
-      data: {
+    await prisma.cycleMetadata.upsert({
+      where: { id: 1 },
+      create: {
         id: 1,
+        totalCycles: 1,
+        lastCycleAt: new Date(),
+      },
+      update: {
         totalCycles: 1,
         lastCycleAt: new Date(),
       },
     });
 
     // Create test users
-    testUser1 = await prisma.user.create({
+    const timestamp = Date.now();
+    const testUser1 = await prisma.user.create({
       data: {
-        username: 'tournament_test_user1',
+        username: `tournament_test_user1_${timestamp}`,
         passwordHash: 'hash',
         currency: 1000000,
         prestige: 5000,
       },
     });
+    testUserIds.push(testUser1.id);
 
-    testUser2 = await prisma.user.create({
+    const testUser2 = await prisma.user.create({
       data: {
-        username: 'tournament_test_user2',
+        username: `tournament_test_user2_${timestamp}`,
         passwordHash: 'hash',
         currency: 1000000,
         prestige: 3000,
       },
     });
+    testUserIds.push(testUser2.id);
 
     // Create Streaming Studio for user1 (level 5 = 1.5x multiplier)
-    await prisma.facility.create({
+    const facility = await prisma.facility.create({
       data: {
         userId: testUser1.id,
         facilityType: 'streaming_studio',
         level: 5,
       },
     });
+    testFacilityIds.push(facility.id);
 
     // Create practice sword
     practiceSword = await prisma.weapon.create({
       data: {
-        name: 'Test Sword',
+        name: `Test Sword ${timestamp}`,
         weaponType: 'melee',
         baseDamage: 5,
         cooldown: 3,
@@ -73,26 +75,65 @@ describe('Tournament Streaming Revenue', () => {
         loadoutType: 'single',
       },
     });
+    testWeaponIds.push(practiceSword.id);
+  });
+
+  afterEach(async () => {
+    // Clean up test data between tests (but keep users, weapons, facilities, and tournament from beforeAll/first test)
+    await prisma.tournamentMatch.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
+    await prisma.battle.deleteMany({});
+    await prisma.robot.deleteMany({
+      where: { userId: { in: testUserIds } },
+    });
+    await prisma.weaponInventory.deleteMany({
+      where: { 
+        userId: { in: testUserIds },
+        id: { in: testWeaponInvIds },
+      },
+    });
+    
+    // Reset tracking arrays (but keep testUserIds, testWeaponIds, testFacilityIds, testTournamentIds)
+    testRobotIds = [];
+    testWeaponInvIds = [];
   });
 
   afterAll(async () => {
+    // Final cleanup
+    await prisma.tournamentMatch.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
+    await prisma.battle.deleteMany({});
+    await prisma.robot.deleteMany({});
+    await prisma.tournament.deleteMany({});
+    await prisma.weaponInventory.deleteMany({});
+    await prisma.facility.deleteMany({});
+    await prisma.user.deleteMany({});
+    await prisma.weapon.deleteMany({});
+
     await prisma.$disconnect();
   });
 
   describe('Tournament Battle Streaming Revenue', () => {
     it('should award streaming revenue to both participants in a tournament battle', async () => {
+      // Get user IDs
+      const testUser1Id = testUserIds[0];
+      const testUser2Id = testUserIds[1];
+
       // Create two test robots with different stats
       const weaponInv1 = await prisma.weaponInventory.create({
-        data: { userId: testUser1.id, weaponId: practiceSword.id },
+        data: { userId: testUser1Id, weaponId: practiceSword.id },
       });
+      testWeaponInvIds.push(weaponInv1.id);
+
       const weaponInv2 = await prisma.weaponInventory.create({
-        data: { userId: testUser2.id, weaponId: practiceSword.id },
+        data: { userId: testUser2Id, weaponId: practiceSword.id },
       });
+      testWeaponInvIds.push(weaponInv2.id);
 
       const robot1 = await prisma.robot.create({
         data: {
-          userId: testUser1.id,
-          name: 'Tournament Fighter 1',
+          userId: testUser1Id,
+          name: `Tournament Fighter 1 ${Date.now()}`,
           leagueId: 'bronze_1',
           currentLeague: 'bronze',
           currentHP: 10,
@@ -104,11 +145,12 @@ describe('Tournament Streaming Revenue', () => {
           fame: 2500, // 1.5x fame multiplier
         },
       });
+      testRobotIds.push(robot1.id);
 
       const robot2 = await prisma.robot.create({
         data: {
-          userId: testUser2.id,
-          name: 'Tournament Fighter 2',
+          userId: testUser2Id,
+          name: `Tournament Fighter 2 ${Date.now()}`,
           leagueId: 'bronze_1',
           currentLeague: 'bronze',
           currentHP: 10,
@@ -120,11 +162,12 @@ describe('Tournament Streaming Revenue', () => {
           fame: 500, // 1.1x fame multiplier
         },
       });
+      testRobotIds.push(robot2.id);
 
       // Create tournament
       tournament = await prisma.tournament.create({
         data: {
-          name: 'Test Tournament',
+          name: `Test Tournament ${Date.now()}`,
           tournamentType: 'single_elimination',
           totalParticipants: 8,
           currentRound: 1,
@@ -132,6 +175,7 @@ describe('Tournament Streaming Revenue', () => {
           status: 'active',
         },
       });
+      testTournamentIds.push(tournament.id);
 
       // Create tournament match
       const tournamentMatch = await prisma.tournamentMatch.create({
@@ -147,15 +191,15 @@ describe('Tournament Streaming Revenue', () => {
       });
 
       // Get initial balances
-      const user1Before = await prisma.user.findUnique({ where: { id: testUser1.id } });
-      const user2Before = await prisma.user.findUnique({ where: { id: testUser2.id } });
+      const user1Before = await prisma.user.findUnique({ where: { id: testUser1Id } });
+      const user2Before = await prisma.user.findUnique({ where: { id: testUser2Id } });
 
       // Process tournament battle
       const result = await processTournamentBattle(tournamentMatch);
 
       // Get final balances
-      const user1After = await prisma.user.findUnique({ where: { id: testUser1.id } });
-      const user2After = await prisma.user.findUnique({ where: { id: testUser2.id } });
+      const user1After = await prisma.user.findUnique({ where: { id: testUser1Id } });
+      const user2After = await prisma.user.findUnique({ where: { id: testUser2Id } });
 
       // Calculate expected streaming revenue
       // User1: 1000 × 1.5 (battles) × 1.5 (fame) × 1.5 (studio level 5) = 3375
@@ -188,15 +232,19 @@ describe('Tournament Streaming Revenue', () => {
     });
 
     it('should not award streaming revenue for bye matches', async () => {
+      // Get user ID
+      const testUser1Id = testUserIds[0];
+
       // Create a robot for bye match
       const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser1.id, weaponId: practiceSword.id },
+        data: { userId: testUser1Id, weaponId: practiceSword.id },
       });
+      testWeaponInvIds.push(weaponInv.id);
 
       const robot = await prisma.robot.create({
         data: {
-          userId: testUser1.id,
-          name: 'Bye Fighter',
+          userId: testUser1Id,
+          name: `Bye Fighter ${Date.now()}`,
           leagueId: 'bronze_1',
           currentLeague: 'bronze',
           currentHP: 10,
@@ -208,6 +256,7 @@ describe('Tournament Streaming Revenue', () => {
           fame: 2500,
         },
       });
+      testRobotIds.push(robot.id);
 
       // Create bye match
       const byeMatch = await prisma.tournamentMatch.create({

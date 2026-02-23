@@ -20,18 +20,88 @@ import { executeScheduledTagTeamBattles } from '../../src/services/tagTeamBattle
 const prisma = new PrismaClient();
 
 describe('Tag Team Bye-Team Handling Integration Test', () => {
-  let testUsers: any[] = [];
-  let testRobots: any[] = [];
-  let testTeams: any[] = [];
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testTeamIds: number[] = [];
+  let weapon: any;
 
   beforeAll(async () => {
     await prisma.$connect();
 
     // Get a weapon for robots
-    const weapon = await prisma.weapon.findFirst();
+    weapon = await prisma.weapon.findFirst();
     if (!weapon) {
       throw new Error('No weapons found. Run seed first.');
     }
+  });
+
+  afterEach(async () => {
+    // Clean up in correct order
+    if (testTeamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTeamIds } },
+            { team2Id: { in: testTeamIds } },
+            { team1Id: -1 },
+            { team2Id: -1 },
+          ],
+        },
+      });
+    }
+
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          battleType: 'tag_team',
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot1Id: -1 },
+          ],
+        },
+      });
+    }
+
+    if (testTeamIds.length > 0) {
+      await prisma.tagTeam.deleteMany({
+        where: { id: { in: testTeamIds } },
+      });
+    }
+
+    if (testRobotIds.length > 0) {
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    testTeamIds = [];
+    testRobotIds = [];
+    testUserIds = [];
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it('should create bye-team match when odd number of teams eligible', async () => {
+    // Step 1: Create 3 teams (odd number)
+    console.log('[Test] Step 1: Creating 3 teams (odd number)...');
+    
+    const testUsers: any[] = [];
+    const testRobots: any[] = [];
+    const testTeams: any[] = [];
 
     // Create 3 test users (odd number for bye-team scenario)
     for (let i = 0; i < 3; i++) {
@@ -44,6 +114,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
         },
       });
       testUsers.push(user);
+      testUserIds.push(user.id);
 
       // Create 2 robots per user
       for (let j = 0; j < 2; j++) {
@@ -71,57 +142,9 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
           },
         });
         testRobots.push(robot);
+        testRobotIds.push(robot.id);
       }
     }
-  });
-
-  afterAll(async () => {
-    // Clean up
-    await prisma.tagTeamMatch.deleteMany({
-      where: {
-        OR: [
-          { team1Id: { in: testTeams.map(t => t.id) } },
-          { team2Id: { in: testTeams.map(t => t.id) } },
-          { team1Id: -1 },
-          { team2Id: -1 },
-        ],
-      },
-    });
-    await prisma.battle.deleteMany({
-      where: {
-        battleType: 'tag_team',
-        OR: [
-          { robot1Id: { in: testRobots.map(r => r.id) } },
-          { robot1Id: -1 },
-        ],
-      },
-    });
-    await prisma.tagTeam.deleteMany({
-      where: {
-        id: { in: testTeams.map(t => t.id) },
-      },
-    });
-    await prisma.robot.deleteMany({
-      where: {
-        id: { in: testRobots.map(r => r.id) },
-      },
-    });
-    await prisma.weaponInventory.deleteMany({
-      where: {
-        userId: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.user.deleteMany({
-      where: {
-        id: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.$disconnect();
-  });
-
-  it('should create bye-team match when odd number of teams eligible', async () => {
-    // Step 1: Create 3 teams (odd number)
-    console.log('[Test] Step 1: Creating 3 teams (odd number)...');
     
     for (let i = 0; i < 3; i++) {
       const user = testUsers[i];
@@ -131,6 +154,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
       const result = await createTeam(user.id, robot1.id, robot2.id);
       expect(result.success).toBe(true);
       testTeams.push(result.team!);
+      testTeamIds.push(result.team!.id);
     }
 
     expect(testTeams.length).toBe(3);

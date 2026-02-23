@@ -8,8 +8,6 @@
 
 import express, { Request, Response } from 'express';
 import { cycleSnapshotService } from '../services/cycleSnapshotService';
-import { comparisonService } from '../services/comparisonService';
-import { trendAnalysisService } from '../services/trendAnalysisService';
 import { robotPerformanceService } from '../services/robotPerformanceService';
 import prisma from '../lib/prisma';
 
@@ -123,51 +121,6 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
       });
     }
 
-    // Get cycle 0 purchases (purchases made before first cycle) to include in cycle 1
-    const cycle0Purchases = await prisma.auditLog.findMany({
-      where: {
-        cycleNumber: 0,
-        userId,
-        eventType: { in: ['weapon_purchase', 'facility_purchase', 'facility_upgrade', 'attribute_upgrade'] },
-      },
-    });
-
-    // Also get robot creation events (logged as credit_change with source='other')
-    const cycle0RobotCreations = await prisma.auditLog.findMany({
-      where: {
-        cycleNumber: 0,
-        userId,
-        eventType: 'credit_change',
-        payload: {
-          path: ['source'],
-          equals: 'other'
-        }
-      },
-    });
-
-    const cycle0WeaponPurchases = cycle0Purchases
-      .filter(e => e.eventType === 'weapon_purchase')
-      .reduce((sum, e) => sum + (Number((e.payload as any).cost) || 0), 0);
-    
-    const cycle0FacilityPurchases = cycle0Purchases
-      .filter(e => e.eventType === 'facility_purchase' || e.eventType === 'facility_upgrade')
-      .reduce((sum, e) => sum + (Number((e.payload as any).cost) || 0), 0);
-    
-    const cycle0AttributeUpgrades = cycle0Purchases
-      .filter(e => e.eventType === 'attribute_upgrade')
-      .reduce((sum, e) => sum + (Number((e.payload as any).cost) || 0), 0);
-
-    const cycle0RobotPurchases = cycle0RobotCreations
-      .reduce((sum, e) => sum + Math.abs(Number((e.payload as any).amount) || 0), 0);
-
-    const cycle0TotalPurchases = cycle0WeaponPurchases + cycle0FacilityPurchases + cycle0AttributeUpgrades + cycle0RobotPurchases;
-
-    // Get user's current balance to calculate starting balance
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { currency: true }
-    });
-    
     // First pass: calculate cycles without balance
     const cyclesWithoutBalance = snapshots.map(snapshot => {
       const userMetrics = snapshot.stableMetrics.find(m => m.userId === userId);
@@ -188,6 +141,7 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
             operatingCosts: 0,
             weaponPurchases: 0,
             facilityPurchases: 0,
+            robotPurchases: 0,
             attributeUpgrades: 0,
           },
         };
@@ -199,92 +153,42 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
       const expenses = userMetrics.totalRepairCosts + userMetrics.operatingCosts;
       const weaponPurchases = Number(userMetrics.weaponPurchases) || 0;
       const facilityPurchases = Number(userMetrics.facilityPurchases) || 0;
+      const robotPurchases = Number(userMetrics.robotPurchases) || 0;
       const attributeUpgrades = Number(userMetrics.attributeUpgrades) || 0;
       
-      // Include cycle 0 purchases in cycle 1
-      const isCycle1 = snapshot.cycleNumber === 1;
-      const finalWeaponPurchases = weaponPurchases + (isCycle1 ? cycle0WeaponPurchases : 0);
-      const finalFacilityPurchases = facilityPurchases + (isCycle1 ? cycle0FacilityPurchases : 0);
-      const finalAttributeUpgrades = attributeUpgrades + (isCycle1 ? cycle0AttributeUpgrades : 0);
-      const finalRobotPurchases = (isCycle1 ? cycle0RobotPurchases : 0);
-      const purchases = finalWeaponPurchases + finalFacilityPurchases + finalAttributeUpgrades + finalRobotPurchases;
-
-      // Adjust net profit for cycle 1 to include cycle 0 purchases
-      const adjustedNetProfit = isCycle1 
-        ? userMetrics.netProfit - cycle0TotalPurchases 
-        : userMetrics.netProfit;
+      const purchases = weaponPurchases + facilityPurchases + robotPurchases + attributeUpgrades;
 
       return {
         cycleNumber: snapshot.cycleNumber,
         income,
         expenses,
         purchases,
-        netProfit: adjustedNetProfit,
+        netProfit: userMetrics.netProfit,
         breakdown: {
           battleCredits: userMetrics.totalCreditsEarned,
           merchandising: userMetrics.merchandisingIncome,
           streaming: userMetrics.streamingIncome,
           repairCosts: userMetrics.totalRepairCosts,
           operatingCosts: userMetrics.operatingCosts,
-          weaponPurchases: finalWeaponPurchases,
-          facilityPurchases: finalFacilityPurchases,
-          attributeUpgrades: finalAttributeUpgrades,
-          robotPurchases: finalRobotPurchases,
+          weaponPurchases,
+          facilityPurchases,
+          robotPurchases,
+          attributeUpgrades,
         },
       };
     });
 
-    // Calculate starting balance
-    // For cycle 1, start with ₡3,000,000 (cycle 0 purchases are already included in cycle 1's purchases)
-    // For other cycles, get from previous cycle's snapshot
-    let startingBalance = 0;
-    
-    if (startCycle === 1) {
-      // Starting balance is ₡3,000,000 (cycle 0 purchases are included in cycle 1 data)
-      startingBalance = 3000000;
-    } else {
-      // Get balance from previous cycle's snapshot
-      const previousCycle = startCycle - 1;
-      const previousSnapshot = await prisma.cycleSnapshot.findUnique({
-        where: { cycleNumber: previousCycle },
-      });
+    // Use stored balance from snapshots instead of recalculating
+    const cycles = cyclesWithoutBalance.map((cycle, index) => {
+      const snapshot = snapshots[index];
+      const userMetrics = snapshot.stableMetrics.find(m => m.userId === userId);
       
-      if (previousSnapshot && previousSnapshot.stableMetrics) {
-        const userMetric = (previousSnapshot.stableMetrics as any[]).find((m: any) => m.userId === userId);
-        if (userMetric) {
-          // Calculate balance after previous cycle
-          // We need to calculate cumulative balance from cycle 1 to previous cycle
-          const allPreviousSnapshots = await cycleSnapshotService.getSnapshotRange(1, previousCycle);
-          let runningBalance = 3000000; // Starting balance
-          
-          for (const snapshot of allPreviousSnapshots) {
-            const metric = snapshot.stableMetrics.find(m => m.userId === userId);
-            if (metric) {
-              const income = metric.totalCreditsEarned + metric.merchandisingIncome + metric.streamingIncome;
-              const expenses = metric.totalRepairCosts + metric.operatingCosts;
-              const purchases = metric.weaponPurchases + metric.facilityPurchases + metric.attributeUpgrades;
-              runningBalance += income - expenses - purchases;
-            }
-          }
-          
-          startingBalance = runningBalance;
-        } else {
-          // User didn't exist in previous cycles, use default
-          startingBalance = 3000000;
-        }
-      } else {
-        // No previous snapshot, use default
-        startingBalance = 3000000;
-      }
-    }
-
-    // Second pass: add balance to each cycle
-    let runningBalance = startingBalance;
-    const cycles = cyclesWithoutBalance.map(cycle => {
-      runningBalance += cycle.income - cycle.expenses - cycle.purchases;
+      // Use the stored balance if available, otherwise fallback to 0
+      const balance = userMetrics?.balance ?? 0;
+      
       return {
         ...cycle,
-        balance: runningBalance,
+        balance,
       };
     });
 
@@ -312,298 +216,7 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
   }
 });
 
-/**
- * GET /api/analytics/comparison
- * 
- * Returns comparison between current and historical cycle metrics.
- * 
- * Query parameters:
- * - userId: User ID to filter by (optional)
- * - current: Current cycle number (required)
- * - comparison: Comparison cycle number (required)
- * 
- * Response:
- * {
- *   currentCycle: number,
- *   comparisonCycle: number,
- *   stableComparisons: Array<{
- *     userId: number,
- *     battlesParticipated: { current, comparison, delta, percentChange },
- *     totalCreditsEarned: { current, comparison, delta, percentChange },
- *     totalPrestigeEarned: { current, comparison, delta, percentChange },
- *     totalRepairCosts: { current, comparison, delta, percentChange },
- *     merchandisingIncome: { current, comparison, delta, percentChange },
- *     streamingIncome: { current, comparison, delta, percentChange },
- *     operatingCosts: { current, comparison, delta, percentChange },
- *     netProfit: { current, comparison, delta, percentChange }
- *   }>,
- *   robotComparisons: Array<{
- *     robotId: number,
- *     battlesParticipated: { current, comparison, delta, percentChange },
- *     wins: { current, comparison, delta, percentChange },
- *     losses: { current, comparison, delta, percentChange },
- *     draws: { current, comparison, delta, percentChange },
- *     damageDealt: { current, comparison, delta, percentChange },
- *     damageReceived: { current, comparison, delta, percentChange },
- *     creditsEarned: { current, comparison, delta, percentChange },
- *     eloChange: { current, comparison, delta, percentChange },
- *     fameChange: { current, comparison, delta, percentChange }
- *   }>,
- *   unavailableMetrics?: string[]
- * }
- * 
- * Requirements: 6.4, 12.4
- */
-router.get('/comparison', async (req: Request, res: Response) => {
-  try {
-    const userIdParam = req.query.userId as string | undefined;
-    const currentParam = req.query.current as string;
-    const comparisonParam = req.query.comparison as string;
 
-    // Validate required parameters
-    if (!currentParam || !comparisonParam) {
-      return res.status(400).json({ 
-        error: 'Missing required parameters',
-        message: 'Both "current" and "comparison" query parameters are required'
-      });
-    }
-
-    const current = parseInt(currentParam);
-    const comparison = parseInt(comparisonParam);
-
-    if (isNaN(current) || isNaN(comparison)) {
-      return res.status(400).json({ 
-        error: 'Invalid parameters',
-        message: 'Both "current" and "comparison" must be valid integers'
-      });
-    }
-
-    if (current < 1 || comparison < 1) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle numbers',
-        message: 'Cycle numbers must be positive integers'
-      });
-    }
-
-    // Parse optional userId
-    let userId: number | undefined;
-    if (userIdParam) {
-      userId = parseInt(userIdParam);
-      if (isNaN(userId)) {
-        return res.status(400).json({ 
-          error: 'Invalid userId',
-          message: 'userId must be a valid integer'
-        });
-      }
-    }
-
-    // Call comparison service
-    const result = await comparisonService.compareCycles(current, comparison, userId);
-
-    return res.json(result);
-  } catch (error) {
-    console.error('[Analytics] Error in comparison:', error);
-    
-    // Handle specific error cases
-    if (error instanceof Error && error.message.includes('not found')) {
-      return res.status(404).json({ 
-        error: 'Snapshot not found',
-        message: error.message
-      });
-    }
-
-    return res.status(500).json({ 
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
-
-/**
- * GET /api/analytics/trends
- * 
- * Returns time-series data for a specific metric over a cycle range.
- * Supports moving averages and trend line calculations.
- * 
- * Query parameters:
- * - userId: User ID for stable-level metrics (optional, mutually exclusive with robotId)
- * - robotId: Robot ID for robot-level metrics (optional, mutually exclusive with userId)
- * - metric: The metric to analyze (required)
- *   - Stable metrics: income, expenses, netProfit
- *   - Robot metrics: elo, fame, wins, losses, damageDealt, damageReceived
- * - startCycle: Start of cycle range (required)
- * - endCycle: End of cycle range (required)
- * - includeMovingAverage: Whether to include moving averages (optional, default: false)
- * - includeTrendLine: Whether to include trend line (optional, default: false)
- * 
- * Response:
- * {
- *   metric: string,
- *   cycleRange: [startCycle, endCycle],
- *   data: Array<{
- *     cycleNumber: number,
- *     value: number,
- *     timestamp: Date
- *   }>,
- *   movingAverage3?: Array<{
- *     cycleNumber: number,
- *     value: number,
- *     average: number
- *   }>,
- *   movingAverage7?: Array<{
- *     cycleNumber: number,
- *     value: number,
- *     average: number
- *   }>,
- *   trendLine?: {
- *     slope: number,
- *     intercept: number,
- *     points: Array<{ cycleNumber: number, value: number }>
- *   }
- * }
- * 
- * Requirements: 12.5
- */
-router.get('/trends', async (req: Request, res: Response) => {
-  try {
-    const userIdParam = req.query.userId as string | undefined;
-    const robotIdParam = req.query.robotId as string | undefined;
-    const metric = req.query.metric as string;
-    const startCycleParam = req.query.startCycle as string;
-    const endCycleParam = req.query.endCycle as string;
-    const includeMovingAverageParam = req.query.includeMovingAverage as string | undefined;
-    const includeTrendLineParam = req.query.includeTrendLine as string | undefined;
-
-    // Validate required parameters
-    if (!metric) {
-      return res.status(400).json({ 
-        error: 'Missing required parameter',
-        message: 'The "metric" query parameter is required'
-      });
-    }
-
-    if (!startCycleParam || !endCycleParam) {
-      return res.status(400).json({ 
-        error: 'Missing required parameters',
-        message: 'Both "startCycle" and "endCycle" query parameters are required'
-      });
-    }
-
-    // Validate that either userId or robotId is provided, but not both
-    if (!userIdParam && !robotIdParam) {
-      return res.status(400).json({ 
-        error: 'Missing required parameter',
-        message: 'Either "userId" or "robotId" query parameter is required'
-      });
-    }
-
-    if (userIdParam && robotIdParam) {
-      return res.status(400).json({ 
-        error: 'Invalid parameters',
-        message: 'Cannot specify both "userId" and "robotId" - they are mutually exclusive'
-      });
-    }
-
-    // Parse parameters
-    const startCycle = parseInt(startCycleParam);
-    const endCycle = parseInt(endCycleParam);
-
-    if (isNaN(startCycle) || isNaN(endCycle)) {
-      return res.status(400).json({ 
-        error: 'Invalid parameters',
-        message: 'Both "startCycle" and "endCycle" must be valid integers'
-      });
-    }
-
-    if (startCycle < 1 || endCycle < 1) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle numbers',
-        message: 'Cycle numbers must be positive integers'
-      });
-    }
-
-    if (startCycle > endCycle) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle range',
-        message: 'startCycle must be less than or equal to endCycle'
-      });
-    }
-
-    // Parse userId or robotId
-    let userId: number | null = null;
-    let robotId: number | null = null;
-
-    if (userIdParam) {
-      userId = parseInt(userIdParam);
-      if (isNaN(userId)) {
-        return res.status(400).json({ 
-          error: 'Invalid userId',
-          message: 'userId must be a valid integer'
-        });
-      }
-    }
-
-    if (robotIdParam) {
-      robotId = parseInt(robotIdParam);
-      if (isNaN(robotId)) {
-        return res.status(400).json({ 
-          error: 'Invalid robotId',
-          message: 'robotId must be a valid integer'
-        });
-      }
-    }
-
-    // Validate metric type based on userId/robotId
-    const stableMetrics = ['income', 'expenses', 'netProfit'];
-    const robotMetrics = ['elo', 'fame', 'wins', 'losses', 'damageDealt', 'damageReceived'];
-    const validMetrics = [...stableMetrics, ...robotMetrics];
-
-    if (!validMetrics.includes(metric)) {
-      return res.status(400).json({ 
-        error: 'Invalid metric',
-        message: `Metric must be one of: ${validMetrics.join(', ')}`
-      });
-    }
-
-    // Check metric compatibility with userId/robotId
-    if (userId !== null && !stableMetrics.includes(metric)) {
-      return res.status(400).json({ 
-        error: 'Invalid metric for userId',
-        message: `When using userId, metric must be one of: ${stableMetrics.join(', ')}`
-      });
-    }
-
-    if (robotId !== null && !robotMetrics.includes(metric)) {
-      return res.status(400).json({ 
-        error: 'Invalid metric for robotId',
-        message: `When using robotId, metric must be one of: ${robotMetrics.join(', ')}`
-      });
-    }
-
-    // Parse boolean flags
-    const includeMovingAverage = includeMovingAverageParam === 'true';
-    const includeTrendLine = includeTrendLineParam === 'true';
-
-    // Call trend analysis service
-    const result = await trendAnalysisService.analyzeTrend(
-      userId,
-      robotId,
-      metric as any,
-      [startCycle, endCycle],
-      includeMovingAverage,
-      includeTrendLine
-    );
-
-    return res.json(result);
-  } catch (error) {
-    console.error('[Analytics] Error in trends:', error);
-    
-    return res.status(500).json({ 
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
 
 /**
  * GET /api/analytics/robot/:robotId/performance
@@ -1357,7 +970,7 @@ router.post('/stats/refresh', async (req: Request, res: Response) => {
  * 
  * Query parameters:
  * - facilityType: Type of facility to analyze (required)
- *   Examples: 'income_generator', 'repair_bay', 'training_facility', 'weapons_workshop'
+ *   Examples: 'merchandising_hub', 'repair_bay', 'training_facility', 'weapons_workshop'
  * 
  * Response:
  * {
@@ -1404,6 +1017,7 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
       'repair_bay',
       'training_facility',
       'weapons_workshop',
+      'streaming_studio',
       'research_lab',
       'medical_bay',
       'roster_expansion',
@@ -1414,7 +1028,8 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
       'defense_training_academy',
       'mobility_training_academy',
       'ai_training_academy',
-      'income_generator'
+      'merchandising_hub',
+      'streaming_studio'
     ];
 
     if (!validFacilityTypes.includes(facilityType)) {

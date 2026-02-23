@@ -2493,7 +2493,7 @@ describe('Analytics API - Current Cycle', () => {
 
   it('should return 0 if no cycle metadata exists', async () => {
     // Temporarily delete metadata
-    await prisma.cycleMetadata.delete({ where: { id: 1 } });
+    await prisma.cycleMetadata.deleteMany({ where: { id: 1 } });
 
     const response = await request(app)
       .get('/api/analytics/cycle/current')
@@ -2625,7 +2625,7 @@ describe('Analytics API - Facility ROI', () => {
     await prisma.auditLog.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
   });
 
   it('should return ROI for a specific facility', async () => {
@@ -2753,7 +2753,7 @@ describe('GET /api/analytics/facility/:userId/recommendations', () => {
     // Clean up test data
     await prisma.auditLog.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
   });
 
   it('should return facility recommendations', async () => {

@@ -9,6 +9,7 @@ import prisma from '../src/lib/prisma';
 
 describe('Cycle Execution Timing', () => {
   let eventLogger: EventLogger;
+  let testCycleNumbers: number[] = [];
 
   beforeAll(() => {
     eventLogger = new EventLogger();
@@ -20,6 +21,12 @@ describe('Cycle Execution Timing', () => {
   });
 
   afterAll(async () => {
+    // Clean up any test data
+    if (testCycleNumbers.length > 0) {
+      await prisma.auditLog.deleteMany({
+        where: { cycleNumber: { in: testCycleNumbers } },
+      });
+    }
     await prisma.$disconnect();
   });
 

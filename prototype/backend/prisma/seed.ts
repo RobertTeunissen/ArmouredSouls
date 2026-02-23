@@ -1288,7 +1288,7 @@ async function main() {
   await prisma.facility.create({
     data: {
       userId: facilityInvestorUser.id,
-      facilityType: 'income_generator',
+      facilityType: 'merchandising_hub',
       level: 1,
       maxLevel: 10,
     },
@@ -1775,7 +1775,7 @@ async function main() {
   console.log('🏭 Facilities: 14 types with 10 levels each');
   console.log('   - repair_bay, training_facility, weapons_workshop, research_lab');
   console.log('   - medical_bay, roster_expansion, storage_facility, coaching_staff');
-  console.log('   - booking_office, combat/defense/mobility/ai_training_academy, income_generator');
+  console.log('   - booking_office, combat/defense/mobility/ai_training_academy, merchandising_hub, streaming_studio');
   console.log('');
   console.log('⚔️  Loadout Types: single, weapon_shield, two_handed, dual_wield');
   console.log('🥊 Stances: offensive, defensive, balanced');

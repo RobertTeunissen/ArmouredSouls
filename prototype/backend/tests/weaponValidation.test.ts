@@ -48,6 +48,10 @@ const createMockWeapon = (overrides?: Partial<Weapon>): Weapon => ({
 });
 
 describe('Weapon Validation', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   describe('isWeaponCompatibleWithLoadout', () => {
     it('should allow weapons with loadoutType "any" for all loadouts', () => {
       const weapon = createMockWeapon({ loadoutType: 'any' });

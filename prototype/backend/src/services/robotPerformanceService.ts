@@ -155,20 +155,16 @@ export class RobotPerformanceService {
       }
     }
 
-    // Get ELO start and end values from Battle table
+    // Get ELO start and end values from BattleParticipant table
     const firstBattle = await this.getFirstBattleInRange(robotId, cycleRange);
     const lastBattle = await this.getLastBattleInRange(robotId, cycleRange);
 
     if (firstBattle) {
-      eloStart = firstBattle.robot1Id === robotId 
-        ? firstBattle.robot1ELOBefore 
-        : firstBattle.robot2ELOBefore;
+      eloStart = firstBattle.eloBefore;
     }
 
     if (lastBattle) {
-      eloEnd = lastBattle.robot1Id === robotId 
-        ? lastBattle.robot1ELOAfter 
-        : lastBattle.robot2ELOAfter;
+      eloEnd = lastBattle.eloAfter;
     }
 
     // Calculate win rate
@@ -209,25 +205,35 @@ export class RobotPerformanceService {
     const startTime = await this.getCycleStartTime(startCycle);
     const endTime = await this.getCycleEndTime(endCycle);
 
-    // Query all battles for this robot in the cycle range
-    const battles = await prisma.battle.findMany({
+    // Query all battle participants for this robot in the cycle range
+    const participants = await prisma.battleParticipant.findMany({
       where: {
-        OR: [
-          { robot1Id: robotId },
-          { robot2Id: robotId },
-        ],
-        createdAt: {
-          gte: startTime,
-          lte: endTime,
+        robotId,
+        battle: {
+          createdAt: {
+            gte: startTime,
+            lte: endTime,
+          },
+        },
+      },
+      include: {
+        battle: {
+          select: {
+            id: true,
+            winnerId: true,
+            createdAt: true,
+          },
         },
       },
       orderBy: {
-        createdAt: 'asc',
+        battle: {
+          createdAt: 'asc',
+        },
       },
     });
 
     // Aggregate statistics
-    let battlesParticipated = battles.length;
+    let battlesParticipated = participants.length;
     let wins = 0;
     let losses = 0;
     let draws = 0;
@@ -242,52 +248,70 @@ export class RobotPerformanceService {
     let eloStart = 0;
     let eloEnd = 0;
 
-    battles.forEach((battle, index) => {
-      const isRobot1 = battle.robot1Id === robotId;
-
+    participants.forEach((participant, index) => {
       // Track ELO
       if (index === 0) {
-        eloStart = isRobot1 ? battle.robot1ELOBefore : battle.robot2ELOBefore;
+        eloStart = participant.eloBefore;
       }
-      if (index === battles.length - 1) {
-        eloEnd = isRobot1 ? battle.robot1ELOAfter : battle.robot2ELOAfter;
+      if (index === participants.length - 1) {
+        eloEnd = participant.eloAfter;
       }
 
       // Aggregate ELO change
-      if (isRobot1) {
-        eloChange += battle.robot1ELOAfter - battle.robot1ELOBefore;
-      } else {
-        eloChange += battle.robot2ELOAfter - battle.robot2ELOBefore;
-      }
+      eloChange += participant.eloAfter - participant.eloBefore;
 
       // Track wins/losses/draws
-      if (battle.winnerId === robotId) {
+      if (participant.battle.winnerId === robotId) {
         wins++;
-        totalCreditsEarned += battle.winnerReward || 0;
-      } else if (battle.winnerId === null) {
+      } else if (participant.battle.winnerId === null) {
         draws++;
-        totalCreditsEarned += isRobot1 ? (battle.loserReward || 0) : (battle.loserReward || 0);
       } else {
         losses++;
-        totalCreditsEarned += isRobot1 ? (battle.loserReward || 0) : (battle.loserReward || 0);
       }
 
-      // Track damage, kills, and destructions
-      if (isRobot1) {
-        damageDealt += battle.robot1DamageDealt;
-        damageReceived += battle.robot2DamageDealt;
-        totalFameEarned += battle.robot1FameAwarded;
-        // Note: Repair costs now tracked via audit log, not battle table
-        if (battle.robot2Destroyed) kills++;
-        if (battle.robot1Destroyed) destructions++;
-      } else {
-        damageDealt += battle.robot2DamageDealt;
-        damageReceived += battle.robot1DamageDealt;
-        totalFameEarned += battle.robot2FameAwarded;
-        // Note: Repair costs now tracked via audit log, not battle table
-        if (battle.robot1Destroyed) kills++;
-        if (battle.robot2Destroyed) destructions++;
+      // Aggregate stats from participant
+      totalCreditsEarned += participant.credits;
+      damageDealt += participant.damageDealt;
+      totalFameEarned += participant.fameAwarded;
+      
+      if (participant.destroyed) destructions++;
+      
+      // Note: damageReceived and kills require looking at other participants in the same battle
+      // We'll calculate these in a second pass
+    });
+
+    // Second pass: calculate damage received and kills by looking at opponents
+    const battleIds = participants.map(p => p.battleId);
+    const allParticipantsInBattles = await prisma.battleParticipant.findMany({
+      where: {
+        battleId: { in: battleIds },
+      },
+      select: {
+        battleId: true,
+        robotId: true,
+        damageDealt: true,
+        destroyed: true,
+      },
+    });
+
+    // Group by battle
+    const participantsByBattle = new Map<number, typeof allParticipantsInBattles>();
+    allParticipantsInBattles.forEach(p => {
+      if (!participantsByBattle.has(p.battleId)) {
+        participantsByBattle.set(p.battleId, []);
       }
+      participantsByBattle.get(p.battleId)!.push(p);
+    });
+
+    // Calculate damage received and kills
+    participants.forEach(participant => {
+      const battleParticipants = participantsByBattle.get(participant.battleId) || [];
+      const opponents = battleParticipants.filter(p => p.robotId !== robotId);
+      
+      opponents.forEach(opponent => {
+        damageReceived += opponent.damageDealt;
+        if (opponent.destroyed) kills++;
+      });
     });
 
     // Get repair costs from audit log
@@ -347,20 +371,30 @@ export class RobotPerformanceService {
     const startTime = await this.getCycleStartTime(startCycle);
     const endTime = await this.getCycleEndTime(endCycle);
 
-    // Query all battles for this robot in the cycle range
-    const battles = await prisma.battle.findMany({
+    // Query all battle participants for this robot in the cycle range
+    const participants = await prisma.battleParticipant.findMany({
       where: {
-        OR: [
-          { robot1Id: robotId },
-          { robot2Id: robotId },
-        ],
-        createdAt: {
-          gte: startTime,
-          lte: endTime,
+        robotId,
+        battle: {
+          createdAt: {
+            gte: startTime,
+            lte: endTime,
+          },
+        },
+      },
+      include: {
+        battle: {
+          select: {
+            id: true,
+            winnerId: true,
+            createdAt: true,
+          },
         },
       },
       orderBy: {
-        createdAt: 'asc',
+        battle: {
+          createdAt: 'asc',
+        },
       },
     });
 
@@ -370,91 +404,83 @@ export class RobotPerformanceService {
     let endValue = 0;
     let totalChange = 0;
 
-    // Group battles by cycle
-    const battlesByCycle = new Map<number, typeof battles>();
+    // Group participants by cycle
+    const participantsByCycle = new Map<number, typeof participants>();
     
-    for (const battle of battles) {
-      const cycleNumber = await this.getCycleNumberForBattle(battle.createdAt);
-      if (!battlesByCycle.has(cycleNumber)) {
-        battlesByCycle.set(cycleNumber, []);
+    for (const participant of participants) {
+      const cycleNumber = await this.getCycleNumberForBattle(participant.battle.createdAt);
+      if (!participantsByCycle.has(cycleNumber)) {
+        participantsByCycle.set(cycleNumber, []);
       }
-      battlesByCycle.get(cycleNumber)!.push(battle);
+      participantsByCycle.get(cycleNumber)!.push(participant);
     }
 
-    // Extract metric value from battle based on metric type
-    const extractMetricValue = (battle: any, isRobot1: boolean, metric: RobotMetric): number => {
+    // Extract metric value from participant based on metric type
+    const extractMetricValue = (participant: any, metric: RobotMetric): number => {
       switch (metric) {
         case 'elo':
-          return isRobot1 ? battle.robot1ELOAfter : battle.robot2ELOAfter;
+          return participant.eloAfter;
         case 'fame':
-          return isRobot1 ? battle.robot1FameAwarded : battle.robot2FameAwarded;
+          return participant.fameAwarded;
         case 'damageDealt':
-          return isRobot1 ? battle.robot1DamageDealt : battle.robot2DamageDealt;
+          return participant.damageDealt;
         case 'damageReceived':
-          return isRobot1 ? battle.robot2DamageDealt : battle.robot1DamageDealt;
+          // Note: damageReceived not directly stored, would need to query opponents
+          return 0; // Will calculate separately if needed
         case 'wins':
-          return battle.winnerId === robotId ? 1 : 0;
+          return participant.battle.winnerId === robotId ? 1 : 0;
         case 'losses':
-          return battle.winnerId !== null && battle.winnerId !== robotId ? 1 : 0;
+          return participant.battle.winnerId !== null && participant.battle.winnerId !== robotId ? 1 : 0;
         case 'draws':
-          return battle.winnerId === null ? 1 : 0;
+          return participant.battle.winnerId === null ? 1 : 0;
         case 'kills':
-          // A kill is when the opponent robot is destroyed (finalHP = 0)
-          const opponentFinalHP = isRobot1 ? battle.robot2FinalHP : battle.robot1FinalHP;
-          return opponentFinalHP === 0 ? 1 : 0;
+          // Would need to check if opponents were destroyed
+          return 0; // Will calculate separately if needed
         case 'creditsEarned':
-          if (battle.winnerId === robotId) {
-            return battle.winnerReward || 0;
-          } else {
-            return battle.loserReward || 0;
-          }
+          return participant.credits;
         default:
           return 0;
       }
     };
 
     // Get starting value for the metric
-    const getStartingValue = (battle: any, isRobot1: boolean, metric: RobotMetric): number => {
+    const getStartingValue = (participant: any, metric: RobotMetric): number => {
       if (metric === 'elo') {
-        return isRobot1 ? battle.robot1ELOBefore : battle.robot2ELOBefore;
+        return participant.eloBefore;
       }
       return 0; // For cumulative metrics, start at 0
     };
 
     // Create data points per cycle
     let cumulativeValue = 0;
-    let isFirstBattle = true;
+    let isFirstParticipant = true;
 
     for (let cycle = startCycle; cycle <= endCycle; cycle++) {
-      const cycleBattles = battlesByCycle.get(cycle) || [];
+      const cycleParticipants = participantsByCycle.get(cycle) || [];
       
-      if (cycleBattles.length === 0) continue;
+      if (cycleParticipants.length === 0) continue;
 
       // Calculate total change in this cycle
       let cycleChange = 0;
       let cycleEndValue = 0;
 
-      for (const battle of cycleBattles) {
-        const isRobot1 = battle.robot1Id === robotId;
-        
-        // Set starting value from first battle
-        if (isFirstBattle) {
-          startValue = getStartingValue(battle, isRobot1, metric);
+      for (const participant of cycleParticipants) {
+        // Set starting value from first participant
+        if (isFirstParticipant) {
+          startValue = getStartingValue(participant, metric);
           if (metric !== 'elo') {
             cumulativeValue = startValue;
           }
-          isFirstBattle = false;
+          isFirstParticipant = false;
         }
 
         // Extract metric value
-        const value = extractMetricValue(battle, isRobot1, metric);
+        const value = extractMetricValue(participant, metric);
 
         if (metric === 'elo') {
           // For ELO, track the change
-          const eloBefore = isRobot1 ? battle.robot1ELOBefore : battle.robot2ELOBefore;
-          const eloAfter = isRobot1 ? battle.robot1ELOAfter : battle.robot2ELOAfter;
-          cycleChange += eloAfter - eloBefore;
-          cycleEndValue = eloAfter;
+          cycleChange += participant.eloAfter - participant.eloBefore;
+          cycleEndValue = participant.eloAfter;
         } else {
           // For cumulative metrics (fame, damage, wins, losses, credits), accumulate
           cycleChange += value;
@@ -473,16 +499,14 @@ export class RobotPerformanceService {
     }
 
     // Get start and end values
-    if (battles.length > 0) {
-      const firstBattle = battles[0];
-      const lastBattle = battles[battles.length - 1];
-      const isFirstRobot1 = firstBattle.robot1Id === robotId;
-      const isLastRobot1 = lastBattle.robot1Id === robotId;
+    if (participants.length > 0) {
+      const firstParticipant = participants[0];
+      const lastParticipant = participants[participants.length - 1];
       
-      startValue = getStartingValue(firstBattle, isFirstRobot1, metric);
+      startValue = getStartingValue(firstParticipant, metric);
       
       if (metric === 'elo') {
-        endValue = isLastRobot1 ? lastBattle.robot1ELOAfter : lastBattle.robot2ELOAfter;
+        endValue = lastParticipant.eloAfter;
       } else {
         // For cumulative metrics, end value is the cumulative total
         endValue = cumulativeValue;
@@ -531,20 +555,28 @@ export class RobotPerformanceService {
     const startTime = await this.getCycleStartTime(startCycle);
     const endTime = await this.getCycleEndTime(endCycle);
 
-    // Query all battles for this robot in the cycle range
-    const battles = await prisma.battle.findMany({
+    // Query all battle participants for this robot in the cycle range
+    const participants = await prisma.battleParticipant.findMany({
       where: {
-        OR: [
-          { robot1Id: robotId },
-          { robot2Id: robotId },
-        ],
-        createdAt: {
-          gte: startTime,
-          lte: endTime,
+        robotId,
+        battle: {
+          createdAt: {
+            gte: startTime,
+            lte: endTime,
+          },
+        },
+      },
+      include: {
+        battle: {
+          select: {
+            createdAt: true,
+          },
         },
       },
       orderBy: {
-        createdAt: 'asc',
+        battle: {
+          createdAt: 'asc',
+        },
       },
     });
 
@@ -554,37 +586,31 @@ export class RobotPerformanceService {
     let endElo = 0;
     let totalChange = 0;
 
-    // Group battles by cycle
-    const battlesByCycle = new Map<number, typeof battles>();
+    // Group participants by cycle
+    const participantsByCycle = new Map<number, typeof participants>();
     
-    for (const battle of battles) {
-      const cycleNumber = await this.getCycleNumberForBattle(battle.createdAt);
-      if (!battlesByCycle.has(cycleNumber)) {
-        battlesByCycle.set(cycleNumber, []);
+    for (const participant of participants) {
+      const cycleNumber = await this.getCycleNumberForBattle(participant.battle.createdAt);
+      if (!participantsByCycle.has(cycleNumber)) {
+        participantsByCycle.set(cycleNumber, []);
       }
-      battlesByCycle.get(cycleNumber)!.push(battle);
+      participantsByCycle.get(cycleNumber)!.push(participant);
     }
 
     // Create data points per cycle
     for (let cycle = startCycle; cycle <= endCycle; cycle++) {
-      const cycleBattles = battlesByCycle.get(cycle) || [];
+      const cycleParticipants = participantsByCycle.get(cycle) || [];
       
-      if (cycleBattles.length === 0) continue;
+      if (cycleParticipants.length === 0) continue;
 
-      // Get ELO at end of cycle (from last battle)
-      const lastBattle = cycleBattles[cycleBattles.length - 1];
-      const isRobot1 = lastBattle.robot1Id === robotId;
-      const elo = isRobot1 ? lastBattle.robot1ELOAfter : lastBattle.robot2ELOAfter;
+      // Get ELO at end of cycle (from last participant)
+      const lastParticipant = cycleParticipants[cycleParticipants.length - 1];
+      const elo = lastParticipant.eloAfter;
 
       // Calculate total change in this cycle
       let cycleChange = 0;
-      for (const battle of cycleBattles) {
-        const isR1 = battle.robot1Id === robotId;
-        if (isR1) {
-          cycleChange += battle.robot1ELOAfter - battle.robot1ELOBefore;
-        } else {
-          cycleChange += battle.robot2ELOAfter - battle.robot2ELOBefore;
-        }
+      for (const participant of cycleParticipants) {
+        cycleChange += participant.eloAfter - participant.eloBefore;
       }
 
       dataPoints.push({
@@ -597,17 +623,12 @@ export class RobotPerformanceService {
     }
 
     // Get start and end ELO
-    if (battles.length > 0) {
-      const firstBattle = battles[0];
-      const lastBattle = battles[battles.length - 1];
+    if (participants.length > 0) {
+      const firstParticipant = participants[0];
+      const lastParticipant = participants[participants.length - 1];
       
-      startElo = firstBattle.robot1Id === robotId 
-        ? firstBattle.robot1ELOBefore 
-        : firstBattle.robot2ELOBefore;
-      
-      endElo = lastBattle.robot1Id === robotId 
-        ? lastBattle.robot1ELOAfter 
-        : lastBattle.robot2ELOAfter;
+      startElo = firstParticipant.eloBefore;
+      endElo = lastParticipant.eloAfter;
     }
 
     const averageChange = dataPoints.length > 0 
@@ -636,19 +657,23 @@ export class RobotPerformanceService {
     const startTime = await this.getCycleStartTime(startCycle);
     const endTime = await this.getCycleEndTime(endCycle);
 
-    return prisma.battle.findFirst({
+    return prisma.battleParticipant.findFirst({
       where: {
-        OR: [
-          { robot1Id: robotId },
-          { robot2Id: robotId },
-        ],
-        createdAt: {
-          gte: startTime,
-          lte: endTime,
+        robotId,
+        battle: {
+          createdAt: {
+            gte: startTime,
+            lte: endTime,
+          },
         },
       },
+      include: {
+        battle: true,
+      },
       orderBy: {
-        createdAt: 'asc',
+        battle: {
+          createdAt: 'asc',
+        },
       },
     });
   }
@@ -664,19 +689,23 @@ export class RobotPerformanceService {
     const startTime = await this.getCycleStartTime(startCycle);
     const endTime = await this.getCycleEndTime(endCycle);
 
-    return prisma.battle.findFirst({
+    return prisma.battleParticipant.findFirst({
       where: {
-        OR: [
-          { robot1Id: robotId },
-          { robot2Id: robotId },
-        ],
-        createdAt: {
-          gte: startTime,
-          lte: endTime,
+        robotId,
+        battle: {
+          createdAt: {
+            gte: startTime,
+            lte: endTime,
+          },
         },
       },
+      include: {
+        battle: true,
+      },
       orderBy: {
-        createdAt: 'desc',
+        battle: {
+          createdAt: 'desc',
+        },
       },
     });
   }

@@ -112,8 +112,21 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
     testUserId2 = user2.id;
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
+    // Get current cycle number for clearing cache
+    const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+    const cycleNumber = metadata?.totalCycles || 0;
+    clearSequenceCache(cycleNumber);
+
     // Cleanup - delete in correct order to avoid foreign key constraints
+    await prisma.battleParticipant.deleteMany({
+      where: {
+        robot: {
+          OR: [{ userId: testUserId1 }, { userId: testUserId2 }],
+        },
+      },
+    });
+
     await prisma.battle.deleteMany({
       where: {
         OR: [
@@ -142,6 +155,15 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
       },
     });
 
+    await prisma.facility.deleteMany({
+      where: {
+        OR: [{ userId: testUserId1 }, { userId: testUserId2 }],
+      },
+    });
+  });
+
+  afterAll(async () => {
+    // Final cleanup of users
     await prisma.user.deleteMany({
       where: {
         OR: [{ id: testUserId1 }, { id: testUserId2 }],
@@ -149,13 +171,6 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
     });
 
     await prisma.$disconnect();
-  });
-
-  beforeEach(async () => {
-    // Get current cycle number for clearing cache
-    const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    const cycleNumber = metadata?.totalCycles || 0;
-    clearSequenceCache(cycleNumber);
   });
 
   it('should include totalStreamingRevenue property in battle execution summary', async () => {
@@ -256,9 +271,9 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
               id: { in: battles.map(b => b.id) },
             },
           });
-          await prisma.scheduledMatch.delete({ where: { id: match.id } });
-          await prisma.robot.delete({ where: { id: robot1.id } });
-          await prisma.robot.delete({ where: { id: robot2.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+          await prisma.robot.deleteMany({ where: { id: robot1.id } });
+          await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
       { numRuns: 10 }

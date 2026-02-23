@@ -744,7 +744,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             
             // Clean up
             await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.delete({ where: { id: user.id } });
+            await prisma.user.deleteMany({ where: { id: user.id } });
             
             // Verify all robots are counted
             expect(count).toBe(robotHPs.length);
@@ -804,7 +804,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             
             // Clean up
             await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.delete({ where: { id: user.id } });
+            await prisma.user.deleteMany({ where: { id: user.id } });
             
             // Verify only regular robots are counted
             expect(count).toBe(numRobots);
@@ -867,7 +867,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             
             // Clean up
             await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.delete({ where: { id: user.id } });
+            await prisma.user.deleteMany({ where: { id: user.id } });
             
             // Verify all robots are counted (healthy + destroyed)
             expect(count).toBe(numHealthy + numDestroyed);
@@ -930,7 +930,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             
             // Clean up
             await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.delete({ where: { id: user.id } });
+            await prisma.user.deleteMany({ where: { id: user.id } });
             
             // Verify all robots are counted (healthy + damaged)
             expect(count).toBe(numHealthy + numDamaged);
@@ -1003,7 +1003,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             
             // Clean up
             await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.delete({ where: { id: user.id } });
+            await prisma.user.deleteMany({ where: { id: user.id } });
             
             // Verify repair cost uses the correct robot count
             expect(repairCost).toBe(expectedCost);
@@ -1062,7 +1062,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
             
             // Clean up
-            await prisma.user.delete({ where: { id: user.id } });
+            await prisma.user.deleteMany({ where: { id: user.id } });
             
             // Verify repair cost has no multi-robot bonus
             expect(repairCost).toBe(expectedCost);

@@ -95,7 +95,7 @@ export default function MultiplierBreakdown({ multiplierData }: MultiplierBreakd
         <div className="p-4 bg-gray-700/50 rounded border border-gray-600 text-center">
           <div className="text-gray-400 mb-2">No passive income streams active</div>
           <div className="text-sm text-gray-500">
-            Upgrade Income Generator facility to unlock merchandising and streaming revenue
+            Upgrade Merchandising Hub facility to unlock merchandising and streaming revenue
           </div>
         </div>
       )}

@@ -168,6 +168,7 @@ export interface LeagueRobot {
   userId: number;
   user: {
     username: string;
+    stableName: string | null;
   };
 }
 
@@ -204,10 +205,20 @@ export const getUpcomingMatches = async (): Promise<ScheduledMatch[]> => {
 
 export const getMatchHistory = async (
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team'
 ): Promise<PaginatedResponse<BattleHistory>> => {
+  const params: any = { page, perPage: pageSize };
+  
+  // Add battleType filter if not 'overall'
+  if (battleType && battleType !== 'overall') {
+    params.battleType = battleType;
+  }
+  
+  console.log('[API] getMatchHistory params:', params);
+  
   const response = await axios.get(`${API_BASE_URL}/matches/history`, {
-    params: { page, perPage: pageSize },
+    params,
     headers: getAuthHeaders()
   });
   return response.data;

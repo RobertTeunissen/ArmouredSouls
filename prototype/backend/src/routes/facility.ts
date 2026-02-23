@@ -192,7 +192,7 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
       const cycleMetadata = await prisma.cycleMetadata.findUnique({
         where: { id: 1 },
       });
-      const currentCycle = cycleMetadata?.totalCycles || 0;
+      const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
 
       // Log the facility upgrade/purchase event with balance tracking
       await eventLogger.logFacilityTransaction(

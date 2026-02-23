@@ -6,6 +6,8 @@ import app from './testApp';
 const prisma = new PrismaClient();
 
 describe('Stance and Yield Threshold API Endpoints', () => {
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
   let testUser: any;
   let testRobot: any;
   let authToken: string;
@@ -16,13 +18,36 @@ describe('Stance and Yield Threshold API Endpoints', () => {
   });
 
   afterAll(async () => {
-    // Cleanup
-    if (testRobot) {
-      await prisma.robot.delete({ where: { id: testRobot.id } }).catch(() => {});
+    // Cleanup in correct order
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
     }
-    if (testUser) {
-      await prisma.user.delete({ where: { id: testUser.id } }).catch(() => {});
+
+    if (testUserIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.facility.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
     }
+
     await prisma.$disconnect();
   });
 
@@ -30,11 +55,12 @@ describe('Stance and Yield Threshold API Endpoints', () => {
     // Create a test user
     testUser = await prisma.user.create({
       data: {
-        username: `testuser_${Date.now()}`,
+        username: `testuser_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         passwordHash: 'test_hash',
         currency: 10000000,
       },
     });
+    testUserIds.push(testUser.id);
 
     // Generate auth token
     authToken = jwt.sign(
@@ -47,7 +73,7 @@ describe('Stance and Yield Threshold API Endpoints', () => {
     testRobot = await prisma.robot.create({
       data: {
         userId: testUser.id,
-        name: 'Test Robot',
+        name: `Test Robot ${Date.now()}`,
         currentHP: 100,
         maxHP: 100,
         currentShield: 20,
@@ -56,18 +82,13 @@ describe('Stance and Yield Threshold API Endpoints', () => {
         yieldThreshold: 10,
       },
     });
+    testRobotIds.push(testRobot.id);
   });
 
   afterEach(async () => {
-    // Cleanup after each test
-    if (testRobot) {
-      await prisma.robot.delete({ where: { id: testRobot.id } }).catch(() => {});
-      testRobot = null;
-    }
-    if (testUser) {
-      await prisma.user.delete({ where: { id: testUser.id } }).catch(() => {});
-      testUser = null;
-    }
+    // Reset for next test
+    testRobot = null;
+    testUser = null;
   });
 
   describe('PATCH /api/robots/:id/stance', () => {
@@ -151,6 +172,7 @@ describe('Stance and Yield Threshold API Endpoints', () => {
           currency: 1000000,
         },
       });
+      testUserIds.push(otherUser.id);
 
       const otherToken = jwt.sign(
         { userId: otherUser.id, username: otherUser.username },
@@ -165,9 +187,6 @@ describe('Stance and Yield Threshold API Endpoints', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.error).toContain('Not authorized');
-
-      // Cleanup
-      await prisma.user.delete({ where: { id: otherUser.id } });
     });
 
     it('should return 401 without authentication', async () => {
@@ -282,6 +301,7 @@ describe('Stance and Yield Threshold API Endpoints', () => {
           currency: 1000000,
         },
       });
+      testUserIds.push(otherUser.id);
 
       const otherToken = jwt.sign(
         { userId: otherUser.id, username: otherUser.username },
@@ -295,9 +315,6 @@ describe('Stance and Yield Threshold API Endpoints', () => {
         .send({ yieldThreshold: 25 });
 
       expect(response.status).toBe(403);
-
-      // Cleanup
-      await prisma.user.delete({ where: { id: otherUser.id } });
     });
 
     it('should return 401 without authentication', async () => {

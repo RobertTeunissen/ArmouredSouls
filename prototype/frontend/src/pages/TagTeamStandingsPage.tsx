@@ -23,12 +23,31 @@ function TagTeamStandingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [userTeamTiers, setUserTeamTiers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
       fetchStandings();
+      fetchUserTeamTiers();
     }
   }, [user, selectedTier, page]);
+
+  const fetchUserTeamTiers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const response = await axios.get('http://localhost:3001/api/tag-teams', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      const teams = response.data.teams || [];
+      const tiers = new Set<string>(teams.map((team: any) => team.tagTeamLeague));
+      setUserTeamTiers(tiers);
+    } catch (err) {
+      console.error('Failed to fetch user team tiers:', err);
+    }
+  };
 
   const fetchStandings = async () => {
     try {
@@ -90,13 +109,14 @@ function TagTeamStandingsPage() {
             const tierColor = getTagTeamLeagueTierColor(tier);
             const tierIcon = getTagTeamLeagueTierIcon(tier);
             const isActive = selectedTier === tier;
+            const hasUserTeams = userTeamTiers.has(tier);
 
             return (
               <button
                 key={tier}
                 onClick={() => handleTierChange(tier)}
                 className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all
+                  flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all relative
                   ${isActive
                     ? `${tierColor} bg-white/10 border-2 border-current`
                     : 'text-gray-400 bg-surface-elevated border-2 border-gray-700 hover:border-gray-600'
@@ -105,6 +125,9 @@ function TagTeamStandingsPage() {
               >
                 <span>{tierIcon}</span>
                 <span>{tierName}</span>
+                {hasUserTeams && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-gray-900"></span>
+                )}
               </button>
             );
           })}

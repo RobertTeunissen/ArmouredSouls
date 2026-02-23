@@ -8,12 +8,20 @@ import prisma from '../src/lib/prisma';
 import { eventLogger, EventType } from '../src/services/eventLogger';
 
 describe('EventLogger Integration', () => {
+  let testCycleNumbers: number[] = [];
+
   beforeEach(async () => {
     // Clean up audit logs before each test
     await prisma.auditLog.deleteMany({});
   });
 
   afterAll(async () => {
+    // Final cleanup
+    if (testCycleNumbers.length > 0) {
+      await prisma.auditLog.deleteMany({
+        where: { cycleNumber: { in: testCycleNumbers } },
+      });
+    }
     await prisma.$disconnect();
   });
 

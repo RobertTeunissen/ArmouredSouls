@@ -119,8 +119,19 @@ async function createWeaponForRobot(userId: number, robotId: number): Promise<vo
 }
 
 describe('Multi-Match Scheduling and Execution - Property Tests', () => {
-  beforeEach(async () => {
+  beforeAll(async () => {
+    await prisma.$connect();
+    // Ensure cycle metadata exists and set to odd cycle
+    await prisma.cycleMetadata.upsert({
+      where: { id: 1 },
+      update: { totalCycles: 1 },
+      create: { id: 1, totalCycles: 1 },
+    });
+  });
+
+  afterEach(async () => {
     // Clean up database in correct order (respecting foreign keys)
+    await prisma.battleParticipant.deleteMany();
     await prisma.battle.deleteMany();
     await prisma.tagTeamMatch.deleteMany();
     await prisma.scheduledMatch.deleteMany();
@@ -128,13 +139,6 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
     await prisma.weaponInventory.deleteMany();
     await prisma.robot.deleteMany();
     await prisma.user.deleteMany();
-
-    // Ensure cycle metadata exists and set to odd cycle
-    await prisma.cycleMetadata.upsert({
-      where: { id: 1 },
-      update: { totalCycles: 1 },
-      create: { id: 1, totalCycles: 1 },
-    });
   });
 
   afterAll(async () => {

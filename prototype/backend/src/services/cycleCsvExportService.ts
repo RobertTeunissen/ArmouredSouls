@@ -29,6 +29,7 @@ interface BattleCSVRow {
  */
 export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<string> {
   // Get all battle_complete events for this cycle
+  // NEW: Each event is for ONE robot (not both)
   const battleEvents = await prisma.auditLog.findMany({
     where: {
       cycleNumber,
@@ -42,68 +43,34 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
   for (const event of battleEvents) {
     const payload = event.payload as any;
     
-    // Get robot details
-    const robot1 = await prisma.robot.findUnique({
-      where: { id: payload.robot1Id },
+    // Get robot details (this robot)
+    const robot = await prisma.robot.findUnique({
+      where: { id: event.robotId || 0 },
       select: { id: true, name: true },
     });
     
-    const robot2 = await prisma.robot.findUnique({
-      where: { id: payload.robot2Id },
+    // Get opponent details
+    const opponent = await prisma.robot.findUnique({
+      where: { id: payload.opponentId },
       select: { id: true, name: true },
     });
 
-    if (!robot1 || !robot2) continue;
+    if (!robot || !opponent) continue;
 
-    const isByeMatch = payload.isByeMatch || false;
-    const isDraw = payload.isDraw || false;
-    const winnerId = payload.winnerId;
-
-    // Determine results for each robot
-    let robot1Result = 'loss';
-    let robot2Result = 'loss';
-    
-    if (isDraw) {
-      robot1Result = 'draw';
-      robot2Result = 'draw';
-    } else if (winnerId === robot1.id) {
-      robot1Result = 'win';
-      robot2Result = 'loss';
-    } else if (winnerId === robot2.id) {
-      robot1Result = 'loss';
-      robot2Result = 'win';
-    }
-
-    // Add row for robot1
+    // Add row for this robot (event already has all data for this robot)
     rows.push({
       cycle: cycleNumber,
-      battle_id: payload.battleId,
-      robot_id: robot1.id,
-      robot_name: robot1.name,
-      opponent_id: robot2.id,
-      opponent_name: robot2.name,
-      result: robot1Result,
-      winnings: robot1Result === 'win' ? (payload.winnerReward || 0) : (payload.loserReward || 0),
-      streaming_revenue: isByeMatch ? 0 : (payload.streamingRevenue1 || 0),
-      repair_cost: payload.robot1RepairCost || 0,
-      prestige_awarded: payload.robot1PrestigeAwarded || 0,
-      fame_awarded: payload.robot1FameAwarded || 0,
-    });
-
-    // Add row for robot2
-    rows.push({
-      cycle: cycleNumber,
-      battle_id: payload.battleId,
-      robot_id: robot2.id,
-      robot_name: robot2.name,
-      opponent_id: robot1.id,
-      opponent_name: robot1.name,
-      result: robot2Result,
-      winnings: robot2Result === 'win' ? (payload.winnerReward || 0) : (payload.loserReward || 0),
-      streaming_revenue: isByeMatch ? 0 : (payload.streamingRevenue2 || 0),
-      repair_cost: payload.robot2RepairCost || 0,
-      prestige_awarded: payload.robot2PrestigeAwarded || 0,
-      fame_awarded: payload.robot2FameAwarded || 0,
+      battle_id: event.battleId || 0,
+      robot_id: robot.id,
+      robot_name: robot.name,
+      opponent_id: opponent.id,
+      opponent_name: opponent.name,
+      result: payload.result || 'unknown',
+      winnings: payload.credits || 0,
+      streaming_revenue: payload.isByeMatch ? 0 : (payload.streamingRevenue || 0),
+      repair_cost: payload.repairCost || 0,
+      prestige_awarded: payload.prestige || 0,
+      fame_awarded: payload.fame || 0,
     });
   }
 

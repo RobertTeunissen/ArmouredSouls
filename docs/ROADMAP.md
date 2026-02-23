@@ -98,7 +98,7 @@ Phase 1 is in progress with major core systems implemented. The prototype includ
   11. **Medical Bay**: Placeholder for robot recovery speed
   12. **Storage Facility**: Placeholder for increased storage capacity
   13. **Booking Office**: Placeholder for tournament management
-  14. **Income Generator**: Placeholder for passive credit generation
+  14. **Merchandising Hub**: Generates passive income from merchandise sales (formerly "Income Generator")
  
 Note: the overview above is not up to date, more facilities are actually working. Still under review. Will be reviewed together with the UX overhaul of the Facilities page.
  

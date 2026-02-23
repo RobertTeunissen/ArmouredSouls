@@ -5,6 +5,10 @@ import { validateStableName, validatePassword } from '../src/utils/validation';
 const NUM_RUNS = 100;
 
 describe('Validation Service - Property Tests', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   describe('Property 1: Valid stable names are accepted', () => {
     /**
      * **Validates: Requirements 1.2, 1.4, 1.5**

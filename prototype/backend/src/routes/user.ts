@@ -18,11 +18,6 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
         currency: true,
         prestige: true,
         createdAt: true,
-        // Statistics fields
-        totalBattles: true,
-        totalWins: true,
-        highestELO: true,
-        championshipTitles: true,
         // Profile fields
         stableName: true,
         profileVisibility: true,
@@ -371,10 +366,6 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
         currency: true,
         prestige: true,
         createdAt: true,
-        totalBattles: true,
-        totalWins: true,
-        highestELO: true,
-        championshipTitles: true,
         stableName: true,
         profileVisibility: true,
         notificationsBattle: true,

@@ -1,6 +1,10 @@
 import { calculateRepairCost } from '../src/utils/robotCalculations';
 
 describe('calculateRepairCost - Multi-Robot Discount', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   const sumOfAllAttributes = 230; // Sum of all 23 attributes
   const baseRepairCost = sumOfAllAttributes * 100; // 23,000
 

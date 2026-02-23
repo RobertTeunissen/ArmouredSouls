@@ -86,8 +86,8 @@ async function ensureTestRobot(robotId: number, userId: number) {
 }
 
 describe('CycleSnapshotService Property-Based Tests', () => {
-  beforeEach(async () => {
-    // Clean up before each test (order matters due to foreign keys)
+  afterEach(async () => {
+    // Clean up after each test in correct dependency order
     await prisma.cycleSnapshot.deleteMany({});
     await prisma.auditLog.deleteMany({});
     await prisma.battle.deleteMany({});
@@ -97,6 +97,13 @@ describe('CycleSnapshotService Property-Based Tests', () => {
     await prisma.user.deleteMany({});
     // Don't delete weapons - they're seed data
     
+    // Clear test data caches
+    testUsers.clear();
+    testRobots.clear();
+    robotIdMapping.clear();
+  });
+
+  beforeEach(async () => {
     // Clear test data caches
     testUsers.clear();
     testRobots.clear();

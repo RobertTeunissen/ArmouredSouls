@@ -12,7 +12,7 @@ const EMOJI_FALLBACKS: Record<string, string> = {
   training_facility: '🏋️',
   weapons_workshop: '🔧',
   repair_bay: '🔩',
-  income_generator: '💰',
+  merchandising_hub: '💰',
   streaming_studio: '📺',
   roster_expansion: '🏭',
   storage_facility: '📦',

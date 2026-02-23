@@ -8,31 +8,31 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface RecordsData {
   combat: {
-    fastestVictory: FastestVictory | null;
-    longestBattle: LongestBattle | null;
-    mostDamageInBattle: MostDamageInBattle | null;
-    narrowestVictory: NarrowestVictory | null;
+    fastestVictory: FastestVictory[];
+    longestBattle: LongestBattle[];
+    mostDamageInBattle: MostDamageInBattle[];
+    narrowestVictory: NarrowestVictory[];
   };
   upsets: {
-    biggestUpset: BiggestUpset | null;
-    biggestEloGain: BiggestEloGain | null;
-    biggestEloLoss: BiggestEloLoss | null;
+    biggestUpset: BiggestUpset[];
+    biggestEloGain: BiggestEloGain[];
+    biggestEloLoss: BiggestEloLoss[];
   };
   career: {
-    mostBattles: MostBattles | null;
-    highestWinRate: HighestWinRate | null;
-    mostLifetimeDamage: MostLifetimeDamage | null;
-    highestElo: HighestElo | null;
-    mostKills: MostKills | null;
+    mostBattles: MostBattles[];
+    highestWinRate: HighestWinRate[];
+    mostLifetimeDamage: MostLifetimeDamage[];
+    highestElo: HighestElo[];
+    mostKills: MostKills[];
   };
   economic: {
-    mostExpensiveBattle: MostExpensiveBattle | null;
-    highestFame: HighestFame | null;
-    richestStables: RichestStables | null;
+    mostExpensiveBattle: MostExpensiveBattle[];
+    highestFame: HighestFame[];
+    richestStables: RichestStables[];
   };
   prestige: {
-    highestPrestige: HighestPrestige | null;
-    mostTitles: MostTitles | null;
+    highestPrestige: HighestPrestige[];
+    mostTitles: MostTitles[];
   };
   timestamp: string;
 }
@@ -245,7 +245,7 @@ function HallOfRecordsPage() {
   };
 
   const handleBattleClick = (battleId: number) => {
-    navigate(`/battle-history?battle=${battleId}`);
+    navigate(`/battle/${battleId}`);
   };
 
   const categories = [
@@ -263,7 +263,7 @@ function HallOfRecordsPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white pb-24 md:pb-8">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 max-w-[1800px]">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-yellow-400 mb-2">
@@ -314,65 +314,85 @@ function HallOfRecordsPage() {
 
         {/* Records Content */}
         {!loading && !error && records && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-8">
             {/* Combat Records */}
             {activeCategory === 'combat' && (
               <>
                 {/* Fastest Victory */}
-                {records.combat.fastestVictory && (
-                  <RecordCard
-                    title="⚡ Fastest Victory"
-                    value={formatDuration(records.combat.fastestVictory.durationSeconds)}
-                    description={`${records.combat.fastestVictory.winner.name} defeated ${records.combat.fastestVictory.loser.name}`}
-                    details={[
-                      `Winner: ${records.combat.fastestVictory.winner.username}`,
-                      `Date: ${formatDate(records.combat.fastestVictory.date)}`,
-                    ]}
-                    onClick={() => handleBattleClick(records.combat.fastestVictory!.battleId)}
-                  />
+                {records.combat.fastestVictory.length > 0 && (
+                  <RecordSection title="⚡ Fastest Victory">
+                    {records.combat.fastestVictory.map((record, index) => (
+                      <RecordCard
+                        key={record.battleId}
+                        rank={index + 1}
+                        value={formatDuration(record.durationSeconds)}
+                        description={`${record.winner.name} defeated ${record.loser.name}`}
+                        details={[
+                          `Winner: ${record.winner.username}`,
+                          `Date: ${formatDate(record.date)}`,
+                        ]}
+                        onClick={() => handleBattleClick(record.battleId)}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Longest Battle */}
-                {records.combat.longestBattle && (
-                  <RecordCard
-                    title="⏱️ Longest Battle"
-                    value={formatDuration(records.combat.longestBattle.durationSeconds)}
-                    description={`${records.combat.longestBattle.winner.name} vs ${records.combat.longestBattle.loser.name}`}
-                    details={[
-                      `Winner: ${records.combat.longestBattle.winner.username}`,
-                      `Date: ${formatDate(records.combat.longestBattle.date)}`,
-                    ]}
-                    onClick={() => handleBattleClick(records.combat.longestBattle!.battleId)}
-                  />
+                {records.combat.longestBattle.length > 0 && (
+                  <RecordSection title="⏱️ Longest Battle">
+                    {records.combat.longestBattle.map((record, index) => (
+                      <RecordCard
+                        key={record.battleId}
+                        rank={index + 1}
+                        value={formatDuration(record.durationSeconds)}
+                        description={`${record.winner.name} vs ${record.loser.name}`}
+                        details={[
+                          `Winner: ${record.winner.username}`,
+                          `Date: ${formatDate(record.date)}`,
+                        ]}
+                        onClick={() => handleBattleClick(record.battleId)}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Most Damage */}
-                {records.combat.mostDamageInBattle && (
-                  <RecordCard
-                    title="💥 Most Damage in Single Battle"
-                    value={`${records.combat.mostDamageInBattle.damageDealt.toLocaleString()} damage`}
-                    description={`${records.combat.mostDamageInBattle.robot.name} vs ${records.combat.mostDamageInBattle.opponent.name}`}
-                    details={[
-                      `Robot: ${records.combat.mostDamageInBattle.robot.username}`,
-                      `Duration: ${formatDuration(records.combat.mostDamageInBattle.durationSeconds)}`,
-                      `Date: ${formatDate(records.combat.mostDamageInBattle.date)}`,
-                    ]}
-                    onClick={() => handleBattleClick(records.combat.mostDamageInBattle!.battleId)}
-                  />
+                {records.combat.mostDamageInBattle.length > 0 && (
+                  <RecordSection title="💥 Most Damage in Single Battle">
+                    {records.combat.mostDamageInBattle.map((record, index) => (
+                      <RecordCard
+                        key={record.battleId}
+                        rank={index + 1}
+                        value={`${record.damageDealt.toLocaleString()} damage`}
+                        description={`${record.robot.name} vs ${record.opponent.name}`}
+                        details={[
+                          `Robot: ${record.robot.username}`,
+                          `Duration: ${formatDuration(record.durationSeconds)}`,
+                          `Date: ${formatDate(record.date)}`,
+                        ]}
+                        onClick={() => handleBattleClick(record.battleId)}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Narrowest Victory */}
-                {records.combat.narrowestVictory && (
-                  <RecordCard
-                    title="🎯 Narrowest Victory"
-                    value={`${records.combat.narrowestVictory.remainingHP} HP remaining`}
-                    description={`${records.combat.narrowestVictory.winner.name} barely survived against ${records.combat.narrowestVictory.loser.name}`}
-                    details={[
-                      `Winner: ${records.combat.narrowestVictory.winner.username}`,
-                      `Date: ${formatDate(records.combat.narrowestVictory.date)}`,
-                    ]}
-                    onClick={() => handleBattleClick(records.combat.narrowestVictory!.battleId)}
-                  />
+                {records.combat.narrowestVictory.length > 0 && (
+                  <RecordSection title="🎯 Narrowest Victory">
+                    {records.combat.narrowestVictory.map((record, index) => (
+                      <RecordCard
+                        key={record.battleId}
+                        rank={index + 1}
+                        value={`${record.remainingHP} HP remaining`}
+                        description={`${record.winner.name} barely survived against ${record.loser.name}`}
+                        details={[
+                          `Winner: ${record.winner.username}`,
+                          `Date: ${formatDate(record.date)}`,
+                        ]}
+                        onClick={() => handleBattleClick(record.battleId)}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
               </>
             )}
@@ -381,46 +401,61 @@ function HallOfRecordsPage() {
             {activeCategory === 'upsets' && (
               <>
                 {/* Biggest Upset */}
-                {records.upsets.biggestUpset && (
-                  <RecordCard
-                    title="🎲 Biggest Upset"
-                    value={`${records.upsets.biggestUpset.eloDifference} ELO underdog`}
-                    description={`${records.upsets.biggestUpset.underdog.name} (${records.upsets.biggestUpset.underdog.eloBefore} ELO) defeated ${records.upsets.biggestUpset.favorite.name} (${records.upsets.biggestUpset.favorite.eloBefore} ELO)`}
-                    details={[
-                      `Underdog: ${records.upsets.biggestUpset.underdog.username}`,
-                      `Date: ${formatDate(records.upsets.biggestUpset.date)}`,
-                    ]}
-                    onClick={() => handleBattleClick(records.upsets.biggestUpset!.battleId)}
-                  />
+                {records.upsets.biggestUpset.length > 0 && (
+                  <RecordSection title="🎲 Biggest Upset">
+                    {records.upsets.biggestUpset.map((record, index) => (
+                      <RecordCard
+                        key={record.battleId}
+                        rank={index + 1}
+                        value={`${record.eloDifference} ELO underdog`}
+                        description={`${record.underdog.name} (${record.underdog.eloBefore} ELO) defeated ${record.favorite.name} (${record.favorite.eloBefore} ELO)`}
+                        details={[
+                          `Underdog: ${record.underdog.username}`,
+                          `Date: ${formatDate(record.date)}`,
+                        ]}
+                        onClick={() => handleBattleClick(record.battleId)}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Biggest ELO Gain */}
-                {records.upsets.biggestEloGain && (
-                  <RecordCard
-                    title="📈 Biggest ELO Gain"
-                    value={`+${records.upsets.biggestEloGain.eloChange} ELO`}
-                    description={`${records.upsets.biggestEloGain.winner.name} (${records.upsets.biggestEloGain.winner.eloBefore} → ${records.upsets.biggestEloGain.winner.eloAfter})`}
-                    details={[
-                      `Winner: ${records.upsets.biggestEloGain.winner.username}`,
-                      `Opponent ELO: ${records.upsets.biggestEloGain.loser.eloBefore}`,
-                      `Date: ${formatDate(records.upsets.biggestEloGain.date)}`,
-                    ]}
-                    onClick={() => handleBattleClick(records.upsets.biggestEloGain!.battleId)}
-                  />
+                {records.upsets.biggestEloGain.length > 0 && (
+                  <RecordSection title="📈 Biggest ELO Gain">
+                    {records.upsets.biggestEloGain.map((record, index) => (
+                      <RecordCard
+                        key={record.battleId}
+                        rank={index + 1}
+                        value={`+${record.eloChange} ELO`}
+                        description={`${record.winner.name} (${record.winner.eloBefore} → ${record.winner.eloAfter})`}
+                        details={[
+                          `Winner: ${record.winner.username}`,
+                          `Opponent ELO: ${record.loser.eloBefore}`,
+                          `Date: ${formatDate(record.date)}`,
+                        ]}
+                        onClick={() => handleBattleClick(record.battleId)}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Biggest ELO Loss */}
-                {records.upsets.biggestEloLoss && (
-                  <RecordCard
-                    title="📉 Biggest ELO Loss"
-                    value={`${records.upsets.biggestEloLoss.eloChange} ELO`}
-                    description={`${records.upsets.biggestEloLoss.loser.name} (${records.upsets.biggestEloLoss.loser.eloBefore} → ${records.upsets.biggestEloLoss.loser.eloAfter})`}
-                    details={[
-                      `Lost to: ${records.upsets.biggestEloLoss.winner.username}`,
-                      `Date: ${formatDate(records.upsets.biggestEloLoss.date)}`,
-                    ]}
-                    onClick={() => handleBattleClick(records.upsets.biggestEloLoss!.battleId)}
-                  />
+                {records.upsets.biggestEloLoss.length > 0 && (
+                  <RecordSection title="📉 Biggest ELO Loss">
+                    {records.upsets.biggestEloLoss.map((record, index) => (
+                      <RecordCard
+                        key={record.battleId}
+                        rank={index + 1}
+                        value={`-${record.eloChange} ELO`}
+                        description={`${record.loser.name} (${record.loser.eloBefore} → ${record.loser.eloAfter})`}
+                        details={[
+                          `Lost to: ${record.winner.username}`,
+                          `Date: ${formatDate(record.date)}`,
+                        ]}
+                        onClick={() => handleBattleClick(record.battleId)}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
               </>
             )}
@@ -429,70 +464,95 @@ function HallOfRecordsPage() {
             {activeCategory === 'career' && (
               <>
                 {/* Most Battles */}
-                {records.career.mostBattles && (
-                  <RecordCard
-                    title="🎖️ Most Battles Fought"
-                    value={`${records.career.mostBattles.totalBattles} battles`}
-                    description={`${records.career.mostBattles.robotName} by ${records.career.mostBattles.username}`}
-                    details={[
-                      `Record: ${records.career.mostBattles.wins}-${records.career.mostBattles.losses}-${records.career.mostBattles.draws}`,
-                      `Win Rate: ${records.career.mostBattles.winRate}%`,
-                      `Current ELO: ${records.career.mostBattles.elo}`,
-                    ]}
-                  />
+                {records.career.mostBattles.length > 0 && (
+                  <RecordSection title="🎖️ Most Battles Fought">
+                    {records.career.mostBattles.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.totalBattles} battles`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Record: ${record.wins}-${record.losses}-${record.draws}`,
+                          `Win Rate: ${record.winRate}%`,
+                          `Current ELO: ${record.elo}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Highest Win Rate */}
-                {records.career.highestWinRate && (
-                  <RecordCard
-                    title="🏆 Highest Win Rate"
-                    value={`${records.career.highestWinRate.winRate}%`}
-                    description={`${records.career.highestWinRate.robotName} by ${records.career.highestWinRate.username}`}
-                    details={[
-                      `Wins: ${records.career.highestWinRate.wins} / ${records.career.highestWinRate.totalBattles}`,
-                      `ELO: ${records.career.highestWinRate.elo}`,
-                      `League: ${records.career.highestWinRate.league}`,
-                    ]}
-                  />
+                {records.career.highestWinRate.length > 0 && (
+                  <RecordSection title="🏆 Highest Win Rate">
+                    {records.career.highestWinRate.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.winRate}%`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Wins: ${record.wins} / ${record.totalBattles}`,
+                          `ELO: ${record.elo}`,
+                          `League: ${record.league}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Most Lifetime Damage */}
-                {records.career.mostLifetimeDamage && (
-                  <RecordCard
-                    title="💪 Most Lifetime Damage"
-                    value={`${records.career.mostLifetimeDamage.damageDealt.toLocaleString()} damage`}
-                    description={`${records.career.mostLifetimeDamage.robotName} by ${records.career.mostLifetimeDamage.username}`}
-                    details={[
-                      `Total Battles: ${records.career.mostLifetimeDamage.totalBattles}`,
-                      `Avg per Battle: ${records.career.mostLifetimeDamage.avgDamagePerBattle.toLocaleString()}`,
-                    ]}
-                  />
+                {records.career.mostLifetimeDamage.length > 0 && (
+                  <RecordSection title="💪 Most Lifetime Damage">
+                    {records.career.mostLifetimeDamage.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.damageDealt.toLocaleString()} damage`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Total Battles: ${record.totalBattles}`,
+                          `Avg per Battle: ${record.avgDamagePerBattle.toLocaleString()}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Highest ELO */}
-                {records.career.highestElo && (
-                  <RecordCard
-                    title="👑 Highest Current ELO"
-                    value={`${records.career.highestElo.elo} ELO`}
-                    description={`${records.career.highestElo.robotName} by ${records.career.highestElo.username}`}
-                    details={[
-                      `League: ${records.career.highestElo.league}`,
-                      `Record: ${records.career.highestElo.wins}-${records.career.highestElo.losses}-${records.career.highestElo.draws}`,
-                    ]}
-                  />
+                {records.career.highestElo.length > 0 && (
+                  <RecordSection title="👑 Highest Current ELO">
+                    {records.career.highestElo.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.elo} ELO`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `League: ${record.league}`,
+                          `Record: ${record.wins}-${record.losses}-${record.draws}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Most Kills */}
-                {records.career.mostKills && (
-                  <RecordCard
-                    title="☠️ Most Robot Destructions"
-                    value={`${records.career.mostKills.kills} kills`}
-                    description={`${records.career.mostKills.robotName} by ${records.career.mostKills.username}`}
-                    details={[
-                      `Total Battles: ${records.career.mostKills.totalBattles}`,
-                      `Kill Rate: ${records.career.mostKills.killRate}%`,
-                    ]}
-                  />
+                {records.career.mostKills.length > 0 && (
+                  <RecordSection title="☠️ Most Robot Destructions">
+                    {records.career.mostKills.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.kills} kills`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Total Battles: ${record.totalBattles}`,
+                          `Kill Rate: ${record.killRate}%`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
               </>
             )}
@@ -500,46 +560,40 @@ function HallOfRecordsPage() {
             {/* Economic Records */}
             {activeCategory === 'economic' && (
               <>
-                {/* Most Expensive Battle */}
-                {records.economic.mostExpensiveBattle && (
-                  <RecordCard
-                    title="💸 Most Expensive Battle"
-                    value={formatCurrency(records.economic.mostExpensiveBattle.totalRepairCost)}
-                    description={`${records.economic.mostExpensiveBattle.robot1.name} vs ${records.economic.mostExpensiveBattle.robot2.name}`}
-                    details={[
-                      `${records.economic.mostExpensiveBattle.robot1.username}: ${formatCurrency(records.economic.mostExpensiveBattle.robot1.repairCost || 0)}`,
-                      `${records.economic.mostExpensiveBattle.robot2.username}: ${formatCurrency(records.economic.mostExpensiveBattle.robot2.repairCost || 0)}`,
-                      `Date: ${formatDate(records.economic.mostExpensiveBattle.date)}`,
-                    ]}
-                    onClick={() => handleBattleClick(records.economic.mostExpensiveBattle!.battleId)}
-                  />
-                )}
-
                 {/* Highest Fame */}
-                {records.economic.highestFame && (
-                  <RecordCard
-                    title="⭐ Highest Fame"
-                    value={`${records.economic.highestFame.fame.toLocaleString()} fame`}
-                    description={`${records.economic.highestFame.robotName} by ${records.economic.highestFame.username}`}
-                    details={[
-                      `League: ${records.economic.highestFame.league}`,
-                      `ELO: ${records.economic.highestFame.elo}`,
-                    ]}
-                  />
+                {records.economic.highestFame.length > 0 && (
+                  <RecordSection title="⭐ Highest Fame">
+                    {records.economic.highestFame.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.fame.toLocaleString()} fame`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `League: ${record.league}`,
+                          `ELO: ${record.elo}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Richest Stables */}
-                {records.economic.richestStables && (
-                  <RecordCard
-                    title="💎 Richest Stable"
-                    value={formatCurrency(records.economic.richestStables.currency)}
-                    description={`${records.economic.richestStables.username}'s stable`}
-                    details={[
-                      `Robots: ${records.economic.richestStables.robotCount}`,
-                      `Prestige: ${records.economic.richestStables.prestige.toLocaleString()}`,
-                      `Total Battles: ${records.economic.richestStables.totalBattles}`,
-                    ]}
-                  />
+                {records.economic.richestStables.length > 0 && (
+                  <RecordSection title="💎 Richest Stable">
+                    {records.economic.richestStables.map((record, index) => (
+                      <RecordCard
+                        key={record.userId}
+                        rank={index + 1}
+                        value={formatCurrency(record.currency)}
+                        description={`${record.username}'s stable`}
+                        details={[
+                          `Robots: ${record.robotCount}`,
+                          `Prestige: ${record.prestige.toLocaleString()}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
               </>
             )}
@@ -548,32 +602,39 @@ function HallOfRecordsPage() {
             {activeCategory === 'prestige' && (
               <>
                 {/* Highest Prestige */}
-                {records.prestige.highestPrestige && (
-                  <RecordCard
-                    title="🌟 Highest Prestige"
-                    value={`${records.prestige.highestPrestige.prestige.toLocaleString()} prestige`}
-                    description={`${records.prestige.highestPrestige.username}'s stable`}
-                    details={[
-                      `Robots: ${records.prestige.highestPrestige.robotCount}`,
-                      `Total Battles: ${records.prestige.highestPrestige.totalBattles}`,
-                      `Total Wins: ${records.prestige.highestPrestige.totalWins}`,
-                      `Championships: ${records.prestige.highestPrestige.championshipTitles}`,
-                    ]}
-                  />
+                {records.prestige.highestPrestige.length > 0 && (
+                  <RecordSection title="🌟 Highest Prestige">
+                    {records.prestige.highestPrestige.map((record, index) => (
+                      <RecordCard
+                        key={record.userId}
+                        rank={index + 1}
+                        value={`${record.prestige.toLocaleString()} prestige`}
+                        description={`${record.username}'s stable`}
+                        details={[
+                          `Robots: ${record.robotCount}`,
+                          `Championships: ${record.championshipTitles}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
 
                 {/* Most Titles */}
-                {records.prestige.mostTitles && (
-                  <RecordCard
-                    title="🏅 Most Championship Titles"
-                    value={`${records.prestige.mostTitles.championshipTitles} titles`}
-                    description={`${records.prestige.mostTitles.username}'s stable`}
-                    details={[
-                      `Prestige: ${records.prestige.mostTitles.prestige.toLocaleString()}`,
-                      `Robots: ${records.prestige.mostTitles.robotCount}`,
-                      `Total Battles: ${records.prestige.mostTitles.totalBattles}`,
-                    ]}
-                  />
+                {records.prestige.mostTitles.length > 0 && (
+                  <RecordSection title="🏅 Most Championship Titles">
+                    {records.prestige.mostTitles.map((record, index) => (
+                      <RecordCard
+                        key={record.userId}
+                        rank={index + 1}
+                        value={`${record.championshipTitles} titles`}
+                        description={`${record.username}'s stable`}
+                        details={[
+                          `Prestige: ${record.prestige.toLocaleString()}`,
+                          `Robots: ${record.robotCount}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
                 )}
               </>
             )}
@@ -593,39 +654,92 @@ function HallOfRecordsPage() {
   );
 }
 
-interface RecordCardProps {
+interface RecordSectionProps {
   title: string;
+  children: React.ReactNode;
+}
+
+function RecordSection({ title, children }: RecordSectionProps) {
+  return (
+    <div className="mb-10">
+      <h2 className="text-2xl font-bold text-gray-200 mb-6">{title}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+interface RecordCardProps {
+  rank: number;
   value: string;
   description: string;
   details?: string[];
   onClick?: () => void;
 }
 
-function RecordCard({ title, value, description, details, onClick }: RecordCardProps) {
+function RecordCard({ rank, value, description, details, onClick }: RecordCardProps) {
+  const getRankColor = (rank: number) => {
+    if (rank === 1) return 'text-yellow-400';
+    if (rank === 2) return 'text-gray-300';
+    if (rank === 3) return 'text-orange-400';
+    return 'text-gray-500';
+  };
+
+  const getRankBadge = (rank: number) => {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return `#${rank}`;
+  };
+
+  // Different sizes for top 3 vs rest
+  const isTop3 = rank <= 3;
+  const isFirst = rank === 1;
+  
+  const cardClasses = isFirst
+    ? 'md:col-span-2 lg:col-span-3 p-6' // First place spans full width
+    : isTop3
+    ? 'md:col-span-1 lg:col-span-1 p-5' // 2nd and 3rd normal size
+    : 'md:col-span-1 lg:col-span-1 p-4'; // Rest smaller
+
+  const valueSize = isFirst ? 'text-4xl' : isTop3 ? 'text-2xl' : 'text-xl';
+  const rankSize = isFirst ? 'text-4xl' : isTop3 ? 'text-3xl' : 'text-2xl';
+  const descSize = isFirst ? 'text-lg' : isTop3 ? 'text-base' : 'text-sm';
+
   return (
     <div
-      className={`bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-yellow-500/50 transition-all ${
+      className={`bg-gray-800 border ${
+        isFirst ? 'border-yellow-500/70' : 'border-gray-700'
+      } rounded-lg hover:border-yellow-500/50 transition-all flex items-start gap-4 ${cardClasses} ${
         onClick ? 'cursor-pointer hover:bg-gray-750' : ''
       }`}
       onClick={onClick}
     >
-      <h3 className="text-lg font-semibold text-gray-300 mb-3">{title}</h3>
-      <div className="text-3xl font-bold text-yellow-400 mb-2">{value}</div>
-      <p className="text-gray-400 mb-4">{description}</p>
-      {details && details.length > 0 && (
-        <div className="space-y-1">
-          {details.map((detail, index) => (
-            <p key={index} className="text-sm text-gray-500">
-              {detail}
-            </p>
-          ))}
-        </div>
-      )}
-      {onClick && (
-        <div className="mt-4 text-sm text-yellow-500 hover:text-yellow-400">
-          View Battle Details →
-        </div>
-      )}
+      {/* Rank Badge */}
+      <div className={`${rankSize} font-bold ${getRankColor(rank)} ${isFirst ? 'min-w-[4rem]' : 'min-w-[3rem]'} text-center flex-shrink-0`}>
+        {getRankBadge(rank)}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className={`${valueSize} font-bold text-yellow-400 mb-1`}>{value}</div>
+        <p className={`text-gray-300 mb-2 ${descSize}`}>{description}</p>
+        {details && details.length > 0 && (
+          <div className={`space-y-1 ${isFirst ? '' : 'text-sm'}`}>
+            {details.map((detail, index) => (
+              <p key={index} className="text-gray-500">
+                {detail}
+              </p>
+            ))}
+          </div>
+        )}
+        {onClick && (
+          <div className={`mt-2 text-yellow-500 hover:text-yellow-400 ${isFirst ? 'text-base' : 'text-sm'}`}>
+            View Battle Details →
+          </div>
+        )}
+      </div>
     </div>
   );
 }

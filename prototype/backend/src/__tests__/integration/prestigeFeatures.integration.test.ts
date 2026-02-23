@@ -114,7 +114,7 @@ describe('Prestige Features Integration', () => {
       const targetIncomeGenLevel = 4;
       
       // Check if upgrade is allowed
-      const config = getFacilityConfig('income_generator');
+      const config = getFacilityConfig('merchandising_hub');
       const prestigeReq = config?.prestigeRequirements?.[targetIncomeGenLevel - 1] || 0;
       const canUpgrade = userPrestige >= prestigeReq;
       

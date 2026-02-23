@@ -9,6 +9,10 @@ import { getFacilityConfig } from '../src/config/facilities';
 const prisma = new PrismaClient();
 
 describe('Prestige Gates', () => {
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
   describe('Facility Config Prestige Requirements', () => {
     test('Repair Bay has correct prestige requirements', () => {
       const config = getFacilityConfig('repair_bay');

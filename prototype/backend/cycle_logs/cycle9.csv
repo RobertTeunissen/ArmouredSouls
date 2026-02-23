@@ -1,0 +1,186 @@
+Timestamp | Level | Message
+2026-02-23T16:00:08.006Z | INFO | === Cycle 9 Started ===
+2026-02-23T16:00:08.006Z | INFO | Cycle 9 (9/10)
+2026-02-23T16:00:08.006Z | INFO |  [Admin] === Cycle 9 (9/10) ===
+2026-02-23T16:00:08.015Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-23T16:00:08.015Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-23T16:00:08.015Z
+2026-02-23T16:00:08.020Z | INFO | [BattleOrchestrator] Found 3 matches to execute
+2026-02-23T16:00:08.087Z | INFO | [Streaming] NewTeam_Robot_0_1771862368254 earned ₡1,034 from Battle #76819
+2026-02-23T16:00:08.089Z | INFO | [Streaming] Poor_Robot_3_1771862367694 earned ₡1,037 from Battle #76819
+2026-02-23T16:00:08.098Z | INFO | [Battle] League: bronze | NewTeam_Robot_0_1771862368254 (User 47964) vs Poor_Robot_3_1771862367694 (User 47931) | Winner: Poor_Robot_3_1771862367694 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:00:08.157Z | INFO | [Streaming] Poor_Robot_1_1771862367685 earned ₡1,035 from Battle #76820
+2026-02-23T16:00:08.158Z | INFO | [Streaming] NewTeam_Robot_1_1771862368260 earned ₡1,032 from Battle #76820
+2026-02-23T16:00:08.168Z | INFO | [Battle] League: bronze | Poor_Robot_1_1771862367685 (User 47930) vs NewTeam_Robot_1_1771862368260 (User 47964) | Winner: NewTeam_Robot_1_1771862368260 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:00:08.226Z | INFO | [Streaming] Poor_Robot_0_1771862367679 earned ₡1,035 from Battle #76821
+2026-02-23T16:00:08.227Z | INFO | [Streaming] Poor_Robot_2_1771862367689 earned ₡1,034 from Battle #76821
+2026-02-23T16:00:08.238Z | INFO | [Battle] League: bronze | Poor_Robot_0_1771862367679 (User 47930) vs Poor_Robot_2_1771862367689 (User 47931) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-02-23T16:00:08.239Z | INFO | [BattleOrchestrator] Execution complete: 3 successful, 0 failed, 0 bye-matches
+2026-02-23T16:00:08.239Z | INFO | [BattleOrchestrator] Reputation: 10 prestige, 5 fame awarded
+2026-02-23T16:00:08.240Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-23T16:00:08.248Z | INFO | [RepairService] | User 47930 | Robot 738423 (Poor_Robot_0_1771862367679) | Cost: ₡1,610 | Discount: 0%
+2026-02-23T16:00:08.252Z | INFO | [RepairService] | User 47930 | Robot 738424 (Poor_Robot_1_1771862367685) | Cost: ₡1,909 | Discount: 0%
+2026-02-23T16:00:08.259Z | INFO | [RepairService] | User 47931 | Robot 738428 (Poor_Robot_3_1771862367694) | Cost: ₡1,702 | Discount: 0%
+2026-02-23T16:00:08.263Z | INFO | [RepairService] | User 47931 | Robot 738426 (Poor_Robot_2_1771862367689) | Cost: ₡1,725 | Discount: 0%
+2026-02-23T16:00:08.269Z | INFO | [RepairService] | User 47964 | Robot 738509 (NewTeam_Robot_0_1771862368254) | Cost: ₡1,886 | Discount: 0%
+2026-02-23T16:00:08.273Z | INFO | [RepairService] | User 47964 | Robot 738510 (NewTeam_Robot_1_1771862368260) | Cost: ₡1,886 | Discount: 0%
+2026-02-23T16:00:08.276Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 9)
+2026-02-23T16:00:08.282Z | INFO | [TagTeamBattles] Found 2 scheduled tag team matches
+2026-02-23T16:00:08.331Z | INFO | [TagTeamBattle] Completed: Team 103959 vs Team 103974 (Winner: Team 103959)
+2026-02-23T16:00:08.363Z | INFO | [TagTeamBattles] Updated results for match 2841: Team 103959 ELO +19, Team 103974 ELO -19
+2026-02-23T16:00:08.363Z | INFO | [TagTeamBattles] Fame awarded - Team 103959: Poor_Robot_2_1771862367689 +2, Poor_Robot_3_1771862367694 +1
+2026-02-23T16:00:08.369Z | INFO | [Streaming] Team 103959 earned ₡1,039 (Battles from Poor_Robot_2_1771862367689, Fame from Poor_Robot_3_1771862367694)
+2026-02-23T16:00:08.369Z | INFO | [Streaming] Team 103974 earned ₡1,035 (Battles from NewTeam_Robot_0_1771862368254, Fame from NewTeam_Robot_0_1771862368254)
+2026-02-23T16:00:08.384Z | INFO | [TagTeamBattles] Created 4 audit log events for tag team battle 76822 (one per robot, rewards split 50/50 per team)
+2026-02-23T16:00:08.400Z | ERROR | [TagTeamBattles] Error executing match 2842: {""name"":""PrismaClientKnownRequestError"",""code"":""P2003"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""Battle"",""field_name"":""battles_robot2_id_fkey (index)""}}
+2026-02-23T16:00:08.401Z | INFO | [TagTeamBattles] Execution complete: 1 battles, 1 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-02-23T16:00:08.402Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-23T16:00:08.409Z | INFO | [RepairService] | User 47931 | Robot 738426 (Poor_Robot_2_1771862367689) | Cost: ₡1,932 | Discount: 0%
+2026-02-23T16:00:08.412Z | INFO | [RepairService] | User 47931 | Robot 738428 (Poor_Robot_3_1771862367694) | Cost: ₡644 | Discount: 0%
+2026-02-23T16:00:08.418Z | INFO | [RepairService] | User 47964 | Robot 738509 (NewTeam_Robot_0_1771862368254) | Cost: ₡1,886 | Discount: 0%
+2026-02-23T16:00:08.421Z | INFO | [RepairService] | User 47964 | Robot 738510 (NewTeam_Robot_1_1771862368260) | Cost: ₡1,909 | Discount: 0%
+2026-02-23T16:00:08.423Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-23T16:00:08.424Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-23T16:00:08.426Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-02-23T16:00:08.427Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-23T16:00:08.427Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-02-23T16:00:08.427Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-23T16:00:08.428Z | INFO | [Rebalancing] Total robots in system: 6
+2026-02-23T16:00:08.428Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-02-23T16:00:08.430Z | INFO | [Rebalancing] bronze: 6 total robots across 1 instances
+2026-02-23T16:00:08.430Z | INFO | [Rebalancing] Processing bronze_1...
+2026-02-23T16:00:08.431Z | INFO | [Rebalancing] bronze_1: Skipping (6 eligible, need 10)
+2026-02-23T16:00:08.431Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-02-23T16:00:08.431Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-02-23T16:00:08.433Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
+2026-02-23T16:00:08.433Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.433Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-02-23T16:00:08.435Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-02-23T16:00:08.435Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.435Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-02-23T16:00:08.437Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-02-23T16:00:08.437Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.437Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-02-23T16:00:08.439Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-02-23T16:00:08.439Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.439Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-02-23T16:00:08.441Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-02-23T16:00:08.441Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.441Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-02-23T16:00:08.442Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T16:00:08.443Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T16:00:08.444Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T16:00:08.445Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T16:00:08.446Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T16:00:08.447Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T16:00:08.447Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-23T16:00:08.447Z | INFO | [Rebalancing] League rebalancing complete!
+2026-02-23T16:00:08.447Z | INFO |   Total promoted: 0
+2026-02-23T16:00:08.447Z | INFO |   Total demoted: 0
+2026-02-23T16:00:08.447Z | INFO |   Errors: 0
+2026-02-23T16:00:08.447Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-23T16:00:08.448Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 9)
+2026-02-23T16:00:08.449Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-23T16:00:08.449Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
+2026-02-23T16:00:08.449Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-23T16:00:08.450Z | INFO | [TagTeamRebalancing] Total teams in system: 3
+2026-02-23T16:00:08.450Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
+2026-02-23T16:00:08.451Z | INFO | [TagTeamRebalancing] bronze: 3 total teams across 1 instances
+2026-02-23T16:00:08.451Z | INFO | [TagTeamRebalancing] Processing bronze_1...
+2026-02-23T16:00:08.452Z | INFO | [TagTeamRebalancing] bronze_1: Skipping (3 eligible, need 10)
+2026-02-23T16:00:08.452Z | INFO | [TagTeamRebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-02-23T16:00:08.452Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
+2026-02-23T16:00:08.453Z | INFO | [TagTeamRebalancing] silver: 0 total teams across 0 instances
+2026-02-23T16:00:08.453Z | INFO | [TagTeamRebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.453Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
+2026-02-23T16:00:08.454Z | INFO | [TagTeamRebalancing] gold: 0 total teams across 0 instances
+2026-02-23T16:00:08.454Z | INFO | [TagTeamRebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.454Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
+2026-02-23T16:00:08.455Z | INFO | [TagTeamRebalancing] platinum: 0 total teams across 0 instances
+2026-02-23T16:00:08.455Z | INFO | [TagTeamRebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.456Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
+2026-02-23T16:00:08.456Z | INFO | [TagTeamRebalancing] diamond: 0 total teams across 0 instances
+2026-02-23T16:00:08.457Z | INFO | [TagTeamRebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.457Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
+2026-02-23T16:00:08.459Z | INFO | [TagTeamRebalancing] champion: 0 total teams across 0 instances
+2026-02-23T16:00:08.459Z | INFO | [TagTeamRebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T16:00:08.459Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-23T16:00:08.459Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
+2026-02-23T16:00:08.459Z | INFO |   Total promoted: 0
+2026-02-23T16:00:08.459Z | INFO |   Total demoted: 0
+2026-02-23T16:00:08.459Z | INFO |   Errors: 0
+2026-02-23T16:00:08.459Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-23T16:00:08.459Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
+2026-02-23T16:00:08.460Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
+2026-02-23T16:00:08.461Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
+2026-02-23T16:00:08.462Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
+2026-02-23T16:00:08.462Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
+2026-02-23T16:00:08.463Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
+2026-02-23T16:00:08.464Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
+2026-02-23T16:00:08.465Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-02-23T16:00:08.465Z | INFO | [UserGeneration] Generating 9 archetype users for Cycle 9...
+2026-02-23T16:00:08.465Z | INFO | [UserGeneration] Creating user 1/9: archetype_facility_investor_9_1 (archetype: facility_investor)
+2026-02-23T16:00:08.529Z | ERROR | [UserGeneration] Error creating user 1: {}
+2026-02-23T16:00:08.529Z | ERROR | [Admin] Error generating users: {}
+2026-02-23T16:00:08.531Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-02-23T16:00:08.531Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-02-23T16:00:08.531Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-23T16:00:09.531Z
+2026-02-23T16:00:08.531Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-02-23T16:00:08.533Z | INFO | [Matchmaking] Processing bronze_1...
+2026-02-23T16:00:08.536Z | INFO | [Matchmaking] Queue for bronze_1: 6 robots available (6 total, 6 ready)
+2026-02-23T16:00:08.540Z | INFO | [Matchmaking] Created 3 scheduled matches
+2026-02-23T16:00:08.540Z | INFO | [Matchmaking] BRONZE: Created 3 matches across 1 instances
+2026-02-23T16:00:08.540Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-02-23T16:00:08.542Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
+2026-02-23T16:00:08.542Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-02-23T16:00:08.543Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-02-23T16:00:08.543Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-02-23T16:00:08.544Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-02-23T16:00:08.544Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-02-23T16:00:08.545Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-02-23T16:00:08.545Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-02-23T16:00:08.546Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-02-23T16:00:08.546Z | INFO | [Matchmaking] ========================================
+2026-02-23T16:00:08.546Z | INFO | [Matchmaking] COMPLETE: 3 total matches created
+2026-02-23T16:00:08.546Z | INFO | [Matchmaking] ========================================
+2026-02-23T16:00:08.547Z | INFO | [Admin] Step 9.5: Matchmaking for Tag Teams (Cycle 9)
+2026-02-23T16:00:08.547Z | INFO | [TagTeamMatchmaking] Starting tag team matchmaking for all tiers...
+2026-02-23T16:00:08.559Z | INFO | [TagTeamMatchmaking] bronze_1: 3 eligible teams (3 total, 3 ready, 0 already scheduled)
+2026-02-23T16:00:08.571Z | INFO | [TagTeamMatchmaking] Bye-match created for team 103974
+2026-02-23T16:00:08.575Z | INFO | [TagTeamMatchmaking] Scheduled 2 tag team matches
+2026-02-23T16:00:08.575Z | INFO | [TagTeamMatchmaking] bronze_1: Created 2 matches
+2026-02-23T16:00:08.577Z | INFO | [TagTeamMatchmaking] Complete: 2 total matches created
+2026-02-23T16:00:08.578Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-02-23T16:00:08.584Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-02-23T16:00:08.593Z | INFO | [OperatingCosts] User 47930 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-23T16:00:08.598Z | INFO | [OperatingCosts] User 47931 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-23T16:00:08.606Z | INFO | [OperatingCosts] User 47964 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-23T16:00:08.606Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡1,500
+2026-02-23T16:00:08.607Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-02-23T16:00:09.714Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-02-23T16:00:09.715Z | INFO | [Admin] === End of Cycle 9 Balances ===
+2026-02-23T16:00:09.718Z | INFO | [Balance] User 47930 | Stable: tagteam_poor_user_1_1771862367668 | Balance: ₡272,169
+2026-02-23T16:00:09.722Z | INFO | [Balance] User 47931 | Stable: tagteam_poor_user_2_1771862367670 | Balance: ₡325,869
+2026-02-23T16:00:09.723Z | INFO | [Balance] User 47964 | Stable: tagteam_newteam_user_1771862368248 | Balance: ₡304,388
+2026-02-23T16:00:09.726Z | INFO | [Balance] User 47967 | Stable: rc_test_1771862368216_742843 | Balance: ₡1,000,000
+2026-02-23T16:00:09.728Z | INFO | [Balance] User 47969 | Stable: rc_test_1771862368217_896692 | Balance: ₡1,000,000
+2026-02-23T16:00:09.729Z | INFO | [Admin] ===================================
+2026-02-23T16:00:09.730Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-02-23T16:00:09.730Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 9
+2026-02-23T16:00:09.736Z | INFO | [CycleSnapshotService] Found 10 battle_complete events for cycle 9
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47964: credits=1500, streaming=1034, prestige=0
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47931: credits=9000, streaming=1037, prestige=5
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47930: credits=1500, streaming=1035, prestige=0
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47964: credits=9000, streaming=1032, prestige=5
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47930: credits=1500, streaming=1035, prestige=0
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47931: credits=1500, streaming=1034, prestige=0
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47931: credits=9000, streaming=519, prestige=4
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47931: credits=9000, streaming=519, prestige=4
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47964: credits=1500, streaming=517, prestige=0
+2026-02-23T16:00:09.739Z | INFO | [CycleSnapshotService] Processing battle_complete for user 47964: credits=1500, streaming=517, prestige=0
+2026-02-23T16:00:09.746Z | INFO | [CycleSnapshotService] Found 5 cycle_end_balance events for cycle 9
+2026-02-23T16:00:09.756Z | INFO | [CycleSnapshotService] Snapshot created for cycle 9
+2026-02-23T16:00:09.757Z | INFO | [Admin] Cycle snapshot created for cycle 9
+2026-02-23T16:00:09.759Z | INFO | [Admin] === Cycle 9 Summary ===
+2026-02-23T16:00:09.759Z | INFO | [Admin] Battles: 3
+2026-02-23T16:00:09.759Z | INFO | [Admin] ===================================
+2026-02-23T16:00:09.759Z | INFO | === Cycle 9 Ended ===

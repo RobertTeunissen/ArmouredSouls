@@ -1,0 +1,203 @@
+Timestamp | Level | Message
+2026-02-23T16:02:42.155Z | INFO | === Cycle 4 Started ===
+2026-02-23T16:02:42.155Z | INFO | Cycle 4 (4/10)
+2026-02-23T16:02:42.155Z | INFO |  [Admin] === Cycle 4 (4/10) ===
+2026-02-23T16:02:42.157Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-23T16:02:42.157Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-23T16:02:42.157Z
+2026-02-23T16:02:42.163Z | INFO | [BattleOrchestrator] Found 617 matches to execute
+2026-02-23T16:02:42.237Z | INFO | [Streaming] PBT_Elig1_1771862523761_0.01609015345964715 earned ₡1,012 from Battle #78212
+2026-02-23T16:02:42.239Z | INFO | [Streaming] PBT_Disband2_1771862521478_0.24861662553376274 earned ₡1,007 from Battle #78212
+2026-02-23T16:02:42.244Z | ERROR | [BattleOrchestrator] Failed to process match 53261: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.287Z | INFO | [Streaming] PBT_Elig1_1771862523922_0.18899333633064652 earned ₡1,006 from Battle #78213
+2026-02-23T16:02:42.289Z | INFO | [Streaming] PBT_ELO1_1771862532761_0.8955912203262696 earned ₡1,003 from Battle #78213
+2026-02-23T16:02:42.294Z | ERROR | [BattleOrchestrator] Failed to process match 53663: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.336Z | INFO | [Streaming] PBT_ELO1_1771862531816_0.933984638845387 earned ₡1,004 from Battle #78214
+2026-02-23T16:02:42.337Z | INFO | [Streaming] PBT_ELO1_1771862530474_0.32724442975604884 earned ₡1,003 from Battle #78214
+2026-02-23T16:02:42.342Z | ERROR | [BattleOrchestrator] Failed to process match 53664: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.383Z | INFO | [Streaming] PBT_ELO2_1771862528807_0.22484071652458082 earned ₡1,004 from Battle #78215
+2026-02-23T16:02:42.384Z | INFO | [Streaming] PBT_ELO2_1771862530135_0.48361947095031776 earned ₡1,003 from Battle #78215
+2026-02-23T16:02:42.389Z | ERROR | [BattleOrchestrator] Failed to process match 53665: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.433Z | INFO | [Streaming] PBT_ELO2_1771862532832_0.5667994362177793 earned ₡1,004 from Battle #78216
+2026-02-23T16:02:42.434Z | INFO | [Streaming] PBT_ELO2_1771862530081_0.5816559010609769 earned ₡1,004 from Battle #78216
+2026-02-23T16:02:42.441Z | ERROR | [BattleOrchestrator] Failed to process match 53666: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.489Z | INFO | [Streaming] PBT_ELO2_1771862528505_0.25301632535054064 earned ₡1,004 from Battle #78217
+2026-02-23T16:02:42.490Z | INFO | [Streaming] PBT_ELO2_1771862532960_0.6217234887020197 earned ₡1,003 from Battle #78217
+2026-02-23T16:02:42.494Z | ERROR | [BattleOrchestrator] Failed to process match 53667: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.542Z | INFO | [Streaming] PBT_ELO1_1771862528408_0.6763618466651515 earned ₡1,004 from Battle #78218
+2026-02-23T16:02:42.543Z | INFO | [Streaming] PBT_Elig2_1771862523633_0.48767417992468276 earned ₡1,005 from Battle #78218
+2026-02-23T16:02:42.549Z | ERROR | [BattleOrchestrator] Failed to process match 53668: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.597Z | INFO | [Streaming] TestRobot_1771862521523_0.8436276968522519 earned ₡1,005 from Battle #78219
+2026-02-23T16:02:42.598Z | INFO | [Streaming] MultiMatch_Robot_1_0_1771862522664 earned ₡1,006 from Battle #78219
+2026-02-23T16:02:42.602Z | ERROR | [BattleOrchestrator] Failed to process match 53669: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.649Z | INFO | [Streaming] PBT_ELO1_1771862529328_0.6042617559577039 earned ₡1,004 from Battle #78220
+2026-02-23T16:02:42.649Z | INFO | [Streaming] TestRobot_1771862521484_0.36511541005321657 earned ₡1,006 from Battle #78220
+2026-02-23T16:02:42.655Z | ERROR | [BattleOrchestrator] Failed to process match 53670: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.709Z | INFO | [Streaming] PBT_ELO1_1771862533424_0.9188936721258313 earned ₡1,004 from Battle #78221
+2026-02-23T16:02:42.710Z | INFO | [Streaming] PBT_Elig1_1771862523631_0.5299837071397099 earned ₡1,006 from Battle #78221
+2026-02-23T16:02:42.716Z | ERROR | [BattleOrchestrator] Failed to process match 53671: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.762Z | INFO | [Streaming] PBT_ELO1_1771862533010_0.8604271163205474 earned ₡1,004 from Battle #78222
+2026-02-23T16:02:42.763Z | INFO | [Streaming] PBT_ELO1_1771862530544_0.9558167772518832 earned ₡1,003 from Battle #78222
+2026-02-23T16:02:42.768Z | ERROR | [BattleOrchestrator] Failed to process match 53672: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.811Z | INFO | [Streaming] PBT_ELO1_1771862532204_0.12206807590402102 earned ₡1,004 from Battle #78223
+2026-02-23T16:02:42.813Z | INFO | [Streaming] PBT_ELO1_1771862533400_0.28467746083459833 earned ₡1,004 from Battle #78223
+2026-02-23T16:02:42.818Z | ERROR | [BattleOrchestrator] Failed to process match 53673: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.860Z | INFO | [Streaming] PBT_Elig1_1771862524688_0.71878394712671 earned ₡1,007 from Battle #78224
+2026-02-23T16:02:42.861Z | INFO | [Streaming] PBT_ELO2_1771862531155_0.2088822756321772 earned ₡1,002 from Battle #78224
+2026-02-23T16:02:42.867Z | ERROR | [BattleOrchestrator] Failed to process match 53674: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.907Z | INFO | [Streaming] PBT_ELO2_1771862532524_0.7328283489673684 earned ₡1,003 from Battle #78225
+2026-02-23T16:02:42.908Z | INFO | [Streaming] PBT_ELO2_1771862533425_0.6333331053746023 earned ₡1,003 from Battle #78225
+2026-02-23T16:02:42.912Z | ERROR | [BattleOrchestrator] Failed to process match 53675: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:42.956Z | INFO | [Streaming] PBT_ELO2_1771862532820_0.6678774799597924 earned ₡1,003 from Battle #78226
+2026-02-23T16:02:42.957Z | INFO | [Streaming] PBT_ELO2_1771862532218_0.4010636526982505 earned ₡1,004 from Battle #78226
+2026-02-23T16:02:42.962Z | ERROR | [BattleOrchestrator] Failed to process match 53676: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.001Z | INFO | [Streaming] PBT_ELO1_1771862528849_0.9237052292591365 earned ₡1,003 from Battle #78227
+2026-02-23T16:02:43.002Z | INFO | [Streaming] PBT_Elig2_1771862524632_0.8396498629979509 earned ₡1,004 from Battle #78227
+2026-02-23T16:02:43.008Z | ERROR | [BattleOrchestrator] Failed to process match 53677: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.060Z | INFO | [Streaming] PBT_ELO1_1771862531585_0.8778161116541036 earned ₡1,003 from Battle #78228
+2026-02-23T16:02:43.061Z | INFO | [Streaming] PBT_Elig2_1771862523980_0.16893943679373713 earned ₡1,005 from Battle #78228
+2026-02-23T16:02:43.066Z | ERROR | [BattleOrchestrator] Failed to process match 53678: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.109Z | INFO | [Streaming] PBT_ELO1_1771862528359_0.25363648177910314 earned ₡1,003 from Battle #78229
+2026-02-23T16:02:43.110Z | INFO | [Streaming] PBT_ELO1_1771862528515_0.8653609539856353 earned ₡1,004 from Battle #78229
+2026-02-23T16:02:43.115Z | ERROR | [BattleOrchestrator] Failed to process match 53679: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.158Z | INFO | [Streaming] PBT_ELO1_1771862530133_0.8947135810536072 earned ₡1,003 from Battle #78230
+2026-02-23T16:02:43.159Z | INFO | [Streaming] PBT_ELO2_1771862531358_0.16150132600762013 earned ₡1,004 from Battle #78230
+2026-02-23T16:02:43.166Z | ERROR | [BattleOrchestrator] Failed to process match 53680: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.215Z | INFO | [Streaming] PBT_ELO1_1771862533889_0.053089018313665304 earned ₡1,003 from Battle #78231
+2026-02-23T16:02:43.216Z | INFO | [Streaming] PBT_ELO2_1771862531898_0.17782092553125572 earned ₡1,003 from Battle #78231
+2026-02-23T16:02:43.221Z | ERROR | [BattleOrchestrator] Failed to process match 53681: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.276Z | INFO | [Streaming] PBT_ELO1_1771862530646_0.12368319627696756 earned ₡1,003 from Battle #78232
+2026-02-23T16:02:43.277Z | INFO | [Streaming] PBT_ELO1_1771862528922_0.4304988937505506 earned ₡1,003 from Battle #78232
+2026-02-23T16:02:43.283Z | ERROR | [BattleOrchestrator] Failed to process match 53682: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.338Z | INFO | [Streaming] PBT_ELO1_1771862528098_0.056668586109030805 earned ₡1,003 from Battle #78233
+2026-02-23T16:02:43.339Z | INFO | [Streaming] PBT_ELO2_1771862534847_0.21509410396968276 earned ₡1,001 from Battle #78233
+2026-02-23T16:02:43.346Z | ERROR | [BattleOrchestrator] Failed to process match 53683: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.397Z | INFO | [Streaming] PBT_ELO2_1771862531005_0.7284548794968305 earned ₡1,003 from Battle #78234
+2026-02-23T16:02:43.398Z | INFO | [Streaming] PBT_ELO2_1771862533257_0.2898608642026471 earned ₡1,003 from Battle #78234
+2026-02-23T16:02:43.403Z | ERROR | [BattleOrchestrator] Failed to process match 53685: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.456Z | INFO | [Streaming] PBT_ELO1_1771862529981_0.8671029095994716 earned ₡1,003 from Battle #78235
+2026-02-23T16:02:43.457Z | INFO | [Streaming] PBT_ELO1_1771862533812_0.49976121007597085 earned ₡1,003 from Battle #78235
+2026-02-23T16:02:43.462Z | ERROR | [BattleOrchestrator] Failed to process match 53686: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.508Z | INFO | [Streaming] PBT_ELO2_1771862530032_0.12499995032888334 earned ₡1,004 from Battle #78236
+2026-02-23T16:02:43.509Z | INFO | [Streaming] PBT_ELO2_1771862535693_0.9835347233901947 earned ₡1,000 from Battle #78236
+2026-02-23T16:02:43.516Z | ERROR | [BattleOrchestrator] Failed to process match 53687: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.558Z | INFO | [Streaming] PBT_ELO2_1771862528267_0.3856996405301606 earned ₡1,003 from Battle #78237
+2026-02-23T16:02:43.559Z | INFO | [Streaming] PBT_ELO2_1771862536383_0.8001050525538796 earned ₡1,000 from Battle #78237
+2026-02-23T16:02:43.565Z | ERROR | [BattleOrchestrator] Failed to process match 53688: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.613Z | INFO | [Streaming] PBT_ELO2_1771862537225_0.08125016207387492 earned ₡1,000 from Battle #78238
+2026-02-23T16:02:43.614Z | INFO | [Streaming] PBT_ELO2_1771862529457_0.9160448614091636 earned ₡1,003 from Battle #78238
+2026-02-23T16:02:43.619Z | ERROR | [BattleOrchestrator] Failed to process match 53689: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.662Z | INFO | [Streaming] PBT_ELO2_1771862534521_0.6619617561657662 earned ₡1,000 from Battle #78239
+2026-02-23T16:02:43.663Z | INFO | [Streaming] PBT_ELO2_1771862534611_0.965125063794102 earned ₡1,001 from Battle #78239
+2026-02-23T16:02:43.668Z | ERROR | [BattleOrchestrator] Failed to process match 53690: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.718Z | INFO | [Streaming] PBT_ELO2_1771862535642_0.9393907173973789 earned ₡1,001 from Battle #78240
+2026-02-23T16:02:43.719Z | INFO | [Streaming] PBT_ELO2_1771862533708_0.39208447832127913 earned ₡1,002 from Battle #78240
+2026-02-23T16:02:43.725Z | ERROR | [BattleOrchestrator] Failed to process match 53691: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.776Z | INFO | [Streaming] PBT_ELO2_1771862530901_0.09827147079390486 earned ₡1,003 from Battle #78241
+2026-02-23T16:02:43.777Z | INFO | [Streaming] PBT_ELO1_1771862536174_0.6262034015146754 earned ₡1,000 from Battle #78241
+2026-02-23T16:02:43.784Z | ERROR | [BattleOrchestrator] Failed to process match 53692: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.833Z | INFO | [Streaming] PBT_ELO1_1771862537120_0.435196257258352 earned ₡1,001 from Battle #78242
+2026-02-23T16:02:43.834Z | INFO | [Streaming] PBT_ELO2_1771862529621_0.5936700078672466 earned ₡1,002 from Battle #78242
+2026-02-23T16:02:43.840Z | ERROR | [BattleOrchestrator] Failed to process match 53693: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.903Z | INFO | [Streaming] PBT_ELO1_1771862537488_0.9585249262634951 earned ₡1,000 from Battle #78243
+2026-02-23T16:02:43.905Z | INFO | [Streaming] PBT_ELO1_1771862534734_0.24215077895212478 earned ₡1,001 from Battle #78243
+2026-02-23T16:02:43.910Z | ERROR | [BattleOrchestrator] Failed to process match 53694: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:43.951Z | INFO | [Streaming] PBT_ELO1_1771862535391_0.31937759885184946 earned ₡1,000 from Battle #78244
+2026-02-23T16:02:43.952Z | INFO | [Streaming] PBT_ELO1_1771862532900_0.21489635034251964 earned ₡1,003 from Battle #78244
+2026-02-23T16:02:43.958Z | ERROR | [BattleOrchestrator] Failed to process match 53695: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:44.018Z | INFO | [Streaming] PBT_ELO2_1771862535977_0.12315091692668922 earned ₡1,001 from Battle #78245
+2026-02-23T16:02:44.020Z | INFO | [Streaming] PBT_ELO1_1771862535544_0.011430718126897776 earned ₡1,000 from Battle #78245
+2026-02-23T16:02:44.027Z | ERROR | [BattleOrchestrator] Failed to process match 53696: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:44.069Z | INFO | [Streaming] PBT_ELO1_1771862536217_0.9387713925739234 earned ₡1,000 from Battle #78246
+2026-02-23T16:02:44.070Z | INFO | [Streaming] PBT_ELO2_1771862535423_0.6388527875913448 earned ₡1,001 from Battle #78246
+2026-02-23T16:02:44.083Z | ERROR | [BattleOrchestrator] Failed to process match 53697: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:44.127Z | INFO | [Streaming] PBT_ELO2_1771862536345_0.5570075673367629 earned ₡1,001 from Battle #78247
+2026-02-23T16:02:44.128Z | INFO | [Streaming] PBT_ELO1_1771862535251_0.8910043947982722 earned ₡1,000 from Battle #78247
+2026-02-23T16:02:44.133Z | ERROR | [BattleOrchestrator] Failed to process match 53698: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:44.174Z | INFO | [Streaming] PBT_ELO1_1771862536513_0.6199898700318179 earned ₡1,001 from Battle #78248
+2026-02-23T16:02:44.175Z | INFO | [Streaming] PBT_ELO1_1771862536538_0.5932649981426611 earned ₡1,000 from Battle #78248
+2026-02-23T16:02:44.179Z | ERROR | [BattleOrchestrator] Failed to process match 53699: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:44.219Z | INFO | [Streaming] PBT_ELO1_1771862535158_0.4231139290063537 earned ₡1,000 from Battle #78249
+2026-02-23T16:02:44.220Z | INFO | [Streaming] PBT_ELO2_1771862534992_0.009835519863207076 earned ₡1,001 from Battle #78249
+2026-02-23T16:02:44.226Z | ERROR | [BattleOrchestrator] Failed to process match 53700: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:44.266Z | INFO | [Streaming] PBT_ELO2_1771862534812_0.09070852344259717 earned ₡1,001 from Battle #78250
+2026-02-23T16:02:44.267Z | INFO | [Streaming] PBT_ELO1_1771862534678_0.10436141281541367 earned ₡1,000 from Battle #78250
+2026-02-23T16:02:44.272Z | ERROR | [BattleOrchestrator] Failed to process match 53701: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:02:44.314Z | INFO | [Streaming] PBT_ELO1_1771862534496_0.6145863949041844 earned ₡1,000 from Battle #78251
+2026-02-23T16:02:44.315Z | INFO | [Streaming] PBT_ELO2_1771862536708_0.058448340965352674 earned ₡1,001 from Battle #78251
+2026-02-23T16:02:44.324Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862534496_0.6145863949041844 (User 48351) vs PBT_ELO2_1771862536708_0.058448340965352674 (User 48351) | Winner: PBT_ELO2_1771862536708_0.058448340965352674 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:44.371Z | INFO | [Streaming] PBT_ELO1_1771862537354_0.5508107357979051 earned ₡1,001 from Battle #78252
+2026-02-23T16:02:44.373Z | INFO | [Streaming] PBT_ELO1_1771862534075_0.7817335182388742 earned ₡1,000 from Battle #78252
+2026-02-23T16:02:44.382Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862537354_0.5508107357979051 (User 48351) vs PBT_ELO1_1771862534075_0.7817335182388742 (User 48351) | Winner: PBT_ELO1_1771862537354_0.5508107357979051 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:44.425Z | INFO | [Streaming] PBT_ELO1_1771862536875_0.8440172266121226 earned ₡1,000 from Battle #78253
+2026-02-23T16:02:44.426Z | INFO | [Streaming] PBT_ELO1_1771862536994_0.217242532966477 earned ₡1,001 from Battle #78253
+2026-02-23T16:02:44.434Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862536875_0.8440172266121226 (User 48351) vs PBT_ELO1_1771862536994_0.217242532966477 (User 48351) | Winner: PBT_ELO1_1771862536994_0.217242532966477 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:44.477Z | INFO | [Streaming] PBT_ELO2_1771862537438_0.002112268232390413 earned ₡1,001 from Battle #78254
+2026-02-23T16:02:44.478Z | INFO | [Streaming] PBT_ELO1_1771862535858_0.4080837046249358 earned ₡1,000 from Battle #78254
+2026-02-23T16:02:44.486Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862537438_0.002112268232390413 (User 48351) vs PBT_ELO1_1771862535858_0.4080837046249358 (User 48351) | Winner: PBT_ELO2_1771862537438_0.002112268232390413 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:44.538Z | INFO | [Streaming] PBT_ELO2_1771862531131_0.9324613773049542 earned ₡1,001 from Battle #78255
+2026-02-23T16:02:44.540Z | INFO | [Streaming] PBT_ELO1_1771862534410_0.8263311697133257 earned ₡1,000 from Battle #78255
+2026-02-23T16:02:44.550Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862531131_0.9324613773049542 (User 48351) vs PBT_ELO1_1771862534410_0.8263311697133257 (User 48351) | Winner: PBT_ELO2_1771862531131_0.9324613773049542 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:44.594Z | INFO | [Streaming] PBT_ELO2_1771862534245_0.3394960035349317 earned ₡1,000 from Battle #78256
+2026-02-23T16:02:44.595Z | INFO | [Streaming] PBT_ELO1_1771862533544_0.8062251245035161 earned ₡1,003 from Battle #78256
+2026-02-23T16:02:44.603Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862534245_0.3394960035349317 (User 48351) vs PBT_ELO1_1771862533544_0.8062251245035161 (User 48351) | Winner: PBT_ELO1_1771862533544_0.8062251245035161 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:44.657Z | INFO | [Streaming] PBT_ELO2_1771862531874_0.043436335344634314 earned ₡1,002 from Battle #78257
+2026-02-23T16:02:44.658Z | INFO | [Streaming] PBT_ELO2_1771862531082_0.237727674468179 earned ₡1,003 from Battle #78257
+2026-02-23T16:02:44.666Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862531874_0.043436335344634314 (User 48351) vs PBT_ELO2_1771862531082_0.237727674468179 (User 48351) | Winner: PBT_ELO2_1771862531082_0.237727674468179 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:44.710Z | INFO | [Streaming] PBT_Elig1_1771862524542_0.7650029836382479 earned ₡1,010 from Battle #78258
+2026-02-23T16:02:44.711Z | INFO | [Streaming] PBT_ELO2_1771862531467_0.4982414221037562 earned ₡1,004 from Battle #78258
+2026-02-23T16:02:44.718Z | INFO | [Battle] League: bronze | PBT_Elig1_1771862524542_0.7650029836382479 (User 48332) vs PBT_ELO2_1771862531467_0.4982414221037562 (User 48351) | Winner: PBT_ELO2_1771862531467_0.4982414221037562 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:44.764Z | INFO | [Streaming] PBT_ELO1_1771862530953_0.4048894855492853 earned ₡1,003 from Battle #78259
+2026-02-23T16:02:44.765Z | INFO | [Streaming] PBT_ELO1_1771862529139_0.9878838310489805 earned ₡1,002 from Battle #78259
+2026-02-23T16:02:44.773Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862530953_0.4048894855492853 (User 48351) vs PBT_ELO1_1771862529139_0.9878838310489805 (User 48351) | Winner: PBT_ELO1_1771862529139_0.9878838310489805 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:44.819Z | INFO | [Streaming] PBT_ELO1_1771862529081_0.5400816442448791 earned ₡1,003 from Battle #78260
+2026-02-23T16:02:44.820Z | INFO | [Streaming] PBT_ELO1_1771862531036_0.6742812734177921 earned ₡1,003 from Battle #78260
+2026-02-23T16:02:44.833Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862529081_0.5400816442448791 (User 48351) vs PBT_ELO1_1771862531036_0.6742812734177921 (User 48351) | Winner: PBT_ELO1_1771862529081_0.5400816442448791 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:44.882Z | INFO | [Streaming] PBT_ELO2_1771862531805_0.4426848867902595 earned ₡1,003 from Battle #78261
+2026-02-23T16:02:44.883Z | INFO | [Streaming] PBT_ELO1_1771862533023_0.555515520744875 earned ₡1,002 from Battle #78261
+2026-02-23T16:02:44.892Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862531805_0.4426848867902595 (User 48351) vs PBT_ELO1_1771862533023_0.555515520744875 (User 48351) | Winner: PBT_ELO2_1771862531805_0.4426848867902595 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:44.948Z | INFO | [Streaming] PBT_ELO1_1771862531430_0.10316782655765788 earned ₡1,002 from Battle #78262
+2026-02-23T16:02:44.949Z | INFO | [Streaming] PBT_ELO1_1771862531896_0.4779898744867147 earned ₡1,003 from Battle #78262
+2026-02-23T16:02:44.957Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862531430_0.10316782655765788 (User 48351) vs PBT_ELO1_1771862531896_0.4779898744867147 (User 48351) | Winner: PBT_ELO1_1771862531896_0.4779898744867147 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.001Z | INFO | [Streaming] PBT_ELO1_1771862536355_0.30519740699731535 earned ₡1,001 from Battle #78263
+2026-02-23T16:02:45.002Z | INFO | [Streaming] PBT_ELO1_1771862535988_0.17981031214583976 earned ₡1,000 from Battle #78263
+2026-02-23T16:02:45.010Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862536355_0.30519740699731535 (User 48351) vs PBT_ELO1_1771862535988_0.17981031214583976 (User 48351) | Winner: PBT_ELO1_1771862536355_0.30519740699731535 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:45.057Z | INFO | [Streaming] PBT_ELO1_1771862537447_0.6169266018941113 earned ₡1,001 from Battle #78264
+2026-02-23T16:02:45.058Z | INFO | [Streaming] PBT_ELO2_1771862536997_0.13013379562429273 earned ₡1,000 from Battle #78264
+2026-02-23T16:02:45.069Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862537447_0.6169266018941113 (User 48351) vs PBT_ELO2_1771862536997_0.13013379562429273 (User 48351) | Winner: PBT_ELO1_1771862537447_0.6169266018941113 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:45.113Z | INFO | [Streaming] PBT_ELO2_1771862534400_0.12385778308085515 earned ₡1,001 from Battle #78265
+2026-02-23T16:02:45.114Z | INFO | [Streaming] PBT_ELO2_1771862534066_0.25464364380049165 earned ₡1,000 from Battle #78265
+2026-02-23T16:02:45.121Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862534400_0.12385778308085515 (User 48351) vs PBT_ELO2_1771862534066_0.25464364380049165 (User 48351) | Winner: PBT_ELO2_1771862534400_0.12385778308085515 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.165Z | INFO | [Streaming] PBT_ELO1_1771862534242_0.39561843138524944 earned ₡1,000 from Battle #78266
+2026-02-23T16:02:45.166Z | INFO | [Streaming] PBT_ELO2_1771862536540_0.13330852970015894 earned ₡1,001 from Battle #78266
+2026-02-23T16:02:45.174Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862534242_0.39561843138524944 (User 48351) vs PBT_ELO2_1771862536540_0.13330852970015894 (User 48351) | Winner: PBT_ELO2_1771862536540_0.13330852970015894 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.218Z | INFO | [Streaming] PBT_ELO2_1771862536221_0.07710659539846709 earned ₡1,001 from Battle #78267
+2026-02-23T16:02:45.218Z | INFO | [Streaming] PBT_ELO2_1771862536515_0.10208709514208258 earned ₡1,000 from Battle #78267
+2026-02-23T16:02:45.226Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862536221_0.07710659539846709 (User 48351) vs PBT_ELO2_1771862536515_0.10208709514208258 (User 48351) | Winner: PBT_ELO2_1771862536221_0.07710659539846709 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.270Z | INFO | [Streaming] PBT_ELO1_1771862535704_0.26538185028564165 earned ₡1,001 from Battle #78268
+2026-02-23T16:02:45.272Z | INFO | [Streaming] PBT_ELO2_1771862535860_0.4062056442478954 earned ₡1,000 from Battle #78268
+2026-02-23T16:02:45.279Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862535704_0.26538185028564165 (User 48351) vs PBT_ELO2_1771862535860_0.4062056442478954 (User 48351) | Winner: PBT_ELO1_1771862535704_0.26538185028564165 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:45.319Z | INFO | [Streaming] PBT_ELO1_1771862535431_0.7343807887272027 earned ₡1,001 from Battle #78269
+2026-02-23T16:02:45.321Z | INFO | [Streaming] PBT_ELO2_1771862535547_0.33050745033909024 earned ₡1,000 from Battle #78269
+2026-02-23T16:02:45.330Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862535431_0.7343807887272027 (User 48351) vs PBT_ELO2_1771862535547_0.33050745033909024 (User 48351) | Winner: PBT_ELO1_1771862535431_0.7343807887272027 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.374Z | INFO | [Streaming] PBT_ELO2_1771862535161_0.8711569702800137 earned ₡1,001 from Battle #78270
+2026-02-23T16:02:45.375Z | INFO | [Streaming] PBT_ELO2_1771862535253_0.6354808157783299 earned ₡1,000 from Battle #78270
+2026-02-23T16:02:45.382Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862535161_0.8711569702800137 (User 48351) vs PBT_ELO2_1771862535253_0.6354808157783299 (User 48351) | Winner: PBT_ELO2_1771862535161_0.8711569702800137 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.424Z | INFO | [Streaming] PBT_ELO1_1771862534820_0.5548284884454906 earned ₡1,001 from Battle #78271
+2026-02-23T16:02:45.425Z | INFO | [Streaming] PBT_ELO1_1771862535000_0.6150152309430509 earned ₡1,000 from Battle #78271
+2026-02-23T16:02:45.433Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862534820_0.5548284884454906 (User 48351) vs PBT_ELO1_1771862535000_0.6150152309430509 (User 48351) | Winner: PBT_ELO1_1771862534820_0.5548284884454906 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.480Z | INFO | [Streaming] PBT_ELO2_1771862534498_0.1476842201690708 earned ₡1,001 from Battle #78272
+2026-02-23T16:02:45.481Z | INFO | [Streaming] PBT_ELO2_1771862534682_0.382478619409349 earned ₡1,000 from Battle #78272
+2026-02-23T16:02:45.489Z | INFO | [Battle] League: bronze | PBT_ELO2_1771862534498_0.1476842201690708 (User 48351) vs PBT_ELO2_1771862534682_0.382478619409349 (User 48351) | Winner: PBT_ELO2_1771862534498_0.1476842201690708 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:45.534Z | INFO | [Streaming] PBT_ELO1_1771862537253_0.970575736996866 earned ₡1,000 from Battle #78273
+2026-02-23T16:02:45.535Z | INFO | [Streaming] PBT_ELO2_1771862537356_0.6072812522984448 earned ₡1,001 from Battle #78273
+2026-02-23T16:02:45.544Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862537253_0.970575736996866 (User 48351) vs PBT_ELO2_1771862537356_0.6072812522984448 (User 48351) | Winner: PBT_ELO2_1771862537356_0.6072812522984448 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.591Z | INFO | [Streaming] PBT_ELO1_1771862534136_0.5048127636658335 earned ₡1,000 from Battle #78274
+2026-02-23T16:02:45.592Z | INFO | [Streaming] PBT_ELO2_1771862536878_0.8931860295590064 earned ₡1,001 from Battle #78274
+2026-02-23T16:02:45.601Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862534136_0.5048127636658335 (User 48351) vs PBT_ELO2_1771862536878_0.8931860295590064 (User 48351) | Winner: PBT_ELO2_1771862536878_0.8931860295590064 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:02:45.648Z | INFO | [Streaming] PBT_ELO1_1771862534626_0.6818651886842115 earned ₡1,000 from Battle #78275
+2026-02-23T16:02:45.649Z | INFO | [Streaming] PBT_ELO1_1771862536952_0.3807921325414215 earned ₡1,001 from Battle #78275
+2026-02-23T16:02:45.657Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862534626_0.6818651886842115 (User 48351) vs PBT_ELO1_1771862536952_0.3807921325414215 (User 48351) | Winner: PBT_ELO1_1771862536952_0.3807921325414215 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:02:45.699Z | INFO | [Streaming] PBT_ELO1_1771862536564_0.476937044316989 earned ₡1,001 from Battle #78276
+2026-02-23T16:02:45.700Z | INFO | [Streaming] PBT_ELO1_1771862531750_0.9002335445209934 earned ₡1,002 from Battle #78276
+2026-02-23T16:02:45.711Z | INFO | [Admin] Running 3 bulk cycles (includeTournaments: false, generateUsersPerCycle: true)...
+2026-02-23T16:02:45.711Z | INFO | [Battle] League: bronze | PBT_ELO1_1771862536564_0.476937044316989 (User 48351) vs PBT_ELO1_1771862531750_0.9002335445209934 (User 48351) | Winner: PBT_ELO1_1771862536564_0.476937044316989 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2

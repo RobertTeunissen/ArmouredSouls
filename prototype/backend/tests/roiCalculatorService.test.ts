@@ -8,8 +8,14 @@ const prisma = new PrismaClient();
 describe('ROICalculatorService', () => {
   let testUserId: number;
   let testRobotId: number;
+  let baseCycleNumber: number;
+  let baseSequenceNumber: number;
 
   beforeEach(async () => {
+    // Use unique numbers to avoid conflicts with other tests
+    baseCycleNumber = 100000 + Math.floor(Math.random() * 100000);
+    baseSequenceNumber = Math.floor(Math.random() * 10000);
+
     // Create test user
     const user = await createTestUser();
     testUserId = user.id;
@@ -21,20 +27,27 @@ describe('ROICalculatorService', () => {
     // Ensure cycle metadata exists
     await prisma.cycleMetadata.upsert({
       where: { id: 1 },
-      update: { totalCycles: 1 },
+      update: { totalCycles: baseCycleNumber },
       create: {
         id: 1,
-        totalCycles: 1,
+        totalCycles: baseCycleNumber,
       },
     });
   });
 
   afterEach(async () => {
     // Clean up test data
-    await prisma.auditLog.deleteMany({ where: { userId: testUserId } });
+    await prisma.auditLog.deleteMany({ 
+      where: { 
+        OR: [
+          { userId: testUserId },
+          { cycleNumber: { gte: baseCycleNumber } }
+        ]
+      } 
+    });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.delete({ where: { id: testUserId } });
+    await prisma.user.deleteMany({ where: { id: testUserId } });
   });
 
   afterAll(async () => {
@@ -45,7 +58,7 @@ describe('ROICalculatorService', () => {
     it('should return null for facility not purchased', async () => {
       const roi = await roiCalculatorService.calculateFacilityROI(
         testUserId,
-        'income_generator'
+        'merchandising_hub'
       );
 
       expect(roi).toBeNull();
@@ -56,24 +69,25 @@ describe('ROICalculatorService', () => {
       await prisma.facility.create({
         data: {
           userId: testUserId,
-          facilityType: 'income_generator',
+          facilityType: 'merchandising_hub',
           level: 1,
         },
       });
 
       // Log purchase event
       await eventLogger.logFacilityTransaction(
-        1,
+        baseCycleNumber,
         testUserId,
-        'income_generator',
+        'merchandising_hub',
         0,
-        1,
+        baseCycleNumber,
         400000,
         'purchase'
       );
 
       // Log passive income for 5 cycles
-      for (let cycle = 1; cycle <= 5; cycle++) {
+      for (let i = 0; i < 5; i++) {
+        const cycle = baseCycleNumber + i;
         await eventLogger.logPassiveIncome(
           cycle,
           testUserId,
@@ -87,32 +101,32 @@ describe('ROICalculatorService', () => {
 
         // Log operating costs
         await eventLogger.logOperatingCosts(cycle, testUserId, [
-          { facilityType: 'income_generator', level: 1, cost: 7000 },
+          { facilityType: 'merchandising_hub', level: 1, cost: 7000 },
         ], 7000);
       }
 
       // Update cycle metadata
       await prisma.cycleMetadata.update({
         where: { id: 1 },
-        data: { totalCycles: 5 },
+        data: { totalCycles: baseCycleNumber + 4 },
       });
 
       const roi = await roiCalculatorService.calculateFacilityROI(
         testUserId,
-        'income_generator'
+        'merchandising_hub'
       );
 
       expect(roi).not.toBeNull();
-      expect(roi!.facilityType).toBe('income_generator');
+      expect(roi!.facilityType).toBe('merchandising_hub');
       expect(roi!.currentLevel).toBe(1);
-      expect(roi!.totalInvestment).toBe(400000);
+      expect(roi!.totalInvestment).toBe(150000); // Level 1 cost
       expect(roi!.totalReturns).toBe(25000); // 5000 * 5 cycles
       expect(roi!.totalOperatingCosts).toBe(35000); // 7000 * 5 cycles
       expect(roi!.cyclesSincePurchase).toBe(5);
       
       // Net ROI = (returns - operating costs - investment) / investment
-      // = (25000 - 35000 - 400000) / 400000 = -410000 / 400000 = -1.025
-      expect(roi!.netROI).toBeCloseTo(-1.025, 2);
+      // = (25000 - 35000 - 150000) / 150000 = -160000 / 150000 = -1.067
+      expect(roi!.netROI).toBeCloseTo(-1.067, 2);
       expect(roi!.isProfitable).toBe(false);
       expect(roi!.breakevenCycle).toBeNull(); // Not yet broken even
     });
@@ -129,33 +143,34 @@ describe('ROICalculatorService', () => {
 
       // Log purchase events
       await eventLogger.logFacilityTransaction(
-        1,
+        baseCycleNumber,
         testUserId,
         'repair_bay',
         0,
-        1,
+        baseCycleNumber,
         100000,
         'purchase'
       );
       await eventLogger.logFacilityTransaction(
-        1,
+        baseCycleNumber,
         testUserId,
         'repair_bay',
-        1,
+        baseCycleNumber,
         2,
         200000,
         'upgrade'
       );
 
       // Log repair events with 10% discount (level 2 repair bay)
-      for (let cycle = 1; cycle <= 3; cycle++) {
+      for (let i = 0; i < 3; i++) {
+        const cycle = baseCycleNumber + i;
         // Repair cost: 10,000 with 10% discount = 9,000 actual cost
         await prisma.auditLog.create({
           data: {
             cycleNumber: cycle,
             eventType: 'robot_repair',
             eventTimestamp: new Date(),
-            sequenceNumber: cycle * 100,
+            sequenceNumber: baseSequenceNumber + i + 1,
             userId: testUserId,
             robotId: testRobotId,
             payload: {
@@ -175,7 +190,7 @@ describe('ROICalculatorService', () => {
       // Update cycle metadata
       await prisma.cycleMetadata.update({
         where: { id: 1 },
-        data: { totalCycles: 3 },
+        data: { totalCycles: baseCycleNumber + 2 },
       });
 
       const roi = await roiCalculatorService.calculateFacilityROI(
@@ -208,24 +223,25 @@ describe('ROICalculatorService', () => {
 
       // Log purchase event
       await eventLogger.logFacilityTransaction(
-        1,
+        baseCycleNumber,
         testUserId,
         'training_facility',
         0,
-        1,
+        baseCycleNumber,
         150000,
         'purchase'
       );
 
       // Log attribute upgrade events with 5% discount (level 1 training facility)
-      for (let cycle = 1; cycle <= 2; cycle++) {
+      for (let i = 0; i < 2; i++) {
+        const cycle = baseCycleNumber + i;
         // Upgrade cost: 20,000 with 5% discount = 19,000 actual cost
         await prisma.auditLog.create({
           data: {
             cycleNumber: cycle,
             eventType: 'attribute_upgrade',
             eventTimestamp: new Date(),
-            sequenceNumber: cycle * 100,
+            sequenceNumber: baseSequenceNumber + i + 1,
             userId: testUserId,
             robotId: testRobotId,
             payload: {
@@ -247,7 +263,7 @@ describe('ROICalculatorService', () => {
       // Update cycle metadata
       await prisma.cycleMetadata.update({
         where: { id: 1 },
-        data: { totalCycles: 2 },
+        data: { totalCycles: baseCycleNumber + 1 },
       });
 
       const roi = await roiCalculatorService.calculateFacilityROI(
@@ -273,25 +289,26 @@ describe('ROICalculatorService', () => {
       await prisma.facility.create({
         data: {
           userId: testUserId,
-          facilityType: 'income_generator',
+          facilityType: 'merchandising_hub',
           level: 3,
         },
       });
 
       // Log purchase events
       await eventLogger.logFacilityTransaction(
-        1,
+        baseCycleNumber,
         testUserId,
-        'income_generator',
+        'merchandising_hub',
         0,
-        1,
+        baseCycleNumber,
         400000,
         'purchase'
       );
 
       // Simulate high income to reach breakeven quickly
       // Level 3 unlocks streaming, so we have both merchandising and streaming
-      for (let cycle = 1; cycle <= 100; cycle++) {
+      for (let i = 0; i < 100; i++) {
+        const cycle = baseCycleNumber + i;
         await eventLogger.logPassiveIncome(
           cycle,
           testUserId,
@@ -305,27 +322,27 @@ describe('ROICalculatorService', () => {
 
         // Log operating costs
         await eventLogger.logOperatingCosts(cycle, testUserId, [
-          { facilityType: 'income_generator', level: 3, cost: 8000 },
+          { facilityType: 'merchandising_hub', level: 3, cost: 8000 },
         ], 8000);
       }
 
       // Update cycle metadata
       await prisma.cycleMetadata.update({
         where: { id: 1 },
-        data: { totalCycles: 100 },
+        data: { totalCycles: baseCycleNumber + 99 },
       });
 
       const roi = await roiCalculatorService.calculateFacilityROI(
         testUserId,
-        'income_generator'
+        'merchandising_hub'
       );
 
       expect(roi).not.toBeNull();
-      expect(roi!.totalInvestment).toBe(1800000);
+      expect(roi!.totalInvestment).toBe(900000); // 150k + 300k + 450k
       expect(roi!.totalReturns).toBe(1500000); // (12000 + 3000) * 100 cycles
       expect(roi!.totalOperatingCosts).toBe(800000); // 8000 * 100 cycles
       
-      // Net profit = 1500000 - 800000 - 1800000 = -1100000 (still not profitable)
+      // Net profit = 1500000 - 800000 - 900000 = -200000 (still not profitable)
       expect(roi!.isProfitable).toBe(false);
       expect(roi!.breakevenCycle).toBeNull();
     });
@@ -336,7 +353,7 @@ describe('ROICalculatorService', () => {
       // Purchase multiple facilities
       await prisma.facility.createMany({
         data: [
-          { userId: testUserId, facilityType: 'income_generator', level: 1 },
+          { userId: testUserId, facilityType: 'merchandising_hub', level: 1 },
           { userId: testUserId, facilityType: 'repair_bay', level: 2 },
           { userId: testUserId, facilityType: 'training_facility', level: 1 },
           { userId: testUserId, facilityType: 'roster_expansion', level: 0 }, // Not purchased
@@ -345,29 +362,29 @@ describe('ROICalculatorService', () => {
 
       // Log purchase events
       await eventLogger.logFacilityTransaction(
-        1,
+        baseCycleNumber,
         testUserId,
-        'income_generator',
+        'merchandising_hub',
         0,
-        1,
+        baseCycleNumber,
         400000,
         'purchase'
       );
       await eventLogger.logFacilityTransaction(
-        1,
+        baseCycleNumber,
         testUserId,
         'repair_bay',
         0,
-        1,
+        baseCycleNumber,
         100000,
         'purchase'
       );
       await eventLogger.logFacilityTransaction(
-        1,
+        baseCycleNumber,
         testUserId,
         'training_facility',
         0,
-        1,
+        baseCycleNumber,
         150000,
         'purchase'
       );
@@ -376,7 +393,7 @@ describe('ROICalculatorService', () => {
 
       expect(rois).toHaveLength(3); // Only purchased facilities (level > 0)
       expect(rois.map(r => r.facilityType).sort()).toEqual([
-        'income_generator',
+        'merchandising_hub',
         'repair_bay',
         'training_facility',
       ]);

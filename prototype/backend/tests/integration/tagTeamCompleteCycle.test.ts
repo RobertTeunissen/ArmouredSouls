@@ -21,18 +21,80 @@ import { executeScheduledTagTeamBattles } from '../../src/services/tagTeamBattle
 const prisma = new PrismaClient();
 
 describe('Tag Team Complete Cycle Integration Test', () => {
-  let testUsers: any[] = [];
-  let testRobots: any[] = [];
-  let testTeams: any[] = [];
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testTeamIds: number[] = [];
+  let weapon: any;
 
   beforeAll(async () => {
     await prisma.$connect();
 
     // Get a weapon for robots
-    const weapon = await prisma.weapon.findFirst();
+    weapon = await prisma.weapon.findFirst();
     if (!weapon) {
       throw new Error('No weapons found. Run seed first.');
     }
+  });
+
+  afterEach(async () => {
+    // Clean up in reverse order
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          battleType: 'tag_team',
+          robot1Id: { in: testRobotIds },
+        },
+      });
+    }
+
+    if (testTeamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTeamIds } },
+            { team2Id: { in: testTeamIds } },
+          ],
+        },
+      });
+      await prisma.tagTeam.deleteMany({
+        where: { id: { in: testTeamIds } },
+      });
+    }
+
+    if (testRobotIds.length > 0) {
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    testTeamIds = [];
+    testRobotIds = [];
+    testUserIds = [];
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it('should complete full tag team cycle: create → matchmake → battle → verify', async () => {
+    // Step 1: Create teams
+    console.log('[Test] Step 1: Creating tag teams...');
+    
+    const testUsers: any[] = [];
+    const testRobots: any[] = [];
+    const testTeams: any[] = [];
 
     // Create 4 test users (stables)
     for (let i = 0; i < 4; i++) {
@@ -45,6 +107,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
         },
       });
       testUsers.push(user);
+      testUserIds.push(user.id);
 
       // Create 2 robots per user (for 1 team each)
       for (let j = 0; j < 2; j++) {
@@ -74,49 +137,9 @@ describe('Tag Team Complete Cycle Integration Test', () => {
           },
         });
         testRobots.push(robot);
+        testRobotIds.push(robot.id);
       }
     }
-  });
-
-  afterAll(async () => {
-    // Clean up in reverse order
-    await prisma.battle.deleteMany({
-      where: {
-        battleType: 'tag_team',
-        robot1Id: { in: testRobots.map(r => r.id) },
-      },
-    });
-    await prisma.tagTeamMatch.deleteMany({
-      where: {
-        OR: testTeams.map(t => ({ team1Id: t.id })),
-      },
-    });
-    await prisma.tagTeam.deleteMany({
-      where: {
-        id: { in: testTeams.map(t => t.id) },
-      },
-    });
-    await prisma.robot.deleteMany({
-      where: {
-        id: { in: testRobots.map(r => r.id) },
-      },
-    });
-    await prisma.weaponInventory.deleteMany({
-      where: {
-        userId: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.user.deleteMany({
-      where: {
-        id: { in: testUsers.map(u => u.id) },
-      },
-    });
-    await prisma.$disconnect();
-  });
-
-  it('should complete full tag team cycle: create → matchmake → battle → verify', async () => {
-    // Step 1: Create teams
-    console.log('[Test] Step 1: Creating tag teams...');
     
     for (let i = 0; i < testUsers.length; i++) {
       const user = testUsers[i];
@@ -127,6 +150,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
       expect(result.success).toBe(true);
       expect(result.team).toBeDefined();
       testTeams.push(result.team!);
+      testTeamIds.push(result.team!.id);
     }
 
     expect(testTeams.length).toBe(4);
@@ -265,7 +289,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     await prisma.tagTeam.deleteMany({ where: { stableId: user.id } });
     await prisma.robot.deleteMany({ where: { userId: user.id } });
     await prisma.weaponInventory.deleteMany({ where: { userId: user.id } });
-    await prisma.user.delete({ where: { id: user.id } });
+    await prisma.user.deleteMany({ where: { id: user.id } });
   });
 
   it('should verify battle log contains tag events', async () => {

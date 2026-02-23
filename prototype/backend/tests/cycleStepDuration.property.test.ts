@@ -15,6 +15,7 @@ import prisma from '../src/lib/prisma';
 
 describe('Property 15: Cycle Step Duration Recording', () => {
   let eventLogger: EventLogger;
+  let testCycleNumbers: number[] = [];
 
   beforeAll(() => {
     eventLogger = new EventLogger();
@@ -26,6 +27,12 @@ describe('Property 15: Cycle Step Duration Recording', () => {
   });
 
   afterAll(async () => {
+    // Clean up any test data
+    if (testCycleNumbers.length > 0) {
+      await prisma.auditLog.deleteMany({
+        where: { cycleNumber: { in: testCycleNumbers } },
+      });
+    }
     await prisma.$disconnect();
   });
 

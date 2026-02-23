@@ -33,15 +33,15 @@ function BattleHistoryPage() {
   const [resultsPerPage, setResultsPerPage] = useState(20);
 
   useEffect(() => {
-    fetchBattles(1);
+    fetchBattles(1, battleFilter);
   }, []);
 
   useEffect(() => {
-    // Refetch when results per page changes
-    fetchBattles(1);
-  }, [resultsPerPage]);
+    // Refetch when results per page or battle filter changes
+    fetchBattles(1, battleFilter);
+  }, [resultsPerPage, battleFilter]);
 
-  const fetchBattles = async (page: number) => {
+  const fetchBattles = async (page: number, filter: typeof battleFilter) => {
     try {
       setLoading(true);
       setError(null);
@@ -54,8 +54,8 @@ function BattleHistoryPage() {
         return;
       }
       
-      console.log('[BattleHistory] Fetching battle history, page:', page);
-      const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, resultsPerPage);
+      console.log('[BattleHistory] Fetching battle history, page:', page, 'battleFilter:', filter);
+      const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, resultsPerPage, filter);
       console.log('[BattleHistory] Received data:', data);
       
       setBattles(data.data);
@@ -75,7 +75,7 @@ function BattleHistoryPage() {
   };
 
   const handlePageChange = (newPage: number) => {
-    fetchBattles(newPage);
+    fetchBattles(newPage, battleFilter);
   };
 
   const isMyRobot = (robotUserId: number) => {
@@ -227,45 +227,36 @@ function BattleHistoryPage() {
       avgELOChange,
       totalCreditsEarned: totalCredits,
       currentStreak: streakCount >= 3 ? { type: streakType!, count: streakCount } : undefined,
-      leagueStats: leagueBattles > 0 ? {
+      leagueStats: {
         battles: leagueBattles,
         wins: leagueWins,
         losses: leagueLosses,
         draws: leagueDraws,
         winRate: leagueWinRate,
         avgELOChange: leagueAvgELO,
-      } : undefined,
-      tournamentStats: tournamentBattles > 0 ? {
+      },
+      tournamentStats: {
         battles: tournamentBattles,
         wins: tournamentWins,
         losses: tournamentLosses,
         draws: tournamentDraws,
         winRate: tournamentWinRate,
         avgELOChange: tournamentAvgELO,
-      } : undefined,
-      tagTeamStats: tagTeamBattles > 0 ? {
+      },
+      tagTeamStats: {
         battles: tagTeamBattles,
         wins: tagTeamWins,
         losses: tagTeamLosses,
         draws: tagTeamDraws,
         winRate: tagTeamWinRate,
         avgELOChange: tagTeamAvgELO,
-      } : undefined,
+      },
     };
   }, [battles]);
 
-  // Filter and sort battles
+  // Filter and sort battles (battle type filter now handled by backend)
   const filteredAndSortedBattles = useMemo(() => {
     let filtered = battles;
-
-    // Apply battle type filter (league/tournament/tag_team)
-    if (battleFilter === 'league') {
-      filtered = filtered.filter(b => b.battleType !== 'tournament' && b.battleType !== 'tag_team');
-    } else if (battleFilter === 'tournament') {
-      filtered = filtered.filter(b => b.battleType === 'tournament');
-    } else if (battleFilter === 'tag_team') {
-      filtered = filtered.filter(b => b.battleType === 'tag_team');
-    }
 
     // Apply outcome filter
     if (outcomeFilter !== 'all') {
@@ -312,7 +303,7 @@ function BattleHistoryPage() {
     });
 
     return sorted;
-  }, [battles, battleFilter, outcomeFilter, searchTerm, sortBy]);
+  }, [battles, outcomeFilter, searchTerm, sortBy]);
 
   const clearFilters = () => {
     setOutcomeFilter('all');
@@ -422,10 +413,9 @@ function BattleHistoryPage() {
               </div>
 
               {/* Filter Results Count */}
-              {(hasActiveFilters || filteredAndSortedBattles.length !== battles.length) && (
+              {filteredAndSortedBattles.length !== battles.length && (
                 <div className="mt-3 text-sm text-[#8b949e]">
                   Showing {filteredAndSortedBattles.length} of {battles.length} battles
-                  {battleFilter !== 'overall' && ` (${battleFilter} only)`}
                 </div>
               )}
             </div>

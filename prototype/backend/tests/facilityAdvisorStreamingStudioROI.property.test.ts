@@ -171,8 +171,8 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
     testUserId = user.id;
   });
 
-  afterAll(async () => {
-    // Clean up test data
+  afterEach(async () => {
+    // Clean up test data after each test
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
     await prisma.cycleSnapshot.deleteMany({
@@ -180,19 +180,12 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
         cycleNumber: { gte: currentCycle - 10, lte: currentCycle },
       },
     });
-    await prisma.user.delete({ where: { id: testUserId } });
-    await prisma.$disconnect();
   });
 
-  beforeEach(async () => {
-    // Clean up robots, facilities, and cycle snapshots before each test
-    await prisma.robot.deleteMany({ where: { userId: testUserId } });
-    await prisma.facility.deleteMany({ where: { userId: testUserId } });
-    await prisma.cycleSnapshot.deleteMany({
-      where: {
-        cycleNumber: { gte: currentCycle - 10, lte: currentCycle },
-      },
-    });
+  afterAll(async () => {
+    // Final cleanup of user
+    await prisma.user.deleteMany({ where: { id: testUserId } });
+    await prisma.$disconnect();
   });
 
   /**
@@ -268,8 +261,8 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
             const expectedOperatingCostIncrease = nextLevel * 100 - currentLevel * 100;
 
             // Calculate expected streaming revenue
-            const currentMultiplier = 1 + (currentLevel * 0.1);
-            const nextMultiplier = 1 + (nextLevel * 0.1);
+            const currentMultiplier = 1 + (currentLevel * 1.0);
+            const nextMultiplier = 1 + (nextLevel * 1.0);
             const multiplierIncrease = nextMultiplier - currentMultiplier;
 
             // Calculate average streaming revenue per battle
@@ -357,7 +350,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
 
           // Clean up robots for next iteration
           for (const robot of robots) {
-            await prisma.robot.delete({ where: { id: robot.id } });
+            await prisma.robot.deleteMany({ where: { id: robot.id } });
           }
         }
       ),
@@ -473,8 +466,8 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
 
           if (studioRec) {
             const nextLevel = currentLevel + 1;
-            const currentMultiplier = 1 + (currentLevel * 0.1);
-            const nextMultiplier = 1 + (nextLevel * 0.1);
+            const currentMultiplier = 1 + (currentLevel * 1.0);
+            const nextMultiplier = 1 + (nextLevel * 1.0);
             const multiplierIncrease = nextMultiplier - currentMultiplier;
 
             // Calculate expected streaming revenue

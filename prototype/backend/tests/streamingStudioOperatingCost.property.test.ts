@@ -12,6 +12,10 @@ import fc from 'fast-check';
 import { calculateFacilityOperatingCost } from '../src/utils/economyCalculations';
 
 describe('Property 8: Streaming Studio Operating Cost Formula', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   /**
    * Property 8: For any Streaming Studio at level L (where L > 0), 
    * the daily operating cost should equal L × 100 credits

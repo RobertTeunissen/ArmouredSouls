@@ -14,9 +14,12 @@ describe('League Rebalancing Service', () => {
   let practiceSword: any;
 
   beforeAll(async () => {
-    // Clean up
+    // Clean up in correct order
     await prisma.scheduledMatch.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
+    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});
@@ -44,6 +47,17 @@ describe('League Rebalancing Service', () => {
         loadoutType: 'single',
       },
     });
+  });
+
+  afterEach(async () => {
+    // Clean up after each test to prevent pollution
+    // Only delete robots and their dependencies, keep testUser and practiceSword
+    await prisma.scheduledMatch.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
+    await prisma.battle.deleteMany({});
+    await prisma.robot.deleteMany({});
+    await prisma.weaponInventory.deleteMany({});
+    await prisma.facility.deleteMany({});
   });
 
   afterAll(async () => {
@@ -92,7 +106,7 @@ describe('League Rebalancing Service', () => {
 
       // Clean up
       for (const robot of robots) {
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
@@ -137,7 +151,7 @@ describe('League Rebalancing Service', () => {
 
       // Clean up
       for (const robot of robots) {
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
@@ -181,7 +195,7 @@ describe('League Rebalancing Service', () => {
 
       // Clean up
       for (const robot of robots) {
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
@@ -220,7 +234,7 @@ describe('League Rebalancing Service', () => {
 
       // Clean up
       for (const robot of robots) {
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
@@ -264,7 +278,7 @@ describe('League Rebalancing Service', () => {
 
       // Clean up
       for (const robot of robots) {
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
@@ -309,8 +323,8 @@ describe('League Rebalancing Service', () => {
       expect(updated?.elo).toBe(1300); // ELO should not change
 
       // Clean up
-      await prisma.robot.delete({ where: { id: robot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
     it('should throw error when trying to promote from champion', async () => {
@@ -338,8 +352,8 @@ describe('League Rebalancing Service', () => {
       await expect(promoteRobot(robot)).rejects.toThrow();
 
       // Clean up
-      await prisma.robot.delete({ where: { id: robot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
   });
 
@@ -375,8 +389,8 @@ describe('League Rebalancing Service', () => {
       expect(updated?.elo).toBe(1100); // ELO should not change
 
       // Clean up
-      await prisma.robot.delete({ where: { id: robot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
     it('should throw error when trying to demote from bronze', async () => {
@@ -404,8 +418,8 @@ describe('League Rebalancing Service', () => {
       await expect(demoteRobot(robot)).rejects.toThrow();
 
       // Clean up
-      await prisma.robot.delete({ where: { id: robot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
   });
 
@@ -448,7 +462,7 @@ describe('League Rebalancing Service', () => {
 
       // Clean up
       for (const robot of robots) {
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
@@ -527,7 +541,7 @@ describe('League Rebalancing Service', () => {
 
       // Clean up
       for (const robot of robots) {
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });

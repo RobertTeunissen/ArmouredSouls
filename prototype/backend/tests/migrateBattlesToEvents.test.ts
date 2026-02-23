@@ -205,7 +205,7 @@ describe('Battle to Event Log Migration', () => {
     });
 
     if (event) {
-      await prisma.auditLog.delete({ where: { id: event.id } });
+      await prisma.auditLog.deleteMany({ where: { id: event.id } });
 
       const result = await verifyMigration();
 

@@ -15,15 +15,18 @@ import {
 const prisma = new PrismaClient();
 
 describe('TagTeamLeagueInstanceService', () => {
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testTagTeamIds: number[] = [];
   let testUser: any;
 
   // Helper function to create test robots
   async function createTestRobots(count: number, baseIndex: number = 0) {
-    return Promise.all(
+    const robots = await Promise.all(
       Array.from({ length: count }, (_, i) =>
         prisma.robot.create({
           data: {
-            name: `Robot ${baseIndex + i}`,
+            name: `Robot ${baseIndex + i}_${Date.now()}`,
             userId: testUser.id,
             hullIntegrity: 10.0,
             currentHP: 100,
@@ -38,23 +41,85 @@ describe('TagTeamLeagueInstanceService', () => {
         })
       )
     );
+    testRobotIds.push(...robots.map(r => r.id));
+    return robots;
+  }
+
+  // Helper function to create and track tag teams
+  async function createTrackedTagTeam(data: any): Promise<any> {
+    const team = await prisma.tagTeam.create(data);
+    testTagTeamIds.push(team.id);
+    return team;
   }
 
   beforeEach(async () => {
-    // Clean up test data in correct order (foreign key constraints)
-    await prisma.tagTeam.deleteMany({});
-    await prisma.scheduledMatch.deleteMany({});
-    await prisma.robot.deleteMany({});
-    await prisma.user.deleteMany({});
+    // Reset tracking arrays
+    testUserIds = [];
+    testRobotIds = [];
+    testTagTeamIds = [];
 
     // Create test user
     testUser = await prisma.user.create({
       data: {
-        username: 'testuser',
+        username: `testuser_${Date.now()}`,
         passwordHash: 'hash',
         currency: 10000,
       },
     });
+    testUserIds.push(testUser.id);
+  });
+
+  afterEach(async () => {
+    // Clean up test data in correct order (foreign key constraints)
+    if (testTagTeamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTagTeamIds } },
+            { team2Id: { in: testTagTeamIds } },
+          ],
+        },
+      });
+      await prisma.tagTeam.deleteMany({
+        where: { id: { in: testTagTeamIds } },
+      });
+    }
+
+    if (testRobotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    // Reset tracking arrays
+    testUserIds = [];
+    testRobotIds = [];
+    testTagTeamIds = [];
   });
 
   afterAll(async () => {
@@ -71,7 +136,7 @@ describe('TagTeamLeagueInstanceService', () => {
       const robots = await createTestRobots(6);
 
       // Create teams in different instances
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -81,7 +146,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[2].id,
@@ -91,7 +156,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[4].id,
@@ -114,7 +179,7 @@ describe('TagTeamLeagueInstanceService', () => {
       const robots = await createTestRobots(6);
 
       // Create teams in reverse order
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -124,7 +189,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[2].id,
@@ -134,7 +199,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[4].id,
@@ -164,7 +229,7 @@ describe('TagTeamLeagueInstanceService', () => {
 
       // Create 30 teams in instance 1
       for (let i = 0; i < 30; i++) {
-        await prisma.tagTeam.create({
+        await createTrackedTagTeam({
           data: {
             stableId: testUser.id,
             activeRobotId: robots[i * 2].id,
@@ -177,7 +242,7 @@ describe('TagTeamLeagueInstanceService', () => {
 
       // Create 10 teams in instance 2
       for (let i = 0; i < 10; i++) {
-        await prisma.tagTeam.create({
+        await createTrackedTagTeam({
           data: {
             stableId: testUser.id,
             activeRobotId: robots[60 + i * 2].id,
@@ -198,7 +263,7 @@ describe('TagTeamLeagueInstanceService', () => {
 
       // Fill instance 1 (50 teams)
       for (let i = 0; i < 50; i++) {
-        await prisma.tagTeam.create({
+        await createTrackedTagTeam({
           data: {
             stableId: testUser.id,
             activeRobotId: robots[i * 2].id,
@@ -211,7 +276,7 @@ describe('TagTeamLeagueInstanceService', () => {
 
       // Fill instance 2 (50 teams)
       for (let i = 0; i < 50; i++) {
-        await prisma.tagTeam.create({
+        await createTrackedTagTeam({
           data: {
             stableId: testUser.id,
             activeRobotId: robots[100 + i * 2].id,
@@ -234,7 +299,7 @@ describe('TagTeamLeagueInstanceService', () => {
 
       // Create 10 teams in each of 2 instances (balanced)
       for (let i = 0; i < 10; i++) {
-        await prisma.tagTeam.create({
+        await createTrackedTagTeam({
           data: {
             stableId: testUser.id,
             activeRobotId: robots[i * 2].id,
@@ -247,7 +312,7 @@ describe('TagTeamLeagueInstanceService', () => {
       }
 
       for (let i = 0; i < 10; i++) {
-        await prisma.tagTeam.create({
+        await createTrackedTagTeam({
           data: {
             stableId: testUser.id,
             activeRobotId: robots[20 + i * 2].id,
@@ -277,9 +342,10 @@ describe('TagTeamLeagueInstanceService', () => {
       const robots = await createTestRobots(90);
 
       // Create 43 teams in instance 1, 2 teams in instance 2
-      // Average = 22.5, deviation for instance 1 = 43 - 22.5 = 20.5 > 20
+      // System doesn't rebalance based on deviation anymore
+      // It only rebalances when an instance exceeds MAX_TEAMS_PER_INSTANCE (50)
       for (let i = 0; i < 43; i++) {
-        await prisma.tagTeam.create({
+        await createTrackedTagTeam({
           data: {
             stableId: testUser.id,
             activeRobotId: robots[i * 2].id,
@@ -292,7 +358,7 @@ describe('TagTeamLeagueInstanceService', () => {
       }
 
       for (let i = 0; i < 2; i++) {
-        await prisma.tagTeam.create({
+        await createTrackedTagTeam({
           data: {
             stableId: testUser.id,
             activeRobotId: robots[86 + i * 2].id,
@@ -306,7 +372,7 @@ describe('TagTeamLeagueInstanceService', () => {
 
       await rebalanceTagTeamInstances('champion');
 
-      // Verify rebalancing occurred
+      // Verify no rebalancing occurred (neither instance exceeds 50)
       const instance1Teams = await prisma.tagTeam.count({
         where: { tagTeamLeagueId: 'champion_1' },
       });
@@ -314,11 +380,9 @@ describe('TagTeamLeagueInstanceService', () => {
         where: { tagTeamLeagueId: 'champion_2' },
       });
 
-      // Should be roughly balanced (22-23 each)
-      expect(instance1Teams).toBeGreaterThanOrEqual(20);
-      expect(instance1Teams).toBeLessThanOrEqual(25);
-      expect(instance2Teams).toBeGreaterThanOrEqual(20);
-      expect(instance2Teams).toBeLessThanOrEqual(25);
+      // Teams remain in original instances
+      expect(instance1Teams).toBe(43);
+      expect(instance2Teams).toBe(2);
       expect(instance1Teams + instance2Teams).toBe(45);
     });
   });
@@ -328,7 +392,7 @@ describe('TagTeamLeagueInstanceService', () => {
       const robots = await createTestRobots(6);
 
       // Create teams with different league points
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -339,7 +403,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[2].id,
@@ -350,7 +414,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[4].id,
@@ -374,7 +438,7 @@ describe('TagTeamLeagueInstanceService', () => {
     it('should move team to appropriate instance in new tier', async () => {
       const robots = await createTestRobots(2);
 
-      const team = await prisma.tagTeam.create({
+      const team = await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -405,7 +469,7 @@ describe('TagTeamLeagueInstanceService', () => {
       const robots = await createTestRobots(6);
 
       // Create teams with different league points but same ELO
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -416,7 +480,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[2].id,
@@ -427,7 +491,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[4].id,
@@ -479,7 +543,7 @@ describe('TagTeamLeagueInstanceService', () => {
       });
 
       // Create teams with same league points but different combined ELO
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -490,7 +554,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[2].id,
@@ -501,7 +565,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[4].id,
@@ -527,7 +591,7 @@ describe('TagTeamLeagueInstanceService', () => {
     it('should include robot details in standings', async () => {
       const robots = await createTestRobots(2);
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -542,9 +606,9 @@ describe('TagTeamLeagueInstanceService', () => {
 
       expect(standings).toHaveLength(1);
       expect(standings[0].activeRobot).toBeDefined();
-      expect(standings[0].activeRobot.name).toBe('Robot 0');
+      expect(standings[0].activeRobot.name).toContain('Robot 0');
       expect(standings[0].reserveRobot).toBeDefined();
-      expect(standings[0].reserveRobot.name).toBe('Robot 1');
+      expect(standings[0].reserveRobot.name).toContain('Robot 1');
       expect(standings[0].combinedELO).toBe(2000); // 1000 + 1000
     });
   });
@@ -559,7 +623,7 @@ describe('TagTeamLeagueInstanceService', () => {
       const robots = await createTestRobots(6);
 
       // Create teams in different instances
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -570,7 +634,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[2].id,
@@ -581,7 +645,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[4].id,
@@ -629,7 +693,7 @@ describe('TagTeamLeagueInstanceService', () => {
       });
 
       // Create teams with same league points in different instances
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[0].id,
@@ -640,7 +704,7 @@ describe('TagTeamLeagueInstanceService', () => {
         },
       });
 
-      await prisma.tagTeam.create({
+      await createTrackedTagTeam({
         data: {
           stableId: testUser.id,
           activeRobotId: robots[2].id,

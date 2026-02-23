@@ -84,8 +84,8 @@ async function ensureTestRobot(robotId: number, userId: number) {
 }
 
 describe('TrendAnalysisService Property-Based Tests', () => {
-  beforeEach(async () => {
-    // Clean up before each test
+  afterEach(async () => {
+    // Clean up after each test in correct dependency order
     await prisma.cycleSnapshot.deleteMany({});
     await prisma.auditLog.deleteMany({});
     await prisma.battle.deleteMany({});
@@ -97,7 +97,10 @@ describe('TrendAnalysisService Property-Based Tests', () => {
     // Clear test data caches
     testUsers.clear();
     testRobots.clear();
-    
+  });
+
+  beforeEach(async () => {
+    // Clear test data caches
     // Clear sequence cache
     for (let i = 1; i <= 200; i++) {
       clearSequenceCache(i);

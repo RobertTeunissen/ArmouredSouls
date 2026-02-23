@@ -29,6 +29,21 @@ describe('Admin Cycle Generation Integration Tests', () => {
   beforeAll(async () => {
     await prisma.$connect();
 
+    // Seed weapons required by archetypes
+    await prisma.weapon.createMany({
+      data: [
+        { name: 'Power Sword', weaponType: 'melee', baseDamage: 10, cooldown: 3, cost: 100000, handsRequired: 'one', damageType: 'melee', loadoutType: 'single' },
+        { name: 'Combat Shield', weaponType: 'shield', baseDamage: 0, cooldown: 0, cost: 100000, handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield' },
+        { name: 'Plasma Cannon', weaponType: 'energy', baseDamage: 25, cooldown: 5, cost: 500000, handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed' },
+        { name: 'Railgun', weaponType: 'ballistic', baseDamage: 30, cooldown: 6, cost: 600000, handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed' },
+        { name: 'Heavy Hammer', weaponType: 'melee', baseDamage: 28, cooldown: 5, cost: 550000, handsRequired: 'two', damageType: 'melee', loadoutType: 'two_handed' },
+        { name: 'Machine Gun', weaponType: 'ballistic', baseDamage: 7, cooldown: 2, cost: 150000, handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single' },
+        { name: 'Plasma Blade', weaponType: 'energy', baseDamage: 12, cooldown: 2, cost: 200000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single' },
+        { name: 'Plasma Rifle', weaponType: 'energy', baseDamage: 15, cooldown: 3, cost: 250000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single' },
+      ],
+      skipDuplicates: true,
+    });
+
     // Create admin user
     adminUser = await prisma.user.create({
       data: {
@@ -54,31 +69,78 @@ describe('Admin Cycle Generation Integration Tests', () => {
     }
   });
 
+  afterEach(async () => {
+    // Clean up auto-generated users and their data after each test
+    const autoUsers = await prisma.user.findMany({
+      where: { username: { startsWith: 'auto_user_' } },
+      select: { id: true },
+    });
+    
+    const userIds = autoUsers.map(u => u.id);
+    
+    if (userIds.length > 0) {
+      const robots = await prisma.robot.findMany({
+        where: { userId: { in: userIds } },
+        select: { id: true },
+      });
+      const robotIds = robots.map(r => r.id);
+      
+      if (robotIds.length > 0) {
+        await prisma.battleParticipant.deleteMany({
+          where: { robotId: { in: robotIds } },
+        });
+        await prisma.battle.deleteMany({
+          where: {
+            OR: [
+              { robot1Id: { in: robotIds } },
+              { robot2Id: { in: robotIds } },
+            ],
+          },
+        });
+        await prisma.scheduledMatch.deleteMany({
+          where: {
+            OR: [
+              { robot1Id: { in: robotIds } },
+              { robot2Id: { in: robotIds } },
+            ],
+          },
+        });
+      }
+      
+      await prisma.weaponInventory.deleteMany({
+        where: { userId: { in: userIds } },
+      });
+      await prisma.robot.deleteMany({
+        where: { userId: { in: userIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: userIds } },
+      });
+    }
+
+    // Reset cycle counter after each test
+    await prisma.cycleMetadata.update({
+      where: { id: 1 },
+      data: { totalCycles: 0 },
+    });
+  });
+
   afterAll(async () => {
     // Cleanup admin user
     if (adminUser) {
       await deleteTestUser(adminUser.id);
     }
 
-    // Clean up auto-generated users
-    await prisma.user.deleteMany({
-      where: { username: { startsWith: 'auto_user_' } },
+    // Cleanup weapons created in beforeAll
+    await prisma.weapon.deleteMany({
+      where: {
+        name: {
+          in: ['Power Sword', 'Combat Shield', 'Plasma Cannon', 'Railgun', 'Heavy Hammer', 'Machine Gun', 'Plasma Blade', 'Plasma Rifle'],
+        },
+      },
     });
 
     await prisma.$disconnect();
-  });
-
-  beforeEach(async () => {
-    // Reset cycle counter before each test
-    await prisma.cycleMetadata.update({
-      where: { id: 1 },
-      data: { totalCycles: 0 },
-    });
-
-    // Clean up auto-generated users before each test
-    await prisma.user.deleteMany({
-      where: { username: { startsWith: 'auto_user_' } },
-    });
   });
 
   describe('POST /api/admin/cycles/bulk with generateUsersPerCycle', () => {

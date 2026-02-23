@@ -150,7 +150,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
       const cycleMetadata = await prisma.cycleMetadata.findUnique({
         where: { id: 1 },
       });
-      const currentCycle = cycleMetadata?.totalCycles || 0;
+      const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
 
       await eventLogger.logWeaponPurchase(
         currentCycle,

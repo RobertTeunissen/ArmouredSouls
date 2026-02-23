@@ -12,8 +12,8 @@ import { robotPerformanceService } from '../src/services/robotPerformanceService
 const prisma = new PrismaClient();
 
 describe('ELO Progression Property-Based Tests', () => {
-  beforeEach(async () => {
-    // Clean up test data before each test
+  afterEach(async () => {
+    // Clean up test data after each test in correct dependency order
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.user.deleteMany({});

@@ -131,29 +131,45 @@ describe('Validation Service - Unit Tests', () => {
      * Test stable name uniqueness check
      * Requirements: 1.6
      */
-    let testUser1: any;
-    let testUser2: any;
+    let testUserIds: number[] = [];
 
     beforeAll(async () => {
       await prisma.$connect();
+    });
 
-      // Create test users
+    afterEach(async () => {
+      // Cleanup after each test
+      if (testUserIds.length > 0) {
+        await prisma.user.deleteMany({
+          where: { id: { in: testUserIds } },
+        });
+      }
+      testUserIds = [];
+    });
+
+    afterAll(async () => {
+      await prisma.$disconnect();
+    });
+
+    test('should return false when stable name is already taken by another user', async () => {
       const passwordHash = await bcrypt.hash('TestPass123', 10);
+      const timestamp = Date.now();
       
-      testUser1 = await prisma.user.create({
+      const testUser1 = await prisma.user.create({
         data: {
-          username: `uniquetest1_${Date.now()}`,
+          username: `utest1_${timestamp}`,
           passwordHash,
           role: 'user',
           currency: 10000,
           prestige: 100,
-          stableName: 'UniqueStableName',
+          stableName: `UniqueStableName_${timestamp}`,
         },
       });
+      testUserIds.push(testUser1.id);
 
-      testUser2 = await prisma.user.create({
+      const testUser2 = await prisma.user.create({
         data: {
-          username: `uniquetest2_${Date.now()}`,
+          username: `utest2_${timestamp}`,
           passwordHash,
           role: 'user',
           currency: 10000,
@@ -161,38 +177,83 @@ describe('Validation Service - Unit Tests', () => {
           stableName: null,
         },
       });
-    });
+      testUserIds.push(testUser2.id);
 
-    afterAll(async () => {
-      // Cleanup
-      if (testUser1) {
-        await prisma.user.delete({ where: { id: testUser1.id } }).catch(() => {});
-      }
-      if (testUser2) {
-        await prisma.user.delete({ where: { id: testUser2.id } }).catch(() => {});
-      }
-      await prisma.$disconnect();
-    });
-
-    test('should return false when stable name is already taken by another user', async () => {
-      const isUnique = await isStableNameUnique('UniqueStableName', testUser2.id);
+      const isUnique = await isStableNameUnique(testUser1.stableName!, testUser2.id);
       expect(isUnique).toBe(false);
     });
 
     test('should return true when stable name is not taken', async () => {
-      const isUnique = await isStableNameUnique('BrandNewStableName', testUser2.id);
+      const passwordHash = await bcrypt.hash('TestPass123', 10);
+      const timestamp = Date.now();
+      
+      const testUser = await prisma.user.create({
+        data: {
+          username: `utest3_${timestamp}`,
+          passwordHash,
+          role: 'user',
+          currency: 10000,
+          prestige: 100,
+          stableName: null,
+        },
+      });
+      testUserIds.push(testUser.id);
+
+      const isUnique = await isStableNameUnique(`BrandNewStableName_${timestamp}`, testUser.id);
       expect(isUnique).toBe(true);
     });
 
     test('should return true when stable name is owned by the current user', async () => {
+      const passwordHash = await bcrypt.hash('TestPass123', 10);
+      const timestamp = Date.now();
+      
+      const testUser = await prisma.user.create({
+        data: {
+          username: `utest4_${timestamp}`,
+          passwordHash,
+          role: 'user',
+          currency: 10000,
+          prestige: 100,
+          stableName: `OwnStableName_${timestamp}`,
+        },
+      });
+      testUserIds.push(testUser.id);
+
       // User should be able to keep their own stable name
-      const isUnique = await isStableNameUnique('UniqueStableName', testUser1.id);
+      const isUnique = await isStableNameUnique(testUser.stableName!, testUser.id);
       expect(isUnique).toBe(true);
     });
 
     test('should be case-sensitive for uniqueness', async () => {
+      const passwordHash = await bcrypt.hash('TestPass123', 10);
+      const rand = Math.floor(Math.random() * 10000);
+      
+      const testUser1 = await prisma.user.create({
+        data: {
+          username: `utest5_${rand}`,
+          passwordHash,
+          role: 'user',
+          currency: 10000,
+          prestige: 100,
+          stableName: `CaseName_${rand}`,
+        },
+      });
+      testUserIds.push(testUser1.id);
+
+      const testUser2 = await prisma.user.create({
+        data: {
+          username: `utest6_${rand}`,
+          passwordHash,
+          role: 'user',
+          currency: 10000,
+          prestige: 100,
+          stableName: null,
+        },
+      });
+      testUserIds.push(testUser2.id);
+
       // Different case should be considered different names
-      const isUnique = await isStableNameUnique('uniquestablename', testUser2.id);
+      const isUnique = await isStableNameUnique(testUser1.stableName!.toLowerCase(), testUser2.id);
       expect(isUnique).toBe(true);
     });
   });

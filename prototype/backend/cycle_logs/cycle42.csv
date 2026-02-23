@@ -1,0 +1,294 @@
+Timestamp | Level | Message
+2026-02-23T15:59:18.894Z | INFO | === Cycle 42 Started ===
+2026-02-23T15:59:18.894Z | INFO | Cycle 42 (2/3)
+2026-02-23T15:59:18.894Z | INFO |  [Admin] === Cycle 42 (2/3) ===
+2026-02-23T15:59:18.900Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-23T15:59:18.901Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-23T15:59:18.901Z
+2026-02-23T15:59:18.903Z | INFO | [BattleOrchestrator] Found 8 matches to execute
+2026-02-23T15:59:18.978Z | INFO | [Streaming] Strategist C041 earned ₡1,002 from Battle #76598
+2026-02-23T15:59:18.980Z | INFO | [Streaming] Prestige Hunter C041 earned ₡1,003 from Battle #76598
+2026-02-23T15:59:18.999Z | INFO | [Battle] League: bronze | Strategist C041 (User 47578) vs Prestige Hunter C041 (User 47579) | Winner: Prestige Hunter C041 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Prestige Hunter C041
+2026-02-23T15:59:19.065Z | INFO | [Streaming] Fortress Prime C041 earned ₡1,002 from Battle #76601
+2026-02-23T15:59:19.067Z | INFO | [Streaming] Glass Cannon A C041 earned ₡1,003 from Battle #76601
+2026-02-23T15:59:19.083Z | INFO | [Battle] League: bronze | Fortress Prime C041 (User 47580) vs Glass Cannon A C041 (User 47582) | Winner: Glass Cannon A C041 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Glass Cannon A C041
+2026-02-23T15:59:19.145Z | INFO | [Streaming] Glass Cannon B C041 earned ₡1,002 from Battle #76603
+2026-02-23T15:59:19.147Z | INFO | [Streaming] Glass Cannon C C041 earned ₡1,003 from Battle #76603
+2026-02-23T15:59:19.163Z | INFO | [Battle] League: bronze | Glass Cannon B C041 (User 47583) vs Glass Cannon C C041 (User 47584) | Winner: Glass Cannon C C041 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4 | Kill: Glass Cannon C C041
+2026-02-23T15:59:19.231Z | INFO | [Streaming] Velocity Alpha C041 earned ₡1,002 from Battle #76605
+2026-02-23T15:59:19.234Z | INFO | [Streaming] Velocity Beta C041 earned ₡1,002 from Battle #76605
+2026-02-23T15:59:19.253Z | INFO | [Battle] League: bronze | Velocity Alpha C041 (User 47586) vs Velocity Beta C041 (User 47587) | Winner: Velocity Beta C041 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T15:59:19.320Z | INFO | [Streaming] Velocity Gamma C041 earned ₡1,003 from Battle #76607
+2026-02-23T15:59:19.322Z | INFO | [Streaming] Equilibrium C041 earned ₡1,002 from Battle #76607
+2026-02-23T15:59:19.338Z | INFO | [Battle] League: bronze | Velocity Gamma C041 (User 47589) vs Equilibrium C041 (User 47590) | Winner: Velocity Gamma C041 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4
+2026-02-23T15:59:19.400Z | INFO | [Streaming] Investor One C041 earned ₡1,002 from Battle #76609
+2026-02-23T15:59:19.402Z | INFO | [Streaming] Specialist Alpha C041 earned ₡1,003 from Battle #76609
+2026-02-23T15:59:19.420Z | INFO | [Battle] League: bronze | Investor One C041 (User 47591) vs Specialist Alpha C041 (User 47592) | Winner: Specialist Alpha C041 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T15:59:19.494Z | INFO | [Streaming] Specialist Beta C041 earned ₡1,002 from Battle #76611
+2026-02-23T15:59:19.496Z | INFO | [Streaming] Brawler Prime C041 earned ₡1,003 from Battle #76611
+2026-02-23T15:59:19.513Z | INFO | [Battle] League: bronze | Specialist Beta C041 (User 47592) vs Brawler Prime C041 (User 47594) | Winner: Brawler Prime C041 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Brawler Prime C041
+2026-02-23T15:59:19.520Z | ERROR | [BattleOrchestrator] Failed to process match 52695: {}
+2026-02-23T15:59:19.526Z | INFO | [BattleOrchestrator] Execution complete: 7 successful, 1 failed, 0 bye-matches
+2026-02-23T15:59:19.526Z | INFO | [BattleOrchestrator] Reputation: 35 prestige, 20 fame awarded
+2026-02-23T15:59:19.528Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-23T15:59:19.547Z | INFO | [RepairService] | User 47596 | Robot 734702 (Longshot C041) | Cost: ₡4,475 | Discount: 0%
+2026-02-23T15:59:19.586Z | INFO | [RepairService] | User 47608 | Robot 734776 (Velocity Gamma C041) | Cost: ₡21,528 | Discount: 0%
+2026-02-23T15:59:19.601Z | INFO | [RepairService] | User 47573 | Robot 734529 (Investor One C041) | Cost: ₡5,790 | Discount: 6%
+2026-02-23T15:59:19.614Z | INFO | [RepairService] | User 47582 | Robot 734598 (Glass Cannon A C041) | Cost: ₡8,160 | Discount: 0%
+2026-02-23T15:59:19.626Z | INFO | [RepairService] | User 47601 | Robot 734735 (Glass Cannon A C041) | Cost: ₡5,952 | Discount: 0%
+2026-02-23T15:59:19.642Z | ERROR | [RepairService] | ERROR | User 47603 | Robot 734743 | Failed to log repair event:  Invalid `prisma.auditLog.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/eventLogger.ts:197:27    194 };   195    196 // Insert into database → 197 await prisma.auditLog.create( Unique constraint failed on the fields: (`cycle_number`,`sequence_number`)
+2026-02-23T15:59:19.654Z | INFO | [RepairService] | User 47574 | Robot 734538 (Specialist Alpha C041) | Cost: ₡5,022 | Discount: 0%
+2026-02-23T15:59:19.660Z | INFO | [RepairService] | User 47574 | Robot 734540 (Specialist Beta C041) | Cost: ₡12,400 | Discount: 0%
+2026-02-23T15:59:19.674Z | INFO | [RepairService] | User 47597 | Robot 734710 (Strategist C041) | Cost: ₡25,600 | Discount: 0%
+2026-02-23T15:59:19.687Z | INFO | [RepairService] | User 47599 | Robot 734719 (Prestige Hunter C041) | Cost: ₡2,983 | Discount: 0%
+2026-02-23T15:59:19.701Z | INFO | [RepairService] | User 47600 | Robot 734728 (Fortress Prime C041) | Cost: ₡20,600 | Discount: 0%
+2026-02-23T15:59:19.714Z | INFO | [RepairService] | User 47604 | Robot 734750 (Glass Cannon C C041) | Cost: ₡19,200 | Discount: 0%
+2026-02-23T15:59:19.727Z | INFO | [RepairService] | User 47605 | Robot 734759 (Velocity Alpha C041) | Cost: ₡3,687 | Discount: 0%
+2026-02-23T15:59:19.743Z | INFO | [RepairService] | User 47606 | Robot 734767 (Velocity Beta C041) | Cost: ₡9,348 | Discount: 0%
+2026-02-23T15:59:19.754Z | INFO | [RepairService] | User 47575 | Robot 734548 (Brawler Prime C041) | Cost: ₡16,673 | Discount: 0%
+2026-02-23T15:59:19.764Z | INFO | [RepairService] | User 47576 | Robot 734557 (Longshot C041) | Cost: ₡5,253 | Discount: 0%
+2026-02-23T15:59:19.776Z | INFO | [RepairService] | User 47578 | Robot 734566 (Strategist C041) | Cost: ₡25,600 | Discount: 0%
+2026-02-23T15:59:19.787Z | INFO | [RepairService] | User 47579 | Robot 734576 (Prestige Hunter C041) | Cost: ₡2,531 | Discount: 0%
+2026-02-23T15:59:19.799Z | INFO | [RepairService] | User 47580 | Robot 734585 (Fortress Prime C041) | Cost: ₡20,600 | Discount: 0%
+2026-02-23T15:59:19.810Z | INFO | [RepairService] | User 47583 | Robot 734607 (Glass Cannon B C041) | Cost: ₡19,200 | Discount: 0%
+2026-02-23T15:59:19.824Z | INFO | [RepairService] | User 47586 | Robot 734631 (Velocity Alpha C041) | Cost: ₡21,528 | Discount: 0%
+2026-02-23T15:59:19.835Z | INFO | [RepairService] | User 47587 | Robot 734641 (Velocity Beta C041) | Cost: ₡3,555 | Discount: 0%
+2026-02-23T15:59:19.846Z | INFO | [RepairService] | User 47590 | Robot 734663 (Equilibrium C041) | Cost: ₡11,739 | Discount: 0%
+2026-02-23T15:59:19.858Z | INFO | [RepairService] | User 47591 | Robot 734672 (Investor One C041) | Cost: ₡5,948 | Discount: 6%
+2026-02-23T15:59:19.868Z | INFO | [RepairService] | User 47592 | Robot 734683 (Specialist Alpha C041) | Cost: ₡682 | Discount: 0%
+2026-02-23T15:59:19.873Z | INFO | [RepairService] | User 47592 | Robot 734684 (Specialist Beta C041) | Cost: ₡12,400 | Discount: 0%
+2026-02-23T15:59:19.884Z | INFO | [RepairService] | User 47594 | Robot 734698 (Brawler Prime C041) | Cost: ₡7,508 | Discount: 0%
+2026-02-23T15:59:19.893Z | INFO | [RepairService] | User 47609 | Robot 734782 (Equilibrium C041) | Cost: ₡4,300 | Discount: 0%
+2026-02-23T15:59:19.904Z | INFO | [RepairService] | User 47610 | Robot 734790 (Investor One C041) | Cost: ₡8,460 | Discount: 6%
+2026-02-23T15:59:19.917Z | INFO | [RepairService] | User 47612 | Robot 734801 (Specialist Alpha C041) | Cost: ₡12,400 | Discount: 0%
+2026-02-23T15:59:19.923Z | INFO | [RepairService] | User 47612 | Robot 734802 (Specialist Beta C041) | Cost: ₡12,400 | Discount: 0%
+2026-02-23T15:59:19.939Z | INFO | [RepairService] | User 47613 | Robot 734809 (Brawler Prime C041) | Cost: ₡9,653 | Discount: 0%
+2026-02-23T15:59:19.949Z | INFO | [RepairService] | User 47614 | Robot 734817 (Longshot C041) | Cost: ₡2,626 | Discount: 0%
+2026-02-23T15:59:19.960Z | INFO | [RepairService] | User 47616 | Robot 734825 (Strategist C041) | Cost: ₡25,600 | Discount: 0%
+2026-02-23T15:59:19.972Z | INFO | [RepairService] | User 47617 | Robot 734831 (Prestige Hunter C041) | Cost: ₡6,509 | Discount: 0%
+2026-02-23T15:59:19.986Z | INFO | [RepairService] | User 47620 | Robot 734840 (Fortress Prime C041) | Cost: ₡20,600 | Discount: 0%
+2026-02-23T15:59:20.006Z | INFO | [RepairService] | User 47621 | Robot 734848 (Glass Cannon A C041) | Cost: ₡1,920 | Discount: 0%
+2026-02-23T15:59:20.020Z | INFO | [RepairService] | User 47623 | Robot 734860 (Glass Cannon B C041) | Cost: ₡19,200 | Discount: 0%
+2026-02-23T15:59:20.034Z | INFO | [RepairService] | User 47627 | Robot 734899 (Velocity Beta C041) | Cost: ₡6,452 | Discount: 0%
+2026-02-23T15:59:20.049Z | INFO | [RepairService] | User 47629 | Robot 734911 (Velocity Gamma C041) | Cost: ₡21,528 | Discount: 0%
+2026-02-23T15:59:20.054Z | INFO | [Admin] Step 3: Skipping Tag Team Battles (even cycle 42)
+2026-02-23T15:59:20.054Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-23T15:59:20.059Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-23T15:59:20.062Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-23T15:59:20.067Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-02-23T15:59:20.067Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-23T15:59:20.067Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-02-23T15:59:20.067Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-23T15:59:20.070Z | INFO | [Rebalancing] Total robots in system: 411
+2026-02-23T15:59:20.070Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-02-23T15:59:20.078Z | INFO | [Rebalancing] bronze: 230 total robots across 4 instances
+2026-02-23T15:59:20.078Z | INFO | [Rebalancing] Processing bronze_1...
+2026-02-23T15:59:20.089Z | INFO | [Rebalancing] bronze_1: 3 robots eligible for promotion (top 10% of 34 AND ≥25 league points, 34 met points threshold)
+2026-02-23T15:59:20.096Z | INFO | [Rebalancing] Promoted: Initial Robot 37 (bronze → silver, LP: 50 retained)
+2026-02-23T15:59:20.101Z | INFO | [Rebalancing] Promoted: New Robot 242 (bronze → silver, LP: 25 retained)
+2026-02-23T15:59:20.105Z | INFO | [Rebalancing] Promoted: New Robot 214 (bronze → silver, LP: 25 retained)
+2026-02-23T15:59:20.105Z | INFO | [Rebalancing] Processing bronze_2...
+2026-02-23T15:59:20.115Z | INFO | [Rebalancing] bronze_2: 3 robots eligible for promotion (top 10% of 34 AND ≥25 league points, 34 met points threshold)
+2026-02-23T15:59:20.120Z | INFO | [Rebalancing] Promoted: Initial Robot 39 (bronze → silver, LP: 50 retained)
+2026-02-23T15:59:20.126Z | INFO | [Rebalancing] Promoted: New Robot 31 (bronze → silver, LP: 25 retained)
+2026-02-23T15:59:20.131Z | INFO | [Rebalancing] Promoted: New Robot 219 (bronze → silver, LP: 25 retained)
+2026-02-23T15:59:20.131Z | INFO | [Rebalancing] Processing bronze_3...
+2026-02-23T15:59:20.142Z | INFO | [Rebalancing] bronze_3: 3 robots eligible for promotion (top 10% of 33 AND ≥25 league points, 33 met points threshold)
+2026-02-23T15:59:20.147Z | INFO | [Rebalancing] Promoted: Initial Robot 77 (bronze → silver, LP: 50 retained)
+2026-02-23T15:59:20.152Z | INFO | [Rebalancing] Promoted: New Robot 32 (bronze → silver, LP: 25 retained)
+2026-02-23T15:59:20.157Z | INFO | [Rebalancing] Promoted: New Robot 216 (bronze → silver, LP: 25 retained)
+2026-02-23T15:59:20.157Z | INFO | [Rebalancing] Processing bronze_4...
+2026-02-23T15:59:20.169Z | INFO | [Rebalancing] bronze_4: 3 robots eligible for promotion (top 10% of 33 AND ≥25 league points, 33 met points threshold)
+2026-02-23T15:59:20.174Z | INFO | [Rebalancing] Promoted: Initial Robot 16 (bronze → silver, LP: 50 retained)
+2026-02-23T15:59:20.179Z | INFO | [Rebalancing] Promoted: New Robot 245 (bronze → silver, LP: 25 retained)
+2026-02-23T15:59:20.185Z | INFO | [Rebalancing] Promoted: New Robot 217 (bronze → silver, LP: 25 retained)
+2026-02-23T15:59:20.186Z | INFO | [Rebalancing] bronze: Promoted 12, Demoted 0 across 4 instances
+2026-02-23T15:59:20.186Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-02-23T15:59:20.194Z | INFO | [Rebalancing] silver: 191 total robots across 2 instances
+2026-02-23T15:59:20.194Z | INFO | [Rebalancing] Processing silver_1...
+2026-02-23T15:59:20.211Z | INFO | [Rebalancing] silver_1: 6 robots eligible for promotion (top 10% of 64 AND ≥25 league points, 64 met points threshold)
+2026-02-23T15:59:20.220Z | INFO | [Rebalancing] silver_1: 6 robots eligible for demotion (bottom 10% of 64)
+2026-02-23T15:59:20.226Z | INFO | [Rebalancing] Promoted: Initial Robot 31 (silver → gold, LP: 50 retained)
+2026-02-23T15:59:20.230Z | INFO | [Rebalancing] Promoted: Initial Robot 32 (silver → gold, LP: 50 retained)
+2026-02-23T15:59:20.234Z | INFO | [Rebalancing] Promoted: Initial Robot 89 (silver → gold, LP: 50 retained)
+2026-02-23T15:59:20.239Z | INFO | [Rebalancing] Promoted: Initial Robot 27 (silver → gold, LP: 50 retained)
+2026-02-23T15:59:20.244Z | INFO | [Rebalancing] Promoted: Initial Robot 47 (silver → gold, LP: 50 retained)
+2026-02-23T15:59:20.248Z | INFO | [Rebalancing] Promoted: Initial Robot 63 (silver → gold, LP: 50 retained)
+2026-02-23T15:59:20.253Z | INFO | [Rebalancing] Demoted: Initial Robot 31 (silver → bronze, LP: 50 retained)
+2026-02-23T15:59:20.259Z | INFO | [Rebalancing] Demoted: Initial Robot 32 (silver → bronze, LP: 50 retained)
+2026-02-23T15:59:20.264Z | INFO | [Rebalancing] Demoted: Initial Robot 89 (silver → bronze, LP: 50 retained)
+2026-02-23T15:59:20.270Z | INFO | [Rebalancing] Demoted: Initial Robot 27 (silver → bronze, LP: 50 retained)
+2026-02-23T15:59:20.275Z | INFO | [Rebalancing] Demoted: Initial Robot 47 (silver → bronze, LP: 50 retained)
+2026-02-23T15:59:20.280Z | INFO | [Rebalancing] Demoted: Initial Robot 63 (silver → bronze, LP: 50 retained)
+2026-02-23T15:59:20.280Z | INFO | [Rebalancing] Processing silver_2...
+2026-02-23T15:59:20.295Z | INFO | [Rebalancing] silver_2: 5 robots eligible for promotion (top 10% of 59 AND ≥25 league points, 59 met points threshold)
+2026-02-23T15:59:20.303Z | INFO | [Rebalancing] silver_2: 5 robots eligible for demotion (bottom 10% of 59)
+2026-02-23T15:59:20.309Z | INFO | [Rebalancing] Promoted: New Robot 215 (silver → gold, LP: 25 retained)
+2026-02-23T15:59:20.316Z | INFO | [Rebalancing] Promoted: New Robot 93 (silver → gold, LP: 25 retained)
+2026-02-23T15:59:20.321Z | INFO | [Rebalancing] Promoted: New Robot 81 (silver → gold, LP: 25 retained)
+2026-02-23T15:59:20.327Z | INFO | [Rebalancing] Promoted: New Robot 241 (silver → gold, LP: 25 retained)
+2026-02-23T15:59:20.331Z | INFO | [Rebalancing] Promoted: New Robot 63 (silver → gold, LP: 25 retained)
+2026-02-23T15:59:20.344Z | INFO | [Rebalancing] Demoted: New Robot 215 (silver → bronze, LP: 25 retained)
+2026-02-23T15:59:20.351Z | INFO | [Rebalancing] Demoted: New Robot 93 (silver → bronze, LP: 25 retained)
+2026-02-23T15:59:20.356Z | INFO | [Rebalancing] Demoted: New Robot 81 (silver → bronze, LP: 25 retained)
+2026-02-23T15:59:20.362Z | INFO | [Rebalancing] Demoted: New Robot 241 (silver → bronze, LP: 25 retained)
+2026-02-23T15:59:20.368Z | INFO | [Rebalancing] Demoted: New Robot 63 (silver → bronze, LP: 25 retained)
+2026-02-23T15:59:20.368Z | INFO | [Rebalancing] silver: Promoted 11, Demoted 11 across 2 instances
+2026-02-23T15:59:20.368Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-02-23T15:59:20.371Z | INFO | [Rebalancing] gold: 2 total robots across 1 instances
+2026-02-23T15:59:20.372Z | INFO | [Rebalancing] Processing gold_1...
+2026-02-23T15:59:20.376Z | INFO | [Rebalancing] gold_1: Skipping (0 eligible, need 10)
+2026-02-23T15:59:20.376Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 1 instances
+2026-02-23T15:59:20.376Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-02-23T15:59:20.380Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-02-23T15:59:20.380Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T15:59:20.380Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-02-23T15:59:20.383Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-02-23T15:59:20.383Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T15:59:20.383Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-02-23T15:59:20.386Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-02-23T15:59:20.387Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T15:59:20.387Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-02-23T15:59:20.388Z | INFO | [Rebalancing] bronze: Instance exceeds 100 robots, rebalancing...
+2026-02-23T15:59:20.390Z | INFO | [LeagueInstance] Rebalancing bronze instances...
+2026-02-23T15:59:20.391Z | INFO |   Total robots: 240
+2026-02-23T15:59:20.391Z | INFO |   Instances: 4
+2026-02-23T15:59:20.391Z | INFO |   Average per instance: 60.0
+2026-02-23T15:59:20.410Z | INFO |   Target instances: 3
+2026-02-23T15:59:20.485Z | ERROR | [Rebalancing] Error checking bronze instances: {""name"":""PrismaClientKnownRequestError"",""code"":""P2025"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""Robot"",""cause"":""Record to update not found.""}}
+2026-02-23T15:59:20.523Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:59:20.527Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:59:20.529Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:59:20.530Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:59:20.531Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:59:20.532Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-23T15:59:20.532Z | INFO | [Rebalancing] League rebalancing complete!
+2026-02-23T15:59:20.532Z | INFO |   Total promoted: 23
+2026-02-23T15:59:20.532Z | INFO |   Total demoted: 11
+2026-02-23T15:59:20.532Z | INFO |   Errors: 0
+2026-02-23T15:59:20.532Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-23T15:59:20.536Z | INFO | [Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle 42)
+2026-02-23T15:59:20.536Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-02-23T15:59:20.536Z | INFO | [UserGeneration] Generating 42 archetype users for Cycle 42...
+2026-02-23T15:59:20.536Z | INFO | [UserGeneration] Creating user 1/42: archetype_balanced_brawler_42_1 (archetype: balanced_brawler)
+2026-02-23T15:59:20.612Z | INFO | [UserGeneration] Creating user 2/42: archetype_facility_investor_42_2 (archetype: facility_investor)
+2026-02-23T15:59:20.688Z | INFO | [UserGeneration] Creating user 3/42: archetype_two_robot_42_3 (archetype: two_robot)
+2026-02-23T15:59:20.768Z | INFO | [UserGeneration] Created tag team for archetype_two_robot_42_3
+2026-02-23T15:59:20.770Z | INFO | [UserGeneration] Creating user 4/42: archetype_melee_specialist_42_4 (archetype: melee_specialist)
+2026-02-23T15:59:20.842Z | INFO | [UserGeneration] Creating user 5/42: archetype_ranged_sniper_42_5 (archetype: ranged_sniper)
+2026-02-23T15:59:20.914Z | INFO | [UserGeneration] Created 5/42 users...
+2026-02-23T15:59:20.914Z | INFO | [UserGeneration] Creating user 6/42: archetype_ai_tactician_42_6 (archetype: ai_tactician)
+2026-02-23T15:59:20.987Z | INFO | [UserGeneration] Creating user 7/42: archetype_prestige_rusher_42_7 (archetype: prestige_rusher)
+2026-02-23T15:59:21.061Z | INFO | [UserGeneration] Creating user 8/42: archetype_tank_fortress_42_8 (archetype: tank_fortress)
+2026-02-23T15:59:21.136Z | INFO | [UserGeneration] Creating user 9/42: archetype_glass_cannon_a_42_9 (archetype: glass_cannon_a)
+2026-02-23T15:59:21.207Z | INFO | [UserGeneration] Creating user 10/42: archetype_glass_cannon_b_42_10 (archetype: glass_cannon_b)
+2026-02-23T15:59:21.280Z | INFO | [UserGeneration] Created 10/42 users...
+2026-02-23T15:59:21.280Z | INFO | [UserGeneration] Creating user 11/42: archetype_glass_cannon_c_42_11 (archetype: glass_cannon_c)
+2026-02-23T15:59:21.358Z | INFO | [UserGeneration] Creating user 12/42: archetype_speed_demon_a_42_12 (archetype: speed_demon_a)
+2026-02-23T15:59:21.434Z | INFO | [UserGeneration] Creating user 13/42: archetype_speed_demon_b_42_13 (archetype: speed_demon_b)
+2026-02-23T15:59:21.509Z | INFO | [UserGeneration] Creating user 14/42: archetype_speed_demon_c_42_14 (archetype: speed_demon_c)
+2026-02-23T15:59:21.584Z | INFO | [UserGeneration] Creating user 15/42: archetype_balanced_brawler_42_15 (archetype: balanced_brawler)
+2026-02-23T15:59:21.655Z | INFO | [UserGeneration] Created 15/42 users...
+2026-02-23T15:59:21.655Z | INFO | [UserGeneration] Creating user 16/42: archetype_facility_investor_42_16 (archetype: facility_investor)
+2026-02-23T15:59:21.731Z | INFO | [UserGeneration] Creating user 17/42: archetype_two_robot_42_17 (archetype: two_robot)
+2026-02-23T15:59:21.809Z | INFO | [UserGeneration] Created tag team for archetype_two_robot_42_17
+2026-02-23T15:59:21.811Z | INFO | [UserGeneration] Creating user 18/42: archetype_melee_specialist_42_18 (archetype: melee_specialist)
+2026-02-23T15:59:21.882Z | INFO | [UserGeneration] Creating user 19/42: archetype_ranged_sniper_42_19 (archetype: ranged_sniper)
+2026-02-23T15:59:21.955Z | INFO | [UserGeneration] Creating user 20/42: archetype_ai_tactician_42_20 (archetype: ai_tactician)
+2026-02-23T15:59:22.025Z | INFO | [UserGeneration] Created 20/42 users...
+2026-02-23T15:59:22.025Z | INFO | [UserGeneration] Creating user 21/42: archetype_prestige_rusher_42_21 (archetype: prestige_rusher)
+2026-02-23T15:59:22.103Z | INFO | [UserGeneration] Creating user 22/42: archetype_tank_fortress_42_22 (archetype: tank_fortress)
+2026-02-23T15:59:22.176Z | INFO | [UserGeneration] Creating user 23/42: archetype_glass_cannon_a_42_23 (archetype: glass_cannon_a)
+2026-02-23T15:59:22.248Z | INFO | [UserGeneration] Creating user 24/42: archetype_glass_cannon_b_42_24 (archetype: glass_cannon_b)
+2026-02-23T15:59:22.321Z | INFO | [UserGeneration] Creating user 25/42: archetype_glass_cannon_c_42_25 (archetype: glass_cannon_c)
+2026-02-23T15:59:22.391Z | INFO | [UserGeneration] Created 25/42 users...
+2026-02-23T15:59:22.391Z | INFO | [UserGeneration] Creating user 26/42: archetype_speed_demon_a_42_26 (archetype: speed_demon_a)
+2026-02-23T15:59:22.466Z | INFO | [UserGeneration] Creating user 27/42: archetype_speed_demon_b_42_27 (archetype: speed_demon_b)
+2026-02-23T15:59:22.539Z | INFO | [UserGeneration] Creating user 28/42: archetype_speed_demon_c_42_28 (archetype: speed_demon_c)
+2026-02-23T15:59:22.614Z | INFO | [UserGeneration] Creating user 29/42: archetype_balanced_brawler_42_29 (archetype: balanced_brawler)
+2026-02-23T15:59:22.686Z | INFO | [UserGeneration] Creating user 30/42: archetype_facility_investor_42_30 (archetype: facility_investor)
+2026-02-23T15:59:22.761Z | INFO | [UserGeneration] Created 30/42 users...
+2026-02-23T15:59:22.761Z | INFO | [UserGeneration] Creating user 31/42: archetype_two_robot_42_31 (archetype: two_robot)
+2026-02-23T15:59:22.836Z | INFO | [UserGeneration] Created tag team for archetype_two_robot_42_31
+2026-02-23T15:59:22.838Z | INFO | [UserGeneration] Creating user 32/42: archetype_melee_specialist_42_32 (archetype: melee_specialist)
+2026-02-23T15:59:22.911Z | INFO | [UserGeneration] Creating user 33/42: archetype_ranged_sniper_42_33 (archetype: ranged_sniper)
+2026-02-23T15:59:22.985Z | INFO | [UserGeneration] Creating user 34/42: archetype_ai_tactician_42_34 (archetype: ai_tactician)
+2026-02-23T15:59:23.058Z | INFO | [UserGeneration] Creating user 35/42: archetype_prestige_rusher_42_35 (archetype: prestige_rusher)
+2026-02-23T15:59:23.134Z | INFO | [UserGeneration] Created 35/42 users...
+2026-02-23T15:59:23.134Z | INFO | [UserGeneration] Creating user 36/42: archetype_tank_fortress_42_36 (archetype: tank_fortress)
+2026-02-23T15:59:23.210Z | INFO | [UserGeneration] Creating user 37/42: archetype_glass_cannon_a_42_37 (archetype: glass_cannon_a)
+2026-02-23T15:59:23.284Z | INFO | [UserGeneration] Creating user 38/42: archetype_glass_cannon_b_42_38 (archetype: glass_cannon_b)
+2026-02-23T15:59:23.358Z | INFO | [UserGeneration] Creating user 39/42: archetype_glass_cannon_c_42_39 (archetype: glass_cannon_c)
+2026-02-23T15:59:23.442Z | INFO | [UserGeneration] Creating user 40/42: archetype_speed_demon_a_42_40 (archetype: speed_demon_a)
+2026-02-23T15:59:23.518Z | INFO | [UserGeneration] Created 40/42 users...
+2026-02-23T15:59:23.518Z | INFO | [UserGeneration] Creating user 41/42: archetype_speed_demon_b_42_41 (archetype: speed_demon_b)
+2026-02-23T15:59:23.602Z | INFO | [UserGeneration] Creating user 42/42: archetype_speed_demon_c_42_42 (archetype: speed_demon_c)
+2026-02-23T15:59:23.677Z | INFO | [UserGeneration] Created 42/42 users...
+2026-02-23T15:59:23.677Z | INFO | [UserGeneration] ✅ Created 42 users with 45 robots in 3141ms
+2026-02-23T15:59:23.677Z | INFO | [UserGeneration] Archetype position after this cycle: 7
+2026-02-23T15:59:23.677Z | INFO | [Admin] Generated 42 users for cycle 42
+2026-02-23T15:59:23.680Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-02-23T15:59:23.680Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-02-23T15:59:23.680Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-23T15:59:24.680Z
+2026-02-23T15:59:23.680Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-02-23T15:59:23.683Z | INFO | [Matchmaking] Processing bronze_1...
+2026-02-23T15:59:23.710Z | INFO | [Matchmaking] Queue for bronze_1: 60 robots available (124 total, 60 ready)
+2026-02-23T15:59:23.761Z | INFO | [Matchmaking] Created 30 scheduled matches
+2026-02-23T15:59:23.761Z | INFO | [Matchmaking] Processing bronze_2...
+2026-02-23T15:59:23.776Z | INFO | [Matchmaking] Queue for bronze_2: 14 robots available (70 total, 14 ready)
+2026-02-23T15:59:23.785Z | INFO | [Matchmaking] Created 7 scheduled matches
+2026-02-23T15:59:23.785Z | INFO | [Matchmaking] Processing bronze_3...
+2026-02-23T15:59:23.801Z | INFO | [Matchmaking] Queue for bronze_3: 15 robots available (71 total, 15 ready)
+2026-02-23T15:59:23.812Z | WARN | [Matchmaking] No Bye Robot found for Strategist C041
+2026-02-23T15:59:23.817Z | INFO | [Matchmaking] Created 7 scheduled matches
+2026-02-23T15:59:23.817Z | INFO | [Matchmaking] BRONZE: Created 44 matches across 3 instances
+2026-02-23T15:59:23.817Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-02-23T15:59:23.820Z | INFO | [Matchmaking] Processing silver_1...
+2026-02-23T15:59:23.833Z | INFO | [Matchmaking] Queue for silver_1: 0 robots available (90 total, 0 ready)
+2026-02-23T15:59:23.833Z | INFO | [Matchmaking] silver_1: Not enough robots for matches (0 available)
+2026-02-23T15:59:23.833Z | INFO | [Matchmaking] Processing silver_2...
+2026-02-23T15:59:23.845Z | INFO | [Matchmaking] Queue for silver_2: 0 robots available (90 total, 0 ready)
+2026-02-23T15:59:23.845Z | INFO | [Matchmaking] silver_2: Not enough robots for matches (0 available)
+2026-02-23T15:59:23.845Z | INFO | [Matchmaking] SILVER: Created 0 matches across 2 instances
+2026-02-23T15:59:23.846Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-02-23T15:59:23.847Z | INFO | [Matchmaking] Processing gold_1...
+2026-02-23T15:59:23.851Z | INFO | [Matchmaking] Queue for gold_1: 0 robots available (2 total, 0 ready)
+2026-02-23T15:59:23.851Z | INFO | [Matchmaking] gold_1: Not enough robots for matches (0 available)
+2026-02-23T15:59:23.851Z | INFO | [Matchmaking] GOLD: Created 0 matches across 1 instances
+2026-02-23T15:59:23.851Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-02-23T15:59:23.853Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-02-23T15:59:23.853Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-02-23T15:59:23.855Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-02-23T15:59:23.855Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-02-23T15:59:23.858Z | INFO | [Matchmaking] Processing champion_1...
+2026-02-23T15:59:23.863Z | INFO | [Matchmaking] Queue for champion_1: 0 robots available (14 total, 0 ready)
+2026-02-23T15:59:23.863Z | INFO | [Matchmaking] champion_1: Not enough robots for matches (0 available)
+2026-02-23T15:59:23.863Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 1 instances
+2026-02-23T15:59:23.863Z | INFO | [Matchmaking] ========================================
+2026-02-23T15:59:23.863Z | INFO | [Matchmaking] COMPLETE: 44 total matches created
+2026-02-23T15:59:23.863Z | INFO | [Matchmaking] ========================================
+2026-02-23T15:59:23.868Z | INFO | [Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle 42)
+2026-02-23T15:59:23.868Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-02-23T15:59:23.888Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-02-23T15:59:23.916Z | INFO | [OperatingCosts] User 47787 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-23T15:59:23.929Z | INFO | [OperatingCosts] User 47793 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-23T15:59:23.972Z | INFO | [OperatingCosts] User 47740 | Total: ₡2,400 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-23T15:59:24.025Z | INFO | [OperatingCosts] User 47764 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-23T15:59:24.053Z | INFO | [OperatingCosts] User 47567 | Total: ₡400 | Facilities: streaming_studio(L4): ₡400
+2026-02-23T15:59:24.067Z | INFO | [OperatingCosts] User 47741 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-23T15:59:24.078Z | INFO | [OperatingCosts] User 47568 | Total: ₡400 | Facilities: streaming_studio(L4): ₡400
+2026-02-23T15:59:24.090Z | INFO | [OperatingCosts] User 47742 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-23T15:59:24.103Z | INFO | [OperatingCosts] User 47766 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-23T15:59:24.114Z | INFO | [OperatingCosts] User 47769 | Total: ₡1,000 | Facilities: ai_training_academy(L1): ₡1000
+2026-02-23T15:59:24.128Z | INFO | [OperatingCosts] User 47744 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-23T15:59:24.139Z | INFO | [OperatingCosts] User 47753 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-23T15:59:24.154Z | INFO | [OperatingCosts] User 47772 | Total: ₡2,400 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-23T15:59:24.167Z | INFO | [OperatingCosts] User 47773 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-23T15:59:24.180Z | INFO | [OperatingCosts] User 47754 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-23T15:59:24.193Z | INFO | [OperatingCosts] User 47775 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-23T15:59:24.205Z | INFO | [OperatingCosts] User 47757 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-23T15:59:24.218Z | INFO | [OperatingCosts] User 47777 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-23T15:59:24.234Z | INFO | [OperatingCosts] User 47758 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-23T15:59:24.252Z | INFO | [OperatingCosts] User 47779 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-23T15:59:24.262Z | ERROR | [Admin] Error in cycle 42: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T15:59:24.262Z | ERROR | Cycle 42 failed
+2026-02-23T15:59:24.262Z | INFO | === Cycle 42 Ended ===

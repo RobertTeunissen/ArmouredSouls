@@ -19,8 +19,8 @@ import { calculateRepairCost, calculateAttributeSum } from '../../src/utils/robo
 const prisma = new PrismaClient();
 
 describe('Repair Cost Consistency Integration Test', () => {
-  let testUser: any;
-  let testRobots: any[] = [];
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
   let testWeapon: any;
 
   beforeAll(async () => {
@@ -31,15 +31,46 @@ describe('Repair Cost Consistency Integration Test', () => {
     if (!testWeapon) {
       throw new Error('No weapons found. Run seed first.');
     }
+  });
 
+  afterEach(async () => {
+    // Clean up in correct order
+    if (testRobotIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { robot: { id: { in: testRobotIds } } },
+      });
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.facility.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    testRobotIds = [];
+    testUserIds = [];
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  test('canonical function produces consistent repair costs for same damage', async () => {
     // Create test user
-    testUser = await prisma.user.create({
+    const testUser = await prisma.user.create({
       data: {
         username: `repair_consistency_user_${Date.now()}`,
         passwordHash: 'test_hash',
         currency: 1000000,
       },
     });
+    testUserIds.push(testUser.id);
 
     // Create Repair Bay facility (level 3 = 21% discount with 2 robots)
     await prisma.facility.create({
@@ -60,6 +91,7 @@ describe('Repair Cost Consistency Integration Test', () => {
     });
 
     // Create 2 robots for multi-robot discount
+    const testRobots: any[] = [];
     for (let i = 0; i < 2; i++) {
       const weaponInv = await prisma.weaponInventory.create({
         data: {
@@ -111,27 +143,44 @@ describe('Repair Cost Consistency Integration Test', () => {
         },
       });
       testRobots.push(robot);
+      testRobotIds.push(robot.id);
     }
-  });
+          loadoutType: 'single',
+          mainWeaponId: weaponInv.id,
+          currentLeague: 'bronze',
+          leagueId: 'bronze_1',
+          leaguePoints: 0,
+          cyclesInCurrentLeague: 0,
+          // Set all 23 attributes to 10.0 for consistent testing
+          combatPower: 10,
+          targetingSystems: 10,
+          criticalSystems: 10,
+          penetration: 10,
+          weaponControl: 10,
+          attackSpeed: 10,
+          armorPlating: 10,
+          shieldCapacity: 10,
+          evasionThrusters: 10,
+          damageDampeners: 10,
+          counterProtocols: 10,
+          hullIntegrity: 10,
+          servoMotors: 10,
+          gyroStabilizers: 10,
+          hydraulicSystems: 10,
+          powerCore: 10,
+          combatAlgorithms: 10,
+          threatAnalysis: 10,
+          adaptiveAI: 10,
+          logicCores: 10,
+          syncProtocols: 10,
+          supportSystems: 10,
+          formationTactics: 10,
+        },
+      });
+      testRobots.push(robot);
+      testRobotIds.push(robot.id);
+    }
 
-  afterAll(async () => {
-    // Clean up
-    await prisma.weaponInventory.deleteMany({
-      where: { userId: testUser.id },
-    });
-    await prisma.robot.deleteMany({
-      where: { userId: testUser.id },
-    });
-    await prisma.facility.deleteMany({
-      where: { userId: testUser.id },
-    });
-    await prisma.user.delete({
-      where: { id: testUser.id },
-    });
-    await prisma.$disconnect();
-  });
-
-  test('canonical function produces consistent repair costs for same damage', async () => {
     // Get facility levels
     const repairBay = await prisma.facility.findFirst({
       where: {

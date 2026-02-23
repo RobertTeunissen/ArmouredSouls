@@ -71,8 +71,20 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     }
   });
 
+  afterEach(async () => {
+    // Clean up teams after each test
+    if (testTeams.length > 0) {
+      await prisma.tagTeam.deleteMany({
+        where: {
+          id: { in: testTeams.map(t => t.id) },
+        },
+      });
+      testTeams = [];
+    }
+  });
+
   afterAll(async () => {
-    // Clean up
+    // Clean up in correct dependency order
     await prisma.tagTeam.deleteMany({
       where: {
         id: { in: testTeams.map(t => t.id) },
@@ -166,7 +178,8 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     promotedTeams.forEach(team => {
       expect(team.tagTeamLeague).toBe('silver');
       expect(team.tagTeamLeagueId).toBe('silver_1');
-      expect(team.tagTeamLeaguePoints).toBe(0); // Reset to 0
+      // LP is retained across promotions, not reset
+      expect(team.tagTeamLeaguePoints).toBeGreaterThanOrEqual(25); // Must have had ≥25 to be promoted
       expect(team.cyclesInTagTeamLeague).toBe(0); // Reset to 0
     });
 
@@ -269,14 +282,14 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     console.log('[Test] ✓ Teams with < 5 cycles correctly excluded from rebalancing');
 
     // Clean up
-    await prisma.tagTeam.delete({ where: { id: newTeam.id } });
+    await prisma.tagTeam.deleteMany({ where: { id: newTeam.id } });
     await prisma.robot.deleteMany({
       where: { id: { in: robots.map(r => r.id) } },
     });
     await prisma.weaponInventory.deleteMany({
       where: { userId: user.id },
     });
-    await prisma.user.delete({ where: { id: user.id } });
+    await prisma.user.deleteMany({ where: { id: user.id } });
   });
 
   it('should handle demotion from silver to bronze', async () => {

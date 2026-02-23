@@ -1,0 +1,126 @@
+Timestamp | Level | Message
+2026-02-23T16:01:54.877Z | INFO | === Cycle 53 Started ===
+2026-02-23T16:01:54.877Z | INFO | Cycle 53 (3/3)
+2026-02-23T16:01:54.877Z | INFO |  [Admin] === Cycle 53 (3/3) ===
+2026-02-23T16:01:54.883Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-23T16:01:54.883Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-23T16:01:54.883Z
+2026-02-23T16:01:54.885Z | INFO | [BattleOrchestrator] Found 17 matches to execute
+2026-02-23T16:01:54.969Z | INFO | [Streaming] Longshot C052 earned ₡1,002 from Battle #76975
+2026-02-23T16:01:54.973Z | INFO | [Streaming] Strategist C052 earned ₡1,002 from Battle #76975
+2026-02-23T16:01:54.994Z | INFO | [Battle] League: bronze | Longshot C052 (User 48046) vs Strategist C052 (User 48047) | Winner: Longshot C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Longshot C052
+2026-02-23T16:01:55.072Z | INFO | [Streaming] Prestige Hunter C052 earned ₡1,002 from Battle #76977
+2026-02-23T16:01:55.073Z | INFO | [Streaming] Fortress Prime C052 earned ₡1,002 from Battle #76977
+2026-02-23T16:01:55.091Z | INFO | [Battle] League: bronze | Prestige Hunter C052 (User 48049) vs Fortress Prime C052 (User 48050) | Winner: Prestige Hunter C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Prestige Hunter C052
+2026-02-23T16:01:55.162Z | INFO | [Streaming] Glass Cannon A C052 earned ₡1,003 from Battle #76979
+2026-02-23T16:01:55.165Z | INFO | [Streaming] Glass Cannon B C052 earned ₡1,002 from Battle #76979
+2026-02-23T16:01:55.184Z | INFO | [Battle] League: bronze | Glass Cannon A C052 (User 48051) vs Glass Cannon B C052 (User 48053) | Winner: Glass Cannon A C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4 | Kill: Glass Cannon A C052
+2026-02-23T16:01:55.242Z | INFO | [Streaming] Specialist Alpha C052 earned ₡1,002 from Battle #76981
+2026-02-23T16:01:55.244Z | INFO | [Streaming] Brawler Prime C052 earned ₡1,002 from Battle #76981
+2026-02-23T16:01:55.266Z | INFO | [Battle] League: bronze | Specialist Alpha C052 (User 48062) vs Brawler Prime C052 (User 48065) | Winner: Brawler Prime C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Brawler Prime C052
+2026-02-23T16:01:55.331Z | INFO | [Streaming] Specialist Beta C052 earned ₡1,002 from Battle #76984
+2026-02-23T16:01:55.333Z | INFO | [Streaming] Longshot C052 earned ₡1,002 from Battle #76984
+2026-02-23T16:01:55.344Z | ERROR | [BattleOrchestrator] Failed to process match 53028: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:01:55.403Z | INFO | [Streaming] Strategist C052 earned ₡1,002 from Battle #76985
+2026-02-23T16:01:55.406Z | INFO | [Streaming] Prestige Hunter C052 earned ₡1,003 from Battle #76985
+2026-02-23T16:01:55.422Z | INFO | [Battle] League: bronze | Strategist C052 (User 48067) vs Prestige Hunter C052 (User 48068) | Winner: Prestige Hunter C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4
+2026-02-23T16:01:55.491Z | INFO | [Streaming] Fortress Prime C052 earned ₡1,002 from Battle #76988
+2026-02-23T16:01:55.493Z | INFO | [Streaming] Glass Cannon A C052 earned ₡1,003 from Battle #76988
+2026-02-23T16:01:55.510Z | INFO | [Battle] League: bronze | Fortress Prime C052 (User 48070) vs Glass Cannon A C052 (User 48071) | Winner: Glass Cannon A C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: Glass Cannon A C052
+2026-02-23T16:01:55.571Z | INFO | [Streaming] Glass Cannon B C052 earned ₡1,002 from Battle #76989
+2026-02-23T16:01:55.573Z | INFO | [Streaming] Glass Cannon C C052 earned ₡1,003 from Battle #76989
+2026-02-23T16:01:55.588Z | INFO | [Battle] League: bronze | Glass Cannon B C052 (User 48072) vs Glass Cannon C C052 (User 48074) | Winner: Glass Cannon C C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Glass Cannon C C052
+2026-02-23T16:01:55.658Z | INFO | [Streaming] Velocity Alpha C052 earned ₡1,002 from Battle #76992
+2026-02-23T16:01:55.659Z | INFO | [Streaming] Velocity Beta C052 earned ₡1,002 from Battle #76992
+2026-02-23T16:01:55.675Z | INFO | [Battle] League: bronze | Velocity Alpha C052 (User 48075) vs Velocity Beta C052 (User 48077) | Winner: Velocity Beta C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:01:55.739Z | INFO | [Streaming] Velocity Gamma C052 earned ₡1,003 from Battle #76994
+2026-02-23T16:01:55.741Z | INFO | [Streaming] Equilibrium C052 earned ₡1,002 from Battle #76994
+2026-02-23T16:01:55.758Z | INFO | [Battle] League: bronze | Velocity Gamma C052 (User 48078) vs Equilibrium C052 (User 48080) | Winner: Velocity Gamma C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:01:55.817Z | INFO | [Streaming] Investor One C052 earned ₡1,002 from Battle #76996
+2026-02-23T16:01:55.820Z | INFO | [Streaming] Specialist Alpha C052 earned ₡1,003 from Battle #76996
+2026-02-23T16:01:55.840Z | INFO | [Battle] League: bronze | Investor One C052 (User 48081) vs Specialist Alpha C052 (User 48082) | Winner: Specialist Alpha C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-23T16:01:55.899Z | INFO | [Streaming] Specialist Beta C052 earned ₡1,002 from Battle #76998
+2026-02-23T16:01:55.901Z | INFO | [Streaming] Brawler Prime C052 earned ₡1,002 from Battle #76998
+2026-02-23T16:01:55.917Z | INFO | [Battle] League: bronze | Specialist Beta C052 (User 48082) vs Brawler Prime C052 (User 48083) | Winner: Brawler Prime C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Brawler Prime C052
+2026-02-23T16:01:55.984Z | INFO | [Streaming] Longshot C052 earned ₡1,002 from Battle #77000
+2026-02-23T16:01:55.987Z | INFO | [Streaming] Strategist C052 earned ₡1,002 from Battle #77000
+2026-02-23T16:01:56.003Z | ERROR | [BattleOrchestrator] Failed to process match 53036: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""AuditLog"",""target"":[""cycle_number"",""sequence_number""]}}
+2026-02-23T16:01:56.073Z | INFO | [Streaming] Fortress Prime C052 earned ₡1,002 from Battle #77001
+2026-02-23T16:01:56.075Z | INFO | [Streaming] Glass Cannon A C052 earned ₡1,002 from Battle #77001
+2026-02-23T16:01:56.092Z | INFO | [Battle] League: bronze | Fortress Prime C052 (User 48090) vs Glass Cannon A C052 (User 48091) | Winner: Fortress Prime C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:01:56.158Z | INFO | [Streaming] Glass Cannon B C052 earned ₡1,002 from Battle #77003
+2026-02-23T16:01:56.163Z | INFO | [Streaming] Glass Cannon C C052 earned ₡1,003 from Battle #77003
+2026-02-23T16:01:56.190Z | INFO | [Battle] League: bronze | Glass Cannon B C052 (User 48092) vs Glass Cannon C C052 (User 48093) | Winner: Glass Cannon C C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4 | Kill: Glass Cannon C C052
+2026-02-23T16:01:56.262Z | INFO | [Streaming] Velocity Alpha C052 earned ₡1,002 from Battle #77005
+2026-02-23T16:01:56.264Z | INFO | [Streaming] Velocity Beta C052 earned ₡1,002 from Battle #77005
+2026-02-23T16:01:56.282Z | INFO | [Battle] League: bronze | Velocity Alpha C052 (User 48095) vs Velocity Beta C052 (User 48096) | Winner: Velocity Beta C052 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-23T16:01:56.289Z | ERROR | [BattleOrchestrator] Failed to process match 53048: {}
+2026-02-23T16:01:56.290Z | INFO | [BattleOrchestrator] Execution complete: 14 successful, 3 failed, 0 bye-matches
+2026-02-23T16:01:56.290Z | INFO | [BattleOrchestrator] Reputation: 70 prestige, 36 fame awarded
+2026-02-23T16:01:56.292Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-23T16:01:56.313Z | INFO | [RepairService] | User 47930 | Robot 738423 (Poor_Robot_0_1771862367679) | Cost: ₡1,932 | Discount: 0%
+2026-02-23T16:01:56.319Z | INFO | [RepairService] | User 47930 | Robot 738424 (Poor_Robot_1_1771862367685) | Cost: ₡1,311 | Discount: 0%
+2026-02-23T16:01:56.330Z | INFO | [RepairService] | User 48024 | Robot 738682 (Brawler Prime C052) | Cost: ₡23,400 | Discount: 0%
+2026-02-23T16:01:56.341Z | INFO | [RepairService] | User 48055 | Robot 738926 (Velocity Alpha C052) | Cost: ₡13,167 | Discount: 0%
+2026-02-23T16:01:56.351Z | ERROR | [RepairService] | ERROR | User 48096 | Robot 739225 | Failed to log repair event:  Invalid `prisma.auditLog.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/eventLogger.ts:197:27    194 };   195    196 // Insert into database → 197 await prisma.auditLog.create( Unique constraint failed on the fields: (`cycle_number`,`sequence_number`)
+2026-02-23T16:01:56.361Z | INFO | [RepairService] | User 48085 | Robot 739125 (Longshot C052) | Cost: ₡21,400 | Discount: 0%
+2026-02-23T16:01:56.373Z | INFO | [RepairService] | User 48086 | Robot 739133 (Strategist C052) | Cost: ₡4,771 | Discount: 0%
+2026-02-23T16:01:56.384Z | INFO | [RepairService] | User 48090 | Robot 739159 (Fortress Prime C052) | Cost: ₡5,933 | Discount: 0%
+2026-02-23T16:01:56.396Z | INFO | [RepairService] | User 48091 | Robot 739172 (Glass Cannon A C052) | Cost: ₡13,536 | Discount: 0%
+2026-02-23T16:01:56.407Z | INFO | [RepairService] | User 48092 | Robot 739186 (Glass Cannon B C052) | Cost: ₡19,200 | Discount: 0%
+2026-02-23T16:01:56.418Z | INFO | [RepairService] | User 48095 | Robot 739210 (Velocity Alpha C052) | Cost: ₡21,528 | Discount: 0%
+2026-02-23T16:01:56.428Z | INFO | [RepairService] | User 48026 | Robot 738695 (Longshot C052) | Cost: ₡3,794 | Discount: 0%
+2026-02-23T16:01:56.438Z | INFO | [RepairService] | User 48027 | Robot 738707 (Strategist C052) | Cost: ₡25,600 | Discount: 0%
+2026-02-23T16:01:56.449Z | INFO | [RepairService] | User 48029 | Robot 738720 (Prestige Hunter C052) | Cost: ₡2,531 | Discount: 0%
+2026-02-23T16:01:56.459Z | INFO | [RepairService] | User 48030 | Robot 738733 (Fortress Prime C052) | Cost: ₡20,600 | Discount: 0%
+2026-02-23T16:01:56.471Z | INFO | [RepairService] | User 48032 | Robot 738750 (Glass Cannon A C052) | Cost: ₡7,392 | Discount: 0%
+2026-02-23T16:01:56.483Z | INFO | [RepairService] | User 48033 | Robot 738761 (Glass Cannon B C052) | Cost: ₡19,200 | Discount: 0%
+2026-02-23T16:01:56.493Z | INFO | [RepairService] | User 48036 | Robot 738780 (Velocity Alpha C052) | Cost: ₡21,528 | Discount: 0%
+2026-02-23T16:01:56.505Z | INFO | [RepairService] | User 48037 | Robot 738791 (Velocity Beta C052) | Cost: ₡6,057 | Discount: 0%
+2026-02-23T16:01:56.515Z | INFO | [RepairService] | User 48039 | Robot 738802 (Velocity Gamma C052) | Cost: ₡1,843 | Discount: 0%
+2026-02-23T16:01:56.557Z | INFO | [RepairService] | User 48041 | Robot 738815 (Equilibrium C052) | Cost: ₡11,739 | Discount: 0%
+2026-02-23T16:01:56.568Z | INFO | [RepairService] | User 48042 | Robot 738823 (Investor One C052) | Cost: ₡5,869 | Discount: 6%
+2026-02-23T16:01:56.579Z | INFO | [RepairService] | User 48044 | Robot 738833 (Specialist Alpha C052) | Cost: ₡2,170 | Discount: 0%
+2026-02-23T16:01:56.585Z | INFO | [RepairService] | User 48044 | Robot 738834 (Specialist Beta C052) | Cost: ₡12,400 | Discount: 0%
+2026-02-23T16:01:56.597Z | INFO | [RepairService] | User 48045 | Robot 738845 (Brawler Prime C052) | Cost: ₡2,438 | Discount: 0%
+2026-02-23T16:01:56.609Z | INFO | [RepairService] | User 48054 | Robot 738913 (Glass Cannon C C052) | Cost: ₡19,200 | Discount: 0%
+2026-02-23T16:01:56.620Z | INFO | [RepairService] | User 48046 | Robot 738856 (Longshot C052) | Cost: ₡7,587 | Discount: 0%
+2026-02-23T16:01:56.631Z | INFO | [RepairService] | User 48047 | Robot 738863 (Strategist C052) | Cost: ₡25,600 | Discount: 0%
+2026-02-23T16:01:56.643Z | INFO | [RepairService] | User 48049 | Robot 738873 (Prestige Hunter C052) | Cost: ₡3,797 | Discount: 0%
+2026-02-23T16:01:56.655Z | INFO | [RepairService] | User 48050 | Robot 738887 (Fortress Prime C052) | Cost: ₡20,600 | Discount: 0%
+2026-02-23T16:01:56.669Z | INFO | [RepairService] | User 48053 | Robot 738908 (Glass Cannon B C052) | Cost: ₡19,200 | Discount: 0%
+2026-02-23T16:01:56.682Z | INFO | [RepairService] | User 48057 | Robot 738935 (Velocity Beta C052) | Cost: ₡3,160 | Discount: 0%
+2026-02-23T16:01:56.700Z | INFO | [RepairService] | User 48058 | Robot 738946 (Velocity Gamma C052) | Cost: ₡21,528 | Discount: 0%
+2026-02-23T16:01:56.711Z | INFO | [RepairService] | User 48059 | Robot 738957 (Equilibrium C052) | Cost: ₡5,332 | Discount: 0%
+2026-02-23T16:01:56.722Z | INFO | [RepairService] | User 48060 | Robot 738969 (Investor One C052) | Cost: ₡6,028 | Discount: 6%
+2026-02-23T16:01:56.733Z | INFO | [RepairService] | User 48062 | Robot 738980 (Specialist Alpha C052) | Cost: ₡12,400 | Discount: 0%
+2026-02-23T16:01:56.740Z | INFO | [RepairService] | User 48062 | Robot 738981 (Specialist Beta C052) | Cost: ₡5,270 | Discount: 0%
+2026-02-23T16:01:56.755Z | INFO | [RepairService] | User 48065 | Robot 738986 (Brawler Prime C052) | Cost: ₡4,875 | Discount: 0%
+2026-02-23T16:01:56.766Z | INFO | [RepairService] | User 48066 | Robot 738996 (Longshot C052) | Cost: ₡15,904 | Discount: 0%
+2026-02-23T16:01:56.776Z | INFO | [RepairService] | User 48067 | Robot 739005 (Strategist C052) | Cost: ₡18,153 | Discount: 0%
+2026-02-23T16:01:56.789Z | INFO | [RepairService] | User 48070 | Robot 739023 (Fortress Prime C052) | Cost: ₡20,600 | Discount: 0%
+2026-02-23T16:01:56.799Z | INFO | [RepairService] | User 48071 | Robot 739033 (Glass Cannon A C052) | Cost: ₡8,160 | Discount: 0%
+2026-02-23T16:01:56.814Z | INFO | [RepairService] | User 48072 | Robot 739042 (Glass Cannon B C052) | Cost: ₡19,200 | Discount: 0%
+2026-02-23T16:01:56.855Z | INFO | [RepairService] | User 48074 | Robot 739050 (Glass Cannon C C052) | Cost: ₡5,952 | Discount: 0%
+2026-02-23T16:01:56.872Z | INFO | [RepairService] | User 48077 | Robot 739069 (Velocity Beta C052) | Cost: ₡8,558 | Discount: 0%
+2026-02-23T16:01:56.881Z | INFO | [RepairService] | User 48078 | Robot 739080 (Velocity Gamma C052) | Cost: ₡4,213 | Discount: 0%
+2026-02-23T16:01:56.892Z | INFO | [RepairService] | User 48080 | Robot 739088 (Equilibrium C052) | Cost: ₡17,200 | Discount: 0%
+2026-02-23T16:01:56.909Z | INFO | [RepairService] | User 48081 | Robot 739096 (Investor One C052) | Cost: ₡5,948 | Discount: 6%
+2026-02-23T16:01:56.929Z | INFO | [RepairService] | User 48082 | Robot 739107 (Specialist Alpha C052) | Cost: ₡682 | Discount: 0%
+2026-02-23T16:01:56.936Z | INFO | [RepairService] | User 48082 | Robot 739108 (Specialist Beta C052) | Cost: ₡12,400 | Discount: 0%
+2026-02-23T16:01:56.951Z | INFO | [RepairService] | User 48083 | Robot 739119 (Brawler Prime C052) | Cost: ₡2,438 | Discount: 0%
+2026-02-23T16:01:56.970Z | INFO | [RepairService] | User 48075 | Robot 739059 (Velocity Alpha C052) | Cost: ₡21,528 | Discount: 0%
+2026-02-23T16:01:56.984Z | INFO | [RepairService] | User 47931 | Robot 738428 (Poor_Robot_3_1771862367694) | Cost: ₡1,587 | Discount: 0%
+2026-02-23T16:01:56.990Z | INFO | [RepairService] | User 47931 | Robot 738426 (Poor_Robot_2_1771862367689) | Cost: ₡1,495 | Discount: 0%
+2026-02-23T16:01:57.003Z | INFO | [RepairService] | User 47964 | Robot 738509 (NewTeam_Robot_0_1771862368254) | Cost: ₡1,886 | Discount: 0%
+2026-02-23T16:01:57.009Z | INFO | [RepairService] | User 47964 | Robot 738510 (NewTeam_Robot_1_1771862368260) | Cost: ₡1,932 | Discount: 0%
+2026-02-23T16:01:57.014Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 53)
+2026-02-23T16:01:57.017Z | INFO | [TagTeamBattles] Found 0 scheduled tag team matches
+2026-02-23T16:01:57.017Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-02-23T16:01:57.019Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-23T16:01:57.031Z | INFO | [RepairService] | User 48012 | Robot 740319 (TestRobot1_1771862516927_0.16394336132779697) | Cost: ₡14,950 | Discount: 0%
+2026-02-23T16:01:57.041Z | INFO | [RepairService] | User 48013 | Robot 740320 (TestRobot2_1771862516927_0.3911759438291684) | Cost: ₡18,170 | Discount: 0%
+2026-02-23T16:01:57.045Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-23T16:01:57.047Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-23T16:01:57.060Z | ERROR | [Admin] Error in cycle 53: {""name"":""PrismaClientKnownRequestError"",""code"":""P2025"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""Robot"",""cause"":""Record to update not found.""}}
+2026-02-23T16:01:57.061Z | ERROR | Cycle 53 failed
+2026-02-23T16:01:57.061Z | INFO | === Cycle 53 Ended ===

@@ -9,13 +9,20 @@ import {
 const prisma = new PrismaClient();
 
 describe('Matchmaking Service', () => {
+  let testUserIds: number[] = [];
+  let testRobotIds: number[] = [];
+  let testWeaponIds: number[] = [];
+  let testWeaponInvIds: number[] = [];
   let testUser: any;
   let practiceSword: any;
 
   beforeAll(async () => {
-    // Clean up
+    // Clean up in correct order
     await prisma.scheduledMatch.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
+    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});
@@ -24,16 +31,17 @@ describe('Matchmaking Service', () => {
     // Create test user
     testUser = await prisma.user.create({
       data: {
-        username: 'matchmaking_test_user',
+        username: `matchmaking_test_user_${Date.now()}`,
         passwordHash: 'hash',
         currency: 1000000,
       },
     });
+    testUserIds.push(testUser.id);
 
     // Create practice sword
     practiceSword = await prisma.weapon.create({
       data: {
-        name: 'Test Sword',
+        name: `Test Sword ${Date.now()}`,
         weaponType: 'melee',
         baseDamage: 5,
         cooldown: 3,
@@ -43,9 +51,68 @@ describe('Matchmaking Service', () => {
         loadoutType: 'single',
       },
     });
+    testWeaponIds.push(practiceSword.id);
+  });
+
+  afterEach(async () => {
+    // Cleanup in correct order after each test
+    if (testRobotIds.length > 0) {
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: testRobotIds } },
+            { robot2Id: { in: testRobotIds } },
+          ],
+        },
+      });
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+
+    if (testWeaponInvIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { id: { in: testWeaponInvIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
+    // Reset tracking arrays
+    testRobotIds = [];
+    testWeaponInvIds = [];
+    // Don't reset testUserIds or testWeaponIds - they're created in beforeAll
   });
 
   afterAll(async () => {
+    // Final cleanup
+    if (testWeaponIds.length > 0) {
+      await prisma.weapon.deleteMany({
+        where: { id: { in: testWeaponIds } },
+      });
+    }
+
+    if (testUserIds.length > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
     await prisma.$disconnect();
   });
 
@@ -57,11 +124,12 @@ describe('Matchmaking Service', () => {
           weaponId: practiceSword.id,
         },
       });
+      testWeaponInvIds.push(weaponInv.id);
 
       const robot = await prisma.robot.create({
         data: {
           userId: testUser.id,
-          name: 'Ready Robot',
+          name: `Ready Robot ${Date.now()}`,
           leagueId: 'bronze_1',
           currentLeague: 'bronze',
           currentHP: 10,
@@ -73,6 +141,7 @@ describe('Matchmaking Service', () => {
           yieldThreshold: 10, // Yield at 10%, well below current 100% HP
         },
       });
+      testRobotIds.push(robot.id);
 
       const readiness = checkBattleReadiness(robot);
 
@@ -81,8 +150,8 @@ describe('Matchmaking Service', () => {
       expect(readiness.weaponCheck).toBe(true);
       expect(readiness.reasons).toHaveLength(0);
 
-      await prisma.robot.delete({ where: { id: robot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
     it('should mark robot as not ready when HP < 75%', async () => {
@@ -116,8 +185,8 @@ describe('Matchmaking Service', () => {
       expect(readiness.weaponCheck).toBe(true);
       expect(readiness.reasons.some(r => r.includes('HP too low'))).toBe(true);
 
-      await prisma.robot.delete({ where: { id: robot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
     it('should mark robot as not ready when HP is at or below yield threshold', async () => {
@@ -151,8 +220,8 @@ describe('Matchmaking Service', () => {
       expect(readiness.weaponCheck).toBe(true);
       expect(readiness.reasons.some(r => r.includes('yield threshold'))).toBe(true);
 
-      await prisma.robot.delete({ where: { id: robot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
     it('should mark robot as not ready when weapon not equipped', async () => {
@@ -178,7 +247,7 @@ describe('Matchmaking Service', () => {
       expect(readiness.weaponCheck).toBe(false);
       expect(readiness.reasons).toContain('No main weapon equipped');
 
-      await prisma.robot.delete({ where: { id: robot.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
     });
 
     it('should check dual wield loadout correctly', async () => {
@@ -211,8 +280,8 @@ describe('Matchmaking Service', () => {
       expect(readiness.weaponCheck).toBe(false);
       expect(readiness.reasons).toContain('No offhand weapon equipped');
 
-      await prisma.robot.delete({ where: { id: robot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv1.id } });
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv1.id } });
     });
   });
 
@@ -264,7 +333,7 @@ describe('Matchmaking Service', () => {
       await prisma.scheduledMatch.deleteMany({});
       for (const robot of robots) {
         await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
     });
 
@@ -349,11 +418,11 @@ describe('Matchmaking Service', () => {
       await prisma.scheduledMatch.deleteMany({});
       for (const robot of robots) {
         await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
-      await prisma.robot.delete({ where: { id: byeRobot.id } });
-      await prisma.weaponInventory.delete({ where: { id: byeWeaponInv.id } });
-      await prisma.user.delete({ where: { id: byeUser.id } });
+      await prisma.robot.deleteMany({ where: { id: byeRobot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: byeWeaponInv.id } });
+      await prisma.user.deleteMany({ where: { id: byeUser.id } });
     });
 
     it('should not create duplicate matches for already scheduled robots', async () => {
@@ -402,7 +471,7 @@ describe('Matchmaking Service', () => {
       await prisma.scheduledMatch.deleteMany({});
       for (const robot of robots) {
         await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
     });
 
@@ -455,9 +524,9 @@ describe('Matchmaking Service', () => {
 
       // Clean up
       await prisma.scheduledMatch.deleteMany({});
-      await prisma.robot.delete({ where: { id: readyRobot.id } });
-      await prisma.robot.delete({ where: { id: notReadyRobot.id } });
-      await prisma.weaponInventory.delete({ where: { id: weaponInv1.id } });
+      await prisma.robot.deleteMany({ where: { id: readyRobot.id } });
+      await prisma.robot.deleteMany({ where: { id: notReadyRobot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv1.id } });
     });
   });
 
@@ -505,7 +574,7 @@ describe('Matchmaking Service', () => {
       await prisma.scheduledMatch.deleteMany({});
       for (const robot of allRobots) {
         await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
-        await prisma.robot.delete({ where: { id: robot.id } });
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
     });
   });

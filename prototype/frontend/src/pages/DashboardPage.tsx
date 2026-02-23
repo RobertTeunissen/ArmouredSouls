@@ -141,50 +141,52 @@ function DashboardPage() {
           </div>
         </div>
 
-        {/* Critical Notifications/Warnings */}
-        {notifications.length > 0 && (
-          <div className="mb-6 space-y-3">
-            {notifications.map((notif, idx) => (
-              <div 
-                key={idx}
-                className={`
-                  p-4 rounded-lg border-l-4 flex items-center justify-between
-                  ${notif.type === 'danger' ? 'bg-error/10 border-error' : ''}
-                  ${notif.type === 'warning' ? 'bg-warning/10 border-warning' : ''}
-                  ${notif.type === 'info' ? 'bg-primary/10 border-primary' : ''}
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">
-                    {notif.type === 'danger' && '⚠️'}
-                    {notif.type === 'warning' && '⚡'}
-                    {notif.type === 'info' && 'ℹ️'}
-                  </span>
-                  <span className={`font-semibold ${
-                    notif.type === 'danger' ? 'text-error' : 
-                    notif.type === 'warning' ? 'text-warning' : 
-                    'text-primary'
-                  }`}>
-                    {notif.message}
-                  </span>
-                </div>
-                {notif.action && notif.actionLabel && (
-                  <button
-                    onClick={notif.action}
-                    className={`
-                      px-4 py-2 rounded font-semibold text-sm
-                      ${notif.type === 'danger' ? 'bg-error hover:bg-error/90 text-white' : ''}
-                      ${notif.type === 'warning' ? 'bg-warning hover:bg-warning/90 text-gray-900' : ''}
-                      ${notif.type === 'info' ? 'bg-primary hover:bg-primary/90 text-white' : ''}
-                    `}
-                  >
-                    {notif.actionLabel}
-                  </button>
-                )}
+        {/* Critical Notifications/Warnings - All alerts above overview blocks */}
+        <div className="mb-6 space-y-3">
+          {/* Tag Team Readiness Warning */}
+          <TagTeamReadinessWarning compact={true} />
+          
+          {/* Other Notifications */}
+          {notifications.length > 0 && notifications.map((notif, idx) => (
+            <div 
+              key={idx}
+              className={`
+                p-4 rounded-lg border-l-4 flex items-center justify-between
+                ${notif.type === 'danger' ? 'bg-error/10 border-error' : ''}
+                ${notif.type === 'warning' ? 'bg-warning/10 border-warning' : ''}
+                ${notif.type === 'info' ? 'bg-primary/10 border-primary' : ''}
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">
+                  {notif.type === 'danger' && '⚠️'}
+                  {notif.type === 'warning' && '⚡'}
+                  {notif.type === 'info' && 'ℹ️'}
+                </span>
+                <span className={`font-semibold ${
+                  notif.type === 'danger' ? 'text-error' : 
+                  notif.type === 'warning' ? 'text-warning' : 
+                  'text-primary'
+                }`}>
+                  {notif.message}
+                </span>
               </div>
-            ))}
-          </div>
-        )}
+              {notif.action && notif.actionLabel && (
+                <button
+                  onClick={notif.action}
+                  className={`
+                    px-4 py-2 rounded font-semibold text-sm transition-colors
+                    ${notif.type === 'danger' ? 'bg-error hover:bg-error/90 text-white' : ''}
+                    ${notif.type === 'warning' ? 'bg-warning hover:bg-warning/90 text-gray-900' : ''}
+                    ${notif.type === 'info' ? 'bg-primary hover:bg-primary/90 text-white' : ''}
+                  `}
+                >
+                  {notif.actionLabel}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
 
         {/* Top Row: Stable Statistics and Financial Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -193,11 +195,6 @@ function DashboardPage() {
 
           {/* Financial Summary */}
           <FinancialSummary />
-        </div>
-
-        {/* Tag Team Readiness Warning */}
-        <div className="mb-6">
-          <TagTeamReadinessWarning compact={true} />
         </div>
 
         {/* Matchmaking Section */}

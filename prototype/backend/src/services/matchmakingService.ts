@@ -4,9 +4,11 @@ import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from './leagueInstanceS
 
 
 // Matchmaking configuration
-export const ELO_MATCH_IDEAL = 150; // Ideal ELO difference for a fair match
-export const ELO_MATCH_FALLBACK = 300; // Maximum ELO difference for fallback matching
-export const RECENT_OPPONENT_LIMIT = 5; // Number of recent opponents to track
+export const LP_MATCH_IDEAL = 10;        // ±10 LP ideal range (PRIMARY)
+export const LP_MATCH_FALLBACK = 20;     // ±20 LP fallback range (PRIMARY)
+export const ELO_MATCH_IDEAL = 150;      // ±150 ELO ideal (SECONDARY)
+export const ELO_MATCH_FALLBACK = 300;   // ±300 ELO max (SECONDARY)
+export const RECENT_OPPONENT_LIMIT = 5;  // Number of recent opponents to track
 export const BATTLE_READINESS_HP_THRESHOLD = 0.75; // 75% HP required (ensures robot won't immediately yield)
 
 // Bye-robot identifier
@@ -127,6 +129,7 @@ async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONE
 
 /**
  * Calculate match quality score (lower is better)
+ * CHANGED: LP-primary matching with ELO as secondary quality check
  */
 function calculateMatchScore(
   robot1: Robot,
@@ -136,9 +139,28 @@ function calculateMatchScore(
 ): number {
   let score = 0;
   
-  // ELO difference (primary factor)
+  // LP difference (PRIMARY factor)
+  const lpDiff = Math.abs(robot1.leaguePoints - robot2.leaguePoints);
+  
+  // LP scoring: heavily penalize outside ideal/fallback ranges
+  if (lpDiff <= LP_MATCH_IDEAL) {
+    score += lpDiff * 1;  // Ideal range (±10 LP): minimal penalty
+  } else if (lpDiff <= LP_MATCH_FALLBACK) {
+    score += lpDiff * 5;  // Fallback range (±20 LP): moderate penalty
+  } else {
+    score += lpDiff * 20; // Outside range: heavy penalty
+  }
+  
+  // ELO difference (SECONDARY factor - quality check)
   const eloDiff = Math.abs(robot1.elo - robot2.elo);
-  score += eloDiff;
+  
+  if (eloDiff <= ELO_MATCH_IDEAL) {
+    score += eloDiff * 0.1;  // Ideal ELO (±150): minimal penalty
+  } else if (eloDiff <= ELO_MATCH_FALLBACK) {
+    score += eloDiff * 0.5;  // Fallback ELO (±300): moderate penalty
+  } else {
+    score += 1000;  // Outside ELO range (>300): reject match
+  }
   
   // Recent opponent penalty (soft deprioritize)
   if (recentOpponents1.includes(robot2.id)) {

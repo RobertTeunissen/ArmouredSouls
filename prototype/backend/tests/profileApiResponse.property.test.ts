@@ -29,11 +29,15 @@ describe('Profile API Response - Property Tests', () => {
     await prisma.$connect();
   });
 
-  afterAll(async () => {
-    // Cleanup all test users
+  afterEach(async () => {
+    // Cleanup all test users after each test
     for (const user of testUsers) {
-      await prisma.user.delete({ where: { id: user.id } }).catch(() => {});
+      await prisma.user.deleteMany({ where: { id: user.id } }).catch(() => {});
     }
+    testUsers = [];
+  });
+
+  afterAll(async () => {
     await prisma.$disconnect();
   });
 

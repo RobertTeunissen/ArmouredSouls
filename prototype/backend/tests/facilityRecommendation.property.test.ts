@@ -37,7 +37,7 @@ describe('Property 22: Investment Recommendation Ranking', () => {
       await prisma.auditLog.deleteMany({ where: { userId } });
       await prisma.facility.deleteMany({ where: { userId } });
       await prisma.robot.deleteMany({ where: { userId } });
-      await prisma.user.delete({ where: { id: userId } }).catch(() => {});
+      await prisma.user.deleteMany({ where: { id: userId } }).catch(() => {});
     }
   });
 

@@ -72,6 +72,10 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
 });
 
 describe('Stance Modifiers', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   describe('getStanceModifier', () => {
     it('should return offensive stance modifiers', () => {
       expect(getStanceModifier('offensive', 'combatPower')).toBe(0.15);

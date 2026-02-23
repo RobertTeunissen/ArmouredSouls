@@ -1,0 +1,97 @@
+Timestamp | Level | Message
+2026-02-23T15:54:09.937Z | INFO | === Cycle 32 Started ===
+2026-02-23T15:54:09.937Z | INFO | Cycle 32 (2/3)
+2026-02-23T15:54:09.937Z | INFO |  [Admin] === Cycle 32 (2/3) ===
+2026-02-23T15:54:09.940Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-23T15:54:09.940Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-23T15:54:09.940Z
+2026-02-23T15:54:09.943Z | INFO | [BattleOrchestrator] Found 0 matches to execute
+2026-02-23T15:54:09.943Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
+2026-02-23T15:54:09.943Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
+2026-02-23T15:54:09.945Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-23T15:54:09.948Z | INFO | [Admin] Step 3: Skipping Tag Team Battles (even cycle 32)
+2026-02-23T15:54:09.948Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-23T15:54:09.952Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-23T15:54:09.954Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-23T15:54:09.957Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-02-23T15:54:09.957Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-23T15:54:09.957Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-02-23T15:54:09.957Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-23T15:54:09.960Z | INFO | [Rebalancing] Total robots in system: 4
+2026-02-23T15:54:09.960Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-02-23T15:54:09.967Z | INFO | [Rebalancing] bronze: 5 total robots across 1 instances
+2026-02-23T15:54:09.968Z | INFO | [Rebalancing] Processing bronze_1...
+2026-02-23T15:54:09.970Z | INFO | [Rebalancing] bronze_1: Skipping (0 eligible, need 10)
+2026-02-23T15:54:09.970Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-02-23T15:54:09.971Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-02-23T15:54:09.973Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
+2026-02-23T15:54:09.974Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T15:54:09.974Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-02-23T15:54:09.977Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-02-23T15:54:09.977Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T15:54:09.978Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-02-23T15:54:09.980Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-02-23T15:54:09.980Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T15:54:09.980Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-02-23T15:54:09.983Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-02-23T15:54:09.983Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T15:54:09.983Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-02-23T15:54:09.985Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-02-23T15:54:09.985Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-23T15:54:09.985Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-02-23T15:54:09.987Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:54:09.989Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:54:09.991Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:54:09.992Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:54:09.995Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:54:09.997Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-02-23T15:54:09.997Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-23T15:54:09.997Z | INFO | [Rebalancing] League rebalancing complete!
+2026-02-23T15:54:09.997Z | INFO |   Total promoted: 0
+2026-02-23T15:54:09.997Z | INFO |   Total demoted: 0
+2026-02-23T15:54:09.997Z | INFO |   Errors: 0
+2026-02-23T15:54:09.997Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-23T15:54:09.999Z | INFO | [Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle 32)
+2026-02-23T15:54:09.999Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-02-23T15:54:10.001Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-02-23T15:54:10.001Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-02-23T15:54:10.001Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-23T15:54:11.001Z
+2026-02-23T15:54:10.001Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-02-23T15:54:10.003Z | INFO | [Matchmaking] Processing bronze_1...
+2026-02-23T15:54:10.009Z | INFO | [Matchmaking] Queue for bronze_1: 4 robots available (6 total, 4 ready)
+2026-02-23T15:54:10.017Z | INFO | [Matchmaking] Created 2 scheduled matches
+2026-02-23T15:54:10.017Z | INFO | [Matchmaking] BRONZE: Created 2 matches across 1 instances
+2026-02-23T15:54:10.018Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-02-23T15:54:10.021Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
+2026-02-23T15:54:10.021Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-02-23T15:54:10.023Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-02-23T15:54:10.023Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-02-23T15:54:10.025Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-02-23T15:54:10.025Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-02-23T15:54:10.027Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-02-23T15:54:10.027Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-02-23T15:54:10.029Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-02-23T15:54:10.029Z | INFO | [Matchmaking] ========================================
+2026-02-23T15:54:10.029Z | INFO | [Matchmaking] COMPLETE: 2 total matches created
+2026-02-23T15:54:10.029Z | INFO | [Matchmaking] ========================================
+2026-02-23T15:54:10.032Z | INFO | [Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle 32)
+2026-02-23T15:54:10.032Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-02-23T15:54:10.046Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-02-23T15:54:10.343Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡0
+2026-02-23T15:54:10.347Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-02-23T15:54:11.460Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-02-23T15:54:11.460Z | INFO | [Admin] === End of Cycle 32 Balances ===
+2026-02-23T15:54:11.464Z | INFO | [Balance] User 47124 | Stable: test_rebalance_user | Balance: ₡3,000,000
+2026-02-23T15:54:11.468Z | INFO | [Balance] User 47125 | Stable: test_user_prop10_1_1771862050966 | Balance: ₡100,000
+2026-02-23T15:54:11.472Z | INFO | [Balance] User 47126 | Stable: test_user_prop10_2_1771862050994 | Balance: ₡100,000
+2026-02-23T15:54:11.476Z | INFO | [Balance] User 47127 | Stable: test_oversized_user | Balance: ₡3,000,000
+2026-02-23T15:54:11.479Z | INFO | [Balance] User 47131 | Stable: test_rebal_user | Balance: ₡3,000,000
+2026-02-23T15:54:11.484Z | INFO | [Balance] User 47132 | Stable: test_order_user | Balance: ₡3,000,000
+2026-02-23T15:54:11.489Z | INFO | [Balance] User 47133 | Stable: test_move_user | Balance: ₡3,000,000
+2026-02-23T15:54:11.492Z | INFO | [Admin] ===================================
+2026-02-23T15:54:11.498Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-02-23T15:54:11.498Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 32
+2026-02-23T15:54:11.513Z | ERROR | [Admin] Failed to create cycle snapshot: {}
+2026-02-23T15:54:11.514Z | INFO | [Admin] === Cycle 32 Summary ===
+2026-02-23T15:54:11.514Z | INFO | [Admin] Battles: 0
+2026-02-23T15:54:11.514Z | INFO | [Admin] ===================================
+2026-02-23T15:54:11.514Z | INFO | === Cycle 32 Ended ===

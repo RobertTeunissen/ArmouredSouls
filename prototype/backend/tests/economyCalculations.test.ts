@@ -15,6 +15,10 @@ import {
 } from '../src/utils/economyCalculations';
 
 describe('Economy Calculations', () => {
+  afterAll(() => {
+    // Pure unit test - no cleanup needed
+  });
+
   describe('Facility Operating Costs', () => {
     it('should calculate Repair Bay operating costs correctly', () => {
       expect(calculateFacilityOperatingCost('repair_bay', 0)).toBe(0); // Not purchased
@@ -28,9 +32,9 @@ describe('Economy Calculations', () => {
       expect(calculateFacilityOperatingCost('training_facility', 5)).toBe(4500); // 1500 + (4 * 750)
     });
 
-    it('should calculate Income Generator operating costs correctly', () => {
-      expect(calculateFacilityOperatingCost('income_generator', 1)).toBe(1000);
-      expect(calculateFacilityOperatingCost('income_generator', 10)).toBe(5500); // 1000 + (9 * 500)
+    it('should calculate Merchandising Hub operating costs correctly', () => {
+      expect(calculateFacilityOperatingCost('merchandising_hub', 1)).toBe(200);
+      expect(calculateFacilityOperatingCost('merchandising_hub', 10)).toBe(2000); // 200 * 10
     });
 
     it('should calculate Streaming Studio operating costs correctly', () => {
@@ -108,8 +112,8 @@ describe('Economy Calculations', () => {
       // Level 1: Base 5000, Prestige 10000 = 5000 * (1 + 10000/10000) = 5000 * 2 = 10000
       expect(calculateMerchandisingIncome(1, 10000)).toBe(10000);
       
-      // Level 5: Base 12000, Prestige 15000 = 12000 * (1 + 15000/10000) = 12000 * 2.5 = 30000
-      expect(calculateMerchandisingIncome(5, 15000)).toBe(30000);
+      // Level 5: Base 25000, Prestige 15000 = 25000 * (1 + 15000/10000) = 25000 * 2.5 = 62500
+      expect(calculateMerchandisingIncome(5, 15000)).toBe(62500);
     });
   });
 
@@ -149,11 +153,11 @@ describe('Economy Calculations', () => {
       // Level 1: Base 5000, no prestige
       expect(calculateMerchandisingIncome(1, 0)).toBe(5000);
       
-      // Level 5: Base 12000, prestige 10000
-      expect(calculateMerchandisingIncome(5, 10000)).toBe(24000);
+      // Level 5: Base 25000, prestige 10000 = 25000 * (1 + 10000/10000) = 50000
+      expect(calculateMerchandisingIncome(5, 10000)).toBe(50000);
       
-      // Level 10: Base 35000, prestige 20000
-      expect(calculateMerchandisingIncome(10, 20000)).toBe(105000);
+      // Level 10: Base 50000, prestige 20000 = 50000 * (1 + 20000/10000) = 150000
+      expect(calculateMerchandisingIncome(10, 20000)).toBe(150000);
     });
 
     it('should not include streaming revenue in merchandising calculation', () => {
@@ -165,11 +169,11 @@ describe('Economy Calculations', () => {
       
       const level = 5;
       const prestige = 15000;
-      const baseRate = getMerchandisingBaseRate(level); // 12000
-      const expectedMerchandising = Math.round(baseRate * (1 + prestige / 10000)); // 12000 * 2.5 = 30000
+      const baseRate = getMerchandisingBaseRate(level); // 25000
+      const expectedMerchandising = Math.round(baseRate * (1 + prestige / 10000)); // 25000 * 2.5 = 62500
       
       expect(calculateMerchandisingIncome(level, prestige)).toBe(expectedMerchandising);
-      expect(calculateMerchandisingIncome(level, prestige)).toBe(30000);
+      expect(calculateMerchandisingIncome(level, prestige)).toBe(62500);
     });
 
     it('should return 0 merchandising when Income Generator not purchased', () => {

@@ -95,6 +95,10 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
 }
 
 describe('Bye-Team Battles - Property Tests', () => {
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
   describe('Property 35: Bye-Team Full Rewards', () => {
     /**
      * **Validates: Requirements 12.4**
