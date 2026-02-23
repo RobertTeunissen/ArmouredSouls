@@ -229,7 +229,7 @@ With Option C, multiple strategies are viable:
 **Strategy 2: Balanced Growth**
 - Create robot: ₡500K
 - Moderate upgrades (avg level 6): ₡500K
-- Training Facility L3: ₡600K
+- Training Facility L3: ₡450K
 - Combat Academy L1: ₡200K
 - Income Generator L1: ₡400K
 - Mid-tier weapons (2×): ₡400K
