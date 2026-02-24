@@ -36,8 +36,8 @@ function CompactAttributeRow({
   const effectiveValue = (currentLevel + weaponBonus).toFixed(2);
 
   // Calculate upgrade cost
-  const baseCost = (currentLevel + 1) * 1000;
-  const discountPercent = trainingLevel * 5;
+  const baseCost = (currentLevel + 1) * 1500;
+  const discountPercent = trainingLevel * 10;
   const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
   const canUpgrade = currentLevel < 50 && currentLevel < cap;

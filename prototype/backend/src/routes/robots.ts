@@ -2052,7 +2052,7 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       }
 
       // Calculate cost for this attribute
-      const discountPercent = trainingLevel * 5; // 5% per level
+      const discountPercent = trainingLevel * 10; // 10% per level, capped at 90%
       let attributeCost = 0;
 
       for (let level = Math.floor(currentLevel); level < plannedLevel; level++) {

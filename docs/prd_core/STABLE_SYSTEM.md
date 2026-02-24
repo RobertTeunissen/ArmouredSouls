@@ -113,17 +113,30 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - With 5 robots: Level 10 Repair Bay reaches the 75% discount (15 × 5 = 75%)
 - Maximum benefit requires both high Repair Bay level AND large robot roster
 
-**2. Training Facility** (Operating Cost: ₡1,500/day at Level 1, +₡750/day per level)
-- **Level 1** (₡150,000): 5% discount on attribute upgrade costs
-- **Level 2** (₡300,000): 10% discount on attribute upgrade costs
-- **Level 3** (₡450,000): 15% discount on attribute upgrade costs
-- **Level 4** (₡600,000, requires 1,000 prestige): 20% discount on attribute upgrade costs
-- **Level 5** (₡750,000): 25% discount on attribute upgrade costs
-- **Level 6** (₡900,000): 30% discount on attribute upgrade costs
-- **Level 7** (₡1,050,000, requires 5,000 prestige): 35% discount on attribute upgrade costs
-- **Level 8** (₡1,200,000): 40% discount on attribute upgrade costs
-- **Level 9** (₡1,350,000, requires 10,000 prestige): 45% discount on attribute upgrade costs
-- **Level 10** (₡1,500,000): 50% discount on attribute upgrade costs, unlock special training programs
+**2. Training Facility** (Operating Cost: ₡250/day per level)
+- **Level 1** (₡150,000): 10% discount on attribute upgrade costs (₡250/day operating cost)
+- **Level 2** (₡300,000): 20% discount on attribute upgrade costs (₡500/day operating cost)
+- **Level 3** (₡450,000): 30% discount on attribute upgrade costs (₡750/day operating cost)
+- **Level 4** (₡600,000, requires 1,000 prestige): 40% discount on attribute upgrade costs (₡1,000/day operating cost)
+- **Level 5** (₡750,000): 50% discount on attribute upgrade costs (₡1,250/day operating cost)
+- **Level 6** (₡900,000): 60% discount on attribute upgrade costs (₡1,500/day operating cost)
+- **Level 7** (₡1,050,000, requires 5,000 prestige): 70% discount on attribute upgrade costs (₡1,750/day operating cost)
+- **Level 8** (₡1,200,000): 80% discount on attribute upgrade costs (₡2,000/day operating cost)
+- **Level 9** (₡1,350,000, requires 10,000 prestige): 90% discount on attribute upgrade costs (₡2,250/day operating cost, maximum)
+
+**Discount Formula**: Discount % = Training Facility Level × 10%, capped at 90%
+
+**Operating Cost Formula**: Operating Cost = Level × ₡250/day
+
+**Break-Even Analysis**:
+- Level 1: Need ₡2,500/day in upgrades to cover operating costs (achievable in Bronze league)
+- Level 2: Need ₡2,500/day in upgrades to cover operating costs (double the discount!)
+- Full ROI: ~150 cycles for single-robot strategy, ~75 cycles for two-robot strategy
+
+**Strategic Value**: 
+- Early game (1 robot): Profitable from day 1 if upgrading regularly (₡2,500+/day)
+- Mid game (2 robots): Highly profitable, essential for competitive progression
+- Late game: Maximum 90% discount dramatically reduces upgrade costs for level 20-50 progression
 
 **3. Weapons Workshop** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
 - **Level 0**: No discount

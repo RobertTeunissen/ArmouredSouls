@@ -70,7 +70,7 @@ describe('UpgradePlanner - Cost Transparency Properties', () => {
 
           // Check if training discount is displayed when trainingLevel > 0
           if (trainingLevel > 0) {
-            const trainingDiscountText = `${trainingLevel * 5}%`;
+            const trainingDiscountText = `${trainingLevel * 10}%`;
             const trainingElements = container.querySelectorAll('*');
             let foundTrainingDiscount = false;
             trainingElements.forEach(el => {

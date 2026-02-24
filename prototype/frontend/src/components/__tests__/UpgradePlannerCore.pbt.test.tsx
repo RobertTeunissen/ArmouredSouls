@@ -290,7 +290,7 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
 
           // Calculate expected discounts
           const workshopDiscount = Math.min(workshopLevel * 0.04, 0.20);
-          const trainingDiscount = trainingLevel * 0.05;
+          const trainingDiscount = trainingLevel * 0.10;
           
           // Verify workshop discount is displayed
           const workshopDiscountText = `${(workshopDiscount * 100).toFixed(0)}%`;

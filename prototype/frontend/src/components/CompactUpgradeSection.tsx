@@ -50,8 +50,8 @@ function CompactUpgradeSection({
   const getAttributeInfo = (attributeKey: string) => {
     const currentLevel = Math.floor(robot[attributeKey] as number);
     const weaponBonus = calculateAttributeBonus(attributeKey, robot.mainWeapon, robot.offhandWeapon);
-    const baseCost = (currentLevel + 1) * 1000;
-    const discountPercent = trainingLevel * 5;
+    const baseCost = (currentLevel + 1) * 1500;
+    const discountPercent = trainingLevel * 10;
     const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
     return {

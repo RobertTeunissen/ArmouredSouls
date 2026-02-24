@@ -120,7 +120,7 @@ Each loadout type provides different bonuses. For example, Weapon+Shield provide
 
 **Facilities** provide discounts, unlocks, passive income, or other benefits. See [STABLE_SYSTEM.md](docs/prd_core/STABLE_SYSTEM.md) for complete facility pricing. Key facilities include:
 
-- **Training Facility** - 5% discount on attribute upgrades at Level 1
+- **Training Facility** - 10% discount on attribute upgrades at Level 1 (₡250/day operating cost)
 - **Repair Bay** - Repair cost discount (scales with robot count)
 - **Weapons Workshop** - 5% discount on weapon purchases at Level 1
 - **Income Generator** - Generates passive income daily
@@ -128,11 +128,11 @@ Each loadout type provides different bonuses. For example, Weapon+Shield provide
 - **Storage Facility** - Increases weapon storage capacity from 5 to 10
 
 **Operating Costs**: All facilities have daily operating costs. For example:
-- Training Facility Level 1: ₡1,500/day (₡10,500/week)
+- Training Facility Level 1: ₡250/day (₡1,750/week)
 - Repair Bay Level 1: ₡1,000/day (₡7,000/week)
 - Roster Expansion: ₡500/day per additional robot slot
 
-**ROI Consideration**: Facilities with discount benefits only pay for themselves if you spend enough in that category. For example, Training Facility Level 1 saves 5% on upgrades but costs ₡10,500/week to operate. You'd need to spend ₡210,000/week on upgrades just to break even on operating costs (5% of ₡210K = ₡10.5K). Most players won't spend that much early on, so facility investments are often better suited for mid-game.
+**ROI Consideration**: Facilities with discount benefits only pay for themselves if you spend enough in that category. For example, Training Facility Level 1 saves 10% on upgrades but costs ₡1,750/week to operate. You'd need to spend ₡17,500/week on upgrades just to break even on operating costs (10% of ₡17.5K = ₡1.75K). This is achievable in Bronze league with regular upgrades (₡2,500/day), making Training Facility a solid early-game investment for 1-2 robot strategies.
 
 ### Income Sources
 
