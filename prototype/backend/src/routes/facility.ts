@@ -65,6 +65,39 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         }
       }
 
+      // Calculate operating costs
+      let currentOperatingCost = 0;
+      let nextOperatingCost = 0;
+      
+      if (config.type === 'training_facility') {
+        currentOperatingCost = currentLevel * 250;
+        nextOperatingCost = nextLevel * 250;
+      } else if (config.type === 'repair_bay') {
+        currentOperatingCost = currentLevel > 0 ? 1000 + (currentLevel - 1) * 500 : 0;
+        nextOperatingCost = nextLevel > 0 ? 1000 + (nextLevel - 1) * 500 : 0;
+      } else if (config.type === 'weapons_workshop') {
+        currentOperatingCost = currentLevel > 0 ? 1000 + (currentLevel - 1) * 500 : 0;
+        nextOperatingCost = nextLevel > 0 ? 1000 + (nextLevel - 1) * 500 : 0;
+      } else if (config.type === 'merchandising_hub') {
+        currentOperatingCost = currentLevel * 200;
+        nextOperatingCost = nextLevel * 200;
+      } else if (config.type === 'streaming_studio') {
+        currentOperatingCost = currentLevel * 100;
+        nextOperatingCost = nextLevel * 100;
+      } else if (config.type === 'storage_facility') {
+        currentOperatingCost = currentLevel > 0 ? 500 + (currentLevel - 1) * 250 : 0;
+        nextOperatingCost = nextLevel > 0 ? 500 + (nextLevel - 1) * 250 : 0;
+      } else if (config.type === 'combat_training_academy' || config.type === 'defense_training_academy' || config.type === 'mobility_training_academy') {
+        currentOperatingCost = currentLevel > 0 ? 800 + (currentLevel - 1) * 400 : 0;
+        nextOperatingCost = nextLevel > 0 ? 800 + (nextLevel - 1) * 400 : 0;
+      } else if (config.type === 'ai_training_academy') {
+        currentOperatingCost = currentLevel > 0 ? 1000 + (currentLevel - 1) * 500 : 0;
+        nextOperatingCost = nextLevel > 0 ? 1000 + (nextLevel - 1) * 500 : 0;
+      } else if (config.type === 'research_lab' || config.type === 'medical_bay') {
+        currentOperatingCost = currentLevel > 0 ? 2000 + (currentLevel - 1) * 1000 : 0;
+        nextOperatingCost = nextLevel > 0 ? 2000 + (nextLevel - 1) * 1000 : 0;
+      }
+
       return {
         ...config,
         currentLevel,
@@ -75,6 +108,8 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         canAfford: user.currency >= upgradeCost,
         currentBenefit,
         nextBenefit,
+        currentOperatingCost,
+        nextOperatingCost,
       };
     });
 

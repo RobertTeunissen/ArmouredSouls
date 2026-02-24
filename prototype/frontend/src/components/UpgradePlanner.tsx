@@ -124,7 +124,7 @@ function UpgradePlanner({
   // Calculate cost for a single level upgrade with training facility discount
   const calculateUpgradeCost = (currentLevel: number): number => {
     const baseCost = calculateBaseCost(currentLevel);
-    const trainingDiscountPercent = trainingLevel * 5; // 5% per training facility level
+    const trainingDiscountPercent = trainingLevel * 10; // 10% per training facility level, capped at 90%
     const trainingDiscount = trainingDiscountPercent / 100;
     
     // Apply training facility discount
@@ -261,7 +261,7 @@ function UpgradePlanner({
         {trainingLevel > 0 && (
           <div className="bg-green-900/20 border border-green-700 text-green-300 px-4 py-2 rounded flex items-center justify-between">
             <span className="font-semibold">Training Facility Discount:</span>
-            <span>{trainingLevel * 5}%</span>
+            <span>{trainingLevel * 10}%</span>
           </div>
         )}
       </div>

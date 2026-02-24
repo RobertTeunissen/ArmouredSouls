@@ -30,7 +30,7 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
       return 1000 + (level - 1) * 500;
     
     case 'training_facility':
-      return 1500 + (level - 1) * 750;
+      return 250 * level;
     
     case 'weapons_workshop':
       return 1000 + (level - 1) * 500;

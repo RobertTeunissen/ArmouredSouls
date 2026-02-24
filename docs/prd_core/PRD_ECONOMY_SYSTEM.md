@@ -758,30 +758,36 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 ```
 
 **Facility Discount: Training Facility**
-- Provides 5% to 50% discount based on level (see section 2 below)
+- Provides 10% to 90% discount based on level (see section 2 below)
 - Discount applies to base upgrade cost before calculation
 - Formula with discount:
   ```
-  discount = training_facility_level × 5  // 0% to 50%
+  discount = training_facility_level × 10  // 10% to 90% (capped at Level 9)
   upgrade_cost = (current_level + 1) × 1,500 × (1 - discount/100)  // Updated Feb 8, 2026
   ```
 
 **Training Facility ROI Analysis**:
 
 *Upgrading from level 1→10 (hitting first cap) for all 23 attributes:*
-- Cost per attribute (1→10): (2+3+4+5+6+7+8+9+10+11) × ₡1,000 = ₡54,000
-- Total for all 23 attributes: 23 × ₡54,000 = **₡1,242,000**
+- Cost per attribute (1→10): (2+3+4+5+6+7+8+9+10+11) × ₡1,500 = ₡81,000
+- Total for all 23 attributes: 23 × ₡81,000 = **₡1,863,000**
 
-*With Training Facility Level 1 (5% discount):*
-- Training Facility cost: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for facility pricing
-- Cost per attribute (1→10) with discount: ₡54,000 × 0.95 = ₡51,300
-- Total for all 23 attributes: 23 × ₡51,300 = ₡1,179,900
-- **Savings**: ₡1,242,000 - ₡1,179,900 = ₡62,100
-- **Net cost with facility**: ₡300,000 + ₡1,179,900 = ₡1,479,900
-- **vs without facility**: ₡1,242,000
+*With Training Facility Level 1 (10% discount):*
+- Training Facility cost: ₡150,000 (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md))
+- Operating cost: ₡250/day (₡1,750/week)
+- Cost per attribute (1→10) with discount: ₡81,000 × 0.90 = ₡72,900
+- Total for all 23 attributes: 23 × ₡72,900 = ₡1,676,700
+- **Savings**: ₡1,863,000 - ₡1,676,700 = ₡186,300
+- **Net cost with facility**: ₡150,000 + ₡1,676,700 = ₡1,826,700
+- **vs without facility**: ₡1,863,000
+- **Net benefit**: ₡36,300 savings ✓
 
-**Conclusion**: Training Facility Level 1 is NOT cost-effective for early game (1→10 upgrades). It only becomes valuable when upgrading to higher levels or when upgrading multiple robots. 
-**Recommendation**: Prioritize attribute upgrades first, purchase Training Facility later when preparing for level 15+ upgrades or when managing 2+ robots.
+**Daily Break-Even**: Need ₡2,500/day in upgrade spending to cover ₡250/day operating costs
+- At 10% discount: ₡2,500 × 0.10 = ₡250/day savings
+- Achievable in Bronze league with regular upgrades (1-2 upgrades/day)
+
+**Conclusion**: Training Facility Level 1 is NOW cost-effective for early game! With 10% discount and low operating costs (₡250/day), it pays for itself even with modest upgrade spending.
+**Recommendation**: Purchase Training Facility Level 1 early (cycles 5-15) if you plan to upgrade regularly. Essential for 2+ robot strategies and progression past level 10.
 
 ### 2. Facility Purchases & Upgrades
 
@@ -792,7 +798,7 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 | Facility | Operating Cost/Day |
 |----------|-------------------|
 | 1. Repair Bay | ₡1,000 |
-| 2. Training Facility | ₡1,500 |
+| 2. Training Facility | ₡250/level |
 | 3. Weapons Workshop | ₡1,000 |
 | 4. Research Lab | ₡2,000 |
 | 5. Medical Bay | ₡2,000 |

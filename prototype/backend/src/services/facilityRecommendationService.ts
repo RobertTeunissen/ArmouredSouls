@@ -287,7 +287,7 @@ export class FacilityRecommendationService {
       }
     } else if (facilityType === 'training_facility') {
       // Training facility reduces attribute upgrade costs
-      const discountPercent = nextLevel * 5; // 5% per level
+      const discountPercent = nextLevel * 10; // 10% per level, capped at 90%
       const projectedSavingsPerCycle = activityMetrics.avgUpgradeCostPerCycle * (discountPercent / 100);
       
       if (projectedSavingsPerCycle > 0) {

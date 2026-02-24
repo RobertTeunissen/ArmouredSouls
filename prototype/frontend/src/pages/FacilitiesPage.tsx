@@ -20,6 +20,8 @@ interface Facility {
   nextLevelPrestigeRequired?: number;
   hasPrestige?: boolean;
   canAfford?: boolean;
+  currentOperatingCost?: number;
+  nextOperatingCost?: number;
 }
 
 interface FacilityROI {
@@ -398,6 +400,11 @@ function FacilitiesPage() {
                               <div className="text-green-400">
                                 {facility.currentBenefit || facility.benefits[facility.currentLevel - 1]}
                               </div>
+                              {facility.currentOperatingCost !== undefined && facility.currentOperatingCost > 0 && (
+                                <div className="text-xs text-gray-400 mt-2">
+                                  Operating Cost: <span className="text-red-400">₡{facility.currentOperatingCost.toLocaleString()}/day</span>
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -408,6 +415,16 @@ function FacilitiesPage() {
                                 <div className="text-blue-400">
                                   {facility.nextBenefit || facility.benefits[facility.currentLevel]}
                                 </div>
+                                {facility.nextOperatingCost !== undefined && facility.nextOperatingCost > 0 && (
+                                  <div className="text-xs text-gray-400 mt-2">
+                                    Operating Cost: <span className="text-red-400">₡{facility.nextOperatingCost.toLocaleString()}/day</span>
+                                    {facility.currentOperatingCost !== undefined && facility.currentOperatingCost > 0 && (
+                                      <span className="text-yellow-400 ml-2">
+                                        (+₡{(facility.nextOperatingCost - facility.currentOperatingCost).toLocaleString()}/day)
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
 
                               {/* Prestige Requirement Display */}

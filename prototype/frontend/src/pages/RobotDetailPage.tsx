@@ -435,8 +435,8 @@ function RobotDetailPage() {
     setError('');
     setSuccessMessage('');
 
-    const baseCost = (currentLevel + 1) * 1000;
-    const discountPercent = trainingLevel * 5;
+    const baseCost = (currentLevel + 1) * 1500;
+    const discountPercent = trainingLevel * 10;
     const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
     if (currency < upgradeCost) {
