@@ -225,9 +225,9 @@ describe('Analytics API - Error Handling', () => {
           startTime: snapshot.startTime,
           endTime: snapshot.endTime,
           durationMs: snapshot.durationMs,
-          stableMetrics: snapshot.stableMetrics,
-          robotMetrics: snapshot.robotMetrics,
-          stepDurations: snapshot.stepDurations,
+          stableMetrics: snapshot.stableMetrics as any,
+          robotMetrics: snapshot.robotMetrics as any,
+          stepDurations: snapshot.stepDurations as any,
           totalBattles: snapshot.totalBattles,
           totalCreditsTransacted: snapshot.totalCreditsTransacted,
           totalPrestigeAwarded: snapshot.totalPrestigeAwarded,
@@ -1217,10 +1217,9 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       // Create battles for the robot
       const battle = await prisma.battle.create({
         data: {
-          userId: testUserId,
           robot1Id: testRobotId,
           robot2Id: testRobotId + 1,
-          winnerId: i % 2 === 0 ? testRobotId : testRobotId + 1, // Win every other battle
+          winnerId: i % 2 === 0 ? testRobotId : testRobotId + 1,
           battleType: 'league',
           leagueType: 'bronze',
           battleLog: {},
@@ -1229,25 +1228,39 @@ describe('Analytics API - Robot Performance Endpoint', () => {
           robot2ELOBefore: 1000,
           robot2ELOAfter: 1000,
           eloChange: i % 2 === 0 ? 10 : -5,
-          robot1DamageDealt: 50 + (i * 10),
-          robot2DamageDealt: 30,
-          robot1FinalHP: i % 2 === 0 ? 70 : 20,
-          robot2FinalHP: i % 2 === 0 ? 20 : 70,
-          robot1FinalShield: 0,
-          robot2FinalShield: 0,
           winnerReward: 100,
           loserReward: 50,
-          robot1PrestigeAwarded: i % 2 === 0 ? 10 : 5,
-          robot2PrestigeAwarded: i % 2 === 0 ? 5 : 10,
-          robot1FameAwarded: i % 2 === 0 ? 20 : 10,
-          robot2FameAwarded: i % 2 === 0 ? 10 : 20,
-          robot1RepairCost: 30,
-          robot2RepairCost: 30,
           durationSeconds: 60,
-          robot1Yielded: false,
-          robot2Yielded: false,
-          robot1Destroyed: false,
-          robot2Destroyed: false,
+          participants: {
+            create: [
+              {
+                robotId: testRobotId,
+                team: 1,
+                credits: 0,
+                damageDealt: 50 + (i * 10),
+                finalHP: i % 2 === 0 ? 70 : 20,
+                fameAwarded: i % 2 === 0 ? 20 : 10,
+                prestigeAwarded: i % 2 === 0 ? 10 : 5,
+                eloBefore: 1000 + (i * 10),
+                eloAfter: 1000 + (i * 10) + (i % 2 === 0 ? 10 : -5),
+                yielded: false,
+                destroyed: false,
+              },
+              {
+                robotId: testRobotId + 1,
+                team: 2,
+                credits: 0,
+                damageDealt: 30,
+                finalHP: i % 2 === 0 ? 20 : 70,
+                fameAwarded: i % 2 === 0 ? 10 : 20,
+                prestigeAwarded: i % 2 === 0 ? 5 : 10,
+                eloBefore: 1000,
+                eloAfter: 1000,
+                yielded: false,
+                destroyed: false,
+              },
+            ],
+          },
         },
       });
 
@@ -1721,7 +1734,6 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
 
         await prisma.battle.create({
           data: {
-            userId: testUserId,
             robot1Id: testRobotId,
             robot2Id: testRobotId + 1,
             winnerId: testRobotId,
@@ -1730,25 +1742,19 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
             robot2ELOBefore: 1000,
             robot2ELOAfter: 990,
             eloChange: eloChange,
-            robot1DamageDealt: 50,
-            robot2DamageDealt: 30,
-            robot1FinalHP: 70,
-            robot2FinalHP: 0,
-            robot1FinalShield: 20,
-            robot2FinalShield: 0,
             winnerReward: 100,
             loserReward: 50,
-            robot1PrestigeAwarded: 10,
-            robot2PrestigeAwarded: 5,
-            robot1FameAwarded: 20,
-            robot2FameAwarded: 10,
-            robot1RepairCost: 30,
-            robot2RepairCost: 100,
             durationSeconds: 60,
             battleType: 'league',
             leagueType: 'bronze',
             battleLog: {},
             createdAt: new Date(Date.now() + cycleNumber * 1000),
+            participants: {
+              create: [
+                { robotId: testRobotId, team: 1, credits: 0, damageDealt: 50, finalHP: 70, fameAwarded: 20, prestigeAwarded: 10, eloBefore: currentElo, eloAfter: newElo, yielded: false, destroyed: false },
+                { robotId: testRobotId + 1, team: 2, credits: 0, damageDealt: 30, finalHP: 0, fameAwarded: 10, prestigeAwarded: 5, eloBefore: 1000, eloAfter: 990, yielded: false, destroyed: true },
+              ],
+            },
           },
         });
 
@@ -2065,7 +2071,6 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
 
     await prisma.battle.create({
       data: {
-        userId: testUserId,
         robot1Id: singleBattleRobotId,
         robot2Id: testRobotId,
         winnerId: singleBattleRobotId,
@@ -2074,25 +2079,19 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
         robot2ELOBefore: 1000,
         robot2ELOAfter: 980,
         eloChange: 20,
-        robot1DamageDealt: 50,
-        robot2DamageDealt: 30,
-        robot1FinalHP: 70,
-        robot2FinalHP: 0,
-        robot1FinalShield: 20,
-        robot2FinalShield: 0,
         winnerReward: 100,
         loserReward: 50,
-        robot1PrestigeAwarded: 10,
-        robot2PrestigeAwarded: 5,
-        robot1FameAwarded: 20,
-        robot2FameAwarded: 10,
-        robot1RepairCost: 30,
-        robot2RepairCost: 100,
         durationSeconds: 60,
         battleType: 'league',
         leagueType: 'bronze',
         battleLog: {},
         createdAt: new Date(Date.now() + testCycleStart * 1000),
+        participants: {
+          create: [
+            { robotId: singleBattleRobotId, team: 1, credits: 0, damageDealt: 50, finalHP: 70, fameAwarded: 20, prestigeAwarded: 10, eloBefore: 1000, eloAfter: 1020, yielded: false, destroyed: false },
+            { robotId: testRobotId, team: 2, credits: 0, damageDealt: 30, finalHP: 0, fameAwarded: 10, prestigeAwarded: 5, eloBefore: 1000, eloAfter: 980, yielded: false, destroyed: true },
+          ],
+        },
       },
     });
 
@@ -2208,34 +2207,27 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
         
         await prisma.battle.create({
           data: {
-            userId: testUserId,
             robot1Id: testRobotId,
-            robot2Id: testRobotId + 1, // Opponent robot
+            robot2Id: testRobotId + 1,
             winnerId: testRobotId,
             robot1ELOBefore: eloBefore,
             robot1ELOAfter: eloAfter,
             robot2ELOBefore: 1000,
             robot2ELOAfter: 990,
             eloChange: 10,
-            robot1DamageDealt: 50 + i * 10,
-            robot2DamageDealt: 30 + i * 5,
-            robot1FinalHP: 70,
-            robot2FinalHP: 0,
-            robot1FinalShield: 20,
-            robot2FinalShield: 0,
             winnerReward: 100,
             loserReward: 50,
-            robot1PrestigeAwarded: 10,
-            robot2PrestigeAwarded: 5,
-            robot1FameAwarded: 20 + i * 5,
-            robot2FameAwarded: 10,
-            robot1RepairCost: 30,
-            robot2RepairCost: 100,
             durationSeconds: 60,
             battleType: 'league',
             leagueType: 'bronze',
             battleLog: {},
             createdAt: new Date(Date.now() + cycleNumber * 1000),
+            participants: {
+              create: [
+                { robotId: testRobotId, team: 1, credits: 0, damageDealt: 50 + i * 10, finalHP: 70, fameAwarded: 20 + i * 5, prestigeAwarded: 10, eloBefore, eloAfter, yielded: false, destroyed: false },
+                { robotId: testRobotId + 1, team: 2, credits: 0, damageDealt: 30 + i * 5, finalHP: 0, fameAwarded: 10, prestigeAwarded: 5, eloBefore: 1000, eloAfter: 990, yielded: false, destroyed: true },
+              ],
+            },
           },
         });
       }

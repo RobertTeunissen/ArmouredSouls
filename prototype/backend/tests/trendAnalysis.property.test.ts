@@ -5,13 +5,12 @@
  * Uses fast-check for property-based testing
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { EventLogger, clearSequenceCache } from '../src/services/eventLogger';
 import { CycleSnapshotService } from '../src/services/cycleSnapshotService';
 import { trendAnalysisService } from '../src/services/trendAnalysisService';
 
-const prisma = new PrismaClient();
 const eventLogger = new EventLogger();
 const cycleSnapshotService = new CycleSnapshotService();
 

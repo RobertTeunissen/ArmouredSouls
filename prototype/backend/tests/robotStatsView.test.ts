@@ -76,7 +76,6 @@ describe('RobotStatsViewService', () => {
     for (let i = 0; i < 3; i++) {
       await prisma.battle.create({
         data: {
-          userId: testUserId,
           robot1Id: testRobotId1,
           robot2Id: testRobotId2,
           winnerId: testRobotId1,
@@ -85,24 +84,18 @@ describe('RobotStatsViewService', () => {
           robot2ELOBefore: 1000 - i * 10,
           robot2ELOAfter: 990 - i * 10,
           eloChange: 10,
-          robot1DamageDealt: 100,
-          robot2DamageDealt: 50,
-          robot1FinalHP: 50,
-          robot2FinalHP: 0, // Robot 2 destroyed
-          robot1FinalShield: 20,
-          robot2FinalShield: 0,
           winnerReward: 100,
           loserReward: 50,
-          robot1PrestigeAwarded: 10,
-          robot2PrestigeAwarded: 5,
-          robot1FameAwarded: 20,
-          robot2FameAwarded: 10,
-          robot1RepairCost: 30,
-          robot2RepairCost: 100,
           durationSeconds: 60,
           battleType: 'league',
           leagueType: 'bronze',
           battleLog: {},
+          participants: {
+            create: [
+              { robotId: testRobotId1, team: 1, credits: 100, eloBefore: 1200 + i * 10, eloAfter: 1210 + i * 10, damageDealt: 100, finalHP: 50, fameAwarded: 20, prestigeAwarded: 10 },
+              { robotId: testRobotId2, team: 2, credits: 50, eloBefore: 1000 - i * 10, eloAfter: 990 - i * 10, damageDealt: 50, finalHP: 0, fameAwarded: 10, prestigeAwarded: 5, destroyed: true },
+            ],
+          },
         },
       });
     }
@@ -110,7 +103,6 @@ describe('RobotStatsViewService', () => {
     // Robot 2 wins 1 battle
     await prisma.battle.create({
       data: {
-        userId: testUserId,
         robot1Id: testRobotId2,
         robot2Id: testRobotId1,
         winnerId: testRobotId2,
@@ -119,24 +111,18 @@ describe('RobotStatsViewService', () => {
         robot2ELOBefore: 1230,
         robot2ELOAfter: 1220,
         eloChange: 10,
-        robot1DamageDealt: 100,
-        robot2DamageDealt: 80,
-        robot1FinalHP: 20,
-        robot2FinalHP: 0, // Robot 1 destroyed
-        robot1FinalShield: 0,
-        robot2FinalShield: 0,
         winnerReward: 100,
         loserReward: 50,
-        robot1PrestigeAwarded: 10,
-        robot2PrestigeAwarded: 5,
-        robot1FameAwarded: 20,
-        robot2FameAwarded: 10,
-        robot1RepairCost: 80,
-        robot2RepairCost: 100,
         durationSeconds: 60,
         battleType: 'league',
         leagueType: 'bronze',
         battleLog: {},
+        participants: {
+          create: [
+            { robotId: testRobotId2, team: 1, credits: 100, eloBefore: 970, eloAfter: 980, damageDealt: 100, finalHP: 20, fameAwarded: 20, prestigeAwarded: 10 },
+            { robotId: testRobotId1, team: 2, credits: 50, eloBefore: 1230, eloAfter: 1220, damageDealt: 80, finalHP: 0, fameAwarded: 10, prestigeAwarded: 5, destroyed: true },
+          ],
+        },
       },
     });
 
@@ -275,11 +261,11 @@ describe('RobotStatsViewService', () => {
           expect(stats).toHaveProperty('totalCreditsEarned');
           expect(stats).toHaveProperty('totalFameEarned');
           
-          // Verify calculated values
-          expect(stats.totalBattles).toBe(4); // 3 as robot1 + 1 as robot2
-          expect(stats.wins).toBe(3); // Won 3 battles
-          expect(stats.losses).toBe(1); // Lost 1 battle
-          expect(stats.totalKills).toBe(3); // Killed opponent 3 times
+          // Verify calculated values (BigInt from DB)
+          expect(Number(stats.totalBattles)).toBe(4); // 3 as robot1 + 1 as robot2
+          expect(Number(stats.wins)).toBe(3); // Won 3 battles
+          expect(Number(stats.losses)).toBe(1); // Lost 1 battle
+          expect(Number(stats.totalKills)).toBe(3); // Killed opponent 3 times
         }
       } catch (error) {
         if (error instanceof Error && error.message.includes('does not exist')) {

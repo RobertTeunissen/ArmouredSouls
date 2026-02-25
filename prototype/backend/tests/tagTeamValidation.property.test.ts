@@ -1,8 +1,8 @@
-import { PrismaClient, Robot } from '@prisma/client';
+import { Robot } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import * as fc from 'fast-check';
 import { validateTeam, createTeam, getTeamById, disbandTeam, checkTeamReadiness, calculateCombinedELO } from '../src/services/tagTeamService';
 
-const prisma = new PrismaClient();
 
 /**
  * Property-Based Test for Tag Team Validation

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import {
   createTeam,
   validateTeam,
@@ -7,7 +7,6 @@ import {
   disbandTeam,
 } from '../src/services/tagTeamService';
 
-const prisma = new PrismaClient();
 
 describe('TagTeamService', () => {
   let testUserIds: number[] = [];
@@ -25,7 +24,7 @@ describe('TagTeamService', () => {
     await prisma.$connect();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     // Clean up in correct order
     if (testTeamIds.length > 0) {
       await prisma.tagTeamMatch.deleteMany({
@@ -85,6 +84,15 @@ describe('TagTeamService', () => {
 
   afterAll(async () => {
     await prisma.$disconnect();
+  });
+
+  // Clean up teams between tests to prevent "robot already in team" conflicts
+  beforeEach(async () => {
+    if (testUserId) {
+      await prisma.tagTeam.deleteMany({
+        where: { stableId: { in: testUserIds.filter(id => id > 0) } },
+      });
+    }
   });
 
   beforeAll(async () => {

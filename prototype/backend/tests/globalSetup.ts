@@ -3,9 +3,8 @@
  * Cleans the database to ensure a fresh start
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 
-const prisma = new PrismaClient();
 
 export default async function globalSetup() {
   console.log('\n🧹 Global test setup complete\n');

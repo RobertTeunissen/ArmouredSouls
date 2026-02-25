@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import express from 'express';
@@ -9,7 +9,6 @@ import robotRoutes from '../src/routes/robots';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 // Create test app

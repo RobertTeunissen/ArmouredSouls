@@ -5,11 +5,10 @@
  * Uses fast-check for property-based testing
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { EventLogger, EventType, clearSequenceCache } from '../src/services/eventLogger';
 
-const prisma = new PrismaClient();
 const eventLogger = new EventLogger();
 
 describe('EventLogger Property-Based Tests', () => {
@@ -92,8 +91,8 @@ describe('EventLogger Property-Based Tests', () => {
               events.map(e => ({
                 eventType: e.eventType,
                 payload: e.payload,
-                userId: e.userId,
-                robotId: e.robotId,
+                userId: e.userId ?? undefined,
+                robotId: e.robotId ?? undefined,
               }))
             );
 

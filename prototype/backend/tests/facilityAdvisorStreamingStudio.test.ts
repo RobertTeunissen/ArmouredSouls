@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { facilityRecommendationService } from '../src/services/facilityRecommendationService';
 import { createTestUser, createTestRobot } from './testHelpers';
 
-const prisma = new PrismaClient();
 
 describe('Facility Advisor - Streaming Studio', () => {
   let testUserIds: number[] = [];

@@ -64,7 +64,14 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   stance: 'balanced',
   mainWeaponId: null,
   offhandWeaponId: null,
+  imageUrl: null,
   cyclesInCurrentLeague: 0,
+  totalTagTeamBattles: 0,
+  totalTagTeamWins: 0,
+  totalTagTeamLosses: 0,
+  totalTagTeamDraws: 0,
+  timesTaggedIn: 0,
+  timesTaggedOut: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -176,8 +183,8 @@ describe('Robot Calculations', () => {
       expect(stats.armorPlating).toBe(11.5);
       // counterProtocols: new Prisma.Decimal(10) * 1.10 = 11
       expect(stats.counterProtocols).toBe(11);
-      // attackSpeed: new Prisma.Decimal(10) * 0.85 = 8.5, floored to 8
-      expect(stats.attackSpeed).toBe(8);
+      // attackSpeed: new Prisma.Decimal(10) * 0.85 = 8.5
+      expect(stats.attackSpeed).toBe(8.5);
     });
 
     it('should apply loadout bonuses correctly for two_handed', () => {

@@ -1,6 +1,6 @@
 import * as fc from 'fast-check';
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 import express from 'express';
 import cors from 'cors';
@@ -10,7 +10,6 @@ import userRoutes from '../src/routes/user';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 // Create test app
@@ -488,7 +487,7 @@ function partialUpdateGenerator(): fc.Arbitrary<any> {
     { requiredKeys: [] }
   ).filter((obj) => {
     // Ensure at least one field is present
-    return Object.keys(obj).some((key) => obj[key] !== undefined);
+    return Object.keys(obj).some((key) => (obj as Record<string, unknown>)[key] !== undefined);
   });
 }
 
@@ -515,6 +514,6 @@ function validProfileUpdateGenerator(): fc.Arbitrary<any> {
     { requiredKeys: [] }
   ).filter((obj) => {
     // Ensure at least one field is present
-    return Object.keys(obj).some((key) => obj[key] !== undefined);
+    return Object.keys(obj).some((key) => (obj as Record<string, unknown>)[key] !== undefined);
   });
 }

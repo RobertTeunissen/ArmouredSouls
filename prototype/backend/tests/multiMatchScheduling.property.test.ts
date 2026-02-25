@@ -1,12 +1,12 @@
 import * as fc from 'fast-check';
-import { PrismaClient, Robot, Prisma } from '@prisma/client';
+import { Robot, Prisma } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { createTeam } from '../src/services/tagTeamService';
 import { runMatchmaking } from '../src/services/matchmakingService';
 import { runTagTeamMatchmaking } from '../src/services/tagTeamMatchmakingService';
 import { executeScheduledBattles } from '../src/services/battleOrchestrator';
 import { executeScheduledTagTeamBattles } from '../src/services/tagTeamBattleOrchestrator';
 
-const prisma = new PrismaClient();
 
 // Test configuration
 const NUM_RUNS = 20;
@@ -222,9 +222,9 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
               const team1 = await prisma.tagTeam.findUnique({
                 where: { id: match.team1Id },
               });
-              const team2 = await prisma.tagTeam.findUnique({
+              const team2 = match.team2Id ? await prisma.tagTeam.findUnique({
                 where: { id: match.team2Id },
-              });
+              }) : null;
 
               if (team1) {
                 robotsInTagTeam.add(team1.activeRobotId);

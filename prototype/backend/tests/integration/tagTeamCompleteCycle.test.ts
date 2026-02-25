@@ -13,12 +13,11 @@
  * - Repair cost calculation
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/lib/prisma';
 import { createTeam } from '../../src/services/tagTeamService';
 import { runTagTeamMatchmaking } from '../../src/services/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tagTeamBattleOrchestrator';
 
-const prisma = new PrismaClient();
 
 describe('Tag Team Complete Cycle Integration Test', () => {
   let testUserIds: number[] = [];
@@ -297,7 +296,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     const battle = await prisma.battle.findFirst({
       where: {
         battleType: 'tag_team',
-        robot1Id: { in: testRobots.map(r => r.id) },
+        robot1Id: { in: testRobotIds },
       },
     });
 

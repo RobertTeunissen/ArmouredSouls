@@ -3,9 +3,8 @@
  * Cleans up any remaining test data
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 
-const prisma = new PrismaClient();
 
 export default async function globalTeardown() {
   console.log('\n✅ Global test teardown complete\n');

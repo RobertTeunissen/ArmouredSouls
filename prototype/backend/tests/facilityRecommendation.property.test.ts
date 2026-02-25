@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { facilityRecommendationService } from '../src/services/facilityRecommendationService';
 import { createTestUser, createTestRobot } from './testHelpers';
 
-const prisma = new PrismaClient();
 
 /**
  * Property 22: Investment Recommendation Ranking

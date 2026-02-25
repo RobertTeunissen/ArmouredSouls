@@ -13,10 +13,9 @@
  * - Medical Bay reduction is applied consistently
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/lib/prisma';
 import { calculateRepairCost, calculateAttributeSum } from '../../src/utils/robotCalculations';
 
-const prisma = new PrismaClient();
 
 describe('Repair Cost Consistency Integration Test', () => {
   let testUserIds: number[] = [];

@@ -5,11 +5,10 @@
  * Uses fast-check for property-based testing
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { robotPerformanceService } from '../src/services/robotPerformanceService';
 
-const prisma = new PrismaClient();
 
 describe('ELO Progression Property-Based Tests', () => {
   afterEach(async () => {
@@ -158,7 +157,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
               const battle = await prisma.battle.create({
                 data: {
-                  userId,
                   robot1Id: robotId,
                   robot2Id: opponentId,
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
@@ -168,18 +166,6 @@ describe('ELO Progression Property-Based Tests', () => {
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
-                  robot1RepairCost: 100,
-                  robot2RepairCost: 100,
-                  robot1PrestigeAwarded: 10,
-                  robot2PrestigeAwarded: 10,
-                  robot1FameAwarded: 50,
-                  robot2FameAwarded: 50,
-                  robot1FinalHP: 50,
-                  robot2FinalHP: 50,
-                  robot1FinalShield: 25,
-                  robot2FinalShield: 25,
-                  robot1DamageDealt: 500,
-                  robot2DamageDealt: 500,
                   robot1ELOBefore: eloBefore,
                   robot1ELOAfter: eloAfter,
                   robot2ELOBefore: 1500,
@@ -348,7 +334,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
               const battle = await prisma.battle.create({
                 data: {
-                  userId,
                   robot1Id: opponentId, // Opponent is robot1
                   robot2Id: robotId,    // Our robot is robot2
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
@@ -358,18 +343,6 @@ describe('ELO Progression Property-Based Tests', () => {
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
-                  robot1RepairCost: 100,
-                  robot2RepairCost: 100,
-                  robot1PrestigeAwarded: 10,
-                  robot2PrestigeAwarded: 10,
-                  robot1FameAwarded: 50,
-                  robot2FameAwarded: 50,
-                  robot1FinalHP: 50,
-                  robot2FinalHP: 50,
-                  robot1FinalShield: 25,
-                  robot2FinalShield: 25,
-                  robot1DamageDealt: 500,
-                  robot2DamageDealt: 500,
                   robot1ELOBefore: 1500,
                   robot1ELOAfter: 1500 - eloChange,
                   robot2ELOBefore: eloBefore,
@@ -526,7 +499,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
               const battle = await prisma.battle.create({
                 data: {
-                  userId,
                   robot1Id: robotId,
                   robot2Id: opponentId,
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
@@ -536,18 +508,6 @@ describe('ELO Progression Property-Based Tests', () => {
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
-                  robot1RepairCost: 100,
-                  robot2RepairCost: 100,
-                  robot1PrestigeAwarded: 10,
-                  robot2PrestigeAwarded: 10,
-                  robot1FameAwarded: 50,
-                  robot2FameAwarded: 50,
-                  robot1FinalHP: 50,
-                  robot2FinalHP: 50,
-                  robot1FinalShield: 25,
-                  robot2FinalShield: 25,
-                  robot1DamageDealt: 500,
-                  robot2DamageDealt: 500,
                   robot1ELOBefore: eloBefore,
                   robot1ELOAfter: eloAfter,
                   robot2ELOBefore: 1500,
@@ -681,7 +641,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
             const battle = await prisma.battle.create({
               data: {
-                userId,
                 robot1Id: robotId,
                 robot2Id: opponentId,
                 winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
@@ -691,18 +650,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 durationSeconds: 30,
                 winnerReward: eloChange > 0 ? 1000 : 500,
                 loserReward: eloChange < 0 ? 500 : 1000,
-                robot1RepairCost: 100,
-                robot2RepairCost: 100,
-                robot1PrestigeAwarded: 10,
-                robot2PrestigeAwarded: 10,
-                robot1FameAwarded: 50,
-                robot2FameAwarded: 50,
-                robot1FinalHP: 50,
-                robot2FinalHP: 50,
-                robot1FinalShield: 25,
-                robot2FinalShield: 25,
-                robot1DamageDealt: 500,
-                robot2DamageDealt: 500,
                 robot1ELOBefore: eloBefore,
                 robot1ELOAfter: eloAfter,
                 robot2ELOBefore: 1500,

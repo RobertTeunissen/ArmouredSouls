@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { processTournamentBattle } from '../src/services/tournamentBattleOrchestrator';
 
-const prisma = new PrismaClient();
 
 describe('Tournament Streaming Revenue', () => {
   let testUserIds: number[] = [];

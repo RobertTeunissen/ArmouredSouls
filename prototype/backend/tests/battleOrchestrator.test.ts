@@ -1,11 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import {
   calculateELOChange,
   processBattle,
   executeScheduledBattles,
 } from '../src/services/battleOrchestrator';
 
-const prisma = new PrismaClient();
 
 describe('Battle Orchestrator', () => {
   let testUserIds: number[] = [];

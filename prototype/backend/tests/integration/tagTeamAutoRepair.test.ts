@@ -11,11 +11,10 @@
  * - Battles are skipped if user has insufficient funds for repair
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/lib/prisma';
 import { createTeam } from '../../src/services/tagTeamService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tagTeamBattleOrchestrator';
 
-const prisma = new PrismaClient();
 
 describe('Tag Team Auto-Repair Integration Test', () => {
   let testUserIds: number[] = [];

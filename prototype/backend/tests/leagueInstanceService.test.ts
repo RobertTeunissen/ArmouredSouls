@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import {
   getInstancesForTier,
   getLeagueInstanceStats,
@@ -10,7 +10,6 @@ import {
   REBALANCE_THRESHOLD,
 } from '../src/services/leagueInstanceService';
 
-const prisma = new PrismaClient();
 
 describe('League Instance Service', () => {
   beforeAll(async () => {

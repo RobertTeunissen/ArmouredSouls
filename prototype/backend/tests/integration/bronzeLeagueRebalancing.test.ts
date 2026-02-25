@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/lib/prisma';
 import {
   rebalanceLeagues,
 } from '../../src/services/leagueRebalancingService';
@@ -7,7 +7,6 @@ import {
   MAX_ROBOTS_PER_INSTANCE,
 } from '../../src/services/leagueInstanceService';
 
-const prisma = new PrismaClient();
 
 /**
  * Integration test for the bronze league rebalancing bug fix.

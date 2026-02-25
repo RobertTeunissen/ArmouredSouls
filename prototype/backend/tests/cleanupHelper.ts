@@ -5,9 +5,8 @@
  * in the correct order.
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 
-const prisma = new PrismaClient();
 
 /**
  * Clean up all test data in the correct order to avoid foreign key constraint violations

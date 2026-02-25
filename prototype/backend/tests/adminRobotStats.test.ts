@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 import express from 'express';
 import cors from 'cors';
@@ -9,7 +9,6 @@ import authRoutes from '../src/routes/auth';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 
 // Create test app
 const app = express();

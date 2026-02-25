@@ -1,0 +1,4 @@
+
+> armoured-souls-backend@0.1.0 test
+> jest
+

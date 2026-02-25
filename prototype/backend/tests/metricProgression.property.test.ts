@@ -7,11 +7,10 @@
  * Uses fast-check for property-based testing
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { robotPerformanceService, RobotMetric } from '../src/services/robotPerformanceService';
 
-const prisma = new PrismaClient();
 
 describe('Metric Progression Property-Based Tests', () => {
   afterEach(async () => {
@@ -127,8 +126,8 @@ describe('Metric Progression Property-Based Tests', () => {
 
             // Verify fame monotonicity
             let cumulativeFame = 0;
-            for (const battle of battles) {
-              const fameAwarded = battle.robot1FameAwarded;
+            for (let bi = 0; bi < battles.length; bi++) {
+              const fameAwarded = fameAwards[bi];
               cumulativeFame += fameAwarded;
 
               // Property: Fame should always increase or stay the same (never decrease)
@@ -340,7 +339,6 @@ describe('Metric Progression Property-Based Tests', () => {
             const cycleStart = new Date(2024, 0, cycleNumber, 0, 0, 0);
             const battle = await prisma.battle.create({
               data: {
-                userId,
                 robot1Id: robotId,
                 robot2Id: robotId + 10000,
                 winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? robotId + 10000 : null),
@@ -350,18 +348,6 @@ describe('Metric Progression Property-Based Tests', () => {
                 durationSeconds: 30,
                 winnerReward: 1000,
                 loserReward: 500,
-                robot1RepairCost: 100,
-                robot2RepairCost: 100,
-                robot1PrestigeAwarded: 10,
-                robot2PrestigeAwarded: 10,
-                robot1FameAwarded: 50,
-                robot2FameAwarded: 50,
-                robot1FinalHP: 50,
-                robot2FinalHP: 50,
-                robot1FinalShield: 25,
-                robot2FinalShield: 25,
-                robot1DamageDealt: 500,
-                robot2DamageDealt: 500,
                 robot1ELOBefore: eloBefore,
                 robot1ELOAfter: eloAfter,
                 robot2ELOBefore: 1500,
@@ -587,7 +573,6 @@ async function createBattlesWithELOChanges(
 
     const battle = await prisma.battle.create({
       data: {
-        userId,
         robot1Id: robotId,
         robot2Id: opponentId,
         winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
@@ -597,18 +582,6 @@ async function createBattlesWithELOChanges(
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
-        robot1RepairCost: 100,
-        robot2RepairCost: 100,
-        robot1PrestigeAwarded: 10,
-        robot2PrestigeAwarded: 10,
-        robot1FameAwarded: 50,
-        robot2FameAwarded: 50,
-        robot1FinalHP: 50,
-        robot2FinalHP: 50,
-        robot1FinalShield: 25,
-        robot2FinalShield: 25,
-        robot1DamageDealt: 500,
-        robot2DamageDealt: 500,
         robot1ELOBefore: eloBefore,
         robot1ELOAfter: eloAfter,
         robot2ELOBefore: 1500,
@@ -641,7 +614,6 @@ async function createBattlesWithFameAwards(
 
     const battle = await prisma.battle.create({
       data: {
-        userId,
         robot1Id: robotId,
         robot2Id: opponentId,
         winnerId: robotId,
@@ -651,18 +623,6 @@ async function createBattlesWithFameAwards(
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
-        robot1RepairCost: 100,
-        robot2RepairCost: 100,
-        robot1PrestigeAwarded: 10,
-        robot2PrestigeAwarded: 10,
-        robot1FameAwarded: fameAwarded,
-        robot2FameAwarded: 0,
-        robot1FinalHP: 50,
-        robot2FinalHP: 50,
-        robot1FinalShield: 25,
-        robot2FinalShield: 25,
-        robot1DamageDealt: 500,
-        robot2DamageDealt: 500,
         robot1ELOBefore: 1500,
         robot1ELOAfter: 1520,
         robot2ELOBefore: 1500,
@@ -695,7 +655,6 @@ async function createBattlesWithDamage(
 
     const battle = await prisma.battle.create({
       data: {
-        userId,
         robot1Id: robotId,
         robot2Id: opponentId,
         winnerId: robotId,
@@ -705,18 +664,6 @@ async function createBattlesWithDamage(
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
-        robot1RepairCost: 100,
-        robot2RepairCost: 100,
-        robot1PrestigeAwarded: 10,
-        robot2PrestigeAwarded: 10,
-        robot1FameAwarded: 50,
-        robot2FameAwarded: 0,
-        robot1FinalHP: 50,
-        robot2FinalHP: 50,
-        robot1FinalShield: 25,
-        robot2FinalShield: 25,
-        robot1DamageDealt: damageDealt,
-        robot2DamageDealt: 300,
         robot1ELOBefore: 1500,
         robot1ELOAfter: 1520,
         robot2ELOBefore: 1500,
@@ -749,7 +696,6 @@ async function createBattlesWithOutcomes(
 
     const battle = await prisma.battle.create({
       data: {
-        userId,
         robot1Id: robotId,
         robot2Id: opponentId,
         winnerId: isWin ? robotId : opponentId,
@@ -759,18 +705,6 @@ async function createBattlesWithOutcomes(
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
-        robot1RepairCost: 100,
-        robot2RepairCost: 100,
-        robot1PrestigeAwarded: 10,
-        robot2PrestigeAwarded: 10,
-        robot1FameAwarded: 50,
-        robot2FameAwarded: 0,
-        robot1FinalHP: 50,
-        robot2FinalHP: 50,
-        robot1FinalShield: 25,
-        robot2FinalShield: 25,
-        robot1DamageDealt: 500,
-        robot2DamageDealt: 300,
         robot1ELOBefore: 1500,
         robot1ELOAfter: isWin ? 1520 : 1480,
         robot2ELOBefore: 1500,
@@ -803,7 +737,6 @@ async function createBattlesWithCredits(
 
     const battle = await prisma.battle.create({
       data: {
-        userId,
         robot1Id: robotId,
         robot2Id: opponentId,
         winnerId: robotId,
@@ -813,18 +746,6 @@ async function createBattlesWithCredits(
         durationSeconds: 30,
         winnerReward: credits,
         loserReward: Math.floor(credits / 2),
-        robot1RepairCost: 100,
-        robot2RepairCost: 100,
-        robot1PrestigeAwarded: 10,
-        robot2PrestigeAwarded: 10,
-        robot1FameAwarded: 50,
-        robot2FameAwarded: 0,
-        robot1FinalHP: 50,
-        robot2FinalHP: 50,
-        robot1FinalShield: 25,
-        robot2FinalShield: 25,
-        robot1DamageDealt: 500,
-        robot2DamageDealt: 300,
         robot1ELOBefore: 1500,
         robot1ELOAfter: 1520,
         robot2ELOBefore: 1500,

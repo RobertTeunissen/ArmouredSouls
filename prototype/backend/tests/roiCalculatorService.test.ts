@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { roiCalculatorService } from '../src/services/roiCalculatorService';
 import { eventLogger } from '../src/services/eventLogger';
 import { createTestUser, createTestRobot } from './testHelpers';
 
-const prisma = new PrismaClient();
 
 describe('ROICalculatorService', () => {
   let testUserId: number;

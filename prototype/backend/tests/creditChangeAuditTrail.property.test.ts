@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { EventLogger } from '../src/services/eventLogger';
 import fc from 'fast-check';
 
-const prisma = new PrismaClient();
 const eventLogger = new EventLogger();
 
 /**

@@ -2,11 +2,10 @@ import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import tagTeamsRoutes from '../src/routes/tagTeams';
 
 const app = express();
-const prisma = new PrismaClient();
 
 app.use(cors());
 app.use(express.json());
@@ -34,10 +33,21 @@ describe('Tag Teams API Endpoints', () => {
       process.env.JWT_SECRET || 'test-secret'
     );
 
-    // Get a weapon from the database
-    const weapon = await prisma.weapon.findFirst();
+    // Get or create a weapon for testing
+    let weapon = await prisma.weapon.findFirst();
     if (!weapon) {
-      throw new Error('No weapons found in database. Run seed first.');
+      weapon = await prisma.weapon.create({
+        data: {
+          name: `Test Sword ${Date.now()}`,
+          weaponType: 'melee',
+          baseDamage: 10,
+          cooldown: 3,
+          cost: 0,
+          handsRequired: 'one',
+          damageType: 'melee',
+          loadoutType: 'any',
+        },
+      });
     }
 
     // Create test robots with battle readiness
@@ -117,11 +127,6 @@ describe('Tag Teams API Endpoints', () => {
       where: { id: robot3Id },
       data: { mainWeaponId: weapon3.id },
     });
-  });
-
-  afterEach(async () => {
-    // Clean up test data between tests (keep user, robots, and weapons from beforeAll)
-    await prisma.tagTeam.deleteMany({ where: { stableId: testUserId } });
   });
 
   afterAll(async () => {
@@ -241,11 +246,16 @@ describe('Tag Teams API Endpoints', () => {
     let teamId: number;
 
     beforeAll(async () => {
-      // Get the team ID from the first team
-      const teams = await prisma.tagTeam.findMany({
-        where: { stableId: testUserId },
+      // Create a tag team for this describe block using robot1 + robot3 (robot1+robot2 may already exist from POST tests)
+      const team = await prisma.tagTeam.create({
+        data: {
+          stableId: testUserId,
+          activeRobotId: robot1Id,
+          reserveRobotId: robot3Id,
+          tagTeamLeague: 'bronze',
+        },
       });
-      teamId = teams[0].id;
+      teamId = team.id;
     });
 
     it('should get team details by ID', async () => {

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import {
   getInstancesForTier,
   getTagTeamLeagueInstanceStats,
@@ -12,7 +12,6 @@ import {
   REBALANCE_THRESHOLD,
 } from '../src/services/tagTeamLeagueInstanceService';
 
-const prisma = new PrismaClient();
 
 describe('TagTeamLeagueInstanceService', () => {
   let testUserIds: number[] = [];

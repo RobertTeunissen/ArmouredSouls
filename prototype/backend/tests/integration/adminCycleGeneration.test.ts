@@ -4,7 +4,7 @@
  */
 
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/lib/prisma';
 import jwt from 'jsonwebtoken';
 import express from 'express';
 import cors from 'cors';
@@ -14,7 +14,6 @@ import { createTestUser, deleteTestUser } from '../testHelpers';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 
 // Create test app
 const app = express();

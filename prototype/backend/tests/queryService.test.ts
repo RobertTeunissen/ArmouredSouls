@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { QueryService } from '../src/services/queryService';
 import { EventLogger } from '../src/services/eventLogger';
 
-const prisma = new PrismaClient();
 const queryService = new QueryService();
 const eventLogger = new EventLogger();
 

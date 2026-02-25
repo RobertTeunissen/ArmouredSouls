@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 
-const prisma = new PrismaClient();
 
 describe('Tag Team Model Integration Tests', () => {
   let testUserIds: number[] = [];
@@ -71,8 +70,16 @@ describe('Tag Team Model Integration Tests', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
+    // Clean up test data - tag teams first, then robots
     if (testRobotIds.length > 0) {
+      await prisma.tagTeam.deleteMany({
+        where: {
+          OR: [
+            { activeRobotId: { in: testRobotIds } },
+            { reserveRobotId: { in: testRobotIds } },
+          ],
+        },
+      });
       await prisma.battleParticipant.deleteMany({
         where: { robotId: { in: testRobotIds } },
       });
@@ -138,8 +145,18 @@ describe('Tag Team Model Integration Tests', () => {
     });
 
     it('should retrieve tag team with relations', async () => {
+      // Create a team first (afterEach cleans up between tests)
+      const created = await prisma.tagTeam.create({
+        data: {
+          stableId: testUserId,
+          activeRobotId: testRobot1Id,
+          reserveRobotId: testRobot2Id,
+        },
+      });
+      testTeamIds.push(created.id);
+
       const tagTeam = await prisma.tagTeam.findFirst({
-        where: { stableId: testUserId },
+        where: { id: created.id },
         include: {
           stable: true,
           activeRobot: true,
@@ -154,7 +171,17 @@ describe('Tag Team Model Integration Tests', () => {
     });
 
     it('should prevent duplicate robot pairs', async () => {
-      // Try to create a team with the same robot pair
+      // Create the first team
+      const first = await prisma.tagTeam.create({
+        data: {
+          stableId: testUserId,
+          activeRobotId: testRobot1Id,
+          reserveRobotId: testRobot2Id,
+        },
+      });
+      testTeamIds.push(first.id);
+
+      // Try to create a team with the same robot pair - should fail on unique constraint
       await expect(
         prisma.tagTeam.create({
           data: {
@@ -304,8 +331,8 @@ describe('Tag Team Model Integration Tests', () => {
       expect(match).toBeDefined();
       expect(match?.team1.activeRobot.id).toBe(testRobot1Id);
       expect(match?.team1.reserveRobot.id).toBe(testRobot2Id);
-      expect(match?.team2.activeRobot.id).toBe(testRobot3Id);
-      expect(match?.team2.reserveRobot.id).toBe(testRobot4Id);
+      expect(match?.team2!.activeRobot.id).toBe(testRobot3Id);
+      expect(match?.team2!.reserveRobot.id).toBe(testRobot4Id);
     });
 
     it('should update match status', async () => {

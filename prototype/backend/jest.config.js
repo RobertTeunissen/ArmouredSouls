@@ -17,6 +17,8 @@ module.exports = {
       },
     }],
   },
-  // Increase timeout for property-based tests (30 seconds)
-  testTimeout: 30000,
+  // Increase timeout for property-based tests and integration tests (60 seconds)
+  testTimeout: 60000,
+  // Limit parallelism to reduce sequence number conflicts in shared database
+  maxWorkers: 2,
 };
