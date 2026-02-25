@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 interface StableNameModalProps {
   onComplete: () => void;
@@ -27,7 +27,7 @@ function StableNameModal({ onComplete }: StableNameModalProps) {
     setError('');
 
     try {
-      await axios.put('http://localhost:3001/api/user/stable-name', {
+      await apiClient.put('/api/user/stable-name', {
         stableName: stableName.trim(),
       });
       

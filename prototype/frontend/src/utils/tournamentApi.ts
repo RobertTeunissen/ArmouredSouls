@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001/api';
+import apiClient from './apiClient';
 
 // Types
 export interface Tournament {
@@ -97,27 +95,16 @@ export interface EligibleRobotsResponse {
 /**
  * Create a new single elimination tournament
  */
-export const createTournament = async (token: string): Promise<CreateTournamentResponse> => {
-  const response = await axios.post(
-    `${API_BASE_URL}/admin/tournaments/create`,
-    {},
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
+export const createTournament = async (_token: string): Promise<CreateTournamentResponse> => {
+  const response = await apiClient.post('/api/admin/tournaments/create', {});
   return response.data;
 };
 
 /**
  * List all tournaments (public endpoint for all authenticated users)
  */
-export const listTournaments = async (token: string): Promise<{ tournaments: Tournament[] }> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/tournaments`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
+export const listTournaments = async (_token: string): Promise<{ tournaments: Tournament[] }> => {
+  const response = await apiClient.get('/api/tournaments');
   return response.data;
 };
 
@@ -125,15 +112,10 @@ export const listTournaments = async (token: string): Promise<{ tournaments: Tou
  * Get tournament details by ID (public endpoint for all authenticated users)
  */
 export const getTournamentDetails = async (
-  token: string,
+  _token: string,
   tournamentId: number
 ): Promise<{ tournament: TournamentDetails }> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/tournaments/${tournamentId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
+  const response = await apiClient.get(`/api/tournaments/${tournamentId}`);
   
   // Backend returns tournament directly
   const { tournament } = response.data;
@@ -149,28 +131,17 @@ export const getTournamentDetails = async (
  * Execute the current round of a tournament
  */
 export const executeRound = async (
-  token: string,
+  _token: string,
   tournamentId: number
 ): Promise<ExecuteRoundResponse> => {
-  const response = await axios.post(
-    `${API_BASE_URL}/admin/tournaments/${tournamentId}/execute-round`,
-    {},
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
+  const response = await apiClient.post(`/api/admin/tournaments/${tournamentId}/execute-round`, {});
   return response.data;
 };
 
 /**
  * Get count of eligible robots for tournament
  */
-export const getEligibleRobots = async (token: string): Promise<EligibleRobotsResponse> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/admin/tournaments/eligible-robots`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
+export const getEligibleRobots = async (_token: string): Promise<EligibleRobotsResponse> => {
+  const response = await apiClient.get('/api/admin/tournaments/eligible-robots');
   return response.data;
 };

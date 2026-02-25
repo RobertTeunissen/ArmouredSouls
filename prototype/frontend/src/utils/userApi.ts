@@ -3,21 +3,7 @@
  * Provides functions to interact with user-related endpoints
  */
 
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001/api';
-
-/**
- * Get authentication headers with token
- */
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import apiClient from './apiClient';
 
 /**
  * Stable Statistics (aggregate across all robots)
@@ -43,10 +29,7 @@ export interface StableStatistics {
 }
 
 export const getStableStatistics = async (): Promise<StableStatistics> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/user/stats`,
-    getAuthHeaders()
-  );
+  const response = await apiClient.get('/api/user/stats');
   return response.data;
 };
 
@@ -88,10 +71,7 @@ export interface ProfileUpdateRequest {
  * Get current user's profile information
  */
 export const getProfile = async (): Promise<ProfileData> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/user/profile`,
-    getAuthHeaders()
-  );
+  const response = await apiClient.get('/api/user/profile');
   return response.data;
 };
 
@@ -101,10 +81,6 @@ export const getProfile = async (): Promise<ProfileData> => {
 export const updateProfile = async (
   updates: ProfileUpdateRequest
 ): Promise<ProfileData> => {
-  const response = await axios.put(
-    `${API_BASE_URL}/user/profile`,
-    updates,
-    getAuthHeaders()
-  );
+  const response = await apiClient.put('/api/user/profile', updates);
   return response.data;
 };

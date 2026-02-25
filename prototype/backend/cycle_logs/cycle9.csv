@@ -1,0 +1,129 @@
+Timestamp | Level | Message
+2026-02-25T19:59:22.482Z | INFO | === Cycle 9 Started ===
+2026-02-25T19:59:22.482Z | INFO | Cycle 9 (9/10)
+2026-02-25T19:59:22.482Z | INFO |  [Admin] === Cycle 9 (9/10) ===
+2026-02-25T19:59:22.484Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-25T19:59:22.484Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-25T19:59:22.484Z
+2026-02-25T19:59:22.485Z | INFO | [BattleOrchestrator] Found 0 matches to execute
+2026-02-25T19:59:22.485Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
+2026-02-25T19:59:22.485Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
+2026-02-25T19:59:22.486Z | INFO | [31mprisma:error[39m  Invalid `prisma.auditLog.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/eventLogger.ts:200:31    197    198 try {   199   // Insert into database → 200   await prisma.auditLog.create( Unique constraint failed on the fields: (`cycle_number`,`sequence_number`)
+2026-02-25T19:59:22.488Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-25T19:59:22.490Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 9)
+2026-02-25T19:59:22.491Z | INFO | [TagTeamBattles] Found 0 scheduled tag team matches
+2026-02-25T19:59:22.491Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-02-25T19:59:22.492Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-25T19:59:22.495Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-25T19:59:22.495Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-25T19:59:22.497Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-02-25T19:59:22.497Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-25T19:59:22.497Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-02-25T19:59:22.497Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-25T19:59:22.498Z | INFO | [Rebalancing] Total robots in system: 0
+2026-02-25T19:59:22.498Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-02-25T19:59:22.500Z | INFO | [Rebalancing] bronze: 0 total robots across 0 instances
+2026-02-25T19:59:22.500Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.500Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-02-25T19:59:22.501Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
+2026-02-25T19:59:22.502Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.502Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-02-25T19:59:22.503Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-02-25T19:59:22.503Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.504Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-02-25T19:59:22.505Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-02-25T19:59:22.505Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.505Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-02-25T19:59:22.507Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-02-25T19:59:22.507Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.507Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-02-25T19:59:22.509Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-02-25T19:59:22.509Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.509Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-02-25T19:59:22.510Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:22.511Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:22.511Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:22.512Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:22.513Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:22.514Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:22.514Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-25T19:59:22.514Z | INFO | [Rebalancing] League rebalancing complete!
+2026-02-25T19:59:22.514Z | INFO |   Total promoted: 0
+2026-02-25T19:59:22.514Z | INFO |   Total demoted: 0
+2026-02-25T19:59:22.514Z | INFO |   Errors: 0
+2026-02-25T19:59:22.514Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-25T19:59:22.515Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 9)
+2026-02-25T19:59:22.515Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-25T19:59:22.515Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
+2026-02-25T19:59:22.515Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-25T19:59:22.516Z | INFO | [TagTeamRebalancing] Total teams in system: 0
+2026-02-25T19:59:22.516Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
+2026-02-25T19:59:22.517Z | INFO | [TagTeamRebalancing] bronze: 0 total teams across 0 instances
+2026-02-25T19:59:22.517Z | INFO | [TagTeamRebalancing] bronze: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.517Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
+2026-02-25T19:59:22.518Z | INFO | [TagTeamRebalancing] silver: 0 total teams across 0 instances
+2026-02-25T19:59:22.518Z | INFO | [TagTeamRebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.518Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
+2026-02-25T19:59:22.519Z | INFO | [TagTeamRebalancing] gold: 0 total teams across 0 instances
+2026-02-25T19:59:22.519Z | INFO | [TagTeamRebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.519Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
+2026-02-25T19:59:22.520Z | INFO | [TagTeamRebalancing] platinum: 0 total teams across 0 instances
+2026-02-25T19:59:22.520Z | INFO | [TagTeamRebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.520Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
+2026-02-25T19:59:22.521Z | INFO | [TagTeamRebalancing] diamond: 0 total teams across 0 instances
+2026-02-25T19:59:22.521Z | INFO | [TagTeamRebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.521Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
+2026-02-25T19:59:22.523Z | INFO | [TagTeamRebalancing] champion: 0 total teams across 0 instances
+2026-02-25T19:59:22.523Z | INFO | [TagTeamRebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:22.523Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-25T19:59:22.523Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
+2026-02-25T19:59:22.523Z | INFO |   Total promoted: 0
+2026-02-25T19:59:22.523Z | INFO |   Total demoted: 0
+2026-02-25T19:59:22.523Z | INFO |   Errors: 0
+2026-02-25T19:59:22.523Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-25T19:59:22.523Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
+2026-02-25T19:59:22.524Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
+2026-02-25T19:59:22.524Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
+2026-02-25T19:59:22.525Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
+2026-02-25T19:59:22.525Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
+2026-02-25T19:59:22.526Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
+2026-02-25T19:59:22.526Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
+2026-02-25T19:59:22.527Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-02-25T19:59:22.528Z | INFO | [UserGeneration] Generating 9 archetype users for Cycle 9...
+2026-02-25T19:59:22.528Z | INFO | [UserGeneration] Creating user 1/9: archetype_facility_investor_9_1 (archetype: facility_investor)
+2026-02-25T19:59:22.590Z | ERROR | [UserGeneration] Error creating user 1: {}
+2026-02-25T19:59:22.590Z | ERROR | [Admin] Error generating users: {}
+2026-02-25T19:59:22.591Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-02-25T19:59:22.591Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-02-25T19:59:22.591Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-25T19:59:23.591Z
+2026-02-25T19:59:22.591Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-02-25T19:59:22.593Z | INFO | [Matchmaking] BRONZE: Created 0 matches across 0 instances
+2026-02-25T19:59:22.593Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-02-25T19:59:22.593Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
+2026-02-25T19:59:22.594Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-02-25T19:59:22.594Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-02-25T19:59:22.595Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-02-25T19:59:22.595Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-02-25T19:59:22.595Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-02-25T19:59:22.596Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-02-25T19:59:22.596Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-02-25T19:59:22.597Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-02-25T19:59:22.597Z | INFO | [Matchmaking] ========================================
+2026-02-25T19:59:22.597Z | INFO | [Matchmaking] COMPLETE: 0 total matches created
+2026-02-25T19:59:22.597Z | INFO | [Matchmaking] ========================================
+2026-02-25T19:59:22.598Z | INFO | [Admin] Step 9.5: Matchmaking for Tag Teams (Cycle 9)
+2026-02-25T19:59:22.599Z | INFO | [TagTeamMatchmaking] Starting tag team matchmaking for all tiers...
+2026-02-25T19:59:22.602Z | INFO | [TagTeamMatchmaking] Complete: 0 total matches created
+2026-02-25T19:59:22.603Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-02-25T19:59:22.609Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-02-25T19:59:22.609Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡0
+2026-02-25T19:59:22.610Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-02-25T19:59:23.713Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-02-25T19:59:23.714Z | INFO | [Admin] === End of Cycle 9 Balances ===
+2026-02-25T19:59:23.714Z | INFO | [Admin] ===================================
+2026-02-25T19:59:23.716Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-02-25T19:59:23.716Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 9
+2026-02-25T19:59:23.718Z | ERROR | [Admin] Failed to create cycle snapshot: {}
+2026-02-25T19:59:23.718Z | INFO | [Admin] === Cycle 9 Summary ===
+2026-02-25T19:59:23.718Z | INFO | [Admin] Battles: 0
+2026-02-25T19:59:23.718Z | INFO | [Admin] ===================================
+2026-02-25T19:59:23.718Z | INFO | === Cycle 9 Ended ===

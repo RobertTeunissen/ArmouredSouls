@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 interface StanceSelectorProps {
   robotId: number;
@@ -57,14 +57,9 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
     setLoading(true);
 
     try {
-      const response = await axios.patch(
-        `http://localhost:3001/api/robots/${robotId}/stance`,
-        { stance: newStance },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
+      const response = await apiClient.patch(
+        `/api/robots/${robotId}/stance`,
+        { stance: newStance }
       );
 
       if (response.data) {

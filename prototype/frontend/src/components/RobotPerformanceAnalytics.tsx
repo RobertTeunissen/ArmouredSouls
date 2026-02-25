@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import {
   LineChart,
   Line,
@@ -69,14 +69,9 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
       setLoading(true);
       setError('');
 
-      const token = localStorage.getItem('token');
-
       // Get the latest cycle number
-      const latestCycleResponse = await axios.get(
-        'http://localhost:3001/api/analytics/cycle/current',
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const latestCycleResponse = await apiClient.get(
+        '/api/analytics/cycle/current'
       );
 
       const currentCycle = latestCycleResponse.data.cycleNumber || 1;
@@ -85,38 +80,26 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
       const cycleRange = `[${startCycle},${endCycle}]`;
 
       // Fetch performance summary
-      const summaryResponse = await axios.get(
-        `http://localhost:3001/api/analytics/robot/${robotId}/performance?cycleRange=${cycleRange}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const summaryResponse = await apiClient.get(
+        `/api/analytics/robot/${robotId}/performance?cycleRange=${cycleRange}`
       );
       setSummary(summaryResponse.data);
 
       // Fetch ELO progression
-      const eloResponse = await axios.get(
-        `http://localhost:3001/api/analytics/robot/${robotId}/metric/elo?cycleRange=${cycleRange}&includeMovingAverage=true`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const eloResponse = await apiClient.get(
+        `/api/analytics/robot/${robotId}/metric/elo?cycleRange=${cycleRange}&includeMovingAverage=true`
       );
       setEloProgression(eloResponse.data);
 
       // Fetch damage dealt progression
-      const damageResponse = await axios.get(
-        `http://localhost:3001/api/analytics/robot/${robotId}/metric/damageDealt?cycleRange=${cycleRange}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const damageResponse = await apiClient.get(
+        `/api/analytics/robot/${robotId}/metric/damageDealt?cycleRange=${cycleRange}`
       );
       setDamageProgression(damageResponse.data);
 
       // Fetch credits earned progression
-      const creditsResponse = await axios.get(
-        `http://localhost:3001/api/analytics/robot/${robotId}/metric/creditsEarned?cycleRange=${cycleRange}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const creditsResponse = await apiClient.get(
+        `/api/analytics/robot/${robotId}/metric/creditsEarned?cycleRange=${cycleRange}`
       );
       setCreditsProgression(creditsResponse.data);
     } catch (err: any) {

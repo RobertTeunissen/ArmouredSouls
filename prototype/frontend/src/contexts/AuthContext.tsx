@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import axios from 'axios';
+import { isAxiosError } from 'axios';
+import apiClient from '../utils/apiClient';
 
 interface User {
   id: number;
@@ -42,7 +43,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
   };
 
   const refreshUser = async () => {
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
-      const response = await axios.get('http://localhost:3001/api/user/profile');
+      const response = await apiClient.get('/api/user/profile');
       setUser(response.data);
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
@@ -69,7 +69,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const initAuth = async () => {
       const currentToken = localStorage.getItem('token');
       if (currentToken) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${currentToken}`;
         setToken(currentToken);
         await refreshUser();
       } else {
@@ -83,7 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/login', {
+      const response = await apiClient.post('/api/auth/login', {
         username,
         password,
       });
@@ -92,12 +91,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Set everything in order
       localStorage.setItem('token', newToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       setToken(newToken);
       setUser(userData);
       setLoading(false);
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
+      if (isAxiosError(error) && error.response) {
         throw new Error(error.response.data.error || 'Login failed');
       }
       throw new Error('Login failed');

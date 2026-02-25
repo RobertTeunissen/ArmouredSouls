@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import TabNavigation from '../components/TabNavigation';
@@ -214,59 +215,26 @@ function RobotDetailPage() {
 
   const fetchRobotAndWeapons = async () => {
     try {
-      const token = localStorage.getItem('token');
-
       // Fetch robot details
       console.log(`Fetching robot with ID: ${id}`);
-      const robotResponse = await fetch(`http://localhost:3001/api/robots/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const robotResponse = await apiClient.get(`/api/robots/${id}`);
 
-      if (robotResponse.status === 401) {
-        console.log('Authentication failed, redirecting to login');
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      if (robotResponse.status === 404) {
-        console.log(`Robot not found with ID: ${id}`);
-        setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
-        setLoading(false);
-        return;
-      }
-
-      if (!robotResponse.ok) {
-        const errorData = await robotResponse.json().catch(() => ({}));
-        console.error('Failed to fetch robot:', robotResponse.status, errorData);
-        throw new Error(errorData.error || 'Failed to fetch robot');
-      }
-
-      const robotData = await robotResponse.json();
+      const robotData = robotResponse.data;
       console.log('Robot data received:', robotData.name);
       setRobot(robotData);
 
       // Fetch league rank for this robot
       try {
-        const leagueResponse = await fetch(`http://localhost:3001/api/leagues/${robotData.currentLeague}/standings?instance=${robotData.leagueId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (leagueResponse.ok) {
-          const leagueData = await leagueResponse.json();
-          const standings = leagueData.data || [];
-          const robotIndex = standings.findIndex((r: any) => r.id === parseInt(id!));
-          
-          if (robotIndex !== -1) {
-            const rank = robotIndex + 1;
-            const total = standings.length;
-            const percentile = total > 0 ? ((total - rank) / total) * 100 : 0;
-            setLeagueRank({ rank, total, percentile });
-          }
+        const leagueResponse = await apiClient.get(`/api/leagues/${robotData.currentLeague}/standings?instance=${robotData.leagueId}`);
+        const leagueData = leagueResponse.data;
+        const standings = leagueData.data || [];
+        const robotIndex = standings.findIndex((r: any) => r.id === parseInt(id!));
+        
+        if (robotIndex !== -1) {
+          const rank = robotIndex + 1;
+          const total = standings.length;
+          const percentile = total > 0 ? ((total - rank) / total) * 100 : 0;
+          setLeagueRank({ rank, total, percentile });
         }
       } catch (leagueError) {
         console.error('Failed to fetch league rank:', leagueError);
@@ -274,26 +242,17 @@ function RobotDetailPage() {
       }
 
       // Fetch weapon inventory
-      const weaponsResponse = await fetch('http://localhost:3001/api/weapon-inventory', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (weaponsResponse.ok) {
-        const weaponsData = await weaponsResponse.json();
-        setWeapons(weaponsData);
+      try {
+        const weaponsResponse = await apiClient.get('/api/weapon-inventory');
+        setWeapons(weaponsResponse.data);
+      } catch (err) {
+        console.error('Failed to fetch weapons:', err);
       }
 
       // Fetch training facility level
-      const facilitiesResponse = await fetch('http://localhost:3001/api/facilities', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (facilitiesResponse.ok) {
-        const data = await facilitiesResponse.json();
+      try {
+        const facilitiesResponse = await apiClient.get('/api/facilities');
+        const data = facilitiesResponse.data;
         const facilities = data.facilities || data; // Handle both response formats
         console.log('Facilities API Response:', data);
         console.log('Facilities Array:', facilities);
@@ -317,16 +276,16 @@ function RobotDetailPage() {
         setAcademyLevels(newAcademyLevels);
 
         // Fetch active robot count for repair cost calculation
-        const robotsResponse = await fetch('http://localhost:3001/api/robots', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        if (robotsResponse.ok) {
-          const robotsData = await robotsResponse.json();
+        try {
+          const robotsResponse = await apiClient.get('/api/robots');
+          const robotsData = robotsResponse.data;
           const activeCount = robotsData.filter((r: any) => r.name !== 'Bye Robot').length;
           setActiveRobotCount(activeCount);
+        } catch (err) {
+          console.error('Failed to fetch robots count:', err);
         }
+      } catch (err) {
+        console.error('Failed to fetch facilities:', err);
       }
 
       // Fetch recent battles using the same API as battle history
@@ -363,7 +322,17 @@ function RobotDetailPage() {
       }
       
       setBattleReadiness({ isReady, warnings });
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
+      if (err.response?.status === 404) {
+        setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
+        setLoading(false);
+        return;
+      }
       setError('Failed to load robot details');
       console.error(err);
     } finally {
@@ -386,7 +355,7 @@ function RobotDetailPage() {
       console.log('Updating robot appearance:', { robotId: id, imageUrl });
       
       const response = await axios.put(
-        `http://localhost:3001/api/robots/${id}/appearance`,
+        `/api/robots/${id}/appearance`,
         { imageUrl },
         {
           headers: {
@@ -432,7 +401,7 @@ function RobotDetailPage() {
 
       // Call bulk upgrades endpoint
       const response = await axios.post(
-        `http://localhost:3001/api/robots/${id}/upgrades`,
+        `/api/robots/${id}/upgrades`,
         { upgrades: upgradePlan },
         {
           headers: {
@@ -683,8 +652,8 @@ function RobotDetailPage() {
               onEquipWeapon={async (slot, weaponInventoryId) => {
                 const endpoint =
                   slot === 'main'
-                    ? `http://localhost:3001/api/robots/${id}/equip-main-weapon`
-                    : `http://localhost:3001/api/robots/${id}/equip-offhand-weapon`;
+                    ? `/api/robots/${id}/equip-main-weapon`
+                    : `/api/robots/${id}/equip-offhand-weapon`;
 
                 const response = await axios.put(endpoint, { weaponInventoryId });
                 setRobot(response.data.robot);
@@ -694,8 +663,8 @@ function RobotDetailPage() {
               onUnequipWeapon={async (slot) => {
                 const endpoint =
                   slot === 'main'
-                    ? `http://localhost:3001/api/robots/${id}/unequip-main-weapon`
-                    : `http://localhost:3001/api/robots/${id}/unequip-offhand-weapon`;
+                    ? `/api/robots/${id}/unequip-main-weapon`
+                    : `/api/robots/${id}/unequip-offhand-weapon`;
 
                 const response = await axios.delete(endpoint);
                 setRobot(response.data.robot);

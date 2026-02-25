@@ -1,12 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001/api';
-
-// Helper to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-};
+import apiClient from './apiClient';
 
 // Types
 export interface TagTeamRobot {
@@ -91,32 +83,22 @@ export interface PaginatedStandings {
 
 // API Functions
 export const getMyTagTeams = async (): Promise<TagTeam[]> => {
-  const response = await axios.get(`${API_BASE_URL}/tag-teams`, {
-    headers: getAuthHeaders()
-  });
+  const response = await apiClient.get('/api/tag-teams');
   return response.data.teams || [];
 };
 
 export const getTagTeamById = async (teamId: number): Promise<TagTeam> => {
-  const response = await axios.get(`${API_BASE_URL}/tag-teams/${teamId}`, {
-    headers: getAuthHeaders()
-  });
+  const response = await apiClient.get(`/api/tag-teams/${teamId}`);
   return response.data.team;
 };
 
 export const createTagTeam = async (activeRobotId: number, reserveRobotId: number): Promise<TagTeam> => {
-  const response = await axios.post(
-    `${API_BASE_URL}/tag-teams`,
-    { activeRobotId, reserveRobotId },
-    { headers: getAuthHeaders() }
-  );
+  const response = await apiClient.post('/api/tag-teams', { activeRobotId, reserveRobotId });
   return response.data.team;
 };
 
 export const disbandTagTeam = async (teamId: number): Promise<void> => {
-  await axios.delete(`${API_BASE_URL}/tag-teams/${teamId}`, {
-    headers: getAuthHeaders()
-  });
+  await apiClient.delete(`/api/tag-teams/${teamId}`);
 };
 
 export const getTagTeamStandings = async (
@@ -124,9 +106,8 @@ export const getTagTeamStandings = async (
   page: number = 1,
   perPage: number = 50
 ): Promise<PaginatedStandings> => {
-  const response = await axios.get(`${API_BASE_URL}/tag-teams/leagues/${tier}/standings`, {
+  const response = await apiClient.get(`/api/tag-teams/leagues/${tier}/standings`, {
     params: { page, perPage },
-    headers: getAuthHeaders()
   });
   return response.data;
 };

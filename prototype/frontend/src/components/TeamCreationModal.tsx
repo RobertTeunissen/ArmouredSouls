@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { createTagTeam } from '../utils/tagTeamApi';
 
 interface Robot {
@@ -35,10 +35,7 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
   const fetchRobots = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3001/api/robots', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await apiClient.get('/api/robots');
       setRobots(response.data);
     } catch (err) {
       console.error('Failed to fetch robots:', err);

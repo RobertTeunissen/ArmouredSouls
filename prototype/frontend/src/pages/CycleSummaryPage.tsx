@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency } from '../utils/formatters';
 import Navigation from '../components/Navigation';
+import apiClient from '../utils/apiClient';
 
 interface CycleData {
   cycleNumber: number;
@@ -63,16 +64,15 @@ function CycleSummaryPage() {
         throw new Error('User not logged in');
       }
 
-      const response = await fetch(
-        `http://localhost:3001/api/analytics/stable/${user.id}/summary?lastNCycles=${cycleCount}`
+      const response = await apiClient.get(
+        `/api/analytics/stable/${user.id}/summary?lastNCycles=${cycleCount}`
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch cycle summary');
+      if (response.status !== 200) {
+        throw new Error(response.data?.message || 'Failed to fetch cycle summary');
       }
 
-      const summaryData = await response.json();
+      const summaryData = response.data;
       setData(summaryData);
       setError(null);
     } catch (err) {

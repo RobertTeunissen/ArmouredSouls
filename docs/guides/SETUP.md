@@ -816,4 +816,18 @@ For more details, see:
 - [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md) - Attribute system details
 - [STABLE_SYSTEM.md](STABLE_SYSTEM.md) - Facility and economy system
 
+---
+
+## 🌐 VPS Deployment
+
+For deploying to a Scaleway VPS (acceptance or production), see the deployment guides:
+
+- [VPS Setup Guide](VPS_SETUP.md) — Provision a new VPS from scratch
+- [Deployment Guide](DEPLOYMENT.md) — CI/CD pipeline and deployment procedures
+- [Maintenance Guide](MAINTENANCE.md) — Logs, backups, and monitoring
+- [Troubleshooting Guide](TROUBLESHOOTING.md) — Common issues and rollback
+- [Architecture Decisions](DECISIONS.md) — Project structure rationale and risk register
+
+---
+
 **Happy coding! 🤖⚔️**

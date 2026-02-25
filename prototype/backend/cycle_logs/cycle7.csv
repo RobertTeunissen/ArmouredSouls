@@ -1,0 +1,304 @@
+Timestamp | Level | Message
+2026-02-25T19:59:49.519Z | INFO | === Cycle 7 Started ===
+2026-02-25T19:59:49.519Z | INFO | Cycle 7 (2/3)
+2026-02-25T19:59:49.519Z | INFO |  [Admin] === Cycle 7 (2/3) ===
+2026-02-25T19:59:49.521Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-25T19:59:49.521Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-25T19:59:49.521Z
+2026-02-25T19:59:49.523Z | INFO | [BattleOrchestrator] Found 11 matches to execute
+2026-02-25T19:59:49.575Z | INFO | [Streaming] Velocity Beta C003 earned ₡1,010 from Battle #3524
+2026-02-25T19:59:49.576Z | INFO | [Streaming] Glass Cannon A C002 earned ₡1,010 from Battle #3524
+2026-02-25T19:59:49.587Z | INFO | [Battle] League: bronze | Velocity Beta C003 (User 1307) vs Glass Cannon A C002 (User 1276) | Winner: Velocity Beta C003 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4
+2026-02-25T19:59:49.632Z | INFO | [Streaming] Velocity Alpha C003 earned ₡1,009 from Battle #3525
+2026-02-25T19:59:49.633Z | INFO | [Streaming] Fortress Prime C001 earned ₡1,008 from Battle #3525
+2026-02-25T19:59:49.641Z | INFO | [Battle] League: bronze | Velocity Alpha C003 (User 1305) vs Fortress Prime C001 (User 1254) | Winner: Velocity Alpha C003 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-25T19:59:49.678Z | INFO | [Streaming] Glass Cannon C C003 earned ₡1,008 from Battle #3526
+2026-02-25T19:59:49.679Z | INFO | [Streaming] Specialist Alpha C004 earned ₡1,003 from Battle #3526
+2026-02-25T19:59:49.689Z | INFO | [Battle] League: bronze | Glass Cannon C C003 (User 1303) vs Specialist Alpha C004 (User 1382) | Winner: Specialist Alpha C004 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-25T19:59:49.723Z | INFO | [Streaming] Longshot C005 earned ₡1,002 from Battle #3527
+2026-02-25T19:59:49.724Z | INFO | [Streaming] Prestige Hunter C005 earned ₡1,002 from Battle #3527
+2026-02-25T19:59:49.733Z | INFO | [Battle] League: bronze | Longshot C005 (User 1390) vs Prestige Hunter C005 (User 1392) | Winner: Prestige Hunter C005 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Prestige Hunter C005
+2026-02-25T19:59:49.768Z | INFO | [Streaming] Glass Cannon B C002 earned ₡1,008 from Battle #3528
+2026-02-25T19:59:49.770Z | INFO | [Streaming] Specialist Beta C004 earned ₡1,002 from Battle #3528
+2026-02-25T19:59:49.778Z | INFO | [Battle] League: bronze | Glass Cannon B C002 (User 1278) vs Specialist Beta C004 (User 1382) | Winner: Glass Cannon B C002 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Glass Cannon B C002
+2026-02-25T19:59:49.817Z | INFO | [Streaming] Velocity Gamma C004 earned ₡1,003 from Battle #3529
+2026-02-25T19:59:49.818Z | INFO | [Streaming] Glass Cannon A C006 earned ₡1,000 from Battle #3529
+2026-02-25T19:59:49.828Z | INFO | [Battle] League: bronze | Velocity Gamma C004 (User 1378) vs Glass Cannon A C006 (User 1403) | Winner: Velocity Gamma C004 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-25T19:59:49.867Z | INFO | [Streaming] Glass Cannon C C006 earned ₡1,000 from Battle #3530
+2026-02-25T19:59:49.869Z | INFO | [Streaming] Velocity Alpha C006 earned ₡1,001 from Battle #3530
+2026-02-25T19:59:49.877Z | INFO | [Battle] League: bronze | Glass Cannon C C006 (User 1406) vs Velocity Alpha C006 (User 1407) | Winner: Velocity Alpha C006 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: Velocity Alpha C006
+2026-02-25T19:59:49.917Z | INFO | [Streaming] Velocity Beta C006 earned ₡1,001 from Battle #3531
+2026-02-25T19:59:49.919Z | INFO | [Streaming] Velocity Gamma C006 earned ₡1,000 from Battle #3531
+2026-02-25T19:59:49.928Z | INFO | [Battle] League: bronze | Velocity Beta C006 (User 1408) vs Velocity Gamma C006 (User 1409) | Winner: Velocity Beta C006 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-25T19:59:49.961Z | INFO | [Streaming] Glass Cannon B C006 earned ₡1,000 from Battle #3532
+2026-02-25T19:59:49.962Z | INFO | [Streaming] Brawler Prime C005 earned ₡1,002 from Battle #3532
+2026-02-25T19:59:49.970Z | INFO | [Battle] League: bronze | Glass Cannon B C006 (User 1404) vs Brawler Prime C005 (User 1388) | Winner: Brawler Prime C005 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +4 | Kill: Brawler Prime C005
+2026-02-25T19:59:50.010Z | INFO | [Streaming] Equilibrium C004 earned ₡1,002 from Battle #3533
+2026-02-25T19:59:50.011Z | INFO | [Streaming] Strategist C005 earned ₡1,002 from Battle #3533
+2026-02-25T19:59:50.020Z | INFO | [Battle] League: bronze | Equilibrium C004 (User 1379) vs Strategist C005 (User 1391) | Winner: Equilibrium C004 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-02-25T19:59:50.060Z | INFO | [Streaming] Fortress Prime C005 earned ₡1,002 from Battle #3534
+2026-02-25T19:59:50.061Z | INFO | [Streaming] Investor One C004 earned ₡1,002 from Battle #3534
+2026-02-25T19:59:50.069Z | INFO | [Battle] League: bronze | Fortress Prime C005 (User 1393) vs Investor One C004 (User 1380) | Winner: Fortress Prime C005 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-02-25T19:59:50.070Z | INFO | [BattleOrchestrator] Execution complete: 11 successful, 0 failed, 0 bye-matches
+2026-02-25T19:59:50.070Z | INFO | [BattleOrchestrator] Reputation: 55 prestige, 27 fame awarded
+2026-02-25T19:59:50.071Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-25T19:59:50.080Z | INFO | [RepairService] | User 1276 | Robot 5155 (Glass Cannon A C002) | Cost: ₡13,968 | Discount: 0%
+2026-02-25T19:59:50.087Z | INFO | [RepairService] | User 1254 | Robot 4954 (Fortress Prime C001) | Cost: ₡14,461 | Discount: 0%
+2026-02-25T19:59:50.092Z | INFO | [RepairService] | User 1278 | Robot 5168 (Glass Cannon B C002) | Cost: ₡4,416 | Discount: 0%
+2026-02-25T19:59:50.098Z | INFO | [RepairService] | User 1305 | Robot 5468 (Velocity Alpha C003) | Cost: ₡3,555 | Discount: 0%
+2026-02-25T19:59:50.103Z | INFO | [RepairService] | User 1303 | Robot 5453 (Glass Cannon C C003) | Cost: ₡19,200 | Discount: 0%
+2026-02-25T19:59:50.109Z | INFO | [RepairService] | User 1380 | Robot 6776 (Investor One C004) | Cost: ₡5,790 | Discount: 6%
+2026-02-25T19:59:50.115Z | INFO | [RepairService] | User 1382 | Robot 6789 (Specialist Alpha C004) | Cost: ₡3,162 | Discount: 0%
+2026-02-25T19:59:50.118Z | INFO | [RepairService] | User 1382 | Robot 6790 (Specialist Beta C004) | Cost: ₡12,400 | Discount: 0%
+2026-02-25T19:59:50.124Z | INFO | [RepairService] | User 1378 | Robot 6754 (Velocity Gamma C004) | Cost: ₡8,558 | Discount: 0%
+2026-02-25T19:59:50.129Z | INFO | [RepairService] | User 1379 | Robot 6763 (Equilibrium C004) | Cost: ₡6,536 | Discount: 0%
+2026-02-25T19:59:50.135Z | INFO | [RepairService] | User 1390 | Robot 7173 (Longshot C005) | Cost: ₡21,400 | Discount: 0%
+2026-02-25T19:59:50.140Z | INFO | [RepairService] | User 1403 | Robot 7672 (Glass Cannon A C006) | Cost: ₡13,968 | Discount: 0%
+2026-02-25T19:59:50.146Z | INFO | [RepairService] | User 1406 | Robot 7702 (Glass Cannon C C006) | Cost: ₡19,200 | Discount: 0%
+2026-02-25T19:59:50.152Z | INFO | [RepairService] | User 1404 | Robot 7689 (Glass Cannon B C006) | Cost: ₡19,200 | Discount: 0%
+2026-02-25T19:59:50.158Z | INFO | [RepairService] | User 1407 | Robot 7723 (Velocity Alpha C006) | Cost: ₡9,875 | Discount: 0%
+2026-02-25T19:59:50.164Z | INFO | [RepairService] | User 1408 | Robot 7740 (Velocity Beta C006) | Cost: ₡7,110 | Discount: 0%
+2026-02-25T19:59:50.170Z | INFO | [RepairService] | User 1409 | Robot 7753 (Velocity Gamma C006) | Cost: ₡21,528 | Discount: 0%
+2026-02-25T19:59:50.176Z | INFO | [RepairService] | User 1392 | Robot 7209 (Prestige Hunter C005) | Cost: ₡3,345 | Discount: 0%
+2026-02-25T19:59:50.182Z | INFO | [RepairService] | User 1391 | Robot 7192 (Strategist C005) | Cost: ₡17,455 | Discount: 0%
+2026-02-25T19:59:50.188Z | INFO | [RepairService] | User 1393 | Robot 7227 (Fortress Prime C005) | Cost: ₡1,483 | Discount: 0%
+2026-02-25T19:59:50.190Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 7)
+2026-02-25T19:59:50.196Z | INFO | [TagTeamBattles] Found 1 scheduled tag team matches
+2026-02-25T19:59:50.224Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/tagTeamBattleOrchestrator.ts:895:38    892   result: TagTeamBattleResult   893 ): Promise<Battle> {   894   // Create battle record with tag team fields → 895   const battle = await prisma.battle.create( Foreign key constraint violated: `battles_robot2_id_fkey (index)`
+2026-02-25T19:59:50.224Z | ERROR | [TagTeamBattles] Error executing match 80: {""name"":""PrismaClientKnownRequestError"",""code"":""P2003"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""Battle"",""field_name"":""battles_robot2_id_fkey (index)""}}
+2026-02-25T19:59:50.226Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-02-25T19:59:50.227Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-25T19:59:50.229Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-25T19:59:50.230Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-25T19:59:50.232Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-02-25T19:59:50.232Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-25T19:59:50.233Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-02-25T19:59:50.233Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-25T19:59:50.234Z | INFO | [Rebalancing] Total robots in system: 24
+2026-02-25T19:59:50.234Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-02-25T19:59:50.237Z | INFO | [Rebalancing] bronze: 25 total robots across 1 instances
+2026-02-25T19:59:50.237Z | INFO | [Rebalancing] Processing bronze_1...
+2026-02-25T19:59:50.239Z | INFO | [Rebalancing] bronze_1: Skipping (6 eligible, need 10)
+2026-02-25T19:59:50.239Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-02-25T19:59:50.239Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-02-25T19:59:50.241Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
+2026-02-25T19:59:50.241Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.241Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-02-25T19:59:50.243Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-02-25T19:59:50.243Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.243Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-02-25T19:59:50.245Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-02-25T19:59:50.245Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.245Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-02-25T19:59:50.247Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-02-25T19:59:50.247Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.247Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-02-25T19:59:50.249Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-02-25T19:59:50.249Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.249Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-02-25T19:59:50.250Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:50.251Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:50.252Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:50.252Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:50.253Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:50.254Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-02-25T19:59:50.254Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-25T19:59:50.254Z | INFO | [Rebalancing] League rebalancing complete!
+2026-02-25T19:59:50.254Z | INFO |   Total promoted: 0
+2026-02-25T19:59:50.254Z | INFO |   Total demoted: 0
+2026-02-25T19:59:50.254Z | INFO |   Errors: 0
+2026-02-25T19:59:50.255Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-25T19:59:50.255Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 7)
+2026-02-25T19:59:50.256Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-25T19:59:50.256Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
+2026-02-25T19:59:50.256Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-25T19:59:50.257Z | INFO | [TagTeamRebalancing] Total teams in system: 1
+2026-02-25T19:59:50.257Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
+2026-02-25T19:59:50.259Z | INFO | [TagTeamRebalancing] bronze: 1 total teams across 1 instances
+2026-02-25T19:59:50.259Z | INFO | [TagTeamRebalancing] Processing bronze_1...
+2026-02-25T19:59:50.260Z | INFO | [TagTeamRebalancing] bronze_1: Skipping (0 eligible, need 10)
+2026-02-25T19:59:50.260Z | INFO | [TagTeamRebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-02-25T19:59:50.260Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
+2026-02-25T19:59:50.261Z | INFO | [TagTeamRebalancing] silver: 0 total teams across 0 instances
+2026-02-25T19:59:50.262Z | INFO | [TagTeamRebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.262Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
+2026-02-25T19:59:50.263Z | INFO | [TagTeamRebalancing] gold: 0 total teams across 0 instances
+2026-02-25T19:59:50.263Z | INFO | [TagTeamRebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.263Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
+2026-02-25T19:59:50.265Z | INFO | [TagTeamRebalancing] platinum: 0 total teams across 0 instances
+2026-02-25T19:59:50.265Z | INFO | [TagTeamRebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.265Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
+2026-02-25T19:59:50.267Z | INFO | [TagTeamRebalancing] diamond: 0 total teams across 0 instances
+2026-02-25T19:59:50.268Z | INFO | [TagTeamRebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.268Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
+2026-02-25T19:59:50.269Z | INFO | [TagTeamRebalancing] champion: 0 total teams across 0 instances
+2026-02-25T19:59:50.269Z | INFO | [TagTeamRebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-25T19:59:50.269Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-25T19:59:50.269Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
+2026-02-25T19:59:50.269Z | INFO |   Total promoted: 0
+2026-02-25T19:59:50.269Z | INFO |   Total demoted: 0
+2026-02-25T19:59:50.269Z | INFO |   Errors: 0
+2026-02-25T19:59:50.269Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-25T19:59:50.269Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
+2026-02-25T19:59:50.270Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
+2026-02-25T19:59:50.271Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
+2026-02-25T19:59:50.272Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
+2026-02-25T19:59:50.273Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
+2026-02-25T19:59:50.274Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
+2026-02-25T19:59:50.275Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
+2026-02-25T19:59:50.276Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-02-25T19:59:50.276Z | INFO | [UserGeneration] Generating 7 archetype users for Cycle 7...
+2026-02-25T19:59:50.276Z | INFO | [UserGeneration] Creating user 1/7: archetype_balanced_brawler_7_1 (archetype: balanced_brawler)
+2026-02-25T19:59:50.343Z | INFO | [UserGeneration] Creating user 2/7: archetype_facility_investor_7_2 (archetype: facility_investor)
+2026-02-25T19:59:50.411Z | INFO | [UserGeneration] Creating user 3/7: archetype_two_robot_7_3 (archetype: two_robot)
+2026-02-25T19:59:50.480Z | INFO | [UserGeneration] Created tag team for archetype_two_robot_7_3
+2026-02-25T19:59:50.482Z | INFO | [UserGeneration] Creating user 4/7: archetype_melee_specialist_7_4 (archetype: melee_specialist)
+2026-02-25T19:59:50.546Z | INFO | [UserGeneration] Creating user 5/7: archetype_ranged_sniper_7_5 (archetype: ranged_sniper)
+2026-02-25T19:59:50.612Z | INFO | [UserGeneration] Created 5/7 users...
+2026-02-25T19:59:50.612Z | INFO | [UserGeneration] Creating user 6/7: archetype_ai_tactician_7_6 (archetype: ai_tactician)
+2026-02-25T19:59:50.676Z | INFO | [UserGeneration] Creating user 7/7: archetype_prestige_rusher_7_7 (archetype: prestige_rusher)
+2026-02-25T19:59:50.743Z | INFO | [UserGeneration] Created 7/7 users...
+2026-02-25T19:59:50.743Z | INFO | [UserGeneration] ✅ Created 7 users with 8 robots in 467ms
+2026-02-25T19:59:50.743Z | INFO | [UserGeneration] Archetype position after this cycle: 0
+2026-02-25T19:59:50.743Z | INFO | [Admin] Generated 7 users for cycle 7
+2026-02-25T19:59:50.744Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-02-25T19:59:50.744Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-02-25T19:59:50.744Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-25T19:59:51.744Z
+2026-02-25T19:59:50.744Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-02-25T19:59:50.745Z | INFO | [Matchmaking] Processing bronze_1...
+2026-02-25T19:59:50.751Z | INFO | [Matchmaking] Queue for bronze_1: 30 robots available (32 total, 30 ready)
+2026-02-25T19:59:50.761Z | INFO | [Matchmaking] Created 15 scheduled matches
+2026-02-25T19:59:50.761Z | INFO | [Matchmaking] BRONZE: Created 15 matches across 1 instances
+2026-02-25T19:59:50.761Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-02-25T19:59:50.763Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
+2026-02-25T19:59:50.763Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-02-25T19:59:50.764Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-02-25T19:59:50.764Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-02-25T19:59:50.765Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-02-25T19:59:50.765Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-02-25T19:59:50.766Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-02-25T19:59:50.766Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-02-25T19:59:50.767Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-02-25T19:59:50.767Z | INFO | [Matchmaking] ========================================
+2026-02-25T19:59:50.767Z | INFO | [Matchmaking] COMPLETE: 15 total matches created
+2026-02-25T19:59:50.767Z | INFO | [Matchmaking] ========================================
+2026-02-25T19:59:50.769Z | INFO | [Admin] Step 9.5: Matchmaking for Tag Teams (Cycle 7)
+2026-02-25T19:59:50.769Z | INFO | [TagTeamMatchmaking] Starting tag team matchmaking for all tiers...
+2026-02-25T19:59:50.783Z | INFO | [TagTeamMatchmaking] bronze_1: 2 eligible teams (2 total, 2 ready, 0 already scheduled)
+2026-02-25T19:59:50.791Z | INFO | [TagTeamMatchmaking] Scheduled 1 tag team matches
+2026-02-25T19:59:50.791Z | INFO | [TagTeamMatchmaking] bronze_1: Created 1 matches
+2026-02-25T19:59:50.794Z | INFO | [TagTeamMatchmaking] Complete: 1 total matches created
+2026-02-25T19:59:50.795Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-02-25T19:59:50.804Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-02-25T19:59:50.816Z | INFO | [OperatingCosts] User 1382 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-25T19:59:50.823Z | INFO | [OperatingCosts] User 1378 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-25T19:59:50.829Z | INFO | [OperatingCosts] User 1307 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-25T19:59:50.843Z | INFO | [OperatingCosts] User 1403 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:50.848Z | INFO | [31mprisma:error[39m  Invalid `prisma.auditLog.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/eventLogger.ts:200:31    197    198 try {   199   // Insert into database → 200   await prisma.auditLog.create( Unique constraint failed on the fields: (`cycle_number`,`sequence_number`)
+2026-02-25T19:59:50.853Z | INFO | [OperatingCosts] User 1406 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:50.860Z | INFO | [OperatingCosts] User 1404 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:50.867Z | INFO | [OperatingCosts] User 1407 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-25T19:59:50.880Z | INFO | [OperatingCosts] User 1408 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-25T19:59:50.886Z | INFO | [OperatingCosts] User 1409 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-25T19:59:50.901Z | INFO | [OperatingCosts] User 1419 | Total: ₡1,450 | Facilities: merchandising_hub(L1): ₡200, repair_bay(L1): ₡1000, training_facility(L1): ₡250
+2026-02-25T19:59:50.908Z | INFO | [OperatingCosts] User 1420 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-25T19:59:50.914Z | INFO | [OperatingCosts] User 1422 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:50.921Z | INFO | [OperatingCosts] User 1423 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:50.930Z | INFO | [OperatingCosts] User 1424 | Total: ₡1,000 | Facilities: ai_training_academy(L1): ₡1000
+2026-02-25T19:59:50.936Z | INFO | [OperatingCosts] User 1425 | Total: ₡2,400 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-25T19:59:50.946Z | INFO | [OperatingCosts] User 1276 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:50.953Z | INFO | [OperatingCosts] User 1254 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-25T19:59:50.959Z | INFO | [OperatingCosts] User 1278 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:50.965Z | INFO | [OperatingCosts] User 1305 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-25T19:59:50.971Z | INFO | [OperatingCosts] User 1303 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:50.979Z | INFO | [OperatingCosts] User 1380 | Total: ₡1,450 | Facilities: merchandising_hub(L1): ₡200, repair_bay(L1): ₡1000, training_facility(L1): ₡250
+2026-02-25T19:59:51.057Z | INFO | [OperatingCosts] User 1392 | Total: ₡2,400 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800, mobility_training_academy(L1): ₡800
+2026-02-25T19:59:51.098Z | INFO | [31mprisma:error[39m  Invalid `prisma.auditLog.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/eventLogger.ts:200:31    197    198 try {   199   // Insert into database → 200   await prisma.auditLog.create( Unique constraint failed on the fields: (`cycle_number`,`sequence_number`)
+2026-02-25T19:59:51.103Z | INFO | [OperatingCosts] User 1393 | Total: ₡1,600 | Facilities: combat_training_academy(L1): ₡800, defense_training_academy(L1): ₡800
+2026-02-25T19:59:51.114Z | INFO | [OperatingCosts] User 1390 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:51.127Z | INFO | [OperatingCosts] User 1391 | Total: ₡1,000 | Facilities: ai_training_academy(L1): ₡1000
+2026-02-25T19:59:51.133Z | INFO | [OperatingCosts] User 1388 | Total: ₡800 | Facilities: combat_training_academy(L1): ₡800
+2026-02-25T19:59:51.142Z | INFO | [OperatingCosts] User 1398 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-02-25T19:59:51.142Z | INFO | [Admin] Passive income: ₡10,000, Operating costs: ₡32,000
+2026-02-25T19:59:51.143Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-02-25T19:59:52.245Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-02-25T19:59:52.246Z | INFO | [Admin] === End of Cycle 7 Balances ===
+2026-02-25T19:59:52.247Z | INFO | [Balance] User 1251 | Stable: admin_test_1772049573079 | Balance: ₡1,000,000
+2026-02-25T19:59:52.249Z | INFO | [Balance] User 1254 | Stable: archetype_tank_fortress_1_1 | Balance: ₡654,030
+2026-02-25T19:59:52.250Z | INFO | [Balance] User 1276 | Stable: archetype_glass_cannon_a_2_1 | Balance: ₡916,383
+2026-02-25T19:59:52.252Z | INFO | [Balance] User 1278 | Stable: archetype_glass_cannon_b_2_2 | Balance: ₡942,833
+2026-02-25T19:59:52.253Z | INFO | [Balance] User 1303 | Stable: archetype_glass_cannon_c_3_1 | Balance: ₡1,001,221
+2026-02-25T19:59:52.254Z | INFO | [Balance] User 1305 | Stable: archetype_speed_demon_a_3_2 | Balance: ₡70,418
+2026-02-25T19:59:52.255Z | INFO | [Balance] User 1307 | Stable: archetype_speed_demon_b_3_3 | Balance: ₡118,399
+2026-02-25T19:59:52.256Z | INFO | [Balance] User 1361 | Stable: testuser_1772049579905_8fmfv5 | Balance: ₡3,000,000
+2026-02-25T19:59:52.257Z | INFO | [Balance] User 1362 | Stable: testuser_1772049580214_qcs5jo | Balance: ₡3,000,000
+2026-02-25T19:59:52.258Z | INFO | [Balance] User 1364 | Stable: testuser_1772049580512_m5ilfq | Balance: ₡3,000,000
+2026-02-25T19:59:52.259Z | INFO | [Balance] User 1365 | Stable: testuser_1772049580816_7v6aab | Balance: ₡3,000,000
+2026-02-25T19:59:52.260Z | INFO | [Balance] User 1366 | Stable: testuser_1772049581114_h70vgu | Balance: ₡3,000,000
+2026-02-25T19:59:52.261Z | INFO | [Balance] User 1368 | Stable: testuser_1772049581411_eg8gqg | Balance: ₡3,000,000
+2026-02-25T19:59:52.262Z | INFO | [Balance] User 1370 | Stable: testuser_1772049581711_gktead | Balance: ₡3,000,000
+2026-02-25T19:59:52.263Z | INFO | [Balance] User 1371 | Stable: testuser_1772049582010_dnuu8c | Balance: ₡3,000,000
+2026-02-25T19:59:52.264Z | INFO | [Balance] User 1372 | Stable: testuser_1772049582307_6ys88 | Balance: ₡3,000,000
+2026-02-25T19:59:52.265Z | INFO | [Balance] User 1373 | Stable: testuser_1772049582606_xgiv2 | Balance: ₡3,000,000
+2026-02-25T19:59:52.266Z | INFO | [Balance] User 1376 | Stable: testuser_1772049582910_l0ojuj | Balance: ₡3,000,000
+2026-02-25T19:59:52.267Z | INFO | [Balance] User 1377 | Stable: testuser_1772049583226_d7tc3b | Balance: ₡3,000,000
+2026-02-25T19:59:52.268Z | INFO | [Balance] User 1378 | Stable: archetype_speed_demon_c_4_1 | Balance: ₡13,333
+2026-02-25T19:59:52.269Z | INFO | [Balance] User 1379 | Stable: archetype_balanced_brawler_4_2 | Balance: ₡488,766
+2026-02-25T19:59:52.270Z | INFO | [Balance] User 1380 | Stable: archetype_facility_investor_4_3 | Balance: ₡251,664
+2026-02-25T19:59:52.271Z | INFO | [Balance] User 1381 | Stable: testuser_1772049583542_ep9l | Balance: ₡3,000,000
+2026-02-25T19:59:52.272Z | INFO | [Balance] User 1382 | Stable: archetype_two_robot_4_4 | Balance: ₡178,503
+2026-02-25T19:59:52.273Z | INFO | [Balance] User 1383 | Stable: testuser_1772049583846_57tq68 | Balance: ₡3,000,000
+2026-02-25T19:59:52.274Z | INFO | [Balance] User 1384 | Stable: testuser_1772049584148_79ynqk | Balance: ₡3,000,000
+2026-02-25T19:59:52.275Z | INFO | [Balance] User 1385 | Stable: testuser_1772049584446_v64l1m | Balance: ₡3,000,000
+2026-02-25T19:59:52.276Z | INFO | [Balance] User 1386 | Stable: testuser_1772049584743_dlca3 | Balance: ₡3,000,000
+2026-02-25T19:59:52.277Z | INFO | [Balance] User 1387 | Stable: testuser_1772049585042_e8co08 | Balance: ₡3,000,000
+2026-02-25T19:59:52.278Z | INFO | [Balance] User 1388 | Stable: archetype_melee_specialist_5_1 | Balance: ₡336,702
+2026-02-25T19:59:52.279Z | INFO | [Balance] User 1389 | Stable: testuser_1772049585342_tgl3yn | Balance: ₡3,000,000
+2026-02-25T19:59:52.280Z | INFO | [Balance] User 1390 | Stable: archetype_ranged_sniper_5_2 | Balance: ₡331,018
+2026-02-25T19:59:52.281Z | INFO | [Balance] User 1391 | Stable: archetype_ai_tactician_5_3 | Balance: ₡463,447
+2026-02-25T19:59:52.282Z | INFO | [Balance] User 1392 | Stable: archetype_prestige_rusher_5_4 | Balance: ₡306,071
+2026-02-25T19:59:52.283Z | INFO | [Balance] User 1393 | Stable: archetype_tank_fortress_5_5 | Balance: ₡741,619
+2026-02-25T19:59:52.284Z | INFO | [Balance] User 1394 | Stable: testuser_1772049585641_3c3glb | Balance: ₡3,000,000
+2026-02-25T19:59:52.286Z | INFO | [Balance] User 1395 | Stable: testuser_1772049585957_tbs40j | Balance: ₡3,000,000
+2026-02-25T19:59:52.287Z | INFO | [Balance] User 1396 | Stable: testuser_1772049586294_6s0xgh | Balance: ₡3,000,000
+2026-02-25T19:59:52.288Z | INFO | [Balance] User 1397 | Stable: testuser_1772049586594_7ztxjk | Balance: ₡3,000,000
+2026-02-25T19:59:52.289Z | INFO | [Balance] User 1398 | Stable: test_user_prop10_1_1772049586767 | Balance: ₡98,700
+2026-02-25T19:59:52.290Z | INFO | [Balance] User 1399 | Stable: test_user_prop10_2_1772049586780 | Balance: ₡100,000
+2026-02-25T19:59:52.291Z | INFO | [Balance] User 1400 | Stable: testuser_1772049586895_t6raiq | Balance: ₡3,000,000
+2026-02-25T19:59:52.292Z | INFO | [Balance] User 1401 | Stable: testuser_1772049587193_4ogye6 | Balance: ₡3,000,000
+2026-02-25T19:59:52.293Z | INFO | [Balance] User 1402 | Stable: testuser_1772049587491_dkbr | Balance: ₡3,000,000
+2026-02-25T19:59:52.294Z | INFO | [Balance] User 1403 | Stable: archetype_glass_cannon_a_6_1 | Balance: ₡933,432
+2026-02-25T19:59:52.295Z | INFO | [Balance] User 1404 | Stable: archetype_glass_cannon_b_6_2 | Balance: ₡978,200
+2026-02-25T19:59:52.296Z | INFO | [Balance] User 1405 | Stable: testuser_1772049587790_mt2maw | Balance: ₡3,000,000
+2026-02-25T19:59:52.297Z | INFO | [Balance] User 1406 | Stable: archetype_glass_cannon_c_6_3 | Balance: ₡1,028,200
+2026-02-25T19:59:52.298Z | INFO | [Balance] User 1407 | Stable: archetype_speed_demon_a_6_4 | Balance: ₡63,426
+2026-02-25T19:59:52.299Z | INFO | [Balance] User 1408 | Stable: archetype_speed_demon_b_6_5 | Balance: ₡99,691
+2026-02-25T19:59:52.300Z | INFO | [Balance] User 1409 | Stable: archetype_speed_demon_c_6_6 | Balance: ₡8,772
+2026-02-25T19:59:52.301Z | INFO | [Balance] User 1410 | Stable: testuser_1772049588090_w5gmie | Balance: ₡3,000,000
+2026-02-25T19:59:52.302Z | INFO | [Balance] User 1411 | Stable: testuser_1772049588391_71gv9h | Balance: ₡3,000,000
+2026-02-25T19:59:52.303Z | INFO | [Balance] User 1412 | Stable: testuser_1772049588693_7rgrk4 | Balance: ₡3,000,000
+2026-02-25T19:59:52.304Z | INFO | [Balance] User 1413 | Stable: testuser_1772049588997_7jx3xn | Balance: ₡3,000,000
+2026-02-25T19:59:52.305Z | INFO | [Balance] User 1414 | Stable: testuser_1772049589299_no312 | Balance: ₡3,000,000
+2026-02-25T19:59:52.306Z | INFO | [Balance] User 1415 | Stable: testuser_1772049589604_8a5zqa | Balance: ₡3,000,000
+2026-02-25T19:59:52.307Z | INFO | [Balance] User 1416 | Stable: testuser_1772049589903_6th3mg | Balance: ₡3,000,000
+2026-02-25T19:59:52.308Z | INFO | [Balance] User 1417 | Stable: testuser_1772049590203_ccpenk | Balance: ₡3,000,000
+2026-02-25T19:59:52.309Z | INFO | [Balance] User 1418 | Stable: archetype_balanced_brawler_7_1 | Balance: ₡500,000
+2026-02-25T19:59:52.310Z | INFO | [Balance] User 1419 | Stable: archetype_facility_investor_7_2 | Balance: ₡253,550
+2026-02-25T19:59:52.311Z | INFO | [Balance] User 1420 | Stable: archetype_two_robot_7_3 | Balance: ₡199,500
+2026-02-25T19:59:52.312Z | INFO | [Balance] User 1421 | Stable: testuser_1772049590501_b072g8 | Balance: ₡3,000,000
+2026-02-25T19:59:52.313Z | INFO | [Balance] User 1422 | Stable: archetype_melee_specialist_7_4 | Balance: ₡349,200
+2026-02-25T19:59:52.314Z | INFO | [Balance] User 1423 | Stable: archetype_ranged_sniper_7_5 | Balance: ₡349,200
+2026-02-25T19:59:52.315Z | INFO | [Balance] User 1424 | Stable: archetype_ai_tactician_7_6 | Balance: ₡503,500
+2026-02-25T19:59:52.316Z | INFO | [Balance] User 1425 | Stable: archetype_prestige_rusher_7_7 | Balance: ₡298,100
+2026-02-25T19:59:52.318Z | INFO | [Balance] User 1426 | Stable: testuser_1772049590800_68c8li | Balance: ₡3,000,000
+2026-02-25T19:59:52.319Z | INFO | [Balance] User 1427 | Stable: testuser_1772049591100_e7n8lt | Balance: ₡3,000,000
+2026-02-25T19:59:52.320Z | INFO | [Balance] User 1428 | Stable: testuser_1772049591405_tzdxeb | Balance: ₡3,000,000
+2026-02-25T19:59:52.321Z | INFO | [Balance] User 1429 | Stable: testuser_1772049591717_k1yczo | Balance: ₡3,000,000
+2026-02-25T19:59:52.322Z | INFO | [Balance] User 1430 | Stable: testuser_1772049592022_5zbni | Balance: ₡3,000,000
+2026-02-25T19:59:52.323Z | INFO | [Admin] ===================================
+2026-02-25T19:59:52.324Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-02-25T19:59:52.324Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 7
+2026-02-25T19:59:52.327Z | ERROR | [Admin] Failed to create cycle snapshot: {}
+2026-02-25T19:59:52.327Z | INFO | [Admin] === Cycle 7 Summary ===
+2026-02-25T19:59:52.327Z | INFO | [Admin] Battles: 11
+2026-02-25T19:59:52.327Z | INFO | [Admin] ===================================
+2026-02-25T19:59:52.327Z | INFO | === Cycle 7 Ended ===

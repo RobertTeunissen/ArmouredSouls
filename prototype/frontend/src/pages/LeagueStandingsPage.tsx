@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import apiClient from '../utils/apiClient';
 import {
   getLeagueStandings,
   getLeagueInstances,
@@ -40,18 +41,12 @@ function LeagueStandingsPage() {
   const fetchUserRobotTiers = async () => {
     // Fetch user's robots to determine which tiers and instances they're in
     try {
-      const response = await fetch('http://localhost:3001/api/robots', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (response.ok) {
-        const robotsData = await response.json();
-        const tiers = new Set<string>(robotsData.map((r: any) => r.currentLeague));
-        const instances = new Set<string>(robotsData.map((r: any) => r.leagueId).filter(Boolean));
-        setUserRobotTiers(tiers);
-        setUserRobotInstances(instances);
-      }
+      const response = await apiClient.get('/api/robots');
+      const robotsData = response.data;
+      const tiers = new Set<string>(robotsData.map((r: any) => r.currentLeague));
+      const instances = new Set<string>(robotsData.map((r: any) => r.leagueId).filter(Boolean));
+      setUserRobotTiers(tiers);
+      setUserRobotInstances(instances);
     } catch (err) {
       console.error('Failed to fetch user robot tiers:', err);
     }

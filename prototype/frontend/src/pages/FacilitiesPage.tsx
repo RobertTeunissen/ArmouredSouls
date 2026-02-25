@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import Navigation from '../components/Navigation';
 import FacilityIcon from '../components/FacilityIcon';
 
@@ -121,7 +121,7 @@ function FacilitiesPage() {
 
   const fetchFacilities = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/facilities');
+      const response = await apiClient.get('/api/facilities');
       setFacilities(response.data.facilities || response.data);
       setUserPrestige(response.data.userPrestige || 0);
     } catch (err) {
@@ -141,9 +141,9 @@ function FacilitiesPage() {
       // Fetch current cycle
       let fetchedCurrentCycle = 0;
       try {
-        const cycleResponse = await fetch('http://localhost:3001/api/analytics/cycle/current');
-        if (cycleResponse.ok) {
-          const cycleData = await cycleResponse.json();
+        const cycleResponse = await apiClient.get('/api/analytics/cycle/current');
+        if (cycleResponse.status === 200) {
+          const cycleData = cycleResponse.data;
           fetchedCurrentCycle = cycleData.cycleNumber;
           setCurrentCycle(fetchedCurrentCycle);
         }
@@ -155,9 +155,9 @@ function FacilitiesPage() {
       const facilityTypes = ['merchandising_hub', 'streaming_studio', 'repair_bay', 'training_facility', 'weapons_workshop'];
       const roiPromises = facilityTypes.map(async (type) => {
         try {
-          const response = await fetch(`http://localhost:3001/api/analytics/facility/${user.id}/roi?facilityType=${type}`);
-          if (response.ok) {
-            return await response.json();
+          const response = await apiClient.get(`/api/analytics/facility/${user.id}/roi?facilityType=${type}`);
+          if (response.status === 200) {
+            return response.data;
           }
           return null;
         } catch (err) {
@@ -171,11 +171,11 @@ function FacilitiesPage() {
 
       // Fetch recommendations
       try {
-        const recResponse = await fetch(
-          `http://localhost:3001/api/analytics/facility/${user.id}/recommendations?lastNCycles=${lastNCycles}`
+        const recResponse = await apiClient.get(
+          `/api/analytics/facility/${user.id}/recommendations?lastNCycles=${lastNCycles}`
         );
-        if (recResponse.ok) {
-          const recData = await recResponse.json();
+        if (recResponse.status === 200) {
+          const recData = recResponse.data;
           setRecommendations(recData.recommendations || []);
         } else {
           setRecommendations([]);
@@ -214,7 +214,7 @@ function FacilitiesPage() {
     setError('');
 
     try {
-      await axios.post('http://localhost:3001/api/facilities/upgrade', {
+      await apiClient.post('/api/facilities/upgrade', {
         facilityType,
       });
 

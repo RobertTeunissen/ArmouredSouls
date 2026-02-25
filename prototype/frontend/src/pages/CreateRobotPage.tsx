@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import apiClient from '../utils/apiClient';
 
 function CreateRobotPage() {
   const [name, setName] = useState('');
@@ -41,35 +42,22 @@ function CreateRobotPage() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/robots', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name }),
-      });
+      const response = await apiClient.post('/api/robots', { name });
 
-      if (response.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create robot');
-      }
+      const data = response.data;
 
       // Refresh user data to update currency
       await refreshUser();
 
       // Navigate to the newly created robot
       navigate(`/robots/${data.robot.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create robot');
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
+      setError(err.response?.data?.error || err.message || 'Failed to create robot');
       console.error(err);
     } finally {
       setLoading(false);

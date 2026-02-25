@@ -5,6 +5,7 @@ import Navigation from '../components/Navigation';
 import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
+import apiClient from '../utils/apiClient';
 
 interface Robot {
   id: number;
@@ -180,24 +181,8 @@ function RobotsPage() {
 
   const fetchRobots = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/robots', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch robots');
-      }
-
-      const data = await response.json();
+      const response = await apiClient.get('/api/robots');
+      const data = response.data;
       
       // Debug logging
       console.log('Fetched robots:', {
@@ -214,7 +199,12 @@ function RobotsPage() {
       // Sort robots by ELO (highest first)
       const sortedData = data.sort((a: Robot, b: Robot) => b.elo - a.elo);
       setRobots(sortedData);
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
       setError('Failed to load robots');
       console.error(err);
     } finally {
@@ -224,24 +214,16 @@ function RobotsPage() {
 
   const fetchFacilities = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/facilities', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const facilities = data.facilities || data; // Handle both response formats
-        const repairBay = facilities.find((f: any) => f.type === 'repair_bay');
-        if (repairBay) {
-          setRepairBayLevel(repairBay.currentLevel || 0);
-        }
-        const rosterExpansion = facilities.find((f: any) => f.type === 'roster_expansion');
-        if (rosterExpansion) {
-          setRosterLevel(rosterExpansion.currentLevel || 0);
-        }
+      const response = await apiClient.get('/api/facilities');
+      const data = response.data;
+      const facilities = data.facilities || data; // Handle both response formats
+      const repairBay = facilities.find((f: any) => f.type === 'repair_bay');
+      if (repairBay) {
+        setRepairBayLevel(repairBay.currentLevel || 0);
+      }
+      const rosterExpansion = facilities.find((f: any) => f.type === 'roster_expansion');
+      if (rosterExpansion) {
+        setRosterLevel(rosterExpansion.currentLevel || 0);
       }
     } catch (err) {
       console.error('Failed to fetch facilities:', err);
@@ -309,28 +291,7 @@ function RobotsPage() {
 
   const confirmRepairAll = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/robots/repair-all', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(`Repair failed: ${data.error}`);
-        setShowRepairConfirmation(false);
-        return;
-      }
+      await apiClient.post('/api/robots/repair-all', {});
 
       // Close modal and refresh
       setShowRepairConfirmation(false);

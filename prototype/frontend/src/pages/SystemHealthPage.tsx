@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import apiClient from '../utils/apiClient';
 
 interface CyclePerformanceMetrics {
   cycleNumber: number;
@@ -66,53 +67,35 @@ const SystemHealthPage: React.FC = () => {
 
       // Fetch performance metrics
       try {
-        const perfResponse = await fetch(
-          `http://localhost:3001/api/analytics/performance?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
+        const perfResponse = await apiClient.get(
+          `/api/analytics/performance?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
         );
-        if (!perfResponse.ok) {
-          console.error('Performance fetch failed:', perfResponse.status, perfResponse.statusText);
-          errors.push(`Performance metrics: ${perfResponse.statusText}`);
-        } else {
-          const perfData = await perfResponse.json();
-          setPerformanceMetrics(perfData);
-        }
-      } catch (err) {
+        setPerformanceMetrics(perfResponse.data);
+      } catch (err: any) {
         console.error('Performance error:', err);
-        errors.push(`Performance metrics: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        errors.push(`Performance metrics: ${err.response?.statusText || err.message || 'Unknown error'}`);
       }
 
       // Fetch integrity reports
       try {
-        const integrityResponse = await fetch(
-          `http://localhost:3001/api/analytics/integrity?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
+        const integrityResponse = await apiClient.get(
+          `/api/analytics/integrity?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
         );
-        if (!integrityResponse.ok) {
-          console.error('Integrity fetch failed:', integrityResponse.status, integrityResponse.statusText);
-          errors.push(`Integrity reports: ${integrityResponse.statusText}`);
-        } else {
-          const integrityData = await integrityResponse.json();
-          setIntegrityReports(integrityData);
-        }
-      } catch (err) {
+        setIntegrityReports(integrityResponse.data);
+      } catch (err: any) {
         console.error('Integrity error:', err);
-        errors.push(`Integrity reports: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        errors.push(`Integrity reports: ${err.response?.statusText || err.message || 'Unknown error'}`);
       }
 
       // Fetch event log summary (renamed to /logs/summary to avoid ad blocker issues)
       try {
-        const statsResponse = await fetch(
-          `http://localhost:3001/api/analytics/logs/summary?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
+        const statsResponse = await apiClient.get(
+          `/api/analytics/logs/summary?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
         );
-        if (!statsResponse.ok) {
-          console.error('Stats fetch failed:', statsResponse.status, statsResponse.statusText);
-          errors.push(`Event statistics: ${statsResponse.statusText}`);
-        } else {
-          const statsData = await statsResponse.json();
-          setEventStats(statsData);
-        }
-      } catch (err) {
+        setEventStats(statsResponse.data);
+      } catch (err: any) {
         console.error('Event metrics error:', err);
-        errors.push(`Event statistics: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        errors.push(`Event statistics: ${err.response?.statusText || err.message || 'Unknown error'}`);
       }
 
       setLoading(false);

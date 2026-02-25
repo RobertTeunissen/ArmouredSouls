@@ -57,4 +57,18 @@ prototype/
 
 ---
 
+## 🌐 Production Deployment
+
+Armoured Souls deploys to Scaleway DEV1-S VPS instances running Ubuntu 22.04, with Caddy as reverse proxy, PM2 for process management, and PostgreSQL in Docker.
+
+- [VPS Setup Guide](../docs/guides/VPS_SETUP.md) — Provision a new VPS from scratch
+- [Deployment Guide](../docs/guides/DEPLOYMENT.md) — CI/CD pipeline, first deploy, and manual PRD promotion
+- [Maintenance Guide](../docs/guides/MAINTENANCE.md) — Logs, backups, monitoring
+- [Troubleshooting Guide](../docs/guides/TROUBLESHOOTING.md) — Common issues and rollback procedure
+- [Architecture Decisions](../docs/guides/DECISIONS.md) — Project structure rationale and risk register
+
+ACC auto-deploys on push to `main`. PRD requires manual promotion via GitHub Actions.
+
+---
+
 For complete setup, troubleshooting, and reset instructions: [../docs/SETUP.md](../docs/SETUP.md)

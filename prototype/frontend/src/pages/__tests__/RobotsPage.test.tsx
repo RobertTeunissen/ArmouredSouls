@@ -3,6 +3,20 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import RobotsPage from '../RobotsPage';
 
+// Mock apiClient
+vi.mock('../../utils/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+  },
+}));
+
+import apiClient from '../../utils/apiClient';
+const mockedApiClient = vi.mocked(apiClient);
+
 // Mock the AuthContext
 const mockLogout = vi.fn();
 const mockRefreshUser = vi.fn();
@@ -28,9 +42,6 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../../components/Navigation', () => ({
   default: () => <div data-testid="navigation">Navigation</div>,
 }));
-
-// Mock fetch
-global.fetch = vi.fn();
 
 const mockRobots = [
   {
@@ -107,20 +118,12 @@ describe('RobotsPage', () => {
     localStorage.setItem('token', 'test-token');
     
     // Default mock implementations
-    (global.fetch as any).mockImplementation((url: string) => {
+    mockedApiClient.get.mockImplementation((url: string) => {
       if (url.includes('/api/robots')) {
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve(mockRobots),
-        });
+        return Promise.resolve({ data: mockRobots });
       }
       if (url.includes('/api/facilities')) {
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve(mockFacilities),
-        });
+        return Promise.resolve({ data: mockFacilities });
       }
       return Promise.reject(new Error('Unknown URL'));
     });
@@ -513,33 +516,19 @@ describe('RobotsPage', () => {
   });
 
   describe('API Calls', () => {
-    it('should fetch robots with authorization token', async () => {
+    it('should fetch robots via apiClient', async () => {
       renderWithRouter(<RobotsPage />);
       
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:3001/api/robots',
-          expect.objectContaining({
-            headers: expect.objectContaining({
-              'Authorization': 'Bearer test-token',
-            }),
-          })
-        );
+        expect(mockedApiClient.get).toHaveBeenCalledWith('/api/robots');
       });
     });
 
-    it('should fetch facilities with authorization token', async () => {
+    it('should fetch facilities via apiClient', async () => {
       renderWithRouter(<RobotsPage />);
       
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:3001/api/facilities',
-          expect.objectContaining({
-            headers: expect.objectContaining({
-              'Authorization': 'Bearer test-token',
-            }),
-          })
-        );
+        expect(mockedApiClient.get).toHaveBeenCalledWith('/api/facilities');
       });
     });
   });
