@@ -3,22 +3,33 @@
  * Verifies that tag teams are automatically created for Two-Robot Specialist archetype users
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { generateBattleReadyUsers } from '../src/utils/userGeneration';
 
-const prisma = new PrismaClient();
 
 describe('Two-Robot Specialist Tag Team Generation', () => {
   beforeAll(async () => {
     await prisma.$connect();
     
     // Ensure weapons exist
-    const practiceSword = await prisma.weapon.findFirst({
+    let practiceSword = await prisma.weapon.findFirst({
       where: { name: 'Practice Sword' },
     });
 
     if (!practiceSword) {
-      throw new Error('Practice Sword weapon not found. Run seed first.');
+      await prisma.weapon.create({
+        data: {
+          name: 'Practice Sword',
+          weaponType: 'melee',
+          baseDamage: 10,
+          cooldown: 3,
+          cost: 0,
+          handsRequired: 'one',
+          damageType: 'melee',
+          loadoutType: 'any',
+          description: 'A basic training weapon',
+        },
+      });
     }
   });
 
@@ -100,7 +111,7 @@ describe('Two-Robot Specialist Tag Team Generation', () => {
     // Find the Two-Robot Specialist user
     const twoRobotUser = await prisma.user.findFirst({
       where: {
-        username: 'archetype_two_robot_4',
+        username: { startsWith: 'archetype_two_robot_4' },
       },
       include: {
         robots: true,
@@ -136,7 +147,7 @@ describe('Two-Robot Specialist Tag Team Generation', () => {
     // Find the Two-Robot Specialist user
     const twoRobotUser = await prisma.user.findFirst({
       where: {
-        username: 'archetype_two_robot_10',
+        username: { startsWith: 'archetype_two_robot_10' },
       },
       include: {
         robots: true,
@@ -157,7 +168,7 @@ describe('Two-Robot Specialist Tag Team Generation', () => {
 
     const tankUser = await prisma.user.findFirst({
       where: {
-        username: 'archetype_tank_fortress_1',
+        username: { startsWith: 'archetype_tank_fortress_1' },
       },
       include: {
         robots: true,
@@ -176,7 +187,7 @@ describe('Two-Robot Specialist Tag Team Generation', () => {
 
     const twoRobotUser = await prisma.user.findFirst({
       where: {
-        username: 'archetype_two_robot_4',
+        username: { startsWith: 'archetype_two_robot_4' },
       },
       include: {
         robots: {

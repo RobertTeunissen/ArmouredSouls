@@ -4,10 +4,9 @@
  * Tests event logging, validation, sequence numbers, and batch operations
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { EventLogger, EventType, clearSequenceCache } from '../src/services/eventLogger';
 
-const prisma = new PrismaClient();
 const eventLogger = new EventLogger();
 
 describe('EventLogger Service', () => {

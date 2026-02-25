@@ -177,36 +177,51 @@ export class EventLogger {
     // Validate payload
     validateEventPayload(eventType, payload);
     
-    // Get next sequence number
-    const sequenceNumber = await getNextSequenceNumber(cycleNumber);
-    
-    // Create event entry
-    const entry: EventLogEntry = {
-      cycleNumber,
-      eventType,
-      eventTimestamp: options?.timestamp || new Date(),
-      sequenceNumber,
-      userId: options?.userId || null,
-      robotId: options?.robotId || null,
-      battleId: options?.battleId || null,
-      payload,
-      metadata: options?.metadata || null,
-    };
-    
-    // Insert into database
-    await prisma.auditLog.create({
-      data: {
-        cycleNumber: entry.cycleNumber,
-        eventType: entry.eventType,
-        eventTimestamp: entry.eventTimestamp,
-        sequenceNumber: entry.sequenceNumber,
-        userId: entry.userId,
-        robotId: entry.robotId,
-        battleId: entry.battleId,
-        payload: entry.payload as Prisma.JsonObject,
-        metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
-      },
-    });
+    // Retry loop for sequence number conflicts (parallel test execution)
+    for (let attempt = 0; attempt < 5; attempt++) {
+      // Get next sequence number
+      const sequenceNumber = await getNextSequenceNumber(cycleNumber);
+      
+      // Create event entry
+      const entry: EventLogEntry = {
+        cycleNumber,
+        eventType,
+        eventTimestamp: options?.timestamp || new Date(),
+        sequenceNumber,
+        userId: options?.userId || null,
+        robotId: options?.robotId || null,
+        battleId: options?.battleId || null,
+        payload,
+        metadata: options?.metadata || null,
+      };
+      
+      try {
+        // Insert into database
+        await prisma.auditLog.create({
+          data: {
+            cycleNumber: entry.cycleNumber,
+            eventType: entry.eventType,
+            eventTimestamp: entry.eventTimestamp,
+            sequenceNumber: entry.sequenceNumber,
+            userId: entry.userId,
+            robotId: entry.robotId,
+            battleId: entry.battleId,
+            payload: entry.payload as Prisma.JsonObject,
+            metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
+          },
+        });
+        return; // Success
+      } catch (error: unknown) {
+        const isUniqueViolation = error instanceof Error && 
+          error.message.includes('Unique constraint failed');
+        if (isUniqueViolation && attempt < 4) {
+          // Refresh sequence cache from DB and retry
+          clearSequenceCache(cycleNumber);
+          continue;
+        }
+        throw error;
+      }
+    }
   }
   
   /**
@@ -230,35 +245,49 @@ export class EventLogger {
       validateEventPayload(event.eventType, event.payload);
     }
     
-    // Get sequence numbers for all events
-    const entries: EventLogEntry[] = [];
-    for (const event of events) {
-      const sequenceNumber = await getNextSequenceNumber(cycleNumber);
-      entries.push({
-        cycleNumber,
-        eventType: event.eventType,
-        eventTimestamp: event.timestamp || new Date(),
-        sequenceNumber,
-        userId: event.userId || null,
-        robotId: event.robotId || null,
-        payload: event.payload,
-        metadata: event.metadata || null,
-      });
+    // Retry loop for sequence number conflicts (parallel test execution)
+    for (let attempt = 0; attempt < 5; attempt++) {
+      // Get sequence numbers for all events
+      const entries: EventLogEntry[] = [];
+      for (const event of events) {
+        const sequenceNumber = await getNextSequenceNumber(cycleNumber);
+        entries.push({
+          cycleNumber,
+          eventType: event.eventType,
+          eventTimestamp: event.timestamp || new Date(),
+          sequenceNumber,
+          userId: event.userId || null,
+          robotId: event.robotId || null,
+          payload: event.payload,
+          metadata: event.metadata || null,
+        });
+      }
+      
+      try {
+        // Batch insert
+        await prisma.auditLog.createMany({
+          data: entries.map(entry => ({
+            cycleNumber: entry.cycleNumber,
+            eventType: entry.eventType,
+            eventTimestamp: entry.eventTimestamp,
+            sequenceNumber: entry.sequenceNumber,
+            userId: entry.userId,
+            robotId: entry.robotId,
+            payload: entry.payload as Prisma.JsonObject,
+            metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
+          })),
+        });
+        return; // Success
+      } catch (error: unknown) {
+        const isUniqueViolation = error instanceof Error && 
+          error.message.includes('Unique constraint failed');
+        if (isUniqueViolation && attempt < 4) {
+          clearSequenceCache(cycleNumber);
+          continue;
+        }
+        throw error;
+      }
     }
-    
-    // Batch insert
-    await prisma.auditLog.createMany({
-      data: entries.map(entry => ({
-        cycleNumber: entry.cycleNumber,
-        eventType: entry.eventType,
-        eventTimestamp: entry.eventTimestamp,
-        sequenceNumber: entry.sequenceNumber,
-        userId: entry.userId,
-        robotId: entry.robotId,
-        payload: entry.payload as Prisma.JsonObject,
-        metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
-      })),
-    });
   }
   
   /**

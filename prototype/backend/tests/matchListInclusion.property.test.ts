@@ -1,12 +1,11 @@
 import * as fc from 'fast-check';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import matchesRoutes from '../src/routes/matches';
 
-const prisma = new PrismaClient();
 const app = express();
 
 app.use(cors());
@@ -295,7 +294,6 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           for (let i = 0; i < Math.min(config.num1v1Battles, Math.floor(robots.length / 2)); i++) {
             const battle = await prisma.battle.create({
               data: {
-                userId: testUserId,
                 robot1Id: robots[i * 2].id,
                 robot2Id: robots[i * 2 + 1].id,
                 winnerId: robots[i * 2].id,
@@ -307,19 +305,15 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
                 robot2ELOBefore: 1200,
                 robot2ELOAfter: 1184,
                 eloChange: 16,
-                robot1FinalHP: 50,
-                robot2FinalHP: 0,
-                robot1FinalShield: 5,
-                robot2FinalShield: 0,
-                robot1DamageDealt: 100,
-                robot2DamageDealt: 50,
                 winnerReward: 1000,
                 loserReward: 500,
-                robot1PrestigeAwarded: 5,
-                robot2PrestigeAwarded: 0,
-                robot1FameAwarded: 10,
-                robot2FameAwarded: 5,
                 battleLog: {},
+                participants: {
+                  create: [
+                    { robotId: robots[i * 2].id, team: 1, credits: 1000, eloBefore: 1200, eloAfter: 1216, damageDealt: 100, finalHP: 50, fameAwarded: 10, prestigeAwarded: 5 },
+                    { robotId: robots[i * 2 + 1].id, team: 2, credits: 500, eloBefore: 1200, eloAfter: 1184, damageDealt: 50, finalHP: 0, fameAwarded: 5, prestigeAwarded: 0, destroyed: true },
+                  ],
+                },
               },
             });
             battles1v1.push(battle);
@@ -330,7 +324,6 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           for (let i = 0; i < Math.min(config.numTagTeamBattles, Math.floor(robots.length / 4)); i++) {
             const battle = await prisma.battle.create({
               data: {
-                userId: testUserId,
                 robot1Id: robots[i * 4].id,
                 robot2Id: robots[i * 4 + 2].id,
                 winnerId: robots[i * 4].id,
@@ -346,19 +339,15 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
                 robot2ELOBefore: 1200,
                 robot2ELOAfter: 1184,
                 eloChange: 16,
-                robot1FinalHP: 50,
-                robot2FinalHP: 0,
-                robot1FinalShield: 5,
-                robot2FinalShield: 0,
-                robot1DamageDealt: 150,
-                robot2DamageDealt: 75,
                 winnerReward: 2000,
                 loserReward: 1000,
-                robot1PrestigeAwarded: 8,
-                robot2PrestigeAwarded: 0,
-                robot1FameAwarded: 15,
-                robot2FameAwarded: 8,
                 battleLog: {},
+                participants: {
+                  create: [
+                    { robotId: robots[i * 4].id, team: 1, credits: 2000, eloBefore: 1200, eloAfter: 1216, damageDealt: 150, finalHP: 50, fameAwarded: 15, prestigeAwarded: 8 },
+                    { robotId: robots[i * 4 + 2].id, team: 2, credits: 1000, eloBefore: 1200, eloAfter: 1184, damageDealt: 75, finalHP: 0, fameAwarded: 8, prestigeAwarded: 0, destroyed: true },
+                  ],
+                },
               },
             });
             battlesTagTeam.push(battle);

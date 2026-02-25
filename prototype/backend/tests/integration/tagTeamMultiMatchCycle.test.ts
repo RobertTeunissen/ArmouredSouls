@@ -10,12 +10,11 @@
  * - Dynamic eligibility checking excludes unready robots from later matches
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/lib/prisma';
 import { createTeam } from '../../src/services/tagTeamService';
 import { runTagTeamMatchmaking } from '../../src/services/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tagTeamBattleOrchestrator';
 
-const prisma = new PrismaClient();
 
 describe('Tag Team Multi-Match Cycle Integration Test', () => {
   let testUserIds: number[] = [];

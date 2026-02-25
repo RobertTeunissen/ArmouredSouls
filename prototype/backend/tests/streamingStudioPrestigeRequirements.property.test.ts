@@ -11,7 +11,7 @@
 
 import fc from 'fast-check';
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import jwt from 'jsonwebtoken';
 import express from 'express';
 import cors from 'cors';
@@ -22,7 +22,6 @@ import { getFacilityConfig } from '../src/config/facilities';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 
 // Create test app
 const app = express();

@@ -3,10 +3,9 @@
  * Tests prestige requirement validation for facility upgrades
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { getFacilityConfig } from '../src/config/facilities';
 
-const prisma = new PrismaClient();
 
 describe('Prestige Gates', () => {
   afterAll(async () => {
@@ -23,7 +22,7 @@ describe('Prestige Gates', () => {
     test('Training Facility has correct prestige requirements', () => {
       const config = getFacilityConfig('training_facility');
       expect(config).toBeDefined();
-      expect(config?.prestigeRequirements).toEqual([0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0]);
+      expect(config?.prestigeRequirements).toEqual([0, 0, 0, 1000, 0, 0, 5000, 0, 10000]);
     });
 
     test('Weapons Workshop has correct prestige requirements', () => {
@@ -86,8 +85,8 @@ describe('Prestige Gates', () => {
       expect(config?.prestigeRequirements).toEqual([0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000]);
     });
 
-    test('Income Generator has correct prestige requirements', () => {
-      const config = getFacilityConfig('income_generator');
+    test('Merchandising Hub has correct prestige requirements', () => {
+      const config = getFacilityConfig('merchandising_hub');
       expect(config).toBeDefined();
       expect(config?.prestigeRequirements).toEqual([0, 0, 0, 3000, 0, 0, 7500, 0, 15000, 0]);
     });

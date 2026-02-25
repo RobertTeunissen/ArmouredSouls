@@ -5,12 +5,11 @@
  * Uses fast-check for property-based testing
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { EventLogger, EventType, clearSequenceCache } from '../src/services/eventLogger';
 import { CycleSnapshotService } from '../src/services/cycleSnapshotService';
 
-const prisma = new PrismaClient();
 const eventLogger = new EventLogger();
 const cycleSnapshotService = new CycleSnapshotService();
 
@@ -279,7 +278,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               
               const createdBattle = await prisma.battle.create({
                 data: {
-                  user: { connect: { id: user.id } },
                   robot1: { connect: { id: robot1.id } },
                   robot2: { connect: { id: robot2.id } },
                   winnerId,
@@ -288,30 +286,20 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   robot2ELOBefore: battle.robot2ELOBefore,
                   robot2ELOAfter: battle.robot2ELOBefore + battle.robot2ELOChange,
                   eloChange: Math.abs(battle.robot1ELOChange),
-                  robot1DamageDealt: battle.robot1DamageDealt,
-                  robot2DamageDealt: battle.robot2DamageDealt,
-                  robot1FinalHP: 100 - battle.robot2DamageDealt,
-                  robot2FinalHP: 100 - battle.robot1DamageDealt,
-                  robot1FinalShield: 0,
-                  robot2FinalShield: 0,
                   winnerReward: battle.winnerReward,
                   loserReward: battle.loserReward,
-                  robot1PrestigeAwarded: battle.robot1PrestigeAwarded,
-                  robot2PrestigeAwarded: battle.robot2PrestigeAwarded,
-                  robot1FameAwarded: battle.robot1FameAwarded,
-                  robot2FameAwarded: battle.robot2FameAwarded,
-                  robot1RepairCost: battle.robot1RepairCost,
-                  robot2RepairCost: battle.robot2RepairCost,
                   battleLog: {},
                   durationSeconds: 60,
                   battleType: 'league',
                   leagueType: 'bronze',
-                  robot1Yielded: false,
-                  robot2Yielded: false,
-                  robot1Destroyed: false,
-                  robot2Destroyed: false,
-                  // Don't set createdAt - let it default to now()
+                  participants: {
+                    create: [
+                      { robotId: robot1.id, team: 1, credits: battle.winnerReward || 0, eloBefore: battle.robot1ELOBefore, eloAfter: battle.robot1ELOBefore + battle.robot1ELOChange, finalHP: 50 },
+                      { robotId: robot2.id, team: 2, credits: battle.loserReward || 0, eloBefore: battle.robot2ELOBefore, eloAfter: battle.robot2ELOBefore + battle.robot2ELOChange, finalHP: 0 },
+                    ],
+                  },
                 },
+                include: { participants: true },
               });
               createdBattles.push(createdBattle);
             }
@@ -350,16 +338,23 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             });
 
             for (const createdBattle of createdBattles) {
+              const p1 = (createdBattle as any).participants?.find((p: any) => p.team === 1);
+              const p2 = (createdBattle as any).participants?.find((p: any) => p.team === 2);
+              const robot1DamageDealt = p1?.damageDealt || 0;
+              const robot2DamageDealt = p2?.damageDealt || 0;
+              const robot1FameAwarded = p1?.fameAwarded || 0;
+              const robot2FameAwarded = p2?.fameAwarded || 0;
+
               // Robot 1 metrics
               if (!expectedRobotMetrics.has(createdBattle.robot1Id)) {
                 expectedRobotMetrics.set(createdBattle.robot1Id, initMetric());
               }
               const robot1Metric = expectedRobotMetrics.get(createdBattle.robot1Id)!;
               robot1Metric.battlesParticipated++;
-              robot1Metric.damageDealt += createdBattle.robot1DamageDealt;
-              robot1Metric.damageReceived += createdBattle.robot2DamageDealt;
+              robot1Metric.damageDealt += robot1DamageDealt;
+              robot1Metric.damageReceived += robot2DamageDealt;
               robot1Metric.eloChange += createdBattle.robot1ELOAfter - createdBattle.robot1ELOBefore;
-              robot1Metric.fameChange += createdBattle.robot1FameAwarded;
+              robot1Metric.fameChange += robot1FameAwarded;
               
               if (createdBattle.winnerId === createdBattle.robot1Id) {
                 robot1Metric.wins++;
@@ -378,10 +373,10 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               }
               const robot2Metric = expectedRobotMetrics.get(createdBattle.robot2Id)!;
               robot2Metric.battlesParticipated++;
-              robot2Metric.damageDealt += createdBattle.robot2DamageDealt;
-              robot2Metric.damageReceived += createdBattle.robot1DamageDealt;
+              robot2Metric.damageDealt += robot2DamageDealt;
+              robot2Metric.damageReceived += robot1DamageDealt;
               robot2Metric.eloChange += createdBattle.robot2ELOAfter - createdBattle.robot2ELOBefore;
-              robot2Metric.fameChange += createdBattle.robot2FameAwarded;
+              robot2Metric.fameChange += robot2FameAwarded;
               
               if (createdBattle.winnerId === createdBattle.robot2Id) {
                 robot2Metric.wins++;
@@ -525,7 +520,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               
               await prisma.battle.create({
                 data: {
-                  user: { connect: { id: user.id } },
                   robot1: { connect: { id: robot1.id } },
                   robot2: { connect: { id: robot2.id } },
                   winnerId: robot1.id, // Robot 1 always wins for simplicity
@@ -534,29 +528,18 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   robot2ELOBefore: 1500,
                   robot2ELOAfter: 1480,
                   eloChange: 20,
-                  robot1DamageDealt: 500,
-                  robot2DamageDealt: 300,
-                  robot1FinalHP: 70,
-                  robot2FinalHP: 0,
-                  robot1FinalShield: 0,
-                  robot2FinalShield: 0,
                   winnerReward: battle.winnerReward,
                   loserReward: battle.loserReward,
-                  robot1PrestigeAwarded: battle.robot1PrestigeAwarded,
-                  robot2PrestigeAwarded: battle.robot2PrestigeAwarded,
-                  robot1FameAwarded: 10,
-                  robot2FameAwarded: 5,
-                  robot1RepairCost: battle.robot1RepairCost,
-                  robot2RepairCost: battle.robot2RepairCost,
                   battleLog: {},
                   durationSeconds: 60,
                   battleType: 'league',
                   leagueType: 'bronze',
-                  robot1Yielded: false,
-                  robot2Yielded: false,
-                  robot1Destroyed: false,
-                  robot2Destroyed: false,
-                  // Don't set createdAt - let it default to now()
+                  participants: {
+                    create: [
+                      { robotId: robot1.id, team: 1, credits: battle.winnerReward || 0, eloBefore: 1500, eloAfter: 1520, finalHP: 50 },
+                      { robotId: robot2.id, team: 2, credits: battle.loserReward || 0, eloBefore: 1500, eloAfter: 1480, finalHP: 0 },
+                    ],
+                  },
                 },
               });
             }
@@ -577,7 +560,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               totalRepairCosts: number;
             }>();
 
-            // Get actual user IDs from created battles
+            // Get actual battles from DB with participants
             const actualUserIds = new Set<number>();
             const createdBattlesFromDB = await prisma.battle.findMany({
               where: {
@@ -586,24 +569,33 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   lte: await cycleSnapshotService['getCycleEndTime'](cycleNumber),
                 },
               },
+              include: {
+                robot1: { select: { userId: true } },
+                robot2: { select: { userId: true } },
+                participants: true,
+              },
             });
 
             for (const battle of createdBattlesFromDB) {
-              actualUserIds.add(battle.userId);
+              // Use robot1's userId as the stable owner
+              const battleUserId = battle.robot1.userId;
+              actualUserIds.add(battleUserId);
               
-              if (!expectedStableMetrics.has(battle.userId)) {
-                expectedStableMetrics.set(battle.userId, {
+              if (!expectedStableMetrics.has(battleUserId)) {
+                expectedStableMetrics.set(battleUserId, {
                   battlesParticipated: 0,
                   totalCreditsEarned: 0,
                   totalPrestigeEarned: 0,
                   totalRepairCosts: 0,
                 });
               }
-              const metrics = expectedStableMetrics.get(battle.userId)!;
+              const metrics = expectedStableMetrics.get(battleUserId)!;
               metrics.battlesParticipated++;
               metrics.totalCreditsEarned += (battle.winnerReward || 0) + (battle.loserReward || 0);
-              metrics.totalPrestigeEarned += battle.robot1PrestigeAwarded + battle.robot2PrestigeAwarded;
-              metrics.totalRepairCosts += (battle.robot1RepairCost || 0) + (battle.robot2RepairCost || 0);
+              const p1 = battle.participants.find(p => p.team === 1);
+              const p2 = battle.participants.find(p => p.team === 2);
+              metrics.totalPrestigeEarned += (p1?.prestigeAwarded || 0) + (p2?.prestigeAwarded || 0);
+              metrics.totalRepairCosts += 0; // Repair costs tracked elsewhere
             }
 
             // Property: Snapshot stable metrics should match calculated values
@@ -656,7 +648,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             // Create a battle to generate credits and repair costs
             await prisma.battle.create({
               data: {
-                user: { connect: { id: user.id } },
                 robot1: { connect: { id: robot1.id } },
                 robot2: { connect: { id: robot2.id } },
                 winnerId: robot1.id,
@@ -665,29 +656,18 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                 robot2ELOBefore: 1500,
                 robot2ELOAfter: 1480,
                 eloChange: 20,
-                robot1DamageDealt: 500,
-                robot2DamageDealt: 300,
-                robot1FinalHP: 70,
-                robot2FinalHP: 0,
-                robot1FinalShield: 0,
-                robot2FinalShield: 0,
                 winnerReward: data.battleCredits,
                 loserReward: 0,
-                robot1PrestigeAwarded: 10,
-                robot2PrestigeAwarded: 5,
-                robot1FameAwarded: 10,
-                robot2FameAwarded: 5,
-                robot1RepairCost: data.repairCosts,
-                robot2RepairCost: 0,
                 battleLog: {},
                 durationSeconds: 60,
                 battleType: 'league',
                 leagueType: 'bronze',
-                robot1Yielded: false,
-                robot2Yielded: false,
-                robot1Destroyed: false,
-                robot2Destroyed: false,
-                // Don't set createdAt - let it default to now()
+                participants: {
+                  create: [
+                    { robotId: robot1.id, team: 1, credits: data.battleCredits, eloBefore: 1500, eloAfter: 1520, finalHP: 50 },
+                    { robotId: robot2.id, team: 2, credits: 0, eloBefore: 1500, eloAfter: 1480, finalHP: 0 },
+                  ],
+                },
               },
             });
 

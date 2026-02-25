@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 import { validateStableName, validatePassword, containsProfanity, isStableNameUnique } from '../src/utils/validation';
 
-const prisma = new PrismaClient();
 
 describe('Validation Service - Unit Tests', () => {
   describe('Profanity Filter', () => {

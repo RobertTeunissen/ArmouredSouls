@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
-import { PrismaClient, Robot, Prisma } from '@prisma/client';
+import { Robot, Prisma } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 
-const prisma = new PrismaClient();
 
 // Test configuration
 const NUM_RUNS = 20;

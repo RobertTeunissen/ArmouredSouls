@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import {
   determinePromotions,
   determineDemotions,
@@ -8,7 +8,6 @@ import {
   TAG_TEAM_LEAGUE_TIERS,
 } from '../src/services/tagTeamLeagueRebalancingService';
 
-const prisma = new PrismaClient();
 
 describe('Tag Team League Rebalancing', () => {
   let testStableId: number;

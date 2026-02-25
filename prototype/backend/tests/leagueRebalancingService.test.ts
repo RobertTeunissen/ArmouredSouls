@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import {
   determinePromotions,
   determineDemotions,
@@ -7,7 +7,6 @@ import {
   rebalanceLeagues,
 } from '../src/services/leagueRebalancingService';
 
-const prisma = new PrismaClient();
 
 describe('League Rebalancing Service', () => {
   let testUser: any;

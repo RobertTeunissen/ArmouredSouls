@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -7,7 +7,6 @@ import leaderboardsRoutes from '../src/routes/leaderboards';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 
 // Create test app
 const app = express();

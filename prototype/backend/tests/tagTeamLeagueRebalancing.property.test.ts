@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import {
   promoteTeam,
   demoteTeam,
@@ -7,7 +7,6 @@ import {
   TagTeamLeagueTier,
 } from '../src/services/tagTeamLeagueRebalancingService';
 
-const prisma = new PrismaClient();
 
 // Test configuration
 const NUM_RUNS = 20;

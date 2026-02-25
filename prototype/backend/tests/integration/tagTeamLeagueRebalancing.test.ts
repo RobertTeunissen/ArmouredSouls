@@ -11,10 +11,9 @@
  * - Teams with < 5 cycles are not eligible for promotion/demotion
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/lib/prisma';
 import { rebalanceTagTeamLeagues } from '../../src/services/tagTeamLeagueRebalancingService';
 
-const prisma = new PrismaClient();
 
 describe('Tag Team League Rebalancing Integration Test', () => {
   let testUsers: any[] = [];

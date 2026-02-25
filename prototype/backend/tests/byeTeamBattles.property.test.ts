@@ -1,12 +1,12 @@
 import * as fc from 'fast-check';
-import { PrismaClient, Robot, TagTeam, Prisma } from '@prisma/client';
+import { Robot, TagTeam, Prisma } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import {
   calculateTagTeamRewards,
   calculateTagTeamELOChanges,
   calculateTagTeamLeaguePoints,
 } from '../src/services/tagTeamBattleOrchestrator';
 
-const prisma = new PrismaClient();
 
 // Test configuration
 const NUM_RUNS = 20;
@@ -87,6 +87,7 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     // Equipment
     mainWeaponId: null,
     offhandWeaponId: null,
+    imageUrl: null,
     // Timestamps
     createdAt: new Date(),
     updatedAt: new Date(),

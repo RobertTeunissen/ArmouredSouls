@@ -4,11 +4,10 @@
  * Verifies that battles are logged to the audit log with complete data
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { processBattle } from '../src/services/battleOrchestrator';
 import { EventType, clearSequenceCache } from '../src/services/eventLogger';
 
-const prisma = new PrismaClient();
 
 describe('Battle Event Logging Integration', () => {
   let testUserIds: number[] = [];

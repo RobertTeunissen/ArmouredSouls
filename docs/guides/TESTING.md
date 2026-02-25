@@ -1,6 +1,6 @@
 # Testing Guide
-**Last Updated**: February 23, 2026  
-**Current Pass Rate**: ~65% (540-557/829 tests)
+**Last Updated**: February 24, 2026  
+**Current Pass Rate**: ~82% (900-910/1099 tests)
 
 ## Quick Start
 
@@ -9,89 +9,86 @@ cd prototype/backend
 npm test
 ```
 
-**Expected**: 61-67% pass rate, 30-90 seconds
+**Expected**: ~82% pass rate, ~150-160 seconds with maxWorkers=2
 
 ## Current Status
 
 | Metric | Value |
 |--------|-------|
-| Pass Rate | ~65% |
-| Tests Passing | 540-557/829 |
-| Suites Passing | ~20-27/100 |
-| Variability | ±5% (normal) |
-| Status | ✅ Ready for use |
+| Pass Rate | ~82% |
+| Tests Passing | ~900-910/1099 |
+| Suites Passing | 57-65/100 |
+| Variability | ±2-3% between runs |
+| Status | 🟡 Actively improving |
 
-## Recent Improvements (Feb 23, 2026)
+## Recent Improvements (Feb 24, 2026)
 
-- ✅ Timeout increased from 10s to 30s (fixes property test timeouts)
-- ✅ Weapon seeding added to integration tests
-- ✅ Cleanup robustness improved (`.deleteMany()` everywhere)
-- ✅ Pass rate improved from 49.7% to ~65% (+145 tests)
+- ✅ Database connection singleton pattern (72 files updated)
+- ✅ Battle → BattleParticipant schema migration fixes (8 test files)
+- ✅ Robot mock fields updated (tag team fields + imageUrl)
+- ✅ Test isolation fixes (matchmaking, tagTeams, facilityROI)
+- ✅ Formula/expectation corrections (training costs, combat power, attack speed)
+- ✅ Compilation fixes (profileApiResponse, tagTeamBattleLogCompleteness, userGeneration)
+- ✅ Jest maxWorkers reduced to 2 for stability
 
 ## Writing New Tests
 
 ### Best Practices
-1. Use `.deleteMany()` instead of `.delete()`
-2. Add cleanup in `afterEach` or `afterAll`
-3. Use unique identifiers (timestamps, random values)
-4. Follow cleanup order: auditLog → battleParticipants → battles → scheduledMatches → tagTeams → weaponInventory → facility → robots → users
-5. Test in isolation before committing
+1. Import shared prisma: `import prisma from '../src/lib/prisma'`
+2. Use unique identifiers: `\`test_${Date.now()}_${Math.random().toString(36).substring(7)}\``
+3. Create BattleParticipants with required fields: `team`, `credits`, `eloBefore`, `eloAfter`, `finalHP`
+4. Scope cleanup to test data (never `deleteMany({})` without a where clause)
+5. Cleanup order: auditLog → battleParticipants → battles → scheduledMatches → tagTeams → weaponInventory → facility → robots → users
 
-### Example
+### Battle Creation Pattern
 ```typescript
-describe('My Test', () => {
-  let testUserId: number;
-  
-  afterEach(async () => {
-    // Cleanup in correct order
-    await prisma.auditLog.deleteMany({ where: { userId: testUserId } });
-    await prisma.robot.deleteMany({ where: { userId: testUserId } });
-    await prisma.user.deleteMany({ where: { id: testUserId } });
-  });
-  
-  it('should do something', async () => {
-    // Use unique identifier
-    const username = `test_user_${Date.now()}`;
-    const user = await prisma.user.create({
-      data: { username, passwordHash: 'hash' }
-    });
-    testUserId = user.id;
-    
-    // Your test logic
-  });
+await prisma.battle.create({
+  data: {
+    robot1: { connect: { id: robot1.id } },
+    robot2: { connect: { id: robot2.id } },
+    winnerId: robot1.id,
+    robot1ELOBefore: 1200,
+    robot1ELOAfter: 1220,
+    robot2ELOBefore: 1200,
+    robot2ELOAfter: 1180,
+    eloChange: 20,
+    winnerReward: 500,
+    loserReward: 100,
+    battleLog: {},
+    durationSeconds: 60,
+    battleType: 'league',
+    leagueType: 'bronze',
+    participants: {
+      create: [
+        { robotId: robot1.id, team: 1, credits: 500, eloBefore: 1200, eloAfter: 1220, finalHP: 50 },
+        { robotId: robot2.id, team: 2, credits: 100, eloBefore: 1200, eloAfter: 1180, finalHP: 0 },
+      ],
+    },
+  },
 });
 ```
 
 ## When Tests Fail
 
-1. **Check if flaky**: Run 3 times
-   - Passes sometimes? Known issue (±5% variability)
-   - Always fails? Real bug
+1. **Run in isolation first**: `npm test -- tests/yourtest.test.ts`
+   - Passes alone but fails in suite? Parallel conflict (known issue)
+   - Fails alone? Real bug
 
-2. **Run in isolation**: `npm test -- tests/yourtest.test.ts`
-   - Passes alone? Interdependency issue
-   - Fails alone? Real bug in test or code
+2. **Check for old Battle fields**: If you see `robot1DamageDealt`, `userId` on Battle, etc. — these moved to BattleParticipant
 
-3. **Don't spend too long**: If stuck after 30 min, document and move on
+3. **Check Robot mock fields**: Ensure `totalTagTeamBattles`, `totalTagTeamWins`, `totalTagTeamLosses`, `totalTagTeamDraws`, `timesTaggedIn`, `timesTaggedOut`, `imageUrl` are included
 
 ## Known Issues
 
-### Test Interdependencies (224 tests)
-- Tests pass in parallel (65%) but fail sequentially (42%)
-- Caused by shared state between tests
-- Workaround: Run in parallel (default)
-- Fix: Requires test database per worker (1-2 days)
+### Parallel Test Conflicts (~100+ tests)
+- Tests pass individually but fail together due to shared DB state
+- ±2-3% variability between runs
+- Fix: per-worker database isolation (planned)
 
-### Race Conditions (~50 tests)
-- ±5% variability across runs
-- Caused by timing issues
-- Workaround: Re-run if results seem off
-- Fix: Sequential execution or better locking
-
-### Property Test Logic Errors (~50 tests)
-- Tests expect old behavior
-- Workaround: Ignore for now
-- Fix: Update expectations (2-3 hours per file)
+### Missing Modules (~3 suites)
+- `trendAnalysisService` - module doesn't exist
+- `migrateBattlesToEvents` - script doesn't exist
+- These tests can't pass until the modules are implemented
 
 ## Commands
 
@@ -99,72 +96,31 @@ describe('My Test', () => {
 # Run all tests
 npm test
 
-# Run specific test file
+# Run specific test
 npm test -- tests/eventLogger.test.ts
 
-# Run tests matching pattern
+# Run with pattern match
 npm test -- --testNamePattern="should log events"
+
+# Run sequentially (most stable, slower)
+npm test -- --maxWorkers=1
 
 # Run with verbose output
 npm test -- --verbose
-
-# Run sequentially (slower but more stable)
-npm test -- --maxWorkers=1
 ```
 
-## Roadmap to 85-90%
+## Roadmap to 90%+
 
-### Phase 1: Infrastructure (1-2 days)
-- Implement test database per worker
-- Eliminates test interdependencies
-- Expected: 85-90% pass rate
+### Phase 1: Parallel Isolation (1-2 days)
+- Implement per-worker test database
+- Expected: 88-92% pass rate
 
-### Phase 2: Fix Logic Errors (2-3 days)
-- Update property test expectations
-- Fix integration test expectations
-- Expected: 90-95% pass rate
+### Phase 2: Logic Fixes (2-3 days)
+- Update league/rebalancing test expectations
+- Fix analytics route tests
+- Expected: 92-95% pass rate
 
-### Phase 3: Optimization (1-2 days)
-- Categorize tests (unit/integration/e2e)
-- Reduce property test numRuns
-- Expected: <30s test runs, 95%+ pass rate
-
-## Test Strategy
-
-### Unit Tests
-- Test individual functions/services
-- Mock external dependencies
-- Fast execution (<1s per test)
-- Should have 100% pass rate
-
-### Integration Tests
-- Test multiple components together
-- Use real database
-- Slower execution (1-5s per test)
-- May have interdependencies
-
-### Property Tests
-- Test universal properties with random inputs
-- Use fast-check library
-- Slowest execution (5-30s per test)
-- May timeout if too complex
-
-### E2E Tests
-- Test complete user flows
-- Use real API endpoints
-- Slowest execution (10-60s per test)
-- Most prone to flakiness
-
-## Files Modified
-
-- `prototype/backend/jest.config.js` - Timeout 30s
-- `prototype/backend/tests/integration/adminCycleGeneration.test.ts` - Weapon seeding
-- All 100 test files - `.deleteMany()` improvements
-
-## Support
-
-Questions? Check this guide first, then ask the team.
-
-Issues? Document and share with team.
-
-Improvements? Propose changes and discuss before implementing.
+### Phase 3: Cleanup (1 day)
+- Remove tests for missing modules
+- Fix remaining compilation errors
+- Expected: 95%+ pass rate

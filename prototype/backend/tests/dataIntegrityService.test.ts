@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { DataIntegrityService } from '../src/services/dataIntegrityService';
 import { EventLogger } from '../src/services/eventLogger';
 
-const prisma = new PrismaClient();
 const integrityService = new DataIntegrityService();
 const eventLogger = new EventLogger();
 

@@ -1,8 +1,7 @@
 import * as fc from 'fast-check';
 import { calculateRepairCost } from '../src/utils/robotCalculations';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 
-const prisma = new PrismaClient();
 
 // Test configuration
 const NUM_RUNS = 100;

@@ -1,6 +1,6 @@
 import * as fc from 'fast-check';
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 import express from 'express';
 import cors from 'cors';
@@ -10,7 +10,6 @@ import userRoutes from '../src/routes/user';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 // Create test app
@@ -63,10 +62,6 @@ describe('Profile API Response - Property Tests', () => {
                 role: userProfile.role,
                 currency: userProfile.currency,
                 prestige: userProfile.prestige,
-                totalBattles: userProfile.totalBattles,
-                totalWins: userProfile.totalWins,
-                highestELO: userProfile.highestELO,
-                championshipTitles: userProfile.championshipTitles,
                 stableName: userProfile.stableName,
                 profileVisibility: userProfile.profileVisibility,
                 notificationsBattle: userProfile.notificationsBattle,
@@ -99,10 +94,6 @@ describe('Profile API Response - Property Tests', () => {
             expect(response.body).toHaveProperty('currency');
             expect(response.body).toHaveProperty('prestige');
             expect(response.body).toHaveProperty('createdAt');
-            expect(response.body).toHaveProperty('totalBattles');
-            expect(response.body).toHaveProperty('totalWins');
-            expect(response.body).toHaveProperty('highestELO');
-            expect(response.body).toHaveProperty('championshipTitles');
             expect(response.body).toHaveProperty('stableName');
             expect(response.body).toHaveProperty('profileVisibility');
             expect(response.body).toHaveProperty('notificationsBattle');
@@ -116,10 +107,6 @@ describe('Profile API Response - Property Tests', () => {
             expect(typeof response.body.currency).toBe('number');
             expect(typeof response.body.prestige).toBe('number');
             expect(typeof response.body.createdAt).toBe('string');
-            expect(typeof response.body.totalBattles).toBe('number');
-            expect(typeof response.body.totalWins).toBe('number');
-            expect(typeof response.body.highestELO).toBe('number');
-            expect(typeof response.body.championshipTitles).toBe('number');
             expect(typeof response.body.stableName).toBe('string');
             expect(typeof response.body.profileVisibility).toBe('string');
             expect(typeof response.body.notificationsBattle).toBe('boolean');
@@ -131,11 +118,6 @@ describe('Profile API Response - Property Tests', () => {
             expect(response.body.role).toBe(userProfile.role);
             expect(response.body.currency).toBe(userProfile.currency);
             expect(response.body.prestige).toBe(userProfile.prestige);
-            expect(response.body.totalBattles).toBe(userProfile.totalBattles);
-            expect(response.body.totalWins).toBe(userProfile.totalWins);
-            expect(response.body.highestELO).toBe(userProfile.highestELO);
-            expect(response.body.championshipTitles).toBe(userProfile.championshipTitles);
-            
             // Handle null stableName - should return username as fallback
             if (userProfile.stableName === null) {
               expect(response.body.stableName).toBe(user.username);
@@ -166,10 +148,6 @@ function userProfileGenerator(): fc.Arbitrary<{
   role: string;
   currency: number;
   prestige: number;
-  totalBattles: number;
-  totalWins: number;
-  highestELO: number;
-  championshipTitles: number;
   stableName: string | null;
   profileVisibility: 'public' | 'private';
   notificationsBattle: boolean;
@@ -180,10 +158,6 @@ function userProfileGenerator(): fc.Arbitrary<{
     role: fc.constantFrom('user', 'admin', 'moderator'),
     currency: fc.integer({ min: 0, max: 1000000 }),
     prestige: fc.integer({ min: 0, max: 100000 }),
-    totalBattles: fc.integer({ min: 0, max: 10000 }),
-    totalWins: fc.integer({ min: 0, max: 10000 }),
-    highestELO: fc.integer({ min: 0, max: 3000 }),
-    championshipTitles: fc.integer({ min: 0, max: 100 }),
     stableName: fc.option(validStableNameGenerator(), { nil: null }),
     profileVisibility: fc.constantFrom('public' as const, 'private' as const),
     notificationsBattle: fc.boolean(),

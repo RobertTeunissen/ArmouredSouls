@@ -1,9 +1,8 @@
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import jwt from 'jsonwebtoken';
 import app from './testApp';
 
-const prisma = new PrismaClient();
 
 describe('Stance and Yield Threshold API Endpoints', () => {
   let testUserIds: number[] = [];

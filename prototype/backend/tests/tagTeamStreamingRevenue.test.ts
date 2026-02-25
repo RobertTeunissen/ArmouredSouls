@@ -10,11 +10,10 @@
  * - Terminal logs show which robots' stats were used
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { createTeam } from '../src/services/tagTeamService';
 import { executeScheduledTagTeamBattles } from '../src/services/tagTeamBattleOrchestrator';
 
-const prisma = new PrismaClient();
 
 describe('Tag Team Streaming Revenue Integration', () => {
   let testUserIds: number[] = [];

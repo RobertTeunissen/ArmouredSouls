@@ -28,8 +28,8 @@ describe('Economy Calculations', () => {
     });
 
     it('should calculate Training Facility operating costs correctly', () => {
-      expect(calculateFacilityOperatingCost('training_facility', 1)).toBe(1500);
-      expect(calculateFacilityOperatingCost('training_facility', 5)).toBe(4500); // 1500 + (4 * 750)
+      expect(calculateFacilityOperatingCost('training_facility', 1)).toBe(250);  // 250 * level
+      expect(calculateFacilityOperatingCost('training_facility', 5)).toBe(1250); // 250 * level
     });
 
     it('should calculate Merchandising Hub operating costs correctly', () => {

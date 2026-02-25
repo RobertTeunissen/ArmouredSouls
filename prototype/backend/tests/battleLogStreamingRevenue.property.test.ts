@@ -108,7 +108,6 @@ async function createBattleWithStreamingRevenue(
   // Create battle
   const battle = await prisma.battle.create({
     data: {
-      userId,
       robot1Id,
       robot2Id,
       winnerId,
@@ -116,29 +115,13 @@ async function createBattleWithStreamingRevenue(
       robot1ELOAfter: 1210,
       robot2ELOBefore: 1200,
       robot2ELOAfter: 1190,
-      robot1FinalHP: 50,
-      robot2FinalHP: 0,
-      robot1FinalShield: 0,
-      robot2FinalShield: 0,
-      robot1DamageDealt: 100,
-      robot2DamageDealt: 50,
       winnerReward: 1000,
       loserReward: 500,
       durationSeconds: 30,
       battleType: 'league',
       leagueType: 'bronze',
       battleLog: { events: [] },
-      robot1PrestigeAwarded: 10,
-      robot2PrestigeAwarded: 5,
-      robot1FameAwarded: 20,
-      robot2FameAwarded: 10,
       eloChange: 10,
-      robot1Destroyed: false,
-      robot2Destroyed: true,
-      robot1Yielded: false,
-      robot2Yielded: false,
-      robot1RepairCost: 0,
-      robot2RepairCost: 0,
     },
   });
 

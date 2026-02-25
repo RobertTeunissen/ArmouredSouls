@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import * as fc from 'fast-check';
 import { createTeam } from '../src/services/tagTeamService';
 import { executeTagTeamBattle } from '../src/services/tagTeamBattleOrchestrator';
 
-const prisma = new PrismaClient();
 
 /**
  * Property-Based Test for Battle Log Completeness
@@ -49,57 +48,42 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
   afterEach(async () => {
     // Clean up test data after each test
-    await prisma.battleParticipant.deleteMany({
-      where: {
-        robot: {
+    const userIds = [testUserId1, testUserId2];
+    const robots = await prisma.robot.findMany({
+      where: { userId: { in: userIds } },
+      select: { id: true },
+    });
+    const robotIds = robots.map(r => r.id);
+
+    if (robotIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { robotId: { in: robotIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: {
           OR: [
-            { userId: testUserId1 },
-            { userId: testUserId2 },
+            { robot1Id: { in: robotIds } },
+            { robot2Id: { in: robotIds } },
           ],
         },
-      },
-    });
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { userId: testUserId1 },
-          { userId: testUserId2 },
-        ],
-      },
-    });
+      });
+    }
     await prisma.tagTeamMatch.deleteMany({
       where: {
         OR: [
-          { team1: { stableId: testUserId1 } },
-          { team1: { stableId: testUserId2 } },
-          { team2: { stableId: testUserId1 } },
-          { team2: { stableId: testUserId2 } },
+          { team1: { stableId: { in: userIds } } },
+          { team2: { stableId: { in: userIds } } },
         ],
       },
     });
     await prisma.tagTeam.deleteMany({
-      where: {
-        OR: [
-          { stableId: testUserId1 },
-          { stableId: testUserId2 },
-        ],
-      },
+      where: { stableId: { in: userIds } },
     });
     await prisma.robot.deleteMany({
-      where: {
-        OR: [
-          { userId: testUserId1 },
-          { userId: testUserId2 },
-        ],
-      },
+      where: { userId: { in: userIds } },
     });
     await prisma.weaponInventory.deleteMany({
-      where: {
-        OR: [
-          { userId: testUserId1 },
-          { userId: testUserId2 },
-        ],
-      },
+      where: { userId: { in: userIds } },
     });
   });
 
@@ -114,53 +98,6 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
       },
     });
     await prisma.$disconnect();
-  });
-  });
-
-  afterEach(async () => {
-    // Clean up battles, matches, teams, and robots after each test
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { userId: testUserId1 },
-          { userId: testUserId2 },
-        ],
-      },
-    });
-    await prisma.tagTeamMatch.deleteMany({
-      where: {
-        OR: [
-          { team1: { stableId: testUserId1 } },
-          { team1: { stableId: testUserId2 } },
-          { team2: { stableId: testUserId1 } },
-          { team2: { stableId: testUserId2 } },
-        ],
-      },
-    });
-    await prisma.tagTeam.deleteMany({
-      where: {
-        OR: [
-          { stableId: testUserId1 },
-          { stableId: testUserId2 },
-        ],
-      },
-    });
-    await prisma.robot.deleteMany({
-      where: {
-        OR: [
-          { userId: testUserId1 },
-          { userId: testUserId2 },
-        ],
-      },
-    });
-    await prisma.weaponInventory.deleteMany({
-      where: {
-        OR: [
-          { userId: testUserId1 },
-          { userId: testUserId2 },
-        ],
-      },
-    });
   });
 
   /**

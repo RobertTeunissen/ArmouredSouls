@@ -66,6 +66,13 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   stance: 'balanced',
   mainWeaponId: null,
   offhandWeaponId: null,
+  imageUrl: null,
+  totalTagTeamBattles: 0,
+  totalTagTeamWins: 0,
+  totalTagTeamLosses: 0,
+  totalTagTeamDraws: 0,
+  timesTaggedIn: 0,
+  timesTaggedOut: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -162,14 +169,14 @@ describe('Stance Modifiers', () => {
         stance: 'offensive',
         loadoutType: 'two_handed',
         combatPower: new Prisma.Decimal(20), // base
-        // two_handed gives +25% combatPower: 20 * 1.25 = 25
-        // offensive gives +15% combatPower: 25 * 1.15 = 28.75 -> 28
+        // two_handed gives +10% combatPower (v1.2): 20 * 1.10 = 22
+        // offensive gives +15% combatPower: 22 * 1.15 = 25.3
       });
       
       const stats = calculateEffectiveStatsWithStance(robot);
       
-      // Should be 28.75 (20 * 1.25 * 1.15 = 28.75, rounded to 2 decimals)
-      expect(stats.combatPower).toBe(28.75);
+      // 20 * 1.10 * 1.15 = 25.3
+      expect(stats.combatPower).toBe(25.3);
     });
   });
 });

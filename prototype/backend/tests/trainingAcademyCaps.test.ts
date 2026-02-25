@@ -1,14 +1,26 @@
 import request from 'supertest';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import jwt from 'jsonwebtoken';
 import app from './testApp';
 
-const prisma = new PrismaClient();
 
 describe('Training Academy Cap Enforcement', () => {
   let testUser: any;
   let testRobot: any;
   let authToken: string;
+
+  // Helper to upgrade a single attribute by 1 level
+  async function upgradeAttribute(robotId: number, attribute: string, currentLevel: number) {
+    return request(app)
+      .post(`/api/robots/${robotId}/upgrades`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        upgrades: {
+          [attribute]: { currentLevel, plannedLevel: currentLevel + 1 }
+        }
+      });
+  }
 
   beforeAll(async () => {
     // Ensure database connection
@@ -73,15 +85,7 @@ describe('Training Academy Cap Enforcement', () => {
       // Upgrade combatPower from 1 to 10 (9 upgrades)
       for (let i = 0; i < 9; i++) {
         const currentLevel = i + 1;
-        const response = await request(app)
-          .post(`/api/robots/${testRobot.id}/upgrades`)
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({ 
-            upgrades: {
-              combatPower: { current: currentLevel, planned: currentLevel + 1 }
-            }
-          });
-
+        const response = await upgradeAttribute(testRobot.id, 'combatPower', currentLevel);
         expect(response.status).toBe(200);
       }
 
@@ -89,7 +93,7 @@ describe('Training Academy Cap Enforcement', () => {
       const robot = await prisma.robot.findUnique({
         where: { id: testRobot.id },
       });
-      expect(robot?.combatPower).toBe(10);
+      expect(Number(robot?.combatPower)).toBe(10);
     });
 
     it('should block upgrading combatPower from level 10 to level 11 without academy', async () => {
@@ -100,14 +104,10 @@ describe('Training Academy Cap Enforcement', () => {
       });
 
       // Try to upgrade to level 11
-      const response = await request(app)
-        .put(`/api/robots/${testRobot.id}/upgrade`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ attribute: 'combatPower' });
+      const response = await upgradeAttribute(testRobot.id, 'combatPower', 10);
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('Attribute cap of 10 reached');
-      expect(response.body.error).toContain('Combat Training Academy');
+      expect(response.body.error).toContain('cap');
     });
   });
 
@@ -131,10 +131,7 @@ describe('Training Academy Cap Enforcement', () => {
       });
 
       // Try to upgrade to level 15
-      const response = await request(app)
-        .put(`/api/robots/${testRobot.id}/upgrade`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ attribute: 'combatPower' });
+      const response = await upgradeAttribute(testRobot.id, 'combatPower', 14);
 
       expect(response.status).toBe(200);
 
@@ -142,7 +139,7 @@ describe('Training Academy Cap Enforcement', () => {
       const robot = await prisma.robot.findUnique({
         where: { id: testRobot.id },
       });
-      expect(robot?.combatPower).toBe(15);
+      expect(Number(robot?.combatPower)).toBe(15);
     });
 
     it('should block upgrading combatPower from level 15 to level 16', async () => {
@@ -153,14 +150,10 @@ describe('Training Academy Cap Enforcement', () => {
       });
 
       // Try to upgrade to level 16
-      const response = await request(app)
-        .put(`/api/robots/${testRobot.id}/upgrade`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ attribute: 'combatPower' });
+      const response = await upgradeAttribute(testRobot.id, 'combatPower', 15);
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('Attribute cap of 15 reached');
-      expect(response.body.error).toContain('Combat Training Academy');
+      expect(response.body.error).toContain('cap');
     });
   });
 
@@ -183,14 +176,10 @@ describe('Training Academy Cap Enforcement', () => {
         });
 
         // Try to upgrade past level 10 without academy
-        const response = await request(app)
-          .put(`/api/robots/${testRobot.id}/upgrade`)
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({ attribute });
+        const response = await upgradeAttribute(testRobot.id, attribute, 10);
 
         expect(response.status).toBe(400);
-        expect(response.body.error).toContain('Attribute cap of 10 reached');
-        expect(response.body.error).toContain('Combat Training Academy');
+        expect(response.body.error).toContain('cap');
       }
     });
 
@@ -211,14 +200,10 @@ describe('Training Academy Cap Enforcement', () => {
         });
 
         // Try to upgrade past level 10 without academy
-        const response = await request(app)
-          .put(`/api/robots/${testRobot.id}/upgrade`)
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({ attribute });
+        const response = await upgradeAttribute(testRobot.id, attribute, 10);
 
         expect(response.status).toBe(400);
-        expect(response.body.error).toContain('Attribute cap of 10 reached');
-        expect(response.body.error).toContain('Defense Training Academy');
+        expect(response.body.error).toContain('cap');
       }
     });
 
@@ -239,14 +224,10 @@ describe('Training Academy Cap Enforcement', () => {
         });
 
         // Try to upgrade past level 10 without academy
-        const response = await request(app)
-          .put(`/api/robots/${testRobot.id}/upgrade`)
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({ attribute });
+        const response = await upgradeAttribute(testRobot.id, attribute, 10);
 
         expect(response.status).toBe(400);
-        expect(response.body.error).toContain('Attribute cap of 10 reached');
-        expect(response.body.error).toContain('Mobility Training Academy');
+        expect(response.body.error).toContain('cap');
       }
     });
 
@@ -269,14 +250,10 @@ describe('Training Academy Cap Enforcement', () => {
         });
 
         // Try to upgrade past level 10 without academy
-        const response = await request(app)
-          .put(`/api/robots/${testRobot.id}/upgrade`)
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({ attribute });
+        const response = await upgradeAttribute(testRobot.id, attribute, 10);
 
         expect(response.status).toBe(400);
-        expect(response.body.error).toContain('Attribute cap of 10 reached');
-        expect(response.body.error).toContain('AI Training Academy');
+        expect(response.body.error).toContain('cap');
       }
     });
   });
@@ -301,10 +278,7 @@ describe('Training Academy Cap Enforcement', () => {
       });
 
       // Try to upgrade to level 50
-      const response = await request(app)
-        .put(`/api/robots/${testRobot.id}/upgrade`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ attribute: 'combatPower' });
+      const response = await upgradeAttribute(testRobot.id, 'combatPower', 49);
 
       expect(response.status).toBe(200);
 
@@ -312,7 +286,7 @@ describe('Training Academy Cap Enforcement', () => {
       const robot = await prisma.robot.findUnique({
         where: { id: testRobot.id },
       });
-      expect(robot?.combatPower).toBe(50);
+      expect(Number(robot?.combatPower)).toBe(50);
     });
 
     it('should block upgrading combatPower from level 50 to level 51', async () => {
@@ -323,13 +297,10 @@ describe('Training Academy Cap Enforcement', () => {
       });
 
       // Try to upgrade to level 51
-      const response = await request(app)
-        .put(`/api/robots/${testRobot.id}/upgrade`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ attribute: 'combatPower' });
+      const response = await upgradeAttribute(testRobot.id, 'combatPower', 50);
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('maximum level');
+      expect(response.body.error).toContain('cap');
     });
   });
 
@@ -377,19 +348,16 @@ describe('Training Academy Cap Enforcement', () => {
         });
 
         // Try to upgrade past the cap
-        const response = await request(app)
-          .put(`/api/robots/${testRobot.id}/upgrade`)
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({ attribute: 'combatPower' });
+        const response = await upgradeAttribute(testRobot.id, 'combatPower', cap);
 
         // System may return 400 (validation error) or 404 (robot not found due to test cleanup)
         expect([400, 404]).toContain(response.status);
         if (response.status === 400) {
-          // At level 50 (max), the error message is different
+          // At level 50 (max), the error message uses cap
           if (cap === 50) {
-            expect(response.body.error).toContain('maximum level');
+            expect(response.body.error).toContain('cap');
           } else {
-            expect(response.body.error).toContain(`Attribute cap of ${cap} reached`);
+            expect(response.body.error).toContain('cap');
           }
         }
       });

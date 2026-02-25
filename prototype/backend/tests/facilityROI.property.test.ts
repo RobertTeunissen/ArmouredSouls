@@ -9,25 +9,36 @@
  * Validates: Requirements 5.5, 8.2
  */
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { roiCalculatorService } from '../src/services/roiCalculatorService';
 import { eventLogger } from '../src/services/eventLogger';
 import { createTestUser, createTestRobot } from './testHelpers';
 import { getFacilityConfig } from '../src/config/facilities';
 
-const prisma = new PrismaClient();
 
 describe('Property 7: Facility ROI Calculation Accuracy', () => {
   let testUserId: number;
   let testRobotId: number;
 
+  beforeEach(async () => {
+    const user = await createTestUser();
+    testUserId = user.id;
+    const robot = await createTestRobot(user.id);
+    testRobotId = robot.id;
+  });
+
   afterEach(async () => {
     // Clean up after each test in correct dependency order
-    await prisma.auditLog.deleteMany({});
-    await prisma.facility.deleteMany({});
-    await prisma.robot.deleteMany({});
-    await prisma.user.deleteMany({});
+    if (testUserId) {
+      await prisma.auditLog.deleteMany({ where: { userId: testUserId } });
+      await prisma.facility.deleteMany({ where: { userId: testUserId } });
+      await prisma.battleParticipant.deleteMany({ where: { robot: { userId: testUserId } } });
+      await prisma.battle.deleteMany({ where: { robot1: { userId: testUserId } } });
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUserId } });
+      await prisma.robot.deleteMany({ where: { userId: testUserId } });
+      await prisma.user.deleteMany({ where: { id: testUserId } });
+    }
   });
 
   afterAll(async () => {

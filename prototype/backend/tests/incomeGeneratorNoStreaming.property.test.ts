@@ -10,10 +10,9 @@
  */
 
 import fc from 'fast-check';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { calculateDailyPassiveIncome } from '../src/utils/economyCalculations';
 
-const prisma = new PrismaClient();
 
 describe('Property 18: Income Generator No Longer Provides Streaming Revenue', () => {
   let testUserId: number;
