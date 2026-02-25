@@ -58,14 +58,12 @@ Welcome to the Armoured Souls documentation. This folder contains all project do
   - Facilities economics and consolidation
   - Merchandising hub migration
   - Streaming studio analysis
-  - Navigation reorganization
+  - Navigation and page structure
   - Investment improvements
 
 ### 🗄️ Migrations
 - **[migrations/](migrations/)** - Database migration documentation
-  - Battle table migration status
-  - BattleParticipant migration
-  - Cleanup completion notes
+  - Battle table cleanup completion notes
 
 ### 🐛 Troubleshooting
 - **[troubleshooting/](troubleshooting/)** - Debugging and problem-solving
@@ -123,7 +121,7 @@ Visual specifications, brand guidelines, and UX patterns. Define the look and fe
 - **A new page**: Check `prd_pages/` for similar pages
 - **A core feature**: Review relevant PRD in `prd_core/`
 - **UI components**: Follow `design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md`
-- **Tests**: Read `guides/TESTING_STRATEGY.md`
+- **Tests**: Read `guides/TESTING_STATE.md`
 
 ### I'm debugging...
 - **Cycle issues**: See `troubleshooting/DEBUGGING_CYCLE_SUMMARY.md`

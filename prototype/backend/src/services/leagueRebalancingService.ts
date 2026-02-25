@@ -1,5 +1,10 @@
 import { Robot } from '@prisma/client';
 import prisma from '../lib/prisma';
+
+// NOTE: This service mirrors tagTeamLeagueRebalancingService.ts for tag team leagues.
+// Both share identical promotion/demotion logic but operate on different Prisma models
+// (Robot vs TagTeam) with different field names. If you change thresholds or logic here,
+// apply the same change to the tag team version.
 import { 
   assignLeagueInstance, 
   rebalanceInstances, 

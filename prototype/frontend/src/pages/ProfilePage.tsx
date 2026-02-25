@@ -64,7 +64,7 @@ function ProfilePage() {
     
     // Add edited profile fields (only if they differ from current values)
     if (editedProfile.stableName !== undefined && editedProfile.stableName !== profile?.stableName) {
-      updates.stableName = editedProfile.stableName;
+      updates.stableName = editedProfile.stableName ?? undefined;
     }
     if (editedProfile.profileVisibility !== undefined && editedProfile.profileVisibility !== profile?.profileVisibility) {
       updates.profileVisibility = editedProfile.profileVisibility;

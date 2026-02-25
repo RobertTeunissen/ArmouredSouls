@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import { getLeagueColor } from '../utils/formatters';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -88,18 +89,6 @@ function LeaderboardsFamePage() {
       case 'Renowned': return 'text-orange-400';
       case 'Famous': return 'text-blue-400';
       case 'Known': return 'text-green-400';
-      default: return 'text-gray-400';
-    }
-  };
-
-  const getLeagueColor = (league: string) => {
-    switch (league) {
-      case 'champion': return 'text-purple-400';
-      case 'diamond': return 'text-cyan-400';
-      case 'platinum': return 'text-blue-400';
-      case 'gold': return 'text-yellow-400';
-      case 'silver': return 'text-gray-300';
-      case 'bronze': return 'text-orange-600';
       default: return 'text-gray-400';
     }
   };

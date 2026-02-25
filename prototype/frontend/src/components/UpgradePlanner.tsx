@@ -108,7 +108,7 @@ function UpgradePlanner({
   currentCredits, 
   trainingLevel,
   academyLevels,
-  workshopLevel = 0, // Not used for upgrades, only for weapons
+  // workshopLevel — reserved for future weapon discount integration
   onCommit,
   onNavigateToFacilities
 }: UpgradePlannerProps) {

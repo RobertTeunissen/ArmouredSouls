@@ -22,7 +22,7 @@ import TagTeamManagementPage from './pages/TagTeamManagementPage';
 import TagTeamStandingsPage from './pages/TagTeamStandingsPage';
 import ProfilePage from './pages/ProfilePage';
 import CycleSummaryPage from './pages/CycleSummaryPage';
-import SystemHealthPage from './pages/SystemHealthPage';
+// import SystemHealthPage from './pages/SystemHealthPage';
 
 function App() {
   return (

@@ -11,9 +11,11 @@ import {
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { eventLogger, EventType } from './eventLogger';
 import { calculateStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
-
-// ELO calculation constant
-const ELO_K_FACTOR = 32;
+import {
+  ELO_K_FACTOR,
+  calculateExpectedScore as sharedCalculateExpectedScore,
+  calculateELOChange as sharedCalculateELOChange,
+} from '../utils/battleMath';
 
 // League points
 const LEAGUE_POINTS_WIN = 3;
@@ -147,34 +149,21 @@ function getFameTier(fame: number): string {
 }
 
 /**
- * Calculate expected ELO score
+ * Calculate expected ELO score (delegates to shared battleMath)
  */
 function calculateExpectedScore(ratingA: number, ratingB: number): number {
-  return 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
+  return sharedCalculateExpectedScore(ratingA, ratingB);
 }
 
 /**
- * Calculate ELO changes for both robots
+ * Calculate ELO changes for both robots (delegates to shared battleMath)
  */
 export function calculateELOChange(
   winnerELO: number,
   loserELO: number,
   isDraw: boolean = false
 ): { winnerChange: number; loserChange: number } {
-  const expectedWinner = calculateExpectedScore(winnerELO, loserELO);
-  const expectedLoser = calculateExpectedScore(loserELO, winnerELO);
-
-  if (isDraw) {
-    // Draw: both get 0.5 actual score
-    const winnerChange = Math.round(ELO_K_FACTOR * (0.5 - expectedWinner));
-    const loserChange = Math.round(ELO_K_FACTOR * (0.5 - expectedLoser));
-    return { winnerChange, loserChange };
-  } else {
-    // Win/Loss: winner gets 1, loser gets 0
-    const winnerChange = Math.round(ELO_K_FACTOR * (1 - expectedWinner));
-    const loserChange = Math.round(ELO_K_FACTOR * (0 - expectedLoser));
-    return { winnerChange, loserChange };
-  }
+  return sharedCalculateELOChange(winnerELO, loserELO, isDraw, ELO_K_FACTOR);
 }
 
 /**

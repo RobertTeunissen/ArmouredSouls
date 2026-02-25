@@ -56,7 +56,7 @@ function DailyStableReport({ report }: DailyStableReportProps) {
               <span className="text-gray-300">Streaming (per battle):</span>
               <span className="text-gray-100">
                 {formatCurrency(report.revenue.streaming)}
-                {report.revenue.streamingBattleCount > 0 && (
+                {(report.revenue.streamingBattleCount ?? 0) > 0 && (
                   <span className="text-gray-400 text-xs ml-1">
                     (from {report.revenue.streamingBattleCount} {report.revenue.streamingBattleCount === 1 ? 'battle' : 'battles'})
                   </span>

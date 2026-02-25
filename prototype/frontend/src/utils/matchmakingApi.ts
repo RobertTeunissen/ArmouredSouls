@@ -352,6 +352,27 @@ export const getTournamentRoundName = (currentRound: number, maxRounds: number):
   return `Round ${currentRound}/${maxRounds}`;
 };
 
+/**
+ * Get the reward amount for a specific robot in a battle.
+ * Handles both 1v1 and tag team battle types.
+ */
+export const getBattleReward = (battle: BattleHistory, robotId: number): number => {
+  // For tag team battles, determine reward based on team winner
+  if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
+    const isTeam1Robot = battle.robot1Id === robotId;
+    const isTeam2Robot = battle.robot2Id === robotId;
+    
+    if (isTeam1Robot) {
+      return battle.winnerId === battle.team1Id ? battle.winnerReward : battle.loserReward;
+    } else if (isTeam2Robot) {
+      return battle.winnerId === battle.team2Id ? battle.winnerReward : battle.loserReward;
+    }
+  }
+  
+  // For 1v1 battles, winnerId is the robot ID
+  return battle.winnerId === robotId ? battle.winnerReward : battle.loserReward;
+};
+
 // Battle Log Types
 export interface BattleLogEvent {
   timestamp: number;
@@ -428,6 +449,8 @@ export interface BattleLogResponse {
         owner: string;
       } | null;
       tagOutTime: number | null;
+      stableName?: string | null;
+      teamId?: number;
     };
     team2: {
       activeRobot: {
@@ -441,6 +464,8 @@ export interface BattleLogResponse {
         owner: string;
       } | null;
       tagOutTime: number | null;
+      stableName?: string | null;
+      teamId?: number;
     };
   };
   team1Summary?: {

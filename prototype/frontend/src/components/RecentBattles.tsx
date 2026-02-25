@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import CompactBattleCard from './CompactBattleCard';
-import { BattleHistory, getBattleOutcome, getELOChange } from '../utils/matchmakingApi';
+import { BattleHistory, getBattleOutcome, getELOChange, getBattleReward } from '../utils/matchmakingApi';
 
 interface RecentBattlesProps {
   battles: BattleHistory[];
@@ -50,23 +50,6 @@ const RecentBattles: React.FC<RecentBattlesProps> = ({ battles, robotId }) => {
     return { myRobot, opponent, outcome, eloChange, myRobotId };
   };
 
-  const getReward = (battle: BattleHistory, robotId: number) => {
-    // For tag team battles, determine reward based on team winner
-    if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
-      const isTeam1Robot = battle.robot1Id === robotId;
-      const isTeam2Robot = battle.robot2Id === robotId;
-      
-      if (isTeam1Robot) {
-        return battle.winnerId === battle.team1Id ? battle.winnerReward : battle.loserReward;
-      } else if (isTeam2Robot) {
-        return battle.winnerId === battle.team2Id ? battle.winnerReward : battle.loserReward;
-      }
-    }
-    
-    // For 1v1 battles, winnerId is the robot ID
-    return battle.winnerId === robotId ? battle.winnerReward : battle.loserReward;
-  };
-
   return (
     <div className="bg-[#252b38] rounded-lg overflow-hidden">
       <div className="p-4 border-b border-gray-700">
@@ -76,7 +59,7 @@ const RecentBattles: React.FC<RecentBattlesProps> = ({ battles, robotId }) => {
       <div className="p-2">
         {battles.map((battle) => {
           const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
-          const reward = getReward(battle, myRobotId);
+          const reward = getBattleReward(battle, myRobotId);
 
           return (
             <CompactBattleCard

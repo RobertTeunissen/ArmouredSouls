@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { formatCurrency } from '../utils/formatters';
 import Navigation from '../components/Navigation';
 
 interface CycleData {
@@ -80,12 +81,6 @@ function CycleSummaryPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number): string => {
-    // Handle NaN, null, undefined
-    const safeAmount = Number(amount) || 0;
-    return `₡${Math.floor(safeAmount).toLocaleString()}`;
   };
 
   const getBarHeight = (value: number, maxValue: number): number => {

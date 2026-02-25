@@ -8,6 +8,11 @@ import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalcul
 import { calculateTagTeamStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
 import { getCurrentCycleNumber } from './battleOrchestrator';
 import { EventLogger, EventType } from './eventLogger';
+import {
+  ELO_K_FACTOR,
+  calculateExpectedScore,
+  calculateELOChange,
+} from '../utils/battleMath';
 
 // Battle constants
 const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
@@ -15,7 +20,6 @@ const REPAIR_COST_PER_HP = 50;
 const TAG_TEAM_REWARD_MULTIPLIER = 2; // Tag team rewards are 2x standard
 const TAG_TEAM_PRESTIGE_MULTIPLIER = 1.6; // Tag team prestige is 1.6x standard
 const DESTRUCTION_MULTIPLIER = 2; // Destroyed robots have 2x repair cost
-const ELO_K_FACTOR = 32; // ELO calculation constant
 
 // Types
 interface TagTeamWithRobots extends TagTeam {
@@ -1035,13 +1039,6 @@ export function calculateTagTeamRewards(
 }
 
 /**
- * Calculate expected ELO score
- */
-function calculateExpectedScore(ratingA: number, ratingB: number): number {
-  return 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
-}
-
-/**
  * Calculate ELO changes for tag team battles
  * Requirements 5.1, 5.2: Use combined team ELO, K=32 formula
  */
@@ -1051,23 +1048,15 @@ export function calculateTagTeamELOChanges(
   team1Won: boolean,
   isDraw: boolean
 ): { team1Change: number; team2Change: number } {
-  const expectedTeam1 = calculateExpectedScore(team1CombinedELO, team2CombinedELO);
-  const expectedTeam2 = calculateExpectedScore(team2CombinedELO, team1CombinedELO);
-
   if (isDraw) {
-    // Draw: both get 0.5 actual score
-    const team1Change = Math.round(ELO_K_FACTOR * (0.5 - expectedTeam1));
-    const team2Change = Math.round(ELO_K_FACTOR * (0.5 - expectedTeam2));
-    return { team1Change, team2Change };
+    const { winnerChange, loserChange } = calculateELOChange(team1CombinedELO, team2CombinedELO, true);
+    return { team1Change: winnerChange, team2Change: loserChange };
+  } else if (team1Won) {
+    const { winnerChange, loserChange } = calculateELOChange(team1CombinedELO, team2CombinedELO, false);
+    return { team1Change: winnerChange, team2Change: loserChange };
   } else {
-    // Win/Loss: winner gets 1, loser gets 0
-    const actualTeam1 = team1Won ? 1 : 0;
-    const actualTeam2 = team1Won ? 0 : 1;
-
-    const team1Change = Math.round(ELO_K_FACTOR * (actualTeam1 - expectedTeam1));
-    const team2Change = Math.round(ELO_K_FACTOR * (actualTeam2 - expectedTeam2));
-
-    return { team1Change, team2Change };
+    const { winnerChange, loserChange } = calculateELOChange(team2CombinedELO, team1CombinedELO, false);
+    return { team1Change: loserChange, team2Change: winnerChange };
   }
 }
 

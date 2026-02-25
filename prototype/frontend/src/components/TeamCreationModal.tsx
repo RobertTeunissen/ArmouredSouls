@@ -20,7 +20,7 @@ interface TeamCreationModalProps {
 }
 
 function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [robots, setRobots] = useState<Robot[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);

@@ -97,6 +97,7 @@ Tests pass individually but fail when run together due to shared database state 
 ### Runtime Logic Mismatches (~10 suites)
 - `tests/leagueInstanceService.test.ts` - Rebalancing detection logic changed
 - `tests/leagueRebalancingService.test.ts` - Promotion/demotion criteria changed
+- `tests/tagTeamLeagueRebalancing.property.test.ts` - 5 tests expect LP reset on promotion/demotion, but code now retains LP
 - `tests/analyticsApi.test.ts` - 55 of 133 tests fail (route/endpoint issues)
 - `tests/cycleSnapshot.property.test.ts` - 5 of 6 fail (snapshot service logic)
 - `tests/facilityROI.property.test.ts` - 3 of 4 fail (facility type config)

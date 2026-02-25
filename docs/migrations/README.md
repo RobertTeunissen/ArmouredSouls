@@ -5,8 +5,6 @@ This folder contains documentation related to database schema migrations and dat
 ## Contents
 
 ### Battle Table Migration
-- **BATTLE_TABLE_MIGRATION_STATUS.md** - Status tracking for migrating from denormalized Battle table to BattleParticipant table
-- **BATTLEPARTICIPANT_MIGRATION_COMPLETE.md** - Completion notes for BattleParticipant migration
 - **BATTLE_TABLE_CLEANUP_COMPLETE.md** - Final cleanup after removing redundant Battle table columns
 
 ## Related PRDs

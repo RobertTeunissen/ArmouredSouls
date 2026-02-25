@@ -17,6 +17,8 @@ interface Facility {
   upgradeCost: number;
   canUpgrade: boolean;
   implemented: boolean;
+  currentBenefit?: string;
+  nextBenefit?: string;
   nextLevelPrestigeRequired?: number;
   hasPrestige?: boolean;
   canAfford?: boolean;
