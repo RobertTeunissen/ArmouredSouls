@@ -230,11 +230,23 @@ interface CycleResult {
   repair?: {
     robotsRepaired: number;
   };
+  repair1?: {
+    robotsRepaired: number;
+    totalFinalCost: number;
+  };
   repairPreTournament?: {
     robotsRepaired: number;
   };
   repairPreLeague?: {
     robotsRepaired: number;
+  };
+  repair2?: {
+    robotsRepaired: number;
+    totalFinalCost: number;
+  };
+  repair3?: {
+    robotsRepaired: number;
+    totalFinalCost: number;
   };
   matchmaking?: {
     matchesCreated: number;

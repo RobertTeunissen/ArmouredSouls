@@ -16,6 +16,9 @@ Balance change documents capture:
 - `PRD_WEAPON_ECONOMY_OVERHAUL.md` - Comprehensive weapon economy redesign
 - `WEAPON_CONTROL_IMPLEMENTATION.md` - Weapon control attribute implementation
 
+### Training Facility
+- `TRAINING_FACILITY_REBALANCE.md` - Training facility balance adjustments
+
 ### Implementation Options
 - `OPTION_C_IMPLEMENTATION.md` - Specific balance implementation approach
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMatchHistory, BattleHistory, getBattleOutcome, getELOChange } from '../utils/matchmakingApi';
+import { getMatchHistory, BattleHistory, getBattleOutcome, getELOChange, getBattleReward } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -69,23 +69,6 @@ function RecentMatches() {
     return { myRobot, opponent, outcome, eloChange, myRobotId };
   };
 
-  const getReward = (battle: BattleHistory, robotId: number) => {
-    // For tag team battles, determine reward based on team winner
-    if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
-      const isTeam1Robot = battle.robot1Id === robotId;
-      const isTeam2Robot = battle.robot2Id === robotId;
-      
-      if (isTeam1Robot) {
-        return battle.winnerId === battle.team1Id ? battle.winnerReward : battle.loserReward;
-      } else if (isTeam2Robot) {
-        return battle.winnerId === battle.team2Id ? battle.winnerReward : battle.loserReward;
-      }
-    }
-    
-    // For 1v1 battles, winnerId is the robot ID
-    return battle.winnerId === robotId ? battle.winnerReward : battle.loserReward;
-  };
-
   if (loading) {
     return (
       <div className="bg-surface p-4 rounded-lg border border-gray-700">
@@ -128,7 +111,7 @@ function RecentMatches() {
       <div className="space-y-0 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {matches.map((battle) => {
           const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
-          const reward = getReward(battle, myRobotId);
+          const reward = getBattleReward(battle, myRobotId);
 
           return (
             <CompactBattleCard

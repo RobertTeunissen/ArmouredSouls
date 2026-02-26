@@ -12,10 +12,8 @@ This folder contains economic analysis, ROI calculations, and implementation not
 
 ### UI Improvements
 - **INVESTMENTS_TAB_IMPROVEMENTS.md** - Improvements to facilities investments tab
-- **NAVIGATION_REORGANIZATION.md** - Navigation structure reorganization notes
-
-### Quick Start Guides
-- **MERCHANDISING_HUB_QUICK_START.md** - Quick start guide for Merchandising Hub feature
+- **NAVIGATION_AND_PAGE_STRUCTURE.md** - Navigation and page structure analysis
+- **PRD_NAVIGATION_MENU_DESIGN_ALIGNMENT.md** - Navigation menu design alignment
 
 ## Related PRDs
 

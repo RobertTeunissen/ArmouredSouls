@@ -87,7 +87,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
   };
   
   const displayStats = getDisplayStats();
-  const hasBreakdown = (stats.leagueStats.battles > 0 || stats.tournamentStats.battles > 0 || stats.tagTeamStats.battles > 0);
+  // const _hasBreakdown = (stats.leagueStats.battles > 0 || stats.tournamentStats.battles > 0 || stats.tagTeamStats.battles > 0);
   
   return (
     <div className="bg-[#252b38] border border-gray-700 rounded-lg p-4 mb-4">

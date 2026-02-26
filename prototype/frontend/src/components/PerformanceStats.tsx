@@ -1,4 +1,5 @@
 // React imported for JSX transform (no longer needed in React 18)
+import { formatNumber } from '../utils/formatters';
 
 interface PerformanceStatsProps {
   robot: {
@@ -33,8 +34,7 @@ function PerformanceStats({ robot }: PerformanceStatsProps) {
     ? robot.titles.split(',').map(t => t.trim()).filter(t => t.length > 0)
     : [];
 
-  // Format large numbers
-  const formatNumber = (num: number) => num.toLocaleString();
+  // formatNumber imported from shared utils
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg">

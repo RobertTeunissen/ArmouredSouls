@@ -744,6 +744,110 @@ async function main() {
   console.log(`   - All robots have ELO 1200`);
   console.log(`   - Purpose: Easily defeated mob for tournaments`);
 
+  // ===== ATTRIBUTE TEST USERS (230 users, 10 per attribute, 25 in one attr, 1 in all others) =====
+  console.log('Creating 230 attribute test users (10 per attribute × 23 attributes)...');
+
+  const ATTRIBUTE_NAMES = [
+    'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
+    'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
+    'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
+    'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
+    'syncProtocols', 'supportSystems', 'formationTactics',
+  ] as const;
+
+  // Short labels for naming (camelCase → readable)
+  const ATTRIBUTE_LABELS: Record<string, string> = {
+    combatPower: 'CombatPwr',
+    targetingSystems: 'Targeting',
+    criticalSystems: 'CritSys',
+    penetration: 'Penetratn',
+    weaponControl: 'WeaponCtl',
+    attackSpeed: 'AtkSpeed',
+    armorPlating: 'ArmorPlat',
+    shieldCapacity: 'ShieldCap',
+    evasionThrusters: 'Evasion',
+    damageDampeners: 'DmgDampen',
+    counterProtocols: 'CounterPr',
+    hullIntegrity: 'HullInteg',
+    servoMotors: 'ServoMtr',
+    gyroStabilizers: 'GyroStab',
+    hydraulicSystems: 'Hydraulic',
+    powerCore: 'PowerCore',
+    combatAlgorithms: 'CombatAlg',
+    threatAnalysis: 'ThreatAnl',
+    adaptiveAI: 'AdaptAI',
+    logicCores: 'LogicCore',
+    syncProtocols: 'SyncProto',
+    supportSystems: 'SupportSy',
+    formationTactics: 'FormTacti',
+  };
+
+  const attrTestUsers: { user: any; robot: any }[] = [];
+
+  for (const attr of ATTRIBUTE_NAMES) {
+    const label = ATTRIBUTE_LABELS[attr];
+
+    for (let i = 1; i <= 10; i++) {
+      const username = `attr_${label}_${String(i).padStart(2, '0')}`.toLowerCase();
+      const robotName = `${label}-Bot-${String(i).padStart(2, '0')}`;
+
+      const user = await prisma.user.create({
+        data: {
+          username,
+          passwordHash: testHashedPassword,
+          currency: 100000, // ₡100k
+        },
+      });
+
+      const weaponInv = await prisma.weaponInventory.create({
+        data: { userId: user.id, weaponId: practiceSword.id },
+      });
+
+      // Build attributes: all 1.0 except the focus attribute at 25.0
+      const robotAttrs = { ...DEFAULT_ROBOT_ATTRIBUTES, [attr]: 25.0 };
+
+      // HP/Shield formulas
+      const hullVal = attr === 'hullIntegrity' ? 25.0 : 1.0;
+      const shieldVal = attr === 'shieldCapacity' ? 25.0 : 1.0;
+      const maxHP = 50 + Math.floor(hullVal * 5);   // 55 normally, 175 for hullIntegrity
+      const maxShield = Math.floor(shieldVal * 2);   // 2 normally, 50 for shieldCapacity
+
+      const robot = await prisma.robot.create({
+        data: {
+          userId: user.id,
+          name: robotName,
+          frameId: 1,
+          ...robotAttrs,
+          currentHP: maxHP,
+          maxHP,
+          currentShield: maxShield,
+          maxShield,
+          elo: 1200,
+          currentLeague: 'bronze',
+          leagueId: 'bronze_1',
+          leaguePoints: 0,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv.id,
+          stance: 'balanced',
+          battleReadiness: 100,
+          yieldThreshold: 10,
+        },
+      });
+
+      attrTestUsers.push({ user, robot });
+    }
+
+    console.log(`   ✅ Created 10 ${label} test users (attr: ${attr} = 25)`);
+  }
+
+  console.log(`✅ Created ${attrTestUsers.length} attribute test users with robots`);
+  console.log(`   - Username format: attr_<label>_01 to attr_<label>_10`);
+  console.log(`   - Robot name format: <Label>-Bot-01 to <Label>-Bot-10`);
+  console.log(`   - Each robot has 25 in one attribute, 1 in all others`);
+  console.log(`   - All equipped with Practice Sword, ₡100k credits`);
+  console.log(`   - Password: testpass123`);
+
+  /* ===== ARCHETYPES COMMENTED OUT FOR ATTRIBUTE TESTING =====
   // Create Player Archetype Test Users (17 users with specific builds)
   console.log('Creating 17 player archetype test users...');
   
@@ -1690,6 +1794,7 @@ async function main() {
   console.log(`✅ Created ${archetypeUsers.length} archetype users with ${archetypeUsers.reduce((sum, a) => sum + a.robots.length, 0)} robots`);
   console.log(`   - All 17 archetype variations implemented`);
   console.log(`   - All robots configured per PLAYER_ARCHETYPES_GUIDE.md specifications`);
+  ===== END ARCHETYPES COMMENTED OUT ===== */
 
   // Create Bye-Robot (special robot for odd-number matchmaking)
   console.log('Creating Bye-Robot...');
@@ -1745,23 +1850,22 @@ async function main() {
     adminUser,
     ...playerUsers,
     ...testUsersWithRobots.map(t => t.user),
-    ...archetypeUsers.map(t => t.user)
+    ...attrTestUsers.map(t => t.user),
   ];
 
   console.log(`✅ Total users created: ${users.length + 1} (including bye-robot user)`);
 
   console.log('');
-  console.log('✅ Database seeded successfully with archetype test data!');
+  console.log('✅ Database seeded successfully with attribute test data!');
   console.log('');
   console.log('📊 System Overview:');
   console.log('   💰 Currency: Credits (₡)');
   console.log('   👤 Admin: ₡10,000,000 (username: admin, password: admin123)');
   console.log('   👤 Player users: ₡3,000,000 each (player1-5, password: password123)');
   console.log('   👤 Test users: ₡100,000 each (test_user_001-100, password: testpass123)');
-  console.log('   👤 Archetype users: Various amounts (archetype_*, password: testpass123)');
-  console.log('   🤖 Robots: 100 WimpBot robots + 18 archetype robots + 1 bye-robot');
-  console.log('   👥 Tag Teams: 1 team (Two-Robot Specialist archetype)');
-  console.log('   ⚔️  Practice Sword: FREE (equipped on all WimpBot robots)');
+  console.log('   👤 Attribute test users: ₡100,000 each (attr_*, password: testpass123)');
+  console.log('   🤖 Robots: 100 WimpBot + 230 attribute test + 1 bye-robot');
+  console.log('   ⚔️  Practice Sword: FREE (equipped on all test robots)');
   console.log('   🏆 League: All robots start in Bronze (bronze_1)');
   console.log('   📈 ELO: Test robots at 1200, Bye-Robot at 1000');
   console.log('');
@@ -1786,39 +1890,22 @@ async function main() {
   console.log('');
   console.log('🎯 Matchmaking Test Data:');
   console.log(`   - 100 WimpBot robots (WimpBot 1 through WimpBot 100)`);
+  console.log(`   - 230 attribute test robots (10 per attribute × 23 attributes)`);
   console.log(`   - Bye-Robot ID: ${byeRobot.id} for odd-number matching`);
-  console.log('   - All WimpBots battle-ready with Practice Sword equipped');
-  console.log('   - Purpose: Easily defeated mob for tournaments');
+  console.log('   - All test robots battle-ready with Practice Sword equipped');
   console.log('');
   console.log('🔐 Login Credentials:');
   console.log('   - Admin: admin / admin123');
   console.log('   - Players: player1-5 / password123 (for manual testing)');
   console.log('   - Test users: test_user_001-100 / testpass123 (WimpBot mob)');
-  console.log('   - Archetype users: archetype_tank_fortress, archetype_glass_cannon_a, etc. / testpass123');
+  console.log('   - Attribute test: attr_combatpwr_01, attr_targeting_01, etc. / testpass123');
   console.log('');
-  console.log('🎮 Player Archetypes:');
-  console.log('   - 17 archetype users representing 10 distinct playstyles');
-  console.log('   - Tank Fortress: Defensive powerhouse with high HP and armor');
-  console.log('   - Glass Cannon (3 options): Maximum offense with Plasma Cannon, Railgun, or Heavy Hammer');
-  console.log('   - Speed Demon (3 options): High attack speed with dual weapons (Machine Guns, Plasma Blades, or Mixed)');
-  console.log('   - Balanced Brawler: Well-rounded generalist');
-  console.log('   - Facility Investor: Economic focus with Income Generator');
-  console.log('   - Two-Robot Specialist: 2 robots with different loadouts');
-  console.log('     * Automatically creates tag team with both robots');
-  console.log('     * Active robot: Specialist Alpha (offensive), Reserve robot: Specialist Beta (defensive)');
-  console.log('     * Ready for tag team matches immediately');
-  console.log('   - Melee Specialist: Heavy Hammer focused');
-  console.log('   - Ranged Sniper: Railgun precision build');
-  console.log('   - AI Tactician: AI-focused strategic build');
-  console.log('   - Prestige Rusher: Win-optimized with all 3 training academies');
-  console.log('   - All configured per PLAYER_ARCHETYPES_GUIDE.md specifications');
-  console.log('');
-  console.log('🔄 Dynamic User Generation:');
-  console.log('   - When cycles run, new archetype users will be created');
-  console.log('   - Cycle N creates N users (Cycle 1 = 1 user, Cycle 2 = 2 users, etc.)');
-  console.log('   - Cycles through all 14 archetype variations in order');
-  console.log('   - Format: archetype_<name>_<cycle_number>');
-  console.log('   - Example: Cycle 1 creates Tank Fortress, Cycle 2 creates Glass Cannon A + B');
+  console.log('🧪 Attribute Test Users:');
+  console.log('   - 23 attributes × 10 users each = 230 users/robots');
+  console.log('   - Each robot: 25 in one attribute, 1 in all others');
+  console.log('   - Username: attr_<label>_01 through attr_<label>_10');
+  console.log('   - Robot: <Label>-Bot-01 through <Label>-Bot-10');
+  console.log('   - All equipped with Practice Sword, ₡100k credits');
   console.log('');
 }
 

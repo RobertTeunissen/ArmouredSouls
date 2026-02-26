@@ -5,9 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import TabNavigation from '../components/TabNavigation';
 import BattleConfigTab from '../components/BattleConfigTab';
-import PerformanceStats from '../components/PerformanceStats';
 import EffectiveStatsDisplay from '../components/EffectiveStatsDisplay';
-import CompactUpgradeSection from '../components/CompactUpgradeSection';
 import RobotImage from '../components/RobotImage';
 import RobotImageSelector from '../components/RobotImageSelector';
 import StatisticalRankings from '../components/StatisticalRankings';
@@ -153,65 +151,9 @@ function RobotDetailPage() {
   // Max attribute level cap (from STABLE_SYSTEM.md)
   // const MAX_ATTRIBUTE_LEVEL = 50;
 
-  // Get cap for academy level (from STABLE_SYSTEM.md)
-  const getCapForLevel = (level: number): number => {
-    const capMap: { [key: number]: number } = {
-      0: 10, 1: 15, 2: 20, 3: 25, 4: 30,
-      5: 35, 6: 40, 7: 42, 8: 45, 9: 48, 10: 50
-    };
-    return capMap[level] || 10;
-  };
-
-  const attributeCategories = {
-    'Combat Systems': {
-      academy: 'combat_training_academy',
-      attributes: [
-        { key: 'combatPower', label: 'Combat Power' },
-        { key: 'targetingSystems', label: 'Targeting Systems' },
-        { key: 'criticalSystems', label: 'Critical Systems' },
-        { key: 'penetration', label: 'Penetration' },
-        { key: 'weaponControl', label: 'Weapon Control' },
-        { key: 'attackSpeed', label: 'Attack Speed' },
-      ],
-    },
-    'Defensive Systems': {
-      academy: 'defense_training_academy',
-      attributes: [
-        { key: 'armorPlating', label: 'Armor Plating' },
-        { key: 'shieldCapacity', label: 'Shield Capacity' },
-        { key: 'evasionThrusters', label: 'Evasion Thrusters' },
-        { key: 'damageDampeners', label: 'Damage Dampeners' },
-        { key: 'counterProtocols', label: 'Counter Protocols' },
-      ],
-    },
-    'Chassis & Mobility': {
-      academy: 'mobility_training_academy',
-      attributes: [
-        { key: 'hullIntegrity', label: 'Hull Integrity' },
-        { key: 'servoMotors', label: 'Servo Motors' },
-        { key: 'gyroStabilizers', label: 'Gyro Stabilizers' },
-        { key: 'hydraulicSystems', label: 'Hydraulic Systems' },
-        { key: 'powerCore', label: 'Power Core' },
-      ],
-    },
-    'AI Processing': {
-      academy: 'ai_training_academy',
-      attributes: [
-        { key: 'combatAlgorithms', label: 'Combat Algorithms' },
-        { key: 'threatAnalysis', label: 'Threat Analysis' },
-        { key: 'adaptiveAI', label: 'Adaptive AI' },
-        { key: 'logicCores', label: 'Logic Cores' },
-      ],
-    },
-    'Team Coordination': {
-      academy: 'ai_training_academy',
-      attributes: [
-        { key: 'syncProtocols', label: 'Sync Protocols' },
-        { key: 'supportSystems', label: 'Support Systems' },
-        { key: 'formationTactics', label: 'Formation Tactics' },
-      ],
-    },
-  };
+  /* getCapForLevel and attributeCategories are kept for future use when
+     the inline upgrade UI is re-enabled. Currently upgrades go through
+     CompactUpgradeSection which has its own copy. */
 
   useEffect(() => {
     let isFetching = false;
@@ -429,65 +371,9 @@ function RobotDetailPage() {
     }
   };
 
-  const handleUpgrade = async (attribute: string, currentLevel: number) => {
-    if (!robot) return;
-
-    setError('');
-    setSuccessMessage('');
-
-    const baseCost = (currentLevel + 1) * 1500;
-    const discountPercent = trainingLevel * 10;
-    const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
-
-    if (currency < upgradeCost) {
-      setError('Insufficient credits for this upgrade');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/robots/${id}/upgrade`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ attribute }),
-      });
-
-      if (response.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to upgrade attribute');
-      }
-
-      setRobot(data.robot);
-      setCurrency(data.currency);
-      setSuccessMessage(`${attribute} upgraded to level ${currentLevel + 1}!`);
-      
-      // Refresh user data
-      await refreshUser();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upgrade attribute');
-      console.error(err);
-    }
-  };
-
-  const handleLoadoutChange = (newLoadout: string) => {
-    if (!robot) return;
-    fetchRobotAndWeapons(); // Refresh to get updated robot data
-    setSuccessMessage(`Loadout changed to ${newLoadout}!`);
-    setTimeout(() => setSuccessMessage(''), 3000);
-  };
+  /* handleUpgrade and handleLoadoutChange are kept commented out for future use
+     when the inline upgrade/loadout UI is re-enabled. Currently handled by
+     CompactUpgradeSection and BattleConfigTab respectively. */
 
   const handleAppearanceChange = async (imageUrl: string) => {
     if (!robot) return;
@@ -646,7 +532,7 @@ function RobotDetailPage() {
                 imageUrl={robot.imageUrl}
                 robotName={robot.name}
                 size="hero"
-                showEdit={isOwner}
+                showEdit={isOwner ?? false}
                 onEditClick={() => setShowImageSelector(true)}
               />
               
@@ -760,7 +646,7 @@ function RobotDetailPage() {
         <TabNavigation 
           activeTab={activeTab}
           onTabChange={handleTabChange}
-          isOwner={isOwner}
+          isOwner={isOwner ?? false}
         />
 
         {/* Tab Content */}
@@ -790,7 +676,7 @@ function RobotDetailPage() {
               repairBayLevel={repairBayLevel}
               activeRobotCount={activeRobotCount}
               onRobotUpdate={(updates) => {
-                setRobot({ ...robot, ...updates });
+                setRobot({ ...robot, ...updates } as Robot);
                 setSuccessMessage('Configuration updated successfully!');
                 setTimeout(() => setSuccessMessage(''), 3000);
               }}

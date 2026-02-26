@@ -15,17 +15,13 @@ These documents serve as historical records of what was built, how it was built,
 ## Contents
 
 ### Cycle System
-- `CYCLE_CHANGES_SUMMARY.md` - Summary of changes to the cycle system
 - `CYCLE_PROCESS.md` - Documentation of the cycle execution process
 
 ### League System
 - `LEAGUE_SYSTEM_CHANGES_SUMMARY.md` - Changes to league mechanics
-- `PROMOTION_CRITERIA_CHANGES.md` - Updates to promotion/demotion criteria
 
 ### Robot Features
-- `UNIQUE_ROBOT_NAMES.md` - Initial implementation of unique robot naming
-- `UNIQUE_ROBOT_NAMES_COMPLETE.md` - Completion status
-- `UNIQUE_ROBOT_NAMES_CONSOLIDATED.md` - Final consolidated documentation
+- `UNIQUE_ROBOT_NAMES.md` - Implementation of unique robot naming system
 - `REPAIR_COST_SYSTEM.md` - Repair cost calculation implementation
 
 ### User Features

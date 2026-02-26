@@ -308,8 +308,6 @@ function RobotsPage() {
   };
 
   const confirmRepairAll = async () => {
-    const { discountedCost } = repairCostInfo;
-
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/api/robots/repair-all', {

@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getUpcomingMatches, ScheduledMatch, formatDateTime, getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
-import { getTeamNameFromMatch } from '../utils/tagTeamApi';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-// Constants
-const UNKNOWN_USER = 'Unknown';
 
 interface BattleReadiness {
   isReady: boolean;
@@ -380,6 +376,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
           
           // Handle 1v1 matches (league and tournament)
           const { myRobot, opponent } = matchResult;
+          if (!myRobot || !opponent) return null;
           const tierColor = isTournament ? 'text-[#d29922]' : getLeagueTierColor(match.leagueType);
           const tierName = isTournament 
             ? (match.tournamentRound && match.maxRounds 

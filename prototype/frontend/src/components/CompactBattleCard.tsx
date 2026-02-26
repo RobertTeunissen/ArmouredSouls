@@ -92,8 +92,6 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   };
 
   // For tag team battles, determine team names and robot names
-  let myTeamName = myRobot.name;
-  let opponentTeamName = opponent.name;
   let myTeamRobots = myRobot.name;
   let opponentTeamRobots = opponent.name;
   
@@ -104,8 +102,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
     const opponentTeamId = isTeam1 ? battle.team2Id : battle.team1Id;
     const opponentTeamStableName = isTeam1 ? battle.team2StableName : battle.team1StableName;
     
-    myTeamName = getTeamNameFromMatch(myTeamId, myTeamStableName);
-    opponentTeamName = getTeamNameFromMatch(opponentTeamId, opponentTeamStableName);
+    getTeamNameFromMatch(myTeamId, myTeamStableName ?? null);
+    getTeamNameFromMatch(opponentTeamId, opponentTeamStableName ?? null);
     
     // Get both robot names for each team
     if (isTeam1) {

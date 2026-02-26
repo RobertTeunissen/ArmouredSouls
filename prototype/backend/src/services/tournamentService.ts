@@ -166,16 +166,22 @@ function generateBracketPairs(seededRobots: Robot[], maxRounds: number): Tournam
   // Create first round matches from bracket slots
   let matchNumber = 1;
   for (let i = 0; i < bracketSize; i += 2) {
-    const robot1 = bracketSlots[i];
-    const robot2 = bracketSlots[i + 1];
-    
-    // Determine if this is a bye match
-    const isByeMatch = robot1 !== null && robot2 === null;
+    let robot1 = bracketSlots[i];
+    let robot2 = bracketSlots[i + 1];
     
     if (robot1 === null && robot2 === null) {
       // Both slots empty - shouldn't happen but skip if it does
       continue;
     }
+    
+    // Normalize bye matches: ensure the actual robot is always in robot1
+    // The seed order can place a null in either slot
+    if (robot1 === null && robot2 !== null) {
+      robot1 = robot2;
+      robot2 = null;
+    }
+    
+    const isByeMatch = robot1 !== null && robot2 === null;
     
     matches.push({
       id: 0, // Will be set by database

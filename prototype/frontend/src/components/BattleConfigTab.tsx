@@ -30,9 +30,29 @@ interface WeaponInventory {
     id: number;
     name: string;
     weaponType: string;
+    handsRequired: string;
+    loadoutType: string;
     description: string | null;
     baseDamage: number;
+    cost: number;
+    combatPowerBonus: number;
+    targetingSystemsBonus: number;
+    criticalSystemsBonus: number;
+    penetrationBonus: number;
+    weaponControlBonus: number;
+    attackSpeedBonus: number;
+    armorPlatingBonus: number;
+    shieldCapacityBonus: number;
+    evasionThrustersBonus: number;
+    counterProtocolsBonus: number;
+    servoMotorsBonus: number;
+    gyroStabilizersBonus: number;
+    hydraulicSystemsBonus: number;
+    powerCoreBonus: number;
+    threatAnalysisBonus: number;
   };
+  robotsMain?: Array<{ id: number; name: string }>;
+  robotsOffhand?: Array<{ id: number; name: string }>;
 }
 
 interface BattleConfigTabProps {

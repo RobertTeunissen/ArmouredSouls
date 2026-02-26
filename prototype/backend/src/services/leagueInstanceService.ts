@@ -1,5 +1,10 @@
 import prisma from '../lib/prisma';
 
+// NOTE: This service mirrors tagTeamLeagueInstanceService.ts for tag team leagues.
+// Both share similar instance management logic but operate on different Prisma models
+// (Robot vs TagTeam). If you change instance sizing or rebalancing logic here,
+// apply the same change to the tag team version.
+
 // League tiers in order
 export const LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 export type LeagueTier = typeof LEAGUE_TIERS[number];

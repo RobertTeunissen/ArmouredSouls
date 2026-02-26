@@ -20,9 +20,7 @@ Guides provide practical, actionable information for:
 - `PORTABILITY.md` - Guidelines for maintaining code portability
 
 ### Testing
-- `TESTING.md` - **Complete testing guide** ⭐ Everything you need
-- `TESTING_STRATEGY.md` - Overall testing approach and methodology
-- `TESTING_STATE.md` - Current state of test coverage and testing infrastructure
+- `TESTING_STATE.md` - Current state of test coverage, testing infrastructure, and known failures
 
 ### Security
 - `SECURITY.md` - Security best practices and guidelines
@@ -44,7 +42,7 @@ For technical specifications and requirements, see:
 New developers should start with:
 1. `SETUP.md` - Get your environment running
 2. `MODULE_STRUCTURE.md` - Understand the codebase organization
-3. `TESTING_STRATEGY.md` - Learn how to test your changes
+3. `TESTING_STATE.md` - Understand test coverage and known failures
 4. `SECURITY.md` - Understand security requirements
 
 ## Usage

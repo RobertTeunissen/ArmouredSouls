@@ -60,7 +60,9 @@ interface Robot {
   formationTactics: number;
 }
 
-// Loadout bonus multipliers (matching backend)
+// Loadout bonus multipliers
+// CANONICAL SOURCE: prototype/backend/src/utils/robotCalculations.ts
+// Keep in sync — any balance changes must be applied to both files.
 export const LOADOUT_BONUSES: { [key: string]: { [key: string]: number } } = {
   weapon_shield: {
     shieldCapacity: 0.20,      // +20%
@@ -69,7 +71,7 @@ export const LOADOUT_BONUSES: { [key: string]: { [key: string]: number } } = {
     attackSpeed: -0.15,        // -15%
   },
   two_handed: {
-    combatPower: 0.25,         // +25%
+    combatPower: 0.10,         // +10% (v1.2: reduced from 0.25 for balance)
     criticalSystems: 0.20,     // +20%
     evasionThrusters: -0.10,   // -10%
   },
@@ -85,7 +87,11 @@ export const LOADOUT_BONUSES: { [key: string]: { [key: string]: number } } = {
   },
 };
 
-// Stance modifiers (matching backend)
+// Stance modifiers
+// CANONICAL SOURCE: prototype/backend/src/utils/robotCalculations.ts
+// Keep in sync — any balance changes must be applied to both files.
+// Note: backend defensive stance also has shieldRegen: 0.20 (applied to powerCore for
+// shield regeneration in combat). Frontend omits it since it's only used server-side.
 export const STANCE_MODIFIERS: { [key: string]: { [key: string]: number } } = {
   offensive: {
     combatPower: 0.15,         // +15%

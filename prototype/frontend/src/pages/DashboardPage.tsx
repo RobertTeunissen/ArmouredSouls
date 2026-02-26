@@ -13,6 +13,7 @@ import TagTeamReadinessWarning from '../components/TagTeamReadinessWarning';
 interface Robot {
   id: number;
   name: string;
+  imageUrl?: string | null;
   elo: number;
   currentHP: number;
   maxHP: number;
@@ -211,7 +212,7 @@ function DashboardPage() {
             <h2 className="text-2xl font-semibold mb-4">My Robots</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {robots.map((robot) => (
-                <RobotDashboardCard key={robot.id} robot={robot} />
+                <RobotDashboardCard key={robot.id} robot={{ ...robot, imageUrl: robot.imageUrl ?? null }} />
               ))}
             </div>
           </div>

@@ -361,7 +361,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
                   borderRadius: '0.5rem',
                 }}
                 labelStyle={{ color: '#F3F4F6' }}
-                formatter={(value: number) => `₡${value.toLocaleString()}`}
+                formatter={(value: number | undefined) => `₡${(value ?? 0).toLocaleString()}`}
               />
               <Legend />
               <Line

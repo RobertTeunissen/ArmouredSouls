@@ -48,6 +48,7 @@ export interface FinancialReport {
     prestigeBonus: number;
     merchandising: number;
     streaming: number;
+    streamingBattleCount?: number;
     total: number;
   };
   expenses: {

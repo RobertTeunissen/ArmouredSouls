@@ -10,6 +10,7 @@ import {
   PaginatedResponse,
   getBattleOutcome,
   getELOChange,
+  getBattleReward,
 } from '../utils/matchmakingApi';
 
 function BattleHistoryPage() {
@@ -92,23 +93,6 @@ function BattleHistoryPage() {
     return { myRobot, opponent, outcome, eloChange, myRobotId };
   };
 
-  const getReward = (battle: BattleHistory, robotId: number) => {
-    // For tag team battles, determine reward based on team winner
-    if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
-      const isTeam1Robot = battle.robot1Id === robotId;
-      const isTeam2Robot = battle.robot2Id === robotId;
-      
-      if (isTeam1Robot) {
-        return battle.winnerId === battle.team1Id ? battle.winnerReward : battle.loserReward;
-      } else if (isTeam2Robot) {
-        return battle.winnerId === battle.team2Id ? battle.winnerReward : battle.loserReward;
-      }
-    }
-    
-    // For 1v1 battles, winnerId is the robot ID
-    return battle.winnerId === robotId ? battle.winnerReward : battle.loserReward;
-  };
-
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
     if (battles.length === 0) {
@@ -120,6 +104,9 @@ function BattleHistoryPage() {
         winRate: 0,
         avgELOChange: 0,
         totalCreditsEarned: 0,
+        leagueStats: { battles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0 },
+        tournamentStats: { battles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0 },
+        tagTeamStats: { battles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0 },
       };
     }
 
@@ -142,7 +129,7 @@ function BattleHistoryPage() {
 
     battles.forEach((battle, index) => {
       const { outcome, eloChange, myRobotId } = getMatchData(battle);
-      const reward = getReward(battle, myRobotId);
+      const reward = getBattleReward(battle, myRobotId);
       const isTournament = battle.battleType === 'tournament';
       const isTagTeam = battle.battleType === 'tag_team';
 
@@ -294,9 +281,9 @@ function BattleHistoryPage() {
         case 'elo-asc':
           return aData.eloChange - bData.eloChange;
         case 'reward-desc':
-          return getReward(b, bData.myRobotId) - getReward(a, aData.myRobotId);
+          return getBattleReward(b, bData.myRobotId) - getBattleReward(a, aData.myRobotId);
         case 'reward-asc':
-          return getReward(a, aData.myRobotId) - getReward(b, bData.myRobotId);
+          return getBattleReward(a, aData.myRobotId) - getBattleReward(b, bData.myRobotId);
         default:
           return 0;
       }
@@ -443,7 +430,7 @@ function BattleHistoryPage() {
               ) : (
                 filteredAndSortedBattles.map((battle) => {
                   const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
-                  const reward = getReward(battle, myRobotId);
+                  const reward = getBattleReward(battle, myRobotId);
 
                   return (
                     <CompactBattleCard

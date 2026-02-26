@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { calculateAttributeBonus } from '../utils/robotStats';
+import { formatCost } from '../utils/formatters';
 
 interface WeaponInventory {
   id: number;
@@ -41,11 +42,7 @@ function CompactUpgradeSection({
 }: CompactUpgradeSectionProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(categories[0]?.category || null);
 
-  const formatCost = (cost: number) => {
-    if (cost >= 1000000) return `₡${(cost / 1000000).toFixed(1)}M`;
-    if (cost >= 1000) return `₡${(cost / 1000).toFixed(0)}K`;
-    return `₡${cost}`;
-  };
+  // formatCost imported from shared utils
 
   const getAttributeInfo = (attributeKey: string) => {
     const currentLevel = Math.floor(robot[attributeKey] as number);
