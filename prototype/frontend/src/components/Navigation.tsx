@@ -283,7 +283,7 @@ function Navigation() {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await fetch('http://localhost:3001/api/robots', {
+        const response = await fetch('/api/robots', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

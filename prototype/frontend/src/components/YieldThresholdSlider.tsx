@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 interface YieldThresholdSliderProps {
   robotId: number;
@@ -49,14 +49,9 @@ function YieldThresholdSlider({
     setLoading(true);
 
     try {
-      const response = await axios.patch(
-        `http://localhost:3001/api/robots/${robotId}/yield-threshold`,
-        { yieldThreshold: threshold },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
+      const response = await apiClient.patch(
+        `/api/robots/${robotId}/yield-threshold`,
+        { yieldThreshold: threshold }
       );
 
       if (response.data) {

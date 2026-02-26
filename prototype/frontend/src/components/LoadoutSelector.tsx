@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { LOADOUT_BONUSES, formatLoadoutName, getLoadoutDescription } from '../utils/robotStats';
 
 interface LoadoutSelectorProps {
@@ -27,7 +27,7 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
     setLoading(true);
 
     try {
-      const response = await axios.put(`http://localhost:3001/api/robots/${robotId}/loadout-type`, {
+      const response = await apiClient.put(`/api/robots/${robotId}/loadout-type`, {
         loadoutType: newLoadout,
       });
 

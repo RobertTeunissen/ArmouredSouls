@@ -3,21 +3,7 @@
  * Provides functions to interact with the economy/financial endpoints
  */
 
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001/api';
-
-/**
- * Get authentication headers with token
- */
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
+import apiClient from './apiClient';
 
 /**
  * Financial Summary for Dashboard
@@ -32,10 +18,7 @@ export interface FinancialSummary {
 }
 
 export const getFinancialSummary = async (): Promise<FinancialSummary> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/finances/summary`,
-    getAuthHeaders()
-  );
+  const response = await apiClient.get('/api/finances/summary');
   return response.data;
 };
 
@@ -94,10 +77,7 @@ export interface FinancialReport {
 export const getDailyFinancialReport = async (
   battleWinnings: number = 0
 ): Promise<FinancialReport> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/finances/daily?battleWinnings=${battleWinnings}`,
-    getAuthHeaders()
-  );
+  const response = await apiClient.get(`/api/finances/daily?battleWinnings=${battleWinnings}`);
   return response.data;
 };
 
@@ -114,10 +94,7 @@ export interface OperatingCosts {
 }
 
 export const getOperatingCosts = async (): Promise<OperatingCosts> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/finances/operating-costs`,
-    getAuthHeaders()
-  );
+  const response = await apiClient.get('/api/finances/operating-costs');
   return response.data;
 };
 
@@ -139,10 +116,7 @@ export interface RevenueStreams {
 }
 
 export const getRevenueStreams = async (): Promise<RevenueStreams> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/finances/revenue-streams`,
-    getAuthHeaders()
-  );
+  const response = await apiClient.get('/api/finances/revenue-streams');
   return response.data;
 };
 
@@ -166,10 +140,7 @@ export interface FinancialProjections {
 }
 
 export const getFinancialProjections = async (): Promise<FinancialProjections> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/finances/projections`,
-    getAuthHeaders()
-  );
+  const response = await apiClient.get('/api/finances/projections');
   return response.data;
 };
 
@@ -273,10 +244,7 @@ export interface PerRobotFinancialReport {
 }
 
 export const getPerRobotFinancialReport = async (): Promise<PerRobotFinancialReport> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/finances/per-robot`,
-    getAuthHeaders()
-  );
+  const response = await apiClient.get('/api/finances/per-robot');
   return response.data;
 };
 
@@ -303,10 +271,6 @@ export const calculateFacilityROI = async (
   facilityType: string,
   targetLevel: number
 ): Promise<FacilityROIData> => {
-  const response = await axios.post(
-    `${API_BASE_URL}/finances/roi-calculator`,
-    { facilityType, targetLevel },
-    getAuthHeaders()
-  );
+  const response = await apiClient.post('/api/finances/roi-calculator', { facilityType, targetLevel });
   return response.data;
 };

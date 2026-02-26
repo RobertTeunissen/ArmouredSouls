@@ -21,6 +21,7 @@ import {
 import { processTournamentBattle } from '../services/tournamentBattleOrchestrator';
 import { advanceWinnersToNextRound } from '../services/tournamentService';
 import { EventLogger } from '../services/eventLogger';
+import { getSchedulerState } from '../services/cycleScheduler';
 
 const router = express.Router();
 const eventLogger = new EventLogger();
@@ -2101,6 +2102,15 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, async (req:
       message: error instanceof Error ? error.message : String(error),
     });
   }
+});
+
+/**
+ * GET /api/admin/scheduler/status
+ * Return the current state of the Cycle Scheduler
+ */
+router.get('/scheduler/status', authenticateToken, requireAdmin, (_req: Request, res: Response) => {
+  const state = getSchedulerState();
+  res.json(state);
 });
 
 export default router;

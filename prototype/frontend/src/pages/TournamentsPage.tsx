@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { listTournaments, getTournamentDetails, Tournament, TournamentDetails } from '../utils/tournamentApi';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 function TournamentsPage() {
   const { user, logout } = useAuth();
@@ -29,9 +29,7 @@ function TournamentsPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await axios.get('http://localhost:3001/api/robots/my-robots', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/api/robots/my-robots');
       
       const robotIds = new Set<number>(response.data.robots.map((r: any) => r.id));
       setUserRobots(robotIds);
@@ -74,7 +72,7 @@ function TournamentsPage() {
       setTournaments(data.tournaments || []);
       setError(null);
     } catch (err: any) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
+      if (err.response?.status === 401) {
         logout();
         navigate('/login');
         return;

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import ViewModeToggle from '../components/ViewModeToggle';
@@ -129,15 +129,13 @@ function WeaponShopPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
         // Fetch weapons
-        const weaponsResponse = await axios.get('http://localhost:3001/api/weapons', { headers });
+        const weaponsResponse = await apiClient.get('/api/weapons');
         setWeapons(weaponsResponse.data);
 
         // Fetch owned weapons inventory
-        const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory', { headers });
+        const inventoryResponse = await apiClient.get('/api/weapon-inventory');
         const inventory = inventoryResponse.data;
         
         // Count owned weapons by weapon ID
@@ -155,13 +153,13 @@ function WeaponShopPage() {
         setEquippedWeaponsCount(equippedCount);
 
         // Fetch facilities to get Weapon Workshop level
-        const facilitiesResponse = await axios.get('http://localhost:3001/api/facilities', { headers });
+        const facilitiesResponse = await apiClient.get('/api/facilities');
         const facilities = facilitiesResponse.data.facilities || facilitiesResponse.data;
         const weaponWorkshop = facilities.find((f: Facility) => f.type === 'weapons_workshop');
         setWeaponWorkshopLevel(weaponWorkshop?.currentLevel || 0);
 
         // Fetch storage status
-        const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status', { headers });
+        const storageResponse = await apiClient.get('/api/weapon-inventory/storage-status');
         setStorageStatus(storageResponse.data);
       } catch (err: any) {
         console.error('Failed to fetch data:', err);
@@ -385,20 +383,18 @@ function WeaponShopPage() {
         
         setPurchasing(weaponId);
         try {
-          const token = localStorage.getItem('token');
-          const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-          await axios.post('http://localhost:3001/api/weapon-inventory/purchase', {
+          await apiClient.post('/api/weapon-inventory/purchase', {
             weaponId,
-          }, { headers });
+          });
           await refreshUser();
           
           // Refresh storage status after purchase
-          const storageResponse = await axios.get('http://localhost:3001/api/weapon-inventory/storage-status', { headers });
+          const storageResponse = await apiClient.get('/api/weapon-inventory/storage-status');
           setStorageStatus(storageResponse.data);
           
           // Refresh owned weapons
-          const inventoryResponse = await axios.get('http://localhost:3001/api/weapon-inventory', { headers });
+          const inventoryResponse = await apiClient.get('/api/weapon-inventory');
           const inventory = inventoryResponse.data;
           const ownedMap = new Map<number, number>();
           inventory.forEach((item: any) => {

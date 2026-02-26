@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import Navigation from '../components/Navigation';
 import {
   getTagTeamStandings,
@@ -37,9 +37,7 @@ function TagTeamStandingsPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
       
-      const response = await axios.get('http://localhost:3001/api/tag-teams', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/api/tag-teams');
       
       const teams = response.data.teams || [];
       const tiers = new Set<string>(teams.map((team: any) => team.tagTeamLeague));
@@ -66,7 +64,7 @@ function TagTeamStandingsPage() {
       setStandings(data.standings);
       setTotalPages(data.pagination.totalPages);
     } catch (err: any) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
+      if (err.response?.status === 401) {
         logout();
         navigate('/login');
         return;

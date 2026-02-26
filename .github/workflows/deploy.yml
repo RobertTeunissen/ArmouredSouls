@@ -1,0 +1,491 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - acceptance
+          - production
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Stage 1: Backend unit tests + property tests, frontend build + lint
+  # ---------------------------------------------------------------------------
+  backend-tests:
+    name: Backend Tests (Unit + Property)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: armouredsouls_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: prototype/backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./prototype/backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./prototype/backend
+        run: npm run prisma:generate
+
+      - name: Run database migrations
+        working-directory: ./prototype/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
+        run: npx prisma migrate deploy
+
+      - name: Lint backend code
+        working-directory: ./prototype/backend
+        run: npm run lint
+
+      - name: Build backend
+        working-directory: ./prototype/backend
+        run: npm run build
+
+      - name: Run unit + property tests
+        working-directory: ./prototype/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
+          JWT_SECRET: test-secret-key-for-ci
+          NODE_ENV: test
+        run: npm test
+
+  frontend-build:
+    name: Frontend Build & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: prototype/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./prototype/frontend
+        run: npm ci
+
+      - name: Lint frontend code
+        working-directory: ./prototype/frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: ./prototype/frontend
+        run: npm run build
+
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: prototype/frontend/dist/
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Stage 2: E2E tests (only on merge to main, after Stage 1 passes)
+  # ---------------------------------------------------------------------------
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-build]
+    if: github.event_name == 'push'
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: armouredsouls_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: prototype/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./prototype/frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./prototype/frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: ./prototype/frontend
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: prototype/frontend/playwright-report/
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # ACC deployment — auto-deploy on push to main (after all tests pass)
+  # ---------------------------------------------------------------------------
+  deploy-acc:
+    name: Deploy to Acceptance
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-build, e2e-tests]
+    if: github.event_name == 'push'
+    environment: acceptance
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download frontend build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: prototype/frontend/dist/
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ACC_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.ACC_VPS_IP }} >> ~/.ssh/known_hosts
+
+      - name: Transfer backend artifacts via rsync
+        run: |
+          rsync -avz --delete \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/backend/ \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/backend/
+
+      - name: Transfer frontend artifacts via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/frontend/dist/ \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/dist/
+
+      - name: Transfer ecosystem config
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/ecosystem.config.js \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/
+
+      - name: Install production dependencies on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/backend
+            npm ci --production
+
+      - name: Create pre-migration database backup
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            BACKUP_DIR="/opt/armouredsouls/backups"
+            mkdir -p "$BACKUP_DIR"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            pg_dump -Fc "$DATABASE_URL" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
+            echo "Backup created: pre_deploy_${TIMESTAMP}.dump"
+
+      - name: Run database migrations
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/backend
+            npx prisma migrate deploy
+
+      - name: Restart backend via PM2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls
+            pm2 restart ecosystem.config.js --update-env
+
+      - name: Health check (30s timeout)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            TIMEOUT=30
+            ELAPSED=0
+            until curl -sf http://localhost:3000/health > /dev/null 2>&1; do
+              if [ $ELAPSED -ge $TIMEOUT ]; then
+                echo "Health check failed after ${TIMEOUT}s"
+                exit 1
+              fi
+              sleep 2
+              ELAPSED=$((ELAPSED + 2))
+            done
+            echo "Health check passed"
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+  # ---------------------------------------------------------------------------
+  # PRD deployment — manual trigger via workflow_dispatch (environment=production)
+  # ---------------------------------------------------------------------------
+  deploy-prd:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-build]
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: prototype/frontend/package-lock.json
+
+      - name: Build frontend for production
+        working-directory: ./prototype/frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRD_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.PRD_VPS_IP }} >> ~/.ssh/known_hosts
+
+      - name: Transfer backend artifacts via rsync
+        run: |
+          rsync -avz --delete \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/backend/ \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/backend/
+
+      - name: Transfer frontend artifacts via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/frontend/dist/ \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/dist/
+
+      - name: Transfer ecosystem config
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/ecosystem.config.js \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/
+
+      - name: Install production dependencies on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/backend
+            npm ci --production
+
+      - name: Create pre-migration database backup
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            BACKUP_DIR="/opt/armouredsouls/backups"
+            mkdir -p "$BACKUP_DIR"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            pg_dump -Fc "$DATABASE_URL" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
+            echo "Backup created: pre_deploy_${TIMESTAMP}.dump"
+
+      - name: Run database migrations
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/backend
+            npx prisma migrate deploy
+
+      - name: Restart backend via PM2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls
+            pm2 restart ecosystem.config.js --update-env
+
+      - name: Health check (30s timeout)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            TIMEOUT=30
+            ELAPSED=0
+            until curl -sf http://localhost:3000/health > /dev/null 2>&1; do
+              if [ $ELAPSED -ge $TIMEOUT ]; then
+                echo "Health check failed after ${TIMEOUT}s"
+                exit 1
+              fi
+              sleep 2
+              ELAPSED=$((ELAPSED + 2))
+            done
+            echo "Health check passed"
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+  # ---------------------------------------------------------------------------
+  # Post-deployment smoke tests — ACC
+  # ---------------------------------------------------------------------------
+  smoke-test-acc:
+    name: Smoke Tests (Acceptance)
+    runs-on: ubuntu-latest
+    needs: deploy-acc
+    if: github.event_name == 'push'
+    environment: acceptance
+
+    steps:
+      - name: Verify health endpoint returns 200
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.ACC_VPS_IP }}:3000/health")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Health endpoint returned $HTTP_STATUS (expected 200)"
+            exit 1
+          fi
+          echo "Health endpoint OK (200)"
+
+      - name: Verify frontend loads (HTTP 200 on /)
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.ACC_VPS_IP }}/")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Frontend returned $HTTP_STATUS (expected 200)"
+            exit 1
+          fi
+          echo "Frontend OK (200)"
+
+      - name: Verify login API endpoint responds
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"email":"smoke@test.invalid","password":"smoketest"}' \
+            "http://${{ secrets.ACC_VPS_IP }}:3000/api/auth/login")
+          if [ "$HTTP_STATUS" -ge 500 ]; then
+            echo "Login API returned $HTTP_STATUS (server error)"
+            exit 1
+          fi
+          echo "Login API responding (HTTP $HTTP_STATUS)"
+
+  # ---------------------------------------------------------------------------
+  # Post-deployment smoke tests — PRD
+  # ---------------------------------------------------------------------------
+  smoke-test-prd:
+    name: Smoke Tests (Production)
+    runs-on: ubuntu-latest
+    needs: deploy-prd
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    environment: production
+
+    steps:
+      - name: Verify health endpoint returns 200
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.PRD_VPS_IP }}:3000/health")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Health endpoint returned $HTTP_STATUS (expected 200)"
+            exit 1
+          fi
+          echo "Health endpoint OK (200)"
+
+      - name: Verify frontend loads (HTTP 200 on /)
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.PRD_VPS_IP }}/")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Frontend returned $HTTP_STATUS (expected 200)"
+            exit 1
+          fi
+          echo "Frontend OK (200)"
+
+      - name: Verify login API endpoint responds
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"email":"smoke@test.invalid","password":"smoketest"}' \
+            "http://${{ secrets.PRD_VPS_IP }}:3000/api/auth/login")
+          if [ "$HTTP_STATUS" -ge 500 ]; then
+            echo "Login API returned $HTTP_STATUS (server error)"
+            exit 1
+          fi
+          echo "Login API responding (HTTP $HTTP_STATUS)"

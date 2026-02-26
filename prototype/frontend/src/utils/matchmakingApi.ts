@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001/api';
+import apiClient from './apiClient';
 
 // Types
 export interface ScheduledMatch {
@@ -189,17 +187,9 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// Helper to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-};
-
 // API Functions
 export const getUpcomingMatches = async (): Promise<ScheduledMatch[]> => {
-  const response = await axios.get(`${API_BASE_URL}/matches/upcoming`, {
-    headers: getAuthHeaders()
-  });
+  const response = await apiClient.get('/api/matches/upcoming');
   return response.data.matches || [];  // Extract matches array from response
 };
 
@@ -217,9 +207,8 @@ export const getMatchHistory = async (
   
   console.log('[API] getMatchHistory params:', params);
   
-  const response = await axios.get(`${API_BASE_URL}/matches/history`, {
+  const response = await apiClient.get('/api/matches/history', {
     params,
-    headers: getAuthHeaders()
   });
   return response.data;
 };
@@ -230,17 +219,14 @@ export const getLeagueStandings = async (
   pageSize: number = 50,
   instance?: string
 ): Promise<PaginatedResponse<LeagueRobot>> => {
-  const response = await axios.get(`${API_BASE_URL}/leagues/${tier}/standings`, {
+  const response = await apiClient.get(`/api/leagues/${tier}/standings`, {
     params: { page, pageSize, ...(instance && { instance }) },
-    headers: getAuthHeaders()
   });
   return response.data;
 };
 
 export const getLeagueInstances = async (tier: string): Promise<LeagueInstance[]> => {
-  const response = await axios.get(`${API_BASE_URL}/leagues/${tier}/instances`, {
-    headers: getAuthHeaders()
-  });
+  const response = await apiClient.get(`/api/leagues/${tier}/instances`);
   return response.data;
 };
 
@@ -249,17 +235,14 @@ export const getRobotMatches = async (
   page: number = 1,
   pageSize: number = 10
 ): Promise<PaginatedResponse<BattleHistory>> => {
-  const response = await axios.get(`${API_BASE_URL}/robots/${robotId}/matches`, {
+  const response = await apiClient.get(`/api/robots/${robotId}/matches`, {
     params: { page, perPage: pageSize },
-    headers: getAuthHeaders()
   });
   return response.data;
 };
 
 export const getRobotUpcomingMatches = async (robotId: number): Promise<ScheduledMatch[]> => {
-  const response = await axios.get(`${API_BASE_URL}/robots/${robotId}/upcoming`, {
-    headers: getAuthHeaders()
-  });
+  const response = await apiClient.get(`/api/robots/${robotId}/upcoming`);
   return response.data;
 };
 
@@ -503,8 +486,6 @@ export interface BattleLogResponse {
 }
 
 export const getBattleLog = async (battleId: number): Promise<BattleLogResponse> => {
-  const response = await axios.get(`${API_BASE_URL}/matches/battles/${battleId}/log`, {
-    headers: getAuthHeaders()
-  });
+  const response = await apiClient.get(`/api/matches/battles/${battleId}/log`);
   return response.data;
 };

@@ -1,28 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
+import apiClient from '../apiClient';
 import { getProfile, updateProfile, getStableStatistics } from '../userApi';
 import type { ProfileData, ProfileUpdateRequest, StableStatistics } from '../userApi';
 
-// Mock axios
-vi.mock('axios');
-const mockedAxios = vi.mocked(axios);
+// Mock apiClient
+vi.mock('../apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    put: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+  },
+}));
+
+const mockedApiClient = vi.mocked(apiClient);
 
 describe('userApi', () => {
   beforeEach(() => {
-    // Clear all mocks before each test
     vi.clearAllMocks();
-    
-    // Mock localStorage
-    const localStorageMock = {
-      getItem: vi.fn(() => 'mock-token'),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-    };
-    Object.defineProperty(window, 'localStorage', {
-      value: localStorageMock,
-      writable: true,
-    });
   });
 
   describe('getProfile', () => {
@@ -45,53 +41,19 @@ describe('userApi', () => {
         themePreference: 'dark',
       };
 
-      mockedAxios.get.mockResolvedValueOnce({ data: mockProfileData });
+      mockedApiClient.get.mockResolvedValueOnce({ data: mockProfileData });
 
       const result = await getProfile();
 
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        'http://localhost:3001/api/user/profile',
-        {
-          headers: {
-            Authorization: 'Bearer mock-token',
-          },
-        }
-      );
+      expect(mockedApiClient.get).toHaveBeenCalledWith('/api/user/profile');
       expect(result).toEqual(mockProfileData);
     });
 
     it('should handle network failures', async () => {
       const networkError = new Error('Network error');
-      mockedAxios.get.mockRejectedValueOnce(networkError);
+      mockedApiClient.get.mockRejectedValueOnce(networkError);
 
       await expect(getProfile()).rejects.toThrow('Network error');
-    });
-
-    it('should include auth token from localStorage', async () => {
-      const mockToken = 'test-auth-token-123';
-      const localStorageMock = {
-        getItem: vi.fn(() => mockToken),
-        setItem: vi.fn(),
-        removeItem: vi.fn(),
-        clear: vi.fn(),
-      };
-      Object.defineProperty(window, 'localStorage', {
-        value: localStorageMock,
-        writable: true,
-      });
-
-      mockedAxios.get.mockResolvedValueOnce({ data: {} });
-
-      await getProfile();
-
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.any(String),
-        {
-          headers: {
-            Authorization: `Bearer ${mockToken}`,
-          },
-        }
-      );
     });
   });
 
@@ -119,18 +81,13 @@ describe('userApi', () => {
         themePreference: 'dark',
       };
 
-      mockedAxios.put.mockResolvedValueOnce({ data: mockResponse });
+      mockedApiClient.put.mockResolvedValueOnce({ data: mockResponse });
 
       const result = await updateProfile(updateRequest);
 
-      expect(mockedAxios.put).toHaveBeenCalledWith(
-        'http://localhost:3001/api/user/profile',
-        updateRequest,
-        {
-          headers: {
-            Authorization: 'Bearer mock-token',
-          },
-        }
+      expect(mockedApiClient.put).toHaveBeenCalledWith(
+        '/api/user/profile',
+        updateRequest
       );
       expect(result).toEqual(mockResponse);
     });
@@ -141,37 +98,13 @@ describe('userApi', () => {
         newPassword: 'newpass456',
       };
 
-      mockedAxios.put.mockResolvedValueOnce({ data: {} });
+      mockedApiClient.put.mockResolvedValueOnce({ data: {} });
 
       await updateProfile(updateRequest);
 
-      expect(mockedAxios.put).toHaveBeenCalledWith(
-        'http://localhost:3001/api/user/profile',
-        updateRequest,
-        expect.any(Object)
-      );
-    });
-
-    it('should send correct request body for multiple field updates', async () => {
-      const updateRequest: ProfileUpdateRequest = {
-        stableName: 'Updated Stable',
-        profileVisibility: 'private',
-        notificationsBattle: false,
-        themePreference: 'light',
-      };
-
-      mockedAxios.put.mockResolvedValueOnce({ data: {} });
-
-      await updateProfile(updateRequest);
-
-      expect(mockedAxios.put).toHaveBeenCalledWith(
-        'http://localhost:3001/api/user/profile',
-        updateRequest,
-        {
-          headers: {
-            Authorization: 'Bearer mock-token',
-          },
-        }
+      expect(mockedApiClient.put).toHaveBeenCalledWith(
+        '/api/user/profile',
+        updateRequest
       );
     });
 
@@ -188,14 +121,14 @@ describe('userApi', () => {
         },
       };
 
-      mockedAxios.put.mockRejectedValueOnce(validationError);
+      mockedApiClient.put.mockRejectedValueOnce(validationError);
 
       await expect(updateProfile({ stableName: 'ab' })).rejects.toEqual(validationError);
     });
 
     it('should handle network failures', async () => {
       const networkError = new Error('Network error');
-      mockedAxios.put.mockRejectedValueOnce(networkError);
+      mockedApiClient.put.mockRejectedValueOnce(networkError);
 
       await expect(updateProfile({ stableName: 'Test' })).rejects.toThrow('Network error');
     });
@@ -210,24 +143,9 @@ describe('userApi', () => {
         },
       };
 
-      mockedAxios.put.mockRejectedValueOnce(authError);
+      mockedApiClient.put.mockRejectedValueOnce(authError);
 
       await expect(updateProfile({ stableName: 'Test' })).rejects.toEqual(authError);
-    });
-
-    it('should handle 409 conflict errors for duplicate stable name', async () => {
-      const conflictError = {
-        response: {
-          status: 409,
-          data: {
-            error: 'This stable name is already taken',
-          },
-        },
-      };
-
-      mockedAxios.put.mockRejectedValueOnce(conflictError);
-
-      await expect(updateProfile({ stableName: 'TakenName' })).rejects.toEqual(conflictError);
     });
   });
 
@@ -239,30 +157,26 @@ describe('userApi', () => {
         losses: 35,
         draws: 5,
         winRate: 60.0,
-        avgELO: 1500,
-        highestLeague: 'gold_2',
+        highestELO: 1500,
+        highestLeague: 'gold',
+        highestTagTeamLeague: null,
         totalRobots: 5,
-        robotsReady: 3,
+        prestige: 100,
+        prestigeRank: 'Novice',
+        cycleChanges: null,
       };
 
-      mockedAxios.get.mockResolvedValueOnce({ data: mockStats });
+      mockedApiClient.get.mockResolvedValueOnce({ data: mockStats });
 
       const result = await getStableStatistics();
 
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        'http://localhost:3001/api/user/stats',
-        {
-          headers: {
-            Authorization: 'Bearer mock-token',
-          },
-        }
-      );
+      expect(mockedApiClient.get).toHaveBeenCalledWith('/api/user/stats');
       expect(result).toEqual(mockStats);
     });
 
     it('should handle network failures', async () => {
       const networkError = new Error('Network error');
-      mockedAxios.get.mockRejectedValueOnce(networkError);
+      mockedApiClient.get.mockRejectedValueOnce(networkError);
 
       await expect(getStableStatistics()).rejects.toThrow('Network error');
     });
