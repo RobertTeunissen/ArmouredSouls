@@ -47,12 +47,12 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
 
   // Generate available images from dynamically imported modules
   const availableImages = useMemo(() => {
-    return Object.keys(imageModules)
-      .filter(path => path.endsWith('.webp'))
-      .map(path => {
+    return Object.entries(imageModules)
+      .filter(([path]) => path.endsWith('.webp'))
+      .map(([path, url]) => {
         const { name, description } = formatImageName(path);
         return {
-          url: path,
+          url: url as string, // Use the actual imported URL, not the path
           name,
           description,
         };

@@ -48,7 +48,12 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`/api/admin/battles/${battleId}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/admin/battles/${battleId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setBattle(response.data);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load battle details');

@@ -7,6 +7,16 @@ import SystemHealthPage from './SystemHealthPage';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
 type TabType = 'dashboard' | 'cycles' | 'battles' | 'tournaments' | 'stats' | 'system-health';
 
 interface SessionLogEntry {
@@ -402,7 +412,7 @@ function AdminPage() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/admin/stats');
+      const response = await axios.get('/api/admin/stats', getAuthHeaders());
       setStats(response.data);
       addSessionLog('success', 'System statistics refreshed');
       showMessage('success', 'Stats refreshed successfully');
@@ -417,7 +427,7 @@ function AdminPage() {
   const runMatchmaking = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/admin/matchmaking/run');
+      const response = await axios.post('/api/admin/matchmaking/run', {}, getAuthHeaders());
       showMessage('success', `Matchmaking completed! Created ${response.data.matchesCreated} matches`);
       fetchStats();
     } catch (error: any) {
@@ -430,7 +440,7 @@ function AdminPage() {
   const executeBattles = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/admin/battles/run');
+      const response = await axios.post('/api/admin/battles/run', {}, getAuthHeaders());
       const summary = response.data.summary;
       showMessage(
         'success',
@@ -447,7 +457,7 @@ function AdminPage() {
   const rebalanceLeagues = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/admin/leagues/rebalance');
+      const response = await axios.post('/api/admin/leagues/rebalance', {}, getAuthHeaders());
       const summary = response.data.summary;
       showMessage(
         'success',
@@ -466,7 +476,7 @@ function AdminPage() {
     try {
       const response = await axios.post('/api/admin/repair/all', {
         deductCosts: true,
-      });
+      }, getAuthHeaders());
       showMessage('success', `Repaired ${response.data.robotsRepaired} robots`);
       fetchStats();
     } catch (error: any) {
@@ -479,7 +489,7 @@ function AdminPage() {
   const processDailyFinances = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/admin/daily-finances/process');
+      const response = await axios.post('/api/admin/daily-finances/process', {}, getAuthHeaders());
       const summary = response.data.summary;
       showMessage(
         'success',
@@ -512,7 +522,7 @@ function AdminPage() {
         cycles: bulkCycles,
         includeTournaments,
         generateUsersPerCycle,
-      });
+      }, getAuthHeaders());
       setBulkResults(response.data);
 
       // Add detailed session log entries for each cycle
@@ -612,7 +622,7 @@ function AdminPage() {
       if (leagueFilter !== 'all') params.leagueType = leagueFilter;
       if (battleTypeFilter !== 'all') params.battleType = battleTypeFilter; // Add battle type filter
 
-      const response = await axios.get<BattleListResponse>('/api/admin/battles', { params });
+      const response = await axios.get<BattleListResponse>('/api/admin/battles', { params, ...getAuthHeaders() });
       setBattles(response.data.battles);
       setBattlesPagination(response.data.pagination);
       setCurrentPage(page);
@@ -636,7 +646,7 @@ function AdminPage() {
   const fetchRobotStats = async () => {
     setRobotStatsLoading(true);
     try {
-      const response = await axios.get('/api/admin/stats/robots');
+      const response = await axios.get('/api/admin/stats/robots', getAuthHeaders());
       setRobotStats(response.data);
       setShowRobotStats(true);
       sessionStorage.setItem('adminRobotStatsLoaded', 'true');
@@ -653,7 +663,7 @@ function AdminPage() {
   const fetchAtRiskUsers = async () => {
     setAtRiskLoading(true);
     try {
-      const response = await axios.get('/api/admin/users/at-risk');
+      const response = await axios.get('/api/admin/users/at-risk', getAuthHeaders());
       setAtRiskUsers(response.data);
       setShowAtRiskUsers(true);
       addSessionLog('success', `Loaded ${response.data.totalAtRisk} at-risk users`);

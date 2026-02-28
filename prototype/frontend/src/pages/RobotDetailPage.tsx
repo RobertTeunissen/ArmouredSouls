@@ -650,23 +650,37 @@ function RobotDetailPage() {
                 setTimeout(() => setSuccessMessage(''), 3000);
               }}
               onEquipWeapon={async (slot, weaponInventoryId) => {
+                const token = localStorage.getItem('token');
                 const endpoint =
                   slot === 'main'
                     ? `/api/robots/${id}/equip-main-weapon`
                     : `/api/robots/${id}/equip-offhand-weapon`;
 
-                const response = await axios.put(endpoint, { weaponInventoryId });
+                const response = await axios.put(
+                  endpoint,
+                  { weaponInventoryId },
+                  {
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                    },
+                  }
+                );
                 setRobot(response.data.robot);
                 setSuccessMessage('Weapon equipped successfully!');
                 setTimeout(() => setSuccessMessage(''), 3000);
               }}
               onUnequipWeapon={async (slot) => {
+                const token = localStorage.getItem('token');
                 const endpoint =
                   slot === 'main'
                     ? `/api/robots/${id}/unequip-main-weapon`
                     : `/api/robots/${id}/unequip-offhand-weapon`;
 
-                const response = await axios.delete(endpoint);
+                const response = await axios.delete(endpoint, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                  },
+                });
                 setRobot(response.data.robot);
                 setSuccessMessage('Weapon unequipped!');
                 setTimeout(() => setSuccessMessage(''), 3000);
