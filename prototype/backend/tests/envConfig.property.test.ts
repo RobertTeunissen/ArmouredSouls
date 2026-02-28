@@ -277,6 +277,7 @@ describe('Environment Config Loading - Property Tests', () => {
             process.env.NODE_ENV = 'production';
             process.env.JWT_SECRET = secret;
             process.env.CORS_ORIGIN = 'https://example.com';
+            process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
 
             const config = loadEnvConfig();
 
@@ -320,6 +321,189 @@ describe('Environment Config Loading - Property Tests', () => {
 
       expect(() => loadEnvConfig()).toThrow('process.exit called');
       expect(mockExit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('Property 3: Registration-related environment variables', () => {
+    /**
+     * **Validates: Requirements 10.8**
+     * Registration-related env vars (JWT_EXPIRATION, BCRYPT_SALT_ROUNDS,
+     * RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS) are parsed with correct
+     * types and fall back to safe defaults for invalid or missing values.
+     */
+
+    test('JWT_EXPIRATION defaults to 24h when not set', () => {
+      delete process.env.JWT_EXPIRATION;
+      process.env.NODE_ENV = 'development';
+
+      const config = loadEnvConfig();
+      expect(config.jwtExpiration).toBe('24h');
+    });
+
+    test('JWT_EXPIRATION uses the provided value', () => {
+      fc.assert(
+        fc.property(
+          fc.constantFrom('1h', '7d', '30m', '24h', '12h'),
+          (expiration) => {
+            process.env.JWT_EXPIRATION = expiration;
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.jwtExpiration).toBe(expiration);
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('BCRYPT_SALT_ROUNDS is coerced to a number within valid range', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 4, max: 31 }),
+          (rounds) => {
+            process.env.BCRYPT_SALT_ROUNDS = String(rounds);
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.bcryptSaltRounds).toBe(rounds);
+            expect(typeof config.bcryptSaltRounds).toBe('number');
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('BCRYPT_SALT_ROUNDS defaults to 10 for invalid values', () => {
+      fc.assert(
+        fc.property(
+          fc.oneof(
+            fc.constant('invalid'),
+            fc.constant(''),
+            fc.constant('-1'),
+            fc.constant('0'),
+            fc.constant('3'),
+            fc.constant('32'),
+            fc.constant('100')
+          ),
+          (value) => {
+            process.env.BCRYPT_SALT_ROUNDS = value;
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.bcryptSaltRounds).toBe(10);
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('RATE_LIMIT_WINDOW_MS is coerced to a positive number', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 86400000 }),
+          (windowMs) => {
+            process.env.RATE_LIMIT_WINDOW_MS = String(windowMs);
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.rateLimitWindowMs).toBe(windowMs);
+            expect(typeof config.rateLimitWindowMs).toBe('number');
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('RATE_LIMIT_WINDOW_MS defaults to 60000 for invalid values', () => {
+      fc.assert(
+        fc.property(
+          fc.oneof(
+            fc.constant('invalid'),
+            fc.constant(''),
+            fc.constant('0'),
+            fc.constant('-1000')
+          ),
+          (value) => {
+            process.env.RATE_LIMIT_WINDOW_MS = value;
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.rateLimitWindowMs).toBe(60000);
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('RATE_LIMIT_MAX_REQUESTS is coerced to a positive number', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 10000 }),
+          (maxReqs) => {
+            process.env.RATE_LIMIT_MAX_REQUESTS = String(maxReqs);
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.rateLimitMaxRequests).toBe(maxReqs);
+            expect(typeof config.rateLimitMaxRequests).toBe('number');
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('RATE_LIMIT_MAX_REQUESTS defaults to 10 for invalid values', () => {
+      fc.assert(
+        fc.property(
+          fc.oneof(
+            fc.constant('invalid'),
+            fc.constant(''),
+            fc.constant('0'),
+            fc.constant('-5')
+          ),
+          (value) => {
+            process.env.RATE_LIMIT_MAX_REQUESTS = value;
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.rateLimitMaxRequests).toBe(10);
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('DATABASE_URL validation fails in production when not set', () => {
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation((() => {
+        throw new Error('process.exit called');
+      }) as any);
+      const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      delete process.env.DATABASE_URL;
+      process.env.NODE_ENV = 'production';
+      process.env.JWT_SECRET = 'a-real-secret';
+
+      expect(() => loadEnvConfig()).toThrow('process.exit called');
+      expect(mockExit).toHaveBeenCalledWith(1);
+
+      mockExit.mockRestore();
+      mockConsoleError.mockRestore();
+    });
+
+    test('DATABASE_URL is allowed to be empty in non-production', () => {
+      fc.assert(
+        fc.property(
+          fc.constantFrom('development', 'test'),
+          (env) => {
+            delete process.env.DATABASE_URL;
+            process.env.NODE_ENV = env;
+
+            const config = loadEnvConfig();
+            expect(config.databaseUrl).toBe('');
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
     });
   });
 });

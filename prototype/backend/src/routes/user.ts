@@ -14,6 +14,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
       select: {
         id: true,
         username: true,
+        email: true,
         role: true,
         currency: true,
         prestige: true,
@@ -362,6 +363,7 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
       select: {
         id: true,
         username: true,
+        email: true,
         role: true,
         currency: true,
         prestige: true,

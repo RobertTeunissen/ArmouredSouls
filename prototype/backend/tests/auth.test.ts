@@ -112,6 +112,7 @@ describe('Authentication Endpoints', () => {
       const { user } = response.body;
       expect(user).toHaveProperty('id');
       expect(user).toHaveProperty('username');
+      expect(user).toHaveProperty('email');
       expect(user).toHaveProperty('role');
       expect(user).toHaveProperty('currency');
       expect(user).toHaveProperty('prestige');
@@ -174,6 +175,7 @@ describe('Authentication Endpoints', () => {
       // Verify user data structure
       expect(response.body).toHaveProperty('id');
       expect(response.body).toHaveProperty('username');
+      expect(response.body).toHaveProperty('email');
       expect(response.body).toHaveProperty('role');
       expect(response.body).toHaveProperty('currency');
       expect(response.body).toHaveProperty('prestige');

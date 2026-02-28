@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import logoD from '../assets/logos/logo-d.svg';
 
-// Shared input field styling that follows design system
+/** Shared input field styling that follows the design system. */
 const INPUT_CLASS = 
   'w-full px-4 py-3 bg-surface border border-tertiary rounded-lg ' +
   'text-primary placeholder-tertiary ' +
@@ -11,21 +11,44 @@ const INPUT_CLASS =
   'disabled:bg-background disabled:border-tertiary/50 disabled:opacity-60 ' +
   'transition-all duration-150 ease-out';
 
+/**
+ * Standalone login page component (original login page).
+ *
+ * Renders the application branding and a login form that accepts a username
+ * or email as the identifier. Uses the {@link useAuth} context's `login`
+ * method to authenticate and navigates to the dashboard on success.
+ *
+ * State:
+ * - `identifier` — Current value of the username/email input
+ * - `password` — Current value of the password input
+ * - `error` — Error message string to display (empty when no error)
+ * - `loading` — Whether a login request is currently in progress
+ *
+ * @example
+ * ```tsx
+ * <Route path="/login" element={<LoginPage />} />
+ * ```
+ */
 function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  /**
+   * Handles form submission. Authenticates the user via the AuthContext
+   * login method and navigates to the dashboard on success.
+   * @param e - The form submission event
+   */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await login(username, password);
+      await login(identifier, password);
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -38,9 +61,9 @@ function LoginPage() {
     <div className="min-h-screen bg-background text-primary flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <img 
-            src={logoD} 
-            alt="Armoured Souls" 
+          <img
+            src={logoD}
+            alt="Armoured Souls"
             className="w-20 h-20 mx-auto mb-6 animate-fade-in"
           />
           <h1 className="text-4xl font-bold font-header tracking-tight animate-fade-in">
@@ -50,10 +73,10 @@ function LoginPage() {
 
         <div className="bg-surface-elevated border border-white/10 p-8 rounded-xl shadow-2xl animate-fade-in-delayed">
           <h2 className="text-2xl font-bold text-primary mb-6">Login</h2>
-          
+
           {error && (
-            <div 
-              className="bg-error/10 border border-error text-red-300 px-4 py-3 rounded-lg mb-4 animate-error-slide-in" 
+            <div
+              className="bg-error/10 border border-error text-red-300 px-4 py-3 rounded-lg mb-4 animate-error-slide-in"
               role="alert"
             >
               {error}
@@ -62,20 +85,20 @@ function LoginPage() {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label 
-                htmlFor="username" 
+              <label
+                htmlFor="identifier"
                 className="block text-sm font-medium text-secondary mb-2"
               >
-                Username
+                Username or Email
               </label>
               <input
                 type="text"
-                id="username"
-                name="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="identifier"
+                name="identifier"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className={INPUT_CLASS}
-                placeholder="Enter your username"
+                placeholder="Enter username or email"
                 required
                 aria-required="true"
                 aria-invalid={!!error}
@@ -84,8 +107,8 @@ function LoginPage() {
             </div>
 
             <div className="mb-6">
-              <label 
-                htmlFor="password" 
+              <label
+                htmlFor="password"
                 className="block text-sm font-medium text-secondary mb-2"
               >
                 Password
@@ -109,9 +132,9 @@ function LoginPage() {
               type="submit"
               disabled={loading}
               aria-busy={loading}
-              className="w-full bg-primary hover:bg-primary-light active:bg-primary-dark 
-                         disabled:bg-primary-dark disabled:opacity-60 
-                         text-white font-medium px-6 py-3 rounded-lg 
+              className="w-full bg-primary hover:bg-primary-light active:bg-primary-dark
+                         disabled:bg-primary-dark disabled:opacity-60
+                         text-white font-medium px-6 py-3 rounded-lg
                          transition-all duration-150 ease-out
                          motion-safe:hover:-translate-y-0.5 hover:shadow-lg
                          focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background

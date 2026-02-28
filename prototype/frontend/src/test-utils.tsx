@@ -5,7 +5,14 @@ import { vi } from 'vitest';
 
 // Mock AuthContext for tests
 export const mockAuthContext = {
-  user: { id: 1, username: 'testuser', currency: 100000 },
+  user: { 
+    id: 1, 
+    username: 'testuser', 
+    email: 'testuser@test.com',
+    role: 'user',
+    currency: 100000,
+    prestige: 0,
+  },
   login: vi.fn(),
   logout: vi.fn(),
   refreshUser: vi.fn(),

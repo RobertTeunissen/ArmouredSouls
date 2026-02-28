@@ -1,129 +1,129 @@
 Timestamp | Level | Message
-2026-02-25T19:59:22.482Z | INFO | === Cycle 9 Started ===
-2026-02-25T19:59:22.482Z | INFO | Cycle 9 (9/10)
-2026-02-25T19:59:22.482Z | INFO |  [Admin] === Cycle 9 (9/10) ===
-2026-02-25T19:59:22.484Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
-2026-02-25T19:59:22.484Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-25T19:59:22.484Z
-2026-02-25T19:59:22.485Z | INFO | [BattleOrchestrator] Found 0 matches to execute
-2026-02-25T19:59:22.485Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
-2026-02-25T19:59:22.485Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
-2026-02-25T19:59:22.486Z | INFO | [31mprisma:error[39m  Invalid `prisma.auditLog.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/eventLogger.ts:200:31    197    198 try {   199   // Insert into database → 200   await prisma.auditLog.create( Unique constraint failed on the fields: (`cycle_number`,`sequence_number`)
-2026-02-25T19:59:22.488Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
-2026-02-25T19:59:22.490Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 9)
-2026-02-25T19:59:22.491Z | INFO | [TagTeamBattles] Found 0 scheduled tag team matches
-2026-02-25T19:59:22.491Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
-2026-02-25T19:59:22.492Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
-2026-02-25T19:59:22.495Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
-2026-02-25T19:59:22.495Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
-2026-02-25T19:59:22.497Z | INFO | [Admin] Step 7: Rebalance Leagues
-2026-02-25T19:59:22.497Z | INFO | ════════════════════════════════════════════════════════════
-2026-02-25T19:59:22.497Z | INFO | [Rebalancing] Starting league rebalancing...
-2026-02-25T19:59:22.497Z | INFO | ════════════════════════════════════════════════════════════
-2026-02-25T19:59:22.498Z | INFO | [Rebalancing] Total robots in system: 0
-2026-02-25T19:59:22.498Z | INFO |  [Rebalancing] Processing BRONZE league...
-2026-02-25T19:59:22.500Z | INFO | [Rebalancing] bronze: 0 total robots across 0 instances
-2026-02-25T19:59:22.500Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.500Z | INFO |  [Rebalancing] Processing SILVER league...
-2026-02-25T19:59:22.501Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
-2026-02-25T19:59:22.502Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.502Z | INFO |  [Rebalancing] Processing GOLD league...
-2026-02-25T19:59:22.503Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
-2026-02-25T19:59:22.503Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.504Z | INFO |  [Rebalancing] Processing PLATINUM league...
-2026-02-25T19:59:22.505Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
-2026-02-25T19:59:22.505Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.505Z | INFO |  [Rebalancing] Processing DIAMOND league...
-2026-02-25T19:59:22.507Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
-2026-02-25T19:59:22.507Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.507Z | INFO |  [Rebalancing] Processing CHAMPION league...
-2026-02-25T19:59:22.509Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
-2026-02-25T19:59:22.509Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.509Z | INFO |  [Rebalancing] Checking instances for rebalancing...
-2026-02-25T19:59:22.510Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
-2026-02-25T19:59:22.511Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
-2026-02-25T19:59:22.511Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
-2026-02-25T19:59:22.512Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
-2026-02-25T19:59:22.513Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
-2026-02-25T19:59:22.514Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
-2026-02-25T19:59:22.514Z | INFO |  ════════════════════════════════════════════════════════════
-2026-02-25T19:59:22.514Z | INFO | [Rebalancing] League rebalancing complete!
-2026-02-25T19:59:22.514Z | INFO |   Total promoted: 0
-2026-02-25T19:59:22.514Z | INFO |   Total demoted: 0
-2026-02-25T19:59:22.514Z | INFO |   Errors: 0
-2026-02-25T19:59:22.514Z | INFO | ════════════════════════════════════════════════════════════ 
-2026-02-25T19:59:22.515Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 9)
-2026-02-25T19:59:22.515Z | INFO | ════════════════════════════════════════════════════════════
-2026-02-25T19:59:22.515Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
-2026-02-25T19:59:22.515Z | INFO | ════════════════════════════════════════════════════════════
-2026-02-25T19:59:22.516Z | INFO | [TagTeamRebalancing] Total teams in system: 0
-2026-02-25T19:59:22.516Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
-2026-02-25T19:59:22.517Z | INFO | [TagTeamRebalancing] bronze: 0 total teams across 0 instances
-2026-02-25T19:59:22.517Z | INFO | [TagTeamRebalancing] bronze: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.517Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
-2026-02-25T19:59:22.518Z | INFO | [TagTeamRebalancing] silver: 0 total teams across 0 instances
-2026-02-25T19:59:22.518Z | INFO | [TagTeamRebalancing] silver: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.518Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
-2026-02-25T19:59:22.519Z | INFO | [TagTeamRebalancing] gold: 0 total teams across 0 instances
-2026-02-25T19:59:22.519Z | INFO | [TagTeamRebalancing] gold: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.519Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
-2026-02-25T19:59:22.520Z | INFO | [TagTeamRebalancing] platinum: 0 total teams across 0 instances
-2026-02-25T19:59:22.520Z | INFO | [TagTeamRebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.520Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
-2026-02-25T19:59:22.521Z | INFO | [TagTeamRebalancing] diamond: 0 total teams across 0 instances
-2026-02-25T19:59:22.521Z | INFO | [TagTeamRebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.521Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
-2026-02-25T19:59:22.523Z | INFO | [TagTeamRebalancing] champion: 0 total teams across 0 instances
-2026-02-25T19:59:22.523Z | INFO | [TagTeamRebalancing] champion: Promoted 0, Demoted 0 across 0 instances
-2026-02-25T19:59:22.523Z | INFO |  ════════════════════════════════════════════════════════════
-2026-02-25T19:59:22.523Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
-2026-02-25T19:59:22.523Z | INFO |   Total promoted: 0
-2026-02-25T19:59:22.523Z | INFO |   Total demoted: 0
-2026-02-25T19:59:22.523Z | INFO |   Errors: 0
-2026-02-25T19:59:22.523Z | INFO | ════════════════════════════════════════════════════════════ 
-2026-02-25T19:59:22.523Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
-2026-02-25T19:59:22.524Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
-2026-02-25T19:59:22.524Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
-2026-02-25T19:59:22.525Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
-2026-02-25T19:59:22.525Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
-2026-02-25T19:59:22.526Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
-2026-02-25T19:59:22.526Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
-2026-02-25T19:59:22.527Z | INFO | [Admin] Step 8: Auto Generate New Users
-2026-02-25T19:59:22.528Z | INFO | [UserGeneration] Generating 9 archetype users for Cycle 9...
-2026-02-25T19:59:22.528Z | INFO | [UserGeneration] Creating user 1/9: archetype_facility_investor_9_1 (archetype: facility_investor)
-2026-02-25T19:59:22.590Z | ERROR | [UserGeneration] Error creating user 1: {}
-2026-02-25T19:59:22.590Z | ERROR | [Admin] Error generating users: {}
-2026-02-25T19:59:22.591Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
-2026-02-25T19:59:22.591Z | INFO | [Matchmaking] Starting matchmaking run...
-2026-02-25T19:59:22.591Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-25T19:59:23.591Z
-2026-02-25T19:59:22.591Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
-2026-02-25T19:59:22.593Z | INFO | [Matchmaking] BRONZE: Created 0 matches across 0 instances
-2026-02-25T19:59:22.593Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
-2026-02-25T19:59:22.593Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
-2026-02-25T19:59:22.594Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
-2026-02-25T19:59:22.594Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
-2026-02-25T19:59:22.595Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
-2026-02-25T19:59:22.595Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
-2026-02-25T19:59:22.595Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
-2026-02-25T19:59:22.596Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
-2026-02-25T19:59:22.596Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
-2026-02-25T19:59:22.597Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
-2026-02-25T19:59:22.597Z | INFO | [Matchmaking] ========================================
-2026-02-25T19:59:22.597Z | INFO | [Matchmaking] COMPLETE: 0 total matches created
-2026-02-25T19:59:22.597Z | INFO | [Matchmaking] ========================================
-2026-02-25T19:59:22.598Z | INFO | [Admin] Step 9.5: Matchmaking for Tag Teams (Cycle 9)
-2026-02-25T19:59:22.599Z | INFO | [TagTeamMatchmaking] Starting tag team matchmaking for all tiers...
-2026-02-25T19:59:22.602Z | INFO | [TagTeamMatchmaking] Complete: 0 total matches created
-2026-02-25T19:59:22.603Z | INFO | [Admin] Step 10: Increment Cycle Counters
-2026-02-25T19:59:22.609Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
-2026-02-25T19:59:22.609Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡0
-2026-02-25T19:59:22.610Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
-2026-02-25T19:59:23.713Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
-2026-02-25T19:59:23.714Z | INFO | [Admin] === End of Cycle 9 Balances ===
-2026-02-25T19:59:23.714Z | INFO | [Admin] ===================================
-2026-02-25T19:59:23.716Z | INFO | [Admin] Step 14: Create Cycle Snapshot
-2026-02-25T19:59:23.716Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 9
-2026-02-25T19:59:23.718Z | ERROR | [Admin] Failed to create cycle snapshot: {}
-2026-02-25T19:59:23.718Z | INFO | [Admin] === Cycle 9 Summary ===
-2026-02-25T19:59:23.718Z | INFO | [Admin] Battles: 0
-2026-02-25T19:59:23.718Z | INFO | [Admin] ===================================
-2026-02-25T19:59:23.718Z | INFO | === Cycle 9 Ended ===
+2026-02-28T18:49:27.418Z | INFO | === Cycle 9 Started ===
+2026-02-28T18:49:27.418Z | INFO | Cycle 9 (9/10)
+2026-02-28T18:49:27.418Z | INFO |  [Admin] === Cycle 9 (9/10) ===
+2026-02-28T18:49:27.419Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.419Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.419Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.420Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.420Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.420Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.421Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.421Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.421Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.421Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:27.424Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-02-28T18:49:27.424Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-02-28T18:49:27.424Z
+2026-02-28T18:49:27.427Z | INFO | [BattleOrchestrator] Found 0 matches to execute
+2026-02-28T18:49:27.428Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
+2026-02-28T18:49:27.428Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
+2026-02-28T18:49:27.429Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-02-28T18:49:27.434Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 9)
+2026-02-28T18:49:27.437Z | INFO | [TagTeamBattles] Found 0 scheduled tag team matches
+2026-02-28T18:49:27.437Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-02-28T18:49:27.438Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-02-28T18:49:27.442Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-02-28T18:49:27.443Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-02-28T18:49:27.446Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-02-28T18:49:27.446Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-28T18:49:27.446Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-02-28T18:49:27.446Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-28T18:49:27.448Z | INFO | [Rebalancing] Total robots in system: 46
+2026-02-28T18:49:27.448Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-02-28T18:49:27.451Z | INFO | [Rebalancing] bronze: 46 total robots across 1 instances
+2026-02-28T18:49:27.451Z | INFO | [Rebalancing] Processing bronze_1...
+2026-02-28T18:49:27.453Z | INFO | [Rebalancing] bronze_1: Skipping (0 eligible, need 10)
+2026-02-28T18:49:27.453Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-02-28T18:49:27.453Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-02-28T18:49:27.456Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
+2026-02-28T18:49:27.456Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.456Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-02-28T18:49:27.458Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-02-28T18:49:27.458Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.458Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-02-28T18:49:27.460Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-02-28T18:49:27.460Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.460Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-02-28T18:49:27.463Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-02-28T18:49:27.463Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.463Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-02-28T18:49:27.465Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-02-28T18:49:27.465Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.465Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-02-28T18:49:27.467Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
+2026-02-28T18:49:27.468Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-02-28T18:49:27.469Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-02-28T18:49:27.470Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-02-28T18:49:27.471Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-02-28T18:49:27.472Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-02-28T18:49:27.472Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-28T18:49:27.473Z | INFO | [Rebalancing] League rebalancing complete!
+2026-02-28T18:49:27.473Z | INFO |   Total promoted: 0
+2026-02-28T18:49:27.473Z | INFO |   Total demoted: 0
+2026-02-28T18:49:27.473Z | INFO |   Errors: 0
+2026-02-28T18:49:27.473Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-28T18:49:27.474Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 9)
+2026-02-28T18:49:27.474Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-28T18:49:27.474Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
+2026-02-28T18:49:27.474Z | INFO | ════════════════════════════════════════════════════════════
+2026-02-28T18:49:27.476Z | INFO | [TagTeamRebalancing] Total teams in system: 2
+2026-02-28T18:49:27.476Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
+2026-02-28T18:49:27.478Z | INFO | [TagTeamRebalancing] bronze: 2 total teams across 1 instances
+2026-02-28T18:49:27.478Z | INFO | [TagTeamRebalancing] Processing bronze_1...
+2026-02-28T18:49:27.480Z | INFO | [TagTeamRebalancing] bronze_1: Skipping (0 eligible, need 10)
+2026-02-28T18:49:27.480Z | INFO | [TagTeamRebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-02-28T18:49:27.480Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
+2026-02-28T18:49:27.481Z | INFO | [TagTeamRebalancing] silver: 0 total teams across 0 instances
+2026-02-28T18:49:27.481Z | INFO | [TagTeamRebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.482Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
+2026-02-28T18:49:27.483Z | INFO | [TagTeamRebalancing] gold: 0 total teams across 0 instances
+2026-02-28T18:49:27.483Z | INFO | [TagTeamRebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.483Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
+2026-02-28T18:49:27.484Z | INFO | [TagTeamRebalancing] platinum: 0 total teams across 0 instances
+2026-02-28T18:49:27.484Z | INFO | [TagTeamRebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.484Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
+2026-02-28T18:49:27.486Z | INFO | [TagTeamRebalancing] diamond: 0 total teams across 0 instances
+2026-02-28T18:49:27.486Z | INFO | [TagTeamRebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.486Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
+2026-02-28T18:49:27.487Z | INFO | [TagTeamRebalancing] champion: 0 total teams across 0 instances
+2026-02-28T18:49:27.487Z | INFO | [TagTeamRebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-02-28T18:49:27.487Z | INFO |  ════════════════════════════════════════════════════════════
+2026-02-28T18:49:27.487Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
+2026-02-28T18:49:27.487Z | INFO |   Total promoted: 0
+2026-02-28T18:49:27.487Z | INFO |   Total demoted: 0
+2026-02-28T18:49:27.487Z | INFO |   Errors: 0
+2026-02-28T18:49:27.487Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-02-28T18:49:27.487Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
+2026-02-28T18:49:27.489Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
+2026-02-28T18:49:27.490Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
+2026-02-28T18:49:27.491Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
+2026-02-28T18:49:27.492Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
+2026-02-28T18:49:27.493Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
+2026-02-28T18:49:27.494Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
+2026-02-28T18:49:27.495Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-02-28T18:49:27.495Z | INFO | [UserGeneration] Generating 9 archetype users for Cycle 9...
+2026-02-28T18:49:27.495Z | INFO | [UserGeneration] Creating user 1/9: archetype_facility_investor_9_1 (archetype: facility_investor)
+2026-02-28T18:49:27.569Z | INFO | [UserGeneration] Creating user 2/9: archetype_two_robot_9_2 (archetype: two_robot)
+2026-02-28T18:49:27.642Z | INFO | [UserGeneration] Created tag team for archetype_two_robot_9_2
+2026-02-28T18:49:27.643Z | INFO | [UserGeneration] Creating user 3/9: archetype_melee_specialist_9_3 (archetype: melee_specialist)
+2026-02-28T18:49:27.715Z | INFO | [UserGeneration] Creating user 4/9: archetype_ranged_sniper_9_4 (archetype: ranged_sniper)
+2026-02-28T18:49:27.781Z | INFO | [UserGeneration] Creating user 5/9: archetype_ai_tactician_9_5 (archetype: ai_tactician)
+2026-02-28T18:49:27.848Z | INFO | [UserGeneration] Created 5/9 users...
+2026-02-28T18:49:27.848Z | INFO | [UserGeneration] Creating user 6/9: archetype_prestige_rusher_9_6 (archetype: prestige_rusher)
+2026-02-28T18:49:27.925Z | INFO | [UserGeneration] Creating user 7/9: archetype_tank_fortress_9_7 (archetype: tank_fortress)
+2026-02-28T18:49:27.998Z | INFO | [UserGeneration] Creating user 8/9: archetype_glass_cannon_a_9_8 (archetype: glass_cannon_a)
+2026-02-28T18:49:28.077Z | INFO | [UserGeneration] Creating user 9/9: archetype_glass_cannon_b_9_9 (archetype: glass_cannon_b)
+2026-02-28T18:49:28.146Z | INFO | [UserGeneration] Created 9/9 users...
+2026-02-28T18:49:28.146Z | INFO | [UserGeneration] ✅ Created 9 users with 10 robots in 651ms
+2026-02-28T18:49:28.146Z | INFO | [UserGeneration] Archetype position after this cycle: 3
+2026-02-28T18:49:28.146Z | INFO | [Admin] Generated 9 users for cycle 9
+2026-02-28T18:49:28.147Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-02-28T18:49:28.147Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-02-28T18:49:28.147Z | INFO | [Matchmaking] Matches scheduled for: 2026-02-28T18:49:29.147Z
+2026-02-28T18:49:28.147Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-02-28T18:49:28.149Z | INFO | [Matchmaking] Processing bronze_1...
+2026-02-28T18:49:28.156Z | INFO | [Matchmaking] Queue for bronze_1: 56 robots available (56 total, 56 ready)
+2026-02-28T18:49:28.179Z | INFO | [31mprisma:error[39m  Invalid `prisma.battle.findMany()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/matchmakingService.ts:105:45    102  */   103 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {   104   // Get recent battles where this robot participated → 105   const recentBattles = await prisma.battle.findMany( Too many database connections opened: FATAL: sorry, too many clients already Prisma Accelerate has built-in connection pooling to prevent such errors: https://pris.ly/client/error-accelerate
+2026-02-28T18:49:28.180Z | ERROR | [Admin] Error in cycle 9: {""name"":""PrismaClientKnownRequestError"",""code"":""P2037"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""Battle"",""message"":""FATAL: sorry, too many clients already""}}
+2026-02-28T18:49:28.181Z | ERROR | Cycle 9 failed
+2026-02-28T18:49:28.181Z | INFO | === Cycle 9 Ended ===

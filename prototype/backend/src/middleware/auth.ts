@@ -28,7 +28,12 @@ export const authenticateToken = (
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
 
-    req.user = decoded as { userId: number; username: string; role: string };
+    const payload = decoded as { userId: string | number; username: string; role: string };
+    req.user = {
+      userId: typeof payload.userId === 'string' ? parseInt(payload.userId, 10) : payload.userId,
+      username: payload.username,
+      role: payload.role,
+    };
     next();
   });
 };

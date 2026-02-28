@@ -34,11 +34,17 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
 
   res.on('finish', () => {
     const responseTime = Date.now() - start;
+    const status = res.statusCode;
 
-    logger.info('request completed', {
+    // Only log non-success responses at info level to keep the terminal clean.
+    // Successful requests (2xx, 3xx) go to debug so they're still available
+    // when LOG_LEVEL=debug but don't flood the console during normal use.
+    const level = status >= 400 ? 'warn' : 'debug';
+
+    logger[level]('request completed', {
       method: req.method,
       path: req.originalUrl,
-      statusCode: res.statusCode,
+      statusCode: status,
       responseTime,
     });
   });

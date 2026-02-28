@@ -14,11 +14,15 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor: handle 401
+// Response interceptor: handle 401 for authenticated routes only.
+// Auth endpoints (login/register) return 401 for invalid credentials,
+// which should be handled by the calling component, not by a redirect.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url || '';
+    const isAuthRoute = url.includes('/api/auth/');
+    if (error.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }

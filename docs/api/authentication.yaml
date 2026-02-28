@@ -1,0 +1,358 @@
+openapi: 3.0.3
+info:
+  title: Armoured Souls Authentication API
+  description: |
+    API documentation for the Armoured Souls authentication system, covering
+    user registration and login endpoints.
+
+    ## Validation Rules
+
+    | Field    | Min Length | Max Length | Allowed Characters                          |
+    |----------|-----------|-----------|---------------------------------------------|
+    | username | 3         | 20        | Alphanumeric, underscore (`_`), hyphen (`-`) |
+    | email    | 3         | 20        | Alphanumeric, underscore (`_`), hyphen (`-`) |
+    | password | 8         | 128       | Any characters                               |
+
+    ## Error Codes
+
+    | Code               | HTTP Status | Description                        |
+    |--------------------|-------------|------------------------------------|
+    | VALIDATION_ERROR   | 400         | Input failed validation rules      |
+    | DUPLICATE_USERNAME | 400         | Username is already taken          |
+    | DUPLICATE_EMAIL    | 400         | Email is already registered        |
+    | DATABASE_ERROR     | 500         | A database error occurred          |
+    | INTERNAL_ERROR     | 500         | An unexpected server error occurred|
+    | INVALID_CREDENTIALS| 401         | Invalid login credentials           |
+  version: 1.0.0
+  contact:
+    name: Armoured Souls Dev Team
+
+servers:
+  - url: /api
+    description: Application API base path
+
+paths:
+  /auth/register:
+    post:
+      operationId: registerUser
+      summary: Register a new user account
+      description: |
+        Creates a new user account with the provided username, email, and password.
+        On success the server returns a JWT token and the created user profile.
+
+        The password is hashed with bcrypt before storage. New accounts receive
+        default values: currency 1000, prestige 0, role "player".
+
+        This endpoint is rate-limited (shared limits with the login endpoint).
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+            examples:
+              valid:
+                summary: Valid registration request
+                value:
+                  username: knight_42
+                  email: knight-mail
+                  password: s3cureP@ss!
+              minimal:
+                summary: Minimum-length fields
+                value:
+                  username: abc
+                  email: xyz
+                  password: "12345678"
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Successful registration
+                  value:
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    user:
+                      id: 1
+                      username: knight_42
+                      email: knight-mail
+                      currency: 1000
+                      prestige: 0
+                      role: player
+        '400':
+          description: |
+            Bad request — validation failure, duplicate username, or duplicate email.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationError:
+                  summary: Validation error (e.g. username too short)
+                  value:
+                    error: "Username must be at least 3 characters long"
+                    code: VALIDATION_ERROR
+                duplicateUsername:
+                  summary: Username already taken
+                  value:
+                    error: "Username is already taken"
+                    code: DUPLICATE_USERNAME
+                duplicateEmail:
+                  summary: Email already registered
+                  value:
+                    error: "Email is already registered"
+                    code: DUPLICATE_EMAIL
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Too many requests. Please try again later."
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseError:
+                  summary: Database error
+                  value:
+                    error: "An error occurred during registration. Please try again."
+                    code: DATABASE_ERROR
+                internalError:
+                  summary: Unexpected error
+                  value:
+                    error: "An unexpected error occurred. Please try again."
+                    code: INTERNAL_ERROR
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      summary: Authenticate an existing user
+      description: |
+        Authenticates a user with a login identifier and password.
+        The identifier can be either a username or an email address — the server
+        tries username first, then falls back to email.
+
+        On success the server returns a JWT token and the user profile.
+
+        For backward compatibility the request body also accepts a `username`
+        field in place of `identifier`.
+
+        This endpoint is rate-limited (shared limits with the registration endpoint).
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              loginWithUsername:
+                summary: Login using a username
+                value:
+                  identifier: knight_42
+                  password: s3cureP@ss!
+              loginWithEmail:
+                summary: Login using an email
+                value:
+                  identifier: knight-mail
+                  password: s3cureP@ss!
+              legacyUsername:
+                summary: Backward-compatible request using username field
+                value:
+                  username: knight_42
+                  password: s3cureP@ss!
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Successful login
+                  value:
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    user:
+                      id: 1
+                      username: knight_42
+                      email: knight-mail
+                      currency: 1000
+                      prestige: 0
+                      role: player
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  summary: Wrong username/email or password
+                  value:
+                    error: "Invalid username or password"
+                    code: INVALID_CREDENTIALS
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Too many requests. Please try again later."
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                databaseError:
+                  summary: Database error
+                  value:
+                    error: "An error occurred during login. Please try again."
+                    code: DATABASE_ERROR
+                internalError:
+                  summary: Unexpected error
+                  value:
+                    error: "An unexpected error occurred. Please try again."
+                    code: INTERNAL_ERROR
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - password
+      properties:
+        identifier:
+          type: string
+          description: |
+            Login identifier — can be a username or an email address.
+            The server tries to match a username first, then falls back to email.
+          example: knight_42
+        username:
+          type: string
+          description: |
+            Backward-compatible alias for `identifier`. If both `identifier` and
+            `username` are provided, `identifier` takes precedence.
+          example: knight_42
+          deprecated: true
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: User password.
+          example: s3cureP@ss!
+
+    RegistrationRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: |
+            Unique username. Only alphanumeric characters, underscores, and hyphens are allowed.
+          example: knight_42
+        email:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: |
+            Unique email identifier. Only alphanumeric characters, underscores, and hyphens are allowed.
+            This is a simplified format for the game system (not standard RFC 5322).
+          example: knight-mail
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: User password. Any characters are allowed.
+          example: s3cureP@ss!
+
+    AuthResponse:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token:
+          type: string
+          description: JWT authentication token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      required:
+        - id
+        - username
+        - email
+        - currency
+        - prestige
+        - role
+      properties:
+        id:
+          type: integer
+          description: Unique user identifier
+          example: 1
+        username:
+          type: string
+          example: knight_42
+        email:
+          type: string
+          example: knight-mail
+        currency:
+          type: integer
+          description: Starting currency (default 1000 for new accounts)
+          example: 1000
+        prestige:
+          type: integer
+          description: Starting prestige (default 0 for new accounts)
+          example: 0
+        role:
+          type: string
+          description: User role (default "player" for new accounts)
+          example: player
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - VALIDATION_ERROR
+            - DUPLICATE_USERNAME
+            - DUPLICATE_EMAIL
+            - INVALID_CREDENTIALS
+            - DATABASE_ERROR
+            - INTERNAL_ERROR
