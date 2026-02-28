@@ -5,6 +5,7 @@ export const generalLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   keyGenerator: (req) =>
     req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
 });
@@ -14,6 +15,7 @@ export const authLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   keyGenerator: (req) =>
     req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
 });
