@@ -691,9 +691,13 @@ async function main() {
     await seedCoreTestUsers(practiceSword);
   }
 
-  // --- Full test data (development only) ---
-  if (seedMode === 'development') {
+  // --- Full test data (development + acceptance) ---
+  if (seedMode === 'development' || seedMode === 'acceptance') {
     await seedWimpBotUsers(practiceSword);
+  }
+
+  // --- Attribute test users (development only) ---
+  if (seedMode === 'development') {
     await seedAttributeTestUsers(practiceSword);
   }
 
@@ -714,7 +718,8 @@ async function main() {
     console.log('   🔄 Cycle metadata initialized');
     console.log('   🤖 Bye-Robot for matchmaking');
     console.log('   👤 Admin + player1-5 test accounts');
-    console.log('   ❌ No WimpBot or attribute test users');
+    console.log('   👤 100 WimpBot test users');
+    console.log('   ❌ No attribute test users');
   } else {
     console.log('📊 Development seed summary:');
     console.log(`   ⚔️  ${weapons.length} weapons`);
@@ -731,8 +736,10 @@ async function main() {
     console.log('   - Admin: admin / admin123');
     console.log('   - Players: player1-5 / password123');
   }
-  if (seedMode === 'development') {
+  if (seedMode === 'development' || seedMode === 'acceptance') {
     console.log('   - Test users: test_user_001-100 / testpass123');
+  }
+  if (seedMode === 'development') {
     console.log('   - Attribute test: attr_combatpwr_01, etc. / testpass123');
   }
   console.log('');
