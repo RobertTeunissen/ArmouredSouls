@@ -213,7 +213,7 @@ jobs:
             ./prototype/ecosystem.config.js \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/
 
-      - name: Install production dependencies on VPS
+      - name: Install dependencies and build on VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.ACC_VPS_IP }}
@@ -221,7 +221,9 @@ jobs:
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
             cd /opt/armouredsouls/backend
-            npm ci --production
+            npm ci
+            npm run build
+            npm prune --production
 
       - name: Create pre-migration database backup
         uses: appleboy/ssh-action@v1
@@ -334,7 +336,7 @@ jobs:
             ./prototype/ecosystem.config.js \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/
 
-      - name: Install production dependencies on VPS
+      - name: Install dependencies and build on VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PRD_VPS_IP }}
@@ -342,7 +344,9 @@ jobs:
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
             cd /opt/armouredsouls/backend
-            npm ci --production
+            npm ci
+            npm run build
+            npm prune --production
 
       - name: Create pre-migration database backup
         uses: appleboy/ssh-action@v1
