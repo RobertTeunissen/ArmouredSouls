@@ -267,7 +267,7 @@ jobs:
           script: |
             TIMEOUT=30
             ELAPSED=0
-            until curl -sf http://localhost:3000/health > /dev/null 2>&1; do
+            until curl -sf http://localhost:3001/api/health > /dev/null 2>&1; do
               if [ $ELAPSED -ge $TIMEOUT ]; then
                 echo "Health check failed after ${TIMEOUT}s"
                 exit 1
@@ -390,7 +390,7 @@ jobs:
           script: |
             TIMEOUT=30
             ELAPSED=0
-            until curl -sf http://localhost:3000/health > /dev/null 2>&1; do
+            until curl -sf http://localhost:3001/api/health > /dev/null 2>&1; do
               if [ $ELAPSED -ge $TIMEOUT ]; then
                 echo "Health check failed after ${TIMEOUT}s"
                 exit 1
@@ -417,7 +417,7 @@ jobs:
     steps:
       - name: Verify health endpoint returns 200
         run: |
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.ACC_VPS_IP }}:3000/health")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://acc.armouredsouls.com/api/health")
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "Health endpoint returned $HTTP_STATUS (expected 200)"
             exit 1
@@ -426,7 +426,7 @@ jobs:
 
       - name: Verify frontend loads (HTTP 200 on /)
         run: |
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.ACC_VPS_IP }}/")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://acc.armouredsouls.com/")
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "Frontend returned $HTTP_STATUS (expected 200)"
             exit 1
@@ -438,7 +438,7 @@ jobs:
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Content-Type: application/json" \
             -d '{"email":"smoke@test.invalid","password":"smoketest"}' \
-            "http://${{ secrets.ACC_VPS_IP }}:3000/api/auth/login")
+            "https://acc.armouredsouls.com/api/auth/login")
           if [ "$HTTP_STATUS" -ge 500 ]; then
             echo "Login API returned $HTTP_STATUS (server error)"
             exit 1
@@ -458,7 +458,7 @@ jobs:
     steps:
       - name: Verify health endpoint returns 200
         run: |
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.PRD_VPS_IP }}:3000/health")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://armouredsouls.com/api/health")
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "Health endpoint returned $HTTP_STATUS (expected 200)"
             exit 1
@@ -467,7 +467,7 @@ jobs:
 
       - name: Verify frontend loads (HTTP 200 on /)
         run: |
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.PRD_VPS_IP }}/")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://armouredsouls.com/")
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "Frontend returned $HTTP_STATUS (expected 200)"
             exit 1
@@ -479,7 +479,7 @@ jobs:
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Content-Type: application/json" \
             -d '{"email":"smoke@test.invalid","password":"smoketest"}' \
-            "http://${{ secrets.PRD_VPS_IP }}:3000/api/auth/login")
+            "https://armouredsouls.com/api/auth/login")
           if [ "$HTTP_STATUS" -ge 500 ]; then
             echo "Login API returned $HTTP_STATUS (server error)"
             exit 1
