@@ -1643,8 +1643,12 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
       return res.status(400).json({ error: 'Invalid imageUrl' });
     }
 
-    // Basic validation - must be a path to our assets
-    if (!imageUrl.startsWith('/src/assets/robots/')) {
+    // Basic validation - must be a path to our assets (either source path or built asset path)
+    const isValidPath = imageUrl.startsWith('/src/assets/robots/') || 
+                        imageUrl.startsWith('/assets/') ||
+                        imageUrl.match(/^\/assets\/robot.*\.webp$/);
+    
+    if (!isValidPath) {
       console.log('Invalid image path:', imageUrl);
       return res.status(400).json({ error: 'Invalid image path' });
     }
