@@ -202,6 +202,13 @@ jobs:
             ./prototype/frontend/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/
 
+      - name: Transfer shared utilities via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/shared/ \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/shared/
+
       - name: Build frontend on VPS
         uses: appleboy/ssh-action@v1
         with:
@@ -331,6 +338,13 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key" \
             ./prototype/frontend/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/
+
+      - name: Transfer shared utilities via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/shared/ \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/shared/
 
       - name: Build frontend on VPS
         uses: appleboy/ssh-action@v1
