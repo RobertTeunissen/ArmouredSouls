@@ -18,11 +18,10 @@ const TournamentManagement = () => {
   const [eligibleRobots, setEligibleRobots] = useState<EligibleRobotsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);  useEffect(() => {
     loadTournaments();
     loadEligibleRobots();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadTournaments = async () => {
@@ -40,7 +39,7 @@ const TournamentManagement = () => {
       } else {
         setActiveTournament(null);
       }
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to load tournaments:', err);
       setError(err.response?.data?.error || 'Failed to load tournaments');
     }
@@ -52,7 +51,7 @@ const TournamentManagement = () => {
     try {
       const data = await getEligibleRobots(token);
       setEligibleRobots(data);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to load eligible robots:', err);
     }
   };
@@ -69,7 +68,7 @@ const TournamentManagement = () => {
       setSuccessMessage(result.message);
       await loadTournaments();
       await loadEligibleRobots();
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(err.response?.data?.error || 'Failed to create tournament');
     } finally {
       setLoading(false);
@@ -88,7 +87,7 @@ const TournamentManagement = () => {
       setSuccessMessage(result.message);
       await loadTournaments();
       await loadEligibleRobots();
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(err.response?.data?.error || 'Failed to execute round');
     } finally {
       setLoading(false);

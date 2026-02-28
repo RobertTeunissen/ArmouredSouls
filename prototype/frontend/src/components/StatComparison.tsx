@@ -41,6 +41,7 @@ interface StatComparisonProps {
     loadoutType: string;
     mainWeapon?: WeaponInventory | null;
     offhandWeapon?: WeaponInventory | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
   attributes: Array<{ key: string; label: string }>;

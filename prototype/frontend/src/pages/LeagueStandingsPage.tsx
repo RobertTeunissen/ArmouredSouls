@@ -43,7 +43,9 @@ function LeagueStandingsPage() {
     try {
       const response = await apiClient.get('/api/robots');
       const robotsData = response.data;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tiers = new Set<string>(robotsData.map((r: any) => r.currentLeague));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const instances = new Set<string>(robotsData.map((r: any) => r.leagueId).filter(Boolean));
       setUserRobotTiers(tiers);
       setUserRobotInstances(instances);
@@ -63,7 +65,7 @@ function LeagueStandingsPage() {
       setPagination(standingsData.pagination);
       setInstances(instancesData);
       setError(null);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to fetch league data:', err);
       setError('Failed to load league standings');
     } finally {

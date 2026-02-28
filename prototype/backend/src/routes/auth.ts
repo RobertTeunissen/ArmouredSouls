@@ -12,7 +12,6 @@
  */
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
@@ -22,9 +21,6 @@ import { generateToken } from '../services/jwtService';
 import { createUser, findUserByUsername, findUserByEmail, findUserByIdentifier } from '../services/userService';
 
 const router = express.Router();
-
-/** JWT secret used for token signing in the login endpoint. Sourced from environment variable. */
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 /**
  * POST /api/auth/register
@@ -212,15 +208,11 @@ router.post('/login', async (req: Request, res: Response) => {
 
     // Generate JWT with the same payload shape used by the registration endpoint
     // to ensure authentication equivalence (Requirement 8.4).
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        username: user.username,
-        role: user.role 
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = generateToken({
+      id: String(user.id),
+      username: user.username,
+      role: user.role,
+    });
 
     // Return user profile without passwordHash — never expose hashes to clients
     res.json({

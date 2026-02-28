@@ -169,12 +169,12 @@ function FinancialReportPage() {
                   Streaming Revenue
                 </h3>
                 <p className="text-sm text-gray-300 mb-2">
-                  Streaming revenue is awarded after every battle based on your robot's fame, battle experience, and your Streaming Studio facility level.
+                  Streaming revenue is awarded after every battle based on your robot&apos;s fame, battle experience, and your Streaming Studio facility level.
                 </p>
                 <div className="text-xs text-gray-400 space-y-1">
                   <div>• Base rate: ₡1,000 per battle</div>
-                  <div>• Battle multiplier: Increases with robot's total battles (1 + battles/1,000)</div>
-                  <div>• Fame multiplier: Increases with robot's fame (1 + fame/5,000)</div>
+                  <div>• Battle multiplier: Increases with robot&apos;s total battles (1 + battles/1,000)</div>
+                  <div>• Fame multiplier: Increases with robot&apos;s fame (1 + fame/5,000)</div>
                   <div>• Studio multiplier: +10% per Streaming Studio level</div>
                 </div>
                 <p className="text-xs text-gray-400 mt-2 italic">

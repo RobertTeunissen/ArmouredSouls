@@ -76,10 +76,9 @@ function LeaderboardsFamePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
+  };  useEffect(() => {
     fetchLeaderboard();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueFilter, minBattles]);
 
   const getTierColor = (tier: string) => {

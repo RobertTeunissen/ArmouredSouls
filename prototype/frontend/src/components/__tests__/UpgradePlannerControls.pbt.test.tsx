@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import * as fc from 'fast-check';
 import UpgradePlanner from '../UpgradePlanner';
 

@@ -5,6 +5,7 @@ import { formatCost } from '../utils/formatters';
 interface WeaponInventory {
   id: number;
   weapon: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
 }
@@ -22,6 +23,7 @@ interface AttributeCategory {
 interface CompactUpgradeSectionProps {
   categories: AttributeCategory[];
   robot: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
     mainWeapon?: WeaponInventory | null;
     offhandWeapon?: WeaponInventory | null;

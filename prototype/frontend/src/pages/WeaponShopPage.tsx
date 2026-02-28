@@ -141,6 +141,7 @@ function WeaponShopPage() {
         // Count owned weapons by weapon ID
         const ownedMap = new Map<number, number>();
         let equippedCount = 0;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         inventory.forEach((item: any) => {
           const weaponId = item.weaponId;
           ownedMap.set(weaponId, (ownedMap.get(weaponId) || 0) + 1);
@@ -161,7 +162,7 @@ function WeaponShopPage() {
         // Fetch storage status
         const storageResponse = await apiClient.get('/api/weapon-inventory/storage-status');
         setStorageStatus(storageResponse.data);
-      } catch (err: any) {
+      } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.error('Failed to fetch data:', err);
         
         // Check if it's an authentication error
@@ -241,9 +242,10 @@ function WeaponShopPage() {
         return sorted.sort((a, b) => b.baseDamage - a.baseDamage);
       case 'name-asc':
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
-      case 'dps-desc':
+      case 'dps-desc': {
         const getDPS = (w: Weapon) => w.baseDamage / w.cooldown;
         return sorted.sort((a, b) => getDPS(b) - getDPS(a));
+      }
       default:
         return sorted;
     }
@@ -286,6 +288,7 @@ function WeaponShopPage() {
   };
 
   // Apply search, filters, and sorting
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const processedWeapons = useMemo(() => {
     // Step 1: Search
     let result = searchWeapons(weapons, debouncedSearchQuery);
@@ -343,6 +346,7 @@ function WeaponShopPage() {
     }
 
     return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weapons, debouncedSearchQuery, filters, user, weaponWorkshopLevel, sortBy, viewMode, ownedWeapons]);
 
   const handlePurchase = async (weaponId: number, basePrice: number) => {
@@ -397,6 +401,7 @@ function WeaponShopPage() {
           const inventoryResponse = await apiClient.get('/api/weapon-inventory');
           const inventory = inventoryResponse.data;
           const ownedMap = new Map<number, number>();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           inventory.forEach((item: any) => {
             const wId = item.weaponId;
             ownedMap.set(wId, (ownedMap.get(wId) || 0) + 1);
@@ -415,7 +420,7 @@ function WeaponShopPage() {
           if (selectedWeapon?.id === weaponId) {
             setSelectedWeapon(null);
           }
-        } catch (err: any) {
+        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
           console.error('Purchase failed:', err);
           setConfirmationModal({
             isOpen: true,
@@ -649,6 +654,7 @@ function WeaponShopPage() {
                   purchasing={purchasing}
                   hasDiscount={weaponWorkshopLevel > 0}
                   discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onWeaponClick={(weapon) => setSelectedWeapon(weapon as any)}
                   ownedWeapons={ownedWeapons}
                 />

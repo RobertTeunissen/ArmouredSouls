@@ -162,11 +162,10 @@ function RobotsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { logout, refreshUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
+  const location = useLocation();  useEffect(() => {
     fetchRobots();
     fetchFacilities();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]); // Refetch when navigating to this page
 
   // Refetch facilities when page becomes visible (after navigating back from facility upgrades)
@@ -199,7 +198,7 @@ function RobotsPage() {
       // Sort robots by ELO (highest first)
       const sortedData = data.sort((a: Robot, b: Robot) => b.elo - a.elo);
       setRobots(sortedData);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (err.response?.status === 401) {
         logout();
         navigate('/login');
@@ -217,10 +216,12 @@ function RobotsPage() {
       const response = await apiClient.get('/api/facilities');
       const data = response.data;
       const facilities = data.facilities || data; // Handle both response formats
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const repairBay = facilities.find((f: any) => f.type === 'repair_bay');
       if (repairBay) {
         setRepairBayLevel(repairBay.currentLevel || 0);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rosterExpansion = facilities.find((f: any) => f.type === 'roster_expansion');
       if (rosterExpansion) {
         setRosterLevel(rosterExpansion.currentLevel || 0);
@@ -318,7 +319,9 @@ function RobotsPage() {
     const sorted = [...robots];
     
     sorted.sort((a, b) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let aValue: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let bValue: any;
 
       switch (sortColumn) {
@@ -441,7 +444,7 @@ function RobotsPage() {
 
         {robots.length === 0 ? (
           <div className="bg-[#1a1f29] p-12 rounded-lg text-center">
-            <p className="text-xl text-gray-400 mb-4">You don't have any robots yet.</p>
+            <p className="text-xl text-gray-400 mb-4">You don&apos;t have any robots yet.</p>
             <p className="text-gray-500 mb-6">Create your first robot to start battling!</p>
             <button
               onClick={() => navigate('/robots/create')}

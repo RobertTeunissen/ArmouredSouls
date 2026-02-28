@@ -78,7 +78,9 @@ function DailyStableReport({ report }: DailyStableReportProps) {
             {report.expenses.operatingCostsBreakdown.map((item) => (
               <div key={item.facilityType} className="flex justify-between">
                 <span className="text-gray-300">
+                  {/* eslint-disable @typescript-eslint/no-explicit-any */}
                   {item.facilityName} {(item as any).level !== undefined ? `(Lvl ${(item as any).level})` : ''}:
+                  {/* eslint-enable @typescript-eslint/no-explicit-any */}
                 </span>
                 <span className="text-gray-100">{formatCurrency(item.cost)}</span>
               </div>

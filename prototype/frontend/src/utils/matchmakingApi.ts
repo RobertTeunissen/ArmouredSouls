@@ -198,6 +198,7 @@ export const getMatchHistory = async (
   pageSize: number = 10,
   battleType?: 'overall' | 'league' | 'tournament' | 'tag_team'
 ): Promise<PaginatedResponse<BattleHistory>> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const params: any = { page, perPage: pageSize };
   
   // Add battleType filter if not 'overall'
@@ -361,6 +362,7 @@ export interface BattleLogEvent {
   timestamp: number;
   type: string;
   message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

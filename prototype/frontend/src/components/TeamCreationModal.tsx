@@ -10,7 +10,9 @@ interface Robot {
   currentHP: number;
   maxHP: number;
   yieldThreshold: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mainWeapon?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   offhandWeapon?: any;
 }
 
@@ -20,7 +22,7 @@ interface TeamCreationModalProps {
 }
 
 function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
-  const { } = useAuth();
+  useAuth(); // Ensure auth context is available
   const [robots, setRobots] = useState<Robot[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -88,7 +90,7 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
       setError(null);
       await createTagTeam(activeRobotId, reserveRobotId);
       onTeamCreated();
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to create team:', err);
       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to create team';
       const errorDetails = err.response?.data?.details;
@@ -212,7 +214,7 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
               {/* No Robots */}
               {robots.length === 0 && !loading && (
                 <div className="text-center py-12">
-                  <p className="text-gray-400">You don't have any robots yet. Create robots first!</p>
+                  <p className="text-gray-400">You don&apos;t have any robots yet. Create robots first!</p>
                 </div>
               )}
 

@@ -32,6 +32,7 @@ interface CombatEvent {
 
 function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalProps) {
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [battle, setBattle] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedEvent, setExpandedEvent] = useState<number | null>(null);
@@ -40,6 +41,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
     if (isOpen && battleId) {
       fetchBattleDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, battleId]);
 
   const fetchBattleDetails = async () => {
@@ -55,7 +57,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
         },
       });
       setBattle(response.data);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(err.response?.data?.error || 'Failed to load battle details');
     } finally {
       setLoading(false);

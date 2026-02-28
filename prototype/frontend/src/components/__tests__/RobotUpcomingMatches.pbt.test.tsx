@@ -31,7 +31,7 @@ describe('RobotUpcomingMatches - Property-Based Tests', () => {
               tournamentContext: fc.option(fc.string({ minLength: 1, maxLength: 30 }), { nil: undefined }),
             }),
             { minLength: 0, maxLength: 10 }
-          ).map((matches, index) => {
+          ).map((matches, _index) => {
             // Ensure unique matchIds
             return matches.map((match, i) => ({
               ...match,
@@ -89,7 +89,7 @@ describe('RobotUpcomingMatches - Property-Based Tests', () => {
               leagueContext: fc.option(fc.constantFrom('bronze', 'silver', 'gold', 'platinum'), { nil: undefined }),
             }),
             { minLength: 1, maxLength: 5 }
-          ).map((matches, index) => {
+          ).map((matches, _index) => {
             // Ensure unique matchIds
             return matches.map((match, i) => ({
               ...match,
@@ -119,7 +119,7 @@ describe('RobotUpcomingMatches - Property-Based Tests', () => {
             });
             
             // Should display warning icon
-            expect(container.textContent).toMatch(/[🔴🟡⚠️]/);
+            expect(container.textContent).toMatch(/🔴|🟡|⚠️/);
           }
         }
       ),
@@ -147,7 +147,7 @@ describe('RobotUpcomingMatches - Property-Based Tests', () => {
             leagueContext: fc.option(fc.constantFrom('bronze', 'silver', 'gold', 'platinum'), { nil: undefined }),
           }),
           { minLength: 2, maxLength: 10 }
-        ).map((matches, index) => {
+        ).map((matches, _index) => {
           // Ensure unique matchIds
           return matches.map((match, i) => ({
             ...match,
@@ -204,7 +204,7 @@ describe('RobotUpcomingMatches - Property-Based Tests', () => {
             opponentTeam: fc.array(fc.string({ minLength: 3, maxLength: 15 }), { minLength: 1, maxLength: 3 }),
           }),
           { minLength: 1, maxLength: 5 }
-        ).map((matches, index) => {
+        ).map((matches, _index) => {
           // Ensure unique matchIds
           return matches.map((match, i) => ({
             ...match,

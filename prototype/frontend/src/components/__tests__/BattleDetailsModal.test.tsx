@@ -6,6 +6,7 @@ import BattleDetailsModal from '../BattleDetailsModal';
 
 // Mock axios
 vi.mock('axios');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockedAxios = axios as any;
 
 const mockBattleData = {

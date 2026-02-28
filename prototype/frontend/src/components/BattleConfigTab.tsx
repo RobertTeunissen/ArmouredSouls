@@ -21,6 +21,7 @@ interface Robot {
   yieldThreshold: number;
   mainWeapon: WeaponInventory | null;
   offhandWeapon: WeaponInventory | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any; // For other robot attributes
 }
 

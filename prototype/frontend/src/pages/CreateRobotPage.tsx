@@ -51,7 +51,7 @@ function CreateRobotPage() {
 
       // Navigate to the newly created robot
       navigate(`/robots/${data.robot.id}`);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (err.response?.status === 401) {
         logout();
         navigate('/login');

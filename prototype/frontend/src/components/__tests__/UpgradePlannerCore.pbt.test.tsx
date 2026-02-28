@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import * as fc from 'fast-check';
 import UpgradePlanner from '../UpgradePlanner';
 
@@ -377,8 +377,8 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
           );
 
           // Initial total should be 0
-          let totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
-          let totalCost = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
+          const totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+          const totalCost = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
           expect(totalCost).toBe(0);
 
           // Click + button for first attribute

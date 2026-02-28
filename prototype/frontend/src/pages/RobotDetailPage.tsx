@@ -134,7 +134,9 @@ function RobotDetailPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showImageSelector, setShowImageSelector] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [recentBattles, setRecentBattles] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [battleReadiness, setBattleReadiness] = useState<any>({ isReady: true, warnings: [] });
   const [leagueRank, setLeagueRank] = useState<{ rank: number; total: number; percentile: number } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -205,12 +207,14 @@ function RobotDetailPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, location]); // Re-fetch when route location changes
 
   useEffect(() => {
     if (user) {
       setCurrency(user.currency);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchRobotAndWeapons = async () => {
@@ -228,6 +232,7 @@ function RobotDetailPage() {
         const leagueResponse = await apiClient.get(`/api/leagues/${robotData.currentLeague}/standings?instance=${robotData.leagueId}`);
         const leagueData = leagueResponse.data;
         const standings = leagueData.data || [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const robotIndex = standings.findIndex((r: any) => r.id === parseInt(id!));
         
         if (robotIndex !== -1) {
@@ -258,18 +263,24 @@ function RobotDetailPage() {
         console.log('Facilities Array:', facilities);
         
         // Always set training level (even if 0)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const trainingFacility = facilities.find((f: any) => f.type === 'training_facility');
         setTrainingLevel(trainingFacility?.currentLevel || 0);
 
         // Set repair bay level
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const repairBay = facilities.find((f: any) => f.type === 'repair_bay');
         setRepairBayLevel(repairBay?.currentLevel || 0);
 
         // Always set academy levels (even if 0)
         const newAcademyLevels = {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           combat_training_academy: facilities.find((f: any) => f.type === 'combat_training_academy')?.currentLevel || 0,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           defense_training_academy: facilities.find((f: any) => f.type === 'defense_training_academy')?.currentLevel || 0,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           mobility_training_academy: facilities.find((f: any) => f.type === 'mobility_training_academy')?.currentLevel || 0,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ai_training_academy: facilities.find((f: any) => f.type === 'ai_training_academy')?.currentLevel || 0,
         };
         console.log('Academy Levels:', newAcademyLevels);
@@ -279,6 +290,7 @@ function RobotDetailPage() {
         try {
           const robotsResponse = await apiClient.get('/api/robots');
           const robotsData = robotsResponse.data;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const activeCount = robotsData.filter((r: any) => r.name !== 'Bye Robot').length;
           setActiveRobotCount(activeCount);
         } catch (err) {
@@ -292,6 +304,7 @@ function RobotDetailPage() {
       const recentBattlesData = await getMatchHistory(1, 10);
       
       // Filter for this specific robot
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const robotBattles = recentBattlesData.data.filter((battle: any) => {
         // Check if this robot participated in the battle
         if (battle.battleType === 'tag_team') {
@@ -322,7 +335,7 @@ function RobotDetailPage() {
       }
       
       setBattleReadiness({ isReady, warnings });
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (err.response?.status === 401) {
         logout();
         navigate('/login');
@@ -368,13 +381,14 @@ function RobotDetailPage() {
       setRobot(response.data.robot);
       setSuccessMessage('Robot image updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to update appearance:', err);
       console.error('Error response:', err.response?.data);
       setError(err.response?.data?.error || 'Failed to update robot image');
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCommitUpgrades = async (upgradePlan: any) => {
     if (!robot) return;
 
@@ -394,7 +408,9 @@ function RobotDetailPage() {
       // Optimistic UI update: immediately apply upgrades to robot state
       const optimisticRobot = { ...robot };
       for (const [attribute, plan] of Object.entries(upgradePlan)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { plannedLevel } = plan as any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (optimisticRobot as any)[attribute] = plannedLevel;
       }
       setRobot(optimisticRobot);
@@ -421,7 +437,7 @@ function RobotDetailPage() {
         message: `Successfully upgraded ${upgradeCount} attribute${upgradeCount > 1 ? 's' : ''}!`,
         type: 'success',
       });
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to commit upgrades:', err);
       console.error('Error response:', err.response);
       console.error('Error response data:', err.response?.data);

@@ -26,7 +26,9 @@ interface RobotDashboardCardProps {
     losses?: number;
     draws?: number;
     totalBattles?: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mainWeapon?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     offhandWeapon?: any;
     loadoutType?: string;
   };

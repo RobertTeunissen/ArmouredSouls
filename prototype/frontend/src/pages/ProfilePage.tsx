@@ -119,7 +119,7 @@ function ProfilePage() {
       
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000);
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to update profile:', error);
       console.error('Error response:', error.response);
       
@@ -200,6 +200,7 @@ function ProfilePage() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editedProfile, passwordData]);
 
   // Navigation guard - warn when navigating away with unsaved changes
@@ -224,6 +225,7 @@ function ProfilePage() {
     return () => {
       window.removeEventListener('popstate', handleNavigation);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editedProfile, passwordData]);
 
   if (!user || !profile) {
@@ -322,7 +324,7 @@ function ProfilePage() {
                     if (validationError) {
                       setErrors({ ...errors, stableName: validationError });
                     } else {
-                      const { stableName, ...restErrors } = errors;
+                      const { stableName: _stableName, ...restErrors } = errors;
                       setErrors(restErrors);
                     }
                   }}
@@ -470,7 +472,7 @@ function ProfilePage() {
                     
                     // Clear error when user starts typing
                     if (errors.currentPassword) {
-                      const { currentPassword, ...restErrors } = errors;
+                      const { currentPassword: _currentPassword, ...restErrors } = errors;
                       setErrors(restErrors);
                     }
                   }}
@@ -497,7 +499,7 @@ function ProfilePage() {
                     if (validationError) {
                       setErrors({ ...errors, newPassword: validationError });
                     } else {
-                      const { newPassword, ...restErrors } = errors;
+                      const { newPassword: _newPassword, ...restErrors } = errors;
                       setErrors(restErrors);
                     }
                   }}

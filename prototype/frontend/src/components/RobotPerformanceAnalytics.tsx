@@ -58,10 +58,9 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
   const [summary, setSummary] = useState<PerformanceSummary | null>(null);
   const [eloProgression, setEloProgression] = useState<MetricProgression | null>(null);
   const [damageProgression, setDamageProgression] = useState<MetricProgression | null>(null);
-  const [creditsProgression, setCreditsProgression] = useState<MetricProgression | null>(null);
-
-  useEffect(() => {
+  const [creditsProgression, setCreditsProgression] = useState<MetricProgression | null>(null);  useEffect(() => {
     fetchAnalytics();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [robotId, lastNCycles]);
 
   const fetchAnalytics = async () => {
@@ -102,7 +101,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
         `/api/analytics/robot/${robotId}/metric/creditsEarned?cycleRange=${cycleRange}`
       );
       setCreditsProgression(creditsResponse.data);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to fetch analytics:', err);
       setError(err.response?.data?.message || 'Failed to load analytics data');
     } finally {

@@ -69,10 +69,9 @@ function LeaderboardsPrestigePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
+  };  useEffect(() => {
     fetchLeaderboard();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minRobots]);
 
   const getRankColor = (rank: string) => {

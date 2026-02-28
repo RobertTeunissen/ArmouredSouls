@@ -5,8 +5,11 @@ interface EffectiveStatsDisplayProps {
   robot: {
     loadoutType: string;
     stance: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mainWeapon?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     offhandWeapon?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
 }

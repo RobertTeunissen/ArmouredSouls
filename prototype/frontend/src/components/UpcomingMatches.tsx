@@ -19,10 +19,9 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
   const navigate = useNavigate();
   const [matches, setMatches] = useState<ScheduledMatch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [error, setError] = useState<string | null>(null);  useEffect(() => {
     fetchMatches();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMatches = async () => {
@@ -66,7 +65,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
       
       setMatches(filteredMatches);
       setError(null);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       // Handle 401 Unauthorized errors
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         console.error('[UpcomingMatches] Authentication error:', err);

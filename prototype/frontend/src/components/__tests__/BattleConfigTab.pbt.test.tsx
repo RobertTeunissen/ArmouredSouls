@@ -65,7 +65,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with calculated HP values
           const robot = createRobot(currentHP, maxHP, maxHP, maxHP);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -115,7 +115,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with calculated HP values
           const robot = createRobot(currentHP, maxHP, maxHP, maxHP);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -164,7 +164,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with calculated HP values
           const robot = createRobot(currentHP, maxHP, maxHP, maxHP);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -222,7 +222,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with calculated HP values
           const robot = createRobot(currentHP, maxHP, maxHP, maxHP);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -278,7 +278,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with full HP and calculated shield values
           const robot = createRobot(1000, 1000, currentShield, maxShield);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -326,7 +326,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with full HP and calculated shield values
           const robot = createRobot(1000, 1000, currentShield, maxShield);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -374,7 +374,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with full HP and calculated shield values
           const robot = createRobot(1000, 1000, currentShield, maxShield);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -424,7 +424,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with calculated values
           const robot = createRobot(currentHP, maxHP, currentShield, maxShield);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -488,7 +488,7 @@ describe('Property 18: HP and Shield Bar Color Coding (Property-Based Test)', ()
           // Create robot with calculated HP values
           const robot = createRobot(currentHP, maxHP, maxHP, maxHP);
           
-          const { container } = render(
+          const { container: _container } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -645,7 +645,7 @@ describe('Property 19: Configuration Change Feedback (Property-Based Test)', () 
           // Create robot with initial configuration
           const robot = createRobot(loadoutType, initialStance, yieldThreshold);
 
-          const { rerender } = render(
+          const { rerender: _rerender } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}
@@ -699,7 +699,7 @@ describe('Property 19: Configuration Change Feedback (Property-Based Test)', () 
           // Create robot with initial configuration
           const robot = createRobot(loadoutType, stance, initialThreshold);
 
-          const { rerender } = render(
+          const { rerender: _rerender } = render(
             <BattleConfigTab
               robot={robot}
               onRobotUpdate={mockOnRobotUpdate}

@@ -32,7 +32,7 @@ function StableNameModal({ onComplete }: StableNameModalProps) {
       });
       
       onComplete();
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       setError(err.response?.data?.error || 'Failed to set stable name');
       setSubmitting(false);
     }

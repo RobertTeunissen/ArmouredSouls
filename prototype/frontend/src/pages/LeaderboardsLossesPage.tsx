@@ -72,10 +72,9 @@ function LeaderboardsLossesPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
+  };  useEffect(() => {
     fetchLeaderboard();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueFilter]);
 
   return (
@@ -98,7 +97,7 @@ function LeaderboardsLossesPage() {
             <div className="text-sm text-secondary">
               <p className="font-semibold text-primary mb-1">About Total Losses</p>
               <p>
-                "Total Losses" tracks the cumulative number of opponents a robot has destroyed (reduced to 0 HP) across all battles. 
+                &quot;Total Losses&quot; tracks the cumulative number of opponents a robot has destroyed (reduced to 0 HP) across all battles. 
                 This is a lifetime metric showing overall combat effectiveness and finishing power.
               </p>
               <p className="mt-2">

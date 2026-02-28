@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import * as fc from 'fast-check';
 import PerformanceByContext from '../PerformanceByContext';
 import axios from 'axios';
@@ -236,14 +236,14 @@ describe('PerformanceByContext - Property-Based Tests', () => {
           // Check for "No battles yet" message when appropriate
           // The component shows "No battles yet" when arrays are empty
           // Count how many "No battles yet" messages should appear
-          let expectedEmptyStates = 0;
-          if (!hasLeagues) expectedEmptyStates++;
-          if (!hasTournaments) expectedEmptyStates++;
-          if (!hasTagTeam) expectedEmptyStates++;
+          let _expectedEmptyStates = 0;
+          if (!hasLeagues) _expectedEmptyStates++;
+          if (!hasTournaments) _expectedEmptyStates++;
+          if (!hasTagTeam) _expectedEmptyStates++;
 
           // Count actual "No battles yet" occurrences
           const matches = text.match(/No battles yet/g);
-          const actualEmptyStates = matches ? matches.length : 0;
+          const _actualEmptyStates = matches ? matches.length : 0;
 
           // The component should show "No battles yet" for each empty context
           // Note: This assumes sections are expanded by default or we expand them

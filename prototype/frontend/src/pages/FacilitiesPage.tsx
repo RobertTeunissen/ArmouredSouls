@@ -111,12 +111,11 @@ function FacilitiesPage() {
 
   useEffect(() => {
     fetchFacilities();
-  }, []);
-
-  useEffect(() => {
+  }, []);  useEffect(() => {
     if ((activeTab === 'advisor' || activeTab === 'investments') && user) {
       fetchAdvisorData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, user, lastNCycles]);
 
   const fetchFacilities = async () => {
@@ -220,7 +219,7 @@ function FacilitiesPage() {
 
       // Refresh facilities and user data
       await Promise.all([fetchFacilities(), refreshUser()]);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (err.response?.status === 403) {
         const { current, message } = err.response.data;
         setError(`${message}. You have ${current?.toLocaleString()} prestige.`);
@@ -621,7 +620,7 @@ function FacilitiesPage() {
                       </h3>
                       <div className="text-sm text-gray-300 space-y-2">
                         <p>
-                          <strong className="text-blue-300">ROI</strong> shows how much profit you've made compared to what you invested.
+                          <strong className="text-blue-300">ROI</strong> shows how much profit you&apos;ve made compared to what you invested.
                           A positive ROI means the facility has paid for itself and is generating profit.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">

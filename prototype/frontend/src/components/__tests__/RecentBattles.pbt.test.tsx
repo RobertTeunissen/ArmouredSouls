@@ -91,7 +91,7 @@ describe('RecentBattles - Property-Based Tests', () => {
             eloChange: fc.integer({ min: -100, max: 100 }),
           }),
           { minLength: 1, maxLength: 10 }
-        ).map((battles, index) => {
+        ).map((battles, _index) => {
           // Ensure unique battleIds by adding index
           return battles.map((battle, i) => ({
             ...battle,
@@ -152,7 +152,7 @@ describe('RecentBattles - Property-Based Tests', () => {
             opponentTeam: fc.array(fc.string({ minLength: 3, maxLength: 15 }), { minLength: 1, maxLength: 3 }),
           }),
           { minLength: 1, maxLength: 5 }
-        ).map((battles, index) => {
+        ).map((battles, _index) => {
           // Ensure unique battleIds
           return battles.map((battle, i) => ({
             ...battle,

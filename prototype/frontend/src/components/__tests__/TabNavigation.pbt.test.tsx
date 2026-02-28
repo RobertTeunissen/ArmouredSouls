@@ -83,6 +83,7 @@ describe('Property 1: Default Tab Selection (Property-Based Test)', () => {
           const { container } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={activeTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={isOwner} 
@@ -179,6 +180,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
           const { container, rerender } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={initialTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={isOwner} 
@@ -196,6 +198,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
             rerender(
               <BrowserRouter>
                 <TabNavigation 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   activeTab={initialTab as any} 
                   onTabChange={mockOnTabChange} 
                   isOwner={isOwner} 
@@ -238,6 +241,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
           const { container, rerender } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={currentTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={isOwner} 
@@ -258,6 +262,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
             rerender(
               <BrowserRouter>
                 <TabNavigation 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   activeTab={currentTab as any} 
                   onTabChange={mockOnTabChange} 
                   isOwner={isOwner} 
@@ -302,6 +307,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
           const { container, rerender } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={selectedTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={initialIsOwner} 
@@ -318,6 +324,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
             rerender(
               <BrowserRouter>
                 <TabNavigation 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   activeTab={selectedTab as any} 
                   onTabChange={mockOnTabChange} 
                   isOwner={newIsOwner} 
@@ -360,6 +367,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
           const { container } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={selectedTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={isOwner} 
@@ -421,6 +429,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
             const { container } = render(
               <BrowserRouter>
                 <TabNavigation 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   activeTab={state.activeTab as any} 
                   onTabChange={mockOnTabChange} 
                   isOwner={state.isOwner} 
@@ -482,6 +491,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
           const { container } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={activeTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={isOwner} 
@@ -528,6 +538,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
           const { container } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={activeTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={isOwner} 
@@ -582,6 +593,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             const { container } = render(
               <BrowserRouter>
                 <TabNavigation 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   activeTab={state.activeTab as any} 
                   onTabChange={mockOnTabChange} 
                   isOwner={state.isOwner} 
@@ -634,6 +646,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             const { container } = render(
               <BrowserRouter>
                 <TabNavigation 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   activeTab={activeTab as any} 
                   onTabChange={mockOnTabChange} 
                   isOwner={isOwner} 
@@ -688,6 +701,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
           const { container } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={activeTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={isOwner} 
@@ -742,6 +756,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
           const { container, rerender } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={currentTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={isOwner} 
@@ -764,6 +779,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             rerender(
               <BrowserRouter>
                 <TabNavigation 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   activeTab={currentTab as any} 
                   onTabChange={mockOnTabChange} 
                   isOwner={isOwner} 
@@ -821,6 +837,7 @@ describe('Property 2: Owner-Only Tab Access Control (Property-Based Test)', () =
           const { container } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={activeTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={false} 
@@ -866,6 +883,7 @@ describe('Property 2: Owner-Only Tab Access Control (Property-Based Test)', () =
           const { container } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={activeTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={true} 
@@ -914,6 +932,7 @@ describe('Property 2: Owner-Only Tab Access Control (Property-Based Test)', () =
             const { container } = render(
               <BrowserRouter>
                 <TabNavigation 
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   activeTab={testCase.activeTab as any} 
                   onTabChange={mockOnTabChange} 
                   isOwner={testCase.isOwner} 
@@ -965,6 +984,7 @@ describe('Property 2: Owner-Only Tab Access Control (Property-Based Test)', () =
           const { container } = render(
             <BrowserRouter>
               <TabNavigation 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 activeTab={testCase.attemptedTab as any} 
                 onTabChange={mockOnTabChange} 
                 isOwner={testCase.isOwner} 

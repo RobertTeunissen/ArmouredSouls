@@ -26,11 +26,16 @@ interface Robot {
   losses?: number;
   draws?: number;
   totalBattles?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mainWeapon?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   offhandWeapon?: any;
   loadoutType?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   battlesWon?: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   battlesAsRobot1?: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   battlesAsRobot2?: any[];
 }
 
@@ -52,12 +57,14 @@ function DashboardPage() {
     if (user) {
       fetchRobots();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
     if (robots.length > 0) {
       generateNotifications();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [robots, user]);
 
   const generateNotifications = () => {
@@ -135,7 +142,7 @@ function DashboardPage() {
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700">
           <h1 className="text-3xl font-bold text-white">Command Center</h1>
           <div className="text-lg text-gray-400">
-            <span className="font-semibold text-white">{user.stableName || user.username}</span>'s Stable
+            <span className="font-semibold text-white">{user.stableName || user.username}</span>&apos;s Stable
           </div>
         </div>
 
@@ -221,14 +228,14 @@ function DashboardPage() {
             <div className="max-w-2xl mx-auto">
               <h2 className="text-3xl font-bold mb-4">Welcome to Your Stable!</h2>
               <p className="text-lg text-gray-300 mb-6">
-                You're ready to build your robot fighting empire. Here's how to get started:
+                You&apos;re ready to build your robot fighting empire. Here&apos;s how to get started:
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
                 <div className="bg-surface p-4 rounded-lg border border-gray-600">
                   <div className="text-primary font-bold text-xl mb-2">1. Upgrade Facilities</div>
                   <p className="text-sm text-gray-400">
-                    Unlock robot creation and improve your stable's capabilities
+                    Unlock robot creation and improve your stable&apos;s capabilities
                   </p>
                 </div>
                 <div className="bg-surface p-4 rounded-lg border border-gray-600">

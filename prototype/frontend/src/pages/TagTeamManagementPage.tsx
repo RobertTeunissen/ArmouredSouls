@@ -16,12 +16,11 @@ function TagTeamManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [teamToDisband, setTeamToDisband] = useState<TagTeam | null>(null);
-  const [disbanding, setDisbanding] = useState(false);
-
-  useEffect(() => {
+  const [disbanding, setDisbanding] = useState(false);  useEffect(() => {
     if (user) {
       fetchTeams();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const fetchTeams = async () => {
@@ -38,7 +37,7 @@ function TagTeamManagementPage() {
       
       const data = await getMyTagTeams();
       setTeams(data);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         logout();
         navigate('/login');
@@ -59,7 +58,7 @@ function TagTeamManagementPage() {
       await disbandTagTeam(teamToDisband.id);
       setTeams(teams.filter(t => t.id !== teamToDisband.id));
       setTeamToDisband(null);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to disband team:', err);
       alert(err.response?.data?.message || 'Failed to disband team');
     } finally {

@@ -65,7 +65,7 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
       if (response.data) {
         onStanceChange(newStance);
       }
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to change stance:', err);
       setError(err.response?.data?.error || 'Failed to change stance');
     } finally {

@@ -26,9 +26,9 @@ export interface EnvConfig {
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = process.env.NODE_ENV || 'development';
-  const jwtSecret = process.env.JWT_SECRET || 'default-dev-secret';
+  const jwtSecret = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
-  if (nodeEnv === 'production' && jwtSecret === 'default-dev-secret') {
+  if (nodeEnv === 'production' && jwtSecret === 'dev-secret-change-in-production') {
     console.error('FATAL: JWT_SECRET must be set in production');
     process.exit(1);
   }

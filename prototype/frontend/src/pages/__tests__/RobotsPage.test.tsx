@@ -221,6 +221,7 @@ describe('RobotsPage', () => {
 
   describe('Empty State', () => {
     it('should display empty state when no robots', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockImplementation((url: string) => {
         if (url.includes('/api/robots')) {
           return Promise.resolve({
@@ -249,6 +250,7 @@ describe('RobotsPage', () => {
     });
 
     it('should navigate to create robot page from empty state', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockImplementation((url: string) => {
         if (url.includes('/api/robots')) {
           return Promise.resolve({
@@ -279,6 +281,7 @@ describe('RobotsPage', () => {
 
   describe('Error State', () => {
     it('should display error message when API fails', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockImplementation(() => {
         return Promise.resolve({
           ok: false,
@@ -294,6 +297,7 @@ describe('RobotsPage', () => {
     });
 
     it('should logout and redirect on 401 error', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockImplementation(() => {
         return Promise.resolve({
           ok: false,
@@ -328,6 +332,7 @@ describe('RobotsPage', () => {
         repairCost: 0,
       }));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockImplementation((url: string) => {
         if (url.includes('/api/robots')) {
           return Promise.resolve({
@@ -364,6 +369,7 @@ describe('RobotsPage', () => {
         },
       ];
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockImplementation((url: string) => {
         if (url.includes('/api/robots')) {
           return Promise.resolve({
@@ -405,6 +411,7 @@ describe('RobotsPage', () => {
     it('should disable create button when at capacity', async () => {
       const threeRobots = [...mockRobots, { ...mockRobots[0], id: 3, name: 'Third Robot' }];
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockImplementation((url: string) => {
         if (url.includes('/api/robots')) {
           return Promise.resolve({

@@ -31,6 +31,7 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.localStorage = localStorageMock as any;
 
 // Mock sessionStorage
@@ -40,8 +41,11 @@ const sessionStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.sessionStorage = sessionStorageMock as any;
 
 // Mock window.location.hash
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (window as any).location;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 window.location = { hash: '' } as any;

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fc from 'fast-check';
-import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import apiClient from '../utils/apiClient';
 
@@ -19,7 +18,8 @@ describe('API Client Interceptors - Property Tests', () => {
     mock = new MockAdapter(apiClient);
     vi.mocked(localStorage.getItem).mockReset();
     vi.mocked(localStorage.removeItem).mockReset();
-    (window.location as any).href = '';
+    (window.location as unknown as { href: string }).href = '';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   });
 
   afterEach(() => {
@@ -105,7 +105,9 @@ describe('API Client Interceptors - Property Tests', () => {
         fc.asyncProperty(pathArb, bodyArb, async (path, body) => {
           vi.mocked(localStorage.getItem).mockReturnValue('some-token');
           vi.mocked(localStorage.removeItem).mockClear();
-          (window.location as any).href = '';
+          (window.location as unknown as { href: string }).href = '';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 
           mock.onAny(`/api/${path}`).reply(401, body);
 
@@ -131,7 +133,9 @@ describe('API Client Interceptors - Property Tests', () => {
         fc.asyncProperty(nonAuthStatusArb, async (status) => {
           vi.mocked(localStorage.getItem).mockReturnValue('some-token');
           vi.mocked(localStorage.removeItem).mockClear();
-          (window.location as any).href = '';
+          (window.location as unknown as { href: string }).href = '';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 
           mock.onGet('/api/test').reply(status, { error: 'some error' });
 

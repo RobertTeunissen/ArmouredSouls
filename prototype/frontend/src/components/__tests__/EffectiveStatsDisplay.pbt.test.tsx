@@ -20,7 +20,9 @@ const createRobot = (
   attributeValues: Record<string, number>,
   loadoutType: string = 'single',
   stance: string = 'balanced',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mainWeapon: any = null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   offhandWeapon: any = null
 ) => ({
   loadoutType,

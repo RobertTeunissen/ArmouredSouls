@@ -17,6 +17,7 @@ vi.mock('axios', async (importOriginal) => {
   const actual = await importOriginal<typeof import('axios')>();
   return {
     ...actual,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     isAxiosError: (error: any) => error?.isAxiosError === true,
   };
 });

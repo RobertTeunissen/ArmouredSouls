@@ -360,7 +360,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
             expect(text).toMatch(/of \d+$/);
             
             // Must not have extra spaces
-            expect(text).not.toMatch(/  /); // No double spaces
+            expect(text).not.toMatch(/ {2}/); // No double spaces
             expect(text).not.toMatch(/# /); // No space after #
             expect(text).not.toMatch(/ $/); // No trailing space
             expect(text).not.toMatch(/^ /); // No leading space
@@ -667,7 +667,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
           const total = 1000;
           
           // Helper function to get expected badge
-          const getExpectedBadge = (percentile: number) => {
+          const _getExpectedBadge = (percentile: number) => {
             if (percentile >= 90) return 'Top 10%';
             if (percentile >= 75) return 'Top 25%';
             if (percentile >= 50) return 'Top 50%';

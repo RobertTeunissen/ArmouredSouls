@@ -62,6 +62,7 @@ describe('Property 12: Loading State During Submission', () => {
             resolveRequest = resolve;
           });
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           mockedApiClient.post.mockReturnValue(pendingPromise as any);
 
           const onSuccess = vi.fn();

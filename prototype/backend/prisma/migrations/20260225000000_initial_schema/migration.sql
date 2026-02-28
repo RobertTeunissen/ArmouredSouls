@@ -2,7 +2,6 @@
 CREATE TABLE "users" (
     "id" SERIAL NOT NULL,
     "username" VARCHAR(50) NOT NULL,
-    "email" VARCHAR(20),
     "password_hash" VARCHAR(255) NOT NULL,
     "role" VARCHAR(20) NOT NULL DEFAULT 'user',
     "currency" INTEGER NOT NULL DEFAULT 3000000,
@@ -345,9 +344,6 @@ CREATE TABLE "tag_team_matches" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_stable_name_key" ON "users"("stable_name");

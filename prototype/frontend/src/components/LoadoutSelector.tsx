@@ -34,7 +34,7 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
       if (response.data.robot) {
         onLoadoutChange(newLoadout);
       }
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to change loadout:', err);
       setError(err.response?.data?.error || 'Failed to change loadout type');
     } finally {

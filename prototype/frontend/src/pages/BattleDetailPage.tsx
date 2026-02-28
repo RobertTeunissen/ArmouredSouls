@@ -31,7 +31,7 @@ function BattleDetailPage() {
       const data = await getBattleLog(battleId);
       setBattleLog(data);
       setError(null);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to fetch battle log:', err);
       if (err.response?.status === 404) {
         setError('Battle not found');

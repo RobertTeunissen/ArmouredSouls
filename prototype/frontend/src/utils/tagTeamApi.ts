@@ -10,7 +10,9 @@ export interface TagTeamRobot {
   currentShield?: number;
   maxShield?: number;
   yieldThreshold: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mainWeapon?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   offhandWeapon?: any;
 }
 

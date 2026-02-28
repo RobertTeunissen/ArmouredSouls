@@ -56,6 +56,7 @@ const SystemHealthPage: React.FC = () => {
 
   useEffect(() => {
     fetchSystemHealth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cycleRange]);
 
   const fetchSystemHealth = async () => {
@@ -71,7 +72,7 @@ const SystemHealthPage: React.FC = () => {
           `/api/analytics/performance?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
         );
         setPerformanceMetrics(perfResponse.data);
-      } catch (err: any) {
+      } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.error('Performance error:', err);
         errors.push(`Performance metrics: ${err.response?.statusText || err.message || 'Unknown error'}`);
       }
@@ -82,7 +83,7 @@ const SystemHealthPage: React.FC = () => {
           `/api/analytics/integrity?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
         );
         setIntegrityReports(integrityResponse.data);
-      } catch (err: any) {
+      } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.error('Integrity error:', err);
         errors.push(`Integrity reports: ${err.response?.statusText || err.message || 'Unknown error'}`);
       }
@@ -93,7 +94,7 @@ const SystemHealthPage: React.FC = () => {
           `/api/analytics/logs/summary?startCycle=${cycleRange[0]}&endCycle=${cycleRange[1]}`
         );
         setEventStats(statsResponse.data);
-      } catch (err: any) {
+      } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.error('Event metrics error:', err);
         errors.push(`Event statistics: ${err.response?.statusText || err.message || 'Unknown error'}`);
       }

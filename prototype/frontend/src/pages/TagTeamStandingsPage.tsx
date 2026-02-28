@@ -23,13 +23,12 @@ function TagTeamStandingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [userTeamTiers, setUserTeamTiers] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
+  const [userTeamTiers, setUserTeamTiers] = useState<Set<string>>(new Set());  useEffect(() => {
     if (user) {
       fetchStandings();
       fetchUserTeamTiers();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedTier, page]);
 
   const fetchUserTeamTiers = async () => {
@@ -40,6 +39,7 @@ function TagTeamStandingsPage() {
       const response = await apiClient.get('/api/tag-teams');
       
       const teams = response.data.teams || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tiers = new Set<string>(teams.map((team: any) => team.tagTeamLeague));
       setUserTeamTiers(tiers);
     } catch (err) {
@@ -63,7 +63,7 @@ function TagTeamStandingsPage() {
       console.log('Standings API response - first team:', JSON.stringify(data.standings[0], null, 2));
       setStandings(data.standings);
       setTotalPages(data.pagination.totalPages);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (err.response?.status === 401) {
         logout();
         navigate('/login');

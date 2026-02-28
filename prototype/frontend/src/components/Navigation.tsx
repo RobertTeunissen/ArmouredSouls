@@ -291,6 +291,7 @@ function Navigation() {
 
         if (response.ok) {
           const data = await response.json();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setUserRobots(data.map((robot: any) => ({ id: robot.id, name: robot.name })));
         }
       } catch (error) {

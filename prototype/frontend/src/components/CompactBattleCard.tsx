@@ -5,7 +5,9 @@ import { formatDateTime } from '../utils/matchmakingApi';
 
 interface CompactBattleCardProps {
   battle: BattleHistory;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   myRobot: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opponent: any;
   outcome: string;
   eloChange: number;

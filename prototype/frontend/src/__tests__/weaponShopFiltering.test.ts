@@ -135,7 +135,7 @@ const mockWeapons = [
 ];
 
 // Helper function to check weapon compatibility with loadout
-function isWeaponCompatibleWithLoadout(weapon: any, loadoutType: string): boolean {
+function isWeaponCompatibleWithLoadout(weapon: typeof mockWeapons[number], loadoutType: string): boolean {
   const { handsRequired, weaponType } = weapon;
   const isOneHandedWeapon = () => handsRequired === 'one' && weaponType !== 'shield';
 
@@ -342,7 +342,7 @@ describe('Weapon Shop Sorting Logic', () => {
 
   describe('Sort by DPS', () => {
     it('should sort weapons by DPS (high to low)', () => {
-      const getDPS = (w: any) => w.cooldown > 0 ? w.baseDamage / w.cooldown : 0;
+      const getDPS = (w: typeof mockWeapons[number]) => w.cooldown > 0 ? w.baseDamage / w.cooldown : 0;
       const sorted = [...mockWeapons].sort((a, b) => getDPS(b) - getDPS(a));
       
       // Battle Axe: 120/10 = 12 DPS
@@ -353,7 +353,7 @@ describe('Weapon Shop Sorting Logic', () => {
     });
 
     it('should handle weapons with zero cooldown', () => {
-      const getDPS = (w: any) => w.cooldown > 0 ? w.baseDamage / w.cooldown : 0;
+      const getDPS = (w: typeof mockWeapons[number]) => w.cooldown > 0 ? w.baseDamage / w.cooldown : 0;
       const sorted = [...mockWeapons].sort((a, b) => getDPS(b) - getDPS(a));
       const shieldIndex = sorted.findIndex(w => w.weaponType === 'shield');
       expect(getDPS(sorted[shieldIndex])).toBe(0);
@@ -362,7 +362,7 @@ describe('Weapon Shop Sorting Logic', () => {
 });
 
 describe('Weapon Shop Search Logic', () => {
-  const searchWeapons = (weapons: any[], query: string): any[] => {
+  const searchWeapons = (weapons: typeof mockWeapons, query: string): typeof mockWeapons => {
     if (!query.trim()) return weapons;
     
     const lowerQuery = query.trim().toLowerCase(); // Added trim here
