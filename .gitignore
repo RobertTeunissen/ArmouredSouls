@@ -60,7 +60,7 @@ build/
 *.tsbuildinfo
 
 # Package managers
-package-lock.json
+# package-lock.json should be committed for CI/CD
 yarn.lock
 pnpm-lock.yaml
 poetry.lock
