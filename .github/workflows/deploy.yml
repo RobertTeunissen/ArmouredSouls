@@ -177,12 +177,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download frontend build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: prototype/frontend/dist/
-
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -199,12 +193,25 @@ jobs:
             ./prototype/backend/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/backend/
 
-      - name: Transfer frontend artifacts via rsync
+      - name: Transfer frontend source files via rsync
         run: |
           rsync -avz --delete \
+            --exclude='node_modules' \
+            --exclude='dist' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/frontend/dist/ \
-            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/dist/
+            ./prototype/frontend/ \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/
+
+      - name: Build frontend on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/frontend
+            npm ci
+            npm run build
 
       - name: Transfer ecosystem config
         run: |
@@ -300,12 +307,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Build frontend for production
-        working-directory: ./prototype/frontend
-        run: |
-          npm ci
-          npm run build
-
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -322,12 +323,25 @@ jobs:
             ./prototype/backend/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/backend/
 
-      - name: Transfer frontend artifacts via rsync
+      - name: Transfer frontend source files via rsync
         run: |
           rsync -avz --delete \
+            --exclude='node_modules' \
+            --exclude='dist' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/frontend/dist/ \
-            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/dist/
+            ./prototype/frontend/ \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/
+
+      - name: Build frontend on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/frontend
+            npm ci
+            npm run build
 
       - name: Transfer ecosystem config
         run: |
