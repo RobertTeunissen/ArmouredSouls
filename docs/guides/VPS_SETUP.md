@@ -123,12 +123,12 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 # Reload shell
 source ~/.bashrc
 
-# Install Node.js 18
-nvm install 18
-nvm alias default 18
+# Install Node.js 20 (LTS)
+nvm install 20
+nvm alias default 20
 
 # Verify
-node --version   # v18.x.x
+node --version   # v20.x.x
 npm --version
 ```
 
