@@ -47,8 +47,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: prototype/backend/package-lock.json
 
       - name: Install backend dependencies
         working-directory: ./prototype/backend
@@ -92,8 +90,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: prototype/frontend/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: ./prototype/frontend
@@ -146,8 +142,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: prototype/frontend/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: ./prototype/frontend
@@ -303,8 +297,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: prototype/frontend/package-lock.json
 
       - name: Build frontend for production
         working-directory: ./prototype/frontend
