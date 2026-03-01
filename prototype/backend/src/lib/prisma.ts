@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 // Use a singleton pattern to ensure only one Prisma Client instance
 // This is especially important for tests to avoid "too many connections" errors
 declare global {
-  // eslint-disable-next-line no-var
+   
   var prisma: PrismaClient | undefined;
 }
 

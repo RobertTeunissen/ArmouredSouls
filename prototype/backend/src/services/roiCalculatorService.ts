@@ -180,6 +180,7 @@ export class ROICalculatorService {
     let streaming = 0;
 
     for (const event of incomeEvents) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload = event.payload as any;
       merchandising += payload.merchandising || 0;
       streaming += payload.streaming || 0;
@@ -221,6 +222,7 @@ export class ROICalculatorService {
 
     // For each battle event, get the streaming revenue
     for (const event of battleEvents) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload = event.payload as any;
       const battleId = payload.battleId;
       
@@ -278,6 +280,7 @@ export class ROICalculatorService {
       });
 
       for (const event of repairEvents) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const payload = event.payload as any;
         const actualCost = payload.cost || 0;
         const discountPercent = payload.discountPercent || 0;
@@ -306,6 +309,7 @@ export class ROICalculatorService {
       });
 
       for (const event of upgradeEvents) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const payload = event.payload as any;
         const actualCost = payload.cost || 0;
         const discountPercent = payload.discountPercent || 0;
@@ -330,6 +334,7 @@ export class ROICalculatorService {
       });
 
       for (const event of weaponEvents) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const payload = event.payload as any;
         const actualCost = payload.cost || 0;
         const discountPercent = payload.discountPercent || 0;
@@ -371,12 +376,13 @@ export class ROICalculatorService {
     let totalCost = 0;
 
     for (const event of operatingCostEvents) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload = event.payload as any;
       const costs = payload.costs || [];
 
       // Find the cost for this specific facility type
       const facilityCost = costs.find(
-        (c: any) => c.facilityType === facilityType
+        (c: { facilityType: string; cost: number }) => c.facilityType === facilityType
       );
       if (facilityCost) {
         totalCost += facilityCost.cost || 0;
@@ -437,6 +443,7 @@ export class ROICalculatorService {
 
       // Get streaming revenue for each battle
       for (const event of battleEvents) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const payload = event.payload as any;
         const battleId = payload.battleId;
         const cycle = event.cycleNumber;
@@ -466,6 +473,7 @@ export class ROICalculatorService {
     let cumulativeOperatingCosts = 0;
 
     for (const event of events) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload = event.payload as any;
 
       // Add returns
@@ -511,7 +519,7 @@ export class ROICalculatorService {
       if (event.eventType === 'operating_costs') {
         const costs = payload.costs || [];
         const facilityCost = costs.find(
-          (c: any) => c.facilityType === facilityType
+          (c: { facilityType: string; cost: number }) => c.facilityType === facilityType
         );
         if (facilityCost) {
           cumulativeOperatingCosts += facilityCost.cost || 0;

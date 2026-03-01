@@ -4,7 +4,7 @@
  * Formula scales from small (15 robots) to massive (100k+ robots) tournaments
  */
 
-import { Robot, User } from '@prisma/client';
+
 
 // Base reward amounts (not league-dependent)
 const BASE_CREDIT_REWARD = 20000; // Base credits for tournament win (reduced from 50000)

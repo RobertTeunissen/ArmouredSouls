@@ -1,20 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createTagTeam } from '../utils/tagTeamApi';
-import { fetchMyRobots } from '../utils/robotApi';
-
-interface Robot {
-  id: number;
-  name: string;
-  elo: number;
-  currentHP: number;
-  maxHP: number;
-  yieldThreshold: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mainWeapon?: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  offhandWeapon?: any;
-}
+import { fetchMyRobots, Robot } from '../utils/robotApi';
 
 interface TeamCreationModalProps {
   onClose: () => void;

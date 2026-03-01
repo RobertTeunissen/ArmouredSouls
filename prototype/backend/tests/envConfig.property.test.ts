@@ -452,7 +452,7 @@ describe('Environment Config Loading - Property Tests', () => {
       );
     });
 
-    test('RATE_LIMIT_MAX_REQUESTS defaults to 10 for invalid values', () => {
+    test('RATE_LIMIT_MAX_REQUESTS defaults to 30 for invalid values', () => {
       fc.assert(
         fc.property(
           fc.oneof(
@@ -466,7 +466,7 @@ describe('Environment Config Loading - Property Tests', () => {
             process.env.NODE_ENV = 'development';
 
             const config = loadEnvConfig();
-            expect(config.rateLimitMaxRequests).toBe(10);
+            expect(config.rateLimitMaxRequests).toBe(30);
           }
         ),
         { numRuns: NUM_RUNS }

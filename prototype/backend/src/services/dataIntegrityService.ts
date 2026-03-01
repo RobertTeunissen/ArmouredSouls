@@ -6,6 +6,7 @@ export interface IntegrityIssue {
   type: 'credit_mismatch' | 'sequence_gap' | 'missing_events' | 'invalid_data';
   severity: 'warning' | 'error';
   message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details: Record<string, any>;
 }
 
@@ -73,6 +74,7 @@ export class DataIntegrityService {
     const userCreditChanges = new Map<number, number[]>();
     for (const event of creditEvents) {
       const userId = event.userId!;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const amount = (event.payload as any).amount;
       
       if (!userCreditChanges.has(userId)) {
@@ -91,7 +93,9 @@ export class DataIntegrityService {
       });
 
       if (snapshot) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const stableMetrics = (snapshot.stableMetrics as any[]) || [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const userMetrics = stableMetrics.find((m: any) => m.userId === userId);
         
         if (userMetrics) {

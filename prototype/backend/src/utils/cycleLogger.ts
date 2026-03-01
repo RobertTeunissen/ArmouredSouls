@@ -5,6 +5,7 @@ interface LogEntry {
   timestamp: string;
   level: string;
   message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any;
 }
 
@@ -53,6 +54,7 @@ class CycleLogger {
     if (this.isCapturing) return;
     this.isCapturing = true;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     console.log = (...args: any[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
@@ -74,6 +76,7 @@ class CycleLogger {
       this.originalConsoleLog(...args);
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     console.error = (...args: any[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
@@ -95,6 +98,7 @@ class CycleLogger {
       this.originalConsoleError(...args);
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     console.warn = (...args: any[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
@@ -126,6 +130,7 @@ class CycleLogger {
     console.warn = this.originalConsoleWarn;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log(level: string, message: string, data?: any) {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),

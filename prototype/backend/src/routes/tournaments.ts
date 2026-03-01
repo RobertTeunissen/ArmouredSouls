@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { getActiveTournaments } from '../services/tournamentService';
 import prisma from '../lib/prisma';

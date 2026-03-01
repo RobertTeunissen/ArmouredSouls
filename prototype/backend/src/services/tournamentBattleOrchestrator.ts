@@ -20,7 +20,7 @@ import { calculateStreamingRevenue, awardStreamingRevenue } from './streamingRev
 import { EventLogger, EventType } from './eventLogger';
 
 // Economic constants
-const REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
+const _REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
 
 export interface TournamentBattleResult {
   battleId: number;
@@ -323,6 +323,7 @@ async function createTournamentBattleRecord(
   tournamentMatch: TournamentMatch,
   robot1: Robot,
   robot2: Robot,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   combatResult: any,
   round: number,
   maxRounds: number,
@@ -489,8 +490,8 @@ async function updateRobotStatsForTournament(
   robot: Robot,
   battle: Battle,
   isRobot1: boolean,
-  round: number,
-  maxRounds: number
+  _round: number,
+  _maxRounds: number
 ): Promise<{ prestigeAwarded: number; fameAwarded: number }> {
   const isWinner = battle.winnerId === robot.id;
   

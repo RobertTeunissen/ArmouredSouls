@@ -215,7 +215,7 @@ function RobotDetailPage() {
     if (user) {
       setCurrency(user.currency);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user]);
 
   const fetchRobotAndWeapons = async () => {

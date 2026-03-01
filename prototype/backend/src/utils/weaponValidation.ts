@@ -24,7 +24,7 @@ export function canEquipToSlot(
   slot: 'main' | 'offhand',
   loadoutType: string
 ): { canEquip: boolean; reason?: string } {
-  const { handsRequired, weaponType } = weapon;
+  const { handsRequired, weaponType: _weaponType } = weapon;
 
   // Shield weapons can ONLY go in offhand slot
   if (handsRequired === 'shield') {

@@ -51,7 +51,8 @@ router.get('/fame', async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
     
     // Build where clause
-    const where: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: Record<string, any> = {
       NOT: { name: 'Bye Robot' },
       totalBattles: { gte: minBattles }
     };
@@ -135,7 +136,8 @@ router.get('/losses', async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
     
     // Build where clause - no minimum battles filter for cumulative total
-    const whereClause: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: Record<string, any> = {
       NOT: { name: 'Bye Robot' }
     };
     

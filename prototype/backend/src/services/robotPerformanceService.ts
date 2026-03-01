@@ -117,6 +117,7 @@ export class RobotPerformanceService {
   private async aggregateFromSnapshots(
     robotId: number,
     cycleRange: [number, number],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     snapshots: any[]
   ): Promise<RobotPerformanceSummary> {
     let battlesParticipated = 0;
@@ -136,7 +137,9 @@ export class RobotPerformanceService {
 
     // Aggregate metrics from snapshots
     for (const snapshot of snapshots) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const robotMetrics = snapshot.robotMetrics as any[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const robotMetric = robotMetrics.find((m: any) => m.robotId === robotId);
 
       if (robotMetric) {
@@ -326,7 +329,9 @@ export class RobotPerformanceService {
       },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     repairEvents.forEach((event: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload = event.payload as any;
       totalRepairCosts += payload.cost || 0;
     });
@@ -416,6 +421,7 @@ export class RobotPerformanceService {
     }
 
     // Extract metric value from participant based on metric type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const extractMetricValue = (participant: any, metric: RobotMetric): number => {
       switch (metric) {
         case 'elo':
@@ -444,6 +450,7 @@ export class RobotPerformanceService {
     };
 
     // Get starting value for the metric
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getStartingValue = (participant: any, metric: RobotMetric): number => {
       if (metric === 'elo') {
         return participant.eloBefore;

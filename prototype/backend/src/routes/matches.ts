@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import { getConfig } from '../config/env';
@@ -440,7 +440,8 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
     }
 
     // Build where clause
-    const whereClause: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: Record<string, any> = {
       OR: [
         { robot1Id: { in: robotId !== undefined ? [robotId] : robotIds } },
         { robot2Id: { in: robotId !== undefined ? [robotId] : robotIds } },
@@ -685,7 +686,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
     const streamingRevenue2 = robot2Participant?.streamingRevenue || 0;
 
     // Build response based on battle type
-    const baseResponse: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const baseResponse: Record<string, any> = {
       battleId: battleData.id,
       createdAt: battleData.createdAt,
       battleType: battleData.battleType,
@@ -790,14 +792,9 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
 
     // Add standard robot fields (for 1v1 and tournament battles)
     // For tag team battles, these represent team-level aggregates
-    let robot1IsWinner = false;
-    let robot2IsWinner = false;
-    
     if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {
-      const team1Id = baseResponse.tagTeam.team1.teamId;
-      const team2Id = baseResponse.tagTeam.team2.teamId;
-      robot1IsWinner = battleData.winnerId === team1Id;
-      robot2IsWinner = battleData.winnerId === team2Id;
+      const _team1Id = baseResponse.tagTeam.team1.teamId;
+      const _team2Id = baseResponse.tagTeam.team2.teamId;
       
       // For tag team battles, provide team-level summary (not per-robot)
       // For tag teams, sum up data from all team members using BattleParticipant
@@ -836,8 +833,6 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       };
     } else {
       // For 1v1 and tournament battles, provide robot-level details from BattleParticipant
-      robot1IsWinner = battleData.winnerId === battleData.robot1Id;
-      robot2IsWinner = battleData.winnerId === battleData.robot2Id;
       
       baseResponse.robot1 = {
         id: battleData.robot1.id,

@@ -10,7 +10,7 @@ import { getNextCronOccurrence } from '../utils/scheduleUtils';
 const router = express.Router();
 
 const ROBOT_CREATION_COST = 500000;
-const MAX_ATTRIBUTE_LEVEL = 50;
+const _MAX_ATTRIBUTE_LEVEL = 50;
 
 // Get cap for academy level (from STABLE_SYSTEM.md)
 const getCapForLevel = (level: number): number => {
@@ -943,7 +943,7 @@ router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Resp
     // Format response
     const formattedBattles = battles.map(battle => {
       const isRobot1 = battle.robot1Id === robotId;
-      const thisRobot = isRobot1 ? battle.robot1 : battle.robot2;
+      const _thisRobot = isRobot1 ? battle.robot1 : battle.robot2;
       const opponent = isRobot1 ? battle.robot2 : battle.robot1;
       const won = battle.winnerId === robotId;
       
@@ -1263,6 +1263,7 @@ router.get('/:id/rankings', authenticateToken, async (req: AuthRequest, res: Res
     const totalRobots = allRobots.length;
 
     // Helper function to calculate category sum
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const calculateCategorySum = (robot: any, attributes: string[]) => {
       return attributes.reduce((sum, attr) => {
         const value = robot[attr];
@@ -1430,11 +1431,13 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
     });
 
     // Helper to determine if robot won, lost, or drew
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getBattleResult = (battle: any) => {
       if (battle.winnerId === null) return 'draw';
       
       // For tag team battles, check team membership and ELO change
       if (battle.battleType === 'tag_team') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const participant = battle.participants.find((p: any) => p.robotId === robotId);
         if (!participant) return 'draw';
         
@@ -1448,7 +1451,9 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
     };
 
     // Helper to get robot's damage dealt and taken
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getBattleStats = (battle: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const participant = battle.participants.find((p: any) => p.robotId === robotId);
       if (!participant) {
         return { damageDealt: 0, damageTaken: 0, eloChange: 0 };
@@ -1460,10 +1465,13 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
         // For tag team, sum damage from all opponents
         const opponentTeam = participant.team === 1 ? 2 : 1;
         damageTaken = battle.participants
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .filter((p: any) => p.team === opponentTeam)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .reduce((sum: number, p: any) => sum + p.damageDealt, 0);
       } else {
         // For 1v1, get opponent's damage
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const opponent = battle.participants.find((p: any) => p.robotId !== robotId);
         damageTaken = opponent?.damageDealt || 0;
       }
@@ -1477,6 +1485,7 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
 
     // Process league battles
     const leagueBattles = battles.filter(b => b.battleType === 'league');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const leagueStatsMap = new Map<string, any>();
 
     leagueBattles.forEach(battle => {
@@ -1518,6 +1527,7 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
 
     // Process tournament battles
     const tournamentBattles = battles.filter(b => b.battleType === 'tournament' && b.tournamentId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tournamentStatsMap = new Map<number, any>();
 
     tournamentBattles.forEach(battle => {
@@ -2023,6 +2033,7 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
         return res.status(400).json({ error: `Invalid attribute: ${attribute}` });
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { currentLevel, plannedLevel } = upgrade as any;
 
       if (typeof currentLevel !== 'number' || typeof plannedLevel !== 'number') {
@@ -2037,6 +2048,7 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       const robotCurrentLevelValue = robot[attribute as keyof typeof robot];
       const robotCurrentLevel = typeof robotCurrentLevelValue === 'number' 
         ? robotCurrentLevelValue 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : (robotCurrentLevelValue as any).toNumber();
 
       // Verify current level matches
@@ -2094,6 +2106,7 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       });
 
       // Build update data object
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updateData: any = {};
       for (const op of upgradeOperations) {
         updateData[op.attribute] = op.toLevel;

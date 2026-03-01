@@ -3,7 +3,9 @@ import apiClient from './apiClient';
 export interface Robot {
   id: number;
   name: string;
+  imageUrl?: string | null;
   elo: number;
+  fame: number;
   currentHP: number;
   maxHP: number;
   currentShield: number;
@@ -12,8 +14,18 @@ export interface Robot {
   level: number;
   currentLeague: string;
   leagueId: string | null;
+  leaguePoints: number;
   userId: number;
   createdAt: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  totalBattles: number;
+  battleReadiness: number;
+  yieldThreshold: number;
+  loadoutType: string;
+  mainWeaponId: number | null;
+  offhandWeaponId: number | null;
   // Attributes
   combatPower: number;
   targetingSystems: number;

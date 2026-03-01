@@ -3,7 +3,6 @@
  * Based on PRD_ECONOMY_SYSTEM.md specifications
  */
 
-import { User, Facility, Robot } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { getFacilityConfig } from '../config/facilities';
@@ -11,7 +10,7 @@ import { getFacilityConfig } from '../config/facilities';
 /**
  * Convert Prisma Decimal to JavaScript number for calculations
  */
-function toNumber(value: number | Prisma.Decimal): number {
+function _toNumber(value: number | Prisma.Decimal): number {
   if (typeof value === 'number') return value;
   return value.toNumber();
 }
@@ -345,6 +344,7 @@ export async function generateFinancialReport(
   let streamingBattleCount = 0;
 
   for (const event of battleCompleteEvents) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload = event.payload as any;
     
     // Check if robot1 belongs to this user
@@ -713,7 +713,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
 
   // Calculate totals for distribution calculations
   const totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
-  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
+  const _totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
 
   // Get user for prestige
   const user = await prisma.user.findUnique({
@@ -902,8 +902,8 @@ export function calculateDailyBenefitIncrease(
   fromLevel: number,
   toLevel: number,
   userPrestige: number,
-  totalBattles: number,
-  totalFame: number
+  _totalBattles: number,
+  _totalFame: number
 ): number {
   // Only Merchandising Hub provides direct daily income benefit
   if (facilityType !== 'merchandising_hub') {
@@ -979,16 +979,16 @@ export async function calculateFacilityROI(
     select: { totalBattles: true, fame: true },
   });
 
-  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
-  const totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
+  const _totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
+  const _totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
 
   const dailyBenefitIncrease = calculateDailyBenefitIncrease(
     facilityType,
     currentLevel,
     targetLevel,
     user.prestige,
-    totalBattles,
-    totalFame
+    _totalBattles,
+    _totalFame
   );
 
   // Calculate net change

@@ -8,7 +8,6 @@ import {
   calculateBattleWinnings,
   getPrestigeMultiplier,
 } from '../utils/economyCalculations';
-import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { eventLogger, EventType } from './eventLogger';
 import { calculateStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
 import {
@@ -23,11 +22,11 @@ const LEAGUE_POINTS_LOSS = -1;
 const LEAGUE_POINTS_DRAW = 1;
 
 // Battle simulation constants
-const WINNER_DAMAGE_PERCENT = 0.15; // Winners lose 15% HP
-const LOSER_DAMAGE_PERCENT = 0.40; // Losers lose 40% HP
+const _WINNER_DAMAGE_PERCENT = 0.15; // Winners lose 15% HP
+const _LOSER_DAMAGE_PERCENT = 0.40; // Losers lose 40% HP
 const BYE_BATTLE_DAMAGE_PERCENT = 0.08; // Bye battles: 8% HP loss
-const MIN_BATTLE_DURATION = 20; // Minimum battle duration in seconds
-const BATTLE_DURATION_VARIANCE = 25; // Random variance added to duration
+const _MIN_BATTLE_DURATION = 20; // Minimum battle duration in seconds
+const _BATTLE_DURATION_VARIANCE = 25; // Random variance added to duration
 const BYE_BATTLE_DURATION = 15; // Fixed duration for bye battles
 
 // Bye-robot identifier
@@ -60,6 +59,7 @@ export interface BattleResult {
   durationSeconds: number;
   isDraw: boolean;
   isByeMatch: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   combatEvents?: any[]; // Detailed combat events for admin debugging
 }
 
@@ -139,7 +139,7 @@ function calculateFameForBattle(
 /**
  * Get fame tier name based on fame value
  */
-function getFameTier(fame: number): string {
+function _getFameTier(fame: number): string {
   if (fame < 100) return "Unknown";
   if (fame < 500) return "Known";
   if (fame < 1000) return "Famous";
@@ -151,7 +151,7 @@ function getFameTier(fame: number): string {
 /**
  * Calculate expected ELO score (delegates to shared battleMath)
  */
-function calculateExpectedScore(ratingA: number, ratingB: number): number {
+function _calculateExpectedScore(ratingA: number, ratingB: number): number {
   return sharedCalculateExpectedScore(ratingA, ratingB);
 }
 
@@ -257,15 +257,15 @@ async function createBattleRecord(
     where: { userId: robot2.userId, facilityType: { in: ['Repair Bay', 'Medical Bay'] } }
   });
   
-  const robot1RepairBayLevel = robot1Facilities.find(f => f.facilityType === 'Repair Bay')?.level || 0;
-  const robot1MedicalBayLevel = robot1Facilities.find(f => f.facilityType === 'Medical Bay')?.level || 0;
-  const robot2RepairBayLevel = robot2Facilities.find(f => f.facilityType === 'Repair Bay')?.level || 0;
-  const robot2MedicalBayLevel = robot2Facilities.find(f => f.facilityType === 'Medical Bay')?.level || 0;
+  const _robot1RepairBayLevel = robot1Facilities.find(f => f.facilityType === 'Repair Bay')?.level || 0;
+  const _robot1MedicalBayLevel = robot1Facilities.find(f => f.facilityType === 'Medical Bay')?.level || 0;
+  const _robot2RepairBayLevel = robot2Facilities.find(f => f.facilityType === 'Repair Bay')?.level || 0;
+  const _robot2MedicalBayLevel = robot2Facilities.find(f => f.facilityType === 'Medical Bay')?.level || 0;
   
-  const robot1ActiveRobotCount = await prisma.robot.count({
+  const _robot1ActiveRobotCount = await prisma.robot.count({
     where: { userId: robot1.userId, NOT: { name: 'Bye Robot' } }
   });
-  const robot2ActiveRobotCount = await prisma.robot.count({
+  const _robot2ActiveRobotCount = await prisma.robot.count({
     where: { userId: robot2.userId, NOT: { name: 'Bye Robot' } }
   });
   
@@ -894,6 +894,7 @@ export async function executeScheduledBattles(scheduledFor?: Date): Promise<Batt
         });
         
         if (battleCompleteEvent) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const payload = battleCompleteEvent.payload as any;
           const streamingRevenue1 = payload?.streamingRevenue1 || 0;
           const streamingRevenue2 = payload?.streamingRevenue2 || 0;

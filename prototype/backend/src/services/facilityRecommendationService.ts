@@ -154,8 +154,10 @@ export class FacilityRecommendationService {
 
     // Extract user-specific data from stableMetrics JSON
     for (const snapshot of cycleSnapshots) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stableMetrics = snapshot.stableMetrics as any;
       if (Array.isArray(stableMetrics)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const userMetrics = stableMetrics.find((m: any) => m.userId === userId);
         if (userMetrics) {
           totalRepairCost += userMetrics.totalRepairCosts || 0;
@@ -178,6 +180,7 @@ export class FacilityRecommendationService {
     });
 
     totalUpgradeCost = upgradeEvents.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum, e) => sum + ((e.payload as any).cost || 0),
       0
     );
@@ -193,6 +196,7 @@ export class FacilityRecommendationService {
     });
 
     totalWeaponCost = weaponEvents.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum, e) => sum + ((e.payload as any).cost || 0),
       0
     );
@@ -225,6 +229,7 @@ export class FacilityRecommendationService {
     nextLevel: number,
     activityMetrics: ActivityMetrics,
     existingROIs: FacilityROI[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user: any
   ): Promise<FacilityRecommendation | null> {
     const config = getFacilityConfig(facilityType);

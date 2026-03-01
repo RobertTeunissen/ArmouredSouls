@@ -399,6 +399,7 @@ export class CombatMessageGenerator {
 
   // ── Utility Methods ────────────────────────────────────────────────────
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static interpolate(template: string, values: Record<string, any>): string {
     return template.replace(/{(\w+)}/g, (match, key) => {
       const val = values[key];
@@ -608,7 +609,9 @@ export class CombatMessageGenerator {
       robot3Name?: string; // team1 reserve
       robot4Name?: string; // team2 reserve
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const narrativeEvents: any[] = [];
 
     // Track shield state to detect shield breaks
@@ -697,7 +700,7 @@ export class CombatMessageGenerator {
         // Skip the simulator's battle-start event (timestamp 0, no weapon)
         if (ts === 0 && !event.weapon) continue;
 
-        const defenderMaxHP = event.defender === context.robot1Name
+        const _defenderMaxHP = event.defender === context.robot1Name
           ? context.robot1MaxHP : context.robot2MaxHP;
 
         narrativeEvents.push({
@@ -863,6 +866,7 @@ export class CombatMessageGenerator {
     context: { robot1Name: string; robot2Name: string },
     robot1PrevShield: number,
     robot2PrevShield: number,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     narrativeEvents: any[],
     ts: number
   ): void {
@@ -894,6 +898,7 @@ export class CombatMessageGenerator {
     context: { robot1Name: string; robot2Name: string; robot1MaxHP: number; robot2MaxHP: number },
     robot1Thresholds: Set<number>,
     robot2Thresholds: Set<number>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     narrativeEvents: any[],
     ts: number
   ): void {
@@ -943,6 +948,7 @@ export class CombatMessageGenerator {
    * while passing through tag_out/tag_in events unchanged.
    */
   static convertTagTeamEvents(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mixedEvents: any[],
     context: {
       team1Name: string;
@@ -958,11 +964,13 @@ export class CombatMessageGenerator {
         robot2MaxHP: number;
       }>;
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const narrativeEvents: any[] = [];
     let currentPhase = 0;
     let phaseEvents: CombatEvent[] = [];
-    let phaseStarted = false;
+    let _phaseStarted = false;
 
     for (const event of mixedEvents) {
       // Tag events are already narrative - pass through
@@ -989,13 +997,13 @@ export class CombatMessageGenerator {
           currentPhase++;
         }
         narrativeEvents.push(event);
-        phaseStarted = false;
+        _phaseStarted = false;
         continue;
       }
 
       // Raw simulator event - accumulate for phase conversion
       phaseEvents.push(event as CombatEvent);
-      phaseStarted = true;
+      _phaseStarted = true;
     }
 
     // Flush remaining phase events
@@ -1055,6 +1063,7 @@ export class CombatMessageGenerator {
     robot1MaxHP?: number;
     robot2MaxHP?: number;
     battleType?: 'league' | 'tournament' | 'tag_team';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): any[] {
     // If real simulator events are provided, convert them
     if (battleData.simulatorEvents && battleData.simulatorEvents.length > 0) {
@@ -1073,6 +1082,7 @@ export class CombatMessageGenerator {
     }
 
     // Fallback: generate minimal log without real events (bye matches, etc.)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const log: any[] = [];
     log.push({
       timestamp: 0.0,

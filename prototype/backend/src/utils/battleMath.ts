@@ -7,7 +7,7 @@
  *  - tagTeamBattleOrchestrator.ts (tag team)
  */
 
-import { Robot } from '@prisma/client';
+
 
 // ELO K-factor (shared across all battle types)
 export const ELO_K_FACTOR = 32;

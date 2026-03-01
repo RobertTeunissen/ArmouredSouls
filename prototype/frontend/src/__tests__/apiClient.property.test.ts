@@ -19,7 +19,7 @@ describe('API Client Interceptors - Property Tests', () => {
     vi.mocked(localStorage.getItem).mockReset();
     vi.mocked(localStorage.removeItem).mockReset();
     (window.location as unknown as { href: string }).href = '';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   });
 
   afterEach(() => {
@@ -107,7 +107,7 @@ describe('API Client Interceptors - Property Tests', () => {
           vi.mocked(localStorage.removeItem).mockClear();
           (window.location as unknown as { href: string }).href = '';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 
           mock.onAny(`/api/${path}`).reply(401, body);
 
@@ -135,7 +135,7 @@ describe('API Client Interceptors - Property Tests', () => {
           vi.mocked(localStorage.removeItem).mockClear();
           (window.location as unknown as { href: string }).href = '';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 
           mock.onGet('/api/test').reply(status, { error: 'some error' });
 

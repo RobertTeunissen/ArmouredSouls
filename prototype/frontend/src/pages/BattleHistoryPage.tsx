@@ -92,7 +92,7 @@ function BattleHistoryPage() {
   };
 
   // Calculate summary statistics
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   const summaryStats = useMemo(() => {
     if (battles.length === 0) {
       return {

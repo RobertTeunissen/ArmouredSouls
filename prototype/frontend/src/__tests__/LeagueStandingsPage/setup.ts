@@ -18,7 +18,7 @@ beforeEach(() => {
     removeItem: vi.fn(),
     clear: vi.fn(),
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   global.localStorage = localStorageMock as unknown as Storage;
 });
 

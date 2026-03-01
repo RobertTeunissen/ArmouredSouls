@@ -800,8 +800,8 @@ ${weaponBonuses2}`,
     // Regenerate shields (emit events for significant regen)
     const shield1Before = state1.currentShield;
     const shield2Before = state2.currentShield;
-    const shield1Regen = regenerateShields(state1, SIMULATION_TICK);
-    const shield2Regen = regenerateShields(state2, SIMULATION_TICK);
+    const _shield1Regen = regenerateShields(state1, SIMULATION_TICK);
+    const _shield2Regen = regenerateShields(state2, SIMULATION_TICK);
     
     // Emit shield_regen event when shield crosses 25% thresholds (avoid spam)
     if (state1.maxShield > 0 && shield1Before < state1.currentShield) {

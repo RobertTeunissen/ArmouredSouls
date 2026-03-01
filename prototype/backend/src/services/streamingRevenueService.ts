@@ -254,7 +254,7 @@ export async function calculateTagTeamStreamingRevenue(
 export async function awardStreamingRevenue(
   userId: number,
   calculation: StreamingRevenueCalculation,
-  cycleNumber: number
+  _cycleNumber: number
 ): Promise<void> {
   // Update user balance
   await prisma.user.update({

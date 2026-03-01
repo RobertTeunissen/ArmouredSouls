@@ -337,7 +337,7 @@ router.get('/', async (req: Request, res: Response) => {
     // =========================
 
     // Most Expensive Battle record removed (repair costs no longer tracked on battles)
-    const mostExpensiveBattle = null;
+    const _mostExpensiveBattle = null;
 
     // Highest Fame Robot - Top 10
     const highestFameRobots = await prisma.robot.findMany({

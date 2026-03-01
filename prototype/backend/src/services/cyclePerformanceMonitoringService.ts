@@ -127,10 +127,12 @@ export class CyclePerformanceMonitoringService {
 
     // Calculate averages
     const recentAverage =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recentSteps.reduce((sum, s) => sum + ((s.payload as any).duration as number), 0) /
       recentSteps.length;
 
     const baselineAverage =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       baselineSteps.reduce((sum, s) => sum + ((s.payload as any).duration as number), 0) /
       baselineSteps.length;
 
@@ -173,6 +175,7 @@ export class CyclePerformanceMonitoringService {
 
     const uniqueStepNames = new Set<string>();
     for (const step of steps) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stepName = (step.payload as any).stepName;
       if (stepName) {
         uniqueStepNames.add(stepName);
@@ -221,6 +224,7 @@ export class CyclePerformanceMonitoringService {
     const stepDataMap = new Map<string, StepPerformanceData>();
 
     for (const event of stepEvents) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload = event.payload as any;
       const stepName = payload.stepName as string;
       const duration = payload.duration as number;
@@ -324,6 +328,7 @@ export class CyclePerformanceMonitoringService {
 
     const slowSteps = stepEvents
       .map((event) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const payload = event.payload as any;
         return {
           stepName: payload.stepName as string,
@@ -382,6 +387,7 @@ export class CyclePerformanceMonitoringService {
       throw new Error('Not enough cycle data for trend analysis');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const durations = cycleEvents.map((e) => (e.payload as any).totalDuration as number);
     const averageDuration = durations.reduce((sum, d) => sum + d, 0) / durations.length;
 

@@ -41,6 +41,7 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
   const rows: BattleCSVRow[] = [];
 
   for (const event of battleEvents) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload = event.payload as any;
     
     // Get robot details (this robot)
@@ -84,6 +85,7 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
   });
 
   for (const event of tagTeamEvents) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload = event.payload as any;
     
     // Get team details

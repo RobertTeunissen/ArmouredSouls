@@ -1,7 +1,7 @@
 import prisma from '../lib/prisma';
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { eventLogger } from '../services/eventLogger';
-import { cycleLogger } from '../utils/cycleLogger';
+
 
 
 export interface RepairSummary {

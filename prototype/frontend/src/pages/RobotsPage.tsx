@@ -6,21 +6,7 @@ import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import apiClient from '../utils/apiClient';
-import { fetchMyRobots, Robot as ApiRobot } from '../utils/robotApi';
-
-interface Robot extends ApiRobot {
-  imageUrl?: string | null;
-  fame: number;
-  leaguePoints: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  totalBattles: number;
-  battleReadiness: number;
-  loadoutType: string; // "single", "weapon_shield", "two_handed", "dual_wield"
-  mainWeaponId: number | null;
-  offhandWeaponId: number | null;
-}
+import { fetchMyRobots, Robot } from '../utils/robotApi';
 
 // Utility functions
 const getHPColor = (currentHP: number, maxHP: number): string => {
@@ -164,7 +150,7 @@ function RobotsPage() {
       // Debug logging
       console.log('Fetched robots:', {
         count: data.length,
-        robots: data.map((r: Robot) => ({
+        robots: data.map(r => ({
           id: r.id,
           name: r.name,
           currentHP: r.currentHP,
@@ -174,7 +160,7 @@ function RobotsPage() {
       });
       
       // Sort robots by ELO (highest first)
-      const sortedData = data.sort((a: Robot, b: Robot) => b.elo - a.elo);
+      const sortedData = data.sort((a, b) => b.elo - a.elo);
       setRobots(sortedData);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (err.response?.status === 401) {
@@ -559,7 +545,7 @@ function RobotsPage() {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
                                 <RobotImage
-                                  imageUrl={robot.imageUrl}
+                                  imageUrl={robot.imageUrl ?? null}
                                   robotName={robot.name}
                                   size="small"
                                 />
@@ -700,7 +686,7 @@ function RobotsPage() {
                   {/* Robot Portrait */}
                   <div className="flex justify-center mb-4">
                     <RobotImage
-                      imageUrl={robot.imageUrl}
+                      imageUrl={robot.imageUrl ?? null}
                       robotName={robot.name}
                       size="medium"
                     />

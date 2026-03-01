@@ -10,7 +10,6 @@ import {
   calculateFacilityROI,
   getNextPrestigeTier,
   getMerchandisingBaseRate,
-  calculateMerchandisingIncome,
 } from '../utils/economyCalculations';
 
 const router = express.Router();

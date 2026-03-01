@@ -34,7 +34,8 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
     }
 
     // Build where clause
-    const whereClause: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: Record<string, any> = {
       leagueId: { in: leagueIds },
       NOT: {
         name: 'Bye Robot',

@@ -23,7 +23,9 @@ export interface AuditLogEntry {
   sequenceNumber: number;
   userId: number | null;
   robotId: number | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any> | null;
 }
 
@@ -122,7 +124,9 @@ export class QueryService {
         sequenceNumber: e.sequenceNumber,
         userId: e.userId,
         robotId: e.robotId,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: e.payload as Record<string, any>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: e.metadata as Record<string, any> | null,
       })),
       total,
@@ -211,6 +215,7 @@ export class QueryService {
    */
   async searchEventsByPayload(
     searchKey: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     searchValue: any,
     cycleRange?: [number, number]
   ): Promise<AuditLogEntry[]> {
@@ -244,7 +249,9 @@ export class QueryService {
       sequenceNumber: e.sequenceNumber,
       userId: e.userId,
       robotId: e.robotId,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       payload: e.payload as Record<string, any>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       metadata: e.metadata as Record<string, any> | null,
     }));
   }
@@ -328,7 +335,9 @@ export class QueryService {
       sequenceNumber: e.sequenceNumber,
       userId: e.userId,
       robotId: e.robotId,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       payload: e.payload as Record<string, any>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       metadata: e.metadata as Record<string, any> | null,
     }));
   }
@@ -369,7 +378,9 @@ export class QueryService {
       sequenceNumber: e.sequenceNumber,
       userId: e.userId,
       robotId: e.robotId,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       payload: e.payload as Record<string, any>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       metadata: e.metadata as Record<string, any> | null,
     }));
   }

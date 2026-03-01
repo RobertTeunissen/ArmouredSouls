@@ -57,7 +57,7 @@ app.get('/api/health', async (req, res) => {
       timestamp: new Date().toISOString(),
       environment: config.nodeEnv,
     });
-  } catch (error) {
+  } catch {
     res.status(503).json({
       status: 'error',
       database: 'disconnected',

@@ -288,7 +288,7 @@ function WeaponShopPage() {
   };
 
   // Apply search, filters, and sorting
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   const processedWeapons = useMemo(() => {
     // Step 1: Search
     let result = searchWeapons(weapons, debouncedSearchQuery);

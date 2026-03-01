@@ -61,7 +61,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({
       try {
         const svgModule = await import(`../assets/facilities/facility-${facilityType}-icon.svg`);
         setImageSrc(svgModule.default);
-      } catch (_error) {
+      } catch {
         // If import fails, we'll fall back to emoji
         setImageError(true);
       }

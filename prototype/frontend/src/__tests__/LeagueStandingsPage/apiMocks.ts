@@ -59,6 +59,6 @@ export function mockMatchmakingApi() {
 
 // Mock global fetch
 export function mockGlobalFetch() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   global.fetch = mockFetch as unknown as typeof fetch;
 }

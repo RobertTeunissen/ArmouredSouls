@@ -182,6 +182,7 @@ export async function createTagTeamWithInstanceAssignment(
     cyclesInTagTeamLeague?: number;
   },
   tier: TagTeamLeagueTier
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   return await prisma.$transaction(async (tx) => {
     // Acquire an advisory lock for this tier
@@ -283,6 +284,7 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
 
   // Redistribute teams ROUND-ROBIN to maintain competitive balance
   // This ensures each instance has a mix of high, medium, and low LP teams
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updates: Promise<any>[] = [];
   
   for (let i = 0; i < allTeams.length; i++) {
@@ -308,6 +310,7 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
 /**
  * Get all teams in a specific instance
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getTeamsInInstance(leagueId: string): Promise<any[]> {
   return prisma.tagTeam.findMany({
     where: { tagTeamLeagueId: leagueId },
@@ -354,6 +357,7 @@ export async function moveTeamToInstance(teamId: number, newTier: TagTeamLeagueT
  * Requirement 9.3: Sort by league points (descending), then ELO (descending)
  * Includes team rank calculation
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getStandingsForInstance(leagueId: string): Promise<any[]> {
   const teams = await prisma.tagTeam.findMany({
     where: { tagTeamLeagueId: leagueId },
@@ -401,6 +405,7 @@ export async function getStandingsForInstance(leagueId: string): Promise<any[]> 
  * Requirement 9.3: Sort by league points (descending), then ELO (descending)
  * Includes team rank calculation
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getStandingsForTier(tier: TagTeamLeagueTier): Promise<any[]> {
   const teams = await prisma.tagTeam.findMany({
     where: { tagTeamLeague: tier },

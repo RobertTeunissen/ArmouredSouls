@@ -94,6 +94,7 @@ export function generateToken(user: UserForToken): string {
     role: user.role,
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const token = jwt.sign(payload, secret, { expiresIn: expiration as any });
   return token;
 }
@@ -122,7 +123,7 @@ export function verifyToken(token: string): TokenPayload | null {
     const secret = getJwtSecret();
     const decoded = jwt.verify(token, secret) as TokenPayload;
     return decoded;
-  } catch (error) {
+  } catch {
     // Swallow verification errors (expired, malformed, bad signature) and
     // return null so callers can treat invalid tokens as "not authenticated"
     // without needing try/catch at every call site.

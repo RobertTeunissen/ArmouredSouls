@@ -3,32 +3,32 @@ import prisma from '../lib/prisma';
 import { simulateBattle } from './combatSimulator';
 import { getLeagueBaseReward, getParticipationReward } from '../utils/economyCalculations';
 import { CombatMessageGenerator } from './combatMessageGenerator';
-import { repairAllRobots } from './repairService';
-import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { calculateTagTeamStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
 import { getCurrentCycleNumber } from './battleOrchestrator';
 import { EventLogger, EventType } from './eventLogger';
 import {
-  ELO_K_FACTOR,
-  calculateExpectedScore,
   calculateELOChange,
 } from '../utils/battleMath';
 
 // Battle constants
 const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
-const REPAIR_COST_PER_HP = 50;
+const _REPAIR_COST_PER_HP = 50;
 const TAG_TEAM_REWARD_MULTIPLIER = 2; // Tag team rewards are 2x standard
 const TAG_TEAM_PRESTIGE_MULTIPLIER = 1.6; // Tag team prestige is 1.6x standard
-const DESTRUCTION_MULTIPLIER = 2; // Destroyed robots have 2x repair cost
+const _DESTRUCTION_MULTIPLIER = 2; // Destroyed robots have 2x repair cost
 
 // Types
 interface TagTeamWithRobots extends TagTeam {
   activeRobot: Robot & {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mainWeapon: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     offhandWeapon: any;
   };
   reserveRobot: Robot & {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mainWeapon: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     offhandWeapon: any;
   };
 }
@@ -54,6 +54,7 @@ interface TagTeamBattleResult {
   team1ReserveSurvivalTime: number; // Time in combat for team1 reserve robot
   team2ActiveSurvivalTime: number; // Time in combat for team2 active robot
   team2ReserveSurvivalTime: number; // Time in combat for team2 reserve robot
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   battleLog: any[]; // Complete battle log with all events
   phases: Array<{
     robot1Name: string;
@@ -90,6 +91,7 @@ interface TagInEvent {
  */
 function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRobots {
   // Create bye robots with ELO 1000 each (combined 2000)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const byeRobot1: Robot & { mainWeapon: any; offhandWeapon: any } = {
     id: -1,
     userId: -1,
@@ -172,6 +174,7 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
     updatedAt: new Date(),
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const byeRobot2: Robot & { mainWeapon: any; offhandWeapon: any } = { 
     ...byeRobot1, 
     id: -2, 
@@ -206,7 +209,7 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
  */
 export async function executeTagTeamBattle(match: TagTeamMatch): Promise<TagTeamBattleResult> {
   // Check if this is a bye-team match
-  const isByeMatch = match.team2Id === null;
+  const _isByeMatch = match.team2Id === null;
   
   const team1: TagTeamWithRobots | null = await prisma.tagTeam.findUnique({
     where: { id: match.team1Id },
@@ -304,6 +307,7 @@ async function simulateTagTeamBattle(
   team1: TagTeamWithRobots,
   team2: TagTeamWithRobots
 ): Promise<TagTeamBattleResult> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const battleEvents: any[] = [];
   const tagOutEvents: TagOutEvent[] = [];
   const tagInEvents: TagInEvent[] = [];
@@ -341,7 +345,7 @@ async function simulateTagTeamBattle(
   team2ActiveSurvivalTime += phase1Duration;
   
   // Track if phase 1 had a decisive winner (destruction or yield)
-  const phase1Winner: number | null = phase1Result.winnerId;
+  const _phase1Winner: number | null = phase1Result.winnerId;
   
   // Collect combat events from phase 1 (Requirement 7.1)
   if (phase1Result.events && Array.isArray(phase1Result.events)) {
@@ -954,6 +958,7 @@ function shouldTagOut(robot: Robot): boolean {
  * Activate a reserve robot
  * Requirement 3.5: Set HP to 100%, reset weapon cooldowns to 0
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function activateReserveRobot(robot: Robot & { mainWeapon: any; offhandWeapon: any }): Robot & { mainWeapon: any; offhandWeapon: any } {
   robot.currentHP = robot.maxHP;
   robot.currentShield = robot.maxShield;
@@ -1256,6 +1261,7 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
   totalStreamingRevenue?: number;
 }> {
   // Query scheduled tag team matches
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const whereClause: any = {
     status: 'scheduled',
   };
@@ -1350,6 +1356,7 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
         });
         
         if (battleCompleteEvent) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const payload = battleCompleteEvent.payload as any;
           const streamingRevenue1 = payload?.streamingRevenue1 || 0;
           const streamingRevenue2 = payload?.streamingRevenue2 || 0;
@@ -1512,15 +1519,15 @@ async function updateTagTeamBattleResults(
         },
       },
     });
-    const activeRobotCount = await prisma.robot.count({
+    const _activeRobotCount = await prisma.robot.count({
       where: {
         userId: realTeam.stableId,
         NOT: { name: 'Bye Robot' }
       }
     });
 
-    const repairBayLevel = repairBay ? repairBay.level : 0;
-    const medicalBayLevel = medicalBay ? medicalBay.level : 0;
+    const _repairBayLevel = repairBay ? repairBay.level : 0;
+    const _medicalBayLevel = medicalBay ? medicalBay.level : 0;
 
     const activeFinalHP = team1IsBye ? result.team2ActiveFinalHP : result.team1ActiveFinalHP;
     const reserveFinalHP = team1IsBye ? result.team2ReserveFinalHP : result.team1ReserveFinalHP;
@@ -1704,23 +1711,23 @@ async function updateTagTeamBattleResults(
     },
   });
 
-  const team1ActiveRobotCount = await prisma.robot.count({
+  const _team1ActiveRobotCount = await prisma.robot.count({
     where: {
       userId: team1.stableId,
       NOT: { name: 'Bye Robot' }
     }
   });
-  const team2ActiveRobotCount = await prisma.robot.count({
+  const _team2ActiveRobotCount = await prisma.robot.count({
     where: {
       userId: team2.stableId,
       NOT: { name: 'Bye Robot' }
     }
   });
 
-  const team1RepairBayLevel = team1RepairBay ? team1RepairBay.level : 0;
-  const team2RepairBayLevel = team2RepairBay ? team2RepairBay.level : 0;
-  const team1MedicalBayLevel = team1MedicalBay ? team1MedicalBay.level : 0;
-  const team2MedicalBayLevel = team2MedicalBay ? team2MedicalBay.level : 0;
+  const _team1RepairBayLevel = team1RepairBay ? team1RepairBay.level : 0;
+  const _team2RepairBayLevel = team2RepairBay ? team2RepairBay.level : 0;
+  const _team1MedicalBayLevel = team1MedicalBay ? team1MedicalBay.level : 0;
+  const _team2MedicalBayLevel = team2MedicalBay ? team2MedicalBay.level : 0;
 
   // NOTE: Repair costs are NOT calculated here anymore
   // They are calculated by RepairService when repairs are actually triggered
