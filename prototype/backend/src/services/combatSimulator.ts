@@ -797,9 +797,45 @@ ${weaponBonuses2}`,
   while (currentTime < MAX_BATTLE_DURATION && !battleEnded) {
     currentTime += SIMULATION_TICK;
     
-    // Regenerate shields
+    // Regenerate shields (emit events for significant regen)
+    const shield1Before = state1.currentShield;
+    const shield2Before = state2.currentShield;
     const shield1Regen = regenerateShields(state1, SIMULATION_TICK);
     const shield2Regen = regenerateShields(state2, SIMULATION_TICK);
+    
+    // Emit shield_regen event when shield crosses 25% thresholds (avoid spam)
+    if (state1.maxShield > 0 && shield1Before < state1.currentShield) {
+      const oldPct = Math.floor((shield1Before / state1.maxShield) * 4);
+      const newPct = Math.floor((state1.currentShield / state1.maxShield) * 4);
+      if (newPct > oldPct) {
+        events.push({
+          timestamp: Number(currentTime.toFixed(1)),
+          type: 'shield_regen',
+          attacker: robot1.name,
+          robot1HP: state1.currentHP,
+          robot2HP: state2.currentHP,
+          robot1Shield: state1.currentShield,
+          robot2Shield: state2.currentShield,
+          message: `🛡️⚡ ${robot1.name}'s shields regenerate to ${Math.round((state1.currentShield / state1.maxShield) * 100)}%`,
+        });
+      }
+    }
+    if (state2.maxShield > 0 && shield2Before < state2.currentShield) {
+      const oldPct = Math.floor((shield2Before / state2.maxShield) * 4);
+      const newPct = Math.floor((state2.currentShield / state2.maxShield) * 4);
+      if (newPct > oldPct) {
+        events.push({
+          timestamp: Number(currentTime.toFixed(1)),
+          type: 'shield_regen',
+          attacker: robot2.name,
+          robot1HP: state1.currentHP,
+          robot2HP: state2.currentHP,
+          robot1Shield: state1.currentShield,
+          robot2Shield: state2.currentShield,
+          message: `🛡️⚡ ${robot2.name}'s shields regenerate to ${Math.round((state2.currentShield / state2.maxShield) * 100)}%`,
+        });
+      }
+    }
     
     // Check if robot1 can attack with main weapon
     if (currentTime - state1.lastAttackTime >= state1.attackCooldown && state1.currentHP > 0) {

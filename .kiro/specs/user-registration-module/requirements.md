@@ -46,7 +46,7 @@ This document specifies the requirements for a user registration module in the a
 5. WHEN a registration request contains a username with invalid characters, THE Validation_Service SHALL reject the request with a descriptive error message
 6. THE Validation_Service SHALL accept usernames containing alphanumeric characters, underscores, and hyphens
 7. WHEN a registration request contains an Email_Address shorter than 3 characters, THE Validation_Service SHALL reject the request with a descriptive error message
-8. WHEN a registration request contains an Email_Address longer than 20 characters, THE Validation_Service SHALL reject the request with a descriptive error message
+8. WHEN a registration request contains an Email_Address longer than 50 characters, THE Validation_Service SHALL reject the request with a descriptive error message
 9. WHEN a registration request contains an Email_Address with invalid characters, THE Validation_Service SHALL reject the request with a descriptive error message
 10. THE Validation_Service SHALL accept Email_Addresses containing alphanumeric characters, underscores, and hyphens
 

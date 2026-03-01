@@ -1,8 +1,13 @@
 /**
  * Combat Message Generator
- * Generates human-readable text descriptions for battle events
- * Enhanced version with damage descriptors and expanded message variations
+ * Generates human-readable narrative descriptions for battle events
+ * 
+ * v2.0 - Rewritten to convert real combat simulator events into narrative messages
+ * instead of fabricating fake events. Now uses actual weapon names, damage values,
+ * stances, and all combat data from the simulator.
  */
+
+import { CombatEvent } from './combatSimulator';
 
 export interface BattleStartEvent {
   robot1Name: string;
@@ -61,26 +66,70 @@ export interface TagInEvent {
 
 /**
  * Combat Message Generator Service
+ * Converts real combat simulator events into narrative player-facing messages
  */
 export class CombatMessageGenerator {
-  // Battle Start Messages (expanded)
-  private static battleStartMessages = [
-    '⚔️ Battle commences! {robot1Name} (ELO {robot1ELO}) vs {robot2Name} (ELO {robot2ELO})',
-    '🎯 {robot1Name} and {robot2Name} enter the arena for {leagueType} league combat!',
+
+  // ── Battle Start Messages ────────────────────────────────────────────
+  // Generic (work for any battle type)
+  private static battleStartMessagesGeneric = [
+    '⚔️ Battle commences! {robot1Name} vs {robot2Name}',
     '💥 Arena match starting: {robot1Name} vs {robot2Name}',
-    '⚡ The arena lights up as {robot1Name} faces {robot2Name} in {leagueType} league!',
-    '🏟️ {robot1Name} (ELO {robot1ELO}) challenges {robot2Name} (ELO {robot2ELO}) to battle!',
-    '🔥 Combat initialized: {robot1Name} vs {robot2Name} - {leagueType} league match',
     '⚔️ {robot1Name} and {robot2Name} take their positions in the arena!',
     '💫 Battle systems online: {robot1Name} vs {robot2Name} engaging now',
-    '🎪 The crowd watches as {robot1Name} confronts {robot2Name} in {leagueType} league!',
     '⚡ Arena secured. Combatants ready: {robot1Name} vs {robot2Name}',
   ];
 
-  // Damage intensity descriptors (replace specific damage numbers)
+  // League-specific
+  private static battleStartMessagesLeague = [
+    '⚔️ Battle commences! {robot1Name} (ELO {robot1ELO}) vs {robot2Name} (ELO {robot2ELO})',
+    '🎯 {robot1Name} and {robot2Name} enter the arena for {leagueType} league combat!',
+    '⚡ The arena lights up as {robot1Name} faces {robot2Name} in {leagueType} league!',
+    '🏟️ {robot1Name} (ELO {robot1ELO}) challenges {robot2Name} (ELO {robot2ELO}) to battle!',
+    '🔥 Combat initialized: {robot1Name} vs {robot2Name} - {leagueType} league match',
+    '🎪 The crowd watches as {robot1Name} confronts {robot2Name} in {leagueType} league!',
+  ];
+
+  // Tournament-specific
+  private static battleStartMessagesTournament = [
+    '🏆 Tournament bout! {robot1Name} vs {robot2Name} - only one advances!',
+    '⚔️ Tournament match: {robot1Name} faces {robot2Name} in elimination combat!',
+    '🎯 The tournament bracket brings {robot1Name} against {robot2Name}!',
+    '💥 Elimination round! {robot1Name} vs {robot2Name} - no draws allowed!',
+    '🏟️ The crowd roars as {robot1Name} and {robot2Name} clash in the tournament!',
+  ];
+
+  // Tag team-specific
+  private static battleStartMessagesTagTeam = [
+    '🤝 Tag Team Battle! {team1Name} vs {team2Name}!',
+    '⚔️ Tag team combat begins! {team1Name} sends {robot1Name} against {team2Name}\'s {robot2Name}!',
+    '🏟️ The arena opens for tag team warfare: {team1Name} ({robot1Name} & {robot3Name}) vs {team2Name} ({robot2Name} & {robot4Name})!',
+    '💥 Tag team showdown! {team1Name} vs {team2Name} - four robots, one victor!',
+    '🤝 Teams ready! {team1Name} leads with {robot1Name}, {team2Name} leads with {robot2Name}!',
+  ];
+
+  // ── Stance Messages (3 variations per stance) ─────────────────────────
+  private static stanceMessages: Record<string, string[]> = {
+    offensive: [
+      '⚔️ {robotName} takes an aggressive offensive stance, focusing on damage',
+      '🔥 {robotName} powers up weapons systems - offensive mode engaged!',
+      '💢 {robotName} locks targeting systems to maximum aggression!',
+    ],
+    defensive: [
+      '🛡️ {robotName} adopts a defensive stance, prioritizing survival',
+      '🛡️ {robotName} reinforces shields and activates damage dampeners!',
+      '🛡️ {robotName} hunkers down behind reinforced plating - defense mode!',
+    ],
+    balanced: [
+      '⚖️ {robotName} maintains a balanced stance, ready to adapt',
+      '⚖️ {robotName} calibrates systems for balanced combat readiness',
+      '⚖️ {robotName} holds steady - all systems at standard output',
+    ],
+  };
+
+  // ── Damage Descriptors ─────────────────────────────────────────────────
   private static getDamageDescriptor(damage: number, maxHP: number = 100): string {
     const percentage = (damage / maxHP) * 100;
-    
     if (percentage >= 25) return 'a devastating blow';
     if (percentage >= 15) return 'a heavy strike';
     if (percentage >= 10) return 'a solid hit';
@@ -89,7 +138,7 @@ export class CombatMessageGenerator {
     return 'a minor scratch';
   }
 
-  // Attack Hit Messages with damage descriptors (no numbers)
+  // ── Attack Hit Messages (12 variations) ────────────────────────────────
   private static hitMessages = [
     '💥 {attackerName} strikes {defenderName} with {weaponName}, landing {damageDescriptor}!',
     '⚡ {attackerName}\'s {weaponName} connects, dealing {damageDescriptor} to {defenderName}!',
@@ -105,7 +154,7 @@ export class CombatMessageGenerator {
     '🔪 {attackerName} executes a clean strike with {weaponName}, inflicting {damageDescriptor}!',
   ];
 
-  // Critical Hit Messages (enhanced, no damage numbers)
+  // ── Critical Hit Messages (12 variations) ──────────────────────────────
   private static criticalHitMessages = [
     '💢 CRITICAL HIT! {attackerName}\'s {weaponName} finds a weak point - catastrophic damage to {defenderName}!',
     '🎯 Perfect strike! {attackerName} lands a critical hit with {weaponName} - devastating impact!',
@@ -121,7 +170,7 @@ export class CombatMessageGenerator {
     '🎯 PINPOINT ACCURACY! {attackerName}\'s {weaponName} exploits a weak spot perfectly!',
   ];
 
-  // Miss Messages (expanded)
+  // ── Miss Messages (12 variations) ──────────────────────────────────────
   private static missMessages = [
     '❌ {attackerName} swings {weaponName} but misses {defenderName} completely!',
     '⚠️ {attackerName}\'s {weaponName} attack goes wide - no damage!',
@@ -137,7 +186,7 @@ export class CombatMessageGenerator {
     '💨 Clean evasion! {defenderName} avoids {attackerName}\'s {weaponName} entirely!',
   ];
 
-  // Shield Messages
+  // ── Shield Messages ────────────────────────────────────────────────────
   private static shieldAbsorbMessages = [
     '🛡️ {defenderName}\'s energy shield absorbs the impact from {attackerName}\'s {weaponName}!',
     '⚡ {defenderName}\'s shields hold strong against {attackerName}\'s {weaponName}!',
@@ -154,7 +203,16 @@ export class CombatMessageGenerator {
     '⚠️ Critical: {robotName}\'s protective shields have collapsed!',
   ];
 
-  // Malfunction Messages (NEW)
+  // ── Shield Regeneration Messages (5 variations) ────────────────────────
+  private static shieldRegenMessages = [
+    '🛡️⚡ {robotName}\'s power core recharges shields',
+    '⚡✨ {robotName}\'s shields regenerate during the lull in combat',
+    '🔋 {robotName}\'s energy shield restores capacity',
+    '🛡️ {robotName}\'s defensive systems recover shield energy',
+    '⚡ {robotName}\'s shield generator hums back to life',
+  ];
+
+  // ── Malfunction Messages (6 variations) ────────────────────────────────
   private static malfunctionMessages = [
     '⚙️ MALFUNCTION! {robotName}\'s {weaponName} jams and fails to fire!',
     '⚠️ SYSTEM ERROR! {robotName}\'s targeting systems glitch - attack aborted!',
@@ -164,7 +222,19 @@ export class CombatMessageGenerator {
     '⚙️ MECHANICAL FAULT! {robotName}\'s attack systems fail at a critical moment!',
   ];
 
-  // Victory Messages (expanded)
+  // ── Counter-Attack Messages (8 variations for success) ─────────────────
+  private static counterSuccessMessages = [
+    '🔄 {defenderName} counters {attackerName}\'s attack with {weaponName} for {damageDescriptor}!',
+    '⚔️ Counter-attack! {defenderName} retaliates with {weaponName}, dealing {damageDescriptor} to {attackerName}!',
+    '💫 {defenderName} parries and counters with {weaponName}, striking {attackerName} for {damageDescriptor}!',
+    '🔄 Quick reflexes! {defenderName} turns defense into offense with {weaponName}!',
+    '⚔️ {defenderName} exploits an opening and counters with {weaponName} - {damageDescriptor}!',
+    '💫 {defenderName}\'s counter protocols activate - {weaponName} strikes back at {attackerName}!',
+    '🔄 Reversal! {defenderName} catches {attackerName} off-guard with a {weaponName} counter!',
+    '⚔️ {defenderName} reads the attack and retaliates with {weaponName} for {damageDescriptor}!',
+  ];
+
+  // ── Victory Messages ───────────────────────────────────────────────────
   private static victoryMessages = [
     '🏆 VICTORY! {winnerName} defeats {loserName}!',
     '👑 {winnerName} emerges victorious over {loserName}!',
@@ -176,7 +246,6 @@ export class CombatMessageGenerator {
     '⚔️ {loserName} falls before {winnerName}\'s superior combat prowess!',
   ];
 
-  // Dominant Victory Messages (>80% HP remaining - expanded)
   private static dominantVictoryMessages = [
     '🏆 DOMINANT VICTORY! {winnerName} crushes {loserName} with {hpPercent}% HP remaining!',
     '👑 FLAWLESS! {winnerName} defeats {loserName} while taking minimal damage!',
@@ -188,7 +257,6 @@ export class CombatMessageGenerator {
     '👑 MASTERFUL! {winnerName} outclasses {loserName} in every way!',
   ];
 
-  // Close Victory Messages (<30% HP remaining - expanded)
   private static closeVictoryMessages = [
     '🏆 NARROW VICTORY! {winnerName} defeats {loserName} by the slimmest margin!',
     '⚔️ Hard-fought victory! {winnerName} wins with only {hp} HP remaining!',
@@ -200,7 +268,7 @@ export class CombatMessageGenerator {
     '🏆 NARROW ESCAPE! {winnerName} defeats {loserName} in a nail-biting finish!',
   ];
 
-  // Yield Messages (NEW)
+  // ── Yield Messages (5 variations) ──────────────────────────────────────
   private static yieldMessages = [
     '🏳️ {robotName} yields! Battle ends with {winnerName} victorious!',
     '✋ {robotName} surrenders! {winnerName} wins!',
@@ -209,7 +277,39 @@ export class CombatMessageGenerator {
     '🏳️ {robotName} surrenders to avoid complete destruction!',
   ];
 
-  // ELO Change Messages (expanded)
+  // ── Destruction Messages (5 variations) ────────────────────────────────
+  private static destructionMessages = [
+    '💀 {robotName} has been destroyed! Hull integrity at 0%!',
+    '💥 {robotName}\'s systems fail - robot disabled!',
+    '🔴 KNOCKOUT! {robotName} is down!',
+    '💀 {robotName} crumbles under the assault - total system failure!',
+    '💥 {robotName}\'s hull breaches catastrophically - destruction confirmed!',
+  ];
+
+  // ── Damage Status Messages ─────────────────────────────────────────────
+  private static heavyDamageMessages = [
+    '⚠️ {robotName} is heavily damaged - hull integrity critical!',
+    '🔴 {robotName} at critical health: {percentage}%!',
+    '💔 {robotName}\'s hull integrity severely compromised!',
+  ];
+
+  private static moderateDamageMessages = [
+    '⚠️ {robotName} has taken significant damage!',
+    '🟠 {robotName} showing signs of wear - systems strained!',
+  ];
+
+  private static lightDamageMessages = [
+    '🟢 {robotName} sustains minor damage - still in fighting shape',
+  ];
+
+  // ── Draw Messages (3 variations) ───────────────────────────────────────
+  private static drawMessages = [
+    '⏱️ DRAW! Maximum battle time reached - both combatants survive!',
+    '⏰ Time expires! Battle ends in a draw.',
+    '🤝 Stalemate! Neither robot could secure victory before time ran out.',
+  ];
+
+  // ── ELO Messages ───────────────────────────────────────────────────────
   private static eloGainMessages = [
     '📈 {robotName}: {oldELO} → {newELO} (+{change} ELO)',
     '⬆️ {robotName} gains {change} ELO rating ({oldELO} → {newELO})',
@@ -226,7 +326,7 @@ export class CombatMessageGenerator {
     '⬇️ {robotName} drops {change} ELO points (now {newELO})',
   ];
 
-  // Reward Messages (NEW)
+  // ── Reward Messages ────────────────────────────────────────────────────
   private static rewardMessages = [
     '💰 {robotName} receives ₡{credits}',
     '💵 {robotName} earns ₡{credits} in battle rewards',
@@ -248,7 +348,7 @@ export class CombatMessageGenerator {
     '🎖️ {robotName}\'s renown increases by {fame} fame',
   ];
 
-  // Tag-Out Messages (yield)
+  // ── Tag Team Messages ──────────────────────────────────────────────────
   private static tagOutYieldMessages = [
     '🏳️ {robotName} reaches their yield threshold and tags out! {teamName} calls in their reserve!',
     '✋ {robotName} yields! {teamName}\'s reserve robot prepares to enter the arena!',
@@ -260,7 +360,6 @@ export class CombatMessageGenerator {
     '⚠️ {robotName} reaches critical damage and calls for backup!',
   ];
 
-  // Tag-Out Messages (destruction)
   private static tagOutDestructionMessages = [
     '💥 {robotName} is destroyed! {teamName}\'s reserve robot rushes to continue the fight!',
     '🔥 {robotName} falls in combat! {teamName} sends in their backup!',
@@ -272,7 +371,6 @@ export class CombatMessageGenerator {
     '⚡ {robotName} is eliminated from combat! {teamName}\'s reserve activates!',
   ];
 
-  // Tag-In Messages (reserve activation)
   private static tagInMessages = [
     '🔄 {robotName} enters the arena for {teamName} at full strength!',
     '⚡ Fresh fighter! {robotName} tags in for {teamName} with {hp} HP!',
@@ -286,42 +384,79 @@ export class CombatMessageGenerator {
     '⚡ {robotName} tags in - {teamName} brings fresh firepower to the battle!',
   ];
 
-  /**
-   * Replace placeholders in message template
-   */
+  // ── Utility Methods ────────────────────────────────────────────────────
+
   private static interpolate(template: string, values: Record<string, any>): string {
     return template.replace(/{(\w+)}/g, (match, key) => {
       return values[key] !== undefined ? String(values[key]) : match;
     });
   }
 
-  /**
-   * Select random message from array
-   */
   private static selectRandom<T>(messages: T[]): T {
     return messages[Math.floor(Math.random() * messages.length)];
   }
 
   /**
-   * Generate battle start message
+   * Get a damage status message based on HP percentage thresholds:
+   * - Heavy: ≤25% HP
+   * - Moderate: ≤50% HP
+   * - Light: ≤75% HP
+   * Returns null if HP > 75% (no status message needed)
    */
-  static generateBattleStart(event: BattleStartEvent): string {
-    const template = this.selectRandom(this.battleStartMessages);
+  private static getDamageStatusMessage(robotName: string, currentHP: number, maxHP: number): string | null {
+    const percentage = Math.round((currentHP / maxHP) * 100);
+    if (percentage <= 25) {
+      return this.interpolate(this.selectRandom(this.heavyDamageMessages), { robotName, percentage });
+    }
+    if (percentage <= 50) {
+      return this.interpolate(this.selectRandom(this.moderateDamageMessages), { robotName, percentage });
+    }
+    if (percentage <= 75) {
+      return this.interpolate(this.selectRandom(this.lightDamageMessages), { robotName, percentage });
+    }
+    return null;
+  }
+
+  // ── Individual Message Generators (kept for standalone use) ────────────
+
+  static generateBattleStart(event: BattleStartEvent & {
+    battleType?: 'league' | 'tournament' | 'tag_team';
+    team1Name?: string;
+    team2Name?: string;
+    robot3Name?: string;
+    robot4Name?: string;
+  }): string {
+    let messages: string[];
+    switch (event.battleType) {
+      case 'tournament':
+        messages = this.battleStartMessagesTournament;
+        break;
+      case 'tag_team':
+        messages = this.battleStartMessagesTagTeam;
+        break;
+      case 'league':
+        messages = this.battleStartMessagesLeague;
+        break;
+      default:
+        messages = this.battleStartMessagesGeneric;
+        break;
+    }
+    const template = this.selectRandom(messages);
     return this.interpolate(template, event);
   }
 
-  /**
-   * Generate attack message (with damage descriptor instead of numbers)
-   */
+  static generateStance(robotName: string, stance: string): string {
+    const stanceKey = stance.toLowerCase();
+    const messages = this.stanceMessages[stanceKey] || this.stanceMessages.balanced;
+    return this.interpolate(this.selectRandom(messages), { robotName });
+  }
+
   static generateAttack(event: AttackEvent): string {
     let template: string;
 
     if (event.malfunction) {
       template = this.selectRandom(this.malfunctionMessages);
-      return this.interpolate(template, {
-        robotName: event.attackerName,
-        weaponName: event.weaponName,
-      });
+      return this.interpolate(template, { robotName: event.attackerName, weaponName: event.weaponName });
     }
 
     if (!event.hit) {
@@ -329,28 +464,25 @@ export class CombatMessageGenerator {
     } else if (event.critical) {
       template = this.selectRandom(this.criticalHitMessages);
     } else if (event.shieldDamage && event.shieldDamage > 0 && (!event.hpDamage || event.hpDamage === 0)) {
-      // Shield absorbed all damage
       template = this.selectRandom(this.shieldAbsorbMessages);
     } else {
       template = this.selectRandom(this.hitMessages);
     }
 
-    // Calculate damage descriptor (use total damage or hp damage if shield was involved)
     const effectiveDamage = event.hpDamage || event.damage;
     const damageDescriptor = this.getDamageDescriptor(effectiveDamage);
 
-    return this.interpolate(template, {
-      ...event,
-      damageDescriptor,
-    });
+    return this.interpolate(template, { ...event, damageDescriptor });
   }
 
-  /**
-   * Generate battle end message
-   */
+  static generateCounter(defenderName: string, attackerName: string, weaponName: string, damage: number, maxHP: number): string {
+    const damageDescriptor = this.getDamageDescriptor(damage, maxHP);
+    const template = this.selectRandom(this.counterSuccessMessages);
+    return this.interpolate(template, { defenderName, attackerName, weaponName, damageDescriptor });
+  }
+
   static generateBattleEnd(event: BattleEndEvent): string {
     const hpPercent = Math.round((event.winnerHP / event.winnerMaxHP) * 100);
-    
     let template: string;
     if (hpPercent > 80) {
       template = this.selectRandom(this.dominantVictoryMessages);
@@ -359,106 +491,523 @@ export class CombatMessageGenerator {
     } else {
       template = this.selectRandom(this.victoryMessages);
     }
-
-    return this.interpolate(template, {
-      ...event,
-      hpPercent,
-      hp: event.winnerHP,
-    });
+    return this.interpolate(template, { ...event, hpPercent, hp: event.winnerHP });
   }
 
-  /**
-   * Generate ELO change message
-   */
   static generateELOChange(event: ELOChangeEvent): string {
     const template = event.change > 0
       ? this.selectRandom(this.eloGainMessages)
       : this.selectRandom(this.eloLossMessages);
-
-    return this.interpolate(template, {
-      ...event,
-      change: Math.abs(event.change),
-    });
+    return this.interpolate(template, { ...event, change: Math.abs(event.change) });
   }
 
-  /**
-   * Generate shield break message
-   */
   static generateShieldBreak(robotName: string): string {
-    const template = this.selectRandom(this.shieldBreakMessages);
-    return this.interpolate(template, { robotName });
+    return this.interpolate(this.selectRandom(this.shieldBreakMessages), { robotName });
   }
 
-  /**
-   * Generate yield message
-   */
+  static generateShieldRegen(robotName: string): string {
+    return this.interpolate(this.selectRandom(this.shieldRegenMessages), { robotName });
+  }
+
   static generateYield(robotName: string, winnerName: string): string {
-    const template = this.selectRandom(this.yieldMessages);
-    return this.interpolate(template, { robotName, winnerName });
+    return this.interpolate(this.selectRandom(this.yieldMessages), { robotName, winnerName });
   }
 
-  /**
-   * Generate reward message
-   */
+  static generateDestruction(robotName: string): string {
+    return this.interpolate(this.selectRandom(this.destructionMessages), { robotName });
+  }
+
+  static generateDraw(): string {
+    return this.selectRandom(this.drawMessages);
+  }
+
   static generateReward(event: RewardEvent): string {
-    const template = this.selectRandom(this.rewardMessages);
-    return this.interpolate(template, event);
+    return this.interpolate(this.selectRandom(this.rewardMessages), event);
   }
 
-  /**
-   * Generate prestige message
-   */
   static generatePrestige(robotName: string, prestige: number): string {
-    const template = this.selectRandom(this.prestigeMessages);
-    return this.interpolate(template, { robotName, prestige });
+    return this.interpolate(this.selectRandom(this.prestigeMessages), { robotName, prestige });
   }
 
-  /**
-   * Generate fame message
-   */
   static generateFame(robotName: string, fame: number): string {
-    const template = this.selectRandom(this.fameMessages);
-    return this.interpolate(template, { robotName, fame });
+    return this.interpolate(this.selectRandom(this.fameMessages), { robotName, fame });
   }
 
-  /**
-   * Generate tag-out message (yield)
-   */
   static generateTagOutYield(event: TagOutEvent): string {
-    const template = this.selectRandom(this.tagOutYieldMessages);
-    return this.interpolate(template, event);
+    return this.interpolate(this.selectRandom(this.tagOutYieldMessages), event);
   }
 
-  /**
-   * Generate tag-out message (destruction)
-   */
   static generateTagOutDestruction(event: TagOutEvent): string {
-    const template = this.selectRandom(this.tagOutDestructionMessages);
-    return this.interpolate(template, event);
+    return this.interpolate(this.selectRandom(this.tagOutDestructionMessages), event);
   }
 
-  /**
-   * Generate tag-out message (automatically selects yield or destruction)
-   */
   static generateTagOut(event: TagOutEvent): string {
-    if (event.reason === 'yield') {
-      return this.generateTagOutYield(event);
-    } else {
-      return this.generateTagOutDestruction(event);
+    return event.reason === 'yield' ? this.generateTagOutYield(event) : this.generateTagOutDestruction(event);
+  }
+
+  static generateTagIn(event: TagInEvent): string {
+    return this.interpolate(this.selectRandom(this.tagInMessages), event);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // CORE METHOD: Convert real simulator events into narrative messages
+  // This replaces the old generateBattleLog which fabricated fake events
+  // ══════════════════════════════════════════════════════════════════════
+
+  /**
+   * Convert real combat simulator events into player-facing narrative events.
+   * 
+   * The simulator produces technical messages like:
+   *   "💥 BattleBot hits for 45 damage with Laser Rifle (30 shield, 15 HP)"
+   * 
+   * This method converts them into narrative messages like:
+   *   "⚡ BattleBot's Laser Rifle connects, dealing a heavy strike to Iron Crusher!"
+   * 
+   * It also injects additional narrative events:
+   *   - Stance announcements at battle start
+   *   - Shield break announcements
+   *   - Shield regeneration notices (when significant)
+   *   - Damage status updates (heavy/moderate/light thresholds)
+   *   - Proper yield vs destruction distinction
+   *   - Draw condition messages
+   */
+  static convertSimulatorEvents(
+    simulatorEvents: CombatEvent[],
+    context: {
+      robot1Name: string;
+      robot2Name: string;
+      robot1Stance: string;
+      robot2Stance: string;
+      robot1MaxHP: number;
+      robot2MaxHP: number;
+      robot1ELO: number;
+      robot2ELO: number;
+      leagueType: string;
+      battleType?: 'league' | 'tournament' | 'tag_team';
+      // Tag team fields
+      team1Name?: string;
+      team2Name?: string;
+      robot3Name?: string; // team1 reserve
+      robot4Name?: string; // team2 reserve
+    }
+  ): any[] {
+    const narrativeEvents: any[] = [];
+
+    // Track shield state to detect shield breaks
+    let robot1PrevShield = -1; // -1 = not yet initialized
+    let robot2PrevShield = -1;
+    // Track HP thresholds crossed to emit damage status messages (only once per threshold)
+    const robot1ThresholdsCrossed = new Set<number>();
+    const robot2ThresholdsCrossed = new Set<number>();
+    // Track if we've already emitted the battle start + stance intro
+    let battleStartEmitted = false;
+
+    for (const event of simulatorEvents) {
+      // ── First event: emit battle start + stances ──
+      if (!battleStartEmitted) {
+        battleStartEmitted = true;
+
+        // Battle start message
+        narrativeEvents.push({
+          timestamp: 0,
+          type: 'battle_start',
+          message: this.generateBattleStart({
+            robot1Name: context.robot1Name,
+            robot2Name: context.robot2Name,
+            robot1ELO: context.robot1ELO,
+            robot2ELO: context.robot2ELO,
+            leagueType: context.leagueType,
+            battleType: context.battleType,
+            team1Name: context.team1Name,
+            team2Name: context.team2Name,
+            robot3Name: context.robot3Name,
+            robot4Name: context.robot4Name,
+          }),
+        });
+
+        // Stance announcements
+        narrativeEvents.push({
+          timestamp: 0.1,
+          type: 'stance',
+          message: this.generateStance(context.robot1Name, context.robot1Stance),
+        });
+        narrativeEvents.push({
+          timestamp: 0.2,
+          type: 'stance',
+          message: this.generateStance(context.robot2Name, context.robot2Stance),
+        });
+
+        // Initialize shield tracking from first event
+        if (event.robot1Shield !== undefined) robot1PrevShield = event.robot1Shield;
+        if (event.robot2Shield !== undefined) robot2PrevShield = event.robot2Shield;
+      }
+
+      // ── Convert each simulator event type ──
+      const ts = event.timestamp;
+
+      if (event.type === 'malfunction') {
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'malfunction',
+          attacker: event.attacker,
+          message: this.generateAttack({
+            attackerName: event.attacker || '',
+            defenderName: event.defender || '',
+            weaponName: event.weapon || 'Fists',
+            damage: 0,
+            hit: false,
+            critical: false,
+            malfunction: true,
+          }),
+        });
+      } else if (event.type === 'miss') {
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'miss',
+          attacker: event.attacker,
+          defender: event.defender,
+          message: this.generateAttack({
+            attackerName: event.attacker || '',
+            defenderName: event.defender || '',
+            weaponName: event.weapon || 'Fists',
+            damage: 0,
+            hit: false,
+            critical: false,
+          }),
+        });
+      } else if (event.type === 'attack' || event.type === 'critical') {
+        // Skip the simulator's battle-start event (timestamp 0, no weapon)
+        if (ts === 0 && !event.weapon) continue;
+
+        const defenderMaxHP = event.defender === context.robot1Name
+          ? context.robot1MaxHP : context.robot2MaxHP;
+
+        narrativeEvents.push({
+          timestamp: ts,
+          type: event.type === 'critical' ? 'critical' : 'attack',
+          attacker: event.attacker,
+          defender: event.defender,
+          weapon: event.weapon,
+          message: this.generateAttack({
+            attackerName: event.attacker || '',
+            defenderName: event.defender || '',
+            weaponName: event.weapon || 'Fists',
+            damage: event.damage || 0,
+            hit: true,
+            critical: event.type === 'critical',
+            shieldDamage: event.shieldDamage,
+            hpDamage: event.hpDamage,
+          }),
+        });
+
+        // ── Shield break detection ──
+        this.checkShieldBreak(event, context, robot1PrevShield, robot2PrevShield, narrativeEvents, ts);
+
+        // ── Damage status thresholds ──
+        this.checkDamageStatus(event, context, robot1ThresholdsCrossed, robot2ThresholdsCrossed, narrativeEvents, ts);
+
+      } else if (event.type === 'counter') {
+        const counterWeapon = event.weapon || 'Fists';
+        const attackerMaxHP = event.defender === context.robot1Name
+          ? context.robot1MaxHP : context.robot2MaxHP;
+
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'counter',
+          attacker: event.attacker,
+          defender: event.defender,
+          message: this.generateCounter(
+            event.attacker || '',
+            event.defender || '',
+            counterWeapon,
+            event.damage || 0,
+            attackerMaxHP
+          ),
+        });
+
+        // Check shield break and damage status after counter too
+        this.checkShieldBreak(event, context, robot1PrevShield, robot2PrevShield, narrativeEvents, ts);
+        this.checkDamageStatus(event, context, robot1ThresholdsCrossed, robot2ThresholdsCrossed, narrativeEvents, ts);
+
+      } else if (event.type === 'yield') {
+        // Check if this is actually a draw (time limit)
+        if (event.message.includes('Draw') || event.message.includes('Time limit reached')) {
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'draw',
+            message: this.generateDraw(),
+          });
+        } else if (event.message.includes('Time limit')) {
+          // Tournament time limit with HP tiebreaker
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'battle_end',
+            message: event.message, // Keep the original since it has HP percentages
+          });
+        } else {
+          // Determine who yielded using HP percentages (not message parsing, which is fragile
+          // because both robot names appear in the yield message)
+          const robot1HpPct = (event.robot1HP || 0) / context.robot1MaxHP;
+          const robot2HpPct = (event.robot2HP || 0) / context.robot2MaxHP;
+          const isRobot1Yielding = robot1HpPct <= robot2HpPct;
+          const yieldingRobot = isRobot1Yielding ? context.robot1Name : context.robot2Name;
+          const winnerRobot = isRobot1Yielding ? context.robot2Name : context.robot1Name;
+
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'yield',
+            message: this.generateYield(yieldingRobot, winnerRobot),
+          });
+        }
+
+      } else if (event.type === 'destroyed') {
+        const isRobot1Destroyed = event.robot1HP === 0;
+        const destroyedRobot = isRobot1Destroyed ? context.robot1Name : context.robot2Name;
+        const winnerRobot = isRobot1Destroyed ? context.robot2Name : context.robot1Name;
+        const winnerHP = isRobot1Destroyed ? (event.robot2HP || 0) : (event.robot1HP || 0);
+        const winnerMaxHP = isRobot1Destroyed ? context.robot2MaxHP : context.robot1MaxHP;
+
+        // Destruction message
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'destroyed',
+          message: this.generateDestruction(destroyedRobot),
+        });
+
+        // Victory message
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'battle_end',
+          message: this.generateBattleEnd({
+            winnerName: winnerRobot,
+            loserName: destroyedRobot,
+            winnerHP,
+            winnerMaxHP,
+            reason: 'destruction',
+          }),
+        });
+
+      } else if (event.type === 'shield_break') {
+        // Explicit shield break event from simulator (if any)
+        const robotName = event.attacker || event.defender || '';
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'shield_break',
+          message: this.generateShieldBreak(robotName),
+        });
+
+      } else if (event.type === 'shield_regen') {
+        const robotName = event.attacker || event.defender || '';
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'shield_regen',
+          message: this.generateShieldRegen(robotName),
+        });
+      }
+
+      // Update shield tracking
+      if (event.robot1Shield !== undefined) robot1PrevShield = event.robot1Shield;
+      if (event.robot2Shield !== undefined) robot2PrevShield = event.robot2Shield;
+    }
+
+    // If the last simulator event was a yield, add a victory message
+    const lastEvent = simulatorEvents[simulatorEvents.length - 1];
+    const lastNarrative = narrativeEvents[narrativeEvents.length - 1];
+    if (lastEvent && lastEvent.type === 'yield' && lastNarrative && lastNarrative.type === 'yield') {
+      // Use HP percentages to determine who yielded (not message parsing)
+      const robot1HpPct = (lastEvent.robot1HP || 0) / context.robot1MaxHP;
+      const robot2HpPct = (lastEvent.robot2HP || 0) / context.robot2MaxHP;
+      const isRobot1Yielding = robot1HpPct <= robot2HpPct;
+      const winnerName = isRobot1Yielding ? context.robot2Name : context.robot1Name;
+      const loserName = isRobot1Yielding ? context.robot1Name : context.robot2Name;
+      const winnerHP = isRobot1Yielding ? (lastEvent.robot2HP || 0) : (lastEvent.robot1HP || 0);
+      const winnerMaxHP = isRobot1Yielding ? context.robot2MaxHP : context.robot1MaxHP;
+
+      narrativeEvents.push({
+        timestamp: lastEvent.timestamp,
+        type: 'battle_end',
+        message: this.generateBattleEnd({
+          winnerName,
+          loserName,
+          winnerHP,
+          winnerMaxHP,
+          reason: 'yield',
+        }),
+      });
+    }
+
+    return narrativeEvents;
+  }
+
+  /** Check if a shield just broke and emit a shield_break event */
+  private static checkShieldBreak(
+    event: CombatEvent,
+    context: { robot1Name: string; robot2Name: string },
+    robot1PrevShield: number,
+    robot2PrevShield: number,
+    narrativeEvents: any[],
+    ts: number
+  ): void {
+    // Defender's shield went to 0
+    if (event.defender === context.robot1Name && robot1PrevShield > 0 && event.robot1Shield === 0) {
+      narrativeEvents.push({
+        timestamp: ts,
+        type: 'shield_break',
+        message: this.generateShieldBreak(context.robot1Name),
+      });
+    }
+    if (event.defender === context.robot2Name && robot2PrevShield > 0 && event.robot2Shield === 0) {
+      narrativeEvents.push({
+        timestamp: ts,
+        type: 'shield_break',
+        message: this.generateShieldBreak(context.robot2Name),
+      });
+    }
+    // Also check attacker (for counter-attacks)
+    if (event.defender === context.robot1Name && event.type === 'counter') {
+      // In counter events, the "attacker" field is the counter-attacker (defender of original)
+      // and "defender" is the one taking counter damage
     }
   }
 
-  /**
-   * Generate tag-in message (reserve activation)
-   */
-  static generateTagIn(event: TagInEvent): string {
-    const template = this.selectRandom(this.tagInMessages);
-    return this.interpolate(template, event);
+  /** Check if HP crossed a damage threshold and emit a status message */
+  private static checkDamageStatus(
+    event: CombatEvent,
+    context: { robot1Name: string; robot2Name: string; robot1MaxHP: number; robot2MaxHP: number },
+    robot1Thresholds: Set<number>,
+    robot2Thresholds: Set<number>,
+    narrativeEvents: any[],
+    ts: number
+  ): void {
+    const thresholds = [75, 50, 25]; // Light, Moderate, Heavy
+
+    // Check defender HP
+    if (event.defender === context.robot1Name && event.robot1HP !== undefined) {
+      const pct = (event.robot1HP / context.robot1MaxHP) * 100;
+      for (const t of thresholds) {
+        if (pct <= t && !robot1Thresholds.has(t)) {
+          robot1Thresholds.add(t);
+          const msg = this.getDamageStatusMessage(context.robot1Name, event.robot1HP, context.robot1MaxHP);
+          if (msg) {
+            narrativeEvents.push({ timestamp: ts, type: 'damage_status', message: msg });
+          }
+          break; // Only emit the most severe new threshold
+        }
+      }
+    }
+    if (event.defender === context.robot2Name && event.robot2HP !== undefined) {
+      const pct = (event.robot2HP / context.robot2MaxHP) * 100;
+      for (const t of thresholds) {
+        if (pct <= t && !robot2Thresholds.has(t)) {
+          robot2Thresholds.add(t);
+          const msg = this.getDamageStatusMessage(context.robot2Name, event.robot2HP, context.robot2MaxHP);
+          if (msg) {
+            narrativeEvents.push({ timestamp: ts, type: 'damage_status', message: msg });
+          }
+          break;
+        }
+      }
+    }
   }
 
+  // ══════════════════════════════════════════════════════════════════════
+  // Convert tag team mixed event arrays (raw simulator + narrative tag events)
+  // ══════════════════════════════════════════════════════════════════════
+
   /**
-   * Generate complete battle log
+   * Convert a tag team battle's mixed event array into fully narrative events.
+   * 
+   * Tag team battles have a mix of:
+   * - Raw simulator CombatEvent[] from each combat phase (technical messages)
+   * - Already-narrative tag_out/tag_in events (generated by CombatMessageGenerator)
+   * 
+   * This method processes each phase's simulator events through convertSimulatorEvents
+   * while passing through tag_out/tag_in events unchanged.
    */
+  static convertTagTeamEvents(
+    mixedEvents: any[],
+    context: {
+      team1Name: string;
+      team2Name: string;
+      battleType: 'tag_team';
+      // Phase robot mappings - which robots fought in which phase
+      phases: Array<{
+        robot1Name: string;
+        robot2Name: string;
+        robot1Stance: string;
+        robot2Stance: string;
+        robot1MaxHP: number;
+        robot2MaxHP: number;
+      }>;
+    }
+  ): any[] {
+    const narrativeEvents: any[] = [];
+    let currentPhase = 0;
+    let phaseEvents: CombatEvent[] = [];
+    let phaseStarted = false;
+
+    for (const event of mixedEvents) {
+      // Tag events are already narrative - pass through
+      if (event.type === 'tag_out' || event.type === 'tag_in') {
+        // First, flush any accumulated phase events
+        if (phaseEvents.length > 0 && currentPhase < context.phases.length) {
+          const phase = context.phases[currentPhase];
+          const converted = this.convertSimulatorEvents(phaseEvents, {
+            robot1Name: phase.robot1Name,
+            robot2Name: phase.robot2Name,
+            robot1Stance: phase.robot1Stance,
+            robot2Stance: phase.robot2Stance,
+            robot1MaxHP: phase.robot1MaxHP,
+            robot2MaxHP: phase.robot2MaxHP,
+            robot1ELO: 0,
+            robot2ELO: 0,
+            leagueType: '',
+            battleType: 'tag_team',
+            team1Name: context.team1Name,
+            team2Name: context.team2Name,
+          });
+          narrativeEvents.push(...converted);
+          phaseEvents = [];
+          currentPhase++;
+        }
+        narrativeEvents.push(event);
+        phaseStarted = false;
+        continue;
+      }
+
+      // Raw simulator event - accumulate for phase conversion
+      phaseEvents.push(event as CombatEvent);
+      phaseStarted = true;
+    }
+
+    // Flush remaining phase events
+    if (phaseEvents.length > 0 && currentPhase < context.phases.length) {
+      const phase = context.phases[currentPhase];
+      const converted = this.convertSimulatorEvents(phaseEvents, {
+        robot1Name: phase.robot1Name,
+        robot2Name: phase.robot2Name,
+        robot1Stance: phase.robot1Stance,
+        robot2Stance: phase.robot2Stance,
+        robot1MaxHP: phase.robot1MaxHP,
+        robot2MaxHP: phase.robot2MaxHP,
+        robot1ELO: 0,
+        robot2ELO: 0,
+        leagueType: '',
+        battleType: 'tag_team',
+        team1Name: context.team1Name,
+        team2Name: context.team2Name,
+      });
+      narrativeEvents.push(...converted);
+    }
+
+    return narrativeEvents;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // LEGACY: generateBattleLog - kept for backward compatibility
+  // Now delegates to convertSimulatorEvents when real events are provided
+  // ══════════════════════════════════════════════════════════════════════
+
   static generateBattleLog(battleData: {
     robot1Name: string;
     robot2Name: string;
@@ -481,10 +1030,32 @@ export class CombatMessageGenerator {
     robot2Prestige?: number;
     robot1Fame?: number;
     robot2Fame?: number;
+    // New fields for real event conversion
+    simulatorEvents?: CombatEvent[];
+    robot1Stance?: string;
+    robot2Stance?: string;
+    robot1MaxHP?: number;
+    robot2MaxHP?: number;
+    battleType?: 'league' | 'tournament' | 'tag_team';
   }): any[] {
-    const log: any[] = [];
+    // If real simulator events are provided, convert them
+    if (battleData.simulatorEvents && battleData.simulatorEvents.length > 0) {
+      return this.convertSimulatorEvents(battleData.simulatorEvents, {
+        robot1Name: battleData.robot1Name,
+        robot2Name: battleData.robot2Name,
+        robot1Stance: battleData.robot1Stance || 'balanced',
+        robot2Stance: battleData.robot2Stance || 'balanced',
+        robot1MaxHP: battleData.robot1MaxHP || battleData.winnerMaxHP,
+        robot2MaxHP: battleData.robot2MaxHP || battleData.winnerMaxHP,
+        robot1ELO: battleData.robot1ELOBefore,
+        robot2ELO: battleData.robot2ELOBefore,
+        leagueType: battleData.leagueType,
+        battleType: battleData.battleType,
+      });
+    }
 
-    // Battle start
+    // Fallback: generate minimal log without real events (bye matches, etc.)
+    const log: any[] = [];
     log.push({
       timestamp: 0.0,
       type: 'battle_start',
@@ -494,46 +1065,13 @@ export class CombatMessageGenerator {
         robot1ELO: battleData.robot1ELOBefore,
         robot2ELO: battleData.robot2ELOBefore,
         leagueType: battleData.leagueType,
+        battleType: battleData.battleType,
       }),
     });
 
-    // Simulate some combat events based on damage dealt
-    const robot1Attacks = Math.ceil(battleData.robot1DamageDealt / 15);
-    const robot2Attacks = Math.ceil(battleData.robot2DamageDealt / 15);
-    const totalAttacks = robot1Attacks + robot2Attacks;
-    
-    // Generate attack events with damage descriptors (no actual numbers)
-    for (let i = 0; i < Math.min(totalAttacks, 10); i++) {
-      const timestamp = (i + 1) * (battleData.durationSeconds / (totalAttacks + 1));
-      const isRobot1 = i % 2 === 0;
-      const attackerName = isRobot1 ? battleData.robot1Name : battleData.robot2Name;
-      const defenderName = isRobot1 ? battleData.robot2Name : battleData.robot1Name;
-      const damage = Math.floor(Math.random() * 20) + 10;
-      const isCritical = Math.random() < 0.15;
-      const hits = Math.random() < 0.85;
-
-      log.push({
-        timestamp: Number(timestamp.toFixed(1)),
-        type: hits ? 'attack' : 'miss',
-        attacker: isRobot1 ? 'robot1' : 'robot2',
-        defender: isRobot1 ? 'robot2' : 'robot1',
-        message: this.generateAttack({
-          attackerName,
-          defenderName,
-          weaponName: 'Practice Sword',
-          damage: hits ? damage : 0,
-          hit: hits,
-          critical: hits && isCritical,
-        }),
-      });
-    }
-
-    // Battle end
     log.push({
       timestamp: battleData.durationSeconds,
       type: 'battle_end',
-      winner: battleData.winnerName === battleData.robot1Name ? 'robot1' : 'robot2',
-      loser: battleData.loserName === battleData.robot1Name ? 'robot1' : 'robot2',
       message: this.generateBattleEnd({
         winnerName: battleData.winnerName,
         loserName: battleData.loserName,
@@ -542,11 +1080,6 @@ export class CombatMessageGenerator {
         reason: 'destruction',
       }),
     });
-
-    // Note: ELO changes, rewards, fame, and prestige are now displayed in the
-    // battle summary section at the top of the page, not in the combat log.
-    // This keeps the combat log focused on the action and moves the "results"
-    // to a more prominent position as requested.
 
     return log;
   }

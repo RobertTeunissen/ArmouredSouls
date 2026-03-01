@@ -40,7 +40,7 @@ Returned when one or more fields fail format or length validation. The `error` f
 | Username longer than 20 chars    | Username must not exceed 20 characters                                         |
 | Username has invalid characters  | Username can only contain letters, numbers, underscores, and hyphens           |
 | Email shorter than 3 chars       | Email must be at least 3 characters long                                       |
-| Email longer than 20 chars       | Email must not exceed 20 characters                                            |
+| Email longer than 50 chars       | Email must not exceed 50 characters                                            |
 | Email has invalid characters     | Email can only contain letters, numbers, underscores, and hyphens              |
 | Password shorter than 8 chars    | Password must be at least 8 characters long                                    |
 | Password longer than 128 chars   | Password must not exceed 128 characters                                        |

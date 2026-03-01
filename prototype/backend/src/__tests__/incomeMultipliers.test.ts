@@ -99,7 +99,7 @@ describe('Income Multipliers', () => {
 
     test('should calculate correctly for level 4 with 15000 prestige', () => {
       const result = calculateMerchandisingIncome(4, 15000);
-      const expected = Math.round(12000 * (1 + 15000 / 10000)); // 12000 * 2.5 = 30000
+      // 12000 * (1 + 15000 / 10000) = 12000 * 2.5 = 30000
       expect(result).toBe(30000);
     });
 

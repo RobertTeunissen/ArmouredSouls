@@ -101,9 +101,14 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
     });
 
     if (!latestSnapshot) {
-      return res.status(404).json({ 
-        error: 'No cycle snapshots found',
-        message: 'No cycles have been completed yet'
+      return res.json({
+        userId,
+        cycleRange: [0, 0],
+        totalIncome: 0,
+        totalExpenses: 0,
+        totalPurchases: 0,
+        netProfit: 0,
+        cycles: [],
       });
     }
 
@@ -115,9 +120,14 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
     const snapshots = await cycleSnapshotService.getSnapshotRange(startCycle, endCycle);
 
     if (snapshots.length === 0) {
-      return res.status(404).json({
-        error: 'No snapshots found',
-        message: `No snapshots found for cycles ${startCycle} to ${endCycle}`
+      return res.json({
+        userId,
+        cycleRange: [startCycle, endCycle],
+        totalIncome: 0,
+        totalExpenses: 0,
+        totalPurchases: 0,
+        netProfit: 0,
+        cycles: [],
       });
     }
 

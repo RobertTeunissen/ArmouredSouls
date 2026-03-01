@@ -363,7 +363,7 @@ async function createTournamentBattleRecord(
     winnerRobot.maxHP
   );
 
-  // Generate battle log
+  // Generate battle log from REAL simulator events
   const battleLog = CombatMessageGenerator.generateBattleLog({
     robot1Name: robot1.name,
     robot2Name: robot2.name,
@@ -380,6 +380,13 @@ async function createTournamentBattleRecord(
     robot2DamageDealt: combatResult.robot1Damage,
     leagueType: robot1.currentLeague,
     durationSeconds: combatResult.durationSeconds,
+    // Pass real simulator events + context for narrative conversion
+    simulatorEvents: combatResult.events,
+    robot1Stance: robot1.stance,
+    robot2Stance: robot2.stance,
+    robot1MaxHP: robot1.maxHP,
+    robot2MaxHP: robot2.maxHP,
+    battleType: 'tournament',
   });
 
   // Add tournament reward breakdown to battle log

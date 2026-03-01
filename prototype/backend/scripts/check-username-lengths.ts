@@ -26,13 +26,13 @@ async function main() {
     console.log(`  ${l.username} (${l.usernameLen} chars) → ${l.username}@legacy.local (${l.emailLen} chars)`);
   });
 
-  const tooLong = lengths.filter(l => l.emailLen > 20);
-  console.log(`\n⚠️  ${tooLong.length} usernames would create emails longer than 20 characters`);
+  const tooLong = lengths.filter(l => l.emailLen > 50);
+  console.log(`\n⚠️  ${tooLong.length} usernames would create emails longer than 50 characters`);
   
   if (tooLong.length > 0) {
     console.log('\nProblematic usernames:');
     tooLong.forEach(l => {
-      console.log(`  ${l.username} → ${l.emailLen} chars (exceeds limit by ${l.emailLen - 20})`);
+      console.log(`  ${l.username} → ${l.emailLen} chars (exceeds limit by ${l.emailLen - 50})`);
     });
   }
 }

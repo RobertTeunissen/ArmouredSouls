@@ -295,7 +295,7 @@ async function createBattleRecord(
     robot2Reward = participationReward;
   }
   
-  // Generate battle log with combat messages
+  // Generate battle log with combat messages from REAL simulator events
   const battleLog = CombatMessageGenerator.generateBattleLog({
     robot1Name: robot1.name,
     robot2Name: robot2.name,
@@ -306,12 +306,19 @@ async function createBattleRecord(
     winnerName: isRobot1Winner ? robot1.name : robot2.name,
     loserName: isRobot1Winner ? robot2.name : robot1.name,
     winnerFinalHP: isRobot1Winner ? result.robot1FinalHP : result.robot2FinalHP,
-    winnerMaxHP: 10, // Simplified
+    winnerMaxHP: isRobot1Winner ? robot1.maxHP : robot2.maxHP,
     loserFinalHP: isRobot1Winner ? result.robot2FinalHP : result.robot1FinalHP,
     robot1DamageDealt: result.robot2Damage,
     robot2DamageDealt: result.robot1Damage,
     leagueType: scheduledMatch.leagueType,
     durationSeconds: result.durationSeconds,
+    // Pass real simulator events + context for narrative conversion
+    simulatorEvents: result.combatEvents,
+    robot1Stance: robot1.stance,
+    robot2Stance: robot2.stance,
+    robot1MaxHP: robot1.maxHP,
+    robot2MaxHP: robot2.maxHP,
+    battleType: 'league',
   });
   
   // Add financial reward details to battle log

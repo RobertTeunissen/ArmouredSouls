@@ -101,7 +101,7 @@ export function validateUsername(username: string): ValidationResult {
  * Validate an email against the registration rules.
  *
  * **Validation rules:**
- * - Length must be between 3 and 20 characters (inclusive)
+ * - Length must be between 3 and 50 characters (inclusive)
  * - Only alphanumeric characters, underscores (`_`), and hyphens (`-`) are allowed
  *
  * Note: This is a simplified email format for the game system, **not** standard
@@ -127,8 +127,8 @@ export function validateEmail(email: string): ValidationResult {
 
   if (email.length < 3) {
     errors.push('Email must be at least 3 characters long');
-  } else if (email.length > 20) {
-    errors.push('Email must not exceed 20 characters');
+  } else if (email.length > 50) {
+    errors.push('Email must not exceed 50 characters');
   } else {
     // Only check format/characters when length is valid
     const validCharPattern = /^[a-zA-Z0-9._@-]+$/;

@@ -419,7 +419,7 @@ export class ROICalculatorService {
     });
 
     // For streaming studio, we need battle data grouped by cycle
-    let battleStreamingByCycle: Map<number, number> = new Map();
+    const battleStreamingByCycle: Map<number, number> = new Map();
     if (facilityType === 'streaming_studio') {
       const battleEvents = await prisma.auditLog.findMany({
         where: {

@@ -109,9 +109,9 @@ app.listen(config.port, host, () => {
   // Initialize the cycle scheduler after the server is listening
   initScheduler({
     enabled: config.schedulerEnabled,
-    leagueSchedule: process.env.LEAGUE_SCHEDULE || '0 20 * * *',
-    tournamentSchedule: process.env.TOURNAMENT_SCHEDULE || '0 8 * * *',
-    tagTeamSchedule: process.env.TAGTEAM_SCHEDULE || '0 12 * * *',
-    settlementSchedule: process.env.SETTLEMENT_SCHEDULE || '0 23 * * *',
+    leagueSchedule: config.leagueSchedule,
+    tournamentSchedule: config.tournamentSchedule,
+    tagTeamSchedule: config.tagTeamSchedule,
+    settlementSchedule: config.settlementSchedule,
   });
 });

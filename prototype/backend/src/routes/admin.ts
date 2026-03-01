@@ -4,7 +4,7 @@ import { executeScheduledBattles } from '../services/battleOrchestrator';
 import { runMatchmaking } from '../services/matchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';
 import { rebalanceTagTeamLeagues } from '../services/tagTeamLeagueRebalancingService';
-import { shouldRunTagTeamMatchmaking, runTagTeamMatchmaking } from '../services/tagTeamMatchmakingService';
+import { shouldRunTagTeamMatchmaking as _shouldRunTagTeamMatchmaking, runTagTeamMatchmaking } from '../services/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../services/tagTeamBattleOrchestrator';
 import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
@@ -388,7 +388,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
   try {
     const { 
       cycles = 1, 
-      includeDailyFinances = false, // Deprecated, kept for backwards compatibility
+      _includeDailyFinances = false, // Deprecated, kept for backwards compatibility
       generateUsersPerCycle = false,
       includeTournaments = true
     } = req.body;
@@ -802,7 +802,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             );
             
             // Deduct operating costs from user's account
-            const userBeforeDeduction = await prisma.user.findUnique({
+            const _userBeforeDeduction = await prisma.user.findUnique({
               where: { id: user.id },
               select: { currency: true },
             });
@@ -1290,14 +1290,14 @@ router.get('/users/at-risk', authenticateToken, requireAdmin, async (req: Reques
           const cycleData = cycleMap.get(cycle)!;
           
           if (event.eventType === 'operating_costs') {
-            cycleData.costs += (event.payload as any)?.totalCost || 0;
+            cycleData.costs += (event.payload as Record<string, number>)?.totalCost || 0;
           } else if (event.eventType === 'passive_income') {
-            cycleData.income += (event.payload as any)?.totalIncome || 0;
+            cycleData.income += (event.payload as Record<string, number>)?.totalIncome || 0;
           } else if (event.eventType === 'robot_repair') {
-            cycleData.repairs += (event.payload as any)?.cost || 0;
+            cycleData.repairs += (event.payload as Record<string, number>)?.cost || 0;
           } else if (event.eventType === 'credit_change') {
             // Track credit changes (battle rewards, etc.)
-            const amount = (event.payload as any)?.amount || 0;
+            const amount = (event.payload as Record<string, number>)?.amount || 0;
             if (amount > 0) {
               cycleData.income += amount;
             } else {
@@ -1489,6 +1489,7 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
     const skip = (page - 1) * limit;
 
     // Build where clause
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {};
 
     // Search by robot name

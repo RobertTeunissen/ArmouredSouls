@@ -133,7 +133,7 @@ describe('CombatMessageGenerator', () => {
   });
 
   describe('generateBattleLog', () => {
-    it('should generate complete battle log', () => {
+    it('should generate minimal battle log without simulator events (fallback for bye matches)', () => {
       const log = CombatMessageGenerator.generateBattleLog({
         robot1Name: 'Iron Gladiator',
         robot2Name: 'Steel Warrior',
@@ -154,7 +154,8 @@ describe('CombatMessageGenerator', () => {
 
       expect(log).toBeDefined();
       expect(Array.isArray(log)).toBe(true);
-      expect(log.length).toBeGreaterThan(3); // Start, attacks, end, ELO changes
+      // Without simulator events, fallback generates minimal log (start + end)
+      expect(log.length).toBeGreaterThanOrEqual(2);
 
       // Verify battle start event
       const startEvent = log.find(e => e.type === 'battle_start');
@@ -166,9 +167,6 @@ describe('CombatMessageGenerator', () => {
       expect(endEvent).toBeDefined();
       expect(endEvent?.message).toContain('Iron Gladiator');
       expect(endEvent?.message).toContain('Steel Warrior');
-
-      // ELO changes are no longer included in the battle log
-      // They're shown in the battle summary instead
     });
 
     it('should include timestamps in correct order', () => {
@@ -192,19 +190,16 @@ describe('CombatMessageGenerator', () => {
       });
 
       // Verify timestamps are in ascending order
-      for (let i = 1; i < log.length - 1; i++) {
+      for (let i = 1; i < log.length; i++) {
         expect(log[i].timestamp).toBeGreaterThanOrEqual(log[i - 1].timestamp);
       }
 
       // First event should be at time 0
       expect(log[0].timestamp).toBe(0);
 
-      // Last events should be toward the end of battle (within reasonable distribution)
-      const lastEvents = log.slice(-3);
-      lastEvents.forEach(event => {
-        expect(event.timestamp).toBeGreaterThanOrEqual(battleDurationSeconds * 0.5); // At least 50% through
-        expect(event.timestamp).toBeLessThanOrEqual(battleDurationSeconds);
-      });
+      // Last event should be at battle duration (battle_end)
+      const lastEvent = log[log.length - 1];
+      expect(lastEvent.timestamp).toBe(battleDurationSeconds);
     });
   });
 

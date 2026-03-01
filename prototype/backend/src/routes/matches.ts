@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import { getConfig } from '../config/env';
+import { getNextCronOccurrence } from '../utils/scheduleUtils';
 
 const router = express.Router();
 
@@ -155,7 +157,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       robot1Id: match.robot1Id,
       robot2Id: match.robot2Id,
       leagueType: 'tournament', // Use 'tournament' as league type for display
-      scheduledFor: new Date().toISOString(), // Tournaments don't have scheduled time
+      scheduledFor: getNextCronOccurrence(getConfig().tournamentSchedule).toISOString(),
       status: match.status,
       robot1: match.robot1 ? {
         id: match.robot1.id,

@@ -233,7 +233,7 @@ export class RobotPerformanceService {
     });
 
     // Aggregate statistics
-    let battlesParticipated = participants.length;
+    const battlesParticipated = participants.length;
     let wins = 0;
     let losses = 0;
     let draws = 0;

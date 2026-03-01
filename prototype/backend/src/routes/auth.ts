@@ -30,7 +30,7 @@ const router = express.Router();
  *
  * **Request body:**
  * - `username` (string) — 3–20 alphanumeric / underscore / hyphen characters
- * - `email` (string) — 3–20 alphanumeric / underscore / hyphen characters
+ * - `email` (string) — 3–50 alphanumeric / underscore / hyphen characters
  * - `password` (string) — 8–128 characters, no character restrictions
  *
  * **Responses:**

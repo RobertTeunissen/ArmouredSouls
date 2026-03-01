@@ -487,7 +487,7 @@ describe('Validation Service - Unit Tests', () => {
     test('should accept request with maximum valid lengths', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(20), // Exactly 20 characters
-        email: 'b'.repeat(14) + '@c.com', // Exactly 20 characters
+        email: 'b'.repeat(44) + '@c.com', // Exactly 50 characters
         password: 'c'.repeat(128), // Exactly 128 characters
       };
       const result = validateRegistrationRequest(request);
@@ -498,13 +498,13 @@ describe('Validation Service - Unit Tests', () => {
     test('should reject request with values exceeding maximum lengths', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(21), // 21 characters
-        email: 'b'.repeat(15) + '@c.com', // 21 characters
+        email: 'b'.repeat(45) + '@c.com', // 51 characters
         password: 'c'.repeat(129), // 129 characters
       };
       const result = validateRegistrationRequest(request);
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Username must not exceed 20 characters');
-      expect(result.errors).toContain('Email must not exceed 20 characters');
+      expect(result.errors).toContain('Email must not exceed 50 characters');
       expect(result.errors).toContain('Password must not exceed 128 characters');
       expect(result.errors.length).toBe(3);
     });
@@ -593,7 +593,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     });
 
     test('should accept email with exactly 20 characters (maximum boundary)', () => {
-      const email = 'a'.repeat(14) + '@b.com';  // 14 + 6 = 20
+      const email = 'a'.repeat(44) + '@b.com';  // 44 + 6 = 50
       const result = validateEmail(email);
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
@@ -606,10 +606,10 @@ describe('Registration Validation Service - Unit Tests', () => {
     });
 
     test('should reject email with 21 characters (above maximum)', () => {
-      const email = 'a'.repeat(15) + '@b.com';  // 15 + 6 = 21
+      const email = 'a'.repeat(45) + '@b.com';  // 45 + 6 = 51
       const result = validateEmail(email);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Email must not exceed 20 characters');
+      expect(result.errors).toContain('Email must not exceed 50 characters');
     });
   });
 
@@ -765,12 +765,12 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for long email', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
-        email: 'a'.repeat(21),
+        email: 'a'.repeat(51),
         password: 'validpass',
       };
       const result = validateRegistrationRequest(request);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Email must not exceed 20 characters');
+      expect(result.errors).toContain('Email must not exceed 50 characters');
     });
 
     test('should return specific error message for invalid email characters', () => {
@@ -836,7 +836,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should accept request with all fields at maximum boundaries', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(20),
-        email: 'b'.repeat(14) + '@c.com',
+        email: 'b'.repeat(44) + '@c.com',
         password: 'c'.repeat(128),
       };
       const result = validateRegistrationRequest(request);
@@ -858,7 +858,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should reject request with all fields above maximum boundaries', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(21),
-        email: 'b'.repeat(15) + '@c.com',
+        email: 'b'.repeat(45) + '@c.com',
         password: 'c'.repeat(129),
       };
       const result = validateRegistrationRequest(request);
@@ -909,7 +909,7 @@ describe('Validation Service - Property-Based Tests', () => {
      * and length between 3-20 characters, the validation service should accept it.
      */
     test('Property 8: Valid Email Characters - accepts all valid email formats', () => {
-      // Generate valid email-like strings: local@domain.tld, fitting within 3-20 chars
+      // Generate valid email-like strings: local@domain.tld, fitting within 3-50 chars
       const localPartArbitrary = fc.array(
         fc.constantFrom(
           ...'abcdefghijklmnopqrstuvwxyz0123456789_-'
@@ -928,7 +928,7 @@ describe('Validation Service - Property-Based Tests', () => {
 
       const validEmailArbitrary = fc.tuple(localPartArbitrary, domainArbitrary, tldArbitrary)
         .map(([local, domain, tld]) => `${local}@${domain}.${tld}`)
-        .filter(email => email.length >= 3 && email.length <= 20);
+        .filter(email => email.length >= 3 && email.length <= 50);
 
       fc.assert(
         fc.property(validEmailArbitrary, (email: string) => {

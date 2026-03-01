@@ -10,7 +10,7 @@ info:
     | Field    | Min Length | Max Length | Allowed Characters                          |
     |----------|-----------|-----------|---------------------------------------------|
     | username | 3         | 20        | Alphanumeric, underscore (`_`), hyphen (`-`) |
-    | email    | 3         | 20        | Alphanumeric, underscore (`_`), hyphen (`-`) |
+    | email    | 3         | 50        | Alphanumeric, underscore (`_`), hyphen (`-`) |
     | password | 8         | 128       | Any characters                               |
 
     ## Error Codes
@@ -278,7 +278,7 @@ components:
         email:
           type: string
           minLength: 3
-          maxLength: 20
+          maxLength: 50
           pattern: '^[a-zA-Z0-9_-]+$'
           description: |
             Unique email identifier. Only alphanumeric characters, underscores, and hyphens are allowed.

@@ -93,7 +93,7 @@ graph TD
 ```typescript
 {
   username: string;    // 3-20 chars, alphanumeric + underscore + hyphen
-  email: string;       // 3-20 chars, alphanumeric + underscore + hyphen
+  email: string;       // 3-50 chars, alphanumeric + underscore + hyphen
   password: string;    // 8-128 chars
 }
 ```
@@ -178,7 +178,7 @@ Username:
 - Must be unique in database
 
 Email:
-- Length: 3-20 characters
+- Length: 3-50 characters
 - Allowed characters: alphanumeric, underscore, hyphen
 - Must be unique in database
 - Note: This is a simplified email format for the game system, not standard RFC 5322
@@ -320,7 +320,7 @@ Responsibilities:
 {
   id: UUID (primary key),
   username: VARCHAR(20) (unique, not null),
-  email: VARCHAR(20) (unique, not null),  // NEW FIELD
+  email: VARCHAR(50) (unique, not null),  // NEW FIELD
   passwordHash: VARCHAR(255) (not null),
   currency: INTEGER (default: 1000),      // Default starting currency
   prestige: INTEGER (default: 0),
@@ -404,7 +404,7 @@ After analyzing all acceptance criteria, I identified several areas where proper
 
 ### Property 8: Valid Email Characters
 
-*For any* string containing only alphanumeric characters, underscores, and hyphens, and with length between 3-20 characters, the validation service should accept it as a valid email format (subject to uniqueness check).
+*For any* string containing only alphanumeric characters, underscores, and hyphens, and with length between 3-50 characters, the validation service should accept it as a valid email format (subject to uniqueness check).
 
 **Validates: Requirements 2.9, 2.10**
 
@@ -508,7 +508,7 @@ After analyzing all acceptance criteria, I identified several areas where proper
 - Username invalid characters: "Username can only contain letters, numbers, underscores, and hyphens"
 - Username already exists: "Username is already taken"
 - Email too short (< 3 chars): "Email must be at least 3 characters long"
-- Email too long (> 20 chars): "Email must not exceed 20 characters"
+- Email too long (> 50 chars): "Email must not exceed 50 characters"
 - Email invalid characters: "Email can only contain letters, numbers, underscores, and hyphens"
 - Email already exists: "Email is already registered"
 - Password too short (< 8 chars): "Password must be at least 8 characters long"
@@ -690,7 +690,7 @@ const validUsernameArbitrary = () =>
 const validEmailArbitrary = () => 
   fc.stringOf(
     fc.constantFrom(...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-'),
-    { minLength: 3, maxLength: 20 }
+    { minLength: 3, maxLength: 50 }
   );
 
 const validPasswordArbitrary = () => 

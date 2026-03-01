@@ -11,7 +11,7 @@ import {
 } from '../../utils/economyCalculations';
 import { getFacilityConfig } from '../../config/facilities';
 
-const prisma = new PrismaClient();
+const _prisma = new PrismaClient();
 
 describe('Prestige Features Integration', () => {
   describe('Prestige Gates End-to-End', () => {

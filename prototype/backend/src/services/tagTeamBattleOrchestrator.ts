@@ -55,6 +55,16 @@ interface TagTeamBattleResult {
   team2ActiveSurvivalTime: number; // Time in combat for team2 active robot
   team2ReserveSurvivalTime: number; // Time in combat for team2 reserve robot
   battleLog: any[]; // Complete battle log with all events
+  phases: Array<{
+    robot1Name: string;
+    robot2Name: string;
+    robot1Stance: string;
+    robot2Stance: string;
+    robot1MaxHP: number;
+    robot2MaxHP: number;
+  }>; // Phase robot mappings for narrative conversion
+  team1Name: string;
+  team2Name: string;
 }
 
 interface TagOutEvent {
@@ -198,11 +208,7 @@ export async function executeTagTeamBattle(match: TagTeamMatch): Promise<TagTeam
   // Check if this is a bye-team match
   const isByeMatch = match.team2Id === null;
   
-  let team1: TagTeamWithRobots | null;
-  let team2: TagTeamWithRobots | null;
-
-  // Load team1
-  team1 = await prisma.tagTeam.findUnique({
+  const team1: TagTeamWithRobots | null = await prisma.tagTeam.findUnique({
     where: { id: match.team1Id },
     include: {
       activeRobot: {
@@ -221,6 +227,7 @@ export async function executeTagTeamBattle(match: TagTeamMatch): Promise<TagTeam
   });
 
   // Load team2
+  let team2: TagTeamWithRobots | null;
   if (match.team2Id === null) {
     team2 = createByeTeamForBattle(match.tagTeamLeague, match.tagTeamLeague + '_1');
   } else {
@@ -334,7 +341,7 @@ async function simulateTagTeamBattle(
   team2ActiveSurvivalTime += phase1Duration;
   
   // Track if phase 1 had a decisive winner (destruction or yield)
-  let phase1Winner: number | null = phase1Result.winnerId;
+  const phase1Winner: number | null = phase1Result.winnerId;
   
   // Collect combat events from phase 1 (Requirement 7.1)
   if (phase1Result.events && Array.isArray(phase1Result.events)) {
@@ -855,7 +862,79 @@ async function simulateTagTeamBattle(
     team1ReserveSurvivalTime,
     team2ActiveSurvivalTime,
     team2ReserveSurvivalTime,
-    battleLog: battleEvents, // Complete battle log with all events (Requirement 7.1)
+    battleLog: battleEvents, // Raw events - will be converted to narrative in createTagTeamBattleRecord
+    // Phase tracking for narrative conversion
+    phases: (() => {
+      const phases: Array<{
+        robot1Name: string;
+        robot2Name: string;
+        robot1Stance: string;
+        robot2Stance: string;
+        robot1MaxHP: number;
+        robot2MaxHP: number;
+      }> = [];
+      // Phase 1 is always active vs active
+      phases.push({
+        robot1Name: team1.activeRobot.name,
+        robot2Name: team2.activeRobot.name,
+        robot1Stance: team1.activeRobot.stance,
+        robot2Stance: team2.activeRobot.stance,
+        robot1MaxHP: team1.activeRobot.maxHP,
+        robot2MaxHP: team2.activeRobot.maxHP,
+      });
+      // Phase 2+ depends on who tagged out
+      if (team1NeedsTagOut && team2NeedsTagOut) {
+        phases.push({
+          robot1Name: team1.reserveRobot.name,
+          robot2Name: team2.reserveRobot.name,
+          robot1Stance: team1.reserveRobot.stance,
+          robot2Stance: team2.reserveRobot.stance,
+          robot1MaxHP: team1.reserveRobot.maxHP,
+          robot2MaxHP: team2.reserveRobot.maxHP,
+        });
+      } else if (team1NeedsTagOut) {
+        phases.push({
+          robot1Name: team1.reserveRobot.name,
+          robot2Name: team2.activeRobot.name,
+          robot1Stance: team1.reserveRobot.stance,
+          robot2Stance: team2.activeRobot.stance,
+          robot1MaxHP: team1.reserveRobot.maxHP,
+          robot2MaxHP: team2.activeRobot.maxHP,
+        });
+        if (team2ReserveUsed) {
+          phases.push({
+            robot1Name: team1.reserveRobot.name,
+            robot2Name: team2.reserveRobot.name,
+            robot1Stance: team1.reserveRobot.stance,
+            robot2Stance: team2.reserveRobot.stance,
+            robot1MaxHP: team1.reserveRobot.maxHP,
+            robot2MaxHP: team2.reserveRobot.maxHP,
+          });
+        }
+      } else if (team2NeedsTagOut) {
+        phases.push({
+          robot1Name: team1.activeRobot.name,
+          robot2Name: team2.reserveRobot.name,
+          robot1Stance: team1.activeRobot.stance,
+          robot2Stance: team2.reserveRobot.stance,
+          robot1MaxHP: team1.activeRobot.maxHP,
+          robot2MaxHP: team2.reserveRobot.maxHP,
+        });
+        if (team1ReserveUsed) {
+          phases.push({
+            robot1Name: team1.reserveRobot.name,
+            robot2Name: team2.reserveRobot.name,
+            robot1Stance: team1.reserveRobot.stance,
+            robot2Stance: team2.reserveRobot.stance,
+            robot1MaxHP: team1.reserveRobot.maxHP,
+            robot2MaxHP: team2.reserveRobot.maxHP,
+          });
+        }
+      }
+      return phases;
+    })(),
+    team1Name: `Team ${team1.id}`,
+    team2Name: `Team ${team2.id}`,
   };
 }
 /**
@@ -909,8 +988,15 @@ async function createTagTeamBattleRecord(
       team2TagOutTime: result.team2TagOutTime ? BigInt(Math.round(result.team2TagOutTime * 1000)) : null,
 
       // Battle log with all combat events, tag-out, and tag-in events (Requirement 7.1)
+      // Convert raw simulator events + tag events into narrative messages
       battleLog: {
-        events: result.battleLog,
+        events: CombatMessageGenerator.convertTagTeamEvents(result.battleLog, {
+          team1Name: result.team1Name,
+          team2Name: result.team2Name,
+          battleType: 'tag_team',
+          phases: result.phases,
+        }),
+        detailedCombatEvents: result.battleLog, // Keep raw events for admin debugging
         tagTeamBattle: true,
         team1TagOutTime: result.team1TagOutTime,
         team2TagOutTime: result.team2TagOutTime,
@@ -1129,7 +1215,7 @@ export function calculateTagTeamFame(
     champion: 40,
   };
 
-  let baseFame = baseFameByLeague[robot.currentLeague] || 0;
+  const baseFame = baseFameByLeague[robot.currentLeague] || 0;
 
   // If robot didn't participate (0 survival time), they still get base fame as part of winning team
   if (survivalTime === 0) {

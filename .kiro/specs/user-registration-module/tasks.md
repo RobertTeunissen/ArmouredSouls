@@ -37,7 +37,7 @@ This implementation plan breaks down the user registration module into discrete 
     - **Validates: Requirements 2.5, 2.6**
   
   - [x] 2.3 Implement email validation function
-    - Validate length (3-20 characters)
+    - Validate length (3-50 characters)
     - Validate allowed characters (alphanumeric, underscore, hyphen)
     - Return ValidationResult with specific error messages
     - _Requirements: 2.7, 2.8, 2.9, 2.10_

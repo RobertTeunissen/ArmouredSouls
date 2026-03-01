@@ -13,7 +13,7 @@ datasource db {
 model User {
   id           Int     @id @default(autoincrement())
   username     String  @unique @db.VarChar(50)
-  email        String? @unique @db.VarChar(20)
+  email        String? @unique @db.VarChar(50)
   passwordHash String  @map("password_hash") @db.VarChar(255)
   role         String  @default("user") @db.VarChar(20) // "user", "admin"
 

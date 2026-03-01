@@ -426,7 +426,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                 
                 {/* Date */}
                 <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
-                  {isTournament ? 'TBD' : formatDateTime(match.scheduledFor)}
+                  {formatDateTime(match.scheduledFor)}
                 </div>
                 
                 {/* ELO */}
@@ -453,7 +453,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                     </div>
                   </div>
                   <div className="text-xs text-[#8b949e]">
-                    {isTournament ? 'TBD' : formatDateTime(match.scheduledFor)}
+                    {formatDateTime(match.scheduledFor)}
                   </div>
                 </div>
                 

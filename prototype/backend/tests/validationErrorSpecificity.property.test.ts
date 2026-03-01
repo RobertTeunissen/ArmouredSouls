@@ -168,13 +168,13 @@ describe('Validation Error Specificity - Property Tests', () => {
       );
     });
 
-    test('too-long email returns error mentioning "Email" and "20 characters"', async () => {
+    test('too-long email returns error mentioning "Email" and "50 characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate emails of length 21-40 using valid chars only
+          // Generate emails of length 51-70 using valid chars only
           fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('')), {
-            minLength: 21,
-            maxLength: 40,
+            minLength: 51,
+            maxLength: 70,
           }).map((chars) => chars.join('')),
           validUsernameArbitrary(),
           validPasswordArbitrary(),
@@ -186,7 +186,7 @@ describe('Validation Error Specificity - Property Tests', () => {
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
             expect(res.body.error).toContain('Email');
-            expect(res.body.error).toContain('20 characters');
+            expect(res.body.error).toContain('50 characters');
           },
         ),
         { numRuns: NUM_RUNS },
@@ -196,7 +196,7 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('invalid email characters returns error mentioning "Email" and "invalid characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate strings of valid length (3-20) that contain at least one invalid char
+          // Generate strings of valid length (3-50) that contain at least one invalid char
           // Note: @ and . are now valid email characters, so exclude them from invalid set
           fc.tuple(
             fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('')), {

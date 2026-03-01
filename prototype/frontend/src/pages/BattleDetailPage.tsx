@@ -131,6 +131,9 @@ function BattleDetailPage() {
           <div className="text-gray-300 text-sm">
             {battleLog.battleType === 'tag_team' ? (
               <>🤝 Tag Team Battle • Duration: {formatDuration(battleLog.duration)}</>
+            ) : battleLog.battleType === 'tournament' || battleLog.battleLog.isTournament ? (
+              <>🏆 Tournament Round {battleLog.battleLog.round || '?'}/{battleLog.battleLog.maxRounds || '?'}
+              {battleLog.battleLog.isFinals ? ' (Finals)' : ''} • Duration: {formatDuration(battleLog.duration)}</>
             ) : (
               <>{getLeagueTierName(battleLog.leagueType)} League • Duration: {formatDuration(battleLog.duration)}</>
             )}
@@ -380,6 +383,10 @@ function BattleDetailPage() {
               battleLog.battleLog.events
                 .filter((event: BattleLogEvent) => {
                   // Filter out financial/reward messages since they're now in the top summary
+                  if (event.type === 'tournament_reward' || event.type === 'reward_summary' || 
+                      event.type === 'reward_detail' || event.type === 'reward_breakdown') {
+                    return false;
+                  }
                   const message = event.message.toLowerCase();
                   return !message.includes('financial') && 
                          !message.includes('₡') && 
@@ -387,7 +394,12 @@ function BattleDetailPage() {
                          !message.includes('winner (') &&
                          !message.includes('loser (') &&
                          !message.includes('league base') &&
-                         !message.includes('participation');
+                         !message.includes('participation') &&
+                         !message.includes('prestige:') &&
+                         !message.includes('fame:') &&
+                         !message.includes('tournament size') &&
+                         !message.includes('round progress') &&
+                         !message.includes('championship finals');
                 })
                 .map((event: BattleLogEvent, index: number) => {
                 // Determine event color based on type
@@ -401,6 +413,9 @@ function BattleDetailPage() {
                 } else if (event.type === 'battle_end') {
                   eventColor = 'border-green-500';
                   bgColor = 'bg-green-900/20';
+                } else if (event.type === 'stance') {
+                  eventColor = 'border-purple-500';
+                  bgColor = 'bg-purple-900/20';
                 } else if (event.type === 'tag_out') {
                   eventColor = 'border-orange-500';
                   bgColor = 'bg-orange-900/20';
@@ -409,12 +424,39 @@ function BattleDetailPage() {
                   eventColor = 'border-cyan-500';
                   bgColor = 'bg-cyan-900/20';
                   icon = '⚡';
+                } else if (event.type === 'critical') {
+                  eventColor = 'border-red-500';
+                  bgColor = 'bg-red-900/20';
                 } else if (event.type === 'attack' && event.message.includes('CRITICAL')) {
                   eventColor = 'border-red-500';
                   bgColor = 'bg-red-900/20';
+                } else if (event.type === 'counter') {
+                  eventColor = 'border-yellow-500';
+                  bgColor = 'bg-yellow-900/20';
                 } else if (event.type === 'miss') {
                   eventColor = 'border-gray-500';
                   bgColor = 'bg-gray-800';
+                } else if (event.type === 'malfunction') {
+                  eventColor = 'border-amber-500';
+                  bgColor = 'bg-amber-900/20';
+                } else if (event.type === 'shield_break') {
+                  eventColor = 'border-red-400';
+                  bgColor = 'bg-red-900/15';
+                } else if (event.type === 'shield_regen') {
+                  eventColor = 'border-teal-500';
+                  bgColor = 'bg-teal-900/20';
+                } else if (event.type === 'yield') {
+                  eventColor = 'border-yellow-400';
+                  bgColor = 'bg-yellow-900/20';
+                } else if (event.type === 'destroyed') {
+                  eventColor = 'border-red-600';
+                  bgColor = 'bg-red-900/30';
+                } else if (event.type === 'damage_status') {
+                  eventColor = 'border-orange-400';
+                  bgColor = 'bg-orange-900/15';
+                } else if (event.type === 'draw') {
+                  eventColor = 'border-gray-400';
+                  bgColor = 'bg-gray-700/50';
                 }
 
                 return (

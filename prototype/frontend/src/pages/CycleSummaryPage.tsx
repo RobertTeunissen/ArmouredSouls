@@ -99,13 +99,35 @@ function CycleSummaryPage() {
     );
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-900 text-white">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12 text-red-400">{error || 'No data available'}</div>
+          <div className="text-center py-12 text-red-400">{error}</div>
           <div className="text-center">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || data.cycles.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-lg">No cycle data available yet.</p>
+            <p className="text-gray-500 mt-2">Cycle summaries will appear here once cycles have been completed.</p>
+          </div>
+          <div className="text-center mt-4">
             <button
               onClick={() => navigate('/dashboard')}
               className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded transition-colors"

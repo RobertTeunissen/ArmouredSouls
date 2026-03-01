@@ -419,6 +419,11 @@ export interface BattleLogResponse {
   winner: 'robot1' | 'robot2' | null;
   battleLog: {
     events: BattleLogEvent[];
+    // Tournament metadata
+    isTournament?: boolean;
+    round?: number;
+    maxRounds?: number;
+    isFinals?: boolean;
   };
   // Tag team specific fields
   tagTeam?: {

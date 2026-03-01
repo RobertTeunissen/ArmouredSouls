@@ -53,9 +53,7 @@ class CycleLogger {
     if (this.isCapturing) return;
     this.isCapturing = true;
 
-    const self = this;
-
-    console.log = function(...args: any[]) {
+    console.log = (...args: any[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
@@ -67,16 +65,16 @@ class CycleLogger {
       };
       
       // If cycle is active, add to cycle logs, otherwise add to pre-cycle logs
-      if (self.currentCycle !== null) {
-        self.logs.push(entry);
+      if (this.currentCycle !== null) {
+        this.logs.push(entry);
       } else {
-        self.preCycleLogs.push(entry);
+        this.preCycleLogs.push(entry);
       }
       
-      self.originalConsoleLog(...args);
+      this.originalConsoleLog(...args);
     };
 
-    console.error = function(...args: any[]) {
+    console.error = (...args: any[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
@@ -88,16 +86,16 @@ class CycleLogger {
       };
       
       // If cycle is active, add to cycle logs, otherwise add to pre-cycle logs
-      if (self.currentCycle !== null) {
-        self.logs.push(entry);
+      if (this.currentCycle !== null) {
+        this.logs.push(entry);
       } else {
-        self.preCycleLogs.push(entry);
+        this.preCycleLogs.push(entry);
       }
       
-      self.originalConsoleError(...args);
+      this.originalConsoleError(...args);
     };
 
-    console.warn = function(...args: any[]) {
+    console.warn = (...args: any[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
@@ -109,13 +107,13 @@ class CycleLogger {
       };
       
       // If cycle is active, add to cycle logs, otherwise add to pre-cycle logs
-      if (self.currentCycle !== null) {
-        self.logs.push(entry);
+      if (this.currentCycle !== null) {
+        this.logs.push(entry);
       } else {
-        self.preCycleLogs.push(entry);
+        this.preCycleLogs.push(entry);
       }
       
-      self.originalConsoleWarn(...args);
+      this.originalConsoleWarn(...args);
     };
   }
 

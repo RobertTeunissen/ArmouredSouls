@@ -9,6 +9,10 @@ export interface EnvConfig {
   schedulerEnabled: boolean;
   rateLimitWindowMs: number;
   rateLimitMaxRequests: number;
+  leagueSchedule: string;
+  tournamentSchedule: string;
+  tagTeamSchedule: string;
+  settlementSchedule: string;
 }
 
 /**
@@ -69,5 +73,19 @@ export function loadEnvConfig(): EnvConfig {
     schedulerEnabled: process.env.SCHEDULER_ENABLED === 'true',
     rateLimitWindowMs,
     rateLimitMaxRequests,
+    leagueSchedule: process.env.LEAGUE_SCHEDULE || '0 20 * * *',
+    tournamentSchedule: process.env.TOURNAMENT_SCHEDULE || '0 8 * * *',
+    tagTeamSchedule: process.env.TAGTEAM_SCHEDULE || '0 12 * * *',
+    settlementSchedule: process.env.SETTLEMENT_SCHEDULE || '0 23 * * *',
   };
+}
+
+// Singleton config instance — initialized on first access
+let _config: EnvConfig | null = null;
+
+export function getConfig(): EnvConfig {
+  if (!_config) {
+    _config = loadEnvConfig();
+  }
+  return _config;
 }

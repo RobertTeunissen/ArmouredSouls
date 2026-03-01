@@ -1,5 +1,5 @@
 -- AlterTable: Add optional email column to users table
-ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email" VARCHAR(20);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email" VARCHAR(50);
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email");

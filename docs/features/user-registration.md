@@ -302,7 +302,7 @@ npx prisma generate
 
 The migration performs three steps:
 
-1. Adds `email` column as `VARCHAR(20)`, initially nullable
+1. Adds `email` column as `VARCHAR(50)`, initially nullable
 2. Populates existing users with placeholder emails (`{username}@legacy.local`)
 3. Creates a unique index on the `email` column
 
@@ -504,7 +504,7 @@ Validation functions live in `prototype/backend/src/utils/validation.ts`. Each f
 | Field | Rule | Function |
 |-------|------|----------|
 | Username | 3–20 chars, alphanumeric + `_` + `-` | `validateUsername()` |
-| Email | 3–20 chars, alphanumeric + `_` + `-` | `validateEmail()` |
+| Email | 3–50 chars, alphanumeric + `_` + `-` | `validateEmail()` |
 | Password | 8–128 chars, no character restrictions | `validateRegistrationPassword()` |
 
 **Adding a new validation rule — example: require username to start with a letter:**

@@ -4,6 +4,8 @@ import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable } from '../ut
 import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
 import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
+import { getConfig } from '../config/env';
+import { getNextCronOccurrence } from '../utils/scheduleUtils';
 
 const router = express.Router();
 
@@ -1899,7 +1901,7 @@ router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, 
           matchId: match.id,
           opponentName: opponent?.name || 'TBD',
           opponentPortrait: opponent?.imageUrl || '/src/assets/robots/robot-1.png',
-          scheduledTime: new Date().toISOString(), // Tournament matches don't have specific scheduled times
+          scheduledTime: getNextCronOccurrence(getConfig().tournamentSchedule).toISOString(),
           battleType: 'tournament' as const,
           tournamentContext: match.tournament.name,
         };

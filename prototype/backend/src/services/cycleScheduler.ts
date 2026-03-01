@@ -213,6 +213,8 @@ async function executeTagTeamCycle(): Promise<void> {
 }
 
 async function executeSettlement(): Promise<void> {
+  const settlementStart = Date.now();
+
   // Get or create cycle metadata (singleton pattern)
   let cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
   if (!cycleMetadata) {
@@ -221,6 +223,9 @@ async function executeSettlement(): Promise<void> {
     });
   }
   const currentCycleNumber = cycleMetadata.totalCycles;
+
+  // Log cycle start event (required for snapshot creation)
+  await eventLogger.logCycleStart(currentCycleNumber, 'scheduled');
 
   // Step 1: Calculate and credit passive income for all users
   logger.info('Daily Settlement: Step 1 — Processing passive income');
@@ -368,6 +373,10 @@ async function executeSettlement(): Promise<void> {
   // Step 5: Create analytics snapshot
   logger.info('Daily Settlement: Step 5 — Creating analytics snapshot');
   try {
+    // Log cycle complete event (required for snapshot creation)
+    const settlementDuration = Date.now() - settlementStart;
+    await eventLogger.logCycleComplete(currentCycleNumber, settlementDuration);
+
     const { cycleSnapshotService } = await import('./cycleSnapshotService');
     await cycleSnapshotService.createSnapshot(currentCycleNumber);
     logger.info(`Daily Settlement: Analytics snapshot created for cycle ${currentCycleNumber}`);
