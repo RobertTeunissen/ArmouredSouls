@@ -164,7 +164,7 @@ export class CombatMessageGenerator {
     '⚡ Direct hit! {attackerName}\'s {weaponName} deals {damageDescriptor} to {defenderName}!',
     '🎯 {attackerName} scores {damageDescriptor} against {defenderName} using {weaponName}!',
     '💥 {weaponName} impacts {defenderName}\'s hull - {damageDescriptor} from {attackerName}!',
-    '🔪 {attackerName} executes a clean strike with {weaponName}, inflicting {damageDescriptor}!',
+    '🔪 {attackerName} executes a clean strike on {defenderName} with {weaponName}, inflicting {damageDescriptor}!',
   ];
 
   // ── Critical Hit Messages (12 variations) ──────────────────────────────
