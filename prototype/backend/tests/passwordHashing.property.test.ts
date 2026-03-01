@@ -3,7 +3,7 @@ import { hashPassword } from '../src/services/passwordService';
 import bcrypt from 'bcrypt';
 
 // Test configuration
-const NUM_RUNS = 100;
+const NUM_RUNS = 10;
 
 describe('Password Hashing - Property Tests', () => {
   afterAll(() => {

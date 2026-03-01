@@ -56,8 +56,10 @@ Multiple validation errors are joined with `, ` in a single `error` string. For 
 ```
 
 **Recommended client handling:**
-- Parse the `error` string and display it to the user near the relevant form field(s).
-- If you need per-field granularity, split on `, ` and match keywords (`Username`, `Email`, `Password`) to map messages to fields.
+- The frontend maps `VALIDATION_ERROR` responses to inline per-field error messages using keyword matching (`Username`, `Email`, `Password`).
+- When the error targets a single field, it displays inline below that field with a red border highlight.
+- When multiple fields are affected, the message displays in a general error banner above the form.
+- Client-side validation mirrors these rules to catch issues before the server round-trip.
 - Clear displayed errors when the user edits the corresponding field.
 
 ---
@@ -159,20 +161,20 @@ Returned when the client exceeds the allowed number of requests within the rate-
 
 Returned when a database operation fails (connection issue, constraint violation, etc.). Internal details are logged server-side but never exposed to the client.
 
-| Condition                | Error Message                                                      |
-|--------------------------|--------------------------------------------------------------------|
-| Database error (register)| An error occurred during registration. Please try again.           |
-| Database error (login)   | An error occurred during login. Please try again.                  |
+| Condition                | Error Message                                                                  |
+|--------------------------|--------------------------------------------------------------------------------|
+| Database error (register)| Registration is temporarily unavailable. Please try again in a few minutes.    |
+| Database error (login)   | An error occurred during login. Please try again.                              |
 
 ```json
 {
-  "error": "An error occurred during registration. Please try again.",
+  "error": "Registration is temporarily unavailable. Please try again in a few minutes.",
   "code": "DATABASE_ERROR"
 }
 ```
 
 **Recommended client handling:**
-- Display a generic "something went wrong" message.
+- Display the message in a general error banner (not field-specific).
 - Offer a retry button.
 - If the error persists, suggest the user try again later or contact support.
 
@@ -182,34 +184,49 @@ Returned when a database operation fails (connection issue, constraint violation
 
 Returned for any unexpected, non-database error. Full details are logged server-side.
 
-| Condition                | Error Message                                          |
-|--------------------------|--------------------------------------------------------|
-| Unexpected error         | An unexpected error occurred. Please try again.        |
+| Condition                | Error Message                                                                                    |
+|--------------------------|--------------------------------------------------------------------------------------------------|
+| Unexpected error         | Something went wrong on our end. Please try again later or contact support if the issue persists.|
 
 ```json
 {
-  "error": "An unexpected error occurred. Please try again.",
+  "error": "Something went wrong on our end. Please try again later or contact support if the issue persists.",
   "code": "INTERNAL_ERROR"
 }
 ```
 
 **Recommended client handling:**
-- Same as `DATABASE_ERROR` — display a generic message and offer retry.
+- Same as `DATABASE_ERROR` — display in a general error banner and offer retry.
 - Log the occurrence client-side (without sensitive data) for diagnostics.
+
+---
+
+#### Network / Unreachable Server (client-side only)
+
+When the API request fails without a response (network timeout, DNS failure, server down), the frontend displays a client-generated message. No error code is returned by the server.
+
+| Condition                | Error Message                                                                  |
+|--------------------------|--------------------------------------------------------------------------------|
+| No server response       | Unable to reach the server. Check your internet connection and try again.      |
+
+**Recommended client handling:**
+- Display in a general error banner.
+- Suggest the user check their connection and retry.
 
 ---
 
 ## Quick-Reference Table
 
-| Code                 | HTTP | Endpoint(s)       | Error Message (summary)                                  |
-|----------------------|------|--------------------|----------------------------------------------------------|
-| `VALIDATION_ERROR`   | 400  | Register           | Field-specific validation message(s)                     |
-| `DUPLICATE_USERNAME` | 400  | Register           | Username is already taken                                |
-| `DUPLICATE_EMAIL`    | 400  | Register           | Email is already registered                              |
-| `INVALID_CREDENTIALS`| 401  | Login              | Invalid credentials                                      |
-| *(none)*             | 429  | Register, Login    | Too many requests. Please try again later.               |
-| `DATABASE_ERROR`     | 500  | Register, Login    | An error occurred during registration/login. Please try again. |
-| `INTERNAL_ERROR`     | 500  | Register, Login    | An unexpected error occurred. Please try again.          |
+| Code                 | HTTP | Endpoint(s)       | Error Message (summary)                                                        |
+|----------------------|------|--------------------|--------------------------------------------------------------------------------|
+| `VALIDATION_ERROR`   | 400  | Register           | Field-specific validation message(s)                                           |
+| `DUPLICATE_USERNAME` | 400  | Register           | Username is already taken                                                      |
+| `DUPLICATE_EMAIL`    | 400  | Register           | Email is already registered                                                    |
+| `INVALID_CREDENTIALS`| 401  | Login              | Invalid credentials                                                            |
+| *(none)*             | 429  | Register, Login    | Too many requests. Please try again later.                                     |
+| `DATABASE_ERROR`     | 500  | Register, Login    | Registration is temporarily unavailable. / An error occurred during login.     |
+| `INTERNAL_ERROR`     | 500  | Register, Login    | Something went wrong on our end. Please try again later or contact support.    |
+| *(client-side)*      | —    | Register           | Unable to reach the server. Check your internet connection and try again.      |
 
 ---
 

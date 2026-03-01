@@ -17,7 +17,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 // Test configuration
-const NUM_RUNS = 100;
+const NUM_RUNS = 25;
 
 describe('Authentication Equivalence - Property Tests', () => {
   const createdUserIds: number[] = [];

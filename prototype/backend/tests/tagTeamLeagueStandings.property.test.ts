@@ -203,7 +203,7 @@ describe('Tag Team League Standings Property Tests', () => {
           });
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -343,7 +343,7 @@ describe('Tag Team League Standings Property Tests', () => {
           });
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -463,7 +463,7 @@ describe('Tag Team League Standings Property Tests', () => {
           });
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 });

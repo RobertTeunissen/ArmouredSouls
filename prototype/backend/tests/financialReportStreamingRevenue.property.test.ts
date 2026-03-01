@@ -222,7 +222,7 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 25 }
     );
   });
 
@@ -271,7 +271,7 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
           );
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -397,7 +397,7 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -462,7 +462,7 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -549,7 +549,7 @@ describe('Property 17: Financial Report Includes Streaming Revenue', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 });

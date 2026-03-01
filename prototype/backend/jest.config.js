@@ -1,3 +1,13 @@
+// Shared base config
+const baseTransform = {
+  '^.+\\.tsx?$': ['ts-jest', {
+    tsconfig: {
+      esModuleInterop: true,
+      allowSyntheticDefaultImports: true,
+    },
+  }],
+};
+
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
@@ -9,16 +19,7 @@ module.exports = {
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
   ],
-  transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: {
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-      },
-    }],
-  },
-  // Increase timeout for property-based tests and integration tests (60 seconds)
+  transform: baseTransform,
   testTimeout: 60000,
-  // Limit parallelism to reduce sequence number conflicts in shared database
   maxWorkers: 2,
 };

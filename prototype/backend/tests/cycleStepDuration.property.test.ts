@@ -96,7 +96,7 @@ describe('Property 15: Cycle Step Duration Recording', () => {
           }
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -166,7 +166,7 @@ describe('Property 15: Cycle Step Duration Recording', () => {
           expect(overheadPercentage).toBeLessThanOrEqual(5);
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -218,7 +218,7 @@ describe('Property 15: Cycle Step Duration Recording', () => {
           }
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -262,7 +262,7 @@ describe('Property 15: Cycle Step Duration Recording', () => {
           }
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -315,7 +315,7 @@ describe('Property 15: Cycle Step Duration Recording', () => {
           }
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 

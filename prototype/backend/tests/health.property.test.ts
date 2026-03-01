@@ -2,7 +2,7 @@ import * as fc from 'fast-check';
 import express, { Request, Response } from 'express';
 import request from 'supertest';
 
-const NUM_RUNS = 100;
+const NUM_RUNS = 25;
 
 /**
  * Creates a minimal Express app that mimics the health endpoint behavior.

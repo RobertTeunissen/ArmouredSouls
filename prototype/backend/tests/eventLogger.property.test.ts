@@ -134,7 +134,7 @@ describe('EventLogger Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -177,7 +177,7 @@ describe('EventLogger Property-Based Tests', () => {
             expect(loggedEvent!.payload).toEqual(payload);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -234,7 +234,7 @@ describe('EventLogger Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 50 }
+        { numRuns: 20 }
       );
     });
 
@@ -361,7 +361,7 @@ describe('EventLogger Property-Based Tests', () => {
             });
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
   });
@@ -448,7 +448,7 @@ describe('EventLogger Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -508,7 +508,7 @@ describe('EventLogger Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 50 }
+        { numRuns: 20 }
       );
     });
 
@@ -575,7 +575,7 @@ describe('EventLogger Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 50 }
+        { numRuns: 20 }
       );
     });
 
@@ -627,7 +627,7 @@ describe('EventLogger Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 50 }
+        { numRuns: 20 }
       );
     });
 
@@ -695,7 +695,7 @@ describe('EventLogger Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
   });

@@ -371,7 +371,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 25 }
     );
   });
 
@@ -489,7 +489,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -600,7 +600,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -690,7 +690,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 });

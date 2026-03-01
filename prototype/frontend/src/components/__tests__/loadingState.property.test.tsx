@@ -29,12 +29,15 @@ const validUsernameArbitrary = () =>
     .map((chars) => chars.join(''));
 
 /**
- * Generates a valid email (3-20 alphanumeric/underscore/hyphen chars).
+ * Generates a valid email (alphanumeric with @ symbol).
  */
 const validEmailArbitrary = () =>
   fc
-    .array(fc.constantFrom(...VALID_CHARS.split('')), { minLength: 3, maxLength: 20 })
-    .map((chars) => chars.join(''));
+    .tuple(
+      fc.array(fc.constantFrom(...VALID_CHARS.split('')), { minLength: 3, maxLength: 10 }).map((chars) => chars.join('')),
+      fc.array(fc.constantFrom(...VALID_CHARS.split('')), { minLength: 3, maxLength: 10 }).map((chars) => chars.join('')),
+    )
+    .map(([local, domain]) => `${local}@${domain}`);
 
 /**
  * Generates a valid password (8-64 printable chars).

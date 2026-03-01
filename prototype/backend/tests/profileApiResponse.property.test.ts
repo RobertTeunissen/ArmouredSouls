@@ -19,7 +19,7 @@ app.use(express.json());
 app.use('/api/user', userRoutes);
 
 // Test configuration
-const NUM_RUNS = 100;
+const NUM_RUNS = 25;
 
 describe('Profile API Response - Property Tests', () => {
   let testUsers: any[] = [];

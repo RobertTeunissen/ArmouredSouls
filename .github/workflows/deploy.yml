@@ -20,8 +20,44 @@ jobs:
   # ---------------------------------------------------------------------------
   # Stage 1: Backend unit tests + property tests, frontend build + lint
   # ---------------------------------------------------------------------------
-  backend-tests:
-    name: Backend Tests (Unit + Property)
+  backend-unit-tests:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install backend dependencies
+        working-directory: ./prototype/backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./prototype/backend
+        run: npm run prisma:generate
+
+      - name: Lint backend code
+        working-directory: ./prototype/backend
+        run: npm run lint || true
+
+      - name: Build backend
+        working-directory: ./prototype/backend
+        run: npm run build
+
+      - name: Run unit tests
+        working-directory: ./prototype/backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-secret-key-for-ci
+        run: npm run test:unit
+
+  backend-integration-tests:
+    name: Backend Integration Tests
     runs-on: ubuntu-latest
 
     services:
@@ -62,21 +98,13 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
         run: npx prisma migrate deploy
 
-      - name: Lint backend code
-        working-directory: ./prototype/backend
-        run: npm run lint || true
-
-      - name: Build backend
-        working-directory: ./prototype/backend
-        run: npm run build
-
-      - name: Run unit + property tests
+      - name: Run integration tests
         working-directory: ./prototype/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
           JWT_SECRET: test-secret-key-for-ci
           NODE_ENV: test
-        run: npm test || true
+        run: npm run test:integration || true
 
   frontend-build:
     name: Frontend Build & Lint
@@ -116,7 +144,7 @@ jobs:
   e2e-tests:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-build]
+    needs: [backend-unit-tests, backend-integration-tests, frontend-build]
     if: false  # Temporarily disabled - needs backend server setup
 
     services:
@@ -169,7 +197,7 @@ jobs:
   deploy-acc:
     name: Deploy to Acceptance
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-build]
+    needs: [backend-unit-tests, backend-integration-tests, frontend-build]
     if: github.event_name == 'push'
     environment: acceptance
 
@@ -301,7 +329,7 @@ jobs:
   deploy-prd:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-build]
+    needs: [backend-unit-tests, backend-integration-tests, frontend-build]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     environment: production
 

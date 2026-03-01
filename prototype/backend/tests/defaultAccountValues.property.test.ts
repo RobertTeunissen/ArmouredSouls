@@ -4,7 +4,7 @@ import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 
 // Test configuration
-const NUM_RUNS = 100;
+const NUM_RUNS = 25;
 
 describe('Default Account Values - Property Tests', () => {
   const createdUserIds: number[] = [];

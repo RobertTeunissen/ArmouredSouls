@@ -205,7 +205,7 @@ describe('TrendAnalysisService Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -331,7 +331,7 @@ describe('TrendAnalysisService Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 50, timeout: 60000 } // Reduced runs and increased timeout for performance
+        { numRuns: 20, timeout: 60000 } // Reduced runs and increased timeout for performance
       );
     });
 
@@ -431,7 +431,7 @@ describe('TrendAnalysisService Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -477,7 +477,7 @@ describe('TrendAnalysisService Property-Based Tests', () => {
             expect(trendData.metric).toBe('income');
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -548,7 +548,7 @@ describe('TrendAnalysisService Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
   });

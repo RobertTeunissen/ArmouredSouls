@@ -1,0 +1,264 @@
+Timestamp | Level | Message
+2026-03-01T12:29:57.873Z | INFO | === Cycle 3 Started ===
+2026-03-01T12:29:57.873Z | INFO | Cycle 3 (3/3)
+2026-03-01T12:29:57.873Z | INFO |  [Admin] === Cycle 3 (3/3) ===
+2026-03-01T12:29:57.874Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-03-01T12:29:57.874Z | INFO | [BattleOrchestrator] Executing battles scheduled for: 2026-03-01T12:29:57.874Z
+2026-03-01T12:29:57.875Z | INFO | [BattleOrchestrator] Found 0 matches to execute
+2026-03-01T12:29:57.875Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
+2026-03-01T12:29:57.875Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
+2026-03-01T12:29:57.877Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-03-01T12:29:57.883Z | INFO | [RepairService] | User 922 | Robot 2648 (PBT_Elig2_1772368195162_0.41995245913035584) | Cost: ₡2,144 | Discount: 0%
+2026-03-01T12:29:57.885Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 3)
+2026-03-01T12:29:57.886Z | INFO | [TagTeamBattles] Found 0 scheduled tag team matches
+2026-03-01T12:29:57.886Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-03-01T12:29:57.887Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-03-01T12:29:57.889Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-03-01T12:29:57.890Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-03-01T12:29:57.893Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-03-01T12:29:57.893Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-01T12:29:57.893Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-03-01T12:29:57.893Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-01T12:29:57.894Z | INFO | [Rebalancing] Total robots in system: 400
+2026-03-01T12:29:57.894Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-03-01T12:29:57.896Z | INFO | [Rebalancing] bronze: 400 total robots across 1 instances
+2026-03-01T12:29:57.896Z | INFO | [Rebalancing] Processing bronze_1...
+2026-03-01T12:29:57.897Z | INFO | [Rebalancing] bronze_1: Skipping (0 eligible, need 10)
+2026-03-01T12:29:57.897Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-03-01T12:29:57.897Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-03-01T12:29:57.898Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
+2026-03-01T12:29:57.899Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:57.899Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-03-01T12:29:57.900Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-03-01T12:29:57.900Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:57.900Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-03-01T12:29:57.902Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-03-01T12:29:57.902Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:57.902Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-03-01T12:29:57.904Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-03-01T12:29:57.904Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:57.904Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-03-01T12:29:57.906Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-03-01T12:29:57.906Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:57.906Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-03-01T12:29:57.907Z | INFO | [Rebalancing] bronze: Instance exceeds 100 robots, rebalancing...
+2026-03-01T12:29:57.908Z | INFO | [LeagueInstance] Rebalancing bronze instances...
+2026-03-01T12:29:57.908Z | INFO |   Total robots: 402
+2026-03-01T12:29:57.908Z | INFO |   Instances: 1
+2026-03-01T12:29:57.908Z | INFO |   Average per instance: 402.0
+2026-03-01T12:29:57.937Z | INFO |   Target instances: 5
+2026-03-01T12:29:58.123Z | INFO | [LeagueInstance] Rebalanced 321 robots across 5 instances
+2026-03-01T12:29:58.125Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-03-01T12:29:58.126Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-03-01T12:29:58.127Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-03-01T12:29:58.128Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-03-01T12:29:58.128Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-03-01T12:29:58.129Z | INFO |  ════════════════════════════════════════════════════════════
+2026-03-01T12:29:58.129Z | INFO | [Rebalancing] League rebalancing complete!
+2026-03-01T12:29:58.129Z | INFO |   Total promoted: 0
+2026-03-01T12:29:58.129Z | INFO |   Total demoted: 0
+2026-03-01T12:29:58.129Z | INFO |   Errors: 0
+2026-03-01T12:29:58.129Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-03-01T12:29:58.131Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 3)
+2026-03-01T12:29:58.131Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-01T12:29:58.131Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
+2026-03-01T12:29:58.131Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-01T12:29:58.133Z | INFO | [TagTeamRebalancing] Total teams in system: 6
+2026-03-01T12:29:58.133Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
+2026-03-01T12:29:58.135Z | INFO | [TagTeamRebalancing] bronze: 6 total teams across 1 instances
+2026-03-01T12:29:58.135Z | INFO | [TagTeamRebalancing] Processing bronze_1...
+2026-03-01T12:29:58.136Z | INFO | [TagTeamRebalancing] bronze_1: Skipping (0 eligible, need 10)
+2026-03-01T12:29:58.136Z | INFO | [TagTeamRebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-03-01T12:29:58.136Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
+2026-03-01T12:29:58.137Z | INFO | [TagTeamRebalancing] silver: 0 total teams across 0 instances
+2026-03-01T12:29:58.137Z | INFO | [TagTeamRebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:58.137Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
+2026-03-01T12:29:58.139Z | INFO | [TagTeamRebalancing] gold: 0 total teams across 0 instances
+2026-03-01T12:29:58.139Z | INFO | [TagTeamRebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:58.139Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
+2026-03-01T12:29:58.140Z | INFO | [TagTeamRebalancing] platinum: 0 total teams across 0 instances
+2026-03-01T12:29:58.140Z | INFO | [TagTeamRebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:58.141Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
+2026-03-01T12:29:58.142Z | INFO | [TagTeamRebalancing] diamond: 0 total teams across 0 instances
+2026-03-01T12:29:58.142Z | INFO | [TagTeamRebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:58.142Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
+2026-03-01T12:29:58.143Z | INFO | [TagTeamRebalancing] champion: 0 total teams across 0 instances
+2026-03-01T12:29:58.143Z | INFO | [TagTeamRebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-03-01T12:29:58.143Z | INFO |  ════════════════════════════════════════════════════════════
+2026-03-01T12:29:58.143Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
+2026-03-01T12:29:58.143Z | INFO |   Total promoted: 0
+2026-03-01T12:29:58.143Z | INFO |   Total demoted: 0
+2026-03-01T12:29:58.143Z | INFO |   Errors: 0
+2026-03-01T12:29:58.143Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-03-01T12:29:58.143Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
+2026-03-01T12:29:58.144Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
+2026-03-01T12:29:58.145Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
+2026-03-01T12:29:58.146Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
+2026-03-01T12:29:58.146Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
+2026-03-01T12:29:58.147Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
+2026-03-01T12:29:58.147Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
+2026-03-01T12:29:58.149Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-03-01T12:29:58.149Z | INFO | [UserGeneration] Generating 3 archetype users for Cycle 3...
+2026-03-01T12:29:58.149Z | INFO | [UserGeneration] Creating user 1/3: archetype_glass_cannon_c_3_1 (archetype: glass_cannon_c)
+2026-03-01T12:29:58.213Z | ERROR | [UserGeneration] Error creating user 1: {}
+2026-03-01T12:29:58.213Z | ERROR | [Admin] Error generating users: {}
+2026-03-01T12:29:58.215Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-03-01T12:29:58.215Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-03-01T12:29:58.215Z | INFO | [Matchmaking] Matches scheduled for: 2026-03-01T12:29:59.215Z
+2026-03-01T12:29:58.215Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-03-01T12:29:58.216Z | INFO | [Matchmaking] Processing bronze_1...
+2026-03-01T12:29:58.228Z | INFO | [Matchmaking] Queue for bronze_1: 87 robots available (111 total, 87 ready)
+2026-03-01T12:29:58.241Z | WARN | [Matchmaking] No Bye Robot found for PBT_ELO2_1772368198178_0.5789514450645885
+2026-03-01T12:29:58.245Z | INFO | [Matchmaking] Created 43 scheduled matches
+2026-03-01T12:29:58.245Z | INFO | [Matchmaking] Processing bronze_2...
+2026-03-01T12:29:58.254Z | INFO | [Matchmaking] Queue for bronze_2: 56 robots available (81 total, 56 ready)
+2026-03-01T12:29:58.266Z | INFO | [Matchmaking] Created 28 scheduled matches
+2026-03-01T12:29:58.267Z | INFO | [Matchmaking] Processing bronze_3...
+2026-03-01T12:29:58.275Z | INFO | [Matchmaking] Queue for bronze_3: 51 robots available (80 total, 51 ready)
+2026-03-01T12:29:58.285Z | WARN | [Matchmaking] No Bye Robot found for PBT_ELO1_1772368197894_0.0652775807619852
+2026-03-01T12:29:58.288Z | INFO | [Matchmaking] Created 25 scheduled matches
+2026-03-01T12:29:58.288Z | INFO | [Matchmaking] Processing bronze_4...
+2026-03-01T12:29:58.296Z | INFO | [Matchmaking] Queue for bronze_4: 55 robots available (80 total, 55 ready)
+2026-03-01T12:29:58.306Z | WARN | [Matchmaking] No Bye Robot found for PBT_ELO2_1772368197838_0.46815207930561054
+2026-03-01T12:29:58.310Z | INFO | [Matchmaking] Created 27 scheduled matches
+2026-03-01T12:29:58.310Z | INFO | [Matchmaking] Processing bronze_5...
+2026-03-01T12:29:58.318Z | INFO | [Matchmaking] Queue for bronze_5: 49 robots available (80 total, 49 ready)
+2026-03-01T12:29:58.328Z | WARN | [Matchmaking] No Bye Robot found for PBT_ELO1_1772368197583_0.05678989566272241
+2026-03-01T12:29:58.332Z | INFO | [Matchmaking] Created 24 scheduled matches
+2026-03-01T12:29:58.332Z | INFO | [Matchmaking] BRONZE: Created 147 matches across 5 instances
+2026-03-01T12:29:58.332Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-03-01T12:29:58.334Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
+2026-03-01T12:29:58.334Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-03-01T12:29:58.335Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-03-01T12:29:58.335Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-03-01T12:29:58.336Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-03-01T12:29:58.336Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-03-01T12:29:58.337Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-03-01T12:29:58.337Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-03-01T12:29:58.337Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-03-01T12:29:58.338Z | INFO | [Matchmaking] ========================================
+2026-03-01T12:29:58.338Z | INFO | [Matchmaking] COMPLETE: 147 total matches created
+2026-03-01T12:29:58.338Z | INFO | [Matchmaking] ========================================
+2026-03-01T12:29:58.340Z | INFO | [Admin] Step 9.5: Matchmaking for Tag Teams (Cycle 3)
+2026-03-01T12:29:58.340Z | INFO | [TagTeamMatchmaking] Starting tag team matchmaking for all tiers...
+2026-03-01T12:29:58.348Z | INFO | [TagTeamMatchmaking] bronze_1: 1 eligible teams (1 total, 1 ready, 0 already scheduled)
+2026-03-01T12:29:58.351Z | INFO | [TagTeamMatchmaking] Bye-match created for team 852
+2026-03-01T12:29:58.353Z | INFO | [TagTeamMatchmaking] Scheduled 1 tag team matches
+2026-03-01T12:29:58.353Z | INFO | [TagTeamMatchmaking] bronze_1: Created 1 matches
+2026-03-01T12:29:58.356Z | INFO | [TagTeamMatchmaking] Complete: 1 total matches created
+2026-03-01T12:29:58.358Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-03-01T12:29:58.370Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-03-01T12:29:58.384Z | INFO | [OperatingCosts] User 862 | Total: ₡4,500 | Facilities: roster_expansion(L0): ₡4500
+2026-03-01T12:29:58.532Z | INFO | [OperatingCosts] User 940 | Total: ₡97,500 | Facilities: roster_expansion(L0): ₡97500
+2026-03-01T12:29:58.538Z | INFO | [OperatingCosts] User 922 | Total: ₡134,500 | Facilities: roster_expansion(L0): ₡134500
+2026-03-01T12:29:58.668Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡236,500
+2026-03-01T12:29:58.670Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-03-01T12:29:59.772Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-03-01T12:29:59.772Z | INFO | [Admin] === End of Cycle 3 Balances ===
+2026-03-01T12:29:59.774Z | INFO | [Balance] User 798 | Stable: rebalancing_test_user | Balance: ₡999,000
+2026-03-01T12:29:59.777Z | INFO | [Balance] User 840 | Stable: 6txexbcp8p1772368188 | Balance: ₡3,000,000
+2026-03-01T12:29:59.778Z | INFO | [Balance] User 841 | Stable: zheoofnj941772368188 | Balance: ₡3,000,000
+2026-03-01T12:29:59.779Z | INFO | [Balance] User 842 | Stable: ek0dkzz-x-1772368188 | Balance: ₡3,000,000
+2026-03-01T12:29:59.780Z | INFO | [Balance] User 843 | Stable: g3y17723681886553 | Balance: ₡3,000,000
+2026-03-01T12:29:59.781Z | INFO | [Balance] User 844 | Stable: utbgu17723681887824 | Balance: ₡3,000,000
+2026-03-01T12:29:59.782Z | INFO | [Balance] User 846 | Stable: nca17723681889045 | Balance: ₡3,000,000
+2026-03-01T12:29:59.783Z | INFO | [Balance] User 847 | Stable: _afog17723681890266 | Balance: ₡3,000,000
+2026-03-01T12:29:59.784Z | INFO | [Balance] User 848 | Stable: f0b-17723681891607 | Balance: ₡3,000,000
+2026-03-01T12:29:59.785Z | INFO | [Balance] User 849 | Stable: 7obfe17723681892978 | Balance: ₡3,000,000
+2026-03-01T12:29:59.787Z | INFO | [Balance] User 850 | Stable: 8q5q1ksfu17723681894 | Balance: ₡3,000,000
+2026-03-01T12:29:59.788Z | INFO | [Balance] User 851 | Stable: _-37wl51772368189557 | Balance: ₡3,000,000
+2026-03-01T12:29:59.788Z | INFO | [Balance] User 852 | Stable: ipb_c177236818969711 | Balance: ₡3,000,000
+2026-03-01T12:29:59.789Z | INFO | [Balance] User 853 | Stable: s530yd8gpj1772368189 | Balance: ₡3,000,000
+2026-03-01T12:29:59.790Z | INFO | [Balance] User 854 | Stable: fox0e3wcl17723681899 | Balance: ₡3,000,000
+2026-03-01T12:29:59.792Z | INFO | [Balance] User 855 | Stable: y2cg_177236819008914 | Balance: ₡3,000,000
+2026-03-01T12:29:59.793Z | INFO | [Balance] User 856 | Stable: aj3e177236819022315 | Balance: ₡3,000,000
+2026-03-01T12:29:59.794Z | INFO | [Balance] User 858 | Stable: hwkq_6p1772368190360 | Balance: ₡3,000,000
+2026-03-01T12:29:59.795Z | INFO | [Balance] User 859 | Stable: wrurawn1772368190495 | Balance: ₡3,000,000
+2026-03-01T12:29:59.796Z | INFO | [Balance] User 860 | Stable: ej9f177236819064118 | Balance: ₡3,000,000
+2026-03-01T12:29:59.797Z | INFO | [Balance] User 861 | Stable: 9eq29u7y177236819077 | Balance: ₡3,000,000
+2026-03-01T12:29:59.799Z | INFO | [Balance] User 862 | Stable: pbt_tagteam_user_1772368190888 | Balance: ₡1,029,997
+2026-03-01T12:29:59.800Z | INFO | [Balance] User 863 | Stable: pbt_tagteam_other_1772368190911 | Balance: ₡1,000,000
+2026-03-01T12:29:59.801Z | INFO | [Balance] User 864 | Stable: 3htartyn017723681909 | Balance: ₡3,000,000
+2026-03-01T12:29:59.802Z | INFO | [Balance] User 865 | Stable: mc_g177236819102621 | Balance: ₡3,000,000
+2026-03-01T12:29:59.803Z | INFO | [Balance] User 866 | Stable: 0db177236819115022 | Balance: ₡3,000,000
+2026-03-01T12:29:59.804Z | INFO | [Balance] User 868 | Stable: exm6-177236819127423 | Balance: ₡3,000,000
+2026-03-01T12:29:59.805Z | INFO | [Balance] User 870 | Stable: adzmfqm9q17723681913 | Balance: ₡3,000,000
+2026-03-01T12:29:59.806Z | INFO | [Balance] User 872 | Stable: pzpbijz80o1772368191 | Balance: ₡3,000,000
+2026-03-01T12:29:59.808Z | INFO | [Balance] User 875 | Stable: -l5177236819164626 | Balance: ₡3,000,000
+2026-03-01T12:29:59.809Z | INFO | [Balance] User 878 | Stable: y902pan1772368191772 | Balance: ₡3,000,000
+2026-03-01T12:29:59.810Z | INFO | [Balance] User 881 | Stable: 4wvj3at7177236819190 | Balance: ₡3,000,000
+2026-03-01T12:29:59.811Z | INFO | [Balance] User 883 | Stable: 094co177236819202929 | Balance: ₡3,000,000
+2026-03-01T12:29:59.812Z | INFO | [Balance] User 886 | Stable: 3vg36h6i177236819215 | Balance: ₡3,000,000
+2026-03-01T12:29:59.812Z | INFO | [Balance] User 888 | Stable: 2ogo177236819227631 | Balance: ₡3,000,000
+2026-03-01T12:29:59.813Z | INFO | [Balance] User 890 | Stable: uq3t8177236819239932 | Balance: ₡3,000,000
+2026-03-01T12:29:59.814Z | INFO | [Balance] User 892 | Stable: 9oh_f177236819252333 | Balance: ₡3,000,000
+2026-03-01T12:29:59.815Z | INFO | [Balance] User 894 | Stable: wjlwxpt_177236819264 | Balance: ₡3,000,000
+2026-03-01T12:29:59.817Z | INFO | [Balance] User 895 | Stable: x_d9wrdp177236819277 | Balance: ₡3,000,000
+2026-03-01T12:29:59.817Z | INFO | [Balance] User 897 | Stable: b-hm177236819289336 | Balance: ₡3,000,000
+2026-03-01T12:29:59.818Z | INFO | [Balance] User 898 | Stable: jahmw177236819301837 | Balance: ₡3,000,000
+2026-03-01T12:29:59.819Z | INFO | [Balance] User 899 | Stable: 95a9ick1772368193142 | Balance: ₡3,000,000
+2026-03-01T12:29:59.820Z | INFO | [Balance] User 903 | Stable: 5bhlpn89177236819326 | Balance: ₡3,000,000
+2026-03-01T12:29:59.821Z | INFO | [Balance] User 908 | Stable: 9jryihl3xx1772368193 | Balance: ₡3,000,000
+2026-03-01T12:29:59.822Z | INFO | [Balance] User 909 | Stable: nc4j43mz177236819352 | Balance: ₡3,000,000
+2026-03-01T12:29:59.823Z | INFO | [Balance] User 910 | Stable: ri854n11772368193651 | Balance: ₡3,000,000
+2026-03-01T12:29:59.824Z | INFO | [Balance] User 911 | Stable: 8nsc_o17723681937784 | Balance: ₡3,000,000
+2026-03-01T12:29:59.825Z | INFO | [Balance] User 912 | Stable: 84-7_4si177236819390 | Balance: ₡3,000,000
+2026-03-01T12:29:59.826Z | INFO | [Balance] User 913 | Stable: lptn2o61772368194028 | Balance: ₡3,000,000
+2026-03-01T12:29:59.827Z | INFO | [Balance] User 914 | Stable: xt_q177236819414946 | Balance: ₡3,000,000
+2026-03-01T12:29:59.828Z | INFO | [Balance] User 915 | Stable: m726qbt2u17723681942 | Balance: ₡3,000,000
+2026-03-01T12:29:59.829Z | INFO | [Balance] User 916 | Stable: g8dd9s5f177236819439 | Balance: ₡3,000,000
+2026-03-01T12:29:59.830Z | INFO | [Balance] User 917 | Stable: fq2sy177236819452149 | Balance: ₡3,000,000
+2026-03-01T12:29:59.831Z | INFO | [Balance] User 918 | Stable: o360177236819464350 | Balance: ₡3,000,000
+2026-03-01T12:29:59.833Z | INFO | [Balance] User 919 | Stable: 24avy177236819476651 | Balance: ₡3,000,000
+2026-03-01T12:29:59.834Z | INFO | [Balance] User 920 | Stable: orm177236819489552 | Balance: ₡3,000,000
+2026-03-01T12:29:59.834Z | INFO | [Balance] User 921 | Stable: k8n177236819502453 | Balance: ₡3,000,000
+2026-03-01T12:29:59.835Z | INFO | [Balance] User 922 | Stable: pbt_eligible_user_1772368195142 | Balance: ₡853,356
+2026-03-01T12:29:59.836Z | INFO | [Balance] User 924 | Stable: pna2e3x1772368195147 | Balance: ₡3,000,000
+2026-03-01T12:29:59.837Z | INFO | [Balance] User 925 | Stable: olyi0177236819527155 | Balance: ₡3,000,000
+2026-03-01T12:29:59.838Z | INFO | [Balance] User 926 | Stable: a9q1a177236819539656 | Balance: ₡3,000,000
+2026-03-01T12:29:59.839Z | INFO | [Balance] User 927 | Stable: vghv5_17723681955175 | Balance: ₡3,000,000
+2026-03-01T12:29:59.840Z | INFO | [Balance] User 928 | Stable: -9z7y177236819563858 | Balance: ₡3,000,000
+2026-03-01T12:29:59.841Z | INFO | [Balance] User 929 | Stable: b9es9wj1772368195760 | Balance: ₡3,000,000
+2026-03-01T12:29:59.842Z | INFO | [Balance] User 930 | Stable: 1zid177236819588260 | Balance: ₡3,000,000
+2026-03-01T12:29:59.843Z | INFO | [Balance] User 931 | Stable: jx7cfrfx177236819600 | Balance: ₡3,000,000
+2026-03-01T12:29:59.844Z | INFO | [Balance] User 932 | Stable: f-86ahle417723681961 | Balance: ₡3,000,000
+2026-03-01T12:29:59.845Z | INFO | [Balance] User 933 | Stable: i9ju5uea177236819624 | Balance: ₡3,000,000
+2026-03-01T12:29:59.846Z | INFO | [Balance] User 934 | Stable: b8fim3d1772368196367 | Balance: ₡3,000,000
+2026-03-01T12:29:59.846Z | INFO | [Balance] User 935 | Stable: 5llba8fxkp1772368196 | Balance: ₡3,000,000
+2026-03-01T12:29:59.847Z | INFO | [Balance] User 936 | Stable: ly7j177236819661266 | Balance: ₡3,000,000
+2026-03-01T12:29:59.849Z | INFO | [Balance] User 937 | Stable: 4eflxrxf177236819673 | Balance: ₡3,000,000
+2026-03-01T12:29:59.850Z | INFO | [Balance] User 938 | Stable: 8zg177236819686368 | Balance: ₡3,000,000
+2026-03-01T12:29:59.851Z | INFO | [Balance] User 939 | Stable: rtaw3177236819698869 | Balance: ₡3,000,000
+2026-03-01T12:29:59.852Z | INFO | [Balance] User 940 | Stable: pbt_elo_user_1772368197087 | Balance: ₡902,500
+2026-03-01T12:29:59.852Z | INFO | [Balance] User 941 | Stable: uo7bdwitk17723681971 | Balance: ₡3,000,000
+2026-03-01T12:29:59.853Z | INFO | [Balance] User 942 | Stable: k-lq177236819723771 | Balance: ₡3,000,000
+2026-03-01T12:29:59.854Z | INFO | [Balance] User 943 | Stable: nlx72t91772368197362 | Balance: ₡3,000,000
+2026-03-01T12:29:59.855Z | INFO | [Balance] User 944 | Stable: kgsnkcqlm-1772368197 | Balance: ₡3,000,000
+2026-03-01T12:29:59.857Z | INFO | [Balance] User 945 | Stable: 0swjc5fl317723681976 | Balance: ₡3,000,000
+2026-03-01T12:29:59.858Z | INFO | [Balance] User 946 | Stable: 9a934-t1772368197733 | Balance: ₡3,000,000
+2026-03-01T12:29:59.860Z | INFO | [Balance] User 947 | Stable: j-wjq_e1177236819785 | Balance: ₡3,000,000
+2026-03-01T12:29:59.861Z | INFO | [Balance] User 948 | Stable: w9ao63cfc17723681980 | Balance: ₡3,000,000
+2026-03-01T12:29:59.862Z | INFO | [Balance] User 950 | Stable: 0ss177236819818478 | Balance: ₡3,000,000
+2026-03-01T12:29:59.863Z | INFO | [Balance] User 951 | Stable: tgpu_aphe31772368198 | Balance: ₡3,000,000
+2026-03-01T12:29:59.864Z | INFO | [Balance] User 952 | Stable: -5yh3jb0177236819843 | Balance: ₡3,000,000
+2026-03-01T12:29:59.865Z | INFO | [Balance] User 953 | Stable: 3suerq3k717723681985 | Balance: ₡3,000,000
+2026-03-01T12:29:59.866Z | INFO | [Balance] User 954 | Stable: rpr-m2dg1q1772368198 | Balance: ₡3,000,000
+2026-03-01T12:29:59.868Z | INFO | [Balance] User 955 | Stable: mywx9177236819881083 | Balance: ₡3,000,000
+2026-03-01T12:29:59.869Z | INFO | [Balance] User 956 | Stable: kqacgc7g177236819893 | Balance: ₡3,000,000
+2026-03-01T12:29:59.871Z | INFO | [Balance] User 957 | Stable: 2ds4177236819905485 | Balance: ₡3,000,000
+2026-03-01T12:29:59.871Z | INFO | [Balance] User 958 | Stable: 3s1177236819917886 | Balance: ₡3,000,000
+2026-03-01T12:29:59.872Z | INFO | [Balance] User 959 | Stable: d1aepf81772368199300 | Balance: ₡3,000,000
+2026-03-01T12:29:59.874Z | INFO | [Balance] User 960 | Stable: vi-48517723681994258 | Balance: ₡3,000,000
+2026-03-01T12:29:59.876Z | INFO | [Balance] User 961 | Stable: es8gs495177236819954 | Balance: ₡3,000,000
+2026-03-01T12:29:59.877Z | INFO | [Balance] User 962 | Stable: az-dh9w9lp1772368199 | Balance: ₡3,000,000
+2026-03-01T12:29:59.878Z | INFO | [Admin] ===================================
+2026-03-01T12:29:59.879Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-03-01T12:29:59.879Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 3
+2026-03-01T12:29:59.882Z | INFO | [CycleSnapshotService] Found 0 battle_complete events for cycle 3
+2026-03-01T12:29:59.890Z | INFO | [CycleSnapshotService] Found 124 cycle_end_balance events for cycle 3
+2026-03-01T12:29:59.896Z | INFO | prisma:error  Invalid `prisma.cycleSnapshot.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/cycleSnapshotService.ts:114:49    111 const totalPrestigeAwarded = stableMetrics.reduce((sum, m) => sum + m.totalPrestigeEarned, 0);   112    113 // Store snapshot in database → 114 const snapshot = await prisma.cycleSnapshot.create( Unique constraint failed on the fields: (`cycle_number`)
+2026-03-01T12:29:59.896Z | ERROR | [Admin] Failed to create cycle snapshot: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""CycleSnapshot"",""target"":[""cycle_number""]}}
+2026-03-01T12:29:59.896Z | INFO | [Admin] === Cycle 3 Summary ===
+2026-03-01T12:29:59.896Z | INFO | [Admin] Battles: 0
+2026-03-01T12:29:59.896Z | INFO | [Admin] ===================================
+2026-03-01T12:29:59.896Z | INFO | === Cycle 3 Ended ===

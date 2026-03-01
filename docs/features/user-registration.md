@@ -620,3 +620,41 @@ When the limit is exceeded the middleware returns `429 Too Many Requests`. Clien
 
 - [OpenAPI Specification](../api/authentication.yaml) — full request/response schemas for `/api/auth/register` and `/api/auth/login`
 - [Error Code Reference](./user-registration-error-reference.md) — all error codes, messages, client handling, and troubleshooting
+
+---
+
+## Client-Side Validation & Error Display
+
+The registration form implements a two-layer error handling strategy: client-side validation that mirrors backend rules for instant feedback, and server error mapping that routes API error codes to the correct form field.
+
+### Client-Side Validation Rules
+
+These rules run before the form submits, preventing unnecessary server round-trips:
+
+| Field                 | Rule                                                                 |
+|-----------------------|----------------------------------------------------------------------|
+| Username              | 3–20 chars, alphanumeric + `_` + `-`                                |
+| Email                 | 3–50 chars, valid characters, must contain exactly one `@`          |
+| Password              | 8–128 chars                                                          |
+| Password Confirmation | Must match password field                                            |
+
+These mirror the backend validation in `prototype/backend/src/utils/validation.ts`. When adding new backend validation rules, update the client-side validators in `RegistrationForm.tsx` to match.
+
+### Error Display Behavior
+
+The form uses per-field inline errors instead of a single banner:
+
+| Error Source          | Display Location                                                     |
+|-----------------------|----------------------------------------------------------------------|
+| Client-side validation| Inline below the specific field, with red border highlight           |
+| `DUPLICATE_USERNAME`  | Inline below the username field                                      |
+| `DUPLICATE_EMAIL`     | Inline below the email field                                         |
+| `VALIDATION_ERROR` (single field) | Inline below the matched field                          |
+| `VALIDATION_ERROR` (multi-field)  | General banner above the form                           |
+| `DATABASE_ERROR`      | General banner above the form                                        |
+| `INTERNAL_ERROR`      | General banner above the form                                        |
+| Network failure       | General banner: "Unable to reach the server..."                      |
+
+Error mapping from server codes to fields is handled by `mapServerErrorToField()` in `RegistrationForm.tsx`. Each field input uses `aria-invalid` and `aria-describedby` to link to its inline error message for screen reader accessibility.
+
+Errors clear automatically when the user edits the corresponding field.

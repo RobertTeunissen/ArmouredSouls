@@ -38,7 +38,7 @@ describe('Property 10: Password Confirmation Mismatch', () => {
         // Fill all required fields using fireEvent.change for speed,
         // since the property under test is password mismatch validation, not typing.
         fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } });
-        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test-email' } });
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@email' } });
         fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: password } });
         fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: confirmation } });
 

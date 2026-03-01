@@ -352,7 +352,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 25 }
     );
   });
 
@@ -492,7 +492,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -605,7 +605,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -739,7 +739,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 });

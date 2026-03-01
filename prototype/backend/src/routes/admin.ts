@@ -11,6 +11,7 @@ import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { calculateMaxHP, calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { repairAllRobots } from '../services/repairService';
 import { cycleLogger } from '../utils/cycleLogger';
+import type { Robot } from '@prisma/client';
 import prisma from '../lib/prisma';
 import tournamentRoutes from './adminTournaments';
 import { 
@@ -1821,7 +1822,13 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
     }
 
     // Define all 23 attributes to analyze
-    const attributes = [
+    type RobotAttribute = 'combatPower' | 'targetingSystems' | 'criticalSystems' | 'penetration' | 'weaponControl' | 'attackSpeed'
+      | 'armorPlating' | 'shieldCapacity' | 'evasionThrusters' | 'damageDampeners' | 'counterProtocols'
+      | 'hullIntegrity' | 'servoMotors' | 'gyroStabilizers' | 'hydraulicSystems' | 'powerCore'
+      | 'combatAlgorithms' | 'threatAnalysis' | 'adaptiveAI' | 'logicCores'
+      | 'syncProtocols' | 'supportSystems' | 'formationTactics';
+
+    const attributes: RobotAttribute[] = [
       'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
       'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
       'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
@@ -1873,11 +1880,11 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
     };
 
     // Calculate statistics for each attribute
-    const attributeStats: any = {};
-    const outliers: any = {};
+    const attributeStats: Record<string, ReturnType<typeof calculateStats>> = {};
+    const outliers: Record<string, Array<{ id: number; name: string; value: number; league: string; elo: number; winRate: number }>> = {};
 
     for (const attr of attributes) {
-      const values = robots.map(r => Number((r as any)[attr]));
+      const values = robots.map(r => Number(r[attr]));
       const stats = calculateStats(values);
       
       if (stats) {
@@ -1888,7 +1895,7 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
           .map(r => ({
             id: r.id,
             name: r.name,
-            value: Number((r as any)[attr]),
+            value: Number(r[attr]),
             league: r.currentLeague,
             elo: r.elo,
             winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
@@ -1905,7 +1912,7 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
 
     // Calculate statistics by league tier
     const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
-    const statsByLeague: any = {};
+    const statsByLeague: Record<string, { count: number; averageElo: number; attributes: Record<string, { mean: number; median: number; min: number; max: number }> }> = {};
 
     for (const league of leagues) {
       const leagueRobots = robots.filter(r => r.currentLeague === league);
@@ -1914,11 +1921,11 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
       statsByLeague[league] = {
         count: leagueRobots.length,
         averageElo: Number((leagueRobots.reduce((sum, r) => sum + r.elo, 0) / leagueRobots.length).toFixed(0)),
-        attributes: {} as any,
+        attributes: {},
       };
 
       for (const attr of attributes) {
-        const values = leagueRobots.map(r => Number((r as any)[attr]));
+        const values = leagueRobots.map(r => Number(r[attr]));
         const stats = calculateStats(values);
         if (stats) {
           statsByLeague[league].attributes[attr] = {
@@ -1933,13 +1940,13 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
 
     // Calculate win rate correlations
     // For each attribute, group robots into ranges and calculate average win rate
-    const winRateAnalysis: any = {};
+    const winRateAnalysis: Record<string, Array<{ quintile: number; avgValue: number; avgWinRate: number; sampleSize: number }>> = {};
     
     for (const attr of attributes) {
       const robotsWithWinRate = robots
         .filter(r => r.totalBattles >= 5) // Only consider robots with at least 5 battles
         .map(r => ({
-          value: Number((r as any)[attr]),
+          value: Number(r[attr]),
           winRate: r.wins / r.totalBattles,
         }));
 
@@ -1972,16 +1979,17 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
     }
 
     // Find top and bottom performers by each attribute
-    const topPerformers: any = {};
-    const bottomPerformers: any = {};
+    type PerformerEntry = { id: number; name: string; value: number; league: string; elo: number; winRate: number };
+    const topPerformers: Record<string, PerformerEntry[]> = {};
+    const bottomPerformers: Record<string, PerformerEntry[]> = {};
 
     for (const attr of attributes) {
-      const sorted = [...robots].sort((a, b) => Number((b as any)[attr]) - Number((a as any)[attr]));
+      const sorted = [...robots].sort((a, b) => Number(b[attr]) - Number(a[attr]));
       
       topPerformers[attr] = sorted.slice(0, 5).map(r => ({
         id: r.id,
         name: r.name,
-        value: Number((r as any)[attr]),
+        value: Number(r[attr]),
         league: r.currentLeague,
         elo: r.elo,
         winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
@@ -1990,7 +1998,7 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
       bottomPerformers[attr] = sorted.slice(-5).reverse().map(r => ({
         id: r.id,
         name: r.name,
-        value: Number((r as any)[attr]),
+        value: Number(r[attr]),
         league: r.currentLeague,
         elo: r.elo,
         winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,

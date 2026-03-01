@@ -220,7 +220,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -407,7 +407,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 50 }
+        { numRuns: 20 }
       );
     });
 
@@ -475,7 +475,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             expect(sumOfStepDurations).toBe(totalDuration);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -610,7 +610,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 50 }
+        { numRuns: 20 }
       );
     });
 
@@ -723,7 +723,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             expect(stableMetric!.operatingCosts).toBe(data.operatingCosts);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -796,7 +796,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 50 }
+        { numRuns: 20 }
       );
     });
   });

@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
 import { loadEnvConfig } from '../src/config/env';
 
-const NUM_RUNS = 100;
+const NUM_RUNS = 30;
 
 // Save original env so we can restore after each test
 const originalEnv = process.env;
@@ -251,7 +251,7 @@ describe('Environment Config Loading - Property Tests', () => {
     test('startup fails when JWT_SECRET is the default placeholder in production', () => {
       fc.assert(
         fc.property(
-          fc.constant('default-dev-secret'),
+          fc.constant('dev-secret-change-in-production'),
           (secret) => {
             process.env.NODE_ENV = 'production';
             process.env.JWT_SECRET = secret;

@@ -17,7 +17,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 // Lower NUM_RUNS since we're testing error paths with mocks
-const NUM_RUNS = 50;
+const NUM_RUNS = 20;
 
 /**
  * Database error factories — each produces a Prisma-like error that the

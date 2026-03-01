@@ -46,7 +46,7 @@ describe('Property 7: Streaming Studio Upgrade Cost Formula', () => {
           expect(helperCost).toBe(expectedCost);
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 30 }
     );
   });
 

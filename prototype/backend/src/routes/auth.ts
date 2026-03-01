@@ -132,7 +132,7 @@ router.post('/register', async (req: Request, res: Response) => {
         message: error.message,
         stack: error.stack,
       });
-      return res.status(500).json({ error: 'An error occurred during registration. Please try again.', code: 'DATABASE_ERROR' });
+      return res.status(500).json({ error: 'Registration is temporarily unavailable. Please try again in a few minutes.', code: 'DATABASE_ERROR' });
     }
 
     // Catch-all for truly unexpected errors (e.g. programming bugs, third-party
@@ -142,7 +142,7 @@ router.post('/register', async (req: Request, res: Response) => {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
-    res.status(500).json({ error: 'An unexpected error occurred. Please try again.', code: 'INTERNAL_ERROR' });
+    res.status(500).json({ error: 'Something went wrong on our end. Please try again later or contact support if the issue persists.', code: 'INTERNAL_ERROR' });
   }
 });
 

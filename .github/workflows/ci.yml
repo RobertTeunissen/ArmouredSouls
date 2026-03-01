@@ -11,13 +11,54 @@ permissions:
   contents: read
 
 jobs:
-  backend-tests:
-    name: Backend Tests & Lint
+  backend-unit-tests:
+    name: Backend Unit Tests
     runs-on: ubuntu-latest
     
     permissions:
       contents: read
-      pull-requests: write  # For PR comments if needed
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: prototype/backend/package-lock.json
+      
+      - name: Install backend dependencies
+        working-directory: ./prototype/backend
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        working-directory: ./prototype/backend
+        run: npm run prisma:generate
+      
+      - name: Lint backend code
+        working-directory: ./prototype/backend
+        run: npm run lint
+      
+      - name: Build backend
+        working-directory: ./prototype/backend
+        run: npm run build
+      
+      - name: Run unit tests
+        working-directory: ./prototype/backend
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-secret-key-for-ci
+        run: npm run test:unit
+
+  backend-integration-tests:
+    name: Backend Integration Tests
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write
     
     services:
       postgres:
@@ -59,21 +100,13 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
         run: npx prisma migrate deploy
       
-      - name: Lint backend code
-        working-directory: ./prototype/backend
-        run: npm run lint
-      
-      - name: Build backend
-        working-directory: ./prototype/backend
-        run: npm run build
-      
-      - name: Run backend tests
+      - name: Run integration tests
         working-directory: ./prototype/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
           JWT_SECRET: test-secret-key-for-ci
           NODE_ENV: test
-        run: npm test
+        run: npm run test:integration
 
   frontend-tests:
     name: Frontend Tests & Lint

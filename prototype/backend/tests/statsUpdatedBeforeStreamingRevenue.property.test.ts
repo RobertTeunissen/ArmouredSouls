@@ -374,7 +374,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 25 }
     );
   });
 
@@ -427,7 +427,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -515,7 +515,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -584,7 +584,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 });

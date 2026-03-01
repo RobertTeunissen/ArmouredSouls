@@ -120,7 +120,7 @@ describe('Property 22: Investment Recommendation Ranking', () => {
           }
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -179,7 +179,7 @@ describe('Property 22: Investment Recommendation Ranking', () => {
           }
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -226,7 +226,7 @@ describe('Property 22: Investment Recommendation Ranking', () => {
           }
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 

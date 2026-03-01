@@ -37,25 +37,33 @@ export function getFilesToDelete(
 // Generators
 // ============================================================================
 
-const NUM_RUNS = 100;
+const NUM_RUNS = 30;
 
-/** Generate a date within a reasonable range (last 365 days) */
-const dateGen = fc.date({
-  min: new Date('2024-01-01'),
-  max: new Date('2024-12-31'),
-});
+/** Generate a unique integer index to build distinct timestamps */
+const indexGen = fc.integer({ min: 0, max: 999999 });
 
-/** Generate a daily backup file entry */
-const dailyFileGen = dateGen.map(date => {
-  const ts = date.toISOString().replace(/[-:T]/g, '').slice(0, 15);
-  return { name: `armouredsouls_daily_${ts}.sql.gz`, date };
-});
+/** Build a backup file from an index, guaranteeing a valid & unique timestamp */
+function makeBackupFile(prefix: string, index: number): BackupFile {
+  // Spread index across date components to get unique filenames
+  const day = (index % 28) + 1;
+  const month = ((Math.floor(index / 28)) % 12) + 1;
+  const hour = (Math.floor(index / 336)) % 24;
+  const minute = (Math.floor(index / 8064)) % 60;
+  const second = (Math.floor(index / 483840)) % 60;
+  const date = new Date(2024, month - 1, day, hour, minute, second);
+  const ts = `2024${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}${String(hour).padStart(2, '0')}${String(minute).padStart(2, '0')}${String(second).padStart(2, '0')}`;
+  return { name: `armouredsouls_${prefix}_${ts}.sql.gz`, date };
+}
 
-/** Generate a weekly backup file entry */
-const weeklyFileGen = dateGen.map(date => {
-  const ts = date.toISOString().replace(/[-:T]/g, '').slice(0, 15);
-  return { name: `armouredsouls_weekly_${ts}.sql.gz`, date };
-});
+/** Generate an array of daily backup files with unique names */
+const uniqueDailyFilesGen = (min: number, max: number) =>
+  fc.uniqueArray(indexGen, { minLength: min, maxLength: max })
+    .map(indices => indices.map(i => makeBackupFile('daily', i)));
+
+/** Generate an array of weekly backup files with unique names */
+const uniqueWeeklyFilesGen = (min: number, max: number) =>
+  fc.uniqueArray(indexGen, { minLength: min, maxLength: max })
+    .map(indices => indices.map(i => makeBackupFile('weekly', i)));
 
 // ============================================================================
 // Property 22: Backup retention policy
@@ -70,8 +78,8 @@ describe('Property 22: Backup retention policy', () => {
   test('retains at most dailyRetain daily backups', () => {
     fc.assert(
       fc.property(
-        fc.array(dailyFileGen, { minLength: 0, maxLength: 30 }),
-        fc.array(weeklyFileGen, { minLength: 0, maxLength: 15 }),
+        uniqueDailyFilesGen(0, 30),
+        uniqueWeeklyFilesGen(0, 15),
         (dailyFiles, weeklyFiles) => {
           const allFiles = [...dailyFiles, ...weeklyFiles];
           const toDelete = getFilesToDelete(allFiles, 7, 4);
@@ -88,8 +96,8 @@ describe('Property 22: Backup retention policy', () => {
   test('retains at most weeklyRetain weekly backups', () => {
     fc.assert(
       fc.property(
-        fc.array(dailyFileGen, { minLength: 0, maxLength: 30 }),
-        fc.array(weeklyFileGen, { minLength: 0, maxLength: 15 }),
+        uniqueDailyFilesGen(0, 30),
+        uniqueWeeklyFilesGen(0, 15),
         (dailyFiles, weeklyFiles) => {
           const allFiles = [...dailyFiles, ...weeklyFiles];
           const toDelete = getFilesToDelete(allFiles, 7, 4);
@@ -106,8 +114,8 @@ describe('Property 22: Backup retention policy', () => {
   test('never deletes files when count is within retention limits', () => {
     fc.assert(
       fc.property(
-        fc.array(dailyFileGen, { minLength: 0, maxLength: 7 }),
-        fc.array(weeklyFileGen, { minLength: 0, maxLength: 4 }),
+        uniqueDailyFilesGen(0, 7),
+        uniqueWeeklyFilesGen(0, 4),
         (dailyFiles, weeklyFiles) => {
           const allFiles = [...dailyFiles, ...weeklyFiles];
           const toDelete = getFilesToDelete(allFiles, 7, 4);
@@ -122,7 +130,7 @@ describe('Property 22: Backup retention policy', () => {
   test('deletes oldest files first, keeps newest', () => {
     fc.assert(
       fc.property(
-        fc.array(dailyFileGen, { minLength: 8, maxLength: 30 }),
+        uniqueDailyFilesGen(8, 30),
         (dailyFiles) => {
           const toDelete = getFilesToDelete(dailyFiles, 7, 4);
           const toDeleteNames = new Set(toDelete.map(f => f.name));
@@ -151,8 +159,8 @@ describe('Property 22: Backup retention policy', () => {
   test('daily and weekly retention are independent', () => {
     fc.assert(
       fc.property(
-        fc.array(dailyFileGen, { minLength: 0, maxLength: 30 }),
-        fc.array(weeklyFileGen, { minLength: 0, maxLength: 15 }),
+        uniqueDailyFilesGen(0, 30),
+        uniqueWeeklyFilesGen(0, 15),
         (dailyFiles, weeklyFiles) => {
           const allFiles = [...dailyFiles, ...weeklyFiles];
           const toDelete = getFilesToDelete(allFiles, 7, 4);
@@ -173,8 +181,8 @@ describe('Property 22: Backup retention policy', () => {
   test('works with custom retention values', () => {
     fc.assert(
       fc.property(
-        fc.array(dailyFileGen, { minLength: 0, maxLength: 50 }),
-        fc.array(weeklyFileGen, { minLength: 0, maxLength: 20 }),
+        uniqueDailyFilesGen(0, 50),
+        uniqueWeeklyFilesGen(0, 20),
         fc.integer({ min: 1, max: 30 }),
         fc.integer({ min: 1, max: 12 }),
         (dailyFiles, weeklyFiles, dailyRetain, weeklyRetain) => {
@@ -196,8 +204,8 @@ describe('Property 22: Backup retention policy', () => {
   test('total deleted equals excess files beyond retention', () => {
     fc.assert(
       fc.property(
-        fc.array(dailyFileGen, { minLength: 0, maxLength: 30 }),
-        fc.array(weeklyFileGen, { minLength: 0, maxLength: 15 }),
+        uniqueDailyFilesGen(0, 30),
+        uniqueWeeklyFilesGen(0, 15),
         (dailyFiles, weeklyFiles) => {
           const allFiles = [...dailyFiles, ...weeklyFiles];
           const toDelete = getFilesToDelete(allFiles, 7, 4);

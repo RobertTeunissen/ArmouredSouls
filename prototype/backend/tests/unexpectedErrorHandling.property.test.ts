@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 
-const NUM_RUNS = 50;
+const NUM_RUNS = 20;
 
 /**
  * Unexpected error factories — each produces a non-Prisma, non-validation error

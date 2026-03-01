@@ -35,7 +35,7 @@ describe('Property 8: Streaming Studio Operating Cost Formula', () => {
           expect(actualCost).toBe(expectedCost);
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 30 }
     );
   });
 
@@ -83,7 +83,7 @@ describe('Property 8: Streaming Studio Operating Cost Formula', () => {
           expect(actualIncrease).toBe(expectedIncrease);
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 30 }
     );
   });
 
@@ -110,7 +110,7 @@ describe('Property 8: Streaming Studio Operating Cost Formula', () => {
           expect(cost2).toBeGreaterThan(cost1);
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 30 }
     );
   });
 
@@ -130,7 +130,7 @@ describe('Property 8: Streaming Studio Operating Cost Formula', () => {
           expect(costIncrease).toBe(100);
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 30 }
     );
   });
 

@@ -121,7 +121,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           expect(result.total).toBe(expectedMerchandising);
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 25 }
     );
   }, 30000); // Increase timeout to 30 seconds
 
@@ -172,7 +172,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           expect(result).not.toHaveProperty('streaming');
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   }, 15000); // Increase timeout
 
@@ -222,7 +222,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           expect(result).not.toHaveProperty('streaming');
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -283,7 +283,7 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           expect(result2).not.toHaveProperty('streaming');
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 

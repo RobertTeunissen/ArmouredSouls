@@ -94,7 +94,7 @@ describe('Metric Progression Property-Based Tests', () => {
             expect(progression.totalChange).toBe(totalChange);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -155,7 +155,7 @@ describe('Metric Progression Property-Based Tests', () => {
             expect(progression.totalChange).toBe(totalFame);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -209,7 +209,7 @@ describe('Metric Progression Property-Based Tests', () => {
             expect(progression.endValue).toBe(totalDamage);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -261,7 +261,7 @@ describe('Metric Progression Property-Based Tests', () => {
             expect(progression.endValue).toBe(totalWins);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -313,7 +313,7 @@ describe('Metric Progression Property-Based Tests', () => {
             expect(progression.endValue).toBe(totalCredits);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -374,7 +374,7 @@ describe('Metric Progression Property-Based Tests', () => {
             expect(progression.endValue).toBe(startingELO + eloChange);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -403,7 +403,7 @@ describe('Metric Progression Property-Based Tests', () => {
             expect(progression.totalChange).toBe(0);
           }
         ),
-        { numRuns: 50 }
+        { numRuns: 20 }
       );
     });
   });

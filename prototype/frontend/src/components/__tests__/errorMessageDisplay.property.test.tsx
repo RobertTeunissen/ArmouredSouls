@@ -61,7 +61,7 @@ describe('Property 11: Error Message Display', () => {
 
         // Fill in all form fields with valid data and matching passwords
         fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } });
-        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'testemail' } });
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@email' } });
         fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } });
         fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'password123' } });
 

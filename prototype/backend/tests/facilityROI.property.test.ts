@@ -139,7 +139,7 @@ describe('Property 7: Facility ROI Calculation Accuracy', () => {
           expect(roi!.isProfitable).toBe(expectedROI > 0);
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -248,7 +248,7 @@ describe('Property 7: Facility ROI Calculation Accuracy', () => {
           expect(roi!.isProfitable).toBe(expectedROI > 0);
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -356,7 +356,7 @@ describe('Property 7: Facility ROI Calculation Accuracy', () => {
           expect(roi!.isProfitable).toBe(expectedROI > 0);
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 

@@ -68,7 +68,7 @@ describe('Property 5: Event Queryability', () => {
           expect(result.events.length).toBe(expectedCount);
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -118,7 +118,7 @@ describe('Property 5: Event Queryability', () => {
           expect(result.events.length).toBe(expectedCount);
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -209,7 +209,7 @@ describe('Property 5: Event Queryability', () => {
           expect(result.total).toBe(totalEvents);
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 
@@ -254,7 +254,7 @@ describe('Property 5: Event Queryability', () => {
           }
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   });
 

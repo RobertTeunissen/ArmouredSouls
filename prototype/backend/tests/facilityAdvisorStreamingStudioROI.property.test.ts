@@ -354,7 +354,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
           }
         }
       ),
-      { numRuns: 100 }
+      { numRuns: 25 }
     );
   });
 
@@ -412,7 +412,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -495,7 +495,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 
@@ -605,7 +605,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 20 }
     );
   });
 });

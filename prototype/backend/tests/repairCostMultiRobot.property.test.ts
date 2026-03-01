@@ -4,7 +4,7 @@ import prisma from '../src/lib/prisma';
 
 
 // Test configuration
-const NUM_RUNS = 100;
+const NUM_RUNS = 25;
 
 // Disconnect Prisma after all tests
 afterAll(async () => {

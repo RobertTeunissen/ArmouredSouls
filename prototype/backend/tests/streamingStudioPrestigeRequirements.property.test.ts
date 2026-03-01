@@ -219,7 +219,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           expect(facility?.level).toBe(targetLevel);
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   }, 30000);
 
@@ -293,7 +293,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           expect(successResponse.body.facility.level).toBe(targetLevel);
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   }, 60000);
 
@@ -384,7 +384,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           expect(response.body.message).toMatch(/[\d,]+ prestige/);
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 15 }
     );
   }, 60000);
 

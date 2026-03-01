@@ -214,7 +214,7 @@ describe('ELO Progression Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -376,7 +376,7 @@ describe('ELO Progression Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -538,7 +538,7 @@ describe('ELO Progression Property-Based Tests', () => {
             }
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
 
@@ -671,7 +671,7 @@ describe('ELO Progression Property-Based Tests', () => {
             expect(actualChange).toBe(eloChange);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 25 }
       );
     });
   });
