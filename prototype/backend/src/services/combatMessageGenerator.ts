@@ -138,6 +138,19 @@ export class CombatMessageGenerator {
     return 'a minor scratch';
   }
 
+  /**
+   * Describe remaining HP as a narrative descriptor (no numbers).
+   */
+  private static getHPDescriptor(currentHP: number, maxHP: number): string {
+    const percent = (currentHP / maxHP) * 100;
+    if (percent >= 90) return 'nearly full hull integrity';
+    if (percent >= 70) return 'strong hull integrity';
+    if (percent >= 50) return 'moderate hull integrity';
+    if (percent >= 30) return 'weakened hull integrity';
+    if (percent >= 15) return 'critical hull integrity';
+    return 'minimal hull integrity';
+  }
+
   // ── Attack Hit Messages (12 variations) ────────────────────────────────
   private static hitMessages = [
     '💥 {attackerName} strikes {defenderName} with {weaponName}, landing {damageDescriptor}!',
@@ -247,9 +260,9 @@ export class CombatMessageGenerator {
   ];
 
   private static dominantVictoryMessages = [
-    '🏆 DOMINANT VICTORY! {winnerName} crushes {loserName} with {hpPercent}% HP remaining!',
+    '🏆 DOMINANT VICTORY! {winnerName} crushes {loserName} with {hpDescriptor} remaining!',
     '👑 FLAWLESS! {winnerName} defeats {loserName} while taking minimal damage!',
-    '⚔️ OVERWHELMING! {winnerName} destroys {loserName} at {hpPercent}% health!',
+    '⚔️ OVERWHELMING! {winnerName} destroys {loserName} with {hpDescriptor} to spare!',
     '💪 SUPERIOR! {winnerName} dominates {loserName} completely!',
     '🎯 PERFECT EXECUTION! {winnerName} defeats {loserName} with barely a scratch!',
     '🔥 UNSTOPPABLE! {winnerName} crushes {loserName} with overwhelming force!',
@@ -259,7 +272,7 @@ export class CombatMessageGenerator {
 
   private static closeVictoryMessages = [
     '🏆 NARROW VICTORY! {winnerName} defeats {loserName} by the slimmest margin!',
-    '⚔️ Hard-fought victory! {winnerName} wins with only {hp} HP remaining!',
+    '⚔️ Hard-fought victory! {winnerName} wins with {hpDescriptor} remaining!',
     '💪 {winnerName} barely survives to claim victory over {loserName}!',
     '🎯 {winnerName} edges out {loserName} in a close battle!',
     '🔥 CLUTCH! {winnerName} survives by a hair to defeat {loserName}!',
@@ -289,7 +302,7 @@ export class CombatMessageGenerator {
   // ── Damage Status Messages ─────────────────────────────────────────────
   private static heavyDamageMessages = [
     '⚠️ {robotName} is heavily damaged - hull integrity critical!',
-    '🔴 {robotName} at critical health: {percentage}%!',
+    '🔴 {robotName} at critical health - systems failing!',
     '💔 {robotName}\'s hull integrity severely compromised!',
   ];
 
@@ -373,7 +386,7 @@ export class CombatMessageGenerator {
 
   private static tagInMessages = [
     '🔄 {robotName} enters the arena for {teamName} at full strength!',
-    '⚡ Fresh fighter! {robotName} tags in for {teamName} with {hp} HP!',
+    '⚡ Fresh fighter! {robotName} tags in for {teamName} at peak condition!',
     '🎯 {robotName} joins the battle for {teamName} - weapons ready!',
     '💪 {robotName} charges into the arena to fight for {teamName}!',
     '🔄 Tag-in complete! {robotName} takes over for {teamName}!',
@@ -388,7 +401,11 @@ export class CombatMessageGenerator {
 
   private static interpolate(template: string, values: Record<string, any>): string {
     return template.replace(/{(\w+)}/g, (match, key) => {
-      return values[key] !== undefined ? String(values[key]) : match;
+      const val = values[key];
+      if (val === undefined) return match;
+      // Round numeric values so raw floats never leak into player-facing messages
+      if (typeof val === 'number') return String(Math.round(val));
+      return String(val);
     });
   }
 
@@ -483,6 +500,7 @@ export class CombatMessageGenerator {
 
   static generateBattleEnd(event: BattleEndEvent): string {
     const hpPercent = Math.round((event.winnerHP / event.winnerMaxHP) * 100);
+    const hpDescriptor = this.getHPDescriptor(event.winnerHP, event.winnerMaxHP);
     let template: string;
     if (hpPercent > 80) {
       template = this.selectRandom(this.dominantVictoryMessages);
@@ -491,7 +509,7 @@ export class CombatMessageGenerator {
     } else {
       template = this.selectRandom(this.victoryMessages);
     }
-    return this.interpolate(template, { ...event, hpPercent, hp: event.winnerHP });
+    return this.interpolate(template, { ...event, hpDescriptor });
   }
 
   static generateELOChange(event: ELOChangeEvent): string {

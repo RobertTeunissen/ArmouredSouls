@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import apiClient from '../utils/apiClient';
 import { createTagTeam } from '../utils/tagTeamApi';
+import { fetchMyRobots } from '../utils/robotApi';
 
 interface Robot {
   id: number;
@@ -37,8 +37,8 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
   const fetchRobots = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/robots');
-      setRobots(response.data);
+      const data = await fetchMyRobots();
+      setRobots(data);
     } catch (err) {
       console.error('Failed to fetch robots:', err);
       setError('Failed to load robots');

@@ -127,9 +127,15 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
     }
     
     // For tournament matches, robot1 or robot2 might be null (placeholder matches)
-    if (match.matchType === 'tournament' && (!match.robot1 || !match.robot2)) {
+    // But allow bye matches through - they only have robot1
+    if (match.matchType === 'tournament' && !match.isByeMatch && (!match.robot1 || !match.robot2)) {
       console.log('[UpcomingMatches] Skipping incomplete tournament match:', match.id);
       return null; // Don't display incomplete tournament matches
+    }
+    
+    // Handle bye matches - only robot1 exists
+    if (match.isByeMatch && match.robot1) {
+      return { myRobot: match.robot1, opponent: null, isTagTeam: false, isByeMatch: true };
     }
     
     // For league matches, both robots should be present
@@ -375,7 +381,69 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
           
           // Handle 1v1 matches (league and tournament)
           const { myRobot, opponent } = matchResult;
-          if (!myRobot || !opponent) return null;
+          if (!myRobot) return null;
+          
+          // Handle bye matches - show informational card
+          if (matchResult.isByeMatch) {
+            const tournamentLabel = match.tournamentRound && match.maxRounds 
+              ? `${match.tournamentName || 'Tournament'} • ${getRoundName(match.tournamentRound, match.maxRounds)}`
+              : match.tournamentName || 'Tournament';
+            
+            return (
+              <div 
+                key={match.id} 
+                className={`
+                  bg-[#252b38] border border-gray-700 rounded-lg p-2 mb-1.5
+                  border-l-4 border-l-[#d29922]
+                  transition-all duration-150 ease-out
+                `}
+              >
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center gap-3">
+                  <div className="flex-shrink-0 w-6 text-center text-base">🏆</div>
+                  <div className="flex-shrink-0 w-16">
+                    <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-yellow-500/20 text-yellow-400">
+                      BYE
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-[#d29922] mb-0.5">{tournamentLabel}</div>
+                    <div className="font-medium text-xs">
+                      <span className="text-[#58a6ff]">{myRobot.name}</span>
+                      <span className="text-yellow-400 ml-2">auto-advances to next round</span>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 w-48 text-right">
+                    <div className="text-xs text-[#8b949e]">
+                      Top seed — no opponent in this round
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Mobile Layout */}
+                <div className="md:hidden">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base">🏆</span>
+                      <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
+                        BYE
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-[#d29922] mb-1.5">{tournamentLabel}</div>
+                  <div className="text-sm font-medium mb-1">
+                    <span className="text-[#58a6ff]">{myRobot.name}</span>
+                    <span className="text-yellow-400 ml-2">auto-advances</span>
+                  </div>
+                  <div className="text-xs text-[#8b949e]">
+                    Top seed — no opponent in this round
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          
+          if (!opponent) return null;
           const tierColor = isTournament ? 'text-[#d29922]' : getLeagueTierColor(match.leagueType);
           const tierName = isTournament 
             ? (match.tournamentRound && match.maxRounds 

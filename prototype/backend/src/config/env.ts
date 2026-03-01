@@ -26,7 +26,7 @@ export interface EnvConfig {
  * - `JWT_EXPIRATION` — token lifetime (default: `'24h'`)
  * - `BCRYPT_SALT_ROUNDS` — bcrypt cost factor (default: `10`, valid: 4–31)
  * - `RATE_LIMIT_WINDOW_MS` — rate limit window in ms (default: `60000`)
- * - `RATE_LIMIT_MAX_REQUESTS` — max requests per window (default: `10`)
+ * - `RATE_LIMIT_MAX_REQUESTS` — max auth requests per window (default: `30`; general API allows 10x this)
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = process.env.NODE_ENV || 'development';
@@ -54,8 +54,8 @@ export function loadEnvConfig(): EnvConfig {
   const parsedWindowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10);
   const rateLimitWindowMs = isNaN(parsedWindowMs) || parsedWindowMs <= 0 ? 60000 : parsedWindowMs;
 
-  const parsedMaxReqs = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10', 10);
-  const rateLimitMaxRequests = isNaN(parsedMaxReqs) || parsedMaxReqs <= 0 ? 10 : parsedMaxReqs;
+  const parsedMaxReqs = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '30', 10);
+  const rateLimitMaxRequests = isNaN(parsedMaxReqs) || parsedMaxReqs <= 0 ? 30 : parsedMaxReqs;
 
   const corsOriginRaw = process.env.CORS_ORIGIN || '';
   const corsOrigins = nodeEnv === 'development'

@@ -18,7 +18,7 @@ import tagTeamsRoutes from './routes/tagTeams';
 import analyticsRoutes from './routes/analytics';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycleScheduler';
-import { generalLimiter, authLimiter } from './middleware/rateLimiter';
+import { createGeneralLimiter, createAuthLimiter } from './middleware/rateLimiter';
 import { requestLogger } from './middleware/requestLogger';
 import logger from './config/logger';
 import prisma from './lib/prisma';
@@ -42,6 +42,8 @@ app.use(express.json());
 app.use(requestLogger);
 
 // Rate limiting — auth limiter applied before general limiter for auth routes
+const authLimiter = createAuthLimiter(config);
+const generalLimiter = createGeneralLimiter(config);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api', generalLimiter);

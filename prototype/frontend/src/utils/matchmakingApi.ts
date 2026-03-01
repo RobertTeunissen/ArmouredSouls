@@ -11,6 +11,7 @@ export interface ScheduledMatch {
   maxRounds?: number;
   robot1Id?: number;
   robot2Id?: number;
+  isByeMatch?: boolean;
   team1Id?: number;
   team2Id?: number;
   tagTeamLeague?: string;

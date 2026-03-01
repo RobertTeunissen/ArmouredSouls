@@ -112,6 +112,43 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       },
     });
 
+    // Get recently completed bye matches for user's robots in active tournaments
+    // These are auto-completed at tournament creation and the user never sees them
+    const tournamentByeMatches = await prisma.tournamentMatch.findMany({
+      where: {
+        isByeMatch: true,
+        status: 'completed',
+        robot1Id: { in: robotIds },
+        tournament: {
+          status: 'active',
+        },
+      },
+      include: {
+        robot1: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+              },
+            },
+          },
+        },
+        robot2: true,
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            currentRound: true,
+            maxRounds: true,
+          },
+        },
+      },
+      orderBy: {
+        round: 'asc',
+      },
+    });
+
     // Format league matches
     const formattedLeagueMatches = leagueMatches.map(match => ({
       id: match.id,
@@ -156,6 +193,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       maxRounds: match.tournament.maxRounds,
       robot1Id: match.robot1Id,
       robot2Id: match.robot2Id,
+      isByeMatch: match.isByeMatch,
       leagueType: 'tournament', // Use 'tournament' as league type for display
       scheduledFor: getNextCronOccurrence(getConfig().tournamentSchedule).toISOString(),
       status: match.status,
@@ -181,6 +219,35 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
           username: match.robot2.user.username,
         },
       } : null,
+    }));
+
+    // Format tournament bye matches
+    const formattedByeMatches = tournamentByeMatches.map(match => ({
+      id: `tournament-bye-${match.id}`,
+      matchType: 'tournament',
+      tournamentId: match.tournamentId,
+      tournamentName: match.tournament.name,
+      tournamentRound: match.round,
+      currentRound: match.tournament.currentRound,
+      maxRounds: match.tournament.maxRounds,
+      robot1Id: match.robot1Id,
+      robot2Id: null,
+      isByeMatch: true,
+      leagueType: 'tournament',
+      scheduledFor: getNextCronOccurrence(getConfig().tournamentSchedule).toISOString(),
+      status: 'bye',
+      robot1: match.robot1 ? {
+        id: match.robot1.id,
+        name: match.robot1.name,
+        elo: match.robot1.elo,
+        currentHP: match.robot1.currentHP,
+        maxHP: match.robot1.maxHP,
+        userId: match.robot1.userId,
+        user: {
+          username: match.robot1.user.username,
+        },
+      } : null,
+      robot2: null,
     }));
 
     // Get scheduled tag team matches involving user's teams
@@ -325,13 +392,13 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
     }));
 
     // Combine all types of matches
-    const allMatches = [...formattedLeagueMatches, ...formattedTournamentMatches, ...formattedTagTeamMatches];
+    const allMatches = [...formattedLeagueMatches, ...formattedTournamentMatches, ...formattedByeMatches, ...formattedTagTeamMatches];
 
     res.json({
       matches: allMatches,
       total: allMatches.length,
       leagueMatches: formattedLeagueMatches.length,
-      tournamentMatches: formattedTournamentMatches.length,
+      tournamentMatches: formattedTournamentMatches.length + formattedByeMatches.length,
       tagTeamMatches: formattedTagTeamMatches.length,
     });
   } catch (error) {

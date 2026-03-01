@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
-import apiClient from '../utils/apiClient';
+import { fetchMyRobots } from '../utils/robotApi';
 import {
   getLeagueStandings,
   getLeagueInstances,
@@ -41,8 +41,7 @@ function LeagueStandingsPage() {
   const fetchUserRobotTiers = async () => {
     // Fetch user's robots to determine which tiers and instances they're in
     try {
-      const response = await apiClient.get('/api/robots');
-      const robotsData = response.data;
+      const robotsData = await fetchMyRobots();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tiers = new Set<string>(robotsData.map((r: any) => r.currentLeague));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

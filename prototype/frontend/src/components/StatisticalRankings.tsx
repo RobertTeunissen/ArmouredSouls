@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 interface RankingEntry {
   rank: number;
@@ -79,7 +79,7 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await axios.get(`/api/robots/${robotId}/rankings`);
+        const response = await apiClient.get(`/api/robots/${robotId}/rankings`);
         if (isMounted) {
           setRankings(response.data);
         }

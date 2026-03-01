@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 interface LeaguePerformance {
   leagueName: string;
@@ -52,7 +52,7 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await axios.get(`/api/robots/${robotId}/performance-context`);
+        const response = await apiClient.get(`/api/robots/${robotId}/performance-context`);
         setLeagues(response.data.leagues);
         setTournaments(response.data.tournaments);
         setTagTeam(response.data.tagTeam);

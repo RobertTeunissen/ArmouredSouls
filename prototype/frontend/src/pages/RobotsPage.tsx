@@ -6,6 +6,7 @@ import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import apiClient from '../utils/apiClient';
+import { fetchMyRobots } from '../utils/robotApi';
 
 interface Robot {
   id: number;
@@ -180,8 +181,7 @@ function RobotsPage() {
 
   const fetchRobots = async () => {
     try {
-      const response = await apiClient.get('/api/robots');
-      const data = response.data;
+      const data = await fetchMyRobots();
       
       // Debug logging
       console.log('Fetched robots:', {

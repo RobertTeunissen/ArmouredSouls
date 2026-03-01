@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { listTournaments, getTournamentDetails, Tournament, TournamentDetails } from '../utils/tournamentApi';
-import apiClient from '../utils/apiClient';
+import { fetchMyRobots } from '../utils/robotApi';
 
 function TournamentsPage() {
   const { user, logout } = useAuth();
@@ -25,13 +25,8 @@ function TournamentsPage() {
 
   const fetchUserRobots = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const response = await apiClient.get('/api/robots/my-robots');
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const robotIds = new Set<number>(response.data.robots.map((r: any) => r.id));
+      const robots = await fetchMyRobots();
+      const robotIds = new Set<number>(robots.map((r) => r.id));
       setUserRobots(robotIds);
     } catch (err) {
       console.error('Failed to fetch user robots:', err);

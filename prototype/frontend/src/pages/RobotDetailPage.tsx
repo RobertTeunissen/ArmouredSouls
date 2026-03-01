@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
+import { fetchMyRobots } from '../utils/robotApi';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import TabNavigation from '../components/TabNavigation';
@@ -288,8 +289,7 @@ function RobotDetailPage() {
 
         // Fetch active robot count for repair cost calculation
         try {
-          const robotsResponse = await apiClient.get('/api/robots');
-          const robotsData = robotsResponse.data;
+          const robotsData = await fetchMyRobots();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const activeCount = robotsData.filter((r: any) => r.name !== 'Bye Robot').length;
           setActiveRobotCount(activeCount);

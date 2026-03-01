@@ -2,7 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import apiClient from '../utils/apiClient';
+import { fetchMyRobots } from '../utils/robotApi';
 import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
 import RecentMatches from '../components/RecentMatches';
@@ -113,8 +113,8 @@ function DashboardPage() {
         return;
       }
       
-      const response = await apiClient.get('/api/robots');
-      setRobots(response.data);
+      const data = await fetchMyRobots();
+      setRobots(data);
     } catch (error) {
       // Handle 401 Unauthorized errors
       if (axios.isAxiosError(error) && error.response?.status === 401) {
