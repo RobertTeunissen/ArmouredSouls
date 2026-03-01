@@ -829,24 +829,13 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
  *                       If not provided (undefined), executes ALL scheduled matches regardless of their scheduled time.
  */
 export async function executeScheduledBattles(scheduledFor?: Date): Promise<BattleExecutionSummary> {
-  // If no specific time provided, execute all scheduled matches regardless of scheduledFor time
-  // If a specific time is provided, only execute matches scheduled for that time or earlier
-  const useTimeFilter = scheduledFor !== undefined;
-  const targetTime = scheduledFor || new Date();
+  console.log('[BattleOrchestrator] Executing all scheduled league battles');
   
-  console.log(`[BattleOrchestrator] Executing battles${useTimeFilter ? ` scheduled for: ${targetTime.toISOString()}` : ' (all scheduled matches)'}`);
-  
-  // Build query to get scheduled matches
-  // Use conditional spreading to only add scheduledFor filter when a specific time is provided
+  // Execute all matches with status 'scheduled' — the cron job controls timing,
+  // scheduledFor is informational only (shown to players)
   const scheduledMatches = await prisma.scheduledMatch.findMany({
     where: {
       status: 'scheduled',
-      // Only filter by scheduledFor if a specific time was provided
-      ...(useTimeFilter && {
-        scheduledFor: {
-          lte: targetTime,
-        },
-      }),
     },
     orderBy: {
       createdAt: 'asc',

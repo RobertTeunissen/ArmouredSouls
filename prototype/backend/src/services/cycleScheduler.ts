@@ -117,8 +117,11 @@ async function executeLeagueCycle(): Promise<void> {
   logger.info(`League Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
   // Step 4: Schedule matchmaking with 24h lead time
+  // Round scheduledFor to the top of the hour to avoid millisecond race conditions
+  // where executeScheduledBattles' lte filter misses matches by a few ms
   logger.info('League Cycle: Step 4 — Scheduling league matchmaking (24h lead)');
   const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  scheduledFor.setMinutes(0, 0, 0);
   const matchesCreated = await runMatchmaking(scheduledFor);
   logger.info(`League Cycle: ${matchesCreated} matches scheduled for ${scheduledFor.toISOString()}`);
 }
@@ -206,8 +209,10 @@ async function executeTagTeamCycle(): Promise<void> {
   logger.info(`Tag Team Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
   // Step 4: Schedule tag team matchmaking with 48h lead time
+  // Round scheduledFor to the top of the hour to avoid millisecond race conditions
   logger.info('Tag Team Cycle: Step 4 — Scheduling tag team matchmaking (48h lead)');
   const scheduledFor = new Date(Date.now() + 48 * 60 * 60 * 1000);
+  scheduledFor.setMinutes(0, 0, 0);
   const matchesCreated = await runTagTeamMatchmaking(scheduledFor);
   logger.info(`Tag Team Cycle: ${matchesCreated} tag team matches scheduled for ${scheduledFor.toISOString()}`);
 }

@@ -1261,19 +1261,12 @@ export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promi
   totalStreamingRevenue?: number;
 }> {
   // Query scheduled tag team matches
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const whereClause: any = {
-    status: 'scheduled',
-  };
-
-  if (scheduledFor) {
-    whereClause.scheduledFor = {
-      lte: scheduledFor,
-    };
-  }
-
+  // Execute all matches with status 'scheduled' — the cron job controls timing,
+  // scheduledFor is informational only (shown to players)
   const scheduledMatches = await prisma.tagTeamMatch.findMany({
-    where: whereClause,
+    where: {
+      status: 'scheduled',
+    },
     include: {
       team1: {
         include: {
