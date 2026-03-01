@@ -17,7 +17,6 @@ const unitTestFiles = [
   'streamingStudioOperatingCost\\.property\\.test\\.ts',
   'streamingStudioUpgradeCosts\\.property\\.test\\.ts',
   'validation\\.property\\.test\\.ts',
-  'validation\\.test\\.ts',
 ];
 
 module.exports = {

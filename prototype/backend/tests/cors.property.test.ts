@@ -68,6 +68,7 @@ describe('CORS Origin Parsing - Property Tests', () => {
             process.env.NODE_ENV = nodeEnv;
             process.env.CORS_ORIGIN = corsString;
             process.env.JWT_SECRET = 'non-default-secret-for-testing';
+            process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
 
             const config = loadEnvConfig();
 
@@ -193,6 +194,7 @@ describe('CORS Origin Parsing - Property Tests', () => {
             process.env.NODE_ENV = nodeEnv;
             process.env.CORS_ORIGIN = '';
             process.env.JWT_SECRET = 'non-default-secret-for-testing';
+            process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
 
             const config = loadEnvConfig();
 
