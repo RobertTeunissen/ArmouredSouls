@@ -9,6 +9,8 @@
 import express, { Request, Response } from 'express';
 import { cycleSnapshotService } from '../services/cycleSnapshotService';
 import { robotPerformanceService } from '../services/robotPerformanceService';
+import type { RobotMetric } from '../services/robotPerformanceService';
+import type { LeaderboardOptions } from '../services/robotStatsViewService';
 import prisma from '../lib/prisma';
 
 const router = express.Router();
@@ -357,7 +359,7 @@ router.get('/robot/:robotId/performance', async (req: Request, res: Response) =>
     const includeMetricProgression = includeMetricProgressionParam === 'true' || includeELOProgression;
     
     // Parse progressionMetric (default to 'elo' for backward compatibility)
-    const progressionMetric = (progressionMetricParam || 'elo') as any;
+    const progressionMetric = (progressionMetricParam || 'elo') as RobotMetric;
     
     // Validate progressionMetric
     const validMetrics = ['elo', 'fame', 'damageDealt', 'damageReceived', 'wins', 'losses', 'creditsEarned'];
@@ -375,7 +377,8 @@ router.get('/robot/:robotId/performance', async (req: Request, res: Response) =>
     );
 
     // Build response
-    const response: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response: Record<string, any> = {
       ...summary,
     };
 
@@ -526,7 +529,8 @@ router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
     );
 
     // Build response
-    const response: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response: Record<string, any> = {
       robotId: eloProgression.robotId,
       cycleRange: eloProgression.cycleRange,
       dataPoints: eloProgression.dataPoints,
@@ -638,7 +642,7 @@ router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
 router.get('/robot/:robotId/metric/:metricName', async (req: Request, res: Response) => {
   try {
     const robotId = parseInt(req.params.robotId);
-    const metricName = req.params.metricName as any;
+    const metricName = req.params.metricName as RobotMetric;
     const cycleRangeParam = req.query.cycleRange as string;
     const includeMovingAverageParam = req.query.includeMovingAverage as string | undefined;
     const includeTrendLineParam = req.query.includeTrendLine as string | undefined;
@@ -718,7 +722,8 @@ router.get('/robot/:robotId/metric/:metricName', async (req: Request, res: Respo
     );
 
     // Build response
-    const response: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response: Record<string, any> = {
       robotId: metricProgression.robotId,
       metric: metricProgression.metric,
       cycleRange: metricProgression.cycleRange,
@@ -819,7 +824,7 @@ router.get('/leaderboard', async (req: Request, res: Response) => {
     // Validate and parse orderBy
     const validOrderBy = ['elo', 'winRate', 'battles', 'kills', 'damageDealt'];
     const orderBy = orderByParam && validOrderBy.includes(orderByParam) 
-      ? orderByParam as any
+      ? orderByParam as LeaderboardOptions['orderBy']
       : 'elo';
 
     // Validate and parse limit

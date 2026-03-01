@@ -11,7 +11,6 @@ import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { calculateMaxHP, calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { repairAllRobots } from '../services/repairService';
 import { cycleLogger } from '../utils/cycleLogger';
-import type { Robot } from '@prisma/client';
 import prisma from '../lib/prisma';
 import tournamentRoutes from './adminTournaments';
 import { 

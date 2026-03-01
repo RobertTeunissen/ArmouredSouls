@@ -85,10 +85,10 @@ app.use('/api/tag-teams', tagTeamsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
 // Error handling middleware — logs stack traces, redacts them from production responses
-app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((_err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error('Unhandled error', {
-    message: err.message,
-    stack: err.stack,
+    message: _err.message,
+    stack: _err.stack,
     method: req.method,
     path: req.originalUrl,
   });
@@ -97,7 +97,7 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
 
   res.status(500).json({
     error: 'Internal Server Error',
-    ...(isProduction ? {} : { message: err.message, stack: err.stack }),
+    ...(isProduction ? {} : { message: _err.message, stack: _err.stack }),
   });
 });
 

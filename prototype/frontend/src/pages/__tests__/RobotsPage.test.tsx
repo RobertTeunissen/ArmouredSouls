@@ -44,7 +44,7 @@ vi.mock('../../components/Navigation', () => ({
 }));
 
 vi.mock('../../components/ViewModeToggle', () => ({
-  default: ({ viewMode, onViewModeChange }: { viewMode: string; onViewModeChange: (mode: string) => void }) => (
+  default: ({ onViewModeChange }: { viewMode: string; onViewModeChange: (mode: string) => void }) => (
     <div data-testid="view-mode-toggle">
       <button onClick={() => onViewModeChange('grid')}>Grid</button>
       <button onClick={() => onViewModeChange('list')}>List</button>

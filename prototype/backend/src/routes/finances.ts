@@ -6,7 +6,6 @@ import {
   calculateTotalDailyOperatingCosts,
   calculateDailyPassiveIncome,
   getPrestigeMultiplier,
-  calculateBattleWinnings,
   generatePerRobotFinancialReport,
   calculateFacilityROI,
   getNextPrestigeTier,

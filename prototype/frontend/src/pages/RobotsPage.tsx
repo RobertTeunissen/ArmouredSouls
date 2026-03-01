@@ -6,42 +6,20 @@ import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import apiClient from '../utils/apiClient';
-import { fetchMyRobots } from '../utils/robotApi';
+import { fetchMyRobots, Robot as ApiRobot } from '../utils/robotApi';
 
-interface Robot {
-  id: number;
-  name: string;
-  imageUrl: string | null;
-  elo: number;
+interface Robot extends ApiRobot {
+  imageUrl?: string | null;
   fame: number;
-  currentLeague: string;
   leaguePoints: number;
-  currentHP: number;
-  maxHP: number;
-  currentShield: number;
-  maxShield: number;
   wins: number;
   losses: number;
   draws: number;
   totalBattles: number;
   battleReadiness: number;
-  repairCost: number;
   loadoutType: string; // "single", "weapon_shield", "two_handed", "dual_wield"
   mainWeaponId: number | null;
   offhandWeaponId: number | null;
-  mainWeapon: {
-    weapon: {
-      name: string;
-      weaponType: string;
-    };
-  } | null;
-  offhandWeapon: {
-    weapon: {
-      name: string;
-      weaponType: string;
-    };
-  } | null;
-  createdAt: string;
 }
 
 // Utility functions

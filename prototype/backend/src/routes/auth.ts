@@ -13,7 +13,6 @@
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { Prisma } from '@prisma/client';
-import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { validateRegistrationRequest } from '../utils/validation';
 import { hashPassword } from '../services/passwordService';
