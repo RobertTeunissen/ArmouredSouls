@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Documentation Update Reminder",
+  "description": "Remind to update documentation when core game systems are modified",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/src/services/combat*.ts",
+      "prototype/backend/src/services/economy*.ts",
+      "prototype/backend/src/services/matchmaking*.ts",
+      "prototype/backend/src/services/league*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Core game system modified. Check if related PRD documentation in docs/prd_core/ needs updating to reflect these changes."
+  }
+}

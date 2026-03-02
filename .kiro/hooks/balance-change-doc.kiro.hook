@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Document Balance Changes",
+  "description": "Remind to document game balance modifications",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/src/services/combat*.ts",
+      "prototype/backend/src/config/weapons.ts",
+      "prototype/backend/src/config/facilities.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Game balance parameters modified. Document the change rationale in docs/balance_changes/ including: 1) What changed, 2) Why it changed, 3) Expected impact on gameplay."
+  }
+}

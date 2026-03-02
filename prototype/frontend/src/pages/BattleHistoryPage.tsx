@@ -325,13 +325,13 @@ function BattleHistoryPage() {
           </div>
         )}
 
-        {!loading && !error && battles.length === 0 && (
+        {!loading && !error && battles.length === 0 && battleFilter === 'overall' && (
           <div className="bg-[#252b38] p-6 rounded-lg">
             <p className="text-[#8b949e]">No battles yet. Your first match is coming soon!</p>
           </div>
         )}
 
-        {!loading && !error && battles.length > 0 && (
+        {!loading && !error && (battles.length > 0 || battleFilter !== 'overall') && (
           <>
             {/* Summary Statistics */}
             <BattleHistorySummary 

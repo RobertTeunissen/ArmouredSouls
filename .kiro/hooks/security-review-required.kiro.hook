@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Security Review Required",
+  "description": "Flag security-sensitive files for careful review",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/src/middleware/auth*.ts",
+      "prototype/backend/src/services/auth*.ts",
+      "prototype/backend/src/routes/auth*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Security-sensitive authentication code was modified. Review changes carefully against docs/guides/SECURITY.md guidelines before committing."
+  }
+}

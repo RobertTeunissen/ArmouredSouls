@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Pre-Commit Tests",
+  "description": "Run backend tests before committing code changes",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/src/**/*.ts",
+      "prototype/backend/tests/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Backend TypeScript files were modified. Run 'cd prototype/backend && npm test' to verify tests still pass before committing."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Large File Warning",
+  "description": "Warn when files exceed recommended size",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/src/**/*.ts",
+      "prototype/frontend/src/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check if the modified file exceeds 300 lines. If so, consider refactoring into smaller, more focused modules."
+  }
+}

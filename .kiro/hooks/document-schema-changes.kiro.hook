@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Document Schema Changes",
+  "description": "Remind to document Prisma schema changes",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/prisma/schema.prisma"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Prisma schema modified. After creating migration, update docs/prd_core/DATABASE_SCHEMA.md to reflect the changes."
+  }
+}

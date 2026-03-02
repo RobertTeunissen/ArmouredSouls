@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Post-Task Test Run",
+  "description": "Run tests after completing a spec task",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cd prototype/backend && npm test",
+    "timeout": 300
+  }
+}

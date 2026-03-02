@@ -427,7 +427,7 @@ async function createBattleRecord(
         robotId: robot1.id,
         team: 1,
         role: null,
-        credits: isRobot1Winner ? robot1Reward : robot2Reward,
+        credits: robot1Reward,
         streamingRevenue: 0, // Will be updated later
         eloBefore: robot1ELOBefore,
         eloAfter: robot1ELOAfter,
@@ -443,7 +443,7 @@ async function createBattleRecord(
         robotId: robot2.id,
         team: 2,
         role: null,
-        credits: isRobot1Winner ? robot2Reward : robot1Reward,
+        credits: robot2Reward,
         streamingRevenue: 0, // Will be updated later
         eloBefore: robot2ELOBefore,
         eloAfter: robot2ELOAfter,

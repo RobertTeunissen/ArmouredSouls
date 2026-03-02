@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "API Documentation Check",
+  "description": "Remind to update API documentation when routes are modified",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/src/routes/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "API routes were modified. Verify that docs/api/authentication.yaml or other API documentation is updated if endpoints changed."
+  }
+}

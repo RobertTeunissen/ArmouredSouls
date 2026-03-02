@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Lint TypeScript on Save",
+  "description": "Run ESLint on TypeScript files when saved",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/src/**/*.ts",
+      "prototype/frontend/src/**/*.ts",
+      "prototype/frontend/src/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npm run lint"
+  }
+}

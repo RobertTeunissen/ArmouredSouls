@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Review Database Migration",
+  "description": "Review new database migrations for safety",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "prototype/backend/prisma/migrations/**/*.sql"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "New database migration created. Review the SQL carefully for: 1) Data loss risks, 2) Performance impact, 3) Rollback strategy. Update docs/prd_core/DATABASE_SCHEMA.md if schema changed significantly."
+  }
+}

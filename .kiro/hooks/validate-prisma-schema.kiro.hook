@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validate Prisma Schema",
+  "description": "Format and validate Prisma schema when modified",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/prisma/schema.prisma"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Prisma schema was modified. Run 'cd prototype/backend && npx prisma format && npx prisma validate' to ensure schema is valid."
+  }
+}

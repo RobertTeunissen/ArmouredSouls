@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Test Coverage Report",
+  "description": "Generate coverage report when tests are modified",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/tests/**/*.test.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Test files modified. Consider running 'npm test -- --coverage' to check if coverage improved or decreased."
+  }
+}

@@ -1954,7 +1954,9 @@ async function updateTagTeamBattleResults(
     `(Battles from ${streamingRevenue.team2MaxBattlesRobot.name}, Fame from ${streamingRevenue.team2MaxFameRobot.name})`
   );
 
-  // Update BattleParticipant records with streaming revenue (split 50/50 per team)
+  // Update BattleParticipant records with credits and streaming revenue (split 50/50 per team)
+  const team1CreditsPerRobot = Math.floor(team1Rewards / 2);
+  const team2CreditsPerRobot = Math.floor(team2Rewards / 2);
   const team1StreamingPerRobot = Math.floor(streamingRevenue.team1Revenue.totalRevenue / 2);
   const team2StreamingPerRobot = Math.floor(streamingRevenue.team2Revenue.totalRevenue / 2);
   
@@ -1964,6 +1966,7 @@ async function updateTagTeamBattleResults(
       robotId: { in: [team1.activeRobotId, team1.reserveRobotId] },
     },
     data: {
+      credits: team1CreditsPerRobot,
       streamingRevenue: team1StreamingPerRobot,
     },
   });
@@ -1974,6 +1977,7 @@ async function updateTagTeamBattleResults(
       robotId: { in: [team2.activeRobotId, team2.reserveRobotId] },
     },
     data: {
+      credits: team2CreditsPerRobot,
       streamingRevenue: team2StreamingPerRobot,
     },
   });
@@ -1995,13 +1999,8 @@ async function updateTagTeamBattleResults(
     const team1Result = team1Won ? 'win' : (team2Won ? 'loss' : 'draw');
     const team2Result = team2Won ? 'win' : (team1Won ? 'loss' : 'draw');
     
-    // Split team rewards 50/50 between robots
-    const team1CreditsPerRobot = Math.floor(team1Rewards / 2);
-    const team1StreamingPerRobot = Math.floor(streamingRevenue.team1Revenue.totalRevenue / 2);
+    // Reuse credits/streaming splits calculated above
     const team1PrestigePerRobot = Math.floor(team1Prestige / 2);
-    
-    const team2CreditsPerRobot = Math.floor(team2Rewards / 2);
-    const team2StreamingPerRobot = Math.floor(streamingRevenue.team2Revenue.totalRevenue / 2);
     const team2PrestigePerRobot = Math.floor(team2Prestige / 2);
     
     // Event 1: Team 1 Active Robot

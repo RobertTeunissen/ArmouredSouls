@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Pre-Deployment Checklist",
+  "description": "Verify deployment readiness before pushing to main",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before pushing to main (which triggers ACC deployment), verify: 1) All tests pass locally, 2) No console.log statements in production code, 3) Environment variables documented, 4) Database migrations tested, 5) Documentation updated."
+  }
+}

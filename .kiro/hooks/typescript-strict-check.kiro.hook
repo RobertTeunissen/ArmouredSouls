@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "TypeScript Strict Check",
+  "description": "Check for TypeScript errors in modified files",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "prototype/backend/src/**/*.ts",
+      "prototype/frontend/src/**/*.ts",
+      "prototype/frontend/src/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx tsc --noEmit"
+  }
+}
