@@ -373,7 +373,7 @@ export interface BattleLogResponse {
   battleType?: string;
   leagueType: string;
   duration: number;
-  robot1: {
+  robot1?: {
     id: number;
     name: string;
     owner: string;
@@ -395,7 +395,7 @@ export interface BattleLogResponse {
       studioLevel: number;
     } | null;
   };
-  robot2: {
+  robot2?: {
     id: number;
     name: string;
     owner: string;

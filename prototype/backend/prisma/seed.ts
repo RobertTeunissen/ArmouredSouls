@@ -529,7 +529,7 @@ async function seedCoreTestUsers(practiceSword: { id: number }) {
     passwordHash: await bcrypt.hash('admin123', 10),
     role: 'admin',
     currency: 10000000,
-    prestige: 50000,
+    prestige: 0,
   });
   console.log('✅ Admin user upserted');
 

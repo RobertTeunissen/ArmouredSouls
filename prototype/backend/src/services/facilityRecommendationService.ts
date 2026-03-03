@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { getFacilityConfig, FACILITY_TYPES } from '../config/facilities';
 import { roiCalculatorService, FacilityROI } from './roiCalculatorService';
-
-const prisma = new PrismaClient();
 
 export interface FacilityRecommendation {
   facilityType: string;

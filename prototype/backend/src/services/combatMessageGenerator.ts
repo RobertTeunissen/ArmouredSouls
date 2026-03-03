@@ -404,8 +404,8 @@ export class CombatMessageGenerator {
     return template.replace(/{(\w+)}/g, (match, key) => {
       const val = values[key];
       if (val === undefined) return match;
-      // Round numeric values so raw floats never leak into player-facing messages
-      if (typeof val === 'number') return String(Math.round(val));
+      // Round numeric values and format with thousand separators (e.g. ₡1,500)
+      if (typeof val === 'number') return Math.round(val).toLocaleString('en-US');
       return String(val);
     });
   }

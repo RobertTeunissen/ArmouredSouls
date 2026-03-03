@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { getFacilityConfig } from '../config/facilities';
-
-const prisma = new PrismaClient();
 
 export interface FacilityROI {
   facilityType: string;

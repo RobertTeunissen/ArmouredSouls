@@ -345,7 +345,7 @@ async function simulateTagTeamBattle(
   team2ActiveSurvivalTime += phase1Duration;
   
   // Track if phase 1 had a decisive winner (destruction or yield)
-  const _phase1Winner: number | null = phase1Result.winnerId;
+  // Used below for tag-out fallback check
   
   // Collect combat events from phase 1 (Requirement 7.1)
   if (phase1Result.events && Array.isArray(phase1Result.events)) {
@@ -353,8 +353,26 @@ async function simulateTagTeamBattle(
   }
 
   // Check for tag-outs (Requirement 3.3: HP ≤ yield threshold OR HP ≤ 0)
-  const team1NeedsTagOut = shouldTagOut(team1CurrentRobot);
-  const team2NeedsTagOut = shouldTagOut(team2CurrentRobot);
+  // Also check phase1 winnerId as a fallback: if the simulator ended the battle
+  // (via yield or destruction), the losing robot must tag out even if shouldTagOut
+  // would miss it due to floating-point edge cases.
+  const phase1Winner = phase1Result.winnerId;
+  const team1NeedsTagOut = shouldTagOut(team1CurrentRobot) ||
+    (phase1Winner !== null && phase1Winner === team2CurrentRobot.id && !team1ReserveUsed);
+  const team2NeedsTagOut = shouldTagOut(team2CurrentRobot) ||
+    (phase1Winner !== null && phase1Winner === team1CurrentRobot.id && !team2ReserveUsed);
+
+  // If a tag-out is happening, strip the yield/destroyed/battle_end events from phase 1
+  // since the battle continues with the reserve robot
+  if (team1NeedsTagOut || team2NeedsTagOut) {
+    const terminalTypes = ['yield', 'destroyed', 'battle_end'];
+    // Remove terminal events that were added from phase 1
+    for (let i = battleEvents.length - 1; i >= 0; i--) {
+      if (terminalTypes.includes(battleEvents[i].type)) {
+        battleEvents.splice(i, 1);
+      }
+    }
+  }
 
   // Handle simultaneous tag-outs
   if (team1NeedsTagOut && team2NeedsTagOut) {
@@ -945,13 +963,15 @@ async function simulateTagTeamBattle(
  * Check if a robot should tag out
  * Requirement 3.3: Tag-out when HP ≤ yield threshold OR HP ≤ 0
  */
-function shouldTagOut(robot: Robot): boolean {
+export function shouldTagOut(robot: Robot): boolean {
   if (robot.currentHP <= 0) {
     return true;
   }
 
-  const yieldThresholdHP = Math.floor((robot.yieldThreshold / 100) * robot.maxHP);
-  return robot.currentHP <= yieldThresholdHP;
+  // Use the same percentage-based check as shouldYield in combatSimulator
+  // to avoid rounding mismatches (e.g. Math.floor(5.5) = 5 missing HP of 5.45)
+  const hpPercent = (robot.currentHP / robot.maxHP) * 100;
+  return hpPercent <= robot.yieldThreshold && hpPercent > 0;
 }
 
 /**

@@ -284,3 +284,82 @@ describe('CombatMessageGenerator', () => {
   });
 
 });
+
+describe('CombatMessageGenerator - Credit Formatting', () => {
+  describe('generateReward', () => {
+    it('should format credits with thousand separators', () => {
+      const message = CombatMessageGenerator.generateReward({
+        robotName: 'Iron Gladiator',
+        credits: 1500,
+      });
+
+      expect(message).toBeDefined();
+      expect(message).toContain('1,500');
+      expect(message).not.toMatch(/[^,]1500/); // Should not contain unformatted 1500
+    });
+
+    it('should format large credit amounts with thousand separators', () => {
+      const message = CombatMessageGenerator.generateReward({
+        robotName: 'Steel Warrior',
+        credits: 25000,
+      });
+
+      expect(message).toBeDefined();
+      expect(message).toContain('25,000');
+    });
+
+    it('should not add separator for amounts under 1000', () => {
+      const message = CombatMessageGenerator.generateReward({
+        robotName: 'Iron Gladiator',
+        credits: 500,
+      });
+
+      expect(message).toBeDefined();
+      expect(message).toContain('500');
+    });
+
+    it('should round and format decimal credit values', () => {
+      const message = CombatMessageGenerator.generateReward({
+        robotName: 'Iron Gladiator',
+        credits: 1500.75,
+      });
+
+      expect(message).toBeDefined();
+      expect(message).toContain('1,501');
+    });
+  });
+
+  describe('generatePrestige', () => {
+    it('should format prestige values with thousand separators', () => {
+      const message = CombatMessageGenerator.generatePrestige('Iron Gladiator', 1200);
+
+      expect(message).toBeDefined();
+      expect(message).toContain('1,200');
+    });
+  });
+
+  describe('generateFame', () => {
+    it('should format fame values with thousand separators', () => {
+      const message = CombatMessageGenerator.generateFame('Iron Gladiator', 2500);
+
+      expect(message).toBeDefined();
+      expect(message).toContain('2,500');
+    });
+  });
+
+  describe('generateELOChange - formatting', () => {
+    it('should format large ELO change values with thousand separators when applicable', () => {
+      const message = CombatMessageGenerator.generateELOChange({
+        robotName: 'Iron Gladiator',
+        oldELO: 1200,
+        newELO: 2200,
+        change: 1000,
+      });
+
+      expect(message).toBeDefined();
+      // A change of 1000 should be formatted as 1,000
+      expect(message).toContain('1,000');
+    });
+  });
+});
+

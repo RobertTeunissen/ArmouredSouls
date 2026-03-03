@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 export interface IntegrityIssue {
   type: 'credit_mismatch' | 'sequence_gap' | 'missing_events' | 'invalid_data';
