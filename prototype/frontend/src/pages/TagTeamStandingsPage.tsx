@@ -60,9 +60,7 @@ function TagTeamStandingsPage() {
       }
       
       const data = await getTagTeamStandings(selectedTier, page, 50);
-      if (import.meta.env.DEV) {
-        console.log('Standings API response - first team:', JSON.stringify(data.standings[0], null, 2));
-      }
+      console.log('Standings API response - first team:', JSON.stringify(data.standings[0], null, 2));
       setStandings(data.standings);
       setTotalPages(data.pagination.totalPages);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any

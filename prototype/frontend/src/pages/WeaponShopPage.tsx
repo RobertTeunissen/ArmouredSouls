@@ -163,9 +163,7 @@ function WeaponShopPage() {
         const storageResponse = await apiClient.get('/api/weapon-inventory/storage-status');
         setStorageStatus(storageResponse.data);
       } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        if (import.meta.env.DEV) {
-          console.error('Failed to fetch data:', err);
-        }
+        console.error('Failed to fetch data:', err);
         
         // Check if it's an authentication error
         if (err.response?.status === 401 || err.response?.status === 403) {

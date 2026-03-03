@@ -1,0 +1,623 @@
+Timestamp | Level | Message
+2026-03-02T21:29:57.648Z | INFO | === Cycle 3 Started ===
+2026-03-02T21:29:57.648Z | INFO | Cycle 3 (3/3)
+2026-03-02T21:29:57.648Z | INFO |  [Admin] === Cycle 3 (3/3) ===
+2026-03-02T21:29:57.649Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-03-02T21:29:57.649Z | INFO | [BattleOrchestrator] Executing all scheduled league battles
+2026-03-02T21:29:57.650Z | INFO | [BattleOrchestrator] Found 0 matches to execute
+2026-03-02T21:29:57.650Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
+2026-03-02T21:29:57.650Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
+2026-03-02T21:29:57.651Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-03-02T21:29:57.653Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 3)
+2026-03-02T21:29:57.654Z | INFO | [TagTeamBattles] Found 0 scheduled tag team matches
+2026-03-02T21:29:57.654Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-03-02T21:29:57.655Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-03-02T21:29:57.657Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-03-02T21:29:57.658Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-03-02T21:29:57.660Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-03-02T21:29:57.660Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-02T21:29:57.660Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-03-02T21:29:57.660Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-02T21:29:57.661Z | INFO | [Rebalancing] Total robots in system: 448
+2026-03-02T21:29:57.661Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-03-02T21:29:57.663Z | INFO | [Rebalancing] bronze: 188 total robots across 5 instances
+2026-03-02T21:29:57.663Z | INFO | [Rebalancing] Processing bronze_1...
+2026-03-02T21:29:57.669Z | INFO | [Rebalancing] bronze_1: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 10 met points threshold)
+2026-03-02T21:29:57.673Z | INFO | [Rebalancing] Promoted: New Robot 185 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.678Z | INFO | [Rebalancing] Promoted: New Robot 35 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.678Z | INFO | [Rebalancing] Processing bronze_2...
+2026-03-02T21:29:57.688Z | INFO | [Rebalancing] bronze_2: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 13 met points threshold)
+2026-03-02T21:29:57.691Z | INFO | [Rebalancing] Promoted: New Robot 127 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.694Z | INFO | [Rebalancing] Promoted: New Robot 19 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.694Z | INFO | [Rebalancing] Processing bronze_3...
+2026-03-02T21:29:57.704Z | INFO | [Rebalancing] bronze_3: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 13 met points threshold)
+2026-03-02T21:29:57.708Z | INFO | [Rebalancing] Promoted: New Robot 108 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.711Z | INFO | [Rebalancing] Promoted: New Robot 26 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.711Z | INFO | [Rebalancing] Processing bronze_4...
+2026-03-02T21:29:57.720Z | INFO | [Rebalancing] bronze_4: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 14 met points threshold)
+2026-03-02T21:29:57.724Z | INFO | [Rebalancing] Promoted: New Robot 216 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.727Z | INFO | [Rebalancing] Promoted: New Robot 130 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.727Z | INFO | [Rebalancing] Processing bronze_5...
+2026-03-02T21:29:57.734Z | INFO | [Rebalancing] bronze_5: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 14 met points threshold)
+2026-03-02T21:29:57.742Z | INFO | [Rebalancing] Promoted: New Robot 9 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.745Z | INFO | [Rebalancing] Promoted: New Robot 178 (bronze → silver, LP: 25 retained)
+2026-03-02T21:29:57.745Z | INFO | [Rebalancing] bronze: Promoted 10, Demoted 0 across 5 instances
+2026-03-02T21:29:57.745Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-03-02T21:29:57.749Z | INFO | [Rebalancing] silver: 187 total robots across 3 instances
+2026-03-02T21:29:57.749Z | INFO | [Rebalancing] Processing silver_1...
+2026-03-02T21:29:57.757Z | INFO | [Rebalancing] silver_1: 3 robots eligible for promotion (top 10% of 37 AND ≥25 league points, 37 met points threshold)
+2026-03-02T21:29:57.763Z | INFO | [Rebalancing] silver_1: 3 robots eligible for demotion (bottom 10% of 37)
+2026-03-02T21:29:57.769Z | INFO | [Rebalancing] Promoted: Initial Robot 56 (silver → gold, LP: 50 retained)
+2026-03-02T21:29:57.773Z | INFO | [Rebalancing] Promoted: Initial Robot 71 (silver → gold, LP: 50 retained)
+2026-03-02T21:29:57.776Z | INFO | [Rebalancing] Promoted: Initial Robot 81 (silver → gold, LP: 50 retained)
+2026-03-02T21:29:57.784Z | INFO | [Rebalancing] Demoted: New Robot 47 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.793Z | INFO | [Rebalancing] Demoted: New Robot 228 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.803Z | INFO | [Rebalancing] Demoted: New Robot 229 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.803Z | INFO | [Rebalancing] Processing silver_2...
+2026-03-02T21:29:57.824Z | INFO | [Rebalancing] silver_2: 3 robots eligible for promotion (top 10% of 39 AND ≥25 league points, 39 met points threshold)
+2026-03-02T21:29:57.829Z | INFO | [Rebalancing] silver_2: 3 robots eligible for demotion (bottom 10% of 39)
+2026-03-02T21:29:57.834Z | INFO | [Rebalancing] Promoted: Initial Robot 5 (silver → gold, LP: 50 retained)
+2026-03-02T21:29:57.837Z | INFO | [Rebalancing] Promoted: New Robot 226 (silver → gold, LP: 25 retained)
+2026-03-02T21:29:57.840Z | INFO | [Rebalancing] Promoted: New Robot 86 (silver → gold, LP: 25 retained)
+2026-03-02T21:29:57.843Z | INFO | [Rebalancing] Demoted: New Robot 36 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.846Z | INFO | [Rebalancing] Demoted: New Robot 226 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.850Z | INFO | [Rebalancing] Demoted: New Robot 239 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.850Z | INFO | [Rebalancing] Processing silver_3...
+2026-03-02T21:29:57.865Z | INFO | [Rebalancing] silver_3: 4 robots eligible for promotion (top 10% of 43 AND ≥25 league points, 43 met points threshold)
+2026-03-02T21:29:57.872Z | INFO | [Rebalancing] silver_3: 4 robots eligible for demotion (bottom 10% of 43)
+2026-03-02T21:29:57.876Z | INFO | [Rebalancing] Promoted: Initial Robot 8 (silver → gold, LP: 50 retained)
+2026-03-02T21:29:57.879Z | INFO | [Rebalancing] Promoted: New Robot 125 (silver → gold, LP: 25 retained)
+2026-03-02T21:29:57.883Z | INFO | [Rebalancing] Promoted: New Robot 83 (silver → gold, LP: 25 retained)
+2026-03-02T21:29:57.886Z | INFO | [Rebalancing] Promoted: New Robot 34 (silver → gold, LP: 25 retained)
+2026-03-02T21:29:57.889Z | INFO | [Rebalancing] Demoted: New Robot 145 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.893Z | INFO | [Rebalancing] Demoted: New Robot 125 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.896Z | INFO | [Rebalancing] Demoted: New Robot 92 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.899Z | INFO | [Rebalancing] Demoted: New Robot 83 (silver → bronze, LP: 25 retained)
+2026-03-02T21:29:57.899Z | INFO | [Rebalancing] silver: Promoted 10, Demoted 10 across 3 instances
+2026-03-02T21:29:57.899Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-03-02T21:29:57.901Z | INFO | [Rebalancing] gold: 75 total robots across 1 instances
+2026-03-02T21:29:57.901Z | INFO | [Rebalancing] Processing gold_1...
+2026-03-02T21:29:57.920Z | INFO | [Rebalancing] gold_1: 4 robots eligible for promotion (top 10% of 46 AND ≥25 league points, 46 met points threshold)
+2026-03-02T21:29:57.927Z | INFO | [Rebalancing] gold_1: 4 robots eligible for demotion (bottom 10% of 46)
+2026-03-02T21:29:57.932Z | INFO | [Rebalancing] Promoted: Initial Robot 10 (gold → platinum, LP: 50 retained)
+2026-03-02T21:29:57.934Z | INFO | [Rebalancing] Promoted: Initial Robot 9 (gold → platinum, LP: 50 retained)
+2026-03-02T21:29:57.937Z | INFO | [Rebalancing] Promoted: Initial Robot 58 (gold → platinum, LP: 50 retained)
+2026-03-02T21:29:57.942Z | INFO | [Rebalancing] Promoted: Initial Robot 90 (gold → platinum, LP: 50 retained)
+2026-03-02T21:29:57.945Z | INFO | [Rebalancing] Demoted: User1Robot0 (gold → silver, LP: 43 retained)
+2026-03-02T21:29:57.948Z | INFO | [Rebalancing] Demoted: Initial Robot 9 (gold → silver, LP: 50 retained)
+2026-03-02T21:29:57.951Z | INFO | [Rebalancing] Demoted: Initial Robot 58 (gold → silver, LP: 50 retained)
+2026-03-02T21:29:57.959Z | INFO | [Rebalancing] Demoted: Initial Robot 90 (gold → silver, LP: 50 retained)
+2026-03-02T21:29:57.959Z | INFO | [Rebalancing] gold: Promoted 4, Demoted 4 across 1 instances
+2026-03-02T21:29:57.959Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-03-02T21:29:57.961Z | INFO | [Rebalancing] platinum: 16 total robots across 1 instances
+2026-03-02T21:29:57.961Z | INFO | [Rebalancing] Processing platinum_1...
+2026-03-02T21:29:57.969Z | INFO | [Rebalancing] platinum_1: 1 robots eligible for promotion (top 10% of 12 AND ≥25 league points, 12 met points threshold)
+2026-03-02T21:29:57.973Z | INFO | [Rebalancing] platinum_1: 1 robots eligible for demotion (bottom 10% of 12)
+2026-03-02T21:29:57.979Z | INFO | [Rebalancing] Promoted: Initial Robot 96 (platinum → diamond, LP: 50 retained)
+2026-03-02T21:29:57.986Z | INFO | [Rebalancing] Demoted: Initial Robot 96 (platinum → gold, LP: 50 retained)
+2026-03-02T21:29:57.986Z | INFO | [Rebalancing] platinum: Promoted 1, Demoted 1 across 1 instances
+2026-03-02T21:29:57.986Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-03-02T21:29:57.994Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-03-02T21:29:57.994Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T21:29:57.994Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-03-02T21:29:57.998Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-03-02T21:29:57.999Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T21:29:57.999Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-03-02T21:29:58.000Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T21:29:58.006Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T21:29:58.012Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T21:29:58.016Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T21:29:58.020Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T21:29:58.027Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T21:29:58.027Z | INFO |  ════════════════════════════════════════════════════════════
+2026-03-02T21:29:58.027Z | INFO | [Rebalancing] League rebalancing complete!
+2026-03-02T21:29:58.027Z | INFO |   Total promoted: 25
+2026-03-02T21:29:58.027Z | INFO |   Total demoted: 15
+2026-03-02T21:29:58.027Z | INFO |   Errors: 0
+2026-03-02T21:29:58.027Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-03-02T21:29:58.033Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 3)
+2026-03-02T21:29:58.033Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-02T21:29:58.033Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
+2026-03-02T21:29:58.033Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-02T21:29:58.038Z | INFO | [TagTeamRebalancing] Total teams in system: 20
+2026-03-02T21:29:58.038Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
+2026-03-02T21:29:58.042Z | INFO | [TagTeamRebalancing] bronze: 20 total teams across 1 instances
+2026-03-02T21:29:58.042Z | INFO | [TagTeamRebalancing] Processing bronze_1...
+2026-03-02T21:29:58.050Z | INFO | [TagTeamRebalancing] bronze_1: No teams with ≥25 league points, skipping promotions
+2026-03-02T21:29:58.050Z | INFO | [TagTeamRebalancing] bronze: Promoted 0, Demoted 0 across 1 instances
+2026-03-02T21:29:58.050Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
+2026-03-02T21:29:58.064Z | INFO | [TagTeamRebalancing] silver: 0 total teams across 0 instances
+2026-03-02T21:29:58.064Z | INFO | [TagTeamRebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T21:29:58.064Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
+2026-03-02T21:29:58.079Z | INFO | [TagTeamRebalancing] gold: 0 total teams across 0 instances
+2026-03-02T21:29:58.079Z | INFO | [TagTeamRebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T21:29:58.079Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
+2026-03-02T21:29:58.092Z | INFO | [TagTeamRebalancing] platinum: 0 total teams across 0 instances
+2026-03-02T21:29:58.092Z | INFO | [TagTeamRebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T21:29:58.092Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
+2026-03-02T21:29:58.095Z | INFO | [TagTeamRebalancing] diamond: 0 total teams across 0 instances
+2026-03-02T21:29:58.095Z | INFO | [TagTeamRebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T21:29:58.095Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
+2026-03-02T21:29:58.100Z | INFO | [TagTeamRebalancing] champion: 0 total teams across 0 instances
+2026-03-02T21:29:58.101Z | INFO | [TagTeamRebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T21:29:58.101Z | INFO |  ════════════════════════════════════════════════════════════
+2026-03-02T21:29:58.101Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
+2026-03-02T21:29:58.101Z | INFO |   Total promoted: 0
+2026-03-02T21:29:58.101Z | INFO |   Total demoted: 0
+2026-03-02T21:29:58.101Z | INFO |   Errors: 0
+2026-03-02T21:29:58.101Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-03-02T21:29:58.101Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
+2026-03-02T21:29:58.107Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
+2026-03-02T21:29:58.110Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
+2026-03-02T21:29:58.117Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
+2026-03-02T21:29:58.121Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
+2026-03-02T21:29:58.129Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
+2026-03-02T21:29:58.134Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
+2026-03-02T21:29:58.140Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-03-02T21:29:58.140Z | INFO | [UserGeneration] Generating 3 archetype users for Cycle 3...
+2026-03-02T21:29:58.140Z | INFO | [UserGeneration] Creating user 1/3: archetype_glass_cannon_c_3_1 (archetype: glass_cannon_c)
+2026-03-02T21:29:58.231Z | ERROR | [UserGeneration] Error creating user 1: {}
+2026-03-02T21:29:58.231Z | ERROR | [Admin] Error generating users: {}
+2026-03-02T21:29:58.234Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-03-02T21:29:58.234Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-03-02T21:29:58.234Z | INFO | [Matchmaking] Matches scheduled for: 2026-03-02T21:29:59.234Z
+2026-03-02T21:29:58.234Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-03-02T21:29:58.237Z | INFO | [Matchmaking] Processing bronze_1...
+2026-03-02T21:29:58.245Z | INFO | [Matchmaking] Queue for bronze_1: 0 robots available (38 total, 0 ready)
+2026-03-02T21:29:58.245Z | INFO | [Matchmaking] bronze_1: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.245Z | INFO | [Matchmaking] Processing bronze_2...
+2026-03-02T21:29:58.252Z | INFO | [Matchmaking] Queue for bronze_2: 0 robots available (38 total, 0 ready)
+2026-03-02T21:29:58.252Z | INFO | [Matchmaking] bronze_2: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.252Z | INFO | [Matchmaking] Processing bronze_3...
+2026-03-02T21:29:58.257Z | INFO | [Matchmaking] Queue for bronze_3: 0 robots available (38 total, 0 ready)
+2026-03-02T21:29:58.257Z | INFO | [Matchmaking] bronze_3: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.257Z | INFO | [Matchmaking] Processing bronze_4...
+2026-03-02T21:29:58.262Z | INFO | [Matchmaking] Queue for bronze_4: 0 robots available (37 total, 0 ready)
+2026-03-02T21:29:58.262Z | INFO | [Matchmaking] bronze_4: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.262Z | INFO | [Matchmaking] Processing bronze_5...
+2026-03-02T21:29:58.271Z | INFO | [Matchmaking] Queue for bronze_5: 0 robots available (37 total, 0 ready)
+2026-03-02T21:29:58.271Z | INFO | [Matchmaking] bronze_5: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.271Z | INFO | [Matchmaking] BRONZE: Created 0 matches across 5 instances
+2026-03-02T21:29:58.271Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-03-02T21:29:58.276Z | INFO | [Matchmaking] Processing silver_1...
+2026-03-02T21:29:58.284Z | INFO | [Matchmaking] Queue for silver_1: 0 robots available (58 total, 0 ready)
+2026-03-02T21:29:58.284Z | INFO | [Matchmaking] silver_1: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.284Z | INFO | [Matchmaking] Processing silver_2...
+2026-03-02T21:29:58.298Z | INFO | [Matchmaking] Queue for silver_2: 0 robots available (58 total, 0 ready)
+2026-03-02T21:29:58.298Z | INFO | [Matchmaking] silver_2: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.298Z | INFO | [Matchmaking] Processing silver_3...
+2026-03-02T21:29:58.306Z | INFO | [Matchmaking] Queue for silver_3: 0 robots available (58 total, 0 ready)
+2026-03-02T21:29:58.306Z | INFO | [Matchmaking] silver_3: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.306Z | INFO | [Matchmaking] SILVER: Created 0 matches across 3 instances
+2026-03-02T21:29:58.306Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-03-02T21:29:58.309Z | INFO | [Matchmaking] Processing gold_1...
+2026-03-02T21:29:58.317Z | INFO | [Matchmaking] Queue for gold_1: 0 robots available (71 total, 0 ready)
+2026-03-02T21:29:58.317Z | INFO | [Matchmaking] gold_1: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.317Z | INFO | [Matchmaking] GOLD: Created 0 matches across 1 instances
+2026-03-02T21:29:58.317Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-03-02T21:29:58.320Z | INFO | [Matchmaking] Processing platinum_1...
+2026-03-02T21:29:58.330Z | INFO | [Matchmaking] Queue for platinum_1: 0 robots available (15 total, 0 ready)
+2026-03-02T21:29:58.330Z | INFO | [Matchmaking] platinum_1: Not enough robots for matches (0 available)
+2026-03-02T21:29:58.330Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 1 instances
+2026-03-02T21:29:58.330Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-03-02T21:29:58.331Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-03-02T21:29:58.331Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-03-02T21:29:58.333Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-03-02T21:29:58.333Z | INFO | [Matchmaking] ========================================
+2026-03-02T21:29:58.333Z | INFO | [Matchmaking] COMPLETE: 0 total matches created
+2026-03-02T21:29:58.333Z | INFO | [Matchmaking] ========================================
+2026-03-02T21:29:58.334Z | INFO | [Admin] Step 9.5: Matchmaking for Tag Teams (Cycle 3)
+2026-03-02T21:29:58.334Z | INFO | [TagTeamMatchmaking] Starting tag team matchmaking for all tiers...
+2026-03-02T21:29:58.409Z | INFO | [TagTeamMatchmaking] bronze_1: 0 eligible teams (20 total, 0 ready, 0 already scheduled)
+2026-03-02T21:29:58.409Z | INFO | [TagTeamMatchmaking] bronze_1: No eligible teams, skipping
+2026-03-02T21:29:58.412Z | INFO | [TagTeamMatchmaking] Complete: 0 total matches created
+2026-03-02T21:29:58.413Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-03-02T21:29:58.424Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-03-02T21:29:58.434Z | INFO | [OperatingCosts] User 10839 | Total: ₡1,000 | Facilities: roster_expansion(L0): ₡1000
+2026-03-02T21:29:58.441Z | INFO | [OperatingCosts] User 10840 | Total: ₡1,000 | Facilities: roster_expansion(L0): ₡1000
+2026-03-02T21:29:58.446Z | INFO | [OperatingCosts] User 10842 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-03-02T21:29:58.452Z | INFO | [OperatingCosts] User 10843 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.458Z | INFO | [OperatingCosts] User 10844 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.465Z | INFO | [OperatingCosts] User 10841 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-03-02T21:29:58.471Z | INFO | [OperatingCosts] User 10846 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.477Z | INFO | [OperatingCosts] User 10845 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.482Z | INFO | [OperatingCosts] User 10849 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.487Z | INFO | [OperatingCosts] User 10848 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.493Z | INFO | [OperatingCosts] User 10847 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.499Z | INFO | [OperatingCosts] User 10850 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.506Z | INFO | [OperatingCosts] User 10859 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.512Z | INFO | [OperatingCosts] User 10856 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.519Z | INFO | [OperatingCosts] User 10851 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.524Z | INFO | [OperatingCosts] User 10855 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.531Z | INFO | [OperatingCosts] User 10854 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.539Z | INFO | [OperatingCosts] User 10853 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.544Z | INFO | [OperatingCosts] User 10860 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.549Z | INFO | [OperatingCosts] User 10861 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.557Z | INFO | [OperatingCosts] User 10864 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.564Z | INFO | [OperatingCosts] User 10863 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.572Z | INFO | [OperatingCosts] User 10857 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.579Z | INFO | [OperatingCosts] User 10852 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.585Z | INFO | [OperatingCosts] User 10862 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.591Z | INFO | [OperatingCosts] User 10858 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T21:29:58.600Z | INFO | [OperatingCosts] User 10698 | Total: ₡174,500 | Facilities: roster_expansion(L0): ₡174500
+2026-03-02T21:29:58.600Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡210,500
+2026-03-02T21:29:58.602Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-03-02T21:29:59.720Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-03-02T21:29:59.720Z | INFO | [Admin] === End of Cycle 3 Balances ===
+2026-03-02T21:29:59.723Z | INFO | [Balance] User 10698 | Stable: test_progressive_user | Balance: ₡-3,107,500
+2026-03-02T21:29:59.730Z | INFO | [Balance] User 10839 | Stable: user1_1772486818207_0.44901187883963756 | Balance: ₡965,000
+2026-03-02T21:29:59.733Z | INFO | [Balance] User 10840 | Stable: user2_1772486818209_0.9181100538982236 | Balance: ₡965,000
+2026-03-02T21:29:59.735Z | INFO | [Balance] User 10841 | Stable: user1_1772486818374_0.8673422742310417 | Balance: ₡982,500
+2026-03-02T21:29:59.738Z | INFO | [Balance] User 10842 | Stable: user2_1772486818376_0.6103073451394205 | Balance: ₡982,500
+2026-03-02T21:29:59.742Z | INFO | [Balance] User 10843 | Stable: user1_1772486818583_0.10131183962194323 | Balance: ₡947,500
+2026-03-02T21:29:59.746Z | INFO | [Balance] User 10844 | Stable: user2_1772486818584_0.7956764816262223 | Balance: ₡947,500
+2026-03-02T21:29:59.756Z | INFO | [Balance] User 10845 | Stable: user1_1772486818759_0.32967888098136533 | Balance: ₡-535,252
+2026-03-02T21:29:59.759Z | INFO | [Balance] User 10846 | Stable: user2_1772486818772_0.7569163961086819 | Balance: ₡-678,641
+2026-03-02T21:29:59.765Z | INFO | [Balance] User 10847 | Stable: user1_1772486818898_0.11632382434826338 | Balance: ₡-768,660
+2026-03-02T21:29:59.767Z | INFO | [Balance] User 10848 | Stable: user2_1772486818901_0.013059878830825378 | Balance: ₡-696,160
+2026-03-02T21:29:59.768Z | INFO | [Balance] User 10849 | Stable: user1_1772486819033_0.7799446777729455 | Balance: ₡-665,707
+2026-03-02T21:29:59.768Z | INFO | [Balance] User 10850 | Stable: user2_1772486819034_0.4964552649069427 | Balance: ₡-687,167
+2026-03-02T21:29:59.769Z | INFO | [Balance] User 10851 | Stable: user1_1772486819117_0.3345516832063494 | Balance: ₡-421,279
+2026-03-02T21:29:59.770Z | INFO | [Balance] User 10852 | Stable: user2_1772486819119_0.36166136998394405 | Balance: ₡-827,605
+2026-03-02T21:29:59.779Z | INFO | [Balance] User 10853 | Stable: user1_1772486819200_0.2758903873914217 | Balance: ₡-648,044
+2026-03-02T21:29:59.783Z | INFO | [Balance] User 10854 | Stable: user2_1772486819201_0.5780256436199125 | Balance: ₡-623,488
+2026-03-02T21:29:59.784Z | INFO | [Balance] User 10855 | Stable: user1_1772486819271_0.7087460012002663 | Balance: ₡-840,717
+2026-03-02T21:29:59.785Z | INFO | [Balance] User 10856 | Stable: user2_1772486819271_0.8830336055388215 | Balance: ₡-895,565
+2026-03-02T21:29:59.786Z | INFO | [Balance] User 10857 | Stable: user1_1772486819365_0.7579838657781066 | Balance: ₡-740,421
+2026-03-02T21:29:59.787Z | INFO | [Balance] User 10858 | Stable: user2_1772486819366_0.4951486012701769 | Balance: ₡-631,225
+2026-03-02T21:29:59.789Z | INFO | [Balance] User 10859 | Stable: user1_1772486819455_0.010533778983619402 | Balance: ₡-1,065,337
+2026-03-02T21:29:59.791Z | INFO | [Balance] User 10860 | Stable: user2_1772486819456_0.04557633197739497 | Balance: ₡-954,724
+2026-03-02T21:29:59.793Z | INFO | [Balance] User 10861 | Stable: user1_1772486819533_0.2835022516286082 | Balance: ₡-675,246
+2026-03-02T21:29:59.797Z | INFO | [Balance] User 10862 | Stable: user2_1772486819534_0.08578089941309719 | Balance: ₡-886,439
+2026-03-02T21:29:59.800Z | INFO | [Balance] User 10863 | Stable: user1_1772486819628_0.03977756283663192 | Balance: ₡-842,749
+2026-03-02T21:29:59.802Z | INFO | [Balance] User 10864 | Stable: user2_1772486819630_0.5969952850672665 | Balance: ₡-690,424
+2026-03-02T21:29:59.804Z | INFO | [Balance] User 10865 | Stable: admin_test_1772486875563 | Balance: ₡1,000,000
+2026-03-02T21:29:59.809Z | INFO | [Admin] ===================================
+2026-03-02T21:29:59.812Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-03-02T21:29:59.812Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 3
+2026-03-02T21:29:59.835Z | INFO | [CycleSnapshotService] Found 338 battle_complete events for cycle 3
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=512, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=512, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=513, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=513, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=512, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=512, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1000, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1001, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=501, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=501, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1009, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1007, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1007, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1005, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1007, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1005, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1007, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=9000, streaming=1005, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1008, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1008, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1005, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1008, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1008, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=1005, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1007, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1008, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1007, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1008, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1008, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1005, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1007, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1005, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1007, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1005, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1009, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1008, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1008, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1008, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1008, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1008, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1005, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1009, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1008, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1008, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1008, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1006, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1006, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1005, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1007, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1004, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=505, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=505, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=505, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=505, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=505, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=505, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=505, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=505, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=504, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=504, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1022, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1015, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1015, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1023, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1016, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1021, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1020, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1021, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1017, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1017, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1016, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1016, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1022, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1022, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1023, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1022, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1015, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1021, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1021, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1019, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=1015, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1021, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1022, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1016, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1024, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1022, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=9000, streaming=1022, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1021, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1021, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1021, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1015, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1013, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1021, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1022, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1019, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1017, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1023, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1022, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1023, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1022, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1021, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1022, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1020, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1021, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=1023, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1017, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1017, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1017, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1016, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1022, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1021, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1022, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1016, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1022, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1015, prestige=5
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1015, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=18000, streaming=1026, prestige=10
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=3000, streaming=1023, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=18000, streaming=1018, prestige=10
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=3000, streaming=1024, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=511, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=511, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=510, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=510, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=511, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=511, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=511, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=511, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=511, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=512, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=512, prestige=0
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.844Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=512, prestige=4
+2026-03-02T21:29:59.860Z | INFO | [CycleSnapshotService] Found 140 cycle_end_balance events for cycle 3
+2026-03-02T21:29:59.890Z | INFO | prisma:error  Invalid `prisma.cycleSnapshot.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/cycleSnapshotService.ts:115:50    112 const totalPrestigeAwarded = stableMetrics.reduce((sum, m) => sum + m.totalPrestigeEarned, 0);   113    114 // Store snapshot in database → 115 const _snapshot = await prisma.cycleSnapshot.create( Unique constraint failed on the fields: (`cycle_number`)
+2026-03-02T21:29:59.890Z | ERROR | [Admin] Failed to create cycle snapshot: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""CycleSnapshot"",""target"":[""cycle_number""]}}
+2026-03-02T21:29:59.890Z | INFO | [Admin] === Cycle 3 Summary ===
+2026-03-02T21:29:59.890Z | INFO | [Admin] Battles: 0
+2026-03-02T21:29:59.890Z | INFO | [Admin] ===================================
+2026-03-02T21:29:59.890Z | INFO | === Cycle 3 Ended ===

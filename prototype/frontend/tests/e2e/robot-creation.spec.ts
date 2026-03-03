@@ -12,7 +12,7 @@ test.describe('Robot Creation', () => {
     await page.getByLabel('Username or Email').fill('player1');
     await page.getByLabel('Password').fill('password123');
     await page.getByRole('button', { name: 'Login' }).click();
-    await page.waitForURL('**/dashboard', { timeout: 20000 });
+    await page.waitForURL('**/dashboard', { timeout: 15000 });
   });
 
   test('should navigate to create robot page', async ({ page }) => {

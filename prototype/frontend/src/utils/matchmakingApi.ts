@@ -207,9 +207,7 @@ export const getMatchHistory = async (
     params.battleType = battleType;
   }
   
-  if (import.meta.env.DEV) {
-    console.log('[API] getMatchHistory params:', params);
-  }
+  console.log('[API] getMatchHistory params:', params);
   
   const response = await apiClient.get('/api/matches/history', {
     params,

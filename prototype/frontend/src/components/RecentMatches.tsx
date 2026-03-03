@@ -28,13 +28,9 @@ function RecentMatches() {
         return;
       }
       
-      if (import.meta.env.DEV) {
-        console.log('[RecentMatches] Fetching recent matches...');
-      }
+      console.log('[RecentMatches] Fetching recent matches...');
       const data = await getMatchHistory(1, 5); // Get last 5 matches
-      if (import.meta.env.DEV) {
-        console.log('[RecentMatches] Received data:', data);
-      }
+      console.log('[RecentMatches] Received data:', data);
       
       setMatches(data.data);
       setError(null);

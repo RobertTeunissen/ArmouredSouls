@@ -117,10 +117,8 @@ function CompactUpgradeSection({
                     const atCap = nextLevel > cap;
 
                     // Debug logging
-                    if (import.meta.env.DEV) {
-                      if (key === 'combatPower' || key === 'armorPlating') {
-                        console.log(`[${label}] current: ${info.currentLevel}, next: ${nextLevel}, cap: ${cap}, canUpgrade: ${canUpgrade}, atCap: ${atCap}`);
-                      }
+                    if (key === 'combatPower' || key === 'armorPlating') {
+                      console.log(`[${label}] current: ${info.currentLevel}, next: ${nextLevel}, cap: ${cap}, canUpgrade: ${canUpgrade}, atCap: ${atCap}`);
                     }
 
                     return (

@@ -55,9 +55,7 @@ function ProfilePage() {
   const handleSave = async () => {
     // Prevent submission if validation errors exist
     if (hasValidationErrors()) {
-      if (import.meta.env.DEV) {
-        console.log('Validation errors exist, not submitting');
-      }
+      console.log('Validation errors exist, not submitting');
       return;
     }
 
@@ -93,15 +91,11 @@ function ProfilePage() {
 
     // Check if there are any updates to submit
     if (Object.keys(updates).length === 0) {
-      if (import.meta.env.DEV) {
-        console.log('No changes detected, not submitting');
-      }
+      console.log('No changes detected, not submitting');
       return;
     }
 
-    if (import.meta.env.DEV) {
-      console.log('Submitting updates:', updates);
-    }
+    console.log('Submitting updates:', updates);
 
     try {
       setLoading(true);
@@ -111,9 +105,7 @@ function ProfilePage() {
       // Call API to update profile
       const updatedProfile = await updateProfile(updates);
       
-      if (import.meta.env.DEV) {
-        console.log('Profile updated successfully:', updatedProfile);
-      }
+      console.log('Profile updated successfully:', updatedProfile);
       
       // Update profile state with new data
       setProfile(updatedProfile);
@@ -135,10 +127,8 @@ function ProfilePage() {
       if (error.response) {
         const { status, data } = error.response;
         
-        if (import.meta.env.DEV) {
-          console.log('API error status:', status);
-          console.log('API error data:', data);
-        }
+        console.log('API error status:', status);
+        console.log('API error data:', data);
         
         if (status === 400 && data.details) {
           // Validation errors - display field-specific errors
