@@ -1249,10 +1249,10 @@ export function calculateTagTeamFame(
  * This function processes all scheduled tag team matches, checking robot readiness
  * before each match to handle cumulative damage from earlier matches (including 1v1).
  * 
- * @param scheduledFor - Optional date filter for matches to execute
+ * @param _scheduledFor - Optional date filter for matches to execute
  * @returns Summary of executed battles
  */
-export async function executeScheduledTagTeamBattles(scheduledFor?: Date): Promise<{
+export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Promise<{
   totalBattles: number;
   wins: number;
   draws: number;

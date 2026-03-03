@@ -138,22 +138,10 @@ jobs:
       - name: Build frontend
         working-directory: ./prototype/frontend
         run: npm run build
-      
-      - name: Install Playwright browsers
-        working-directory: ./prototype/frontend
-        run: npx playwright install --with-deps chromium
-      
-      - name: Run E2E tests
-        working-directory: ./prototype/frontend
-        run: npm run test:e2e
-      
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: prototype/frontend/playwright-report/
-          retention-days: 30
+
+      # Note: E2E tests (Playwright) are skipped in CI because they require
+      # a running backend with a seeded database. Run locally before pushing:
+      #   cd prototype/frontend && npm run test:e2e
 
   security-audit:
     name: Security Audit

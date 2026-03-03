@@ -825,10 +825,10 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
 
 /**
  * Execute scheduled battles
- * @param scheduledFor - Optional date filter. If provided, only executes matches scheduled for this time or earlier.
+ * @param _scheduledFor - Optional date filter. If provided, only executes matches scheduled for this time or earlier.
  *                       If not provided (undefined), executes ALL scheduled matches regardless of their scheduled time.
  */
-export async function executeScheduledBattles(scheduledFor?: Date): Promise<BattleExecutionSummary> {
+export async function executeScheduledBattles(_scheduledFor?: Date): Promise<BattleExecutionSummary> {
   console.log('[BattleOrchestrator] Executing all scheduled league battles');
   
   // Execute all matches with status 'scheduled' — the cron job controls timing,

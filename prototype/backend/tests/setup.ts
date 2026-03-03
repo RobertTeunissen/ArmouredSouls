@@ -5,13 +5,11 @@
 
 import { config } from 'dotenv';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/lib/prisma';
 import { WEAPON_DEFINITIONS, upsertWeapon } from '../prisma/seed';
 
 // Load environment variables from .env file
 config({ path: path.resolve(__dirname, '../.env') });
-
-const prisma = new PrismaClient();
 
 // Global setup - runs once before all tests
 beforeAll(async () => {
