@@ -70,7 +70,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Get all user's robots with their battle data
+    // Get all user's robots with their battle data (including tag team stats)
     const robots = await prisma.robot.findMany({
       where: { userId },
       select: {
@@ -80,6 +80,10 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
         wins: true,
         losses: true,
         draws: true,
+        totalTagTeamBattles: true,
+        totalTagTeamWins: true,
+        totalTagTeamLosses: true,
+        totalTagTeamDraws: true,
         currentLeague: true,
         currentHP: true,
         maxHP: true,
@@ -196,11 +200,11 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
       });
     }
 
-    // Calculate aggregate stats
-    const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
-    const wins = robots.reduce((sum, r) => sum + r.wins, 0);
-    const losses = robots.reduce((sum, r) => sum + r.losses, 0);
-    const draws = robots.reduce((sum, r) => sum + r.draws, 0);
+    // Calculate aggregate stats (including tag team battles)
+    const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles + r.totalTagTeamBattles, 0);
+    const wins = robots.reduce((sum, r) => sum + r.wins + r.totalTagTeamWins, 0);
+    const losses = robots.reduce((sum, r) => sum + r.losses + r.totalTagTeamLosses, 0);
+    const draws = robots.reduce((sum, r) => sum + r.draws + r.totalTagTeamDraws, 0);
     const winRate = totalBattles > 0 ? (wins / totalBattles) * 100 : 0;
     const highestELO = Math.max(...robots.map(r => r.elo));
 
