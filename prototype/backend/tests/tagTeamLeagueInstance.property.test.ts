@@ -31,13 +31,26 @@ describe('Tag Team League Instance - Property Tests', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
+    // Clean up test data in correct order
     if (testTeamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTeamIds } },
+            { team2Id: { in: testTeamIds } },
+          ],
+        },
+      });
       await prisma.tagTeam.deleteMany({
         where: { id: { in: testTeamIds } },
       });
     }
     if (testRobotIds.length > 0) {
+      await prisma.weaponInventory.deleteMany({
+        where: { 
+          userId: testStableId,
+        },
+      });
       await prisma.robot.deleteMany({
         where: { id: { in: testRobotIds } },
       });
@@ -53,19 +66,30 @@ describe('Tag Team League Instance - Property Tests', () => {
   beforeEach(async () => {
     // Clean up ALL tag teams in ALL tiers to ensure test isolation
     // This is necessary because getInstancesForTier counts ALL teams globally
+    // Delete matches first to avoid foreign key constraint violations
+    await prisma.tagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
   });
 
   afterEach(async () => {
     // Clean up ALL teams and robots for this test stable (not just tracked ones)
     // This ensures we start fresh even if previous tests failed
+    // Delete in correct order to avoid foreign key violations
+    await prisma.tagTeamMatch.deleteMany({
+      where: {
+        OR: [
+          { team1: { stableId: testStableId } },
+          { team2: { stableId: testStableId } },
+        ],
+      },
+    });
     await prisma.tagTeam.deleteMany({
       where: { stableId: testStableId },
     });
-    await prisma.robot.deleteMany({
+    await prisma.weaponInventory.deleteMany({
       where: { userId: testStableId },
     });
-    await prisma.weaponInventory.deleteMany({
+    await prisma.robot.deleteMany({
       where: { userId: testStableId },
     });
 
@@ -241,6 +265,7 @@ describe('Tag Team League Instance - Property Tests', () => {
           fc.constantFrom(...TAG_TEAM_LEAGUE_TIERS),
           async (numTeams, tier) => {
             // Clean up ALL teams in this tier before this iteration
+            await prisma.tagTeamMatch.deleteMany({});
             await prisma.tagTeam.deleteMany({
               where: { tagTeamLeague: tier },
             });
@@ -290,7 +315,15 @@ describe('Tag Team League Instance - Property Tests', () => {
           ),
           async (tierConfigs) => {
             // Clean up ALL teams before this iteration
+            await prisma.tagTeamMatch.deleteMany({});
             await prisma.tagTeam.deleteMany({});
+
+            // Aggregate duplicate tiers (sum numTeams for same tier)
+            const tierTotals = new Map<string, number>();
+            for (const config of tierConfigs) {
+              const current = tierTotals.get(config.tier) || 0;
+              tierTotals.set(config.tier, current + config.numTeams);
+            }
 
             // Create teams for each tier configuration
             for (const config of tierConfigs) {
@@ -299,9 +332,9 @@ describe('Tag Team League Instance - Property Tests', () => {
               }
             }
 
-            // Verify capacity for each tier
-            for (const config of tierConfigs) {
-              const instances = await getInstancesForTier(config.tier as TagTeamLeagueTier);
+            // Verify capacity for each unique tier
+            for (const [tier, expectedTotal] of tierTotals.entries()) {
+              const instances = await getInstancesForTier(tier as TagTeamLeagueTier);
 
               // Property: No instance in any tier should exceed capacity
               for (const instance of instances) {
@@ -310,7 +343,7 @@ describe('Tag Team League Instance - Property Tests', () => {
 
               // Property: Total teams should match what we created
               const totalTeams = instances.reduce((sum, inst) => sum + inst.currentTeams, 0);
-              expect(totalTeams).toBe(config.numTeams);
+              expect(totalTeams).toBe(expectedTotal);
             }
           }
         ),

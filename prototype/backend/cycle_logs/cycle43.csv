@@ -1,0 +1,1542 @@
+Timestamp | Level | Message
+2026-03-02T20:10:58.023Z | INFO | === Cycle 43 Started ===
+2026-03-02T20:10:58.023Z | INFO | Cycle 43 (3/3)
+2026-03-02T20:10:58.023Z | INFO |  [Admin] === Cycle 43 (3/3) ===
+2026-03-02T20:10:58.026Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-03-02T20:10:58.026Z | INFO | [BattleOrchestrator] Executing all scheduled league battles
+2026-03-02T20:10:58.029Z | INFO | [BattleOrchestrator] Found 169 matches to execute
+2026-03-02T20:10:58.132Z | INFO | [Streaming] User2Robot1 earned ₡1,004 from Battle #17849
+2026-03-02T20:10:58.133Z | INFO | [Streaming] MultiMatch_Robot_1_0_1772481632601 earned ₡1,002 from Battle #17849
+2026-03-02T20:10:58.152Z | INFO | [Battle] League: bronze | User2Robot1 (User 6104) vs MultiMatch_Robot_1_0_1772481632601 (User 6275) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:10:58.228Z | INFO | [Streaming] User1Robot3 earned ₡1,016 from Battle #17850
+2026-03-02T20:10:58.230Z | INFO | [Streaming] User2Robot0 earned ₡1,016 from Battle #17850
+2026-03-02T20:10:58.242Z | INFO | [Battle] League: bronze | User1Robot3 (User 6081) vs User2Robot0 (User 6084) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:58.319Z | INFO | [Streaming] User1Robot1 earned ₡1,017 from Battle #17851
+2026-03-02T20:10:58.320Z | INFO | [Streaming] User1Robot3 earned ₡1,015 from Battle #17851
+2026-03-02T20:10:58.389Z | INFO | [Battle] League: bronze | User1Robot1 (User 6085) vs User1Robot3 (User 6078) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:58.474Z | INFO | [Streaming] User1Robot1 earned ₡1,017 from Battle #17852
+2026-03-02T20:10:58.475Z | INFO | [Streaming] User2Robot1 earned ₡1,007 from Battle #17852
+2026-03-02T20:10:58.487Z | INFO | [Battle] League: bronze | User1Robot1 (User 6081) vs User2Robot1 (User 6102) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:58.550Z | INFO | [Streaming] User1Robot3 earned ₡1,010 from Battle #17853
+2026-03-02T20:10:58.551Z | INFO | [Streaming] User2Robot1 earned ₡1,008 from Battle #17853
+2026-03-02T20:10:58.566Z | INFO | [Battle] League: bronze | User1Robot3 (User 6083) vs User2Robot1 (User 6097) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:58.646Z | INFO | [Streaming] User2Robot2 earned ₡1,008 from Battle #17854
+2026-03-02T20:10:58.648Z | INFO | [Streaming] User2Robot1 earned ₡1,016 from Battle #17854
+2026-03-02T20:10:58.658Z | INFO | [Battle] League: bronze | User2Robot2 (User 6089) vs User2Robot1 (User 6084) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:58.739Z | INFO | [Streaming] User1Robot3 earned ₡1,004 from Battle #17855
+2026-03-02T20:10:58.741Z | INFO | [Streaming] User2Robot3 earned ₡1,003 from Battle #17855
+2026-03-02T20:10:58.752Z | INFO | [Battle] League: bronze | User1Robot3 (User 6106) vs User2Robot3 (User 6104) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:58.815Z | INFO | [Streaming] User2Robot2 earned ₡1,004 from Battle #17856
+2026-03-02T20:10:58.816Z | INFO | [Streaming] User2Robot3 earned ₡1,004 from Battle #17856
+2026-03-02T20:10:58.850Z | INFO | [Battle] League: bronze | User2Robot2 (User 6153) vs User2Robot3 (User 6149) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:58.900Z | INFO | [Streaming] User1Robot3 earned ₡1,003 from Battle #17857
+2026-03-02T20:10:58.902Z | INFO | [Streaming] User1Robot0 earned ₡1,005 from Battle #17857
+2026-03-02T20:10:58.912Z | INFO | [Battle] League: bronze | User1Robot3 (User 6140) vs User1Robot0 (User 6103) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:58.993Z | INFO | [Streaming] User1Robot0 earned ₡1,011 from Battle #17858
+2026-03-02T20:10:58.994Z | INFO | [Streaming] User2Robot2 earned ₡1,005 from Battle #17858
+2026-03-02T20:10:59.010Z | INFO | [Battle] League: bronze | User1Robot0 (User 6091) vs User2Robot2 (User 6102) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:59.093Z | INFO | [Streaming] User2Robot0 earned ₡1,012 from Battle #17859
+2026-03-02T20:10:59.094Z | INFO | [Streaming] User1Robot3 earned ₡1,006 from Battle #17859
+2026-03-02T20:10:59.122Z | INFO | [Battle] League: bronze | User2Robot0 (User 6079) vs User1Robot3 (User 6096) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot3
+2026-03-02T20:10:59.181Z | INFO | [Streaming] User2Robot2 earned ₡1,010 from Battle #17860
+2026-03-02T20:10:59.187Z | INFO | [Streaming] User2Robot0 earned ₡1,006 from Battle #17860
+2026-03-02T20:10:59.213Z | INFO | [Battle] League: bronze | User2Robot2 (User 6079) vs User2Robot0 (User 6094) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:59.286Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17861
+2026-03-02T20:10:59.292Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17861
+2026-03-02T20:10:59.307Z | INFO | [Battle] League: bronze | User2Robot1 (User 6182) vs User1Robot3 (User 6183) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User2Robot1
+2026-03-02T20:10:59.390Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17862
+2026-03-02T20:10:59.392Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17862
+2026-03-02T20:10:59.402Z | INFO | [Battle] League: bronze | User1Robot0 (User 6188) vs User1Robot0 (User 6181) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:59.474Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17863
+2026-03-02T20:10:59.476Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17863
+2026-03-02T20:10:59.486Z | INFO | [Battle] League: bronze | User1Robot2 (User 6194) vs User2Robot2 (User 6195) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:10:59.561Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17864
+2026-03-02T20:10:59.562Z | INFO | [Streaming] User2Robot3 earned ₡1,003 from Battle #17864
+2026-03-02T20:10:59.590Z | INFO | [Battle] League: bronze | User2Robot2 (User 6198) vs User2Robot3 (User 6193) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:10:59.663Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17865
+2026-03-02T20:10:59.665Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17865
+2026-03-02T20:10:59.676Z | INFO | [Battle] League: bronze | User1Robot3 (User 6169) vs User1Robot1 (User 6201) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot3
+2026-03-02T20:10:59.731Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17866
+2026-03-02T20:10:59.732Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17866
+2026-03-02T20:10:59.743Z | INFO | [Battle] League: bronze | User2Robot2 (User 6191) vs User2Robot2 (User 6205) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:10:59.819Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17867
+2026-03-02T20:10:59.821Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17867
+2026-03-02T20:10:59.834Z | INFO | [Battle] League: bronze | User2Robot1 (User 6207) vs User1Robot1 (User 6211) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:10:59.906Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17868
+2026-03-02T20:10:59.907Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17868
+2026-03-02T20:10:59.917Z | INFO | [Battle] League: bronze | User1Robot1 (User 6199) vs User2Robot2 (User 6209) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:10:59.983Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17869
+2026-03-02T20:10:59.984Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17869
+2026-03-02T20:10:59.994Z | INFO | [Battle] League: bronze | User2Robot2 (User 6179) vs User2Robot2 (User 6172) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:00.077Z | INFO | [Streaming] User2Robot0 earned ₡1,003 from Battle #17870
+2026-03-02T20:11:00.078Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17870
+2026-03-02T20:11:00.091Z | INFO | [Battle] League: bronze | User2Robot0 (User 6175) vs User1Robot3 (User 6174) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:00.179Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17871
+2026-03-02T20:11:00.181Z | INFO | [Streaming] User1Robot2 earned ₡1,003 from Battle #17871
+2026-03-02T20:11:00.194Z | INFO | [Battle] League: bronze | User2Robot1 (User 6107) vs User1Robot2 (User 6163) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:00.275Z | INFO | [Streaming] User2Robot0 earned ₡1,004 from Battle #17872
+2026-03-02T20:11:00.276Z | INFO | [Streaming] User1Robot0 earned ₡1,003 from Battle #17872
+2026-03-02T20:11:00.287Z | INFO | [Battle] League: bronze | User2Robot0 (User 6164) vs User1Robot0 (User 6159) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:00.347Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17873
+2026-03-02T20:11:00.349Z | INFO | [Streaming] User1Robot3 earned ₡1,004 from Battle #17873
+2026-03-02T20:11:00.360Z | INFO | [Battle] League: bronze | User2Robot2 (User 6104) vs User1Robot3 (User 6103) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:00.436Z | INFO | [Streaming] User1Robot2 earned ₡1,006 from Battle #17874
+2026-03-02T20:11:00.437Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17874
+2026-03-02T20:11:00.450Z | INFO | [Battle] League: bronze | User1Robot2 (User 6096) vs User2Robot2 (User 6164) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:00.526Z | INFO | [Streaming] User2Robot1 earned ₡1,012 from Battle #17875
+2026-03-02T20:11:00.528Z | INFO | [Streaming] User2Robot3 earned ₡1,008 from Battle #17875
+2026-03-02T20:11:00.540Z | INFO | [Battle] League: bronze | User2Robot1 (User 6079) vs User2Robot3 (User 6092) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:00.624Z | INFO | [Streaming] User2Robot0 earned ₡1,003 from Battle #17876
+2026-03-02T20:11:00.625Z | INFO | [Streaming] User2Robot0 earned ₡1,004 from Battle #17876
+2026-03-02T20:11:00.664Z | INFO | [Battle] League: bronze | User2Robot0 (User 6137) vs User2Robot0 (User 6160) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:00.749Z | INFO | [Streaming] User1Robot3 earned ₡1,004 from Battle #17877
+2026-03-02T20:11:00.751Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17877
+2026-03-02T20:11:00.761Z | INFO | [Battle] League: bronze | User1Robot3 (User 6144) vs User2Robot0 (User 6191) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:00.876Z | INFO | [Streaming] TestRobot38 earned ₡1,022 from Battle #17878
+2026-03-02T20:11:00.877Z | INFO | [Streaming] TestRobot37 earned ₡1,022 from Battle #17878
+2026-03-02T20:11:00.891Z | INFO | [Battle] League: bronze | TestRobot38 (User 6465) vs TestRobot37 (User 6463) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-03-02T20:11:00.985Z | INFO | [Streaming] TestRobot21 earned ₡1,022 from Battle #17879
+2026-03-02T20:11:00.986Z | INFO | [Streaming] TestRobot18 earned ₡1,022 from Battle #17879
+2026-03-02T20:11:00.999Z | INFO | [Battle] League: bronze | TestRobot21 (User 6466) vs TestRobot18 (User 6475) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-03-02T20:11:01.077Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17880
+2026-03-02T20:11:01.078Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17880
+2026-03-02T20:11:01.092Z | INFO | [Battle] League: bronze | User2Robot3 (User 6170) vs User1Robot1 (User 6188) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User2Robot3
+2026-03-02T20:11:01.164Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17881
+2026-03-02T20:11:01.165Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17881
+2026-03-02T20:11:01.175Z | INFO | [Battle] League: bronze | User2Robot1 (User 6200) vs User2Robot3 (User 6172) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:01.256Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17882
+2026-03-02T20:11:01.257Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17882
+2026-03-02T20:11:01.268Z | INFO | [Battle] League: bronze | User1Robot2 (User 6178) vs User1Robot2 (User 6167) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:01.339Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17883
+2026-03-02T20:11:01.341Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17883
+2026-03-02T20:11:01.356Z | INFO | [Battle] League: bronze | User2Robot0 (User 6168) vs User1Robot3 (User 6176) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:01.410Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17884
+2026-03-02T20:11:01.411Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17884
+2026-03-02T20:11:01.433Z | INFO | [Battle] League: bronze | User2Robot0 (User 6177) vs User2Robot1 (User 6189) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:01.498Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17885
+2026-03-02T20:11:01.499Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17885
+2026-03-02T20:11:01.509Z | INFO | [Battle] League: bronze | User1Robot1 (User 6185) vs User1Robot2 (User 6197) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:01.583Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17886
+2026-03-02T20:11:01.585Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17886
+2026-03-02T20:11:01.599Z | INFO | [Battle] League: bronze | User1Robot1 (User 6208) vs User1Robot3 (User 6192) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot3
+2026-03-02T20:11:01.666Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17887
+2026-03-02T20:11:01.671Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17887
+2026-03-02T20:11:01.683Z | INFO | [Battle] League: bronze | User2Robot1 (User 6202) vs User1Robot1 (User 6206) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:01.734Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17888
+2026-03-02T20:11:01.735Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17888
+2026-03-02T20:11:01.746Z | INFO | [Battle] League: bronze | User2Robot0 (User 6202) vs User2Robot1 (User 6212) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:01.821Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17889
+2026-03-02T20:11:01.823Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17889
+2026-03-02T20:11:01.833Z | INFO | [Battle] League: bronze | User2Robot3 (User 6186) vs User2Robot2 (User 6149) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:01.924Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17890
+2026-03-02T20:11:01.926Z | INFO | [Streaming] User1Robot1 earned ₡1,003 from Battle #17890
+2026-03-02T20:11:01.941Z | INFO | [Battle] League: bronze | User1Robot0 (User 6136) vs User1Robot1 (User 6155) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.019Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17891
+2026-03-02T20:11:02.020Z | INFO | [Streaming] User1Robot1 earned ₡1,003 from Battle #17891
+2026-03-02T20:11:02.032Z | INFO | [Battle] League: bronze | User2Robot0 (User 6156) vs User1Robot1 (User 6152) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:02.082Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17892
+2026-03-02T20:11:02.086Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17892
+2026-03-02T20:11:02.117Z | INFO | [Battle] League: bronze | User2Robot0 (User 6172) vs User1Robot0 (User 6167) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.165Z | INFO | [Streaming] User1Robot0 earned ₡1,017 from Battle #17893
+2026-03-02T20:11:02.166Z | INFO | [Streaming] User1Robot1 earned ₡1,012 from Battle #17893
+2026-03-02T20:11:02.176Z | INFO | [Battle] League: bronze | User1Robot0 (User 6083) vs User1Robot1 (User 6091) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.251Z | INFO | [Streaming] User1Robot0 earned ₡1,017 from Battle #17894
+2026-03-02T20:11:02.252Z | INFO | [Streaming] User2Robot0 earned ₡1,015 from Battle #17894
+2026-03-02T20:11:02.274Z | INFO | [Battle] League: bronze | User1Robot0 (User 6078) vs User2Robot0 (User 6086) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.369Z | INFO | [Streaming] User2Robot0 earned ₡1,013 from Battle #17895
+2026-03-02T20:11:02.371Z | INFO | [Streaming] User2Robot0 earned ₡1,008 from Battle #17895
+2026-03-02T20:11:02.402Z | INFO | [Battle] League: bronze | User2Robot0 (User 6089) vs User2Robot0 (User 6097) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.469Z | INFO | [Streaming] User1Robot3 earned ₡1,008 from Battle #17896
+2026-03-02T20:11:02.473Z | INFO | [Streaming] User1Robot3 earned ₡1,005 from Battle #17896
+2026-03-02T20:11:02.488Z | INFO | [Battle] League: bronze | User1Robot3 (User 6088) vs User1Robot3 (User 6098) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.540Z | INFO | [Streaming] User2Robot3 earned ₡1,008 from Battle #17897
+2026-03-02T20:11:02.541Z | INFO | [Streaming] User1Robot1 earned ₡1,004 from Battle #17897
+2026-03-02T20:11:02.551Z | INFO | [Battle] League: bronze | User2Robot3 (User 6094) vs User1Robot1 (User 6103) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.629Z | INFO | [Streaming] User2Robot3 earned ₡1,004 from Battle #17898
+2026-03-02T20:11:02.631Z | INFO | [Streaming] User1Robot0 earned ₡1,004 from Battle #17898
+2026-03-02T20:11:02.642Z | INFO | [Battle] League: bronze | User2Robot3 (User 6160) vs User1Robot0 (User 6140) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User2Robot3
+2026-03-02T20:11:02.711Z | INFO | [Streaming] User2Robot2 earned ₡1,004 from Battle #17899
+2026-03-02T20:11:02.715Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17899
+2026-03-02T20:11:02.728Z | INFO | [Battle] League: bronze | User2Robot2 (User 6141) vs User2Robot2 (User 6156) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:02.798Z | INFO | [Streaming] User2Robot1 earned ₡1,004 from Battle #17900
+2026-03-02T20:11:02.800Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17900
+2026-03-02T20:11:02.811Z | INFO | [Battle] League: bronze | User2Robot1 (User 6145) vs User1Robot0 (User 6174) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.861Z | INFO | [Streaming] User1Robot3 earned ₡1,010 from Battle #17901
+2026-03-02T20:11:02.862Z | INFO | [Streaming] User2Robot2 earned ₡1,004 from Battle #17901
+2026-03-02T20:11:02.874Z | INFO | [Battle] League: bronze | User1Robot3 (User 6085) vs User2Robot2 (User 6099) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:02.951Z | INFO | [Streaming] User2Robot3 earned ₡1,009 from Battle #17902
+2026-03-02T20:11:02.953Z | INFO | [Streaming] User1Robot1 earned ₡1,007 from Battle #17902
+2026-03-02T20:11:02.964Z | INFO | [Battle] League: bronze | User2Robot3 (User 6082) vs User1Robot1 (User 6096) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:03.051Z | INFO | [Streaming] TestRobot13 earned ₡1,022 from Battle #17903
+2026-03-02T20:11:03.052Z | INFO | [Streaming] TestRobot2 earned ₡1,022 from Battle #17903
+2026-03-02T20:11:03.062Z | INFO | [Battle] League: bronze | TestRobot13 (User 6477) vs TestRobot2 (User 6475) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-03-02T20:11:03.113Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17904
+2026-03-02T20:11:03.115Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17904
+2026-03-02T20:11:03.126Z | INFO | [Battle] League: bronze | User2Robot3 (User 6198) vs User2Robot2 (User 6212) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:03.199Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17905
+2026-03-02T20:11:03.200Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17905
+2026-03-02T20:11:03.210Z | INFO | [Battle] League: bronze | User2Robot2 (User 6202) vs User2Robot2 (User 6189) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:03.264Z | INFO | [Streaming] User2Robot0 earned ₡1,003 from Battle #17906
+2026-03-02T20:11:03.265Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17906
+2026-03-02T20:11:03.275Z | INFO | [Battle] League: bronze | User2Robot0 (User 6193) vs User2Robot1 (User 6191) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:03.356Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17907
+2026-03-02T20:11:03.357Z | INFO | [Streaming] User2Robot0 earned ₡1,003 from Battle #17907
+2026-03-02T20:11:03.368Z | INFO | [Battle] League: bronze | User2Robot2 (User 6207) vs User2Robot0 (User 6170) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:03.448Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17908
+2026-03-02T20:11:03.450Z | INFO | [Streaming] User1Robot3 earned ₡1,003 from Battle #17908
+2026-03-02T20:11:03.461Z | INFO | [Battle] League: bronze | User2Robot3 (User 6205) vs User1Robot3 (User 6197) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: User1Robot3
+2026-03-02T20:11:03.568Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17909
+2026-03-02T20:11:03.573Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17909
+2026-03-02T20:11:03.585Z | INFO | [Battle] League: bronze | User2Robot0 (User 6186) vs User2Robot3 (User 6195) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:03.660Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17910
+2026-03-02T20:11:03.661Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17910
+2026-03-02T20:11:03.673Z | INFO | [Battle] League: bronze | User1Robot1 (User 6169) vs User1Robot2 (User 6208) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:03.734Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17911
+2026-03-02T20:11:03.735Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17911
+2026-03-02T20:11:03.790Z | INFO | [Battle] League: bronze | User1Robot3 (User 6178) vs User1Robot2 (User 6199) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:03.849Z | INFO | [Streaming] User1Robot2 earned ₡1,013 from Battle #17912
+2026-03-02T20:11:03.850Z | INFO | [Streaming] User1Robot1 earned ₡1,015 from Battle #17912
+2026-03-02T20:11:03.873Z | INFO | [Battle] League: bronze | User1Robot2 (User 6083) vs User1Robot1 (User 6088) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:03.967Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17913
+2026-03-02T20:11:03.969Z | INFO | [Streaming] User1Robot3 earned ₡1,003 from Battle #17913
+2026-03-02T20:11:03.991Z | INFO | [Battle] League: bronze | User1Robot3 (User 6185) vs User1Robot3 (User 6155) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:04.082Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17914
+2026-03-02T20:11:04.084Z | INFO | [Streaming] User1Robot1 earned ₡1,004 from Battle #17914
+2026-03-02T20:11:04.097Z | INFO | [Battle] League: bronze | User2Robot2 (User 6145) vs User1Robot1 (User 6163) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:04.167Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17915
+2026-03-02T20:11:04.168Z | INFO | [Streaming] User1Robot0 earned ₡1,004 from Battle #17915
+2026-03-02T20:11:04.195Z | INFO | [Battle] League: bronze | User2Robot1 (User 6149) vs User1Robot0 (User 6155) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:04.250Z | INFO | [Streaming] User1Robot2 earned ₡1,006 from Battle #17916
+2026-03-02T20:11:04.251Z | INFO | [Streaming] User1Robot2 earned ₡1,005 from Battle #17916
+2026-03-02T20:11:04.268Z | INFO | [Battle] League: bronze | User1Robot2 (User 6093) vs User1Robot2 (User 6098) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:04.342Z | INFO | [Streaming] User2Robot0 earned ₡1,003 from Battle #17917
+2026-03-02T20:11:04.343Z | INFO | [Streaming] User1Robot2 earned ₡1,003 from Battle #17917
+2026-03-02T20:11:04.356Z | INFO | [Battle] League: bronze | User2Robot0 (User 6153) vs User1Robot2 (User 6136) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:04.434Z | INFO | [Streaming] User2Robot3 earned ₡1,004 from Battle #17918
+2026-03-02T20:11:04.435Z | INFO | [Streaming] User1Robot0 earned ₡1,008 from Battle #17918
+2026-03-02T20:11:04.445Z | INFO | [Battle] League: bronze | User2Robot3 (User 6164) vs User1Robot0 (User 6093) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:04.532Z | INFO | [Streaming] TestRobot14 earned ₡1,022 from Battle #17919
+2026-03-02T20:11:04.533Z | INFO | [Streaming] TestRobot1 earned ₡1,022 from Battle #17919
+2026-03-02T20:11:04.544Z | INFO | [Battle] League: bronze | TestRobot14 (User 6466) vs TestRobot1 (User 6475) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-03-02T20:11:04.624Z | INFO | [Streaming] TestRobot1 earned ₡1,022 from Battle #17920
+2026-03-02T20:11:04.625Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17920
+2026-03-02T20:11:04.652Z | INFO | [Battle] League: bronze | TestRobot1 (User 6466) vs User1Robot1 (User 6181) | Winner: TestRobot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:04.708Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17921
+2026-03-02T20:11:04.709Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17921
+2026-03-02T20:11:04.744Z | INFO | [Battle] League: bronze | User1Robot0 (User 6190) vs User2Robot1 (User 6175) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot0
+2026-03-02T20:11:04.816Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17922
+2026-03-02T20:11:04.817Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17922
+2026-03-02T20:11:04.830Z | INFO | [Battle] League: bronze | User1Robot2 (User 6201) vs User1Robot1 (User 6176) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:04.901Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17923
+2026-03-02T20:11:04.902Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17923
+2026-03-02T20:11:04.913Z | INFO | [Battle] League: bronze | User1Robot1 (User 6190) vs User1Robot2 (User 6171) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:04.963Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17924
+2026-03-02T20:11:04.965Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17924
+2026-03-02T20:11:04.977Z | INFO | [Battle] League: bronze | User1Robot3 (User 6167) vs User2Robot0 (User 6184) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:05.044Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17925
+2026-03-02T20:11:05.045Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17925
+2026-03-02T20:11:05.056Z | INFO | [Battle] League: bronze | User1Robot0 (User 6176) vs User2Robot1 (User 6177) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:05.127Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17926
+2026-03-02T20:11:05.129Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17926
+2026-03-02T20:11:05.142Z | INFO | [Battle] League: bronze | User2Robot2 (User 6182) vs User1Robot3 (User 6194) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:05.197Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17927
+2026-03-02T20:11:05.198Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17927
+2026-03-02T20:11:05.233Z | INFO | [Battle] League: bronze | User2Robot3 (User 6191) vs User2Robot1 (User 6193) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:05.285Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17928
+2026-03-02T20:11:05.286Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17928
+2026-03-02T20:11:05.297Z | INFO | [Battle] League: bronze | User2Robot2 (User 6200) vs User1Robot2 (User 6206) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:05.368Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17929
+2026-03-02T20:11:05.369Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17929
+2026-03-02T20:11:05.380Z | INFO | [Battle] League: bronze | User1Robot2 (User 6211) vs User1Robot1 (User 6204) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:05.432Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17930
+2026-03-02T20:11:05.433Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17930
+2026-03-02T20:11:05.459Z | INFO | [Battle] League: bronze | User2Robot3 (User 6209) vs User2Robot0 (User 6107) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:05.518Z | INFO | [Streaming] User1Robot1 earned ₡1,003 from Battle #17931
+2026-03-02T20:11:05.527Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17931
+2026-03-02T20:11:05.549Z | INFO | [Battle] League: bronze | User1Robot1 (User 6136) vs User1Robot2 (User 6159) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:05.624Z | INFO | [Streaming] User1Robot2 earned ₡1,003 from Battle #17932
+2026-03-02T20:11:05.625Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17932
+2026-03-02T20:11:05.636Z | INFO | [Battle] League: bronze | User1Robot2 (User 6148) vs User2Robot3 (User 6141) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot2
+2026-03-02T20:11:05.688Z | INFO | [Streaming] User1Robot2 earned ₡1,004 from Battle #17933
+2026-03-02T20:11:05.690Z | INFO | [Streaming] User2Robot3 earned ₡1,007 from Battle #17933
+2026-03-02T20:11:05.700Z | INFO | [Battle] League: bronze | User1Robot2 (User 6101) vs User2Robot3 (User 6089) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: User2Robot3
+2026-03-02T20:11:05.774Z | INFO | [Streaming] User2Robot1 earned ₡1,018 from Battle #17934
+2026-03-02T20:11:05.775Z | INFO | [Streaming] User2Robot2 earned ₡1,008 from Battle #17934
+2026-03-02T20:11:05.785Z | INFO | [Battle] League: bronze | User2Robot1 (User 6082) vs User2Robot2 (User 6097) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:05.838Z | INFO | [Streaming] User2Robot0 earned ₡1,017 from Battle #17935
+2026-03-02T20:11:05.840Z | INFO | [Streaming] User1Robot2 earned ₡1,015 from Battle #17935
+2026-03-02T20:11:05.875Z | INFO | [Battle] League: bronze | User2Robot0 (User 6082) vs User1Robot2 (User 6078) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:05.931Z | INFO | [Streaming] User1Robot0 earned ₡1,017 from Battle #17936
+2026-03-02T20:11:05.933Z | INFO | [Streaming] User1Robot0 earned ₡1,015 from Battle #17936
+2026-03-02T20:11:05.943Z | INFO | [Battle] League: bronze | User1Robot0 (User 6081) vs User1Robot0 (User 6088) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:06.042Z | INFO | [Streaming] User2Robot2 earned ₡1,014 from Battle #17937
+2026-03-02T20:11:06.044Z | INFO | [Streaming] User1Robot2 earned ₡1,009 from Battle #17937
+2026-03-02T20:11:06.058Z | INFO | [Battle] League: bronze | User2Robot2 (User 6084) vs User1Robot2 (User 6085) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:06.128Z | INFO | [Streaming] User1Robot1 earned ₡1,018 from Battle #17938
+2026-03-02T20:11:06.129Z | INFO | [Streaming] User2Robot3 earned ₡1,013 from Battle #17938
+2026-03-02T20:11:06.140Z | INFO | [Battle] League: bronze | User1Robot1 (User 6078) vs User2Robot3 (User 6084) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:06.192Z | INFO | [Streaming] User1Robot2 earned ₡1,004 from Battle #17939
+2026-03-02T20:11:06.194Z | INFO | [Streaming] User2Robot3 earned ₡1,003 from Battle #17939
+2026-03-02T20:11:06.205Z | INFO | [Battle] League: bronze | User1Robot2 (User 6106) vs User2Robot3 (User 6107) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:06.275Z | INFO | [Streaming] User2Robot3 earned ₡1,003 from Battle #17940
+2026-03-02T20:11:06.276Z | INFO | [Streaming] User1Robot1 earned ₡1,004 from Battle #17940
+2026-03-02T20:11:06.287Z | INFO | [Battle] League: bronze | User2Robot3 (User 6156) vs User1Robot1 (User 6140) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:06.360Z | INFO | [Streaming] User2Robot3 earned ₡1,004 from Battle #17941
+2026-03-02T20:11:06.361Z | INFO | [Streaming] User1Robot0 earned ₡1,006 from Battle #17941
+2026-03-02T20:11:06.372Z | INFO | [Battle] League: bronze | User2Robot3 (User 6153) vs User1Robot0 (User 6101) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:06.420Z | INFO | [Streaming] User2Robot3 earned ₡1,006 from Battle #17942
+2026-03-02T20:11:06.422Z | INFO | [Streaming] User1Robot1 earned ₡1,005 from Battle #17942
+2026-03-02T20:11:06.432Z | INFO | [Battle] League: bronze | User2Robot3 (User 6099) vs User1Robot1 (User 6098) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:06.504Z | INFO | [Streaming] User2Robot0 earned ₡1,009 from Battle #17943
+2026-03-02T20:11:06.506Z | INFO | [Streaming] User2Robot2 earned ₡1,010 from Battle #17943
+2026-03-02T20:11:06.516Z | INFO | [Battle] League: bronze | User2Robot0 (User 6092) vs User2Robot2 (User 6086) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:06.586Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17944
+2026-03-02T20:11:06.587Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17944
+2026-03-02T20:11:06.600Z | INFO | [Battle] League: bronze | User1Robot2 (User 6188) vs User2Robot1 (User 6184) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:06.665Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17945
+2026-03-02T20:11:06.666Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17945
+2026-03-02T20:11:06.677Z | INFO | [Battle] League: bronze | User2Robot3 (User 6202) vs User1Robot3 (User 6201) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:06.726Z | INFO | [Streaming] User2Robot3 earned ₡1,003 from Battle #17946
+2026-03-02T20:11:06.727Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17946
+2026-03-02T20:11:06.737Z | INFO | [Battle] League: bronze | User2Robot3 (User 6182) vs User2Robot0 (User 6212) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:06.809Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17947
+2026-03-02T20:11:06.810Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17947
+2026-03-02T20:11:06.819Z | INFO | [Battle] League: bronze | User1Robot3 (User 6171) vs User2Robot0 (User 6179) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:06.886Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17948
+2026-03-02T20:11:06.887Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17948
+2026-03-02T20:11:06.898Z | INFO | [Battle] League: bronze | User2Robot1 (User 6168) vs User2Robot2 (User 6175) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:06.968Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17949
+2026-03-02T20:11:06.969Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17949
+2026-03-02T20:11:06.979Z | INFO | [Battle] League: bronze | User2Robot1 (User 6170) vs User2Robot2 (User 6177) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:07.047Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17950
+2026-03-02T20:11:07.048Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17950
+2026-03-02T20:11:07.059Z | INFO | [Battle] League: bronze | User2Robot0 (User 6209) vs User2Robot3 (User 6189) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:07.116Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17951
+2026-03-02T20:11:07.117Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17951
+2026-03-02T20:11:07.155Z | INFO | [Battle] League: bronze | User1Robot0 (User 6194) vs User1Robot2 (User 6185) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:07.211Z | INFO | [Streaming] User1Robot3 earned ₡1,003 from Battle #17952
+2026-03-02T20:11:07.212Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17952
+2026-03-02T20:11:07.248Z | INFO | [Battle] League: bronze | User1Robot3 (User 6199) vs User2Robot0 (User 6205) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:07.301Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17953
+2026-03-02T20:11:07.302Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17953
+2026-03-02T20:11:07.314Z | INFO | [Battle] League: bronze | User2Robot3 (User 6207) vs User1Robot1 (User 6192) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:07.387Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17954
+2026-03-02T20:11:07.389Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17954
+2026-03-02T20:11:07.399Z | INFO | [Battle] League: bronze | User2Robot2 (User 6184) vs User2Robot2 (User 6137) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:07.452Z | INFO | [Streaming] User1Robot2 earned ₡1,004 from Battle #17955
+2026-03-02T20:11:07.453Z | INFO | [Streaming] User1Robot0 earned ₡1,003 from Battle #17955
+2026-03-02T20:11:07.483Z | INFO | [Battle] League: bronze | User1Robot2 (User 6152) vs User1Robot0 (User 6148) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:07.541Z | INFO | [Streaming] User2Robot3 earned ₡1,003 from Battle #17956
+2026-03-02T20:11:07.552Z | INFO | [Streaming] User1Robot1 earned ₡1,003 from Battle #17956
+2026-03-02T20:11:07.573Z | INFO | [Battle] League: bronze | User2Robot3 (User 6145) vs User1Robot1 (User 6106) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:07.651Z | INFO | [Streaming] User2Robot1 earned ₡1,004 from Battle #17957
+2026-03-02T20:11:07.652Z | INFO | [Streaming] User2Robot0 earned ₡1,005 from Battle #17957
+2026-03-02T20:11:07.665Z | INFO | [Battle] League: bronze | User2Robot1 (User 6099) vs User2Robot0 (User 6104) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:07.745Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17958
+2026-03-02T20:11:07.747Z | INFO | [Streaming] User1Robot3 earned ₡1,003 from Battle #17958
+2026-03-02T20:11:07.758Z | INFO | [Battle] League: bronze | User2Robot1 (User 6160) vs User1Robot3 (User 6159) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot3
+2026-03-02T20:11:07.827Z | INFO | [Streaming] User1Robot2 earned ₡1,003 from Battle #17959
+2026-03-02T20:11:07.828Z | INFO | [Streaming] User1Robot0 earned ₡1,008 from Battle #17959
+2026-03-02T20:11:07.840Z | INFO | [Battle] League: bronze | User1Robot2 (User 6144) vs User1Robot0 (User 6096) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:07.911Z | INFO | [Streaming] User1Robot3 earned ₡1,006 from Battle #17960
+2026-03-02T20:11:07.915Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17960
+2026-03-02T20:11:07.927Z | INFO | [Battle] League: bronze | User1Robot3 (User 6093) vs User1Robot3 (User 6152) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:08.015Z | INFO | [Streaming] TestRobot2 earned ₡1,022 from Battle #17961
+2026-03-02T20:11:08.016Z | INFO | [Streaming] TestRobot11 earned ₡1,022 from Battle #17961
+2026-03-02T20:11:08.027Z | INFO | [Battle] League: bronze | TestRobot2 (User 6481) vs TestRobot11 (User 6477) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-03-02T20:11:08.111Z | INFO | [Streaming] TestRobot16 earned ₡1,022 from Battle #17962
+2026-03-02T20:11:08.112Z | INFO | [Streaming] TestRobot33 earned ₡1,022 from Battle #17962
+2026-03-02T20:11:08.123Z | INFO | [Battle] League: bronze | TestRobot16 (User 6463) vs TestRobot33 (User 6464) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-03-02T20:11:08.187Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17963
+2026-03-02T20:11:08.189Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17963
+2026-03-02T20:11:08.199Z | INFO | [Battle] League: bronze | User1Robot2 (User 6181) vs User2Robot1 (User 6186) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:08.276Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17964
+2026-03-02T20:11:08.277Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17964
+2026-03-02T20:11:08.288Z | INFO | [Battle] League: bronze | User2Robot3 (User 6200) vs User1Robot3 (User 6206) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:08.354Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17965
+2026-03-02T20:11:08.356Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17965
+2026-03-02T20:11:08.386Z | INFO | [Battle] League: bronze | User1Robot3 (User 6211) vs User2Robot0 (User 6200) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:08.436Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17966
+2026-03-02T20:11:08.437Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17966
+2026-03-02T20:11:08.448Z | INFO | [Battle] League: bronze | User1Robot0 (User 6171) vs User1Robot0 (User 6197) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:08.523Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17967
+2026-03-02T20:11:08.525Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17967
+2026-03-02T20:11:08.536Z | INFO | [Battle] League: bronze | User1Robot1 (User 6178) vs User2Robot0 (User 6198) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:08.610Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17968
+2026-03-02T20:11:08.611Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17968
+2026-03-02T20:11:08.624Z | INFO | [Battle] League: bronze | User1Robot0 (User 6169) vs User1Robot1 (User 6174) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:08.696Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17969
+2026-03-02T20:11:08.698Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17969
+2026-03-02T20:11:08.709Z | INFO | [Battle] League: bronze | User2Robot2 (User 6193) vs User1Robot1 (User 6183) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:08.776Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17970
+2026-03-02T20:11:08.777Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17970
+2026-03-02T20:11:08.787Z | INFO | [Battle] League: bronze | User2Robot3 (User 6168) vs User1Robot3 (User 6208) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:08.851Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17971
+2026-03-02T20:11:08.852Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17971
+2026-03-02T20:11:08.865Z | INFO | [Battle] League: bronze | User2Robot0 (User 6195) vs User1Robot2 (User 6190) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:08.919Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17972
+2026-03-02T20:11:08.925Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17972
+2026-03-02T20:11:08.952Z | INFO | [Battle] League: bronze | User1Robot2 (User 6204) vs User1Robot0 (User 6183) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:09.007Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17973
+2026-03-02T20:11:09.008Z | INFO | [Streaming] User1Robot0 earned ₡1,003 from Battle #17973
+2026-03-02T20:11:09.019Z | INFO | [Battle] League: bronze | User1Robot0 (User 6106) vs User1Robot0 (User 6163) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:09.099Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17974
+2026-03-02T20:11:09.100Z | INFO | [Streaming] User1Robot2 earned ₡1,003 from Battle #17974
+2026-03-02T20:11:09.110Z | INFO | [Battle] League: bronze | User2Robot0 (User 6141) vs User1Robot2 (User 6155) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot2
+2026-03-02T20:11:09.185Z | INFO | [Streaming] User2Robot2 earned ₡1,006 from Battle #17975
+2026-03-02T20:11:09.189Z | INFO | [Streaming] User1Robot3 earned ₡1,004 from Battle #17975
+2026-03-02T20:11:09.200Z | INFO | [Battle] League: bronze | User2Robot2 (User 6094) vs User1Robot3 (User 6101) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:09.271Z | INFO | [Streaming] User2Robot3 earned ₡1,014 from Battle #17976
+2026-03-02T20:11:09.273Z | INFO | [Streaming] User1Robot2 earned ₡1,009 from Battle #17976
+2026-03-02T20:11:09.286Z | INFO | [Battle] League: bronze | User2Robot3 (User 6086) vs User1Robot2 (User 6091) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:09.340Z | INFO | [Streaming] User1Robot2 earned ₡1,011 from Battle #17977
+2026-03-02T20:11:09.341Z | INFO | [Streaming] User1Robot1 earned ₡1,016 from Battle #17977
+2026-03-02T20:11:09.352Z | INFO | [Battle] League: bronze | User1Robot2 (User 6081) vs User1Robot1 (User 6083) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot1
+2026-03-02T20:11:09.441Z | INFO | [Streaming] User1Robot0 earned ₡1,017 from Battle #17978
+2026-03-02T20:11:09.443Z | INFO | [Streaming] User2Robot1 earned ₡1,014 from Battle #17978
+2026-03-02T20:11:09.454Z | INFO | [Battle] League: bronze | User1Robot0 (User 6085) vs User2Robot1 (User 6089) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:09.524Z | INFO | [Streaming] User2Robot0 earned ₡1,008 from Battle #17979
+2026-03-02T20:11:09.525Z | INFO | [Streaming] User2Robot3 earned ₡1,007 from Battle #17979
+2026-03-02T20:11:09.555Z | INFO | [Battle] League: bronze | User2Robot0 (User 6102) vs User2Robot3 (User 6097) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:09.635Z | INFO | [Streaming] User1Robot1 earned ₡1,010 from Battle #17980
+2026-03-02T20:11:09.636Z | INFO | [Streaming] User1Robot1 earned ₡1,004 from Battle #17980
+2026-03-02T20:11:09.647Z | INFO | [Battle] League: bronze | User1Robot1 (User 6093) vs User1Robot1 (User 6148) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:09.720Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17981
+2026-03-02T20:11:09.722Z | INFO | [Streaming] User2Robot1 earned ₡1,004 from Battle #17981
+2026-03-02T20:11:09.732Z | INFO | [Battle] League: bronze | User2Robot1 (User 6164) vs User2Robot1 (User 6153) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:09.782Z | INFO | [Streaming] User2Robot1 earned ₡1,004 from Battle #17982
+2026-03-02T20:11:09.783Z | INFO | [Streaming] User2Robot0 earned ₡1,005 from Battle #17982
+2026-03-02T20:11:09.799Z | INFO | [Battle] League: bronze | User2Robot1 (User 6137) vs User2Robot0 (User 6099) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:09.867Z | INFO | [Streaming] User2Robot2 earned ₡1,009 from Battle #17983
+2026-03-02T20:11:09.868Z | INFO | [Streaming] User1Robot0 earned ₡1,006 from Battle #17983
+2026-03-02T20:11:09.878Z | INFO | [Battle] League: bronze | User2Robot2 (User 6092) vs User1Robot0 (User 6098) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:09.950Z | INFO | [Streaming] User2Robot1 earned ₡1,010 from Battle #17984
+2026-03-02T20:11:09.951Z | INFO | [Streaming] User1Robot2 earned ₡1,009 from Battle #17984
+2026-03-02T20:11:09.962Z | INFO | [Battle] League: bronze | User2Robot1 (User 6092) vs User1Robot2 (User 6088) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:10.036Z | INFO | [Streaming] User2Robot1 earned ₡1,007 from Battle #17985
+2026-03-02T20:11:10.037Z | INFO | [Streaming] User2Robot3 earned ₡1,011 from Battle #17985
+2026-03-02T20:11:10.049Z | INFO | [Battle] League: bronze | User2Robot1 (User 6094) vs User2Robot3 (User 6079) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User2Robot1
+2026-03-02T20:11:10.103Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #17986
+2026-03-02T20:11:10.104Z | INFO | [Streaming] User1Robot0 earned ₡1,003 from Battle #17986
+2026-03-02T20:11:10.115Z | INFO | [Battle] League: bronze | User1Robot3 (User 6163) vs User1Robot0 (User 6204) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:10.187Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17987
+2026-03-02T20:11:10.189Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17987
+2026-03-02T20:11:10.200Z | INFO | [Battle] League: bronze | User2Robot3 (User 6212) vs User2Robot0 (User 6182) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:10.268Z | INFO | [Streaming] User1Robot0 earned ₡1,003 from Battle #17988
+2026-03-02T20:11:10.269Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17988
+2026-03-02T20:11:10.281Z | INFO | [Battle] League: bronze | User1Robot0 (User 6206) vs User1Robot0 (User 6208) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:10.353Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17989
+2026-03-02T20:11:10.355Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #17989
+2026-03-02T20:11:10.365Z | INFO | [Battle] League: bronze | User1Robot2 (User 6174) vs User1Robot0 (User 6199) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:10.414Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17990
+2026-03-02T20:11:10.415Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #17990
+2026-03-02T20:11:10.425Z | INFO | [Battle] League: bronze | User1Robot1 (User 6194) vs User2Robot0 (User 6189) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:10.499Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17991
+2026-03-02T20:11:10.501Z | INFO | [Streaming] User1Robot1 earned ₡1,003 from Battle #17991
+2026-03-02T20:11:10.511Z | INFO | [Battle] League: bronze | User2Robot3 (User 6179) vs User1Robot1 (User 6167) | Winner: User1Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:10.592Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17992
+2026-03-02T20:11:10.593Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #17992
+2026-03-02T20:11:10.606Z | INFO | [Battle] League: bronze | User1Robot2 (User 6183) vs User2Robot3 (User 6175) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:10.726Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #17993
+2026-03-02T20:11:10.727Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17993
+2026-03-02T20:11:10.740Z | INFO | [Battle] League: bronze | User1Robot2 (User 6169) vs User2Robot2 (User 6168) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:10.826Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17994
+2026-03-02T20:11:10.827Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17994
+2026-03-02T20:11:10.840Z | INFO | [Battle] League: bronze | User1Robot1 (User 6197) vs User2Robot1 (User 6172) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: User2Robot1
+2026-03-02T20:11:10.926Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #17995
+2026-03-02T20:11:10.928Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #17995
+2026-03-02T20:11:10.941Z | INFO | [Battle] League: bronze | User2Robot1 (User 6209) vs User2Robot2 (User 6186) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:11.016Z | INFO | [Streaming] User1Robot1 earned ₡1,003 from Battle #17996
+2026-03-02T20:11:11.017Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #17996
+2026-03-02T20:11:11.027Z | INFO | [Battle] League: bronze | User1Robot1 (User 6144) vs User2Robot1 (User 6156) | Winner: User2Robot1 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:11.102Z | INFO | [Streaming] User2Robot2 earned ₡1,003 from Battle #17997
+2026-03-02T20:11:11.103Z | INFO | [Streaming] User1Robot3 earned ₡1,004 from Battle #17997
+2026-03-02T20:11:11.116Z | INFO | [Battle] League: bronze | User2Robot2 (User 6107) vs User1Robot3 (User 6136) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:11.211Z | INFO | [Streaming] User2Robot0 earned ₡1,003 from Battle #17998
+2026-03-02T20:11:11.214Z | INFO | [Streaming] User2Robot0 earned ₡1,003 from Battle #17998
+2026-03-02T20:11:11.228Z | INFO | [Battle] League: bronze | User2Robot0 (User 6145) vs User2Robot0 (User 6149) | Winner: User2Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:11.281Z | INFO | [Streaming] User1Robot3 earned ₡1,008 from Battle #17999
+2026-03-02T20:11:11.282Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #17999
+2026-03-02T20:11:11.293Z | INFO | [Battle] League: bronze | User1Robot3 (User 6091) vs User1Robot1 (User 6159) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:11.366Z | INFO | [Streaming] User2Robot1 earned ₡1,003 from Battle #18000
+2026-03-02T20:11:11.367Z | INFO | [Streaming] User1Robot0 earned ₡1,003 from Battle #18000
+2026-03-02T20:11:11.377Z | INFO | [Battle] League: bronze | User2Robot1 (User 6141) vs User1Robot0 (User 6144) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:11.451Z | INFO | [Streaming] User1Robot0 earned ₡1,003 from Battle #18001
+2026-03-02T20:11:11.452Z | INFO | [Streaming] User2Robot2 earned ₡1,004 from Battle #18001
+2026-03-02T20:11:11.464Z | INFO | [Battle] League: bronze | User1Robot0 (User 6152) vs User2Robot2 (User 6160) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:11.535Z | INFO | [Streaming] User1Robot1 earned ₡1,005 from Battle #18002
+2026-03-02T20:11:11.536Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #18002
+2026-03-02T20:11:11.548Z | INFO | [Battle] League: bronze | User1Robot1 (User 6101) vs User1Robot3 (User 6181) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:11.633Z | INFO | [Streaming] TestRobot7 earned ₡1,022 from Battle #18003
+2026-03-02T20:11:11.634Z | INFO | [Streaming] TestRobot1 earned ₡1,022 from Battle #18003
+2026-03-02T20:11:11.645Z | INFO | [Battle] League: bronze | TestRobot7 (User 6464) vs TestRobot1 (User 6481) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-03-02T20:11:11.733Z | INFO | [Streaming] TestRobot34 earned ₡1,022 from Battle #18004
+2026-03-02T20:11:11.734Z | INFO | [Streaming] TestRobot17 earned ₡1,022 from Battle #18004
+2026-03-02T20:11:11.745Z | INFO | [Battle] League: bronze | TestRobot34 (User 6466) vs TestRobot17 (User 6475) | Winner: Draw | Rewards: ₡1,500 / ₡1,500 | Prestige: +0 | Fame: +0
+2026-03-02T20:11:11.817Z | INFO | [Streaming] User2Robot1 earned ₡1,013 from Battle #18005
+2026-03-02T20:11:11.819Z | INFO | [Streaming] User2Robot3 earned ₡1,004 from Battle #18005
+2026-03-02T20:11:11.830Z | INFO | [Battle] League: bronze | User2Robot1 (User 6086) vs User2Robot3 (User 6102) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:11.881Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #18006
+2026-03-02T20:11:11.882Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #18006
+2026-03-02T20:11:11.893Z | INFO | [Battle] League: bronze | User1Robot0 (User 6211) vs User2Robot1 (User 6198) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:11.967Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #18007
+2026-03-02T20:11:11.968Z | INFO | [Streaming] User2Robot2 earned ₡1,002 from Battle #18007
+2026-03-02T20:11:11.978Z | INFO | [Battle] League: bronze | User1Robot0 (User 6178) vs User2Robot2 (User 6170) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: User2Robot2
+2026-03-02T20:11:12.052Z | INFO | [Streaming] User1Robot1 earned ₡1,002 from Battle #18008
+2026-03-02T20:11:12.053Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #18008
+2026-03-02T20:11:12.065Z | INFO | [Battle] League: bronze | User1Robot1 (User 6171) vs User1Robot0 (User 6185) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:12.117Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #18009
+2026-03-02T20:11:12.118Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #18009
+2026-03-02T20:11:12.129Z | INFO | [Battle] League: bronze | User2Robot3 (User 6184) vs User2Robot1 (User 6195) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: User2Robot3
+2026-03-02T20:11:12.201Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #18010
+2026-03-02T20:11:12.202Z | INFO | [Streaming] User2Robot0 earned ₡1,002 from Battle #18010
+2026-03-02T20:11:12.212Z | INFO | [Battle] League: bronze | User1Robot0 (User 6192) vs User2Robot0 (User 6207) | Winner: User1Robot0 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:12.294Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #18011
+2026-03-02T20:11:12.298Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #18011
+2026-03-02T20:11:12.316Z | INFO | [Battle] League: bronze | User1Robot2 (User 6192) vs User2Robot1 (User 6205) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:12.402Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #18012
+2026-03-02T20:11:12.404Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #18012
+2026-03-02T20:11:12.417Z | INFO | [Battle] League: bronze | User1Robot3 (User 6204) vs User1Robot2 (User 6176) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot3
+2026-03-02T20:11:12.470Z | INFO | [Streaming] User1Robot0 earned ₡1,002 from Battle #18013
+2026-03-02T20:11:12.472Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #18013
+2026-03-02T20:11:12.483Z | INFO | [Battle] League: bronze | User1Robot0 (User 6201) vs User2Robot3 (User 6177) | Winner: User2Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: User2Robot3
+2026-03-02T20:11:12.557Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #18014
+2026-03-02T20:11:12.558Z | INFO | [Streaming] User1Robot3 earned ₡1,002 from Battle #18014
+2026-03-02T20:11:12.569Z | INFO | [Battle] League: bronze | User1Robot3 (User 6188) vs User1Robot3 (User 6190) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2
+2026-03-02T20:11:12.645Z | INFO | [Streaming] User2Robot1 earned ₡1,002 from Battle #18015
+2026-03-02T20:11:12.646Z | INFO | [Streaming] User1Robot3 earned ₡1,003 from Battle #18015
+2026-03-02T20:11:12.678Z | INFO | [Battle] League: bronze | User2Robot1 (User 6179) vs User1Robot3 (User 6148) | Winner: User1Robot3 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: User1Robot3
+2026-03-02T20:11:12.732Z | INFO | [Streaming] User2Robot3 earned ₡1,002 from Battle #18016
+2026-03-02T20:11:12.733Z | INFO | [Streaming] User1Robot2 earned ₡1,003 from Battle #18016
+2026-03-02T20:11:12.743Z | INFO | [Battle] League: bronze | User2Robot3 (User 6137) vs User1Robot2 (User 6103) | Winner: User1Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: User1Robot2
+2026-03-02T20:11:12.823Z | INFO | [Streaming] User1Robot2 earned ₡1,002 from Battle #18017
+2026-03-02T20:11:12.824Z | INFO | [Streaming] User2Robot2 earned ₡1,010 from Battle #18017
+2026-03-02T20:11:12.835Z | INFO | [Battle] League: bronze | User1Robot2 (User 6140) vs User2Robot2 (User 6082) | Winner: User2Robot2 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3
+2026-03-02T20:11:12.838Z | INFO | [BattleOrchestrator] Execution complete: 169 successful, 0 failed, 0 bye-matches
+2026-03-02T20:11:12.838Z | INFO | [BattleOrchestrator] Reputation: 805 prestige, 373 fame awarded
+2026-03-02T20:11:12.840Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-03-02T20:11:12.873Z | INFO | [RepairService] | User 6091 | Robot 50224 (User1Robot0) | Cost: ₡15,870 | Discount: 0%
+2026-03-02T20:11:12.892Z | INFO | [RepairService] | User 6091 | Robot 50225 (User1Robot1) | Cost: ₡14,030 | Discount: 0%
+2026-03-02T20:11:12.900Z | INFO | [RepairService] | User 6091 | Robot 50226 (User1Robot2) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:12.905Z | INFO | [RepairService] | User 6091 | Robot 50227 (User1Robot3) | Cost: ₡16,330 | Discount: 0%
+2026-03-02T20:11:12.914Z | INFO | [RepairService] | User 6211 | Robot 50497 (User1Robot1) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:12.918Z | INFO | [RepairService] | User 6211 | Robot 50498 (User1Robot2) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:12.923Z | INFO | [RepairService] | User 6211 | Robot 50496 (User1Robot0) | Cost: ₡2,300 | Discount: 0%
+2026-03-02T20:11:12.927Z | INFO | [RepairService] | User 6211 | Robot 50499 (User1Robot3) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:12.934Z | INFO | [RepairService] | User 6178 | Robot 50386 (User1Robot2) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:12.939Z | INFO | [RepairService] | User 6178 | Robot 50385 (User1Robot1) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:12.943Z | INFO | [RepairService] | User 6178 | Robot 50384 (User1Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:12.948Z | INFO | [RepairService] | User 6178 | Robot 50387 (User1Robot3) | Cost: ₡16,790 | Discount: 0%
+2026-03-02T20:11:12.969Z | INFO | [RepairService] | User 6153 | Robot 50316 (User2Robot0) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:12.975Z | INFO | [RepairService] | User 6153 | Robot 50317 (User2Robot1) | Cost: ₡16,100 | Discount: 0%
+2026-03-02T20:11:12.982Z | INFO | [RepairService] | User 6153 | Robot 50318 (User2Robot2) | Cost: ₡8,280 | Discount: 0%
+2026-03-02T20:11:12.986Z | INFO | [RepairService] | User 6153 | Robot 50319 (User2Robot3) | Cost: ₡7,820 | Discount: 0%
+2026-03-02T20:11:12.993Z | INFO | [RepairService] | User 6175 | Robot 50373 (User2Robot1) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:12.998Z | INFO | [RepairService] | User 6175 | Robot 50374 (User2Robot2) | Cost: ₡11,500 | Discount: 0%
+2026-03-02T20:11:13.002Z | INFO | [RepairService] | User 6175 | Robot 50375 (User2Robot3) | Cost: ₡11,270 | Discount: 0%
+2026-03-02T20:11:13.006Z | INFO | [RepairService] | User 6175 | Robot 50372 (User2Robot0) | Cost: ₡20,700 | Discount: 0%
+2026-03-02T20:11:13.015Z | INFO | [RepairService] | User 6152 | Robot 50314 (User1Robot2) | Cost: ₡19,320 | Discount: 0%
+2026-03-02T20:11:13.019Z | INFO | [RepairService] | User 6152 | Robot 50312 (User1Robot0) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:13.023Z | INFO | [RepairService] | User 6152 | Robot 50313 (User1Robot1) | Cost: ₡18,860 | Discount: 0%
+2026-03-02T20:11:13.032Z | INFO | [RepairService] | User 6152 | Robot 50315 (User1Robot3) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:13.055Z | INFO | [RepairService] | User 6102 | Robot 50260 (User2Robot0) | Cost: ₡8,970 | Discount: 0%
+2026-03-02T20:11:13.059Z | INFO | [RepairService] | User 6102 | Robot 50263 (User2Robot3) | Cost: ₡19,090 | Discount: 0%
+2026-03-02T20:11:13.064Z | INFO | [RepairService] | User 6102 | Robot 50262 (User2Robot2) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.068Z | INFO | [RepairService] | User 6102 | Robot 50261 (User2Robot1) | Cost: ₡15,870 | Discount: 0%
+2026-03-02T20:11:13.075Z | INFO | [RepairService] | User 6170 | Robot 50358 (User2Robot2) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.078Z | INFO | [RepairService] | User 6170 | Robot 50357 (User2Robot1) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:13.083Z | INFO | [RepairService] | User 6170 | Robot 50356 (User2Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.086Z | INFO | [RepairService] | User 6170 | Robot 50359 (User2Robot3) | Cost: ₡16,560 | Discount: 0%
+2026-03-02T20:11:13.109Z | INFO | [RepairService] | User 6205 | Robot 50477 (User2Robot1) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:13.117Z | INFO | [RepairService] | User 6205 | Robot 50479 (User2Robot3) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.121Z | INFO | [RepairService] | User 6205 | Robot 50476 (User2Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.127Z | INFO | [RepairService] | User 6205 | Robot 50478 (User2Robot2) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.134Z | INFO | [RepairService] | User 6172 | Robot 50366 (User2Robot2) | Cost: ₡9,430 | Discount: 0%
+2026-03-02T20:11:13.138Z | INFO | [RepairService] | User 6172 | Robot 50364 (User2Robot0) | Cost: ₡16,790 | Discount: 0%
+2026-03-02T20:11:13.143Z | INFO | [RepairService] | User 6172 | Robot 50365 (User2Robot1) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.148Z | INFO | [RepairService] | User 6172 | Robot 50367 (User2Robot3) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:13.155Z | INFO | [RepairService] | User 6167 | Robot 50346 (User1Robot2) | Cost: ₡20,700 | Discount: 0%
+2026-03-02T20:11:13.159Z | INFO | [RepairService] | User 6167 | Robot 50344 (User1Robot0) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.164Z | INFO | [RepairService] | User 6167 | Robot 50347 (User1Robot3) | Cost: ₡5,980 | Discount: 0%
+2026-03-02T20:11:13.167Z | INFO | [RepairService] | User 6167 | Robot 50345 (User1Robot1) | Cost: ₡3,220 | Discount: 0%
+2026-03-02T20:11:13.190Z | INFO | [RepairService] | User 6168 | Robot 50348 (User2Robot0) | Cost: ₡8,740 | Discount: 0%
+2026-03-02T20:11:13.198Z | INFO | [RepairService] | User 6168 | Robot 50349 (User2Robot1) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:13.202Z | INFO | [RepairService] | User 6168 | Robot 50350 (User2Robot2) | Cost: ₡16,560 | Discount: 0%
+2026-03-02T20:11:13.207Z | INFO | [RepairService] | User 6168 | Robot 50351 (User2Robot3) | Cost: ₡2,300 | Discount: 0%
+2026-03-02T20:11:13.215Z | INFO | [RepairService] | User 6163 | Robot 50337 (User1Robot1) | Cost: ₡9,890 | Discount: 0%
+2026-03-02T20:11:13.218Z | INFO | [RepairService] | User 6163 | Robot 50338 (User1Robot2) | Cost: ₡7,820 | Discount: 0%
+2026-03-02T20:11:13.223Z | INFO | [RepairService] | User 6163 | Robot 50336 (User1Robot0) | Cost: ₡13,110 | Discount: 0%
+2026-03-02T20:11:13.228Z | INFO | [RepairService] | User 6163 | Robot 50339 (User1Robot3) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.235Z | INFO | [RepairService] | User 6182 | Robot 50396 (User2Robot0) | Cost: ₡15,410 | Discount: 0%
+2026-03-02T20:11:13.240Z | INFO | [RepairService] | User 6182 | Robot 50397 (User2Robot1) | Cost: ₡17,940 | Discount: 0%
+2026-03-02T20:11:13.244Z | INFO | [RepairService] | User 6182 | Robot 50399 (User2Robot3) | Cost: ₡13,110 | Discount: 0%
+2026-03-02T20:11:13.248Z | INFO | [RepairService] | User 6182 | Robot 50398 (User2Robot2) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.256Z | INFO | [RepairService] | User 6171 | Robot 50361 (User1Robot1) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:13.260Z | INFO | [RepairService] | User 6171 | Robot 50362 (User1Robot2) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.265Z | INFO | [RepairService] | User 6171 | Robot 50363 (User1Robot3) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.268Z | INFO | [RepairService] | User 6171 | Robot 50360 (User1Robot0) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.276Z | INFO | [RepairService] | User 6160 | Robot 50334 (User2Robot2) | Cost: ₡20,700 | Discount: 0%
+2026-03-02T20:11:13.287Z | INFO | [RepairService] | User 6160 | Robot 50335 (User2Robot3) | Cost: ₡14,490 | Discount: 0%
+2026-03-02T20:11:13.292Z | INFO | [RepairService] | User 6160 | Robot 50333 (User2Robot1) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.295Z | INFO | [RepairService] | User 6160 | Robot 50332 (User2Robot0) | Cost: ₡19,550 | Discount: 0%
+2026-03-02T20:11:13.303Z | INFO | [RepairService] | User 6174 | Robot 50371 (User1Robot3) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.326Z | INFO | [RepairService] | User 6174 | Robot 50368 (User1Robot0) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.334Z | INFO | [RepairService] | User 6174 | Robot 50369 (User1Robot1) | Cost: ₡11,040 | Discount: 0%
+2026-03-02T20:11:13.342Z | INFO | [RepairService] | User 6174 | Robot 50370 (User1Robot2) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.350Z | INFO | [RepairService] | User 6159 | Robot 50328 (User1Robot0) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.354Z | INFO | [RepairService] | User 6159 | Robot 50330 (User1Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:13.359Z | INFO | [RepairService] | User 6159 | Robot 50331 (User1Robot3) | Cost: ₡14,950 | Discount: 0%
+2026-03-02T20:11:13.363Z | INFO | [RepairService] | User 6159 | Robot 50329 (User1Robot1) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:13.370Z | INFO | [RepairService] | User 6184 | Robot 50404 (User2Robot0) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:13.375Z | INFO | [RepairService] | User 6184 | Robot 50405 (User2Robot1) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.378Z | INFO | [RepairService] | User 6184 | Robot 50407 (User2Robot3) | Cost: ₡20,240 | Discount: 0%
+2026-03-02T20:11:13.383Z | INFO | [RepairService] | User 6184 | Robot 50406 (User2Robot2) | Cost: ₡18,170 | Discount: 0%
+2026-03-02T20:11:13.391Z | INFO | [RepairService] | User 6176 | Robot 50379 (User1Robot3) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.396Z | INFO | [RepairService] | User 6176 | Robot 50376 (User1Robot0) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:13.400Z | INFO | [RepairService] | User 6176 | Robot 50378 (User1Robot2) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.405Z | INFO | [RepairService] | User 6176 | Robot 50377 (User1Robot1) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:13.431Z | INFO | [RepairService] | User 6169 | Robot 50352 (User1Robot0) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:13.438Z | INFO | [RepairService] | User 6169 | Robot 50354 (User1Robot2) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.443Z | INFO | [RepairService] | User 6169 | Robot 50353 (User1Robot1) | Cost: ₡11,730 | Discount: 0%
+2026-03-02T20:11:13.447Z | INFO | [RepairService] | User 6169 | Robot 50355 (User1Robot3) | Cost: ₡14,030 | Discount: 0%
+2026-03-02T20:11:13.454Z | INFO | [RepairService] | User 6094 | Robot 50236 (User2Robot0) | Cost: ₡12,650 | Discount: 0%
+2026-03-02T20:11:13.460Z | INFO | [RepairService] | User 6094 | Robot 50239 (User2Robot3) | Cost: ₡14,490 | Discount: 0%
+2026-03-02T20:11:13.465Z | INFO | [RepairService] | User 6094 | Robot 50238 (User2Robot2) | Cost: ₡19,780 | Discount: 0%
+2026-03-02T20:11:13.468Z | INFO | [RepairService] | User 6094 | Robot 50237 (User2Robot1) | Cost: ₡13,570 | Discount: 0%
+2026-03-02T20:11:13.476Z | INFO | [RepairService] | User 6093 | Robot 50234 (User1Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:13.480Z | INFO | [RepairService] | User 6093 | Robot 50232 (User1Robot0) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.484Z | INFO | [RepairService] | User 6093 | Robot 50233 (User1Robot1) | Cost: ₡15,410 | Discount: 0%
+2026-03-02T20:11:13.489Z | INFO | [RepairService] | User 6093 | Robot 50235 (User1Robot3) | Cost: ₡16,790 | Discount: 0%
+2026-03-02T20:11:13.499Z | INFO | [RepairService] | User 6183 | Robot 50403 (User1Robot3) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.515Z | INFO | [RepairService] | User 6183 | Robot 50401 (User1Robot1) | Cost: ₡18,170 | Discount: 0%
+2026-03-02T20:11:13.524Z | INFO | [RepairService] | User 6183 | Robot 50402 (User1Robot2) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.527Z | INFO | [RepairService] | User 6183 | Robot 50400 (User1Robot0) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:13.536Z | INFO | [RepairService] | User 6081 | Robot 50195 (User1Robot3) | Cost: ₡15,180 | Discount: 0%
+2026-03-02T20:11:13.541Z | INFO | [RepairService] | User 6081 | Robot 50193 (User1Robot1) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.544Z | INFO | [RepairService] | User 6081 | Robot 50194 (User1Robot2) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.549Z | INFO | [RepairService] | User 6081 | Robot 50192 (User1Robot0) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:13.558Z | INFO | [RepairService] | User 6082 | Robot 50196 (User2Robot0) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:13.561Z | INFO | [RepairService] | User 6082 | Robot 50197 (User2Robot1) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.566Z | INFO | [RepairService] | User 6082 | Robot 50198 (User2Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:13.569Z | INFO | [RepairService] | User 6082 | Robot 50199 (User2Robot3) | Cost: ₡11,270 | Discount: 0%
+2026-03-02T20:11:13.577Z | INFO | [RepairService] | User 6084 | Robot 50204 (User2Robot0) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.581Z | INFO | [RepairService] | User 6084 | Robot 50205 (User2Robot1) | Cost: ₡12,880 | Discount: 0%
+2026-03-02T20:11:13.585Z | INFO | [RepairService] | User 6084 | Robot 50207 (User2Robot3) | Cost: ₡20,470 | Discount: 0%
+2026-03-02T20:11:13.590Z | INFO | [RepairService] | User 6084 | Robot 50206 (User2Robot2) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.598Z | INFO | [RepairService] | User 6190 | Robot 50426 (User1Robot2) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.602Z | INFO | [RepairService] | User 6190 | Robot 50424 (User1Robot0) | Cost: ₡15,640 | Discount: 0%
+2026-03-02T20:11:13.607Z | INFO | [RepairService] | User 6190 | Robot 50427 (User1Robot3) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.610Z | INFO | [RepairService] | User 6190 | Robot 50425 (User1Robot1) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:13.617Z | INFO | [RepairService] | User 6188 | Robot 50416 (User1Robot0) | Cost: ₡11,040 | Discount: 0%
+2026-03-02T20:11:13.622Z | INFO | [RepairService] | User 6188 | Robot 50418 (User1Robot2) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.631Z | INFO | [RepairService] | User 6188 | Robot 50419 (User1Robot3) | Cost: ₡6,210 | Discount: 0%
+2026-03-02T20:11:13.649Z | INFO | [RepairService] | User 6188 | Robot 50417 (User1Robot1) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.660Z | INFO | [RepairService] | User 6181 | Robot 50392 (User1Robot0) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.664Z | INFO | [RepairService] | User 6181 | Robot 50393 (User1Robot1) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.668Z | INFO | [RepairService] | User 6181 | Robot 50394 (User1Robot2) | Cost: ₡8,050 | Discount: 0%
+2026-03-02T20:11:13.673Z | INFO | [RepairService] | User 6181 | Robot 50395 (User1Robot3) | Cost: ₡5,750 | Discount: 0%
+2026-03-02T20:11:13.680Z | INFO | [RepairService] | User 6177 | Robot 50380 (User2Robot0) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:13.684Z | INFO | [RepairService] | User 6177 | Robot 50381 (User2Robot1) | Cost: ₡13,800 | Discount: 0%
+2026-03-02T20:11:13.688Z | INFO | [RepairService] | User 6177 | Robot 50382 (User2Robot2) | Cost: ₡17,250 | Discount: 0%
+2026-03-02T20:11:13.692Z | INFO | [RepairService] | User 6177 | Robot 50383 (User2Robot3) | Cost: ₡20,010 | Discount: 0%
+2026-03-02T20:11:13.700Z | INFO | [RepairService] | User 6186 | Robot 50412 (User2Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.705Z | INFO | [RepairService] | User 6186 | Robot 50415 (User2Robot3) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:13.709Z | INFO | [RepairService] | User 6186 | Robot 50413 (User2Robot1) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.712Z | INFO | [RepairService] | User 6186 | Robot 50414 (User2Robot2) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:13.719Z | INFO | [RepairService] | User 6201 | Robot 50466 (User1Robot2) | Cost: ₡12,880 | Discount: 0%
+2026-03-02T20:11:13.724Z | INFO | [RepairService] | User 6201 | Robot 50467 (User1Robot3) | Cost: ₡11,500 | Discount: 0%
+2026-03-02T20:11:13.728Z | INFO | [RepairService] | User 6201 | Robot 50464 (User1Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.749Z | INFO | [RepairService] | User 6201 | Robot 50465 (User1Robot1) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.761Z | INFO | [RepairService] | User 6179 | Robot 50391 (User2Robot3) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.766Z | INFO | [RepairService] | User 6179 | Robot 50389 (User2Robot1) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.770Z | INFO | [RepairService] | User 6179 | Robot 50390 (User2Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:13.774Z | INFO | [RepairService] | User 6179 | Robot 50388 (User2Robot0) | Cost: ₡18,170 | Discount: 0%
+2026-03-02T20:11:13.781Z | INFO | [RepairService] | User 6195 | Robot 50447 (User2Robot3) | Cost: ₡13,110 | Discount: 0%
+2026-03-02T20:11:13.788Z | INFO | [RepairService] | User 6195 | Robot 50444 (User2Robot0) | Cost: ₡2,070 | Discount: 0%
+2026-03-02T20:11:13.792Z | INFO | [RepairService] | User 6195 | Robot 50445 (User2Robot1) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.797Z | INFO | [RepairService] | User 6195 | Robot 50446 (User2Robot2) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:13.804Z | INFO | [RepairService] | User 6194 | Robot 50442 (User1Robot2) | Cost: ₡12,190 | Discount: 0%
+2026-03-02T20:11:13.808Z | INFO | [RepairService] | User 6194 | Robot 50443 (User1Robot3) | Cost: ₡11,270 | Discount: 0%
+2026-03-02T20:11:13.812Z | INFO | [RepairService] | User 6194 | Robot 50440 (User1Robot0) | Cost: ₡11,730 | Discount: 0%
+2026-03-02T20:11:13.816Z | INFO | [RepairService] | User 6194 | Robot 50441 (User1Robot1) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.841Z | INFO | [RepairService] | User 6085 | Robot 50209 (User1Robot1) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.850Z | INFO | [RepairService] | User 6085 | Robot 50211 (User1Robot3) | Cost: ₡10,120 | Discount: 0%
+2026-03-02T20:11:13.855Z | INFO | [RepairService] | User 6085 | Robot 50208 (User1Robot0) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.859Z | INFO | [RepairService] | User 6085 | Robot 50210 (User1Robot2) | Cost: ₡19,090 | Discount: 0%
+2026-03-02T20:11:13.866Z | INFO | [RepairService] | User 6191 | Robot 50428 (User2Robot0) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:13.870Z | INFO | [RepairService] | User 6191 | Robot 50429 (User2Robot1) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:13.874Z | INFO | [RepairService] | User 6191 | Robot 50431 (User2Robot3) | Cost: ₡20,010 | Discount: 0%
+2026-03-02T20:11:13.878Z | INFO | [RepairService] | User 6191 | Robot 50430 (User2Robot2) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:13.885Z | INFO | [RepairService] | User 6189 | Robot 50421 (User2Robot1) | Cost: ₡16,790 | Discount: 0%
+2026-03-02T20:11:13.889Z | INFO | [RepairService] | User 6189 | Robot 50422 (User2Robot2) | Cost: ₡12,420 | Discount: 0%
+2026-03-02T20:11:13.893Z | INFO | [RepairService] | User 6189 | Robot 50423 (User2Robot3) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:13.898Z | INFO | [RepairService] | User 6189 | Robot 50420 (User2Robot0) | Cost: ₡15,870 | Discount: 0%
+2026-03-02T20:11:13.904Z | INFO | [RepairService] | User 6185 | Robot 50409 (User1Robot1) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:13.909Z | INFO | [RepairService] | User 6185 | Robot 50408 (User1Robot0) | Cost: ₡9,430 | Discount: 0%
+2026-03-02T20:11:13.914Z | INFO | [RepairService] | User 6185 | Robot 50411 (User1Robot3) | Cost: ₡13,110 | Discount: 0%
+2026-03-02T20:11:13.918Z | INFO | [RepairService] | User 6185 | Robot 50410 (User1Robot2) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:13.925Z | INFO | [RepairService] | User 6209 | Robot 50492 (User2Robot0) | Cost: ₡14,260 | Discount: 0%
+2026-03-02T20:11:13.930Z | INFO | [RepairService] | User 6209 | Robot 50495 (User2Robot3) | Cost: ₡10,350 | Discount: 0%
+2026-03-02T20:11:13.934Z | INFO | [RepairService] | User 6209 | Robot 50494 (User2Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:13.939Z | INFO | [RepairService] | User 6209 | Robot 50493 (User2Robot1) | Cost: ₡17,020 | Discount: 0%
+2026-03-02T20:11:13.946Z | INFO | [RepairService] | User 6202 | Robot 50471 (User2Robot3) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:13.950Z | INFO | [RepairService] | User 6202 | Robot 50470 (User2Robot2) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:13.961Z | INFO | [RepairService] | User 6202 | Robot 50469 (User2Robot1) | Cost: ₡15,870 | Discount: 0%
+2026-03-02T20:11:13.978Z | INFO | [RepairService] | User 6202 | Robot 50468 (User2Robot0) | Cost: ₡18,170 | Discount: 0%
+2026-03-02T20:11:13.988Z | INFO | [RepairService] | User 6089 | Robot 50222 (User2Robot2) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:13.992Z | INFO | [RepairService] | User 6089 | Robot 50223 (User2Robot3) | Cost: ₡20,240 | Discount: 0%
+2026-03-02T20:11:13.996Z | INFO | [RepairService] | User 6089 | Robot 50220 (User2Robot0) | Cost: ₡14,030 | Discount: 0%
+2026-03-02T20:11:14.000Z | INFO | [RepairService] | User 6089 | Robot 50221 (User2Robot1) | Cost: ₡8,510 | Discount: 0%
+2026-03-02T20:11:14.008Z | INFO | [RepairService] | User 6079 | Robot 50188 (User2Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.012Z | INFO | [RepairService] | User 6079 | Robot 50190 (User2Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.019Z | INFO | [RepairService] | User 6079 | Robot 50189 (User2Robot1) | Cost: ₡18,170 | Discount: 0%
+2026-03-02T20:11:14.024Z | INFO | [RepairService] | User 6079 | Robot 50191 (User2Robot3) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.031Z | INFO | [RepairService] | User 6200 | Robot 50460 (User2Robot0) | Cost: ₡14,490 | Discount: 0%
+2026-03-02T20:11:14.035Z | INFO | [RepairService] | User 6200 | Robot 50462 (User2Robot2) | Cost: ₡19,320 | Discount: 0%
+2026-03-02T20:11:14.040Z | INFO | [RepairService] | User 6200 | Robot 50463 (User2Robot3) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:14.044Z | INFO | [RepairService] | User 6200 | Robot 50461 (User2Robot1) | Cost: ₡14,490 | Discount: 0%
+2026-03-02T20:11:14.052Z | INFO | [RepairService] | User 6465 | Robot 53118 (TestRobot38) | Cost: ₡435 | Discount: 0%
+2026-03-02T20:11:14.059Z | INFO | [RepairService] | User 6463 | Robot 53115 (TestRobot37) | Cost: ₡504 | Discount: 0%
+2026-03-02T20:11:14.065Z | INFO | [RepairService] | User 6463 | Robot 53114 (TestRobot16) | Cost: ₡552 | Discount: 0%
+2026-03-02T20:11:14.094Z | INFO | [RepairService] | User 6466 | Robot 53122 (TestRobot21) | Cost: ₡614 | Discount: 0%
+2026-03-02T20:11:14.099Z | INFO | [RepairService] | User 6466 | Robot 53119 (TestRobot14) | Cost: ₡506 | Discount: 0%
+2026-03-02T20:11:14.103Z | INFO | [RepairService] | User 6466 | Robot 53120 (TestRobot34) | Cost: ₡575 | Discount: 0%
+2026-03-02T20:11:14.107Z | INFO | [RepairService] | User 6466 | Robot 53121 (TestRobot1) | Cost: ₡506 | Discount: 0%
+2026-03-02T20:11:14.116Z | INFO | [RepairService] | User 6078 | Robot 50184 (User1Robot0) | Cost: ₡17,020 | Discount: 0%
+2026-03-02T20:11:14.120Z | INFO | [RepairService] | User 6078 | Robot 50187 (User1Robot3) | Cost: ₡9,890 | Discount: 0%
+2026-03-02T20:11:14.124Z | INFO | [RepairService] | User 6078 | Robot 50186 (User1Robot2) | Cost: ₡14,720 | Discount: 0%
+2026-03-02T20:11:14.128Z | INFO | [RepairService] | User 6078 | Robot 50185 (User1Robot1) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.136Z | INFO | [RepairService] | User 6088 | Robot 50219 (User1Robot3) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:14.141Z | INFO | [RepairService] | User 6088 | Robot 50218 (User1Robot2) | Cost: ₡18,400 | Discount: 0%
+2026-03-02T20:11:14.145Z | INFO | [RepairService] | User 6088 | Robot 50217 (User1Robot1) | Cost: ₡11,500 | Discount: 0%
+2026-03-02T20:11:14.149Z | INFO | [RepairService] | User 6088 | Robot 50216 (User1Robot0) | Cost: ₡16,330 | Discount: 0%
+2026-03-02T20:11:14.179Z | INFO | [RepairService] | User 6104 | Robot 50268 (User2Robot0) | Cost: ₡20,470 | Discount: 0%
+2026-03-02T20:11:14.184Z | INFO | [RepairService] | User 6104 | Robot 50269 (User2Robot1) | Cost: ₡460 | Discount: 0%
+2026-03-02T20:11:14.191Z | INFO | [RepairService] | User 6104 | Robot 50271 (User2Robot3) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.195Z | INFO | [RepairService] | User 6104 | Robot 50270 (User2Robot2) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:14.203Z | INFO | [RepairService] | User 6206 | Robot 50483 (User1Robot3) | Cost: ₡19,090 | Discount: 0%
+2026-03-02T20:11:14.207Z | INFO | [RepairService] | User 6206 | Robot 50481 (User1Robot1) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.211Z | INFO | [RepairService] | User 6206 | Robot 50482 (User1Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.216Z | INFO | [RepairService] | User 6206 | Robot 50480 (User1Robot0) | Cost: ₡4,140 | Discount: 0%
+2026-03-02T20:11:14.223Z | INFO | [RepairService] | User 6083 | Robot 50201 (User1Robot1) | Cost: ₡12,420 | Discount: 0%
+2026-03-02T20:11:14.227Z | INFO | [RepairService] | User 6083 | Robot 50203 (User1Robot3) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:14.231Z | INFO | [RepairService] | User 6083 | Robot 50200 (User1Robot0) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.235Z | INFO | [RepairService] | User 6083 | Robot 50202 (User1Robot2) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:14.243Z | INFO | [RepairService] | User 6099 | Robot 50252 (User2Robot0) | Cost: ₡20,240 | Discount: 0%
+2026-03-02T20:11:14.250Z | INFO | [RepairService] | User 6099 | Robot 50254 (User2Robot2) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:14.258Z | INFO | [RepairService] | User 6099 | Robot 50255 (User2Robot3) | Cost: ₡11,500 | Discount: 0%
+2026-03-02T20:11:14.266Z | INFO | [RepairService] | User 6099 | Robot 50253 (User2Robot1) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:14.275Z | INFO | [RepairService] | User 6103 | Robot 50266 (User1Robot2) | Cost: ₡19,550 | Discount: 0%
+2026-03-02T20:11:14.279Z | INFO | [RepairService] | User 6103 | Robot 50267 (User1Robot3) | Cost: ₡19,090 | Discount: 0%
+2026-03-02T20:11:14.298Z | INFO | [RepairService] | User 6103 | Robot 50264 (User1Robot0) | Cost: ₡6,210 | Discount: 0%
+2026-03-02T20:11:14.308Z | INFO | [RepairService] | User 6103 | Robot 50265 (User1Robot1) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:14.316Z | INFO | [RepairService] | User 6198 | Robot 50454 (User2Robot2) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:14.320Z | INFO | [RepairService] | User 6198 | Robot 50455 (User2Robot3) | Cost: ₡16,100 | Discount: 0%
+2026-03-02T20:11:14.325Z | INFO | [RepairService] | User 6198 | Robot 50452 (User2Robot0) | Cost: ₡14,030 | Discount: 0%
+2026-03-02T20:11:14.329Z | INFO | [RepairService] | User 6198 | Robot 50453 (User2Robot1) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.336Z | INFO | [RepairService] | User 6475 | Robot 53124 (TestRobot18) | Cost: ₡662 | Discount: 0%
+2026-03-02T20:11:14.340Z | INFO | [RepairService] | User 6475 | Robot 53123 (TestRobot1) | Cost: ₡575 | Discount: 0%
+2026-03-02T20:11:14.344Z | INFO | [RepairService] | User 6475 | Robot 53127 (TestRobot17) | Cost: ₡715 | Discount: 0%
+2026-03-02T20:11:14.349Z | INFO | [RepairService] | User 6475 | Robot 53126 (TestRobot2) | Cost: ₡667 | Discount: 0%
+2026-03-02T20:11:14.357Z | INFO | [RepairService] | User 6197 | Robot 50450 (User1Robot2) | Cost: ₡15,180 | Discount: 0%
+2026-03-02T20:11:14.361Z | INFO | [RepairService] | User 6197 | Robot 50448 (User1Robot0) | Cost: ₡13,800 | Discount: 0%
+2026-03-02T20:11:14.366Z | INFO | [RepairService] | User 6197 | Robot 50449 (User1Robot1) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.369Z | INFO | [RepairService] | User 6197 | Robot 50451 (User1Robot3) | Cost: ₡20,010 | Discount: 0%
+2026-03-02T20:11:14.399Z | INFO | [RepairService] | User 6477 | Robot 53125 (TestRobot13) | Cost: ₡527 | Discount: 0%
+2026-03-02T20:11:14.404Z | INFO | [RepairService] | User 6477 | Robot 53128 (TestRobot11) | Cost: ₡552 | Discount: 0%
+2026-03-02T20:11:14.414Z | INFO | [RepairService] | User 6096 | Robot 50243 (User1Robot3) | Cost: ₡14,720 | Discount: 0%
+2026-03-02T20:11:14.418Z | INFO | [RepairService] | User 6096 | Robot 50241 (User1Robot1) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:14.423Z | INFO | [RepairService] | User 6096 | Robot 50240 (User1Robot0) | Cost: ₡14,260 | Discount: 0%
+2026-03-02T20:11:14.427Z | INFO | [RepairService] | User 6096 | Robot 50242 (User1Robot2) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:14.434Z | INFO | [RepairService] | User 6098 | Robot 50250 (User1Robot2) | Cost: ₡17,710 | Discount: 0%
+2026-03-02T20:11:14.454Z | INFO | [RepairService] | User 6098 | Robot 50249 (User1Robot1) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:14.464Z | INFO | [RepairService] | User 6098 | Robot 50248 (User1Robot0) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:14.469Z | INFO | [RepairService] | User 6098 | Robot 50251 (User1Robot3) | Cost: ₡18,400 | Discount: 0%
+2026-03-02T20:11:14.476Z | INFO | [RepairService] | User 6199 | Robot 50457 (User1Robot1) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:14.481Z | INFO | [RepairService] | User 6199 | Robot 50458 (User1Robot2) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:14.485Z | INFO | [RepairService] | User 6199 | Robot 50456 (User1Robot0) | Cost: ₡10,120 | Discount: 0%
+2026-03-02T20:11:14.490Z | INFO | [RepairService] | User 6199 | Robot 50459 (User1Robot3) | Cost: ₡20,470 | Discount: 0%
+2026-03-02T20:11:14.499Z | INFO | [RepairService] | User 6092 | Robot 50231 (User2Robot3) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.503Z | INFO | [RepairService] | User 6092 | Robot 50228 (User2Robot0) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.509Z | INFO | [RepairService] | User 6092 | Robot 50230 (User2Robot2) | Cost: ₡20,700 | Discount: 0%
+2026-03-02T20:11:14.514Z | INFO | [RepairService] | User 6092 | Robot 50229 (User2Robot1) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:14.522Z | INFO | [RepairService] | User 6208 | Robot 50489 (User1Robot1) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.526Z | INFO | [RepairService] | User 6208 | Robot 50490 (User1Robot2) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:14.532Z | INFO | [RepairService] | User 6208 | Robot 50491 (User1Robot3) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:14.536Z | INFO | [RepairService] | User 6208 | Robot 50488 (User1Robot0) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:14.544Z | INFO | [RepairService] | User 6192 | Robot 50435 (User1Robot3) | Cost: ₡17,250 | Discount: 0%
+2026-03-02T20:11:14.549Z | INFO | [RepairService] | User 6192 | Robot 50434 (User1Robot2) | Cost: ₡16,560 | Discount: 0%
+2026-03-02T20:11:14.552Z | INFO | [RepairService] | User 6192 | Robot 50432 (User1Robot0) | Cost: ₡18,630 | Discount: 0%
+2026-03-02T20:11:14.558Z | INFO | [RepairService] | User 6192 | Robot 50433 (User1Robot1) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:14.565Z | INFO | [RepairService] | User 6101 | Robot 50258 (User1Robot2) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.586Z | INFO | [RepairService] | User 6101 | Robot 50259 (User1Robot3) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.596Z | INFO | [RepairService] | User 6101 | Robot 50256 (User1Robot0) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:14.602Z | INFO | [RepairService] | User 6101 | Robot 50257 (User1Robot1) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:14.610Z | INFO | [RepairService] | User 6156 | Robot 50327 (User2Robot3) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:14.616Z | INFO | [RepairService] | User 6156 | Robot 50324 (User2Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.620Z | INFO | [RepairService] | User 6156 | Robot 50326 (User2Robot2) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:14.625Z | INFO | [RepairService] | User 6156 | Robot 50325 (User2Robot1) | Cost: ₡18,170 | Discount: 0%
+2026-03-02T20:11:14.633Z | INFO | [RepairService] | User 6097 | Robot 50244 (User2Robot0) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.637Z | INFO | [RepairService] | User 6097 | Robot 50245 (User2Robot1) | Cost: ₡8,510 | Discount: 0%
+2026-03-02T20:11:14.642Z | INFO | [RepairService] | User 6097 | Robot 50246 (User2Robot2) | Cost: ₡17,480 | Discount: 0%
+2026-03-02T20:11:14.647Z | INFO | [RepairService] | User 6097 | Robot 50247 (User2Robot3) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:14.656Z | INFO | [RepairService] | User 6193 | Robot 50437 (User2Robot1) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:14.660Z | INFO | [RepairService] | User 6193 | Robot 50439 (User2Robot3) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.664Z | INFO | [RepairService] | User 6193 | Robot 50436 (User2Robot0) | Cost: ₡19,550 | Discount: 0%
+2026-03-02T20:11:14.668Z | INFO | [RepairService] | User 6193 | Robot 50438 (User2Robot2) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:14.692Z | INFO | [RepairService] | User 6106 | Robot 50275 (User1Robot3) | Cost: ₡18,400 | Discount: 0%
+2026-03-02T20:11:14.704Z | INFO | [RepairService] | User 6106 | Robot 50274 (User1Robot2) | Cost: ₡19,550 | Discount: 0%
+2026-03-02T20:11:14.709Z | INFO | [RepairService] | User 6106 | Robot 50273 (User1Robot1) | Cost: ₡10,350 | Discount: 0%
+2026-03-02T20:11:14.713Z | INFO | [RepairService] | User 6106 | Robot 50272 (User1Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.722Z | INFO | [RepairService] | User 6207 | Robot 50484 (User2Robot0) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:14.725Z | INFO | [RepairService] | User 6207 | Robot 50486 (User2Robot2) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.730Z | INFO | [RepairService] | User 6207 | Robot 50487 (User2Robot3) | Cost: ₡5,520 | Discount: 0%
+2026-03-02T20:11:14.734Z | INFO | [RepairService] | User 6207 | Robot 50485 (User2Robot1) | Cost: ₡19,780 | Discount: 0%
+2026-03-02T20:11:14.742Z | INFO | [RepairService] | User 6107 | Robot 50277 (User2Robot1) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:14.764Z | INFO | [RepairService] | User 6107 | Robot 50276 (User2Robot0) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:14.773Z | INFO | [RepairService] | User 6107 | Robot 50279 (User2Robot3) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:14.777Z | INFO | [RepairService] | User 6107 | Robot 50278 (User2Robot2) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.785Z | INFO | [RepairService] | User 6212 | Robot 50501 (User2Robot1) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:14.790Z | INFO | [RepairService] | User 6212 | Robot 50503 (User2Robot3) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:14.793Z | INFO | [RepairService] | User 6212 | Robot 50502 (User2Robot2) | Cost: ₡33,120 | Discount: 0%
+2026-03-02T20:11:14.798Z | INFO | [RepairService] | User 6212 | Robot 50500 (User2Robot0) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:14.806Z | INFO | [RepairService] | User 6137 | Robot 50284 (User2Robot0) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:14.810Z | INFO | [RepairService] | User 6137 | Robot 50286 (User2Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.815Z | INFO | [RepairService] | User 6137 | Robot 50285 (User2Robot1) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.819Z | INFO | [RepairService] | User 6137 | Robot 50287 (User2Robot3) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.826Z | INFO | [RepairService] | User 6136 | Robot 50280 (User1Robot0) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:14.830Z | INFO | [RepairService] | User 6136 | Robot 50282 (User1Robot2) | Cost: ₡8,970 | Discount: 0%
+2026-03-02T20:11:14.834Z | INFO | [RepairService] | User 6136 | Robot 50281 (User1Robot1) | Cost: ₡15,870 | Discount: 0%
+2026-03-02T20:11:14.839Z | INFO | [RepairService] | User 6136 | Robot 50283 (User1Robot3) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:14.847Z | INFO | [RepairService] | User 6086 | Robot 50212 (User2Robot0) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.851Z | INFO | [RepairService] | User 6086 | Robot 50214 (User2Robot2) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:14.855Z | INFO | [RepairService] | User 6086 | Robot 50215 (User2Robot3) | Cost: ₡15,410 | Discount: 0%
+2026-03-02T20:11:14.859Z | INFO | [RepairService] | User 6086 | Robot 50213 (User2Robot1) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.867Z | INFO | [RepairService] | User 6464 | Robot 53116 (TestRobot7) | Cost: ₡520 | Discount: 0%
+2026-03-02T20:11:14.873Z | INFO | [RepairService] | User 6464 | Robot 53117 (TestRobot33) | Cost: ₡644 | Discount: 0%
+2026-03-02T20:11:14.901Z | INFO | [RepairService] | User 6481 | Robot 53129 (TestRobot1) | Cost: ₡506 | Discount: 0%
+2026-03-02T20:11:14.905Z | INFO | [RepairService] | User 6481 | Robot 53130 (TestRobot2) | Cost: ₡685 | Discount: 0%
+2026-03-02T20:11:14.912Z | INFO | [RepairService] | User 6155 | Robot 50323 (User1Robot3) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:14.918Z | INFO | [RepairService] | User 6155 | Robot 50321 (User1Robot1) | Cost: ₡14,950 | Discount: 0%
+2026-03-02T20:11:14.923Z | INFO | [RepairService] | User 6155 | Robot 50320 (User1Robot0) | Cost: ₡2,990 | Discount: 0%
+2026-03-02T20:11:14.926Z | INFO | [RepairService] | User 6155 | Robot 50322 (User1Robot2) | Cost: ₡11,960 | Discount: 0%
+2026-03-02T20:11:14.935Z | INFO | [RepairService] | User 6140 | Robot 50291 (User1Robot3) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:14.940Z | INFO | [RepairService] | User 6140 | Robot 50288 (User1Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.943Z | INFO | [RepairService] | User 6140 | Robot 50289 (User1Robot1) | Cost: ₡16,330 | Discount: 0%
+2026-03-02T20:11:14.948Z | INFO | [RepairService] | User 6140 | Robot 50290 (User1Robot2) | Cost: ₡31,740 | Discount: 0%
+2026-03-02T20:11:14.957Z | INFO | [RepairService] | User 6141 | Robot 50294 (User2Robot2) | Cost: ₡18,860 | Discount: 0%
+2026-03-02T20:11:14.961Z | INFO | [RepairService] | User 6141 | Robot 50293 (User2Robot1) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:14.983Z | INFO | [RepairService] | User 6141 | Robot 50295 (User2Robot3) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:14.993Z | INFO | [RepairService] | User 6141 | Robot 50292 (User2Robot0) | Cost: ₡46,000 | Discount: 0%
+2026-03-02T20:11:15.002Z | INFO | [RepairService] | User 6149 | Robot 50311 (User2Robot3) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:15.008Z | INFO | [RepairService] | User 6149 | Robot 50310 (User2Robot2) | Cost: ₡19,780 | Discount: 0%
+2026-03-02T20:11:15.012Z | INFO | [RepairService] | User 6149 | Robot 50309 (User2Robot1) | Cost: ₡32,085 | Discount: 0%
+2026-03-02T20:11:15.017Z | INFO | [RepairService] | User 6149 | Robot 50308 (User2Robot0) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:15.024Z | INFO | [RepairService] | User 6148 | Robot 50307 (User1Robot3) | Cost: ₡14,260 | Discount: 0%
+2026-03-02T20:11:15.028Z | INFO | [RepairService] | User 6148 | Robot 50306 (User1Robot2) | Cost: ₡14,030 | Discount: 0%
+2026-03-02T20:11:15.033Z | INFO | [RepairService] | User 6148 | Robot 50304 (User1Robot0) | Cost: ₡33,465 | Discount: 0%
+2026-03-02T20:11:15.037Z | INFO | [RepairService] | User 6148 | Robot 50305 (User1Robot1) | Cost: ₡34,155 | Discount: 0%
+2026-03-02T20:11:15.045Z | INFO | [RepairService] | User 6204 | Robot 50473 (User1Robot1) | Cost: ₡11,270 | Discount: 0%
+2026-03-02T20:11:15.049Z | INFO | [RepairService] | User 6204 | Robot 50474 (User1Robot2) | Cost: ₡11,960 | Discount: 0%
+2026-03-02T20:11:15.053Z | INFO | [RepairService] | User 6204 | Robot 50472 (User1Robot0) | Cost: ₡18,630 | Discount: 0%
+2026-03-02T20:11:15.057Z | INFO | [RepairService] | User 6204 | Robot 50475 (User1Robot3) | Cost: ₡17,020 | Discount: 0%
+2026-03-02T20:11:15.065Z | INFO | [RepairService] | User 6164 | Robot 50342 (User2Robot2) | Cost: ₡12,420 | Discount: 0%
+2026-03-02T20:11:15.068Z | INFO | [RepairService] | User 6164 | Robot 50340 (User2Robot0) | Cost: ₡19,320 | Discount: 0%
+2026-03-02T20:11:15.073Z | INFO | [RepairService] | User 6164 | Robot 50343 (User2Robot3) | Cost: ₡18,630 | Discount: 0%
+2026-03-02T20:11:15.077Z | INFO | [RepairService] | User 6164 | Robot 50341 (User2Robot1) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:15.084Z | INFO | [RepairService] | User 6144 | Robot 50299 (User1Robot3) | Cost: ₡20,700 | Discount: 0%
+2026-03-02T20:11:15.089Z | INFO | [RepairService] | User 6144 | Robot 50298 (User1Robot2) | Cost: ₡31,395 | Discount: 0%
+2026-03-02T20:11:15.093Z | INFO | [RepairService] | User 6144 | Robot 50297 (User1Robot1) | Cost: ₡32,430 | Discount: 0%
+2026-03-02T20:11:15.097Z | INFO | [RepairService] | User 6144 | Robot 50296 (User1Robot0) | Cost: ₡14,490 | Discount: 0%
+2026-03-02T20:11:15.104Z | INFO | [RepairService] | User 6145 | Robot 50301 (User2Robot1) | Cost: ₡14,490 | Discount: 0%
+2026-03-02T20:11:15.108Z | INFO | [RepairService] | User 6145 | Robot 50302 (User2Robot2) | Cost: ₡32,775 | Discount: 0%
+2026-03-02T20:11:15.111Z | INFO | [RepairService] | User 6145 | Robot 50303 (User2Robot3) | Cost: ₡33,810 | Discount: 0%
+2026-03-02T20:11:15.133Z | INFO | [RepairService] | User 6145 | Robot 50300 (User2Robot0) | Cost: ₡9,890 | Discount: 0%
+2026-03-02T20:11:15.144Z | INFO | [RepairService] | User 6275 | Robot 51044 (MultiMatch_Robot_1_0_1772481632601) | Cost: ₡2,047 | Discount: 0%
+2026-03-02T20:11:15.147Z | INFO | [Admin] Step 3: Execute Tag Team Battles (Cycle 43)
+2026-03-02T20:11:15.150Z | INFO | [TagTeamBattles] Found 0 scheduled tag team matches
+2026-03-02T20:11:15.150Z | INFO | [TagTeamBattles] Execution complete: 0 battles, 0 wins, 0 draws, 0 losses, 0 skipped due to unready robots
+2026-03-02T20:11:15.151Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-03-02T20:11:15.154Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-03-02T20:11:15.156Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-03-02T20:11:15.158Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-03-02T20:11:15.158Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-02T20:11:15.158Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-03-02T20:11:15.158Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-02T20:11:15.160Z | INFO | [Rebalancing] Total robots in system: 341
+2026-03-02T20:11:15.160Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-03-02T20:11:15.164Z | INFO | [Rebalancing] bronze: 341 total robots across 4 instances
+2026-03-02T20:11:15.164Z | INFO | [Rebalancing] Processing bronze_1...
+2026-03-02T20:11:15.170Z | INFO | [Rebalancing] bronze_1: 1 robots eligible for promotion (top 10% of 14 AND ≥25 league points, 1 met points threshold)
+2026-03-02T20:11:15.175Z | INFO | [Rebalancing] Promoted: User1Robot3 (bronze → silver, LP: 25 retained)
+2026-03-02T20:11:15.175Z | INFO | [Rebalancing] Processing bronze_2...
+2026-03-02T20:11:15.179Z | INFO | [Rebalancing] bronze_2: No robots with ≥25 league points, skipping promotions
+2026-03-02T20:11:15.179Z | INFO | [Rebalancing] Processing bronze_3...
+2026-03-02T20:11:15.183Z | INFO | [Rebalancing] bronze_3: No robots with ≥25 league points, skipping promotions
+2026-03-02T20:11:15.183Z | INFO | [Rebalancing] Processing bronze_4...
+2026-03-02T20:11:15.185Z | INFO | [Rebalancing] bronze_4: No robots with ≥25 league points, skipping promotions
+2026-03-02T20:11:15.185Z | INFO | [Rebalancing] bronze: Promoted 1, Demoted 0 across 4 instances
+2026-03-02T20:11:15.186Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-03-02T20:11:15.188Z | INFO | [Rebalancing] silver: 1 total robots across 1 instances
+2026-03-02T20:11:15.188Z | INFO | [Rebalancing] Processing silver_1...
+2026-03-02T20:11:15.190Z | INFO | [Rebalancing] silver_1: Skipping (0 eligible, need 10)
+2026-03-02T20:11:15.190Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 1 instances
+2026-03-02T20:11:15.190Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-03-02T20:11:15.192Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-03-02T20:11:15.192Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.192Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-03-02T20:11:15.194Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-03-02T20:11:15.194Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.194Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-03-02T20:11:15.197Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-03-02T20:11:15.197Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.197Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-03-02T20:11:15.199Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-03-02T20:11:15.199Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.199Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-03-02T20:11:15.200Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T20:11:15.203Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T20:11:15.223Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T20:11:15.225Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T20:11:15.227Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T20:11:15.228Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-03-02T20:11:15.228Z | INFO |  ════════════════════════════════════════════════════════════
+2026-03-02T20:11:15.228Z | INFO | [Rebalancing] League rebalancing complete!
+2026-03-02T20:11:15.228Z | INFO |   Total promoted: 1
+2026-03-02T20:11:15.228Z | INFO |   Total demoted: 0
+2026-03-02T20:11:15.228Z | INFO |   Errors: 0
+2026-03-02T20:11:15.228Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-03-02T20:11:15.233Z | INFO | [Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle 43)
+2026-03-02T20:11:15.233Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-02T20:11:15.233Z | INFO | [TagTeamRebalancing] Starting tag team league rebalancing...
+2026-03-02T20:11:15.233Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-02T20:11:15.243Z | INFO | [TagTeamRebalancing] Total teams in system: 0
+2026-03-02T20:11:15.243Z | INFO |  [TagTeamRebalancing] Processing BRONZE league...
+2026-03-02T20:11:15.248Z | INFO | [TagTeamRebalancing] bronze: 0 total teams across 0 instances
+2026-03-02T20:11:15.248Z | INFO | [TagTeamRebalancing] bronze: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.248Z | INFO |  [TagTeamRebalancing] Processing SILVER league...
+2026-03-02T20:11:15.249Z | INFO | [TagTeamRebalancing] silver: 0 total teams across 0 instances
+2026-03-02T20:11:15.249Z | INFO | [TagTeamRebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.249Z | INFO |  [TagTeamRebalancing] Processing GOLD league...
+2026-03-02T20:11:15.251Z | INFO | [TagTeamRebalancing] gold: 0 total teams across 0 instances
+2026-03-02T20:11:15.251Z | INFO | [TagTeamRebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.251Z | INFO |  [TagTeamRebalancing] Processing PLATINUM league...
+2026-03-02T20:11:15.253Z | INFO | [TagTeamRebalancing] platinum: 0 total teams across 0 instances
+2026-03-02T20:11:15.253Z | INFO | [TagTeamRebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.253Z | INFO |  [TagTeamRebalancing] Processing DIAMOND league...
+2026-03-02T20:11:15.255Z | INFO | [TagTeamRebalancing] diamond: 0 total teams across 0 instances
+2026-03-02T20:11:15.255Z | INFO | [TagTeamRebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.255Z | INFO |  [TagTeamRebalancing] Processing CHAMPION league...
+2026-03-02T20:11:15.257Z | INFO | [TagTeamRebalancing] champion: 0 total teams across 0 instances
+2026-03-02T20:11:15.257Z | INFO | [TagTeamRebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-03-02T20:11:15.257Z | INFO |  ════════════════════════════════════════════════════════════
+2026-03-02T20:11:15.257Z | INFO | [TagTeamRebalancing] Tag team league rebalancing complete!
+2026-03-02T20:11:15.257Z | INFO |   Total promoted: 0
+2026-03-02T20:11:15.257Z | INFO |   Total demoted: 0
+2026-03-02T20:11:15.257Z | INFO |   Errors: 0
+2026-03-02T20:11:15.257Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-03-02T20:11:15.257Z | INFO | [TagTeamRebalancing] Rebalancing instances across all tiers...
+2026-03-02T20:11:15.259Z | INFO | [TagTeamLeagueInstance] bronze instances balanced, no action needed
+2026-03-02T20:11:15.259Z | INFO | [TagTeamLeagueInstance] silver instances balanced, no action needed
+2026-03-02T20:11:15.260Z | INFO | [TagTeamLeagueInstance] gold instances balanced, no action needed
+2026-03-02T20:11:15.261Z | INFO | [TagTeamLeagueInstance] platinum instances balanced, no action needed
+2026-03-02T20:11:15.262Z | INFO | [TagTeamLeagueInstance] diamond instances balanced, no action needed
+2026-03-02T20:11:15.264Z | INFO | [TagTeamLeagueInstance] champion instances balanced, no action needed
+2026-03-02T20:11:15.265Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-03-02T20:11:15.265Z | INFO | [UserGeneration] Generating 43 archetype users for Cycle 43...
+2026-03-02T20:11:15.265Z | INFO | [UserGeneration] Creating user 1/43: archetype_balanced_brawler_43_1 (archetype: balanced_brawler)
+2026-03-02T20:11:15.339Z | ERROR | [UserGeneration] Error creating user 1: {}
+2026-03-02T20:11:15.339Z | ERROR | [Admin] Error generating users: {}
+2026-03-02T20:11:15.349Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-03-02T20:11:15.349Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-03-02T20:11:15.349Z | INFO | [Matchmaking] Matches scheduled for: 2026-03-02T20:11:16.349Z
+2026-03-02T20:11:15.349Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-03-02T20:11:15.352Z | INFO | [Matchmaking] Processing bronze_1...
+2026-03-02T20:11:15.368Z | INFO | [Matchmaking] Queue for bronze_1: 85 robots available (85 total, 85 ready)
+2026-03-02T20:11:15.400Z | WARN | [Matchmaking] No Bye Robot found for MultiMatch_Robot_1_0_1772481632601
+2026-03-02T20:11:15.408Z | INFO | [Matchmaking] Created 42 scheduled matches
+2026-03-02T20:11:15.408Z | INFO | [Matchmaking] Processing bronze_2...
+2026-03-02T20:11:15.419Z | INFO | [Matchmaking] Queue for bronze_2: 85 robots available (85 total, 85 ready)
+2026-03-02T20:11:15.465Z | WARN | [Matchmaking] No Bye Robot found for MultiMatch_Robot_0_1_1772481632597
+2026-03-02T20:11:15.473Z | INFO | [Matchmaking] Created 42 scheduled matches
+2026-03-02T20:11:15.473Z | INFO | [Matchmaking] Processing bronze_3...
+2026-03-02T20:11:15.485Z | INFO | [Matchmaking] Queue for bronze_3: 85 robots available (85 total, 85 ready)
+2026-03-02T20:11:15.507Z | WARN | [Matchmaking] No Bye Robot found for MultiMatch_Robot_0_0_1772481632591
+2026-03-02T20:11:15.512Z | INFO | [Matchmaking] Created 42 scheduled matches
+2026-03-02T20:11:15.512Z | INFO | [Matchmaking] Processing bronze_4...
+2026-03-02T20:11:15.523Z | INFO | [Matchmaking] Queue for bronze_4: 85 robots available (85 total, 85 ready)
+2026-03-02T20:11:15.544Z | WARN | [Matchmaking] No Bye Robot found for MultiMatch_Robot_1_1_1772481632605
+2026-03-02T20:11:15.551Z | INFO | [Matchmaking] Created 42 scheduled matches
+2026-03-02T20:11:15.551Z | INFO | [Matchmaking] BRONZE: Created 168 matches across 4 instances
+2026-03-02T20:11:15.551Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-03-02T20:11:15.552Z | INFO | [Matchmaking] Processing silver_1...
+2026-03-02T20:11:15.556Z | INFO | [Matchmaking] Queue for silver_1: 1 robots available (1 total, 1 ready)
+2026-03-02T20:11:15.556Z | INFO | [Matchmaking] silver_1: Not enough robots for matches (1 available)
+2026-03-02T20:11:15.556Z | INFO | [Matchmaking] SILVER: Created 0 matches across 1 instances
+2026-03-02T20:11:15.556Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-03-02T20:11:15.558Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-03-02T20:11:15.558Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-03-02T20:11:15.559Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-03-02T20:11:15.559Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-03-02T20:11:15.560Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-03-02T20:11:15.560Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-03-02T20:11:15.560Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-03-02T20:11:15.560Z | INFO | [Matchmaking] ========================================
+2026-03-02T20:11:15.560Z | INFO | [Matchmaking] COMPLETE: 168 total matches created
+2026-03-02T20:11:15.560Z | INFO | [Matchmaking] ========================================
+2026-03-02T20:11:15.563Z | INFO | [Admin] Step 9.5: Matchmaking for Tag Teams (Cycle 43)
+2026-03-02T20:11:15.563Z | INFO | [TagTeamMatchmaking] Starting tag team matchmaking for all tiers...
+2026-03-02T20:11:15.583Z | INFO | [TagTeamMatchmaking] Complete: 0 total matches created
+2026-03-02T20:11:15.588Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-03-02T20:11:15.604Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-03-02T20:11:15.641Z | INFO | [OperatingCosts] User 6094 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.650Z | INFO | [OperatingCosts] User 6093 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.660Z | INFO | [OperatingCosts] User 6079 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.668Z | INFO | [OperatingCosts] User 6078 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.697Z | INFO | [OperatingCosts] User 6137 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.707Z | INFO | [OperatingCosts] User 6136 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.716Z | INFO | [OperatingCosts] User 6140 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.724Z | INFO | [OperatingCosts] User 6141 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.734Z | INFO | [OperatingCosts] User 6081 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.742Z | INFO | [OperatingCosts] User 6082 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.766Z | INFO | [OperatingCosts] User 6149 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.787Z | INFO | [OperatingCosts] User 6148 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.799Z | INFO | [OperatingCosts] User 6144 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.808Z | INFO | [OperatingCosts] User 6145 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.816Z | INFO | [OperatingCosts] User 6189 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.842Z | INFO | [OperatingCosts] User 6202 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.867Z | INFO | [OperatingCosts] User 6200 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.879Z | INFO | [OperatingCosts] User 6463 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-03-02T20:11:15.886Z | INFO | [OperatingCosts] User 6466 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.894Z | INFO | [OperatingCosts] User 6206 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.901Z | INFO | [OperatingCosts] User 6083 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.909Z | INFO | [OperatingCosts] User 6198 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.916Z | INFO | [OperatingCosts] User 6197 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.924Z | INFO | [OperatingCosts] User 6211 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.932Z | INFO | [OperatingCosts] User 6199 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.941Z | INFO | [OperatingCosts] User 6178 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.948Z | INFO | [OperatingCosts] User 6192 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.978Z | INFO | [OperatingCosts] User 6153 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.986Z | INFO | [OperatingCosts] User 6193 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:15.994Z | INFO | [OperatingCosts] User 6152 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.002Z | INFO | [OperatingCosts] User 6205 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.010Z | INFO | [OperatingCosts] User 6207 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.017Z | INFO | [OperatingCosts] User 6212 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.025Z | INFO | [OperatingCosts] User 6172 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.032Z | INFO | [OperatingCosts] User 6182 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.040Z | INFO | [OperatingCosts] User 6171 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.068Z | INFO | [OperatingCosts] User 6084 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.077Z | INFO | [OperatingCosts] User 6464 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-03-02T20:11:16.085Z | INFO | [OperatingCosts] User 6204 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.092Z | INFO | [OperatingCosts] User 6190 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.100Z | INFO | [OperatingCosts] User 6188 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.108Z | INFO | [OperatingCosts] User 6181 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.116Z | INFO | [OperatingCosts] User 6201 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.125Z | INFO | [OperatingCosts] User 6179 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.134Z | INFO | [OperatingCosts] User 6191 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.142Z | INFO | [OperatingCosts] User 6175 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.149Z | INFO | [OperatingCosts] User 6170 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.157Z | INFO | [OperatingCosts] User 6167 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.165Z | INFO | [OperatingCosts] User 6168 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.172Z | INFO | [OperatingCosts] User 6160 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.195Z | INFO | [OperatingCosts] User 6174 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.212Z | INFO | [OperatingCosts] User 6159 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.220Z | INFO | [OperatingCosts] User 6184 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.227Z | INFO | [OperatingCosts] User 6176 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.235Z | INFO | [OperatingCosts] User 6169 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.243Z | INFO | [OperatingCosts] User 6183 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.250Z | INFO | [OperatingCosts] User 6177 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.265Z | INFO | [OperatingCosts] User 6186 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.271Z | INFO | [OperatingCosts] User 6195 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.291Z | INFO | [OperatingCosts] User 6194 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.309Z | INFO | [OperatingCosts] User 6085 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.316Z | INFO | [OperatingCosts] User 6185 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.325Z | INFO | [OperatingCosts] User 6209 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.334Z | INFO | [OperatingCosts] User 6208 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.341Z | INFO | [OperatingCosts] User 6086 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.470Z | INFO | [OperatingCosts] User 6089 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.478Z | INFO | [OperatingCosts] User 6088 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.486Z | INFO | [OperatingCosts] User 6475 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.494Z | INFO | [OperatingCosts] User 6477 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-03-02T20:11:16.502Z | INFO | [OperatingCosts] User 6481 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-03-02T20:11:16.514Z | INFO | [OperatingCosts] User 6091 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.523Z | INFO | [OperatingCosts] User 6092 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.533Z | INFO | [OperatingCosts] User 6489 | Total: ₡500 | Facilities: streaming_studio(L5): ₡500
+2026-03-02T20:11:16.544Z | INFO | [OperatingCosts] User 6274 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-03-02T20:11:16.553Z | INFO | [OperatingCosts] User 6104 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.562Z | INFO | [OperatingCosts] User 6103 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.594Z | INFO | [OperatingCosts] User 6096 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.602Z | INFO | [OperatingCosts] User 6097 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.610Z | INFO | [OperatingCosts] User 6275 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
+2026-03-02T20:11:16.617Z | INFO | [OperatingCosts] User 6099 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.625Z | INFO | [OperatingCosts] User 6098 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.633Z | INFO | [OperatingCosts] User 6102 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.640Z | INFO | [OperatingCosts] User 6163 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.648Z | INFO | [OperatingCosts] User 6101 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.655Z | INFO | [OperatingCosts] User 6156 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.662Z | INFO | [OperatingCosts] User 6155 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.669Z | INFO | [OperatingCosts] User 6164 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.678Z | INFO | [OperatingCosts] User 6106 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.686Z | INFO | [OperatingCosts] User 6107 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
+2026-03-02T20:11:16.686Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡126,500
+2026-03-02T20:11:16.687Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-03-02T20:11:17.796Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-03-02T20:11:17.796Z | INFO | [Admin] === End of Cycle 43 Balances ===
+2026-03-02T20:11:17.802Z | INFO | [Balance] User 6078 | Stable: user1_1772481599052_0.3898842839308452 | Balance: ₡300,702
+2026-03-02T20:11:17.808Z | INFO | [Balance] User 6079 | Stable: user2_1772481599106_0.4349728105458035 | Balance: ₡262,218
+2026-03-02T20:11:17.817Z | INFO | [Balance] User 6081 | Stable: user1_1772481599655_0.06050690420207361 | Balance: ₡386,466
+2026-03-02T20:11:17.824Z | INFO | [Balance] User 6082 | Stable: user2_1772481599660_0.5319546048048859 | Balance: ₡415,381
+2026-03-02T20:11:17.826Z | INFO | [Balance] User 6083 | Stable: user1_1772481600222_0.596823700380945 | Balance: ₡515,972
+2026-03-02T20:11:17.832Z | INFO | [Balance] User 6084 | Stable: user2_1772481600224_0.6061232588391507 | Balance: ₡294,220
+2026-03-02T20:11:17.833Z | INFO | [Balance] User 6085 | Stable: user1_1772481600769_0.6402702334618785 | Balance: ₡468,935
+2026-03-02T20:11:17.835Z | INFO | [Balance] User 6086 | Stable: user2_1772481600774_0.6421237976595903 | Balance: ₡327,107
+2026-03-02T20:11:17.838Z | INFO | [Balance] User 6088 | Stable: user1_1772481602411_0.42793269088784613 | Balance: ₡576,043
+2026-03-02T20:11:17.840Z | INFO | [Balance] User 6089 | Stable: user2_1772481602413_0.8942206867283329 | Balance: ₡481,007
+2026-03-02T20:11:17.843Z | INFO | [Balance] User 6091 | Stable: user1_1772481603862_0.600713786675339 | Balance: ₡707,744
+2026-03-02T20:11:17.845Z | INFO | [Balance] User 6092 | Stable: user2_1772481603864_0.7203878869534897 | Balance: ₡546,628
+2026-03-02T20:11:17.849Z | INFO | [Balance] User 6093 | Stable: user1_1772481604847_0.492263508751704 | Balance: ₡472,875
+2026-03-02T20:11:17.850Z | INFO | [Balance] User 6094 | Stable: user2_1772481604849_0.867292113543826 | Balance: ₡498,385
+2026-03-02T20:11:17.851Z | INFO | [Balance] User 6096 | Stable: user1_1772481607200_0.453656259742763 | Balance: ₡579,733
+2026-03-02T20:11:17.853Z | INFO | [Balance] User 6097 | Stable: user2_1772481607203_0.4406933458263612 | Balance: ₡809,377
+2026-03-02T20:11:17.854Z | INFO | [Balance] User 6098 | Stable: user1_1772481609558_0.30253738962241117 | Balance: ₡750,224
+2026-03-02T20:11:17.857Z | INFO | [Balance] User 6099 | Stable: user2_1772481609561_0.5845981428571488 | Balance: ₡708,413
+2026-03-02T20:11:17.859Z | INFO | [Balance] User 6101 | Stable: user1_1772481611128_0.12633235271933396 | Balance: ₡641,039
+2026-03-02T20:11:17.860Z | INFO | [Balance] User 6102 | Stable: user2_1772481611130_0.8779610071070184 | Balance: ₡821,750
+2026-03-02T20:11:17.861Z | INFO | [Balance] User 6103 | Stable: user1_1772481613765_0.18790705511375305 | Balance: ₡713,937
+2026-03-02T20:11:17.862Z | INFO | [Balance] User 6104 | Stable: user2_1772481613767_0.05371320063821461 | Balance: ₡739,529
+2026-03-02T20:11:17.865Z | INFO | [Balance] User 6106 | Stable: user1_1772481616623_0.3397562440197971 | Balance: ₡781,120
+2026-03-02T20:11:17.866Z | INFO | [Balance] User 6107 | Stable: user2_1772481616625_0.9852551752095212 | Balance: ₡710,865
+2026-03-02T20:11:17.867Z | INFO | [Balance] User 6136 | Stable: user1_1772481620197_0.902049222080995 | Balance: ₡735,156
+2026-03-02T20:11:17.868Z | INFO | [Balance] User 6137 | Stable: user2_1772481620199_0.7398008268396243 | Balance: ₡716,043
+2026-03-02T20:11:17.873Z | INFO | [Balance] User 6140 | Stable: user1_1772481620863_0.867241964481621 | Balance: ₡789,145
+2026-03-02T20:11:17.874Z | INFO | [Balance] User 6141 | Stable: user2_1772481620864_0.21112725742712957 | Balance: ₡707,992
+2026-03-02T20:11:17.876Z | INFO | [Balance] User 6144 | Stable: user1_1772481621505_0.9717514558222972 | Balance: ₡779,689
+2026-03-02T20:11:17.877Z | INFO | [Balance] User 6145 | Stable: user2_1772481621506_0.6004020097880148 | Balance: ₡772,353
+2026-03-02T20:11:17.878Z | INFO | [Balance] User 6148 | Stable: user1_1772481622132_0.5459892792822169 | Balance: ₡725,153
+2026-03-02T20:11:17.880Z | INFO | [Balance] User 6149 | Stable: user2_1772481622133_0.2810205177516253 | Balance: ₡723,429
+2026-03-02T20:11:17.881Z | INFO | [Balance] User 6152 | Stable: user1_1772481622776_0.47111395242118825 | Balance: ₡692,351
+2026-03-02T20:11:17.882Z | INFO | [Balance] User 6153 | Stable: user2_1772481622778_0.4919418009821689 | Balance: ₡900,197
+2026-03-02T20:11:17.883Z | INFO | [Balance] User 6155 | Stable: user1_1772481623467_0.9132583228621515 | Balance: ₡764,022
+2026-03-02T20:11:17.884Z | INFO | [Balance] User 6156 | Stable: user2_1772481623469_0.37019659638528013 | Balance: ₡746,336
+2026-03-02T20:11:17.885Z | INFO | [Balance] User 6159 | Stable: user1_1772481624124_0.11170397459433579 | Balance: ₡695,084
+2026-03-02T20:11:17.886Z | INFO | [Balance] User 6160 | Stable: user2_1772481624127_0.774729654918136 | Balance: ₡781,582
+2026-03-02T20:11:17.888Z | INFO | [Balance] User 6163 | Stable: user1_1772481624763_0.8023403525819056 | Balance: ₡808,464
+2026-03-02T20:11:17.890Z | INFO | [Balance] User 6164 | Stable: user2_1772481624764_0.9872844804295076 | Balance: ₡819,530
+2026-03-02T20:11:17.891Z | INFO | [Balance] User 6167 | Stable: user1_1772481625386_0.926788449450364 | Balance: ₡876,831
+2026-03-02T20:11:17.892Z | INFO | [Balance] User 6168 | Stable: user2_1772481625388_0.1813909878901565 | Balance: ₡888,445
+2026-03-02T20:11:17.894Z | INFO | [Balance] User 6169 | Stable: user1_1772481625498_0.8297875035808919 | Balance: ₡876,946
+2026-03-02T20:11:17.896Z | INFO | [Balance] User 6170 | Stable: user2_1772481625499_0.5969193441790003 | Balance: ₡840,261
+2026-03-02T20:11:17.898Z | INFO | [Balance] User 6171 | Stable: user1_1772481625609_0.9205034556898384 | Balance: ₡770,379
+2026-03-02T20:11:17.899Z | INFO | [Balance] User 6172 | Stable: user2_1772481625610_0.9451975238369457 | Balance: ₡866,507
+2026-03-02T20:11:17.900Z | INFO | [Balance] User 6174 | Stable: user1_1772481625724_0.6393949659268696 | Balance: ₡836,671
+2026-03-02T20:11:17.902Z | INFO | [Balance] User 6175 | Stable: user2_1772481625725_0.9870061497118894 | Balance: ₡889,622
+2026-03-02T20:11:17.903Z | INFO | [Balance] User 6176 | Stable: user1_1772481625837_0.46348359140028883 | Balance: ₡735,253
+2026-03-02T20:11:17.904Z | INFO | [Balance] User 6177 | Stable: user2_1772481625838_0.48496281643102157 | Balance: ₡829,654
+2026-03-02T20:11:17.907Z | INFO | [Balance] User 6178 | Stable: user1_1772481625945_0.24291946957172095 | Balance: ₡770,724
+2026-03-02T20:11:17.909Z | INFO | [Balance] User 6179 | Stable: user2_1772481625948_0.9936690015752841 | Balance: ₡827,701
+2026-03-02T20:11:17.910Z | INFO | [Balance] User 6181 | Stable: user1_1772481626040_0.6509514334217085 | Balance: ₡833,654
+2026-03-02T20:11:17.913Z | INFO | [Balance] User 6182 | Stable: user2_1772481626042_0.4690413627957052 | Balance: ₡886,288
+2026-03-02T20:11:17.915Z | INFO | [Balance] User 6183 | Stable: user1_1772481626154_0.7150542036297132 | Balance: ₡806,860
+2026-03-02T20:11:17.917Z | INFO | [Balance] User 6184 | Stable: user2_1772481626155_0.6270236296589639 | Balance: ₡834,166
+2026-03-02T20:11:17.921Z | INFO | [Balance] User 6185 | Stable: user1_1772481626272_0.41017740896538946 | Balance: ₡838,970
+2026-03-02T20:11:17.927Z | INFO | [Balance] User 6186 | Stable: user2_1772481626273_0.7161386603570749 | Balance: ₡779,005
+2026-03-02T20:11:17.929Z | INFO | [Balance] User 6188 | Stable: user1_1772481626381_0.9327842223558732 | Balance: ₡829,195
+2026-03-02T20:11:17.935Z | INFO | [Balance] User 6189 | Stable: user2_1772481626382_0.9948635879871058 | Balance: ₡907,331
+2026-03-02T20:11:17.941Z | INFO | [Balance] User 6190 | Stable: user1_1772481626489_0.9481468064989605 | Balance: ₡767,478
+2026-03-02T20:11:17.948Z | INFO | [Balance] User 6191 | Stable: user2_1772481626490_0.8034863181667279 | Balance: ₡797,545
+2026-03-02T20:11:17.951Z | INFO | [Balance] User 6192 | Stable: user1_1772481626594_0.4325108908559465 | Balance: ₡818,384
+2026-03-02T20:11:17.957Z | INFO | [Balance] User 6193 | Stable: user2_1772481626596_0.6939869013754005 | Balance: ₡821,722
+2026-03-02T20:11:17.962Z | INFO | [Balance] User 6194 | Stable: user1_1772481626688_0.8959576162983277 | Balance: ₡897,786
+2026-03-02T20:11:17.963Z | INFO | [Balance] User 6195 | Stable: user2_1772481626689_0.2893462324989867 | Balance: ₡848,400
+2026-03-02T20:11:17.965Z | INFO | [Balance] User 6197 | Stable: user1_1772481626803_0.9352653325226575 | Balance: ₡861,881
+2026-03-02T20:11:17.966Z | INFO | [Balance] User 6198 | Stable: user2_1772481626804_0.8989854172626702 | Balance: ₡854,380
+2026-03-02T20:11:17.967Z | INFO | [Balance] User 6199 | Stable: user1_1772481626913_0.14145924778276786 | Balance: ₡892,153
+2026-03-02T20:11:17.968Z | INFO | [Balance] User 6200 | Stable: user2_1772481626914_0.17333447108558175 | Balance: ₡804,673
+2026-03-02T20:11:17.969Z | INFO | [Balance] User 6201 | Stable: user1_1772481627021_0.8401543942697317 | Balance: ₡817,695
+2026-03-02T20:11:17.970Z | INFO | [Balance] User 6202 | Stable: user2_1772481627021_0.9643422428428174 | Balance: ₡819,535
+2026-03-02T20:11:17.972Z | INFO | [Balance] User 6204 | Stable: user1_1772481627127_0.9517234351647861 | Balance: ₡874,300
+2026-03-02T20:11:17.974Z | INFO | [Balance] User 6205 | Stable: user2_1772481627128_0.5462552973411201 | Balance: ₡797,687
+2026-03-02T20:11:17.975Z | INFO | [Balance] User 6206 | Stable: user1_1772481627217_0.236317904688222 | Balance: ₡793,060
+2026-03-02T20:11:17.976Z | INFO | [Balance] User 6207 | Stable: user2_1772481627219_0.06921561344723415 | Balance: ₡879,822
+2026-03-02T20:11:17.977Z | INFO | [Balance] User 6208 | Stable: user1_1772481627332_0.5139662839139055 | Balance: ₡776,590
+2026-03-02T20:11:17.978Z | INFO | [Balance] User 6209 | Stable: user2_1772481627333_0.7184654650159631 | Balance: ₡882,517
+2026-03-02T20:11:17.979Z | INFO | [Balance] User 6211 | Stable: user1_1772481627438_0.1327238183079883 | Balance: ₡820,749
+2026-03-02T20:11:17.981Z | INFO | [Balance] User 6212 | Stable: user2_1772481627439_0.406559108762626 | Balance: ₡801,341
+2026-03-02T20:11:17.982Z | INFO | [Balance] User 6274 | Stable: tagteam_multi_user_0_1772481632587 | Balance: ₡113,522
+2026-03-02T20:11:17.983Z | INFO | [Balance] User 6275 | Stable: tagteam_multi_user_1_1772481632599 | Balance: ₡99,431
+2026-03-02T20:11:17.984Z | INFO | [Balance] User 6463 | Stable: test_user_3_1772481666829 | Balance: ₡106,520
+2026-03-02T20:11:17.985Z | INFO | [Balance] User 6464 | Stable: test_user_1_1772481666887 | Balance: ₡106,318
+2026-03-02T20:11:17.986Z | INFO | [Balance] User 6465 | Stable: test_user_9_1772481666939 | Balance: ₡104,102
+2026-03-02T20:11:17.987Z | INFO | [Balance] User 6466 | Stable: test_user_6_1772481666962 | Balance: ₡118,818
+2026-03-02T20:11:17.989Z | INFO | [Balance] User 6468 | Stable: l6a6j0023b1772481667 | Balance: ₡3,000,000
+2026-03-02T20:11:17.990Z | INFO | [Balance] User 6469 | Stable: -_mc6wis177248166789 | Balance: ₡3,000,000
+2026-03-02T20:11:17.991Z | INFO | [Balance] User 6470 | Stable: jz1h217724816681002 | Balance: ₡3,000,000
+2026-03-02T20:11:17.992Z | INFO | [Balance] User 6471 | Stable: 1hhdd17724816683373 | Balance: ₡3,000,000
+2026-03-02T20:11:17.993Z | INFO | [Balance] User 6472 | Stable: z8l69n17724816685824 | Balance: ₡3,000,000
+2026-03-02T20:11:17.994Z | INFO | [Balance] User 6473 | Stable: vxqk417724816689725 | Balance: ₡3,000,000
+2026-03-02T20:11:17.995Z | INFO | [Balance] User 6474 | Stable: 4t317724816693576 | Balance: ₡3,000,000
+2026-03-02T20:11:17.997Z | INFO | [Balance] User 6475 | Stable: test_user_4_1772481669849 | Balance: ₡110,871
+2026-03-02T20:11:17.999Z | INFO | [Balance] User 6476 | Stable: 8-i0bcztdd1772481669 | Balance: ₡3,000,000
+2026-03-02T20:11:18.000Z | INFO | [Balance] User 6477 | Stable: test_user_1_1772481669919 | Balance: ₡113,924
+2026-03-02T20:11:18.002Z | INFO | [Balance] User 6478 | Stable: i03fznaws17724816701 | Balance: ₡3,000,000
+2026-03-02T20:11:18.003Z | INFO | [Balance] User 6479 | Stable: jzw5b17724816703749 | Balance: ₡3,000,000
+2026-03-02T20:11:18.008Z | INFO | [Balance] User 6480 | Stable: 3itd3217724816706741 | Balance: ₡3,000,000
+2026-03-02T20:11:18.009Z | INFO | [Balance] User 6481 | Stable: test_user_8_1772481670922 | Balance: ₡106,235
+2026-03-02T20:11:18.010Z | INFO | [Balance] User 6482 | Stable: c65pt717724816708941 | Balance: ₡3,000,000
+2026-03-02T20:11:18.011Z | INFO | [Balance] User 6483 | Stable: test_user_1_1772481671058 | Balance: ₡100,000
+2026-03-02T20:11:18.014Z | INFO | [Balance] User 6484 | Stable: d3oaq177248167110312 | Balance: ₡3,000,000
+2026-03-02T20:11:18.016Z | INFO | [Balance] User 6485 | Stable: h7k177248167132813 | Balance: ₡3,000,000
+2026-03-02T20:11:18.017Z | INFO | [Balance] User 6487 | Stable: ra_y-chm1f1772481671 | Balance: ₡3,000,000
+2026-03-02T20:11:18.018Z | INFO | [Balance] User 6488 | Stable: owd1177248167175315 | Balance: ₡3,000,000
+2026-03-02T20:11:18.020Z | INFO | [Balance] User 6489 | Stable: test_user_1772481671880_6y3vk | Balance: ₡8,498,500
+2026-03-02T20:11:18.022Z | INFO | [Balance] User 6490 | Stable: tp58eml1772481671974 | Balance: ₡3,000,000
+2026-03-02T20:11:18.023Z | INFO | [Balance] User 6496 | Stable: admin_test_1772482233808 | Balance: ₡1,000,000
+2026-03-02T20:11:18.027Z | INFO | [Admin] ===================================
+2026-03-02T20:11:18.037Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-03-02T20:11:18.037Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 43
+2026-03-02T20:11:18.056Z | INFO | [CycleSnapshotService] Found 338 battle_complete events for cycle 43
+2026-03-02T20:11:18.059Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6081: credits=1500, streaming=1017, prestige=0
+2026-03-02T20:11:18.059Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6102: credits=9000, streaming=1007, prestige=5
+2026-03-02T20:11:18.059Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6083: credits=1500, streaming=1010, prestige=0
+2026-03-02T20:11:18.059Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6097: credits=9000, streaming=1008, prestige=5
+2026-03-02T20:11:18.059Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6089: credits=1500, streaming=1008, prestige=0
+2026-03-02T20:11:18.059Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6084: credits=9000, streaming=1016, prestige=5
+2026-03-02T20:11:18.059Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6106: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.059Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6104: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6153: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6149: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6140: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6103: credits=9000, streaming=1005, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6202: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6206: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6202: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6212: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6186: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6149: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6136: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6155: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6091: credits=9000, streaming=1011, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6102: credits=1500, streaming=1005, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6079: credits=1500, streaming=1012, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6096: credits=9000, streaming=1006, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6079: credits=1500, streaming=1010, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6094: credits=9000, streaming=1006, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6182: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6183: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6188: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6181: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6194: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6195: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6198: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6193: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6169: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6201: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6191: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6205: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6207: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6211: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6199: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6209: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6179: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6172: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6175: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6174: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6107: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6163: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6104: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6275: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6081: credits=9000, streaming=1016, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6084: credits=1500, streaming=1016, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6085: credits=1500, streaming=1017, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6078: credits=9000, streaming=1015, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6164: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6159: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6104: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6103: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6096: credits=1500, streaming=1006, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6164: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6079: credits=9000, streaming=1012, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6092: credits=1500, streaming=1008, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6137: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6160: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6144: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6191: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6465: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6463: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6466: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6475: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6170: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6188: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6200: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6172: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6178: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6167: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6168: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6176: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6177: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6189: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6185: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6197: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6208: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6192: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6195: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6190: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6204: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6183: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6106: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6163: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6141: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6156: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6152: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6172: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6167: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6083: credits=1500, streaming=1017, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6091: credits=9000, streaming=1012, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6078: credits=9000, streaming=1017, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6086: credits=1500, streaming=1015, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6089: credits=9000, streaming=1013, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6097: credits=1500, streaming=1008, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6088: credits=1500, streaming=1008, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6098: credits=9000, streaming=1005, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6094: credits=9000, streaming=1008, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6103: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6160: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6140: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6141: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6156: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6145: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6174: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6085: credits=9000, streaming=1010, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6099: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6082: credits=9000, streaming=1009, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6096: credits=1500, streaming=1007, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6477: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6475: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6198: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6212: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6202: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6189: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6193: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6191: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6207: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6170: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6205: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6197: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6186: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6195: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6169: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6208: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6178: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6199: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6083: credits=1500, streaming=1013, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6088: credits=9000, streaming=1015, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6185: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6155: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6145: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6163: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6149: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6155: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6093: credits=1500, streaming=1006, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6098: credits=9000, streaming=1005, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6153: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6136: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6164: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6093: credits=1500, streaming=1008, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6466: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6475: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6466: credits=9000, streaming=1022, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6181: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6190: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6175: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6201: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6176: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6190: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6171: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6167: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6184: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6176: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6177: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6182: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6194: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6191: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6193: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6200: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6206: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6211: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6204: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6209: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6107: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6136: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6159: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6148: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6141: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6101: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6089: credits=9000, streaming=1007, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6082: credits=1500, streaming=1018, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6097: credits=9000, streaming=1008, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6082: credits=1500, streaming=1017, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6078: credits=9000, streaming=1015, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6081: credits=1500, streaming=1017, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6088: credits=9000, streaming=1015, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6084: credits=1500, streaming=1014, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6085: credits=9000, streaming=1009, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6078: credits=1500, streaming=1018, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6084: credits=9000, streaming=1013, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6106: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6107: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6156: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6140: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6153: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6101: credits=1500, streaming=1006, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6099: credits=9000, streaming=1006, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6098: credits=1500, streaming=1005, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6092: credits=1500, streaming=1009, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6086: credits=9000, streaming=1010, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6188: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6184: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6202: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6201: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6182: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6212: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6171: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6179: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6168: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6175: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6170: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6177: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6209: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6189: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6194: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6185: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6199: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6205: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6207: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6192: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6184: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6137: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6152: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6148: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6145: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6106: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6099: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6104: credits=9000, streaming=1005, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6160: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6159: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6144: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6096: credits=9000, streaming=1008, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6093: credits=9000, streaming=1006, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6152: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6481: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6477: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6463: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6464: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6181: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6186: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6200: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6206: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6211: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6200: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6171: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6197: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6178: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6198: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6169: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6174: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6193: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6183: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6168: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6208: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6155: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6094: credits=9000, streaming=1006, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6101: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6086: credits=9000, streaming=1014, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6091: credits=1500, streaming=1009, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6081: credits=1500, streaming=1011, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6083: credits=9000, streaming=1016, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6085: credits=1500, streaming=1017, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6089: credits=9000, streaming=1014, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6102: credits=9000, streaming=1008, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6097: credits=1500, streaming=1007, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6093: credits=9000, streaming=1010, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6148: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6164: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6153: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6137: credits=1500, streaming=1004, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6099: credits=9000, streaming=1005, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6092: credits=9000, streaming=1009, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6098: credits=1500, streaming=1006, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6092: credits=1500, streaming=1010, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6088: credits=9000, streaming=1009, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6094: credits=9000, streaming=1007, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6079: credits=1500, streaming=1011, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6163: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6204: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6212: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6182: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6206: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6208: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6174: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6199: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6194: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6189: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6179: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6167: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6183: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6175: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6169: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6168: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6197: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6172: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6209: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6186: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6144: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6156: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6107: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6136: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6145: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6149: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6091: credits=9000, streaming=1008, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6159: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6141: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6144: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6152: credits=1500, streaming=1003, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6160: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6101: credits=1500, streaming=1005, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6181: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6464: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6481: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6466: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6475: credits=1500, streaming=1022, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6086: credits=1500, streaming=1013, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6102: credits=9000, streaming=1004, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6211: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6198: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6178: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6170: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6171: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6185: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6184: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6195: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6192: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6207: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6192: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6205: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6204: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6176: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6201: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6177: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6188: credits=9000, streaming=1002, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6190: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6179: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6148: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6137: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6103: credits=9000, streaming=1003, prestige=5
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6140: credits=1500, streaming=1002, prestige=0
+2026-03-02T20:11:18.060Z | INFO | [CycleSnapshotService] Processing battle_complete for user 6082: credits=9000, streaming=1010, prestige=5
+2026-03-02T20:11:18.072Z | INFO | [CycleSnapshotService] Found 109 cycle_end_balance events for cycle 43
+2026-03-02T20:11:18.104Z | INFO | [CycleSnapshotService] Snapshot created for cycle 43
+2026-03-02T20:11:18.104Z | INFO | [Admin] Cycle snapshot created for cycle 43
+2026-03-02T20:11:18.106Z | INFO | [Admin] === Cycle 43 Summary ===
+2026-03-02T20:11:18.106Z | INFO | [Admin] Battles: 169
+2026-03-02T20:11:18.106Z | INFO | [Admin] ===================================
+2026-03-02T20:11:18.106Z | INFO | === Cycle 43 Ended ===

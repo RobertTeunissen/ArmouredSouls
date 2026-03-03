@@ -756,7 +756,7 @@ export class RobotPerformanceService {
     });
 
     if (!event) {
-      // Fallback: use latest battle in cycle
+      // Fallback: use cycle snapshot end time
       const snapshot = await prisma.cycleSnapshot.findUnique({
         where: { cycleNumber },
       });
@@ -765,7 +765,26 @@ export class RobotPerformanceService {
         return snapshot.endTime;
       }
 
-      throw new Error(`Cycle ${cycleNumber} end time not found`);
+      // Second fallback: find the latest battle in this cycle
+      const cycleStartTime = await this.getCycleStartTime(cycleNumber);
+      const latestBattle = await prisma.battle.findFirst({
+        where: {
+          createdAt: {
+            gte: cycleStartTime,
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      if (latestBattle) {
+        return latestBattle.createdAt;
+      }
+
+      // Final fallback: use current time for incomplete cycles
+      // This allows analytics to work for cycles that are in progress
+      return new Date();
     }
 
     return event.eventTimestamp;

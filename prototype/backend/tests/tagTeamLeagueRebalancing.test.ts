@@ -33,6 +33,15 @@ describe('Tag Team League Rebalancing', () => {
     // Clean up test data in correct order
     // Only clean up teams and robots created by this test (tracked in arrays)
     if (testTeamIds.length > 0) {
+      // Delete tag team matches first (foreign key constraint)
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: testTeamIds } },
+            { team2Id: { in: testTeamIds } },
+          ],
+        },
+      });
       await prisma.tagTeam.deleteMany({
         where: { id: { in: testTeamIds } },
       });
@@ -63,6 +72,29 @@ describe('Tag Team League Rebalancing', () => {
     testTeamIds = [];
     testRobotIds = [];
   });
+
+  /**
+   * Helper function to clean up tag teams with their matches
+   */
+  async function cleanupTagTeams(where: any) {
+    // Delete tag team matches first (foreign key constraint)
+    const teams = await prisma.tagTeam.findMany({ where });
+    const teamIds = teams.map(t => t.id);
+    
+    if (teamIds.length > 0) {
+      await prisma.tagTeamMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: teamIds } },
+            { team2Id: { in: teamIds } },
+          ],
+        },
+      });
+    }
+    
+    // Now delete the teams
+    await prisma.tagTeam.deleteMany({ where });
+  }
 
   /**
    * Helper function to create a test robot
@@ -127,9 +159,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should return empty array when fewer than 10 teams', async () => {
       // Clean up any existing teams in bronze_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'bronze_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'bronze_1' });
       
       // Create 5 teams in bronze with 5+ cycles
       for (let i = 0; i < 5; i++) {
@@ -142,9 +172,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should return empty array when no teams have 5+ cycles', async () => {
       // Clean up any existing teams in bronze_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'bronze_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'bronze_1' });
       
       // Create 15 teams in bronze with < 5 cycles
       for (let i = 0; i < 15; i++) {
@@ -157,9 +185,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should promote top 10% of eligible teams with ≥25 league points', async () => {
       // Clean up any existing teams in bronze_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'bronze_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'bronze_1' });
       
       // Create 20 teams in bronze with 5+ cycles
       for (let i = 0; i < 20; i++) {
@@ -181,9 +207,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should return empty array when no teams have ≥25 league points', async () => {
       // Clean up any existing teams in bronze_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'bronze_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'bronze_1' });
       
       // Create 20 teams in bronze with 5+ cycles but low points
       for (let i = 0; i < 20; i++) {
@@ -196,9 +220,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should exclude teams in excludeTeamIds set', async () => {
       // Clean up any existing teams in bronze_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'bronze_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'bronze_1' });
       
       // Create 20 teams in bronze with 5+ cycles
       const teams = [];
@@ -227,9 +249,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should return empty array when fewer than 10 teams', async () => {
       // Clean up any existing teams in silver_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'silver_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'silver_1' });
       
       // Create 5 teams in silver with 5+ cycles
       for (let i = 0; i < 5; i++) {
@@ -242,9 +262,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should return empty array when no teams have 5+ cycles', async () => {
       // Clean up any existing teams in silver_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'silver_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'silver_1' });
       
       // Create 15 teams in silver with < 5 cycles
       for (let i = 0; i < 15; i++) {
@@ -257,9 +275,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should demote bottom 10% of eligible teams', async () => {
       // Clean up any existing teams in silver_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'silver_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'silver_1' });
       
       // Create 20 teams in silver with 5+ cycles
       for (let i = 0; i < 20; i++) {
@@ -278,9 +294,7 @@ describe('Tag Team League Rebalancing', () => {
 
     it('should exclude teams in excludeTeamIds set', async () => {
       // Clean up any existing teams in silver_1 from previous tests
-      await prisma.tagTeam.deleteMany({
-        where: { tagTeamLeagueId: 'silver_1' },
-      });
+      await cleanupTagTeams({ tagTeamLeagueId: 'silver_1' });
       
       // Create 20 teams in silver with 5+ cycles
       const teams = [];
@@ -380,6 +394,7 @@ describe('Tag Team League Rebalancing', () => {
   describe('rebalanceTagTeamLeagues', () => {
     beforeEach(async () => {
       // Clean up ALL teams before these tests since they count total teams
+      await prisma.tagTeamMatch.deleteMany({});
       await prisma.tagTeam.deleteMany({});
     });
 

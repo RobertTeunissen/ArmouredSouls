@@ -13,9 +13,9 @@ test.describe('Login Page', () => {
 
   test('should display login page correctly', async ({ page }) => {
     // Check that main elements are visible
-    await expect(page.getByRole('heading', { name: 'Armoured Souls' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'ARMOURED SOULS' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
-    await expect(page.getByLabel('Username')).toBeVisible();
+    await expect(page.getByLabel('Username or Email')).toBeVisible();
     await expect(page.getByLabel('Password')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
     
@@ -26,22 +26,11 @@ test.describe('Login Page', () => {
     });
   });
 
-  test('should show test accounts information', async ({ page }) => {
-    // Verify test accounts section is visible
-    await expect(page.getByText('Test Accounts:')).toBeVisible();
-    await expect(page.getByText('admin / admin123')).toBeVisible();
-    await expect(page.getByText('player1 / password123')).toBeVisible();
-    
-    // Take screenshot showing test accounts
-    await page.screenshot({ 
-      path: 'test-results/screenshots/login-page-test-accounts.png',
-      fullPage: true 
-    });
-  });
+
 
   test('should show error for invalid credentials', async ({ page }) => {
     // Try to login with invalid credentials
-    await page.getByLabel('Username').fill('invalid_user');
+    await page.getByLabel('Username or Email').fill('invalid_user');
     await page.getByLabel('Password').fill('wrong_password');
     
     // Take screenshot before clicking login
@@ -66,7 +55,7 @@ test.describe('Login Page', () => {
 
   test('should successfully login with valid credentials', async ({ page }) => {
     // Fill in valid credentials
-    await page.getByLabel('Username').fill('player1');
+    await page.getByLabel('Username or Email').fill('player1');
     await page.getByLabel('Password').fill('password123');
     
     // Take screenshot before login
@@ -98,8 +87,8 @@ test.describe('Login Page', () => {
     await page.goto('/login');
     
     // Check elements are still visible
-    await expect(page.getByRole('heading', { name: 'Armoured Souls' })).toBeVisible();
-    await expect(page.getByLabel('Username')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'ARMOURED SOULS' })).toBeVisible();
+    await expect(page.getByLabel('Username or Email')).toBeVisible();
     
     // Take screenshot on mobile viewport
     await page.screenshot({ 

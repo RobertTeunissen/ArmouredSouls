@@ -25,7 +25,9 @@ describe('TagTeamService', () => {
   });
 
   afterAll(async () => {
-    // Clean up in correct order
+    // Clean up in correct order: tagTeamMatch → tagTeam → battles → robots → users
+    
+    // Delete tag team matches first
     if (testTeamIds.length > 0) {
       await prisma.tagTeamMatch.deleteMany({
         where: {
@@ -35,11 +37,16 @@ describe('TagTeamService', () => {
           ],
         },
       });
-      await prisma.tagTeam.deleteMany({
-        where: { id: { in: testTeamIds } },
-      });
     }
+    
+    // Delete tag teams (must be before robots due to foreign key)
+    await prisma.tagTeam.deleteMany({
+      where: {
+        OR: [{ stableId: testUserId }, { stableId: otherUserId }],
+      },
+    });
 
+    // Delete battle-related data
     if (testRobotIds.length > 0) {
       await prisma.battleParticipant.deleteMany({
         where: { robotId: { in: testRobotIds } },
@@ -60,11 +67,16 @@ describe('TagTeamService', () => {
           ],
         },
       });
-      await prisma.robot.deleteMany({
-        where: { id: { in: testRobotIds } },
-      });
     }
+    
+    // Delete robots
+    await prisma.robot.deleteMany({
+      where: {
+        OR: [{ userId: testUserId }, { userId: otherUserId }],
+      },
+    });
 
+    // Delete weapon inventory and facilities
     if (testUserIds.length > 0) {
       await prisma.weaponInventory.deleteMany({
         where: { userId: { in: testUserIds } },
@@ -72,17 +84,19 @@ describe('TagTeamService', () => {
       await prisma.facility.deleteMany({
         where: { userId: { in: testUserIds } },
       });
-      await prisma.user.deleteMany({
-        where: { id: { in: testUserIds } },
-      });
     }
+    
+    // Delete users
+    await prisma.user.deleteMany({
+      where: {
+        id: { in: [testUserId, otherUserId] },
+      },
+    });
 
     testTeamIds = [];
     testRobotIds = [];
     testUserIds = [];
-  });
-
-  afterAll(async () => {
+    
     await prisma.$disconnect();
   });
 
@@ -227,31 +241,6 @@ describe('TagTeamService', () => {
       },
     });
     otherRobotId = otherRobot.id;
-  });
-
-  afterAll(async () => {
-    // Clean up test data
-    await prisma.tagTeam.deleteMany({
-      where: {
-        OR: [{ stableId: testUserId }, { stableId: otherUserId }],
-      },
-    });
-    await prisma.robot.deleteMany({
-      where: {
-        OR: [{ userId: testUserId }, { userId: otherUserId }],
-      },
-    });
-    await prisma.weaponInventory.deleteMany({
-      where: {
-        OR: [{ userId: testUserId }, { userId: otherUserId }],
-      },
-    });
-    await prisma.user.deleteMany({
-      where: {
-        id: { in: [testUserId, otherUserId] },
-      },
-    });
-    await prisma.$disconnect();
   });
 
   describe('validateTeam', () => {

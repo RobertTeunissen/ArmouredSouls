@@ -230,7 +230,7 @@ export class CycleSnapshotService {
         metric.totalRepairCosts += payload.repairCost || 0;
       });
 
-      // Add passive income (merchandising)
+      // Add passive income (merchandising and streaming)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       passiveIncomeEvents.forEach((event: any) => {
         if (!event.userId) return;
@@ -238,6 +238,7 @@ export class CycleSnapshotService {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const payload = event.payload as any;
         metric.merchandisingIncome += payload.merchandising || 0;
+        metric.streamingIncome += payload.streaming || 0;
       });
 
       // Add operating costs
@@ -575,7 +576,34 @@ export class CycleSnapshotService {
     });
 
     if (!event) {
-      throw new Error(`Cycle ${cycleNumber} complete event not found`);
+      // Fallback: use cycle snapshot end time
+      const snapshot = await prisma.cycleSnapshot.findUnique({
+        where: { cycleNumber },
+      });
+      
+      if (snapshot) {
+        return snapshot.endTime;
+      }
+
+      // Second fallback: find the latest battle in this cycle
+      const cycleStartTime = await this.getCycleStartTime(cycleNumber);
+      const latestBattle = await prisma.battle.findFirst({
+        where: {
+          createdAt: {
+            gte: cycleStartTime,
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      if (latestBattle) {
+        return latestBattle.createdAt;
+      }
+
+      // Final fallback: use current time for incomplete cycles
+      return new Date();
     }
 
     return event.eventTimestamp;

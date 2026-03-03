@@ -1,10 +1,29 @@
 /**
  * Jest Setup File
- * Loads environment variables before tests run
+ * Loads environment variables and ensures weapons are seeded before tests run
  */
 
 import { config } from 'dotenv';
 import path from 'path';
+import { PrismaClient } from '@prisma/client';
+import { WEAPON_DEFINITIONS, upsertWeapon } from '../prisma/seed';
 
 // Load environment variables from .env file
 config({ path: path.resolve(__dirname, '../.env') });
+
+const prisma = new PrismaClient();
+
+// Global setup - runs once before all tests
+beforeAll(async () => {
+  // Ensure weapons are seeded (required for tests that create robots)
+  console.log('🌱 Ensuring weapons are seeded for tests...');
+  for (const def of WEAPON_DEFINITIONS) {
+    await upsertWeapon({ ...def });
+  }
+  console.log('✅ Weapons seeded');
+});
+
+// Global teardown - runs once after all tests
+afterAll(async () => {
+  await prisma.$disconnect();
+});

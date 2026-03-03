@@ -118,6 +118,7 @@ describe('Tag Team Streaming Revenue Integration', () => {
     await prisma.tagTeamMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
+    await prisma.tagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({
       where: { userId: { in: testUserIds } },

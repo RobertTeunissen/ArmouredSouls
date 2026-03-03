@@ -5,10 +5,10 @@ const isRemote = !!process.env.PLAYWRIGHT_BASE_URL;
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false, // Run tests serially to avoid interference
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1, // Single worker to prevent parallel execution issues
   reporter: [
     ['html', { open: 'never' }],
     ['list'],

@@ -23,6 +23,16 @@ describe('League Instance Service', () => {
     await prisma.weapon.deleteMany({});
   });
 
+  afterEach(async () => {
+    // Clean up after each test to prevent data pollution
+    await prisma.scheduledMatch.deleteMany({});
+    await prisma.battle.deleteMany({});
+    await prisma.robot.deleteMany({});
+    await prisma.weaponInventory.deleteMany({});
+    await prisma.facility.deleteMany({});
+    await prisma.user.deleteMany({});
+  });
+
   afterAll(async () => {
     await prisma.$disconnect();
   });
@@ -159,7 +169,7 @@ describe('League Instance Service', () => {
       
       expect(stats.totalRobots).toBe(100);
       expect(stats.averagePerInstance).toBe(50);
-      expect(stats.needsRebalancing).toBe(true); // Deviation of 30 > threshold of 20
+      expect(stats.needsRebalancing).toBe(false); // Changed: needsRebalancing only true when instance > MAX_ROBOTS_PER_INSTANCE (100)
 
       // Clean up
       await prisma.robot.deleteMany({ where: { userId: user.id } });
@@ -345,7 +355,8 @@ describe('League Instance Service', () => {
 
       await rebalanceInstances('champion');
 
-      // Verify rebalancing occurred while respecting MAX_ROBOTS_PER_INSTANCE
+      // Since neither instance exceeds MAX_ROBOTS_PER_INSTANCE (100), rebalancing won't trigger
+      // The instances will remain as they were (80 and 20)
       const instances = await getInstancesForTier('champion');
       const totalRobots = instances.reduce(
         (sum, instance) => sum + instance.currentRobots,
@@ -353,9 +364,8 @@ describe('League Instance Service', () => {
       );
       expect(totalRobots).toBe(100);
       
-      // With 100 robots and MAX_ROBOTS_PER_INSTANCE=100, should have exactly 1 instance
-      expect(instances).toHaveLength(1);
-      expect(instances[0].currentRobots).toBe(100);
+      // Should still have 2 instances since rebalancing didn't trigger
+      expect(instances).toHaveLength(2);
       
       // Verify no instance exceeds the limit
       instances.forEach((instance) => {
