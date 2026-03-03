@@ -148,16 +148,18 @@ function RobotsPage() {
       const data = await fetchMyRobots();
       
       // Debug logging
-      console.log('Fetched robots:', {
-        count: data.length,
-        robots: data.map(r => ({
-          id: r.id,
-          name: r.name,
-          currentHP: r.currentHP,
-          maxHP: r.maxHP,
-          repairCost: r.repairCost,
-        })),
-      });
+      if (import.meta.env.DEV) {
+        console.log('Fetched robots:', {
+          count: data.length,
+          robots: data.map(r => ({
+            id: r.id,
+            name: r.name,
+            currentHP: r.currentHP,
+            maxHP: r.maxHP,
+            repairCost: r.repairCost,
+          })),
+        });
+      }
       
       // Sort robots by ELO (highest first)
       const sortedData = data.sort((a, b) => b.elo - a.elo);
@@ -226,17 +228,19 @@ function RobotsPage() {
       return hasRepairCost || hasHPDamage;
     });
     
-    console.log('Repair cost calculation:', {
-      robotCount: robots.length,
-      activeRobotCount,
-      robotsNeedingRepair: robotsNeedingRepair.length,
-      robotsWithRepairCost: robots.filter(r => (r.repairCost || 0) > 0).length,
-      robotsWithHPDamage: robots.filter(r => r.currentHP < r.maxHP).length,
-      totalBaseCost,
-      discount,
-      discountedCost,
-      repairBayLevel,
-    });
+    if (import.meta.env.DEV) {
+      console.log('Repair cost calculation:', {
+        robotCount: robots.length,
+        activeRobotCount,
+        robotsNeedingRepair: robotsNeedingRepair.length,
+        robotsWithRepairCost: robots.filter(r => (r.repairCost || 0) > 0).length,
+        robotsWithHPDamage: robots.filter(r => r.currentHP < r.maxHP).length,
+        totalBaseCost,
+        discount,
+        discountedCost,
+        repairBayLevel,
+      });
+    }
     
     return { totalBaseCost, discountedCost, discount };
   };

@@ -37,14 +37,18 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
         return;
       }
       
-      console.log('[UpcomingMatches] Fetching upcoming matches...');
+      if (import.meta.env.DEV) {
+        console.log('[UpcomingMatches] Fetching upcoming matches...');
+      }
       const data = await getUpcomingMatches();
-      console.log('[UpcomingMatches] Received matches:', {
-        total: data.length,
-        leagueMatches: data.filter(m => m.matchType === 'league').length,
-        tournamentMatches: data.filter(m => m.matchType === 'tournament').length,
-        matches: data,
-      });
+      if (import.meta.env.DEV) {
+        console.log('[UpcomingMatches] Received matches:', {
+          total: data.length,
+          leagueMatches: data.filter(m => m.matchType === 'league').length,
+          tournamentMatches: data.filter(m => m.matchType === 'tournament').length,
+          matches: data,
+        });
+      }
       
       // Filter by robotId if provided
       let filteredMatches = data;
@@ -129,7 +133,9 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
     // For tournament matches, robot1 or robot2 might be null (placeholder matches)
     // But allow bye matches through - they only have robot1
     if (match.matchType === 'tournament' && !match.isByeMatch && (!match.robot1 || !match.robot2)) {
-      console.log('[UpcomingMatches] Skipping incomplete tournament match:', match.id);
+      if (import.meta.env.DEV) {
+        console.log('[UpcomingMatches] Skipping incomplete tournament match:', match.id);
+      }
       return null; // Don't display incomplete tournament matches
     }
     
@@ -246,12 +252,14 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
           
           // Skip invalid matches safely
           if (!matchResult) {
-            console.log('[UpcomingMatches] Filtering out match:', {
-              id: match.id,
-              matchType: match.matchType,
-              hasRobot1: !!match.robot1,
-              hasRobot2: !!match.robot2,
-            });
+            if (import.meta.env.DEV) {
+              console.log('[UpcomingMatches] Filtering out match:', {
+                id: match.id,
+                matchType: match.matchType,
+                hasRobot1: !!match.robot1,
+                hasRobot2: !!match.robot2,
+              });
+            }
             return null;
           }
           

@@ -53,9 +53,13 @@ function BattleHistoryPage() {
         return;
       }
       
-      console.log('[BattleHistory] Fetching battle history, page:', page, 'battleFilter:', filter);
+      if (import.meta.env.DEV) {
+        console.log('[BattleHistory] Fetching battle history, page:', page, 'battleFilter:', filter);
+      }
       const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, resultsPerPage, filter);
-      console.log('[BattleHistory] Received data:', data);
+      if (import.meta.env.DEV) {
+        console.log('[BattleHistory] Received data:', data);
+      }
       
       setBattles(data.data);
       setPagination(data.pagination);

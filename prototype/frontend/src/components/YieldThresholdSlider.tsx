@@ -25,12 +25,14 @@ function YieldThresholdSlider({
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    console.log('[YieldThresholdSlider] Props received:', {
-      robotId,
-      currentThreshold,
-      repairBayLevel,
-      activeRobotCount
-    });
+    if (import.meta.env.DEV) {
+      console.log('[YieldThresholdSlider] Props received:', {
+        robotId,
+        currentThreshold,
+        repairBayLevel,
+        activeRobotCount
+      });
+    }
   }, [robotId, currentThreshold, repairBayLevel, activeRobotCount]);
 
   useEffect(() => {
@@ -119,18 +121,20 @@ function YieldThresholdSlider({
     const discount = Math.min(repairBayLevel * (5 + activeRobotCount), 90);
     const finalCost = rawCost * (1 - discount / 100);
 
-    console.log('[YieldThresholdSlider] Repair Cost Calculation:', {
-      damagePercent,
-      hpPercent,
-      sumOfAttributes,
-      baseRepairCost,
-      multiplier,
-      rawCost,
-      repairBayLevel,
-      activeRobotCount,
-      discount,
-      finalCost: Math.round(finalCost)
-    });
+    if (import.meta.env.DEV) {
+      console.log('[YieldThresholdSlider] Repair Cost Calculation:', {
+        damagePercent,
+        hpPercent,
+        sumOfAttributes,
+        baseRepairCost,
+        multiplier,
+        rawCost,
+        repairBayLevel,
+        activeRobotCount,
+        discount,
+        finalCost: Math.round(finalCost)
+      });
+    }
 
     return Math.round(finalCost);
   };

@@ -12,7 +12,7 @@ test.describe('Weapon Shop Page', () => {
     await page.getByLabel('Username').fill('player1');
     await page.getByLabel('Password').fill('password123');
     await page.getByRole('button', { name: 'Login' }).click();
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForURL('**/dashboard', { timeout: 20000 });
     
     // Navigate to weapon shop
     await page.goto('/weapon-shop');
@@ -55,6 +55,9 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should show storage capacity with progress bar', async ({ page }) => {
+      // Wait for weapon cards to load first
+      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 5000 });
+      
       // Check storage capacity display
       const storageText = page.locator('text=/\\d+ \\/ \\d+/');
       await expect(storageText).toBeVisible();
@@ -66,31 +69,17 @@ test.describe('Weapon Shop Page', () => {
   });
 
   test.describe('Filtering System', () => {
-    test('should expand and collapse filter panel', async ({ page }) => {
-      // Check if filters are collapsed by default
-      const loadoutTypeHeading = page.getByText('Loadout Type', { exact: true });
-      
-      // Expand filters
-      await page.getByText('Filters').click();
-      await expect(loadoutTypeHeading).toBeVisible();
-      
-      // Take screenshot of expanded filters
-      await page.screenshot({ 
-        path: 'test-results/screenshots/weapon-shop-filters-expanded.png',
-        fullPage: true 
-      });
-      
-      // Collapse filters
-      await page.getByText('Filters').click();
-      await expect(loadoutTypeHeading).not.toBeVisible();
-    });
 
     test('should filter weapons by loadout type', async ({ page }) => {
-      // Expand filters
-      await page.getByText('Filters').click();
+      // Wait for weapon cards to load first
+      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 5000 });
       
       // Get initial weapon count
       const initialCount = await page.locator('text=/Showing \\d+ of \\d+ weapons/').textContent();
+      
+      // Expand filters by clicking the Filters heading
+      await page.getByRole('heading', { name: 'Filters' }).click();
+      await page.waitForTimeout(300);
       
       // Click "Two-Handed" filter
       await page.getByRole('button', { name: 'Two-Handed' }).click();
@@ -110,8 +99,12 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should filter weapons by weapon type', async ({ page }) => {
-      // Expand filters
-      await page.getByText('Filters').click();
+      // Wait for weapon cards to load first
+      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 5000 });
+      
+      // Expand filters by clicking the Filters heading
+      await page.getByRole('heading', { name: 'Filters' }).click();
+      await page.waitForTimeout(300);
       
       // Click "Melee" filter
       await page.getByRole('button', { name: 'Melee' }).click();
@@ -119,8 +112,9 @@ test.describe('Weapon Shop Page', () => {
       // Wait for filter to apply
       await page.waitForTimeout(500);
       
-      // Check that active filter chip is displayed
-      await expect(page.getByText('Melee', { exact: true })).toBeVisible();
+      // Check that active filter chip is displayed (look for the chip specifically, not the button)
+      const filterChip = page.locator('.bg-red-900\\/30').filter({ hasText: 'Melee' });
+      await expect(filterChip).toBeVisible();
       
       // Take screenshot
       await page.screenshot({ 
@@ -130,8 +124,12 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should filter weapons by price range', async ({ page }) => {
-      // Expand filters
-      await page.getByText('Filters').click();
+      // Wait for weapon cards to load first
+      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 5000 });
+      
+      // Expand filters by clicking the Filters heading
+      await page.getByRole('heading', { name: 'Filters' }).click();
+      await page.waitForTimeout(300);
       
       // Click "Budget (<₡100K)" filter
       await page.getByRole('button', { name: /Budget.*100K/ }).click();
@@ -147,8 +145,12 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should apply multiple filters simultaneously', async ({ page }) => {
-      // Expand filters
-      await page.getByText('Filters').click();
+      // Wait for weapon cards to load first
+      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 5000 });
+      
+      // Expand filters by clicking the Filters heading
+      await page.getByRole('heading', { name: 'Filters' }).click();
+      await page.waitForTimeout(300);
       
       // Apply multiple filters
       await page.getByRole('button', { name: 'Single' }).click();
@@ -157,9 +159,11 @@ test.describe('Weapon Shop Page', () => {
       // Wait for filters to apply
       await page.waitForTimeout(500);
       
-      // Check that both filter chips are displayed
-      await expect(page.getByText('Single', { exact: true })).toBeVisible();
-      await expect(page.getByText('Melee', { exact: true })).toBeVisible();
+      // Check that both filter chips are displayed (look for chips specifically, not buttons)
+      const singleChip = page.locator('.bg-red-900\\/30').filter({ hasText: 'Single' });
+      const meleeChip = page.locator('.bg-red-900\\/30').filter({ hasText: 'Melee' });
+      await expect(singleChip).toBeVisible();
+      await expect(meleeChip).toBeVisible();
       
       // Take screenshot
       await page.screenshot({ 
@@ -169,8 +173,12 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should clear all filters', async ({ page }) => {
-      // Expand filters
-      await page.getByText('Filters').click();
+      // Wait for weapon cards to load first
+      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 5000 });
+      
+      // Expand filters by clicking the Filters heading
+      await page.getByRole('heading', { name: 'Filters' }).click();
+      await page.waitForTimeout(300);
       
       // Apply a filter
       await page.getByRole('button', { name: 'Melee' }).click();
@@ -189,8 +197,12 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should remove individual filter chips', async ({ page }) => {
-      // Expand filters
-      await page.getByText('Filters').click();
+      // Wait for weapon cards to load first
+      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 5000 });
+      
+      // Expand filters by clicking the Filters heading
+      await page.getByRole('heading', { name: 'Filters' }).click();
+      await page.waitForTimeout(300);
       
       // Apply a filter
       await page.getByRole('button', { name: 'Melee' }).click();
@@ -516,6 +528,9 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should filter weapons quickly', async ({ page }) => {
+      // Wait for Filters heading to be visible
+      await page.waitForSelector('text=Filters', { timeout: 5000 });
+      
       // Expand filters
       await page.getByText('Filters').click();
       

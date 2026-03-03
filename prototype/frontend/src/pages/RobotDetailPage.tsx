@@ -221,11 +221,15 @@ function RobotDetailPage() {
   const fetchRobotAndWeapons = async () => {
     try {
       // Fetch robot details
-      console.log(`Fetching robot with ID: ${id}`);
+      if (import.meta.env.DEV) {
+        console.log(`Fetching robot with ID: ${id}`);
+      }
       const robotResponse = await apiClient.get(`/api/robots/${id}`);
 
       const robotData = robotResponse.data;
-      console.log('Robot data received:', robotData.name);
+      if (import.meta.env.DEV) {
+        console.log('Robot data received:', robotData.name);
+      }
       setRobot(robotData);
 
       // Fetch league rank for this robot
@@ -260,8 +264,10 @@ function RobotDetailPage() {
         const facilitiesResponse = await apiClient.get('/api/facilities');
         const data = facilitiesResponse.data;
         const facilities = data.facilities || data; // Handle both response formats
-        console.log('Facilities API Response:', data);
-        console.log('Facilities Array:', facilities);
+        if (import.meta.env.DEV) {
+          console.log('Facilities API Response:', data);
+          console.log('Facilities Array:', facilities);
+        }
         
         // Always set training level (even if 0)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -284,7 +290,9 @@ function RobotDetailPage() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ai_training_academy: facilities.find((f: any) => f.type === 'ai_training_academy')?.currentLevel || 0,
         };
-        console.log('Academy Levels:', newAcademyLevels);
+        if (import.meta.env.DEV) {
+          console.log('Academy Levels:', newAcademyLevels);
+        }
         setAcademyLevels(newAcademyLevels);
 
         // Fetch active robot count for repair cost calculation
@@ -365,7 +373,9 @@ function RobotDetailPage() {
 
     try {
       const token = localStorage.getItem('token');
-      console.log('Updating robot appearance:', { robotId: id, imageUrl });
+      if (import.meta.env.DEV) {
+        console.log('Updating robot appearance:', { robotId: id, imageUrl });
+      }
       
       const response = await axios.put(
         `/api/robots/${id}/appearance`,
@@ -377,7 +387,9 @@ function RobotDetailPage() {
         }
       );
 
-      console.log('Update response:', response.data);
+      if (import.meta.env.DEV) {
+        console.log('Update response:', response.data);
+      }
       setRobot(response.data.robot);
       setSuccessMessage('Robot image updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -401,9 +413,11 @@ function RobotDetailPage() {
     try {
       const token = localStorage.getItem('token');
       
-      console.log('Committing upgrade plan:', upgradePlan);
-      console.log('Robot ID:', id);
-      console.log('Current robot state:', robot);
+      if (import.meta.env.DEV) {
+        console.log('Committing upgrade plan:', upgradePlan);
+        console.log('Robot ID:', id);
+        console.log('Current robot state:', robot);
+      }
       
       // Optimistic UI update: immediately apply upgrades to robot state
       const optimisticRobot = { ...robot };
@@ -426,7 +440,9 @@ function RobotDetailPage() {
         }
       );
 
-      console.log('Upgrade response:', response.data);
+      if (import.meta.env.DEV) {
+        console.log('Upgrade response:', response.data);
+      }
 
       // Update state with actual robot data from server
       setRobot(response.data.robot);

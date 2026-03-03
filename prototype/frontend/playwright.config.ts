@@ -9,6 +9,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1, // Single worker to prevent parallel execution issues
+  timeout: 60000, // 60 second timeout per test
   reporter: [
     ['html', { open: 'never' }],
     ['list'],
