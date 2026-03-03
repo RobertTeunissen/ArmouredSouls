@@ -1,6 +1,6 @@
 import { Robot, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
-import { checkTeamReadiness, calculateCombinedELO, TagTeamWithRobots } from './tagTeamService';
+import { checkTeamSchedulingReadiness, calculateCombinedELO, TagTeamWithRobots } from './tagTeamService';
 
 
 // Matchmaking configuration
@@ -56,10 +56,10 @@ export async function getEligibleTeams(
     },
   });
 
-  // Filter for ready teams
+  // Filter for scheduling-ready teams (weapons only, HP not checked)
   const readyTeams: TagTeamWithRobots[] = [];
   for (const team of teams) {
-    const readiness = await checkTeamReadiness(team.id);
+    const readiness = await checkTeamSchedulingReadiness(team.id);
     if (readiness.isReady) {
       readyTeams.push(team);
     }

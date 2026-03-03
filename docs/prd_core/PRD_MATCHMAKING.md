@@ -55,7 +55,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **League Instance System**: Max 100 robots per instance with auto-balancing
 - **Battle Scheduling**: Daily cycle with 24-hour adjustment period
 - **League Progression**: Top 10% promotion AND ≥25 league points (min 5 cycles in tier), bottom 10% demotion
-- **Battle Readiness**: HP ≥75% + HP > yield threshold + all weapons equipped
+- **Battle Readiness**: Two-tier system: Scheduling requires weapons equipped only; battle execution requires HP ≥75% + HP > yield threshold + weapons equipped
 - **Bye-Robot System**: Handles odd numbers (ELO 1000, full rewards)
 - **Combat Logs**: Action-by-action with 50+ message templates
 - **Admin Tools**: Bulk cycle testing (up to 100 cycles) with auto-repair
@@ -92,7 +92,8 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
    - Files: `leagueInstanceService.ts` (12 tests passing)
 
 3. **Matchmaking Algorithm** 
-   - Battle readiness: HP ≥75%, HP > yield threshold, weapons equipped
+   - Scheduling readiness (for matchmaking): weapons equipped only — HP not checked since robots are repaired before battle execution
+   - Battle readiness (for execution): HP ≥75%, HP > yield threshold, weapons equipped
    - ELO-based pairing (±150 ideal, ±300 fallback)
    - Recent opponent tracking (soft deprioritize last 5)
    - Same-stable deprioritization (heavy penalty)
@@ -186,9 +187,11 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **Implementation**: Special robot id: -1, predictable weak stats
 
 **D5: Battle Readiness**
-- **Decision**: HP ≥75% AND HP > yield threshold AND all weapons equipped
-- **Rationale**: Prevents incomplete loadouts and immediate surrenders
-- **Implementation**: Comprehensive validation by loadout type
+- **Decision**: Two-tier readiness system
+  - Scheduling readiness (matchmaking): All required weapons equipped for loadout type
+  - Battle execution readiness: HP ≥75% AND HP > yield threshold AND all weapons equipped
+- **Rationale**: With the cycle order repair → execute → schedule, robots may have reduced HP at scheduling time. Since repair runs before execution, HP at scheduling time is irrelevant. Only weapon loadout matters for scheduling eligibility.
+- **Implementation**: `checkSchedulingReadiness()` for matchmaking, `checkBattleReadiness()` for execution and user-facing validation
 
 **D6: Same-Stable Matching**
 - **Decision**: Strongly deprioritize (allow as last resort)
@@ -252,7 +255,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 **Current Behavior**:
 - Matchmaking processes tiers sequentially (Bronze → Champion)
 - Scheduled match query is global (not filtered by tier/time)
-- Battle readiness requires: HP ≥75% AND HP > yield threshold AND weapons equipped
+- Battle readiness has two tiers: scheduling readiness (weapons only) and execution readiness (HP ≥75% AND HP > yield threshold AND weapons equipped). Matchmaking uses scheduling readiness since robots are repaired before battles execute.
 - Rebalancing runs every cycle (checks eligibility each time)
 
 **Why Byes Occur** (Analysis from February 2026):
@@ -269,8 +272,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 
 **Recommendations to Minimize Byes**:
 - Balance robot counts to even numbers (30, 32 vs 31)
-- Run auto-repair BEFORE matchmaking (ensures all robots at 100% HP)
-- Monitor robots with very high yield thresholds (40-50%)
+- Monitor robots with missing weapons (only remaining cause of scheduling exclusion)
 
 ---
 
@@ -471,23 +473,21 @@ The scheduled batch model allows:
 - **So that** I can pair them efficiently
 
 **Acceptance Criteria:**
-- Queue includes all robots with battleReadiness ≥ 75%
-- Battle readiness checks (ALL must pass):
-  - HP ≥ 75% of maximum
-  - HP > yield threshold (prevents immediate surrender at battle start)
+- Queue includes all robots that have required weapons equipped (scheduling readiness)
+- Scheduling readiness checks (ALL must pass):
   - All required weapons equipped based on loadout type:
     - Single weapon: mainWeapon required
     - Dual-wield: mainWeapon AND offhandWeapon required
     - Weapon+shield: mainWeapon AND shield required
     - Two-handed: two-handed mainWeapon required
+- HP is NOT checked at scheduling time (robots are repaired before battle execution)
 - Exclude robots currently scheduled for a match
-- Exclude robots that have yielded/been destroyed until repaired
 - Queue sorted by: Priority (league points) → ELO → Random tiebreaker
 - Queue refreshes before each matchmaking cycle
 
-**Critical Yield Threshold Check**: A robot with 55% HP and 60% yield threshold would surrender immediately at battle start, creating a pointless battle. The yield threshold check prevents this by ensuring HP percentage is strictly greater than the yield threshold before allowing matchmaking.
+**Note on HP checks**: HP ≥75% and yield threshold checks are enforced at battle execution time, not at scheduling time. This is because the cycle order is: repair → execute battles → schedule new matches. Robots may have reduced HP after battles, but will be repaired before the next execution.
 
-**Battle Readiness Warnings**: Display on robot list page (icon/badge), robot detail page (banner at top), and dashboard (notification area). Multiple touchpoints ensure players see warnings.
+**Battle Readiness Warnings**: Display on robot list page (icon/badge), robot detail page (banner at top), and dashboard (notification area). Multiple touchpoints ensure players see warnings about missing weapons.
 
 ### Epic: Battle Scheduling
 

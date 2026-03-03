@@ -320,16 +320,27 @@ function noLowercasePasswordGenerator(): fc.Arbitrary<string> {
 }
 
 /**
- * Generate passwords without numbers (8+ chars, letters only)
+ * Generate passwords without numbers (8+ chars, has uppercase AND lowercase, but no digits)
  */
 function noNumberPasswordGenerator(): fc.Arbitrary<string> {
   return fc
-    .array(
+    .tuple(
       fc.constantFrom(
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+      ), // At least one lowercase
+      fc.constantFrom(
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
-      ),
-      { minLength: 8, maxLength: 20 }
+      ), // At least one uppercase
+      fc.array(
+        fc.constantFrom(
+          'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+          'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+        ),
+        { minLength: 6, maxLength: 18 }
+      )
     )
-    .map((chars) => chars.join(''));
+    .map(([lower, upper, rest]) => {
+      const chars = [lower, upper, ...rest];
+      return chars.sort(() => Math.random() - 0.5).join('');
+    });
 }

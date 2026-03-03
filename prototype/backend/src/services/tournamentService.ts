@@ -5,7 +5,7 @@
 
 import { Robot, Tournament, TournamentMatch } from '@prisma/client';
 import prisma from '../lib/prisma';
-import { checkBattleReadiness } from './matchmakingService';
+import { checkSchedulingReadiness } from './matchmakingService';
 
 // Tournament configuration constants
 const MIN_TOURNAMENT_PARTICIPANTS = 4; // Minimum robots needed to start a tournament
@@ -43,7 +43,7 @@ function calculateMaxRounds(participants: number): number {
  * 
  * Excludes:
  * - Bye robot
- * - Robots not battle-ready (< 75% HP, missing weapons)
+ * - Robots without required weapons equipped
  */
 export async function getEligibleRobotsForTournament(): Promise<Robot[]> {
   // Get all robots except bye robot
@@ -59,9 +59,10 @@ export async function getEligibleRobotsForTournament(): Promise<Robot[]> {
     },
   });
 
-  // Filter for battle-ready robots
+  // Filter for scheduling-ready robots (weapons only, HP not checked)
+  // Robots will be repaired before tournament matches execute
   const battleReadyRobots = allRobots.filter(robot => {
-    const readiness = checkBattleReadiness(robot);
+    const readiness = checkSchedulingReadiness(robot);
     return readiness.isReady;
   });
 

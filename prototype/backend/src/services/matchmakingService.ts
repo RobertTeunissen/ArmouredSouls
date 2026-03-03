@@ -96,6 +96,53 @@ export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
     weaponCheck,
   };
 }
+/**
+ * Check if a robot meets scheduling readiness requirements.
+ * Used when scheduling future matches — only checks weapon loadout,
+ * NOT HP. Robots will be repaired before the scheduled match executes,
+ * so HP status at scheduling time is irrelevant.
+ */
+export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
+  const reasons: string[] = [];
+
+  // Weapon Check: Must have all required weapons equipped based on loadout type
+  let weaponCheck = false;
+
+  switch (robot.loadoutType) {
+    case 'single':
+      weaponCheck = robot.mainWeaponId !== null;
+      if (!weaponCheck) reasons.push('No main weapon equipped');
+      break;
+
+    case 'dual_wield':
+      weaponCheck = robot.mainWeaponId !== null && robot.offhandWeaponId !== null;
+      if (robot.mainWeaponId === null) reasons.push('No main weapon equipped');
+      if (robot.offhandWeaponId === null) reasons.push('No offhand weapon equipped');
+      break;
+
+    case 'weapon_shield':
+      weaponCheck = robot.mainWeaponId !== null && robot.offhandWeaponId !== null;
+      if (robot.mainWeaponId === null) reasons.push('No main weapon equipped');
+      if (robot.offhandWeaponId === null) reasons.push('No shield equipped');
+      break;
+
+    case 'two_handed':
+      weaponCheck = robot.mainWeaponId !== null;
+      if (!weaponCheck) reasons.push('No two-handed weapon equipped');
+      break;
+
+    default:
+      weaponCheck = false;
+      reasons.push('Invalid loadout type');
+  }
+
+  return {
+    isReady: weaponCheck,
+    reasons,
+    hpCheck: true, // HP not checked for scheduling
+    weaponCheck,
+  };
+}
 
 /**
  * Get recent opponents for a robot (last N matches)
@@ -222,9 +269,10 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
     ],
   });
   
-  // Filter for battle-ready robots
+  // Filter for scheduling-ready robots (weapons equipped, HP not checked)
+  // Robots will be repaired before the scheduled match executes
   const readyRobots = robots.filter(robot => {
-    const readiness = checkBattleReadiness(robot);
+    const readiness = checkSchedulingReadiness(robot);
     return readiness.isReady;
   });
   

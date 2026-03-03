@@ -1,6 +1,6 @@
 import { Robot, TagTeam } from '@prisma/client';
 import prisma from '../lib/prisma';
-import { checkBattleReadiness } from './matchmakingService';
+import { checkBattleReadiness, checkSchedulingReadiness } from './matchmakingService';
 import { assignTagTeamLeagueInstance } from './tagTeamLeagueInstanceService';
 
 
@@ -296,6 +296,37 @@ export async function checkTeamReadiness(teamId: number): Promise<TeamReadinessR
   // Check readiness for both robots
   const activeReadiness = checkBattleReadiness(team.activeRobot);
   const reserveReadiness = checkBattleReadiness(team.reserveRobot);
+
+  return {
+    isReady: activeReadiness.isReady && reserveReadiness.isReady,
+    activeRobotStatus: activeReadiness,
+    reserveRobotStatus: reserveReadiness,
+  };
+}
+/**
+ * Check if a tag team is ready for scheduling (not battle execution).
+ * Only checks weapon loadout — HP is not checked because robots
+ * will be repaired before the scheduled match executes.
+ */
+export async function checkTeamSchedulingReadiness(teamId: number): Promise<TeamReadinessResult> {
+  const team = await prisma.tagTeam.findUnique({
+    where: { id: teamId },
+    include: {
+      activeRobot: true,
+      reserveRobot: true,
+    },
+  });
+
+  if (!team) {
+    return {
+      isReady: false,
+      activeRobotStatus: { isReady: false, reasons: ['Team not found'] },
+      reserveRobotStatus: { isReady: false, reasons: ['Team not found'] },
+    };
+  }
+
+  const activeReadiness = checkSchedulingReadiness(team.activeRobot);
+  const reserveReadiness = checkSchedulingReadiness(team.reserveRobot);
 
   return {
     isReady: activeReadiness.isReady && reserveReadiness.isReady,

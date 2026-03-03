@@ -2,6 +2,7 @@ import { Robot } from '@prisma/client';
 import prisma from '../src/lib/prisma';
 import {
   checkBattleReadiness,
+  checkSchedulingReadiness,
   runMatchmaking,
   runMatchmakingForTier,
   BATTLE_READINESS_HP_THRESHOLD,
@@ -312,6 +313,148 @@ describe('Matchmaking Service', () => {
     });
   });
 
+  describe('checkSchedulingReadiness', () => {
+    it('should mark robot as ready when weapon equipped regardless of HP', async () => {
+      const weaponInv = await prisma.weaponInventory.create({
+        data: {
+          userId: testUser.id,
+          weaponId: practiceSword.id,
+        },
+      });
+      testWeaponInvIds.push(weaponInv.id);
+
+      const robot = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: `Low HP Scheduled ${Date.now()}`,
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 1, // Very low HP — would fail checkBattleReadiness
+          maxHP: 10,
+          currentShield: 0,
+          maxShield: 2,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv.id,
+          yieldThreshold: 10,
+        },
+      });
+      testRobotIds.push(robot.id);
+
+      const readiness = checkSchedulingReadiness(robot);
+
+      expect(readiness.isReady).toBe(true);
+      expect(readiness.hpCheck).toBe(true); // Always true for scheduling
+      expect(readiness.weaponCheck).toBe(true);
+      expect(readiness.reasons).toHaveLength(0);
+
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
+    });
+
+    it('should mark robot as not ready when weapon not equipped', async () => {
+      const robot = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: `No Weapon Scheduled ${Date.now()}`,
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 10,
+          maxHP: 10,
+          currentShield: 2,
+          maxShield: 2,
+          loadoutType: 'single',
+          mainWeaponId: null,
+        },
+      });
+      testRobotIds.push(robot.id);
+
+      const readiness = checkSchedulingReadiness(robot);
+
+      expect(readiness.isReady).toBe(false);
+      expect(readiness.weaponCheck).toBe(false);
+      expect(readiness.reasons).toContain('No main weapon equipped');
+
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+    });
+
+    it('should check dual wield loadout correctly for scheduling', async () => {
+      const weaponInv1 = await prisma.weaponInventory.create({
+        data: {
+          userId: testUser.id,
+          weaponId: practiceSword.id,
+        },
+      });
+      testWeaponInvIds.push(weaponInv1.id);
+
+      const robot = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: `Dual Scheduled ${Date.now()}`,
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 2, // Low HP — irrelevant for scheduling
+          maxHP: 10,
+          currentShield: 0,
+          maxShield: 2,
+          loadoutType: 'dual_wield',
+          mainWeaponId: weaponInv1.id,
+          offhandWeaponId: null, // Missing offhand
+        },
+      });
+      testRobotIds.push(robot.id);
+
+      const readiness = checkSchedulingReadiness(robot);
+
+      expect(readiness.isReady).toBe(false);
+      expect(readiness.weaponCheck).toBe(false);
+      expect(readiness.reasons).toContain('No offhand weapon equipped');
+
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv1.id } });
+    });
+
+    it('should differ from checkBattleReadiness for low HP robots with weapons', async () => {
+      const weaponInv = await prisma.weaponInventory.create({
+        data: {
+          userId: testUser.id,
+          weaponId: practiceSword.id,
+        },
+      });
+      testWeaponInvIds.push(weaponInv.id);
+
+      const robot = await prisma.robot.create({
+        data: {
+          userId: testUser.id,
+          name: `Diff Check ${Date.now()}`,
+          leagueId: 'bronze_1',
+          currentLeague: 'bronze',
+          currentHP: 3, // 30% HP — fails battle readiness but passes scheduling
+          maxHP: 10,
+          currentShield: 0,
+          maxShield: 2,
+          loadoutType: 'single',
+          mainWeaponId: weaponInv.id,
+          yieldThreshold: 10,
+        },
+      });
+      testRobotIds.push(robot.id);
+
+      const battleReadiness = checkBattleReadiness(robot);
+      const schedulingReadiness = checkSchedulingReadiness(robot);
+
+      // Battle readiness should fail (HP too low)
+      expect(battleReadiness.isReady).toBe(false);
+      expect(battleReadiness.hpCheck).toBe(false);
+
+      // Scheduling readiness should pass (only checks weapons)
+      expect(schedulingReadiness.isReady).toBe(true);
+      expect(schedulingReadiness.weaponCheck).toBe(true);
+
+      await prisma.robot.deleteMany({ where: { id: robot.id } });
+      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
+    });
+  });
+
   describe('runMatchmakingForTier', () => {
     it('should create matches for available robots', async () => {
       // Create 4 ready robots in bronze league
@@ -560,8 +703,8 @@ describe('Matchmaking Service', () => {
       }
     });
 
-    it('should skip robots that are not battle-ready', async () => {
-      // Create 1 ready robot and 1 not-ready robot
+    it('should skip robots without weapons equipped', async () => {
+      // Create 1 ready robot and 1 not-ready robot (no weapon)
       const weaponInv1 = await prisma.weaponInventory.create({
         data: {
           userId: testUser.id,
@@ -597,14 +740,14 @@ describe('Matchmaking Service', () => {
           maxShield: 2,
           elo: 1200,
           loadoutType: 'single',
-          mainWeaponId: null, // No weapon
+          mainWeaponId: null, // No weapon — this is why it's excluded
         },
       });
 
       const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
       const matchCount = await runMatchmakingForTier('platinum', scheduledFor);
 
-      // Should be 0 matches (need at least 2 ready robots)
+      // Should be 0 matches (need at least 2 scheduling-ready robots)
       expect(matchCount).toBe(0);
 
       // Clean up
@@ -621,6 +764,68 @@ describe('Matchmaking Service', () => {
       await prisma.robot.deleteMany({ where: { id: readyRobot.id } });
       await prisma.robot.deleteMany({ where: { id: notReadyRobot.id } });
       await prisma.weaponInventory.deleteMany({ where: { id: weaponInv1.id } });
+    });
+
+    it('should schedule matches for low-HP robots that have weapons equipped', async () => {
+      // Create 2 robots with low HP but weapons equipped
+      const robots = [];
+      for (let i = 0; i < 2; i++) {
+        const weaponInv = await prisma.weaponInventory.create({
+          data: {
+            userId: testUser.id,
+            weaponId: practiceSword.id,
+          },
+        });
+
+        const robot = await prisma.robot.create({
+          data: {
+            userId: testUser.id,
+            name: `Low HP Match ${i} ${Date.now()}`,
+            leagueId: 'platinum_1',
+            currentLeague: 'platinum',
+            currentHP: 2, // 20% HP — would fail old battle readiness check
+            maxHP: 10,
+            currentShield: 0,
+            maxShield: 2,
+            elo: 1200 + i * 10,
+            loadoutType: 'single',
+            mainWeaponId: weaponInv.id,
+          },
+        });
+        robots.push(robot);
+      }
+
+      const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const matchCount = await runMatchmakingForTier('platinum', scheduledFor);
+
+      // Should create at least 1 match — low HP no longer blocks scheduling
+      expect(matchCount).toBeGreaterThanOrEqual(1);
+
+      // Verify our robots got scheduled
+      const robotIds = robots.map(r => r.id);
+      const scheduledMatches = await prisma.scheduledMatch.findMany({
+        where: {
+          OR: [
+            { robot1Id: { in: robotIds } },
+            { robot2Id: { in: robotIds } },
+          ],
+        },
+      });
+      expect(scheduledMatches.length).toBeGreaterThanOrEqual(1);
+
+      // Clean up
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          OR: [
+            { robot1Id: { in: robotIds } },
+            { robot2Id: { in: robotIds } },
+          ],
+        },
+      });
+      for (const robot of robots) {
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
+      }
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
   });
 
