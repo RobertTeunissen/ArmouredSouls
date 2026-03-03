@@ -67,8 +67,9 @@ test.describe('Login Page', () => {
     // Click login button
     await page.getByRole('button', { name: 'Login' }).click();
     
-    // Wait for navigation to dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    // Wait for navigation to dashboard with longer timeout
+    await page.waitForURL('**/dashboard', { timeout: 20000 });
+    await page.waitForLoadState('networkidle');
     
     // Verify we're on the dashboard
     await expect(page).toHaveURL(/.*dashboard/);

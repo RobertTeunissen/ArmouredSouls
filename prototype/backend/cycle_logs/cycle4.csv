@@ -1,402 +1,712 @@
 Timestamp | Level | Message
-2026-03-02T21:29:38.052Z | INFO | === Cycle 4 Started ===
-2026-03-02T21:29:38.052Z | INFO | Cycle 4 (4/10)
-2026-03-02T21:29:38.052Z | INFO |  [Admin] === Cycle 4 (4/10) ===
-2026-03-02T21:29:38.054Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
-2026-03-02T21:29:38.054Z | INFO | [BattleOrchestrator] Executing all scheduled league battles
-2026-03-02T21:29:38.055Z | INFO | [BattleOrchestrator] Found 0 matches to execute
-2026-03-02T21:29:38.055Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
-2026-03-02T21:29:38.055Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
-2026-03-02T21:29:38.056Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
-2026-03-02T21:29:38.058Z | INFO | [Admin] Step 3: Skipping Tag Team Battles (even cycle 4)
-2026-03-02T21:29:38.058Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
-2026-03-02T21:29:38.060Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
-2026-03-02T21:29:38.060Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
-2026-03-02T21:29:38.062Z | INFO | [Admin] Step 7: Rebalance Leagues
-2026-03-02T21:29:38.062Z | INFO | ════════════════════════════════════════════════════════════
-2026-03-02T21:29:38.062Z | INFO | [Rebalancing] Starting league rebalancing...
-2026-03-02T21:29:38.062Z | INFO | ════════════════════════════════════════════════════════════
-2026-03-02T21:29:38.063Z | INFO | [Rebalancing] Total robots in system: 448
-2026-03-02T21:29:38.063Z | INFO |  [Rebalancing] Processing BRONZE league...
-2026-03-02T21:29:38.066Z | INFO | [Rebalancing] bronze: 195 total robots across 5 instances
-2026-03-02T21:29:38.066Z | INFO | [Rebalancing] Processing bronze_1...
-2026-03-02T21:29:38.071Z | INFO | [Rebalancing] bronze_1: 3 robots eligible for promotion (top 10% of 31 AND ≥25 league points, 13 met points threshold)
-2026-03-02T21:29:38.074Z | INFO | [Rebalancing] Promoted: New Robot 112 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.077Z | INFO | [Rebalancing] Promoted: New Robot 27 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.080Z | INFO | [Rebalancing] Promoted: New Robot 95 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.080Z | INFO | [Rebalancing] Processing bronze_2...
-2026-03-02T21:29:38.085Z | INFO | [Rebalancing] bronze_2: 3 robots eligible for promotion (top 10% of 31 AND ≥25 league points, 15 met points threshold)
-2026-03-02T21:29:38.088Z | INFO | [Rebalancing] Promoted: New Robot 99 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.091Z | INFO | [Rebalancing] Promoted: New Robot 48 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.093Z | INFO | [Rebalancing] Promoted: New Robot 196 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.093Z | INFO | [Rebalancing] Processing bronze_3...
-2026-03-02T21:29:38.098Z | INFO | [Rebalancing] bronze_3: 3 robots eligible for promotion (top 10% of 30 AND ≥25 league points, 14 met points threshold)
-2026-03-02T21:29:38.101Z | INFO | [Rebalancing] Promoted: User2Robot1 (bronze → silver, LP: 27 retained)
-2026-03-02T21:29:38.104Z | INFO | [Rebalancing] Promoted: New Robot 207 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.107Z | INFO | [Rebalancing] Promoted: New Robot 192 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.107Z | INFO | [Rebalancing] Processing bronze_4...
-2026-03-02T21:29:38.113Z | INFO | [Rebalancing] bronze_4: 3 robots eligible for promotion (top 10% of 30 AND ≥25 league points, 15 met points threshold)
-2026-03-02T21:29:38.116Z | INFO | [Rebalancing] Promoted: New Robot 188 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.119Z | INFO | [Rebalancing] Promoted: New Robot 106 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.123Z | INFO | [Rebalancing] Promoted: New Robot 158 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.123Z | INFO | [Rebalancing] Processing bronze_5...
-2026-03-02T21:29:38.129Z | INFO | [Rebalancing] bronze_5: 3 robots eligible for promotion (top 10% of 30 AND ≥25 league points, 15 met points threshold)
-2026-03-02T21:29:38.132Z | INFO | [Rebalancing] Promoted: New Robot 183 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.134Z | INFO | [Rebalancing] Promoted: New Robot 168 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.136Z | INFO | [Rebalancing] Promoted: New Robot 113 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:38.136Z | INFO | [Rebalancing] bronze: Promoted 15, Demoted 0 across 5 instances
-2026-03-02T21:29:38.136Z | INFO |  [Rebalancing] Processing SILVER league...
-2026-03-02T21:29:38.139Z | INFO | [Rebalancing] silver: 196 total robots across 3 instances
-2026-03-02T21:29:38.139Z | INFO | [Rebalancing] Processing silver_1...
-2026-03-02T21:29:38.147Z | INFO | [Rebalancing] silver_1: 3 robots eligible for promotion (top 10% of 39 AND ≥25 league points, 39 met points threshold)
-2026-03-02T21:29:38.151Z | INFO | [Rebalancing] silver_1: 3 robots eligible for demotion (bottom 10% of 39)
-2026-03-02T21:29:38.157Z | INFO | [Rebalancing] Promoted: Initial Robot 85 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:38.160Z | INFO | [Rebalancing] Promoted: Initial Robot 64 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:38.163Z | INFO | [Rebalancing] Promoted: Initial Robot 70 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:38.167Z | INFO | [Rebalancing] Demoted: New Robot 150 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.172Z | INFO | [Rebalancing] Demoted: New Robot 197 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.175Z | INFO | [Rebalancing] Demoted: New Robot 121 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.175Z | INFO | [Rebalancing] Processing silver_2...
-2026-03-02T21:29:38.182Z | INFO | [Rebalancing] silver_2: 3 robots eligible for promotion (top 10% of 35 AND ≥25 league points, 35 met points threshold)
-2026-03-02T21:29:38.186Z | INFO | [Rebalancing] silver_2: 3 robots eligible for demotion (bottom 10% of 35)
-2026-03-02T21:29:38.209Z | INFO | [Rebalancing] Promoted: Initial Robot 12 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:38.216Z | INFO | [Rebalancing] Promoted: Initial Robot 17 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:38.221Z | INFO | [Rebalancing] Promoted: Initial Robot 68 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:38.224Z | INFO | [Rebalancing] Demoted: New Robot 152 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.226Z | INFO | [Rebalancing] Demoted: New Robot 90 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.229Z | INFO | [Rebalancing] Demoted: New Robot 246 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.229Z | INFO | [Rebalancing] Processing silver_3...
-2026-03-02T21:29:38.238Z | INFO | [Rebalancing] silver_3: 4 robots eligible for promotion (top 10% of 41 AND ≥25 league points, 41 met points threshold)
-2026-03-02T21:29:38.243Z | INFO | [Rebalancing] silver_3: 4 robots eligible for demotion (bottom 10% of 41)
-2026-03-02T21:29:38.247Z | INFO | [Rebalancing] Promoted: New Robot 166 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:38.249Z | INFO | [Rebalancing] Promoted: New Robot 189 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:38.251Z | INFO | [Rebalancing] Promoted: New Robot 23 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:38.254Z | INFO | [Rebalancing] Promoted: New Robot 249 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:38.257Z | INFO | [Rebalancing] Demoted: New Robot 166 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.260Z | INFO | [Rebalancing] Demoted: New Robot 189 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.263Z | INFO | [Rebalancing] Demoted: New Robot 23 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.265Z | INFO | [Rebalancing] Demoted: New Robot 249 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:38.265Z | INFO | [Rebalancing] silver: Promoted 10, Demoted 10 across 3 instances
-2026-03-02T21:29:38.265Z | INFO |  [Rebalancing] Processing GOLD league...
-2026-03-02T21:29:38.266Z | INFO | [Rebalancing] gold: 72 total robots across 1 instances
-2026-03-02T21:29:38.266Z | INFO | [Rebalancing] Processing gold_1...
-2026-03-02T21:29:38.273Z | INFO | [Rebalancing] gold_1: 3 robots eligible for promotion (top 10% of 31 AND ≥25 league points, 31 met points threshold)
-2026-03-02T21:29:38.276Z | INFO | [Rebalancing] gold_1: 3 robots eligible for demotion (bottom 10% of 31)
-2026-03-02T21:29:38.279Z | INFO | [Rebalancing] Promoted: Initial Robot 15 (gold → platinum, LP: 50 retained)
-2026-03-02T21:29:38.282Z | INFO | [Rebalancing] Promoted: Initial Robot 39 (gold → platinum, LP: 50 retained)
-2026-03-02T21:29:38.284Z | INFO | [Rebalancing] Promoted: Initial Robot 44 (gold → platinum, LP: 50 retained)
-2026-03-02T21:29:38.287Z | INFO | [Rebalancing] Demoted: User2Robot3 (gold → silver, LP: 34 retained)
-2026-03-02T21:29:38.290Z | INFO | [Rebalancing] Demoted: Initial Robot 39 (gold → silver, LP: 50 retained)
-2026-03-02T21:29:38.292Z | INFO | [Rebalancing] Demoted: Initial Robot 44 (gold → silver, LP: 50 retained)
-2026-03-02T21:29:38.292Z | INFO | [Rebalancing] gold: Promoted 3, Demoted 3 across 1 instances
-2026-03-02T21:29:38.292Z | INFO |  [Rebalancing] Processing PLATINUM league...
-2026-03-02T21:29:38.294Z | INFO | [Rebalancing] platinum: 7 total robots across 1 instances
-2026-03-02T21:29:38.294Z | INFO | [Rebalancing] Processing platinum_1...
-2026-03-02T21:29:38.296Z | INFO | [Rebalancing] platinum_1: Skipping (0 eligible, need 10)
-2026-03-02T21:29:38.296Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 1 instances
-2026-03-02T21:29:38.296Z | INFO |  [Rebalancing] Processing DIAMOND league...
-2026-03-02T21:29:38.297Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
-2026-03-02T21:29:38.297Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
-2026-03-02T21:29:38.297Z | INFO |  [Rebalancing] Processing CHAMPION league...
-2026-03-02T21:29:38.298Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
-2026-03-02T21:29:38.298Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
-2026-03-02T21:29:38.298Z | INFO |  [Rebalancing] Checking instances for rebalancing...
-2026-03-02T21:29:38.299Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:38.300Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:38.301Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:38.301Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:38.302Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:38.303Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:38.303Z | INFO |  ════════════════════════════════════════════════════════════
-2026-03-02T21:29:38.303Z | INFO | [Rebalancing] League rebalancing complete!
-2026-03-02T21:29:38.303Z | INFO |   Total promoted: 28
-2026-03-02T21:29:38.303Z | INFO |   Total demoted: 13
-2026-03-02T21:29:38.303Z | INFO |   Errors: 0
-2026-03-02T21:29:38.303Z | INFO | ════════════════════════════════════════════════════════════ 
-2026-03-02T21:29:38.304Z | INFO | [Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle 4)
-2026-03-02T21:29:38.304Z | INFO | [Admin] Step 8: Auto Generate New Users
-2026-03-02T21:29:38.304Z | INFO | [UserGeneration] Generating 4 archetype users for Cycle 4...
-2026-03-02T21:29:38.304Z | INFO | [UserGeneration] Creating user 1/4: archetype_speed_demon_c_4_1 (archetype: speed_demon_c)
-2026-03-02T21:29:38.376Z | ERROR | [UserGeneration] Error creating user 1: {}
-2026-03-02T21:29:38.376Z | ERROR | [Admin] Error generating users: {}
-2026-03-02T21:29:38.381Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
-2026-03-02T21:29:38.381Z | INFO | [Matchmaking] Starting matchmaking run...
-2026-03-02T21:29:38.381Z | INFO | [Matchmaking] Matches scheduled for: 2026-03-02T21:29:39.381Z
-2026-03-02T21:29:38.381Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
-2026-03-02T21:29:38.383Z | INFO | [Matchmaking] Processing bronze_1...
-2026-03-02T21:29:38.389Z | INFO | [Matchmaking] Queue for bronze_1: 0 robots available (38 total, 0 ready)
-2026-03-02T21:29:38.389Z | INFO | [Matchmaking] bronze_1: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.389Z | INFO | [Matchmaking] Processing bronze_2...
-2026-03-02T21:29:38.395Z | INFO | [Matchmaking] Queue for bronze_2: 0 robots available (38 total, 0 ready)
-2026-03-02T21:29:38.395Z | INFO | [Matchmaking] bronze_2: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.395Z | INFO | [Matchmaking] Processing bronze_3...
-2026-03-02T21:29:38.401Z | INFO | [Matchmaking] Queue for bronze_3: 0 robots available (38 total, 0 ready)
-2026-03-02T21:29:38.401Z | INFO | [Matchmaking] bronze_3: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.401Z | INFO | [Matchmaking] Processing bronze_4...
-2026-03-02T21:29:38.407Z | INFO | [Matchmaking] Queue for bronze_4: 0 robots available (38 total, 0 ready)
-2026-03-02T21:29:38.407Z | INFO | [Matchmaking] bronze_4: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.407Z | INFO | [Matchmaking] Processing bronze_5...
-2026-03-02T21:29:38.417Z | INFO | [Matchmaking] Queue for bronze_5: 0 robots available (38 total, 0 ready)
-2026-03-02T21:29:38.417Z | INFO | [Matchmaking] bronze_5: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.417Z | INFO | [Matchmaking] BRONZE: Created 0 matches across 5 instances
-2026-03-02T21:29:38.417Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
-2026-03-02T21:29:38.422Z | INFO | [Matchmaking] Processing silver_1...
-2026-03-02T21:29:38.432Z | INFO | [Matchmaking] Queue for silver_1: 0 robots available (61 total, 0 ready)
-2026-03-02T21:29:38.432Z | INFO | [Matchmaking] silver_1: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.432Z | INFO | [Matchmaking] Processing silver_2...
-2026-03-02T21:29:38.440Z | INFO | [Matchmaking] Queue for silver_2: 0 robots available (61 total, 0 ready)
-2026-03-02T21:29:38.440Z | INFO | [Matchmaking] silver_2: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.440Z | INFO | [Matchmaking] Processing silver_3...
-2026-03-02T21:29:38.450Z | INFO | [Matchmaking] Queue for silver_3: 0 robots available (61 total, 0 ready)
-2026-03-02T21:29:38.450Z | INFO | [Matchmaking] silver_3: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.450Z | INFO | [Matchmaking] SILVER: Created 0 matches across 3 instances
-2026-03-02T21:29:38.450Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
-2026-03-02T21:29:38.453Z | INFO | [Matchmaking] Processing gold_1...
-2026-03-02T21:29:38.460Z | INFO | [Matchmaking] Queue for gold_1: 0 robots available (68 total, 0 ready)
-2026-03-02T21:29:38.460Z | INFO | [Matchmaking] gold_1: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.460Z | INFO | [Matchmaking] GOLD: Created 0 matches across 1 instances
-2026-03-02T21:29:38.460Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
-2026-03-02T21:29:38.461Z | INFO | [Matchmaking] Processing platinum_1...
-2026-03-02T21:29:38.463Z | INFO | [Matchmaking] Queue for platinum_1: 0 robots available (7 total, 0 ready)
-2026-03-02T21:29:38.463Z | INFO | [Matchmaking] platinum_1: Not enough robots for matches (0 available)
-2026-03-02T21:29:38.463Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 1 instances
-2026-03-02T21:29:38.463Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
-2026-03-02T21:29:38.464Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
-2026-03-02T21:29:38.464Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
-2026-03-02T21:29:38.465Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
-2026-03-02T21:29:38.465Z | INFO | [Matchmaking] ========================================
-2026-03-02T21:29:38.465Z | INFO | [Matchmaking] COMPLETE: 0 total matches created
-2026-03-02T21:29:38.465Z | INFO | [Matchmaking] ========================================
-2026-03-02T21:29:38.467Z | INFO | [Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle 4)
-2026-03-02T21:29:38.467Z | INFO | [Admin] Step 10: Increment Cycle Counters
-2026-03-02T21:29:38.480Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
-2026-03-02T21:29:38.488Z | INFO | [OperatingCosts] User 10839 | Total: ₡1,000 | Facilities: roster_expansion(L0): ₡1000
-2026-03-02T21:29:38.494Z | INFO | [OperatingCosts] User 10840 | Total: ₡1,000 | Facilities: roster_expansion(L0): ₡1000
-2026-03-02T21:29:38.499Z | INFO | [OperatingCosts] User 10841 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
-2026-03-02T21:29:38.503Z | INFO | [OperatingCosts] User 10842 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
-2026-03-02T21:29:38.508Z | INFO | [OperatingCosts] User 10843 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.513Z | INFO | [OperatingCosts] User 10844 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.518Z | INFO | [OperatingCosts] User 10846 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.523Z | INFO | [OperatingCosts] User 10845 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.527Z | INFO | [OperatingCosts] User 10848 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.532Z | INFO | [OperatingCosts] User 10847 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.536Z | INFO | [OperatingCosts] User 10850 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.541Z | INFO | [OperatingCosts] User 10849 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.545Z | INFO | [OperatingCosts] User 10864 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.550Z | INFO | [OperatingCosts] User 10863 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.554Z | INFO | [OperatingCosts] User 10857 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.558Z | INFO | [OperatingCosts] User 10852 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.565Z | INFO | [OperatingCosts] User 10862 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.571Z | INFO | [OperatingCosts] User 10858 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.575Z | INFO | [OperatingCosts] User 10859 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.580Z | INFO | [OperatingCosts] User 10856 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.584Z | INFO | [OperatingCosts] User 10851 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.590Z | INFO | [OperatingCosts] User 10855 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.595Z | INFO | [OperatingCosts] User 10854 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.599Z | INFO | [OperatingCosts] User 10853 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.604Z | INFO | [OperatingCosts] User 10860 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.610Z | INFO | [OperatingCosts] User 10861 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:38.616Z | INFO | [OperatingCosts] User 10698 | Total: ₡174,500 | Facilities: roster_expansion(L0): ₡174500
-2026-03-02T21:29:38.616Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡210,500
-2026-03-02T21:29:38.617Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
-2026-03-02T21:29:39.738Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
-2026-03-02T21:29:39.738Z | INFO | [Admin] === End of Cycle 4 Balances ===
-2026-03-02T21:29:39.739Z | INFO | [Balance] User 10698 | Stable: test_progressive_user | Balance: ₡-1,537,000
-2026-03-02T21:29:39.744Z | INFO | [Balance] User 10839 | Stable: user1_1772486818207_0.44901187883963756 | Balance: ₡974,000
-2026-03-02T21:29:39.745Z | INFO | [Balance] User 10840 | Stable: user2_1772486818209_0.9181100538982236 | Balance: ₡974,000
-2026-03-02T21:29:39.745Z | INFO | [Balance] User 10841 | Stable: user1_1772486818374_0.8673422742310417 | Balance: ₡987,000
-2026-03-02T21:29:39.746Z | INFO | [Balance] User 10842 | Stable: user2_1772486818376_0.6103073451394205 | Balance: ₡987,000
-2026-03-02T21:29:39.747Z | INFO | [Balance] User 10843 | Stable: user1_1772486818583_0.10131183962194323 | Balance: ₡961,000
-2026-03-02T21:29:39.749Z | INFO | [Balance] User 10844 | Stable: user2_1772486818584_0.7956764816262223 | Balance: ₡961,000
-2026-03-02T21:29:39.750Z | INFO | [Balance] User 10845 | Stable: user1_1772486818759_0.32967888098136533 | Balance: ₡-521,752
-2026-03-02T21:29:39.751Z | INFO | [Balance] User 10846 | Stable: user2_1772486818772_0.7569163961086819 | Balance: ₡-665,141
-2026-03-02T21:29:39.752Z | INFO | [Balance] User 10847 | Stable: user1_1772486818898_0.11632382434826338 | Balance: ₡-755,160
-2026-03-02T21:29:39.754Z | INFO | [Balance] User 10848 | Stable: user2_1772486818901_0.013059878830825378 | Balance: ₡-682,660
-2026-03-02T21:29:39.755Z | INFO | [Balance] User 10849 | Stable: user1_1772486819033_0.7799446777729455 | Balance: ₡-652,207
-2026-03-02T21:29:39.758Z | INFO | [Balance] User 10850 | Stable: user2_1772486819034_0.4964552649069427 | Balance: ₡-673,667
-2026-03-02T21:29:39.760Z | INFO | [Balance] User 10851 | Stable: user1_1772486819117_0.3345516832063494 | Balance: ₡-407,779
-2026-03-02T21:29:39.762Z | INFO | [Balance] User 10852 | Stable: user2_1772486819119_0.36166136998394405 | Balance: ₡-814,105
-2026-03-02T21:29:39.765Z | INFO | [Balance] User 10853 | Stable: user1_1772486819200_0.2758903873914217 | Balance: ₡-634,544
-2026-03-02T21:29:39.769Z | INFO | [Balance] User 10854 | Stable: user2_1772486819201_0.5780256436199125 | Balance: ₡-609,988
-2026-03-02T21:29:39.772Z | INFO | [Balance] User 10855 | Stable: user1_1772486819271_0.7087460012002663 | Balance: ₡-827,217
-2026-03-02T21:29:39.776Z | INFO | [Balance] User 10856 | Stable: user2_1772486819271_0.8830336055388215 | Balance: ₡-882,065
-2026-03-02T21:29:39.779Z | INFO | [Balance] User 10857 | Stable: user1_1772486819365_0.7579838657781066 | Balance: ₡-726,921
-2026-03-02T21:29:39.786Z | INFO | [Balance] User 10858 | Stable: user2_1772486819366_0.4951486012701769 | Balance: ₡-617,725
-2026-03-02T21:29:39.792Z | INFO | [Balance] User 10859 | Stable: user1_1772486819455_0.010533778983619402 | Balance: ₡-1,051,837
-2026-03-02T21:29:39.795Z | INFO | [Balance] User 10860 | Stable: user2_1772486819456_0.04557633197739497 | Balance: ₡-941,224
-2026-03-02T21:29:39.798Z | INFO | [Balance] User 10861 | Stable: user1_1772486819533_0.2835022516286082 | Balance: ₡-661,746
-2026-03-02T21:29:39.802Z | INFO | [Balance] User 10862 | Stable: user2_1772486819534_0.08578089941309719 | Balance: ₡-872,939
-2026-03-02T21:29:39.803Z | INFO | [Balance] User 10863 | Stable: user1_1772486819628_0.03977756283663192 | Balance: ₡-829,249
-2026-03-02T21:29:39.805Z | INFO | [Balance] User 10864 | Stable: user2_1772486819630_0.5969952850672665 | Balance: ₡-676,924
-2026-03-02T21:29:39.807Z | INFO | [Balance] User 10865 | Stable: admin_test_1772486875563 | Balance: ₡1,000,000
-2026-03-02T21:29:39.809Z | INFO | [Admin] ===================================
-2026-03-02T21:29:39.812Z | INFO | [Admin] Step 14: Create Cycle Snapshot
-2026-03-02T21:29:39.812Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 4
-2026-03-02T21:29:39.823Z | INFO | [CycleSnapshotService] Found 160 battle_complete events for cycle 4
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1004, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1003, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1003, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1004, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1004, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1003, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1003, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1004, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1003, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1003, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1003, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1002, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=1002, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1006, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1006, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1008, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1008, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=1008, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=1011, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1008, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1008, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1006, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.842Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1006, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1008, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1006, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1006, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1011, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1011, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=1011, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1011, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1011, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1011, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1008, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1008, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1011, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1008, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1008, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1007, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1007, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1006, prestige=5
-2026-03-02T21:29:39.843Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1006, prestige=0
-2026-03-02T21:29:39.853Z | INFO | [CycleSnapshotService] Found 84 cycle_end_balance events for cycle 4
-2026-03-02T21:29:39.877Z | INFO | prisma:error  Invalid `prisma.cycleSnapshot.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/cycleSnapshotService.ts:115:50    112 const totalPrestigeAwarded = stableMetrics.reduce((sum, m) => sum + m.totalPrestigeEarned, 0);   113    114 // Store snapshot in database → 115 const _snapshot = await prisma.cycleSnapshot.create( Unique constraint failed on the fields: (`cycle_number`)
-2026-03-02T21:29:39.877Z | ERROR | [Admin] Failed to create cycle snapshot: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""CycleSnapshot"",""target"":[""cycle_number""]}}
-2026-03-02T21:29:39.877Z | INFO | [Admin] === Cycle 4 Summary ===
-2026-03-02T21:29:39.877Z | INFO | [Admin] Battles: 0
-2026-03-02T21:29:39.877Z | INFO | [Admin] ===================================
-2026-03-02T21:29:39.877Z | INFO | === Cycle 4 Ended ===
+2026-03-03T15:11:07.865Z | INFO | === Cycle 4 Started ===
+2026-03-03T15:11:07.865Z | INFO | Cycle 4 (4/5)
+2026-03-03T15:11:07.865Z | INFO |  [Admin] === Cycle 4 (4/5) ===
+2026-03-03T15:11:07.866Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-03-03T15:11:07.866Z | INFO | [BattleOrchestrator] Executing all scheduled league battles
+2026-03-03T15:11:07.868Z | INFO | [BattleOrchestrator] Found 3 matches to execute
+2026-03-03T15:11:07.914Z | INFO | [Streaming] PBT_Limit_1772550664580_4_0.41917533003152363 earned ₡1,000 from Battle #36309
+2026-03-03T15:11:07.915Z | INFO | [Streaming] PBT_Limit_1772550664559_3_0.3054645290288196 earned ₡1,001 from Battle #36309
+2026-03-03T15:11:07.925Z | INFO | [Battle] League: bronze | PBT_Limit_1772550664580_4_0.41917533003152363 (User 14296) vs PBT_Limit_1772550664559_3_0.3054645290288196 (User 14296) | Winner: PBT_Limit_1772550664559_3_0.3054645290288196 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: PBT_Limit_1772550664559_3_0.3054645290288196
+2026-03-03T15:11:07.962Z | INFO | [Streaming] PBT_Limit_1772550664599_5_0.05737080230431679 earned ₡1,001 from Battle #36310
+2026-03-03T15:11:07.963Z | INFO | [Streaming] PBT_Limit_1772550664527_1_0.86154541294782 earned ₡1,000 from Battle #36310
+2026-03-03T15:11:07.998Z | INFO | [Battle] League: bronze | PBT_Limit_1772550664599_5_0.05737080230431679 (User 14296) vs PBT_Limit_1772550664527_1_0.86154541294782 (User 14296) | Winner: PBT_Limit_1772550664599_5_0.05737080230431679 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +2 | Kill: PBT_Limit_1772550664599_5_0.05737080230431679
+2026-03-03T15:11:08.038Z | INFO | [Streaming] PBT_Limit_1772550664543_2_0.6391416778859336 earned ₡1,000 from Battle #36311
+2026-03-03T15:11:08.039Z | INFO | [Streaming] PBT_Limit_1772550664515_0_0.5041993914052703 earned ₡1,001 from Battle #36311
+2026-03-03T15:11:08.048Z | INFO | [Battle] League: bronze | PBT_Limit_1772550664543_2_0.6391416778859336 (User 14296) vs PBT_Limit_1772550664515_0_0.5041993914052703 (User 14296) | Winner: PBT_Limit_1772550664515_0_0.5041993914052703 | Rewards: ₡9,000 / ₡1,500 | Prestige: +5 | Fame: +3 | Kill: PBT_Limit_1772550664515_0_0.5041993914052703
+2026-03-03T15:11:08.050Z | INFO | [BattleOrchestrator] Execution complete: 3 successful, 0 failed, 0 bye-matches
+2026-03-03T15:11:08.050Z | INFO | [BattleOrchestrator] Reputation: 15 prestige, 7 fame awarded
+2026-03-03T15:11:08.051Z | INFO | prisma:error  Invalid `prisma.auditLog.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/eventLogger.ts:203:31    200    201 try {   202   // Insert into database → 203   await prisma.auditLog.create( Unique constraint failed on the fields: (`cycle_number`,`sequence_number`)
+2026-03-03T15:11:08.053Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-03-03T15:11:08.067Z | INFO | [RepairService] | User 14296 | Robot 264394 (PBT_Limit_1772550664527_1_0.86154541294782) | Cost: ₡6,400 | Discount: 0%
+2026-03-03T15:11:08.070Z | INFO | [RepairService] | User 14296 | Robot 264393 (PBT_Limit_1772550664515_0_0.5041993914052703) | Cost: ₡2,752 | Discount: 0%
+2026-03-03T15:11:08.073Z | INFO | [RepairService] | User 14296 | Robot 264397 (PBT_Limit_1772550664580_4_0.41917533003152363) | Cost: ₡6,400 | Discount: 0%
+2026-03-03T15:11:08.077Z | INFO | prisma:error  Invalid `prisma.auditLog.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/eventLogger.ts:203:31    200    201 try {   202   // Insert into database → 203   await prisma.auditLog.create( Unique constraint failed on the fields: (`cycle_number`,`sequence_number`)
+2026-03-03T15:11:08.080Z | INFO | [RepairService] | User 14296 | Robot 264396 (PBT_Limit_1772550664559_3_0.3054645290288196) | Cost: ₡2,048 | Discount: 0%
+2026-03-03T15:11:08.083Z | INFO | [RepairService] | User 14296 | Robot 264398 (PBT_Limit_1772550664599_5_0.05737080230431679) | Cost: ₡2,048 | Discount: 0%
+2026-03-03T15:11:08.087Z | INFO | [RepairService] | User 14296 | Robot 264395 (PBT_Limit_1772550664543_2_0.6391416778859336) | Cost: ₡6,400 | Discount: 0%
+2026-03-03T15:11:08.089Z | INFO | [Admin] Step 3: Skipping Tag Team Battles (even cycle 4)
+2026-03-03T15:11:08.089Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-03-03T15:11:08.095Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-03-03T15:11:08.096Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-03-03T15:11:08.103Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-03-03T15:11:08.103Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-03T15:11:08.103Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-03-03T15:11:08.103Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-03T15:11:08.108Z | INFO | [Rebalancing] Total robots in system: 11578
+2026-03-03T15:11:08.108Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-03-03T15:11:08.121Z | INFO | [Rebalancing] bronze: 11578 total robots across 116 instances
+2026-03-03T15:11:08.121Z | INFO | [Rebalancing] Processing bronze_1...
+2026-03-03T15:11:08.127Z | INFO | [Rebalancing] bronze_1: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.127Z | INFO | [Rebalancing] Processing bronze_2...
+2026-03-03T15:11:08.131Z | INFO | [Rebalancing] bronze_2: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.131Z | INFO | [Rebalancing] Processing bronze_3...
+2026-03-03T15:11:08.134Z | INFO | [Rebalancing] bronze_3: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.134Z | INFO | [Rebalancing] Processing bronze_4...
+2026-03-03T15:11:08.138Z | INFO | [Rebalancing] bronze_4: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.138Z | INFO | [Rebalancing] Processing bronze_5...
+2026-03-03T15:11:08.142Z | INFO | [Rebalancing] bronze_5: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.142Z | INFO | [Rebalancing] Processing bronze_6...
+2026-03-03T15:11:08.146Z | INFO | [Rebalancing] bronze_6: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.146Z | INFO | [Rebalancing] Processing bronze_7...
+2026-03-03T15:11:08.150Z | INFO | [Rebalancing] bronze_7: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.150Z | INFO | [Rebalancing] Processing bronze_8...
+2026-03-03T15:11:08.154Z | INFO | [Rebalancing] bronze_8: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.154Z | INFO | [Rebalancing] Processing bronze_9...
+2026-03-03T15:11:08.158Z | INFO | [Rebalancing] bronze_9: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.158Z | INFO | [Rebalancing] Processing bronze_10...
+2026-03-03T15:11:08.161Z | INFO | [Rebalancing] bronze_10: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.161Z | INFO | [Rebalancing] Processing bronze_11...
+2026-03-03T15:11:08.164Z | INFO | [Rebalancing] bronze_11: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.164Z | INFO | [Rebalancing] Processing bronze_12...
+2026-03-03T15:11:08.167Z | INFO | [Rebalancing] bronze_12: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.167Z | INFO | [Rebalancing] Processing bronze_13...
+2026-03-03T15:11:08.172Z | INFO | [Rebalancing] bronze_13: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.172Z | INFO | [Rebalancing] Processing bronze_14...
+2026-03-03T15:11:08.175Z | INFO | [Rebalancing] bronze_14: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.175Z | INFO | [Rebalancing] Processing bronze_15...
+2026-03-03T15:11:08.179Z | INFO | [Rebalancing] bronze_15: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.179Z | INFO | [Rebalancing] Processing bronze_16...
+2026-03-03T15:11:08.183Z | INFO | [Rebalancing] bronze_16: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.183Z | INFO | [Rebalancing] Processing bronze_17...
+2026-03-03T15:11:08.187Z | INFO | [Rebalancing] bronze_17: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.187Z | INFO | [Rebalancing] Processing bronze_18...
+2026-03-03T15:11:08.190Z | INFO | [Rebalancing] bronze_18: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.190Z | INFO | [Rebalancing] Processing bronze_19...
+2026-03-03T15:11:08.194Z | INFO | [Rebalancing] bronze_19: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.194Z | INFO | [Rebalancing] Processing bronze_20...
+2026-03-03T15:11:08.197Z | INFO | [Rebalancing] bronze_20: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.197Z | INFO | [Rebalancing] Processing bronze_21...
+2026-03-03T15:11:08.200Z | INFO | [Rebalancing] bronze_21: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.200Z | INFO | [Rebalancing] Processing bronze_22...
+2026-03-03T15:11:08.204Z | INFO | [Rebalancing] bronze_22: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.204Z | INFO | [Rebalancing] Processing bronze_23...
+2026-03-03T15:11:08.207Z | INFO | [Rebalancing] bronze_23: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.207Z | INFO | [Rebalancing] Processing bronze_24...
+2026-03-03T15:11:08.211Z | INFO | [Rebalancing] bronze_24: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.211Z | INFO | [Rebalancing] Processing bronze_25...
+2026-03-03T15:11:08.215Z | INFO | [Rebalancing] bronze_25: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.215Z | INFO | [Rebalancing] Processing bronze_26...
+2026-03-03T15:11:08.218Z | INFO | [Rebalancing] bronze_26: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.218Z | INFO | [Rebalancing] Processing bronze_27...
+2026-03-03T15:11:08.222Z | INFO | [Rebalancing] bronze_27: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.222Z | INFO | [Rebalancing] Processing bronze_28...
+2026-03-03T15:11:08.226Z | INFO | [Rebalancing] bronze_28: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.226Z | INFO | [Rebalancing] Processing bronze_29...
+2026-03-03T15:11:08.229Z | INFO | [Rebalancing] bronze_29: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.229Z | INFO | [Rebalancing] Processing bronze_30...
+2026-03-03T15:11:08.233Z | INFO | [Rebalancing] bronze_30: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.233Z | INFO | [Rebalancing] Processing bronze_31...
+2026-03-03T15:11:08.236Z | INFO | [Rebalancing] bronze_31: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.236Z | INFO | [Rebalancing] Processing bronze_32...
+2026-03-03T15:11:08.240Z | INFO | [Rebalancing] bronze_32: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.240Z | INFO | [Rebalancing] Processing bronze_33...
+2026-03-03T15:11:08.243Z | INFO | [Rebalancing] bronze_33: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.243Z | INFO | [Rebalancing] Processing bronze_34...
+2026-03-03T15:11:08.247Z | INFO | [Rebalancing] bronze_34: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.247Z | INFO | [Rebalancing] Processing bronze_35...
+2026-03-03T15:11:08.250Z | INFO | [Rebalancing] bronze_35: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.250Z | INFO | [Rebalancing] Processing bronze_36...
+2026-03-03T15:11:08.255Z | INFO | [Rebalancing] bronze_36: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.255Z | INFO | [Rebalancing] Processing bronze_37...
+2026-03-03T15:11:08.258Z | INFO | [Rebalancing] bronze_37: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.258Z | INFO | [Rebalancing] Processing bronze_38...
+2026-03-03T15:11:08.262Z | INFO | [Rebalancing] bronze_38: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.262Z | INFO | [Rebalancing] Processing bronze_39...
+2026-03-03T15:11:08.266Z | INFO | [Rebalancing] bronze_39: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.266Z | INFO | [Rebalancing] Processing bronze_40...
+2026-03-03T15:11:08.269Z | INFO | [Rebalancing] bronze_40: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.269Z | INFO | [Rebalancing] Processing bronze_41...
+2026-03-03T15:11:08.273Z | INFO | [Rebalancing] bronze_41: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.273Z | INFO | [Rebalancing] Processing bronze_42...
+2026-03-03T15:11:08.277Z | INFO | [Rebalancing] bronze_42: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.277Z | INFO | [Rebalancing] Processing bronze_43...
+2026-03-03T15:11:08.281Z | INFO | [Rebalancing] bronze_43: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.281Z | INFO | [Rebalancing] Processing bronze_44...
+2026-03-03T15:11:08.284Z | INFO | [Rebalancing] bronze_44: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.284Z | INFO | [Rebalancing] Processing bronze_45...
+2026-03-03T15:11:08.288Z | INFO | [Rebalancing] bronze_45: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.288Z | INFO | [Rebalancing] Processing bronze_46...
+2026-03-03T15:11:08.292Z | INFO | [Rebalancing] bronze_46: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.292Z | INFO | [Rebalancing] Processing bronze_47...
+2026-03-03T15:11:08.296Z | INFO | [Rebalancing] bronze_47: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.296Z | INFO | [Rebalancing] Processing bronze_48...
+2026-03-03T15:11:08.300Z | INFO | [Rebalancing] bronze_48: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.300Z | INFO | [Rebalancing] Processing bronze_49...
+2026-03-03T15:11:08.304Z | INFO | [Rebalancing] bronze_49: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.304Z | INFO | [Rebalancing] Processing bronze_50...
+2026-03-03T15:11:08.307Z | INFO | [Rebalancing] bronze_50: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.307Z | INFO | [Rebalancing] Processing bronze_51...
+2026-03-03T15:11:08.310Z | INFO | [Rebalancing] bronze_51: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.311Z | INFO | [Rebalancing] Processing bronze_52...
+2026-03-03T15:11:08.314Z | INFO | [Rebalancing] bronze_52: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.314Z | INFO | [Rebalancing] Processing bronze_53...
+2026-03-03T15:11:08.318Z | INFO | [Rebalancing] bronze_53: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.318Z | INFO | [Rebalancing] Processing bronze_54...
+2026-03-03T15:11:08.326Z | INFO | [Rebalancing] bronze_54: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.326Z | INFO | [Rebalancing] Processing bronze_55...
+2026-03-03T15:11:08.331Z | INFO | [Rebalancing] bronze_55: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.331Z | INFO | [Rebalancing] Processing bronze_56...
+2026-03-03T15:11:08.334Z | INFO | [Rebalancing] bronze_56: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.334Z | INFO | [Rebalancing] Processing bronze_57...
+2026-03-03T15:11:08.339Z | INFO | [Rebalancing] bronze_57: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.339Z | INFO | [Rebalancing] Processing bronze_58...
+2026-03-03T15:11:08.342Z | INFO | [Rebalancing] bronze_58: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.342Z | INFO | [Rebalancing] Processing bronze_59...
+2026-03-03T15:11:08.347Z | INFO | [Rebalancing] bronze_59: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.347Z | INFO | [Rebalancing] Processing bronze_60...
+2026-03-03T15:11:08.350Z | INFO | [Rebalancing] bronze_60: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.350Z | INFO | [Rebalancing] Processing bronze_61...
+2026-03-03T15:11:08.353Z | INFO | [Rebalancing] bronze_61: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.353Z | INFO | [Rebalancing] Processing bronze_62...
+2026-03-03T15:11:08.357Z | INFO | [Rebalancing] bronze_62: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.357Z | INFO | [Rebalancing] Processing bronze_63...
+2026-03-03T15:11:08.361Z | INFO | [Rebalancing] bronze_63: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.361Z | INFO | [Rebalancing] Processing bronze_64...
+2026-03-03T15:11:08.364Z | INFO | [Rebalancing] bronze_64: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.364Z | INFO | [Rebalancing] Processing bronze_65...
+2026-03-03T15:11:08.368Z | INFO | [Rebalancing] bronze_65: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.368Z | INFO | [Rebalancing] Processing bronze_66...
+2026-03-03T15:11:08.372Z | INFO | [Rebalancing] bronze_66: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.372Z | INFO | [Rebalancing] Processing bronze_67...
+2026-03-03T15:11:08.376Z | INFO | [Rebalancing] bronze_67: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.376Z | INFO | [Rebalancing] Processing bronze_68...
+2026-03-03T15:11:08.379Z | INFO | [Rebalancing] bronze_68: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.379Z | INFO | [Rebalancing] Processing bronze_69...
+2026-03-03T15:11:08.383Z | INFO | [Rebalancing] bronze_69: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.383Z | INFO | [Rebalancing] Processing bronze_70...
+2026-03-03T15:11:08.387Z | INFO | [Rebalancing] bronze_70: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.387Z | INFO | [Rebalancing] Processing bronze_71...
+2026-03-03T15:11:08.391Z | INFO | [Rebalancing] bronze_71: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.391Z | INFO | [Rebalancing] Processing bronze_72...
+2026-03-03T15:11:08.395Z | INFO | [Rebalancing] bronze_72: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.395Z | INFO | [Rebalancing] Processing bronze_73...
+2026-03-03T15:11:08.400Z | INFO | [Rebalancing] bronze_73: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.400Z | INFO | [Rebalancing] Processing bronze_74...
+2026-03-03T15:11:08.404Z | INFO | [Rebalancing] bronze_74: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.404Z | INFO | [Rebalancing] Processing bronze_75...
+2026-03-03T15:11:08.408Z | INFO | [Rebalancing] bronze_75: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.408Z | INFO | [Rebalancing] Processing bronze_76...
+2026-03-03T15:11:08.412Z | INFO | [Rebalancing] bronze_76: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.412Z | INFO | [Rebalancing] Processing bronze_77...
+2026-03-03T15:11:08.415Z | INFO | [Rebalancing] bronze_77: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.415Z | INFO | [Rebalancing] Processing bronze_78...
+2026-03-03T15:11:08.418Z | INFO | [Rebalancing] bronze_78: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.418Z | INFO | [Rebalancing] Processing bronze_79...
+2026-03-03T15:11:08.422Z | INFO | [Rebalancing] bronze_79: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.422Z | INFO | [Rebalancing] Processing bronze_80...
+2026-03-03T15:11:08.426Z | INFO | [Rebalancing] bronze_80: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.426Z | INFO | [Rebalancing] Processing bronze_81...
+2026-03-03T15:11:08.430Z | INFO | [Rebalancing] bronze_81: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.430Z | INFO | [Rebalancing] Processing bronze_82...
+2026-03-03T15:11:08.434Z | INFO | [Rebalancing] bronze_82: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.434Z | INFO | [Rebalancing] Processing bronze_83...
+2026-03-03T15:11:08.438Z | INFO | [Rebalancing] bronze_83: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.438Z | INFO | [Rebalancing] Processing bronze_84...
+2026-03-03T15:11:08.441Z | INFO | [Rebalancing] bronze_84: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.441Z | INFO | [Rebalancing] Processing bronze_85...
+2026-03-03T15:11:08.446Z | INFO | [Rebalancing] bronze_85: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.446Z | INFO | [Rebalancing] Processing bronze_86...
+2026-03-03T15:11:08.450Z | INFO | [Rebalancing] bronze_86: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.450Z | INFO | [Rebalancing] Processing bronze_87...
+2026-03-03T15:11:08.454Z | INFO | [Rebalancing] bronze_87: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.454Z | INFO | [Rebalancing] Processing bronze_88...
+2026-03-03T15:11:08.458Z | INFO | [Rebalancing] bronze_88: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.458Z | INFO | [Rebalancing] Processing bronze_89...
+2026-03-03T15:11:08.462Z | INFO | [Rebalancing] bronze_89: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.462Z | INFO | [Rebalancing] Processing bronze_90...
+2026-03-03T15:11:08.466Z | INFO | [Rebalancing] bronze_90: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.466Z | INFO | [Rebalancing] Processing bronze_91...
+2026-03-03T15:11:08.471Z | INFO | [Rebalancing] bronze_91: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.471Z | INFO | [Rebalancing] Processing bronze_92...
+2026-03-03T15:11:08.475Z | INFO | [Rebalancing] bronze_92: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.475Z | INFO | [Rebalancing] Processing bronze_93...
+2026-03-03T15:11:08.480Z | INFO | [Rebalancing] bronze_93: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.480Z | INFO | [Rebalancing] Processing bronze_94...
+2026-03-03T15:11:08.483Z | INFO | [Rebalancing] bronze_94: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.483Z | INFO | [Rebalancing] Processing bronze_95...
+2026-03-03T15:11:08.487Z | INFO | [Rebalancing] bronze_95: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.487Z | INFO | [Rebalancing] Processing bronze_96...
+2026-03-03T15:11:08.491Z | INFO | [Rebalancing] bronze_96: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.491Z | INFO | [Rebalancing] Processing bronze_97...
+2026-03-03T15:11:08.495Z | INFO | [Rebalancing] bronze_97: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.495Z | INFO | [Rebalancing] Processing bronze_98...
+2026-03-03T15:11:08.498Z | INFO | [Rebalancing] bronze_98: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.498Z | INFO | [Rebalancing] Processing bronze_99...
+2026-03-03T15:11:08.502Z | INFO | [Rebalancing] bronze_99: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.502Z | INFO | [Rebalancing] Processing bronze_100...
+2026-03-03T15:11:08.506Z | INFO | [Rebalancing] bronze_100: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.506Z | INFO | [Rebalancing] Processing bronze_101...
+2026-03-03T15:11:08.510Z | INFO | [Rebalancing] bronze_101: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.510Z | INFO | [Rebalancing] Processing bronze_102...
+2026-03-03T15:11:08.513Z | INFO | [Rebalancing] bronze_102: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.513Z | INFO | [Rebalancing] Processing bronze_103...
+2026-03-03T15:11:08.517Z | INFO | [Rebalancing] bronze_103: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.517Z | INFO | [Rebalancing] Processing bronze_104...
+2026-03-03T15:11:08.520Z | INFO | [Rebalancing] bronze_104: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.520Z | INFO | [Rebalancing] Processing bronze_105...
+2026-03-03T15:11:08.524Z | INFO | [Rebalancing] bronze_105: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.524Z | INFO | [Rebalancing] Processing bronze_106...
+2026-03-03T15:11:08.528Z | INFO | [Rebalancing] bronze_106: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.528Z | INFO | [Rebalancing] Processing bronze_107...
+2026-03-03T15:11:08.533Z | INFO | [Rebalancing] bronze_107: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.533Z | INFO | [Rebalancing] Processing bronze_108...
+2026-03-03T15:11:08.537Z | INFO | [Rebalancing] bronze_108: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.537Z | INFO | [Rebalancing] Processing bronze_109...
+2026-03-03T15:11:08.541Z | INFO | [Rebalancing] bronze_109: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.541Z | INFO | [Rebalancing] Processing bronze_110...
+2026-03-03T15:11:08.544Z | INFO | [Rebalancing] bronze_110: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.544Z | INFO | [Rebalancing] Processing bronze_111...
+2026-03-03T15:11:08.549Z | INFO | [Rebalancing] bronze_111: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.549Z | INFO | [Rebalancing] Processing bronze_112...
+2026-03-03T15:11:08.552Z | INFO | [Rebalancing] bronze_112: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.552Z | INFO | [Rebalancing] Processing bronze_113...
+2026-03-03T15:11:08.556Z | INFO | [Rebalancing] bronze_113: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.556Z | INFO | [Rebalancing] Processing bronze_114...
+2026-03-03T15:11:08.559Z | INFO | [Rebalancing] bronze_114: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.559Z | INFO | [Rebalancing] Processing bronze_115...
+2026-03-03T15:11:08.564Z | INFO | [Rebalancing] bronze_115: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.564Z | INFO | [Rebalancing] Processing bronze_116...
+2026-03-03T15:11:08.567Z | INFO | [Rebalancing] bronze_116: No robots with ≥25 league points, skipping promotions
+2026-03-03T15:11:08.567Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 116 instances
+2026-03-03T15:11:08.567Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-03-03T15:11:08.570Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
+2026-03-03T15:11:08.570Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:11:08.570Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-03-03T15:11:08.572Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-03-03T15:11:08.572Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:11:08.572Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-03-03T15:11:08.575Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-03-03T15:11:08.575Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:11:08.575Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-03-03T15:11:08.577Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-03-03T15:11:08.577Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:11:08.577Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-03-03T15:11:08.579Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-03-03T15:11:08.579Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:11:08.579Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-03-03T15:11:08.586Z | INFO | [Rebalancing] bronze: Instance exceeds 100 robots, rebalancing...
+2026-03-03T15:11:08.594Z | INFO | [LeagueInstance] Rebalancing bronze instances...
+2026-03-03T15:11:08.594Z | INFO |   Total robots: 11576
+2026-03-03T15:11:08.594Z | INFO |   Instances: 116
+2026-03-03T15:11:08.594Z | INFO |   Average per instance: 99.8
+2026-03-03T15:11:09.350Z | INFO |   Target instances: 116
+2026-03-03T15:11:17.162Z | INFO | [LeagueInstance] Rebalanced 11460 robots across 116 instances
+2026-03-03T15:11:17.175Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:11:17.184Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:11:17.187Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:11:17.194Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:11:17.198Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:11:17.198Z | INFO |  ════════════════════════════════════════════════════════════
+2026-03-03T15:11:17.198Z | INFO | [Rebalancing] League rebalancing complete!
+2026-03-03T15:11:17.198Z | INFO |   Total promoted: 0
+2026-03-03T15:11:17.198Z | INFO |   Total demoted: 0
+2026-03-03T15:11:17.198Z | INFO |   Errors: 0
+2026-03-03T15:11:17.198Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-03-03T15:11:17.211Z | INFO | [Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle 4)
+2026-03-03T15:11:17.211Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-03-03T15:11:17.211Z | INFO | [UserGeneration] Generating 4 archetype users for Cycle 4...
+2026-03-03T15:11:17.211Z | INFO | [UserGeneration] Creating user 1/4: archetype_speed_demon_c_4_1 (archetype: speed_demon_c)
+2026-03-03T15:11:17.316Z | ERROR | [UserGeneration] Error creating user 1: {}
+2026-03-03T15:11:17.316Z | ERROR | [Admin] Error generating users: {}
+2026-03-03T15:11:17.324Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-03-03T15:11:17.324Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-03-03T15:11:17.324Z | INFO | [Matchmaking] Matches scheduled for: 2026-03-03T15:11:18.324Z
+2026-03-03T15:11:17.324Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-03-03T15:11:17.338Z | INFO | [Matchmaking] Processing bronze_1...
+2026-03-03T15:11:17.369Z | INFO | [Matchmaking] Queue for bronze_1: 1 robots available (102 total, 1 ready)
+2026-03-03T15:11:17.369Z | INFO | [Matchmaking] bronze_1: Not enough robots for matches (1 available)
+2026-03-03T15:11:17.369Z | INFO | [Matchmaking] Processing bronze_2...
+2026-03-03T15:11:17.394Z | INFO | [Matchmaking] Queue for bronze_2: 0 robots available (105 total, 0 ready)
+2026-03-03T15:11:17.394Z | INFO | [Matchmaking] bronze_2: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.394Z | INFO | [Matchmaking] Processing bronze_3...
+2026-03-03T15:11:17.416Z | INFO | [Matchmaking] Queue for bronze_3: 0 robots available (102 total, 0 ready)
+2026-03-03T15:11:17.416Z | INFO | [Matchmaking] bronze_3: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.416Z | INFO | [Matchmaking] Processing bronze_4...
+2026-03-03T15:11:17.436Z | INFO | [Matchmaking] Queue for bronze_4: 0 robots available (102 total, 0 ready)
+2026-03-03T15:11:17.436Z | INFO | [Matchmaking] bronze_4: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.436Z | INFO | [Matchmaking] Processing bronze_5...
+2026-03-03T15:11:17.453Z | INFO | [Matchmaking] Queue for bronze_5: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:17.453Z | INFO | [Matchmaking] bronze_5: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.453Z | INFO | [Matchmaking] Processing bronze_6...
+2026-03-03T15:11:17.471Z | INFO | [Matchmaking] Queue for bronze_6: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:17.471Z | INFO | [Matchmaking] bronze_6: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.471Z | INFO | [Matchmaking] Processing bronze_7...
+2026-03-03T15:11:17.486Z | INFO | [Matchmaking] Queue for bronze_7: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:17.486Z | INFO | [Matchmaking] bronze_7: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.486Z | INFO | [Matchmaking] Processing bronze_8...
+2026-03-03T15:11:17.501Z | INFO | [Matchmaking] Queue for bronze_8: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:17.501Z | INFO | [Matchmaking] bronze_8: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.501Z | INFO | [Matchmaking] Processing bronze_9...
+2026-03-03T15:11:17.519Z | INFO | [Matchmaking] Queue for bronze_9: 0 robots available (101 total, 0 ready)
+2026-03-03T15:11:17.519Z | INFO | [Matchmaking] bronze_9: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.519Z | INFO | [Matchmaking] Processing bronze_10...
+2026-03-03T15:11:17.534Z | INFO | [Matchmaking] Queue for bronze_10: 0 robots available (103 total, 0 ready)
+2026-03-03T15:11:17.534Z | INFO | [Matchmaking] bronze_10: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.534Z | INFO | [Matchmaking] Processing bronze_11...
+2026-03-03T15:11:17.560Z | INFO | [Matchmaking] Queue for bronze_11: 0 robots available (102 total, 0 ready)
+2026-03-03T15:11:17.560Z | INFO | [Matchmaking] bronze_11: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.560Z | INFO | [Matchmaking] Processing bronze_12...
+2026-03-03T15:11:17.577Z | INFO | [Matchmaking] Queue for bronze_12: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:17.577Z | INFO | [Matchmaking] bronze_12: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.577Z | INFO | [Matchmaking] Processing bronze_13...
+2026-03-03T15:11:17.590Z | INFO | [Matchmaking] Queue for bronze_13: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:17.590Z | INFO | [Matchmaking] bronze_13: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.590Z | INFO | [Matchmaking] Processing bronze_14...
+2026-03-03T15:11:17.605Z | INFO | [Matchmaking] Queue for bronze_14: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:17.605Z | INFO | [Matchmaking] bronze_14: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.605Z | INFO | [Matchmaking] Processing bronze_15...
+2026-03-03T15:11:17.621Z | INFO | [Matchmaking] Queue for bronze_15: 0 robots available (101 total, 0 ready)
+2026-03-03T15:11:17.621Z | INFO | [Matchmaking] bronze_15: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.621Z | INFO | [Matchmaking] Processing bronze_16...
+2026-03-03T15:11:17.646Z | INFO | [Matchmaking] Queue for bronze_16: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:17.646Z | INFO | [Matchmaking] bronze_16: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.646Z | INFO | [Matchmaking] Processing bronze_17...
+2026-03-03T15:11:17.664Z | INFO | [Matchmaking] Queue for bronze_17: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:17.664Z | INFO | [Matchmaking] bronze_17: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.664Z | INFO | [Matchmaking] Processing bronze_18...
+2026-03-03T15:11:17.683Z | INFO | [Matchmaking] Queue for bronze_18: 0 robots available (102 total, 0 ready)
+2026-03-03T15:11:17.683Z | INFO | [Matchmaking] bronze_18: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.683Z | INFO | [Matchmaking] Processing bronze_19...
+2026-03-03T15:11:17.703Z | INFO | [Matchmaking] Queue for bronze_19: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:17.703Z | INFO | [Matchmaking] bronze_19: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.703Z | INFO | [Matchmaking] Processing bronze_20...
+2026-03-03T15:11:17.720Z | INFO | [Matchmaking] Queue for bronze_20: 0 robots available (103 total, 0 ready)
+2026-03-03T15:11:17.720Z | INFO | [Matchmaking] bronze_20: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.720Z | INFO | [Matchmaking] Processing bronze_21...
+2026-03-03T15:11:17.733Z | INFO | [Matchmaking] Queue for bronze_21: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:17.733Z | INFO | [Matchmaking] bronze_21: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.733Z | INFO | [Matchmaking] Processing bronze_22...
+2026-03-03T15:11:17.753Z | INFO | [Matchmaking] Queue for bronze_22: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:17.753Z | INFO | [Matchmaking] bronze_22: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.753Z | INFO | [Matchmaking] Processing bronze_23...
+2026-03-03T15:11:17.766Z | INFO | [Matchmaking] Queue for bronze_23: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:17.766Z | INFO | [Matchmaking] bronze_23: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.766Z | INFO | [Matchmaking] Processing bronze_24...
+2026-03-03T15:11:17.791Z | INFO | [Matchmaking] Queue for bronze_24: 0 robots available (101 total, 0 ready)
+2026-03-03T15:11:17.791Z | INFO | [Matchmaking] bronze_24: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.791Z | INFO | [Matchmaking] Processing bronze_25...
+2026-03-03T15:11:17.808Z | INFO | [Matchmaking] Queue for bronze_25: 0 robots available (103 total, 0 ready)
+2026-03-03T15:11:17.808Z | INFO | [Matchmaking] bronze_25: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.808Z | INFO | [Matchmaking] Processing bronze_26...
+2026-03-03T15:11:17.840Z | INFO | [Matchmaking] Queue for bronze_26: 0 robots available (106 total, 0 ready)
+2026-03-03T15:11:17.840Z | INFO | [Matchmaking] bronze_26: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.840Z | INFO | [Matchmaking] Processing bronze_27...
+2026-03-03T15:11:17.869Z | INFO | [Matchmaking] Queue for bronze_27: 0 robots available (105 total, 0 ready)
+2026-03-03T15:11:17.869Z | INFO | [Matchmaking] bronze_27: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.869Z | INFO | [Matchmaking] Processing bronze_28...
+2026-03-03T15:11:17.896Z | INFO | [Matchmaking] Queue for bronze_28: 0 robots available (107 total, 0 ready)
+2026-03-03T15:11:17.896Z | INFO | [Matchmaking] bronze_28: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.896Z | INFO | [Matchmaking] Processing bronze_29...
+2026-03-03T15:11:17.913Z | INFO | [Matchmaking] Queue for bronze_29: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:17.913Z | INFO | [Matchmaking] bronze_29: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.913Z | INFO | [Matchmaking] Processing bronze_30...
+2026-03-03T15:11:17.933Z | INFO | [Matchmaking] Queue for bronze_30: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:17.933Z | INFO | [Matchmaking] bronze_30: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.933Z | INFO | [Matchmaking] Processing bronze_31...
+2026-03-03T15:11:17.950Z | INFO | [Matchmaking] Queue for bronze_31: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:17.950Z | INFO | [Matchmaking] bronze_31: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.950Z | INFO | [Matchmaking] Processing bronze_32...
+2026-03-03T15:11:17.975Z | INFO | [Matchmaking] Queue for bronze_32: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:17.975Z | INFO | [Matchmaking] bronze_32: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.975Z | INFO | [Matchmaking] Processing bronze_33...
+2026-03-03T15:11:17.997Z | INFO | [Matchmaking] Queue for bronze_33: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:17.997Z | INFO | [Matchmaking] bronze_33: Not enough robots for matches (0 available)
+2026-03-03T15:11:17.997Z | INFO | [Matchmaking] Processing bronze_34...
+2026-03-03T15:11:18.013Z | INFO | [Matchmaking] Queue for bronze_34: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:18.013Z | INFO | [Matchmaking] bronze_34: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.013Z | INFO | [Matchmaking] Processing bronze_35...
+2026-03-03T15:11:18.037Z | INFO | [Matchmaking] Queue for bronze_35: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:18.037Z | INFO | [Matchmaking] bronze_35: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.037Z | INFO | [Matchmaking] Processing bronze_36...
+2026-03-03T15:11:18.059Z | INFO | [Matchmaking] Queue for bronze_36: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:18.059Z | INFO | [Matchmaking] bronze_36: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.059Z | INFO | [Matchmaking] Processing bronze_37...
+2026-03-03T15:11:18.093Z | INFO | [Matchmaking] Queue for bronze_37: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:18.093Z | INFO | [Matchmaking] bronze_37: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.093Z | INFO | [Matchmaking] Processing bronze_38...
+2026-03-03T15:11:18.121Z | INFO | [Matchmaking] Queue for bronze_38: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:18.121Z | INFO | [Matchmaking] bronze_38: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.121Z | INFO | [Matchmaking] Processing bronze_39...
+2026-03-03T15:11:18.155Z | INFO | [Matchmaking] Queue for bronze_39: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:18.155Z | INFO | [Matchmaking] bronze_39: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.155Z | INFO | [Matchmaking] Processing bronze_40...
+2026-03-03T15:11:18.175Z | INFO | [Matchmaking] Queue for bronze_40: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:18.175Z | INFO | [Matchmaking] bronze_40: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.175Z | INFO | [Matchmaking] Processing bronze_41...
+2026-03-03T15:11:18.198Z | INFO | [Matchmaking] Queue for bronze_41: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:18.198Z | INFO | [Matchmaking] bronze_41: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.198Z | INFO | [Matchmaking] Processing bronze_42...
+2026-03-03T15:11:18.215Z | INFO | [Matchmaking] Queue for bronze_42: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:18.215Z | INFO | [Matchmaking] bronze_42: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.215Z | INFO | [Matchmaking] Processing bronze_43...
+2026-03-03T15:11:18.230Z | INFO | [Matchmaking] Queue for bronze_43: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:18.230Z | INFO | [Matchmaking] bronze_43: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.230Z | INFO | [Matchmaking] Processing bronze_44...
+2026-03-03T15:11:18.245Z | INFO | [Matchmaking] Queue for bronze_44: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:18.245Z | INFO | [Matchmaking] bronze_44: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.245Z | INFO | [Matchmaking] Processing bronze_45...
+2026-03-03T15:11:18.256Z | INFO | [Matchmaking] Queue for bronze_45: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:18.256Z | INFO | [Matchmaking] bronze_45: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.256Z | INFO | [Matchmaking] Processing bronze_46...
+2026-03-03T15:11:18.275Z | INFO | [Matchmaking] Queue for bronze_46: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:18.275Z | INFO | [Matchmaking] bronze_46: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.275Z | INFO | [Matchmaking] Processing bronze_47...
+2026-03-03T15:11:18.291Z | INFO | [Matchmaking] Queue for bronze_47: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:18.291Z | INFO | [Matchmaking] bronze_47: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.291Z | INFO | [Matchmaking] Processing bronze_48...
+2026-03-03T15:11:18.335Z | INFO | [Matchmaking] Queue for bronze_48: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:18.335Z | INFO | [Matchmaking] bronze_48: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.335Z | INFO | [Matchmaking] Processing bronze_49...
+2026-03-03T15:11:18.350Z | INFO | [Matchmaking] Queue for bronze_49: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:18.350Z | INFO | [Matchmaking] bronze_49: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.350Z | INFO | [Matchmaking] Processing bronze_50...
+2026-03-03T15:11:18.381Z | INFO | [Matchmaking] Queue for bronze_50: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:18.381Z | INFO | [Matchmaking] bronze_50: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.381Z | INFO | [Matchmaking] Processing bronze_51...
+2026-03-03T15:11:18.403Z | INFO | [Matchmaking] Queue for bronze_51: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:18.403Z | INFO | [Matchmaking] bronze_51: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.403Z | INFO | [Matchmaking] Processing bronze_52...
+2026-03-03T15:11:18.426Z | INFO | [Matchmaking] Queue for bronze_52: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:18.426Z | INFO | [Matchmaking] bronze_52: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.426Z | INFO | [Matchmaking] Processing bronze_53...
+2026-03-03T15:11:18.446Z | INFO | [Matchmaking] Queue for bronze_53: 0 robots available (91 total, 0 ready)
+2026-03-03T15:11:18.446Z | INFO | [Matchmaking] bronze_53: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.446Z | INFO | [Matchmaking] Processing bronze_54...
+2026-03-03T15:11:18.463Z | INFO | [Matchmaking] Queue for bronze_54: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:18.463Z | INFO | [Matchmaking] bronze_54: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.463Z | INFO | [Matchmaking] Processing bronze_55...
+2026-03-03T15:11:18.483Z | INFO | [Matchmaking] Queue for bronze_55: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:18.483Z | INFO | [Matchmaking] bronze_55: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.483Z | INFO | [Matchmaking] Processing bronze_56...
+2026-03-03T15:11:18.505Z | INFO | [Matchmaking] Queue for bronze_56: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:18.505Z | INFO | [Matchmaking] bronze_56: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.505Z | INFO | [Matchmaking] Processing bronze_57...
+2026-03-03T15:11:18.527Z | INFO | [Matchmaking] Queue for bronze_57: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:18.527Z | INFO | [Matchmaking] bronze_57: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.527Z | INFO | [Matchmaking] Processing bronze_58...
+2026-03-03T15:11:18.553Z | INFO | [Matchmaking] Queue for bronze_58: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:18.553Z | INFO | [Matchmaking] bronze_58: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.553Z | INFO | [Matchmaking] Processing bronze_59...
+2026-03-03T15:11:18.576Z | INFO | [Matchmaking] Queue for bronze_59: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:18.576Z | INFO | [Matchmaking] bronze_59: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.576Z | INFO | [Matchmaking] Processing bronze_60...
+2026-03-03T15:11:18.605Z | INFO | [Matchmaking] Queue for bronze_60: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:18.605Z | INFO | [Matchmaking] bronze_60: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.605Z | INFO | [Matchmaking] Processing bronze_61...
+2026-03-03T15:11:18.629Z | INFO | [Matchmaking] Queue for bronze_61: 0 robots available (91 total, 0 ready)
+2026-03-03T15:11:18.629Z | INFO | [Matchmaking] bronze_61: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.629Z | INFO | [Matchmaking] Processing bronze_62...
+2026-03-03T15:11:18.651Z | INFO | [Matchmaking] Queue for bronze_62: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:18.651Z | INFO | [Matchmaking] bronze_62: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.651Z | INFO | [Matchmaking] Processing bronze_63...
+2026-03-03T15:11:18.682Z | INFO | [Matchmaking] Queue for bronze_63: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:18.682Z | INFO | [Matchmaking] bronze_63: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.682Z | INFO | [Matchmaking] Processing bronze_64...
+2026-03-03T15:11:18.701Z | INFO | [Matchmaking] Queue for bronze_64: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:18.701Z | INFO | [Matchmaking] bronze_64: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.701Z | INFO | [Matchmaking] Processing bronze_65...
+2026-03-03T15:11:18.715Z | INFO | [Matchmaking] Queue for bronze_65: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:18.715Z | INFO | [Matchmaking] bronze_65: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.715Z | INFO | [Matchmaking] Processing bronze_66...
+2026-03-03T15:11:18.733Z | INFO | [Matchmaking] Queue for bronze_66: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:18.733Z | INFO | [Matchmaking] bronze_66: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.733Z | INFO | [Matchmaking] Processing bronze_67...
+2026-03-03T15:11:18.754Z | INFO | [Matchmaking] Queue for bronze_67: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:18.754Z | INFO | [Matchmaking] bronze_67: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.754Z | INFO | [Matchmaking] Processing bronze_68...
+2026-03-03T15:11:18.772Z | INFO | [Matchmaking] Queue for bronze_68: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:18.772Z | INFO | [Matchmaking] bronze_68: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.772Z | INFO | [Matchmaking] Processing bronze_69...
+2026-03-03T15:11:18.797Z | INFO | [Matchmaking] Queue for bronze_69: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:18.797Z | INFO | [Matchmaking] bronze_69: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.797Z | INFO | [Matchmaking] Processing bronze_70...
+2026-03-03T15:11:18.818Z | INFO | [Matchmaking] Queue for bronze_70: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:18.818Z | INFO | [Matchmaking] bronze_70: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.818Z | INFO | [Matchmaking] Processing bronze_71...
+2026-03-03T15:11:18.838Z | INFO | [Matchmaking] Queue for bronze_71: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:18.838Z | INFO | [Matchmaking] bronze_71: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.838Z | INFO | [Matchmaking] Processing bronze_72...
+2026-03-03T15:11:18.857Z | INFO | [Matchmaking] Queue for bronze_72: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:18.857Z | INFO | [Matchmaking] bronze_72: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.857Z | INFO | [Matchmaking] Processing bronze_73...
+2026-03-03T15:11:18.878Z | INFO | [Matchmaking] Queue for bronze_73: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:18.878Z | INFO | [Matchmaking] bronze_73: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.878Z | INFO | [Matchmaking] Processing bronze_74...
+2026-03-03T15:11:18.906Z | INFO | [Matchmaking] Queue for bronze_74: 0 robots available (92 total, 0 ready)
+2026-03-03T15:11:18.906Z | INFO | [Matchmaking] bronze_74: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.906Z | INFO | [Matchmaking] Processing bronze_75...
+2026-03-03T15:11:18.928Z | INFO | [Matchmaking] Queue for bronze_75: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:18.928Z | INFO | [Matchmaking] bronze_75: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.928Z | INFO | [Matchmaking] Processing bronze_76...
+2026-03-03T15:11:18.941Z | INFO | [Matchmaking] Queue for bronze_76: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:18.941Z | INFO | [Matchmaking] bronze_76: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.941Z | INFO | [Matchmaking] Processing bronze_77...
+2026-03-03T15:11:18.958Z | INFO | [Matchmaking] Queue for bronze_77: 0 robots available (92 total, 0 ready)
+2026-03-03T15:11:18.958Z | INFO | [Matchmaking] bronze_77: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.958Z | INFO | [Matchmaking] Processing bronze_78...
+2026-03-03T15:11:18.978Z | INFO | [Matchmaking] Queue for bronze_78: 0 robots available (92 total, 0 ready)
+2026-03-03T15:11:18.978Z | INFO | [Matchmaking] bronze_78: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.978Z | INFO | [Matchmaking] Processing bronze_79...
+2026-03-03T15:11:18.994Z | INFO | [Matchmaking] Queue for bronze_79: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:18.994Z | INFO | [Matchmaking] bronze_79: Not enough robots for matches (0 available)
+2026-03-03T15:11:18.994Z | INFO | [Matchmaking] Processing bronze_80...
+2026-03-03T15:11:19.008Z | INFO | [Matchmaking] Queue for bronze_80: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:19.008Z | INFO | [Matchmaking] bronze_80: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.008Z | INFO | [Matchmaking] Processing bronze_81...
+2026-03-03T15:11:19.025Z | INFO | [Matchmaking] Queue for bronze_81: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:19.025Z | INFO | [Matchmaking] bronze_81: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.025Z | INFO | [Matchmaking] Processing bronze_82...
+2026-03-03T15:11:19.039Z | INFO | [Matchmaking] Queue for bronze_82: 0 robots available (101 total, 0 ready)
+2026-03-03T15:11:19.039Z | INFO | [Matchmaking] bronze_82: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.039Z | INFO | [Matchmaking] Processing bronze_83...
+2026-03-03T15:11:19.055Z | INFO | [Matchmaking] Queue for bronze_83: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:19.055Z | INFO | [Matchmaking] bronze_83: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.055Z | INFO | [Matchmaking] Processing bronze_84...
+2026-03-03T15:11:19.077Z | INFO | [Matchmaking] Queue for bronze_84: 0 robots available (101 total, 0 ready)
+2026-03-03T15:11:19.077Z | INFO | [Matchmaking] bronze_84: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.077Z | INFO | [Matchmaking] Processing bronze_85...
+2026-03-03T15:11:19.094Z | INFO | [Matchmaking] Queue for bronze_85: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:19.094Z | INFO | [Matchmaking] bronze_85: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.094Z | INFO | [Matchmaking] Processing bronze_86...
+2026-03-03T15:11:19.111Z | INFO | [Matchmaking] Queue for bronze_86: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:19.111Z | INFO | [Matchmaking] bronze_86: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.111Z | INFO | [Matchmaking] Processing bronze_87...
+2026-03-03T15:11:19.122Z | INFO | [Matchmaking] Queue for bronze_87: 0 robots available (100 total, 0 ready)
+2026-03-03T15:11:19.122Z | INFO | [Matchmaking] bronze_87: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.122Z | INFO | [Matchmaking] Processing bronze_88...
+2026-03-03T15:11:19.131Z | INFO | [Matchmaking] Queue for bronze_88: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:19.131Z | INFO | [Matchmaking] bronze_88: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.131Z | INFO | [Matchmaking] Processing bronze_89...
+2026-03-03T15:11:19.140Z | INFO | [Matchmaking] Queue for bronze_89: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:19.140Z | INFO | [Matchmaking] bronze_89: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.140Z | INFO | [Matchmaking] Processing bronze_90...
+2026-03-03T15:11:19.149Z | INFO | [Matchmaking] Queue for bronze_90: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:19.149Z | INFO | [Matchmaking] bronze_90: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.149Z | INFO | [Matchmaking] Processing bronze_91...
+2026-03-03T15:11:19.159Z | INFO | [Matchmaking] Queue for bronze_91: 0 robots available (101 total, 0 ready)
+2026-03-03T15:11:19.159Z | INFO | [Matchmaking] bronze_91: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.159Z | INFO | [Matchmaking] Processing bronze_92...
+2026-03-03T15:11:19.169Z | INFO | [Matchmaking] Queue for bronze_92: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:19.169Z | INFO | [Matchmaking] bronze_92: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.169Z | INFO | [Matchmaking] Processing bronze_93...
+2026-03-03T15:11:19.178Z | INFO | [Matchmaking] Queue for bronze_93: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:19.178Z | INFO | [Matchmaking] bronze_93: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.178Z | INFO | [Matchmaking] Processing bronze_94...
+2026-03-03T15:11:19.189Z | INFO | [Matchmaking] Queue for bronze_94: 0 robots available (99 total, 0 ready)
+2026-03-03T15:11:19.189Z | INFO | [Matchmaking] bronze_94: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.189Z | INFO | [Matchmaking] Processing bronze_95...
+2026-03-03T15:11:19.198Z | INFO | [Matchmaking] Queue for bronze_95: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:19.198Z | INFO | [Matchmaking] bronze_95: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.198Z | INFO | [Matchmaking] Processing bronze_96...
+2026-03-03T15:11:19.208Z | INFO | [Matchmaking] Queue for bronze_96: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:19.208Z | INFO | [Matchmaking] bronze_96: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.208Z | INFO | [Matchmaking] Processing bronze_97...
+2026-03-03T15:11:19.220Z | INFO | [Matchmaking] Queue for bronze_97: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:19.220Z | INFO | [Matchmaking] bronze_97: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.220Z | INFO | [Matchmaking] Processing bronze_98...
+2026-03-03T15:11:19.230Z | INFO | [Matchmaking] Queue for bronze_98: 0 robots available (98 total, 0 ready)
+2026-03-03T15:11:19.230Z | INFO | [Matchmaking] bronze_98: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.230Z | INFO | [Matchmaking] Processing bronze_99...
+2026-03-03T15:11:19.240Z | INFO | [Matchmaking] Queue for bronze_99: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:19.240Z | INFO | [Matchmaking] bronze_99: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.240Z | INFO | [Matchmaking] Processing bronze_100...
+2026-03-03T15:11:19.251Z | INFO | [Matchmaking] Queue for bronze_100: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:19.251Z | INFO | [Matchmaking] bronze_100: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.251Z | INFO | [Matchmaking] Processing bronze_101...
+2026-03-03T15:11:19.260Z | INFO | [Matchmaking] Queue for bronze_101: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:19.260Z | INFO | [Matchmaking] bronze_101: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.260Z | INFO | [Matchmaking] Processing bronze_102...
+2026-03-03T15:11:19.269Z | INFO | [Matchmaking] Queue for bronze_102: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:19.269Z | INFO | [Matchmaking] bronze_102: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.269Z | INFO | [Matchmaking] Processing bronze_103...
+2026-03-03T15:11:19.281Z | INFO | [Matchmaking] Queue for bronze_103: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:19.281Z | INFO | [Matchmaking] bronze_103: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.281Z | INFO | [Matchmaking] Processing bronze_104...
+2026-03-03T15:11:19.291Z | INFO | [Matchmaking] Queue for bronze_104: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:19.291Z | INFO | [Matchmaking] bronze_104: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.291Z | INFO | [Matchmaking] Processing bronze_105...
+2026-03-03T15:11:19.301Z | INFO | [Matchmaking] Queue for bronze_105: 0 robots available (91 total, 0 ready)
+2026-03-03T15:11:19.301Z | INFO | [Matchmaking] bronze_105: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.301Z | INFO | [Matchmaking] Processing bronze_106...
+2026-03-03T15:11:19.310Z | INFO | [Matchmaking] Queue for bronze_106: 0 robots available (92 total, 0 ready)
+2026-03-03T15:11:19.310Z | INFO | [Matchmaking] bronze_106: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.310Z | INFO | [Matchmaking] Processing bronze_107...
+2026-03-03T15:11:19.320Z | INFO | [Matchmaking] Queue for bronze_107: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:19.320Z | INFO | [Matchmaking] bronze_107: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.320Z | INFO | [Matchmaking] Processing bronze_108...
+2026-03-03T15:11:19.333Z | INFO | [Matchmaking] Queue for bronze_108: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:19.333Z | INFO | [Matchmaking] bronze_108: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.333Z | INFO | [Matchmaking] Processing bronze_109...
+2026-03-03T15:11:19.344Z | INFO | [Matchmaking] Queue for bronze_109: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:19.344Z | INFO | [Matchmaking] bronze_109: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.344Z | INFO | [Matchmaking] Processing bronze_110...
+2026-03-03T15:11:19.354Z | INFO | [Matchmaking] Queue for bronze_110: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:19.354Z | INFO | [Matchmaking] bronze_110: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.354Z | INFO | [Matchmaking] Processing bronze_111...
+2026-03-03T15:11:19.363Z | INFO | [Matchmaking] Queue for bronze_111: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:19.363Z | INFO | [Matchmaking] bronze_111: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.363Z | INFO | [Matchmaking] Processing bronze_112...
+2026-03-03T15:11:19.374Z | INFO | [Matchmaking] Queue for bronze_112: 0 robots available (96 total, 0 ready)
+2026-03-03T15:11:19.374Z | INFO | [Matchmaking] bronze_112: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.374Z | INFO | [Matchmaking] Processing bronze_113...
+2026-03-03T15:11:19.384Z | INFO | [Matchmaking] Queue for bronze_113: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:19.384Z | INFO | [Matchmaking] bronze_113: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.384Z | INFO | [Matchmaking] Processing bronze_114...
+2026-03-03T15:11:19.393Z | INFO | [Matchmaking] Queue for bronze_114: 0 robots available (95 total, 0 ready)
+2026-03-03T15:11:19.393Z | INFO | [Matchmaking] bronze_114: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.393Z | INFO | [Matchmaking] Processing bronze_115...
+2026-03-03T15:11:19.402Z | INFO | [Matchmaking] Queue for bronze_115: 0 robots available (94 total, 0 ready)
+2026-03-03T15:11:19.402Z | INFO | [Matchmaking] bronze_115: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.402Z | INFO | [Matchmaking] Processing bronze_116...
+2026-03-03T15:11:19.415Z | INFO | [Matchmaking] Queue for bronze_116: 0 robots available (97 total, 0 ready)
+2026-03-03T15:11:19.415Z | INFO | [Matchmaking] bronze_116: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.415Z | INFO | [Matchmaking] Processing bronze_117...
+2026-03-03T15:11:19.425Z | INFO | [Matchmaking] Queue for bronze_117: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:19.425Z | INFO | [Matchmaking] bronze_117: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.425Z | INFO | [Matchmaking] Processing bronze_118...
+2026-03-03T15:11:19.434Z | INFO | [Matchmaking] Queue for bronze_118: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:19.434Z | INFO | [Matchmaking] bronze_118: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.434Z | INFO | [Matchmaking] Processing bronze_119...
+2026-03-03T15:11:19.442Z | INFO | [Matchmaking] Queue for bronze_119: 0 robots available (93 total, 0 ready)
+2026-03-03T15:11:19.442Z | INFO | [Matchmaking] bronze_119: Not enough robots for matches (0 available)
+2026-03-03T15:11:19.442Z | INFO | [Matchmaking] BRONZE: Created 0 matches across 119 instances
+2026-03-03T15:11:19.442Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-03-03T15:11:19.443Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
+2026-03-03T15:11:19.443Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-03-03T15:11:19.444Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-03-03T15:11:19.444Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-03-03T15:11:19.446Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-03-03T15:11:19.446Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-03-03T15:11:19.447Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-03-03T15:11:19.447Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-03-03T15:11:19.448Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-03-03T15:11:19.448Z | INFO | [Matchmaking] ========================================
+2026-03-03T15:11:19.448Z | INFO | [Matchmaking] COMPLETE: 0 total matches created
+2026-03-03T15:11:19.448Z | INFO | [Matchmaking] ========================================
+2026-03-03T15:11:19.449Z | INFO | [Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle 4)
+2026-03-03T15:11:19.449Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-03-03T15:11:19.577Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-03-03T15:11:19.596Z | INFO | [OperatingCosts] User 14306 | Total: ₡7,500 | Facilities: roster_expansion(L0): ₡7500
+2026-03-03T15:11:19.618Z | INFO | [OperatingCosts] User 14046 | Total: ₡2,622,500 | Facilities: roster_expansion(L0): ₡2622500
+2026-03-03T15:11:19.630Z | INFO | [OperatingCosts] User 14296 | Total: ₡3,500 | Facilities: roster_expansion(L0): ₡3500
+2026-03-03T15:11:19.660Z | INFO | [OperatingCosts] User 14156 | Total: ₡3,160,500 | Facilities: roster_expansion(L0): ₡3160500
+2026-03-03T15:11:19.666Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡5,794,000
+2026-03-03T15:11:19.667Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-03-03T15:11:20.771Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-03-03T15:11:20.771Z | INFO | [Admin] === End of Cycle 4 Balances ===
+2026-03-03T15:11:20.773Z | INFO | [Balance] User 14046 | Stable: pbt_instance_1772550381339 | Balance: ₡-38,615,557
+2026-03-03T15:11:20.777Z | INFO | [Balance] User 14087 | Stable: admin_test_1772550398610 | Balance: ₡1,000,000
+2026-03-03T15:11:20.778Z | INFO | [Balance] User 14156 | Stable: pbt_instance_1772550448626 | Balance: ₡-46,319,709
+2026-03-03T15:11:20.780Z | INFO | [Balance] User 14161 | Stable: admin_test_1772550587625 | Balance: ₡1,000,000
+2026-03-03T15:11:20.780Z | INFO | [Balance] User 14296 | Stable: pbt_tagteam_user_1772550639719 | Balance: ₡1,015,160
+2026-03-03T15:11:20.781Z | INFO | [Balance] User 14297 | Stable: pbt_tagteam_other_1772550639742 | Balance: ₡1,000,000
+2026-03-03T15:11:20.782Z | INFO | [Balance] User 14306 | Stable: pbt_elo_user_1772550679414 | Balance: ₡926,000
+2026-03-03T15:11:20.783Z | INFO | [Admin] ===================================
+2026-03-03T15:11:20.784Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-03-03T15:11:20.784Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 4
+2026-03-03T15:11:20.787Z | ERROR | [Admin] Failed to create cycle snapshot: {}
+2026-03-03T15:11:20.787Z | INFO | [Admin] === Cycle 4 Summary ===
+2026-03-03T15:11:20.787Z | INFO | [Admin] Battles: 3
+2026-03-03T15:11:20.787Z | INFO | [Admin] ===================================
+2026-03-03T15:11:20.787Z | INFO | === Cycle 4 Ended ===

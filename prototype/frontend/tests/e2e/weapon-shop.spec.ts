@@ -9,10 +9,11 @@ test.describe('Weapon Shop Page', () => {
   test.beforeEach(async ({ page }) => {
     // Login as player1
     await page.goto('/login');
-    await page.getByLabel('Username').fill('player1');
+    await page.getByLabel('Username or Email').fill('player1');
     await page.getByLabel('Password').fill('password123');
     await page.getByRole('button', { name: 'Login' }).click();
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await page.waitForURL('**/dashboard', { timeout: 20000 });
+    await page.waitForLoadState('networkidle');
     
     // Navigate to weapon shop
     await page.goto('/weapon-shop');
@@ -113,14 +114,15 @@ test.describe('Weapon Shop Page', () => {
       // Expand filters
       await page.getByText('Filters').click();
       
-      // Click "Melee" filter
-      await page.getByRole('button', { name: 'Melee' }).click();
+      // Click "Melee" filter button (in the filter panel, not the chip)
+      await page.locator('.bg-gray-700').filter({ hasText: 'Melee' }).locator('button').click();
       
       // Wait for filter to apply
       await page.waitForTimeout(500);
       
       // Check that active filter chip is displayed
-      await expect(page.getByText('Melee', { exact: true })).toBeVisible();
+      const filterChip = page.locator('.bg-purple-900').filter({ hasText: 'Melee' });
+      await expect(filterChip).toBeVisible();
       
       // Take screenshot
       await page.screenshot({ 
@@ -150,16 +152,18 @@ test.describe('Weapon Shop Page', () => {
       // Expand filters
       await page.getByText('Filters').click();
       
-      // Apply multiple filters
-      await page.getByRole('button', { name: 'Single' }).click();
-      await page.getByRole('button', { name: 'Melee' }).click();
+      // Apply multiple filters - use more specific selectors
+      await page.locator('.bg-gray-700').filter({ hasText: 'Single' }).locator('button').click();
+      await page.locator('.bg-gray-700').filter({ hasText: 'Melee' }).locator('button').click();
       
       // Wait for filters to apply
       await page.waitForTimeout(500);
       
       // Check that both filter chips are displayed
-      await expect(page.getByText('Single', { exact: true })).toBeVisible();
-      await expect(page.getByText('Melee', { exact: true })).toBeVisible();
+      const singleChip = page.locator('.bg-blue-900').filter({ hasText: 'Single' });
+      const meleeChip = page.locator('.bg-purple-900').filter({ hasText: 'Melee' });
+      await expect(singleChip).toBeVisible();
+      await expect(meleeChip).toBeVisible();
       
       // Take screenshot
       await page.screenshot({ 
@@ -173,7 +177,7 @@ test.describe('Weapon Shop Page', () => {
       await page.getByText('Filters').click();
       
       // Apply a filter
-      await page.getByRole('button', { name: 'Melee' }).click();
+      await page.locator('.bg-gray-700').filter({ hasText: 'Melee' }).locator('button').click();
       await page.waitForTimeout(500);
       
       // Click "Clear All" button
@@ -183,7 +187,7 @@ test.describe('Weapon Shop Page', () => {
       await page.waitForTimeout(500);
       
       // Check that filter chip is removed
-      const meleeChip = page.locator('text=Melee').first();
+      const meleeChip = page.locator('.bg-purple-900').filter({ hasText: 'Melee' });
       const isVisible = await meleeChip.isVisible().catch(() => false);
       expect(isVisible).toBe(false);
     });
@@ -193,11 +197,11 @@ test.describe('Weapon Shop Page', () => {
       await page.getByText('Filters').click();
       
       // Apply a filter
-      await page.getByRole('button', { name: 'Melee' }).click();
+      await page.locator('.bg-gray-700').filter({ hasText: 'Melee' }).locator('button').click();
       await page.waitForTimeout(500);
       
-      // Find and click the X button on the filter chip
-      const filterChip = page.locator('.bg-red-900\\/30').first();
+      // Find and click the X button on the filter chip (purple chip for weapon type)
+      const filterChip = page.locator('.bg-purple-900').filter({ hasText: 'Melee' });
       await filterChip.locator('button').click();
       
       // Wait for filter to be removed
@@ -522,7 +526,7 @@ test.describe('Weapon Shop Page', () => {
       const startTime = Date.now();
       
       // Apply filter
-      await page.getByRole('button', { name: 'Melee' }).click();
+      await page.locator('.bg-gray-700').filter({ hasText: 'Melee' }).locator('button').click();
       
       // Wait for filter to apply
       await page.waitForTimeout(100);

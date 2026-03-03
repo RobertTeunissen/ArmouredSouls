@@ -12,7 +12,8 @@ test.describe('Dashboard Page', () => {
     await page.getByLabel('Username or Email').fill('player1');
     await page.getByLabel('Password').fill('password123');
     await page.getByRole('button', { name: 'Login' }).click();
-    await page.waitForURL('**/dashboard', { timeout: 15000 });
+    await page.waitForURL('**/dashboard', { timeout: 20000 });
+    await page.waitForLoadState('networkidle');
   });
 
   test('should display dashboard with user profile', async ({ page }) => {

@@ -1,320 +1,90 @@
 Timestamp | Level | Message
-2026-03-02T21:29:42.269Z | INFO | === Cycle 6 Started ===
-2026-03-02T21:29:42.269Z | INFO | Cycle 6 (6/10)
-2026-03-02T21:29:42.269Z | INFO |  [Admin] === Cycle 6 (6/10) ===
-2026-03-02T21:29:42.272Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
-2026-03-02T21:29:42.272Z | INFO | [BattleOrchestrator] Executing all scheduled league battles
-2026-03-02T21:29:42.273Z | INFO | [BattleOrchestrator] Found 0 matches to execute
-2026-03-02T21:29:42.273Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
-2026-03-02T21:29:42.273Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
-2026-03-02T21:29:42.274Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
-2026-03-02T21:29:42.277Z | INFO | [Admin] Step 3: Skipping Tag Team Battles (even cycle 6)
-2026-03-02T21:29:42.277Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
-2026-03-02T21:29:42.280Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
-2026-03-02T21:29:42.281Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
-2026-03-02T21:29:42.284Z | INFO | [Admin] Step 7: Rebalance Leagues
-2026-03-02T21:29:42.284Z | INFO | ════════════════════════════════════════════════════════════
-2026-03-02T21:29:42.284Z | INFO | [Rebalancing] Starting league rebalancing...
-2026-03-02T21:29:42.284Z | INFO | ════════════════════════════════════════════════════════════
-2026-03-02T21:29:42.285Z | INFO | [Rebalancing] Total robots in system: 448
-2026-03-02T21:29:42.285Z | INFO |  [Rebalancing] Processing BRONZE league...
-2026-03-02T21:29:42.287Z | INFO | [Rebalancing] bronze: 186 total robots across 5 instances
-2026-03-02T21:29:42.287Z | INFO | [Rebalancing] Processing bronze_1...
-2026-03-02T21:29:42.295Z | INFO | [Rebalancing] bronze_1: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 10 met points threshold)
-2026-03-02T21:29:42.298Z | INFO | [Rebalancing] Promoted: New Robot 212 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.301Z | INFO | [Rebalancing] Promoted: New Robot 67 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.301Z | INFO | [Rebalancing] Processing bronze_2...
-2026-03-02T21:29:42.316Z | INFO | [Rebalancing] bronze_2: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 13 met points threshold)
-2026-03-02T21:29:42.330Z | INFO | [Rebalancing] Promoted: New Robot 179 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.341Z | INFO | [Rebalancing] Promoted: New Robot 51 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.341Z | INFO | [Rebalancing] Processing bronze_3...
-2026-03-02T21:29:42.357Z | INFO | [Rebalancing] bronze_3: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 13 met points threshold)
-2026-03-02T21:29:42.361Z | INFO | [Rebalancing] Promoted: New Robot 211 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.367Z | INFO | [Rebalancing] Promoted: New Robot 15 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.367Z | INFO | [Rebalancing] Processing bronze_4...
-2026-03-02T21:29:42.390Z | INFO | [Rebalancing] bronze_4: 2 robots eligible for promotion (top 10% of 29 AND ≥25 league points, 14 met points threshold)
-2026-03-02T21:29:42.396Z | INFO | [Rebalancing] Promoted: New Robot 16 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.402Z | INFO | [Rebalancing] Promoted: New Robot 141 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.402Z | INFO | [Rebalancing] Processing bronze_5...
-2026-03-02T21:29:42.410Z | INFO | [Rebalancing] bronze_5: 3 robots eligible for promotion (top 10% of 30 AND ≥25 league points, 15 met points threshold)
-2026-03-02T21:29:42.413Z | INFO | [Rebalancing] Promoted: New Robot 248 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.418Z | INFO | [Rebalancing] Promoted: New Robot 96 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.421Z | INFO | [Rebalancing] Promoted: New Robot 164 (bronze → silver, LP: 25 retained)
-2026-03-02T21:29:42.421Z | INFO | [Rebalancing] bronze: Promoted 11, Demoted 0 across 5 instances
-2026-03-02T21:29:42.421Z | INFO |  [Rebalancing] Processing SILVER league...
-2026-03-02T21:29:42.424Z | INFO | [Rebalancing] silver: 195 total robots across 3 instances
-2026-03-02T21:29:42.424Z | INFO | [Rebalancing] Processing silver_1...
-2026-03-02T21:29:42.443Z | INFO | [Rebalancing] silver_1: 3 robots eligible for promotion (top 10% of 37 AND ≥25 league points, 37 met points threshold)
-2026-03-02T21:29:42.449Z | INFO | [Rebalancing] silver_1: 3 robots eligible for demotion (bottom 10% of 37)
-2026-03-02T21:29:42.453Z | INFO | [Rebalancing] Promoted: Initial Robot 90 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:42.457Z | INFO | [Rebalancing] Promoted: Initial Robot 49 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:42.462Z | INFO | [Rebalancing] Promoted: Initial Robot 11 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:42.466Z | INFO | [Rebalancing] Demoted: New Robot 71 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.470Z | INFO | [Rebalancing] Demoted: New Robot 6 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.472Z | INFO | [Rebalancing] Demoted: New Robot 118 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.472Z | INFO | [Rebalancing] Processing silver_2...
-2026-03-02T21:29:42.484Z | INFO | [Rebalancing] silver_2: 3 robots eligible for promotion (top 10% of 37 AND ≥25 league points, 37 met points threshold)
-2026-03-02T21:29:42.491Z | INFO | [Rebalancing] silver_2: 3 robots eligible for demotion (bottom 10% of 37)
-2026-03-02T21:29:42.495Z | INFO | [Rebalancing] Promoted: Initial Robot 33 (silver → gold, LP: 50 retained)
-2026-03-02T21:29:42.502Z | INFO | [Rebalancing] Promoted: User1Robot0 (silver → gold, LP: 28 retained)
-2026-03-02T21:29:42.505Z | INFO | [Rebalancing] Promoted: New Robot 155 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:42.508Z | INFO | [Rebalancing] Demoted: New Robot 130 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.513Z | INFO | [Rebalancing] Demoted: New Robot 12 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.517Z | INFO | [Rebalancing] Demoted: New Robot 155 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.518Z | INFO | [Rebalancing] Processing silver_3...
-2026-03-02T21:29:42.529Z | INFO | [Rebalancing] silver_3: 4 robots eligible for promotion (top 10% of 41 AND ≥25 league points, 41 met points threshold)
-2026-03-02T21:29:42.535Z | INFO | [Rebalancing] silver_3: 4 robots eligible for demotion (bottom 10% of 41)
-2026-03-02T21:29:42.540Z | INFO | [Rebalancing] Promoted: New Robot 29 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:42.543Z | INFO | [Rebalancing] Promoted: New Robot 172 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:42.546Z | INFO | [Rebalancing] Promoted: New Robot 217 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:42.554Z | INFO | [Rebalancing] Promoted: New Robot 198 (silver → gold, LP: 25 retained)
-2026-03-02T21:29:42.557Z | INFO | [Rebalancing] Demoted: New Robot 29 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.563Z | INFO | [Rebalancing] Demoted: New Robot 172 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.566Z | INFO | [Rebalancing] Demoted: New Robot 217 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.569Z | INFO | [Rebalancing] Demoted: New Robot 198 (silver → bronze, LP: 25 retained)
-2026-03-02T21:29:42.569Z | INFO | [Rebalancing] silver: Promoted 10, Demoted 10 across 3 instances
-2026-03-02T21:29:42.569Z | INFO |  [Rebalancing] Processing GOLD league...
-2026-03-02T21:29:42.571Z | INFO | [Rebalancing] gold: 75 total robots across 1 instances
-2026-03-02T21:29:42.571Z | INFO | [Rebalancing] Processing gold_1...
-2026-03-02T21:29:42.581Z | INFO | [Rebalancing] gold_1: 4 robots eligible for promotion (top 10% of 45 AND ≥25 league points, 45 met points threshold)
-2026-03-02T21:29:42.586Z | INFO | [Rebalancing] gold_1: 4 robots eligible for demotion (bottom 10% of 45)
-2026-03-02T21:29:42.593Z | INFO | [Rebalancing] Promoted: Initial Robot 75 (gold → platinum, LP: 50 retained)
-2026-03-02T21:29:42.596Z | INFO | [Rebalancing] Promoted: Initial Robot 6 (gold → platinum, LP: 50 retained)
-2026-03-02T21:29:42.600Z | INFO | [Rebalancing] Promoted: Initial Robot 92 (gold → platinum, LP: 50 retained)
-2026-03-02T21:29:42.603Z | INFO | [Rebalancing] Promoted: Initial Robot 88 (gold → platinum, LP: 50 retained)
-2026-03-02T21:29:42.607Z | INFO | [Rebalancing] Demoted: User1Robot1 (gold → silver, LP: 30 retained)
-2026-03-02T21:29:42.611Z | INFO | [Rebalancing] Demoted: Initial Robot 6 (gold → silver, LP: 50 retained)
-2026-03-02T21:29:42.616Z | INFO | [Rebalancing] Demoted: Initial Robot 92 (gold → silver, LP: 50 retained)
-2026-03-02T21:29:42.620Z | INFO | [Rebalancing] Demoted: Initial Robot 88 (gold → silver, LP: 50 retained)
-2026-03-02T21:29:42.620Z | INFO | [Rebalancing] gold: Promoted 4, Demoted 4 across 1 instances
-2026-03-02T21:29:42.620Z | INFO |  [Rebalancing] Processing PLATINUM league...
-2026-03-02T21:29:42.622Z | INFO | [Rebalancing] platinum: 9 total robots across 1 instances
-2026-03-02T21:29:42.622Z | INFO | [Rebalancing] Processing platinum_1...
-2026-03-02T21:29:42.625Z | INFO | [Rebalancing] platinum_1: Skipping (2 eligible, need 10)
-2026-03-02T21:29:42.625Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 1 instances
-2026-03-02T21:29:42.625Z | INFO |  [Rebalancing] Processing DIAMOND league...
-2026-03-02T21:29:42.631Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
-2026-03-02T21:29:42.631Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
-2026-03-02T21:29:42.631Z | INFO |  [Rebalancing] Processing CHAMPION league...
-2026-03-02T21:29:42.634Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
-2026-03-02T21:29:42.634Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
-2026-03-02T21:29:42.634Z | INFO |  [Rebalancing] Checking instances for rebalancing...
-2026-03-02T21:29:42.636Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:42.638Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:42.640Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:42.642Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:42.643Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:42.644Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
-2026-03-02T21:29:42.644Z | INFO |  ════════════════════════════════════════════════════════════
-2026-03-02T21:29:42.644Z | INFO | [Rebalancing] League rebalancing complete!
-2026-03-02T21:29:42.644Z | INFO |   Total promoted: 25
-2026-03-02T21:29:42.644Z | INFO |   Total demoted: 14
-2026-03-02T21:29:42.644Z | INFO |   Errors: 0
-2026-03-02T21:29:42.644Z | INFO | ════════════════════════════════════════════════════════════ 
-2026-03-02T21:29:42.645Z | INFO | [Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle 6)
-2026-03-02T21:29:42.645Z | INFO | [Admin] Step 8: Auto Generate New Users
-2026-03-02T21:29:42.645Z | INFO | [UserGeneration] Generating 6 archetype users for Cycle 6...
-2026-03-02T21:29:42.645Z | INFO | [UserGeneration] Creating user 1/6: archetype_glass_cannon_a_6_1 (archetype: glass_cannon_a)
-2026-03-02T21:29:42.728Z | ERROR | [UserGeneration] Error creating user 1: {}
-2026-03-02T21:29:42.728Z | ERROR | [Admin] Error generating users: {}
-2026-03-02T21:29:42.729Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
-2026-03-02T21:29:42.729Z | INFO | [Matchmaking] Starting matchmaking run...
-2026-03-02T21:29:42.729Z | INFO | [Matchmaking] Matches scheduled for: 2026-03-02T21:29:43.729Z
-2026-03-02T21:29:42.729Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
-2026-03-02T21:29:42.731Z | INFO | [Matchmaking] Processing bronze_1...
-2026-03-02T21:29:42.738Z | INFO | [Matchmaking] Queue for bronze_1: 0 robots available (37 total, 0 ready)
-2026-03-02T21:29:42.738Z | INFO | [Matchmaking] bronze_1: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.738Z | INFO | [Matchmaking] Processing bronze_2...
-2026-03-02T21:29:42.747Z | INFO | [Matchmaking] Queue for bronze_2: 0 robots available (37 total, 0 ready)
-2026-03-02T21:29:42.747Z | INFO | [Matchmaking] bronze_2: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.747Z | INFO | [Matchmaking] Processing bronze_3...
-2026-03-02T21:29:42.752Z | INFO | [Matchmaking] Queue for bronze_3: 0 robots available (37 total, 0 ready)
-2026-03-02T21:29:42.752Z | INFO | [Matchmaking] bronze_3: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.752Z | INFO | [Matchmaking] Processing bronze_4...
-2026-03-02T21:29:42.758Z | INFO | [Matchmaking] Queue for bronze_4: 0 robots available (37 total, 0 ready)
-2026-03-02T21:29:42.758Z | INFO | [Matchmaking] bronze_4: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.758Z | INFO | [Matchmaking] Processing bronze_5...
-2026-03-02T21:29:42.763Z | INFO | [Matchmaking] Queue for bronze_5: 0 robots available (37 total, 0 ready)
-2026-03-02T21:29:42.763Z | INFO | [Matchmaking] bronze_5: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.763Z | INFO | [Matchmaking] BRONZE: Created 0 matches across 5 instances
-2026-03-02T21:29:42.763Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
-2026-03-02T21:29:42.765Z | INFO | [Matchmaking] Processing silver_1...
-2026-03-02T21:29:42.772Z | INFO | [Matchmaking] Queue for silver_1: 0 robots available (62 total, 0 ready)
-2026-03-02T21:29:42.772Z | INFO | [Matchmaking] silver_1: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.772Z | INFO | [Matchmaking] Processing silver_2...
-2026-03-02T21:29:42.784Z | INFO | [Matchmaking] Queue for silver_2: 0 robots available (61 total, 0 ready)
-2026-03-02T21:29:42.784Z | INFO | [Matchmaking] silver_2: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.784Z | INFO | [Matchmaking] Processing silver_3...
-2026-03-02T21:29:42.797Z | INFO | [Matchmaking] Queue for silver_3: 0 robots available (61 total, 0 ready)
-2026-03-02T21:29:42.797Z | INFO | [Matchmaking] silver_3: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.797Z | INFO | [Matchmaking] SILVER: Created 0 matches across 3 instances
-2026-03-02T21:29:42.797Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
-2026-03-02T21:29:42.800Z | INFO | [Matchmaking] Processing gold_1...
-2026-03-02T21:29:42.809Z | INFO | [Matchmaking] Queue for gold_1: 0 robots available (70 total, 0 ready)
-2026-03-02T21:29:42.809Z | INFO | [Matchmaking] gold_1: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.809Z | INFO | [Matchmaking] GOLD: Created 0 matches across 1 instances
-2026-03-02T21:29:42.809Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
-2026-03-02T21:29:42.812Z | INFO | [Matchmaking] Processing platinum_1...
-2026-03-02T21:29:42.815Z | INFO | [Matchmaking] Queue for platinum_1: 0 robots available (9 total, 0 ready)
-2026-03-02T21:29:42.815Z | INFO | [Matchmaking] platinum_1: Not enough robots for matches (0 available)
-2026-03-02T21:29:42.815Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 1 instances
-2026-03-02T21:29:42.815Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
-2026-03-02T21:29:42.816Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
-2026-03-02T21:29:42.816Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
-2026-03-02T21:29:42.817Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
-2026-03-02T21:29:42.817Z | INFO | [Matchmaking] ========================================
-2026-03-02T21:29:42.817Z | INFO | [Matchmaking] COMPLETE: 0 total matches created
-2026-03-02T21:29:42.817Z | INFO | [Matchmaking] ========================================
-2026-03-02T21:29:42.819Z | INFO | [Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle 6)
-2026-03-02T21:29:42.819Z | INFO | [Admin] Step 10: Increment Cycle Counters
-2026-03-02T21:29:42.827Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
-2026-03-02T21:29:42.834Z | INFO | [OperatingCosts] User 10839 | Total: ₡1,000 | Facilities: roster_expansion(L0): ₡1000
-2026-03-02T21:29:42.839Z | INFO | [OperatingCosts] User 10840 | Total: ₡1,000 | Facilities: roster_expansion(L0): ₡1000
-2026-03-02T21:29:42.844Z | INFO | [OperatingCosts] User 10842 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
-2026-03-02T21:29:42.850Z | INFO | [OperatingCosts] User 10843 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.858Z | INFO | [OperatingCosts] User 10844 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.864Z | INFO | [OperatingCosts] User 10841 | Total: ₡500 | Facilities: roster_expansion(L0): ₡500
-2026-03-02T21:29:42.872Z | INFO | [OperatingCosts] User 10846 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.880Z | INFO | [OperatingCosts] User 10845 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.887Z | INFO | [OperatingCosts] User 10848 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.894Z | INFO | [OperatingCosts] User 10847 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.902Z | INFO | [OperatingCosts] User 10850 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.910Z | INFO | [OperatingCosts] User 10849 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.917Z | INFO | [OperatingCosts] User 10864 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.925Z | INFO | [OperatingCosts] User 10863 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.932Z | INFO | [OperatingCosts] User 10857 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.938Z | INFO | [OperatingCosts] User 10852 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.945Z | INFO | [OperatingCosts] User 10862 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.952Z | INFO | [OperatingCosts] User 10858 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.960Z | INFO | [OperatingCosts] User 10859 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.967Z | INFO | [OperatingCosts] User 10856 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.976Z | INFO | [OperatingCosts] User 10851 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.984Z | INFO | [OperatingCosts] User 10855 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.991Z | INFO | [OperatingCosts] User 10854 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:42.997Z | INFO | [OperatingCosts] User 10853 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:43.004Z | INFO | [OperatingCosts] User 10860 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:43.010Z | INFO | [OperatingCosts] User 10861 | Total: ₡1,500 | Facilities: roster_expansion(L0): ₡1500
-2026-03-02T21:29:43.019Z | INFO | [OperatingCosts] User 10698 | Total: ₡174,500 | Facilities: roster_expansion(L0): ₡174500
-2026-03-02T21:29:43.019Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡210,500
-2026-03-02T21:29:43.019Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
-2026-03-02T21:29:44.129Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
-2026-03-02T21:29:44.129Z | INFO | [Admin] === End of Cycle 6 Balances ===
-2026-03-02T21:29:44.132Z | INFO | [Balance] User 10698 | Stable: test_progressive_user | Balance: ₡-1,886,000
-2026-03-02T21:29:44.136Z | INFO | [Balance] User 10839 | Stable: user1_1772486818207_0.44901187883963756 | Balance: ₡972,000
-2026-03-02T21:29:44.137Z | INFO | [Balance] User 10840 | Stable: user2_1772486818209_0.9181100538982236 | Balance: ₡972,000
-2026-03-02T21:29:44.139Z | INFO | [Balance] User 10841 | Stable: user1_1772486818374_0.8673422742310417 | Balance: ₡986,000
-2026-03-02T21:29:44.141Z | INFO | [Balance] User 10842 | Stable: user2_1772486818376_0.6103073451394205 | Balance: ₡986,000
-2026-03-02T21:29:44.143Z | INFO | [Balance] User 10843 | Stable: user1_1772486818583_0.10131183962194323 | Balance: ₡958,000
-2026-03-02T21:29:44.144Z | INFO | [Balance] User 10844 | Stable: user2_1772486818584_0.7956764816262223 | Balance: ₡958,000
-2026-03-02T21:29:44.146Z | INFO | [Balance] User 10845 | Stable: user1_1772486818759_0.32967888098136533 | Balance: ₡-524,752
-2026-03-02T21:29:44.148Z | INFO | [Balance] User 10846 | Stable: user2_1772486818772_0.7569163961086819 | Balance: ₡-668,141
-2026-03-02T21:29:44.149Z | INFO | [Balance] User 10847 | Stable: user1_1772486818898_0.11632382434826338 | Balance: ₡-758,160
-2026-03-02T21:29:44.150Z | INFO | [Balance] User 10848 | Stable: user2_1772486818901_0.013059878830825378 | Balance: ₡-685,660
-2026-03-02T21:29:44.153Z | INFO | [Balance] User 10849 | Stable: user1_1772486819033_0.7799446777729455 | Balance: ₡-655,207
-2026-03-02T21:29:44.155Z | INFO | [Balance] User 10850 | Stable: user2_1772486819034_0.4964552649069427 | Balance: ₡-676,667
-2026-03-02T21:29:44.156Z | INFO | [Balance] User 10851 | Stable: user1_1772486819117_0.3345516832063494 | Balance: ₡-410,779
-2026-03-02T21:29:44.162Z | INFO | [Balance] User 10852 | Stable: user2_1772486819119_0.36166136998394405 | Balance: ₡-817,105
-2026-03-02T21:29:44.164Z | INFO | [Balance] User 10853 | Stable: user1_1772486819200_0.2758903873914217 | Balance: ₡-637,544
-2026-03-02T21:29:44.169Z | INFO | [Balance] User 10854 | Stable: user2_1772486819201_0.5780256436199125 | Balance: ₡-612,988
-2026-03-02T21:29:44.171Z | INFO | [Balance] User 10855 | Stable: user1_1772486819271_0.7087460012002663 | Balance: ₡-830,217
-2026-03-02T21:29:44.173Z | INFO | [Balance] User 10856 | Stable: user2_1772486819271_0.8830336055388215 | Balance: ₡-885,065
-2026-03-02T21:29:44.175Z | INFO | [Balance] User 10857 | Stable: user1_1772486819365_0.7579838657781066 | Balance: ₡-729,921
-2026-03-02T21:29:44.177Z | INFO | [Balance] User 10858 | Stable: user2_1772486819366_0.4951486012701769 | Balance: ₡-620,725
-2026-03-02T21:29:44.178Z | INFO | [Balance] User 10859 | Stable: user1_1772486819455_0.010533778983619402 | Balance: ₡-1,054,837
-2026-03-02T21:29:44.179Z | INFO | [Balance] User 10860 | Stable: user2_1772486819456_0.04557633197739497 | Balance: ₡-944,224
-2026-03-02T21:29:44.181Z | INFO | [Balance] User 10861 | Stable: user1_1772486819533_0.2835022516286082 | Balance: ₡-664,746
-2026-03-02T21:29:44.184Z | INFO | [Balance] User 10862 | Stable: user2_1772486819534_0.08578089941309719 | Balance: ₡-875,939
-2026-03-02T21:29:44.185Z | INFO | [Balance] User 10863 | Stable: user1_1772486819628_0.03977756283663192 | Balance: ₡-832,249
-2026-03-02T21:29:44.186Z | INFO | [Balance] User 10864 | Stable: user2_1772486819630_0.5969952850672665 | Balance: ₡-679,924
-2026-03-02T21:29:44.188Z | INFO | [Balance] User 10865 | Stable: admin_test_1772486875563 | Balance: ₡1,000,000
-2026-03-02T21:29:44.190Z | INFO | [Admin] ===================================
-2026-03-02T21:29:44.192Z | INFO | [Admin] Step 14: Create Cycle Snapshot
-2026-03-02T21:29:44.192Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 6
-2026-03-02T21:29:44.200Z | INFO | [CycleSnapshotService] Found 80 battle_complete events for cycle 6
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1013, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1012, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=9000, streaming=1011, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1013, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1014, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1013, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1013, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1011, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1014, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1013, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=1500, streaming=1013, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1012, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1012, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1013, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1015, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10863: credits=1500, streaming=1013, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1013, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1013, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10847: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10859: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1012, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10862: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10853: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=9000, streaming=1012, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10858: credits=9000, streaming=1016, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=9000, streaming=1013, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1014, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1012, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=9000, streaming=1013, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1012, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10849: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10852: credits=9000, streaming=1014, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10857: credits=1500, streaming=1010, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10851: credits=1500, streaming=1008, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=9000, streaming=1014, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10845: credits=9000, streaming=1013, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10848: credits=1500, streaming=1012, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10856: credits=9000, streaming=1009, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10850: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10860: credits=1500, streaming=1014, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10855: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10854: credits=1500, streaming=1013, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10861: credits=9000, streaming=1015, prestige=5
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10846: credits=1500, streaming=1009, prestige=0
-2026-03-02T21:29:44.204Z | INFO | [CycleSnapshotService] Processing battle_complete for user 10864: credits=9000, streaming=1010, prestige=5
-2026-03-02T21:29:44.211Z | INFO | [CycleSnapshotService] Found 56 cycle_end_balance events for cycle 6
-2026-03-02T21:29:44.225Z | INFO | prisma:error  Invalid `prisma.cycleSnapshot.create()` invocation in /Users/robertteunissen/Downloads/ArmouredSouls/prototype/backend/src/services/cycleSnapshotService.ts:115:50    112 const totalPrestigeAwarded = stableMetrics.reduce((sum, m) => sum + m.totalPrestigeEarned, 0);   113    114 // Store snapshot in database → 115 const _snapshot = await prisma.cycleSnapshot.create( Unique constraint failed on the fields: (`cycle_number`)
-2026-03-02T21:29:44.225Z | ERROR | [Admin] Failed to create cycle snapshot: {""name"":""PrismaClientKnownRequestError"",""code"":""P2002"",""clientVersion"":""5.22.0"",""meta"":{""modelName"":""CycleSnapshot"",""target"":[""cycle_number""]}}
-2026-03-02T21:29:44.225Z | INFO | [Admin] === Cycle 6 Summary ===
-2026-03-02T21:29:44.225Z | INFO | [Admin] Battles: 0
-2026-03-02T21:29:44.225Z | INFO | [Admin] ===================================
-2026-03-02T21:29:44.225Z | INFO | === Cycle 6 Ended ===
+2026-03-03T15:06:14.689Z | INFO | === Cycle 6 Started ===
+2026-03-03T15:06:14.689Z | INFO | Cycle 6 (6/10)
+2026-03-03T15:06:14.689Z | INFO |  [Admin] === Cycle 6 (6/10) ===
+2026-03-03T15:06:14.690Z | INFO | [Admin] Step 1: Execute League Battles (1v1)
+2026-03-03T15:06:14.690Z | INFO | [BattleOrchestrator] Executing all scheduled league battles
+2026-03-03T15:06:14.690Z | INFO | [BattleOrchestrator] Found 0 matches to execute
+2026-03-03T15:06:14.690Z | INFO | [BattleOrchestrator] Execution complete: 0 successful, 0 failed, 0 bye-matches
+2026-03-03T15:06:14.691Z | INFO | [BattleOrchestrator] Reputation: 0 prestige, 0 fame awarded
+2026-03-03T15:06:14.692Z | INFO | [Admin] Step 2: Repair All Robots (post-league)
+2026-03-03T15:06:14.695Z | INFO | [Admin] Step 3: Skipping Tag Team Battles (even cycle 6)
+2026-03-03T15:06:14.695Z | INFO | [Admin] Step 4: Repair All Robots (post-tag-team)
+2026-03-03T15:06:14.696Z | INFO | [Admin] Step 5: Tournament Execution / Scheduling
+2026-03-03T15:06:14.697Z | INFO | [Admin] Step 6: Repair All Robots (post-tournament)
+2026-03-03T15:06:14.699Z | INFO | [Admin] Step 7: Rebalance Leagues
+2026-03-03T15:06:14.699Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-03T15:06:14.699Z | INFO | [Rebalancing] Starting league rebalancing...
+2026-03-03T15:06:14.699Z | INFO | ════════════════════════════════════════════════════════════
+2026-03-03T15:06:14.700Z | INFO | [Rebalancing] Total robots in system: 0
+2026-03-03T15:06:14.700Z | INFO |  [Rebalancing] Processing BRONZE league...
+2026-03-03T15:06:14.703Z | INFO | [Rebalancing] bronze: 0 total robots across 0 instances
+2026-03-03T15:06:14.703Z | INFO | [Rebalancing] bronze: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:06:14.703Z | INFO |  [Rebalancing] Processing SILVER league...
+2026-03-03T15:06:14.704Z | INFO | [Rebalancing] silver: 0 total robots across 0 instances
+2026-03-03T15:06:14.704Z | INFO | [Rebalancing] silver: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:06:14.704Z | INFO |  [Rebalancing] Processing GOLD league...
+2026-03-03T15:06:14.706Z | INFO | [Rebalancing] gold: 0 total robots across 0 instances
+2026-03-03T15:06:14.706Z | INFO | [Rebalancing] gold: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:06:14.706Z | INFO |  [Rebalancing] Processing PLATINUM league...
+2026-03-03T15:06:14.708Z | INFO | [Rebalancing] platinum: 0 total robots across 0 instances
+2026-03-03T15:06:14.708Z | INFO | [Rebalancing] platinum: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:06:14.708Z | INFO |  [Rebalancing] Processing DIAMOND league...
+2026-03-03T15:06:14.710Z | INFO | [Rebalancing] diamond: 0 total robots across 0 instances
+2026-03-03T15:06:14.710Z | INFO | [Rebalancing] diamond: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:06:14.710Z | INFO |  [Rebalancing] Processing CHAMPION league...
+2026-03-03T15:06:14.711Z | INFO | [Rebalancing] champion: 0 total robots across 0 instances
+2026-03-03T15:06:14.711Z | INFO | [Rebalancing] champion: Promoted 0, Demoted 0 across 0 instances
+2026-03-03T15:06:14.711Z | INFO |  [Rebalancing] Checking instances for rebalancing...
+2026-03-03T15:06:14.712Z | INFO | [Rebalancing] bronze: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:06:14.713Z | INFO | [Rebalancing] silver: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:06:14.714Z | INFO | [Rebalancing] gold: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:06:14.715Z | INFO | [Rebalancing] platinum: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:06:14.716Z | INFO | [Rebalancing] diamond: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:06:14.716Z | INFO | [Rebalancing] champion: All instances at or under 100 robots, skipping rebalancing
+2026-03-03T15:06:14.716Z | INFO |  ════════════════════════════════════════════════════════════
+2026-03-03T15:06:14.716Z | INFO | [Rebalancing] League rebalancing complete!
+2026-03-03T15:06:14.716Z | INFO |   Total promoted: 0
+2026-03-03T15:06:14.717Z | INFO |   Total demoted: 0
+2026-03-03T15:06:14.717Z | INFO |   Errors: 0
+2026-03-03T15:06:14.717Z | INFO | ════════════════════════════════════════════════════════════ 
+2026-03-03T15:06:14.718Z | INFO | [Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle 6)
+2026-03-03T15:06:14.718Z | INFO | [Admin] Step 8: Auto Generate New Users
+2026-03-03T15:06:14.718Z | INFO | [UserGeneration] Generating 6 archetype users for Cycle 6...
+2026-03-03T15:06:14.718Z | INFO | [UserGeneration] Creating user 1/6: archetype_glass_cannon_a_6_1 (archetype: glass_cannon_a)
+2026-03-03T15:06:14.780Z | ERROR | [UserGeneration] Error creating user 1: {}
+2026-03-03T15:06:14.780Z | ERROR | [Admin] Error generating users: {}
+2026-03-03T15:06:14.781Z | INFO | [Admin] Step 9: Matchmaking for Leagues (1v1)
+2026-03-03T15:06:14.781Z | INFO | [Matchmaking] Starting matchmaking run...
+2026-03-03T15:06:14.781Z | INFO | [Matchmaking] Matches scheduled for: 2026-03-03T15:06:15.781Z
+2026-03-03T15:06:14.782Z | INFO | [Matchmaking] Running matchmaking for BRONZE league...
+2026-03-03T15:06:14.783Z | INFO | [Matchmaking] BRONZE: Created 0 matches across 0 instances
+2026-03-03T15:06:14.783Z | INFO | [Matchmaking] Running matchmaking for SILVER league...
+2026-03-03T15:06:14.783Z | INFO | [Matchmaking] SILVER: Created 0 matches across 0 instances
+2026-03-03T15:06:14.784Z | INFO | [Matchmaking] Running matchmaking for GOLD league...
+2026-03-03T15:06:14.785Z | INFO | [Matchmaking] GOLD: Created 0 matches across 0 instances
+2026-03-03T15:06:14.785Z | INFO | [Matchmaking] Running matchmaking for PLATINUM league...
+2026-03-03T15:06:14.787Z | INFO | [Matchmaking] PLATINUM: Created 0 matches across 0 instances
+2026-03-03T15:06:14.787Z | INFO | [Matchmaking] Running matchmaking for DIAMOND league...
+2026-03-03T15:06:14.789Z | INFO | [Matchmaking] DIAMOND: Created 0 matches across 0 instances
+2026-03-03T15:06:14.789Z | INFO | [Matchmaking] Running matchmaking for CHAMPION league...
+2026-03-03T15:06:14.791Z | INFO | [Matchmaking] CHAMPION: Created 0 matches across 0 instances
+2026-03-03T15:06:14.792Z | INFO | [Matchmaking] ========================================
+2026-03-03T15:06:14.792Z | INFO | [Matchmaking] COMPLETE: 0 total matches created
+2026-03-03T15:06:14.792Z | INFO | [Matchmaking] ========================================
+2026-03-03T15:06:14.794Z | INFO | [Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle 6)
+2026-03-03T15:06:14.794Z | INFO | [Admin] Step 10: Increment Cycle Counters
+2026-03-03T15:06:14.799Z | INFO | [Admin] Step 11: Calculate Passive Income & Operating Costs
+2026-03-03T15:06:14.803Z | INFO | [Admin] Passive income: ₡0, Operating costs: ₡0
+2026-03-03T15:06:14.804Z | INFO | [Admin] Step 12: Wait (1.1 second delay)
+2026-03-03T15:06:15.906Z | INFO | [Admin] Step 13: Log End-of-Cycle Balances
+2026-03-03T15:06:15.906Z | INFO | [Admin] === End of Cycle 6 Balances ===
+2026-03-03T15:06:15.907Z | INFO | [Balance] User 14016 | Stable: admin_test_1772550341350 | Balance: ₡1,000,000
+2026-03-03T15:06:15.910Z | INFO | [Admin] ===================================
+2026-03-03T15:06:15.911Z | INFO | [Admin] Step 14: Create Cycle Snapshot
+2026-03-03T15:06:15.911Z | INFO | [CycleSnapshotService] Creating snapshot for cycle 6
+2026-03-03T15:06:15.913Z | ERROR | [Admin] Failed to create cycle snapshot: {}
+2026-03-03T15:06:15.913Z | INFO | [Admin] === Cycle 6 Summary ===
+2026-03-03T15:06:15.913Z | INFO | [Admin] Battles: 0
+2026-03-03T15:06:15.913Z | INFO | [Admin] ===================================
+2026-03-03T15:06:15.913Z | INFO | === Cycle 6 Ended ===

@@ -10,34 +10,65 @@ inclusion: always
 
 ### Required Verifications
 
-1. **Tests Pass Locally**
+1. **Backend Tests Pass Locally**
    - Run: `cd prototype/backend && npm test`
    - Verify: All tests pass (no failures allowed)
    - Check: Coverage meets minimum thresholds (80% general, 90% critical)
    - Run: `npm test -- --coverage` to verify coverage
    - Confirm: All new code has accompanying tests
+   - **CRITICAL**: Do not push if any backend tests fail
 
-2. **No Debug Code in Production**
+2. **Frontend Tests Pass Locally**
+   - Run: `cd prototype/frontend && npm run test:e2e`
+   - Verify: All E2E tests pass (no failures allowed)
+   - Check: Tests complete without timeouts
+   - Confirm: All new features have E2E test coverage
+   - **CRITICAL**: Do not push if any frontend tests fail
+
+3. **No Debug Code in Production**
    - Search for: `console.log`, `console.debug`, `console.warn`
    - Remove: All debugging statements from production code
    - Exception: Intentional logging via proper logging framework
+   - Frontend: Wrap debug logs with `if (import.meta.env.DEV)` checks
 
-3. **Environment Variables Documented**
+4. **Environment Variables Documented**
    - Check: All new environment variables added to `.env.example`
    - Verify: Documentation updated if new variables required
    - Confirm: No secrets committed to repository
 
-4. **Database Migrations Tested**
+5. **Database Migrations Tested**
    - Run: `npx prisma migrate deploy` locally
    - Verify: Migration applies successfully
    - Check: No data loss or breaking changes
    - Update: `docs/prd_core/DATABASE_SCHEMA.md` if schema changed
 
-5. **Documentation Updated**
+6. **Documentation Updated**
    - Review: Affected PRD documents in docs/prd_core/ or docs/prd_pages/
    - Update: API documentation if endpoints changed
    - Document: Any breaking changes or new features
    - Check: README files current for modified modules
+
+## Pre-Push Command Sequence
+
+**Run these commands in order before pushing to main**:
+
+```bash
+# 1. Backend tests
+cd prototype/backend
+npm test
+
+# 2. Frontend E2E tests  
+cd ../frontend
+npm run test:e2e
+
+# 3. If both pass, commit and push
+cd ../..
+git add -A
+git commit -m "your commit message"
+git push origin main
+```
+
+**STOP if either test suite fails. Fix issues before pushing.**
 
 ## Deployment Process
 
