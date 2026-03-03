@@ -21,6 +21,7 @@ const unitTestFiles = [
 
 module.exports = {
   ...base,
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.unit.ts'],
   testMatch: undefined,
   testRegex: `(${unitTestFiles.join('|')})$`,
   maxWorkers: '75%',
