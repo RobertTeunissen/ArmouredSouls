@@ -3,18 +3,14 @@ import { test, expect } from '@playwright/test';
 /**
  * E2E tests for Robot Creation
  * These tests verify the robot creation workflow
+ *
+ * Auth state is pre-loaded via the setup project (see auth.setup.ts).
  */
 
 test.describe('Robot Creation', () => {
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    await page.goto('/login');
-    await page.getByLabel('Username or Email').fill('player1');
-    await page.getByLabel('Password').fill('password123');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Wait for dashboard with longer timeout
-    await page.waitForURL('**/dashboard', { timeout: 20000 });
+    // Auth state already loaded — go straight to dashboard
+    await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
   });
 

@@ -16,7 +16,7 @@ import prisma from '../lib/prisma';
 export interface ResetBlocker {
   type: 'scheduled_matches' | 'tournament' | 'pending_battles' | 'facility_construction' | 'pending_transactions';
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 /**

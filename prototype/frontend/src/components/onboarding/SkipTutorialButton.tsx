@@ -77,8 +77,8 @@ const SkipTutorialButton = ({ onSkipped, className = '', disabled = false }: Ski
       } else {
         navigate('/dashboard');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to skip tutorial');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to skip tutorial');
     } finally {
       setSkipping(false);
     }

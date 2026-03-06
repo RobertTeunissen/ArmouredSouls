@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * BattleTypeCard component
  * Displays battle type information including name, description, scheduling,
@@ -14,7 +15,7 @@
 
 export type BattleType = 'league' | 'tag_team' | 'tournament';
 
-interface BattleTypeInfo {
+export interface BattleTypeInfo {
   name: string;
   description: string;
   icon: string;
@@ -378,4 +379,3 @@ const BattleTypeCard = ({
 };
 
 export default BattleTypeCard;
-export type { BattleTypeInfo };

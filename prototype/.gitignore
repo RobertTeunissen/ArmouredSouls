@@ -30,3 +30,6 @@ Thumbs.db
 
 # Test coverage
 coverage/
+
+# Playwright auth state
+.auth/

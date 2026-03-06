@@ -155,8 +155,9 @@ function RobotsPage() {
       // Sort robots by ELO (highest first)
       const sortedData = data.sort((a, b) => b.elo - a.elo);
       setRobots(sortedData);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (err.response?.status === 401) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } };
+      if (axiosErr.response?.status === 401) {
         logout();
         navigate('/login');
         return;
@@ -182,7 +183,7 @@ function RobotsPage() {
       if (rosterExpansion) {
         setRosterLevel(rosterExpansion.currentLevel || 0);
       }
-    } catch (err) {
+    } catch {
       // Silently fail - facilities are optional
     }
   };
@@ -236,7 +237,7 @@ function RobotsPage() {
       
       // Refresh robots list to show updated status and user credits
       await Promise.all([fetchRobots(), refreshUser()]);
-    } catch (err) {
+    } catch {
       alert('Failed to repair robots. Please try again.');
       setShowRepairConfirmation(false);
     }

@@ -14,7 +14,7 @@ function TournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'active' | 'pending' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [showOnlyUserRobots, setShowOnlyUserRobots] = useState(false);
   const [matchesPage, setMatchesPage] = useState(1);
   const [matchesPerPage, setMatchesPerPage] = useState(50);  useEffect(() => {
@@ -96,8 +96,6 @@ function TournamentsPage() {
     switch (status) {
       case 'active':
         return <span className="px-3 py-1 bg-green-900/50 text-green-400 rounded-full text-sm font-semibold">🔴 Live</span>;
-      case 'pending':
-        return <span className="px-3 py-1 bg-yellow-900/50 text-yellow-400 rounded-full text-sm font-semibold">⏳ Pending</span>;
       case 'completed':
         return <span className="px-3 py-1 bg-gray-700 text-gray-400 rounded-full text-sm font-semibold">✓ Completed</span>;
       default:
@@ -116,7 +114,6 @@ function TournamentsPage() {
 
   const filteredTournaments = getFilteredTournaments();
   const activeTournaments = tournaments.filter(t => t.status === 'active');
-  const pendingTournaments = tournaments.filter(t => t.status === 'pending');
   const completedTournaments = tournaments.filter(t => t.status === 'completed');
 
   return (
@@ -134,14 +131,10 @@ function TournamentsPage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-3xl font-bold text-green-400">{activeTournaments.length}</div>
             <div className="text-gray-400 text-sm">Active Tournaments</div>
-          </div>
-          <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <div className="text-3xl font-bold text-yellow-400">{pendingTournaments.length}</div>
-            <div className="text-gray-400 text-sm">Pending Start</div>
           </div>
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="text-3xl font-bold text-gray-400">{completedTournaments.length}</div>
@@ -170,16 +163,6 @@ function TournamentsPage() {
             }`}
           >
             Active ({activeTournaments.length})
-          </button>
-          <button
-            onClick={() => setFilter('pending')}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              filter === 'pending'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            Pending ({pendingTournaments.length})
           </button>
           <button
             onClick={() => setFilter('completed')}

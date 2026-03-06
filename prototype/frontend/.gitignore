@@ -7,3 +7,6 @@ dist
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Playwright auth state
+/.auth/

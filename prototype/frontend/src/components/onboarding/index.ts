@@ -17,7 +17,7 @@ export { default as LoadoutDiagram } from './LoadoutDiagram';
 export { default as WeaponRecommendationCard, STARTER_WEAPONS } from './WeaponRecommendationCard';
 export { default as LoadoutSelectorEducational } from './LoadoutSelectorEducational';
 export { default as BattleTypeCard, BATTLE_TYPE_INFO } from './BattleTypeCard';
-export { default as CycleScheduleVisualization, CYCLE_EVENTS } from './CycleScheduleVisualization';
+export { default as CycleScheduleVisualization } from './CycleScheduleVisualization';
 export { default as BattleReadinessEducation, ROBOT_EXAMPLES } from './BattleReadinessEducation';
 export { default as SkipTutorialButton } from './SkipTutorialButton';
 export { default as ResumeTutorialButton } from './ResumeTutorialButton';

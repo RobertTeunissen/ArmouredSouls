@@ -3,16 +3,14 @@ import { test, expect } from '@playwright/test';
 /**
  * E2E tests for Dashboard Page
  * These tests verify the dashboard displays correctly after login
+ *
+ * Auth state is pre-loaded via the setup project (see auth.setup.ts).
  */
 
 test.describe('Dashboard Page', () => {
   test.beforeEach(async ({ page }) => {
-    // Login before each test
-    await page.goto('/login');
-    await page.getByLabel('Username or Email').fill('player1');
-    await page.getByLabel('Password').fill('password123');
-    await page.getByRole('button', { name: 'Login' }).click();
-    await page.waitForURL('**/dashboard', { timeout: 20000 });
+    // Auth state already loaded — go straight to dashboard
+    await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
   });
 
@@ -45,7 +43,7 @@ test.describe('Dashboard Page', () => {
 
   test('should display navigation menu', async ({ page }) => {
     // Check navigation elements are present (they're buttons, not links)
-    await expect(page.getByRole('button', { name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Dashboard', exact: true })).toBeVisible();
     
     // Check dropdown menus exist
     await expect(page.getByText('Robots ▾')).toBeVisible();

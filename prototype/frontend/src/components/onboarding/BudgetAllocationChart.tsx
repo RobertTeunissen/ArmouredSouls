@@ -101,7 +101,7 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
   };
 
   // Custom tooltip for pie chart
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; min: number; max: number; value: number } }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -159,7 +159,7 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
             <Legend 
               verticalAlign="bottom" 
               height={36}
-              formatter={(value, _entry: any) => (
+              formatter={(value, _entry: unknown) => (
                 <span className="text-gray-300">{value}</span>
               )}
             />

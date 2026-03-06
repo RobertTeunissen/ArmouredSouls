@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Accessibility Tests for BattleReadinessCheck and CreditWarning
  *

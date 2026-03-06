@@ -14,7 +14,7 @@
 import { useMemo } from 'react';
 import type { BattleType } from './BattleTypeCard';
 
-interface CycleEvent {
+export interface CycleEvent {
   type: BattleType | 'settlement';
   name: string;
   utcTime: string; // HH:MM format
@@ -382,5 +382,3 @@ const CycleScheduleVisualization = ({
 };
 
 export default CycleScheduleVisualization;
-export { CYCLE_EVENTS, convertToLocalTime, getTimezoneAbbreviation, getUTCOffset };
-export type { CycleEvent };

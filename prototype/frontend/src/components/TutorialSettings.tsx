@@ -17,8 +17,8 @@ function TutorialSettings() {
         setError(null);
         const state = await getTutorialState();
         setTutorialState(state);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load tutorial state');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load tutorial state');
       } finally {
         setLoading(false);
       }

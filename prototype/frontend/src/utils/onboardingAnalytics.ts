@@ -90,7 +90,6 @@ export async function flushEvents(): Promise<void> {
   const batch = eventQueue.splice(0);
 
   if (isDev()) {
-    // eslint-disable-next-line no-console
     console.debug('[onboarding-analytics] flush', batch);
     return;
   }
@@ -126,7 +125,6 @@ export function trackEvent(
   };
 
   if (isDev()) {
-    // eslint-disable-next-line no-console
     console.debug('[onboarding-analytics]', event);
   }
 
