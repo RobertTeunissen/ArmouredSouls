@@ -30,6 +30,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
       setConfirmationText('');
       setError(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const checkResetEligibility = async () => {
@@ -59,7 +60,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
       } else {
         setError('Failed to check reset eligibility');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to check reset eligibility');
     } finally {
       setIsCheckingEligibility(false);
@@ -105,7 +106,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
       } else {
         setError(data.error || 'Failed to reset account');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to reset account. Please try again.');
     } finally {
       setIsLoading(false);

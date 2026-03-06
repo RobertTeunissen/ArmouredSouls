@@ -6,7 +6,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import StrategyComparison from '../StrategyComparison';
-import type { RosterStrategy } from '../RosterStrategyCard';
 
 describe('StrategyComparison', () => {
   it('renders comparison header', () => {

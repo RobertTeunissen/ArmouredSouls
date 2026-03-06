@@ -67,8 +67,19 @@ test.describe('Login Page', () => {
     // Click login button
     await page.getByRole('button', { name: 'Login' }).click();
     
-    // Wait for navigation to dashboard with longer timeout
-    await page.waitForURL('**/dashboard', { timeout: 20000 });
+    // Wait for navigation to dashboard or onboarding
+    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20000 });
+
+    // If redirected to onboarding, skip the tutorial
+    if (page.url().includes('/onboarding')) {
+      await page.getByRole('button', { name: 'Skip Tutorial' }).click();
+      const skipConfirm = page.getByRole('button', { name: 'Skip Anyway' }).or(
+        page.getByRole('button', { name: 'Yes, Skip' })
+      );
+      await skipConfirm.click({ timeout: 5000 });
+      await page.waitForURL('**/dashboard', { timeout: 10000 });
+    }
+
     await page.waitForLoadState('networkidle');
     
     // Verify we're on the dashboard

@@ -10,6 +10,8 @@
  */
 import apiClient from './apiClient';
 
+/** Shape of Axios-like errors thrown by apiClient */
+type ApiError = { response?: { status: number; data?: { error?: string; blockers?: string[] } }; message?: string };
 /**
  * Tutorial state data structure
  */
@@ -116,9 +118,10 @@ export async function getTutorialState(): Promise<TutorialState> {
     }
 
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle 404 as "no tutorial state yet" - return default state
-    if (error.response?.status === 404) {
+    const err = error as ApiError;
+    if (err.response?.status === 404) {
       return {
         currentStep: 1,
         hasCompletedOnboarding: false,
@@ -132,7 +135,7 @@ export async function getTutorialState(): Promise<TutorialState> {
 
     // Re-throw other errors
     throw new Error(
-      error.response?.data?.error || error.message || 'Failed to get tutorial state'
+      err.response?.data?.error || err.message || 'Failed to get tutorial state'
     );
   }
 }
@@ -178,9 +181,10 @@ export async function updateTutorialState(updates: {
     }
 
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as ApiError;
     throw new Error(
-      error.response?.data?.error || error.message || 'Failed to update tutorial state'
+      err.response?.data?.error || err.message || 'Failed to update tutorial state'
     );
   }
 }
@@ -206,9 +210,10 @@ export async function completeTutorial(): Promise<void> {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to complete tutorial');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as ApiError;
     throw new Error(
-      error.response?.data?.error || error.message || 'Failed to complete tutorial'
+      err.response?.data?.error || err.message || 'Failed to complete tutorial'
     );
   }
 }
@@ -234,9 +239,10 @@ export async function skipTutorial(): Promise<void> {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to skip tutorial');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as ApiError;
     throw new Error(
-      error.response?.data?.error || error.message || 'Failed to skip tutorial'
+      err.response?.data?.error || err.message || 'Failed to skip tutorial'
     );
   }
 }
@@ -265,9 +271,10 @@ export async function replayTutorial(): Promise<TutorialState> {
     }
 
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as ApiError;
     throw new Error(
-      error.response?.data?.error || error.message || 'Failed to replay tutorial'
+      err.response?.data?.error || err.message || 'Failed to replay tutorial'
     );
   }
 }
@@ -355,9 +362,10 @@ export async function getRecommendations(
     recommendationCache.expiresAt = Date.now() + RECOMMENDATION_CACHE_TTL;
 
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as ApiError;
     throw new Error(
-      error.response?.data?.error || error.message || 'Failed to get recommendations'
+      err.response?.data?.error || err.message || 'Failed to get recommendations'
     );
   }
 }
@@ -397,10 +405,11 @@ export async function resetAccount(confirmation: string, reason?: string): Promi
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to reset account');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as ApiError;
     // Include blockers in error message if available
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to reset account';
-    const blockers = error.response?.data?.blockers;
+    const errorMessage = err.response?.data?.error || err.message || 'Failed to reset account';
+    const blockers = err.response?.data?.blockers;
 
     if (blockers && blockers.length > 0) {
       throw new Error(`${errorMessage} (Blockers: ${blockers.join(', ')})`);
@@ -438,9 +447,10 @@ export async function checkResetEligibility(): Promise<ResetEligibility> {
     }
 
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as ApiError;
     throw new Error(
-      error.response?.data?.error || error.message || 'Failed to check reset eligibility'
+      err.response?.data?.error || err.message || 'Failed to check reset eligibility'
     );
   }
 }
@@ -462,11 +472,12 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries: number = 3): Promi
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
-    } catch (error: any) {
-      lastError = error;
+    } catch (error: unknown) {
+      lastError = error as Error;
+      const err = error as ApiError;
 
       // Don't retry on client errors (4xx) except 429 (rate limit)
-      if (error.response?.status >= 400 && error.response?.status < 500 && error.response?.status !== 429) {
+      if (err.response?.status && err.response.status >= 400 && err.response.status < 500 && err.response.status !== 429) {
         throw error;
       }
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * WeaponRecommendationCard component
  * Displays recommended starter weapons with costs, attribute bonuses,

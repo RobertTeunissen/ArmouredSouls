@@ -420,7 +420,7 @@ export async function upsertWeapon(data: Record<string, unknown>) {
 /**
  * Upsert a user by username (unique constraint exists).
  */
-export async function upsertUser(data: { username: string; passwordHash: string; role?: string; currency?: number; prestige?: number }) {
+export async function upsertUser(data: { username: string; passwordHash: string; role?: string; currency?: number; prestige?: number; hasCompletedOnboarding?: boolean }) {
   return prisma.user.upsert({
     where: { username: data.username },
     update: {
@@ -428,6 +428,7 @@ export async function upsertUser(data: { username: string; passwordHash: string;
       role: data.role || 'user',
       currency: data.currency ?? 0,
       prestige: data.prestige ?? 0,
+      hasCompletedOnboarding: data.hasCompletedOnboarding ?? false,
     },
     create: data,
   });
@@ -530,6 +531,7 @@ async function seedCoreTestUsers(practiceSword: { id: number }) {
     role: 'admin',
     currency: 10000000,
     prestige: 0,
+    hasCompletedOnboarding: true,
   });
   console.log('✅ Admin user upserted');
 
@@ -539,6 +541,7 @@ async function seedCoreTestUsers(practiceSword: { id: number }) {
       username: `player${i}`,
       passwordHash: hashedPassword,
       currency: 3000000,
+      hasCompletedOnboarding: true,
     });
     playerUsers.push(user);
   }

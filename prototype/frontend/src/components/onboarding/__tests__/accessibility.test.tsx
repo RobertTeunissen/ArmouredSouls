@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Comprehensive Accessibility Tests for Onboarding Components
  *
@@ -7,7 +8,7 @@
  * Requirements: 25.1-25.7
  */
 
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';

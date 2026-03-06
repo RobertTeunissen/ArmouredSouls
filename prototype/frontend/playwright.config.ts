@@ -20,12 +20,32 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
+    // Setup project: logs in once and saves auth state
     {
-      name: 'chromium',
-      use: { 
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Login tests need a fresh (unauthenticated) browser context
+    {
+      name: 'login-tests',
+      testMatch: /login\.spec\.ts/,
+      use: {
         ...devices['Desktop Chrome'],
         screenshot: 'on',
+        storageState: { cookies: [], origins: [] },
       },
+    },
+    {
+      name: 'chromium',
+      testIgnore: /login\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        screenshot: 'on',
+        // Reuse auth state from setup project (skips login per test)
+        storageState: '.auth/player1.json',
+      },
+      dependencies: ['setup'],
     },
   ],
   // Only start local dev server when not testing against a remote environment

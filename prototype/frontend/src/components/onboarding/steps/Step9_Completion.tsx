@@ -21,7 +21,7 @@ import { useOnboarding } from '../../../contexts/OnboardingContext';
 interface Step9_CompletionProps {
   onNext: () => void;
   onPrevious: () => void;
-  playerChoices?: { strategy?: string; [key: string]: any };
+  playerChoices?: { strategy?: string; [key: string]: unknown };
 }
 
 /** Strategy display names */

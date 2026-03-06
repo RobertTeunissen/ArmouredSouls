@@ -166,7 +166,7 @@ router.post('/state', authenticateToken, async (req: AuthRequest, res: Response)
     }
 
     // Update tutorial state
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (step !== undefined) {
       updates.onboardingStep = step;
     }
@@ -336,25 +336,25 @@ router.get('/recommendations', authenticateToken, async (req: AuthRequest, res: 
 
     // Generate recommendations
     const facilities = recommendationEngine.generateFacilityRecommendations(
-      rosterStrategy as any,
-      loadout as any,
-      battleStance as any
+      rosterStrategy as '1_mighty' | '2_average' | '3_flimsy',
+      loadout as 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
+      battleStance as 'offensive' | 'defensive' | 'balanced'
     );
 
     const weapons = recommendationEngine.generateWeaponRecommendations(
-      rosterStrategy as any,
-      loadout as any,
+      rosterStrategy as '1_mighty' | '2_average' | '3_flimsy',
+      loadout as 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
       credits
     );
 
     const attributes = recommendationEngine.generateAttributeRecommendations(
-      rosterStrategy as any,
-      loadout as any,
-      battleStance as any
+      rosterStrategy as '1_mighty' | '2_average' | '3_flimsy',
+      loadout as 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
+      battleStance as 'offensive' | 'defensive' | 'balanced'
     );
 
     const budgetAllocation = recommendationEngine.calculateBudgetAllocation(
-      rosterStrategy as any
+      rosterStrategy as '1_mighty' | '2_average' | '3_flimsy'
     );
 
     res.json({

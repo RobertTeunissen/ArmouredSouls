@@ -24,7 +24,7 @@ import GuidedUIOverlay from '../GuidedUIOverlay';
 interface Step8_BattleReadinessProps {
   onNext?: () => void;
   onPrevious?: () => void;
-  playerChoices?: { strategy?: string; [key: string]: any };
+  playerChoices?: { strategy?: string; [key: string]: unknown };
 }
 
 /** Battle readiness checklist items */

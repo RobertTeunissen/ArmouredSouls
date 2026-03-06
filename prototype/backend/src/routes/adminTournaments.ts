@@ -4,7 +4,7 @@
  */
 
 import express, { Request, Response } from 'express';
-import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth';
+import { authenticateToken, requireAdmin } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import {
   createSingleEliminationTournament,

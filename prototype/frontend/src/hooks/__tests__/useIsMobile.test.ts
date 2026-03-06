@@ -4,7 +4,7 @@
  * Requirements: 24.1-24.7
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useIsMobile } from '../useIsMobile';
 

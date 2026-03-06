@@ -1278,9 +1278,9 @@ For **large tournaments** (256+ robots):
 
 **Milestone 6.4: Public Tournament Viewing Page** ✅ COMPLETE
 - [x] Create TournamentsPage.tsx component
-- [x] List view of all tournaments (active, pending, completed)
+- [x] List view of all tournaments (active, completed)
 - [x] Filter tabs by tournament status
-- [x] Status badges (🔴 Live, ⏳ Pending, ✓ Completed)
+- [x] Status badges (🔴 Live, ✓ Completed)
 - [x] Tournament stats dashboard (participant count, round progress, dates)
 - [x] Progress bars for active tournaments
 - [x] Champion display for completed tournaments
@@ -1903,7 +1903,7 @@ npm run prisma:seed
 - [ ] Execute round button works
 - [ ] Tournament details display correctly
 - [ ] Public tournaments page shows all tournaments
-- [ ] Filter tabs work (All/Active/Pending/Completed)
+- [ ] Filter tabs work (All/Active/Completed)
 - [ ] My Robots shows upcoming tournament matches
 - [ ] Battle history shows tournament battles
 - [ ] Tournament badges (🏆) display correctly
@@ -2170,8 +2170,8 @@ curl -X GET http://localhost:3001/api/admin/tournaments/eligible-robots \
 
 1. Navigate to Tournaments page (from main menu)
 2. View all tournaments:
-   - Filter tabs: All / Active / Pending / Completed
-   - Status badges: 🔴 Live, ⏳ Pending, ✓ Completed
+   - Filter tabs: All / Active / Completed
+   - Status badges: 🔴 Live, ✓ Completed
    - Tournament stats: participants, rounds, dates
    - Progress bars for active tournaments
    - Champion names for completed tournaments

@@ -114,11 +114,11 @@ function ProfilePage() {
       
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000);
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      
+    } catch (error: unknown) {
+      const err = error as { response?: { status: number; data: { details?: Record<string, string>; error?: string } }; request?: unknown };
       // Handle API error responses
-      if (error.response) {
-        const { status, data } = error.response;
+      if (err.response) {
+        const { status, data } = err.response;
         
         if (status === 400 && data.details) {
           // Validation errors - display field-specific errors
@@ -135,9 +135,9 @@ function ProfilePage() {
           setErrors({ stableName: 'This stable name is already taken' });
         } else {
           // Other API errors
-          setErrors({ general: data.error || data.details || 'Failed to update profile' });
+          setErrors({ general: data.error || 'Failed to update profile' });
         }
-      } else if (error.request) {
+      } else if (err.request) {
         // Network error
         setErrors({ general: 'Network error. Please check your connection and try again.' });
       } else {
@@ -163,7 +163,7 @@ function ProfilePage() {
         setLoading(true);
         const profileData = await getProfile();
         setProfile(profileData);
-      } catch (error) {
+      } catch {
         setErrors({ general: 'Failed to load profile data' });
       } finally {
         setLoading(false);

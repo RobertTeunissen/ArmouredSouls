@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth';
+import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { executeScheduledBattles } from '../services/battleOrchestrator';
 import { runMatchmaking } from '../services/matchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';

@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import { Prisma } from '@prisma/client';
 import { OnboardingError, OnboardingErrorCode } from '../errors/onboardingErrors';
 import logger from '../config/logger';
 
@@ -55,7 +56,7 @@ export interface TutorialState {
 export interface TutorialStateUpdates {
   onboardingStep?: number;
   onboardingStrategy?: string;
-  onboardingChoices?: Record<string, any>;
+  onboardingChoices?: Record<string, unknown>;
 }
 
 /**
@@ -163,7 +164,7 @@ function validateStep(step: number): void {
  * @throws {OnboardingError} If strategy is invalid
  */
 function validateStrategy(strategy: string): void {
-  if (!VALID_STRATEGIES.includes(strategy as any)) {
+  if (!(VALID_STRATEGIES as readonly string[]).includes(strategy)) {
     throw new OnboardingError(
       OnboardingErrorCode.INVALID_STRATEGY,
       `Invalid strategy. Must be one of: ${VALID_STRATEGIES.join(', ')}`,
@@ -240,9 +241,15 @@ export async function updateTutorialState(
   }
 
   try {
+    const { onboardingChoices, ...rest } = updates;
     const user = await prisma.user.update({
       where: { id: userId },
-      data: updates,
+      data: {
+        ...rest,
+        ...(onboardingChoices !== undefined && {
+          onboardingChoices: onboardingChoices as Prisma.InputJsonValue,
+        }),
+      },
     });
 
     return {
@@ -255,9 +262,10 @@ export async function updateTutorialState(
       onboardingStartedAt: user.onboardingStartedAt,
       onboardingCompletedAt: user.onboardingCompletedAt,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Prisma P2025: record not found
-    if (error?.code === 'P2025') {
+    const prismaError = error as { code?: string };
+    if (prismaError?.code === 'P2025') {
       throw new OnboardingError(
         OnboardingErrorCode.TUTORIAL_STATE_NOT_FOUND,
         'Tutorial state not found for this user',
