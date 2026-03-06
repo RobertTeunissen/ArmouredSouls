@@ -95,6 +95,30 @@ router.get('/', authenticateToken, requireAdmin, async (req: Request, res: Respo
 });
 
 /**
+ * GET /api/admin/tournaments/eligible-robots
+ * Get robots eligible for tournament participation
+ * NOTE: Must be defined before /:id to avoid Express matching "eligible-robots" as an :id param
+ */
+router.get('/eligible-robots', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const eligibleRobots = await getEligibleRobotsForTournament();
+
+    res.json({
+      success: true,
+      eligibleRobots,
+      count: eligibleRobots.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Admin] Eligible robots fetch error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch eligible robots',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
  * GET /api/admin/tournaments/:id
  * Get detailed tournament information
  */

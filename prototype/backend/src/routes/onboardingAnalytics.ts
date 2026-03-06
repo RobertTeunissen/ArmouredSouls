@@ -7,7 +7,7 @@
  * @see {@link ../services/onboardingAnalyticsService} for event storage
  * Requirements: 26.1-26.12
  */
-import express from 'express';
+import express, { Response } from 'express';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { recordEvents, OnboardingAnalyticsEvent } from '../services/onboardingAnalyticsService';
 import logger from '../config/logger';
