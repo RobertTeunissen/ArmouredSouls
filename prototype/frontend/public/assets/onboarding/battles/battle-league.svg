@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <title>League Battle</title>
+  <rect width="600" height="400" fill="#1a1a2e" rx="8"/>
+  <rect x="10" y="10" width="580" height="380" fill="none" stroke="#0f3460" stroke-width="2" rx="6"/>
+  <!-- Trophy icon top center -->
+  <path d="M280 40 L280 60 L270 60 Q260 60 260 50 L260 40 Z" fill="#e94560" opacity="0.6"/>
+  <path d="M320 40 L320 60 L330 60 Q340 60 340 50 L340 40 Z" fill="#e94560" opacity="0.6"/>
+  <rect x="278" y="35" width="44" height="30" fill="#e94560" rx="4"/>
+  <rect x="288" y="65" width="24" height="8" fill="#e94560" rx="2"/>
+  <rect x="282" y="73" width="36" height="6" fill="#e94560" rx="2"/>
+  <!-- Robot 1 (left) -->
+  <rect x="100" y="130" width="80" height="110" fill="#0f3460" rx="10"/>
+  <rect x="110" y="110" width="60" height="35" fill="#0f3460" rx="8"/>
+  <circle cx="128" cy="124" r="6" fill="#e94560"/>
+  <circle cx="152" cy="124" r="6" fill="#e94560"/>
+  <rect x="78" y="145" width="24" height="70" fill="#0f3460" rx="6"/>
+  <rect x="178" y="145" width="24" height="70" fill="#0f3460" rx="6"/>
+  <rect x="110" y="240" width="26" height="45" fill="#0f3460" rx="6"/>
+  <rect x="144" y="240" width="26" height="45" fill="#0f3460" rx="6"/>
+  <!-- VS text -->
+  <text x="300" y="200" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="48" font-weight="bold">VS</text>
+  <!-- Robot 2 (right) -->
+  <rect x="420" y="130" width="80" height="110" fill="#0f3460" rx="10"/>
+  <rect x="430" y="110" width="60" height="35" fill="#0f3460" rx="8"/>
+  <circle cx="448" cy="124" r="6" fill="#e94560"/>
+  <circle cx="472" cy="124" r="6" fill="#e94560"/>
+  <rect x="398" y="145" width="24" height="70" fill="#0f3460" rx="6"/>
+  <rect x="498" y="145" width="24" height="70" fill="#0f3460" rx="6"/>
+  <rect x="430" y="240" width="26" height="45" fill="#0f3460" rx="6"/>
+  <rect x="464" y="240" width="26" height="45" fill="#0f3460" rx="6"/>
+  <!-- Lightning bolts between -->
+  <line x1="260" y1="160" x2="270" y2="180" stroke="#e94560" stroke-width="2" opacity="0.5"/>
+  <line x1="340" y1="160" x2="330" y2="180" stroke="#e94560" stroke-width="2" opacity="0.5"/>
+  <!-- Text -->
+  <text x="300" y="340" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="28" font-weight="bold">League Battle</text>
+  <text x="300" y="370" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="14">600 × 400 — Placeholder</text>
+</svg>

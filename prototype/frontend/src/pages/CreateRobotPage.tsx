@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import GuidedUIOverlay from '../components/onboarding/GuidedUIOverlay';
 import apiClient from '../utils/apiClient';
 
 function CreateRobotPage() {
@@ -11,6 +12,10 @@ function CreateRobotPage() {
   const [error, setError] = useState('');
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const isOnboarding = searchParams.get('onboarding') === 'true';
+  const [onboardingGuideStep, setOnboardingGuideStep] = useState(isOnboarding ? 0 : -1);
 
   const ROBOT_CREATION_COST = 500000;
 
@@ -49,8 +54,26 @@ function CreateRobotPage() {
       // Refresh user data to update currency
       await refreshUser();
 
-      // Navigate to the newly created robot
-      navigate(`/robots/${data.robot.id}`);
+      if (isOnboarding) {
+        // During onboarding: update onboarding choices with new robot ID, then return to onboarding
+        try {
+          const existingState = await apiClient.get('/api/onboarding/state');
+          const currentChoices = existingState.data?.data?.choices || {};
+          const robotsCreated = currentChoices.robotsCreated || [];
+          await apiClient.post('/api/onboarding/state', {
+            choices: {
+              ...currentChoices,
+              robotsCreated: [...robotsCreated, data.robot.id],
+            },
+          });
+        } catch {
+          // Non-critical: onboarding state update failed, continue anyway
+        }
+        navigate('/onboarding');
+      } else {
+        // Normal flow: navigate to the newly created robot
+        navigate(`/robots/${data.robot.id}`);
+      }
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (err.response?.status === 401) {
         logout();
@@ -58,7 +81,6 @@ function CreateRobotPage() {
         return;
       }
       setError(err.response?.data?.error || err.message || 'Failed to create robot');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -75,6 +97,20 @@ function CreateRobotPage() {
           <h2 className="text-3xl font-bold mb-8">Create New Robot</h2>
 
           <div className="bg-gray-800 p-8 rounded-lg mb-6">
+            {/* Onboarding banner */}
+            {isOnboarding && (
+              <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0">🎓</span>
+                  <div>
+                    <p className="text-blue-400 font-semibold">Tutorial Step 5: Robot Creation</p>
+                    <p className="text-sm text-gray-300">
+                      Choose a name for your robot and confirm the purchase. Your robot will start with all attributes at Level 1.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="mb-6">
               <h3 className="text-xl font-semibold mb-4">Robot Frame Cost</h3>
               <div className="bg-gray-700 p-6 rounded-lg">
@@ -139,11 +175,11 @@ function CreateRobotPage() {
               <div className="flex gap-4">
                 <button
                   type="button"
-                  onClick={() => navigate('/robots')}
+                  onClick={() => navigate(isOnboarding ? '/onboarding' : '/robots')}
                   className="flex-1 bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg transition-colors font-semibold"
                   disabled={loading}
                 >
-                  Cancel
+                  {isOnboarding ? 'Back to Tutorial' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -161,6 +197,38 @@ function CreateRobotPage() {
           </div>
         </div>
       </div>
+
+      {/* Onboarding guided overlays */}
+      {isOnboarding && onboardingGuideStep === 0 && (
+        <GuidedUIOverlay
+          targetSelector="#name"
+          tooltipContent={
+            <div>
+              <p className="font-semibold text-blue-400 mb-2">Name Your Robot</p>
+              <p>Choose a unique name for your robot (1-50 characters). This is how your robot will be known in battles and leaderboards.</p>
+            </div>
+          }
+          position="bottom"
+          onNext={() => setOnboardingGuideStep(1)}
+          showNext={true}
+          onClose={() => setOnboardingGuideStep(-1)}
+        />
+      )}
+
+      {isOnboarding && onboardingGuideStep === 1 && (
+        <GuidedUIOverlay
+          targetSelector="button[type='submit']"
+          tooltipContent={
+            <div>
+              <p className="font-semibold text-blue-400 mb-2">Confirm Creation</p>
+              <p>Once you've entered a name, click this button to create your robot for ₡{ROBOT_CREATION_COST.toLocaleString()}. You'll be returned to the tutorial afterward.</p>
+            </div>
+          }
+          position="top"
+          showNext={false}
+          onClose={() => setOnboardingGuideStep(-1)}
+        />
+      )}
     </div>
   );
 }

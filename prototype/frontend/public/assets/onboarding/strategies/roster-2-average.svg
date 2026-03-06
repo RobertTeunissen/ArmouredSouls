@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <title>2 Average Robots - Roster Strategy</title>
+  <rect width="400" height="300" fill="#1a1a2e" rx="8"/>
+  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#0f3460" stroke-width="2" rx="6"/>
+  <!-- Robot 1 (medium) -->
+  <rect x="85" y="80" width="70" height="95" fill="#0f3460" rx="8"/>
+  <rect x="93" y="62" width="54" height="32" fill="#0f3460" rx="6"/>
+  <circle cx="108" cy="74" r="5" fill="#e94560"/>
+  <circle cx="132" cy="74" r="5" fill="#e94560"/>
+  <rect x="68" y="92" width="20" height="60" fill="#0f3460" rx="5"/>
+  <rect x="152" y="92" width="20" height="60" fill="#0f3460" rx="5"/>
+  <rect x="93" y="175" width="24" height="40" fill="#0f3460" rx="5"/>
+  <rect x="123" y="175" width="24" height="40" fill="#0f3460" rx="5"/>
+  <!-- Robot 2 (medium) -->
+  <rect x="245" y="80" width="70" height="95" fill="#0f3460" rx="8"/>
+  <rect x="253" y="62" width="54" height="32" fill="#0f3460" rx="6"/>
+  <circle cx="268" cy="74" r="5" fill="#e94560"/>
+  <circle cx="292" cy="74" r="5" fill="#e94560"/>
+  <rect x="228" y="92" width="20" height="60" fill="#0f3460" rx="5"/>
+  <rect x="312" y="92" width="20" height="60" fill="#0f3460" rx="5"/>
+  <rect x="253" y="175" width="24" height="40" fill="#0f3460" rx="5"/>
+  <rect x="283" y="175" width="24" height="40" fill="#0f3460" rx="5"/>
+  <!-- Text -->
+  <text x="200" y="248" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="22" font-weight="bold">2 Average Robots</text>
+  <text x="200" y="270" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="12">400 × 300 — Placeholder</text>
+</svg>

@@ -1502,12 +1502,83 @@ const categoryEmojis = {
 
 ---
 
+## 7. Onboarding Integration: Facility Purchase Blocking & Priority Highlighting
+
+**Status**: ✅ **IMPLEMENTED**
+
+**Reference**: See [PRD_ONBOARDING_SYSTEM.md](PRD_ONBOARDING_SYSTEM.md) for complete onboarding system specification.
+
+During the new player onboarding tutorial, the Facilities Page has special behavior to prevent premature spending and guide new players toward optimal facility investments.
+
+### 7.1 Facility Purchase Blocking During Onboarding
+
+**Condition**: When the user's `onboardingStep < 4` (before the Budget Allocation Guidance step)
+
+**Behavior**:
+- All facility upgrade buttons are disabled
+- A prominent explanation message is displayed at the top of the Facilities Page:
+  ```
+  ┌─────────────────────────────────────────────────────────────┐
+  │ 📋 Complete Tutorial First                                   │
+  │                                                              │
+  │ Facility purchases are locked until you complete the        │
+  │ Budget Allocation step of the tutorial. This ensures you    │
+  │ understand facility timing and priority before investing.   │
+  │                                                              │
+  │ [Return to Tutorial]                                         │
+  └─────────────────────────────────────────────────────────────┘
+  ```
+- Individual facility cards show a lock indicator on the upgrade button
+- The explanation emphasizes that facility timing matters: "You can spend your money only once"
+- After the player reaches onboarding Step 4 or later, facility purchases are unblocked
+
+**Backend Validation**:
+- `POST /api/facilities/upgrade` returns a `403` error with code `ONBOARDING_FACILITY_BLOCKED` if `onboardingStep < 4`
+- Error message: "Complete the Budget Allocation step before purchasing facilities"
+
+### 7.2 Facility Priority Highlighting for New Players
+
+**Condition**: When the user's `hasCompletedOnboarding = false` and `onboardingStep >= 4`
+
+**Behavior**:
+- Facilities are highlighted based on the player's chosen roster strategy (`onboardingStrategy`)
+- Priority highlighting uses colored left borders on facility cards:
+  - **Green border** (`border-green-500`): Mandatory First facilities for the chosen strategy
+  - **Blue border** (`border-blue-500`): Recommended Early facilities
+  - **No special border**: Optional/Later facilities
+
+**Strategy-Specific Priorities**:
+
+| Facility | 1 Mighty | 2 Average | 3 Flimsy |
+|----------|----------|-----------|----------|
+| Roster Expansion | Optional | Mandatory First | Mandatory First |
+| Weapons Workshop | Recommended Early | Mandatory First | Mandatory First |
+| Training Facility | Mandatory First | Recommended Early | Optional |
+| Storage Facility | Optional | Recommended Early | Mandatory First |
+| Repair Bay | Recommended Early | Recommended Early | Mandatory First |
+
+- A small tooltip on highlighted facilities explains: "Recommended for your {strategy} strategy"
+- Priority highlighting is removed once `hasCompletedOnboarding = true`
+
+### 7.3 Integration with Onboarding Step 3 (Facility Timing Education)
+
+During onboarding Step 3, the tutorial teaches facility timing and priority through the `FacilityPriorityList` component. This step:
+- Explains the concept of "you can spend your money only once"
+- Shows facility categories: Mandatory First, Recommended Early, Strategy-Dependent, Optional/Later
+- Displays concrete savings examples (e.g., Weapons Workshop Level 1 saves 5% on all weapon purchases)
+- Uses existing `FacilityIcon` components for visual consistency with the Facilities Page
+
+After completing Step 3, the player has context for why certain facilities are highlighted when they visit the Facilities Page.
+
+---
+
 ## Appendix D: Related Documentation
 
 ### Core Documentation
 - [STABLE_SYSTEM.md](STABLE_SYSTEM.md) - Complete facility system mechanics
 - [PRD_ECONOMY_SYSTEM.md](prd_core/PRD_ECONOMY_SYSTEM.md) - Economic context (see Implementation History section)
 - [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md) - Attribute caps and training academies
+- [PRD_ONBOARDING_SYSTEM.md](PRD_ONBOARDING_SYSTEM.md) - Onboarding tutorial system
 
 ### Design References
 - [DESIGN_SYSTEM_AND_UX_GUIDE.md](design_ux/DESIGN_SYSTEM_AND_UX_GUIDE.md) - Design system

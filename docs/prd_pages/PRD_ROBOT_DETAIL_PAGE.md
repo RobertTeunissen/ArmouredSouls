@@ -1271,11 +1271,89 @@ RobotDetailPage
 
 ---
 
+## Onboarding: GuidedUIOverlay Integration (Step 8 - Battle Readiness)
+
+**Status**: ✅ **IMPLEMENTED**
+
+**Reference**: See [PRD_ONBOARDING_SYSTEM.md](PRD_ONBOARDING_SYSTEM.md) for complete onboarding system specification.
+
+During onboarding Step 8 (Battle Readiness), the Robot Detail Page integrates with the `GuidedUIOverlay` component to guide new players through weapon equipping and battle readiness concepts.
+
+### When the Overlay Appears
+
+The overlay only appears when all of the following conditions are met:
+- User's `hasCompletedOnboarding = false`
+- User's `onboardingStep = 8` (Battle Readiness step)
+- The onboarding system navigates the player to their robot's detail page
+
+The overlay is never shown for users who have completed or skipped onboarding.
+
+### Overlay Behavior
+
+**Loadout Section Highlighting**:
+- The GuidedUIOverlay dims the rest of the page and highlights the Battle Configuration section (⚔️)
+- A pulsing border draws attention to the weapon loadout slots
+- Tooltip arrows point to the Main Weapon Slot with guidance: "Equip your weapon here to prepare for battle"
+- After weapon is equipped, the overlay advances to show updated effective stats
+
+**Weapon Equipping Guidance**:
+- Overlay highlights the weapon slot and guides the player to select a weapon from their inventory
+- Uses existing `WeaponSlot` and `LoadoutSelector` components with overlay tooltips
+- After equipping, shows the stat changes (base → effective with weapon bonuses)
+
+**Battle Readiness Education**:
+- After weapon equipping, the overlay teaches key battle readiness concepts:
+  - **Repair Cost Formula**: `(sum_of_all_23_attributes × 100) × damage_percentage × multiplier`
+  - **Multiplier tiers**: 1.0× normal, 1.5× heavily damaged (<10% HP), 2.0× destroyed (0 HP)
+  - **HP/Shield Mechanics**: HP does not regenerate between battles; shields regenerate fully after each battle
+  - **Battle Readiness Requirements**: Robot must have HP > 0 and a weapon equipped to participate in battles
+- For multi-robot strategies (2 average, 3 flimsy), explains that repair costs multiply across robots
+
+**Example Repair Cost Display**:
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 💡 Understanding Repair Costs                                │
+│                                                              │
+│ Your robot's repair cost depends on total attributes and    │
+│ damage taken:                                                │
+│                                                              │
+│ Base Repair = (Sum of 23 Attributes × 100)                  │
+│ Repair Cost = Base × Damage% × Condition Multiplier         │
+│                                                              │
+│ Condition Multipliers:                                       │
+│   Normal damage:        1.0×                                 │
+│   Heavily damaged (<10% HP): 1.5×                           │
+│   Destroyed (0 HP):     2.0×                                 │
+│                                                              │
+│ ⚠️ HP does NOT regenerate between battles!                   │
+│ ✅ Shields regenerate fully after each battle.               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Overlay Positioning
+
+- Tooltips use top/bottom positioning relative to the highlighted element
+- On mobile (<768px), tooltips use full-width positioning
+- Touch targets are at least 44×44px
+- Keyboard navigation supported (Tab, Enter, Escape to dismiss)
+
+### Related Components
+
+- `GuidedUIOverlay` - Semi-transparent overlay with element highlighting
+- `HPBar` - Reused to show current robot health status
+- `BattleReadinessBadge` - Reused to show readiness indicators
+- `WeaponSlot` - Existing weapon equipping component
+- `LoadoutSelector` - Existing loadout type selector
+
+---
+
 ## Revision History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-01-30 | Robert Teunissen | Initial draft |
+| 1.1 | 2026-02-10 | Robert Teunissen | Implementation complete |
+| 1.2 | 2026-03-05 | GitHub Copilot | Added onboarding GuidedUIOverlay integration (Step 8) |
 
 ---
 

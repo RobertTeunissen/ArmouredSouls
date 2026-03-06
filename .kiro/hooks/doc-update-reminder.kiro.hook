@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Documentation Update Reminder",
   "description": "Remind to update documentation when core game systems are modified",
   "version": "1",

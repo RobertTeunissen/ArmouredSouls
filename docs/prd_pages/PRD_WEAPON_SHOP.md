@@ -2249,6 +2249,74 @@ The Weapon Shop is **production-ready** with all 4 core phases complete. The imp
 
 ---
 
+## Onboarding Integration: Weapon Recommendation & Budget Filtering
+
+**Status**: ✅ **IMPLEMENTED**
+
+**Reference**: See [PRD_ONBOARDING_SYSTEM.md](PRD_ONBOARDING_SYSTEM.md) for complete onboarding system specification.
+
+During onboarding Step 7 (Weapon Purchase Guidance), the Weapon Shop integrates with the onboarding system to help new players make informed first weapon purchases.
+
+### Weapon Recommendation Highlighting
+
+**Condition**: When the user's `hasCompletedOnboarding = false` and `onboardingStep = 7`
+
+**Behavior**:
+- Recommended starter weapons are highlighted with a green "Recommended" badge on their cards
+- Recommended weapons appear at the top of the weapon list regardless of current sort order
+- A banner at the top of the Weapon Shop explains: "We've highlighted weapons that work well for new players"
+
+**Recommended Starter Weapons**:
+
+| Weapon | Type | Loadout | Cost | Why Recommended |
+|--------|------|---------|------|-----------------|
+| Laser Rifle | Energy | Single/Dual-Wield | Budget-friendly | Balanced damage and attribute bonuses, good all-rounder |
+| Machine Gun | Ballistic | Single/Dual-Wield | Budget-friendly | High DPS, reliable damage output |
+| Combat Knife | Melee | Single/Dual-Wield | Budget-friendly | Low cost, decent melee bonuses, good for budget builds |
+
+- Recommendations are adjusted based on the player's chosen loadout type from onboarding Step 6
+- For Weapon+Shield loadouts, shields (Light Shield, Combat Shield) are also highlighted
+- For Two-Handed loadouts, budget-friendly two-handed weapons are highlighted instead
+
+### Budget-Appropriate Filtering
+
+**Condition**: When the user's `hasCompletedOnboarding = false`
+
+**Behavior**:
+- Weapons costing more than ₡300,000 display a warning badge: "⚠️ Expensive for new players"
+- The warning tooltip explains: "Consider starting with a budget weapon. You'll need credits for facilities, repairs, and attribute upgrades."
+- The "Can Afford" filter is pre-activated during onboarding to show only purchasable weapons
+- Premium and Luxury price range filters show a subtle advisory: "These weapons may strain your starting budget"
+
+**Budget Warning Example**:
+```
+┌──────────────────────────────────────────────────── [⚠️ Expensive]
+│ ⚔️  Plasma Cannon                          ₡450,000
+│     Two-Handed | Energy | 85 base damage
+│     
+│ ⚠️ This weapon costs more than ₡300K.
+│    New players should consider budget options first.
+│    
+│ [View Details]                    [Purchase - ₡450,000]
+└─────────────────────────────────────────────────────────────
+```
+
+### Integration with Onboarding Step 7
+
+The onboarding Step 7 component (`Step7_WeaponPurchase`) works alongside the Weapon Shop:
+1. Explains that robots require weapons to participate in battles
+2. Displays weapon recommendation cards with costs and attribute bonuses
+3. Navigates the player to the Weapon Shop with the GuidedUIOverlay active
+4. The overlay highlights the recommended weapons and guides the purchase flow
+5. After a weapon is purchased, the onboarding advances to Step 8 (Battle Readiness)
+6. Shows a "savings missed" note: "A Weapons Workshop would have saved you ₡X on this purchase"
+
+### Removal of Onboarding UI
+
+All onboarding-specific weapon shop behavior (recommendation badges, budget warnings, pre-activated filters) is removed once `hasCompletedOnboarding = true`. Returning players see the standard Weapon Shop experience.
+
+---
+
 **Document Version**: 2.0 (Consolidated)  
 **Last Updated**: February 9, 2026  
 **Status**: Complete and Production-Ready  

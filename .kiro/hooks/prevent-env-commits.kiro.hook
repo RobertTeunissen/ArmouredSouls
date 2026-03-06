@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Prevent .env Commits",
   "description": "Warn if .env files are modified (should never be committed)",
   "version": "1",

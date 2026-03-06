@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Repair Bay</title>
+  <rect width="64" height="64" fill="#1a1a2e" rx="8"/>
+  <!-- Wrench -->
+  <path d="M22 16 L18 20 L28 30 L24 34 L14 24 L10 28 C6 24 6 18 10 14 C14 10 20 10 24 14 Z" fill="none" stroke="#e94560" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Gear -->
+  <circle cx="42" cy="38" r="10" fill="none" stroke="#0f3460" stroke-width="2.5"/>
+  <circle cx="42" cy="38" r="4" fill="#e94560"/>
+  <line x1="42" y1="26" x2="42" y2="30" stroke="#0f3460" stroke-width="2.5"/>
+  <line x1="42" y1="46" x2="42" y2="50" stroke="#0f3460" stroke-width="2.5"/>
+  <line x1="30" y1="38" x2="34" y2="38" stroke="#0f3460" stroke-width="2.5"/>
+  <line x1="50" y1="38" x2="54" y2="38" stroke="#0f3460" stroke-width="2.5"/>
+</svg>

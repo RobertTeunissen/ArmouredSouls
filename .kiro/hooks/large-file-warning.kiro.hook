@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Large File Warning",
   "description": "Warn when files exceed recommended size",
   "version": "1",

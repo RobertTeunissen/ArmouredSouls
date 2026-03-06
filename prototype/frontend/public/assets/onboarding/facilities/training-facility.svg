@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Training Facility</title>
+  <rect width="64" height="64" fill="#1a1a2e" rx="8"/>
+  <!-- Dumbbell -->
+  <rect x="12" y="24" width="10" height="16" fill="#0f3460" rx="2"/>
+  <rect x="42" y="24" width="10" height="16" fill="#0f3460" rx="2"/>
+  <rect x="22" y="29" width="20" height="6" fill="#e94560" rx="2"/>
+  <!-- Target below -->
+  <circle cx="32" cy="50" r="8" fill="none" stroke="#0f3460" stroke-width="2"/>
+  <circle cx="32" cy="50" r="4" fill="none" stroke="#e94560" stroke-width="1.5"/>
+  <circle cx="32" cy="50" r="1.5" fill="#e94560"/>
+</svg>

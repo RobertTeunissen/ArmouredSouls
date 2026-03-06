@@ -4,7 +4,7 @@
  */
 
 import express, { Request, Response } from 'express';
-import { AuthRequest, authenticateToken } from '../middleware/auth';
+import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import {
   createSingleEliminationTournament,
@@ -18,21 +18,6 @@ import {
 import { processTournamentBattle } from '../services/tournamentBattleOrchestrator';
 
 const router = express.Router();
-
-/**
- * Middleware to check if user is admin
- */
-const requireAdmin = (req: AuthRequest, res: Response, next: express.NextFunction) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-
-  next();
-};
 
 /**
  * POST /api/admin/tournaments/create

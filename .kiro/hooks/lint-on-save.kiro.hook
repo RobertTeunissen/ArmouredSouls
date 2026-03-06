@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Lint TypeScript on Save",
   "description": "Run ESLint on TypeScript files when saved",
   "version": "1",

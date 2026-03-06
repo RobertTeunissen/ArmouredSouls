@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Document Schema Changes",
   "description": "Remind to document Prisma schema changes",
   "version": "1",

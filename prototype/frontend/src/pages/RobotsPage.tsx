@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
+import GuidedUIOverlay from '../components/onboarding/GuidedUIOverlay';
 import apiClient from '../utils/apiClient';
 import { fetchMyRobots, Robot } from '../utils/robotApi';
 
@@ -127,7 +128,11 @@ function RobotsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { logout, refreshUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();  useEffect(() => {
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const isOnboarding = searchParams.get('onboarding') === 'true';
+  const [onboardingGuideStep, setOnboardingGuideStep] = useState(isOnboarding ? 0 : -1);  useEffect(() => {
     fetchRobots();
     fetchFacilities();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,18 +152,6 @@ function RobotsPage() {
     try {
       const data = await fetchMyRobots();
       
-      // Debug logging
-      console.log('Fetched robots:', {
-        count: data.length,
-        robots: data.map(r => ({
-          id: r.id,
-          name: r.name,
-          currentHP: r.currentHP,
-          maxHP: r.maxHP,
-          repairCost: r.repairCost,
-        })),
-      });
-      
       // Sort robots by ELO (highest first)
       const sortedData = data.sort((a, b) => b.elo - a.elo);
       setRobots(sortedData);
@@ -169,7 +162,6 @@ function RobotsPage() {
         return;
       }
       setError('Failed to load robots');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -191,7 +183,7 @@ function RobotsPage() {
         setRosterLevel(rosterExpansion.currentLevel || 0);
       }
     } catch (err) {
-      console.error('Failed to fetch facilities:', err);
+      // Silently fail - facilities are optional
     }
   };
 
@@ -219,25 +211,6 @@ function RobotsPage() {
     const discount = Math.min(90, repairBayLevel * (5 + activeRobotCount));
     const discountedCost = Math.floor(totalBaseCost * (1 - discount / 100));
     
-    // Debug logging
-    const robotsNeedingRepair = robots.filter(r => {
-      const hasRepairCost = (r.repairCost || 0) > 0;
-      const hasHPDamage = r.currentHP < r.maxHP;
-      return hasRepairCost || hasHPDamage;
-    });
-    
-    console.log('Repair cost calculation:', {
-      robotCount: robots.length,
-      activeRobotCount,
-      robotsNeedingRepair: robotsNeedingRepair.length,
-      robotsWithRepairCost: robots.filter(r => (r.repairCost || 0) > 0).length,
-      robotsWithHPDamage: robots.filter(r => r.currentHP < r.maxHP).length,
-      totalBaseCost,
-      discount,
-      discountedCost,
-      repairBayLevel,
-    });
-    
     return { totalBaseCost, discountedCost, discount };
   };
 
@@ -264,7 +237,6 @@ function RobotsPage() {
       // Refresh robots list to show updated status and user credits
       await Promise.all([fetchRobots(), refreshUser()]);
     } catch (err) {
-      console.error('Repair all error:', err);
       alert('Failed to repair robots. Please try again.');
       setShowRepairConfirmation(false);
     }
@@ -353,6 +325,35 @@ function RobotsPage() {
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Onboarding banner */}
+        {isOnboarding && (
+          <div
+            className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6"
+            role="region"
+            aria-label="Onboarding guidance"
+            data-testid="onboarding-banner"
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-xl flex-shrink-0" aria-hidden="true">🎓</span>
+              <div className="flex-1">
+                <p className="text-blue-400 font-semibold mb-1">Tutorial Step 8: Equip Your Weapon</p>
+                <p className="text-gray-300 text-sm">
+                  Select your robot below to visit its detail page. From there, go to the Battle Config tab
+                  to equip the weapon you purchased. Once equipped, your robot will be battle-ready!
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/onboarding')}
+                className="text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+                aria-label="Return to tutorial"
+                data-testid="return-to-tutorial"
+              >
+                Return to Tutorial
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">
             My Robots <span className="text-gray-400 text-2xl">({robots.length}/{maxRobots})</span>
@@ -539,7 +540,7 @@ function RobotsPage() {
                           <tr 
                             key={robot.id}
                             className="border-t border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
-                            onClick={() => navigate(`/robots/${robot.id}`)}
+                            onClick={() => navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`)}
                           >
                             {/* Robot Name & Image */}
                             <td className="px-4 py-3">
@@ -642,7 +643,7 @@ function RobotsPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  navigate(`/robots/${robot.id}`);
+                                  navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`);
                                 }}
                                 className="text-sm text-[#58a6ff] hover:text-[#79c0ff] transition-colors"
                               >
@@ -680,8 +681,8 @@ function RobotsPage() {
               return (
                 <div
                   key={robot.id}
-                  className="bg-[#252b38] p-6 rounded-lg border-2 border-[#3d444d] hover:border-[#58a6ff] transition-colors cursor-pointer"
-                  onClick={() => navigate(`/robots/${robot.id}`)}
+                  className={`bg-[#252b38] p-6 rounded-lg border-2 border-[#3d444d] hover:border-[#58a6ff] transition-colors cursor-pointer${isOnboarding && displayedRobots.indexOf(robot) === 0 ? ' robot-card-first' : ''}${isOnboarding ? ' onboarding-robot-card' : ''}`}
+                  onClick={() => navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`)}
                 >
                   {/* Robot Portrait */}
                   <div className="flex justify-center mb-4">
@@ -771,7 +772,7 @@ function RobotsPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/robots/${robot.id}`);
+                      navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`);
                     }}
                     className="mt-4 w-full border border-[#58a6ff] text-[#58a6ff] hover:bg-[#58a6ff] hover:bg-opacity-10 px-4 py-2 rounded transition-colors"
                   >
@@ -785,6 +786,29 @@ function RobotsPage() {
           </>
         )}
       </div>
+
+      {/* Onboarding Guided Overlay */}
+      {isOnboarding && onboardingGuideStep === 0 && robots.length > 0 && !loading && (
+        <GuidedUIOverlay
+          targetSelector=".robot-card-first"
+          tooltipContent={
+            <div>
+              <p className="font-semibold text-blue-400 mb-2">Select Your Robot</p>
+              <p className="mb-2">
+                Click on your robot to visit its detail page. From there, navigate to the
+                Battle Config tab to equip your weapon.
+              </p>
+              <p className="text-sm text-gray-400">
+                Once your weapon is equipped, your robot's stats will update with weapon bonuses
+                and it will be battle-ready!
+              </p>
+            </div>
+          }
+          position="bottom"
+          showNext={false}
+          onClose={() => setOnboardingGuideStep(-1)}
+        />
+      )}
 
       {/* Repair Confirmation Modal */}
       {showRepairConfirmation && (

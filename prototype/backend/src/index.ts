@@ -16,6 +16,7 @@ import recordsRoutes from './routes/records';
 import tournamentsRoutes from './routes/tournaments';
 import tagTeamsRoutes from './routes/tagTeams';
 import analyticsRoutes from './routes/analytics';
+import onboardingRoutes from './routes/onboarding';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycleScheduler';
 import { createGeneralLimiter, createAuthLimiter } from './middleware/rateLimiter';
@@ -83,6 +84,7 @@ app.use('/api/records', recordsRoutes);
 app.use('/api/tournaments', tournamentsRoutes);
 app.use('/api/tag-teams', tagTeamsRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Error handling middleware — logs stack traces, redacts them from production responses
 app.use((_err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {

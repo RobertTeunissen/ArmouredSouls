@@ -2,9 +2,9 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: February 9, 2026  
+**Last Updated**: March 5, 2026  
 **Status**: Current Implementation  
-**Version**: v1.2
+**Version**: v1.3
 
 ---
 
@@ -12,6 +12,7 @@
 - v1.0 - First draft
 - v1.1 - Review done by Robert Teunissen
 - v1.2 - Updated to match current implementation (Decimal attributes, HP formula, tournament system, v1.2 weapon pricing)
+- v1.3 - Added onboarding tracking fields to User model (7 new columns for tutorial system) and ResetLog table for account reset tracking
 
 ---
 
@@ -65,6 +66,15 @@ model User {
   highestELO      Int      @default(1200)       // Best ELO achieved by any robot in stable
   championshipTitles Int   @default(0)          // Tournament victories
   
+  // ===== ONBOARDING TRACKING =====
+  hasCompletedOnboarding Boolean  @default(false)  // Whether user completed the tutorial
+  onboardingSkipped      Boolean  @default(false)  // Whether user skipped the tutorial
+  onboardingStep         Int      @default(1)      // Current step (1-9) in tutorial
+  onboardingStrategy     String?  @db.VarChar(20)  // Chosen roster strategy: "1_mighty", "2_average", "3_flimsy"
+  onboardingChoices      Json     @default("{}")   // Player choices during onboarding (JSON object)
+  onboardingStartedAt    DateTime?                 // When user started the tutorial
+  onboardingCompletedAt  DateTime?                 // When user completed the tutorial
+  
   // ===== TIMESTAMPS =====
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -83,6 +93,10 @@ model User {
 - Prestige: Earned from victories, never spent - used as unlock threshold
 - Statistics are aggregated from all robots for stable-level tracking
 - No stable-level league - leagues are per robot
+- Onboarding tracking: New users start with `hasCompletedOnboarding = false` and `onboardingStep = 1`
+- Onboarding strategy: Chosen during Step 2 of tutorial ("1_mighty", "2_average", or "3_flimsy")
+- Onboarding choices: JSON object storing player decisions throughout the 9-step tutorial
+- Existing users: Marked with `hasCompletedOnboarding = true` during migration to skip tutorial
 
 ---
 
@@ -559,6 +573,39 @@ model ScheduledMatch {
 
 ---
 
+## ResetLog Model
+
+Tracks account reset history for the onboarding system. Records what was deleted and why.
+
+```prisma
+model ResetLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  
+  // ===== STATE BEFORE RESET =====
+  robotsDeleted      Int                       // Number of robots deleted
+  weaponsDeleted     Int                       // Number of weapons deleted
+  facilitiesDeleted  Int                       // Number of facilities deleted
+  creditsBeforeReset Decimal @db.Decimal(15, 2)  // Credits before reset
+  
+  // ===== RESET METADATA =====
+  reason    String?  @db.Text                  // Optional reason for reset
+  resetAt   DateTime @default(now())           // When reset occurred
+  
+  @@index([userId])
+  @@index([resetAt])
+}
+```
+
+**Notes**:
+- Part of the onboarding system's "Reset Account" feature
+- Allows players to restart the tutorial with a clean slate
+- Tracks what was deleted for audit purposes
+- Reason field is optional (can be user-provided or system-generated)
+- Multiple resets per user are allowed (no unique constraint on userId)
+
+---
+
 ## CycleMetadata Model
 
 Singleton table tracking global cycle state for admin operations.
@@ -782,6 +829,76 @@ These are calculated in application code:
 - `operatingCost`: Based on facility type and level (see STABLE_SYSTEM.md)
 - `discountPercentage`: For repair_bay, training_facility, weapons_workshop, medical_bay
 - `bonusPercentage`: For coaching_staff bonuses
+
+---
+
+## Onboarding Tracking Fields (User Model)
+
+The following columns were added to the User model to support the 9-step new player onboarding tutorial system. These fields track tutorial progress, player choices, and completion status.
+
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `hasCompletedOnboarding` | `Boolean` | `false` | Whether the user has completed the onboarding tutorial. Existing users were migrated with `true`. |
+| `onboardingSkipped` | `Boolean` | `false` | Whether the user chose to skip the tutorial instead of completing it. |
+| `onboardingStep` | `Int` | `1` | Current step in the 9-step tutorial (range: 1-9). Advances as the player progresses. |
+| `onboardingStrategy` | `String?` (VarChar 20) | `null` | Roster strategy chosen during Step 2. Values: `"1_mighty"`, `"2_average"`, `"3_flimsy"`. Null until Step 2 is completed. |
+| `onboardingChoices` | `Json` | `"{}"` | JSON object storing all player decisions made throughout the tutorial (loadout preferences, facility choices, weapon selections, etc.). |
+| `onboardingStartedAt` | `DateTime?` | `null` | Timestamp when the user first started the tutorial. Set during registration or when tutorial is initiated. |
+| `onboardingCompletedAt` | `DateTime?` | `null` | Timestamp when the user completed (or skipped) the tutorial. Null while tutorial is in progress. |
+
+**Database Column Mapping**: All columns use `snake_case` mapping (e.g., `has_completed_onboarding`, `onboarding_step`).
+
+**Migration Notes**:
+- All existing users were marked with `hasCompletedOnboarding = true` during the migration to skip the tutorial
+- New users start with `hasCompletedOnboarding = false` and `onboardingStep = 1`
+- The `onboardingChoices` JSON object is progressively populated as the player advances through steps
+
+---
+
+## ResetLog Model
+
+Tracks account reset history for the onboarding system's "Reset Account" feature. Records what was deleted and the account state before reset for audit purposes.
+
+```prisma
+model ResetLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+
+  // ===== STATE BEFORE RESET =====
+  robotsDeleted      Int                          // Number of robots deleted during reset
+  weaponsDeleted     Int                          // Number of weapons deleted during reset
+  facilitiesDeleted  Int                          // Number of facilities deleted during reset
+  creditsBeforeReset Decimal @db.Decimal(15, 2)   // Credits balance before reset was performed
+
+  // ===== RESET METADATA =====
+  reason    String?  @db.Text                     // Optional reason for reset (user-provided or system-generated)
+  resetAt   DateTime @default(now()) @map("reset_at")  // When the reset occurred
+
+  @@index([userId])
+  @@index([resetAt])
+  @@map("reset_logs")
+}
+```
+
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `Int` (PK) | Auto-increment | Unique identifier for each reset event |
+| `userId` | `Int` | — | Reference to the User who performed the reset |
+| `robotsDeleted` | `Int` | — | Number of robots deleted during the reset |
+| `weaponsDeleted` | `Int` | — | Number of weapon inventory items deleted during the reset |
+| `facilitiesDeleted` | `Int` | — | Number of facility records deleted during the reset |
+| `creditsBeforeReset` | `Decimal(15,2)` | — | User's credit balance immediately before the reset was performed |
+| `reason` | `String?` (Text) | `null` | Optional reason for the reset (e.g., "Restarting tutorial", "Fresh start") |
+| `resetAt` | `DateTime` | `now()` | Timestamp when the reset was executed |
+
+**Indexes**: `userId` (for querying reset history per user), `resetAt` (for chronological queries)
+
+**Notes**:
+- Part of the onboarding system's "Reset Account" feature accessible from settings
+- Allows players to restart the tutorial with a clean slate (credits reset to ₡3,000,000, all robots/weapons/facilities deleted)
+- Multiple resets per user are allowed (no unique constraint on `userId`)
+- Reset is blocked if the user has active scheduled matches, tournament participation, or pending battles
+- The `reason` field is optional and can be user-provided or system-generated
 
 ---
 

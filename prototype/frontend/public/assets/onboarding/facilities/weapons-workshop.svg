@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Weapons Workshop</title>
+  <rect width="64" height="64" fill="#1a1a2e" rx="8"/>
+  <!-- Anvil -->
+  <rect x="16" y="38" width="32" height="8" fill="#0f3460" rx="2"/>
+  <rect x="20" y="46" width="24" height="6" fill="#0f3460" rx="1"/>
+  <rect x="24" y="32" width="16" height="6" fill="#0f3460" rx="3"/>
+  <!-- Hammer -->
+  <rect x="36" y="10" width="10" height="14" fill="#e94560" rx="2"/>
+  <line x1="41" y1="24" x2="41" y2="36" stroke="#e94560" stroke-width="3" stroke-linecap="round"/>
+  <!-- Sparks -->
+  <circle cx="30" cy="30" r="1.5" fill="#e94560" opacity="0.8"/>
+  <circle cx="26" cy="26" r="1" fill="#e94560" opacity="0.6"/>
+  <circle cx="34" cy="27" r="1" fill="#e94560" opacity="0.7"/>
+</svg>

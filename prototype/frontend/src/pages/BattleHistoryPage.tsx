@@ -47,26 +47,17 @@ function BattleHistoryPage() {
       
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error('[BattleHistory] No authentication token found');
         setError('Authentication required');
         setLoading(false);
         return;
       }
       
-      console.log('[BattleHistory] Fetching battle history, page:', page, 'battleFilter:', filter);
       const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, resultsPerPage, filter);
-      console.log('[BattleHistory] Received data:', data);
       
       setBattles(data.data);
       setPagination(data.pagination);
       setError(null);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('[BattleHistory] Failed to fetch battle history:', err);
-      console.error('[BattleHistory] Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
       setError(err.response?.data?.message || 'Failed to load battle history');
     } finally {
       setLoading(false);

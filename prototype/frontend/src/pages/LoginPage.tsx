@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getTutorialState } from '../utils/onboardingApi';
 import logoD from '../assets/logos/logo-d.svg';
 
 /** Shared input field styling that follows the design system. */
@@ -39,7 +40,7 @@ function LoginPage() {
 
   /**
    * Handles form submission. Authenticates the user via the AuthContext
-   * login method and navigates to the dashboard on success.
+   * login method, checks onboarding status, and navigates accordingly.
    * @param e - The form submission event
    */
   const handleSubmit = async (e: FormEvent) => {
@@ -49,6 +50,18 @@ function LoginPage() {
 
     try {
       await login(identifier, password);
+
+      // Check onboarding status and redirect new players to the tutorial
+      try {
+        const tutorialState = await getTutorialState();
+        if (!tutorialState.hasCompletedOnboarding && !tutorialState.onboardingSkipped) {
+          navigate('/onboarding');
+          return;
+        }
+      } catch {
+        // If onboarding check fails, proceed to dashboard gracefully
+      }
+
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

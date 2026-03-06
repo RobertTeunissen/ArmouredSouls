@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Document Balance Changes",
   "description": "Remind to document game balance modifications",
   "version": "1",

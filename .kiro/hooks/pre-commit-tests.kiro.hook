@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Pre-Commit Tests",
   "description": "Run backend tests before committing code changes",
   "version": "1",

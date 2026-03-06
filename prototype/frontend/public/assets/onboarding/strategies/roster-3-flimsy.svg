@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <title>3 Flimsy Robots - Roster Strategy</title>
+  <rect width="400" height="300" fill="#1a1a2e" rx="8"/>
+  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#0f3460" stroke-width="2" rx="6"/>
+  <!-- Robot 1 (small) -->
+  <rect x="52" y="105" width="55" height="75" fill="#0f3460" rx="6"/>
+  <rect x="58" y="90" width="43" height="26" fill="#0f3460" rx="5"/>
+  <circle cx="70" cy="100" r="4" fill="#e94560"/>
+  <circle cx="90" cy="100" r="4" fill="#e94560"/>
+  <rect x="38" y="114" width="16" height="48" fill="#0f3460" rx="4"/>
+  <rect x="105" y="114" width="16" height="48" fill="#0f3460" rx="4"/>
+  <rect x="60" y="180" width="18" height="32" fill="#0f3460" rx="4"/>
+  <rect x="82" y="180" width="18" height="32" fill="#0f3460" rx="4"/>
+  <!-- Robot 2 (small) -->
+  <rect x="172" y="105" width="55" height="75" fill="#0f3460" rx="6"/>
+  <rect x="178" y="90" width="43" height="26" fill="#0f3460" rx="5"/>
+  <circle cx="190" cy="100" r="4" fill="#e94560"/>
+  <circle cx="210" cy="100" r="4" fill="#e94560"/>
+  <rect x="158" y="114" width="16" height="48" fill="#0f3460" rx="4"/>
+  <rect x="225" y="114" width="16" height="48" fill="#0f3460" rx="4"/>
+  <rect x="180" y="180" width="18" height="32" fill="#0f3460" rx="4"/>
+  <rect x="202" y="180" width="18" height="32" fill="#0f3460" rx="4"/>
+  <!-- Robot 3 (small) -->
+  <rect x="292" y="105" width="55" height="75" fill="#0f3460" rx="6"/>
+  <rect x="298" y="90" width="43" height="26" fill="#0f3460" rx="5"/>
+  <circle cx="310" cy="100" r="4" fill="#e94560"/>
+  <circle cx="330" cy="100" r="4" fill="#e94560"/>
+  <rect x="278" y="114" width="16" height="48" fill="#0f3460" rx="4"/>
+  <rect x="345" y="114" width="16" height="48" fill="#0f3460" rx="4"/>
+  <rect x="300" y="180" width="18" height="32" fill="#0f3460" rx="4"/>
+  <rect x="322" y="180" width="18" height="32" fill="#0f3460" rx="4"/>
+  <!-- Text -->
+  <text x="200" y="240" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="22" font-weight="bold">3 Flimsy Robots</text>
+  <text x="200" y="262" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="12">400 × 300 — Placeholder</text>
+</svg>

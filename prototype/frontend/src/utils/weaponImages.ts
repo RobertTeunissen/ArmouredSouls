@@ -30,7 +30,6 @@ export const getWeaponImagePath = (weaponName: string): string => {
     return imageUrl;
   }
   
-  console.warn(`Weapon image not found: ${filename}.webp`);
   // Return a data URL for a placeholder if image not found
   return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23374151" width="64" height="64"/%3E%3Ctext x="32" y="32" text-anchor="middle" fill="%239ca3af" font-size="12"%3E%3F%3C/text%3E%3C/svg%3E';
 };

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
+import TutorialSettings from '../components/TutorialSettings';
 import { getProfile, ProfileData, updateProfile, ProfileUpdateRequest } from '../utils/userApi';
 
 function ProfilePage() {
@@ -55,7 +56,6 @@ function ProfilePage() {
   const handleSave = async () => {
     // Prevent submission if validation errors exist
     if (hasValidationErrors()) {
-      console.log('Validation errors exist, not submitting');
       return;
     }
 
@@ -91,11 +91,8 @@ function ProfilePage() {
 
     // Check if there are any updates to submit
     if (Object.keys(updates).length === 0) {
-      console.log('No changes detected, not submitting');
       return;
     }
-
-    console.log('Submitting updates:', updates);
 
     try {
       setLoading(true);
@@ -104,8 +101,6 @@ function ProfilePage() {
 
       // Call API to update profile
       const updatedProfile = await updateProfile(updates);
-      
-      console.log('Profile updated successfully:', updatedProfile);
       
       // Update profile state with new data
       setProfile(updatedProfile);
@@ -120,15 +115,10 @@ function ProfilePage() {
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000);
     } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to update profile:', error);
-      console.error('Error response:', error.response);
       
       // Handle API error responses
       if (error.response) {
         const { status, data } = error.response;
-        
-        console.log('API error status:', status);
-        console.log('API error data:', data);
         
         if (status === 400 && data.details) {
           // Validation errors - display field-specific errors
@@ -174,7 +164,6 @@ function ProfilePage() {
         const profileData = await getProfile();
         setProfile(profileData);
       } catch (error) {
-        console.error('Failed to fetch profile:', error);
         setErrors({ general: 'Failed to load profile data' });
       } finally {
         setLoading(false);
@@ -510,6 +499,9 @@ function ProfilePage() {
               </div>
             </div>
           </div>
+
+          {/* Tutorial Section */}
+          <TutorialSettings />
         </div>
 
         {/* Action Buttons */}

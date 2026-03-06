@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import RegistrationForm from '../components/RegistrationForm';
 import LoginForm from '../components/LoginForm';
 import type { UserProfile } from '../components/RegistrationForm';
+import { getTutorialState } from '../utils/onboardingApi';
 import logoD from '../assets/logos/logo-d.svg';
 
 /** The two possible authentication views on the front page. */
@@ -37,7 +38,7 @@ function FrontPage() {
   /**
    * Shared success handler for both login and registration forms.
    * Stores the JWT token, refreshes the user profile in AuthContext,
-   * and navigates to the dashboard.
+   * checks onboarding status, and navigates accordingly.
    * @param token - The JWT token returned by the API
    * @param _user - The user profile (unused; profile is refreshed from the server)
    */
@@ -48,6 +49,18 @@ function FrontPage() {
     // Refresh from server rather than using the _user param directly, so
     // AuthContext always holds the canonical server-side profile data.
     await refreshUser();
+
+    // Check onboarding status and redirect new players to the tutorial
+    try {
+      const tutorialState = await getTutorialState();
+      if (!tutorialState.hasCompletedOnboarding && !tutorialState.onboardingSkipped) {
+        navigate('/onboarding');
+        return;
+      }
+    } catch {
+      // If onboarding check fails, proceed to dashboard gracefully
+    }
+
     navigate('/dashboard');
   };
 

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">
+  <title>Daily Cycle Schedule</title>
+  <rect width="800" height="200" fill="#1a1a2e" rx="8"/>
+  <rect x="10" y="10" width="780" height="180" fill="none" stroke="#0f3460" stroke-width="2" rx="6"/>
+  <!-- Title -->
+  <text x="400" y="38" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Daily Cycle Schedule</text>
+  <!-- Timeline bar -->
+  <rect x="60" y="80" width="680" height="6" fill="#16213e" rx="3"/>
+  <!-- Time markers -->
+  <line x1="60" y1="75" x2="60" y2="91" stroke="#0f3460" stroke-width="1.5"/>
+  <text x="60" y="105" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.5">12 AM</text>
+  <line x1="230" y1="75" x2="230" y2="91" stroke="#0f3460" stroke-width="1.5"/>
+  <text x="230" y="105" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.5">6 AM</text>
+  <line x1="400" y1="75" x2="400" y2="91" stroke="#0f3460" stroke-width="1.5"/>
+  <text x="400" y="105" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.5">12 PM</text>
+  <line x1="570" y1="75" x2="570" y2="91" stroke="#0f3460" stroke-width="1.5"/>
+  <text x="570" y="105" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.5">6 PM</text>
+  <line x1="740" y1="75" x2="740" y2="91" stroke="#0f3460" stroke-width="1.5"/>
+  <text x="740" y="105" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.5">12 AM</text>
+  <!-- Tournament 8 AM -->
+  <circle cx="287" cy="83" r="10" fill="#e94560"/>
+  <text x="287" y="87" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="9" font-weight="bold">T</text>
+  <text x="287" y="125" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="11" font-weight="bold">Tournament</text>
+  <text x="287" y="140" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.7">8:00 AM</text>
+  <!-- Tag Team 12 PM -->
+  <circle cx="400" cy="83" r="10" fill="#0f3460" stroke="#e94560" stroke-width="1.5"/>
+  <text x="400" y="87" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="9" font-weight="bold">TT</text>
+  <text x="400" y="125" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="11" font-weight="bold">Tag Team</text>
+  <text x="400" y="140" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.7">12:00 PM</text>
+  <!-- League 8 PM -->
+  <circle cx="627" cy="83" r="10" fill="#e94560"/>
+  <text x="627" y="87" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="9" font-weight="bold">L</text>
+  <text x="627" y="125" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="11" font-weight="bold">League</text>
+  <text x="627" y="140" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.7">8:00 PM</text>
+  <!-- Settlement 11 PM -->
+  <circle cx="712" cy="83" r="10" fill="#16213e" stroke="#e94560" stroke-width="1.5"/>
+  <text x="712" y="87" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="9" font-weight="bold">S</text>
+  <text x="712" y="125" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="11" font-weight="bold">Settlement</text>
+  <text x="712" y="140" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="10" opacity="0.7">11:00 PM</text>
+  <!-- Subtitle -->
+  <text x="400" y="175" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="11">800 × 200 — Placeholder</text>
+</svg>

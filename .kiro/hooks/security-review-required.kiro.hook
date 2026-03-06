@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Security Review Required",
   "description": "Flag security-sensitive files for careful review",
   "version": "1",

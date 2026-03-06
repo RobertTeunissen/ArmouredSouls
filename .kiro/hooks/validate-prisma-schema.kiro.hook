@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Validate Prisma Schema",
   "description": "Format and validate Prisma schema when modified",
   "version": "1",

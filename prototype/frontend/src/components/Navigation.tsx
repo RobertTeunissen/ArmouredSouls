@@ -8,6 +8,7 @@ import SwordsIcon from '../assets/icons/swords.svg?react';
 import CartIcon from '../assets/icons/cart.svg?react';
 import MenuIcon from '../assets/icons/menu.svg?react';
 import CloseIcon from '../assets/icons/close.svg?react';
+import OnboardingNavBanner from './OnboardingNavBanner';
 
 interface UserRobot {
   id: number;
@@ -294,8 +295,8 @@ function Navigation() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setUserRobots(data.map((robot: any) => ({ id: robot.id, name: robot.name })));
         }
-      } catch (error) {
-        console.error('Failed to fetch robots:', error);
+      } catch {
+        // Silently handle fetch failure
       }
     };
 
@@ -690,6 +691,10 @@ function Navigation() {
 
       {/* Spacer for fixed navigation */}
       <div className="h-14 lg:h-16" />
+
+      {/* Onboarding Banner - shown on all pages during active tutorial */}
+      <OnboardingNavBanner />
+
       {/* Bottom spacer for mobile nav bar */}
       <div className="h-16 lg:hidden" />
     </>

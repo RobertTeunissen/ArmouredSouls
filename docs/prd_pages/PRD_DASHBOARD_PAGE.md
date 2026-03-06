@@ -907,5 +907,101 @@ prototype/frontend/src/
 
 ---
 
+## Onboarding System Integration
+
+**Status**: ✅ **IMPLEMENTED**
+
+**Reference**: See [PRD_ONBOARDING_SYSTEM.md](PRD_ONBOARDING_SYSTEM.md) for complete onboarding system specification.
+
+The dashboard serves as the primary entry point for the new player onboarding tutorial system. The existing "Welcome to Your Stable" empty state has been replaced with an interactive onboarding trigger for new users.
+
+### Onboarding Trigger Behavior
+
+The dashboard conditionally renders onboarding content based on the user's `hasCompletedOnboarding` and `onboardingStep` fields from the User model.
+
+**New Users (`hasCompletedOnboarding = false`, `onboardingStep = 1`)**:
+- The existing 4-step "Welcome to Your Stable" getting started guide is replaced
+- Displays a "Start Your Journey" section with a prominent "Begin Interactive Tutorial" button (primary CTA)
+- Shows brief description: "Learn strategic decisions in 9 guided steps"
+- The tutorial covers roster strategy, facility timing, budget allocation, robot creation, weapon education, and battle readiness
+
+**Incomplete Onboarding (`hasCompletedOnboarding = false`, `onboardingStep > 1`)**:
+- Displays a "Resume Tutorial" button instead of "Begin Interactive Tutorial"
+- Shows a progress indicator: "Continue from Step X of 9"
+- Includes a brief reminder of the last completed step to re-orient the player
+- A compact progress indicator also appears in the dashboard header as a "Complete Setup" call-to-action badge
+
+**Completed Users (`hasCompletedOnboarding = true`)**:
+- Normal dashboard experience with no onboarding prompts
+- All onboarding UI elements are hidden
+- Existing dashboard sections (Stable Statistics, Financial Summary, Robot Cards, Matches) display as documented above
+
+### Visual Mockup - Onboarding Trigger (New User)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Command Center                        newplayer's Stable        │
+└─────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────┬─────────────────────────────────────┐
+│ Stable Statistics         │ Financial Overview                  │
+│ (All zeros)               │ Balance: ₡3,000,000                 │
+└───────────────────────────┴─────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                  🚀 Start Your Journey                          │
+│                                                                 │
+│  Welcome, Commander! Before you dive into battle, let us       │
+│  guide you through the key strategic decisions that will       │
+│  shape your stable's future.                                   │
+│                                                                 │
+│  Learn about roster strategies, facility investments,          │
+│  weapon loadouts, and budget allocation in 9 guided steps.     │
+│                                                                 │
+│              [Begin Interactive Tutorial]                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Visual Mockup - Resume Tutorial (Incomplete Onboarding)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Command Center                [Complete Setup ▓▓▓░░░░░░ 3/9]   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                  📋 Continue Your Setup                          │
+│                                                                 │
+│  You're making progress! Pick up where you left off.           │
+│                                                                 │
+│  Continue from Step 4 of 9: Budget Allocation Guidance         │
+│  ▓▓▓░░░░░░ 33% complete                                       │
+│                                                                 │
+│              [Resume Tutorial]                                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Implementation Details
+
+**Frontend Changes** (`DashboardPage.tsx`):
+- Reads `hasCompletedOnboarding` and `onboardingStep` from user context
+- Conditionally renders onboarding trigger or normal empty state
+- "Begin Interactive Tutorial" navigates to the OnboardingContainer component
+- "Resume Tutorial" navigates to OnboardingContainer starting at the user's current step
+- Progress indicator in header uses compact badge format
+
+**Backend Dependencies**:
+- `GET /api/onboarding/state` - Fetches current tutorial state
+- User model fields: `hasCompletedOnboarding`, `onboardingStep`
+
+**Related Components**:
+- `OnboardingContainer` - Main tutorial orchestration component
+- `ProgressIndicator` - Visual step progress bar
+- `OnboardingContext` - React context for tutorial state management
+
+---
+
 **End of Document**
 

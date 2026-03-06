@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { fetchMyRobots } from '../utils/robotApi';
+import { getTutorialState, TutorialState } from '../utils/onboardingApi';
 import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
 import RecentMatches from '../components/RecentMatches';
@@ -10,6 +11,8 @@ import FinancialSummary from '../components/FinancialSummary';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import StableStatistics from '../components/StableStatistics';
 import TagTeamReadinessWarning from '../components/TagTeamReadinessWarning';
+import DashboardWelcome from '../components/DashboardWelcome';
+import DashboardOnboardingBanner from '../components/DashboardOnboardingBanner';
 
 interface Robot {
   id: number;
@@ -51,11 +54,15 @@ function DashboardPage() {
   const navigate = useNavigate();
   const [robots, setRobots] = useState<Robot[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [onboardingState, setOnboardingState] = useState<TutorialState | null>(null);
   // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchRobots();
+      getTutorialState()
+        .then(setOnboardingState)
+        .catch(() => setOnboardingState(null));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -107,7 +114,6 @@ function DashboardPage() {
       
       // If no token, redirect to login
       if (!token) {
-        console.error('No authentication token found');
         logout();
         navigate('/login');
         return;
@@ -122,7 +128,6 @@ function DashboardPage() {
         navigate('/login');
         return;
       }
-      console.error('Failed to fetch robots:', error);
     }
     // finally {
     //   setLoading(false);
@@ -145,6 +150,9 @@ function DashboardPage() {
             <span className="font-semibold text-white">{user.stableName || user.username}</span>&apos;s Stable
           </div>
         </div>
+
+        {/* Onboarding Progress Banner - shows for users with incomplete onboarding */}
+        <DashboardOnboardingBanner onboardingState={onboardingState} />
 
         {/* Critical Notifications/Warnings - All alerts above overview blocks */}
         <div className="mb-6 space-y-3">
@@ -224,52 +232,10 @@ function DashboardPage() {
 
         {/* Stable Info (empty state) */}
         {robots.length === 0 && (
-          <div className="bg-surface-elevated p-8 rounded-lg mb-8 border border-gray-700 text-center">
-            <div className="max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold mb-4">Welcome to Your Stable!</h2>
-              <p className="text-lg text-gray-300 mb-6">
-                You&apos;re ready to build your robot fighting empire. Here&apos;s how to get started:
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8">
-                <div className="bg-surface p-4 rounded-lg border border-gray-600">
-                  <div className="text-primary font-bold text-xl mb-2">1. Upgrade Facilities</div>
-                  <p className="text-sm text-gray-400">
-                    Unlock robot creation and improve your stable&apos;s capabilities
-                  </p>
-                </div>
-                <div className="bg-surface p-4 rounded-lg border border-gray-600">
-                  <div className="text-primary font-bold text-xl mb-2">2. Create Your Robot</div>
-                  <p className="text-sm text-gray-400">
-                    Build your first battle robot with unique attributes
-                  </p>
-                </div>
-                <div className="bg-surface p-4 rounded-lg border border-gray-600">
-                  <div className="text-primary font-bold text-xl mb-2">3. Equip Weapons</div>
-                  <p className="text-sm text-gray-400">
-                    Visit the weapon shop and configure loadouts
-                  </p>
-                </div>
-                <div className="bg-surface p-4 rounded-lg border border-gray-600">
-                  <div className="text-primary font-bold text-xl mb-2">4. Enter Battles</div>
-                  <p className="text-sm text-gray-400">
-                    Compete in leagues and climb the rankings!
-                  </p>
-                </div>
-              </div>
-              
-              <button
-                onClick={() => navigate('/facilities')}
-                className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
-              >
-                Get Started
-              </button>
-              
-              <p className="text-sm text-gray-400 mt-6">
-                You have ₡{user.currency.toLocaleString()} to spend on upgrades and robots.
-              </p>
-            </div>
-          </div>
+          <DashboardWelcome
+            onboardingState={onboardingState}
+            currency={user.currency}
+          />
         )}
       </div>
     </div>

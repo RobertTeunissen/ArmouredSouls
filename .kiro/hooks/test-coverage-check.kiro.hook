@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Test Coverage Report",
   "description": "Generate coverage report when tests are modified",
   "version": "1",

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Merchandising Hub</title>
+  <rect width="64" height="64" fill="#1a1a2e" rx="8"/>
+  <!-- Shopping bag -->
+  <rect x="16" y="24" width="32" height="28" fill="#0f3460" rx="4"/>
+  <!-- Bag handle -->
+  <path d="M24 24 L24 18 Q24 12 32 12 Q40 12 40 18 L40 24" fill="none" stroke="#e94560" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Star on bag -->
+  <polygon points="32,30 34,36 40,36 35,40 37,46 32,42 27,46 29,40 24,36 30,36" fill="#e94560" opacity="0.8"/>
+</svg>

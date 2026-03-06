@@ -1,14 +1,13 @@
 {
   "enabled": true,
   "name": "Post-Task Test Run",
-  "description": "Run tests after completing a spec task",
+  "description": "After completing a parent spec task (not sub-tasks), run only the tests relevant to files changed in that task.",
   "version": "1",
   "when": {
     "type": "postTaskExecution"
   },
   "then": {
-    "type": "runCommand",
-    "command": "cd prototype/backend && npm test",
-    "timeout": 300
+    "type": "askAgent",
+    "prompt": "A spec task was just completed. First check: if this is a SUB-TASK (e.g. 21.1, 21.2, 3.1) do NOT run any tests — just say 'Sub-task completed, skipping test run.' and stop. Only run tests when a PARENT task completes (e.g. 21, 3, 17). For parent tasks: identify which files were created or modified, then run ONLY the specific test files related to those changes. Rules: 1) For frontend files (prototype/frontend/), run: npx vitest run <specific-test-file> with cwd prototype/frontend 2) For backend files (prototype/backend/), run: npx jest --maxWorkers=1 <specific-test-file> with cwd prototype/backend 3) Do NOT run the full test suite. Only run specific test file(s). 4) If no test files exist for the changed files, skip and report that. 5) Use a 120 second timeout on any test command. 6) Do NOT retry if tests fail — report the failure and stop."
   }
 }

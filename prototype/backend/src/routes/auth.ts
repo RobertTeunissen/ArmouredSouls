@@ -18,6 +18,7 @@ import { validateRegistrationRequest } from '../utils/validation';
 import { hashPassword } from '../services/passwordService';
 import { generateToken } from '../services/jwtService';
 import { createUser, findUserByUsername, findUserByEmail, findUserByIdentifier } from '../services/userService';
+import { initializeTutorialState } from '../services/onboardingService';
 
 const router = express.Router();
 
@@ -79,6 +80,17 @@ router.post('/register', async (req: Request, res: Response) => {
 
     // Create user
     const user = await createUser({ username, email, passwordHash });
+
+    // Initialize onboarding state for the new user.
+    // Non-blocking: registration succeeds even if onboarding init fails.
+    try {
+      await initializeTutorialState(user.id);
+    } catch (onboardingError) {
+      logger.error('Failed to initialize onboarding state', {
+        userId: user.id,
+        error: onboardingError instanceof Error ? onboardingError.message : String(onboardingError),
+      });
+    }
 
     // Generate JWT token
     const token = generateToken({

@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { AuthRequest, authenticateToken } from '../middleware/auth';
+import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth';
 import { executeScheduledBattles } from '../services/battleOrchestrator';
 import { runMatchmaking } from '../services/matchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';
@@ -31,21 +31,6 @@ router.use('/tournaments', tournamentRoutes);
 
 // Configuration constants
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
-
-/**
- * Middleware to check if user is admin
- */
-const requireAdmin = (req: AuthRequest, res: Response, next: express.NextFunction) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-
-  next();
-};
 
 /**
  * POST /api/admin/matchmaking/run

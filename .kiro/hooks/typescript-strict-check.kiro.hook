@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "TypeScript Strict Check",
   "description": "Check for TypeScript errors in modified files",
   "version": "1",

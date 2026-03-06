@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+  <title>Weapon + Shield Loadout</title>
+  <rect width="300" height="200" fill="#1a1a2e" rx="8"/>
+  <rect x="8" y="8" width="284" height="184" fill="none" stroke="#0f3460" stroke-width="2" rx="6"/>
+  <!-- Robot outline -->
+  <rect x="115" y="40" width="50" height="70" fill="none" stroke="#0f3460" stroke-width="2" rx="6"/>
+  <rect x="122" y="26" width="36" height="22" fill="none" stroke="#0f3460" stroke-width="2" rx="4"/>
+  <circle cx="134" cy="35" r="3" fill="#0f3460"/>
+  <circle cx="150" cy="35" r="3" fill="#0f3460"/>
+  <!-- Right arm with weapon -->
+  <rect x="163" y="50" width="14" height="44" fill="none" stroke="#0f3460" stroke-width="2" rx="3"/>
+  <rect x="177" y="48" width="40" height="20" fill="#e94560" rx="4" opacity="0.8"/>
+  <line x1="177" y1="58" x2="165" y2="58" stroke="#e94560" stroke-width="2"/>
+  <text x="197" y="62" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="9" font-weight="bold">MAIN</text>
+  <!-- Left arm with shield -->
+  <rect x="103" y="50" width="14" height="44" fill="none" stroke="#0f3460" stroke-width="2" rx="3"/>
+  <rect x="63" y="46" width="40" height="24" fill="#0f3460" rx="4" opacity="0.8" stroke="#e94560" stroke-width="1.5"/>
+  <line x1="103" y1="58" x2="103" y2="58" stroke="#e94560" stroke-width="2"/>
+  <line x1="103" y1="58" x2="95" y2="58" stroke="#e94560" stroke-width="2"/>
+  <text x="83" y="62" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="9" font-weight="bold">SHIELD</text>
+  <!-- Legs -->
+  <rect x="122" y="110" width="16" height="28" fill="none" stroke="#0f3460" stroke-width="2" rx="3"/>
+  <rect x="142" y="110" width="16" height="28" fill="none" stroke="#0f3460" stroke-width="2" rx="3"/>
+  <!-- Text -->
+  <text x="150" y="162" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="18" font-weight="bold">Weapon + Shield</text>
+  <text x="150" y="180" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="10">300 × 200 — Placeholder</text>
+</svg>

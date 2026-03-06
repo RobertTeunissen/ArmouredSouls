@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <title>Budget Chart - 3 Flimsy Robots Strategy</title>
+  <rect width="400" height="400" fill="#1a1a2e" rx="8"/>
+  <rect x="10" y="10" width="380" height="380" fill="none" stroke="#0f3460" stroke-width="2" rx="6"/>
+  <!-- Pie chart -->
+  <!-- Facilities 12% = 75.4, Robots 50% = 314.2, Attributes 10% = 62.8, Weapons 12% = 75.4, Reserve 17% = 106.8 -->
+  <circle cx="200" cy="180" r="100" fill="none" stroke="#e94560" stroke-width="60"
+    stroke-dasharray="75.4 552.92" stroke-dashoffset="0" transform="rotate(-90 200 180)"/>
+  <circle cx="200" cy="180" r="100" fill="none" stroke="#0f3460" stroke-width="60"
+    stroke-dasharray="314.2 314.12" stroke-dashoffset="-75.4" transform="rotate(-90 200 180)"/>
+  <circle cx="200" cy="180" r="100" fill="none" stroke="#16213e" stroke-width="60"
+    stroke-dasharray="62.8 565.52" stroke-dashoffset="-389.6" transform="rotate(-90 200 180)"/>
+  <circle cx="200" cy="180" r="100" fill="none" stroke="#e94560" stroke-width="60" opacity="0.5"
+    stroke-dasharray="75.4 552.92" stroke-dashoffset="-452.4" transform="rotate(-90 200 180)"/>
+  <circle cx="200" cy="180" r="100" fill="none" stroke="#0f3460" stroke-width="60" opacity="0.5"
+    stroke-dasharray="106.8 521.52" stroke-dashoffset="-527.8" transform="rotate(-90 200 180)"/>
+  <!-- Center circle -->
+  <circle cx="200" cy="180" r="68" fill="#1a1a2e"/>
+  <text x="200" y="175" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="14" font-weight="bold">3 FLIMSY</text>
+  <text x="200" y="195" text-anchor="middle" fill="#eee" font-family="Arial, sans-serif" font-size="12" opacity="0.7">₡3,000,000</text>
+  <!-- Legend -->
+  <rect x="50" y="310" width="14" height="14" fill="#e94560" rx="2"/>
+  <text x="70" y="322" fill="#eee" font-family="Arial, sans-serif" font-size="12">Facilities 12%</text>
+  <rect x="170" y="310" width="14" height="14" fill="#0f3460" rx="2"/>
+  <text x="190" y="322" fill="#eee" font-family="Arial, sans-serif" font-size="12">Robots 50%</text>
+  <rect x="280" y="310" width="14" height="14" fill="#16213e" rx="2" stroke="#eee" stroke-width="0.5"/>
+  <text x="300" y="322" fill="#eee" font-family="Arial, sans-serif" font-size="12">Attributes 10%</text>
+  <rect x="50" y="335" width="14" height="14" fill="#e94560" rx="2" opacity="0.5"/>
+  <text x="70" y="347" fill="#eee" font-family="Arial, sans-serif" font-size="12">Weapons 12%</text>
+  <rect x="170" y="335" width="14" height="14" fill="#0f3460" rx="2" opacity="0.5"/>
+  <text x="190" y="347" fill="#eee" font-family="Arial, sans-serif" font-size="12">Reserve 17%</text>
+  <!-- Subtitle -->
+  <text x="200" y="375" text-anchor="middle" fill="#e94560" font-family="Arial, sans-serif" font-size="11">400 × 400 — Placeholder</text>
+</svg>

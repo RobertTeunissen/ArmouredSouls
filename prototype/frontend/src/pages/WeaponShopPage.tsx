@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
@@ -12,6 +13,7 @@ import ComparisonBar from '../components/ComparisonBar';
 import ComparisonModal from '../components/ComparisonModal';
 import WeaponDetailModal from '../components/WeaponDetailModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import GuidedUIOverlay from '../components/onboarding/GuidedUIOverlay';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../utils/weaponImages';
@@ -64,6 +66,12 @@ type ViewMode = 'card' | 'table';
 
 function WeaponShopPage() {
   const { user, refreshUser } = useAuth();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const isOnboarding = searchParams.get('onboarding') === 'true';
+  const [onboardingGuideStep, setOnboardingGuideStep] = useState(isOnboarding ? 0 : -1);
+
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [ownedWeapons, setOwnedWeapons] = useState<Map<number, number>>(new Map());
   const [equippedWeaponsCount, setEquippedWeaponsCount] = useState(0);
@@ -82,12 +90,12 @@ function WeaponShopPage() {
     return (saved as ViewMode) || 'card';
   });
 
-  // Filter state
+  // Filter state — auto-apply budget-friendly filters in onboarding mode
   const [filters, setFilters] = useState<WeaponFilters>({
     loadoutTypes: [],
     weaponTypes: [],
-    priceRange: null,
-    canAffordOnly: false,
+    priceRange: isOnboarding ? { min: 0, max: 300000 } : null,
+    canAffordOnly: isOnboarding,
     onlyOwnedWeapons: false,
   });
 
@@ -132,7 +140,11 @@ function WeaponShopPage() {
 
         // Fetch weapons
         const weaponsResponse = await apiClient.get('/api/weapons');
-        setWeapons(weaponsResponse.data);
+        // Filter out test weapons (Basic Laser is created by tests and shouldn't be purchasable)
+        const filteredWeapons = weaponsResponse.data.filter((w: Weapon) => 
+          w.name !== 'Basic Laser' && w.cost >= 10000 // Filter out test weapons with unrealistic prices
+        );
+        setWeapons(filteredWeapons);
 
         // Fetch owned weapons inventory
         const inventoryResponse = await apiClient.get('/api/weapon-inventory');
@@ -163,7 +175,6 @@ function WeaponShopPage() {
         const storageResponse = await apiClient.get('/api/weapon-inventory/storage-status');
         setStorageStatus(storageResponse.data);
       } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        console.error('Failed to fetch data:', err);
         
         // Check if it's an authentication error
         if (err.response?.status === 401 || err.response?.status === 403) {
@@ -408,12 +419,33 @@ function WeaponShopPage() {
           });
           setOwnedWeapons(ownedMap);
           
-          // Show success message
+          // Update onboarding state if in onboarding mode
+          if (isOnboarding) {
+            try {
+              const existingState = await apiClient.get('/api/onboarding/state');
+              const currentChoices = existingState.data?.data?.choices || {};
+              const weaponsPurchased = currentChoices.weaponsPurchased || [];
+              await apiClient.post('/api/onboarding/state', {
+                choices: {
+                  ...currentChoices,
+                  weaponsPurchased: [...weaponsPurchased, weaponId],
+                },
+              });
+            } catch {
+              // Non-critical: onboarding state update failed, continue anyway
+            }
+          }
+          
+          // Show success message (don't auto-navigate, let user continue shopping)
           setConfirmationModal({
             isOpen: true,
             title: 'Purchase Successful',
-            message: `${weaponName} purchased successfully!`,
-            onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
+            message: isOnboarding 
+              ? `${weaponName} purchased successfully! You can continue shopping or return to the tutorial when ready.`
+              : `${weaponName} purchased successfully!`,
+            onConfirm: () => {
+              setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+            },
           });
           
           // Close detail modal if open
@@ -421,7 +453,6 @@ function WeaponShopPage() {
             setSelectedWeapon(null);
           }
         } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-          console.error('Purchase failed:', err);
           setConfirmationModal({
             isOpen: true,
             title: 'Purchase Failed',
@@ -529,6 +560,31 @@ function WeaponShopPage() {
           <h1 className="text-3xl font-bold mb-2">Weapon Shop</h1>
           <p className="text-gray-400">Purchase weapons to equip your robots. Weapons provide attribute bonuses and combat capabilities.</p>
         </div>
+
+        {/* Onboarding banner */}
+        {isOnboarding && (
+          <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-blue-400 font-semibold mb-1">Tutorial Step 7: Weapon Purchase</p>
+                <p className="text-gray-300 text-sm mb-3">
+                  Browse the weapons below and purchase one or more for your robot(s). We've filtered to show
+                  budget-friendly options under ₡300,000. You can buy multiple weapons if you're planning
+                  to use Dual-Wield or have multiple robots.
+                </p>
+                <button
+                  onClick={() => navigate('/onboarding')}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-sm font-semibold"
+                >
+                  Return to Tutorial
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Storage Capacity */}
         {storageStatus && (
@@ -866,6 +922,29 @@ function WeaponShopPage() {
           />
         )}
       </div>
+
+      {/* Onboarding guided overlay */}
+      {isOnboarding && onboardingGuideStep === 0 && !loading && (
+        <GuidedUIOverlay
+          targetSelector=".bg-gray-800.p-6.rounded-lg"
+          tooltipContent={
+            <div>
+              <p className="font-semibold text-blue-400 mb-2">Choose a Weapon</p>
+              <p className="mb-2">
+                Browse the weapons below. We've filtered to show affordable options
+                under ₡300,000 that fit your budget.
+              </p>
+              <p className="text-sm text-gray-400">
+                Look for weapons with attribute bonuses that complement your robot's build.
+                After purchasing, you'll return to the tutorial.
+              </p>
+            </div>
+          }
+          position="bottom"
+          showNext={false}
+          onClose={() => setOnboardingGuideStep(-1)}
+        />
+      )}
     </div>
   );
 }

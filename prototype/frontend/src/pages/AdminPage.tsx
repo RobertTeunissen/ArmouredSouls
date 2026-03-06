@@ -709,13 +709,21 @@ function AdminPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">Admin Portal</h1>
-          <button
-            onClick={fetchStats}
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
-          >
-            {loading ? 'Loading...' : 'Refresh Stats'}
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/admin/onboarding-analytics"
+              className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded font-semibold transition-colors text-sm"
+            >
+              🎓 Onboarding Analytics
+            </Link>
+            <button
+              onClick={fetchStats}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+            >
+              {loading ? 'Loading...' : 'Refresh Stats'}
+            </button>
+          </div>
         </div>
 
         {message && (

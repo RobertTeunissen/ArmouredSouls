@@ -119,6 +119,7 @@ function RobotDetailPage() {
   const { id } = useParams();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isOnboarding = searchParams.get('onboarding') === 'true';
   const [robot, setRobot] = useState<Robot | null>(null);
   const [weapons, setWeapons] = useState<WeaponInventory[]>([]);
   const [currency, setCurrency] = useState(0);
@@ -149,7 +150,11 @@ function RobotDetailPage() {
   const activeTab = tabParam || 'overview';
 
   const handleTabChange = (tab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics') => {
-    setSearchParams({ tab });
+    const params: Record<string, string> = { tab };
+    if (isOnboarding) {
+      params.onboarding = 'true';
+    }
+    setSearchParams(params);
   };
 
   // Max attribute level cap (from STABLE_SYSTEM.md)
@@ -498,6 +503,35 @@ function RobotDetailPage() {
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Onboarding banner */}
+        {isOnboarding && (
+          <div
+            className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6"
+            role="region"
+            aria-label="Onboarding guidance"
+            data-testid="onboarding-banner"
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-xl flex-shrink-0" aria-hidden="true">🎓</span>
+              <div className="flex-1">
+                <p className="text-blue-400 font-semibold mb-1">Tutorial Step 8: Equip Your Weapon</p>
+                <p className="text-gray-300 text-sm">
+                  Navigate to the Battle Config tab below to equip the weapon you purchased.
+                  Once equipped, your robot will gain weapon attribute bonuses and be battle-ready!
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/onboarding')}
+                className="text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+                aria-label="Return to tutorial"
+                data-testid="return-to-tutorial"
+              >
+                Return to Tutorial
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Robot Header - Visible to All Users */}
         <div className="mb-8">
           <div className="mb-4">

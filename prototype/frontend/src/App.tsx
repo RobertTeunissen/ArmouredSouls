@@ -22,6 +22,8 @@ import TagTeamManagementPage from './pages/TagTeamManagementPage';
 import TagTeamStandingsPage from './pages/TagTeamStandingsPage';
 import ProfilePage from './pages/ProfilePage';
 import CycleSummaryPage from './pages/CycleSummaryPage';
+import OnboardingPage from './pages/OnboardingPage';
+import OnboardingAnalyticsPage from './pages/OnboardingAnalyticsPage';
 // import SystemHealthPage from './pages/SystemHealthPage';
 
 function App() {
@@ -30,6 +32,14 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<FrontPage />} />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -191,6 +201,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CycleSummaryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/onboarding-analytics"
+            element={
+              <ProtectedRoute>
+                <OnboardingAnalyticsPage />
               </ProtectedRoute>
             }
           />

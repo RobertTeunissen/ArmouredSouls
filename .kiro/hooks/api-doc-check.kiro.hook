@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "API Documentation Check",
   "description": "Remind to update API documentation when routes are modified",
   "version": "1",

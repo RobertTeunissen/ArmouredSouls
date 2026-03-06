@@ -25,11 +25,20 @@ model User {
   championshipTitles Int @default(0) @map("championship_titles") // Tournament victories
 
   // ===== PROFILE FIELDS =====
-  stableName            String?  @unique @map("stable_name") @db.VarChar(30)
-  profileVisibility     String   @default("public") @map("profile_visibility") @db.VarChar(10)
-  notificationsBattle   Boolean  @default(true) @map("notifications_battle")
-  notificationsLeague   Boolean  @default(true) @map("notifications_league")
-  themePreference       String   @default("dark") @map("theme_preference") @db.VarChar(20)
+  stableName          String? @unique @map("stable_name") @db.VarChar(30)
+  profileVisibility   String  @default("public") @map("profile_visibility") @db.VarChar(10)
+  notificationsBattle Boolean @default(true) @map("notifications_battle")
+  notificationsLeague Boolean @default(true) @map("notifications_league")
+  themePreference     String  @default("dark") @map("theme_preference") @db.VarChar(20)
+
+  // ===== ONBOARDING TRACKING =====
+  hasCompletedOnboarding Boolean   @default(false) @map("has_completed_onboarding")
+  onboardingSkipped      Boolean   @default(false) @map("onboarding_skipped")
+  onboardingStep         Int       @default(1) @map("onboarding_step") // Current step (1-9)
+  onboardingStrategy     String?   @map("onboarding_strategy") @db.VarChar(20) // "1_mighty", "2_average", "3_flimsy"
+  onboardingChoices      Json      @default("{}") @map("onboarding_choices") // Player choices during onboarding
+  onboardingStartedAt    DateTime? @map("onboarding_started_at")
+  onboardingCompletedAt  DateTime? @map("onboarding_completed_at")
 
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
@@ -163,19 +172,19 @@ model Robot {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // ===== RELATIONS =====
-  user                      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mainWeapon                WeaponInventory?  @relation("MainWeapon", fields: [mainWeaponId], references: [id])
-  offhandWeapon             WeaponInventory?  @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
-  battlesAsRobot1           Battle[]          @relation("Robot1")
-  battlesAsRobot2           Battle[]          @relation("Robot2")
-  scheduledMatchesAsRobot1  ScheduledMatch[]  @relation("ScheduledRobot1")
-  scheduledMatchesAsRobot2  ScheduledMatch[]  @relation("ScheduledRobot2")
-  tournamentsWon            Tournament[]      @relation("TournamentWinner")
-  tournamentMatchesAsRobot1 TournamentMatch[] @relation("TournamentRobot1")
-  tournamentMatchesAsRobot2 TournamentMatch[] @relation("TournamentRobot2")
-  tournamentMatchesWon      TournamentMatch[]         @relation("TournamentMatchWinner")
-  tagTeamsAsActive          TagTeam[]                 @relation("TagTeamActiveRobot")
-  tagTeamsAsReserve         TagTeam[]                 @relation("TagTeamReserveRobot")
+  user                      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mainWeapon                WeaponInventory?    @relation("MainWeapon", fields: [mainWeaponId], references: [id])
+  offhandWeapon             WeaponInventory?    @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
+  battlesAsRobot1           Battle[]            @relation("Robot1")
+  battlesAsRobot2           Battle[]            @relation("Robot2")
+  scheduledMatchesAsRobot1  ScheduledMatch[]    @relation("ScheduledRobot1")
+  scheduledMatchesAsRobot2  ScheduledMatch[]    @relation("ScheduledRobot2")
+  tournamentsWon            Tournament[]        @relation("TournamentWinner")
+  tournamentMatchesAsRobot1 TournamentMatch[]   @relation("TournamentRobot1")
+  tournamentMatchesAsRobot2 TournamentMatch[]   @relation("TournamentRobot2")
+  tournamentMatchesWon      TournamentMatch[]   @relation("TournamentMatchWinner")
+  tagTeamsAsActive          TagTeam[]           @relation("TagTeamActiveRobot")
+  tagTeamsAsReserve         TagTeam[]           @relation("TagTeamReserveRobot")
   battleParticipations      BattleParticipant[]
 
   @@unique([userId, name])
@@ -265,35 +274,35 @@ model Weapon {
 }
 
 model BattleParticipant {
-  id               Int     @id @default(autoincrement())
-  battleId         Int     @map("battle_id")
-  robotId          Int     @map("robot_id")
-  team             Int     // 1 or 2
-  role             String? @db.VarChar(20) // "active" or "reserve" for tag team, null for 1v1
-  
+  id       Int     @id @default(autoincrement())
+  battleId Int     @map("battle_id")
+  robotId  Int     @map("robot_id")
+  team     Int // 1 or 2
+  role     String? @db.VarChar(20) // "active" or "reserve" for tag team, null for 1v1
+
   // Economic effects
   credits          Int
-  streamingRevenue Int     @default(0) @map("streaming_revenue")
-  
+  streamingRevenue Int @default(0) @map("streaming_revenue")
+
   // Stat changes
-  eloBefore        Int     @map("elo_before")
-  eloAfter         Int     @map("elo_after")
-  prestigeAwarded  Int     @default(0) @map("prestige_awarded")
-  fameAwarded      Int     @default(0) @map("fame_awarded")
-  
+  eloBefore       Int @map("elo_before")
+  eloAfter        Int @map("elo_after")
+  prestigeAwarded Int @default(0) @map("prestige_awarded")
+  fameAwarded     Int @default(0) @map("fame_awarded")
+
   // Battle stats
-  damageDealt      Int     @default(0) @map("damage_dealt")
-  finalHP          Int     @map("final_hp")
-  yielded          Boolean @default(false)
-  destroyed        Boolean @default(false)
-  
+  damageDealt Int     @default(0) @map("damage_dealt")
+  finalHP     Int     @map("final_hp")
+  yielded     Boolean @default(false)
+  destroyed   Boolean @default(false)
+
   // Timestamp
-  createdAt        DateTime @default(now()) @map("created_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+
   // Relationships
-  battle  Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
-  robot   Robot  @relation(fields: [robotId], references: [id])
-  
+  battle Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  robot  Robot  @relation(fields: [robotId], references: [id])
+
   @@unique([battleId, robotId])
   @@index([battleId])
   @@index([robotId])
@@ -331,14 +340,14 @@ model Battle {
 
   // ===== TAG TEAM PER-ROBOT STATS =====
   // Individual robot contributions for tag team battles (0 for non-tag-team battles)
-  team1ActiveDamageDealt   Int @default(0) @map("team1_active_damage_dealt")
-  team1ReserveDamageDealt  Int @default(0) @map("team1_reserve_damage_dealt")
-  team2ActiveDamageDealt   Int @default(0) @map("team2_active_damage_dealt")
-  team2ReserveDamageDealt  Int @default(0) @map("team2_reserve_damage_dealt")
-  team1ActiveFameAwarded   Int @default(0) @map("team1_active_fame_awarded")
-  team1ReserveFameAwarded  Int @default(0) @map("team1_reserve_fame_awarded")
-  team2ActiveFameAwarded   Int @default(0) @map("team2_active_fame_awarded")
-  team2ReserveFameAwarded  Int @default(0) @map("team2_reserve_fame_awarded")
+  team1ActiveDamageDealt  Int @default(0) @map("team1_active_damage_dealt")
+  team1ReserveDamageDealt Int @default(0) @map("team1_reserve_damage_dealt")
+  team2ActiveDamageDealt  Int @default(0) @map("team2_active_damage_dealt")
+  team2ReserveDamageDealt Int @default(0) @map("team2_reserve_damage_dealt")
+  team1ActiveFameAwarded  Int @default(0) @map("team1_active_fame_awarded")
+  team1ReserveFameAwarded Int @default(0) @map("team1_reserve_fame_awarded")
+  team2ActiveFameAwarded  Int @default(0) @map("team2_active_fame_awarded")
+  team2ReserveFameAwarded Int @default(0) @map("team2_reserve_fame_awarded")
 
   // ===== ELO TRACKING (kept for backward compatibility and aggregate queries) =====
   robot1ELOBefore Int @map("robot1_elo_before") // ELO before battle
@@ -351,13 +360,13 @@ model Battle {
   createdAt DateTime @default(now()) @map("created_at")
 
   // ===== RELATIONS =====
-  robot1            Robot                @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2            Robot                @relation("Robot2", fields: [robot2Id], references: [id])
-  tournament        Tournament?          @relation("TournamentBattles", fields: [tournamentId], references: [id])
+  robot1            Robot               @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2            Robot               @relation("Robot2", fields: [robot2Id], references: [id])
+  tournament        Tournament?         @relation("TournamentBattles", fields: [tournamentId], references: [id])
   scheduledMatch    ScheduledMatch[]
   tournamentMatches TournamentMatch[]
-  tagTeamMatches    TagTeamMatch[]       @relation("TagTeamBattle")
-  participants      BattleParticipant[]  // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
+  tagTeamMatches    TagTeamMatch[]      @relation("TagTeamBattle")
+  participants      BattleParticipant[] // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
 
   @@index([robot1Id])
   @@index([robot2Id])
@@ -405,23 +414,23 @@ model CycleMetadata {
 
 // Audit log table for event sourcing - stores all game events with flexible JSONB payload
 model AuditLog {
-  id              BigInt   @id @default(autoincrement())
-  cycleNumber     Int      @map("cycle_number")
-  eventType       String   @map("event_type") @db.VarChar(100)
-  eventTimestamp  DateTime @default(now()) @map("event_timestamp")
-  sequenceNumber  Int      @map("sequence_number") // Unique within cycle for ordering
-  
+  id             BigInt   @id @default(autoincrement())
+  cycleNumber    Int      @map("cycle_number")
+  eventType      String   @map("event_type") @db.VarChar(100)
+  eventTimestamp DateTime @default(now()) @map("event_timestamp")
+  sequenceNumber Int      @map("sequence_number") // Unique within cycle for ordering
+
   // References (nullable for system-wide events)
-  userId          Int?     @map("user_id")
-  robotId         Int?     @map("robot_id")
-  battleId        Int?     @map("battle_id") // For battle_complete events
-  
+  userId   Int? @map("user_id")
+  robotId  Int? @map("robot_id")
+  battleId Int? @map("battle_id") // For battle_complete events
+
   // Flexible event data
-  payload         Json
-  
+  payload Json
+
   // Optional calculation metadata for debugging
-  metadata        Json?
-  
+  metadata Json?
+
   @@unique([cycleNumber, sequenceNumber], name: "audit_logs_cycle_sequence")
   @@index([cycleNumber])
   @@index([userId])
@@ -438,27 +447,27 @@ model AuditLog {
 
 // Cycle snapshot table for pre-aggregated metrics for fast historical queries
 model CycleSnapshot {
-  id                     Int      @id @default(autoincrement())
-  cycleNumber            Int      @unique @map("cycle_number")
-  triggerType            String   @map("trigger_type") @db.VarChar(20) // "manual" or "scheduled"
-  
+  id          Int    @id @default(autoincrement())
+  cycleNumber Int    @unique @map("cycle_number")
+  triggerType String @map("trigger_type") @db.VarChar(20) // "manual" or "scheduled"
+
   // Timing
-  startTime              DateTime @map("start_time")
-  endTime                DateTime @map("end_time")
-  durationMs             Int      @map("duration_ms")
-  
+  startTime  DateTime @map("start_time")
+  endTime    DateTime @map("end_time")
+  durationMs Int      @map("duration_ms")
+
   // Aggregated data (computed from audit_logs and existing tables)
-  stableMetrics          Json     @map("stable_metrics")
-  robotMetrics           Json     @map("robot_metrics")
-  stepDurations          Json     @map("step_durations")
-  
+  stableMetrics Json @map("stable_metrics")
+  robotMetrics  Json @map("robot_metrics")
+  stepDurations Json @map("step_durations")
+
   // Summary statistics (for quick filtering)
-  totalBattles           Int      @default(0) @map("total_battles")
-  totalCreditsTransacted BigInt   @default(0) @map("total_credits_transacted")
-  totalPrestigeAwarded   Int      @default(0) @map("total_prestige_awarded")
-  
-  createdAt              DateTime @default(now()) @map("created_at")
-  
+  totalBattles           Int    @default(0) @map("total_battles")
+  totalCreditsTransacted BigInt @default(0) @map("total_credits_transacted")
+  totalPrestigeAwarded   Int    @default(0) @map("total_prestige_awarded")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   @@index([cycleNumber])
   @@index([startTime])
   @@map("cycle_snapshots")
@@ -587,4 +596,26 @@ model TagTeamMatch {
   @@index([scheduledFor, status])
   @@index([status])
   @@map("tag_team_matches")
+}
+
+// Reset log table for tracking account resets (onboarding feature)
+model ResetLog {
+  id     Int @id @default(autoincrement())
+  userId Int @map("user_id")
+
+  // State before reset
+  robotsDeleted      Int     @map("robots_deleted")
+  weaponsDeleted     Int     @map("weapons_deleted")
+  facilitiesDeleted  Int     @map("facilities_deleted")
+  creditsBeforeReset Decimal @map("credits_before_reset") @db.Decimal(15, 2)
+
+  // Reason (optional)
+  reason String? @db.Text
+
+  // Timestamp
+  resetAt DateTime @default(now()) @map("reset_at")
+
+  @@index([userId])
+  @@index([resetAt])
+  @@map("reset_logs")
 }
