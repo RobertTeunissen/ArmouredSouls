@@ -26,6 +26,6 @@ module.exports = {
     '/node_modules/',
     ...unitTestPatterns,
   ],
-  maxWorkers: 2,
+  maxWorkers: 1,
   testTimeout: 60000,
 };

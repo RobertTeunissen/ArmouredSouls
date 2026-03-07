@@ -7,7 +7,7 @@ import prisma from '../src/lib/prisma';
 
 
 export default async function globalTeardown() {
-  console.log('\n✅ Global test teardown complete\n');
+  // Global test teardown complete
   
   // Note: Database cleanup is handled by individual test files
 }

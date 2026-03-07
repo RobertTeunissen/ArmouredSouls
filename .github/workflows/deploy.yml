@@ -54,7 +54,7 @@ jobs:
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-key-for-ci
-        run: npm run test:unit
+        run: npm run test:unit -- --silent
 
   backend-integration-tests:
     name: Backend Integration Tests
@@ -72,6 +72,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --shm-size=256mb
         ports:
           - 5432:5432
 
@@ -95,16 +96,16 @@ jobs:
       - name: Run database migrations
         working-directory: ./prototype/backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
         run: npx prisma migrate deploy
 
       - name: Run integration tests
         working-directory: ./prototype/backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
           NODE_ENV: test
-        run: npm run test:integration || true
+        run: npm run test:integration -- --silent 2>&1 | tail -n 500 || true
 
   frontend-build:
     name: Frontend Build & Lint

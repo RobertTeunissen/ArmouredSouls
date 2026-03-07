@@ -7,7 +7,7 @@ import prisma from '../src/lib/prisma';
 
 
 export default async function globalSetup() {
-  console.log('\n🧹 Global test setup complete\n');
+  // Global test setup complete
   
   // Note: Database cleanup is handled by individual test files
   // to avoid long startup times and foreign key issues

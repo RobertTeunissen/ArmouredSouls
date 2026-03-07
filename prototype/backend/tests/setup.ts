@@ -14,11 +14,9 @@ config({ path: path.resolve(__dirname, '../.env') });
 // Global setup - runs once before all tests
 beforeAll(async () => {
   // Ensure weapons are seeded (required for tests that create robots)
-  console.log('🌱 Ensuring weapons are seeded for tests...');
   for (const def of WEAPON_DEFINITIONS) {
     await upsertWeapon({ ...def });
   }
-  console.log('✅ Weapons seeded');
 });
 
 // Global teardown - runs once after all tests
