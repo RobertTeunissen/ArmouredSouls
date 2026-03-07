@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { navigateToProtectedPage } from './helpers/navigate';
 
 /**
  * E2E tests for Weapon Shop Page
@@ -10,9 +11,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Weapon Shop Page', () => {
   test.beforeEach(async ({ page }) => {
-    // Auth state already loaded via storageState — go straight to weapon shop
-    await page.goto('/weapon-shop');
-    await page.waitForLoadState('networkidle');
+    await navigateToProtectedPage(page, '/weapon-shop');
   });
 
   test.describe('Page Load and Initial State', () => {
@@ -234,9 +233,8 @@ test.describe('Weapon Shop Page', () => {
       await viewToggle.locator('button').last().click();
       await page.waitForTimeout(500);
 
-      // Reload page
-      await page.reload();
-      await page.waitForLoadState('networkidle');
+      // Reload page (re-navigate to handle auth race)
+      await navigateToProtectedPage(page, '/weapon-shop');
 
       // Check that table view is still active
       const table = page.locator('table');
@@ -460,9 +458,8 @@ test.describe('Weapon Shop Page', () => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 });
 
-      // Reload page
-      await page.reload();
-      await page.waitForLoadState('networkidle');
+      // Re-navigate to handle auth race after viewport change
+      await navigateToProtectedPage(page, '/weapon-shop');
 
       // Check that page is still functional
       await expect(page.getByRole('heading', { name: 'Weapon Shop' })).toBeVisible();
@@ -478,9 +475,8 @@ test.describe('Weapon Shop Page', () => {
       // Set tablet viewport
       await page.setViewportSize({ width: 768, height: 1024 });
 
-      // Reload page
-      await page.reload();
-      await page.waitForLoadState('networkidle');
+      // Re-navigate to handle auth race after viewport change
+      await navigateToProtectedPage(page, '/weapon-shop');
 
       // Check that page is still functional
       await expect(page.getByRole('heading', { name: 'Weapon Shop' })).toBeVisible();
@@ -497,8 +493,8 @@ test.describe('Weapon Shop Page', () => {
     test('should load weapons within acceptable time', async ({ page }) => {
       const startTime = Date.now();
 
-      // Navigate to weapon shop
-      await page.goto('/weapon-shop');
+      // Navigate to weapon shop (handles auth race)
+      await navigateToProtectedPage(page, '/weapon-shop');
 
       // Wait for weapons to load
       await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });

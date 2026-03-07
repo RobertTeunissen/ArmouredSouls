@@ -177,7 +177,7 @@ export class CombatMessageGenerator {
     '💢 CRITICAL STRIKE! {attackerName}\'s {weaponName} tears through {defenderName}\'s armor!',
     '🎯 Precision attack! {attackerName} targets a critical system on {defenderName} with {weaponName}!',
     '💥 EXCEPTIONAL! {attackerName} delivers a punishing critical blow with {weaponName}!',
-    '⚡ DEVASTATING CRITICAL! {weaponName} finds the perfect angle - {defenderName} reels from the impact!',
+    '⚡ DEVASTATING CRITICAL! {attackerName}\'s {weaponName} finds the perfect angle - {defenderName} reels from the impact!',
     '🔥 CRITICAL DAMAGE! {attackerName}\'s {weaponName} strikes a vulnerable point on {defenderName}!',
     '💢 CRUSHING BLOW! {attackerName} lands a critical strike that staggers {defenderName}!',
     '🎯 PINPOINT ACCURACY! {attackerName}\'s {weaponName} exploits a weak spot perfectly!',
