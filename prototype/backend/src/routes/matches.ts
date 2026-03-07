@@ -114,15 +114,22 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
     });
 
     // Get recently completed bye matches for user's robots in active tournaments
-    // These are auto-completed at tournament creation and the user never sees them
-    const tournamentByeMatches = await prisma.tournamentMatch.findMany({
+    // Only show bye matches from the current round (not stale ones from earlier rounds)
+    const activeTournaments = await prisma.tournament.findMany({
+      where: { status: 'active' },
+      select: { id: true, currentRound: true },
+    });
+
+    const tournamentByeMatches = activeTournaments.length > 0
+      ? await prisma.tournamentMatch.findMany({
       where: {
         isByeMatch: true,
         status: 'completed',
         robot1Id: { in: robotIds },
-        tournament: {
-          status: 'active',
-        },
+        OR: activeTournaments.map(t => ({
+          tournamentId: t.id,
+          round: t.currentRound,
+        })),
       },
       include: {
         robot1: {
@@ -148,7 +155,8 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       orderBy: {
         round: 'asc',
       },
-    });
+    })
+      : [];
 
     // Format league matches
     const formattedLeagueMatches = leagueMatches.map(match => ({
