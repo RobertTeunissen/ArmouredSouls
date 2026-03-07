@@ -7,6 +7,7 @@ import { eventLogger } from '../services/eventLogger';
 import { getConfig } from '../config/env';
 import { getNextCronOccurrence } from '../utils/scheduleUtils';
 import logger from '../config/logger';
+import { assignLeagueInstance } from '../services/leagueInstanceService';
 
 const router = express.Router();
 
@@ -192,6 +193,9 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       const maxHP = 50 + (hullIntegrity * 5); // = 55 HP
       const maxShield = shieldCapacity * 2; // = 2 Shield
       
+      // Assign to least-full bronze instance instead of relying on schema default
+      const bronzeLeagueId = await assignLeagueInstance('bronze');
+
       const robot = await tx.robot.create({
         data: {
           userId,
@@ -200,6 +204,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
           maxHP: maxHP,
           currentShield: maxShield,
           maxShield: maxShield,
+          leagueId: bronzeLeagueId,
         },
         include: {
           mainWeapon: {

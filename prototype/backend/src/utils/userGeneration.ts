@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { assignLeagueInstance } from '../services/leagueInstanceService';
+import { assignTagTeamLeagueInstance } from '../services/tagTeamLeagueInstanceService';
 
 // Default robot attributes (all set to 1.00)
 const DEFAULT_ROBOT_ATTRIBUTES = {
@@ -558,6 +560,9 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
             mainWeaponId = weaponInventories[robotIndex]?.id || weaponInventories[0]?.id;
           }
 
+          // Assign to least-full bronze instance instead of hardcoding bronze_1
+          const bronzeLeagueId = await assignLeagueInstance('bronze');
+
           // Create robot
           const robot = await tx.robot.create({
             data: {
@@ -571,7 +576,7 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
               maxShield: robotSpec.shield,
               elo: 1200,
               currentLeague: 'bronze',
-              leagueId: 'bronze_1',
+              leagueId: bronzeLeagueId,
               leaguePoints: 0,
               loadoutType: robotSpec.loadout,
               mainWeaponId,
@@ -588,13 +593,14 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
 
         // Create tag team for Two-Robot Specialist archetype
         if (archetype.name === 'two_robot' && createdRobots.length === 2) {
+          const tagTeamLeagueId = await assignTagTeamLeagueInstance('bronze');
           await tx.tagTeam.create({
             data: {
               stableId: user.id,
               activeRobotId: createdRobots[0].id,
               reserveRobotId: createdRobots[1].id,
               tagTeamLeague: 'bronze',
-              tagTeamLeagueId: 'bronze_1',
+              tagTeamLeagueId,
             },
           });
           logger.info(`[UserGeneration] Created tag team for ${username}`);

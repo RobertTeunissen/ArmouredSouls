@@ -51,6 +51,15 @@ describe('User Generation', () => {
       });
       const robotIds = robots.map(r => r.id);
       if (robotIds.length > 0) {
+        const tagTeamIds = (await prisma.tagTeam.findMany({
+          where: { OR: [{ activeRobotId: { in: robotIds } }, { reserveRobotId: { in: robotIds } }] },
+          select: { id: true },
+        })).map(t => t.id);
+        if (tagTeamIds.length > 0) {
+          await prisma.tagTeamMatch.deleteMany({
+            where: { OR: [{ team1Id: { in: tagTeamIds } }, { team2Id: { in: tagTeamIds } }] },
+          });
+        }
         await prisma.tagTeam.deleteMany({
           where: { OR: [{ activeRobotId: { in: robotIds } }, { reserveRobotId: { in: robotIds } }] },
         });
@@ -63,6 +72,7 @@ describe('User Generation', () => {
         });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: { in: userIds } } });
+      await prisma.facility.deleteMany({ where: { userId: { in: userIds } } });
       await prisma.robot.deleteMany({ where: { userId: { in: userIds } } });
       await prisma.user.deleteMany({ where: { id: { in: userIds } } });
     }
@@ -105,6 +115,7 @@ describe('User Generation', () => {
       expect(robot!.maxHP).toBeGreaterThan(0);
       expect(robot!.elo).toBe(1200);
       expect(robot!.currentLeague).toBe('bronze');
+      expect(robot!.leagueId).toMatch(/^bronze_\d+$/);
       expect(robot!.battleReadiness).toBe(100);
     });
 
@@ -158,6 +169,72 @@ describe('User Generation', () => {
       expect(result.robotsCreated).toBeGreaterThanOrEqual(7);
       expect(Array.isArray(result.usernames)).toBe(true);
       expect(result.usernames.length).toBe(7);
+    });
+
+    it('should distribute robots across bronze instances evenly via assignLeagueInstance', async () => {
+      // Pre-fill bronze_1 to capacity so new robots must go elsewhere
+      const fillerUser = await prisma.user.create({
+        data: {
+          username: `filler_user_instance_test_${Date.now()}`,
+          passwordHash: 'hashed',
+          currency: 0,
+        },
+      });
+
+      // Count existing robots in bronze_1
+      const existingInBronze1 = await prisma.robot.count({
+        where: { leagueId: 'bronze_1', currentLeague: 'bronze' },
+      });
+
+      // Fill bronze_1 to exactly 100 (the max)
+      const fillCount = Math.max(0, 100 - existingInBronze1);
+      if (fillCount > 0) {
+        const fillerRobots = [];
+        for (let i = 0; i < fillCount; i++) {
+          fillerRobots.push({
+            userId: fillerUser.id,
+            name: `Filler B1 ${i} ${Date.now()}`,
+            leagueId: 'bronze_1',
+            currentLeague: 'bronze' as const,
+            currentHP: 10,
+            maxHP: 10,
+            currentShield: 2,
+            maxShield: 2,
+          });
+        }
+        await prisma.robot.createMany({ data: fillerRobots });
+      }
+
+      // Verify bronze_1 is now at capacity
+      const bronze1Count = await prisma.robot.count({
+        where: { leagueId: 'bronze_1', currentLeague: 'bronze' },
+      });
+      expect(bronze1Count).toBeGreaterThanOrEqual(100);
+
+      // Generate archetype users — should NOT go to bronze_1 since it's full
+      const result = await generateBattleReadyUsers(2);
+      expect(result.usersCreated).toBe(2);
+
+      // Check that archetype robots went to a different instance
+      const archetypeRobots = await prisma.robot.findMany({
+        where: { user: { username: { startsWith: 'archetype_' } } },
+        select: { leagueId: true },
+      });
+
+      expect(archetypeRobots.length).toBeGreaterThanOrEqual(2);
+
+      // At least one robot should NOT be in bronze_1 (since it was full)
+      const notInBronze1 = archetypeRobots.filter(r => r.leagueId !== 'bronze_1');
+      expect(notInBronze1.length).toBeGreaterThan(0);
+
+      // All robots should still be in a valid bronze instance
+      archetypeRobots.forEach(r => {
+        expect(r.leagueId).toMatch(/^bronze_\d+$/);
+      });
+
+      // Cleanup filler data
+      await prisma.robot.deleteMany({ where: { userId: fillerUser.id } });
+      await prisma.user.delete({ where: { id: fillerUser.id } });
     });
   });
 });
