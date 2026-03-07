@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -115,7 +116,7 @@ router.get('/fame', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Leaderboards] Fame leaderboard error:', error);
+    logger.error('[Leaderboards] Fame leaderboard error:', error);
     res.status(500).json({
       error: 'Failed to retrieve fame leaderboard',
       message: error instanceof Error ? error.message : String(error),
@@ -203,7 +204,7 @@ router.get('/losses', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Leaderboards] Total Losses leaderboard error:', error);
+    logger.error('[Leaderboards] Total Losses leaderboard error:', error);
     res.status(500).json({
       error: 'Failed to retrieve total losses leaderboard',
       message: error instanceof Error ? error.message : String(error),
@@ -303,7 +304,7 @@ router.get('/prestige', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Leaderboards] Prestige leaderboard error:', error);
+    logger.error('[Leaderboards] Prestige leaderboard error:', error);
     res.status(500).json({
       error: 'Failed to retrieve prestige leaderboard',
       message: error instanceof Error ? error.message : String(error),

@@ -3,9 +3,9 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
 import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
-// import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
+import logger from '../config/logger';
 
-// Temporary stub implementations
+// Discount helpers (local until shared/utils/discounts is available)
 const calculateWeaponWorkshopDiscount = (level: number): number => {
   return level * 5; // 5% per level
 };
@@ -43,7 +43,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 
     res.json(inventory);
   } catch (error) {
-    console.error('Weapon inventory list error:', error);
+    logger.error('Weapon inventory list error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -161,9 +161,9 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 
       // Console log for cycle logs
       const discountInfo = discountPercent > 0 ? ` | Discount: ${discountPercent}% (base: ₡${weapon.cost.toLocaleString()})` : '';
-      console.log(`[Weapon] User ${userId} | Purchased: ${weapon.name} | Cost: ₡${finalCost.toLocaleString()}${discountInfo} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+      logger.info(`[Weapon] User ${userId} | Purchased: ${weapon.name} | Cost: ₡${finalCost.toLocaleString()}${discountInfo} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
     } catch (logError) {
-      console.error('Failed to log weapon purchase event:', logError);
+      logger.error('Failed to log weapon purchase event:', logError);
       // Don't fail the request if logging fails
     }
 
@@ -173,7 +173,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
       message: 'Weapon purchased successfully',
     });
   } catch (error) {
-    console.error('Weapon purchase error:', error);
+    logger.error('Weapon purchase error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -220,7 +220,7 @@ router.get('/:id/available', authenticateToken, async (req: AuthRequest, res: Re
       currentlyEquippedTo: robots.find(r => r.mainWeaponId === inventoryId || r.offhandWeaponId === inventoryId)?.id || null,
     });
   } catch (error) {
-    console.error('Available robots error:', error);
+    logger.error('Available robots error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -251,7 +251,7 @@ router.get('/storage-status', authenticateToken, async (req: AuthRequest, res: R
 
     res.json(storageStatus);
   } catch (error) {
-    console.error('Storage status error:', error);
+    logger.error('Storage status error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

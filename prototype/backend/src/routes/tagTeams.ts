@@ -13,6 +13,7 @@ import {
   TAG_TEAM_LEAGUE_TIERS,
   TagTeamLeagueTier,
 } from '../services/tagTeamLeagueInstanceService';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -70,14 +71,14 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     const teamWithRobots = await getTeamById(result.team!.id);
 
     // Console log for cycle logs
-    console.log(`[TagTeam] User ${req.user.userId} | Created team | Active: ${activeRobotId} (${activeRobot.name}) | Reserve: ${reserveRobotId} (${reserveRobot.name})`);
+    logger.info(`[TagTeam] User ${req.user.userId} | Created team | Active: ${activeRobotId} (${activeRobot.name}) | Reserve: ${reserveRobotId} (${reserveRobot.name})`);
 
     res.status(201).json({
       team: teamWithRobots,
       message: 'Tag team created successfully',
     });
   } catch (error) {
-    console.error('[TagTeams API] Error creating team:', error);
+    logger.error('[TagTeams API] Error creating team:', error);
     res.status(500).json({
       error: 'Failed to create team',
       message: error instanceof Error ? error.message : String(error),
@@ -114,7 +115,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       total: teamsWithReadiness.length,
     });
   } catch (error) {
-    console.error('[TagTeams API] Error fetching teams:', error);
+    logger.error('[TagTeams API] Error fetching teams:', error);
     res.status(500).json({
       error: 'Failed to fetch teams',
       message: error instanceof Error ? error.message : String(error),
@@ -160,7 +161,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
       },
     });
   } catch (error) {
-    console.error('[TagTeams API] Error fetching team:', error);
+    logger.error('[TagTeams API] Error fetching team:', error);
     res.status(500).json({
       error: 'Failed to fetch team',
       message: error instanceof Error ? error.message : String(error),
@@ -192,13 +193,13 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
     }
 
     // Console log for cycle logs
-    console.log(`[TagTeam] User ${req.user.userId} | Disbanded team | Team ID: ${teamId}`);
+    logger.info(`[TagTeam] User ${req.user.userId} | Disbanded team | Team ID: ${teamId}`);
 
     res.json({
       message: 'Team disbanded successfully',
     });
   } catch (error) {
-    console.error('[TagTeams API] Error disbanding team:', error);
+    logger.error('[TagTeams API] Error disbanding team:', error);
     res.status(500).json({
       error: 'Failed to disband team',
       message: error instanceof Error ? error.message : String(error),
@@ -233,17 +234,6 @@ router.get('/leagues/:tier/standings', authenticateToken, async (req: AuthReques
 
     // Get standings for the tier
     const allStandings = await getStandingsForTier(tier);
-    
-    // Debug: Log first team to see if stable is included
-    if (allStandings.length > 0) {
-      console.log('[TagTeams API] Sample standing:', {
-        id: allStandings[0].id,
-        stableId: allStandings[0].stableId,
-        stable: allStandings[0].stable,
-        hasStable: !!allStandings[0].stable,
-        stableName: allStandings[0].stable?.stableName,
-      });
-    }
 
     // Apply pagination
     const total = allStandings.length;
@@ -289,7 +279,7 @@ router.get('/leagues/:tier/standings', authenticateToken, async (req: AuthReques
       tier,
     });
   } catch (error) {
-    console.error('[TagTeams API] Error fetching standings:', error);
+    logger.error('[TagTeams API] Error fetching standings:', error);
     res.status(500).json({
       error: 'Failed to fetch standings',
       message: error instanceof Error ? error.message : String(error),

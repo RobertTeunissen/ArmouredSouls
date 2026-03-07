@@ -6,6 +6,7 @@ import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
 import { getConfig } from '../config/env';
 import { getNextCronOccurrence } from '../utils/scheduleUtils';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -78,7 +79,7 @@ router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Respo
 
     res.json(robots);
   } catch (error) {
-    console.error('All robots list error:', error);
+    logger.error('All robots list error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -107,7 +108,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 
     res.json(robots);
   } catch (error) {
-    console.error('Robot list error:', error);
+    logger.error('Robot list error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -243,9 +244,9 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       const stableInfo = userForLog?.stableName ? ` (${userForLog.stableName})` : '';
 
       // Console log for cycle logs
-      console.log(`[Robot] | User ${userId}${stableInfo} | Created: "${name}" | Cost: ₡${ROBOT_CREATION_COST.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+      logger.info(`[Robot] | User ${userId}${stableInfo} | Created: "${name}" | Cost: ₡${ROBOT_CREATION_COST.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
     } catch (logError) {
-      console.error('Failed to log robot creation event:', logError);
+      logger.error('Failed to log robot creation event:', logError);
       // Don't fail the request if logging fails
     }
 
@@ -255,7 +256,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       message: 'Robot created successfully',
     });
   } catch (error) {
-    console.error('Robot creation error:', error);
+    logger.error('Robot creation error:', error);
     
     // Handle unique constraint violation (as a fallback safety check)
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
@@ -272,11 +273,8 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     const robotId = parseInt(req.params.id);
 
     if (isNaN(robotId)) {
-      console.log(`Invalid robot ID received: ${req.params.id}`);
       return res.status(400).json({ error: 'Invalid robot ID' });
     }
-
-    console.log(`Fetching robot with ID: ${robotId}`);
 
     const robot = await prisma.robot.findUnique({
       where: {
@@ -303,14 +301,12 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     });
 
     if (!robot) {
-      console.log(`Robot not found with ID: ${robotId}`);
       return res.status(404).json({ error: 'Robot not found' });
     }
 
-    console.log(`Successfully fetched robot: ${robot.name} (ID: ${robot.id})`);
     res.json(robot);
   } catch (error) {
-    console.error('Robot fetch error:', error);
+    logger.error('Robot fetch error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -413,7 +409,7 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
       message: 'Main weapon equipped successfully',
     });
   } catch (error) {
-    console.error('Main weapon equip error:', error);
+    logger.error('Main weapon equip error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -533,7 +529,7 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
       message: 'Offhand weapon equipped successfully',
     });
   } catch (error) {
-    console.error('Offhand weapon equip error:', error);
+    logger.error('Offhand weapon equip error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -599,7 +595,7 @@ router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthReq
       message: 'Main weapon unequipped successfully',
     });
   } catch (error) {
-    console.error('Main weapon unequip error:', error);
+    logger.error('Main weapon unequip error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -665,7 +661,7 @@ router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: Auth
       message: 'Offhand weapon unequipped successfully',
     });
   } catch (error) {
-    console.error('Offhand weapon unequip error:', error);
+    logger.error('Offhand weapon unequip error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -752,7 +748,7 @@ router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res:
       message: `Loadout type changed to ${loadoutType}`,
     });
   } catch (error) {
-    console.error('Loadout type change error:', error);
+    logger.error('Loadout type change error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -804,7 +800,7 @@ router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Res
       message: `Stance updated to ${normalizedStance}`,
     });
   } catch (error) {
-    console.error('Stance update error:', error);
+    logger.error('Stance update error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -863,7 +859,7 @@ router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest,
       message: `Yield threshold updated to ${threshold}%`,
     });
   } catch (error) {
-    console.error('Yield threshold update error:', error);
+    logger.error('Yield threshold update error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -991,7 +987,7 @@ router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Resp
       },
     });
   } catch (error) {
-    console.error('Robot matches error:', error);
+    logger.error('Robot matches error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1081,7 +1077,7 @@ router.get('/:id/upcoming', authenticateToken, async (req: AuthRequest, res: Res
       },
     });
   } catch (error) {
-    console.error('Robot upcoming matches error:', error);
+    logger.error('Robot upcoming matches error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1196,7 +1192,7 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
       message: `Successfully repaired ${robotsNeedingRepair.length} robot(s) for ₡${finalCost.toLocaleString()}`,
     });
   } catch (error) {
-    console.error('Repair all robots error:', error);
+    logger.error('Repair all robots error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1367,7 +1363,7 @@ router.get('/:id/rankings', authenticateToken, async (req: AuthRequest, res: Res
 
     res.json(rankings);
   } catch (error) {
-    console.error('Robot rankings error:', error);
+    logger.error('Robot rankings error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1635,7 +1631,7 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
       tagTeam: tagTeamStatsWithWinRate,
     });
   } catch (error) {
-    console.error('Robot performance context error:', error);
+    logger.error('Robot performance context error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1647,11 +1643,11 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
     const robotId = parseInt(req.params.id);
     const { imageUrl } = req.body;
 
-    console.log('Appearance update request:', { userId, robotId, imageUrl });
+    logger.info('Appearance update request:', { userId, robotId, imageUrl });
 
     // Validate input
     if (!imageUrl || typeof imageUrl !== 'string') {
-      console.log('Invalid imageUrl:', imageUrl);
+      logger.info('Invalid imageUrl:', imageUrl);
       return res.status(400).json({ error: 'Invalid imageUrl' });
     }
 
@@ -1661,7 +1657,7 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
                         imageUrl.match(/^\/assets\/robot.*\.webp$/);
     
     if (!isValidPath) {
-      console.log('Invalid image path:', imageUrl);
+      logger.info('Invalid image path:', imageUrl);
       return res.status(400).json({ error: 'Invalid image path' });
     }
 
@@ -1671,16 +1667,16 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
     });
 
     if (!robot) {
-      console.log('Robot not found:', robotId);
+      logger.info('Robot not found:', robotId);
       return res.status(404).json({ error: 'Robot not found' });
     }
 
     if (robot.userId !== userId) {
-      console.log('Ownership mismatch:', { robotUserId: robot.userId, requestUserId: userId });
+      logger.info('Ownership mismatch:', { robotUserId: robot.userId, requestUserId: userId });
       return res.status(403).json({ error: 'You do not own this robot' });
     }
 
-    console.log('Updating robot with imageUrl...');
+    logger.info('Updating robot with imageUrl...');
     
     // Update appearance
     const updatedRobot = await prisma.robot.update({
@@ -1702,7 +1698,7 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
       },
     });
 
-    console.log('Robot updated successfully');
+    logger.info('Robot updated successfully');
 
     res.json({
       success: true,
@@ -1710,7 +1706,7 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
       message: 'Robot image updated successfully',
     });
   } catch (error) {
-    console.error('Update robot appearance error:', error);
+    logger.error('Update robot appearance error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1956,7 +1952,7 @@ router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, 
       },
     });
   } catch (error) {
-    console.error('Upcoming matches error:', error);
+    logger.error('Upcoming matches error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1973,7 +1969,7 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
     }
 
     if (!upgrades || typeof upgrades !== 'object' || Object.keys(upgrades).length === 0) {
-      console.log('Invalid upgrades object:', upgrades);
+      logger.info('Invalid upgrades object:', upgrades);
       return res.status(400).json({ error: 'Upgrades object is required' });
     }
 
@@ -2182,7 +2178,7 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       // because the current cycle's snapshot has already been created
       const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
 
-      console.log(`[AttributeUpgrade] User ${userId} | Robot ${robotId} (${robot.name}) | Attributes: ${upgradeOperations.length} | Total Cost: ₡${totalCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+      logger.info(`[AttributeUpgrade] User ${userId} | Robot ${robotId} (${robot.name}) | Attributes: ${upgradeOperations.length} | Total Cost: ₡${totalCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
 
       // Log each attribute upgrade
       for (const op of upgradeOperations) {
@@ -2195,10 +2191,10 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
           op.cost,
           userId  // Pass userId so it can be aggregated properly
         );
-        console.log(`[AttributeUpgrade]   ${op.attribute} | ${op.fromLevel}→${op.toLevel} | ₡${op.cost.toLocaleString()}`);
+        logger.info(`[AttributeUpgrade]   ${op.attribute} | ${op.fromLevel}→${op.toLevel} | ₡${op.cost.toLocaleString()}`);
       }
     } catch (logError) {
-      console.error('[AttributeUpgrade] ERROR logging upgrades:', logError);
+      logger.error('[AttributeUpgrade] ERROR logging upgrades:', logError);
       // Don't fail the request if logging fails
     }
 
@@ -2211,9 +2207,9 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       message: `Successfully upgraded ${upgradeOperations.length} attribute${upgradeOperations.length > 1 ? 's' : ''}`,
     });
   } catch (error) {
-    console.error('Bulk robot upgrade error:', error);
-    console.error('Error details:', error instanceof Error ? error.message : error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    logger.error('Bulk robot upgrade error:', error);
+    logger.error('Error details:', error instanceof Error ? error.message : error);
+    logger.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) });
   }
 });

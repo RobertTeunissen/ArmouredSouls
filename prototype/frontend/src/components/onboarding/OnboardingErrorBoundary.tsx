@@ -1,4 +1,5 @@
 import { Component, ReactNode } from 'react';
+import { trackError } from '../../utils/onboardingAnalytics';
 
 interface Props {
   children: ReactNode;
@@ -21,6 +22,10 @@ class OnboardingErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error) {
+    trackError(0, error.message, 'OnboardingErrorBoundary');
   }
 
   handleRetry = () => {

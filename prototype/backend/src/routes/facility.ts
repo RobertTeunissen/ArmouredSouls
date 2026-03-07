@@ -3,6 +3,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
 import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -120,7 +121,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       robotCount, // Include for frontend display
     });
   } catch (error) {
-    console.error('Facility list error:', error);
+    logger.error('Facility list error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -244,9 +245,9 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
 
       // Console log for cycle logs
       const action = currentLevel === 0 ? 'Purchased' : 'Upgraded';
-      console.log(`[Facility] User ${userId} | ${action}: ${config.name} | Level: ${targetLevel} | Cost: ₡${upgradeCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+      logger.info(`[Facility] User ${userId} | ${action}: ${config.name} | Level: ${targetLevel} | Cost: ₡${upgradeCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
     } catch (logError) {
-      console.error('Failed to log facility transaction event:', logError);
+      logger.error('Failed to log facility transaction event:', logError);
       // Don't fail the request if logging fails
     }
 
@@ -256,7 +257,7 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
       message: 'Facility upgraded successfully',
     });
   } catch (error) {
-    console.error('Facility upgrade error:', error);
+    logger.error('Facility upgrade error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

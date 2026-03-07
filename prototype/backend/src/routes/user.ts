@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { validateStableName, isStableNameUnique, validatePassword } from '../utils/validation';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -40,7 +41,7 @@ router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response
 
     res.json(response);
   } catch (error) {
-    console.error('Profile fetch error:', error);
+    logger.error('Profile fetch error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -253,7 +254,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
       cycleChanges,
     });
   } catch (error) {
-    console.error('Stats fetch error:', error);
+    logger.error('Stats fetch error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -271,8 +272,6 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
       currentPassword,
       newPassword,
     } = req.body;
-
-    console.log('Profile update request:', { userId, body: req.body });
 
     // Validation errors object
     const validationErrors: Record<string, string> = {};
@@ -366,11 +365,8 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
     if (themePreference !== undefined) updateData.themePreference = themePreference;
     if (hashedPassword !== undefined) updateData.passwordHash = hashedPassword;
 
-    console.log('Update data:', updateData);
-
     // Check if there are any updates
     if (Object.keys(updateData).length === 0) {
-      console.log('No updates to apply');
       return res.status(400).json({ error: 'No updates provided' });
     }
 
@@ -402,17 +398,6 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
 
     res.json(response);
   } catch (error) {
-    console.error('Profile update error:', error);
-    
-    // Provide more detailed error information
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-    }
-    
     res.status(500).json({ 
       error: 'Internal server error',
       details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined

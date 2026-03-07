@@ -478,4 +478,57 @@ describe('RobotPerformanceService', () => {
       expect(progression.totalChange).toBe(1500);
     });
   });
+
+  describe('missing audit log fallback (regression)', () => {
+    it('should not throw when no audit log entries or snapshots exist for a cycle', async () => {
+      // Regression test: previously getCycleStartTime threw "Cycle X start time not found"
+      // when no audit log entries existed. Now it should fallback to epoch/current time.
+      const cycleNumber = 1099;
+
+      // Ensure no audit log entries or snapshots exist for this cycle
+      await prisma.auditLog.deleteMany({ where: { cycleNumber } });
+      await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber } });
+
+      // These should all resolve without throwing
+      const summary = await robotPerformanceService.getRobotPerformanceSummary(testRobotId, [cycleNumber, cycleNumber]);
+      expect(summary.robotId).toBe(testRobotId);
+      expect(summary.battlesParticipated).toBe(0);
+
+      const elo = await robotPerformanceService.getELOProgression(testRobotId, [cycleNumber, cycleNumber]);
+      expect(elo.robotId).toBe(testRobotId);
+      expect(elo.dataPoints).toHaveLength(0);
+
+      const metric = await robotPerformanceService.getRobotMetricProgression(testRobotId, 'damageDealt', [cycleNumber, cycleNumber]);
+      expect(metric.robotId).toBe(testRobotId);
+      expect(metric.dataPoints).toHaveLength(0);
+    });
+
+    it('should return valid data when only snapshot exists but no audit log', async () => {
+      const cycleNumber = 1098;
+
+      await prisma.auditLog.deleteMany({ where: { cycleNumber } });
+      await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber } });
+
+      // Create a snapshot without audit log entries
+      await prisma.cycleSnapshot.create({
+        data: {
+          cycleNumber,
+          triggerType: 'manual',
+          startTime: new Date('2026-01-01T00:00:00Z'),
+          endTime: new Date('2026-01-01T01:00:00Z'),
+          durationMs: 3600000,
+          stableMetrics: [],
+          robotMetrics: [],
+          stepDurations: [],
+          totalBattles: 0,
+          totalCreditsTransacted: BigInt(0),
+          totalPrestigeAwarded: 0,
+        },
+      });
+
+      const summary = await robotPerformanceService.getRobotPerformanceSummary(testRobotId, [cycleNumber, cycleNumber]);
+      expect(summary.robotId).toBe(testRobotId);
+      expect(summary.battlesParticipated).toBe(0);
+    });
+  });
 });

@@ -1,5 +1,6 @@
 import { Robot, ScheduledMatch, Battle } from '@prisma/client';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import { CombatMessageGenerator } from './combatMessageGenerator';
 import { simulateBattle } from './combatSimulator';
 import {
@@ -44,7 +45,7 @@ export async function getCurrentCycleNumber(): Promise<number> {
     return (metadata?.totalCycles || 0) + 1;
   } catch (error) {
     // If cycleMetadata table doesn't exist or query fails, return 1 (first cycle)
-    console.warn('[BattleOrchestrator] Could not fetch cycle number, defaulting to 1:', error);
+    logger.warn('[BattleOrchestrator] Could not fetch cycle number, defaulting to 1:', error);
     return 1;
   }
 }
@@ -656,11 +657,11 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
     
     if (streamingRevenue1) {
       await awardStreamingRevenue(robot1.userId, streamingRevenue1, cycleNumber);
-      console.log(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
+      logger.info(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
     }
     if (streamingRevenue2) {
       await awardStreamingRevenue(robot2.userId, streamingRevenue2, cycleNumber);
-      console.log(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
+      logger.info(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
     }
   }
   
@@ -814,7 +815,7 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
   const robot2Killed = robot1Participant?.destroyed || false;
   const killInfo = robot1Killed ? ` | Kill: ${robot1.name}` : (robot2Killed ? ` | Kill: ${robot2.name}` : '');
   
-  console.log(`[Battle] League: ${battle.leagueType} | ${robot1.name} (User ${robot1User?.id}) vs ${robot2.name} (User ${robot2User?.id}) | Winner: ${winnerName} | Rewards: ₡${battle.winnerReward?.toLocaleString() || 0} / ₡${battle.loserReward?.toLocaleString() || 0} | Prestige: +${totalPrestige} | Fame: +${totalFame}${killInfo}`);
+  logger.info(`[Battle] League: ${battle.leagueType} | ${robot1.name} (User ${robot1User?.id}) vs ${robot2.name} (User ${robot2User?.id}) | Winner: ${winnerName} | Rewards: ₡${battle.winnerReward?.toLocaleString() || 0} / ₡${battle.loserReward?.toLocaleString() || 0} | Prestige: +${totalPrestige} | Fame: +${totalFame}${killInfo}`);
   
   return {
     ...result,
@@ -829,7 +830,7 @@ export async function processBattle(scheduledMatch: ScheduledMatch): Promise<Bat
  *                       If not provided (undefined), executes ALL scheduled matches regardless of their scheduled time.
  */
 export async function executeScheduledBattles(_scheduledFor?: Date): Promise<BattleExecutionSummary> {
-  console.log('[BattleOrchestrator] Executing all scheduled league battles');
+  logger.info('[BattleOrchestrator] Executing all scheduled league battles');
   
   // Execute all matches with status 'scheduled' — the cron job controls timing,
   // scheduledFor is informational only (shown to players)
@@ -842,7 +843,7 @@ export async function executeScheduledBattles(_scheduledFor?: Date): Promise<Bat
     },
   });
   
-  console.log(`[BattleOrchestrator] Found ${scheduledMatches.length} matches to execute`);
+  logger.info(`[BattleOrchestrator] Found ${scheduledMatches.length} matches to execute`);
   
   const summary: BattleExecutionSummary = {
     totalBattles: scheduledMatches.length,
@@ -917,14 +918,14 @@ export async function executeScheduledBattles(_scheduledFor?: Date): Promise<Bat
       summary.failedBattles++;
       const errorMsg = error instanceof Error ? error.message : String(error);
       summary.errors.push(`Match ${match.id}: ${errorMsg}`);
-      console.error(`[BattleOrchestrator] Failed to process match ${match.id}:`, error);
+      logger.error(`[BattleOrchestrator] Failed to process match ${match.id}:`, error);
     }
   }
   
-  console.log(`[BattleOrchestrator] Execution complete: ${summary.successfulBattles} successful, ${summary.failedBattles} failed, ${summary.byeBattles} bye-matches`);
-  console.log(`[BattleOrchestrator] Reputation: ${summary.reputationSummary?.totalPrestigeAwarded} prestige, ${summary.reputationSummary?.totalFameAwarded} fame awarded`);
+  logger.info(`[BattleOrchestrator] Execution complete: ${summary.successfulBattles} successful, ${summary.failedBattles} failed, ${summary.byeBattles} bye-matches`);
+  logger.info(`[BattleOrchestrator] Reputation: ${summary.reputationSummary?.totalPrestigeAwarded} prestige, ${summary.reputationSummary?.totalFameAwarded} fame awarded`);
   if (summary.totalStreamingRevenue && summary.totalStreamingRevenue > 0) {
-    console.log(`[BattleOrchestrator] Streaming Revenue: ₡${summary.totalStreamingRevenue.toLocaleString()} total earned`);
+    logger.info(`[BattleOrchestrator] Streaming Revenue: ₡${summary.totalStreamingRevenue.toLocaleString()} total earned`);
   }
   
   return summary;

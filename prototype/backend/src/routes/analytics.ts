@@ -12,6 +12,7 @@ import { robotPerformanceService } from '../services/robotPerformanceService';
 import type { RobotMetric } from '../services/robotPerformanceService';
 import type { LeaderboardOptions } from '../services/robotStatsViewService';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.get('/cycle/current', async (req: Request, res: Response) => {
       lastCycleAt: metadata.lastCycleAt,
     });
   } catch (error) {
-    console.error('[Analytics] Error getting current cycle:', error);
+    logger.error('[Analytics] Error getting current cycle:', error);
     return res.status(500).json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -220,7 +221,7 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
       cycles,
     });
   } catch (error) {
-    console.error('[Analytics] Error in stable summary:', error);
+    logger.error('[Analytics] Error in stable summary:', error);
     return res.status(500).json({ 
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -412,7 +413,7 @@ router.get('/robot/:robotId/performance', async (req: Request, res: Response) =>
 
     return res.json(response);
   } catch (error) {
-    console.error('[Analytics] Error in robot performance:', error);
+    logger.error('[Analytics] Error in robot performance:', error);
     
     return res.status(500).json({ 
       error: 'Internal server error',
@@ -585,7 +586,7 @@ router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
 
     return res.json(response);
   } catch (error) {
-    console.error('[Analytics] Error in ELO progression:', error);
+    logger.error('[Analytics] Error in ELO progression:', error);
     
     return res.status(500).json({ 
       error: 'Internal server error',
@@ -765,7 +766,7 @@ router.get('/robot/:robotId/metric/:metricName', async (req: Request, res: Respo
 
     return res.json(response);
   } catch (error) {
-    console.error('[Analytics] Error in metric progression:', error);
+    logger.error('[Analytics] Error in metric progression:', error);
     
     return res.status(500).json({ 
       error: 'Internal server error',
@@ -874,7 +875,7 @@ router.get('/leaderboard', async (req: Request, res: Response) => {
       total,
     });
   } catch (error) {
-    console.error('[Analytics] Error in leaderboard:', error);
+    logger.error('[Analytics] Error in leaderboard:', error);
     
     return res.status(500).json({
       error: 'Internal server error',
@@ -934,7 +935,7 @@ router.get('/robot/:robotId/stats', async (req: Request, res: Response) => {
 
     return res.json(stats);
   } catch (error) {
-    console.error('[Analytics] Error getting robot stats:', error);
+    logger.error('[Analytics] Error getting robot stats:', error);
     
     return res.status(500).json({
       error: 'Internal server error',
@@ -968,7 +969,7 @@ router.post('/stats/refresh', async (req: Request, res: Response) => {
       message: 'Robot stats materialized view refreshed successfully'
     });
   } catch (error) {
-    console.error('[Analytics] Error refreshing stats:', error);
+    logger.error('[Analytics] Error refreshing stats:', error);
     
     return res.status(500).json({
       error: 'Internal server error',
@@ -1078,7 +1079,7 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
 
     return res.json(roi);
   } catch (error) {
-    console.error('[Analytics] Error calculating facility ROI:', error);
+    logger.error('[Analytics] Error calculating facility ROI:', error);
     
     return res.status(500).json({
       error: 'Internal server error',
@@ -1161,7 +1162,7 @@ router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
       overallNetROI,
     });
   } catch (error) {
-    console.error('[Analytics] Error calculating all facility ROIs:', error);
+    logger.error('[Analytics] Error calculating all facility ROIs:', error);
     
     return res.status(500).json({
       error: 'Internal server error',
@@ -1247,7 +1248,7 @@ router.get('/facility/:userId/recommendations', async (req: Request, res: Respon
 
     return res.json(recommendations);
   } catch (error) {
-    console.error('[Analytics] Error generating facility recommendations:', error);
+    logger.error('[Analytics] Error generating facility recommendations:', error);
     
     return res.status(500).json({
       error: 'Internal server error',
@@ -1288,7 +1289,7 @@ router.get('/performance', async (req: Request, res: Response) => {
 
     return res.json(metrics);
   } catch (error) {
-    console.error('[Analytics] Error getting performance metrics:', error);
+    logger.error('[Analytics] Error getting performance metrics:', error);
     return res.status(500).json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -1320,7 +1321,7 @@ router.get('/integrity', async (req: Request, res: Response) => {
 
     return res.json(reports);
   } catch (error) {
-    console.error('[Analytics] Error getting integrity reports:', error);
+    logger.error('[Analytics] Error getting integrity reports:', error);
     return res.status(500).json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -1353,7 +1354,7 @@ router.get('/logs/summary', async (req: Request, res: Response) => {
 
     return res.json(stats);
   } catch (error) {
-    console.error('[Analytics] Error getting event statistics:', error);
+    logger.error('[Analytics] Error getting event statistics:', error);
     return res.status(500).json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error',

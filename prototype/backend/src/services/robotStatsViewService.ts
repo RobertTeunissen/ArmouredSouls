@@ -16,6 +16,7 @@
  */
 
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 export interface RobotStats {
   robotId: number;
@@ -49,9 +50,9 @@ export class RobotStatsViewService {
   async refreshStats(): Promise<void> {
     try {
       await prisma.$executeRawUnsafe('REFRESH MATERIALIZED VIEW robot_current_stats');
-      console.log('[RobotStatsView] Materialized view refreshed successfully');
+      logger.info('[RobotStatsView] Materialized view refreshed successfully');
     } catch (error) {
-      console.error('[RobotStatsView] Error refreshing materialized view:', error);
+      logger.error('[RobotStatsView] Error refreshing materialized view:', error);
       throw error;
     }
   }

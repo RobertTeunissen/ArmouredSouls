@@ -102,7 +102,9 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
       );
       setCreditsProgression(creditsResponse.data);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to fetch analytics:', err);
+      if (import.meta.env.DEV) {
+        console.error('Failed to fetch analytics:', err);
+      }
       setError(err.response?.data?.message || 'Failed to load analytics data');
     } finally {
       setLoading(false);

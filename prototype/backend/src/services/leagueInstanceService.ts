@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 // NOTE: This service mirrors tagTeamLeagueInstanceService.ts for tag team leagues.
 // Both share similar instance management logic but operate on different Prisma models
@@ -125,14 +126,14 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
   const stats = await getLeagueInstanceStats(tier);
 
   if (!stats.needsRebalancing) {
-    console.log(`[LeagueInstance] ${tier} instances balanced, no action needed`);
+    logger.info(`[LeagueInstance] ${tier} instances balanced, no action needed`);
     return;
   }
 
-  console.log(`[LeagueInstance] Rebalancing ${tier} instances...`);
-  console.log(`  Total robots: ${stats.totalRobots}`);
-  console.log(`  Instances: ${stats.instances.length}`);
-  console.log(`  Average per instance: ${stats.averagePerInstance.toFixed(1)}`);
+  logger.info(`[LeagueInstance] Rebalancing ${tier} instances...`);
+  logger.info(`  Total robots: ${stats.totalRobots}`);
+  logger.info(`  Instances: ${stats.instances.length}`);
+  logger.info(`  Average per instance: ${stats.averagePerInstance.toFixed(1)}`);
 
   // Get all robots in this tier (excluding bye-robot)
   const allRobots = await prisma.robot.findMany({
@@ -151,7 +152,7 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
   // Calculate how many instances we need
   const targetInstanceCount = Math.ceil(stats.totalRobots / MAX_ROBOTS_PER_INSTANCE);
 
-  console.log(`  Target instances: ${targetInstanceCount}`);
+  logger.info(`  Target instances: ${targetInstanceCount}`);
 
   // Redistribute robots ROUND-ROBIN to maintain competitive balance
   // This ensures each instance has a mix of high, medium, and low LP robots
@@ -175,7 +176,7 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
   }
 
   await Promise.all(updates);
-  console.log(`[LeagueInstance] Rebalanced ${updates.length} robots across ${targetInstanceCount} instances`);
+  logger.info(`[LeagueInstance] Rebalanced ${updates.length} robots across ${targetInstanceCount} instances`);
 }
 
 /**

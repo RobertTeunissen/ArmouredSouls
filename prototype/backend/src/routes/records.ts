@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -634,7 +635,7 @@ router.get('/', async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Records] Error fetching records:', error);
+    logger.error('[Records] Error fetching records:', error);
     res.status(500).json({
       error: 'Failed to retrieve hall of records',
       message: error instanceof Error ? error.message : String(error),

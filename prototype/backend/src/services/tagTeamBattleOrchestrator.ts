@@ -1,5 +1,6 @@
 import { Robot, TagTeam, TagTeamMatch, Battle, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import { simulateBattle } from './combatSimulator';
 import { getLeagueBaseReward, getParticipationReward } from '../utils/economyCalculations';
 import { CombatMessageGenerator } from './combatMessageGenerator';
@@ -289,7 +290,7 @@ export async function executeTagTeamBattle(match: TagTeamMatch): Promise<TagTeam
     },
   });
 
-  console.log(
+  logger.info(
     `[TagTeamBattle] Completed: Team ${team1.id} vs Team ${team2.id} ` +
     `(Winner: ${result.winnerId ? `Team ${result.winnerId}` : 'Draw'})`
   );
@@ -1306,7 +1307,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
     },
   });
 
-  console.log(`[TagTeamBattles] Found ${scheduledMatches.length} scheduled tag team matches`);
+  logger.info(`[TagTeamBattles] Found ${scheduledMatches.length} scheduled tag team matches`);
 
   let totalBattles = 0;
   let wins = 0;
@@ -1327,7 +1328,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
         const team2Ready = match.team2 ? await checkTeamReadinessForBattle(match.team2) : true; // Bye matches are always ready
 
         if (!team1Ready || !team2Ready) {
-          console.log(
+          logger.info(
             `[TagTeamBattles] Skipping match ${match.id}: ` +
             `Team ${match.team1Id} ready: ${team1Ready}, Team ${match.team2Id} ready: ${team2Ready}`
           );
@@ -1381,7 +1382,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
       await updateTagTeamBattleResults(match, result);
 
     } catch (error) {
-      console.error(`[TagTeamBattles] Error executing match ${match.id}:`, error);
+      logger.error(`[TagTeamBattles] Error executing match ${match.id}:`, error);
       
       // Mark match as cancelled on error
       await prisma.tagTeamMatch.update({
@@ -1391,13 +1392,13 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
     }
   }
 
-  console.log(
+  logger.info(
     `[TagTeamBattles] Execution complete: ${totalBattles} battles, ` +
     `${wins} wins, ${draws} draws, ${losses} losses, ` +
     `${skippedDueToUnreadyRobots} skipped due to unready robots`
   );
   if (totalStreamingRevenue > 0) {
-    console.log(`[TagTeamBattles] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()} total earned`);
+    logger.info(`[TagTeamBattles] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()} total earned`);
   }
 
   return {
@@ -1654,7 +1655,7 @@ async function updateTagTeamBattleResults(
       },
     });
 
-    console.log(
+    logger.info(
       `[TagTeamBattles] Updated bye-match results for match ${match.id}: ` +
       `Team ${realTeam.id} ELO ${realTeamELOChange > 0 ? '+' : ''}${realTeamELOChange}`
     );
@@ -1928,7 +1929,7 @@ async function updateTagTeamBattleResults(
     },
   });
 
-  console.log(
+  logger.info(
     `[TagTeamBattles] Updated results for match ${match.id}: ` +
     `Team ${team1.id} ELO ${eloChanges.team1Change > 0 ? '+' : ''}${eloChanges.team1Change}, ` +
     `Team ${team2.id} ELO ${eloChanges.team2Change > 0 ? '+' : ''}${eloChanges.team2Change}`
@@ -1936,13 +1937,13 @@ async function updateTagTeamBattleResults(
   
   // Log fame awards
   if (team1ActiveFame > 0 || team1ReserveFame > 0) {
-    console.log(
+    logger.info(
       `[TagTeamBattles] Fame awarded - Team ${team1.id}: ` +
       `${team1.activeRobot.name} +${team1ActiveFame}, ${team1.reserveRobot.name} +${team1ReserveFame}`
     );
   }
   if (team2ActiveFame > 0 || team2ReserveFame > 0) {
-    console.log(
+    logger.info(
       `[TagTeamBattles] Fame awarded - Team ${team2.id}: ` +
       `${team2.activeRobot.name} +${team2ActiveFame}, ${team2.reserveRobot.name} +${team2ReserveFame}`
     );
@@ -1965,11 +1966,11 @@ async function updateTagTeamBattleResults(
   await awardStreamingRevenue(team2.stableId, streamingRevenue.team2Revenue, cycleNumber);
 
   // Log streaming revenue with details about which robots' stats were used
-  console.log(
+  logger.info(
     `[Streaming] Team ${team1.id} earned ₡${streamingRevenue.team1Revenue.totalRevenue.toLocaleString()} ` +
     `(Battles from ${streamingRevenue.team1MaxBattlesRobot.name}, Fame from ${streamingRevenue.team1MaxFameRobot.name})`
   );
-  console.log(
+  logger.info(
     `[Streaming] Team ${team2.id} earned ₡${streamingRevenue.team2Revenue.totalRevenue.toLocaleString()} ` +
     `(Battles from ${streamingRevenue.team2MaxBattlesRobot.name}, Fame from ${streamingRevenue.team2MaxFameRobot.name})`
   );
@@ -2197,7 +2198,7 @@ async function updateTagTeamBattleResults(
       }
     );
     
-    console.log(
+    logger.info(
       `[TagTeamBattles] Created 4 audit log events for tag team battle ${battle.id} ` +
       `(one per robot, rewards split 50/50 per team)`
     );

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import logger from '../config/logger';
 
 /**
  * @module services/jwtService
@@ -45,7 +46,7 @@ function getJwtSecret(): string {
     }
     // In development, fall back to a known default so the app starts without
     // requiring env setup. This value must never be used in production.
-    console.warn('JWT_SECRET not set, using default (not suitable for production)');
+    logger.warn('JWT_SECRET not set, using default (not suitable for production)');
     return 'dev-secret-change-in-production';
   }
   

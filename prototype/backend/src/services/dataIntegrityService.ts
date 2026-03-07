@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 export interface IntegrityIssue {
   type: 'credit_mismatch' | 'sequence_gap' | 'missing_events' | 'invalid_data';
@@ -285,7 +286,7 @@ export class DataIntegrityService {
    */
   async flagCycleForReview(cycleNumber: number, reason: string): Promise<void> {
     // Store flag in database (could be a separate table or metadata field)
-    console.warn(`[DataIntegrity] Cycle ${cycleNumber} flagged for review: ${reason}`);
+    logger.warn(`[DataIntegrity] Cycle ${cycleNumber} flagged for review: ${reason}`);
     
     // In a production system, this would:
     // 1. Create a database record for manual review

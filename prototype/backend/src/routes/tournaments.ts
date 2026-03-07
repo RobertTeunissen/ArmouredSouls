@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { getActiveTournaments } from '../services/tournamentService';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -38,7 +39,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Tournaments] List error:', error);
+    logger.error('[Tournaments] List error:', error);
     res.status(500).json({
       error: 'Failed to fetch tournaments',
       message: error instanceof Error ? error.message : String(error),
@@ -84,7 +85,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Tournaments] Get details error:', error);
+    logger.error('[Tournaments] Get details error:', error);
     res.status(500).json({
       error: 'Failed to fetch tournament details',
       message: error instanceof Error ? error.message : String(error),

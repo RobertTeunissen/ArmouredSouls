@@ -7,13 +7,20 @@
  * Each step is loaded on demand, and the next step is preloaded for smooth transitions.
  */
 
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import ProgressIndicator from './ProgressIndicator';
 import BudgetTracker from './BudgetTracker';
 import SkipConfirmationModal from './SkipConfirmationModal';
 import OnboardingErrorBoundary from './OnboardingErrorBoundary';
 import { useStepFocusManagement } from './hooks/useStepFocusManagement';
+import {
+  trackStepStarted,
+  trackStepCompleted,
+  trackTutorialCompleted,
+  trackTutorialSkipped,
+  flushEvents,
+} from '../../utils/onboardingAnalytics';
 
 // Lazy-loaded step components for code splitting
 const Step1_Welcome = lazy(() => import('./steps/Step1_Welcome'));
@@ -87,6 +94,17 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
   });
 
   const currentStep = tutorialState?.currentStep ?? 1;
+
+  // Track step_started whenever the current step changes
+  const prevStepRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (tutorialState && !tutorialState.hasCompletedOnboarding) {
+      if (prevStepRef.current !== currentStep) {
+        trackStepStarted(currentStep);
+        prevStepRef.current = currentStep;
+      }
+    }
+  }, [currentStep, tutorialState]);
 
   // Preload the next step component for smooth transitions
   useEffect(() => {
@@ -172,7 +190,10 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
   }
 
   const handleNext = async () => {
+    trackStepCompleted(currentStep);
     if (currentStep === 9) {
+      trackTutorialCompleted(currentStep);
+      await flushEvents();
       await completeTutorial();
       if (onComplete) {
         onComplete();
@@ -193,6 +214,8 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
   const handleSkipConfirm = async () => {
     setSkipLoading(true);
     try {
+      trackTutorialSkipped(currentStep);
+      await flushEvents();
       await skipTutorial();
       setShowSkipConfirmation(false);
       if (onComplete) {

@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 /**
  * CycleSnapshotService
@@ -70,7 +71,7 @@ export class CycleSnapshotService {
    * Aggregates data from Battle table and AuditLog gap events
    */
   async createSnapshot(cycleNumber: number): Promise<CycleSnapshot> {
-    console.log(`[CycleSnapshotService] Creating snapshot for cycle ${cycleNumber}`);
+    logger.info(`[CycleSnapshotService] Creating snapshot for cycle ${cycleNumber}`);
 
     // Get cycle timing from audit log events
     const cycleStartEvent = await prisma.auditLog.findFirst({
@@ -131,7 +132,7 @@ export class CycleSnapshotService {
       },
     });
 
-    console.log(`[CycleSnapshotService] Snapshot created for cycle ${cycleNumber}`);
+    logger.info(`[CycleSnapshotService] Snapshot created for cycle ${cycleNumber}`);
 
     return {
       cycleNumber,
@@ -160,7 +161,7 @@ export class CycleSnapshotService {
         },
       });
 
-      console.log(`[CycleSnapshotService] Found ${battleCompleteEvents.length} battle_complete events for cycle ${cycleNumber}`);
+      logger.info(`[CycleSnapshotService] Found ${battleCompleteEvents.length} battle_complete events for cycle ${cycleNumber}`);
 
       // Get passive income and operating costs from audit log
       const passiveIncomeEvents = await prisma.auditLog.findMany({
@@ -211,7 +212,7 @@ export class CycleSnapshotService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       battleCompleteEvents.forEach((event: any) => {
         if (!event.userId) {
-          console.log(`[CycleSnapshotService] WARNING: battle_complete event ${event.id} has no userId`);
+          logger.info(`[CycleSnapshotService] WARNING: battle_complete event ${event.id} has no userId`);
           return; // Skip invalid events
         }
         
@@ -220,7 +221,7 @@ export class CycleSnapshotService {
         const payload = event.payload as any;
         
         // Debug logging
-        console.log(`[CycleSnapshotService] Processing battle_complete for user ${event.userId}: credits=${payload.credits}, streaming=${payload.streamingRevenue}, prestige=${payload.prestige}`);
+        logger.info(`[CycleSnapshotService] Processing battle_complete for user ${event.userId}: credits=${payload.credits}, streaming=${payload.streamingRevenue}, prestige=${payload.prestige}`);
         
         // Aggregate data from this battle
         metric.battlesParticipated++;
@@ -363,7 +364,7 @@ export class CycleSnapshotService {
         }
       });
 
-      console.log(`[CycleSnapshotService] Found ${cycleEndBalanceEvents.length} cycle_end_balance events for cycle ${cycleNumber}`);
+      logger.info(`[CycleSnapshotService] Found ${cycleEndBalanceEvents.length} cycle_end_balance events for cycle ${cycleNumber}`);
       
       metricsMap.forEach(metric => {
         metric.totalPurchases = 
@@ -558,7 +559,17 @@ export class CycleSnapshotService {
     });
 
     if (!event) {
-      throw new Error(`Cycle ${cycleNumber} start event not found`);
+      // Fallback: use cycle snapshot start time
+      const snapshot = await prisma.cycleSnapshot.findUnique({
+        where: { cycleNumber },
+      });
+      
+      if (snapshot) {
+        return snapshot.startTime;
+      }
+
+      // Final fallback: return epoch (very old date) to allow queries to work
+      return new Date(0);
     }
 
     return event.eventTimestamp;
@@ -583,23 +594,6 @@ export class CycleSnapshotService {
       
       if (snapshot) {
         return snapshot.endTime;
-      }
-
-      // Second fallback: find the latest battle in this cycle
-      const cycleStartTime = await this.getCycleStartTime(cycleNumber);
-      const latestBattle = await prisma.battle.findFirst({
-        where: {
-          createdAt: {
-            gte: cycleStartTime,
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-
-      if (latestBattle) {
-        return latestBattle.createdAt;
       }
 
       // Final fallback: use current time for incomplete cycles

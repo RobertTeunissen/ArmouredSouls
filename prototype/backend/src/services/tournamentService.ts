@@ -5,6 +5,7 @@
 
 import { Robot, Tournament, TournamentMatch } from '@prisma/client';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import { checkSchedulingReadiness } from './matchmakingService';
 
 // Tournament configuration constants
@@ -357,7 +358,7 @@ export async function createSingleEliminationTournament(): Promise<TournamentCre
     },
   });
 
-  console.log(`[Tournament] Created ${tournamentName} with ${seededRobots.length} participants (${maxRounds} rounds)`);
+  logger.info(`[Tournament] Created ${tournamentName} with ${seededRobots.length} participants (${maxRounds} rounds)`);
 
   return {
     tournament,
@@ -480,7 +481,7 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
 
   const allCompleted = allMatches.every(match => match.status === 'completed');
   if (!allCompleted) {
-    console.log(`[Tournament] Round ${tournament.currentRound} not yet complete. Waiting for all matches.`);
+    logger.info(`[Tournament] Round ${tournament.currentRound} not yet complete. Waiting for all matches.`);
     return;
   }
 
@@ -533,7 +534,7 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
     },
   });
 
-  console.log(`[Tournament] Advanced to round ${nextRound} with ${winners.length} winners`);
+  logger.info(`[Tournament] Advanced to round ${nextRound} with ${winners.length} winners`);
 }
 
 /**
@@ -564,8 +565,8 @@ async function completeTournament(tournamentId: number, winnerId: number): Promi
       },
     });
 
-    console.log(`[Tournament] Tournament ${tournamentId} completed! Winner: ${winnerRobot.name} (User: ${winnerRobot.user.username})`);
-    console.log(`[Tournament] Championship title awarded to ${winnerRobot.user.username} (total: ${winnerRobot.user.championshipTitles + 1})`);
+    logger.info(`[Tournament] Tournament ${tournamentId} completed! Winner: ${winnerRobot.name} (User: ${winnerRobot.user.username})`);
+    logger.info(`[Tournament] Championship title awarded to ${winnerRobot.user.username} (total: ${winnerRobot.user.championshipTitles + 1})`);
   }
 }
 
@@ -579,18 +580,18 @@ export async function autoCreateNextTournament(): Promise<Tournament | null> {
   // Check for active tournaments
   const activeTournaments = await getActiveTournaments();
   if (activeTournaments.length > 0) {
-    console.log(`[Tournament] Active tournament exists. Skipping auto-creation.`);
+    logger.info(`[Tournament] Active tournament exists. Skipping auto-creation.`);
     return null;
   }
 
   // Check for eligible robots
   const eligibleRobots = await getEligibleRobotsForTournament();
   if (eligibleRobots.length < AUTO_START_THRESHOLD) {
-    console.log(`[Tournament] Insufficient robots for auto-tournament (${eligibleRobots.length}/${AUTO_START_THRESHOLD})`);
+    logger.info(`[Tournament] Insufficient robots for auto-tournament (${eligibleRobots.length}/${AUTO_START_THRESHOLD})`);
     return null;
   }
 
-  console.log(`[Tournament] Auto-creating tournament with ${eligibleRobots.length} eligible robots`);
+  logger.info(`[Tournament] Auto-creating tournament with ${eligibleRobots.length} eligible robots`);
   const result = await createSingleEliminationTournament();
   return result.tournament;
 }

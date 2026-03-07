@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 // Default robot attributes (all set to 1.00)
 const DEFAULT_ROBOT_ATTRIBUTES = {
@@ -454,7 +455,7 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
 }> {
   const startTime = Date.now();
   const count = cycleNumber; // Cycle N creates N users
-  console.log(`[UserGeneration] Generating ${count} archetype users for Cycle ${cycleNumber}...`);
+  logger.info(`[UserGeneration] Generating ${count} archetype users for Cycle ${cycleNumber}...`);
 
   // Calculate starting archetype position based on previous cycles
   // Total users created in previous cycles = sum(1 to cycleNumber-1) = (cycleNumber-1) * cycleNumber / 2
@@ -470,7 +471,7 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
       const archetype = ARCHETYPE_SPECS[archetypePosition % TOTAL_ARCHETYPES];
       const username = `${archetype.username}_${cycleNumber}_${i + 1}`;
 
-      console.log(`[UserGeneration] Creating user ${i + 1}/${count}: ${username} (archetype: ${archetype.name})`);
+      logger.info(`[UserGeneration] Creating user ${i + 1}/${count}: ${username} (archetype: ${archetype.name})`);
 
       // Use transaction to ensure atomicity
       await prisma.$transaction(async (tx) => {
@@ -596,7 +597,7 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
               tagTeamLeagueId: 'bronze_1',
             },
           });
-          console.log(`[UserGeneration] Created tag team for ${username}`);
+          logger.info(`[UserGeneration] Created tag team for ${username}`);
         }
       });
 
@@ -605,17 +606,17 @@ export async function generateBattleReadyUsers(cycleNumber: number): Promise<{
 
       // Log progress
       if ((i + 1) % 5 === 0 || i + 1 === count) {
-        console.log(`[UserGeneration] Created ${i + 1}/${count} users...`);
+        logger.info(`[UserGeneration] Created ${i + 1}/${count} users...`);
       }
     } catch (error) {
-      console.error(`[UserGeneration] Error creating user ${i + 1}:`, error);
+      logger.error(`[UserGeneration] Error creating user ${i + 1}:`, error);
       throw error; // Fail fast if any user creation fails
     }
   }
 
   const duration = Date.now() - startTime;
-  console.log(`[UserGeneration] ✅ Created ${count} users with ${totalRobotsCreated} robots in ${duration}ms`);
-  console.log(`[UserGeneration] Archetype position after this cycle: ${archetypePosition % TOTAL_ARCHETYPES}`);
+  logger.info(`[UserGeneration] ✅ Created ${count} users with ${totalRobotsCreated} robots in ${duration}ms`);
+  logger.info(`[UserGeneration] Archetype position after this cycle: ${archetypePosition % TOTAL_ARCHETYPES}`);
 
   return {
     usersCreated: count,

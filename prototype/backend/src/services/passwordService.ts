@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import logger from '../config/logger';
 
 /**
  * @module services/passwordService
@@ -24,7 +25,7 @@ function getSaltRounds(): number {
   // Default of 10 provides ~100ms hash time on modern hardware — a good balance
   // between security and user-facing response time.
   if (isNaN(saltRounds) || saltRounds < 4 || saltRounds > 31) {
-    console.warn(`Invalid BCRYPT_SALT_ROUNDS value, using default of 10`);
+    logger.warn(`Invalid BCRYPT_SALT_ROUNDS value, using default of 10`);
     return 10;
   }
   

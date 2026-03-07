@@ -9,6 +9,7 @@
 
 import { Robot, TournamentMatch, Battle } from '@prisma/client';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import { simulateBattle } from './combatSimulator';
 import { CombatMessageGenerator } from './combatMessageGenerator';
 import { calculateELOChange, getCurrentCycleNumber } from './battleOrchestrator';
@@ -143,11 +144,11 @@ export async function processTournamentBattle(
   
   if (streamingRevenue1) {
     await awardStreamingRevenue(robot1.userId, streamingRevenue1, cycleNumber);
-    console.log(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Tournament Battle #${battle.id}`);
+    logger.info(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Tournament Battle #${battle.id}`);
   }
   if (streamingRevenue2) {
     await awardStreamingRevenue(robot2.userId, streamingRevenue2, cycleNumber);
-    console.log(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Tournament Battle #${battle.id}`);
+    logger.info(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Tournament Battle #${battle.id}`);
   }
 
   // Update BattleParticipant records with streaming revenue
@@ -298,7 +299,7 @@ export async function processTournamentBattle(
   const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
   const totalFame = stats1.fameAwarded + stats2.fameAwarded;
   
-  console.log(
+  logger.info(
     `[Battle] Tournament: Round ${tournament.currentRound} | ${robot1.name} (User ${robot1User?.id}) vs ${robot2.name} (User ${robot2User?.id}) | Winner: ${battle.winnerId === robot1.id ? robot1.name : robot2.name} | Rewards: ₡${battle.winnerReward?.toLocaleString() || 0} / ₡${battle.loserReward?.toLocaleString() || 0} | Prestige: +${totalPrestige} | Fame: +${totalFame}${killInfo}`
   );
 

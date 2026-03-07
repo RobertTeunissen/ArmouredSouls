@@ -718,7 +718,12 @@ export class RobotPerformanceService {
   }
 
   /**
-   * Get cycle start time from audit log
+   * Get cycle start time from audit log or fallback to epoch
+   * 
+   * Returns the start time for a cycle. If no audit log or snapshot exists,
+   * returns epoch (very old date) to allow queries to work for cycles without
+   * explicit start time records. This enables analytics to display completed
+   * cycles even when cycle metadata is missing.
    */
   private async getCycleStartTime(cycleNumber: number): Promise<Date> {
     const event = await prisma.auditLog.findFirst({
@@ -729,7 +734,7 @@ export class RobotPerformanceService {
     });
 
     if (!event) {
-      // Fallback: use earliest battle in cycle
+      // Fallback: use cycle snapshot start time
       const snapshot = await prisma.cycleSnapshot.findUnique({
         where: { cycleNumber },
       });
@@ -738,14 +743,20 @@ export class RobotPerformanceService {
         return snapshot.startTime;
       }
 
-      throw new Error(`Cycle ${cycleNumber} start time not found`);
+      // Final fallback: return epoch (very old date) to allow queries to work
+      // This enables analytics for cycles without audit logs or snapshots
+      return new Date(0);
     }
 
     return event.eventTimestamp;
   }
 
   /**
-   * Get cycle end time from audit log
+   * Get cycle end time from audit log or fallback to current time
+   * 
+   * Returns the end time for a cycle. If no audit log or snapshot exists,
+   * returns current time to allow queries to work for incomplete cycles.
+   * This enables analytics to display in-progress cycles.
    */
   private async getCycleEndTime(cycleNumber: number): Promise<Date> {
     const event = await prisma.auditLog.findFirst({
@@ -763,23 +774,6 @@ export class RobotPerformanceService {
       
       if (snapshot) {
         return snapshot.endTime;
-      }
-
-      // Second fallback: find the latest battle in this cycle
-      const cycleStartTime = await this.getCycleStartTime(cycleNumber);
-      const latestBattle = await prisma.battle.findFirst({
-        where: {
-          createdAt: {
-            gte: cycleStartTime,
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-
-      if (latestBattle) {
-        return latestBattle.createdAt;
       }
 
       // Final fallback: use current time for incomplete cycles

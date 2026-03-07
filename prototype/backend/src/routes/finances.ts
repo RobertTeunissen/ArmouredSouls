@@ -1,6 +1,7 @@
 import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import {
   generateFinancialReport,
   calculateTotalDailyOperatingCosts,
@@ -146,7 +147,7 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
       multiplierBreakdown,
     });
   } catch (error) {
-    console.error('Daily financial report error:', error);
+    logger.error('Daily financial report error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -181,7 +182,7 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
       prestigeMultiplier: getPrestigeMultiplier(user.prestige),
     });
   } catch (error) {
-    console.error('Financial summary error:', error);
+    logger.error('Financial summary error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -198,7 +199,7 @@ router.get('/operating-costs', authenticateToken, async (req: AuthRequest, res: 
 
     res.json(operatingCosts);
   } catch (error) {
-    console.error('Operating costs error:', error);
+    logger.error('Operating costs error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -243,7 +244,7 @@ router.get('/revenue-streams', authenticateToken, async (req: AuthRequest, res: 
       prestige: user.prestige,
     });
   } catch (error) {
-    console.error('Revenue streams error:', error);
+    logger.error('Revenue streams error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -328,7 +329,7 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
       recommendations,
     });
   } catch (error) {
-    console.error('Financial projections error:', error);
+    logger.error('Financial projections error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -345,7 +346,7 @@ router.get('/per-robot', authenticateToken, async (req: AuthRequest, res: Respon
 
     res.json(report);
   } catch (error) {
-    console.error('Per-robot financial report error:', error);
+    logger.error('Per-robot financial report error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -367,7 +368,7 @@ router.post('/roi-calculator', authenticateToken, async (req: AuthRequest, res: 
 
     res.json(roiData);
   } catch (error) {
-    console.error('ROI calculator error:', error);
+    logger.error('ROI calculator error:', error);
     if (error instanceof Error) {
       res.status(400).json({ error: error.message });
     } else {

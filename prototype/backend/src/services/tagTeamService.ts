@@ -1,5 +1,6 @@
 import { Robot, TagTeam } from '@prisma/client';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import { checkBattleReadiness, checkSchedulingReadiness } from './matchmakingService';
 import { assignTagTeamLeagueInstance } from './tagTeamLeagueInstanceService';
 
@@ -180,14 +181,14 @@ export async function createTeam(
       },
     });
 
-    console.log(`[TagTeam] Created team ${team.id} for stable ${stableId} in instance ${tagTeamLeagueId}`);
+    logger.info(`[TagTeam] Created team ${team.id} for stable ${stableId} in instance ${tagTeamLeagueId}`);
 
     return {
       success: true,
       team,
     };
   } catch (error) {
-    console.error('[TagTeam] Error creating team:', error);
+    logger.error('[TagTeam] Error creating team:', error);
     return {
       success: false,
       errors: ['Failed to create team'],
@@ -247,12 +248,12 @@ export async function disbandTeam(teamId: number, stableId: number): Promise<boo
     });
 
     if (!team) {
-      console.error(`[TagTeam] Team ${teamId} not found`);
+      logger.error(`[TagTeam] Team ${teamId} not found`);
       return false;
     }
 
     if (team.stableId !== stableId) {
-      console.error(`[TagTeam] Stable ${stableId} does not own team ${teamId}`);
+      logger.error(`[TagTeam] Stable ${stableId} does not own team ${teamId}`);
       return false;
     }
 
@@ -261,10 +262,10 @@ export async function disbandTeam(teamId: number, stableId: number): Promise<boo
       where: { id: teamId },
     });
 
-    console.log(`[TagTeam] Disbanded team ${teamId}`);
+    logger.info(`[TagTeam] Disbanded team ${teamId}`);
     return true;
   } catch (error) {
-    console.error('[TagTeam] Error disbanding team:', error);
+    logger.error('[TagTeam] Error disbanding team:', error);
     return false;
   }
 }

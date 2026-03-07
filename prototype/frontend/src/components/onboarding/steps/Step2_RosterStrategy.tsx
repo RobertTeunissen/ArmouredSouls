@@ -15,6 +15,7 @@
 import { useState, useEffect, memo } from 'react';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 import RosterStrategyCard, { RosterStrategy } from '../RosterStrategyCard';
+import { trackStrategySelected } from '../../../utils/onboardingAnalytics';
 
 interface Step2_RosterStrategyProps {
   onNext?: () => void;
@@ -56,6 +57,7 @@ const Step2_RosterStrategy = ({ onNext }: Step2_RosterStrategyProps) => {
     try {
       setIsSubmitting(true);
       await updateStrategy(selectedStrategy);
+      trackStrategySelected(selectedStrategy, 2);
       setIsConfirmed(true);
     } catch {
       // Error is handled by context

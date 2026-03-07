@@ -3,6 +3,7 @@ import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { executeScheduledBattles } from '../services/battleOrchestrator';
 import { runMatchmaking } from '../services/matchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';
+import logger from '../config/logger';
 import { rebalanceTagTeamLeagues } from '../services/tagTeamLeagueRebalancingService';
 import { shouldRunTagTeamMatchmaking as _shouldRunTagTeamMatchmaking, runTagTeamMatchmaking } from '../services/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../services/tagTeamBattleOrchestrator';
@@ -41,7 +42,7 @@ router.post('/matchmaking/run', authenticateToken, requireAdmin, async (req: Req
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    console.log('[Admin] Triggering matchmaking...');
+    logger.info('[Admin] Triggering matchmaking...');
     const totalMatches = await runMatchmaking(targetTime);
 
     res.json({
@@ -51,7 +52,7 @@ router.post('/matchmaking/run', authenticateToken, requireAdmin, async (req: Req
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Matchmaking error:', error);
+    logger.error('[Admin] Matchmaking error:', error);
     res.status(500).json({
       error: 'Failed to run matchmaking',
       message: error instanceof Error ? error.message : String(error),
@@ -70,7 +71,7 @@ router.post('/battles/run', authenticateToken, requireAdmin, async (req: Request
     // If not provided, pass undefined to execute ALL scheduled matches
     const targetTime = scheduledFor ? new Date(scheduledFor) : undefined;
 
-    console.log('[Admin] Executing battles...');
+    logger.info('[Admin] Executing battles...');
     const summary = await executeScheduledBattles(targetTime);
 
     res.json({
@@ -79,7 +80,7 @@ router.post('/battles/run', authenticateToken, requireAdmin, async (req: Request
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Battle execution error:', error);
+    logger.error('[Admin] Battle execution error:', error);
     res.status(500).json({
       error: 'Failed to execute battles',
       message: error instanceof Error ? error.message : String(error),
@@ -93,7 +94,7 @@ router.post('/battles/run', authenticateToken, requireAdmin, async (req: Request
  */
 router.post('/leagues/rebalance', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    console.log('[Admin] Triggering league rebalancing...');
+    logger.info('[Admin] Triggering league rebalancing...');
     const summary = await rebalanceLeagues();
 
     res.json({
@@ -102,7 +103,7 @@ router.post('/leagues/rebalance', authenticateToken, requireAdmin, async (req: R
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Rebalancing error:', error);
+    logger.error('[Admin] Rebalancing error:', error);
     res.status(500).json({
       error: 'Failed to rebalance leagues',
       message: error instanceof Error ? error.message : String(error),
@@ -118,7 +119,7 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
   try {
     const { deductCosts = false } = req.body;
 
-    console.log('[Admin] Auto-repairing all robots...');
+    logger.info('[Admin] Auto-repairing all robots...');
 
     // Get all robots that need repair
     const robots = await prisma.robot.findMany({
@@ -251,7 +252,7 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Auto-repair error:', error);
+    logger.error('[Admin] Auto-repair error:', error);
     res.status(500).json({
       error: 'Failed to auto-repair robots',
       message: error instanceof Error ? error.message : String(error),
@@ -265,7 +266,7 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
  */
 router.post('/recalculate-hp', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    console.log('[Admin] Recalculating HP for all robots using new formula...');
+    logger.info('[Admin] Recalculating HP for all robots using new formula...');
 
     // Get all robots
     const robots = await prisma.robot.findMany({
@@ -321,7 +322,7 @@ router.post('/recalculate-hp', authenticateToken, requireAdmin, async (req: Requ
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] HP recalculation error:', error);
+    logger.error('[Admin] HP recalculation error:', error);
     res.status(500).json({
       error: 'Failed to recalculate HP',
       message: error instanceof Error ? error.message : String(error),
@@ -335,11 +336,11 @@ router.post('/recalculate-hp', authenticateToken, requireAdmin, async (req: Requ
  */
 router.post('/daily-finances/process', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    console.log('[Admin] Processing daily finances for all users...');
+    logger.info('[Admin] Processing daily finances for all users...');
     
     const summary = await processAllDailyFinances();
     
-    console.log(`[Admin] Processed ${summary.usersProcessed} users, ` +
+    logger.info(`[Admin] Processed ${summary.usersProcessed} users, ` +
       `deducted ₡${summary.totalCostsDeducted.toLocaleString()}, ` +
       `${summary.bankruptUsers} bankruptcies`);
     
@@ -349,7 +350,7 @@ router.post('/daily-finances/process', authenticateToken, requireAdmin, async (r
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Daily finances error:', error);
+    logger.error('[Admin] Daily finances error:', error);
     res.status(500).json({
       error: 'Failed to process daily finances',
       message: error instanceof Error ? error.message : String(error),
@@ -380,7 +381,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
     const maxCycles = 100;
     const cycleCount = Math.min(Math.max(1, cycles), maxCycles);
 
-    console.log(`[Admin] Running ${cycleCount} bulk cycles (includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
+    logger.info(`[Admin] Running ${cycleCount} bulk cycles (includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
 
     // Get or create cycle metadata (singleton pattern)
     // Note: This initialization is also in seed.ts. Both locations create the same
@@ -405,14 +406,14 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       cycleLogger.startCycle(currentCycleNumber);
       cycleLogger.log('INFO', `Cycle ${currentCycleNumber} (${i}/${cycleCount})`);
 
-      console.log(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
+      logger.info(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
 
       try {
         // Log cycle start
         await eventLogger.logCycleStart(currentCycleNumber, 'manual');
 
         // Step 1: Execute League Battles (1v1) - matches scheduled in previous cycle
-        console.log(`[Admin] Step 1: Execute League Battles (1v1)`);
+        logger.info(`[Admin] Step 1: Execute League Battles (1v1)`);
         const step1Start = Date.now();
         const battleSummary = await executeScheduledBattles(new Date());
         await eventLogger.logCycleStepComplete(
@@ -424,7 +425,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         );
 
         // Step 2: Repair All Robots (costs deducted) - after league battles
-        console.log(`[Admin] Step 2: Repair All Robots (post-league)`);
+        logger.info(`[Admin] Step 2: Repair All Robots (post-league)`);
         const step2Start = Date.now();
         const repair1Summary = await repairAllRobots(true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
@@ -440,7 +441,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         let tagTeamBattleSummary = null;
         const shouldRunTagTeam = currentCycleNumber % 2 === 1; // Odd cycles only
         if (shouldRunTagTeam) {
-          console.log(`[Admin] Step 3: Execute Tag Team Battles (Cycle ${currentCycleNumber})`);
+          logger.info(`[Admin] Step 3: Execute Tag Team Battles (Cycle ${currentCycleNumber})`);
           const step3Start = Date.now();
           tagTeamBattleSummary = await executeScheduledTagTeamBattles(new Date());
           await eventLogger.logCycleStepComplete(
@@ -451,11 +452,11 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             { battlesExecuted: tagTeamBattleSummary?.totalBattles || 0 }
           );
         } else {
-          console.log(`[Admin] Step 3: Skipping Tag Team Battles (even cycle ${currentCycleNumber})`);
+          logger.info(`[Admin] Step 3: Skipping Tag Team Battles (even cycle ${currentCycleNumber})`);
         }
 
         // Step 4: Repair All Robots (costs deducted) - after tag team battles
-        console.log(`[Admin] Step 4: Repair All Robots (post-tag-team)`);
+        logger.info(`[Admin] Step 4: Repair All Robots (post-tag-team)`);
         const step4Start = Date.now();
         const repair2Summary = await repairAllRobots(true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
@@ -467,7 +468,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         );
 
         // Step 5: Tournament Execution / Scheduling
-        console.log(`[Admin] Step 5: Tournament Execution / Scheduling`);
+        logger.info(`[Admin] Step 5: Tournament Execution / Scheduling`);
         const step5Start = Date.now();
         let tournamentSummary = null;
         if (includeTournaments) {
@@ -527,15 +528,15 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
               const nextTournament = await autoCreateNextTournament();
               if (nextTournament) {
                 tournamentSummary.tournamentsCreated++;
-                console.log(`[Admin] Auto-created tournament: ${nextTournament.name}`);
+                logger.info(`[Admin] Auto-created tournament: ${nextTournament.name}`);
               }
             } catch (error) {
-              console.error('[Admin] Failed to auto-create tournament:', error);
+              logger.error('[Admin] Failed to auto-create tournament:', error);
             }
 
-            console.log(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted} executed, ${tournamentSummary.roundsExecuted} rounds, ${tournamentSummary.matchesExecuted} matches`);
+            logger.info(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted} executed, ${tournamentSummary.roundsExecuted} rounds, ${tournamentSummary.matchesExecuted} matches`);
           } catch (error) {
-            console.error('[Admin] Tournament execution error:', error);
+            logger.error('[Admin] Tournament execution error:', error);
             tournamentSummary = {
               error: error instanceof Error ? error.message : String(error),
             };
@@ -553,7 +554,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         );
 
         // Step 6: Repair All Robots (costs deducted) - after tournaments
-        console.log(`[Admin] Step 6: Repair All Robots (post-tournament)`);
+        logger.info(`[Admin] Step 6: Repair All Robots (post-tournament)`);
         const step6Start = Date.now();
         const repair3Summary = await repairAllRobots(true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
@@ -565,7 +566,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         );
 
         // Step 7: Rebalance Leagues
-        console.log(`[Admin] Step 7: Rebalance Leagues`);
+        logger.info(`[Admin] Step 7: Rebalance Leagues`);
         const step7Start = Date.now();
         const rebalancingSummary = await rebalanceLeagues();
         await eventLogger.logCycleStepComplete(
@@ -579,7 +580,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // Step 7.5: Rebalance Tag Team Leagues (odd cycles only)
         let tagTeamRebalancingSummary = null;
         if (shouldRunTagTeam) {
-          console.log(`[Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle ${currentCycleNumber})`);
+          logger.info(`[Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle ${currentCycleNumber})`);
           const step7_5Start = Date.now();
           tagTeamRebalancingSummary = await rebalanceTagTeamLeagues();
           await eventLogger.logCycleStepComplete(
@@ -590,19 +591,19 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             { promotions: tagTeamRebalancingSummary.totalPromoted, demotions: tagTeamRebalancingSummary.totalDemoted }
           );
         } else {
-          console.log(`[Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle ${currentCycleNumber})`);
+          logger.info(`[Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle ${currentCycleNumber})`);
         }
 
         // Step 8: Auto Generate New Users (battle ready)
-        console.log(`[Admin] Step 8: Auto Generate New Users`);
+        logger.info(`[Admin] Step 8: Auto Generate New Users`);
         const step8Start = Date.now();
         let userGenerationSummary = null;
         if (generateUsersPerCycle) {
           try {
             userGenerationSummary = await generateBattleReadyUsers(currentCycleNumber);
-            console.log(`[Admin] Generated ${userGenerationSummary.usersCreated} users for cycle ${currentCycleNumber}`);
+            logger.info(`[Admin] Generated ${userGenerationSummary.usersCreated} users for cycle ${currentCycleNumber}`);
           } catch (error) {
-            console.error(`[Admin] Error generating users:`, error);
+            logger.error(`[Admin] Error generating users:`, error);
             userGenerationSummary = {
               error: error instanceof Error ? error.message : String(error),
             };
@@ -617,7 +618,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         );
 
         // Step 9: Matchmaking for Leagues (1v1) - schedule for next cycle
-        console.log(`[Admin] Step 9: Matchmaking for Leagues (1v1)`);
+        logger.info(`[Admin] Step 9: Matchmaking for Leagues (1v1)`);
         const step9Start = Date.now();
         const scheduledFor = new Date(Date.now() + 1000); // 1 second ahead
         const matchesCreated = await runMatchmaking(scheduledFor);
@@ -633,7 +634,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // Step 9.5: Matchmaking for Tag Teams (odd cycles only)
         let tagTeamMatchmakingSummary = null;
         if (shouldRunTagTeam) {
-          console.log(`[Admin] Step 9.5: Matchmaking for Tag Teams (Cycle ${currentCycleNumber})`);
+          logger.info(`[Admin] Step 9.5: Matchmaking for Tag Teams (Cycle ${currentCycleNumber})`);
           const step9_5Start = Date.now();
           const tagTeamMatchesCreated = await runTagTeamMatchmaking(scheduledFor);
           tagTeamMatchmakingSummary = { matchesCreated: tagTeamMatchesCreated };
@@ -645,11 +646,11 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             { matchesCreated: tagTeamMatchesCreated }
           );
         } else {
-          console.log(`[Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle ${currentCycleNumber})`);
+          logger.info(`[Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle ${currentCycleNumber})`);
         }
 
         // Step 10: Increment Cycle Counters
-        console.log(`[Admin] Step 10: Increment Cycle Counters`);
+        logger.info(`[Admin] Step 10: Increment Cycle Counters`);
         const step10Start = Date.now();
         
         // Update cycle metadata with current cycle number
@@ -690,7 +691,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         );
 
         // Step 11: Calculate and Log Passive Income & Operating Costs
-        console.log(`[Admin] Step 11: Calculate Passive Income & Operating Costs`);
+        logger.info(`[Admin] Step 11: Calculate Passive Income & Operating Costs`);
         const step11Start = Date.now();
         const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../utils/economyCalculations');
         
@@ -803,13 +804,13 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             
             // Console log for cycle logs
             const facilityList = facilityCosts.filter(f => f.cost > 0).map(f => `${f.facilityType}(L${f.level}): ₡${f.cost}`).join(', ');
-            console.log(`[OperatingCosts] User ${user.id} | Total: ₡${totalCost.toLocaleString()} | Facilities: ${facilityList}`);
+            logger.info(`[OperatingCosts] User ${user.id} | Total: ₡${totalCost.toLocaleString()} | Facilities: ${facilityList}`);
             
             totalOperatingCosts += totalCost;
           }
         }
 
-        console.log(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
+        logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
         
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
@@ -824,7 +825,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         );
 
         // Step 12: Wait (1.1 second delay)
-        console.log(`[Admin] Step 12: Wait (1.1 second delay)`);
+        logger.info(`[Admin] Step 12: Wait (1.1 second delay)`);
         const step12Start = Date.now();
         await new Promise(resolve => setTimeout(resolve, 1100));
         await eventLogger.logCycleStepComplete(
@@ -840,8 +841,8 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         await eventLogger.logCycleComplete(currentCycleNumber, cycleDuration);
 
         // Step 13: Log End-of-Cycle Balances
-        console.log(`[Admin] Step 13: Log End-of-Cycle Balances`);
-        console.log(`[Admin] === End of Cycle ${currentCycleNumber} Balances ===`);
+        logger.info(`[Admin] Step 13: Log End-of-Cycle Balances`);
+        logger.info(`[Admin] === End of Cycle ${currentCycleNumber} Balances ===`);
         const step13Start = Date.now();
         const endOfCycleUsers = await prisma.user.findMany({
           where: {
@@ -857,7 +858,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         });
 
         for (const user of endOfCycleUsers) {
-          console.log(`[Balance] User ${user.id} | Stable: ${user.stableName || user.username} | Balance: ₡${user.currency.toLocaleString()}`);
+          logger.info(`[Balance] User ${user.id} | Stable: ${user.stableName || user.username} | Balance: ₡${user.currency.toLocaleString()}`);
           
           // Log end-of-cycle balance to audit log
           await eventLogger.logCycleEndBalance(
@@ -868,7 +869,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             user.currency
           );
         }
-        console.log(`[Admin] ===================================`);
+        logger.info(`[Admin] ===================================`);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'log_end_of_cycle_balances',
@@ -878,12 +879,12 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         );
 
         // Step 14: Create Cycle Snapshot for analytics (LAST STEP - aggregates all data including balances)
-        console.log(`[Admin] Step 14: Create Cycle Snapshot`);
+        logger.info(`[Admin] Step 14: Create Cycle Snapshot`);
         const step14Start = Date.now();
         try {
           const { cycleSnapshotService } = await import('../services/cycleSnapshotService');
           await cycleSnapshotService.createSnapshot(currentCycleNumber);
-          console.log(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
+          logger.info(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
           await eventLogger.logCycleStepComplete(
             currentCycleNumber,
             'create_cycle_snapshot',
@@ -892,18 +893,18 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
             {}
           );
         } catch (snapshotError) {
-          console.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
+          logger.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
           // Don't fail the entire cycle if snapshot creation fails
         }
 
         // Display Cycle Summary
-        console.log(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
-        console.log(`[Admin] Battles: ${battleSummary.totalBattles}`);
+        logger.info(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
+        logger.info(`[Admin] Battles: ${battleSummary.totalBattles}`);
         const totalStreamingRevenue = (battleSummary.totalStreamingRevenue || 0) + (tagTeamBattleSummary?.totalStreamingRevenue || 0);
         if (totalStreamingRevenue > 0) {
-          console.log(`[Admin] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()}`);
+          logger.info(`[Admin] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()}`);
         }
-        console.log(`[Admin] ===================================`);
+        logger.info(`[Admin] ===================================`);
 
         cycleResults.push({
           cycle: currentCycleNumber,
@@ -925,7 +926,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // End cycle logging
         cycleLogger.endCycle();
       } catch (error) {
-        console.error(`[Admin] Error in cycle ${currentCycleNumber}:`, error);
+        logger.error(`[Admin] Error in cycle ${currentCycleNumber}:`, error);
         cycleLogger.log('ERROR', `Cycle ${currentCycleNumber} failed`, { error: error instanceof Error ? error.message : String(error) });
         cycleLogger.endCycle();
         
@@ -951,7 +952,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Bulk cycles error:', error);
+    logger.error('[Admin] Bulk cycles error:', error);
     res.status(500).json({
       error: 'Failed to run bulk cycles',
       message: error instanceof Error ? error.message : String(error),
@@ -965,7 +966,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
  */
 router.post('/snapshots/backfill', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    console.log('[Admin] Backfilling cycle snapshots...');
+    logger.info('[Admin] Backfilling cycle snapshots...');
     
     const { cycleSnapshotService } = await import('../services/cycleSnapshotService');
     
@@ -992,16 +993,16 @@ router.post('/snapshots/backfill', authenticateToken, requireAdmin, async (req: 
     // Create snapshots for missing cycles
     for (let cycle = 1; cycle <= totalCycles; cycle++) {
       if (existingCycles.has(cycle)) {
-        console.log(`[Admin] Snapshot already exists for cycle ${cycle}, skipping`);
+        logger.info(`[Admin] Snapshot already exists for cycle ${cycle}, skipping`);
         continue;
       }
 
       try {
-        console.log(`[Admin] Creating snapshot for cycle ${cycle}`);
+        logger.info(`[Admin] Creating snapshot for cycle ${cycle}`);
         await cycleSnapshotService.createSnapshot(cycle);
         snapshotsCreated.push(cycle);
       } catch (error) {
-        console.error(`[Admin] Failed to create snapshot for cycle ${cycle}:`, error);
+        logger.error(`[Admin] Failed to create snapshot for cycle ${cycle}:`, error);
         errors.push({
           cycle,
           error: error instanceof Error ? error.message : String(error),
@@ -1017,7 +1018,7 @@ router.post('/snapshots/backfill', authenticateToken, requireAdmin, async (req: 
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
-    console.error('[Admin] Backfill snapshots error:', error);
+    logger.error('[Admin] Backfill snapshots error:', error);
     res.status(500).json({
       error: 'Failed to backfill snapshots',
       message: error instanceof Error ? error.message : String(error),
@@ -1187,7 +1188,7 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Stats error:', error);
+    logger.error('[Admin] Stats error:', error);
     res.status(500).json({
       error: 'Failed to retrieve stats',
       message: error instanceof Error ? error.message : String(error),
@@ -1375,7 +1376,7 @@ router.get('/users/at-risk', authenticateToken, requireAdmin, async (req: Reques
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] At-risk users error:', error);
+    logger.error('[Admin] At-risk users error:', error);
     res.status(500).json({
       error: 'Failed to retrieve at-risk users',
       message: error instanceof Error ? error.message : String(error),
@@ -1577,7 +1578,7 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
       },
     });
   } catch (error) {
-    console.error('[Admin] Battles list error:', error);
+    logger.error('[Admin] Battles list error:', error);
     res.status(500).json({
       error: 'Failed to retrieve battles',
       message: error instanceof Error ? error.message : String(error),
@@ -1733,7 +1734,7 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
       battleLog: battle.battleLog,
     });
   } catch (error) {
-    console.error('[Admin] Battle detail error:', error);
+    logger.error('[Admin] Battle detail error:', error);
     res.status(500).json({
       error: 'Failed to retrieve battle details',
       message: error instanceof Error ? error.message : String(error),
@@ -2013,7 +2014,7 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Robot stats error:', error);
+    logger.error('[Admin] Robot stats error:', error);
     res.status(500).json({
       error: 'Failed to retrieve robot statistics',
       message: error instanceof Error ? error.message : String(error),
@@ -2030,7 +2031,7 @@ router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, async (re
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    console.log('[Admin] Triggering tag team matchmaking...');
+    logger.info('[Admin] Triggering tag team matchmaking...');
     const totalMatches = await runTagTeamMatchmaking(targetTime);
 
     res.json({
@@ -2040,7 +2041,7 @@ router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, async (re
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Tag team matchmaking error:', error);
+    logger.error('[Admin] Tag team matchmaking error:', error);
     res.status(500).json({
       error: 'Failed to run tag team matchmaking',
       message: error instanceof Error ? error.message : String(error),
@@ -2057,7 +2058,7 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, async (req: R
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : undefined;
 
-    console.log('[Admin] Executing tag team battles...');
+    logger.info('[Admin] Executing tag team battles...');
     const summary = await executeScheduledTagTeamBattles(targetTime);
 
     res.json({
@@ -2066,7 +2067,7 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, async (req: R
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Tag team battle execution error:', error);
+    logger.error('[Admin] Tag team battle execution error:', error);
     res.status(500).json({
       error: 'Failed to execute tag team battles',
       message: error instanceof Error ? error.message : String(error),
@@ -2080,7 +2081,7 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, async (req: R
  */
 router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    console.log('[Admin] Triggering tag team league rebalancing...');
+    logger.info('[Admin] Triggering tag team league rebalancing...');
     const summary = await rebalanceTagTeamLeagues();
 
     res.json({
@@ -2089,7 +2090,7 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, async (req:
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Tag team rebalancing error:', error);
+    logger.error('[Admin] Tag team rebalancing error:', error);
     res.status(500).json({
       error: 'Failed to rebalance tag team leagues',
       message: error instanceof Error ? error.message : String(error),

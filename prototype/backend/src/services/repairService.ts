@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma';
 import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 import { eventLogger } from '../services/eventLogger';
+import logger from '../config/logger';
 
 
 
@@ -161,9 +162,9 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
         const stableInfo = user?.stableName ? ` (${user.stableName})` : '';
         
         // Single consolidated log per robot
-        console.log(`[RepairService] | User ${userId}${stableInfo} | Robot ${robot.id} (${robot.name}) | Cost: ₡${repairCost.toLocaleString()} | Discount: ${repairBayDiscount}%`);
+        logger.info(`[RepairService] | User ${userId}${stableInfo} | Robot ${robot.id} (${robot.name}) | Cost: ₡${repairCost.toLocaleString()} | Discount: ${repairBayDiscount}%`);
       } catch (logError) {
-        console.error(`[RepairService] | ERROR | User ${userId} | Robot ${robot.id} | Failed to log repair event:`, logError instanceof Error ? logError.message : logError);
+        logger.error(`[RepairService] | ERROR | User ${userId} | Robot ${robot.id} | Failed to log repair event:`, logError instanceof Error ? logError.message : logError);
       }
     }
 

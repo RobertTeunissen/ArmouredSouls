@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/leagueInstanceService';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 const router = express.Router();
 
@@ -95,7 +96,7 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('[Leagues API] Error fetching standings:', error);
+    logger.error('[Leagues API] Error fetching standings:', error);
     res.status(500).json({
       error: 'Failed to fetch league standings',
       message: error instanceof Error ? error.message : String(error),
@@ -130,7 +131,7 @@ router.get('/:tier/instances', async (req: Request, res: Response) => {
       maxRobots: instance.maxRobots,
     })));
   } catch (error) {
-    console.error('[Leagues API] Error fetching instances:', error);
+    logger.error('[Leagues API] Error fetching instances:', error);
     res.status(500).json({
       error: 'Failed to fetch league instances',
       message: error instanceof Error ? error.message : String(error),

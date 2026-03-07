@@ -6,6 +6,7 @@
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { getFacilityConfig } from '../config/facilities';
+import logger from '../config/logger';
 
 /**
  * Convert Prisma Decimal to JavaScript number for calculations
@@ -606,7 +607,7 @@ export async function processAllDailyFinances(): Promise<{
         bankruptUsers++;
       }
     } catch (error) {
-      console.error(`[Daily Finances] Error processing user ${user.id}:`, error);
+      logger.error(`[Daily Finances] Error processing user ${user.id}:`, error);
     }
   }
 

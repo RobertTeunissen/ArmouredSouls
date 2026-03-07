@@ -1,6 +1,7 @@
 import { Robot } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from './leagueInstanceService';
+import logger from '../config/logger';
 
 
 // Matchmaking configuration
@@ -300,7 +301,7 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
   // Filter out already scheduled robots
   const availableRobots = readyRobots.filter(robot => !alreadyScheduledIds.has(robot.id));
   
-  console.log(`[Matchmaking] Queue for ${leagueId}: ${availableRobots.length} robots available (${robots.length} total, ${readyRobots.length} ready)`);
+  logger.info(`[Matchmaking] Queue for ${leagueId}: ${availableRobots.length} robots available (${robots.length} total, ${readyRobots.length} ready)`);
   
   return availableRobots;
 }
@@ -364,9 +365,9 @@ async function pairRobots(robots: Robot[]): Promise<MatchPair[]> {
         leagueType: lastRobot.currentLeague,
       });
       
-      console.log(`[Matchmaking] Bye-match created for ${lastRobot.name}`);
+      logger.info(`[Matchmaking] Bye-match created for ${lastRobot.name}`);
     } else {
-      console.warn(`[Matchmaking] No ${BYE_ROBOT_NAME} found for ${lastRobot.name}`);
+      logger.warn(`[Matchmaking] No ${BYE_ROBOT_NAME} found for ${lastRobot.name}`);
     }
   }
   
@@ -389,26 +390,26 @@ async function createScheduledMatches(matches: MatchPair[], scheduledFor: Date):
     data: matchData,
   });
   
-  console.log(`[Matchmaking] Created ${matches.length} scheduled matches`);
+  logger.info(`[Matchmaking] Created ${matches.length} scheduled matches`);
 }
 
 /**
  * Run matchmaking for a specific league tier
  */
 export async function runMatchmakingForTier(tier: LeagueTier, scheduledFor: Date): Promise<number> {
-  console.log(`[Matchmaking] Running matchmaking for ${tier.toUpperCase()} league...`);
+  logger.info(`[Matchmaking] Running matchmaking for ${tier.toUpperCase()} league...`);
   
   const instances = await getInstancesForTier(tier);
   let totalMatches = 0;
   
   for (const instance of instances) {
-    console.log(`[Matchmaking] Processing ${instance.leagueId}...`);
+    logger.info(`[Matchmaking] Processing ${instance.leagueId}...`);
     
     // Build queue for this instance
     const queue = await buildMatchmakingQueue(instance.leagueId);
     
     if (queue.length < 2) {
-      console.log(`[Matchmaking] ${instance.leagueId}: Not enough robots for matches (${queue.length} available)`);
+      logger.info(`[Matchmaking] ${instance.leagueId}: Not enough robots for matches (${queue.length} available)`);
       continue;
     }
     
@@ -421,7 +422,7 @@ export async function runMatchmakingForTier(tier: LeagueTier, scheduledFor: Date
     totalMatches += matches.length;
   }
   
-  console.log(`[Matchmaking] ${tier.toUpperCase()}: Created ${totalMatches} matches across ${instances.length} instances`);
+  logger.info(`[Matchmaking] ${tier.toUpperCase()}: Created ${totalMatches} matches across ${instances.length} instances`);
   return totalMatches;
 }
 
@@ -431,8 +432,8 @@ export async function runMatchmakingForTier(tier: LeagueTier, scheduledFor: Date
 export async function runMatchmaking(scheduledFor?: Date): Promise<number> {
   const matchTime = scheduledFor || new Date(Date.now() + 24 * 60 * 60 * 1000); // Default: 24 hours from now
   
-  console.log(`[Matchmaking] Starting matchmaking run...`);
-  console.log(`[Matchmaking] Matches scheduled for: ${matchTime.toISOString()}`);
+  logger.info(`[Matchmaking] Starting matchmaking run...`);
+  logger.info(`[Matchmaking] Matches scheduled for: ${matchTime.toISOString()}`);
   
   let totalMatches = 0;
   
@@ -441,9 +442,9 @@ export async function runMatchmaking(scheduledFor?: Date): Promise<number> {
     totalMatches += tierMatches;
   }
   
-  console.log(`[Matchmaking] ========================================`);
-  console.log(`[Matchmaking] COMPLETE: ${totalMatches} total matches created`);
-  console.log(`[Matchmaking] ========================================`);
+  logger.info(`[Matchmaking] ========================================`);
+  logger.info(`[Matchmaking] COMPLETE: ${totalMatches} total matches created`);
+  logger.info(`[Matchmaking] ========================================`);
   
   return totalMatches;
 }

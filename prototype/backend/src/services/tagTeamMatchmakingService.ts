@@ -1,5 +1,6 @@
 import { Robot, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import { checkTeamSchedulingReadiness, calculateCombinedELO, TagTeamWithRobots } from './tagTeamService';
 
 
@@ -25,14 +26,14 @@ export async function shouldRunTagTeamMatchmaking(): Promise<boolean> {
   });
 
   if (!cycleMetadata) {
-    console.warn('[TagTeamMatchmaking] No cycle metadata found, defaulting to cycle 0');
+    logger.warn('[TagTeamMatchmaking] No cycle metadata found, defaulting to cycle 0');
     return false; // Even cycle, skip
   }
 
   const currentCycle = cycleMetadata.totalCycles;
   const shouldRun = currentCycle % 2 === 1; // Odd cycles only
 
-  console.log(`[TagTeamMatchmaking] Current cycle: ${currentCycle}, should run: ${shouldRun}`);
+  logger.info(`[TagTeamMatchmaking] Current cycle: ${currentCycle}, should run: ${shouldRun}`);
   return shouldRun;
 }
 
@@ -91,7 +92,7 @@ export async function getEligibleTeams(
   // Filter out already scheduled teams
   const eligibleTeams = readyTeams.filter(team => !alreadyScheduledIds.has(team.id));
 
-  console.log(
+  logger.info(
     `[TagTeamMatchmaking] ${tagTeamLeagueId}: ${eligibleTeams.length} eligible teams ` +
     `(${teams.length} total, ${readyTeams.length} ready, ${alreadyScheduledIds.size} already scheduled)`
   );
@@ -375,7 +376,7 @@ export async function pairTeams(teams: TagTeamWithRobots[]): Promise<TagTeamMatc
       tagTeamLeague: lastTeam.tagTeamLeague,
     });
 
-    console.log(`[TagTeamMatchmaking] Bye-match created for team ${lastTeam.id}`);
+    logger.info(`[TagTeamMatchmaking] Bye-match created for team ${lastTeam.id}`);
   }
 
   return matches;
@@ -418,7 +419,7 @@ export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor:
     });
   }
 
-  console.log(`[TagTeamMatchmaking] Scheduled ${matches.length} tag team matches`);
+  logger.info(`[TagTeamMatchmaking] Scheduled ${matches.length} tag team matches`);
 }
 
 /**
@@ -435,7 +436,7 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
 
   let totalMatches = 0;
 
-  console.log('[TagTeamMatchmaking] Starting tag team matchmaking for all tiers...');
+  logger.info('[TagTeamMatchmaking] Starting tag team matchmaking for all tiers...');
 
   for (const tier of TAG_TEAM_LEAGUE_TIERS) {
     try {
@@ -453,7 +454,7 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
         const eligibleTeams = await getEligibleTeams(tier, instanceId);
 
         if (eligibleTeams.length < 1) {
-          console.log(`[TagTeamMatchmaking] ${instanceId}: No eligible teams, skipping`);
+          logger.info(`[TagTeamMatchmaking] ${instanceId}: No eligible teams, skipping`);
           continue;
         }
 
@@ -465,15 +466,15 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
           await scheduleMatches(matches, matchTime);
           totalMatches += matches.length;
 
-          console.log(`[TagTeamMatchmaking] ${instanceId}: Created ${matches.length} matches`);
+          logger.info(`[TagTeamMatchmaking] ${instanceId}: Created ${matches.length} matches`);
         }
       }
     } catch (error) {
-      console.error(`[TagTeamMatchmaking] Error in ${tier} tier:`, error);
+      logger.error(`[TagTeamMatchmaking] Error in ${tier} tier:`, error);
     }
   }
 
-  console.log(`[TagTeamMatchmaking] Complete: ${totalMatches} total matches created`);
+  logger.info(`[TagTeamMatchmaking] Complete: ${totalMatches} total matches created`);
   return totalMatches;
 }
 

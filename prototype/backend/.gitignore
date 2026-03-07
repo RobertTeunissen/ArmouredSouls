@@ -3,3 +3,19 @@ dist
 .env
 *.log
 cycle_logs/
+
+# Test output files
+test-results*.txt
+test-results*.json
+test-output.txt
+final-test-run.txt
+
+# SSH keys
+hostnet
+hostnet.pub
+*.pem
+id_rsa
+id_ed25519
+
+# OS files
+.DS_Store

@@ -1,5 +1,6 @@
 import { Robot } from '@prisma/client';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 // NOTE: This service mirrors tagTeamLeagueRebalancingService.ts for tag team leagues.
 // Both share identical promotion/demotion logic but operate on different Prisma models
@@ -74,7 +75,7 @@ export async function determinePromotions(instanceId: string, excludeRobotIds: S
 
   // If no robots meet the minimum points threshold, skip
   if (robotsWithMinPoints.length === 0) {
-    console.log(`[Rebalancing] ${instanceId}: No robots with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`);
+    logger.info(`[Rebalancing] ${instanceId}: No robots with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`);
     return [];
   }
 
@@ -94,7 +95,7 @@ export async function determinePromotions(instanceId: string, excludeRobotIds: S
 
   // Skip if too few robots
   if (totalEligibleRobots < MIN_ROBOTS_FOR_REBALANCING) {
-    console.log(`[Rebalancing] ${instanceId}: Too few eligible robots (${totalEligibleRobots} < ${MIN_ROBOTS_FOR_REBALANCING}), skipping promotions`);
+    logger.info(`[Rebalancing] ${instanceId}: Too few eligible robots (${totalEligibleRobots} < ${MIN_ROBOTS_FOR_REBALANCING}), skipping promotions`);
     return [];
   }
 
@@ -102,14 +103,14 @@ export async function determinePromotions(instanceId: string, excludeRobotIds: S
   const promotionCount = Math.floor(totalEligibleRobots * PROMOTION_PERCENTAGE);
   
   if (promotionCount === 0) {
-    console.log(`[Rebalancing] ${instanceId}: Promotion count is 0 (${totalEligibleRobots} eligible robots), skipping`);
+    logger.info(`[Rebalancing] ${instanceId}: Promotion count is 0 (${totalEligibleRobots} eligible robots), skipping`);
     return [];
   }
 
   // Take the top 10%, but only from robots with ≥25 league points
   const toPromote = robotsWithMinPoints.slice(0, Math.min(promotionCount, robotsWithMinPoints.length));
   
-  console.log(`[Rebalancing] ${instanceId}: ${toPromote.length} robots eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleRobots} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${robotsWithMinPoints.length} met points threshold)`);
+  logger.info(`[Rebalancing] ${instanceId}: ${toPromote.length} robots eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleRobots} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${robotsWithMinPoints.length} met points threshold)`);
   
   return toPromote;
 }
@@ -147,7 +148,7 @@ export async function determineDemotions(instanceId: string, excludeRobotIds: Se
 
   // Skip if too few robots
   if (robots.length < MIN_ROBOTS_FOR_REBALANCING) {
-    console.log(`[Rebalancing] ${instanceId}: Too few robots (${robots.length} < ${MIN_ROBOTS_FOR_REBALANCING}), skipping demotions`);
+    logger.info(`[Rebalancing] ${instanceId}: Too few robots (${robots.length} < ${MIN_ROBOTS_FOR_REBALANCING}), skipping demotions`);
     return [];
   }
 
@@ -155,12 +156,12 @@ export async function determineDemotions(instanceId: string, excludeRobotIds: Se
   const demotionCount = Math.floor(robots.length * DEMOTION_PERCENTAGE);
   
   if (demotionCount === 0) {
-    console.log(`[Rebalancing] ${instanceId}: Demotion count is 0 (${robots.length} robots), skipping`);
+    logger.info(`[Rebalancing] ${instanceId}: Demotion count is 0 (${robots.length} robots), skipping`);
     return [];
   }
 
   const toDemote = robots.slice(0, demotionCount);
-  console.log(`[Rebalancing] ${instanceId}: ${toDemote.length} robots eligible for demotion (bottom ${DEMOTION_PERCENTAGE * 100}% of ${robots.length})`);
+  logger.info(`[Rebalancing] ${instanceId}: ${toDemote.length} robots eligible for demotion (bottom ${DEMOTION_PERCENTAGE * 100}% of ${robots.length})`);
   
   return toDemote;
 }
@@ -212,7 +213,7 @@ export async function promoteRobot(robot: Robot): Promise<void> {
     },
   });
 
-  console.log(`[Rebalancing] Promoted: ${robot.name} (${robot.currentLeague} → ${nextTier}, LP: ${robot.leaguePoints} retained)`);
+  logger.info(`[Rebalancing] Promoted: ${robot.name} (${robot.currentLeague} → ${nextTier}, LP: ${robot.leaguePoints} retained)`);
 }
 
 /**
@@ -240,7 +241,7 @@ export async function demoteRobot(robot: Robot): Promise<void> {
     },
   });
 
-  console.log(`[Rebalancing] Demoted: ${robot.name} (${robot.currentLeague} → ${previousTier}, LP: ${robot.leaguePoints} retained)`);
+  logger.info(`[Rebalancing] Demoted: ${robot.name} (${robot.currentLeague} → ${previousTier}, LP: ${robot.leaguePoints} retained)`);
 }
 
 /**
@@ -250,7 +251,7 @@ export async function demoteRobot(robot: Robot): Promise<void> {
  * @param excludeRobotIds - Set of robot IDs already processed in this cycle
  */
 async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Promise<RebalancingSummary> {
-  console.log(`\n[Rebalancing] Processing ${tier.toUpperCase()} league...`);
+  logger.info(`\n[Rebalancing] Processing ${tier.toUpperCase()} league...`);
 
   // Count total robots in tier
   const totalInTier = await prisma.robot.count({
@@ -271,11 +272,11 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
   // Get all instances for this tier
   const instances = await getInstancesForTier(tier);
   
-  console.log(`[Rebalancing] ${tier}: ${totalInTier} total robots across ${instances.length} instances`);
+  logger.info(`[Rebalancing] ${tier}: ${totalInTier} total robots across ${instances.length} instances`);
 
   // Process each instance separately
   for (const instance of instances) {
-    console.log(`[Rebalancing] Processing ${instance.leagueId}...`);
+    logger.info(`[Rebalancing] Processing ${instance.leagueId}...`);
     
     // Count eligible robots in this instance
     const eligibleInInstance = await prisma.robot.count({
@@ -293,7 +294,7 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
 
     // Skip if too few robots in this instance
     if (eligibleInInstance < MIN_ROBOTS_FOR_REBALANCING) {
-      console.log(`[Rebalancing] ${instance.leagueId}: Skipping (${eligibleInInstance} eligible, need ${MIN_ROBOTS_FOR_REBALANCING})`);
+      logger.info(`[Rebalancing] ${instance.leagueId}: Skipping (${eligibleInInstance} eligible, need ${MIN_ROBOTS_FOR_REBALANCING})`);
       continue;
     }
 
@@ -310,7 +311,7 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
         excludeRobotIds.add(robot.id); // Mark as processed
         summary.promoted++;
       } catch (error) {
-        console.error(`[Rebalancing] Error promoting robot ${robot.id}:`, error);
+        logger.error(`[Rebalancing] Error promoting robot ${robot.id}:`, error);
       }
     }
 
@@ -321,12 +322,12 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
         excludeRobotIds.add(robot.id); // Mark as processed
         summary.demoted++;
       } catch (error) {
-        console.error(`[Rebalancing] Error demoting robot ${robot.id}:`, error);
+        logger.error(`[Rebalancing] Error demoting robot ${robot.id}:`, error);
       }
     }
   }
 
-  console.log(`[Rebalancing] ${tier}: Promoted ${summary.promoted}, Demoted ${summary.demoted} across ${instances.length} instances`);
+  logger.info(`[Rebalancing] ${tier}: Promoted ${summary.promoted}, Demoted ${summary.demoted} across ${instances.length} instances`);
 
   return summary;
 }
@@ -335,9 +336,9 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
  * Rebalance all league tiers
  */
 export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
-  console.log('═'.repeat(60));
-  console.log('[Rebalancing] Starting league rebalancing...');
-  console.log('═'.repeat(60));
+  logger.info('═'.repeat(60));
+  logger.info('[Rebalancing] Starting league rebalancing...');
+  logger.info('═'.repeat(60));
 
   const fullSummary: FullRebalancingSummary = {
     totalRobots: 0,
@@ -352,7 +353,7 @@ export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
     where: { NOT: { name: 'Bye Robot' } },
   });
 
-  console.log(`[Rebalancing] Total robots in system: ${fullSummary.totalRobots}`);
+  logger.info(`[Rebalancing] Total robots in system: ${fullSummary.totalRobots}`);
 
   // Track which robots have already been processed in this cycle
   const processedRobotIds = new Set<number>();
@@ -367,34 +368,34 @@ export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       fullSummary.errors.push(`${tier}: ${errorMsg}`);
-      console.error(`[Rebalancing] Error in tier ${tier}:`, error);
+      logger.error(`[Rebalancing] Error in tier ${tier}:`, error);
     }
   }
 
   // Rebalance instances for each tier after all moves (ONLY if instance exceeds 100 robots)
-  console.log('\n[Rebalancing] Checking instances for rebalancing...');
+  logger.info('\n[Rebalancing] Checking instances for rebalancing...');
   for (const tier of LEAGUE_TIERS) {
     try {
       const instances = await getInstancesForTier(tier);
       const needsRebalancing = instances.some(inst => inst.currentRobots > MAX_ROBOTS_PER_INSTANCE);
       
       if (needsRebalancing) {
-        console.log(`[Rebalancing] ${tier}: Instance exceeds ${MAX_ROBOTS_PER_INSTANCE} robots, rebalancing...`);
+        logger.info(`[Rebalancing] ${tier}: Instance exceeds ${MAX_ROBOTS_PER_INSTANCE} robots, rebalancing...`);
         await rebalanceInstances(tier);
       } else {
-        console.log(`[Rebalancing] ${tier}: All instances at or under ${MAX_ROBOTS_PER_INSTANCE} robots, skipping rebalancing`);
+        logger.info(`[Rebalancing] ${tier}: All instances at or under ${MAX_ROBOTS_PER_INSTANCE} robots, skipping rebalancing`);
       }
     } catch (error) {
-      console.error(`[Rebalancing] Error checking ${tier} instances:`, error);
+      logger.error(`[Rebalancing] Error checking ${tier} instances:`, error);
     }
   }
 
-  console.log('\n' + '═'.repeat(60));
-  console.log('[Rebalancing] League rebalancing complete!');
-  console.log(`  Total promoted: ${fullSummary.totalPromoted}`);
-  console.log(`  Total demoted: ${fullSummary.totalDemoted}`);
-  console.log(`  Errors: ${fullSummary.errors.length}`);
-  console.log('═'.repeat(60) + '\n');
+  logger.info('\n' + '═'.repeat(60));
+  logger.info('[Rebalancing] League rebalancing complete!');
+  logger.info(`  Total promoted: ${fullSummary.totalPromoted}`);
+  logger.info(`  Total demoted: ${fullSummary.totalDemoted}`);
+  logger.info(`  Errors: ${fullSummary.errors.length}`);
+  logger.info('═'.repeat(60) + '\n');
 
   return fullSummary;
 }

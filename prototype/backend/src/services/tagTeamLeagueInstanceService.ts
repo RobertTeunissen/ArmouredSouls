@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 // NOTE: This service mirrors leagueInstanceService.ts for 1v1 leagues.
 // Both share similar instance management logic but operate on different Prisma models
@@ -255,14 +256,14 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
   const stats = await getTagTeamLeagueInstanceStats(tier);
 
   if (!stats.needsRebalancing) {
-    console.log(`[TagTeamLeagueInstance] ${tier} instances balanced, no action needed`);
+    logger.info(`[TagTeamLeagueInstance] ${tier} instances balanced, no action needed`);
     return;
   }
 
-  console.log(`[TagTeamLeagueInstance] Rebalancing ${tier} instances...`);
-  console.log(`  Total teams: ${stats.totalTeams}`);
-  console.log(`  Instances: ${stats.instances.length}`);
-  console.log(`  Average per instance: ${stats.averagePerInstance.toFixed(1)}`);
+  logger.info(`[TagTeamLeagueInstance] Rebalancing ${tier} instances...`);
+  logger.info(`  Total teams: ${stats.totalTeams}`);
+  logger.info(`  Instances: ${stats.instances.length}`);
+  logger.info(`  Average per instance: ${stats.averagePerInstance.toFixed(1)}`);
 
   // Get all teams in this tier
   const allTeams = await prisma.tagTeam.findMany({
@@ -280,7 +281,7 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
   const minInstanceCount = Math.ceil(stats.totalTeams / MAX_TEAMS_PER_INSTANCE);
   const targetInstanceCount = Math.max(minInstanceCount, stats.instances.length);
 
-  console.log(`  Target instances: ${targetInstanceCount}`);
+  logger.info(`  Target instances: ${targetInstanceCount}`);
 
   // Redistribute teams ROUND-ROBIN to maintain competitive balance
   // This ensures each instance has a mix of high, medium, and low LP teams
@@ -304,7 +305,7 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
   }
 
   await Promise.all(updates);
-  console.log(`[TagTeamLeagueInstance] Rebalanced ${updates.length} teams across ${targetInstanceCount} instances`);
+  logger.info(`[TagTeamLeagueInstance] Rebalanced ${updates.length} teams across ${targetInstanceCount} instances`);
 }
 
 /**

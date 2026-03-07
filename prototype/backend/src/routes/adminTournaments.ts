@@ -6,6 +6,7 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import {
   createSingleEliminationTournament,
   getActiveTournaments,
@@ -34,7 +35,7 @@ router.post('/create', authenticateToken, requireAdmin, async (req: Request, res
       });
     }
 
-    console.log('[Admin] Creating tournament...');
+    logger.info('[Admin] Creating tournament...');
     const result = await createSingleEliminationTournament();
 
     res.json({
@@ -45,7 +46,7 @@ router.post('/create', authenticateToken, requireAdmin, async (req: Request, res
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Tournament creation error:', error);
+    logger.error('[Admin] Tournament creation error:', error);
     res.status(500).json({
       error: 'Failed to create tournament',
       message: error instanceof Error ? error.message : String(error),
@@ -86,7 +87,7 @@ router.get('/', authenticateToken, requireAdmin, async (req: Request, res: Respo
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Tournament list error:', error);
+    logger.error('[Admin] Tournament list error:', error);
     res.status(500).json({
       error: 'Failed to fetch tournaments',
       message: error instanceof Error ? error.message : String(error),
@@ -110,7 +111,7 @@ router.get('/eligible-robots', authenticateToken, requireAdmin, async (req: Requ
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Eligible robots fetch error:', error);
+    logger.error('[Admin] Eligible robots fetch error:', error);
     res.status(500).json({
       error: 'Failed to fetch eligible robots',
       message: error instanceof Error ? error.message : String(error),
@@ -146,7 +147,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Re
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Tournament fetch error:', error);
+    logger.error('[Admin] Tournament fetch error:', error);
     res.status(500).json({
       error: 'Failed to fetch tournament',
       message: error instanceof Error ? error.message : String(error),
@@ -166,7 +167,7 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
       return res.status(400).json({ error: 'Invalid tournament ID' });
     }
 
-    console.log(`[Admin] Executing tournament ${tournamentId} round...`);
+    logger.info(`[Admin] Executing tournament ${tournamentId} round...`);
 
     const tournament = await prisma.tournament.findUnique({
       where: { id: tournamentId },
@@ -212,7 +213,7 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
         summary.matchesFailed++;
         const errorMsg = error instanceof Error ? error.message : String(error);
         summary.errors.push(`Match ${match.id}: ${errorMsg}`);
-        console.error(`[Admin] Tournament match ${match.id} failed:`, error);
+        logger.error(`[Admin] Tournament match ${match.id} failed:`, error);
       }
     }
 
@@ -232,10 +233,10 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
       try {
         const nextTournament = await autoCreateNextTournament();
         if (nextTournament) {
-          console.log(`[Admin] Auto-created next tournament: ${nextTournament.name}`);
+          logger.info(`[Admin] Auto-created next tournament: ${nextTournament.name}`);
         }
       } catch (error) {
-        console.error('[Admin] Failed to auto-create next tournament:', error);
+        logger.error('[Admin] Failed to auto-create next tournament:', error);
       }
     }
 
@@ -245,7 +246,7 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Tournament round execution error:', error);
+    logger.error('[Admin] Tournament round execution error:', error);
     res.status(500).json({
       error: 'Failed to execute tournament round',
       message: error instanceof Error ? error.message : String(error),
@@ -268,7 +269,7 @@ router.get('/eligible-robots', authenticateToken, requireAdmin, async (req: Requ
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Admin] Eligible robots fetch error:', error);
+    logger.error('[Admin] Eligible robots fetch error:', error);
     res.status(500).json({
       error: 'Failed to fetch eligible robots',
       message: error instanceof Error ? error.message : String(error),

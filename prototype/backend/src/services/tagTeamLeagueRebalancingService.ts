@@ -1,5 +1,6 @@
 import { TagTeam } from '@prisma/client';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 
 // NOTE: This service mirrors leagueRebalancingService.ts for 1v1 leagues.
 // Both share identical promotion/demotion logic but operate on different Prisma models
@@ -77,7 +78,7 @@ export async function determinePromotions(
 
   // If no teams meet the minimum points threshold, skip
   if (teamsWithMinPoints.length === 0) {
-    console.log(
+    logger.info(
       `[TagTeamRebalancing] ${instanceId}: No teams with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`
     );
     return [];
@@ -98,7 +99,7 @@ export async function determinePromotions(
 
   // Skip if too few teams (Requirement 6.3: ≥10 teams in instance)
   if (totalEligibleTeams < MIN_TEAMS_FOR_REBALANCING) {
-    console.log(
+    logger.info(
       `[TagTeamRebalancing] ${instanceId}: Too few eligible teams (${totalEligibleTeams} < ${MIN_TEAMS_FOR_REBALANCING}), skipping promotions`
     );
     return [];
@@ -108,7 +109,7 @@ export async function determinePromotions(
   const promotionCount = Math.floor(totalEligibleTeams * PROMOTION_PERCENTAGE);
 
   if (promotionCount === 0) {
-    console.log(
+    logger.info(
       `[TagTeamRebalancing] ${instanceId}: Promotion count is 0 (${totalEligibleTeams} eligible teams), skipping`
     );
     return [];
@@ -117,7 +118,7 @@ export async function determinePromotions(
   // Take the top 10%, but only from teams with ≥25 league points
   const toPromote = teamsWithMinPoints.slice(0, Math.min(promotionCount, teamsWithMinPoints.length));
   
-  console.log(
+  logger.info(
     `[TagTeamRebalancing] ${instanceId}: ${toPromote.length} teams eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleTeams} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${teamsWithMinPoints.length} met points threshold)`
   );
 
@@ -160,7 +161,7 @@ export async function determineDemotions(
 
   // Skip if too few teams (Requirement 6.4: ≥10 teams in instance)
   if (teams.length < MIN_TEAMS_FOR_REBALANCING) {
-    console.log(
+    logger.info(
       `[TagTeamRebalancing] ${instanceId}: Too few teams (${teams.length} < ${MIN_TEAMS_FOR_REBALANCING}), skipping demotions`
     );
     return [];
@@ -170,14 +171,14 @@ export async function determineDemotions(
   const demotionCount = Math.floor(teams.length * DEMOTION_PERCENTAGE);
 
   if (demotionCount === 0) {
-    console.log(
+    logger.info(
       `[TagTeamRebalancing] ${instanceId}: Demotion count is 0 (${teams.length} teams), skipping`
     );
     return [];
   }
 
   const toDemote = teams.slice(0, demotionCount);
-  console.log(
+  logger.info(
     `[TagTeamRebalancing] ${instanceId}: ${toDemote.length} teams eligible for demotion (bottom ${DEMOTION_PERCENTAGE * 100}% of ${teams.length})`
   );
 
@@ -235,7 +236,7 @@ export async function promoteTeam(team: TagTeam): Promise<void> {
     },
   });
 
-  console.log(
+  logger.info(
     `[TagTeamRebalancing] Promoted: Team ${team.id} (${team.tagTeamLeague} → ${nextTier}, instance ${newLeagueId}, LP: ${team.tagTeamLeaguePoints} retained)`
   );
 }
@@ -269,7 +270,7 @@ export async function demoteTeam(team: TagTeam): Promise<void> {
     },
   });
 
-  console.log(
+  logger.info(
     `[TagTeamRebalancing] Demoted: Team ${team.id} (${team.tagTeamLeague} → ${previousTier}, instance ${newLeagueId}, LP: ${team.tagTeamLeaguePoints} retained)`
   );
 }
@@ -284,7 +285,7 @@ async function rebalanceTier(
   tier: TagTeamLeagueTier,
   excludeTeamIds: Set<number>
 ): Promise<TagTeamRebalancingSummary> {
-  console.log(`\n[TagTeamRebalancing] Processing ${tier.toUpperCase()} league...`);
+  logger.info(`\n[TagTeamRebalancing] Processing ${tier.toUpperCase()} league...`);
 
   // Count total teams in tier
   const totalInTier = await prisma.tagTeam.count({
@@ -310,11 +311,11 @@ async function rebalanceTier(
 
   const instanceIds = instances.map(i => i.tagTeamLeagueId);
   
-  console.log(`[TagTeamRebalancing] ${tier}: ${totalInTier} total teams across ${instanceIds.length} instances`);
+  logger.info(`[TagTeamRebalancing] ${tier}: ${totalInTier} total teams across ${instanceIds.length} instances`);
 
   // Process each instance separately
   for (const instanceId of instanceIds) {
-    console.log(`[TagTeamRebalancing] Processing ${instanceId}...`);
+    logger.info(`[TagTeamRebalancing] Processing ${instanceId}...`);
     
     // Count eligible teams in this instance
     const eligibleInInstance = await prisma.tagTeam.count({
@@ -331,7 +332,7 @@ async function rebalanceTier(
 
     // Skip if too few teams in this instance
     if (eligibleInInstance < MIN_TEAMS_FOR_REBALANCING) {
-      console.log(`[TagTeamRebalancing] ${instanceId}: Skipping (${eligibleInInstance} eligible, need ${MIN_TEAMS_FOR_REBALANCING})`);
+      logger.info(`[TagTeamRebalancing] ${instanceId}: Skipping (${eligibleInInstance} eligible, need ${MIN_TEAMS_FOR_REBALANCING})`);
       continue;
     }
 
@@ -348,7 +349,7 @@ async function rebalanceTier(
         excludeTeamIds.add(team.id); // Mark as processed
         summary.promoted++;
       } catch (error) {
-        console.error(`[TagTeamRebalancing] Error promoting team ${team.id}:`, error);
+        logger.error(`[TagTeamRebalancing] Error promoting team ${team.id}:`, error);
       }
     }
 
@@ -359,12 +360,12 @@ async function rebalanceTier(
         excludeTeamIds.add(team.id); // Mark as processed
         summary.demoted++;
       } catch (error) {
-        console.error(`[TagTeamRebalancing] Error demoting team ${team.id}:`, error);
+        logger.error(`[TagTeamRebalancing] Error demoting team ${team.id}:`, error);
       }
     }
   }
 
-  console.log(
+  logger.info(
     `[TagTeamRebalancing] ${tier}: Promoted ${summary.promoted}, Demoted ${summary.demoted} across ${instanceIds.length} instances`
   );
 
@@ -376,9 +377,9 @@ async function rebalanceTier(
  * This should be called every other cycle (odd cycles only)
  */
 export async function rebalanceTagTeamLeagues(): Promise<FullTagTeamRebalancingSummary> {
-  console.log('═'.repeat(60));
-  console.log('[TagTeamRebalancing] Starting tag team league rebalancing...');
-  console.log('═'.repeat(60));
+  logger.info('═'.repeat(60));
+  logger.info('[TagTeamRebalancing] Starting tag team league rebalancing...');
+  logger.info('═'.repeat(60));
 
   const fullSummary: FullTagTeamRebalancingSummary = {
     totalTeams: 0,
@@ -391,7 +392,7 @@ export async function rebalanceTagTeamLeagues(): Promise<FullTagTeamRebalancingS
   // Get total team count
   fullSummary.totalTeams = await prisma.tagTeam.count();
 
-  console.log(`[TagTeamRebalancing] Total teams in system: ${fullSummary.totalTeams}`);
+  logger.info(`[TagTeamRebalancing] Total teams in system: ${fullSummary.totalTeams}`);
 
   // Track which teams have already been processed in this cycle
   const processedTeamIds = new Set<number>();
@@ -406,24 +407,24 @@ export async function rebalanceTagTeamLeagues(): Promise<FullTagTeamRebalancingS
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       fullSummary.errors.push(`${tier}: ${errorMsg}`);
-      console.error(`[TagTeamRebalancing] Error in tier ${tier}:`, error);
+      logger.error(`[TagTeamRebalancing] Error in tier ${tier}:`, error);
     }
   }
 
-  console.log('\n' + '═'.repeat(60));
-  console.log('[TagTeamRebalancing] Tag team league rebalancing complete!');
-  console.log(`  Total promoted: ${fullSummary.totalPromoted}`);
-  console.log(`  Total demoted: ${fullSummary.totalDemoted}`);
-  console.log(`  Errors: ${fullSummary.errors.length}`);
-  console.log('═'.repeat(60) + '\n');
+  logger.info('\n' + '═'.repeat(60));
+  logger.info('[TagTeamRebalancing] Tag team league rebalancing complete!');
+  logger.info(`  Total promoted: ${fullSummary.totalPromoted}`);
+  logger.info(`  Total demoted: ${fullSummary.totalDemoted}`);
+  logger.info(`  Errors: ${fullSummary.errors.length}`);
+  logger.info('═'.repeat(60) + '\n');
 
   // Rebalance instances across all tiers (Requirement 6.8)
-  console.log('[TagTeamRebalancing] Rebalancing instances across all tiers...');
+  logger.info('[TagTeamRebalancing] Rebalancing instances across all tiers...');
   for (const tier of TAG_TEAM_LEAGUE_TIERS) {
     try {
       await rebalanceTagTeamInstances(tier);
     } catch (error) {
-      console.error(`[TagTeamRebalancing] Error balancing ${tier} instances:`, error);
+      logger.error(`[TagTeamRebalancing] Error balancing ${tier} instances:`, error);
       fullSummary.errors.push(`Instance balancing for ${tier}: ${error}`);
     }
   }

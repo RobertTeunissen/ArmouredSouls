@@ -1,6 +1,7 @@
 import express, { Response } from 'express';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import logger from '../config/logger';
 import { getConfig } from '../config/env';
 import { getNextCronOccurrence } from '../utils/scheduleUtils';
 
@@ -402,7 +403,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       tagTeamMatches: formattedTagTeamMatches.length,
     });
   } catch (error) {
-    console.error('[Matches API] Error fetching upcoming matches:', error);
+    logger.error('[Matches API] Error fetching upcoming matches:', error);
     res.status(500).json({
       error: 'Failed to fetch upcoming matches',
       message: error instanceof Error ? error.message : String(error),
@@ -614,7 +615,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
       },
     });
   } catch (error) {
-    console.error('[Matches API] Error fetching battle history:', error);
+    logger.error('[Matches API] Error fetching battle history:', error);
     res.status(500).json({
       error: 'Failed to fetch battle history',
       message: error instanceof Error ? error.message : String(error),
@@ -877,7 +878,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
     // Format battle log response
     res.json(baseResponse);
   } catch (error) {
-    console.error('[Matches API] Error fetching battle log:', error);
+    logger.error('[Matches API] Error fetching battle log:', error);
     res.status(500).json({
       error: 'Failed to fetch battle log',
       message: error instanceof Error ? error.message : String(error),
