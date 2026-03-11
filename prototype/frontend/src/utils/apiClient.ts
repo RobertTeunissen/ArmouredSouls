@@ -14,15 +14,20 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor: handle 401 for authenticated routes only.
+// Response interceptor: handle auth failures for authenticated routes only.
 // Auth endpoints (login/register) return 401 for invalid credentials,
 // which should be handled by the calling component, not by a redirect.
+// Network errors (no response) are NOT treated as auth failures.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const url = error.config?.url || '';
     const isAuthRoute = url.includes('/api/auth/');
-    if (error.response?.status === 401 && !isAuthRoute) {
+    const status = error.response?.status;
+
+    // Only clear token and redirect on definitive auth failures (401/403)
+    // from non-auth routes. Network errors (no response) should not trigger logout.
+    if ((status === 401 || status === 403) && !isAuthRoute) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }

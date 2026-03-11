@@ -128,11 +128,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const response = await apiClient.get('/api/user/profile');
       setUser(response.data);
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      // If the profile fetch fails (expired/invalid token, server error),
-      // clear auth state so the user is redirected to the login page
-      // rather than stuck in a broken authenticated state.
-      logout();
+      // Only logout on definitive auth failures (401/403). Network errors,
+      // timeouts, and server errors (5xx) should NOT destroy the session —
+      // the token may still be valid and the user can retry.
+      if (isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+        console.error('Auth token rejected, logging out:', error);
+        logout();
+      } else {
+        console.warn('Failed to fetch user profile (keeping session):', error);
+      }
     } finally {
       setLoading(false);
     }
