@@ -211,7 +211,7 @@ The onboarding consists of 9 sequential steps. Each step teaches a strategic con
 |----------|------|-------|
 | Coaching Staff | ₡150,000 | Expensive operating costs (₡3,000/day when active). Wait until profitable. |
 | Combat/Defense/Mobility Academies | ₡100,000 each | Specialized training. Buy after core facilities. |
-| AI Training Academy | ₡500,000 | Very expensive. Late-game investment. |
+| AI Training Academy | ₡100,000 | Late-game investment. |
 | Booking Office | ₡100,000 | Generates prestige, not credits. Buy when prestige matters. |
 | Research Lab | ₡150,000 | Advanced upgrades. Mid-to-late game. |
 

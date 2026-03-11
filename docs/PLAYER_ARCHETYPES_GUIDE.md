@@ -2179,7 +2179,7 @@ The AI Tactician strategy revolves around maximizing decision-making quality and
 
 6. **Leverage Flexibility**: Your loadout-agnostic nature allows you to adapt to meta shifts. If shields become popular, switch to Two-Handed. If speed builds dominate, switch to Weapon+Shield. Your AI optimizes whatever you choose.
 
-7. **Invest in AI Training Academy**: The AI Training Academy facility (₡500,000) provides bonuses to AI attribute effectiveness. This is your key facility investment - it amplifies your strategic advantage.
+7. **Invest in AI Training Academy**: The AI Training Academy facility (₡100,000) provides bonuses to AI attribute effectiveness. This is your key facility investment - it amplifies your strategic advantage.
 
 **Why AI Tactician Works**:
 
@@ -2201,7 +2201,7 @@ High Combat Algorithms + high Threat Analysis + high Adaptive AI = a robot that 
 
 **AI Training Academy - Your Key Facility**:
 
-AI Training Academy (₡500,000) is the signature facility for AI Tactician:
+AI Training Academy (₡100,000) is the signature facility for AI Tactician:
 
 **What It Does**:
 - Provides bonuses to AI attribute effectiveness (Combat Algorithms, Threat Analysis, Adaptive AI, Logic Cores, Neural Networks)
@@ -2736,10 +2736,10 @@ This section provides exact spending breakdowns for each archetype's ₡3,000,00
 
 1. **Attributes are CAPPED at level 10 without Training Academies**
 2. **Training Academy Costs (CORRECTED)**:
-   - Combat Training Academy Level 1: ₡200,000 (unlocks Combat attributes to level 15)
-   - Defense Training Academy Level 1: ₡200,000 (unlocks Defense attributes to level 15)
-   - Mobility Training Academy Level 1: ₡200,000 (unlocks Mobility attributes to level 15)
-   - AI Training Academy Level 1: ₡250,000 (unlocks AI attributes to level 15)
+   - Combat Training Academy Level 1: ₡100,000 (unlocks Combat attributes to level 15)
+   - Defense Training Academy Level 1: ₡100,000 (unlocks Defense attributes to level 15)
+   - Mobility Training Academy Level 1: ₡100,000 (unlocks Mobility attributes to level 15)
+   - AI Training Academy Level 1: ₡100,000 (unlocks AI attributes to level 15)
 3. **To upgrade ANY attribute above level 10, you MUST purchase the corresponding Training Academy FIRST**
 4. **Each archetype must decide**: Buy Training Academies (expensive but allows higher attributes) OR stay at level 10 max (cheaper but weaker)
 
@@ -2751,27 +2751,27 @@ This section provides exact spending breakdowns for each archetype's ₡3,000,00
 
 **Understanding Attribute Caps**:
 - **WITHOUT Training Academies**: ALL attributes capped at level 10
-- **WITH Defense Training Academy** (₡200,000): Defense attributes unlocked to level 15
-- **WITH Combat Training Academy** (₡200,000): Combat attributes unlocked to level 15
+- **WITH Defense Training Academy** (₡100,000): Defense attributes unlocked to level 15
+- **WITH Combat Training Academy** (₡100,000): Combat attributes unlocked to level 15
 
 #### Strategy A: With Training Academies (Recommended for Tank Fortress)
 
 #### Facility Investments (REQUIRED - Purchase FIRST)
 
-**Defense Training Academy Level 1** - ₡200,000
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+**Defense Training Academy Level 1** - ₡100,000
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Defense attributes cap from level 10 to level 15
 - **Required for**: Hull Integrity, Armor Plating, Shield Capacity, Counter Protocols, Damage Control, Redundant Systems above level 10
 
-**Combat Training Academy Level 1** - ₡200,000
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+**Combat Training Academy Level 1** - ₡100,000
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Combat attributes cap from level 10 to level 15
 - **Required for**: Combat Power, Penetration, Critical Systems, Weapon Control, Hydraulic Systems, Targeting Systems above level 10
 
-**Total Facility Cost: ₡400,000**
-**Total Operating Costs: ₡5,600/week**
+**Total Facility Cost: ₡200,000**
+**Total Operating Costs: ₡3,500/week**
 
 #### Robot Purchases
 
@@ -2849,7 +2849,7 @@ This section provides exact spending breakdowns for each archetype's ₡3,000,00
 
 **Purpose**:
 - **Emergency repairs**: Covers ~80-90 losses at ₡8-9K per repair
-- **Operating costs**: Covers ~135 weeks of Training Academy costs (₡5,600/week)
+- **Operating costs**: Covers ~216 weeks of Training Academy costs (₡3,500/week)
 - **Large safety net**: Tank Fortress has lowest repair costs, so massive buffer is sustainable
 
 **Buffer Management Strategy**:
@@ -2871,9 +2871,9 @@ This section provides exact spending breakdowns for each archetype's ₡3,000,00
 | **Total Spent** | **₡2,244,000** | **74.80%** |
 | **Remaining** | **₡756,000** | **25.20%** |
 
-**Allocation Philosophy**: Tank Fortress balances Training Academy investment (₡400K) with massive safety buffer (₡756K). The ₡5,600/week operating cost is easily covered by low repair costs (₡8-9K per loss vs ₡15-20K for Glass Cannon).
+**Allocation Philosophy**: Tank Fortress balances Training Academy investment (₡200K) with massive safety buffer (₡756K). The ₡3,500/week operating cost is easily covered by low repair costs (₡8-9K per loss vs ₡15-20K for Glass Cannon).
 
-**Key Insight**: By investing ₡400K in Training Academies, Tank Fortress unlocks defensive attributes to level 15, creating a robot with 125 HP, 28 shield, and 14 armor that reduces repair costs by ~40%. The ₡756K buffer provides extreme safety.
+**Key Insight**: By investing ₡200K in Training Academies, Tank Fortress unlocks defensive attributes to level 15, creating a robot with 125 HP, 28 shield, and 14 armor that reduces repair costs by ~40%. The ₡756K buffer provides extreme safety.
 
 ---
 
@@ -2915,7 +2915,7 @@ If you prefer to avoid Training Academy costs and operating expenses:
 
 **Strategy B Benefits**:
 - **Massive buffer**: ₡1.39M = 150+ repairs at ₡9K per loss
-- **No operating costs**: Save ₡5,600/week permanently
+- **No operating costs**: Save ₡3,500/week permanently
 - **Ultra-safe**: Virtually impossible to go bankrupt
 - **Simpler management**: No facility costs to track
 
@@ -2932,24 +2932,24 @@ If you prefer to avoid Training Academy costs and operating expenses:
 
 **Total Budget**: ₡3,000,000
 
-**CRITICAL DECISION**: Purchase Combat Training Academy (₡200,000) to unlock Combat attributes above level 10
+**CRITICAL DECISION**: Purchase Combat Training Academy (₡100,000) to unlock Combat attributes above level 10
 
 **Understanding Attribute Caps**:
 - **WITHOUT Combat Training Academy**: ALL Combat attributes capped at level 10
-- **WITH Combat Training Academy** (₡200,000): Combat attributes unlocked to level 15
+- **WITH Combat Training Academy** (₡100,000): Combat attributes unlocked to level 15
 
 Glass Cannon REQUIRES Combat Training Academy because the archetype's entire strategy depends on maximizing Combat Power, Critical Systems, and Penetration above level 10. Without it, you cannot build a true Glass Cannon.
 
 #### Facility Investments (REQUIRED - Purchase FIRST)
 
-**Combat Training Academy Level 1** - ₡200,000
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+**Combat Training Academy Level 1** - ₡100,000
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Combat attributes cap from level 10 to level 15
 - **Required for**: Combat Power, Penetration, Critical Systems, Weapon Control, Hydraulic Systems, Targeting Systems above level 10
 
-**Total Facility Cost: ₡200,000**
-**Total Operating Costs: ₡2,800/week**
+**Total Facility Cost: ₡100,000**
+**Total Operating Costs: ₡1,750/week**
 
 #### Robot Purchases
 
@@ -3042,7 +3042,7 @@ This distribution creates an offensive powerhouse that can eliminate most oppone
 
 **Purpose**:
 - **Emergency repairs**: Covers approximately 55-65 losses at ₡15-17K per repair
-- **Operating costs**: Covers ~340 weeks of Combat Training Academy costs (₡2,800/week)
+- **Operating costs**: Covers ~540 weeks of Combat Training Academy costs (₡1,750/week)
 - **Safety net**: Provides substantial cushion for Bronze league volatility
 
 **Why Larger Buffer Than Original Glass Cannon?**
@@ -3050,7 +3050,7 @@ This distribution creates an offensive powerhouse that can eliminate most oppone
 This corrected allocation has a much larger buffer (₡946K vs ₡60K in the incorrect version) because:
 
 1. **Realistic attribute costs**: With attributes capped at level 15 (not level 30), we spend ₡853K on attributes instead of ₡2.14M
-2. **Lower operating costs**: Only Combat Training Academy (₡2,800/week) instead of Training Facility (₡10,500/week)
+2. **Lower operating costs**: Only Combat Training Academy (₡1,750/week) instead of Training Facility (₡10,500/week)
 3. **Safety first**: Even Glass Cannon needs a reasonable buffer for Bronze league volatility
 4. **Flexibility**: Large buffer allows weapon experimentation or facility purchases later
 
@@ -3067,7 +3067,7 @@ This corrected allocation has a much larger buffer (₡946K vs ₡60K in the inc
 | Category | Amount | Percentage |
 |----------|--------|------------|
 | Robot Purchase | ₡500,000 | 16.67% |
-| Facilities (Combat Training Academy) | ₡200,000 | 6.67% |
+| Facilities (Combat Training Academy) | ₡100,000 | 3.33% |
 | Attribute Upgrades | ₡853,500 | 28.45% |
 | Weapons (Plasma Cannon) | ₡500,000 | 16.67% |
 | Reserve Buffer | ₡946,500 | 31.55% |
@@ -3084,7 +3084,7 @@ Glass Cannon allocates budget for maximum offensive power within realistic attri
 - **6.67% on Facilities**: Combat Training Academy to unlock attributes above level 10
 - **31.55% Buffer**: Substantial safety net for Bronze league volatility
 
-**Key Insight**: By investing ₡200K in Combat Training Academy, Glass Cannon unlocks offensive attributes to level 15, creating a robot with 125 Combat Power, 15 Critical Systems, and 14 Penetration that can eliminate opponents in 2-3 hits. The ₡946K buffer provides substantial safety for learning and Bronze league volatility.
+**Key Insight**: By investing ₡100K in Combat Training Academy, Glass Cannon unlocks offensive attributes to level 15, creating a robot with 125 Combat Power, 15 Critical Systems, and 14 Penetration that can eliminate opponents in 2-3 hits. The ₡946K buffer provides substantial safety for learning and Bronze league volatility.
 
 ---
 
@@ -3096,20 +3096,20 @@ Glass Cannon allocates budget for maximum offensive power within realistic attri
 
 **CRITICAL**: Speed Demon requires academy facilities to unlock higher attribute levels. Without these facilities, attributes are capped at level 10.
 
-**Mobility Training Academy (Level 1)** - ₡200,000
+**Mobility Training Academy (Level 1)** - ₡100,000
 - **Purpose**: REQUIRED to upgrade Attack Speed and Servo Motors above level 10
 - **Unlock**: Enables mobility attributes up to level 15
-- **Operating Cost**: ₡1,000/day (₡7,000/week)
+- **Operating Cost**: ₡250/day (₡1,750/week)
 - **Rationale**: Speed Demon's core strategy depends on high Attack Speed and Servo Motors. Without this academy, you're capped at level 10, which severely limits your attack frequency and mobility advantage.
 
-**Combat Training Academy (Level 1)** - ₡200,000
+**Combat Training Academy (Level 1)** - ₡100,000
 - **Purpose**: REQUIRED to upgrade Combat Power and Weapon Control above level 10
 - **Unlock**: Enables combat attributes up to level 15
-- **Operating Cost**: ₡1,000/day (₡7,000/week)
+- **Operating Cost**: ₡250/day (₡1,750/week)
 - **Rationale**: Weapon Control is critical for accuracy with rapid attacks. Combat Power ensures each hit deals meaningful damage. Both are essential for Speed Demon effectiveness.
 
-**Total Facility Cost: ₡400,000**
-**Total Weekly Operating Cost: ₡14,000**
+**Total Facility Cost: ₡200,000**
+**Total Weekly Operating Cost: ₡3,500**
 
 **Why These Academies Are Non-Negotiable**:
 
@@ -3119,7 +3119,7 @@ Speed Demon's entire strategy revolves around high Attack Speed (for attack freq
 - Combat Power capped at 10 = 100 damage (instead of 125)
 - Result: You lose 40-50% of your effectiveness, making Speed Demon unviable
 
-The ₡400,000 investment is mandatory for this archetype to function.
+The ₡200,000 investment is mandatory for this archetype to function.
 
 #### Robot Purchases
 
@@ -3236,8 +3236,8 @@ This distribution creates a speed-focused attacker that overwhelms opponents thr
 
 Speed Demon has a minimal buffer because:
 
-1. **Academy Investment**: ₡400,000 spent on required facilities leaves less for buffer
-2. **Operating Costs**: ₡14,000/week in facility costs means you need to win battles quickly to stay profitable
+1. **Academy Investment**: ₡200,000 spent on required facilities leaves less for buffer
+2. **Operating Costs**: ₡3,500/week in facility costs means you need to win battles quickly to stay profitable
 3. **High Risk**: This archetype requires immediate success - you cannot afford extended losing streaks
 4. **Quick Profitability**: With 50%+ win rate, you'll generate ₡15-25K/week net income to rebuild buffer
 
@@ -3295,7 +3295,7 @@ Speed Demon allocates budget for academy-enabled speed optimization:
 - **10.00% on Weapons**: Budget dual-wield weapons (2× Machine Guns)
 - **0.33% Buffer**: Minimal safety net - high risk archetype
 
-**Key Insight**: Speed Demon requires ₡400,000 in academy investments to function, leaving minimal buffer (₡10K). This creates a high-risk archetype that demands 55-60% win rate in Bronze to stay profitable. The academy operating costs (₡14K/week) add significant financial pressure, making this archetype unsuitable for risk-averse players or those learning the game. However, skilled players who can maintain high win rates will find Speed Demon highly effective, and profitability improves dramatically upon reaching Silver League.
+**Key Insight**: Speed Demon requires ₡200,000 in academy investments to function, leaving minimal buffer (₡10K). This creates a high-risk archetype that demands 55-60% win rate in Bronze to stay profitable. The academy operating costs (₡3.5K/week) add financial pressure, making this archetype unsuitable for risk-averse players or those learning the game. However, skilled players who can maintain high win rates will find Speed Demon highly effective, and profitability improves dramatically upon reaching Silver League.
 
 ---
 
@@ -3850,7 +3850,7 @@ Two-Robot Specialist has a moderate buffer because:
 
 - **Week 1-4**: Use Tank robot primarily (lower repair costs), deploy Glass Cannon only for favorable matchups
 - **Week 5-8**: Buffer should grow to ₡850-900K as you optimize robot selection
-- **Month 3+**: Consider purchasing Combat or Defense Training Academy (₡200K) to specialize one robot further
+- **Month 3+**: Consider purchasing Combat or Defense Training Academy (₡100K) to specialize one robot further
 
 **Bankruptcy Risk**: Low. Two-Robot Specialist would need to lose 65-80 consecutive battles to face bankruptcy, which is unlikely with proper robot selection.
 
@@ -3892,19 +3892,19 @@ Two-Robot Specialist allocates budget for tactical versatility:
 
 #### Facility Investments (REQUIRED - Purchase FIRST)
 
-**Combat Training Academy Level 1** - ₡200,000
+**Combat Training Academy Level 1** - ₡100,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Combat attributes cap from level 10 to level 15
 - **Strategic Value**: Required for Hydraulic Systems, Combat Power, and other combat attributes above level 10
 
-**Mobility Training Academy Level 1** - ₡200,000
+**Mobility Training Academy Level 1** - ₡100,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Mobility attributes cap from level 10 to level 15
 - **Strategic Value**: Required for Servo Motors and mobility attributes above level 10 (essential for closing distance)
 
@@ -3918,7 +3918,7 @@ Melee Specialist REQUIRES both Combat and Mobility Training Academies because:
 2. **Servo Motors** (Mobility attribute) is essential for closing distance quickly - needs to go above level 10
 3. Without these academies, you're capped at level 10, which severely limits melee effectiveness
 
-**Operating Cost**: ₡5,600/week total (₡2,800 + ₡2,800) for both academies
+**Operating Cost**: ₡3,500/week total (₡1,750 + ₡1,750) for both academies
 
 #### Attribute Upgrades
 
@@ -3999,7 +3999,7 @@ This distribution creates a melee powerhouse that can eliminate most opponents i
 
 **Purpose**:
 - **Emergency repairs**: Covers approximately 55-65 losses at ₡10.5-12.5K per repair
-- **Operating costs**: Covers approximately 125 weeks of academy costs (₡5,600/week total)
+- **Operating costs**: Covers approximately 200 weeks of academy costs (₡3,500/week total)
 - **Safety net**: Provides substantial cushion for learning melee positioning
 - **Flexibility**: Can purchase additional facilities or weapons later
 
@@ -4007,7 +4007,7 @@ This distribution creates a melee powerhouse that can eliminate most opponents i
 
 Melee Specialist has a moderate buffer because:
 
-1. **Academy Operating Costs**: ₡5,600/week for both Combat and Mobility Training Academies
+1. **Academy Operating Costs**: ₡3,500/week for both Combat and Mobility Training Academies
 2. **Positioning Learning Curve**: Melee combat requires skill in closing distance and timing strikes
 3. **Moderate Repair Costs**: ₡10.5-12.5K per loss (higher than Tank, lower than Glass Cannon)
 4. **High Damage Output**: Your melee strikes end battles quickly, reducing damage taken
@@ -4016,7 +4016,7 @@ Melee Specialist has a moderate buffer because:
 
 - **Week 1-4**: Practice melee positioning, expect 45-50% win rate while learning
 - **Week 5-8**: Buffer should stabilize around ₡700-750K as you master melee tactics
-- **Month 3+**: Consider purchasing Defense Training Academy (₡200K) to boost survivability
+- **Month 3+**: Consider purchasing Defense Training Academy (₡100K) to boost survivability
 
 **Bankruptcy Risk**: Low-Medium. Melee Specialist would need to lose 55-65 consecutive battles to face bankruptcy, which is unlikely once you master positioning.
 
@@ -4058,15 +4058,15 @@ Melee Specialist allocates budget for maximum melee power with academy support:
 
 #### Facility Investments (REQUIRED - Purchase FIRST)
 
-**Combat Training Academy Level 1** - ₡200,000
+**Combat Training Academy Level 1** - ₡100,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Combat attributes cap from level 10 to level 15
 - **Strategic Value**: Required for Targeting Systems, Penetration, Critical Systems, and other combat attributes above level 10
 
-**Total Facility Cost: ₡200,000**
+**Total Facility Cost: ₡100,000**
 
 **Why Combat Training Academy?**
 
@@ -4077,7 +4077,7 @@ Ranged Sniper REQUIRES Combat Training Academy because:
 3. **Critical Systems** (Combat attribute) enables precision critical hits - benefits from going above level 10
 4. Without this academy, you're capped at level 10, which severely limits ranged effectiveness
 
-**Operating Cost**: ₡2,800/week for Combat Training Academy
+**Operating Cost**: ₡1,750/week for Combat Training Academy
 
 #### Attribute Upgrades
 
@@ -4163,7 +4163,7 @@ This distribution creates a precision shooter that rarely misses, bypasses armor
 
 **Purpose**:
 - **Emergency repairs**: Covers approximately 65-75 losses at ₡10.5-12K per repair
-- **Operating costs**: Covers approximately 280 weeks of Combat Training Academy costs (₡2,800/week)
+- **Operating costs**: Covers approximately 450 weeks of Combat Training Academy costs (₡1,750/week)
 - **Safety net**: Provides substantial cushion for learning ranged tactics
 - **Flexibility**: Can purchase additional facilities or weapons later
 
@@ -4172,7 +4172,7 @@ This distribution creates a precision shooter that rarely misses, bypasses armor
 Ranged Sniper has a large buffer because:
 
 1. **Ranged Safety**: Ranged combat is safer than melee, resulting in lower repair costs
-2. **Single Academy**: Only Combat Training Academy (₡2,800/week) instead of multiple academies
+2. **Single Academy**: Only Combat Training Academy (₡1,750/week) instead of multiple academies
 3. **Learning Curve**: Ranged positioning is easier to learn than melee, reducing early losses
 4. **Moderate Repair Costs**: ₡10.5-12K per loss (lower than Glass Cannon, similar to Balanced Brawler)
 
@@ -4180,7 +4180,7 @@ Ranged Sniper has a large buffer because:
 
 - **Week 1-4**: Practice ranged positioning, expect 50-55% win rate
 - **Week 5-8**: Buffer should grow to ₡850-900K as you master ranged tactics
-- **Month 3+**: Consider purchasing Mobility Training Academy (₡200K) to boost kiting ability
+- **Month 3+**: Consider purchasing Mobility Training Academy (₡100K) to boost kiting ability
 
 **Bankruptcy Risk**: Low. Ranged Sniper would need to lose 65-75 consecutive battles to face bankruptcy, which is very unlikely with ranged safety.
 
@@ -4189,7 +4189,7 @@ Ranged Sniper has a large buffer because:
 | Category | Amount | Percentage |
 |----------|--------|------------|
 | Robot Purchase | ₡500,000 | 16.67% |
-| Facilities (Combat Training Academy) | ₡200,000 | 6.67% |
+| Facilities (Combat Training Academy) | ₡100,000 | 3.33% |
 | Attribute Upgrades | ₡1,065,000 | 35.50% |
 | Weapons (Railgun) | ₡450,000 | 15.00% |
 | Reserve Buffer | ₡785,000 | 26.17% |
@@ -4203,10 +4203,10 @@ Ranged Sniper allocates budget for precision and accuracy with academy support:
 - **35.50% on Attributes**: Heavy investment in Targeting Systems, Penetration, and accuracy-focused attributes (capped at level 15 with Combat Academy)
 - **16.67% on Robot**: Standard robot purchase
 - **15.00% on Weapons**: Premium two-handed ranged weapon
-- **6.67% on Facilities**: Combat Training Academy (₡200K) to unlock combat attributes above level 10
+- **6.67% on Facilities**: Combat Training Academy (₡100K) to unlock combat attributes above level 10
 - **26.17% Buffer**: Large buffer for safety and flexibility
 
-**Key Insight**: Ranged Sniper achieves high accuracy (87.5%+) and good armor penetration (50-60%) through focused Targeting Systems and Penetration investments (level 15 each = ₡180K each). The Combat Training Academy (₡200K) is essential for unlocking combat attributes above level 10. The ranged weapon (₡450K) keeps you safe while delivering precise, armor-piercing strikes. The large buffer (₡785K) provides excellent safety and flexibility.
+**Key Insight**: Ranged Sniper achieves high accuracy (87.5%+) and good armor penetration (50-60%) through focused Targeting Systems and Penetration investments (level 15 each = ₡180K each). The Combat Training Academy (₡100K) is essential for unlocking combat attributes above level 10. The ranged weapon (₡450K) keeps you safe while delivering precise, armor-piercing strikes. The large buffer (₡785K) provides excellent safety and flexibility.
 
 ---
 
@@ -4222,11 +4222,11 @@ Ranged Sniper allocates budget for precision and accuracy with academy support:
 
 #### Facility Investments (Purchase FIRST)
 
-**AI Training Academy Level 1** - ₡250,000
+**AI Training Academy Level 1** - ₡100,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡250,000
-- **Operating Cost**: ₡500/day = ₡3,500/week
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks AI attributes cap from level 10 to level 15
 - **Strategic Value**: Required to invest in AI attributes above level 10
 
@@ -4310,14 +4310,14 @@ This distribution creates an AI-driven robot that makes optimal decisions in eve
 
 **Amount: ₡504,500**
 
-**Purpose**: Covers approximately 36-40 repairs at ₡13-14K per repair. Provides cushion for learning AI-focused gameplay and covers approximately 144 weeks of AI Training Academy operating costs (₡3,500/week).
+**Purpose**: Covers approximately 36-40 repairs at ₡13-14K per repair. Provides cushion for learning AI-focused gameplay and covers approximately 288 weeks of AI Training Academy operating costs (₡1,750/week).
 
 #### Budget Summary
 
 | Category | Amount | Percentage |
 |----------|--------|------------|
 | Robot Purchase | ₡500,000 | 16.67% |
-| Facilities (AI Training Academy Level 1) | ₡250,000 | 8.33% |
+| Facilities (AI Training Academy Level 1) | ₡100,000 | 3.33% |
 | Attribute Upgrades | ₡1,495,500 | 49.85% |
 | Weapons (Plasma Rifle) | ₡250,000 | 8.33% |
 | Reserve Buffer | ₡504,500 | 16.82% |
@@ -4330,11 +4330,11 @@ AI Tactician allocates budget for AI optimization:
 
 - **49.85% on Attributes**: Heavy investment in AI attributes (maxed at level 15 with Academy)
 - **16.67% on Robot**: Standard robot purchase
-- **8.33% on Facilities**: AI Training Academy (₡250K, required for AI attribute caps)
+- **8.33% on Facilities**: AI Training Academy (₡100K, required for AI attribute caps)
 - **8.33% on Weapons**: Mid-tier versatile weapon
 - **16.82% Buffer**: Moderate safety net for learning and covering academy operating costs
 
-**Key Insight**: AI Tactician requires AI Training Academy (₡250K) to unlock AI attribute caps, making it more expensive than non-facility archetypes. The payoff is superior AI decision-making that optimizes every combat choice, providing consistent performance across all matchups. The moderate buffer (₡504.5K) provides good safety while covering the ₡3,500/week operating cost.
+**Key Insight**: AI Tactician requires AI Training Academy (₡100K) to unlock AI attribute caps, making it affordable alongside other facility archetypes. The payoff is superior AI decision-making that optimizes every combat choice, providing consistent performance across all matchups. The moderate buffer (₡504.5K) provides good safety while covering the ₡1,750/week operating cost.
 
 ---
 
@@ -4350,31 +4350,31 @@ AI Tactician allocates budget for AI optimization:
 
 #### Facility Investments (REQUIRED - Purchase FIRST)
 
-**Combat Training Academy Level 1** - ₡200,000
+**Combat Training Academy Level 1** - ₡100,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Combat attributes cap from level 10 to level 15
 - **Strategic Value**: Required for Combat Power and other combat attributes above level 10
 
-**Defense Training Academy Level 1** - ₡200,000
+**Defense Training Academy Level 1** - ₡100,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Defense attributes cap from level 10 to level 15
 - **Strategic Value**: Required for Hull Integrity, Armor Plating, and other defense attributes above level 10
 
-**Mobility Training Academy Level 1** - ₡200,000
+**Mobility Training Academy Level 1** - ₡100,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡200,000
-- **Operating Cost**: ₡400/day = ₡2,800/week
+- **Purchase Cost**: ₡100,000
+- **Operating Cost**: ₡250/day = ₡1,750/week
 - **Benefit**: Unlocks Mobility attributes cap from level 10 to level 15
 - **Strategic Value**: Required for Attack Speed and other mobility attributes above level 10
 
-**Total Facility Cost: ₡600,000**
+**Total Facility Cost: ₡300,000**
 
 **Why All Three Academies?**
 
@@ -4384,7 +4384,7 @@ Prestige Rusher REQUIRES all three Training Academies because:
 2. **Attribute Caps**: Without these academies, all attributes are capped at level 10, which is insufficient for competitive play
 3. **Win Rate Optimization**: Higher attribute levels across all categories create a well-rounded robot that wins consistently
 
-**Operating Cost**: ₡8,400/week total (₡2,800 × 3) for all three academies
+**Operating Cost**: ₡5,250/week total (₡1,750 × 3) for all three academies
 
 #### Attribute Upgrades
 
@@ -4458,7 +4458,7 @@ This distribution creates a well-rounded competitive robot that excels at winnin
 
 **Purpose**:
 - **Emergency repairs**: Covers approximately 25-30 losses at ₡10-12K per repair
-- **Operating costs**: Covers approximately 36 weeks of academy costs (₡8,400/week total)
+- **Operating costs**: Covers approximately 57 weeks of academy costs (₡5,250/week total)
 - **Safety net**: Provides cushion for competitive play
 - **Flexibility**: Can purchase Booking Office later (₡500K at 1,000 prestige)
 
@@ -4466,7 +4466,7 @@ This distribution creates a well-rounded competitive robot that excels at winnin
 
 Prestige Rusher has a moderate buffer because:
 
-1. **Three Academies**: ₡8,400/week operating costs for Combat, Defense, and Mobility Training Academies
+1. **Three Academies**: ₡5,250/week operating costs for Combat, Defense, and Mobility Training Academies
 2. **Competitive Focus**: Optimized for win rate, expecting 52-55% wins to offset costs
 3. **Balanced Repair Costs**: ₡10-12K per loss (moderate due to balanced build)
 4. **Future Investment**: Plan to purchase Booking Office (₡500K) once you reach 1,000 prestige (weeks 2-4)
@@ -4501,7 +4501,7 @@ Prestige Rusher allocates budget for maximum win rate with full academy support:
 - **16.67% on Weapons**: Premium two-handed weapon for maximum damage
 - **10.02% Buffer**: Moderate safety net for competitive play and academy operating costs
 
-**Key Insight**: Prestige Rusher creates the most competitive robot possible by investing in all three Training Academies (₡600K total), enabling balanced high-level attributes across Combat, Defense, and Mobility. The balanced high-level attributes (Combat Power 15, Hull Integrity 15, Attack Speed 15) ensure consistent wins across all matchups, maximizing prestige accumulation rate. The moderate buffer (₡300.5K) provides safety while covering the ₡8,400/week operating costs.
+**Key Insight**: Prestige Rusher creates the most competitive robot possible by investing in all three Training Academies (₡300K total), enabling balanced high-level attributes across Combat, Defense, and Mobility. The balanced high-level attributes (Combat Power 15, Hull Integrity 15, Attack Speed 15) ensure consistent wins across all matchups, maximizing prestige accumulation rate. The moderate buffer (₡300.5K) provides safety while covering the ₡5,250/week operating costs.
 
 **Future Investment**: Purchase Booking Office (₡500,000) once you reach 1,000 prestige (approximately weeks 2-4) to unlock tournament access for accelerated prestige gains.
 
@@ -4566,9 +4566,9 @@ This section provides detailed economic projections for each archetype, includin
 #### Operating Costs
 
 **Facility Operating Costs**:
-- Defense Training Academy Level 1: ₡400/day = ₡2,800/week
-- Combat Training Academy Level 1: ₡400/day = ₡2,800/week
-- **Total facility costs**: **₡5,600/week**
+- Defense Training Academy Level 1: ₡250/day = ₡1,750/week
+- Combat Training Academy Level 1: ₡250/day = ₡1,750/week
+- **Total facility costs**: **₡3,500/week**
 
 **Repair Costs** (Average per loss):
 
@@ -4689,7 +4689,7 @@ Break-even win rate: **15.8%**
 - Sustainable long-term economics
 
 **Weaknesses**:
-- Moderate facility operating costs (₡5,600/week)
+- Moderate facility operating costs (₡3,500/week)
 - Lower income potential than aggressive archetypes in early game
 - Slower wealth accumulation in Bronze compared to high-risk archetypes
 
@@ -4726,8 +4726,8 @@ Break-even win rate: **15.8%**
 #### Operating Costs
 
 **Facility Operating Costs**:
-- Combat Training Academy Level 1: ₡400/day = ₡2,800/week
-- **Total facility costs**: **₡2,800/week**
+- Combat Training Academy Level 1: ₡250/day = ₡1,750/week
+- **Total facility costs**: **₡1,750/week**
 
 **Repair Costs** (Average per loss):
 
@@ -4834,7 +4834,7 @@ Break-even win rate: **21.4%**
 - Scales excellently with league advancement (repair costs stay flat while income doubles per league)
 - Transforms from medium-risk to low-risk as you advance leagues
 - Large starting buffer (₡946.5K) provides substantial safety
-- Low facility operating costs (₡2,800/week)
+- Low facility operating costs (₡1,750/week)
 
 **Weaknesses**:
 - High repair costs (₡5,135 per loss) hurt in Bronze
@@ -4865,9 +4865,9 @@ Break-even win rate: **21.4%**
 #### Operating Costs
 
 **Facility Operating Costs**:
-- Mobility Training Academy Level 1: ₡400/day = ₡2,800/week
-- Combat Training Academy Level 1: ₡400/day = ₡2,800/week
-- **Total facility costs**: **₡5,600/week**
+- Mobility Training Academy Level 1: ₡250/day = ₡1,750/week
+- Combat Training Academy Level 1: ₡250/day = ₡1,750/week
+- **Total facility costs**: **₡3,500/week**
 
 **Repair Costs** (Average per loss):
 
@@ -4927,7 +4927,7 @@ W = 0.336 = **33.6% win rate**
 - Starting buffer: ₡66,500 (very small)
 - Losses to bankruptcy: 66,500 / 5,130 = ~13 losses
 - At 50% win rate: Profitable by ₡13,195/week (modest margins)
-- **Assessment**: Speed Demon has the smallest buffer of any archetype (₡66.5K) and high operating costs (₡5,600/week). You can only afford ~13 consecutive losses before bankruptcy. At 50% win rate, you're profitable but margins are tight. A bad week (2-5 record) can drain ₡15-20K from your already-small buffer. Requires immediate success and 35-40% minimum win rate.
+- **Assessment**: Speed Demon has the smallest buffer of any archetype (₡66.5K) and high operating costs (₡3,500/week). You can only afford ~13 consecutive losses before bankruptcy. At 50% win rate, you're profitable but margins are tight. A bad week (2-5 record) can drain ₡15-20K from your already-small buffer. Requires immediate success and 35-40% minimum win rate.
 
 **Silver League**: **LOW-MEDIUM RISK**
 - Break-even win rate: 27.2%
@@ -4938,11 +4938,11 @@ W = 0.336 = **33.6% win rate**
 **Gold League**: **LOW RISK**
 - Break-even win rate: 22.6%
 - Weekly profit at 50% win rate: ₡123,445
-- **Assessment**: Speed Demon becomes highly profitable in Gold. High operating costs (₡5,600/week) and moderate repair costs (₡5,130 per loss) are easily covered by massive income (₡147K/week).
+- **Assessment**: Speed Demon becomes highly profitable in Gold. High operating costs (₡3,500/week) and moderate repair costs (₡5,130 per loss) are easily covered by massive income (₡147K/week).
 
 #### League Progression Impact
 
-**Key Insight**: Speed Demon is a high-risk archetype in Bronze due to small buffer (₡66.5K) and high operating costs (₡5,600/week), but becomes increasingly safe as you advance leagues.
+**Key Insight**: Speed Demon is a high-risk archetype in Bronze due to small buffer (₡66.5K) and high operating costs (₡3,500/week), but becomes increasingly safe as you advance leagues.
 
 **Bronze → Silver Transition**:
 - Income increases: +100%
@@ -4966,7 +4966,7 @@ W = 0.336 = **33.6% win rate**
 
 **Weaknesses**:
 - Smallest starting buffer (₡66.5K) of any archetype
-- High operating costs (₡5,600/week) from two Training Academies
+- High operating costs (₡3,500/week) from two Training Academies
 - Requires 33.6% win rate to break even in Bronze
 - Very tight margins in Bronze (₡13,195/week net)
 - High bankruptcy risk in Bronze (only 13 losses to bankruptcy)
@@ -5215,8 +5215,8 @@ W = 0.336 = **33.6% win rate**
 #### Operating Costs
 
 **Facility Operating Costs**:
-- Combat Training Academy Level 1: ₡400/day = ₡2,800/week
-- **Total facility costs**: **₡2,800/week**
+- Combat Training Academy Level 1: ₡250/day = ₡1,750/week
+- **Total facility costs**: **₡1,750/week**
 
 **Repair Costs**:
 - Total attributes: ~75 levels (Hydraulic Systems 15, Combat Power 15, Hull Integrity 14, etc.)
@@ -5253,7 +5253,7 @@ W = 0.336 = **33.6% win rate**
 
 **Strengths**:
 - High melee damage output
-- Moderate operating costs (₡2,800/week)
+- Moderate operating costs (₡1,750/week)
 - Scales well with league advancement
 - Low break-even win rate (28.9% in Bronze)
 
@@ -5277,8 +5277,8 @@ W = 0.336 = **33.6% win rate**
 #### Operating Costs
 
 **Facility Operating Costs**:
-- Combat Training Academy Level 1: ₡400/day = ₡2,800/week
-- **Total facility costs**: **₡2,800/week**
+- Combat Training Academy Level 1: ₡250/day = ₡1,750/week
+- **Total facility costs**: **₡1,750/week**
 
 **Repair Costs**:
 - Total attributes: ~76 levels (Targeting Systems 15, Penetration 15, Critical Systems 14, etc.)
@@ -5319,7 +5319,7 @@ W = 0.336 = **33.6% win rate**
 - High precision damage output
 - Ranged safety (avoid melee damage)
 - Scales excellently in higher leagues (precision more valuable)
-- Moderate operating costs (₡2,800/week)
+- Moderate operating costs (₡1,750/week)
 
 **Weaknesses**:
 - Higher repair costs (₡4,560 per loss) due to lower defense
@@ -5387,7 +5387,7 @@ W = 0.336 = **33.6% win rate**
 **Weaknesses**:
 - Requires understanding AI mechanics
 - Less intuitive than direct combat builds
-- AI Training Academy more expensive (₡500K vs ₡400K for other academies)
+- AI Training Academy more affordable (₡100K, same as other academies)
 
 **Recommendation**: AI Tactician is ideal for players who enjoy strategic depth and AI optimization. Economically sustainable with low-medium risk. Scales excellently into higher leagues where AI advantages compound.
 
@@ -5404,10 +5404,10 @@ W = 0.336 = **33.6% win rate**
 #### Operating Costs
 
 **Facility Operating Costs**:
-- Combat Training Academy Level 1: ₡400/day = ₡2,800/week
-- Defense Training Academy Level 1: ₡400/day = ₡2,800/week
-- Mobility Training Academy Level 1: ₡400/day = ₡2,800/week
-- **Total facility costs**: **₡8,400/week** (highest of any archetype)
+- Combat Training Academy Level 1: ₡250/day = ₡1,750/week
+- Defense Training Academy Level 1: ₡250/day = ₡1,750/week
+- Mobility Training Academy Level 1: ₡250/day = ₡1,750/week
+- **Total facility costs**: **₡5,250/week** (highest of any archetype)
 
 **Repair Costs**:
 - Total attributes: ~99 levels (balanced high-level build across Combat, Defense, Mobility)
@@ -5435,9 +5435,9 @@ W = 0.336 = **33.6% win rate**
 **Bronze League**: **MEDIUM RISK**
 - Break-even: 34.2% (requires above-average performance)
 - Starting buffer: ₡300,500
-- High operating costs: ₡8,400/week (highest of any archetype)
+- High operating costs: ₡5,250/week (highest of any archetype)
 - Weekly profit at 50%: ₡14,490
-- **Assessment**: Prestige Rusher has high operating costs (₡8,400/week) from three Training Academies, creating tight margins in Bronze. At 50% win rate, you're profitable but not by much. Requires 35-40% minimum win rate to stay sustainable. The moderate buffer (₡300.5K) provides some safety, but high costs mean losses hurt.
+- **Assessment**: Prestige Rusher has high operating costs (₡5,250/week) from three Training Academies, creating tight margins in Bronze. At 50% win rate, you're profitable but not by much. Requires 35-40% minimum win rate to stay sustainable. The moderate buffer (₡300.5K) provides some safety, but high costs mean losses hurt.
 
 **Silver League**: **LOW-MEDIUM RISK**
 - Income doubles while costs stay flat
@@ -5475,7 +5475,7 @@ W = 0.336 = **33.6% win rate**
 - Low repair costs (₡3,960 per loss) due to good defense
 
 **Weaknesses**:
-- Highest operating costs (₡8,400/week) from three Training Academies
+- Highest operating costs (₡5,250/week) from three Training Academies
 - Requires 34.2% win rate to break even in Bronze
 - Tight profit margins in Bronze (₡14,490/week)
 - Requires above-average performance to stay profitable
@@ -6157,9 +6157,9 @@ After establishing your early game foundation, the mid game is about strategic e
 1. **Repair Bay Level 2** (₡250,000) - Increases discount to 10%, saves ₡1,400-₡2,100/week
    - ROI: 17-25 weeks (reasonable for defensive build with high repair volume)
    - Operating cost increases to ₡1,500/day (₡10,500/week)
-2. **Defense Training Academy Level 1** (₡200,000) - 5% discount on defensive attribute upgrades
-   - Only if planning ₡4M+ in defensive upgrades (₡200K / 0.05 = ₡4M break-even)
-   - Operating cost: ₡2,000/day (₡14,000/week)
+2. **Defense Training Academy Level 1** (₡100,000) - 5% discount on defensive attribute upgrades
+   - Only if planning ₡2M+ in defensive upgrades (₡100K / 0.05 = ₡2M break-even)
+   - Operating cost: ₡250/day (₡1,750/week)
 
 **Income Diversification**:
 - **Silver league**: ₡73,500/week (7 battles, 50% win rate)
@@ -6219,9 +6219,9 @@ After establishing your early game foundation, the mid game is about strategic e
 1. **Training Facility Level 2** (₡350,000) - Increases discount to 10%
    - You're upgrading offensive attributes aggressively, so this pays off
    - Operating cost increases to ₡2,250/day (₡15,750/week)
-2. **Combat Training Academy Level 1** (₡200,000) - 5% discount on combat attribute upgrades
-   - Only if planning ₡4M+ in combat upgrades
-   - Operating cost: ₡2,000/day (₡14,000/week)
+2. **Combat Training Academy Level 1** (₡100,000) - 5% discount on combat attribute upgrades
+   - Only if planning ₡2M+ in combat upgrades
+   - Operating cost: ₡250/day (₡1,750/week)
 
 **Income Diversification**:
 - **Silver league**: ₡73,500/week (minimum acceptable)
@@ -6276,9 +6276,9 @@ After establishing your early game foundation, the mid game is about strategic e
 1. **Weapons Workshop Level 2** (₡300,000) - Increases discount to 10%
    - Useful if experimenting with different dual-wield combinations
    - Operating cost increases to ₡1,500/day (₡10,500/week)
-2. **Mobility Training Academy Level 1** (₡200,000) - 5% discount on mobility upgrades
-   - Only if planning ₡4M+ in mobility upgrades
-   - Operating cost: ₡2,000/day (₡14,000/week)
+2. **Mobility Training Academy Level 1** (₡100,000) - 5% discount on mobility upgrades
+   - Only if planning ₡2M+ in mobility upgrades
+   - Operating cost: ₡250/day (₡1,750/week)
 
 **Income Diversification**:
 - **Silver league**: ₡73,500/week
@@ -6417,9 +6417,9 @@ After establishing your early game foundation, the mid game is about strategic e
 
 **Advanced Investments**:
 - **More facilities**: Add specialized training academies
-  - Combat Training Academy (₡200,000)
-  - Defense Training Academy (₡200,000)
-  - Mobility Training Academy (₡200,000)
+  - Combat Training Academy (₡100,000)
+  - Defense Training Academy (₡100,000)
+  - Mobility Training Academy (₡100,000)
 - **Facility upgrades**: Upgrade existing facilities to Level 3-5
   - Income Generator Level 3 (₡1,000,000) - ₡15-20K/week passive
   - Training Facility Level 3 (₡400,000) - 15% discount
@@ -6512,9 +6512,9 @@ After establishing your early game foundation, the mid game is about strategic e
 - Win rate 50%+ with melee positioning mastery
 
 **Facility Upgrade Priorities**:
-1. **Combat Training Academy Level 2** (₡250,000) - Increases discount to 10%
+1. **Combat Training Academy Level 2** (₡200,000) - Increases discount to 10%
    - You're upgrading Hydraulic Systems and Combat Power aggressively
-   - Operating cost increases to ₡3,000/day (₡21,000/week)
+   - Operating cost increases to ₡500/day (₡3,500/week)
 2. **Training Facility Level 2** (₡350,000) - Increases discount to 10%
    - General upgrade discount helps with all attributes
    - Operating cost increases to ₡2,250/day (₡15,750/week)
@@ -6573,9 +6573,9 @@ After establishing your early game foundation, the mid game is about strategic e
 - Win rate 50%+ with accuracy mastery
 
 **Facility Upgrade Priorities**:
-1. **Combat Training Academy Level 2** (₡250,000) - Increases discount to 10%
+1. **Combat Training Academy Level 2** (₡200,000) - Increases discount to 10%
    - You're upgrading Targeting Systems and Penetration aggressively
-   - Operating cost increases to ₡3,000/day (₡21,000/week)
+   - Operating cost increases to ₡500/day (₡3,500/week)
 2. **Training Facility Level 2** (₡350,000) - Increases discount to 10%
    - General upgrade discount helps with all attributes
    - Operating cost increases to ₡2,250/day (₡15,750/week)
@@ -9002,7 +9002,7 @@ This section provides summary tables and cheat sheets for quick lookup. Use thes
 | Two-Robot Specialist | ₡1,000,000 (2 robots) | ₡800,000 | ₡700,000 (2 weapons) | ₡300,000 (Roster Expansion) | ₡200,000 | ₡3,000,000 |
 | Melee Specialist | ₡500,000 | ₡1,000,000 | ₡350,000 (Heavy Hammer) | ₡300,000 (Training Facility) | ₡350,000 | ₡2,500,000 |
 | Ranged Sniper | ₡500,000 | ₡1,000,000 | ₡350,000 (Railgun) | ₡300,000 (Training Facility) | ₡350,000 | ₡2,500,000 |
-| AI Tactician | ₡500,000 | ₡900,000 | ₡250,000 (Plasma Rifle) | ₡500,000 (AI Training Academy) | ₡350,000 | ₡2,500,000 |
+| AI Tactician | ₡500,000 | ₡900,000 | ₡250,000 (Plasma Rifle) | ₡100,000 (AI Training Academy) | ₡350,000 | ₡2,500,000 |
 | Prestige Rusher | ₡500,000 | ₡1,200,000 | ₡200,000 (Power Sword) | ₡400,000 (Booking Office) | ₡200,000 | ₡2,500,000 |
 
 **Note**: Most archetypes spend ₡2.5M of the ₡3M budget, keeping ₡500K for early operations. Facility Investor and Two-Robot Specialist spend closer to ₡3M due to high initial investments.
@@ -9034,10 +9034,10 @@ This section provides summary tables and cheat sheets for quick lookup. Use thes
 | Income Generator | ₡800,000 | ₡1,000 | ₡7,000 | Passive income (prestige-dependent) | High prestige (5,000+), Month 6+ |
 | Roster Expansion | ₡300,000 | ₡500/robot | ₡3,500 (2nd robot) | Allows owning 2+ robots | When you have ₡1.5M+ for full 2-robot setup |
 | Storage Facility | ₡150,000 | ₡500 | ₡3,500 | 10 weapon capacity (default 5) | When you own 6+ weapons |
-| Combat Training Academy | ₡400,000 | ₡2,000 | ₡14,000 | +10% Combat attribute effectiveness | Late-game (Month 9+), offensive builds |
-| Defense Training Academy | ₡400,000 | ₡2,000 | ₡14,000 | +10% Defense attribute effectiveness | Late-game (Month 9+), defensive builds |
-| Mobility Training Academy | ₡400,000 | ₡2,000 | ₡14,000 | +10% Mobility attribute effectiveness | Late-game (Month 9+), speed builds |
-| AI Training Academy | ₡500,000 | ₡2,500 | ₡17,500 | +15% AI attribute effectiveness | AI Tactician archetype, 5,000+ prestige |
+| Combat Training Academy | ₡100,000 | ₡250 | ₡1,750 | +10% Combat attribute effectiveness | Late-game (Month 9+), offensive builds |
+| Defense Training Academy | ₡100,000 | ₡250 | ₡1,750 | +10% Defense attribute effectiveness | Late-game (Month 9+), defensive builds |
+| Mobility Training Academy | ₡100,000 | ₡250 | ₡1,750 | +10% Mobility attribute effectiveness | Late-game (Month 9+), speed builds |
+| AI Training Academy | ₡100,000 | ₡250 | ₡1,750 | +15% AI attribute effectiveness | AI Tactician archetype, 5,000+ prestige |
 | Booking Office | ₡400,000 | ₡2,000 | ₡14,000 | Tournament access (bonus prestige) | Prestige Rusher archetype, Gold+ league |
 
 **Key Insight**: Most facilities have poor early-game ROI. Wait until mid-late game (Month 6+) when you have surplus credits and high usage.
@@ -9367,10 +9367,10 @@ This appendix lists all 14 facilities with costs, benefits, operating costs, and
 
 | Facility | Level 1 Cost | Operating Cost (Daily) | Benefit | Prestige Required | Best For |
 |----------|--------------|------------------------|---------|-------------------|----------|
-| Combat Training Academy | ₡400,000 | ₡2,000 | +10% Combat attribute effectiveness | 3,000 | Late-game (Month 9+), offensive builds |
-| Defense Training Academy | ₡400,000 | ₡2,000 | +10% Defense attribute effectiveness | 3,000 | Late-game (Month 9+), defensive builds |
-| Mobility Training Academy | ₡400,000 | ₡2,000 | +10% Mobility attribute effectiveness | 3,000 | Late-game (Month 9+), speed builds |
-| AI Training Academy | ₡500,000 | ₡2,500 | +15% AI attribute effectiveness | 5,000 | AI Tactician archetype, 5,000+ prestige |
+| Combat Training Academy | ₡100,000 | ₡250 | +10% Combat attribute effectiveness | 3,000 | Late-game (Month 9+), offensive builds |
+| Defense Training Academy | ₡100,000 | ₡250 | +10% Defense attribute effectiveness | 3,000 | Late-game (Month 9+), defensive builds |
+| Mobility Training Academy | ₡100,000 | ₡250 | +10% Mobility attribute effectiveness | 3,000 | Late-game (Month 9+), speed builds |
+| AI Training Academy | ₡100,000 | ₡250 | +15% AI attribute effectiveness | 5,000 | AI Tactician archetype, 5,000+ prestige |
 
 ---
 

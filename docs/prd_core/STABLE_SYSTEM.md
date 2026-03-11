@@ -255,57 +255,57 @@ Example:
 - **Level 9** (₡4,500,000, requires 45,000 prestige): Enhanced tournament rewards (+40%)
 - **Level 10** (₡5,000,000, requires 50,000 prestige): Access to World Championship, custom arena design
 
-**10. Combat Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
+**10. Combat Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: Combat Systems attributes (6) capped at level 10
-- **Level 1** (₡200,000): Unlock Combat Systems cap to level 15
-- **Level 2** (₡400,000): Unlock Combat Systems cap to level 20
-- **Level 3** (₡600,000, requires 2,000 prestige): Unlock Combat Systems cap to level 25
-- **Level 4** (₡800,000): Unlock Combat Systems cap to level 30
-- **Level 5** (₡1,000,000, requires 4,000 prestige): Unlock Combat Systems cap to level 35
-- **Level 6** (₡1,200,000): Unlock Combat Systems cap to level 40
-- **Level 7** (₡1,400,000, requires 7,000 prestige): Unlock Combat Systems cap to level 42
-- **Level 8** (₡1,600,000): Unlock Combat Systems cap to level 45
-- **Level 9** (₡1,800,000, requires 10,000 prestige): Unlock Combat Systems cap to level 48
-- **Level 10** (₡2,000,000, requires 15,000 prestige): Unlock Combat Systems cap to level 50 (maximum)
+- **Level 1** (₡100,000): Unlock Combat Systems cap to level 15
+- **Level 2** (₡200,000): Unlock Combat Systems cap to level 20
+- **Level 3** (₡300,000, requires 2,000 prestige): Unlock Combat Systems cap to level 25
+- **Level 4** (₡400,000): Unlock Combat Systems cap to level 30
+- **Level 5** (₡500,000, requires 4,000 prestige): Unlock Combat Systems cap to level 35
+- **Level 6** (₡600,000): Unlock Combat Systems cap to level 40
+- **Level 7** (₡700,000, requires 7,000 prestige): Unlock Combat Systems cap to level 42
+- **Level 8** (₡800,000): Unlock Combat Systems cap to level 45
+- **Level 9** (₡900,000, requires 10,000 prestige): Unlock Combat Systems cap to level 48
+- **Level 10** (₡1,000,000, requires 15,000 prestige): Unlock Combat Systems cap to level 50 (maximum)
 
-**11. Defense Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
+**11. Defense Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: Defensive Systems attributes (5) capped at level 10
-- **Level 1** (₡200,000): Unlock Defensive Systems cap to level 15
-- **Level 2** (₡400,000): Unlock Defensive Systems cap to level 20
-- **Level 3** (₡600,000, requires 2,000 prestige): Unlock Defensive Systems cap to level 25
-- **Level 4** (₡800,000): Unlock Defensive Systems cap to level 30
-- **Level 5** (₡1,000,000, requires 4,000 prestige): Unlock Defensive Systems cap to level 35
-- **Level 6** (₡1,200,000): Unlock Defensive Systems cap to level 40
-- **Level 7** (₡1,400,000, requires 7,000 prestige): Unlock Defensive Systems cap to level 42
-- **Level 8** (₡1,600,000): Unlock Defensive Systems cap to level 45
-- **Level 9** (₡1,800,000, requires 10,000 prestige): Unlock Defensive Systems cap to level 48
-- **Level 10** (₡2,000,000, requires 15,000 prestige): Unlock Defensive Systems cap to level 50 (maximum)
+- **Level 1** (₡100,000): Unlock Defensive Systems cap to level 15
+- **Level 2** (₡200,000): Unlock Defensive Systems cap to level 20
+- **Level 3** (₡300,000, requires 2,000 prestige): Unlock Defensive Systems cap to level 25
+- **Level 4** (₡400,000): Unlock Defensive Systems cap to level 30
+- **Level 5** (₡500,000, requires 4,000 prestige): Unlock Defensive Systems cap to level 35
+- **Level 6** (₡600,000): Unlock Defensive Systems cap to level 40
+- **Level 7** (₡700,000, requires 7,000 prestige): Unlock Defensive Systems cap to level 42
+- **Level 8** (₡800,000): Unlock Defensive Systems cap to level 45
+- **Level 9** (₡900,000, requires 10,000 prestige): Unlock Defensive Systems cap to level 48
+- **Level 10** (₡1,000,000, requires 15,000 prestige): Unlock Defensive Systems cap to level 50 (maximum)
 
-**12. Mobility Training Academy** (Operating Cost: ₡800/day at Level 1, +₡400/day per level)
+**12. Mobility Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: Chassis & Mobility attributes (5) capped at level 10
-- **Level 1** (₡200,000): Unlock Chassis & Mobility cap to level 15
-- **Level 2** (₡400,000): Unlock Chassis & Mobility cap to level 20
-- **Level 3** (₡600,000, requires 2,000 prestige): Unlock Chassis & Mobility cap to level 25
-- **Level 4** (₡800,000): Unlock Chassis & Mobility cap to level 30
-- **Level 5** (₡1,000,000, requires 4,000 prestige): Unlock Chassis & Mobility cap to level 35
-- **Level 6** (₡1,200,000): Unlock Chassis & Mobility cap to level 40
-- **Level 7** (₡1,400,000, requires 7,000 prestige): Unlock Chassis & Mobility cap to level 42
-- **Level 8** (₡1,600,000): Unlock Chassis & Mobility cap to level 45
-- **Level 9** (₡1,800,000, requires 10,000 prestige): Unlock Chassis & Mobility cap to level 48
-- **Level 10** (₡2,000,000, requires 15,000 prestige): Unlock Chassis & Mobility cap to level 50 (maximum)
+- **Level 1** (₡100,000): Unlock Chassis & Mobility cap to level 15
+- **Level 2** (₡200,000): Unlock Chassis & Mobility cap to level 20
+- **Level 3** (₡300,000, requires 2,000 prestige): Unlock Chassis & Mobility cap to level 25
+- **Level 4** (₡400,000): Unlock Chassis & Mobility cap to level 30
+- **Level 5** (₡500,000, requires 4,000 prestige): Unlock Chassis & Mobility cap to level 35
+- **Level 6** (₡600,000): Unlock Chassis & Mobility cap to level 40
+- **Level 7** (₡700,000, requires 7,000 prestige): Unlock Chassis & Mobility cap to level 42
+- **Level 8** (₡800,000): Unlock Chassis & Mobility cap to level 45
+- **Level 9** (₡900,000, requires 10,000 prestige): Unlock Chassis & Mobility cap to level 48
+- **Level 10** (₡1,000,000, requires 15,000 prestige): Unlock Chassis & Mobility cap to level 50 (maximum)
 
-**13. AI Training Academy** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
+**13. AI Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: AI Processing + Team Coordination attributes (7) capped at level 10
-- **Level 1** (₡200,000): Unlock AI & Team cap to level 15
-- **Level 2** (₡400,000): Unlock AI & Team cap to level 20
-- **Level 3** (₡600,000, requires 2,000 prestige): Unlock AI & Team cap to level 25
-- **Level 4** (₡800,000): Unlock AI & Team cap to level 30
-- **Level 5** (₡1,000,000, requires 4,000 prestige): Unlock AI & Team cap to level 35
-- **Level 6** (₡1,200,000): Unlock AI & Team cap to level 40
-- **Level 7** (₡1,400,000, requires 7,000 prestige): Unlock AI & Team cap to level 42
-- **Level 8** (₡1,600,000): Unlock AI & Team cap to level 45
-- **Level 9** (₡1,800,000, requires 10,000 prestige): Unlock AI & Team cap to level 48
-- **Level 10** (₡2,000,000, requires 15,000 prestige): Unlock AI & Team cap to level 50 (maximum)
+- **Level 1** (₡100,000): Unlock AI & Team cap to level 15
+- **Level 2** (₡200,000): Unlock AI & Team cap to level 20
+- **Level 3** (₡300,000, requires 2,000 prestige): Unlock AI & Team cap to level 25
+- **Level 4** (₡400,000): Unlock AI & Team cap to level 30
+- **Level 5** (₡500,000, requires 4,000 prestige): Unlock AI & Team cap to level 35
+- **Level 6** (₡600,000): Unlock AI & Team cap to level 40
+- **Level 7** (₡700,000, requires 7,000 prestige): Unlock AI & Team cap to level 42
+- **Level 8** (₡800,000): Unlock AI & Team cap to level 45
+- **Level 9** (₡900,000, requires 10,000 prestige): Unlock AI & Team cap to level 48
+- **Level 10** (₡1,000,000, requires 15,000 prestige): Unlock AI & Team cap to level 50 (maximum)
 
 **14. Merchandising Hub** (Operating Cost: ₡200/day per level)
 - **Level 0**: No merchandising income

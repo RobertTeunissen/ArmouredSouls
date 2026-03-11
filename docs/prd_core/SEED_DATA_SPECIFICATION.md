@@ -684,7 +684,7 @@ Manual testing accounts with full starting resources:
 **Creation Cycle**: 0
 
 **Facilities**:
-- Combat Training Academy Level 1 (₡200,000)
+- Combat Training Academy Level 1 (₡100,000)
 
 **Robot**: "Brawler Prime"
 - **Attributes**:
@@ -722,7 +722,7 @@ Manual testing accounts with full starting resources:
 **Creation Cycle**: 0
 
 **Facilities**:
-- Combat Training Academy Level 1 (₡200,000)
+- Combat Training Academy Level 1 (₡100,000)
 
 **Robot**: "Longshot"
 - **Attributes**:
@@ -759,7 +759,7 @@ Manual testing accounts with full starting resources:
 **Creation Cycle**: 0
 
 **Facilities**:
-- AI Training Academy Level 1 (₡250,000)
+- AI Training Academy Level 1 (₡100,000)
 
 **Robot**: "Strategist"
 - **Attributes**:
@@ -796,9 +796,9 @@ Manual testing accounts with full starting resources:
 **Creation Cycle**: 0
 
 **Facilities**:
-- Combat Training Academy Level 1 (₡200,000)
-- Defense Training Academy Level 1 (₡200,000)
-- Mobility Training Academy Level 1 (₡200,000)
+- Combat Training Academy Level 1 (₡100,000)
+- Defense Training Academy Level 1 (₡100,000)
+- Mobility Training Academy Level 1 (₡100,000)
 
 **Robot**: "Prestige Hunter"
 - **Attributes**:

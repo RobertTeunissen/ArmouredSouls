@@ -58,16 +58,16 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
       return 0; // No operating cost (generates prestige)
     
     case 'combat_training_academy':
-      return 800 + (level - 1) * 400;
+      return 250 * level;
     
     case 'defense_training_academy':
-      return 800 + (level - 1) * 400;
+      return 250 * level;
     
     case 'mobility_training_academy':
-      return 800 + (level - 1) * 400;
+      return 250 * level;
     
     case 'ai_training_academy':
-      return 1000 + (level - 1) * 500;
+      return 250 * level;
     
     case 'merchandising_hub':
       return 200 * level;
