@@ -806,10 +806,10 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 | 7. Storage Facility | ₡500 |
 | 8. Coaching Staff | ₡3,000 when active |
 | 9. Booking Office | ₡0 (generates prestige) |
-| 10. Combat Training Academy | ₡800 |
-| 11. Defense Training Academy | ₡800 |
-| 12. Mobility Training Academy | ₡800 |
-| 13. AI Training Academy | ₡500,000 | ₡1,000 |
+| 10. Combat Training Academy | ₡250/level |
+| 11. Defense Training Academy | ₡250/level |
+| 12. Mobility Training Academy | ₡250/level |
+| 13. AI Training Academy | ₡250/level |
 | 14. Merchandising Hub | ₡150,000 | ₡200/level |
 | 15. Streaming Studio | ₡100,000 | ₡100/level |
 
@@ -1196,7 +1196,7 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 - 1 Budget weapon (e.g., Practice Sword or Machine Gun): ₡50,000-₡100,000
 - Repair Bay Level 1: ₡200,000
 - Basic attribute upgrades (100 levels @ avg ₡550): ~₡55,000
-- One Academy Level 1 (e.g., Combat Training): ₡400,000
+- One Academy Level 1 (e.g., Combat Training): ₡100,000
 - Additional attribute upgrades (100 levels): ~₡650,000
 - **Buffer**: ₡50,000 (1-2 repairs)
 

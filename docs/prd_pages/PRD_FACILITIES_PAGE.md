@@ -1256,7 +1256,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 #### Combat Training Academy (✅ Implemented)
 - **Type**: `combat_training_academy`
 - **Max Level**: 10
-- **Cost Range**: ₡400K - ₡2.5M (total: ₡13M)
+- **Cost Range**: ₡100K - ₡1M (total: ₡5.5M)
 - **Benefits**: Increases Combat Systems attribute caps from 10 to 15-50
 - **Strategic Value**: Important - Required for late-game combat attribute progression
 - **Implementation Status**: Fully implemented, increases caps for Combat Power, Energy Weapons, Ballistic Weapons, Melee Weapons, Combat Systems Integration
@@ -1264,7 +1264,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 #### Defense Training Academy (✅ Implemented)
 - **Type**: `defense_training_academy`
 - **Max Level**: 10
-- **Cost Range**: ₡400K - ₡2.5M (total: ₡13M)
+- **Cost Range**: ₡100K - ₡1M (total: ₡5.5M)
 - **Benefits**: Increases Defensive Systems attribute caps from 10 to 15-50
 - **Strategic Value**: Important - Required for late-game defense attribute progression
 - **Implementation Status**: Fully implemented, increases caps for Armor Plating, Energy Shield, Regeneration, Countermeasures, Defensive Systems Integration
@@ -1272,7 +1272,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 #### Mobility Training Academy (✅ Implemented)
 - **Type**: `mobility_training_academy`
 - **Max Level**: 10
-- **Cost Range**: ₡400K - ₡2.5M (total: ₡13M)
+- **Cost Range**: ₡100K - ₡1M (total: ₡5.5M)
 - **Benefits**: Increases Chassis & Mobility attribute caps from 10 to 15-50
 - **Strategic Value**: Important - Required for late-game mobility attribute progression
 - **Implementation Status**: Fully implemented, increases caps for Frame Durability, Mobility, Gyroscopic Stabilization, Chassis Integration
@@ -1280,7 +1280,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 #### AI Training Academy (✅ Implemented)
 - **Type**: `ai_training_academy`
 - **Max Level**: 10
-- **Cost Range**: ₡500K - ₡3M (total: ₡16M)
+- **Cost Range**: ₡100K - ₡1M (total: ₡5.5M)
 - **Benefits**: Increases AI & Team Coordination attribute caps from 10 to 15-50
 - **Strategic Value**: Important - Required for late-game AI/team attribute progression (future 2v2)
 - **Implementation Status**: Fully implemented, increases caps for Threat Analysis, Battle Strategy, AI Processing, Team Coordination
