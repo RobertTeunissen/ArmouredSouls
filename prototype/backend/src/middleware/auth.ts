@@ -25,7 +25,10 @@ export const authenticateToken = (
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
+      // Use 401 for expired/invalid tokens so the frontend interceptor can
+      // detect auth failures consistently and redirect to login.
+      // 403 is reserved for authorization failures (e.g. "not admin").
+      return res.status(401).json({ error: 'Invalid or expired token' });
     }
 
     const payload = decoded as { userId: string | number; username: string; role: string };
