@@ -4,7 +4,7 @@
   "description": "Verify deployment readiness before pushing to main",
   "version": "1",
   "when": {
-    "type": "promptSubmit"
+    "type": "userTriggered"
   },
   "then": {
     "type": "askAgent",

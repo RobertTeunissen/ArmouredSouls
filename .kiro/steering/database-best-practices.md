@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: "**/prisma/**,**/schema.prisma,**/migrations/**,**/db/**,**/database/**,**/*migration*"
 ---
 
 # Database Best Practices

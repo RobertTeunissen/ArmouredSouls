@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/services/matchmaking*,**/services/league*,**/services/cycle*,**/services/economy*,**/services/fame*,**/services/facility*,**/services/tournament*"
 ---
 
 # Game Mechanics Quick Reference

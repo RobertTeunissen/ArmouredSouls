@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: "**/backend/src/**,**/middleware/**,**/services/**,**/*error*,**/*logger*"
 ---
 
 # Error Handling and Logging Standards
