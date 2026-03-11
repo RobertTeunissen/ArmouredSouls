@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: "**/package.json,**/package-lock.json,**/.npmrc"
 ---
 
 # Dependency Management

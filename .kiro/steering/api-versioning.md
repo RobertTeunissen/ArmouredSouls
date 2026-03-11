@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: fileMatch
+fileMatchPattern: "**/routes/**,**/api/**,**/*.route.ts,**/*.router.ts"
 ---
 
 # API Versioning and Breaking Changes

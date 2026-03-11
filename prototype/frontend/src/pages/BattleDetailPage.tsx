@@ -217,7 +217,7 @@ function BattleDetailPage() {
                   {battleLog.team1Summary?.reward != null && (
                     <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
                       <span className="text-gray-400">💰 Credits</span>
-                      <span className="font-bold text-green-400">₡{battleLog.team1Summary.reward}</span>
+                      <span className="font-bold text-green-400">₡{battleLog.team1Summary.reward.toLocaleString()}</span>
                     </div>
                   )}
                   {battleLog.team1Summary?.prestige != null && battleLog.team1Summary.prestige > 0 && (
@@ -251,7 +251,7 @@ function BattleDetailPage() {
                   {battleLog.team2Summary?.reward != null && (
                     <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
                       <span className="text-gray-400">💰 Credits</span>
-                      <span className="font-bold text-green-400">₡{battleLog.team2Summary.reward}</span>
+                      <span className="font-bold text-green-400">₡{battleLog.team2Summary.reward.toLocaleString()}</span>
                     </div>
                   )}
                   {battleLog.team2Summary?.prestige != null && battleLog.team2Summary.prestige > 0 && (
@@ -346,7 +346,7 @@ function BattleDetailPage() {
                   {battleLog.robot1.reward !== undefined && battleLog.robot1.reward !== null && (
                     <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
                       <span className="text-gray-400">💰 Credits</span>
-                      <span className="font-bold text-green-400">₡{battleLog.robot1.reward}</span>
+                      <span className="font-bold text-green-400">₡{battleLog.robot1.reward.toLocaleString()}</span>
                     </div>
                   )}
                   {battleLog.robot1.prestige !== undefined && battleLog.robot1.prestige > 0 && (
@@ -382,7 +382,7 @@ function BattleDetailPage() {
                   {battleLog.robot2.reward !== undefined && battleLog.robot2.reward !== null && (
                     <div className="flex items-center justify-between bg-gray-900 rounded px-2 py-1">
                       <span className="text-gray-400">💰 Credits</span>
-                      <span className="font-bold text-green-400">₡{battleLog.robot2.reward}</span>
+                      <span className="font-bold text-green-400">₡{battleLog.robot2.reward.toLocaleString()}</span>
                     </div>
                   )}
                   {battleLog.robot2.prestige !== undefined && battleLog.robot2.prestige > 0 && (
