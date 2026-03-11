@@ -16,6 +16,8 @@ import { rebalanceTagTeamLeagues } from './tagTeamLeagueRebalancingService';
 import { runTagTeamMatchmaking } from './tagTeamMatchmakingService';
 import prisma from '../lib/prisma';
 import { EventLogger } from './eventLogger';
+import { JobContext } from './notifications/integration';
+import { buildSuccessMessage, buildErrorMessage, getActiveIntegrations, dispatchNotification } from './notifications/notification-service';
 
 const eventLogger = new EventLogger();
 
@@ -101,7 +103,7 @@ function releaseLock(): void {
 
 // --- Stub job handlers (to be implemented in tasks 9.2–9.5) ---
 
-async function executeLeagueCycle(): Promise<void> {
+async function executeLeagueCycle(): Promise<JobContext> {
   // Step 1: Repair all robots (always first per Requirement 24.24)
   logger.info('League Cycle: Step 1 — Repairing all robots');
   await repairAllRobots(true);
@@ -124,9 +126,11 @@ async function executeLeagueCycle(): Promise<void> {
   scheduledFor.setMinutes(0, 0, 0);
   const matchesCreated = await runMatchmaking(scheduledFor);
   logger.info(`League Cycle: ${matchesCreated} matches scheduled for ${scheduledFor.toISOString()}`);
+
+  return { jobName: 'league' };
 }
 
-async function executeTournamentCycle(): Promise<void> {
+async function executeTournamentCycle(): Promise<JobContext> {
   // Step 1: Repair all robots (always first per Requirement 24.24)
   logger.info('Tournament Cycle: Step 1 — Repairing all robots');
   await repairAllRobots(true);
@@ -138,6 +142,7 @@ async function executeTournamentCycle(): Promise<void> {
   let tournamentsCompleted = 0;
 
   const activeTournaments = await getActiveTournaments();
+  let lastTournament: { name: string; currentRound: number; maxRounds: number } | null = null;
 
   for (const tournament of activeTournaments) {
     const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
@@ -162,6 +167,12 @@ async function executeTournamentCycle(): Promise<void> {
     if (updatedTournament?.status === 'completed') {
       tournamentsCompleted++;
     }
+
+    lastTournament = {
+      name: tournament.name,
+      currentRound: tournament.currentRound,
+      maxRounds: tournament.maxRounds,
+    };
   }
 
   logger.info(`Tournament Cycle: ${activeTournaments.length} tournaments processed, ${totalRoundsExecuted} rounds, ${totalMatchesExecuted} matches executed, ${tournamentsCompleted} completed`);
@@ -174,9 +185,20 @@ async function executeTournamentCycle(): Promise<void> {
   } else {
     logger.info('Tournament Cycle: No new tournament needed (active tournament exists or not enough participants)');
   }
+
+  if (lastTournament) {
+    return {
+      jobName: 'tournament',
+      tournamentName: lastTournament.name,
+      tournamentRound: lastTournament.currentRound,
+      tournamentMaxRounds: lastTournament.maxRounds,
+    };
+  }
+
+  return { jobName: 'tournament' };
 }
 
-async function executeTagTeamCycle(): Promise<void> {
+async function executeTagTeamCycle(): Promise<JobContext> {
   // Step 1: Repair all robots (always first per Requirement 24.24)
   logger.info('Tag Team Cycle: Step 1 — Repairing all robots');
   await repairAllRobots(true);
@@ -194,7 +216,7 @@ async function executeTagTeamCycle(): Promise<void> {
   if (!isOddCycle) {
     // Even cycle — skip battle execution (Requirement 24.9)
     logger.info(`Tag Team Cycle: Skipping battles on even cycle ${currentCycleNumber} — tag team battles only execute on odd cycles`);
-    return;
+    return { jobName: 'tag-team', isEvenCycle: true };
   }
 
   // Odd cycle — execute full tag team cycle (Requirement 24.8)
@@ -215,9 +237,11 @@ async function executeTagTeamCycle(): Promise<void> {
   scheduledFor.setMinutes(0, 0, 0);
   const matchesCreated = await runTagTeamMatchmaking(scheduledFor);
   logger.info(`Tag Team Cycle: ${matchesCreated} tag team matches scheduled for ${scheduledFor.toISOString()}`);
+
+  return { jobName: 'tag-team', isEvenCycle: !isOddCycle };
 }
 
-async function executeSettlement(): Promise<void> {
+async function executeSettlement(): Promise<JobContext> {
   const settlementStart = Date.now();
 
   // Get or create cycle metadata (singleton pattern)
@@ -400,11 +424,13 @@ async function executeSettlement(): Promise<void> {
   }
 
   logger.info(`Daily Settlement: Completed — passive income ₡${totalPassiveIncome.toLocaleString()}, operating costs ₡${totalOperatingCosts.toLocaleString()}, ${endOfCycleUsers.length} users processed`);
+
+  return { jobName: 'settlement' };
 }
 
 // --- Job runner with concurrency lock, logging, and error handling ---
 
-export async function runJob(jobName: JobState['name'], handler: () => Promise<void>): Promise<void> {
+export async function runJob(jobName: JobState['name'], handler: () => Promise<JobContext>): Promise<void> {
   await acquireLock(jobName);
 
   const state = jobStates.get(jobName);
@@ -413,7 +439,7 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<v
   logger.info(`Scheduler: job "${jobName}" started at ${startTime.toISOString()}`);
 
   try {
-    await handler();
+    const jobContext = await handler();
 
     const endTime = new Date();
     const durationMs = endTime.getTime() - startTime.getTime();
@@ -426,6 +452,18 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<v
     }
 
     logger.info(`Scheduler: job "${jobName}" completed at ${endTime.toISOString()} (duration: ${durationMs}ms)`);
+
+    // Dispatch success notification
+    try {
+      const appBaseUrl = process.env.APP_BASE_URL || '';
+      const message = buildSuccessMessage(jobContext, appBaseUrl);
+      if (message) {
+        const integrations = getActiveIntegrations();
+        await dispatchNotification(message, integrations);
+      }
+    } catch (notifyError) {
+      logger.error(`Scheduler: notification dispatch failed for "${jobName}" — ${notifyError instanceof Error ? notifyError.message : String(notifyError)}`);
+    }
   } catch (error) {
     const endTime = new Date();
     const durationMs = endTime.getTime() - startTime.getTime();
@@ -439,6 +477,16 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<v
     }
 
     logger.error(`Scheduler: job "${jobName}" failed at ${endTime.toISOString()} (duration: ${durationMs}ms) — ${errorMessage}`);
+
+    // Dispatch error notification
+    try {
+      const appBaseUrl = process.env.APP_BASE_URL || '';
+      const errorMsg = buildErrorMessage(jobName, appBaseUrl);
+      const integrations = getActiveIntegrations();
+      await dispatchNotification(errorMsg, integrations);
+    } catch (notifyError) {
+      logger.error(`Scheduler: error notification dispatch failed for "${jobName}" — ${notifyError instanceof Error ? notifyError.message : String(notifyError)}`);
+    }
   } finally {
     releaseLock();
   }
@@ -458,7 +506,7 @@ export function initScheduler(config: SchedulerConfig): void {
   schedulerActive = true;
 
   // Define the 4 jobs with their schedules and handlers
-  const jobs: Array<{ name: JobState['name']; schedule: string; handler: () => Promise<void> }> = [
+  const jobs: Array<{ name: JobState['name']; schedule: string; handler: () => Promise<JobContext> }> = [
     { name: 'league', schedule: config.leagueSchedule, handler: executeLeagueCycle },
     { name: 'tournament', schedule: config.tournamentSchedule, handler: executeTournamentCycle },
     { name: 'tagTeam', schedule: config.tagTeamSchedule, handler: executeTagTeamCycle },
