@@ -40,7 +40,7 @@ export type TagTeamWithRobots = TagTeam & {
  * Validate that two robots can form a tag team
  * Requirements:
  * - Both robots must be from the same stable
- * - Both robots must meet battle readiness (HP ≥75%, HP > yield threshold, weapons equipped)
+ * - Both robots must meet battle readiness (HP > yield threshold, weapons equipped)
  * - No duplicate teams (same robot pair)
  * - Roster limit not exceeded (max teams = roster size / 2)
  */
@@ -273,7 +273,7 @@ export async function disbandTeam(teamId: number, stableId: number): Promise<boo
 /**
  * Check team readiness for battle
  * Requirements 8.1, 8.2, 8.3:
- * - Both robots must have HP ≥75%
+ * - Both robots must have HP > yield threshold
  * - Both robots must have HP > yield threshold
  * - Both robots must have all required weapons equipped
  */

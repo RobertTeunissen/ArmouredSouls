@@ -93,8 +93,7 @@ function buildMatchmakingQueue(leagueId: string): RobotQueueEntry[] {
   const eligibleRobots = await prisma.robot.findMany({
     where: {
       leagueId: leagueId,  // Specific instance (e.g., "bronze_1")
-      battleReadiness: { gte: 75 },  // At least 75% HP
-      currentHP: { gt: prisma.robot.yieldThreshold },  // HP > yield threshold
+      // HP not checked — auto-repair runs before battle execution
       // Exclude robots already scheduled for this batch
       scheduledMatchesAsRobot1: { none: { status: 'scheduled' } },
       scheduledMatchesAsRobot2: { none: { status: 'scheduled' } },
@@ -276,8 +275,7 @@ ELO_MATCH_MAX = 300             // Maximum ELO difference (hard limit)
 // Recent opponent tracking
 RECENT_OPPONENT_LIMIT = 5       // Number of recent battles to track
 
-// Battle readiness
-BATTLE_READINESS_HP_THRESHOLD = 0.75  // 75% HP required
+// Battle readiness — weapons only (HP not checked, auto-repair runs before battles)
 
 // Special robots
 BYE_ROBOT_ID = -1               // ID of bye robot

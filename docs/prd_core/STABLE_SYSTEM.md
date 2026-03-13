@@ -81,23 +81,23 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 11. **Defense Training Academy** - Defensive Systems attribute caps
 12. **Mobility Training Academy** - Chassis & Mobility attribute caps
 13. **AI Training Academy** - AI Processing + Team Coordination attribute caps
-14. **Income Generator** - Additional revenue streams
+14. **Merchandising Hub** - Merchandising revenue (scales with prestige)
 15. **Streaming Studio** - Increases streaming revenue per battle
 
 ### Facility Upgrades
 
 **1. Repair Bay** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
 - **Level 0**: No discount
-- **Level 1** (₡200,000): 6% discount on repair costs (1 robot)
-- **Level 2** (₡400,000): 12% discount on repair costs (1 robot)
-- **Level 3** (₡600,000): 18% discount on repair costs (1 robot)
-- **Level 4** (₡800,000, requires 1,000 prestige): 24% discount on repair costs (1 robot)
-- **Level 5** (₡1,000,000): 30% discount on repair costs (1 robot)
-- **Level 6** (₡1,200,000): 36% discount on repair costs (1 robot)
-- **Level 7** (₡1,500,000, requires 5,000 prestige): 42% discount on repair costs (1 robot)
-- **Level 8** (₡2,000,000): 48% discount on repair costs (1 robot)
-- **Level 9** (₡2,500,000, requires 10,000 prestige): 54% discount on repair costs (1 robot)
-- **Level 10** (₡3,000,000): 60% discount on repair costs (1 robot), automatic minor repairs
+- **Level 1** (₡100,000): 6% discount on repair costs (1 robot)
+- **Level 2** (₡200,000): 12% discount on repair costs (1 robot)
+- **Level 3** (₡300,000): 18% discount on repair costs (1 robot)
+- **Level 4** (₡400,000, requires 1,000 prestige): 24% discount on repair costs (1 robot)
+- **Level 5** (₡500,000): 30% discount on repair costs (1 robot)
+- **Level 6** (₡600,000): 36% discount on repair costs (1 robot)
+- **Level 7** (₡750,000, requires 5,000 prestige): 42% discount on repair costs (1 robot)
+- **Level 8** (₡1,000,000): 48% discount on repair costs (1 robot)
+- **Level 9** (₡1,250,000, requires 10,000 prestige): 54% discount on repair costs (1 robot)
+- **Level 10** (₡1,500,000): 60% discount on repair costs (1 robot), automatic minor repairs
 
 **Discount Formula**: Discount % = Repair Bay Level × (5 + Active Robot Count), capped at 90%
 
@@ -140,70 +140,70 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 
 **3. Weapons Workshop** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
 - **Level 0**: No discount
-- **Level 1** (₡250,000): 5% discount on weapon purchases
-- **Level 2** (₡500,000): 10% discount on weapon purchases
-- **Level 3** (₡750,000): 15% discount on weapon purchases, unlock weapon modifications
-- **Level 4** (₡1,000,000, requires 1,500 prestige): 20% discount on weapon purchases
-- **Level 5** (₡1,300,000): 25% discount on weapon purchases
-- **Level 6** (₡1,600,000): 30% discount on weapon purchases, unlock custom weapon design
-- **Level 7** (₡2,000,000, requires 5,000 prestige): 35% discount on weapon purchases
-- **Level 8** (₡2,500,000): 40% discount on weapon purchases
-- **Level 9** (₡3,000,000, requires 10,000 prestige): 45% discount on weapon purchases
-- **Level 10** (₡4,000,000): 50% discount on weapon purchases, unlock legendary weapon crafting
+- **Level 1** (₡125,000): 5% discount on weapon purchases
+- **Level 2** (₡250,000): 10% discount on weapon purchases
+- **Level 3** (₡375,000): 15% discount on weapon purchases, unlock weapon modifications
+- **Level 4** (₡500,000, requires 1,500 prestige): 20% discount on weapon purchases
+- **Level 5** (₡650,000): 25% discount on weapon purchases
+- **Level 6** (₡800,000): 30% discount on weapon purchases, unlock custom weapon design
+- **Level 7** (₡1,000,000, requires 5,000 prestige): 35% discount on weapon purchases
+- **Level 8** (₡1,250,000): 40% discount on weapon purchases
+- **Level 9** (₡1,500,000, requires 10,000 prestige): 45% discount on weapon purchases
+- **Level 10** (₡2,000,000): 50% discount on weapon purchases, unlock legendary weapon crafting
 
 **Discount Formula**: Discount % = Weapons Workshop Level × 5
 
 **For complete weapon details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 
 **4. Research Lab** (Operating Cost: ₡2,000/day at Level 1, +₡1,000/day per level)
-- **Level 1** (₡400,000): Unlock advanced battle analytics
-- **Level 2** (₡800,000): Unlock loadout presets (save 3 configurations per robot)
-- **Level 3** (₡1,200,000): Unlock AI behavior customization
-- **Level 4** (₡1,600,000, requires 2,000 prestige): Unlock 5 loadout presets per robot
-- **Level 5** (₡2,000,000): Unlock battle simulation (test matchups without cost)
-- **Level 6** (₡2,500,000): Unlock advanced statistics dashboard
-- **Level 7** (₡3,000,000, requires 7,500 prestige): Unlock predictive AI (opponent analysis)
-- **Level 8** (₡3,500,000): Unlock 8 loadout presets per robot
-- **Level 9** (₡4,000,000, requires 15,000 prestige): Unlock experimental technology
-- **Level 10** (₡5,000,000): Unlock robot cloning
+- **Level 1** (₡200,000): Unlock advanced battle analytics
+- **Level 2** (₡400,000): Unlock loadout presets (save 3 configurations per robot)
+- **Level 3** (₡600,000): Unlock AI behavior customization
+- **Level 4** (₡800,000, requires 2,000 prestige): Unlock 5 loadout presets per robot
+- **Level 5** (₡1,000,000): Unlock battle simulation (test matchups without cost)
+- **Level 6** (₡1,250,000): Unlock advanced statistics dashboard
+- **Level 7** (₡1,500,000, requires 7,500 prestige): Unlock predictive AI (opponent analysis)
+- **Level 8** (₡1,750,000): Unlock 8 loadout presets per robot
+- **Level 9** (₡2,000,000, requires 15,000 prestige): Unlock experimental technology
+- **Level 10** (₡2,500,000): Unlock robot cloning
 
 **5. Medical Bay** (Operating Cost: ₡2,000/day at Level 1, +₡1,000/day per level)
-- **Level 1** (₡350,000): 15% reduction on critical damage repair costs (0 HP)
-- **Level 2** (₡700,000): 25% reduction on critical damage repair costs
-- **Level 3** (₡1,050,000): 35% reduction on critical damage repair costs
-- **Level 4** (₡1,400,000, requires 2,000 prestige): 45% reduction on critical damage repair costs
-- **Level 5** (₡1,750,000): 55% reduction on critical damage repair costs
-- **Level 6** (₡2,100,000): 65% reduction on critical damage repair costs, faster recovery protocols
-- **Level 7** (₡2,500,000, requires 7,500 prestige): 75% reduction on critical damage repair costs
-- **Level 8** (₡3,000,000): 85% reduction on critical damage repair costs
-- **Level 9** (₡3,500,000, requires 15,000 prestige): 95% reduction on critical damage repair costs, prevent permanent damage
-- **Level 10** (₡4,500,000): Eliminate critical damage penalties entirely
+- **Level 1** (₡175,000): 15% reduction on critical damage repair costs (0 HP)
+- **Level 2** (₡350,000): 25% reduction on critical damage repair costs
+- **Level 3** (₡525,000): 35% reduction on critical damage repair costs
+- **Level 4** (₡700,000, requires 2,000 prestige): 45% reduction on critical damage repair costs
+- **Level 5** (₡875,000): 55% reduction on critical damage repair costs
+- **Level 6** (₡1,050,000): 65% reduction on critical damage repair costs, faster recovery protocols
+- **Level 7** (₡1,250,000, requires 7,500 prestige): 75% reduction on critical damage repair costs
+- **Level 8** (₡1,500,000): 85% reduction on critical damage repair costs
+- **Level 9** (₡1,750,000, requires 15,000 prestige): 95% reduction on critical damage repair costs, prevent permanent damage
+- **Level 10** (₡2,250,000): Eliminate critical damage penalties entirely
 
 **6. Roster Expansion** (Operating Cost: ₡500/day per robot slot beyond first)
 - **Level 0**: 1 robot slot (free, no operating cost)
-- **Level 1** (₡300,000): 2 robot slots
-- **Level 2** (₡600,000): 3 robot slots
-- **Level 3** (₡900,000): 4 robot slots
-- **Level 4** (₡1,200,000, requires 1,000 prestige): 5 robot slots
-- **Level 5** (₡1,500,000): 6 robot slots
-- **Level 6** (₡1,800,000): 7 robot slots
-- **Level 7** (₡2,200,000, requires 5,000 prestige): 8 robot slots
-- **Level 8** (₡2,600,000): 9 robot slots
-- **Level 9** (₡3,000,000, requires 10,000 prestige): 10 robot slots (maximum)
+- **Level 1** (₡150,000): 2 robot slots
+- **Level 2** (₡300,000): 3 robot slots
+- **Level 3** (₡450,000): 4 robot slots
+- **Level 4** (₡600,000, requires 1,000 prestige): 5 robot slots
+- **Level 5** (₡750,000): 6 robot slots
+- **Level 6** (₡900,000): 7 robot slots
+- **Level 7** (₡1,100,000, requires 5,000 prestige): 8 robot slots
+- **Level 8** (₡1,300,000): 9 robot slots
+- **Level 9** (₡1,500,000, requires 10,000 prestige): 10 robot slots (maximum)
 - **Level 10**: N/A (Level 9 is maximum)
 
 **7. Storage Facility** (Operating Cost: ₡500/day at Level 1, +₡250/day per level)
 - **Level 0**: 5 weapons storage (free, base capacity)
-- **Level 1** (₡150,000): 10 weapon slots (5 base + 5)
-- **Level 2** (₡300,000): 15 weapons storage (5 base + 10)
-- **Level 3** (₡450,000): 20 weapons storage (5 base + 15)
-- **Level 4** (₡600,000): 25 weapons storage (5 base + 20)
-- **Level 5** (₡750,000): 30 weapons storage (5 base + 25)
-- **Level 6** (₡900,000): 35 weapons storage (5 base + 30)
-- **Level 7** (₡1,100,000): 40 weapons storage (5 base + 35)
-- **Level 8** (₡1,300,000): 45 weapons storage (5 base + 40)
-- **Level 9** (₡1,500,000): 50 weapons storage (5 base + 45)
-- **Level 10** (₡2,000,000): 55 weapons storage (5 base + 50, maximum)
+- **Level 1** (₡75,000): 10 weapon slots (5 base + 5)
+- **Level 2** (₡150,000): 15 weapons storage (5 base + 10)
+- **Level 3** (₡225,000): 20 weapons storage (5 base + 15)
+- **Level 4** (₡300,000): 25 weapons storage (5 base + 20)
+- **Level 5** (₡375,000): 30 weapons storage (5 base + 25)
+- **Level 6** (₡450,000): 35 weapons storage (5 base + 30)
+- **Level 7** (₡550,000): 40 weapons storage (5 base + 35)
+- **Level 8** (₡650,000): 45 weapons storage (5 base + 40)
+- **Level 9** (₡750,000): 50 weapons storage (5 base + 45)
+- **Level 10** (₡1,000,000): 55 weapons storage (5 base + 50, maximum)
 
 **Formula**: Storage Capacity = 5 + (Storage Facility Level × 5)
 
@@ -213,16 +213,16 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 
 **8. Coaching Staff** (Operating Cost: ₡3,000/day when coach active)
 - **Level 0**: No coach available
-- **Level 1** (₡500,000): Unlock Offensive Coach (+3% Combat Power for all robots)
-- **Level 2** (₡700,000): Unlock Defensive Coach (+3% Armor Plating for all robots)
-- **Level 3** (₡900,000, requires 2,000 prestige): Unlock Tactical Coach (+5% Threat Analysis for all robots)
-- **Level 4** (₡1,200,000): Improve Offensive Coach (+5% Combat Power)
-- **Level 5** (₡1,500,000): Improve Defensive Coach (+5% Armor Plating)
-- **Level 6** (₡1,800,000, requires 5,000 prestige): Improve Tactical Coach (+8% Threat Analysis)
-- **Level 7** (₡2,200,000): Unlock Team Coach (+5% team coordination bonuses for arena battles)
-- **Level 8** (₡2,600,000): Improve Offensive Coach (+7% Combat Power)
-- **Level 9** (₡3,000,000, requires 10,000 prestige): Improve Defensive Coach (+7% Armor Plating)
-- **Level 10** (₡3,500,000): Master Coach (combine two coach bonuses at 75% effectiveness)
+- **Level 1** (₡250,000): Unlock Offensive Coach (+3% Combat Power for all robots)
+- **Level 2** (₡350,000): Unlock Defensive Coach (+3% Armor Plating for all robots)
+- **Level 3** (₡450,000, requires 2,000 prestige): Unlock Tactical Coach (+5% Threat Analysis for all robots)
+- **Level 4** (₡600,000): Improve Offensive Coach (+5% Combat Power)
+- **Level 5** (₡750,000): Improve Defensive Coach (+5% Armor Plating)
+- **Level 6** (₡900,000, requires 5,000 prestige): Improve Tactical Coach (+8% Threat Analysis)
+- **Level 7** (₡1,100,000): Unlock Team Coach (+5% team coordination bonuses for arena battles)
+- **Level 8** (₡1,300,000): Improve Offensive Coach (+7% Combat Power)
+- **Level 9** (₡1,500,000, requires 10,000 prestige): Improve Defensive Coach (+7% Armor Plating)
+- **Level 10** (₡1,750,000): Master Coach (combine two coach bonuses at 75% effectiveness)
 
 **Note**: Only one coach can be active at a time. Switching coaches costs ₡100,000.
 
@@ -244,16 +244,16 @@ Example:
 
 **9. Booking Office** (Operating Cost: None - generates prestige instead)
 - **Level 0**: Bronze league access only
-- **Level 1** (₡500,000, requires 1,000 prestige): Unlock Silver league tournaments
-- **Level 2** (₡1,000,000, requires 2,500 prestige): Unlock Gold league tournaments, custom paint jobs
-- **Level 3** (₡1,500,000, requires 5,000 prestige): Unlock Platinum tournaments, exclusive weapon skins
-- **Level 4** (₡2,000,000, requires 10,000 prestige): Unlock Diamond tournaments, legendary frame designs
-- **Level 5** (₡2,500,000, requires 15,000 prestige): Enhanced tournament rewards (+10%)
-- **Level 6** (₡3,000,000, requires 20,000 prestige): Enhanced tournament rewards (+20%)
-- **Level 7** (₡3,500,000, requires 25,000 prestige): Access to Champion tournaments, hall of fame listing
-- **Level 8** (₡4,000,000, requires 35,000 prestige): Enhanced tournament rewards (+30%)
-- **Level 9** (₡4,500,000, requires 45,000 prestige): Enhanced tournament rewards (+40%)
-- **Level 10** (₡5,000,000, requires 50,000 prestige): Access to World Championship, custom arena design
+- **Level 1** (₡250,000, requires 1,000 prestige): Unlock Silver league tournaments
+- **Level 2** (₡500,000, requires 2,500 prestige): Unlock Gold league tournaments, custom paint jobs
+- **Level 3** (₡750,000, requires 5,000 prestige): Unlock Platinum tournaments, exclusive weapon skins
+- **Level 4** (₡1,000,000, requires 10,000 prestige): Unlock Diamond tournaments, legendary frame designs
+- **Level 5** (₡1,250,000, requires 15,000 prestige): Enhanced tournament rewards (+10%)
+- **Level 6** (₡1,500,000, requires 20,000 prestige): Enhanced tournament rewards (+20%)
+- **Level 7** (₡1,750,000, requires 25,000 prestige): Access to Champion tournaments, hall of fame listing
+- **Level 8** (₡2,000,000, requires 35,000 prestige): Enhanced tournament rewards (+30%)
+- **Level 9** (₡2,250,000, requires 45,000 prestige): Enhanced tournament rewards (+40%)
+- **Level 10** (₡2,500,000, requires 50,000 prestige): Access to World Championship, custom arena design
 
 **10. Combat Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: Combat Systems attributes (6) capped at level 10
@@ -432,19 +432,20 @@ The game presents players with a **daily income/expense sheet** showing all reve
 ### Revenue Streams
 
 **Battle Winnings**:
-- Win rewards vary by league tier
-- Bronze: ₡5,000 - ₡10,000 per win
-- Silver: ₡10,000 - ₡20,000 per win
-- Gold: ₡20,000 - ₡40,000 per win
-- Platinum: ₡40,000 - ₡80,000 per win
-- Diamond: ₡80,000 - ₡150,000 per win
-- Champion: ₡150,000 - ₡300,000 per win
+- Each tier has a fixed base win reward (midpoint of the tier's min/max range)
+- Bronze: ₡7,500 per win
+- Silver: ₡15,000 per win
+- Gold: ₡30,000 per win
+- Platinum: ₡60,000 per win
+- Diamond: ₡115,000 per win
+- Champion: ₡225,000 per win
 
 **Prestige Bonuses**:
-- 5,000+ Prestige: +5% to battle winnings
-- 10,000+ Prestige: +10% to battle winnings
-- 25,000+ Prestige: +15% to battle winnings
-- 50,000+ Prestige: +20% to battle winnings
+- 1,000+ Prestige: +10% to battle winnings
+- 5,000+ Prestige: +20% to battle winnings
+- 10,000+ Prestige: +30% to battle winnings
+- 25,000+ Prestige: +40% to battle winnings
+- 50,000+ Prestige: +50% to battle winnings
 
 **Merchandising** (from Merchandising Hub facility):
 ```
@@ -524,7 +525,7 @@ OPERATING COSTS:
   Defense Academy (Lvl 2): ₡1,200
   Mobility Academy (Lvl 2): ₡1,200
   AI Academy (Lvl 1):      ₡1,000
-  Income Generator (Lvl 5): ₡3,500
+  Merchandising Hub (Lvl 5): ₡3,500
   Streaming Studio (Lvl 5): ₡500
   ─────────────────────────────────
   Total Operating Costs:   ₡26,500
@@ -598,7 +599,7 @@ CURRENT BALANCE:           ₡1,847,000
 ### Early Game (₡3M starting budget)
 1. Build 1 robot with basic weapon (₡500K + ₡150K = ₡650K)
 2. Upgrade key attributes (₡300K)
-3. Save for Repair Bay Level 1 (₡200K) - provides 9% discount with 4 robots
+3. Save for Repair Bay Level 1 (₡100K) - provides 9% discount with 4 robots
 4. Consider Streaming Studio Level 1 (₡100K) - provides 10% boost to per-battle streaming revenue
 5. Focus on battles to earn Credits and prestige
 6. Remaining: ~₡750K for additional upgrades or second robot
@@ -625,7 +626,7 @@ CURRENT BALANCE:           ₡1,847,000
 ### Mid Game (₡5M+ total earned)
 1. Upgrade key facilities (Repair Bay, Training Facility to Level 3-4)
 2. Expand robot roster to 3-4 robots
-3. Unlock Income Generator for passive income (merchandising)
+3. Unlock Merchandising Hub for passive income (merchandising)
 4. Upgrade Streaming Studio to Level 3-5 for 30-50% streaming boost
 5. Specialize robots for different strategies
 6. Invest in better weapons (₡300K-₡400K range)
@@ -649,7 +650,7 @@ CURRENT BALANCE:           ₡1,847,000
 4. Invest in prestige-locked content (high-tier tournaments)
 5. Compete in high-tier tournaments (Diamond/Champion)
 6. Build legendary custom weapons
-7. Optimize daily income streams (Income Generator Level 10, Streaming Studio Level 10)
+7. Optimize daily income streams (Merchandising Hub Level 10, Streaming Studio Level 10)
 
 **Optimal Multi-Robot Configuration**:
 - **10 robots + Repair Bay Level 6**: Reaches 90% discount cap (6 × (5 + 10) = 90%)

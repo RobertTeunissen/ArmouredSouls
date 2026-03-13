@@ -47,7 +47,7 @@
 - ✅ **NEW**: `POST /api/admin/daily-finances/process` - Process daily operating costs for all users
 
 **Battle Rewards:**
-- ✅ League-based rewards: Bronze (₡5-10K) → Champion (₡150-300K)
+- ✅ League-based rewards: Bronze (₡7.5K) → Champion (₡225K)
 - ✅ Prestige multipliers: 5%-20% bonus on winnings
 - ✅ Participation rewards: 30% of league base for all combatants
 - ✅ **NEW**: Detailed reward breakdown shown in battle logs:
@@ -139,8 +139,8 @@ Battle logs now include comprehensive reward breakdowns showing exactly how rewa
 **Example Battle Log:**
 ```
 💰 Financial Rewards Summary
-   Winner (RobotName): ₡12,750
-      • League Base (gold): ₡30,000 (range: ₡20,000-₡40,000)
+   Winner (RobotName): ₡39,000
+      • League Base (gold): ₡30,000
       • Prestige Bonus (10%): +₡3,000
       • Participation: ₡6,000
    Loser (OpponentName): ₡6,000
@@ -255,7 +255,7 @@ curl -X POST -H "Authorization: Bearer <token>" \
           "total": 15000,
           "breakdown": [
             {
-              "facilityType": "INCOME_GENERATOR",
+              "facilityType": "MERCHANDISING_HUB",
               "level": 5,
               "cost": 5000
             },
@@ -353,7 +353,7 @@ curl -H "Authorization: Bearer <token>" \
     "total": 29000,
     "breakdown": [
       {
-        "facilityType": "INCOME_GENERATOR",
+        "facilityType": "MERCHANDISING_HUB",
         "level": 5,
         "cost": 5000
       },
@@ -411,7 +411,7 @@ curl -H "Authorization: Bearer <token>" \
   "total": 29000,
   "breakdown": [
     {
-      "facilityType": "INCOME_GENERATOR",
+      "facilityType": "MERCHANDISING_HUB",
       "level": 5,
       "cost": 5000,
       "description": "Generates passive income from merchandising and streaming"
@@ -640,7 +640,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
   - `GET /api/finances/revenue-streams` - Income sources
   - `GET /api/finances/projections` - Forecasts & recommendations
 - ✅ **Battle reward system** - League-based rewards with prestige multipliers
-  - Bronze: ₡5-10K → Champion: ₡150-300K
+  - Bronze: ₡7.5K → Champion: ₡225K
   - Prestige multipliers: 5%-20% bonus
   - Participation rewards: 30% of league base
   - **NEW (Feb 4)**: Rewards tracked in database and displayed in admin
@@ -1194,7 +1194,7 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 **Minimum Viable Stable** (₡1,950,000 spent, ₡50K buffer):
 - 1 Robot: ₡500,000
 - 1 Budget weapon (e.g., Practice Sword or Machine Gun): ₡50,000-₡100,000
-- Repair Bay Level 1: ₡200,000
+- Repair Bay Level 1: ₡100,000
 - Basic attribute upgrades (100 levels @ avg ₡550): ~₡55,000
 - One Academy Level 1 (e.g., Combat Training): ₡100,000
 - Additional attribute upgrades (100 levels): ~₡650,000
@@ -1211,14 +1211,14 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 **Aggressive Startup** (₡1,985,000 spent, ₡15K buffer - risky):
 - 2 Robots: ₡1,000,000
 - 2 Budget weapons (e.g., 2× Machine Guns): ₡200,000
-- Repair Bay Level 1: ₡200,000
+- Repair Bay Level 1: ₡100,000
 - Split attribute upgrades (100 levels total): ~₡585,000
 - **Buffer**: ₡15,000 (emergency only)
 
 **Power Maximizer** (₡1,995,000 spent, ₡5K buffer - very risky):
 - 1 Robot: ₡500,000
 - 1 Premium weapon (e.g., Plasma Cannon): ₡400,000
-- Repair Bay Level 1: ₡200,000
+- Repair Bay Level 1: ₡100,000
 - Heavy attribute investment (200 levels): ~₡895,000
 - **Buffer**: ₡5,000 (forced to win first battle or bankrupt)
 
@@ -1243,14 +1243,14 @@ All revenue is earned in Credits (₡). This section consolidates every way play
 
 **Victory Rewards by League**:
 
-| League | Win Reward Range | Prestige per Win |
-|--------|-----------------|------------------|
-| Bronze | ₡5,000 - ₡10,000 | +5 |
-| Silver | ₡10,000 - ₡20,000 | +10 | +10 |
-| Gold | ₡20,000 - ₡40,000 | +20 | +20 |
-| Platinum | ₡40,000 - ₡80,000 | +30 | +30 |
-| Diamond | ₡80,000 - ₡150,000 | +50 | +50 |
-| Champion | ₡150,000 - ₡300,000 | +75 | +75 |
+| League | Base Win Reward | Prestige per Win |
+|--------|----------------|------------------|
+| Bronze | ₡7,500 | +5 |
+| Silver | ₡15,000 | +10 |
+| Gold | ₡30,000 | +20 |
+| Platinum | ₡60,000 | +30 |
+| Diamond | ₡115,000 | +50 |
+| Champion | ₡225,000 | +75 |
 
 **Fame vs Prestige**:
 - **Fame**: Robot-level reputation (individual robot stat)
@@ -1335,10 +1335,11 @@ Higher stable prestige increases battle winnings:
 
 | Prestige Threshold | Battle Winnings Bonus |
 |-------------------|---------------------|
-| 5,000+ | +5% |
-| 10,000+ | +10% |
-| 25,000+ | +15% |
-| 50,000+ | +20% |
+| 1,000+ | +10% |
+| 5,000+ | +20% |
+| 10,000+ | +30% |
+| 25,000+ | +40% |
+| 50,000+ | +50% |
 
 **Bonus Application**: Prestige bonus multiplies the base battle reward **AFTER** ELO calculation, extending beyond the league reward range.
 
@@ -1390,7 +1391,7 @@ final_battle_reward = base_reward × prestige_multiplier
 **Requirements**:
 - Merchandising Hub Level 1+ (unlocks merchandising)
 
-**Note**: The Merchandising Hub (formerly Income Generator) has been rebalanced with lower costs and linear scaling. Streaming revenue is awarded per battle via the Streaming Studio facility.
+**Note**: The Merchandising Hub has been rebalanced with lower costs and linear scaling. Streaming revenue is awarded per battle via the Streaming Studio facility.
 
 **Base Income by Level**:
 - Level 1: ₡5,000/day
@@ -1943,7 +1944,7 @@ Recommendations:
 
 **Payback Period Examples** (Revised with correct battle frequency):
 
-1. **Repair Bay Level 1** (₡200,000):
+1. **Repair Bay Level 1** (₡100,000):
    > **For complete repair cost formulas, facility discounts, and ROI analysis**: See **Section 5 "Repair Costs"** in the Cost Centers section above. Includes detailed payback calculations for single and multi-robot scenarios, Medical Bay integration, and worked examples.
   
 2. **Training Facility Level 1**: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for pricing
@@ -1974,10 +1975,10 @@ Recommendations:
    - **Better with**: Multiple robots (more battles/week) or active play
    - **Recommendation**: Excellent early investment for active players with 2-3 robots
    
-5. **Weapons Workshop Level 1** (₡250,000):
+5. **Weapons Workshop Level 1** (₡125,000):
    - Saves 5% on weapons (₡5K-₡20K per weapon)
    - Average weapon cost: ₡200K → saves ₡10K per purchase
-   - Payback: **25 weapon purchases**
+   - Payback: **12-13 weapon purchases**
    - **Multi-robot context**: 3 robots × 2 weapons = 6 weapons minimum
    - With loadout changes/testing: 10-15 weapons over time
    - **Payback timeline**: **2-3 years** for typical player
@@ -2110,7 +2111,7 @@ Recommendations:
 
 **Metrics**:
 - Revenue breakdown: Battle winnings vs passive income (target: 60/40 split)
-- % of players using Income Generator (target: >60% by day 60)
+- % of players using Merchandising Hub (target: >60% by day 60)
 - Average daily income by game stage (early/mid/late)
 - Facility ROI analysis (which facilities are most popular?)
 

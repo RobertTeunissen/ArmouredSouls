@@ -1,0 +1,68 @@
+[
+  {
+    "slug": "getting-started",
+    "title": "Getting Started",
+    "description": "Learn the basics of Armoured Souls",
+    "order": 1
+  },
+  {
+    "slug": "robots",
+    "title": "Robots",
+    "description": "Robot attributes, upgrades, and frame types",
+    "order": 2
+  },
+  {
+    "slug": "combat",
+    "title": "Combat",
+    "description": "Battle mechanics, damage, and strategy",
+    "order": 3
+  },
+  {
+    "slug": "weapons",
+    "title": "Weapons & Loadouts",
+    "description": "Weapon types, loadout configurations, and bonuses",
+    "order": 4
+  },
+  {
+    "slug": "leagues",
+    "title": "Leagues & Matchmaking",
+    "description": "Competitive tiers, LP, ELO, and matchmaking",
+    "order": 5
+  },
+  {
+    "slug": "tournaments",
+    "title": "Tournaments",
+    "description": "Tournament format, eligibility, and rewards",
+    "order": 6
+  },
+  {
+    "slug": "economy",
+    "title": "Economy & Finances",
+    "description": "Credits, income, expenses, and financial management",
+    "order": 7
+  },
+  {
+    "slug": "facilities",
+    "title": "Stable & Facilities",
+    "description": "Facility types, upgrades, and investment strategy",
+    "order": 8
+  },
+  {
+    "slug": "prestige-fame",
+    "title": "Prestige & Fame",
+    "description": "Reputation systems and progression rewards",
+    "order": 9
+  },
+  {
+    "slug": "strategy",
+    "title": "Strategy Guides",
+    "description": "Build archetypes, budget allocation, and advanced tactics",
+    "order": 10
+  },
+  {
+    "slug": "integrations",
+    "title": "Integrations & API",
+    "description": "Webhooks, notifications, and community integrations",
+    "order": 11
+  }
+]

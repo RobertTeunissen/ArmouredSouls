@@ -100,7 +100,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 8. **Energy Shield Capacity** - Maximum energy shield HP pool (separate from robot HP)
 9. **Evasion Thrusters** - Chance to dodge incoming attacks
 10. **Damage Dampeners** - Reduces ALL incoming damage + extra crit damage reduction (rebalanced Feb 2026)
-11. **Counter Protocols** - Chance to strike back when hit
+11. **Counter Protocols** - Chance to strike back when attacked (hit or miss)
 
 **Damage Dampeners Mechanics (Updated Feb 2026)**:
 - **Primary Benefit**: Pre-shield damage mitigation on ALL hits (0.2% per point, capped at 15%)

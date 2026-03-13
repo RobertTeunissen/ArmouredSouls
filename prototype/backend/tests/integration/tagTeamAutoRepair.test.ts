@@ -4,7 +4,7 @@
  * Tests auto-repair functionality before tag team battles
  * 
  * This test verifies:
- * - Robots below 75% HP are automatically repaired before battle
+ * - Robots with damage are automatically repaired before battle
  * - Repair costs are deducted from user currency
  * - Repair Bay discounts are applied correctly
  * - Battles proceed after successful repair
@@ -168,9 +168,9 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     expect(team2Result.success).toBe(true);
     testTeamIds.push(team1Result.team!.id, team2Result.team!.id);
 
-    console.log('[Test] Step 3: Damaging robots below 75% HP...');
+    console.log('[Test] Step 3: Damaging robots...');
     
-    // Damage team 1 robots to 70% HP (below 75% threshold)
+    // Damage team 1 robots to 70% HP
     await prisma.robot.update({
       where: { id: testRobots[0].id },
       data: { currentHP: 70 },
@@ -321,12 +321,12 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     expect(poorTeam1Result.success).toBe(true);
     expect(poorTeam2Result.success).toBe(true);
 
-    // Now damage the robots below 75% HP (after team creation)
-    console.log('[Test] Damaging robots below 75% HP...');
+    // Now damage the robots (after team creation)
+    console.log('[Test] Damaging robots...');
     for (const robot of poorRobots) {
       await prisma.robot.update({
         where: { id: robot.id },
-        data: { currentHP: 70 }, // Below 75% threshold
+        data: { currentHP: 70 }, // Damaged, needs repair
       });
     }
 

@@ -38,7 +38,7 @@ The implementation integrates with existing systems (matchmaking, battle orchest
   - [x] 2.1 Implement team creation and validation
     - Create TagTeamService class with createTeam method
     - Validate both robots are from same stable
-    - Validate both robots meet battle readiness (HP ≥75%, HP > yield threshold, weapons equipped)
+    - Validate both robots meet battle readiness (HP > yield threshold, weapons equipped)
     - Check for duplicate teams (same robot pair)
     - Check roster limit (max teams = roster size / 2)
     - Return validation errors with specific messages
@@ -75,7 +75,7 @@ The implementation integrates with existing systems (matchmaking, battle orchest
 - [x] 3. Tag Team Readiness and ELO Calculation
   - [x] 3.1 Implement team readiness checking
     - Add checkTeamReadiness method
-    - Validate both robots: HP ≥75%, HP > yield threshold, all weapons equipped
+    - Validate both robots: HP > yield threshold, all weapons equipped
     - Return detailed readiness status for each robot
     - _Requirements: 8.1, 8.2, 8.3_
   

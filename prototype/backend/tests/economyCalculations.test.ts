@@ -51,34 +51,36 @@ describe('Economy Calculations', () => {
   });
 
   describe('Prestige Multipliers', () => {
-    it('should return 1.0 for prestige below 5000', () => {
+    it('should return 1.0 for prestige below 1000', () => {
       expect(getPrestigeMultiplier(0)).toBe(1.0);
-      expect(getPrestigeMultiplier(4999)).toBe(1.0);
+      expect(getPrestigeMultiplier(999)).toBe(1.0);
     });
 
     it('should return correct multipliers for prestige tiers', () => {
-      expect(getPrestigeMultiplier(5000)).toBe(1.05); // 5%
-      expect(getPrestigeMultiplier(10000)).toBe(1.10); // 10%
-      expect(getPrestigeMultiplier(25000)).toBe(1.15); // 15%
-      expect(getPrestigeMultiplier(50000)).toBe(1.20); // 20%
+      expect(getPrestigeMultiplier(1000)).toBe(1.10); // 10%
+      expect(getPrestigeMultiplier(5000)).toBe(1.20); // 20%
+      expect(getPrestigeMultiplier(10000)).toBe(1.30); // 30%
+      expect(getPrestigeMultiplier(25000)).toBe(1.40); // 40%
+      expect(getPrestigeMultiplier(50000)).toBe(1.50); // 50%
     });
 
     it('should return highest multiplier for prestige over 50000', () => {
-      expect(getPrestigeMultiplier(100000)).toBe(1.20);
+      expect(getPrestigeMultiplier(100000)).toBe(1.50);
     });
   });
 
   describe('Battle Winnings', () => {
     it('should calculate battle winnings with no prestige bonus', () => {
       expect(calculateBattleWinnings(10000, 0)).toBe(10000);
-      expect(calculateBattleWinnings(10000, 4999)).toBe(10000);
+      expect(calculateBattleWinnings(10000, 999)).toBe(10000);
     });
 
     it('should calculate battle winnings with prestige bonuses', () => {
-      expect(calculateBattleWinnings(10000, 5000)).toBe(10500); // +5%
-      expect(calculateBattleWinnings(10000, 10000)).toBe(11000); // +10%
-      expect(calculateBattleWinnings(10000, 25000)).toBe(11500); // +15%
-      expect(calculateBattleWinnings(10000, 50000)).toBe(12000); // +20%
+      expect(calculateBattleWinnings(10000, 1000)).toBe(11000); // +10%
+      expect(calculateBattleWinnings(10000, 5000)).toBe(12000); // +20%
+      expect(calculateBattleWinnings(10000, 10000)).toBe(13000); // +30%
+      expect(calculateBattleWinnings(10000, 25000)).toBe(14000); // +40%
+      expect(calculateBattleWinnings(10000, 50000)).toBe(15000); // +50%
     });
   });
 

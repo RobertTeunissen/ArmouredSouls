@@ -422,7 +422,7 @@ model Facility {
 11. **defense_training_academy** - Defensive Systems attribute caps (10→50 max)
 12. **mobility_training_academy** - Chassis & Mobility attribute caps (10→50 max)
 13. **ai_training_academy** - AI Processing + Team Coordination attribute caps (10→50 max)
-14. **income_generator** - Additional revenue streams (merchandising + streaming)
+14. **merchandising_hub** - Merchandising revenue (scales with prestige)
 
 **Facility Costs**: See STABLE_SYSTEM.md for complete cost breakdown per level
 **Operating Costs**: Each facility has daily operating cost that scales with level

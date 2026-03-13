@@ -139,14 +139,14 @@ Each loadout type provides different bonuses. For example, Weapon+Shield provide
 Your primary income comes from **battle winnings**, which scale dramatically with league tier:
 
 **League Rewards** (per win):
-- **Bronze**: ₡5,000 - ₡10,000 + ₡1,500 participation
-- **Silver**: ₡10,000 - ₡20,000 + ₡3,000 participation
-- **Gold**: ₡20,000 - ₡40,000 + ₡6,000 participation
-- **Platinum**: ₡40,000 - ₡80,000 + ₡12,000 participation
-- **Diamond**: ₡80,000 - ₡150,000 + ₡24,000 participation
-- **Champion**: ₡150,000 - ₡300,000 + ₡45,000 participation
+- **Bronze**: ₡7,500 + ₡1,500 participation
+- **Silver**: ₡15,000 + ₡3,000 participation
+- **Gold**: ₡30,000 + ₡6,000 participation
+- **Platinum**: ₡60,000 + ₡12,000 participation
+- **Diamond**: ₡115,000 + ₡24,000 participation
+- **Champion**: ₡225,000 + ₡45,000 participation
 
-**Participation Rewards**: You earn participation rewards even when you lose (approximately 30% of base win reward).
+**Participation Rewards**: You earn participation rewards even when you lose (30% of the tier's base minimum).
 
 **Example Weekly Income** (7 battles, 50% win rate):
 - **Bronze**: (3.5 wins × ₡7,500) + (7 battles × ₡1,500) = ₡36,750/week
@@ -186,7 +186,7 @@ Repair Cost = (230 × 100) × 0.60 × 1.0 = ₡13,800
 **Leagues** are competitive tiers that dramatically affect your income and risk profile:
 
 1. **Bronze** (Starting League)
-   - Low income (₡5-10K per win)
+   - Low income (₡7,500 per win)
    - High bankruptcy risk for aggressive builds
    - Goal: Advance to Silver within 2-4 weeks
 
@@ -234,11 +234,11 @@ Priority attributes for Tank Fortress builds:
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Low risk. Even with modest income (₡5-10K per win), your low repair costs (typically ₡8-12K per loss) keep you profitable. Tank Fortress is one of the safest archetypes for Bronze.
+- **Bronze League**: Low risk. Even with modest income (₡7,500 per win), your low repair costs (typically ₡8-12K per loss) keep you profitable. Tank Fortress is one of the safest archetypes for Bronze.
 
-- **Silver League**: Very low risk. Income doubles (₡10-20K per win) while repair costs remain stable. You'll build a healthy reserve quickly, enabling expansion investments.
+- **Silver League**: Very low risk. Income doubles (₡15,000 per win) while repair costs remain stable. You'll build a healthy reserve quickly, enabling expansion investments.
 
-- **Gold League and Beyond**: Extremely low risk. With income at ₡20-40K per win and repair costs still around ₡10-15K per loss, Tank Fortress becomes highly profitable. This archetype benefits greatly from league advancement because your costs don't scale with income.
+- **Gold League and Beyond**: Extremely low risk. With income at ₡30,000 per win and repair costs still around ₡10-15K per loss, Tank Fortress becomes highly profitable. This archetype benefits greatly from league advancement because your costs don't scale with income.
 
 **Personality Fit**: 
 
@@ -300,11 +300,11 @@ Priority attributes for Glass Cannon builds:
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: High risk. With income at ₡5-10K per win but repair costs of ₡15-25K per loss (due to low defense), losing streaks can quickly drain your reserves. Glass Cannon requires a 55-60% win rate to stay profitable in Bronze. This is the most dangerous phase for this archetype.
+- **Bronze League**: High risk. With income at ₡7,500 per win but repair costs of ₡15-25K per loss (due to low defense), losing streaks can quickly drain your reserves. Glass Cannon requires a 55-60% win rate to stay profitable in Bronze. This is the most dangerous phase for this archetype.
 
-- **Silver League**: Medium-high risk. Income doubles to ₡10-20K per win, making losses more manageable (repair costs still ₡15-25K). A 50-55% win rate becomes sustainable. The pressure eases but you're not safe yet.
+- **Silver League**: Medium-high risk. Income doubles to ₡15,000 per win, making losses more manageable (repair costs still ₡15-25K). A 50-55% win rate becomes sustainable. The pressure eases but you're not safe yet.
 
-- **Gold League and Beyond**: Medium risk. With income at ₡20-40K per win, even expensive repairs (₡15-25K) are easily covered. At 50% win rate, you're highly profitable. Glass Cannon transforms from high-risk to high-reward once you reach Gold.
+- **Gold League and Beyond**: Medium risk. With income at ₡30,000 per win, even expensive repairs (₡15-25K) are easily covered. At 50% win rate, you're highly profitable. Glass Cannon transforms from high-risk to high-reward once you reach Gold.
 
 **High-Risk/High-Reward Nature**:
 
@@ -408,11 +408,11 @@ Priority attributes for Speed Demon builds:
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Medium risk. With income at ₡5-10K per win and moderate repair costs (₡12-18K per loss due to balanced defense), you need roughly 52-55% win rate to stay profitable. Speed Demon is more forgiving than Glass Cannon but less safe than Tank Fortress. Your mobility helps you win consistently, keeping you profitable.
+- **Bronze League**: Medium risk. With income at ₡7,500 per win and moderate repair costs (₡12-18K per loss due to balanced defense), you need roughly 52-55% win rate to stay profitable. Speed Demon is more forgiving than Glass Cannon but less safe than Tank Fortress. Your mobility helps you win consistently, keeping you profitable.
 
-- **Silver League**: Low-medium risk. Income doubles to ₡10-20K per win while repair costs remain stable at ₡12-18K per loss. At 50% win rate, you're comfortably profitable. Your speed advantage becomes more valuable as opponents get tougher, helping maintain win rate.
+- **Silver League**: Low-medium risk. Income doubles to ₡15,000 per win while repair costs remain stable at ₡12-18K per loss. At 50% win rate, you're comfortably profitable. Your speed advantage becomes more valuable as opponents get tougher, helping maintain win rate.
 
-- **Gold League and Beyond**: Low risk. With income at ₡20-40K per win and repair costs still ₡12-18K per loss, Speed Demon becomes highly profitable. Your consistent performance across leagues makes this archetype increasingly safe as you progress.
+- **Gold League and Beyond**: Low risk. With income at ₡30,000 per win and repair costs still ₡12-18K per loss, Speed Demon becomes highly profitable. Your consistent performance across leagues makes this archetype increasingly safe as you progress.
 
 **Consistent Across Leagues**:
 
@@ -584,11 +584,11 @@ This creates a robot with no glaring weaknesses. You won't have the highest dama
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Very low risk. With income at ₡5-10K per win and low-moderate repair costs (₡10-15K per loss due to balanced defense), you need roughly 50-52% win rate to stay profitable. Balanced Brawler is the most forgiving archetype in Bronze because your balanced stats help you win consistently without exposing you to catastrophic losses.
+- **Bronze League**: Very low risk. With income at ₡7,500 per win and low-moderate repair costs (₡10-15K per loss due to balanced defense), you need roughly 50-52% win rate to stay profitable. Balanced Brawler is the most forgiving archetype in Bronze because your balanced stats help you win consistently without exposing you to catastrophic losses.
 
-- **Silver League**: Very low risk. Income doubles to ₡10-20K per win while repair costs remain stable at ₡10-15K per loss. At 50% win rate, you're comfortably profitable with healthy margins. Your versatility helps you maintain consistent performance as opponents get tougher.
+- **Silver League**: Very low risk. Income doubles to ₡15,000 per win while repair costs remain stable at ₡10-15K per loss. At 50% win rate, you're comfortably profitable with healthy margins. Your versatility helps you maintain consistent performance as opponents get tougher.
 
-- **Gold League and Beyond**: Very low risk. With income at ₡20-40K per win and repair costs still ₡10-15K per loss, Balanced Brawler becomes highly profitable. Your steady progression continues without dramatic shifts in risk or strategy.
+- **Gold League and Beyond**: Very low risk. With income at ₡30,000 per win and repair costs still ₡10-15K per loss, Balanced Brawler becomes highly profitable. Your steady progression continues without dramatic shifts in risk or strategy.
 
 **Steady Progression - No Dramatic Swings**:
 
@@ -845,11 +845,11 @@ This creates a robot that's "good enough" to compete in Bronze/Silver while dire
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Low risk. With income at ₡5-10K per win and low repair costs (₡8-12K per loss due to moderate defense), you need roughly 48-50% win rate to stay profitable. Your facilities' operating costs (₡15-25K/week) are covered by battle income, and your passive income from Income Generator (if purchased) provides additional cushion. Facility Investor is very safe in Bronze because your sustainable economics protect you from bankruptcy.
+- **Bronze League**: Low risk. With income at ₡7,500 per win and low repair costs (₡8-12K per loss due to moderate defense), you need roughly 48-50% win rate to stay profitable. Your facilities' operating costs (₡15-25K/week) are covered by battle income, and your passive income from Income Generator (if purchased) provides additional cushion. Facility Investor is very safe in Bronze because your sustainable economics protect you from bankruptcy.
 
-- **Silver League**: Very low risk. Income doubles to ₡10-20K per win while repair costs remain stable at ₡8-12K per loss. Your facility benefits start compounding - Training Facility discounts save more as you upgrade higher levels, Repair Bay discounts save more as you battle more frequently, and Income Generator passive income scales with prestige. At 50% win rate, you're highly profitable and your infrastructure investments begin paying for themselves.
+- **Silver League**: Very low risk. Income doubles to ₡15,000 per win while repair costs remain stable at ₡8-12K per loss. Your facility benefits start compounding - Training Facility discounts save more as you upgrade higher levels, Repair Bay discounts save more as you battle more frequently, and Income Generator passive income scales with prestige. At 50% win rate, you're highly profitable and your infrastructure investments begin paying for themselves.
 
-- **Gold League and Beyond**: Extremely low risk. With income at ₡20-40K per win and repair costs still ₡8-12K per loss, Facility Investor becomes one of the most profitable archetypes in the game. Your facility benefits have compounded significantly - you're saving 10-25% on all upgrades, repairs, and purchases, while passive income provides substantial daily credits. The gap between your income and costs widens dramatically, creating massive profit margins.
+- **Gold League and Beyond**: Extremely low risk. With income at ₡30,000 per win and repair costs still ₡8-12K per loss, Facility Investor becomes one of the most profitable archetypes in the game. Your facility benefits have compounded significantly - you're saving 10-25% on all upgrades, repairs, and purchases, while passive income provides substantial daily credits. The gap between your income and costs widens dramatically, creating massive profit margins.
 
 **Excellent Scaling - Facility Benefits Compound Over Time**:
 
@@ -1078,17 +1078,17 @@ Unlike Balanced Brawler (which spreads attributes evenly across one robot), Two-
 - **Purchase Cost**: ₡300,000 (Level 1 allows 2 robots)
 - **Operating Cost**: ₡500/day per additional robot slot (₡3,500/week for 2nd robot)
 - **Hard Requirement**: You cannot purchase a 2nd robot without Roster Expansion
-- **Budget Impact**: This ₡300,000 facility cost is non-negotiable for Two-Robot Specialist
+- **Budget Impact**: This ₡150,000 facility cost is non-negotiable for Two-Robot Specialist
 
 **Why This Matters**:
 
-Roster Expansion is unique among facilities because it's not about ROI or efficiency - it's a hard gate. You either pay ₡300,000 or you cannot execute this archetype. This makes Two-Robot Specialist more expensive than single-robot archetypes, as you're paying:
+Roster Expansion is unique among facilities because it's not about ROI or efficiency - it's a hard gate. You either pay ₡150,000 or you cannot execute this archetype. This makes Two-Robot Specialist more expensive than single-robot archetypes, as you're paying:
 - ₡500,000 for Robot 1
 - ₡500,000 for Robot 2
-- ₡300,000 for Roster Expansion (required)
+- ₡150,000 for Roster Expansion (required)
 - ₡3,500/week ongoing operating costs
 
-That's ₡1,300,000 (43% of starting budget) just for the robots and facility before any attribute upgrades or weapons. This is why Two-Robot Specialist requires careful budget management.
+That's ₡1,150,000 (38% of starting budget) just for the robots and facility before any attribute upgrades or weapons. This is why Two-Robot Specialist requires careful budget management.
 
 **Complementary Builds Strategy**:
 
@@ -1127,11 +1127,11 @@ Two-Robot Specialist adds a strategic layer that single-robot archetypes don't h
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Medium risk. With income at ₡5-10K per win and moderate repair costs (₡10-16K per loss depending on which robot you use), you need roughly 52-55% win rate to stay profitable. The ₡3,500/week Roster Expansion operating cost adds pressure, but your ability to select optimal matchups helps maintain win rate. Two-Robot Specialist is more challenging than Tank Fortress but more forgiving than Glass Cannon in Bronze.
+- **Bronze League**: Medium risk. With income at ₡7,500 per win and moderate repair costs (₡10-16K per loss depending on which robot you use), you need roughly 52-55% win rate to stay profitable. The ₡3,500/week Roster Expansion operating cost adds pressure, but your ability to select optimal matchups helps maintain win rate. Two-Robot Specialist is more challenging than Tank Fortress but more forgiving than Glass Cannon in Bronze.
 
-- **Silver League**: Low-medium risk. Income doubles to ₡10-20K per win while repair costs remain stable at ₡10-16K per loss. Your matchup selection advantage becomes more valuable as opponents get tougher - being able to counter-pick gives you a 5-10% win rate boost over single-robot archetypes. The Roster Expansion operating cost (₡3,500/week) is easily covered by increased income. At 50% win rate, you're comfortably profitable.
+- **Silver League**: Low-medium risk. Income doubles to ₡15,000 per win while repair costs remain stable at ₡10-16K per loss. Your matchup selection advantage becomes more valuable as opponents get tougher - being able to counter-pick gives you a 5-10% win rate boost over single-robot archetypes. The Roster Expansion operating cost (₡3,500/week) is easily covered by increased income. At 50% win rate, you're comfortably profitable.
 
-- **Gold League and Beyond**: Low risk. With income at ₡20-40K per win and repair costs still ₡10-16K per loss, Two-Robot Specialist becomes highly profitable. Your matchup selection advantage is most valuable in higher leagues where opponents are skilled and specialized - being able to deploy the right tool for each job gives you consistent edge. The operating costs (₡3,500/week) are negligible compared to income. Your versatility makes you one of the most adaptable archetypes in high-level play.
+- **Gold League and Beyond**: Low risk. With income at ₡30,000 per win and repair costs still ₡10-16K per loss, Two-Robot Specialist becomes highly profitable. Your matchup selection advantage is most valuable in higher leagues where opponents are skilled and specialized - being able to deploy the right tool for each job gives you consistent edge. The operating costs (₡3,500/week) are negligible compared to income. Your versatility makes you one of the most adaptable archetypes in high-level play.
 
 **Strong in Higher Leagues - Can Select Optimal Robot Per Opponent**:
 
@@ -1313,7 +1313,7 @@ Beyond strategic benefits, Two-Robot Specialist offers psychological benefits:
 
 **Quick Summary**:
 
-Two-Robot Specialist is the versatility and matchup selection archetype in Armoured Souls. If you enjoy strategic depth, appreciate having options, value adaptability, and want to experience multiple playstyles simultaneously, this is your archetype. You'll invest in Roster Expansion (₡300,000 required) and maintain two complementary robots (typically Tank + Glass Cannon), giving you the ability to counter-pick opponents and select optimal matchups. This 3-5% win rate advantage from matchup selection compounds over time, making you more profitable and faster-progressing than single-robot specialists. Strong in higher leagues where matchup dynamics matter most, Two-Robot Specialist rewards strategic thinking and tactical flexibility. Perfect for players who want the right tool for every job and enjoy the meta-game of robot selection. Medium risk in Bronze, low risk in Gold+, with excellent scaling as you advance leagues.
+Two-Robot Specialist is the versatility and matchup selection archetype in Armoured Souls. If you enjoy strategic depth, appreciate having options, value adaptability, and want to experience multiple playstyles simultaneously, this is your archetype. You'll invest in Roster Expansion (₡150,000 required) and maintain two complementary robots (typically Tank + Glass Cannon), giving you the ability to counter-pick opponents and select optimal matchups. This 3-5% win rate advantage from matchup selection compounds over time, making you more profitable and faster-progressing than single-robot specialists. Strong in higher leagues where matchup dynamics matter most, Two-Robot Specialist rewards strategic thinking and tactical flexibility. Perfect for players who want the right tool for every job and enjoy the meta-game of robot selection. Medium risk in Bronze, low risk in Gold+, with excellent scaling as you advance leagues.
 
 ---
 
@@ -1427,11 +1427,11 @@ This makes Melee Specialist rewarding for players who enjoy mastering positionin
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Medium-high risk. With income at ₡5-10K per win and moderate-to-high repair costs (₡14-20K per loss depending on loadout choice), you need roughly 54-58% win rate to stay profitable. The positioning challenge is most punishing in Bronze where you're still learning optimal approach patterns. Two-Handed Melee has higher risk (₡18-20K repairs) than Weapon+Shield (₡14-16K repairs). Melee Specialist requires above-average skill to stay profitable in Bronze.
+- **Bronze League**: Medium-high risk. With income at ₡7,500 per win and moderate-to-high repair costs (₡14-20K per loss depending on loadout choice), you need roughly 54-58% win rate to stay profitable. The positioning challenge is most punishing in Bronze where you're still learning optimal approach patterns. Two-Handed Melee has higher risk (₡18-20K repairs) than Weapon+Shield (₡14-16K repairs). Melee Specialist requires above-average skill to stay profitable in Bronze.
 
-- **Silver League**: Medium risk. Income doubles to ₡10-20K per win while repair costs remain stable at ₡14-20K per loss. Your positioning skills improve with experience, helping maintain win rate. At 52-55% win rate, you're profitable. The pressure eases as you master the approach phase and learn which opponents to engage aggressively vs. cautiously.
+- **Silver League**: Medium risk. Income doubles to ₡15,000 per win while repair costs remain stable at ₡14-20K per loss. Your positioning skills improve with experience, helping maintain win rate. At 52-55% win rate, you're profitable. The pressure eases as you master the approach phase and learn which opponents to engage aggressively vs. cautiously.
 
-- **Gold League and Beyond**: Low-medium risk. With income at ₡20-40K per win and repair costs still ₡14-20K per loss, Melee Specialist becomes profitable at 50% win rate. Your mastery of positioning and melee combat makes you dangerous in higher leagues where tactical skill matters more than raw stats.
+- **Gold League and Beyond**: Low-medium risk. With income at ₡30,000 per win and repair costs still ₡14-20K per loss, Melee Specialist becomes profitable at 50% win rate. Your mastery of positioning and melee combat makes you dangerous in higher leagues where tactical skill matters more than raw stats.
 
 **Improves in Higher Leagues - Better Opponents Mean More Tactical Positioning Opportunities**:
 
@@ -1718,11 +1718,11 @@ This makes Ranged Sniper rewarding for players who enjoy precision mechanics and
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Medium risk. With income at ₡5-10K per win and moderate repair costs (₡12-16K per loss due to moderate defense), you need roughly 52-55% win rate to stay profitable. The precision challenge is most punishing in Bronze where you're still learning optimal targeting and range control. Ranged Sniper requires above-average accuracy to stay profitable in Bronze.
+- **Bronze League**: Medium risk. With income at ₡7,500 per win and moderate repair costs (₡12-16K per loss due to moderate defense), you need roughly 52-55% win rate to stay profitable. The precision challenge is most punishing in Bronze where you're still learning optimal targeting and range control. Ranged Sniper requires above-average accuracy to stay profitable in Bronze.
 
-- **Silver League**: Low-medium risk. Income doubles to ₡10-20K per win while repair costs remain stable at ₡12-16K per loss. Your precision skills improve with experience, helping maintain win rate. At 50-52% win rate, you're profitable. The pressure eases as you master targeting and learn which opponents to engage at range vs. avoid.
+- **Silver League**: Low-medium risk. Income doubles to ₡15,000 per win while repair costs remain stable at ₡12-16K per loss. Your precision skills improve with experience, helping maintain win rate. At 50-52% win rate, you're profitable. The pressure eases as you master targeting and learn which opponents to engage at range vs. avoid.
 
-- **Gold League and Beyond**: Low risk. With income at ₡20-40K per win and repair costs still ₡12-16K per loss, Ranged Sniper becomes highly profitable at 50% win rate. Your mastery of precision targeting and range control makes you dangerous in higher leagues where accuracy matters more than raw stats.
+- **Gold League and Beyond**: Low risk. With income at ₡30,000 per win and repair costs still ₡12-16K per loss, Ranged Sniper becomes highly profitable at 50% win rate. Your mastery of precision targeting and range control makes you dangerous in higher leagues where accuracy matters more than raw stats.
 
 **Excellent in Higher Leagues - Precision Matters More Against Skilled Opponents**:
 
@@ -2069,11 +2069,11 @@ Your Combat Algorithms makes every other attribute 20-30% more effective through
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Medium risk. With income at ₡5-10K per win and moderate repair costs (₡12-16K per loss due to balanced stats), you need roughly 52-55% win rate to stay profitable. The strategic advantage is modest in Bronze where opponents make obvious mistakes regardless of your AI quality. AI Tactician requires above-average tactical understanding to stay profitable in Bronze.
+- **Bronze League**: Medium risk. With income at ₡7,500 per win and moderate repair costs (₡12-16K per loss due to balanced stats), you need roughly 52-55% win rate to stay profitable. The strategic advantage is modest in Bronze where opponents make obvious mistakes regardless of your AI quality. AI Tactician requires above-average tactical understanding to stay profitable in Bronze.
 
-- **Silver League**: Low-medium risk. Income doubles to ₡10-20K per win while repair costs remain stable at ₡12-16K per loss. Your strategic advantage becomes more valuable as opponents improve - your superior decision-making creates larger win rate advantages. At 50-52% win rate, you're profitable. The pressure eases as your AI quality becomes more impactful.
+- **Silver League**: Low-medium risk. Income doubles to ₡15,000 per win while repair costs remain stable at ₡12-16K per loss. Your strategic advantage becomes more valuable as opponents improve - your superior decision-making creates larger win rate advantages. At 50-52% win rate, you're profitable. The pressure eases as your AI quality becomes more impactful.
 
-- **Gold League and Beyond**: Low risk. With income at ₡20-40K per win and repair costs still ₡12-16K per loss, AI Tactician becomes highly profitable at 50% win rate. Your mastery of tactical decision-making and AI optimization makes you dangerous in higher leagues where strategy matters more than raw stats.
+- **Gold League and Beyond**: Low risk. With income at ₡30,000 per win and repair costs still ₡12-16K per loss, AI Tactician becomes highly profitable at 50% win rate. Your mastery of tactical decision-making and AI optimization makes you dangerous in higher leagues where strategy matters more than raw stats.
 
 **Scales Excellently - AI Attributes Become More Valuable Against Better Opponents**:
 
@@ -2503,11 +2503,11 @@ A player with 10,000 prestige earns 20% more income and 10% more prestige than a
 
 **League Scaling and Risk Profile**:
 
-- **Bronze League**: Medium-high risk. With income at ₡5-10K per win and moderate repair costs (₡12-18K per loss), you need 54-58% win rate to stay profitable. Your win-optimized build should achieve this, but Bronze is still challenging. The key is advancing quickly - every week in Bronze is a week not earning Gold-tier prestige. Goal: Escape Bronze within 3-4 weeks maximum.
+- **Bronze League**: Medium-high risk. With income at ₡7,500 per win and moderate repair costs (₡12-18K per loss), you need 54-58% win rate to stay profitable. Your win-optimized build should achieve this, but Bronze is still challenging. The key is advancing quickly - every week in Bronze is a week not earning Gold-tier prestige. Goal: Escape Bronze within 3-4 weeks maximum.
 
-- **Silver League**: Medium risk. Income doubles to ₡10-20K per win while repair costs remain stable at ₡12-18K per loss. At 52-56% win rate, you're profitable and accumulating prestige at 2× Bronze rate. Still not ideal - you want to reach Gold. Goal: Advance to Gold within 8-12 weeks total (4-8 weeks in Silver).
+- **Silver League**: Medium risk. Income doubles to ₡15,000 per win while repair costs remain stable at ₡12-18K per loss. At 52-56% win rate, you're profitable and accumulating prestige at 2× Bronze rate. Still not ideal - you want to reach Gold. Goal: Advance to Gold within 8-12 weeks total (4-8 weeks in Silver).
 
-- **Gold League and Beyond**: Low-medium risk. With income at ₡20-40K per win and repair costs still ₡12-18K per loss, you're highly profitable at 50-54% win rate. More importantly, you're earning 4× Bronze prestige per win (20 prestige vs 5 prestige). This is where Prestige Rusher thrives - sustainable economics + maximum prestige gains. Goal: Maintain Gold+ status permanently, push for Platinum/Diamond.
+- **Gold League and Beyond**: Low-medium risk. With income at ₡30,000 per win and repair costs still ₡12-18K per loss, you're highly profitable at 50-54% win rate. More importantly, you're earning 4× Bronze prestige per win (20 prestige vs 5 prestige). This is where Prestige Rusher thrives - sustainable economics + maximum prestige gains. Goal: Maintain Gold+ status permanently, push for Platinum/Diamond.
 
 **Critical - Must Advance Leagues Quickly**:
 
@@ -3648,10 +3648,10 @@ Training Facility's value comes from long-term compounding:
 3. **Scales with Activity**: As you upgrade more, savings increase while operating costs stay fixed
 4. **Multi-Robot Value**: When you expand to 2-3 robots, upgrade costs multiply but discount applies to all
 
-**Repair Bay Level 1** - ₡200,000
+**Repair Bay Level 1** - ₡100,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡200,000
+- **Purchase Cost**: ₡100,000
 - **Operating Cost**: ₡1,000/day = ₡7,000/week
 - **Benefit**: 5% discount on all repairs
 - **Strategic Value**: Reduces repair costs permanently
@@ -3760,10 +3760,10 @@ Facility Investor allocates budget for long-term infrastructure:
 
 #### Facility Investments (REQUIRED)
 
-**Roster Expansion Level 1** - ₡300,000
+**Roster Expansion Level 1** - ₡150,000
 
 **Facility Details**:
-- **Purchase Cost**: ₡300,000 (REQUIRED to own 2+ robots)
+- **Purchase Cost**: ₡150,000 (REQUIRED to own 2+ robots)
 - **Operating Cost**: ₡500/day per additional robot slot = ₡3,500/week for 2nd robot
 - **Benefit**: Allows owning 2 robots (default is 1)
 - **Strategic Value**: Hard requirement for Two-Robot Specialist archetype
@@ -3859,12 +3859,12 @@ Two-Robot Specialist has a moderate buffer because:
 | Category | Amount | Percentage |
 |----------|--------|------------|
 | Robot Purchases (2 robots) | ₡1,000,000 | 33.33% |
-| Facilities (Roster Expansion Level 1) | ₡300,000 | 10.00% |
+| Facilities (Roster Expansion Level 1) | ₡150,000 | 5.00% |
 | Attribute Upgrades (both robots) | ₡882,000 | 29.40% |
 | Weapons (Power Sword + Shield + Plasma Rifle) | ₡550,000 | 18.33% |
-| Reserve Buffer | ₡268,000 | 8.93% |
-| **Total Spent** | **₡2,732,000** | **91.07%** |
-| **Remaining** | **₡268,000** | **8.93%** |
+| Reserve Buffer | ₡418,000 | 13.93% |
+| **Total Spent** | **₡2,582,000** | **86.07%** |
+| **Remaining** | **₡418,000** | **13.93%** |
 
 **Allocation Philosophy**:
 
@@ -4518,7 +4518,7 @@ This section provides detailed economic projections for each archetype, includin
 
 ### Key Economic Concepts
 
-**Income Scaling by League**: Battle winnings scale dramatically with league tier. Bronze pays ₡5-10K per win, Silver pays ₡10-20K per win, and Gold pays ₡20-40K per win. This 2× scaling between leagues means advancing leagues is the single most important economic decision you can make.
+**Income Scaling by League**: Battle winnings scale dramatically with league tier. Bronze pays ₡7,500 per win, Silver pays ₡15,000 per win, and Gold pays ₡30,000 per win. This 2× scaling between leagues means advancing leagues is the single most important economic decision you can make.
 
 **Operating Costs**: Include daily facility costs (Training Academies, Repair Bays, etc.) that accumulate regardless of battle activity. These costs are fixed and must be covered by battle income.
 
@@ -4537,7 +4537,7 @@ This section provides detailed economic projections for each archetype, includin
 #### Income Projections (50% Win Rate, 7 Battles/Week)
 
 **Bronze League** (Weeks 1-4):
-- Average win reward: ₡7,500 (midpoint of ₡5,000-₡10,000 range)
+- Average win reward: ₡7,500 (fixed base win reward)
 - Participation reward: ₡1,500 per battle
 - Weekly battles: 7
 - Wins at 50% rate: 3.5
@@ -4546,7 +4546,7 @@ This section provides detailed economic projections for each archetype, includin
 - **Total weekly income**: **₡36,750**
 
 **Silver League** (Weeks 5-12):
-- Average win reward: ₡15,000 (midpoint of ₡10,000-₡20,000 range)
+- Average win reward: ₡15,000 (fixed base win reward)
 - Participation reward: ₡3,000 per battle
 - Weekly battles: 7
 - Wins at 50% rate: 3.5
@@ -4555,7 +4555,7 @@ This section provides detailed economic projections for each archetype, includin
 - **Total weekly income**: **₡73,500**
 
 **Gold League** (Weeks 13+):
-- Average win reward: ₡30,000 (midpoint of ₡20,000-₡40,000 range)
+- Average win reward: ₡30,000 (fixed base win reward)
 - Participation reward: ₡6,000 per battle
 - Weekly battles: 7
 - Wins at 50% rate: 3.5
@@ -5107,12 +5107,12 @@ W = 0.336 = **33.6% win rate**
 - Payback period: Never (at Level 1)
 - **Assessment**: Income Generator Level 1 is a poor investment - it generates exactly what it costs to operate. Only becomes profitable at higher levels or with prestige multipliers.
 
-**Repair Bay Level 1** (₡200,000 purchase, ₡7,000/week operating):
+**Repair Bay Level 1** (₡100,000 purchase, ₡7,000/week operating):
 - Saves: 5% on repairs = ₡10,973 × 0.05 = ₡549/week
 - Net benefit: ₡549 - ₡7,000 = -₡6,451/week (NEGATIVE)
 - **Assessment**: Repair Bay Level 1 loses money. You'd need ₡140,000/week in repair costs for it to break even.
 
-**Training Facility Level 1** (₡300,000 purchase, ₡10,500/week operating):
+**Training Facility Level 1** (₡150,000 purchase, ₡1,750/week operating):
 - Saves: 5% on attribute upgrades
 - Net benefit: Only positive if spending ₡210,000+/week on upgrades
 - **Assessment**: Training Facility Level 1 is a poor early-game investment.
@@ -5538,7 +5538,7 @@ This table compares the economic performance of all 10 archetypes across Bronze,
 This section provides detailed guidance for your first 30 days of gameplay for each archetype. The early game is critical for establishing a sustainable stable and avoiding bankruptcy. Each strategy specifies battle frequency, income expectations across Bronze and Silver leagues, league progression goals, common pitfalls to avoid, and repair cost management techniques.
 
 **Key Principles for All Archetypes**:
-- **League Income Scaling**: Bronze pays ₡5-10K per win, Silver pays ₡10-20K per win, Gold pays ₡20-40K per win
+- **League Income Scaling**: Bronze pays ₡7,500 per win, Silver pays ₡15,000 per win, Gold pays ₡30,000 per win
 - **Participation Rewards**: You earn participation rewards even when losing (₡1.5K Bronze, ₡3K Silver, ₡6K Gold)
 - **Repair Cost Management**: Repair costs are based on total attributes × damage % × condition multiplier
 - **Reserve Buffer**: Your starting buffer is for emergencies only - don't spend it frivolously
@@ -5615,7 +5615,7 @@ This section provides detailed guidance for your first 30 days of gameplay for e
 **League Progression Goals**:
 - Week 1-2: **CRITICAL - Push hard for Silver promotion**
 - Week 3-4: Establish yourself in Silver league
-- **Why urgent**: Bronze income (₡5-10K/win) barely covers your high repair costs. Silver income (₡10-20K/win) makes this build sustainable.
+- **Why urgent**: Bronze income (₡7,500/win) barely covers your high repair costs. Silver income (₡15,000/win) makes this build sustainable.
 
 **Common Pitfalls**:
 - **Fighting too much in Bronze**: Each loss costs ₡15,000-₡20,000 in repairs - you can't afford many losses
@@ -6150,7 +6150,7 @@ After establishing your early game foundation, the mid game is about strategic e
 
 **Expansion Triggers**:
 - Balance reaches ₡800,000+ (enough for major investment + buffer)
-- Consistent Silver league performance (₡10-20K per win)
+- Consistent Silver league performance (₡15,000 per win)
 - Win rate stabilized at 50%+ for 2+ weeks
 
 **Facility Upgrade Priorities**:
@@ -6171,7 +6171,7 @@ After establishing your early game foundation, the mid game is about strategic e
 
 **League Advancement Targets**:
 - Month 2: Establish Silver, push for Gold
-- Month 3: Reach Gold (₡20-40K per win = game-changer)
+- Month 3: Reach Gold (₡30,000 per win = game-changer)
 - Month 4: Stabilize in Gold, consider Platinum push
 
 **Robot/Weapon Expansion**:
@@ -6190,7 +6190,7 @@ After establishing your early game foundation, the mid game is about strategic e
   - Shield Capacity 1→15: ₡180,000
 - **Consider second robot** only if:
   - Balance exceeds ₡2M
-  - Roster Expansion purchased (₡300,000)
+  - Roster Expansion purchased (₡150,000)
   - Have specific strategic need (backup tank, different matchup coverage)
 
 **Prestige Targets**:
@@ -6354,7 +6354,7 @@ After establishing your early game foundation, the mid game is about strategic e
   - Weapon+Shield (₡150K shield + ₡200K weapon)
 - **Storage Facility Level 1** (₡150,000) - Useful for weapon collection
 - **Second robot** - Good option for Balanced Brawler
-  - Roster Expansion (₡300,000)
+  - Roster Expansion (₡150,000)
   - Second robot (₡500,000) with specialized build
 
 **Days 61-120 (Months 3-4)**
@@ -7579,7 +7579,7 @@ As your stable grows and your understanding of the game deepens, you may want to
 **Target State**: Two+ robots (Two-Robot Specialist or Portfolio)
 
 **Rebalancing Approach**:
-1. **Purchase Roster Expansion** - ₡300,000 (required for 2nd robot)
+1. **Purchase Roster Expansion** - ₡150,000 (required for 2nd robot)
 2. **Purchase 2nd robot** - ₡500,000 (base robot)
 3. **Purchase weapon for 2nd robot** - ₡200,000-₡400,000
 4. **Upgrade 2nd robot attributes** - ₡200,000-₡300,000 (bring to competitive level)
@@ -8140,9 +8140,9 @@ Savings: ₡1,080 per repair
 **Formula**: Weekly Income = (Battles × Win Rate × Win Reward) + (Battles × Participation Reward)
 
 **League Rewards**:
-- **Bronze**: ₡5,000-₡10,000 per win (avg ₡7,500), ₡1,500 participation
-- **Silver**: ₡10,000-₡20,000 per win (avg ₡15,000), ₡3,000 participation
-- **Gold**: ₡20,000-₡40,000 per win (avg ₡30,000), ₡6,000 participation
+- **Bronze**: ₡7,500 per win, ₡1,500 participation
+- **Silver**: ₡15,000 per win, ₡3,000 participation
+- **Gold**: ₡30,000 per win, ₡6,000 participation
 
 ---
 
@@ -9028,17 +9028,17 @@ This section provides summary tables and cheat sheets for quick lookup. Use thes
 
 | Facility | Level 1 Cost | Operating Cost (Daily) | Operating Cost (Weekly) | Benefit | When to Buy |
 |----------|--------------|------------------------|-------------------------|---------|-------------|
-| Repair Bay | ₡200,000 | ₡1,000 | ₡7,000 | 5% repair discount | Multi-robot stables, Month 6+ |
-| Training Facility | ₡300,000 | ₡1,500 | ₡10,500 | 5% attribute upgrade discount | Late-game (Month 6+), high-level upgrades |
-| Weapons Workshop | ₡250,000 | ₡1,000 | ₡7,000 | 5% weapon purchase discount | Rarely (weapons are one-time purchases) |
+| Repair Bay | ₡100,000 | ₡1,000 | ₡7,000 | 5% repair discount | Multi-robot stables, Month 6+ |
+| Training Facility | ₡150,000 | ₡250 | ₡1,750 | 10% attribute upgrade discount | Late-game (Month 6+), high-level upgrades |
+| Weapons Workshop | ₡125,000 | ₡1,000 | ₡7,000 | 5% weapon purchase discount | Rarely (weapons are one-time purchases) |
 | Income Generator | ₡800,000 | ₡1,000 | ₡7,000 | Passive income (prestige-dependent) | High prestige (5,000+), Month 6+ |
-| Roster Expansion | ₡300,000 | ₡500/robot | ₡3,500 (2nd robot) | Allows owning 2+ robots | When you have ₡1.5M+ for full 2-robot setup |
-| Storage Facility | ₡150,000 | ₡500 | ₡3,500 | 10 weapon capacity (default 5) | When you own 6+ weapons |
+| Roster Expansion | ₡150,000 | ₡500/robot | ₡3,500 (2nd robot) | Allows owning 2+ robots | When you have ₡1.5M+ for full 2-robot setup |
+| Storage Facility | ₡75,000 | ₡500 | ₡3,500 | 10 weapon capacity (default 5) | When you own 6+ weapons |
 | Combat Training Academy | ₡100,000 | ₡250 | ₡1,750 | +10% Combat attribute effectiveness | Late-game (Month 9+), offensive builds |
 | Defense Training Academy | ₡100,000 | ₡250 | ₡1,750 | +10% Defense attribute effectiveness | Late-game (Month 9+), defensive builds |
 | Mobility Training Academy | ₡100,000 | ₡250 | ₡1,750 | +10% Mobility attribute effectiveness | Late-game (Month 9+), speed builds |
 | AI Training Academy | ₡100,000 | ₡250 | ₡1,750 | +15% AI attribute effectiveness | AI Tactician archetype, 5,000+ prestige |
-| Booking Office | ₡400,000 | ₡2,000 | ₡14,000 | Tournament access (bonus prestige) | Prestige Rusher archetype, Gold+ league |
+| Booking Office | ₡250,000 | ₡0 | ₡0 | Tournament access (bonus prestige) | Prestige Rusher archetype, Gold+ league |
 
 **Key Insight**: Most facilities have poor early-game ROI. Wait until mid-late game (Month 6+) when you have surplus credits and high usage.
 
@@ -9195,11 +9195,11 @@ This section provides summary tables and cheat sheets for quick lookup. Use thes
 
 | Mistake | Cost | Impact | How to Avoid |
 |---------|------|--------|--------------|
-| Buying Training Facility too early | ₡300,000 | Negative ROI for 6+ months | Wait until Month 6+, high-level upgrades |
+| Buying Training Facility too early | ₡150,000 | Negative ROI for 6+ months | Wait until Month 6+, high-level upgrades |
 | Over-investing in weapons | ₡300,000-700,000 | Wasted credits, no power gain | Buy 1-2 weapons initially, experiment mid-game |
 | Neglecting reserve buffer | ₡0 (no buffer) | Bankruptcy risk | Keep ₡50-200K reserve depending on archetype |
-| Buying Roster Expansion without 2nd robot | ₡300,000 | Idle facility, wasted operating costs | Only buy when you have ₡1.5M+ for full 2-robot setup |
-| Buying Storage Facility before needed | ₡150,000 | Wasted credits, no benefit | Only buy when you own 6+ weapons |
+| Buying Roster Expansion without 2nd robot | ₡150,000 | Idle facility, wasted operating costs | Only buy when you have ₡1.5M+ for full 2-robot setup |
+| Buying Storage Facility before needed | ₡75,000 | Wasted credits, no benefit | Only buy when you own 6+ weapons |
 | Staying in Bronze too long | Opportunity cost | Low income, high risk | Advance to Silver/Gold ASAP |
 
 **Key Insight**: Most mistakes involve buying facilities too early or over-investing in weapons. Prioritize attributes and league advancement.
@@ -9348,9 +9348,9 @@ This appendix lists all 14 facilities with costs, benefits, operating costs, and
 | Facility | Level 1 Cost | Operating Cost (Daily) | Benefit | ROI Timeline | Best For |
 |----------|--------------|------------------------|---------|--------------|----------|
 | Income Generator | ₡800,000 | ₡1,000 | Passive income (prestige-dependent) | 18 weeks at 5,000 prestige | Facility Investor, late-game (Month 6+) |
-| Repair Bay | ₡200,000 | ₡1,000 | 5% repair discount | Never (early), 30 weeks (multi-robot) | Multi-robot stables, Month 6+ |
-| Training Facility | ₡300,000 | ₡1,500 | 5% attribute upgrade discount | 40 weeks (early), 20 weeks (late) | Late-game (Month 6+), high-level upgrades |
-| Weapons Workshop | ₡250,000 | ₡1,000 | 5% weapon purchase discount | Never (weapons are one-time) | Rarely recommended |
+| Repair Bay | ₡100,000 | ₡1,000 | 5% repair discount | Never (early), 30 weeks (multi-robot) | Multi-robot stables, Month 6+ |
+| Training Facility | ₡150,000 | ₡250 | 10% attribute upgrade discount | 40 weeks (early), 20 weeks (late) | Late-game (Month 6+), high-level upgrades |
+| Weapons Workshop | ₡125,000 | ₡1,000 | 5% weapon purchase discount | Never (weapons are one-time) | Rarely recommended |
 
 ---
 
@@ -9358,8 +9358,8 @@ This appendix lists all 14 facilities with costs, benefits, operating costs, and
 
 | Facility | Level 1 Cost | Operating Cost (Daily) | Benefit | When to Buy |
 |----------|--------------|------------------------|---------|-------------|
-| Roster Expansion | ₡300,000 | ₡500 per extra robot | Allows owning 2+ robots | When you have ₡1.5M+ for full 2-robot setup |
-| Storage Facility | ₡150,000 | ₡500 | 10 weapon capacity (default 5) | When you own 6+ weapons |
+| Roster Expansion | ₡150,000 | ₡500 per extra robot | Allows owning 2+ robots | When you have ₡1.5M+ for full 2-robot setup |
+| Storage Facility | ₡75,000 | ₡500 | 10 weapon capacity (default 5) | When you own 6+ weapons |
 
 ---
 
@@ -9446,12 +9446,12 @@ Level 10 discount: 50% → Cost × 0.50
 Weekly Battle Income = (Battles × Win Rate × Win Reward) + (Battles × Participation Reward)
 
 Win Rewards by League:
-  - Bronze: ₡5,000-₡10,000 (avg ₡7,500)
-  - Silver: ₡10,000-₡20,000 (avg ₡15,000)
-  - Gold: ₡20,000-₡40,000 (avg ₡30,000)
-  - Platinum: ₡40,000-₡80,000 (avg ₡60,000)
-  - Diamond: ₡80,000-₡150,000 (avg ₡115,000)
-  - Champion: ₡150,000-₡300,000 (avg ₡225,000)
+  - Bronze: ₡7,500
+  - Silver: ₡15,000
+  - Gold: ₡30,000
+  - Platinum: ₡60,000
+  - Diamond: ₡115,000
+  - Champion: ₡225,000
 
 Participation Rewards by League:
   - Bronze: ₡1,500

@@ -160,11 +160,11 @@ if (robotIds.length > 0) {
 
 #### 3. Display Specific Facility Levels
 
-**Problem**: Previously showed "Income Generator (Lvl varies)" for all facilities
+**Problem**: Previously showed "Merchandising Hub (Lvl varies)" for all facilities
 
 **Solution**:
 - Backend now includes `level` field in operatingCostsBreakdown
-- Frontend displays actual level: "Income Generator (Lvl 5)"
+- Frontend displays actual level: "Merchandising Hub (Lvl 5)"
 
 **Backend Changes** (`economyCalculations.ts`):
 ```typescript
@@ -452,7 +452,7 @@ bg-gray-800 (outer container)
 |---------|-------------|
 | **ROI Calculator** | For all facility types with multi-level upgrades |
 | **Upgrade Cost Calculations** | Single or multi-level cost totals |
-| **Break-Even Analysis** | Time to recover investment for Income Generator |
+| **Break-Even Analysis** | Time to recover investment for Merchandising Hub |
 | **Affordability Checks** | Based on current balance |
 | **Contextual Recommendations** | Excellent/good/neutral/poor/not_affordable |
 | **Current Costs Summary** | Operating + repairs |
@@ -564,9 +564,9 @@ if (robotIds.length > 0) {
 ```
 
 **3. Display Specific Facility Levels**
-- Previously showed "Income Generator (Lvl varies)" for all facilities
+- Previously showed "Merchandising Hub (Lvl varies)" for all facilities
 - Backend now includes `level` field in operatingCostsBreakdown
-- Frontend displays actual level: "Income Generator (Lvl 5)"
+- Frontend displays actual level: "Merchandising Hub (Lvl 5)"
 - Result: Users see specific facility levels for better decision-making
 
 **Backend Changes** (`economyCalculations.ts`):
@@ -598,7 +598,7 @@ breakdown.push({
 ```
 
 **Result**:
-- Income Generator (Lvl 5): ₡3,000
+- Merchandising Hub (Lvl 5): ₡3,000
 - Training Facility (Lvl 3): ₡3,000
 - Repair Bay (Lvl 2): ₡1,500
 - All facilities show their actual levels
@@ -664,7 +664,7 @@ breakdown.push({
 │   Total: ₡106,500            │                                 │
 │                              │ 💡 Recommendations             │
 │ OPERATING COSTS:             │                                 │
-│   Income Generator (Lvl 5)   │ • Create more robots           │
+│   Merchandising Hub (Lvl 5)   │ • Create more robots           │
 │   Training Facility (Lvl 3)  │ • Upgrade facilities           │
 │   ...                        │ • Maintain positive cash flow  │
 │                              │                                 │
@@ -829,7 +829,7 @@ This section provides detailed visual documentation of the UI improvements imple
 ```
 ╔═══════════════════════════════════════════════╗
 ║ OPERATING COSTS:                              ║
-║   Income Generator (Lvl varies):   ₡3,000     ║  ← Not helpful! ❌
+║   Merchandising Hub (Lvl varies):   ₡3,000     ║  ← Not helpful! ❌
 ║   Training Facility (Lvl varies):  ₡3,000     ║
 ║   Repair Bay (Lvl varies):         ₡1,500     ║
 ║   Roster Expansion (Lvl N/A):      ₡1,500     ║
@@ -842,7 +842,7 @@ This section provides detailed visual documentation of the UI improvements imple
 ```
 ╔═══════════════════════════════════════════════╗
 ║ OPERATING COSTS:                              ║
-║   Income Generator (Lvl 5):        ₡3,000     ║  ← Specific! ✅
+║   Merchandising Hub (Lvl 5):        ₡3,000     ║  ← Specific! ✅
 ║   Training Facility (Lvl 3):       ₡3,000     ║  ← Specific! ✅
 ║   Repair Bay (Lvl 2):              ₡1,500     ║  ← Specific! ✅
 ║   Roster Expansion (Lvl N/A):      ₡1,500     ║
@@ -879,7 +879,7 @@ This section provides detailed visual documentation of the UI improvements imple
 │ ║   Total:           ₡106,500              ║  │
 │ ║                                          ║  │
 │ ║ OPERATING COSTS:                         ║  │
-│ ║   Income Generator (Lvl 5): ₡3,000       ║  │
+│ ║   Merchandising Hub (Lvl 5): ₡3,000       ║  │
 │ ║   Training Facility (Lvl 3): ₡3,000      ║  │
 │ ║   Repair Bay (Lvl 2): ₡1,500             ║  │
 │ ║   Total: ₡7,500                          ║  │
@@ -1431,8 +1431,8 @@ Queries database:
 Calculates:
   - Battle winnings from battles
   - Prestige bonus
-  - Merchandising (from Income Generator)
-  - Streaming (from Income Generator)
+  - Merchandising (from Merchandising Hub)
+  - Streaming (from Streaming Studio)
   - Operating costs (all facilities)
   - Repair costs (from battles)
   - Financial health metrics
@@ -1965,7 +1965,7 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 
   **Example**:
   ```
-  INCOME GENERATOR UPGRADE
+  MERCHANDISING HUB UPGRADE
   Current: Level 5 → Target: Level 6
   
   Upgrade Cost:              ₡800,000
@@ -2011,7 +2011,7 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 - **Economic Milestones**
   - "At current rate, you'll reach ₡2M balance in 23 days"
   - "At current expenses, you can sustain ₡500K facility upgrade"
-  - "Income Generator Level 6 is affordable in 45 days with current savings rate"
+  - "Merchandising Hub Level 6 is affordable in 45 days with current savings rate"
 
 ### Tab 5: Alerts & Recommendations
 
@@ -2039,18 +2039,18 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
   
   5. **Investment Opportunity** (✅ Info)
      - Trigger: Can afford beneficial facility upgrade with positive ROI
-     - Message: "You can afford Income Generator Level 6 (₡800K). ROI break-even in 145 days with ₡5,500/day net gain."
+     - Message: "You can afford Merchandising Hub Level 6 (₡900K). ROI break-even in 145 days with ₡5,500/day net gain."
   
   6. **Prestige Threshold Reached** (🎉 Achievement)
      - Trigger: Accumulated prestige unlocks new facility levels
-     - Message: "Congratulations! You've reached 5,000 prestige. Income Generator Level 6 is now unlocked."
+     - Message: "Congratulations! You've reached 5,000 prestige. Merchandising Hub Level 6 is now unlocked."
 
 - **AI-Powered Recommendations** (from existing API)
   - Ranked by priority (Critical → High → Medium → Low)
   - Actionable suggestions with links to relevant pages
   - Examples:
     - "Win more battles to increase income" → Link to Battle History
-    - "Upgrade Income Generator for passive income" → Link to Facilities
+    - "Upgrade Merchandising Hub for passive income" → Link to Facilities
     - "Repair only critical robots" → Link to Robots page with filter for damaged robots
 
 - **Economic Health Score** (0-100)
@@ -2092,8 +2092,8 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 - [x] Ensure all revenue streams are calculated and displayed:
   - Battle Winnings (from battles)
   - Prestige Bonus (percentage calculation)
-  - Merchandising (Income Generator facility)
-  - Streaming (Income Generator facility)
+  - Merchandising (Merchandising Hub facility)
+  - Streaming (Streaming Studio facility)
 - [x] Ensure all operating costs are listed by facility
 - [x] Add repair costs display (total shown, per-robot breakdown requires API enhancement)
 - [x] Calculate and display financial health indicators:
@@ -2192,7 +2192,7 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 **MVP Implementation** (No database changes):
 - ROI calculator for all 14 facility types
 - Multi-level upgrade cost calculations
-- Break-even analysis for Income Generator
+- Break-even analysis for Merchandising Hub
 - Affordability checks
 - Net profit projections (30/90/180 days)
 - Color-coded recommendations (excellent/good/neutral/poor/not_affordable)
@@ -2288,22 +2288,23 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 **Income Multiplier Formulas** (from STABLE_SYSTEM.md):
 
 **Prestige Bonus on Battle Winnings:**
-- 5,000+ Prestige: +5% to battle winnings
-- 10,000+ Prestige: +10% to battle winnings
-- 25,000+ Prestige: +15% to battle winnings
-- 50,000+ Prestige: +20% to battle winnings
+- 1,000+ Prestige: +10% to battle winnings
+- 5,000+ Prestige: +20% to battle winnings
+- 10,000+ Prestige: +30% to battle winnings
+- 25,000+ Prestige: +40% to battle winnings
+- 50,000+ Prestige: +50% to battle winnings
 
-**Merchandising (Income Generator facility):**
+**Merchandising (Merchandising Hub facility):**
 ```
 merchandising_income = base_merchandising × (1 + prestige / 10000)
 
 Example:
-- Income Generator Level 4: ₡12,000/day base
+- Merchandising Hub Level 4: ₡20,000/day base
 - Prestige 15,000
 - Merchandising = ₡12,000 × (1 + 15000/10000) = ₡12,000 × 2.5 = ₡30,000/day
 ```
 
-**Streaming Revenue (Income Generator facility):**
+**Streaming Revenue (Streaming Studio facility):**
 ```
 streaming_income = base_streaming × (1 + (total_battles / 1000)) × (1 + (total_fame / 5000))
 
@@ -2311,7 +2312,7 @@ streaming_income = base_streaming × (1 + (total_battles / 1000)) × (1 + (total
 // total_fame = sum of fame values from all robots in stable
 
 Example:
-- Income Generator Level 5: ₡6,000/day base
+- Streaming Studio Level 5: ₡6,000/day base
 - Total battles: 500 (across all robots)
 - Total fame: 10,000 (sum of all robot fame values)
 - Streaming = ₡6,000 × (1 + 0.5) × (1 + 2.0) = ₡6,000 × 1.5 × 3.0 = ₡27,000/day
@@ -3188,7 +3189,7 @@ The Income Dashboard is fully functional, refined, and production-ready:
         "Win more battles to increase income",
         "Consider disabling expensive coach (₡3,000/day)",
         "Repair only critical robots",
-        "Upgrade Income Generator for passive income"
+        "Upgrade Merchandising Hub for passive income"
       ],
       "actionLinks": [
         { "label": "View Battle History", "path": "/battle-history" },
@@ -3216,9 +3217,9 @@ The Income Dashboard is fully functional, refined, and production-ready:
       "type": "INVESTMENT_OPPORTUNITY",
       "severity": "info",
       "title": "Investment Opportunity Available",
-      "message": "You can afford Income Generator Level 6 (₡800K). ROI break-even in 145 days with ₡5,500/day net gain.",
+      "message": "You can afford Merchandising Hub Level 6 (₡900K). ROI break-even in 145 days with ₡5,500/day net gain.",
       "recommendations": [
-        "Upgrade Income Generator Level 6 for ₡800,000",
+        "Upgrade Merchandising Hub Level 6 for ₡900,000",
         "Net daily gain: ₡5,500",
         "Break-even time: 145 days (~5 months)"
       ],

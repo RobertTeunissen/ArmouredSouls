@@ -28,7 +28,7 @@ The feature integrates with the existing battle system: when the first robot rea
 
 1. WHEN a player accesses the tag team interface, THE System SHALL display all robots in their stable that meet battle readiness requirements
 2. WHEN a player selects two robots for a team, THE System SHALL validate that both robots are from the same stable
-3. WHEN a player selects two robots for a team, THE System SHALL validate that both robots meet battle readiness requirements (HP ≥75%, HP > yield threshold, all weapons equipped)
+3. WHEN a player selects two robots for a team, THE System SHALL validate that both robots meet battle readiness requirements (HP > yield threshold, all weapons equipped)
 4. WHEN a player confirms team selection, THE System SHALL save the team configuration with designated active and reserve positions
 5. WHEN a player has multiple robots available, THE System SHALL allow them to create multiple tag teams (up to roster size / 2)
 
@@ -125,12 +125,11 @@ The feature integrates with the existing battle system: when the first robot rea
 
 #### Acceptance Criteria
 
-1. WHEN checking tag team readiness, THE System SHALL validate that both robots have HP ≥75%
-2. WHEN checking tag team readiness, THE System SHALL validate that both robots have HP > their yield threshold
-3. WHEN checking tag team readiness, THE System SHALL validate that both robots have all required weapons equipped
-4. WHEN a tag team fails readiness checks, THE System SHALL exclude the team from matchmaking
-5. WHEN displaying tag team status, THE System SHALL show readiness warnings for each robot that fails checks
-6. THE System SHALL display tag team readiness status on the dashboard, tag team management page, and robot detail pages
+1. WHEN checking tag team readiness, THE System SHALL validate that both robots have HP > their yield threshold
+2. WHEN checking tag team readiness, THE System SHALL validate that both robots have all required weapons equipped
+3. WHEN a tag team fails readiness checks, THE System SHALL exclude the team from matchmaking
+4. WHEN displaying tag team status, THE System SHALL show readiness warnings for each robot that fails checks
+5. THE System SHALL display tag team readiness status on the dashboard, tag team management page, and robot detail pages
 
 ### Requirement 9: Tag Team UI and Display
 

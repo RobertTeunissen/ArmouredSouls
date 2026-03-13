@@ -246,7 +246,7 @@ async function generateBattleReadyUsers(count: number): Promise<{
 
 #### NFR-2: Data Integrity
 - All generated users must have valid weapon inventory entries
-- Robots must pass battle-readiness checks (HP ≥ 75%, weapons equipped)
+- Robots must pass battle-readiness checks (weapons equipped for loadout type)
 - No duplicate usernames (auto-increment numbering ensures uniqueness)
 
 #### NFR-3: Maintainability
@@ -402,9 +402,8 @@ All generated robots receive:
 ### 5.4 Battle Readiness Verification
 New users must pass matchmaking checks:
 ```typescript
-✅ currentHP >= 75% of maxHP (55 >= 0.75 × 55 = 41.25) → PASS
-✅ currentHP % >= yieldThreshold (100% >= 10%) → PASS
 ✅ mainWeaponId is not null → PASS
+✅ Weapons equipped for loadout type → PASS (battle-ready)
 ✅ User has weapon in inventory → PASS
 ```
 
@@ -903,7 +902,7 @@ describe('POST /api/admin/cycles/bulk with generateUsersPerCycle', () => {
 - [ ] Run 5 more cycles → verify 40 additional users (6+7+8+9+10)
 - [ ] Check `cycle_metadata` table → verify `totalCycles = 10`
 - [ ] Verify all auto-users have robots with Practice Sword equipped
-- [ ] Verify all robots are eligible for matchmaking (HP ≥ 75%, weapon equipped)
+- [ ] Verify all robots are eligible for matchmaking (weapon equipped)
 - [ ] Run cycles with flag disabled → verify no new users created
 - [ ] Test error handling: delete Practice Sword, run cycle → verify error logged but cycle continues
 

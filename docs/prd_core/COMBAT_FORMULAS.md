@@ -131,24 +131,27 @@ When a weapon malfunctions:
 - ❌ Attack immediately fails (bypasses hit calculation)
 - ❌ No damage dealt (0 HP, 0 Shield damage)
 - ❌ No critical hit possible
-- ❌ No counter-attack triggered
+- ❌ No counter-attack triggered (malfunction is not a real attack)
 - ⚠️ Event logged as 'malfunction' type with warning message
 
 ### Malfunction Order of Operations
 
 ```
 1. Check Weapon Malfunction (FIRST)
-   └─> If malfunction: Attack fails immediately, skip all other checks
+   └─> If malfunction: Attack fails immediately, skip all other checks, NO counter
    └─> If reliable: Continue to step 2
 
 2. Calculate Hit Chance
-   └─> If miss: Attack fails, 0 damage
+   └─> If miss: Attack fails, 0 damage, proceed to step 6 (counter check)
    └─> If hit: Continue to step 3
 
 3. Calculate Critical Hit Chance
 4. Calculate Damage
 5. Apply Damage through Shield & Armor
-6. Check Counter-Attack
+6. Check Counter-Attack (triggers on hit OR miss, NOT on malfunction)
+   └─> If counter triggers: Run hit check for counter
+      └─> If counter hits: Apply counter damage (70% of defender's main hand)
+      └─> If counter misses: No damage
 ```
 
 ### Display Format (Extended Battle Logs - Admin)
@@ -749,16 +752,28 @@ Shield Multiplier = 1.10 if weapon+shield loadout, else 1.0
 Counter Chance = Clamp(Base × Stance × Shield × 100, 0%, 40%)
 ```
 
+### Trigger Conditions
+Counter-attacks trigger whenever the defender is attacked — whether the attack hits or misses. The only exception is weapon malfunctions, which do not trigger counters (the weapon failed before any real attack occurred).
+
+### Counter Hit Check
+Once a counter triggers, it goes through its own hit chance calculation using the standard formula:
+```
+Counter Hit Chance = calculateHitChance(defender as attacker, attacker as defender, 'main')
+```
+The counter uses the defender's Targeting Systems vs the original attacker's Evasion Thrusters and Gyro Stabilizers. A counter that misses deals no damage.
+
 ### Counter Damage
 ```
-Counter Damage = Original Attack Base Damage × 0.7
+Counter Damage = Defender's Main Hand Base Damage × Combat Power × Loadout × Weapon Control × Stance × 0.7
 ```
 
-Counter attacks use the defender's main hand weapon for damage calculation.
+Counter-attacks always use the defender's main hand weapon for damage calculation.
 
 ### Display Format
 ```
-Counter: 5.00 counter_protocols / 100 × 1.0 × 1.0 = 5.0% (rolled 40.7, result: no counter)
+Counter trigger: 5.00 counter_protocols / 100 × 1.0 × 1.0 = 5.0% (rolled 3.2, result: COUNTER)
+Counter hit: 70 base + 4.0 targeting + 0 stance - 1.7 evasion - 1.0 gyro + 2.3 variance = 73.6% (rolled 45.1, result: HIT)
+Counter damage: 12 base × 1.10 combat_power × 1.00 loadout × 1.05 weapon_control × 1.00 stance = 13.9 × 0.70 = 9.7
 ```
 
 ---

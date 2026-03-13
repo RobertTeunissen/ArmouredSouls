@@ -24,6 +24,7 @@ import ProfilePage from './pages/ProfilePage';
 import CycleSummaryPage from './pages/CycleSummaryPage';
 import OnboardingPage from './pages/OnboardingPage';
 import OnboardingAnalyticsPage from './pages/OnboardingAnalyticsPage';
+import GuidePage from './pages/GuidePage';
 // import SystemHealthPage from './pages/SystemHealthPage';
 
 function App() {
@@ -209,6 +210,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <OnboardingAnalyticsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guide"
+            element={
+              <ProtectedRoute>
+                <GuidePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guide/:sectionSlug"
+            element={
+              <ProtectedRoute>
+                <GuidePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guide/:sectionSlug/:articleSlug"
+            element={
+              <ProtectedRoute>
+                <GuidePage />
               </ProtectedRoute>
             }
           />

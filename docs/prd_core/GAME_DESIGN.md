@@ -57,7 +57,7 @@ This document captures the core game design decisions for Armoured Souls, a stra
 
 **Robot Components**: ✅ IMPLEMENTED
 - Chassis (determines base stats and size) ✅
-- Weapons (primary and secondary with 13 weapons + 2 shields) ✅
+- Weapons (primary and secondary with 20 weapons + 3 shields) ✅
 - 23 core attributes across 5 categories:
   - Combat Systems (6 attributes) ✅
   - Defensive Systems (5 attributes) ✅
@@ -264,7 +264,7 @@ This document captures the core game design decisions for Armoured Souls, a stra
 
 **Input Variables**: ✅ IMPLEMENTED
 - Robot stats (23 attributes across 5 categories) ✅
-- Weapon configurations (13 weapons + 2 shields) ✅
+- Weapon configurations (20 weapons + 3 shields) ✅
 - Strategic settings (stance, yield threshold, loadout type) ✅
 - Conditional triggers ❌ (future feature)
 

@@ -19,8 +19,8 @@
   - Specified image requirements (14 facility icons + 4 category icons)
   - Outlined UX improvement plan
 - v1.1 - Review comments processed (February 7, 2026)
-  - Corrected implementation status: Repair Bay and Income Generator are implemented (10 of 14 total)
-  - Recategorized Income Generator from Advanced to Economy category
+  - Corrected implementation status: Repair Bay and Merchandising Hub are implemented (10 of 14 total)
+  - Recategorized Merchandising Hub from Advanced to Economy category
   - Clarified Medical Bay purpose (critical damage vs regular damage)
   - Removed Stable Overview Dashboard section (not priority)
   - Specified image storage path (frontend/src/assets/facilities/)
@@ -111,7 +111,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 7. ✅ **Defense Training Academy** - Defensive Systems caps (10→50)
 8. ✅ **Mobility Training Academy** - Chassis & Mobility caps (10→50)
 9. ✅ **AI Training Academy** - AI/Team Coordination caps (10→50)
-10. ✅ **Income Generator** - Passive income streams (merchandising, streaming)
+10. ✅ **Merchandising Hub** - Passive income streams (merchandising, scales with prestige)
 
 **Not Yet Implemented (4 facilities):**
 1. ❌ **Research Lab** - Unlock analytics, loadout presets, battle simulation
@@ -136,7 +136,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 - ⚠️ **Small badge**: "Effect not yet implemented" badge is small and easy to miss
 
 **Information Architecture:**
-- ⚠️ **Mixed priorities**: Critical facilities (Roster Expansion) mixed with future features (Income Generator)
+- ⚠️ **Mixed priorities**: Critical facilities (Roster Expansion) mixed with future features (Coaching Staff)
 - ⚠️ **No guidance**: No indication of which facilities are most important to upgrade first
 - ⚠️ **No relationships**: Cannot see dependencies or synergies between facilities
 
@@ -231,7 +231,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
   1. Training Facility (✅ Implemented) - Attribute upgrade discounts
   2. Weapons Workshop (✅ Implemented) - Weapon purchase discounts
   3. Repair Bay (✅ Implemented) - Repair cost discounts
-  4. Income Generator (✅ Implemented) - Passive income from merchandising & streaming 
+  4. Merchandising Hub (✅ Implemented) - Passive income from merchandising (scales with prestige)
 
 **Category 2: Capacity & Storage** (2 facilities)
 - **Purpose**: Expand stable capacity for robots and weapons
@@ -289,7 +289,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 1. Training Facility (most used in gameplay)
 2. Weapons Workshop (frequent purchases)
 3. Repair Bay (combat damage)
-4. Income Generator (passive income)
+4. Merchandising Hub (passive income)
 
 **Capacity & Storage** (by progression importance):
 1. Roster Expansion (hard blocker for multi-robot strategies)
@@ -305,7 +305,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 1. Research Lab (analytics & planning tools)
 2. Coaching Staff (stable-wide bonuses)
 3. Booking Office (tournament access)
-4. Income Generator (passive income)
+4. Merchandising Hub (passive income)
 5. Medical Bay (critical damage handling)
 
 ### 2. Implementation Status Clarity
@@ -411,7 +411,7 @@ No icon / image on the Visual Example?
 11. **Defense Training Academy** - Icon showing shield or defensive barrier
 12. **Mobility Training Academy** - Icon showing robot legs, chassis, or movement
 13. **AI Training Academy** - Icon showing circuit board, AI chip, or neural network
-14. **Income Generator** - Icon showing currency symbol, merchandising, or media
+14. **Merchandising Hub** - Icon showing currency symbol, merchandising, or media
 
 **Placeholder Strategy (Current Implementation):**
 - Use emoji placeholders until WebP assets are created (🏋️, 🔧, 🔩, etc.)
@@ -611,7 +611,7 @@ Many facility levels require prestige thresholds to unlock. Players must earn pr
 - Level 9: 10,000 prestige
 - Level 10: 15,000 prestige
 
-**Income Generator:**
+**Merchandising Hub:**
 - Level 4: 3,000 prestige
 - Level 7: 7,500 prestige
 - Level 9: 15,000 prestige
@@ -1225,20 +1225,20 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Strategic Value**: Important - Critical for managing battle damage repair costs, especially valuable with multiple robots
 - **Implementation Status**: Fully implemented with multi-robot discount formula, discount applies to robot repair costs after battles
 
-#### Income Generator (✅ Implemented)
-- **Type**: `income_generator`
+#### Merchandising Hub (✅ Implemented)
+- **Type**: `merchandising_hub`
 - **Max Level**: 10
-- **Cost Range**: ₡800K - ₡5M (total: ₡28M)
-- **Benefits**: Passive income from merchandising (unlocked at L1) and streaming (unlocked at L3), scales with prestige and battles
+- **Cost Range**: ₡150K - ₡1.5M (total: ₡9.45M)
+- **Benefits**: Passive income from merchandising, scales with prestige. ₡5,000–₡50,000/day base income.
 - **Strategic Value**: Important - Provides passive income to supplement battle earnings
-- **Implementation Status**: Fully implemented, provides daily passive income from merchandising and streaming
+- **Implementation Status**: Fully implemented, provides daily passive income from merchandising
 
 ### Capacity & Storage (Category 2)
 
 #### Roster Expansion (✅ Implemented)
 - **Type**: `roster_expansion`
 - **Max Level**: 9
-- **Cost Range**: ₡300K - ₡3M (total: ₡12.2M)
+- **Cost Range**: ₡150K - ₡1.5M (total: ₡7.95M)
 - **Benefits**: 2 - 10 robot slots (starts at 1 robot with no upgrades)
 - **Strategic Value**: Essential - Hard cap on number of robots, required for multi-robot strategies
 - **Implementation Status**: Fully implemented, increases robot ownership limit
@@ -1246,7 +1246,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 #### Storage Facility (✅ Implemented)
 - **Type**: `storage_facility`
 - **Max Level**: 10
-- **Cost Range**: ₡150K - ₡2M (total: ₡8.4M)
+- **Cost Range**: ₡75K - ₡1M (total: ₡4.575M)
 - **Benefits**: 10 - 55 weapon storage capacity (5 base + facility levels)
 - **Strategic Value**: Important - Enables weapon collection and loadout flexibility
 - **Implementation Status**: Fully implemented, increases weapon inventory capacity
@@ -1375,7 +1375,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 11. `facility-defense-training-academy-icon.webp` + `.svg` - Shield, defensive barrier
 12. `facility-mobility-training-academy-icon.webp` + `.svg` - Robot legs, movement trails
 13. `facility-ai-training-academy-icon.webp` + `.svg` - Circuit board, neural network
-14. `facility-income-generator-icon.webp` + `.svg` - Currency symbol, media/merchandise
+14. `facility-merchandising-hub-icon.webp` + `.svg` - Currency symbol, media/merchandise
 
 **Total Assets Required**: 28 files (14 WebP + 14 SVG)
 
@@ -1430,7 +1430,7 @@ const facilityEmojis = {
   defense_training_academy: '🛡️',
   mobility_training_academy: '🦿',
   ai_training_academy: '🤖',
-  income_generator: '💰',
+  merchandising_hub: '💰',
 };
 
 const categoryEmojis = {

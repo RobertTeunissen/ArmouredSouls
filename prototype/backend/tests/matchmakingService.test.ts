@@ -5,7 +5,6 @@ import {
   checkSchedulingReadiness,
   runMatchmaking,
   runMatchmakingForTier,
-  BATTLE_READINESS_HP_THRESHOLD,
 } from '../src/services/matchmakingService';
 
 
@@ -145,7 +144,7 @@ describe('Matchmaking Service', () => {
   });
 
   describe('checkBattleReadiness', () => {
-    it('should mark robot as ready when HP >= 75% and weapon equipped', async () => {
+    it('should mark robot as ready when weapon equipped (HP not checked)', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: {
           userId: testUser.id,
@@ -182,7 +181,7 @@ describe('Matchmaking Service', () => {
       await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
-    it('should mark robot as not ready when HP < 75%', async () => {
+    it('should mark robot as ready even with low HP (HP not checked)', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: {
           userId: testUser.id,
@@ -196,7 +195,7 @@ describe('Matchmaking Service', () => {
           name: 'Low HP Robot',
           leagueId: 'bronze_1',
           currentLeague: 'bronze',
-          currentHP: 7, // 70% HP (below 75% threshold)
+          currentHP: 7, // 70% HP — no longer matters, repairs run before battles
           maxHP: 10,
           currentShield: 2,
           maxShield: 2,
@@ -208,16 +207,16 @@ describe('Matchmaking Service', () => {
 
       const readiness = checkBattleReadiness(robot);
 
-      expect(readiness.isReady).toBe(false);
-      expect(readiness.hpCheck).toBe(false);
+      expect(readiness.isReady).toBe(true);
+      expect(readiness.hpCheck).toBe(true);
       expect(readiness.weaponCheck).toBe(true);
-      expect(readiness.reasons.some(r => r.includes('HP too low'))).toBe(true);
+      expect(readiness.reasons).toHaveLength(0);
 
       await prisma.robot.deleteMany({ where: { id: robot.id } });
       await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
-    it('should mark robot as not ready when HP is at or below yield threshold', async () => {
+    it('should mark robot as ready even when HP is at yield threshold (HP not checked)', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: {
           userId: testUser.id,
@@ -231,22 +230,22 @@ describe('Matchmaking Service', () => {
           name: 'Yield Threshold Robot',
           leagueId: 'bronze_1',
           currentLeague: 'bronze',
-          currentHP: 8, // 80% HP (above 75% threshold)
+          currentHP: 8, // 80% HP
           maxHP: 10,
           currentShield: 2,
           maxShield: 2,
           loadoutType: 'single',
           mainWeaponId: weaponInv.id,
-          yieldThreshold: 80, // But yield threshold is 80%, so robot would surrender immediately
+          yieldThreshold: 80, // Yield threshold is 80% — no longer matters for readiness
         },
       });
 
       const readiness = checkBattleReadiness(robot);
 
-      expect(readiness.isReady).toBe(false);
-      expect(readiness.hpCheck).toBe(false); // Should fail HP check due to yield threshold
+      expect(readiness.isReady).toBe(true);
+      expect(readiness.hpCheck).toBe(true);
       expect(readiness.weaponCheck).toBe(true);
-      expect(readiness.reasons.some(r => r.includes('yield threshold'))).toBe(true);
+      expect(readiness.reasons).toHaveLength(0);
 
       await prisma.robot.deleteMany({ where: { id: robot.id } });
       await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });

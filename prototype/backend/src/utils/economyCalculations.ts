@@ -144,13 +144,14 @@ export async function calculateTotalDailyOperatingCosts(userId: number): Promise
 
 /**
  * Get prestige multiplier for battle winnings
- * Tiers: 5K (5%), 10K (10%), 25K (15%), 50K (20%)
+ * Tiers: Established 1K (10%), Veteran 5K (20%), Elite 10K (30%), Champion 25K (40%), Legendary 50K (50%)
  */
 export function getPrestigeMultiplier(prestige: number): number {
-  if (prestige >= 50000) return 1.20;
-  if (prestige >= 25000) return 1.15;
-  if (prestige >= 10000) return 1.10;
-  if (prestige >= 5000) return 1.05;
+  if (prestige >= 50000) return 1.50;
+  if (prestige >= 25000) return 1.40;
+  if (prestige >= 10000) return 1.30;
+  if (prestige >= 5000) return 1.20;
+  if (prestige >= 1000) return 1.10;
   return 1.0;
 }
 
@@ -167,10 +168,11 @@ export function calculateBattleWinnings(baseReward: number, prestige: number): n
  * Returns null if already at max tier (50,000+)
  */
 export function getNextPrestigeTier(currentPrestige: number): { threshold: number; bonus: string } | null {
-  if (currentPrestige < 5000) return { threshold: 5000, bonus: '+5%' };
-  if (currentPrestige < 10000) return { threshold: 10000, bonus: '+10%' };
-  if (currentPrestige < 25000) return { threshold: 25000, bonus: '+15%' };
-  if (currentPrestige < 50000) return { threshold: 50000, bonus: '+20%' };
+  if (currentPrestige < 1000) return { threshold: 1000, bonus: '+10%' };
+  if (currentPrestige < 5000) return { threshold: 5000, bonus: '+20%' };
+  if (currentPrestige < 10000) return { threshold: 10000, bonus: '+30%' };
+  if (currentPrestige < 25000) return { threshold: 25000, bonus: '+40%' };
+  if (currentPrestige < 50000) return { threshold: 50000, bonus: '+50%' };
   return null; // Max tier reached
 }
 

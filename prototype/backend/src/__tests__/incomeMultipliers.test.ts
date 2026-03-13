@@ -13,75 +13,89 @@ import {
 
 describe('Income Multipliers', () => {
   describe('getPrestigeMultiplier', () => {
-    test('should return 1.0 for prestige below 5000', () => {
+    test('should return 1.0 for prestige below 1000', () => {
       expect(getPrestigeMultiplier(0)).toBe(1.0);
-      expect(getPrestigeMultiplier(4999)).toBe(1.0);
+      expect(getPrestigeMultiplier(999)).toBe(1.0);
     });
 
-    test('should return 1.05 for prestige 5000-9999', () => {
-      expect(getPrestigeMultiplier(5000)).toBe(1.05);
-      expect(getPrestigeMultiplier(7500)).toBe(1.05);
-      expect(getPrestigeMultiplier(9999)).toBe(1.05);
+    test('should return 1.10 for prestige 1000-4999', () => {
+      expect(getPrestigeMultiplier(1000)).toBe(1.10);
+      expect(getPrestigeMultiplier(2500)).toBe(1.10);
+      expect(getPrestigeMultiplier(4999)).toBe(1.10);
     });
 
-    test('should return 1.10 for prestige 10000-24999', () => {
-      expect(getPrestigeMultiplier(10000)).toBe(1.10);
-      expect(getPrestigeMultiplier(15000)).toBe(1.10);
-      expect(getPrestigeMultiplier(24999)).toBe(1.10);
+    test('should return 1.20 for prestige 5000-9999', () => {
+      expect(getPrestigeMultiplier(5000)).toBe(1.20);
+      expect(getPrestigeMultiplier(7500)).toBe(1.20);
+      expect(getPrestigeMultiplier(9999)).toBe(1.20);
     });
 
-    test('should return 1.15 for prestige 25000-49999', () => {
-      expect(getPrestigeMultiplier(25000)).toBe(1.15);
-      expect(getPrestigeMultiplier(35000)).toBe(1.15);
-      expect(getPrestigeMultiplier(49999)).toBe(1.15);
+    test('should return 1.30 for prestige 10000-24999', () => {
+      expect(getPrestigeMultiplier(10000)).toBe(1.30);
+      expect(getPrestigeMultiplier(15000)).toBe(1.30);
+      expect(getPrestigeMultiplier(24999)).toBe(1.30);
     });
 
-    test('should return 1.20 for prestige 50000+', () => {
-      expect(getPrestigeMultiplier(50000)).toBe(1.20);
-      expect(getPrestigeMultiplier(75000)).toBe(1.20);
-      expect(getPrestigeMultiplier(100000)).toBe(1.20);
+    test('should return 1.40 for prestige 25000-49999', () => {
+      expect(getPrestigeMultiplier(25000)).toBe(1.40);
+      expect(getPrestigeMultiplier(35000)).toBe(1.40);
+      expect(getPrestigeMultiplier(49999)).toBe(1.40);
+    });
+
+    test('should return 1.50 for prestige 50000+', () => {
+      expect(getPrestigeMultiplier(50000)).toBe(1.50);
+      expect(getPrestigeMultiplier(75000)).toBe(1.50);
+      expect(getPrestigeMultiplier(100000)).toBe(1.50);
     });
   });
 
   describe('calculateBattleWinnings', () => {
     test('should apply no bonus for low prestige', () => {
       const baseReward = 10000;
-      const prestige = 1000;
+      const prestige = 500;
       const result = calculateBattleWinnings(baseReward, prestige);
       
       expect(result).toBe(10000); // 10000 * 1.0
     });
 
-    test('should apply 5% bonus for 5000 prestige', () => {
+    test('should apply 10% bonus for 1000 prestige', () => {
       const baseReward = 10000;
-      const prestige = 5000;
-      const result = calculateBattleWinnings(baseReward, prestige);
-      
-      expect(result).toBe(10500); // 10000 * 1.05
-    });
-
-    test('should apply 10% bonus for 10000 prestige', () => {
-      const baseReward = 10000;
-      const prestige = 10000;
+      const prestige = 1000;
       const result = calculateBattleWinnings(baseReward, prestige);
       
       expect(result).toBe(11000); // 10000 * 1.10
     });
 
-    test('should apply 20% bonus for 50000+ prestige', () => {
+    test('should apply 20% bonus for 5000 prestige', () => {
       const baseReward = 10000;
-      const prestige = 50000;
+      const prestige = 5000;
       const result = calculateBattleWinnings(baseReward, prestige);
       
       expect(result).toBe(12000); // 10000 * 1.20
     });
 
-    test('should round to nearest integer', () => {
-      const baseReward = 10001;
-      const prestige = 5000;
+    test('should apply 30% bonus for 10000 prestige', () => {
+      const baseReward = 10000;
+      const prestige = 10000;
       const result = calculateBattleWinnings(baseReward, prestige);
       
-      expect(result).toBe(10501); // Math.round(10001 * 1.05)
+      expect(result).toBe(13000); // 10000 * 1.30
+    });
+
+    test('should apply 50% bonus for 50000+ prestige', () => {
+      const baseReward = 10000;
+      const prestige = 50000;
+      const result = calculateBattleWinnings(baseReward, prestige);
+      
+      expect(result).toBe(15000); // 10000 * 1.50
+    });
+
+    test('should round to nearest integer', () => {
+      const baseReward = 10001;
+      const prestige = 1000;
+      const result = calculateBattleWinnings(baseReward, prestige);
+      
+      expect(result).toBe(11001); // Math.round(10001 * 1.10)
     });
   });
 
@@ -116,36 +130,44 @@ describe('Income Multipliers', () => {
   });
 
   describe('getNextPrestigeTier', () => {
-    test('should return 5000 threshold for prestige below 5000', () => {
+    test('should return 1000 threshold for prestige below 1000', () => {
       const result = getNextPrestigeTier(0);
-      expect(result).toEqual({ threshold: 5000, bonus: '+5%' });
+      expect(result).toEqual({ threshold: 1000, bonus: '+10%' });
+      
+      const result2 = getNextPrestigeTier(999);
+      expect(result2).toEqual({ threshold: 1000, bonus: '+10%' });
+    });
+
+    test('should return 5000 threshold for prestige 1000-4999', () => {
+      const result = getNextPrestigeTier(1000);
+      expect(result).toEqual({ threshold: 5000, bonus: '+20%' });
       
       const result2 = getNextPrestigeTier(4999);
-      expect(result2).toEqual({ threshold: 5000, bonus: '+5%' });
+      expect(result2).toEqual({ threshold: 5000, bonus: '+20%' });
     });
 
     test('should return 10000 threshold for prestige 5000-9999', () => {
       const result = getNextPrestigeTier(5000);
-      expect(result).toEqual({ threshold: 10000, bonus: '+10%' });
+      expect(result).toEqual({ threshold: 10000, bonus: '+30%' });
       
       const result2 = getNextPrestigeTier(9999);
-      expect(result2).toEqual({ threshold: 10000, bonus: '+10%' });
+      expect(result2).toEqual({ threshold: 10000, bonus: '+30%' });
     });
 
     test('should return 25000 threshold for prestige 10000-24999', () => {
       const result = getNextPrestigeTier(10000);
-      expect(result).toEqual({ threshold: 25000, bonus: '+15%' });
+      expect(result).toEqual({ threshold: 25000, bonus: '+40%' });
       
       const result2 = getNextPrestigeTier(24999);
-      expect(result2).toEqual({ threshold: 25000, bonus: '+15%' });
+      expect(result2).toEqual({ threshold: 25000, bonus: '+40%' });
     });
 
     test('should return 50000 threshold for prestige 25000-49999', () => {
       const result = getNextPrestigeTier(25000);
-      expect(result).toEqual({ threshold: 50000, bonus: '+20%' });
+      expect(result).toEqual({ threshold: 50000, bonus: '+50%' });
       
       const result2 = getNextPrestigeTier(49999);
-      expect(result2).toEqual({ threshold: 50000, bonus: '+20%' });
+      expect(result2).toEqual({ threshold: 50000, bonus: '+50%' });
     });
 
     test('should return null for prestige 50000+ (max tier)', () => {
@@ -174,7 +196,7 @@ describe('Income Multipliers', () => {
     });
 
     test('should handle very high prestige', () => {
-      expect(getPrestigeMultiplier(1000000)).toBe(1.20);
+      expect(getPrestigeMultiplier(1000000)).toBe(1.50);
       const result = calculateMerchandisingIncome(4, 1000000);
       expect(result).toBeGreaterThan(0);
     });

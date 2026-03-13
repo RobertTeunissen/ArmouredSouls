@@ -36,6 +36,7 @@ const implementedPages = new Set([
   '/profile',
   '/cycle-summary',
   '/system-health',
+  '/guide',
 ]);
 
 const allPages = {
@@ -395,6 +396,13 @@ function Navigation() {
                 checkActive={isActive}
               />
               
+              <NavLink
+                to="/guide"
+                isActive={isActive('/guide')}
+              >
+                📖 Guide
+              </NavLink>
+              
               {user.role === 'admin' && (
                 <NavLink 
                   to="/admin" 
@@ -656,6 +664,14 @@ function Navigation() {
                     ⚙️ Settings & Admin
                   </h3>
                   <nav className="space-y-1">
+                    <DrawerMenuItem
+                      label="📖 Game Guide"
+                      onClick={() => {
+                        navigate('/guide');
+                        setDrawerOpen(false);
+                      }}
+                      isActive={isActive('/guide')}
+                    />
                     <DrawerMenuItem
                       label="Settings"
                       onClick={() => {

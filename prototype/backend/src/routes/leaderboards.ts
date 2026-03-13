@@ -32,10 +32,11 @@ function getPrestigeRank(prestige: number): string {
  * Calculate battle winnings bonus percentage
  */
 function calculateBattleWinningsBonus(prestige: number): number {
-  if (prestige >= 50000) return 20;
-  if (prestige >= 25000) return 15;
-  if (prestige >= 10000) return 10;
-  if (prestige >= 5000) return 5;
+  if (prestige >= 50000) return 50;
+  if (prestige >= 25000) return 40;
+  if (prestige >= 10000) return 30;
+  if (prestige >= 5000) return 20;
+  if (prestige >= 1000) return 10;
   return 0;
 }
 

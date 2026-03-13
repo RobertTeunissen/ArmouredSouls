@@ -168,9 +168,8 @@ Note: the overview above is not up to date, more facilities are actually working
 - ✅ **ELO-based robot pairing**: ±150 ideal, ±300 fallback (secondary to LP)
 - ✅ **League instance management** with auto-balancing (max 100 robots per instance)
 - ✅ **Battle readiness validation**:
-  - HP threshold check (≥75%)
-  - Yield threshold prevention (HP% > yieldThreshold)
   - Weapon loadout validation for each loadout type
+  - HP not checked — auto-repair runs before battle execution
 - ✅ **Recent opponent tracking** (last 5 battles, soft deprioritization)
 - ✅ **Same-stable deprioritization** (prevents stable vs self matches)
 - ✅ **Bye-robot system** for odd-number matching
