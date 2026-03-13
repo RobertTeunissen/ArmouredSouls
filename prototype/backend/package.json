@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && tsc --project tsconfig.seed.json",
+    "build": "tsc && tsc --project tsconfig.seed.json && cp -r src/content dist/content",
     "start": "node dist/index.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
