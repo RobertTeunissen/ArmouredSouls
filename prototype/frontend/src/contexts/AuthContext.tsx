@@ -128,12 +128,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const response = await apiClient.get('/api/user/profile');
       setUser(response.data);
     } catch (error) {
-      // Only logout on definitive auth failures (401/403). Network errors,
-      // timeouts, and server errors (5xx) should NOT destroy the session —
-      // the token may still be valid and the user can retry.
+      // Only logout on definitive auth failures from our own backend.
+      // Proxy/WAF/DDoS layers may return 401/403 with non-JSON bodies —
+      // those should NOT destroy the session since the token may still be valid.
       if (isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
-        console.error('Auth token rejected, logging out:', error);
-        logout();
+        const data = error.response?.data;
+        const isBackendAuthError =
+          data && typeof data === 'object' && typeof data.error === 'string';
+
+        if (isBackendAuthError) {
+          console.error('Auth token rejected by backend, logging out:', error);
+          logout();
+        } else {
+          console.warn('Non-backend 401/403 during profile fetch (possible proxy/WAF block), keeping session:', error);
+        }
       } else {
         console.warn('Failed to fetch user profile (keeping session):', error);
       }

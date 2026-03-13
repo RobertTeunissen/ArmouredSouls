@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import RegistrationForm from '../components/RegistrationForm';
 import LoginForm from '../components/LoginForm';
@@ -33,7 +33,23 @@ type View = 'register' | 'login';
 function FrontPage() {
   const [view, setView] = useState<View>('login');
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
+
+  // If the user is already authenticated (e.g. returning to the site with a
+  // valid token in localStorage), skip the login screen and go to the dashboard.
+  if (!loading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // While restoring the session from localStorage, show a minimal loading
+  // state instead of flashing the login form.
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-primary flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   /**
    * Shared success handler for both login and registration forms.
