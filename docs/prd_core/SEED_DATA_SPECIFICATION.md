@@ -633,7 +633,7 @@ Manual testing accounts with full starting resources:
 **Creation Cycle**: 0
 
 **Facilities**:
-- Roster Expansion Level 1 (₡300,000)
+- Roster Expansion Level 1 (₡150,000)
 
 **Robot 1**: "Specialist Alpha"
 - **Attributes**:

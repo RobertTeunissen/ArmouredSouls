@@ -597,10 +597,10 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
               },
             });
 
-            // Execute tag team battles (should check readiness)
+            // Execute tag team battles (should check readiness — weapons only, not HP)
             const result = await executeScheduledTagTeamBattles(scheduledFor);
 
-            // Check if match was skipped or executed
+            // Check if match was executed
             const match = await prisma.tagTeamMatch.findFirst({
               where: {
                 team1Id: team1.id,
@@ -608,29 +608,10 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
               },
             });
 
-            // Calculate readiness threshold
-            const BATTLE_READINESS_HP_THRESHOLD = 75;
-            const robot0HPPercent = ((user1Robots[0].maxHP - damageAmount) / user1Robots[0].maxHP) * 100;
-
-            // Property: If robot HP is below 75%, match should be skipped
-            if (robot0HPPercent < BATTLE_READINESS_HP_THRESHOLD) {
-              expect(match?.status).toBe('cancelled');
-              expect(result.skippedDueToUnreadyRobots).toBeGreaterThan(0);
-            } else {
-              // If HP is above threshold, match should execute
-              expect(match?.status).toBe('completed');
-              expect(result.totalBattles).toBeGreaterThan(0);
-            }
-
-            // Property: Skipped matches don't affect robot stats
-            if (match?.status === 'cancelled') {
-              const robot0After = await prisma.robot.findUnique({
-                where: { id: user1Robots[0].id },
-                select: { totalTagTeamBattles: true },
-              });
-
-              expect(robot0After?.totalTagTeamBattles).toBe(0);
-            }
+            // Property: HP damage does not affect readiness — match should always execute
+            // (repairs run before battles in the cron cycle, HP is not checked)
+            expect(match?.status).toBe('completed');
+            expect(result.totalBattles).toBeGreaterThan(0);
           }
         ),
         { numRuns: NUM_RUNS }

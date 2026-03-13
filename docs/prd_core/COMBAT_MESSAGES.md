@@ -96,7 +96,8 @@ All three orchestrators now use the narrative conversion pipeline:
 | Shield Break | 5 | When shield depletes to 0 |
 | Shield Regeneration | 5 | Emitted at 25% shield thresholds |
 | Malfunction | 6 | Weapon failure messages |
-| Counter-Attack | 8 | With weapon name and damage descriptor |
+| Counter-Attack Hit | 8 | With weapon name and damage descriptor |
+| Counter-Attack Miss | 6 | Counter triggered but missed |
 | Yield | 5 | Surrender messages |
 | Destruction | 5 | Robot destroyed messages |
 | Victory (Standard) | 8 | Normal win |
@@ -228,6 +229,18 @@ Tag Team (5 variations):
 "🔄 Reversal! {defenderName} catches {attackerName} off-guard with a {weaponName} counter!"
 "⚔️ {defenderName} reads the attack and retaliates with {weaponName}!"
 ```
+
+**Counter Miss** (6 variations):
+```
+"🔄❌ {defenderName} counters but {weaponName} misses {attackerName}!"
+"⚔️❌ {defenderName} retaliates with {weaponName} but fails to connect!"
+"💫❌ {defenderName}'s counter protocols activate but {weaponName} swings wide of {attackerName}!"
+"🔄❌ {defenderName} attempts a counter with {weaponName} — {attackerName} evades!"
+"⚔️❌ Counter-attack! {defenderName} strikes back with {weaponName} but misses!"
+"💫❌ {defenderName} retaliates but {attackerName} dodges the {weaponName} counter!"
+```
+
+**Note**: Counter-attacks trigger on any attack (hit or miss) except malfunctions. The counter itself has its own hit check and can miss.
 
 ### 5. Shield Events
 

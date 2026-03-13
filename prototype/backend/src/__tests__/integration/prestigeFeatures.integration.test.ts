@@ -64,22 +64,23 @@ describe('Prestige Features Integration', () => {
       const nextTier = getNextPrestigeTier(userPrestige);
       
       // Verify calculations
-      expect(prestigeMultiplier).toBe(1.10); // 10% bonus
+      expect(prestigeMultiplier).toBe(1.30); // 30% bonus
       expect(merchandising).toBe(30000); // 12000 * 2.5
-      expect(nextTier).toEqual({ threshold: 25000, bonus: '+15%' });
+      expect(nextTier).toEqual({ threshold: 25000, bonus: '+40%' });
       
       const totalPassiveIncome = merchandising;
       expect(totalPassiveIncome).toBe(30000);
     });
 
     test('should show progression through prestige tiers', () => {
-      const prestiges = [0, 5000, 10000, 25000, 50000];
-      const expectedMultipliers = [1.0, 1.05, 1.10, 1.15, 1.20];
+      const prestiges = [0, 1000, 5000, 10000, 25000, 50000];
+      const expectedMultipliers = [1.0, 1.10, 1.20, 1.30, 1.40, 1.50];
       const expectedNextTiers = [
-        { threshold: 5000, bonus: '+5%' },
-        { threshold: 10000, bonus: '+10%' },
-        { threshold: 25000, bonus: '+15%' },
-        { threshold: 50000, bonus: '+20%' },
+        { threshold: 1000, bonus: '+10%' },
+        { threshold: 5000, bonus: '+20%' },
+        { threshold: 10000, bonus: '+30%' },
+        { threshold: 25000, bonus: '+40%' },
+        { threshold: 50000, bonus: '+50%' },
         null,
       ];
       
@@ -140,7 +141,7 @@ describe('Prestige Features Integration', () => {
       const nextTier = getNextPrestigeTier(userPrestige);
       const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige);
       
-      expect(prestigeMultiplier).toBe(1.20); // Max tier
+      expect(prestigeMultiplier).toBe(1.50); // Max tier
       expect(nextTier).toBeNull(); // No next tier
       expect(merchandising).toBeGreaterThan(0);
       

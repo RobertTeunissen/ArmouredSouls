@@ -55,7 +55,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **League Instance System**: Max 100 robots per instance with auto-balancing
 - **Battle Scheduling**: Daily cycle with 24-hour adjustment period
 - **League Progression**: Top 10% promotion AND ≥25 league points (min 5 cycles in tier), bottom 10% demotion
-- **Battle Readiness**: Two-tier system: Scheduling requires weapons equipped only; battle execution requires HP ≥75% + HP > yield threshold + weapons equipped
+- **Battle Readiness**: Weapons-only check — robots must have all required weapons equipped for their loadout type. HP is not checked because auto-repair runs before battle execution.
 - **Bye-Robot System**: Handles odd numbers (ELO 1000, full rewards)
 - **Combat Logs**: Action-by-action with 50+ message templates
 - **Admin Tools**: Bulk cycle testing (up to 100 cycles) with auto-repair
@@ -93,7 +93,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 
 3. **Matchmaking Algorithm** 
    - Scheduling readiness (for matchmaking): weapons equipped only — HP not checked since robots are repaired before battle execution
-   - Battle readiness (for execution): HP ≥75%, HP > yield threshold, weapons equipped
+   - Battle readiness (for execution): weapons equipped only — HP not checked since auto-repair runs before battles
    - ELO-based pairing (±150 ideal, ±300 fallback)
    - Recent opponent tracking (soft deprioritize last 5)
    - Same-stable deprioritization (heavy penalty)
@@ -187,9 +187,10 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **Implementation**: Special robot id: -1, predictable weak stats
 
 **D5: Battle Readiness**
-- **Decision**: Two-tier readiness system
-  - Scheduling readiness (matchmaking): All required weapons equipped for loadout type
-  - Battle execution readiness: HP ≥75% AND HP > yield threshold AND all weapons equipped
+- **Decision**: Weapons-only readiness check
+  - All required weapons must be equipped for the robot's loadout type
+  - HP is not checked — auto-repair runs before every battle execution
+- **Rationale**: Since repairs always run before battles, HP checks at scheduling or execution time are unnecessary
 - **Rationale**: With the cycle order repair → execute → schedule, robots may have reduced HP at scheduling time. Since repair runs before execution, HP at scheduling time is irrelevant. Only weapon loadout matters for scheduling eligibility.
 - **Implementation**: `checkSchedulingReadiness()` for matchmaking, `checkBattleReadiness()` for execution and user-facing validation
 
@@ -255,7 +256,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 **Current Behavior**:
 - Matchmaking processes tiers sequentially (Bronze → Champion)
 - Scheduled match query is global (not filtered by tier/time)
-- Battle readiness has two tiers: scheduling readiness (weapons only) and execution readiness (HP ≥75% AND HP > yield threshold AND weapons equipped). Matchmaking uses scheduling readiness since robots are repaired before battles execute.
+- Battle readiness checks weapons only (scheduling readiness). Robots are repaired before battles execute, so HP checks are unnecessary at scheduling time.
 - Rebalancing runs every cycle (checks eligibility each time)
 
 **Why Byes Occur** (Analysis from February 2026):
@@ -397,7 +398,7 @@ The scheduled batch model allows:
   - League change indicator (if applicable - not shown for Tournaments)
 - **Battle Result**:
   - Winner/Loser/Draw
-  - Draw condition: Battle exceeds maximum time limit (~60 seconds of simulated combat)
+  - Draw condition: Battle exceeds maximum time limit (120 seconds of simulated combat)
   - ELO changes
   - Credits earned/spent
   - Repair costs
@@ -485,7 +486,7 @@ The scheduled batch model allows:
 - Queue sorted by: Priority (league points) → ELO → Random tiebreaker
 - Queue refreshes before each matchmaking cycle
 
-**Note on HP checks**: HP ≥75% and yield threshold checks are enforced at battle execution time, not at scheduling time. This is because the cycle order is: repair → execute battles → schedule new matches. Robots may have reduced HP after battles, but will be repaired before the next execution.
+**Note on HP checks**: Repairs run before battle execution in the daily cycle, so HP checks are unnecessary at scheduling time. Battle readiness only checks that robots have the correct weapons equipped.
 
 **Battle Readiness Warnings**: Display on robot list page (icon/badge), robot detail page (banner at top), and dashboard (notification area). Multiple touchpoints ensure players see warnings about missing weapons.
 
@@ -568,9 +569,7 @@ The scheduled batch model allows:
 **Acceptance Criteria:**
 - Win: +3 league points
 - Loss: -1 league point (can't go below 0)
-- Draw: +1 league point (occurs when battle exceeds max time, ~60 seconds)
-- Bonus: +1 point for winning against higher ELO opponent (>200 difference)
-- Penalty: -1 additional point for losing to much lower ELO opponent (>300 difference)
+- Draw: +1 league point (occurs when battle exceeds max time, 120 seconds)
 - League points displayed on robot detail page
 
 **Draw Mechanics**: Battles end in draw when maximum battle time reached. Prevents infinite stalemates. Time limit adjustable for balance.
@@ -1491,7 +1490,7 @@ See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for 100+ message templates and comp
 - **Rationale**: Manageable size, promotes familiarity within instance
 
 **D5: Draw Mechanics**
-- **Decision**: Battles end in draw when max time reached (~60 seconds, adjustable)
+- **Decision**: Battles end in draw when max time reached (120 seconds)
 - **League points**: +1 for draw
 - **Rationale**: Prevents infinite stalemates, time limit tunable for balance
 
@@ -1505,9 +1504,9 @@ See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for 100+ message templates and comp
 - **Rationale**: Adds match variety, avoids deadlocks
 
 **D8: Battle Readiness**
-- **Decision**: HP ≥75% AND all required weapons equipped
+- **Decision**: All required weapons equipped
 - **Warnings**: Display on robot list, detail page, and dashboard
-- **Rationale**: Prevents incomplete loadouts, ensures fair fights
+- **Rationale**: Prevents incomplete loadouts, ensures fair fights. HP checks removed since repairs run before battles.
 
 **D9: Matchmaking Timing**
 - **Decision**: 24-hour cycle (matchmaking after battles → 24h adjustment → battles)
@@ -2392,7 +2391,7 @@ ELO_MATCH_FALLBACK = 300        // Maximum ELO difference allowed
 RECENT_OPPONENT_LIMIT = 5       // Number of recent battles to track
 
 // Battle readiness
-BATTLE_READINESS_HP_THRESHOLD = 0.75  // 75% HP required
+// HP checks removed — repairs run before battles, so only weapons matter
 
 // Special robots
 BYE_ROBOT_NAME = 'Bye Robot'    // Name of bye robot for odd numbers
@@ -2474,9 +2473,8 @@ const LEAGUE_HIERARCHY = {
 ### Tuning Recommendations
 
 **If too many byes**:
-- Lower BATTLE_READINESS_HP_THRESHOLD (but not below 0.50)
 - Increase ELO_MATCH_FALLBACK (allow wider ELO ranges)
-- Check robot yield thresholds (ensure HP > yield threshold)
+- Check robot weapon loadouts (ensure all weapons equipped)
 
 **If matches too unbalanced**:
 - Decrease ELO_MATCH_FALLBACK (stricter ELO matching)

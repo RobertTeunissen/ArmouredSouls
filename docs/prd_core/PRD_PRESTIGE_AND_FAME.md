@@ -414,7 +414,7 @@ Defeat higher league opponent: +25 prestige (per win)
 - Level 9: 10,000 prestige required (cap to 48)
 - Level 10: 15,000 prestige required (cap to 50)
 
-**Income Generator**:
+**Merchandising Hub**:
 - Level 4: 3,000 prestige required
 - Level 7: 7,500 prestige required
 - Level 9: 15,000 prestige required
@@ -430,17 +430,18 @@ Defeat higher league opponent: +25 prestige (per win)
 
 **Battle Winnings Bonus**:
 ```
-5,000+ prestige:   +5% to all battle winnings
-10,000+ prestige:  +10% to all battle winnings
-25,000+ prestige:  +15% to all battle winnings
-50,000+ prestige:  +20% to all battle winnings
+1,000+ prestige:   +10% to all battle winnings
+5,000+ prestige:   +20% to all battle winnings
+10,000+ prestige:  +30% to all battle winnings
+25,000+ prestige:  +40% to all battle winnings
+50,000+ prestige:  +50% to all battle winnings
 ```
 
 **Example**:
-- Bronze league win base: ₡5,000 - ₡10,000
-- With 10,000 prestige: ₡5,500 - ₡11,000 (10% bonus)
-- Champion league win base: ₡150,000 - ₡300,000
-- With 50,000 prestige: ₡180,000 - ₡360,000 (20% bonus)
+- Bronze league win base: ₡7,500
+- With 10,000 prestige: ₡7,500 × 1.10 = ₡8,250 (10% bonus)
+- Champion league win base: ₡225,000
+- With 50,000 prestige: ₡225,000 × 1.20 = ₡270,000 (20% bonus)
 
 **Merchandising Income Scaling**:
 ```
@@ -448,7 +449,7 @@ merchandising_income = base_merchandising × (1 + prestige / 10000)
 ```
 
 **Example**:
-- Income Generator Level 1: ₡5,000/day base
+- Merchandising Hub Level 1: ₡5,000/day base
 - Prestige 0: ₡5,000/day
 - Prestige 5,000: ₡5,000 × (1 + 0.5) = ₡7,500/day (+50%)
 - Prestige 10,000: ₡5,000 × (1 + 1.0) = ₡10,000/day (+100%)
@@ -611,7 +612,7 @@ streaming_income = base_streaming × (1 + (total_battles / 1000)) × (1 + (total
 ```
 
 **Example**:
-- Income Generator Level 3: ₡3,000/day base
+- Merchandising Hub Level 3: ₡3,000/day base
 - Robot 1: 200 battles, 500 fame
 - Robot 2: 150 battles, 300 fame
 - Robot 3: 100 battles, 200 fame
@@ -624,7 +625,7 @@ streaming = ₡3,000 × (1 + 450/1000) × (1 + 1000/5000)
 ```
 
 **High Fame Example**:
-- Income Generator Level 7: ₡10,000/day base
+- Merchandising Hub Level 7: ₡10,000/day base
 - 4 robots with 1,000 battles total, 10,000 fame total
 
 ```

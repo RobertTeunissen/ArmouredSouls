@@ -39,7 +39,7 @@ Malfunction Chance = Max(0, 20 - (Weapon Control × 0.4))
 - ❌ Attack immediately fails
 - ❌ No damage dealt (0 HP, 0 shield damage)
 - ❌ No critical hit possible
-- ❌ No counter-attack triggered
+- ❌ No counter-attack triggered (malfunction is not a real attack)
 - ⚠️ Event logged with message: "⚠️ {Robot}'s {Weapon} malfunctions! (Weapon Control failure)"
 
 ### Damage Multiplier Rebalance

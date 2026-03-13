@@ -12,7 +12,7 @@ import { validateTeam, createTeam, getTeamById, disbandTeam, checkTeamReadiness,
  * 
  * Property: For any two robots selected for a tag team, if they pass validation,
  * then both robots must be from the same stable AND both must meet battle readiness
- * requirements (HP ≥75%, HP > yield threshold, all weapons equipped).
+ * requirements (HP > yield threshold, all weapons equipped).
  */
 
 describe('Tag Team Validation Property Tests', () => {
@@ -316,7 +316,7 @@ describe('Tag Team Validation Property Tests', () => {
    * **Validates: Requirements 1.3**
    * 
    * Property: Valid teams must have both robots meeting battle readiness
-   * (HP ≥75%, HP > yield threshold, weapons equipped).
+   * (HP > yield threshold, weapons equipped).
    */
   it('should reject teams with unready robots', async () => {
     await fc.assert(
@@ -815,7 +815,7 @@ describe('Tag Team Validation Property Tests', () => {
    * 
    * Property 23: Tag Team Readiness Validation
    * For any tag team, the team should be considered ready for battle if and only if
-   * both robots have HP ≥75%, HP > yield threshold, and all required weapons equipped.
+   * both robots have HP > yield threshold, and all required weapons equipped.
    */
   it('should validate team readiness based on both robots meeting all requirements', async () => {
     await fc.assert(

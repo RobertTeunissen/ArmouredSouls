@@ -161,7 +161,7 @@ The continuous tournament model ensures:
 #### User Story 2.1: Tournament Creation
 - **As an admin**, I can create a new single elimination tournament
 - **Acceptance Criteria:**
-  - Tournament includes all battle-ready robots (HP ≥75%, weapons equipped)
+  - Tournament includes all battle-ready robots (weapons equipped for loadout type)
   - Excludes bye-robot and robots already in active tournaments
   - Excludes robots with scheduled league matches (conflict avoidance)
   - Generates initial bracket with proper seeding (by ELO)
@@ -238,7 +238,7 @@ The continuous tournament model ensures:
   - UI displays match type clearly (league vs tournament)
   - Robots can have multiple tournament matches scheduled (future rounds)
   - Robots can also have league matches scheduled
-  - **Battle readiness is binary**: Robot is either ready (HP ≥75%, weapons equipped) or not
+  - **Battle readiness is binary**: Robot either has weapons equipped for its loadout type or not
   - Daily cycle auto-repair ensures robots are ready for scheduled matches 
 
 #### User Story 3.3: Battle Reports
@@ -494,14 +494,15 @@ function createBracketPairs(seededRobots: Robot[]): TournamentMatch[]
 #### Tournament Rewards (`tournamentRewards.ts`)
 
 ```typescript
-// Tournament-specific reward calculations
-export function calculateTournamentWinReward(baseReward: number, prestige: number): number
-export function calculateTournamentPrestige(robot: Robot, round: number): number
-export function calculateTournamentFame(robot: Robot, round: number, finalHP: number): number
-export function calculateChampionshipBonus(robot: Robot): number
-
-// Integration with existing economy
-export async function awardTournamentRewards(battle: Battle, tournamentMatch: TournamentMatch): Promise<void>
+// Tournament-specific reward calculations (NOT league-based)
+export function calculateTournamentSizeMultiplier(totalParticipants: number): number
+export function calculateRoundProgressMultiplier(currentRound: number, maxRounds: number): number
+export function calculateExclusivityMultiplier(robotsRemaining: number, totalParticipants: number): number
+export function calculateTournamentWinReward(totalParticipants: number, currentRound: number, maxRounds: number): number
+export function calculateTournamentParticipationReward(totalParticipants: number, currentRound: number, maxRounds: number): number
+export function calculateTournamentPrestige(totalParticipants: number, currentRound: number, maxRounds: number): number
+export function calculateTournamentFame(totalParticipants: number, robotsRemaining: number, winnerFinalHP: number, winnerMaxHP: number): number
+export async function calculateTournamentBattleRewards(...): Promise<TournamentRewards>
 ```
 
 #### Battle Orchestrator Updates (`battleOrchestrator.ts`)
@@ -576,85 +577,61 @@ GET    /api/robots/:id/tournaments
 
 ### Tournament Reward Formulas
 
-#### Win Rewards (Tournament Multiplier)
+> **Note**: The formulas below reflect the actual implementation in `tournamentRewards.ts`. Tournament rewards are NOT league-based — they scale with tournament size and round progression.
+
+#### Win Rewards (Size × Progression)
 
 ```typescript
-// Base formula (same as league)
-const leagueReward = getLeagueBaseReward(robot.currentLeague).midpoint;
-const prestigeMultiplier = getPrestigeMultiplier(user.prestige);
-const baseReward = leagueReward * prestigeMultiplier;
+const BASE_CREDIT_REWARD = 20000;
 
-// Tournament bonus
-const TOURNAMENT_WIN_MULTIPLIER = 1.5;
-const tournamentReward = baseReward * TOURNAMENT_WIN_MULTIPLIER;
+// Tournament size multiplier: 1 + (log10(totalParticipants / 10) * 0.5)
+// Examples: 130 robots → 1.06×, 1000 robots → 1.50×, 100k robots → 3.0×
+const sizeMultiplier = calculateTournamentSizeMultiplier(totalParticipants);
+
+// Round progression multiplier: currentRound / maxRounds
+// Example (7-round tournament): Round 1 → 0.14×, Round 4 → 0.57×, Round 7 → 1.0×
+const progressMultiplier = calculateRoundProgressMultiplier(currentRound, maxRounds);
+
+const winnerCredits = Math.round(BASE_CREDIT_REWARD * sizeMultiplier * progressMultiplier);
 ```
 
-#### Prestige Awards (Tournament Multiplier)
+#### Participation Reward (Loser)
 
 ```typescript
-// Base prestige by league (same as league battles)
-const leaguePrestige = {
-  bronze: 5,
-  silver: 10,
-  gold: 20,
-  platinum: 30,
-  diamond: 50,
-  champion: 75,
-}[robot.currentLeague];
+const PARTICIPATION_PERCENTAGE = 0.30;
+const loserCredits = Math.round(winnerCredits * PARTICIPATION_PERCENTAGE);
+```
 
-// Tournament multiplier
-const TOURNAMENT_PRESTIGE_MULTIPLIER = 2.0;
-const tournamentPrestige = leaguePrestige * TOURNAMENT_PRESTIGE_MULTIPLIER;
+#### Prestige Awards
 
-// Championship title bonus (final round only)
-if (isFinalRound && isWinner) {
-  user.championshipTitles += 1;
-  const CHAMPIONSHIP_PRESTIGE_BONUS = 500;
-  tournamentPrestige += CHAMPIONSHIP_PRESTIGE_BONUS;
+```typescript
+const BASE_PRESTIGE_REWARD = 15;
+const CHAMPIONSHIP_PRESTIGE_BONUS = 500;
+
+let prestige = Math.round(BASE_PRESTIGE_REWARD * progressMultiplier * sizeMultiplier);
+
+// Championship bonus for finals winner only
+if (currentRound === maxRounds) {
+  prestige += CHAMPIONSHIP_PRESTIGE_BONUS;
 }
 ```
 
-#### Fame Awards (Tournament Multiplier)
+#### Fame Awards (Exclusivity-Based)
 
 ```typescript
-// Base fame by league (same as league battles)
-const leagueFame = {
-  bronze: 2,
-  silver: 5,
-  gold: 10,
-  platinum: 15,
-  diamond: 25,
-  champion: 40,
-}[robot.currentLeague];
+const BASE_FAME_REWARD = 10;
 
-// Performance multipliers (same as league)
-if (finalHP === maxHP) {
-  leagueFame *= 2.0; // Perfect victory
-} else if (finalHP / maxHP > 0.8) {
-  leagueFame *= 1.5; // Dominating victory
-} else if (finalHP / maxHP < 0.2) {
-  leagueFame *= 1.25; // Comeback victory
-}
+// Exclusivity: fewer robots remaining → more fame
+// Formula: (robotsRemaining / totalParticipants)^-0.5
+const exclusivityMultiplier = Math.pow(robotsRemaining / totalParticipants, -0.5);
 
-// Tournament multiplier
-const TOURNAMENT_FAME_MULTIPLIER = 1.5;
-const tournamentFame = leagueFame * TOURNAMENT_FAME_MULTIPLIER;
-```
+// Performance bonus (affects fame only, NOT credits or prestige)
+let performanceBonus = 1.0;
+if (finalHP === maxHP) performanceBonus = 2.0;       // Perfect victory
+else if (finalHP / maxHP > 0.8) performanceBonus = 1.5;  // Dominating
+else if (finalHP / maxHP < 0.2) performanceBonus = 1.25; // Comeback
 
-#### Round-Based Bonuses (Progressive Rewards)
-
-```typescript
-// Later rounds = higher rewards
-const roundMultipliers = {
-  1: 1.0,    // First round (many participants)
-  2: 1.2,    // Round of 16/32
-  3: 1.4,    // Quarter-finals
-  4: 1.6,    // Semi-finals
-  5: 2.0,    // Finals
-};
-
-const roundBonus = roundMultipliers[round] || 1.0;
-finalReward *= roundBonus;
+const fame = Math.round(BASE_FAME_REWARD * exclusivityMultiplier * performanceBonus);
 ```
 
 ---
@@ -664,7 +641,6 @@ finalReward *= roundBonus;
 ### Tournament Eligibility
 
 **Robots eligible for tournament:**
-- ✅ HP ≥ 75% (battle-ready threshold)
 - ✅ All required weapons equipped (based on loadoutType)
 - ❌ ~~Not already participating in an active tournament~~ **CAN participate in multiple tournaments**
 - ✅ Not the bye-robot (system robot)
@@ -1406,7 +1382,6 @@ For **large tournaments** (256+ robots):
 
 **Test 1: Tournament Creation**
 - ✅ Creates tournament with eligible robots only
-- ✅ Excludes robots with <75% HP
 - ✅ Excludes robots without weapons
 - ✅ Excludes bye-robot
 - ✅ Excludes robots already in active tournament
@@ -1969,9 +1944,8 @@ LIMIT 20;
    - Or: Manually seed database with test users
 
 2. **Robots not battle-ready**
-   - Robots need ≥75% HP
    - Robots need weapons equipped
-   - Solution: Enable auto-repair in daily cycle
+   - Solution: Ensure weapons are equipped before cycle runs
 
 3. **Active tournament already exists**
    - Only creates new tournament if none active
@@ -2089,7 +2063,7 @@ curl -X GET http://localhost:3001/api/admin/tournaments/eligible-robots \
 1. Navigate to Admin page → Tournaments tab
 2. Click "Create Tournament" button
 3. System automatically:
-   - Gathers all battle-ready robots (HP ≥75%, weapons equipped)
+   - Gathers all battle-ready robots (weapons equipped for loadout type)
    - Creates single elimination bracket
    - Assigns byes to highest ELO robots (if needed)
    - Sets tournament to "active" status

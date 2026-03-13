@@ -343,7 +343,7 @@ Before writing correctness properties, I need to analyze the acceptance criteria
 
 
 ### Property 1: Team Creation Validation
-*For any* two robots selected for a tag team, if they pass validation, then both robots must be from the same stable AND both must meet battle readiness requirements (HP ≥75%, HP > yield threshold, all weapons equipped).
+*For any* two robots selected for a tag team, if they pass validation, then both robots must be from the same stable AND both must meet battle readiness requirements (HP > yield threshold, all weapons equipped).
 **Validates: Requirements 1.2, 1.3**
 
 ### Property 2: Team Configuration Round Trip
@@ -431,7 +431,7 @@ Before writing correctness properties, I need to analyze the acceptance criteria
 **Validates: Requirements 7.1, 7.2, 7.3, 7.6**
 
 ### Property 23: Tag Team Readiness Validation
-*For any* tag team, the team should be considered ready for battle if and only if both robots have HP ≥75%, HP > yield threshold, and all required weapons equipped.
+*For any* tag team, the team should be considered ready for battle if and only if both robots have HP > yield threshold, and all required weapons equipped.
 **Validates: Requirements 8.1, 8.2, 8.3**
 
 ### Property 24: Unready Team Exclusion

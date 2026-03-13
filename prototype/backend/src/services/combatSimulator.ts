@@ -571,13 +571,6 @@ function performAttack(
       `Apply: ${applyBreakdown.calculation}`,
     ];
     
-    // Always calculate counter chance (issue #4)
-    const { counterChance, breakdown: counterBreakdown } = calculateCounterChance(defenderState.robot);
-    const counterRoll = random(0, 100);
-    const counterHappens = defenderState.currentHP > 0 && (counterRoll < counterChance);
-    
-    formulaParts.push(`Counter: ${counterBreakdown.calculation} (rolled ${counterRoll.toFixed(1)}, result: ${counterHappens ? 'COUNTER' : 'no counter'})`);
-    
     events.push({
       timestamp: Number(currentTime.toFixed(1)),
       type: isCritical ? 'critical' : 'attack',
@@ -608,54 +601,10 @@ function performAttack(
           critRoll,
           ...damageBreakdown.components, 
           ...applyBreakdown.components,
-          ...counterBreakdown.components,
-          counterRoll,
         },
         result: totalDamage,
       },
     });
-    
-    // Execute counter-attack if it happens
-    if (counterHappens) {
-      const counterDamage = baseDamage * 0.7;
-      const { hpDamage: counterHP, shieldDamage: counterShield, breakdown: counterApplyBreakdown } = applyDamage(
-        counterDamage, 
-        defenderState.robot, 
-        attackerState.robot, 
-        attackerState, 
-        false,
-        'main' // Counters always use main hand
-      );
-      
-      defenderState.totalDamageDealt += counterHP;
-      attackerState.totalDamageTaken += counterHP;
-      
-      events.push({
-        timestamp: Number(currentTime.toFixed(1)),
-        type: 'counter',
-        attacker: defenderName,
-        defender: attackerName,
-        weapon: getWeaponInfo(defenderState.robot, 'main').name,
-        damage: counterHP,
-        hpDamage: counterHP,
-        shieldDamage: counterShield,
-        counter: true,
-        robot1HP: attackerState.currentHP,
-        robot2HP: defenderState.currentHP,
-        robot1Shield: attackerState.currentShield,
-        robot2Shield: defenderState.currentShield,
-        message: `🔄 ${defenderName} counters for ${counterHP.toFixed(0)} damage!`,
-        formulaBreakdown: {
-          calculation: `Counter: ${counterDamage.toFixed(1)} base (70% of attack)\n${counterApplyBreakdown.calculation}`,
-          components: {
-            counterChance: counterChance,
-            counterBase: counterDamage,
-            ...counterApplyBreakdown.components,
-          },
-          result: counterHP,
-        },
-      });
-    }
   } else {
     // Miss - show malfunction check, hit calculation and crit roll too
     const formulaParts = [
@@ -690,6 +639,97 @@ function performAttack(
         result: 0,
       },
     });
+  }
+  
+  // Counter-attack check: triggers on any attack (hit or miss), NOT on malfunctions
+  // Malfunctions return early above, so we only reach here on hit or miss
+  const { counterChance, breakdown: counterBreakdown } = calculateCounterChance(defenderState.robot);
+  const counterRoll = random(0, 100);
+  const counterTriggered = defenderState.currentHP > 0 && (counterRoll < counterChance);
+  
+  if (counterTriggered) {
+    // Counter-attack uses defender's main hand weapon at 70% damage
+    const counterWeaponInfo = getWeaponInfo(defenderState.robot, 'main');
+    const { damage: counterBaseDamage, breakdown: counterDamageBreakdown } = calculateBaseDamage(defenderState.robot, counterWeaponInfo.baseDamage, 'main');
+    const counterDamage = counterBaseDamage * 0.7;
+    
+    // Counter-attacks can miss — run a hit check (defender attacks the original attacker)
+    const { hitChance: counterHitChance, breakdown: counterHitBreakdown } = calculateHitChance(defenderState.robot, attackerState.robot, 'main');
+    const counterHitRoll = random(0, 100);
+    const counterHits = counterHitRoll < counterHitChance;
+    
+    if (counterHits) {
+      const { hpDamage: counterHP, shieldDamage: counterShield, breakdown: counterApplyBreakdown } = applyDamage(
+        counterDamage, 
+        defenderState.robot, 
+        attackerState.robot, 
+        attackerState, 
+        false,
+        'main'
+      );
+      
+      defenderState.totalDamageDealt += counterHP;
+      attackerState.totalDamageTaken += counterHP;
+      
+      events.push({
+        timestamp: Number(currentTime.toFixed(1)),
+        type: 'counter',
+        attacker: defenderName,
+        defender: attackerName,
+        weapon: counterWeaponInfo.name,
+        damage: counterHP + counterShield,
+        hpDamage: counterHP,
+        shieldDamage: counterShield,
+        hit: true,
+        counter: true,
+        robot1HP: attackerState.currentHP,
+        robot2HP: defenderState.currentHP,
+        robot1Shield: attackerState.currentShield,
+        robot2Shield: defenderState.currentShield,
+        message: `🔄 ${defenderName} counters for ${(counterHP + counterShield).toFixed(0)} damage with ${counterWeaponInfo.name}!`,
+        formulaBreakdown: {
+          calculation: `Counter trigger: ${counterBreakdown.calculation} (rolled ${counterRoll.toFixed(1)}, result: COUNTER)\nCounter hit: ${counterHitBreakdown.calculation} (rolled ${counterHitRoll.toFixed(1)}, result: HIT)\nCounter damage: ${counterDamageBreakdown.calculation} × 0.70 = ${counterDamage.toFixed(1)}\n${counterApplyBreakdown.calculation}`,
+          components: {
+            counterChance,
+            counterRoll,
+            counterHitChance,
+            counterHitRoll,
+            counterBase: counterDamage,
+            ...counterApplyBreakdown.components,
+          },
+          result: counterHP + counterShield,
+        },
+      });
+    } else {
+      // Counter triggered but missed
+      events.push({
+        timestamp: Number(currentTime.toFixed(1)),
+        type: 'counter',
+        attacker: defenderName,
+        defender: attackerName,
+        weapon: counterWeaponInfo.name,
+        damage: 0,
+        hpDamage: 0,
+        shieldDamage: 0,
+        hit: false,
+        counter: true,
+        robot1HP: attackerState.currentHP,
+        robot2HP: defenderState.currentHP,
+        robot1Shield: attackerState.currentShield,
+        robot2Shield: defenderState.currentShield,
+        message: `🔄❌ ${defenderName} counters but misses ${attackerName}!`,
+        formulaBreakdown: {
+          calculation: `Counter trigger: ${counterBreakdown.calculation} (rolled ${counterRoll.toFixed(1)}, result: COUNTER)\nCounter hit: ${counterHitBreakdown.calculation} (rolled ${counterHitRoll.toFixed(1)}, result: MISS)`,
+          components: {
+            counterChance,
+            counterRoll,
+            counterHitChance,
+            counterHitRoll,
+          },
+          result: 0,
+        },
+      });
+    }
   }
 }
 

@@ -732,10 +732,10 @@ This format is used across:
 
 **Battle Result Panel**:
 - Result banner: "VICTORY" / "DEFEAT" / "DRAW"
-- Draw condition explanation: "Battle exceeded maximum time limit (60 seconds)"
+- Draw condition explanation: "Battle exceeded maximum time limit (120 seconds)"
 - **Winner/Loser Determination**:
   - Winner: Robot with higher HP percentage remaining
-  - Draw: Battle exceeds ~60 seconds of simulated combat OR both robots yield simultaneously
+  - Draw: Battle exceeds 120 seconds of simulated combat OR both robots yield simultaneously
 - **Consequences**:
   - ELO changes (e.g., "+25 ELO" or "-18 ELO")
   - Credits earned/spent

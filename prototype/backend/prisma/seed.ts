@@ -448,14 +448,41 @@ async function ensureWeaponInventory(userId: number, weaponId: number) {
 
 /**
  * Upsert a robot by userId+name (unique constraint exists).
+ * Verifies weapon inventory FK references before creating to give clear errors.
  */
 export async function upsertRobot(data: Record<string, unknown>) {
   const userId = data.userId as number;
   const name = data.name as string;
   const existing = await prisma.robot.findFirst({ where: { userId, name } });
+
   if (existing) {
+    // On update, clear stale weapon references if the inventory record no longer exists
+    if (data.mainWeaponId) {
+      const mainInv = await prisma.weaponInventory.findUnique({ where: { id: data.mainWeaponId as number } });
+      if (!mainInv) {
+        data.mainWeaponId = null;
+      }
+    }
+    if (data.offhandWeaponId) {
+      const offInv = await prisma.weaponInventory.findUnique({ where: { id: data.offhandWeaponId as number } });
+      if (!offInv) {
+        data.offhandWeaponId = null;
+      }
+    }
     return prisma.robot.update({ where: { id: existing.id }, data });
   }
+
+  // Verify mainWeaponId exists before creating
+  if (data.mainWeaponId) {
+    const weaponInv = await prisma.weaponInventory.findUnique({ where: { id: data.mainWeaponId as number } });
+    if (!weaponInv) {
+      throw new Error(
+        `Cannot create robot "${name}": mainWeaponId ${data.mainWeaponId} not found in weapon_inventory. ` +
+        `Database may have stale data — try: npx prisma migrate reset`
+      );
+    }
+  }
+
   return prisma.robot.create({ data: data as any });
 }
 

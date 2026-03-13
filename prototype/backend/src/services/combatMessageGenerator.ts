@@ -247,6 +247,16 @@ export class CombatMessageGenerator {
     '⚔️ {defenderName} reads the attack and retaliates with {weaponName} for {damageDescriptor}!',
   ];
 
+  // ── Counter-Attack Miss Messages (6 variations) ────────────────────────
+  private static counterMissMessages = [
+    '🔄❌ {defenderName} counters but {weaponName} misses {attackerName}!',
+    '⚔️❌ {defenderName} retaliates with {weaponName} but fails to connect!',
+    '💫❌ {defenderName}\'s counter protocols activate but {weaponName} swings wide of {attackerName}!',
+    '🔄❌ {defenderName} attempts a counter with {weaponName} — {attackerName} evades!',
+    '⚔️❌ Counter-attack! {defenderName} strikes back with {weaponName} but misses!',
+    '💫❌ {defenderName} retaliates but {attackerName} dodges the {weaponName} counter!',
+  ];
+
   // ── Victory Messages ───────────────────────────────────────────────────
   private static victoryMessages = [
     '🏆 VICTORY! {winnerName} defeats {loserName}!',
@@ -499,6 +509,11 @@ export class CombatMessageGenerator {
     return this.interpolate(template, { defenderName, attackerName, weaponName, damageDescriptor });
   }
 
+  static generateCounterMiss(defenderName: string, attackerName: string, weaponName: string): string {
+    const template = this.selectRandom(this.counterMissMessages);
+    return this.interpolate(template, { defenderName, attackerName, weaponName });
+  }
+
   static generateBattleEnd(event: BattleEndEvent): string {
     const hpPercent = Math.round((event.winnerHP / event.winnerMaxHP) * 100);
     const hpDescriptor = this.getHPDescriptor(event.winnerHP, event.winnerMaxHP);
@@ -732,23 +747,39 @@ export class CombatMessageGenerator {
         const attackerMaxHP = event.defender === context.robot1Name
           ? context.robot1MaxHP : context.robot2MaxHP;
 
-        narrativeEvents.push({
-          timestamp: ts,
-          type: 'counter',
-          attacker: event.attacker,
-          defender: event.defender,
-          message: this.generateCounter(
-            event.attacker || '',
-            event.defender || '',
-            counterWeapon,
-            event.damage || 0,
-            attackerMaxHP
-          ),
-        });
+        if (event.hit === false) {
+          // Counter triggered but missed
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'counter',
+            attacker: event.attacker,
+            defender: event.defender,
+            message: this.generateCounterMiss(
+              event.attacker || '',
+              event.defender || '',
+              counterWeapon,
+            ),
+          });
+        } else {
+          // Counter hit
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'counter',
+            attacker: event.attacker,
+            defender: event.defender,
+            message: this.generateCounter(
+              event.attacker || '',
+              event.defender || '',
+              counterWeapon,
+              event.damage || 0,
+              attackerMaxHP
+            ),
+          });
 
-        // Check shield break and damage status after counter too
-        this.checkShieldBreak(event, context, robot1PrevShield, robot2PrevShield, narrativeEvents, ts);
-        this.checkDamageStatus(event, context, robot1ThresholdsCrossed, robot2ThresholdsCrossed, narrativeEvents, ts);
+          // Check shield break and damage status after counter hit
+          this.checkShieldBreak(event, context, robot1PrevShield, robot2PrevShield, narrativeEvents, ts);
+          this.checkDamageStatus(event, context, robot1ThresholdsCrossed, robot2ThresholdsCrossed, narrativeEvents, ts);
+        }
 
       } else if (event.type === 'yield') {
         // Check if this is actually a draw (time limit)

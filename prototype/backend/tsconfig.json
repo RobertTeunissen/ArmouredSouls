@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "tests/guide/content-validation.test.ts"],
   "exclude": ["node_modules", "dist"]
 }

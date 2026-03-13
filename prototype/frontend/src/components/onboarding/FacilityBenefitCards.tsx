@@ -158,7 +158,7 @@ const FACILITY_BENEFITS: FacilityBenefit[] = [
       'Each level adds +5 weapon slots',
       'Important for 3-robot strategies (need 3-6 weapons)',
       'Prevents "storage full" errors when buying weapons',
-      'Level 1 costs ₡100K',
+      'Level 1 costs ₡75K',
     ],
     timing: 'Buy before purchasing multiple weapons, especially for 3-robot strategies.',
   },

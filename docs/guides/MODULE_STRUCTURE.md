@@ -140,7 +140,7 @@ ArmouredSouls/
 
 **Key Entities**:
 - Robot (with 23 attributes + state + configuration)
-- Weapon (13 weapons + 2 shields with cooldown, damage type, attribute bonuses)
+- Weapon (20 weapons + 3 shields with cooldown, damage type, attribute bonuses)
 - Loadout (weapon_shield, two_handed, dual_wield, single)
 - BattleStance (offensive, defensive, balanced)
 

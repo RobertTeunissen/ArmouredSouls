@@ -10,7 +10,6 @@ export const LP_MATCH_FALLBACK = 20;     // ±20 LP fallback range (PRIMARY)
 export const ELO_MATCH_IDEAL = 150;      // ±150 ELO ideal (SECONDARY)
 export const ELO_MATCH_FALLBACK = 300;   // ±300 ELO max (SECONDARY)
 export const RECENT_OPPONENT_LIMIT = 5;  // Number of recent opponents to track
-export const BATTLE_READINESS_HP_THRESHOLD = 0.75; // 75% HP required (ensures robot won't immediately yield)
 
 // Bye-robot identifier
 export const BYE_ROBOT_NAME = 'Bye Robot';
@@ -30,80 +29,11 @@ export interface MatchPair {
 }
 
 /**
- * Check if a robot meets battle readiness requirements
- * A robot is battle-ready if:
- * 1. HP >= 75% (prevents immediate surrender)
- * 2. HP % > yield threshold (robot won't surrender at battle start)
- * 3. Weapons equipped for loadout type
+ * Check if a robot meets battle readiness requirements.
+ * Only checks weapon loadout — HP is not checked because
+ * robots are always repaired before battles execute.
  */
 export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
-  const reasons: string[] = [];
-  
-  // HP Check: Robot must have at least 75% HP
-  const hpPercentage = robot.currentHP / robot.maxHP;
-  const hpCheck = hpPercentage >= BATTLE_READINESS_HP_THRESHOLD;
-  
-  if (!hpCheck) {
-    reasons.push(`HP too low (${Math.floor(hpPercentage * 100)}%, need ${BATTLE_READINESS_HP_THRESHOLD * 100}%)`);
-  }
-  
-  // Yield Threshold Check: Robot's HP must be above yield threshold
-  // Otherwise robot would surrender immediately at battle start
-  const hpPercentageValue = hpPercentage * 100;
-  const yieldCheck = hpPercentageValue > robot.yieldThreshold;
-  
-  if (!yieldCheck) {
-    reasons.push(`HP (${Math.floor(hpPercentageValue)}%) at or below yield threshold (${robot.yieldThreshold}%)`);
-  }
-  
-  // Combine HP checks - both must pass
-  const finalHpCheck = hpCheck && yieldCheck;
-  
-  // Weapon Check: Must have all required weapons equipped based on loadout type
-  let weaponCheck = false;
-  
-  switch (robot.loadoutType) {
-    case 'single':
-      weaponCheck = robot.mainWeaponId !== null;
-      if (!weaponCheck) reasons.push('No main weapon equipped');
-      break;
-      
-    case 'dual_wield':
-      weaponCheck = robot.mainWeaponId !== null && robot.offhandWeaponId !== null;
-      if (robot.mainWeaponId === null) reasons.push('No main weapon equipped');
-      if (robot.offhandWeaponId === null) reasons.push('No offhand weapon equipped');
-      break;
-      
-    case 'weapon_shield':
-      weaponCheck = robot.mainWeaponId !== null && robot.offhandWeaponId !== null;
-      if (robot.mainWeaponId === null) reasons.push('No main weapon equipped');
-      if (robot.offhandWeaponId === null) reasons.push('No shield equipped');
-      break;
-      
-    case 'two_handed':
-      weaponCheck = robot.mainWeaponId !== null;
-      if (!weaponCheck) reasons.push('No two-handed weapon equipped');
-      break;
-      
-    default:
-      weaponCheck = false;
-      reasons.push('Invalid loadout type');
-  }
-  
-  return {
-    isReady: finalHpCheck && weaponCheck,
-    reasons,
-    hpCheck: finalHpCheck,
-    weaponCheck,
-  };
-}
-/**
- * Check if a robot meets scheduling readiness requirements.
- * Used when scheduling future matches — only checks weapon loadout,
- * NOT HP. Robots will be repaired before the scheduled match executes,
- * so HP status at scheduling time is irrelevant.
- */
-export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
   const reasons: string[] = [];
 
   // Weapon Check: Must have all required weapons equipped based on loadout type
@@ -140,9 +70,18 @@ export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
   return {
     isReady: weaponCheck,
     reasons,
-    hpCheck: true, // HP not checked for scheduling
+    hpCheck: true, // HP not checked — repairs run before battles
     weaponCheck,
   };
+}
+/**
+ * Check if a robot meets scheduling readiness requirements.
+ * Used when scheduling future matches — only checks weapon loadout,
+ * NOT HP. Robots will be repaired before the scheduled match executes,
+ * so HP status at scheduling time is irrelevant.
+ */
+export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
+  return checkBattleReadiness(robot);
 }
 
 /**
