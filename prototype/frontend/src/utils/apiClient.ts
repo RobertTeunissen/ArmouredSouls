@@ -25,11 +25,24 @@ apiClient.interceptors.response.use(
     const isAuthRoute = url.includes('/api/auth/');
     const status = error.response?.status;
 
-    // Only clear token and redirect on definitive auth failures (401/403)
-    // from non-auth routes. Network errors (no response) should not trigger logout.
+    // Only clear token and redirect on definitive auth failures from our
+    // own backend. Proxy/WAF/DDoS layers (Cloudflare, Caddy, etc.) may
+    // also return 403, but those responses won't contain our JSON error
+    // format. We distinguish "backend says your token is bad" from
+    // "a proxy blocked this request" by checking the response body shape.
     if ((status === 401 || status === 403) && !isAuthRoute) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      const data = error.response?.data;
+      const isBackendAuthError =
+        data && typeof data === 'object' && typeof data.error === 'string';
+
+      if (isBackendAuthError) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      } else {
+        // Proxy/WAF block — don't destroy the session. The token may
+        // still be perfectly valid; the request was just rejected upstream.
+        console.warn('Non-backend 401/403 received (possible proxy/WAF block), keeping session:', status, url);
+      }
     }
     return Promise.reject(error);
   }
