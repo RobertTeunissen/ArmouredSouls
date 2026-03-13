@@ -1413,43 +1413,19 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
 
 /**
  * Check if a team is ready for battle
- * Requirement 8.1, 8.2, 8.3: Both robots must have HP ≥75%, HP > yield threshold, all weapons equipped
+ * Requirement 8.1, 8.2, 8.3: Both robots must have HP > yield threshold, all weapons equipped
  * Requirement 11.3: Dynamic eligibility checking after earlier matches
  */
 async function checkTeamReadinessForBattle(team: {
   activeRobot: Robot;
   reserveRobot: Robot;
 }): Promise<boolean> {
-  const BATTLE_READINESS_HP_THRESHOLD = 75;
-
-  // Check active robot
-  const activeRobotHPPercent = (team.activeRobot.currentHP / team.activeRobot.maxHP) * 100;
-  const activeYieldThresholdHP = Math.floor((team.activeRobot.yieldThreshold / 100) * team.activeRobot.maxHP);
-  
-  if (activeRobotHPPercent < BATTLE_READINESS_HP_THRESHOLD) {
-    return false;
-  }
-  
-  if (team.activeRobot.currentHP <= activeYieldThresholdHP) {
-    return false;
-  }
-  
+  // Check active robot has weapons
   if (!team.activeRobot.mainWeaponId) {
     return false;
   }
 
-  // Check reserve robot
-  const reserveRobotHPPercent = (team.reserveRobot.currentHP / team.reserveRobot.maxHP) * 100;
-  const reserveYieldThresholdHP = Math.floor((team.reserveRobot.yieldThreshold / 100) * team.reserveRobot.maxHP);
-  
-  if (reserveRobotHPPercent < BATTLE_READINESS_HP_THRESHOLD) {
-    return false;
-  }
-  
-  if (team.reserveRobot.currentHP <= reserveYieldThresholdHP) {
-    return false;
-  }
-  
+  // Check reserve robot has weapons
   if (!team.reserveRobot.mainWeaponId) {
     return false;
   }
@@ -1659,6 +1635,36 @@ async function updateTagTeamBattleResults(
       `[TagTeamBattles] Updated bye-match results for match ${match.id}: ` +
       `Team ${realTeam.id} ELO ${realTeamELOChange > 0 ? '+' : ''}${realTeamELOChange}`
     );
+
+    // Update BattleParticipant records for the real team with ELO, prestige, fame, and credits
+    const byeCreditsPerRobot = Math.floor(realTeamRewards / 2);
+    const byePrestigePerRobot = Math.floor(prestige / 2);
+
+    await prisma.battleParticipant.updateMany({
+      where: {
+        battleId: result.battleId,
+        robotId: realTeam.activeRobotId,
+      },
+      data: {
+        credits: byeCreditsPerRobot,
+        eloAfter: realTeam.activeRobot.elo + realTeamELOChange,
+        prestigeAwarded: byePrestigePerRobot,
+        fameAwarded: activeFame,
+      },
+    });
+
+    await prisma.battleParticipant.updateMany({
+      where: {
+        battleId: result.battleId,
+        robotId: realTeam.reserveRobotId,
+      },
+      data: {
+        credits: byeCreditsPerRobot,
+        eloAfter: realTeam.reserveRobot.elo + realTeamELOChange,
+        prestigeAwarded: byePrestigePerRobot,
+        fameAwarded: reserveFame,
+      },
+    });
 
     return;
   }
@@ -1975,31 +1981,68 @@ async function updateTagTeamBattleResults(
     `(Battles from ${streamingRevenue.team2MaxBattlesRobot.name}, Fame from ${streamingRevenue.team2MaxFameRobot.name})`
   );
 
-  // Update BattleParticipant records with credits and streaming revenue (split 50/50 per team)
+  // Update BattleParticipant records with credits, streaming revenue, ELO, prestige, and fame
   const team1CreditsPerRobot = Math.floor(team1Rewards / 2);
   const team2CreditsPerRobot = Math.floor(team2Rewards / 2);
   const team1StreamingPerRobot = Math.floor(streamingRevenue.team1Revenue.totalRevenue / 2);
   const team2StreamingPerRobot = Math.floor(streamingRevenue.team2Revenue.totalRevenue / 2);
+  const team1PrestigePerRobot = Math.floor(team1Prestige / 2);
+  const team2PrestigePerRobot = Math.floor(team2Prestige / 2);
   
+  // Update each robot individually since eloAfter and fameAwarded differ per robot
   await prisma.battleParticipant.updateMany({
     where: {
       battleId: result.battleId,
-      robotId: { in: [team1.activeRobotId, team1.reserveRobotId] },
+      robotId: team1.activeRobotId,
     },
     data: {
       credits: team1CreditsPerRobot,
       streamingRevenue: team1StreamingPerRobot,
+      eloAfter: team1.activeRobot.elo + eloChanges.team1Change,
+      prestigeAwarded: team1PrestigePerRobot,
+      fameAwarded: team1ActiveFame,
     },
   });
   
   await prisma.battleParticipant.updateMany({
     where: {
       battleId: result.battleId,
-      robotId: { in: [team2.activeRobotId, team2.reserveRobotId] },
+      robotId: team1.reserveRobotId,
+    },
+    data: {
+      credits: team1CreditsPerRobot,
+      streamingRevenue: team1StreamingPerRobot,
+      eloAfter: team1.reserveRobot.elo + eloChanges.team1Change,
+      prestigeAwarded: team1PrestigePerRobot,
+      fameAwarded: team1ReserveFame,
+    },
+  });
+  
+  await prisma.battleParticipant.updateMany({
+    where: {
+      battleId: result.battleId,
+      robotId: team2.activeRobotId,
     },
     data: {
       credits: team2CreditsPerRobot,
       streamingRevenue: team2StreamingPerRobot,
+      eloAfter: team2.activeRobot.elo + eloChanges.team2Change,
+      prestigeAwarded: team2PrestigePerRobot,
+      fameAwarded: team2ActiveFame,
+    },
+  });
+  
+  await prisma.battleParticipant.updateMany({
+    where: {
+      battleId: result.battleId,
+      robotId: team2.reserveRobotId,
+    },
+    data: {
+      credits: team2CreditsPerRobot,
+      streamingRevenue: team2StreamingPerRobot,
+      eloAfter: team2.reserveRobot.elo + eloChanges.team2Change,
+      prestigeAwarded: team2PrestigePerRobot,
+      fameAwarded: team2ReserveFame,
     },
   });
 
