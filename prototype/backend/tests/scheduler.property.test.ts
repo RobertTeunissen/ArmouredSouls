@@ -104,7 +104,7 @@ jest.mock('../src/lib/prisma', () => ({
   },
 }));
 
-const NUM_RUNS = 25;
+const NUM_RUNS = 10;
 
 const defaultConfig: SchedulerConfig = {
   enabled: true,

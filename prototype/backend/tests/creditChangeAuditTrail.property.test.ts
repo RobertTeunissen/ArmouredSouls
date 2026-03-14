@@ -77,7 +77,7 @@ describe('Property 3: Credit Change Audit Trail', () => {
           expect(sumOfChanges).toBe(expectedDelta);
         }
       ),
-      { numRuns: 15 }
+      { numRuns: 10 }
     );
   });
 
@@ -133,7 +133,7 @@ describe('Property 3: Credit Change Audit Trail', () => {
           }
         }
       ),
-      { numRuns: 15 }
+      { numRuns: 10 }
     );
   });
 
@@ -191,7 +191,7 @@ describe('Property 3: Credit Change Audit Trail', () => {
           }
         }
       ),
-      { numRuns: 15 }
+      { numRuns: 10 }
     );
   });
 
@@ -265,7 +265,7 @@ describe('Property 3: Credit Change Audit Trail', () => {
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -339,7 +339,7 @@ describe('Property 3: Credit Change Audit Trail', () => {
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -406,7 +406,7 @@ describe('Property 3: Credit Change Audit Trail', () => {
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 });

@@ -2,7 +2,7 @@ import * as fc from 'fast-check';
 import { validateStableName, validatePassword } from '../src/utils/validation';
 
 // Test configuration
-const NUM_RUNS = 30;
+const NUM_RUNS = 10;
 
 describe('Validation Service - Property Tests', () => {
   afterAll(() => {

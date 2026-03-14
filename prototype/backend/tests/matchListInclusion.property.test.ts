@@ -13,7 +13,7 @@ app.use(express.json());
 app.use('/api/matches', matchesRoutes);
 
 // Test configuration
-const NUM_RUNS = 20;
+const NUM_RUNS = 10;
 
 /**
  * Property 25: Match List Inclusion

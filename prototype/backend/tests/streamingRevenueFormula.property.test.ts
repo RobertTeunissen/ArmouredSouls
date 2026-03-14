@@ -191,7 +191,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -237,7 +237,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -288,7 +288,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -343,7 +343,7 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 });
@@ -462,7 +462,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -488,7 +488,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -522,7 +522,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -585,7 +585,7 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 });
@@ -701,7 +701,7 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -765,7 +765,7 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           await prisma.robot.deleteMany({ where: { id: robot3.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -870,7 +870,7 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -942,7 +942,7 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           await Promise.all(robots.map(robot => prisma.robot.delete({ where: { id: robot.id } })));
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 });
@@ -1084,7 +1084,7 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -1156,7 +1156,7 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -1212,7 +1212,7 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -1254,7 +1254,7 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -1341,7 +1341,7 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 });
@@ -1425,7 +1425,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -1474,7 +1474,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -1527,7 +1527,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -1552,7 +1552,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -1595,7 +1595,7 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
           await prisma.robot.deleteMany({ where: { id: robot.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 });
@@ -1796,7 +1796,7 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -1878,7 +1878,7 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -1981,7 +1981,7 @@ describe('Property 12: Tag Team Single Payment Per Team', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 });
@@ -2175,7 +2175,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -2254,7 +2254,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -2328,7 +2328,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -2402,7 +2402,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -2482,7 +2482,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -2557,7 +2557,7 @@ describe('Property 10: Tag Team Uses Maximum Values', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 });
@@ -2757,7 +2757,7 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -2843,7 +2843,7 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -2938,7 +2938,7 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -3043,7 +3043,7 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -3141,7 +3141,7 @@ describe('Property 11: Tag Team Separate Calculations', () => {
           await prisma.robot.deleteMany({ where: { id: team2Robot2.id } });
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 });

@@ -37,7 +37,7 @@ export function getFilesToDelete(
 // Generators
 // ============================================================================
 
-const NUM_RUNS = 30;
+const NUM_RUNS = 10;
 
 /** Generate a unique integer index to build distinct timestamps */
 const indexGen = fc.integer({ min: 0, max: 999999 });

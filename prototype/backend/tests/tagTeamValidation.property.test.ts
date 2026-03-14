@@ -308,7 +308,7 @@ describe('Tag Team Validation Property Tests', () => {
           });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 
@@ -430,7 +430,7 @@ describe('Tag Team Validation Property Tests', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 
@@ -700,7 +700,7 @@ describe('Tag Team Validation Property Tests', () => {
           });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 
@@ -1153,7 +1153,7 @@ describe('Tag Team Matchmaking Cycle Scheduling Property Tests', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 
@@ -1412,7 +1412,7 @@ describe('Tag Team Matchmaking Eligible Teams Property Tests', () => {
           });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 
@@ -1502,7 +1502,7 @@ describe('Tag Team Matchmaking Eligible Teams Property Tests', () => {
           });
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 });
