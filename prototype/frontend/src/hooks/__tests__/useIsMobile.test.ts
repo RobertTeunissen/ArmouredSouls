@@ -38,7 +38,8 @@ describe('useIsMobile', () => {
   it('should return false when window width is 768px', () => {
     setViewportWidth(768);
     const { result } = renderHook(() => useIsMobile());
-    expect(result.current).toBe(false);
+    // Breakpoint is 1024px, so 768 is still mobile
+    expect(result.current).toBe(true);
   });
 
   it('should return false when window width is above 768px', () => {

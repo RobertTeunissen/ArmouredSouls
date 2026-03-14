@@ -74,7 +74,7 @@ describe('MatchCard', () => {
         <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const card = container.querySelector('[data-testid="match-card-2"]');
-      expect(card?.className).toContain('border-gray-700');
+      expect(card?.className).toContain('border-white/10');
     });
   });
 
@@ -93,7 +93,7 @@ describe('MatchCard', () => {
       const byeBadge = screen.getByText('BYE');
       expect(byeBadge).toBeTruthy();
       expect(byeBadge.className).toContain('bg-yellow-500/20');
-      expect(byeBadge.className).toContain('text-yellow-400');
+      expect(byeBadge.className).toContain('text-warning');
     });
 
     it('should show the advancing robot name in the first slot', () => {
@@ -183,12 +183,12 @@ describe('MatchCard', () => {
         <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const alpha = screen.getByText('AlphaBot');
-      expect(alpha.className).toContain('text-green-400');
+      expect(alpha.className).toContain('text-success');
       expect(alpha.className).toContain('font-semibold');
 
       const beta = screen.getByText('BetaBot');
       expect(beta.className).toContain('line-through');
-      expect(beta.className).toContain('text-gray-500');
+      expect(beta.className).toContain('text-tertiary');
     });
   });
 
@@ -206,7 +206,7 @@ describe('MatchCard', () => {
       const { container } = render(
         <MatchCard match={match} seedMap={seedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
       );
-      const seedSpans = container.querySelectorAll('.text-yellow-400.font-mono');
+      const seedSpans = container.querySelectorAll('.text-warning.font-mono');
       expect(seedSpans.length).toBe(2);
       expect(seedSpans[0].textContent).toBe('#1');
       expect(seedSpans[1].textContent).toBe('#16');
@@ -223,7 +223,7 @@ describe('MatchCard', () => {
       const { container } = render(
         <MatchCard match={match} seedMap={seedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
       );
-      const seedSpans = container.querySelectorAll('.text-yellow-400.font-mono');
+      const seedSpans = container.querySelectorAll('.text-warning.font-mono');
       expect(seedSpans.length).toBe(0);
     });
   });
@@ -434,7 +434,7 @@ describe('SeedingList', () => {
     const { container } = render(
       <SeedingList seedings={seedings} userRobotIds={emptyUserIds} />,
     );
-    const seedNumbers = container.querySelectorAll('.text-yellow-400.font-mono');
+    const seedNumbers = container.querySelectorAll('.text-warning.font-mono');
     expect(seedNumbers.length).toBe(3);
     expect(seedNumbers[0].textContent).toBe('#1');
   });

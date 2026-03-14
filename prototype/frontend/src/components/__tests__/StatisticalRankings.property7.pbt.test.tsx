@@ -2,12 +2,18 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import * as fc from 'fast-check';
 import StatisticalRankings from '../StatisticalRankings';
-import axios from 'axios';
+import apiClient from '../../utils/apiClient';
 
-// Mock axios
-vi.mock('axios');
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockedAxios = axios as any;
+// Mock apiClient (imported by StatisticalRankings)
+vi.mock('../../utils/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
+  },
+}));
+
+const mockedApiClient = vi.mocked(apiClient);
 
 // Cleanup after each test
 afterEach(() => {
@@ -72,32 +78,29 @@ describe('Property 7: Rankings Reflect Current Stats (Property-Based Test)', () 
             kdRatio: { rank: updatedRanking.rank, total: updatedTotal, percentile: updatedPercentile, value: 3.0 },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: initialMockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: initialMockRankings });
           
           const { rerender, unmount } = render(<StatisticalRankings robotId={robotId} />);
           
           try {
+            // Wait for initial rankings to load
             await waitFor(() => {
-              const headers = screen.queryAllByText(/Statistical Rankings/i);
-              expect(headers.length).toBeGreaterThan(0);
+              const displays = screen.getAllByText(`#${initialRanking.rank} / ${initialTotal}`);
+              expect(displays.length).toBeGreaterThanOrEqual(9);
             }, { timeout: 2000 });
             
-            const initialRankDisplays = screen.getAllByText(`#${initialRanking.rank} of ${initialTotal}`);
-            expect(initialRankDisplays.length).toBeGreaterThanOrEqual(9);
-            
-            mockedAxios.get.mockResolvedValueOnce({ data: updatedMockRankings });
-            rerender(<StatisticalRankings robotId={robotId} />);
+            // Use a different robotId to trigger useEffect re-fetch
+            const updatedRobotId = robotId + 10000;
+            mockedApiClient.get.mockResolvedValueOnce({ data: updatedMockRankings });
+            rerender(<StatisticalRankings robotId={updatedRobotId} />);
             
             await waitFor(() => {
-              const updatedRankDisplays = screen.queryAllByText(`#${updatedRanking.rank} of ${updatedTotal}`);
+              const updatedRankDisplays = screen.getAllByText(`#${updatedRanking.rank} / ${updatedTotal}`);
               expect(updatedRankDisplays.length).toBeGreaterThanOrEqual(9);
             }, { timeout: 2000 });
             
-            const updatedRankDisplays = screen.getAllByText(`#${updatedRanking.rank} of ${updatedTotal}`);
-            expect(updatedRankDisplays.length).toBeGreaterThanOrEqual(9);
-            
             if (initialRanking.rank !== updatedRanking.rank || initialTotal !== updatedTotal) {
-              const oldRankDisplays = screen.queryAllByText(`#${initialRanking.rank} of ${initialTotal}`);
+              const oldRankDisplays = screen.queryAllByText(`#${initialRanking.rank} / ${initialTotal}`);
               expect(oldRankDisplays.length).toBe(0);
             }
           } finally {

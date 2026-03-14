@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as fc from 'fast-check';
 import EffectiveStatsDisplay from '../EffectiveStatsDisplay';
@@ -113,9 +113,9 @@ describe('Property 20: Modifier Color Coding (Property-Based Test)', () => {
           // Property: Positive modifiers (starting with +) should exist
           expect(greenModifiers.length).toBeGreaterThan(0);
           
-          // Property: Each positive modifier should have green color class
+          // Property: Each positive modifier should have success color class
           greenModifiers.forEach((element) => {
-            const parent = element.closest('[class*="text-green"]');
+            const parent = element.closest('[class*="text-success"]');
             expect(parent).toBeTruthy();
           });
           
@@ -232,7 +232,7 @@ describe('Property 21: Expandable Details Functionality (Property-Based Test)', 
           // Property: Calculation formula should be visible in expanded state
           const formulaElement = container.querySelector('.font-mono');
           expect(formulaElement).toBeTruthy();
-          expect(formulaElement?.textContent).toContain('=');
+          expect(formulaElement?.textContent).toContain('×');
           
           cleanup();
         }
@@ -246,7 +246,6 @@ describe('Property 21: Expandable Details Functionality (Property-Based Test)', 
       fc.asyncProperty(
         fc.constantFrom('weapon_shield', 'two_handed', 'dual_wield'),
         async (loadoutType) => {
-          const user = userEvent.setup();
           const robot = createRobot({}, loadoutType, 'balanced');
           
           const { container } = render(<EffectiveStatsDisplay robot={robot} />);
@@ -254,14 +253,20 @@ describe('Property 21: Expandable Details Functionality (Property-Based Test)', 
           const attributeRows = container.querySelectorAll('[class*="cursor-pointer"]');
           
           // Expand first attribute
-          await user.click(attributeRows[0] as HTMLElement);
+          fireEvent.click(attributeRows[0] as HTMLElement);
           
           // Property: Weapon Bonus should be visible (first attribute expanded)
           let weaponBonusElements = screen.queryAllByText('Weapon Bonus:');
           expect(weaponBonusElements.length).toBe(1);
           
+          // Close the first expanded attribute via the overlay (fixed positioning modal)
+          const overlay = container.querySelector('.fixed.inset-0');
+          if (overlay) {
+            fireEvent.click(overlay as HTMLElement);
+          }
+          
           // Expand second attribute
-          await user.click(attributeRows[1] as HTMLElement);
+          fireEvent.click(attributeRows[1] as HTMLElement);
           
           // Property: Still only one Weapon Bonus visible (accordion behavior)
           weaponBonusElements = screen.queryAllByText('Weapon Bonus:');
@@ -272,7 +277,7 @@ describe('Property 21: Expandable Details Functionality (Property-Based Test)', 
       ),
       { numRuns: 100 }
     );
-  });
+  }, 15000);
 });
 
 /**

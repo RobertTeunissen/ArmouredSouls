@@ -112,7 +112,7 @@ describe('TutorialSettings', () => {
     });
 
     it('should display fallback error message for unknown errors', async () => {
-      mockGetTutorialState.mockRejectedValue(new Error(''));
+      mockGetTutorialState.mockRejectedValue('unknown error');
       renderComponent();
 
       await waitFor(() => {

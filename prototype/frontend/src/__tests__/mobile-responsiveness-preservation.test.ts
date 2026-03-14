@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fc from 'fast-check';
 import { renderHook } from '@testing-library/react';
-import { render } from '@testing-library/react';
-import React from 'react';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Preservation Property Tests - Desktop Layout and Functionality Unchanged
@@ -124,9 +124,6 @@ describe('Preservation: Desktop Layout and Functionality Unchanged (≥1024px)',
       // This is a source-level preservation check: the Navigation component
       // must maintain the `hidden lg:block` class pattern on the desktop nav element.
       // This ensures the lg: breakpoint (1024px) is the switching point.
-      const fs = require('fs');
-      const path = require('path');
-
       fc.assert(
         fc.property(
           fc.integer({ min: 1024, max: 1920 }),
@@ -163,9 +160,6 @@ describe('Preservation: Desktop Layout and Functionality Unchanged (≥1024px)',
    */
   describe('Property: Desktop page layouts do not use mobile-only stacking classes', () => {
     it('DashboardPage header uses horizontal flex layout (not flex-col) for all desktop viewports', () => {
-      const fs = require('fs');
-      const path = require('path');
-
       fc.assert(
         fc.property(
           fc.integer({ min: 1024, max: 1920 }),
@@ -195,9 +189,6 @@ describe('Preservation: Desktop Layout and Functionality Unchanged (≥1024px)',
     });
 
     it('No page uses standalone flex-col without lg:flex-row qualifier in main layout containers', () => {
-      const fs = require('fs');
-      const path = require('path');
-
       // Representative pages that have desktop horizontal layouts
       const LAYOUT_PAGES = [
         'DashboardPage.tsx',

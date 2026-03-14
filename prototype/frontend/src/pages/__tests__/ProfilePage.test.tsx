@@ -28,6 +28,11 @@ vi.mock('../../components/Navigation', () => ({
   default: () => <div data-testid="navigation">Navigation</div>,
 }));
 
+// Mock TutorialSettings component
+vi.mock('../../components/TutorialSettings', () => ({
+  default: () => <div data-testid="tutorial-settings">Tutorial Settings</div>,
+}));
+
 // Mock userApi
 vi.mock('../../utils/userApi');
 
@@ -133,7 +138,9 @@ describe('ProfilePage', () => {
         expect(screen.getByText('My Profile')).toBeInTheDocument();
       });
 
-      const newPasswordInput = screen.getByLabelText('New Password');
+      // The "New Password" label is not associated via htmlFor, so find by input type
+      const passwordInputs = document.querySelectorAll('input[type="password"]');
+      const newPasswordInput = passwordInputs[1] as HTMLInputElement; // Second password input
       
       // Enter invalid password (too short)
       fireEvent.change(newPasswordInput, { target: { value: 'short' } });
@@ -227,10 +234,12 @@ describe('ProfilePage', () => {
       const stableNameInput = screen.getByPlaceholderText('testuser');
       fireEvent.change(stableNameInput, { target: { value: 'New Stable Name' } });
 
-      // Find button by text before it changes
-      const saveButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Save Changes');
-      expect(saveButton).toBeDefined();
-      fireEvent.click(saveButton!);
+      // Wait for button to become available after state update
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Save Changes/i })).toBeInTheDocument();
+      });
+      
+      fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Profile updated successfully!')).toBeInTheDocument();
@@ -257,9 +266,8 @@ describe('ProfilePage', () => {
       const stableNameInput = screen.getByPlaceholderText('testuser');
       fireEvent.change(stableNameInput, { target: { value: 'Taken Name' } });
 
-      const saveButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Save Changes');
-      expect(saveButton).toBeDefined();
-      fireEvent.click(saveButton!);
+      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      fireEvent.click(saveButton);
 
       await waitFor(() => {
         expect(screen.getByText('This stable name is already taken')).toBeInTheDocument();
@@ -289,9 +297,8 @@ describe('ProfilePage', () => {
       const stableNameInput = screen.getByPlaceholderText('testuser');
       fireEvent.change(stableNameInput, { target: { value: 'BadWord' } });
 
-      const saveButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Save Changes');
-      expect(saveButton).toBeDefined();
-      fireEvent.click(saveButton!);
+      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      fireEvent.click(saveButton);
 
       await waitFor(() => {
         expect(screen.getByText('Stable name contains inappropriate content')).toBeInTheDocument();
@@ -313,9 +320,8 @@ describe('ProfilePage', () => {
       const stableNameInput = screen.getByPlaceholderText('testuser');
       fireEvent.change(stableNameInput, { target: { value: 'New Name' } });
 
-      const saveButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Save Changes');
-      expect(saveButton).toBeDefined();
-      fireEvent.click(saveButton!);
+      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      fireEvent.click(saveButton);
 
       await waitFor(() => {
         expect(screen.getByText('Network error. Please check your connection and try again.')).toBeInTheDocument();
@@ -336,9 +342,8 @@ describe('ProfilePage', () => {
       fireEvent.change(stableNameInput, { target: { value: 'New Stable Name' } });
 
       // Get button before it changes to "Saving..."
-      const saveButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Save Changes');
-      expect(saveButton).toBeDefined();
-      fireEvent.click(saveButton!);
+      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      fireEvent.click(saveButton);
 
       await waitFor(() => {
         expect(userApi.updateProfile).toHaveBeenCalledWith({
@@ -357,10 +362,9 @@ describe('ProfilePage', () => {
       });
 
       const stableNameInput = screen.getByPlaceholderText('testuser') as HTMLInputElement;
-      const saveButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Save Changes');
+      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
       
       // Initially save button should be disabled
-      expect(saveButton).toBeDefined();
       expect(saveButton).toBeDisabled();
       
       // Make a change
@@ -372,9 +376,8 @@ describe('ProfilePage', () => {
       });
 
       // Click cancel
-      const cancelButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Cancel');
-      expect(cancelButton).toBeDefined();
-      fireEvent.click(cancelButton!);
+      const cancelButton = screen.getByRole('button', { name: /Cancel/i });
+      fireEvent.click(cancelButton);
 
       // Save button should be disabled again after cancel
       await waitFor(() => {
