@@ -2099,6 +2099,193 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, async (req:
 });
 
 /**
+ * GET /api/admin/users/recent
+ * Get real (non-auto-generated) users registered in the last X cycles, with their robots and activity status.
+ * Query params:
+ *   - cycles: number of recent cycles to look back (default: 10)
+ */
+router.get('/users/recent', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const cyclesBack = Math.min(Math.max(1, parseInt(req.query.cycles as string) || 10), 200);
+
+    // Get current cycle number
+    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+    const currentCycle = cycleMetadata?.totalCycles || 0;
+
+    // Get the timestamp of the cycle we're looking back to (from cycle snapshots)
+    let cutoffDate: Date | null = null;
+    const targetCycle = Math.max(0, currentCycle - cyclesBack);
+    if (targetCycle > 0) {
+      const snapshot = await prisma.cycleSnapshot.findUnique({
+        where: { cycleNumber: targetCycle },
+        select: { createdAt: true },
+      });
+      cutoffDate = snapshot?.createdAt || null;
+    }
+
+    // If no snapshot found, fall back to cycle metadata lastCycleAt minus rough estimate
+    if (!cutoffDate && cycleMetadata?.lastCycleAt) {
+      // Rough fallback: assume ~1 cycle per trigger, use creation time heuristic
+      cutoffDate = new Date(Date.now() - cyclesBack * 24 * 60 * 60 * 1000);
+    }
+
+    // Fetch real users (exclude auto-generated, seeded, and system users)
+    // Excluded patterns:
+    //   archetype_*  = auto-generated each cycle
+    //   test_user_*  = seeded WimpBot users
+    //   attr_*       = seeded attribute test users
+    //   bye_robot_user = system matchmaking placeholder
+    //   player1-5, admin = seeded dev accounts
+    const recentUsers = await prisma.user.findMany({
+      where: {
+        NOT: [
+          { username: { startsWith: 'archetype_' } },
+          { username: { startsWith: 'test_user_' } },
+          { username: { startsWith: 'attr_' } },
+          { username: 'bye_robot_user' },
+          { username: 'admin' },
+          { username: { startsWith: 'player' } },
+        ],
+        ...(cutoffDate ? { createdAt: { gte: cutoffDate } } : {}),
+      },
+      select: {
+        id: true,
+        username: true,
+        stableName: true,
+        currency: true,
+        role: true,
+        hasCompletedOnboarding: true,
+        onboardingSkipped: true,
+        onboardingStep: true,
+        onboardingStrategy: true,
+        createdAt: true,
+        robots: {
+          select: {
+            id: true,
+            name: true,
+            currentHP: true,
+            maxHP: true,
+            elo: true,
+            currentLeague: true,
+            totalBattles: true,
+            wins: true,
+            losses: true,
+            draws: true,
+            battleReadiness: true,
+            mainWeaponId: true,
+            offhandWeaponId: true,
+            loadoutType: true,
+            stance: true,
+            createdAt: true,
+          },
+        },
+        facilities: {
+          where: { level: { gt: 0 } },
+          select: {
+            facilityType: true,
+            level: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Enrich each user with activity indicators
+    const usersWithActivity = recentUsers.map((user) => {
+      const robots = user.robots;
+      const totalRobots = robots.length;
+      const battleReadyRobots = robots.filter(
+        (r) => r.battleReadiness >= 80 && r.mainWeaponId !== null
+      ).length;
+      const robotsWithBattles = robots.filter((r) => r.totalBattles > 0).length;
+      const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
+      const totalWins = robots.reduce((sum, r) => sum + r.wins, 0);
+
+      // Determine user status / potential issues
+      const issues: string[] = [];
+      if (!user.hasCompletedOnboarding && !user.onboardingSkipped) {
+        issues.push(`Stuck in onboarding (step ${user.onboardingStep})`);
+      }
+      if (totalRobots === 0) {
+        issues.push('No robots created');
+      }
+      if (totalRobots > 0 && battleReadyRobots === 0) {
+        issues.push('No battle-ready robots');
+      }
+      if (totalRobots > 0 && robots.every((r) => r.mainWeaponId === null)) {
+        issues.push('No weapons equipped');
+      }
+      if (totalRobots > 0 && robotsWithBattles === 0 && user.hasCompletedOnboarding) {
+        issues.push('Completed onboarding but no battles yet');
+      }
+      if (user.currency < 10000 && totalRobots > 0) {
+        issues.push('Low balance');
+      }
+
+      return {
+        userId: user.id,
+        username: user.username,
+        stableName: user.stableName,
+        currency: user.currency,
+        role: user.role,
+        createdAt: user.createdAt,
+        onboarding: {
+          completed: user.hasCompletedOnboarding,
+          skipped: user.onboardingSkipped,
+          currentStep: user.onboardingStep,
+          strategy: user.onboardingStrategy,
+        },
+        robots: robots.map((r) => ({
+          id: r.id,
+          name: r.name,
+          currentHP: r.currentHP,
+          maxHP: r.maxHP,
+          hpPercent: r.maxHP > 0 ? Math.round((r.currentHP / r.maxHP) * 100) : 0,
+          elo: r.elo,
+          league: r.currentLeague,
+          totalBattles: r.totalBattles,
+          wins: r.wins,
+          losses: r.losses,
+          draws: r.draws,
+          winRate: r.totalBattles > 0 ? Math.round((r.wins / r.totalBattles) * 100) : 0,
+          battleReady: r.battleReadiness >= 80 && r.mainWeaponId !== null,
+          hasWeapon: r.mainWeaponId !== null,
+          loadout: r.loadoutType,
+          stance: r.stance,
+          createdAt: r.createdAt,
+        })),
+        summary: {
+          totalRobots,
+          battleReadyRobots,
+          robotsWithBattles,
+          totalBattles,
+          totalWins,
+          winRate: totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0,
+          facilitiesPurchased: user.facilities.length,
+        },
+        issues,
+      };
+    });
+
+    res.json({
+      currentCycle,
+      cyclesBack,
+      cutoffDate: cutoffDate?.toISOString() || null,
+      totalUsers: usersWithActivity.length,
+      usersWithIssues: usersWithActivity.filter((u) => u.issues.length > 0).length,
+      users: usersWithActivity,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('[Admin] Recent users error:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve recent users',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
  * GET /api/admin/scheduler/status
  * Return the current state of the Cycle Scheduler
  */
