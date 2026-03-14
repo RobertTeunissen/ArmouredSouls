@@ -17,7 +17,7 @@ const getAuthHeaders = () => {
   };
 };
 
-type TabType = 'dashboard' | 'cycles' | 'battles' | 'tournaments' | 'stats' | 'system-health';
+type TabType = 'dashboard' | 'cycles' | 'battles' | 'tournaments' | 'stats' | 'system-health' | 'recent-users';
 
 interface SessionLogEntry {
   timestamp: string;
@@ -303,11 +303,11 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     // Get tab from localStorage or URL hash
     const hash = window.location.hash.replace('#', '');
-    if (['dashboard', 'cycles', 'battles', 'tournaments', 'stats', 'system-health'].includes(hash)) {
+    if (['dashboard', 'cycles', 'battles', 'tournaments', 'stats', 'system-health', 'recent-users'].includes(hash)) {
       return hash as TabType;
     }
     const stored = localStorage.getItem('adminActiveTab');
-    return (stored && ['dashboard', 'cycles', 'battles', 'tournaments', 'stats', 'system-health'].includes(stored)) 
+    return (stored && ['dashboard', 'cycles', 'battles', 'tournaments', 'stats', 'system-health', 'recent-users'].includes(stored)) 
       ? stored as TabType 
       : 'dashboard';
   });
@@ -367,6 +367,67 @@ function AdminPage() {
   const [atRiskUsers, setAtRiskUsers] = useState<AtRiskUsersResponse | null>(null);
   const [atRiskLoading, setAtRiskLoading] = useState(false);
   const [showAtRiskUsers, setShowAtRiskUsers] = useState(false);
+
+  // Recent users state
+  interface RecentUserRobot {
+    id: number;
+    name: string;
+    currentHP: number;
+    maxHP: number;
+    hpPercent: number;
+    elo: number;
+    league: string;
+    totalBattles: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+    battleReady: boolean;
+    hasWeapon: boolean;
+    loadout: string;
+    stance: string;
+    createdAt: string;
+  }
+
+  interface RecentUser {
+    userId: number;
+    username: string;
+    stableName: string | null;
+    currency: number;
+    role: string;
+    createdAt: string;
+    onboarding: {
+      completed: boolean;
+      skipped: boolean;
+      currentStep: number;
+      strategy: string | null;
+    };
+    robots: RecentUserRobot[];
+    summary: {
+      totalRobots: number;
+      battleReadyRobots: number;
+      robotsWithBattles: number;
+      totalBattles: number;
+      totalWins: number;
+      winRate: number;
+      facilitiesPurchased: number;
+    };
+    issues: string[];
+  }
+
+  interface RecentUsersResponse {
+    currentCycle: number;
+    cyclesBack: number;
+    cutoffDate: string | null;
+    totalUsers: number;
+    usersWithIssues: number;
+    users: RecentUser[];
+    timestamp: string;
+  }
+
+  const [recentUsers, setRecentUsers] = useState<RecentUsersResponse | null>(null);
+  const [recentUsersLoading, setRecentUsersLoading] = useState(false);
+  const [recentUsersCycles, setRecentUsersCycles] = useState(10);
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -684,6 +745,23 @@ function AdminPage() {
     }
   };
 
+  const fetchRecentUsers = async (cycles?: number) => {
+    setRecentUsersLoading(true);
+    try {
+      const c = cycles ?? recentUsersCycles;
+      const response = await axios.get(`/api/admin/users/recent?cycles=${c}`, getAuthHeaders());
+      setRecentUsers(response.data);
+      addSessionLog('success', `Loaded ${response.data.totalUsers} recent users (last ${c} cycles)`);
+      showMessage('success', `Found ${response.data.totalUsers} real users (${response.data.usersWithIssues} with issues)`);
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const errorMsg = error.response?.data?.error || error.message || 'Failed to fetch recent users';
+      addSessionLog('error', `Failed to fetch recent users: ${errorMsg}`, error.response?.data);
+      showMessage('error', errorMsg);
+    } finally {
+      setRecentUsersLoading(false);
+    }
+  };
+
   // Auto-load stats and battles when component mounts
   useEffect(() => {
     fetchStats(); // Load system statistics by default
@@ -699,6 +777,14 @@ function AdminPage() {
         // Auto-load on first view
         fetchRobotStats();
       }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // Auto-load recent users when tab is first viewed
+  useEffect(() => {
+    if (activeTab === 'recent-users' && !recentUsers && !recentUsersLoading) {
+      fetchRecentUsers();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -822,6 +908,20 @@ function AdminPage() {
               }`}
             >
               🏥 System Health
+            </button>
+            <button
+              id="recent-users-tab"
+              role="tab"
+              aria-selected={activeTab === 'recent-users'}
+              aria-controls="recent-users-panel"
+              onClick={() => switchTab('recent-users')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'recent-users'
+                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              👥 Recent Users
             </button>
           </div>
         </div>
@@ -1924,6 +2024,213 @@ function AdminPage() {
         {activeTab === 'system-health' && (
           <div role="tabpanel" id="system-health-panel" aria-labelledby="system-health-tab">
             <SystemHealthPage />
+          </div>
+        )}
+
+        {/* Recent Users Tab */}
+        {activeTab === 'recent-users' && (
+          <div role="tabpanel" id="recent-users-panel" aria-labelledby="recent-users-tab" className="space-y-6">
+            {/* Controls */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">👥 Recent Real Users</h2>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Registered users only — excludes auto-generated bots, WimpBots, and seeded test accounts
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-400">
+                    Last
+                    <input
+                      type="number"
+                      min="1"
+                      max="200"
+                      value={recentUsersCycles}
+                      onChange={(e) => setRecentUsersCycles(Math.max(1, Math.min(200, parseInt(e.target.value) || 10)))}
+                      className="mx-2 bg-gray-700 text-white px-3 py-1 rounded w-20 text-center"
+                    />
+                    cycles
+                  </label>
+                  <button
+                    onClick={() => fetchRecentUsers()}
+                    disabled={recentUsersLoading}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+                  >
+                    {recentUsersLoading ? 'Loading...' : recentUsers ? 'Refresh' : 'Load Users'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Summary cards */}
+              {recentUsers && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="bg-gray-700 rounded p-3">
+                    <p className="text-gray-400">Total Real Users</p>
+                    <p className="text-2xl font-bold text-blue-400">{recentUsers.totalUsers}</p>
+                  </div>
+                  <div className="bg-gray-700 rounded p-3">
+                    <p className="text-gray-400">With Issues</p>
+                    <p className={`text-2xl font-bold ${recentUsers.usersWithIssues > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
+                      {recentUsers.usersWithIssues}
+                    </p>
+                  </div>
+                  <div className="bg-gray-700 rounded p-3">
+                    <p className="text-gray-400">Current Cycle</p>
+                    <p className="text-2xl font-bold">{recentUsers.currentCycle}</p>
+                  </div>
+                  <div className="bg-gray-700 rounded p-3">
+                    <p className="text-gray-400">Looking Back</p>
+                    <p className="text-2xl font-bold">{recentUsers.cyclesBack} cycles</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* User list */}
+            {recentUsersLoading && (
+              <div className="text-center py-8 text-gray-400">
+                <div className="animate-pulse">Loading recent users...</div>
+              </div>
+            )}
+
+            {!recentUsers && !recentUsersLoading && (
+              <div className="text-center py-8 text-gray-400">
+                <p>Click &quot;Load Users&quot; to see recently registered real users and their activity</p>
+              </div>
+            )}
+
+            {recentUsers && recentUsers.users.length === 0 && (
+              <div className="bg-gray-800 rounded-lg p-6 text-center text-gray-400">
+                <p>No real users registered in the last {recentUsers.cyclesBack} cycles.</p>
+                <p className="text-sm mt-2">Try increasing the cycle range.</p>
+              </div>
+            )}
+
+            {recentUsers && recentUsers.users.length > 0 && (
+              <div className="space-y-4">
+                {recentUsers.users.map((user) => (
+                  <div key={user.userId} className={`bg-gray-800 rounded-lg p-5 ${user.issues.length > 0 ? 'border-l-4 border-yellow-500' : ''}`}>
+                    {/* User header */}
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold">{user.stableName || user.username}</span>
+                          {user.stableName && <span className="text-sm text-gray-400">@{user.username}</span>}
+                          {user.role === 'admin' && <span className="px-2 py-0.5 bg-red-800 rounded text-xs">admin</span>}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Registered: {new Date(user.createdAt).toLocaleString()} · ID: {user.userId}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm">₡{user.currency.toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">
+                          {user.summary.totalRobots} robot{user.summary.totalRobots !== 1 ? 's' : ''} · {user.summary.facilitiesPurchased} facilit{user.summary.facilitiesPurchased !== 1 ? 'ies' : 'y'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Onboarding status */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {user.onboarding.completed ? (
+                        <span className="px-2 py-1 bg-green-900 text-green-300 rounded text-xs">✓ Onboarding complete</span>
+                      ) : user.onboarding.skipped ? (
+                        <span className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs">⏭ Onboarding skipped</span>
+                      ) : (
+                        <span className="px-2 py-1 bg-yellow-900 text-yellow-300 rounded text-xs">
+                          ⏳ Onboarding step {user.onboarding.currentStep}/9
+                          {user.onboarding.strategy && ` · ${user.onboarding.strategy}`}
+                        </span>
+                      )}
+                      {user.summary.totalBattles > 0 && (
+                        <span className="px-2 py-1 bg-blue-900 text-blue-300 rounded text-xs">
+                          ⚔️ {user.summary.totalBattles} battles · {user.summary.winRate}% win rate
+                        </span>
+                      )}
+                      {user.summary.battleReadyRobots > 0 && (
+                        <span className="px-2 py-1 bg-green-900 text-green-300 rounded text-xs">
+                          🤖 {user.summary.battleReadyRobots}/{user.summary.totalRobots} battle ready
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Issues */}
+                    {user.issues.length > 0 && (
+                      <div className="mb-3 p-2 bg-yellow-900 bg-opacity-30 rounded">
+                        <p className="text-xs text-yellow-400 font-semibold mb-1">⚠️ Potential issues:</p>
+                        {user.issues.map((issue, idx) => (
+                          <p key={idx} className="text-xs text-yellow-300 ml-2">• {issue}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Robots table */}
+                    {user.robots.length > 0 && (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead className="bg-gray-700">
+                            <tr>
+                              <th className="p-2 text-left">Robot</th>
+                              <th className="p-2 text-left">HP</th>
+                              <th className="p-2 text-left">League</th>
+                              <th className="p-2 text-left">ELO</th>
+                              <th className="p-2 text-left">W/L/D</th>
+                              <th className="p-2 text-left">Win%</th>
+                              <th className="p-2 text-left">Loadout</th>
+                              <th className="p-2 text-left">Status</th>
+                              <th className="p-2 text-left">Created</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {user.robots.map((robot) => (
+                              <tr key={robot.id} className="border-t border-gray-700">
+                                <td className="p-2">
+                                  <Link to={`/robots/${robot.id}`} className="text-blue-400 hover:underline">
+                                    {robot.name}
+                                  </Link>
+                                </td>
+                                <td className="p-2">
+                                  <span className={robot.hpPercent < 50 ? 'text-red-400' : robot.hpPercent < 80 ? 'text-yellow-400' : 'text-green-400'}>
+                                    {robot.hpPercent}%
+                                  </span>
+                                  <span className="text-gray-500 ml-1">({robot.currentHP}/{robot.maxHP})</span>
+                                </td>
+                                <td className="p-2 capitalize">{robot.league}</td>
+                                <td className="p-2">{robot.elo}</td>
+                                <td className="p-2">{robot.wins}/{robot.losses}/{robot.draws}</td>
+                                <td className="p-2">{robot.totalBattles > 0 ? `${robot.winRate}%` : '-'}</td>
+                                <td className="p-2">
+                                  {robot.hasWeapon ? (
+                                    <span className="capitalize">{robot.loadout.replace('_', ' ')}</span>
+                                  ) : (
+                                    <span className="text-red-400">No weapon</span>
+                                  )}
+                                  {' · '}
+                                  <span className="capitalize text-gray-400">{robot.stance}</span>
+                                </td>
+                                <td className="p-2">
+                                  {robot.battleReady ? (
+                                    <span className="text-green-400">Ready</span>
+                                  ) : (
+                                    <span className="text-red-400">Not ready</span>
+                                  )}
+                                </td>
+                                <td className="p-2 text-gray-400">{new Date(robot.createdAt).toLocaleDateString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {user.robots.length === 0 && (
+                      <p className="text-sm text-gray-500 italic">No robots created yet</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
