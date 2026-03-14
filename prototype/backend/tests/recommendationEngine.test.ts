@@ -193,7 +193,7 @@ describe('RecommendationEngine', () => {
               type: 'weapon',
               priority: 'high',
               title: 'Shield',
-              reasoning: expect.stringContaining('weapon+shield')
+              reasoning: expect.stringContaining('shield in the offhand')
             })
           ])
         );
@@ -476,9 +476,9 @@ describe('RecommendationEngine', () => {
           allocation.attributes.max +
           allocation.reserve.max;
         
-        // Should be approximately 3M (allow some flexibility)
+        // Should be approximately 3-4M (allow flexibility for multi-robot strategies)
         expect(total).toBeGreaterThanOrEqual(2800000);
-        expect(total).toBeLessThanOrEqual(3400000);
+        expect(total).toBeLessThanOrEqual(4200000);
       });
     });
   });

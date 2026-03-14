@@ -9,13 +9,13 @@ interface ViewModeToggleProps {
 
 const ViewModeToggle: React.FC<ViewModeToggleProps> = ({ viewMode, onViewModeChange }) => {
   return (
-    <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1">
+    <div className="flex items-center gap-2 bg-surface rounded-lg p-1">
       <button
         onClick={() => onViewModeChange('card')}
         className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
           viewMode === 'card'
-            ? 'bg-blue-600 text-white'
-            : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            ? 'bg-primary text-white'
+            : 'text-secondary hover:text-white hover:bg-surface-elevated'
         }`}
         aria-label="Card View"
         title="Card View"
@@ -27,8 +27,8 @@ const ViewModeToggle: React.FC<ViewModeToggleProps> = ({ viewMode, onViewModeCha
         onClick={() => onViewModeChange('table')}
         className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
           viewMode === 'table'
-            ? 'bg-blue-600 text-white'
-            : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            ? 'bg-primary text-white'
+            : 'text-secondary hover:text-white hover:bg-surface-elevated'
         }`}
         aria-label="Table View"
         title="Table View"

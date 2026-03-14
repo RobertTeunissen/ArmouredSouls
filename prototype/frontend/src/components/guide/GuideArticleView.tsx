@@ -22,7 +22,7 @@ const GuideArticleView: React.FC<GuideArticleViewProps> = ({ article }) => {
         />
 
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{article.title}</h1>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-tertiary mb-6">
           Last updated: {new Date(article.lastUpdated).toLocaleDateString()}
         </p>
 
@@ -31,11 +31,11 @@ const GuideArticleView: React.FC<GuideArticleViewProps> = ({ article }) => {
         <GuideRelatedArticles relatedArticles={article.relatedArticles} />
 
         {/* Previous / Next navigation */}
-        <div className="mt-10 pt-6 border-t border-gray-700 flex flex-col sm:flex-row justify-between gap-3">
+        <div className="mt-10 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-3">
           {article.previousArticle ? (
             <Link
               to={`/guide/${article.previousArticle.sectionSlug}/${article.previousArticle.slug}`}
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors min-w-0"
+              className="flex items-center gap-2 text-sm text-secondary hover:text-white transition-colors min-w-0"
             >
               <span className="flex-shrink-0">←</span>
               <span>{article.previousArticle.title}</span>
@@ -46,7 +46,7 @@ const GuideArticleView: React.FC<GuideArticleViewProps> = ({ article }) => {
           {article.nextArticle ? (
             <Link
               to={`/guide/${article.nextArticle.sectionSlug}/${article.nextArticle.slug}`}
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors min-w-0 sm:text-right"
+              className="flex items-center gap-2 text-sm text-secondary hover:text-white transition-colors min-w-0 sm:text-right"
             >
               <span>{article.nextArticle.title}</span>
               <span className="flex-shrink-0">→</span>

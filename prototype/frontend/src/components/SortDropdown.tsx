@@ -39,7 +39,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ value, onChange, options })
       {/* Dropdown Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white hover:bg-gray-700 transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-surface border border-white/10 rounded-lg text-white hover:bg-surface-elevated transition-colors"
       >
         <span className="text-sm">Sort: {selectedOption?.label || 'None'}</span>
         <svg
@@ -59,7 +59,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ value, onChange, options })
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-10">
+        <div className="absolute right-0 mt-2 w-56 bg-surface border border-white/10 rounded-lg shadow-xl z-10">
           <div className="py-1">
             {options.map((option) => (
               <button
@@ -67,8 +67,8 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ value, onChange, options })
                 onClick={() => handleSelect(option.value)}
                 className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                   value === option.value
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700'
+                    ? 'bg-primary text-white'
+                    : 'text-secondary hover:bg-surface-elevated'
                 }`}
               >
                 {option.label}

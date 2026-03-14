@@ -13,7 +13,7 @@ const GuideBreadcrumb: React.FC<GuideBreadcrumbProps> = ({
   articleTitle,
 }) => {
   return (
-    <nav className="flex items-center text-sm text-gray-400 mb-4 min-w-0 flex-wrap gap-y-1" aria-label="Breadcrumb">
+    <nav className="flex items-center text-sm text-secondary mb-4 min-w-0 flex-wrap gap-y-1" aria-label="Breadcrumb">
       <Link to="/guide" className="hover:text-white transition-colors flex-shrink-0">
         Guide
       </Link>

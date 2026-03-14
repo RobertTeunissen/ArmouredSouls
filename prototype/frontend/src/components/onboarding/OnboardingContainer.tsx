@@ -48,10 +48,10 @@ const stepImports: Record<number, () => Promise<unknown>> = {
 
 /** Loading fallback shown while a step component is being loaded */
 const StepLoadingFallback = () => (
-  <div className="bg-surface p-8 rounded-lg border border-gray-700 text-center animate-pulse">
-    <div className="h-8 bg-gray-700 rounded w-48 mx-auto mb-4" />
-    <div className="h-4 bg-gray-700 rounded w-64 mx-auto mb-2" />
-    <div className="h-4 bg-gray-700 rounded w-56 mx-auto" />
+  <div className="bg-surface p-8 rounded-lg border border-white/10 text-center animate-pulse">
+    <div className="h-8 bg-surface-elevated rounded w-48 mx-auto mb-4" />
+    <div className="h-4 bg-surface-elevated rounded w-64 mx-auto mb-2" />
+    <div className="h-4 bg-surface-elevated rounded w-56 mx-auto" />
   </div>
 );
 
@@ -119,7 +119,7 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl text-gray-400">Loading tutorial...</div>
+          <div className="text-xl text-secondary">Loading tutorial...</div>
         </div>
       </div>
     );
@@ -134,7 +134,7 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
           <h2 className="text-xl font-bold text-error mb-2">
             {isNetwork ? 'Connection Problem' : 'Failed to Load Tutorial'}
           </h2>
-          <p className="text-gray-400 mb-4">
+          <p className="text-secondary mb-4">
             {isNetwork
               ? 'Unable to reach the server. Please check your internet connection.'
               : error}
@@ -142,13 +142,13 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => retry()}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors text-white"
+              className="px-6 py-2 bg-primary hover:bg-primary-dark rounded transition-colors text-white min-h-[44px]"
             >
               Retry
             </button>
             <button
               onClick={() => { window.location.href = '/dashboard'; }}
-              className="px-6 py-2 border border-gray-600 hover:border-gray-400 rounded transition-colors text-gray-300"
+              className="px-6 py-2 border border-gray-600 hover:border-gray-400 rounded transition-colors text-secondary min-h-[44px]"
             >
               Go to Dashboard
             </button>
@@ -163,7 +163,7 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl text-gray-400">No tutorial state found</div>
+          <div className="text-xl text-secondary">No tutorial state found</div>
         </div>
       </div>
     );
@@ -175,12 +175,12 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4 text-gray-100">Tutorial Already Completed</h2>
-          <p className="text-gray-400 mb-6">
+          <p className="text-secondary mb-6">
             You've already completed the onboarding tutorial.
           </p>
           <button
             onClick={() => window.location.href = '/dashboard'}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors"
+            className="px-6 py-2 bg-primary hover:bg-primary-dark rounded transition-colors min-h-[44px]"
           >
             Go to Dashboard
           </button>
@@ -275,7 +275,7 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
       </div>
 
       {/* Header with progress and budget */}
-      <div className="bg-surface border-b border-gray-700 sticky top-0 z-50">
+      <div className="bg-surface border-b border-white/10 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -286,7 +286,7 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
             </div>
             <button
               onClick={() => setShowSkipConfirmation(true)}
-              className="flex-shrink-0 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-600 hover:border-gray-400 rounded transition-colors cursor-pointer"
+              className="flex-shrink-0 px-4 py-2 text-sm text-secondary hover:text-white hover:bg-surface-elevated border border-gray-600 hover:border-gray-400 rounded transition-colors cursor-pointer min-h-[44px]"
               aria-label="Skip Tutorial"
               type="button"
             >

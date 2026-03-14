@@ -70,16 +70,16 @@ function RecentMatches() {
 
   if (loading) {
     return (
-      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h2 className="text-lg font-semibold mb-3">Recent Matches</h2>
-        <p className="text-sm text-gray-400">Loading...</p>
+        <p className="text-sm text-secondary">Loading...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h2 className="text-lg font-semibold mb-3">Recent Matches</h2>
         <p className="text-sm text-error">{error}</p>
       </div>
@@ -88,15 +88,15 @@ function RecentMatches() {
 
   if (matches.length === 0) {
     return (
-      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h2 className="text-lg font-semibold mb-3">Recent Matches</h2>
-        <p className="text-sm text-gray-400">No recent matches</p>
+        <p className="text-sm text-secondary">No recent matches</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-surface p-4 rounded-lg border border-gray-700">
+    <div className="bg-surface p-4 rounded-lg border border-white/10">
       <div className="flex justify-between items-center mb-3">
         <h2 className="text-lg font-semibold">Recent Matches</h2>
         <button

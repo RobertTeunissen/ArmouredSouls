@@ -430,7 +430,7 @@ async function executeSettlement(): Promise<JobContext> {
 
 // --- Job runner with concurrency lock, logging, and error handling ---
 
-export async function runJob(jobName: JobState['name'], handler: () => Promise<JobContext>): Promise<void> {
+export async function runJob(jobName: JobState['name'], handler: () => Promise<JobContext | void>): Promise<void> {
   await acquireLock(jobName);
 
   const state = jobStates.get(jobName);
@@ -455,11 +455,13 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
 
     // Dispatch success notification
     try {
-      const appBaseUrl = process.env.APP_BASE_URL || '';
-      const message = buildSuccessMessage(jobContext, appBaseUrl);
-      if (message) {
-        const integrations = getActiveIntegrations();
-        await dispatchNotification(message, integrations);
+      if (jobContext) {
+        const appBaseUrl = process.env.APP_BASE_URL || '';
+        const message = buildSuccessMessage(jobContext, appBaseUrl);
+        if (message) {
+          const integrations = getActiveIntegrations();
+          await dispatchNotification(message, integrations);
+        }
       }
     } catch (notifyError) {
       logger.error(`Scheduler: notification dispatch failed for "${jobName}" — ${notifyError instanceof Error ? notifyError.message : String(notifyError)}`);

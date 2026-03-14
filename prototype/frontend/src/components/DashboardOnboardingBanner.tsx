@@ -50,11 +50,11 @@ function DashboardOnboardingBanner({ onboardingState }: DashboardOnboardingBanne
             <span className="text-sm font-semibold text-white">
               Setup Progress
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-secondary">
               Step {onboardingState.currentStep} of {totalSteps}
             </span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-1.5">
+          <div className="w-full bg-surface-elevated rounded-full h-1.5">
             <div
               className="bg-primary h-1.5 rounded-full transition-all"
               data-testid="onboarding-progress-bar"

@@ -202,10 +202,10 @@ function FacilitiesPage() {
   };
 
   const getROIColor = (roiPercentage: number): string => {
-    if (roiPercentage >= 50) return 'text-green-400';
-    if (roiPercentage >= 20) return 'text-blue-400';
-    if (roiPercentage >= 0) return 'text-yellow-400';
-    return 'text-red-400';
+    if (roiPercentage >= 50) return 'text-success';
+    if (roiPercentage >= 20) return 'text-primary';
+    if (roiPercentage >= 0) return 'text-warning';
+    return 'text-error';
   };
 
   const handleUpgrade = async (facilityType: string) => {
@@ -252,7 +252,7 @@ function FacilitiesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
@@ -260,15 +260,15 @@ function FacilitiesPage() {
 
         {/* Tab Navigation */}
         <div className="mb-6">
-          <div className="border-b border-gray-700">
+          <div className="border-b border-white/10">
             <nav className="-mb-px flex space-x-8">
               <button
                 onClick={() => setActiveTab('facilities')}
                 className={`
                   py-4 px-1 border-b-2 font-medium text-sm transition-colors
                   ${activeTab === 'facilities'
-                    ? 'border-blue-500 text-blue-500'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                    ? 'border-blue-500 text-primary'
+                    : 'border-transparent text-secondary hover:text-secondary hover:border-gray-300'
                   }
                 `}
               >
@@ -279,8 +279,8 @@ function FacilitiesPage() {
                 className={`
                   py-4 px-1 border-b-2 font-medium text-sm transition-colors
                   ${activeTab === 'investments'
-                    ? 'border-blue-500 text-blue-500'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                    ? 'border-blue-500 text-primary'
+                    : 'border-transparent text-secondary hover:text-secondary hover:border-gray-300'
                   }
                 `}
               >
@@ -291,8 +291,8 @@ function FacilitiesPage() {
                 className={`
                   py-4 px-1 border-b-2 font-medium text-sm transition-colors
                   ${activeTab === 'advisor'
-                    ? 'border-blue-500 text-blue-500'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                    ? 'border-blue-500 text-primary'
+                    : 'border-transparent text-secondary hover:text-secondary hover:border-gray-300'
                   }
                 `}
               >
@@ -326,17 +326,17 @@ function FacilitiesPage() {
                   {/* Category Header */}
                   <button
                     onClick={() => toggleCategory(category.id)}
-                    className="w-full bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors text-left"
+                    className="w-full bg-surface p-4 rounded-lg border border-white/10 hover:border-gray-600 transition-colors text-left"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <span className="text-3xl">{category.icon}</span>
                         <div>
                           <h3 className="text-xl font-semibold">{category.name}</h3>
-                          <p className="text-sm text-gray-400 mt-1">{category.description}</p>
+                          <p className="text-sm text-secondary mt-1">{category.description}</p>
                         </div>
                       </div>
-                      <span className="text-2xl text-gray-400">
+                      <span className="text-2xl text-secondary">
                         {isCollapsed ? '▼' : '▲'}
                       </span>
                     </div>
@@ -348,7 +348,7 @@ function FacilitiesPage() {
                       {categoryFacilities.map((facility) => (
                         <div 
                           key={facility.type} 
-                          className={`bg-gray-800 p-6 rounded-lg relative ${
+                          className={`bg-surface p-6 rounded-lg relative ${
                             facility.implemented 
                               ? 'border border-green-700/30' 
                               : 'border border-yellow-600/50 opacity-90'
@@ -375,35 +375,35 @@ function FacilitiesPage() {
                             
                             <div className="flex-1 min-w-0">
                               <h3 className="text-2xl font-semibold mb-2">{facility.name}</h3>
-                              <p className="text-gray-400 text-sm">{facility.description}</p>
+                              <p className="text-secondary text-sm">{facility.description}</p>
                             </div>
                           </div>
 
                           {/* Level Display with Progress Bar */}
                           <div className="mb-4">
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm text-gray-400">Level Progress</span>
+                              <span className="text-sm text-secondary">Level Progress</span>
                               <span className="text-lg font-bold">
                                 {facility.currentLevel}/{facility.maxLevel}
                               </span>
                             </div>
-                            <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div className="w-full bg-surface-elevated rounded-full h-2">
                               <div 
-                                className="bg-blue-600 h-2 rounded-full transition-all"
+                                className="bg-primary h-2 rounded-full transition-all"
                                 style={{ width: `${(facility.currentLevel / facility.maxLevel) * 100}%` }}
                               />
                             </div>
                           </div>
 
                           {facility.currentLevel > 0 && (
-                            <div className="mb-4 p-3 bg-gray-700 rounded">
-                              <div className="text-sm text-gray-400 mb-1">Current Benefit:</div>
-                              <div className="text-green-400">
+                            <div className="mb-4 p-3 bg-surface-elevated rounded">
+                              <div className="text-sm text-secondary mb-1">Current Benefit:</div>
+                              <div className="text-success">
                                 {facility.currentBenefit || facility.benefits[facility.currentLevel - 1]}
                               </div>
                               {facility.currentOperatingCost !== undefined && facility.currentOperatingCost > 0 && (
-                                <div className="text-xs text-gray-400 mt-2">
-                                  Operating Cost: <span className="text-red-400">₡{facility.currentOperatingCost.toLocaleString()}/day</span>
+                                <div className="text-xs text-secondary mt-2">
+                                  Operating Cost: <span className="text-error">₡{facility.currentOperatingCost.toLocaleString()}/day</span>
                                 </div>
                               )}
                             </div>
@@ -411,16 +411,16 @@ function FacilitiesPage() {
 
                           {facility.canUpgrade && facility.implemented && (
                             <>
-                              <div className="mb-4 p-3 bg-gray-700/50 rounded border border-gray-600">
-                                <div className="text-sm text-gray-400 mb-1">Next Level Benefit:</div>
-                                <div className="text-blue-400">
+                              <div className="mb-4 p-3 bg-surface-elevated/50 rounded border border-gray-600">
+                                <div className="text-sm text-secondary mb-1">Next Level Benefit:</div>
+                                <div className="text-primary">
                                   {facility.nextBenefit || facility.benefits[facility.currentLevel]}
                                 </div>
                                 {facility.nextOperatingCost !== undefined && facility.nextOperatingCost > 0 && (
-                                  <div className="text-xs text-gray-400 mt-2">
-                                    Operating Cost: <span className="text-red-400">₡{facility.nextOperatingCost.toLocaleString()}/day</span>
+                                  <div className="text-xs text-secondary mt-2">
+                                    Operating Cost: <span className="text-error">₡{facility.nextOperatingCost.toLocaleString()}/day</span>
                                     {facility.currentOperatingCost !== undefined && facility.currentOperatingCost > 0 && (
-                                      <span className="text-yellow-400 ml-2">
+                                      <span className="text-warning ml-2">
                                         (+₡{(facility.nextOperatingCost - facility.currentOperatingCost).toLocaleString()}/day)
                                       </span>
                                     )}
@@ -437,8 +437,8 @@ function FacilitiesPage() {
                                 }`}>
                                   <div className="flex items-center justify-between">
                                     <div className="text-sm">
-                                      <span className="text-gray-400">Prestige Required: </span>
-                                      <span className={facility.hasPrestige ? 'text-green-400' : 'text-red-400'}>
+                                      <span className="text-secondary">Prestige Required: </span>
+                                      <span className={facility.hasPrestige ? 'text-success' : 'text-error'}>
                                         {facility.nextLevelPrestigeRequired.toLocaleString()}
                                       </span>
                                     </div>
@@ -447,7 +447,7 @@ function FacilitiesPage() {
                                     </span>
                                   </div>
                                   {!facility.hasPrestige && (
-                                    <div className="text-xs text-gray-400 mt-1">
+                                    <div className="text-xs text-secondary mt-1">
                                       Current: {userPrestige.toLocaleString()} prestige
                                     </div>
                                   )}
@@ -456,7 +456,7 @@ function FacilitiesPage() {
 
                               <div className="flex justify-between items-center">
                                 <div className="text-lg">
-                                  Cost: <span className="text-green-400 font-semibold">
+                                  Cost: <span className="text-success font-semibold">
                                     ₡{facility.upgradeCost.toLocaleString()}
                                   </span>
                                 </div>
@@ -467,7 +467,7 @@ function FacilitiesPage() {
                                     (user.currency < facility.upgradeCost) ||
                                     !!(facility.nextLevelPrestigeRequired && !facility.hasPrestige)
                                   }
-                                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-2 rounded transition-colors"
+                                  className="bg-primary hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-2 rounded transition-colors"
                                   title={
                                     facility.nextLevelPrestigeRequired && !facility.hasPrestige
                                       ? `Requires ${facility.nextLevelPrestigeRequired.toLocaleString()} prestige`
@@ -479,12 +479,12 @@ function FacilitiesPage() {
                               </div>
 
                               {user.currency < facility.upgradeCost && (
-                                <div className="mt-2 text-sm text-red-400">
+                                <div className="mt-2 text-sm text-error">
                                   Insufficient credits
                                 </div>
                               )}
                               {!!(facility.nextLevelPrestigeRequired && !facility.hasPrestige) && (
-                                <div className="mt-2 text-sm text-red-400">
+                                <div className="mt-2 text-sm text-error">
                                   Insufficient prestige (need {facility.nextLevelPrestigeRequired.toLocaleString()})
                                 </div>
                               )}
@@ -492,14 +492,14 @@ function FacilitiesPage() {
                           )}
 
                           {facility.canUpgrade && !facility.implemented && (
-                            <div className="text-center py-3 bg-gray-700/50 rounded border border-yellow-600/50">
-                              <span className="text-yellow-400 font-semibold">Coming Soon</span>
+                            <div className="text-center py-3 bg-surface-elevated/50 rounded border border-yellow-600/50">
+                              <span className="text-warning font-semibold">Coming Soon</span>
                             </div>
                           )}
 
                           {!facility.canUpgrade && (
-                            <div className="text-center py-3 bg-gray-700 rounded">
-                              <span className="text-green-400 font-semibold">Maximum Level Reached</span>
+                            <div className="text-center py-3 bg-surface-elevated rounded">
+                              <span className="text-success font-semibold">Maximum Level Reached</span>
                             </div>
                           )}
                         </div>
@@ -522,25 +522,25 @@ function FacilitiesPage() {
                 ) : (
                   <>
                     {/* Current Facility Performance */}
-                    <div className="bg-gray-800 rounded-lg shadow p-6">
+                    <div className="bg-surface rounded-lg shadow p-6">
                       <h2 className="text-xl font-semibold mb-4">Current Facility Performance</h2>
-                      <p className="text-gray-400 text-sm mb-6">
+                      <p className="text-secondary text-sm mb-6">
                         Track the return on investment (ROI) for your Economy & Discounts facilities. 
                         Only facilities that generate income or reduce costs are shown here.
                       </p>
                       {facilityROIs.length > 0 ? (
                         <div className="space-y-4">
                           {facilityROIs.map((roi, idx) => (
-                            <div key={idx} className="border border-gray-700 rounded-lg p-4 bg-gray-750">
+                            <div key={idx} className="border border-white/10 rounded-lg p-4 bg-gray-750">
                               <div className="flex justify-between items-start mb-4">
                                 <div>
                                   <h3 className="font-semibold text-lg">
                                     {getFacilityDisplayName(roi.facilityType)}
                                   </h3>
-                                  <p className="text-sm text-gray-400">Level {roi.currentLevel}</p>
+                                  <p className="text-sm text-secondary">Level {roi.currentLevel}</p>
                                 </div>
                                 <div className="text-right">
-                                  <div className="text-sm text-gray-400">Net ROI</div>
+                                  <div className="text-sm text-secondary">Net ROI</div>
                                   <div className={`text-2xl font-bold ${getROIColor((roi.netROI ?? 0) * 100)}`}>
                                     {((roi.netROI ?? 0) * 100).toFixed(1)}%
                                   </div>
@@ -549,26 +549,26 @@ function FacilitiesPage() {
 
                               {/* Financial Metrics - Single Row */}
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                                <div className="bg-gray-700 p-2 rounded">
-                                  <div className="text-xs text-gray-400">Investment</div>
+                                <div className="bg-surface-elevated p-2 rounded">
+                                  <div className="text-xs text-secondary">Investment</div>
                                   <div className="font-semibold">₡{(roi.totalInvestment ?? 0).toLocaleString()}</div>
                                 </div>
                                 <div className="bg-red-900 p-2 rounded">
-                                  <div className="text-xs text-gray-400">Operating Costs</div>
-                                  <div className="font-semibold text-red-400">
+                                  <div className="text-xs text-secondary">Operating Costs</div>
+                                  <div className="font-semibold text-error">
                                     ₡{(roi.totalOperatingCosts ?? 0).toLocaleString()}
                                   </div>
                                 </div>
                                 <div className="bg-green-900 p-2 rounded">
-                                  <div className="text-xs text-gray-400">Returns</div>
-                                  <div className="font-semibold text-green-400">
+                                  <div className="text-xs text-secondary">Returns</div>
+                                  <div className="font-semibold text-success">
                                     ₡{(roi.totalReturns ?? 0).toLocaleString()}
                                   </div>
                                 </div>
                                 <div className={`p-2 rounded ${((roi.totalReturns ?? 0) - (roi.totalInvestment ?? 0) - (roi.totalOperatingCosts ?? 0)) >= 0 ? 'bg-green-900' : 'bg-red-900'}`}>
-                                  <div className="text-xs text-gray-400">Net Profit</div>
+                                  <div className="text-xs text-secondary">Net Profit</div>
                                   <div className={`font-semibold ${
-                                    ((roi.totalReturns ?? 0) - (roi.totalInvestment ?? 0) - (roi.totalOperatingCosts ?? 0)) >= 0 ? 'text-green-400' : 'text-red-400'
+                                    ((roi.totalReturns ?? 0) - (roi.totalInvestment ?? 0) - (roi.totalOperatingCosts ?? 0)) >= 0 ? 'text-success' : 'text-error'
                                   }`}>
                                     ₡{((roi.totalReturns ?? 0) - (roi.totalInvestment ?? 0) - (roi.totalOperatingCosts ?? 0)).toLocaleString()}
                                   </div>
@@ -580,8 +580,8 @@ function FacilitiesPage() {
                                 <div>
                                   {roi.breakevenCycle !== null && roi.breakevenCycle !== undefined ? (
                                     <>
-                                      <span className="text-gray-400">Breakeven:</span>
-                                      <span className="ml-2 font-semibold text-blue-400">
+                                      <span className="text-secondary">Breakeven:</span>
+                                      <span className="ml-2 font-semibold text-primary">
                                         {currentCycle > 0 && roi.breakevenCycle <= currentCycle 
                                           ? `Achieved at cycle ${roi.breakevenCycle}`
                                           : currentCycle > 0 && roi.breakevenCycle > currentCycle
@@ -591,11 +591,11 @@ function FacilitiesPage() {
                                       </span>
                                     </>
                                   ) : (
-                                    <span className="text-yellow-400">Not yet profitable</span>
+                                    <span className="text-warning">Not yet profitable</span>
                                   )}
                                 </div>
                                 <div>
-                                  <span className="text-gray-400">Owned for:</span>
+                                  <span className="text-secondary">Owned for:</span>
                                   <span className="ml-2 font-semibold">
                                     {roi.cyclesSincePurchase ?? 0} cycles
                                   </span>
@@ -605,7 +605,7 @@ function FacilitiesPage() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-gray-500 text-center py-8">
+                        <div className="text-tertiary text-center py-8">
                           <p className="mb-2">No facility data available yet.</p>
                           <p className="text-sm">Purchase Economy & Discounts facilities to see ROI analysis.</p>
                         </div>
@@ -614,29 +614,29 @@ function FacilitiesPage() {
 
                     {/* What is ROI? */}
                     <div className="bg-blue-900/20 border border-blue-700/50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibold text-blue-400 mb-3 flex items-center">
+                      <h3 className="text-lg font-semibold text-primary mb-3 flex items-center">
                         <span className="mr-2">💡</span>
                         Understanding ROI (Return on Investment)
                       </h3>
-                      <div className="text-sm text-gray-300 space-y-2">
+                      <div className="text-sm text-secondary space-y-2">
                         <p>
                           <strong className="text-blue-300">ROI</strong> shows how much profit you&apos;ve made compared to what you invested.
                           A positive ROI means the facility has paid for itself and is generating profit.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                          <div className="bg-gray-800/50 p-3 rounded">
+                          <div className="bg-surface/50 p-3 rounded">
                             <div className="text-blue-300 font-semibold mb-1">Investment</div>
                             <div className="text-xs">Total credits spent on upgrades</div>
                           </div>
-                          <div className="bg-gray-800/50 p-3 rounded">
+                          <div className="bg-surface/50 p-3 rounded">
                             <div className="text-green-300 font-semibold mb-1">Returns</div>
                             <div className="text-xs">Income generated or costs saved</div>
                           </div>
-                          <div className="bg-gray-800/50 p-3 rounded">
+                          <div className="bg-surface/50 p-3 rounded">
                             <div className="text-red-300 font-semibold mb-1">Operating Costs</div>
                             <div className="text-xs">Daily maintenance costs</div>
                           </div>
-                          <div className="bg-gray-800/50 p-3 rounded">
+                          <div className="bg-surface/50 p-3 rounded">
                             <div className="text-blue-300 font-semibold mb-1">Breakeven</div>
                             <div className="text-xs">Cycle when facility pays for itself</div>
                           </div>
@@ -645,18 +645,18 @@ function FacilitiesPage() {
                     </div>
 
                     {/* Facility Tips */}
-                    <div className="bg-gray-800 p-6 rounded-lg">
+                    <div className="bg-surface p-6 rounded-lg">
                       <h3 className="text-lg font-semibold mb-3">📊 Facility Investment Tips</h3>
-                      <ul className="space-y-2 text-sm text-gray-300">
+                      <ul className="space-y-2 text-sm text-secondary">
                         <li className="flex items-start">
-                          <span className="text-green-400 mr-2 mt-0.5">•</span>
+                          <span className="text-success mr-2 mt-0.5">•</span>
                           <span>
                             <strong className="text-green-300">Merchandising Hub</strong> provides passive merchandising income every cycle.
                             Best for long-term stable growth.
                           </span>
                         </li>
                         <li className="flex items-start">
-                          <span className="text-blue-400 mr-2 mt-0.5">•</span>
+                          <span className="text-primary mr-2 mt-0.5">•</span>
                           <span>
                             <strong className="text-blue-300">Streaming Studio</strong> increases streaming revenue earned after every battle.
                             Great if you battle frequently.
@@ -670,7 +670,7 @@ function FacilitiesPage() {
                           </span>
                         </li>
                         <li className="flex items-start">
-                          <span className="text-yellow-400 mr-2 mt-0.5">•</span>
+                          <span className="text-warning mr-2 mt-0.5">•</span>
                           <span>
                             <strong className="text-yellow-300">Training Facility</strong> reduces attribute upgrade costs.
                             Valuable if you frequently train your robots.
@@ -700,14 +700,14 @@ function FacilitiesPage() {
                 ) : (
                   <>
                     {/* Analysis Period Selector */}
-                    <div className="bg-gray-800 rounded-lg shadow p-6">
+                    <div className="bg-surface rounded-lg shadow p-6">
                       <h2 className="text-xl font-semibold mb-4">Analysis Period</h2>
                       <div className="flex gap-4 items-center">
-                        <label className="text-sm font-medium text-gray-300">Last N Cycles:</label>
+                        <label className="text-sm font-medium text-secondary">Last N Cycles:</label>
                         <select
                           value={lastNCycles}
                           onChange={(e) => setLastNCycles(parseInt(e.target.value))}
-                          className="bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
+                          className="bg-surface-elevated border border-gray-600 text-white rounded px-3 py-2"
                         >
                           <option value={5}>5 cycles</option>
                           <option value={10}>10 cycles</option>
@@ -716,7 +716,7 @@ function FacilitiesPage() {
                         </select>
                         <button
                           onClick={fetchAdvisorData}
-                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                          className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700"
                         >
                           Refresh
                         </button>
@@ -724,21 +724,21 @@ function FacilitiesPage() {
                     </div>
 
                     {/* Investment Recommendations */}
-                    <div className="bg-gray-800 rounded-lg shadow p-6">
+                    <div className="bg-surface rounded-lg shadow p-6">
                       <h2 className="text-xl font-semibold mb-4">Investment Recommendations</h2>
                       {recommendations.length > 0 ? (
                         <div className="space-y-4">
                           {recommendations.map((rec, idx) => (
                             <div
                               key={idx}
-                              className="border border-gray-700 rounded-lg p-4 bg-gray-750 hover:shadow-md transition-shadow"
+                              className="border border-white/10 rounded-lg p-4 bg-gray-750 hover:shadow-md transition-shadow"
                             >
                               <div className="flex justify-between items-start mb-2">
                                 <div>
                                   <h3 className="font-semibold text-lg">
                                     {rec.facilityName || getFacilityDisplayName(rec.facilityType)}
                                   </h3>
-                                  <p className="text-sm text-gray-400">
+                                  <p className="text-sm text-secondary">
                                     Current Level: {rec.currentLevel} → Recommended Level: {rec.recommendedLevel}
                                   </p>
                                 </div>
@@ -746,7 +746,7 @@ function FacilitiesPage() {
                                   className={`px-3 py-1 rounded-full text-sm font-medium ${
                                     rec.priority === 'high' ? 'bg-green-900 text-green-300' :
                                     rec.priority === 'medium' ? 'bg-blue-900 text-blue-300' :
-                                    'bg-gray-700 text-gray-300'
+                                    'bg-surface-elevated text-secondary'
                                   }`}
                                 >
                                   {rec.priority.charAt(0).toUpperCase() + rec.priority.slice(1)} Priority
@@ -754,22 +754,22 @@ function FacilitiesPage() {
                               </div>
 
                               <div className="grid grid-cols-2 gap-4 mb-3">
-                                <div className="bg-gray-700 p-3 rounded">
-                                  <div className="text-sm text-gray-400">Upgrade Cost</div>
-                                  <div className="text-xl font-bold text-yellow-400">
+                                <div className="bg-surface-elevated p-3 rounded">
+                                  <div className="text-sm text-secondary">Upgrade Cost</div>
+                                  <div className="text-xl font-bold text-warning">
                                     ₡{(rec.upgradeCost ?? 0).toLocaleString()}
                                   </div>
                                 </div>
-                                <div className="bg-gray-700 p-3 rounded">
-                                  <div className="text-sm text-gray-400">
+                                <div className="bg-surface-elevated p-3 rounded">
+                                  <div className="text-sm text-secondary">
                                     {rec.projectedPayoffCycles !== null && rec.projectedPayoffCycles !== undefined 
                                       ? 'Payoff Period' 
                                       : 'Projected ROI'}
                                   </div>
                                   <div className={`text-xl font-bold ${
                                     rec.projectedPayoffCycles !== null && rec.projectedPayoffCycles !== undefined
-                                      ? (rec.projectedPayoffCycles <= 30 ? 'text-green-400' : 
-                                         rec.projectedPayoffCycles <= 100 ? 'text-yellow-400' : 'text-red-400')
+                                      ? (rec.projectedPayoffCycles <= 30 ? 'text-success' : 
+                                         rec.projectedPayoffCycles <= 100 ? 'text-warning' : 'text-error')
                                       : getROIColor((rec.projectedROI ?? 0) * 100)
                                   }`}>
                                     {rec.projectedPayoffCycles !== null && rec.projectedPayoffCycles !== undefined
@@ -779,35 +779,35 @@ function FacilitiesPage() {
                                 </div>
                               </div>
 
-                              <div className="text-sm text-gray-300 bg-blue-900 p-3 rounded">
+                              <div className="text-sm text-secondary bg-blue-900 p-3 rounded">
                                 <strong>Reason:</strong> {rec.reason}
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-gray-500 text-center py-8">
+                        <div className="text-tertiary text-center py-8">
                           No investment recommendations available. Continue playing to gather more data.
                         </div>
                       )}
                     </div>
 
                     {/* Current Facility ROI */}
-                    <div className="bg-gray-800 rounded-lg shadow p-6">
+                    <div className="bg-surface rounded-lg shadow p-6">
                       <h2 className="text-xl font-semibold mb-4">Current Facility Performance</h2>
                       {facilityROIs.length > 0 ? (
                         <div className="space-y-4">
                           {facilityROIs.map((roi, idx) => (
-                            <div key={idx} className="border border-gray-700 rounded-lg p-4 bg-gray-750">
+                            <div key={idx} className="border border-white/10 rounded-lg p-4 bg-gray-750">
                               <div className="flex justify-between items-start mb-4">
                                 <div>
                                   <h3 className="font-semibold text-lg">
                                     {getFacilityDisplayName(roi.facilityType)}
                                   </h3>
-                                  <p className="text-sm text-gray-400">Level {roi.currentLevel}</p>
+                                  <p className="text-sm text-secondary">Level {roi.currentLevel}</p>
                                 </div>
                                 <div className="text-right">
-                                  <div className="text-sm text-gray-400">Net ROI</div>
+                                  <div className="text-sm text-secondary">Net ROI</div>
                                   <div className={`text-2xl font-bold ${getROIColor((roi.netROI ?? 0) * 100)}`}>
                                     {((roi.netROI ?? 0) * 100).toFixed(1)}%
                                   </div>
@@ -815,19 +815,19 @@ function FacilitiesPage() {
                               </div>
 
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
-                                <div className="bg-gray-700 p-2 rounded">
-                                  <div className="text-xs text-gray-400">Investment</div>
+                                <div className="bg-surface-elevated p-2 rounded">
+                                  <div className="text-xs text-secondary">Investment</div>
                                   <div className="font-semibold">₡{(roi.totalInvestment ?? 0).toLocaleString()}</div>
                                 </div>
                                 <div className="bg-green-900 p-2 rounded">
-                                  <div className="text-xs text-gray-400">Returns</div>
-                                  <div className="font-semibold text-green-400">
+                                  <div className="text-xs text-secondary">Returns</div>
+                                  <div className="font-semibold text-success">
                                     ₡{(roi.totalReturns ?? 0).toLocaleString()}
                                   </div>
                                 </div>
                                 <div className="bg-red-900 p-2 rounded">
-                                  <div className="text-xs text-gray-400">Operating Costs</div>
-                                  <div className="font-semibold text-red-400">
+                                  <div className="text-xs text-secondary">Operating Costs</div>
+                                  <div className="font-semibold text-error">
                                     ₡{(roi.totalOperatingCosts ?? 0).toLocaleString()}
                                   </div>
                                 </div>
@@ -835,10 +835,10 @@ function FacilitiesPage() {
 
                               <div className="flex justify-between items-center text-sm">
                                 <div>
-                                  <span className="text-gray-400">Net Profit:</span>
+                                  <span className="text-secondary">Net Profit:</span>
                                   <span
                                     className={`ml-2 font-semibold ${
-                                      ((roi.totalReturns ?? 0) - (roi.totalInvestment ?? 0) - (roi.totalOperatingCosts ?? 0)) >= 0 ? 'text-green-400' : 'text-red-400'
+                                      ((roi.totalReturns ?? 0) - (roi.totalInvestment ?? 0) - (roi.totalOperatingCosts ?? 0)) >= 0 ? 'text-success' : 'text-error'
                                     }`}
                                   >
                                     ₡{((roi.totalReturns ?? 0) - (roi.totalInvestment ?? 0) - (roi.totalOperatingCosts ?? 0)).toLocaleString()}
@@ -847,17 +847,17 @@ function FacilitiesPage() {
                                 <div>
                                   {roi.breakevenCycle !== null && roi.breakevenCycle !== undefined ? (
                                     <>
-                                      <span className="text-gray-400">Breakeven:</span>
-                                      <span className="ml-2 font-semibold text-blue-400">
+                                      <span className="text-secondary">Breakeven:</span>
+                                      <span className="ml-2 font-semibold text-primary">
                                         Cycle {roi.breakevenCycle}
                                       </span>
                                     </>
                                   ) : (
-                                    <span className="text-yellow-400">{roi.isProfitable ? 'Profitable' : 'Not yet profitable'}</span>
+                                    <span className="text-warning">{roi.isProfitable ? 'Profitable' : 'Not yet profitable'}</span>
                                   )}
                                 </div>
                                 <div>
-                                  <span className="text-gray-400">Owned for:</span>
+                                  <span className="text-secondary">Owned for:</span>
                                   <span className="ml-2 font-semibold">
                                     {roi.cyclesSincePurchase ?? 0} cycles
                                   </span>
@@ -866,11 +866,11 @@ function FacilitiesPage() {
 
                               {/* ROI Progress Bar */}
                               <div className="mt-3">
-                                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                                <div className="flex justify-between text-xs text-secondary mb-1">
                                   <span>ROI Progress</span>
                                   <span>{((roi.netROI ?? 0) * 100).toFixed(1)}%</span>
                                 </div>
-                                <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div className="w-full bg-surface-elevated rounded-full h-2">
                                   <div
                                     className={`h-2 rounded-full ${
                                       (roi.netROI ?? 0) >= 0 ? 'bg-green-500' : 'bg-red-500'
@@ -885,7 +885,7 @@ function FacilitiesPage() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-gray-500 text-center py-8">
+                        <div className="text-tertiary text-center py-8">
                           No facility data available. Purchase facilities to see ROI analysis.
                         </div>
                       )}

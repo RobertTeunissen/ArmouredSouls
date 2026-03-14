@@ -98,13 +98,13 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
             
             // The first + button should be for Combat Power (first attribute in Combat Systems)
             if (plusButtons.length > 0) {
-              const initialTotalCost = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+              const initialTotalCost = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
               
               // Click the + button
               fireEvent.click(plusButtons[0]);
               
               // Verify total cost has changed (increased)
-              const newTotalCost = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+              const newTotalCost = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
               
               // Extract numeric values
               const initialCost = parseInt(initialTotalCost.replace(/[^0-9]/g, '')) || 0;
@@ -115,11 +115,11 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
             }
           } else {
             // Original test logic if button is found
-            const initialTotalCost = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            const initialTotalCost = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             
             fireEvent.click(combatPowerButton);
             
-            const newTotalCost = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            const newTotalCost = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             
             const initialCost = parseInt(initialTotalCost.replace(/[^0-9]/g, '')) || 0;
             const newCost = parseInt(newTotalCost.replace(/[^0-9]/g, '')) || 0;
@@ -203,7 +203,7 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
             fireEvent.click(plusButtons[0]);
             fireEvent.click(plusButtons[0]);
             
-            const costAfterIncrement = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            const costAfterIncrement = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             const costAfterIncrementValue = parseInt(costAfterIncrement.replace(/[^0-9]/g, '')) || 0;
             
             // Now find and click the - button
@@ -212,7 +212,7 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
             if (minusButtons.length > 0) {
               fireEvent.click(minusButtons[0]);
               
-              const costAfterDecrement = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+              const costAfterDecrement = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
               const costAfterDecrementValue = parseInt(costAfterDecrement.replace(/[^0-9]/g, '')) || 0;
               
               // Cost should have decreased
@@ -377,7 +377,7 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
           );
 
           // Initial total should be 0
-          const totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+          const totalCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
           const totalCost = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
           expect(totalCost).toBe(0);
 
@@ -388,13 +388,13 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
           if (plusButtons.length >= 2) {
             // Click first + button
             fireEvent.click(plusButtons[0]);
-            totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            totalCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             const costAfterFirst = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
             expect(costAfterFirst).toBeGreaterThan(0);
             
             // Click second + button
             fireEvent.click(plusButtons[1]);
-            totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            totalCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             const costAfterSecond = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
             
             // Total should be greater than after first click (sum of both)
@@ -495,7 +495,7 @@ describe('UpgradePlanner - Core Functionality Properties', () => {
             fireEvent.click(plusButtons[0]);
             
             // Get total cost
-            const totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            const totalCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             const totalCost = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
             
             // Get new remaining credits

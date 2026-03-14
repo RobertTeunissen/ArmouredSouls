@@ -26,10 +26,10 @@ const ProgressIndicator = ({ current, total }: ProgressIndicatorProps) => {
     <div className="w-full" role="navigation" aria-label="Tutorial progress">
       {/* Text indicator - more compact */}
       <div className="flex items-center justify-between mb-1">
-        <div className="text-xs font-medium text-gray-300" id="progress-label">
+        <div className="text-xs font-medium text-secondary" id="progress-label">
           Step {current} of {total}
         </div>
-        <div className="text-xs text-gray-400" aria-hidden="true">
+        <div className="text-xs text-secondary" aria-hidden="true">
           {Math.round(progressPercentage)}%
         </div>
       </div>
@@ -38,7 +38,7 @@ const ProgressIndicator = ({ current, total }: ProgressIndicatorProps) => {
       <div className="relative">
         {/* Background bar */}
         <div
-          className="h-1.5 bg-gray-700 rounded-full overflow-hidden"
+          className="h-1.5 bg-surface-elevated rounded-full overflow-hidden"
           role="progressbar"
           aria-valuenow={current}
           aria-valuemin={1}
@@ -48,7 +48,7 @@ const ProgressIndicator = ({ current, total }: ProgressIndicatorProps) => {
         >
           {/* Progress fill */}
           <div
-            className="h-full bg-blue-600 transition-all duration-300 ease-out"
+            className="h-full bg-primary transition-all duration-300 ease-out"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
@@ -70,9 +70,9 @@ const ProgressIndicator = ({ current, total }: ProgressIndicatorProps) => {
                 <div
                   className={`
                     w-3 h-3 rounded-full border transition-all duration-300
-                    ${isCompleted ? 'bg-blue-600 border-blue-600' : ''}
-                    ${isCurrent ? 'bg-blue-500 border-blue-500 ring-2 ring-blue-500 ring-opacity-30' : ''}
-                    ${isUpcoming ? 'bg-gray-700 border-gray-600' : ''}
+                    ${isCompleted ? 'bg-primary border-blue-600' : ''}
+                    ${isCurrent ? 'bg-primary-dark border-blue-500 ring-2 ring-blue-500 ring-opacity-30' : ''}
+                    ${isUpcoming ? 'bg-surface-elevated border-gray-600' : ''}
                   `}
                   title={`Step ${step}${isCompleted ? ' (completed)' : isCurrent ? ' (current)' : ''}`}
                 />
@@ -97,9 +97,9 @@ const ProgressIndicator = ({ current, total }: ProgressIndicatorProps) => {
                 aria-current={isCurrent ? 'step' : undefined}
                 className={`
                   px-1.5 py-0.5 rounded text-xs font-medium transition-colors
-                  ${isCompleted ? 'bg-blue-600 text-white' : ''}
-                  ${isCurrent ? 'bg-blue-500 text-white ring-1 ring-blue-400' : ''}
-                  ${!isCompleted && !isCurrent ? 'bg-gray-700 text-gray-400' : ''}
+                  ${isCompleted ? 'bg-primary text-white' : ''}
+                  ${isCurrent ? 'bg-primary-dark text-white ring-1 ring-blue-400' : ''}
+                  ${!isCompleted && !isCurrent ? 'bg-surface-elevated text-secondary' : ''}
                 `}
               >
                 {step}

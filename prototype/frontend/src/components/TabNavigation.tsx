@@ -47,8 +47,8 @@ function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) 
   }, [activeTab, onTabChange, visibleTabs]);
 
   return (
-    <div className="border-b border-gray-700 mb-6">
-      <nav className="flex space-x-1" role="tablist" aria-label="Robot detail tabs">
+    <div className="border-b border-white/10 mb-6">
+      <nav className="flex overflow-x-auto scrollbar-hide space-x-1 flex-nowrap" role="tablist" aria-label="Robot detail tabs">
         {visibleTabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
           
@@ -63,12 +63,12 @@ function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) 
               tabIndex={isActive ? 0 : -1}
               onClick={() => onTabChange(tab.id)}
               className={`
-                px-6 py-3 font-medium text-sm rounded-t-lg
+                px-4 lg:px-6 py-3 min-h-[44px] font-medium text-sm rounded-t-lg whitespace-nowrap flex-shrink-0
                 transition-all duration-150 ease-out
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background
                 ${isActive 
-                  ? 'bg-blue-600 text-white border-b-2 border-blue-600' 
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-300'
+                  ? 'bg-primary text-white border-b-2 border-blue-600' 
+                  : 'bg-surface text-secondary hover:bg-surface-elevated hover:text-secondary'
                 }
               `}
             >

@@ -121,13 +121,13 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
       className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex justify-between items-center">
+        <div className="sticky top-0 bg-surface border-b border-white/10 p-6 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-white">Customize Robot Appearance</h2>
           <button
             onClick={handleCancel}
-            className="text-gray-400 hover:text-white text-2xl leading-none"
+            className="text-secondary hover:text-white text-2xl leading-none"
             aria-label="Close"
           >
             ×
@@ -137,7 +137,7 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
         {/* Content */}
         <div className="p-6">
           {/* Preview Section */}
-          <div className="mb-8 bg-gray-900 rounded-lg p-6">
+          <div className="mb-8 bg-background rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4 text-white">Preview</h3>
             <div className="flex items-center justify-center">
               <div className="relative">
@@ -149,11 +149,11 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
                     onError={() => handleImageError(selectedImageUrl)}
                   />
                 ) : (
-                  <div className="w-64 h-64 bg-gray-700 rounded-lg flex items-center justify-center">
+                  <div className="w-64 h-64 bg-surface-elevated rounded-lg flex items-center justify-center">
                     <div className="text-center">
                       <div className="text-6xl mb-2">🤖</div>
                       <div className="text-white font-semibold">No Image Selected</div>
-                      <div className="text-sm text-gray-400 mt-2">
+                      <div className="text-sm text-secondary mt-2">
                         Select an image below
                       </div>
                     </div>
@@ -170,7 +170,7 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
             </h3>
             
             {displayImages.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-secondary">
                 <div className="text-4xl mb-2">📁</div>
                 <p>No images available yet.</p>
                 <p className="text-sm mt-2">Add images to src/assets/robots/</p>
@@ -184,10 +184,10 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
                     className={`p-3 rounded-lg border-2 transition-all ${
                       selectedImageUrl === image.url
                         ? 'border-blue-500 bg-blue-900 bg-opacity-30'
-                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+                        : 'border-gray-600 bg-surface-elevated hover:border-gray-500'
                     }`}
                   >
-                    <div className="aspect-square bg-gray-800 rounded overflow-hidden">
+                    <div className="aspect-square bg-surface rounded overflow-hidden">
                       <img
                         src={image.url}
                         alt={image.name}
@@ -203,10 +203,10 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-800 border-t border-gray-700 p-6 flex justify-end gap-3">
+        <div className="sticky bottom-0 bg-surface border-t border-white/10 p-6 flex justify-end gap-3">
           <button
             onClick={handleCancel}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+            className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-white rounded-lg transition-colors"
           >
             Cancel
           </button>
@@ -215,8 +215,8 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose }: Robo
             disabled={!selectedImageUrl}
             className={`px-6 py-2 rounded-lg transition-colors font-semibold ${
               selectedImageUrl
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                ? 'bg-primary hover:bg-blue-700 text-white'
+                : 'bg-gray-600 text-secondary cursor-not-allowed'
             }`}
           >
             {selectedImageUrl ? 'Apply Image' : 'Select an Image'}

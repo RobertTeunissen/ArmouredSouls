@@ -14,7 +14,7 @@ interface RobotFinancialCardProps {
 function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
   const [showBattles, setShowBattles] = useState(false);
   const isProfitable = robot.netIncome >= 0;
-  const netIncomeColor = isProfitable ? 'text-green-400' : 'text-red-400';
+  const netIncomeColor = isProfitable ? 'text-success' : 'text-error';
 
   // Generate recommendations for this robot
   const recommendations = [];
@@ -44,16 +44,16 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border-2 border-gray-700 font-mono text-sm">
+    <div className="bg-surface rounded-lg p-6 border-2 border-white/10 font-mono text-sm">
       {/* Header */}
       <div className="mb-4 pb-4 border-b border-gray-600">
         <div className="flex justify-between items-start mb-2">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-gray-400 text-xs">#{rank}</span>
+              <span className="text-secondary text-xs">#{rank}</span>
               <h3 className="text-xl font-bold text-gray-100">{robot.name}</h3>
             </div>
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="text-xs text-secondary mt-1">
               {robot.currentLeague.replace('_', ' ').toUpperCase()} | ELO: {robot.elo}
             </div>
           </div>
@@ -61,18 +61,18 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
             <div className={`text-2xl font-bold ${netIncomeColor}`}>
               {isProfitable ? '+' : ''}{formatCurrency(robot.netIncome)}
             </div>
-            <div className="text-xs text-gray-400">Net Income</div>
+            <div className="text-xs text-secondary">Net Income</div>
           </div>
         </div>
       </div>
 
       {/* Recommendations */}
       {recommendations.length > 0 && (
-        <div className="mb-4 p-3 bg-gray-700/50 rounded border-l-4 border-blue-500">
-          <div className="text-xs font-semibold text-blue-400 mb-2">💡 Recommendations</div>
+        <div className="mb-4 p-3 bg-surface-elevated/50 rounded border-l-4 border-blue-500">
+          <div className="text-xs font-semibold text-primary mb-2">💡 Recommendations</div>
           <ul className="space-y-1">
             {recommendations.map((rec, index) => (
-              <li key={index} className="text-xs text-gray-300 flex items-start">
+              <li key={index} className="text-xs text-secondary flex items-start">
                 <span className="mr-2">
                   {rec.type === 'error' && '⚠️'}
                   {rec.type === 'warning' && '⚡'}
@@ -88,44 +88,44 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
 
       {/* Revenue Section */}
       <div className="mb-4">
-        <h4 className="text-green-400 font-semibold mb-2">REVENUE:</h4>
+        <h4 className="text-success font-semibold mb-2">REVENUE:</h4>
         <div className="ml-2 space-y-1">
           <div className="flex justify-between">
-            <span className="text-gray-300">Battle Winnings:</span>
+            <span className="text-secondary">Battle Winnings:</span>
             <span className="text-gray-100">{formatCurrency(robot.revenue.battleWinnings)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-300">Merchandising:</span>
+            <span className="text-secondary">Merchandising:</span>
             <span className="text-gray-100">{formatCurrency(robot.revenue.merchandising)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-300">Streaming:</span>
+            <span className="text-secondary">Streaming:</span>
             <span className="text-gray-100">{formatCurrency(robot.revenue.streaming)}</span>
           </div>
           <div className="border-t border-gray-600 my-1"></div>
           <div className="flex justify-between font-bold">
-            <span className="text-green-400">Robot Revenue:</span>
-            <span className="text-green-400">{formatCurrency(robot.revenue.total)}</span>
+            <span className="text-success">Robot Revenue:</span>
+            <span className="text-success">{formatCurrency(robot.revenue.total)}</span>
           </div>
         </div>
       </div>
 
       {/* Costs Section */}
       <div className="mb-4">
-        <h4 className="text-red-400 font-semibold mb-2">COSTS:</h4>
+        <h4 className="text-error font-semibold mb-2">COSTS:</h4>
         <div className="ml-2 space-y-1">
           <div className="flex justify-between">
-            <span className="text-gray-300">Repair Costs:</span>
+            <span className="text-secondary">Repair Costs:</span>
             <span className="text-gray-100">{formatCurrency(robot.costs.repairs)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-300">Allocated Facilities*:</span>
+            <span className="text-secondary">Allocated Facilities*:</span>
             <span className="text-gray-100">{formatCurrency(robot.costs.allocatedFacilities)}</span>
           </div>
           <div className="border-t border-gray-600 my-1"></div>
           <div className="flex justify-between font-bold">
-            <span className="text-red-400">Robot Costs:</span>
-            <span className="text-red-400">{formatCurrency(robot.costs.total)}</span>
+            <span className="text-error">Robot Costs:</span>
+            <span className="text-error">{formatCurrency(robot.costs.total)}</span>
           </div>
         </div>
       </div>
@@ -135,13 +135,13 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
         <div className="mb-4">
           <button
             onClick={() => setShowBattles(!showBattles)}
-            className="w-full text-left px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+            className="w-full text-left px-3 py-2 bg-surface-elevated hover:bg-gray-600 rounded transition-colors"
           >
             <div className="flex justify-between items-center">
               <span className="text-purple-400 font-semibold">
                 📊 Battle Breakdown ({robot.battles.length} battles)
               </span>
-              <span className="text-gray-400">{showBattles ? '▼' : '▶'}</span>
+              <span className="text-secondary">{showBattles ? '▼' : '▶'}</span>
             </div>
           </button>
           
@@ -150,35 +150,35 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
               {robot.battles.map((battle) => (
                 <div
                   key={battle.id}
-                  className="bg-gray-700/50 p-2 rounded text-xs border-l-2"
+                  className="bg-surface-elevated/50 p-2 rounded text-xs border-l-2"
                   style={{
                     borderLeftColor: battle.isWinner ? '#10b981' : '#ef4444',
                   }}
                 >
                   <div className="flex justify-between items-start mb-1">
                     <div>
-                      <span className={battle.isWinner ? 'text-green-400' : 'text-red-400'}>
+                      <span className={battle.isWinner ? 'text-success' : 'text-error'}>
                         {battle.isWinner ? '✓ WIN' : '✗ LOSS'}
                       </span>
-                      <span className="text-gray-400 ml-2">
+                      <span className="text-secondary ml-2">
                         {battle.battleType === 'tournament' ? '🏆 Tournament' : '⚔️ League'}
                       </span>
                     </div>
-                    <span className="text-gray-500">
+                    <span className="text-tertiary">
                       {new Date(battle.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-300">Earnings:</span>
-                    <span className="text-green-400">{formatCurrency(battle.reward)}</span>
+                    <span className="text-secondary">Earnings:</span>
+                    <span className="text-success">{formatCurrency(battle.reward)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-300">Repairs:</span>
-                    <span className="text-red-400">{formatCurrency(battle.repairCost)}</span>
+                    <span className="text-secondary">Repairs:</span>
+                    <span className="text-error">{formatCurrency(battle.repairCost)}</span>
                   </div>
                   <div className="flex justify-between font-semibold pt-1 border-t border-gray-600 mt-1">
-                    <span className="text-gray-300">Net:</span>
-                    <span className={battle.reward - battle.repairCost >= 0 ? 'text-green-400' : 'text-red-400'}>
+                    <span className="text-secondary">Net:</span>
+                    <span className={battle.reward - battle.repairCost >= 0 ? 'text-success' : 'text-error'}>
                       {formatCurrency(battle.reward - battle.repairCost)}
                     </span>
                   </div>
@@ -199,8 +199,8 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-300">ROI:</span>
-            <span className={robot.roi >= 0 ? 'text-green-400' : 'text-red-400'}>
+            <span className="text-secondary">ROI:</span>
+            <span className={robot.roi >= 0 ? 'text-success' : 'text-error'}>
               {robot.roi >= 0 ? '+' : ''}{robot.roi}%
             </span>
           </div>
@@ -209,27 +209,27 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
 
       {/* Performance Metrics */}
       <div className="pt-4 border-t border-gray-600">
-        <h4 className="text-gray-400 text-xs font-semibold mb-2">PERFORMANCE METRICS:</h4>
+        <h4 className="text-secondary text-xs font-semibold mb-2">PERFORMANCE METRICS:</h4>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
-            <div className="text-gray-500">Win Rate:</div>
+            <div className="text-tertiary">Win Rate:</div>
             <div className="text-gray-200 font-semibold">{robot.metrics.winRate}%</div>
           </div>
           <div>
-            <div className="text-gray-500">Avg Earnings/Battle:</div>
+            <div className="text-tertiary">Avg Earnings/Battle:</div>
             <div className="text-gray-200 font-semibold">{formatCurrency(robot.metrics.avgEarningsPerBattle)}</div>
           </div>
           <div>
-            <div className="text-gray-500">Total Battles (7d):</div>
+            <div className="text-tertiary">Total Battles (7d):</div>
             <div className="text-gray-200 font-semibold">{robot.metrics.totalBattles}</div>
           </div>
           <div>
-            <div className="text-gray-500">Fame:</div>
+            <div className="text-tertiary">Fame:</div>
             <div className="text-gray-200 font-semibold">{robot.metrics.fameContribution.toLocaleString()}</div>
           </div>
           <div className="col-span-2">
-            <div className="text-gray-500">Repair Cost %:</div>
-            <div className={`font-semibold ${robot.metrics.repairCostPercentage > 50 ? 'text-red-400' : 'text-gray-200'}`}>
+            <div className="text-tertiary">Repair Cost %:</div>
+            <div className={`font-semibold ${robot.metrics.repairCostPercentage > 50 ? 'text-error' : 'text-gray-200'}`}>
               {robot.metrics.repairCostPercentage}% of revenue
             </div>
           </div>
@@ -237,7 +237,7 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
       </div>
 
       {/* Footer Note */}
-      <div className="mt-4 pt-2 border-t border-gray-700 text-xs text-gray-500 italic">
+      <div className="mt-4 pt-2 border-t border-white/10 text-xs text-tertiary italic">
         *Facilities costs split evenly across active robots
       </div>
     </div>

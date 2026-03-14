@@ -89,22 +89,22 @@ function CreateRobotPage() {
   const canAfford = currency >= ROBOT_CREATION_COST;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl font-bold mb-8">Create New Robot</h2>
 
-          <div className="bg-gray-800 p-8 rounded-lg mb-6">
+          <div className="bg-surface p-8 rounded-lg mb-6">
             {/* Onboarding banner */}
             {isOnboarding && (
               <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
                 <div className="flex items-start gap-3">
                   <span className="text-xl flex-shrink-0">🎓</span>
                   <div>
-                    <p className="text-blue-400 font-semibold">Tutorial Step 5: Robot Creation</p>
-                    <p className="text-sm text-gray-300">
+                    <p className="text-primary font-semibold">Tutorial Step 5: Robot Creation</p>
+                    <p className="text-sm text-secondary">
                       Choose a name for your robot and confirm the purchase. Your robot will start with all attributes at Level 1.
                     </p>
                   </div>
@@ -113,16 +113,16 @@ function CreateRobotPage() {
             )}
             <div className="mb-6">
               <h3 className="text-xl font-semibold mb-4">Robot Frame Cost</h3>
-              <div className="bg-gray-700 p-6 rounded-lg">
+              <div className="bg-surface-elevated p-6 rounded-lg">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-400">Frame Cost:</span>
-                  <span className="text-3xl font-bold text-yellow-400">
+                  <span className="text-secondary">Frame Cost:</span>
+                  <span className="text-3xl font-bold text-warning">
                     ₡{ROBOT_CREATION_COST.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Your Balance:</span>
-                  <span className={`text-2xl font-semibold ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
+                  <span className="text-secondary">Your Balance:</span>
+                  <span className={`text-2xl font-semibold ${canAfford ? 'text-success' : 'text-error'}`}>
                     ₡{currency.toLocaleString()}
                   </span>
                 </div>
@@ -131,9 +131,9 @@ function CreateRobotPage() {
 
             <div className="mb-6">
               <h3 className="text-xl font-semibold mb-4">Robot Specifications</h3>
-              <div className="bg-gray-700 p-6 rounded-lg">
-                <p className="text-gray-300 mb-2">Your new robot will come with:</p>
-                <ul className="list-disc list-inside text-gray-400 space-y-1">
+              <div className="bg-surface-elevated p-6 rounded-lg">
+                <p className="text-secondary mb-2">Your new robot will come with:</p>
+                <ul className="list-disc list-inside text-secondary space-y-1">
                   <li>All 23 attributes starting at Level 1</li>
                   <li>No weapon equipped (can be added later)</li>
                   <li>Ready for upgrades and customization</li>
@@ -164,26 +164,26 @@ function CreateRobotPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter robot name (1-50 characters)"
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-surface-elevated border border-gray-600 rounded px-4 py-3 text-white focus:outline-none focus:border-blue-500 min-h-[44px]"
                   disabled={loading}
                   maxLength={50}
                   required
                 />
-                <p className="text-gray-400 text-sm mt-1">{name.length}/50 characters</p>
+                <p className="text-secondary text-sm mt-1">{name.length}/50 characters</p>
               </div>
 
               <div className="flex gap-4">
                 <button
                   type="button"
                   onClick={() => navigate(isOnboarding ? '/onboarding' : '/robots')}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg transition-colors font-semibold"
+                  className="flex-1 bg-surface-elevated hover:bg-gray-600 px-6 py-3 rounded-lg transition-colors font-semibold min-h-[44px]"
                   disabled={loading}
                 >
                   {isOnboarding ? 'Back to Tutorial' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className={`flex-1 px-6 py-3 rounded-lg transition-colors font-semibold ${
+                  className={`flex-1 px-6 py-3 rounded-lg transition-colors font-semibold min-h-[44px] ${
                     canAfford && !loading
                       ? 'bg-green-600 hover:bg-green-700'
                       : 'bg-gray-600 cursor-not-allowed'
@@ -204,7 +204,7 @@ function CreateRobotPage() {
           targetSelector="#name"
           tooltipContent={
             <div>
-              <p className="font-semibold text-blue-400 mb-2">Name Your Robot</p>
+              <p className="font-semibold text-primary mb-2">Name Your Robot</p>
               <p>Choose a unique name for your robot (1-50 characters). This is how your robot will be known in battles and leaderboards.</p>
             </div>
           }
@@ -220,7 +220,7 @@ function CreateRobotPage() {
           targetSelector="button[type='submit']"
           tooltipContent={
             <div>
-              <p className="font-semibold text-blue-400 mb-2">Confirm Creation</p>
+              <p className="font-semibold text-primary mb-2">Confirm Creation</p>
               <p>Once you've entered a name, click this button to create your robot for ₡{ROBOT_CREATION_COST.toLocaleString()}. You'll be returned to the tutorial afterward.</p>
             </div>
           }

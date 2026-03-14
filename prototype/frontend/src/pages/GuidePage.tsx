@@ -134,7 +134,7 @@ function GuidePage(): React.ReactElement {
     if (loading) {
       return (
         <div className="flex items-center justify-center py-20">
-          <div className="text-gray-400">Loading...</div>
+          <div className="text-secondary">Loading...</div>
         </div>
       );
     }
@@ -159,10 +159,10 @@ function GuidePage(): React.ReactElement {
               <button
                 key={art.slug}
                 onClick={() => navigate(`/guide/${sectionSlug}/${art.slug}`)}
-                className="w-full text-left p-4 rounded-lg border border-gray-700 bg-surface-elevated hover:border-primary/50 hover:bg-primary/5 transition-all"
+                className="w-full text-left p-4 rounded-lg border border-white/10 bg-surface-elevated hover:border-primary/50 hover:bg-primary/5 transition-all"
               >
                 <h3 className="text-white font-medium">{art.title}</h3>
-                <p className="text-sm text-gray-400 mt-1">{art.description}</p>
+                <p className="text-sm text-secondary mt-1">{art.description}</p>
               </button>
             ))}
           </div>
@@ -182,7 +182,7 @@ function GuidePage(): React.ReactElement {
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold text-white mb-2">Article not found</h2>
-            <p className="text-gray-400 mb-6">The article you're looking for doesn't exist or has been moved.</p>
+            <p className="text-secondary mb-6">The article you're looking for doesn't exist or has been moved.</p>
             <button
               onClick={() => navigate('/guide')}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
@@ -195,7 +195,7 @@ function GuidePage(): React.ReactElement {
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold text-white mb-2">Something went wrong</h2>
-            <p className="text-gray-400 mb-6">We couldn't load this content. Please try again.</p>
+            <p className="text-secondary mb-6">We couldn't load this content. Please try again.</p>
             <button
               onClick={handleRetry}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
@@ -208,7 +208,7 @@ function GuidePage(): React.ReactElement {
         return (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold text-white mb-2">Connection Error</h2>
-            <p className="text-gray-400 mb-6">{error.message}</p>
+            <p className="text-secondary mb-6">{error.message}</p>
           </div>
         );
       default:
@@ -244,7 +244,7 @@ function GuidePage(): React.ReactElement {
           <div className="md:hidden flex items-center gap-3 mb-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-colors text-sm"
+              className="px-3 py-2 rounded-lg border border-white/10 text-secondary hover:text-white hover:border-gray-500 transition-colors text-sm"
               aria-label="Open guide navigation"
             >
               ☰ Menu

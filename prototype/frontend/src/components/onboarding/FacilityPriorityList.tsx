@@ -176,17 +176,17 @@ const getPriorityBadge = (priority: FacilityPriority): { label: string; classNam
     case 'mandatory':
       return {
         label: 'MANDATORY',
-        className: 'bg-red-900/30 text-red-400 border-red-700',
+        className: 'bg-red-900/30 text-error border-red-700',
       };
     case 'recommended':
       return {
         label: 'RECOMMENDED',
-        className: 'bg-blue-900/30 text-blue-400 border-blue-700',
+        className: 'bg-blue-900/30 text-primary border-blue-700',
       };
     case 'optional':
       return {
         label: 'OPTIONAL',
-        className: 'bg-gray-700/30 text-gray-400 border-gray-600',
+        className: 'bg-surface-elevated/30 text-secondary border-gray-600',
       };
   }
 };
@@ -212,7 +212,7 @@ const FacilityPriorityList: React.FC<FacilityPriorityListProps> = memo(({ strate
         <div className="flex items-start gap-3">
           <span className="text-2xl">⚠️</span>
           <div>
-            <h3 className="text-yellow-400 font-semibold mb-1">
+            <h3 className="text-warning font-semibold mb-1">
               You Can Spend Your Money Only Once
             </h3>
             <p className="text-yellow-200 text-sm">
@@ -230,17 +230,17 @@ const FacilityPriorityList: React.FC<FacilityPriorityListProps> = memo(({ strate
           return (
             <div
               key={facility.type}
-              className={`bg-gray-800 border rounded-lg p-4 transition-all hover:border-gray-600 ${
+              className={`bg-surface border rounded-lg p-4 transition-all hover:border-gray-600 ${
                 facility.priority === 'mandatory'
                   ? 'border-red-700/50'
                   : facility.priority === 'recommended'
                   ? 'border-blue-700/50'
-                  : 'border-gray-700'
+                  : 'border-white/10'
               }`}
             >
               <div className="flex items-start gap-4">
                 {/* Priority Number */}
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-bold text-gray-300">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center font-bold text-secondary">
                   {index + 1}
                 </div>
 
@@ -255,7 +255,7 @@ const FacilityPriorityList: React.FC<FacilityPriorityListProps> = memo(({ strate
                     <div>
                       <h3 className="text-lg font-semibold text-gray-100">{facility.name}</h3>
                       {facility.level && (
-                        <p className="text-sm text-gray-400">Recommended Level: {facility.level}</p>
+                        <p className="text-sm text-secondary">Recommended Level: {facility.level}</p>
                       )}
                       {facility.operatingCost !== undefined && facility.operatingCost > 0 && (
                         <p className="text-xs text-orange-400">Operating Cost: {formatCurrency(facility.operatingCost)}/day</p>
@@ -267,13 +267,13 @@ const FacilityPriorityList: React.FC<FacilityPriorityListProps> = memo(({ strate
                       >
                         {priorityBadge.label}
                       </span>
-                      <span className="text-lg font-bold text-yellow-400">{formatCurrency(facility.cost)}</span>
+                      <span className="text-lg font-bold text-warning">{formatCurrency(facility.cost)}</span>
                     </div>
                   </div>
 
                   {/* Benefit */}
                   <div className="mb-2">
-                    <p className="text-sm text-green-400 font-medium">✓ {facility.benefit}</p>
+                    <p className="text-sm text-success font-medium">✓ {facility.benefit}</p>
                   </div>
 
                   {/* Savings Example */}
@@ -288,15 +288,15 @@ const FacilityPriorityList: React.FC<FacilityPriorityListProps> = memo(({ strate
                   {/* ROI */}
                   {facility.roiDays && (
                     <div className="mb-2">
-                      <p className="text-xs text-blue-400">
+                      <p className="text-xs text-primary">
                         ⏱️ Break-even: ~{facility.roiDays} days
                       </p>
                     </div>
                   )}
 
                   {/* Reason */}
-                  <div className="mt-2 pt-2 border-t border-gray-700">
-                    <p className="text-sm text-gray-300">{facility.reason}</p>
+                  <div className="mt-2 pt-2 border-t border-white/10">
+                    <p className="text-sm text-secondary">{facility.reason}</p>
                   </div>
                 </div>
               </div>
@@ -306,24 +306,24 @@ const FacilityPriorityList: React.FC<FacilityPriorityListProps> = memo(({ strate
       </div>
 
       {/* Summary */}
-      <div className="bg-gray-750 border border-gray-700 rounded-lg p-4 mt-6">
+      <div className="bg-gray-750 border border-white/10 rounded-lg p-4 mt-6">
         <h3 className="text-lg font-semibold text-gray-100 mb-3">Priority Summary</h3>
         <div className="space-y-2 text-sm">
           <div className="flex items-start gap-2">
-            <span className="text-red-400 font-semibold">MANDATORY:</span>
-            <span className="text-gray-300">
+            <span className="text-error font-semibold">MANDATORY:</span>
+            <span className="text-secondary">
               Must purchase before proceeding. Required for your strategy.
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-blue-400 font-semibold">RECOMMENDED:</span>
-            <span className="text-gray-300">
+            <span className="text-primary font-semibold">RECOMMENDED:</span>
+            <span className="text-secondary">
               Strongly advised for your strategy. High value for investment.
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-gray-400 font-semibold">OPTIONAL:</span>
-            <span className="text-gray-300">
+            <span className="text-secondary font-semibold">OPTIONAL:</span>
+            <span className="text-secondary">
               Consider based on playstyle and remaining budget.
             </span>
           </div>

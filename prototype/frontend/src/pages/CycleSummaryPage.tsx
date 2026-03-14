@@ -90,10 +90,10 @@ function CycleSummaryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-background text-white">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12 text-gray-400">Loading cycle summary...</div>
+          <div className="text-center py-12 text-secondary">Loading cycle summary...</div>
         </div>
       </div>
     );
@@ -101,14 +101,14 @@ function CycleSummaryPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-background text-white">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12 text-red-400">{error}</div>
+          <div className="text-center py-12 text-error">{error}</div>
           <div className="text-center">
             <button
               onClick={() => navigate('/dashboard')}
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded transition-colors"
+              className="bg-primary hover:bg-blue-700 px-6 py-2 rounded transition-colors"
             >
               Back to Dashboard
             </button>
@@ -120,17 +120,17 @@ function CycleSummaryPage() {
 
   if (!data || data.cycles.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-background text-white">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
-            <p className="text-gray-400 text-lg">No cycle data available yet.</p>
-            <p className="text-gray-500 mt-2">Cycle summaries will appear here once cycles have been completed.</p>
+            <p className="text-secondary text-lg">No cycle data available yet.</p>
+            <p className="text-tertiary mt-2">Cycle summaries will appear here once cycles have been completed.</p>
           </div>
           <div className="text-center mt-4">
             <button
               onClick={() => navigate('/dashboard')}
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded transition-colors"
+              className="bg-primary hover:bg-blue-700 px-6 py-2 rounded transition-colors"
             >
               Back to Dashboard
             </button>
@@ -141,7 +141,7 @@ function CycleSummaryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
@@ -149,7 +149,7 @@ function CycleSummaryPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Cycle Summary</h1>
-            <p className="text-gray-400 mt-2">
+            <p className="text-secondary mt-2">
               Cycles {data.cycleRange[0]} - {data.cycleRange[1]}
             </p>
           </div>
@@ -157,7 +157,7 @@ function CycleSummaryPage() {
             <select
               value={cycleCount}
               onChange={(e) => setCycleCount(parseInt(e.target.value))}
-              className="bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white"
+              className="bg-surface border border-white/10 rounded px-4 py-2 text-white"
             >
               <option value={5}>Last 5 Cycles</option>
               <option value={10}>Last 10 Cycles</option>
@@ -166,7 +166,7 @@ function CycleSummaryPage() {
             </select>
             <button
               onClick={() => navigate('/dashboard')}
-              className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded transition-colors"
+              className="bg-surface-elevated hover:bg-gray-600 px-4 py-2 rounded transition-colors"
             >
               Back to Dashboard
             </button>
@@ -175,39 +175,39 @@ function CycleSummaryPage() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Total Income</div>
-            <div className="text-2xl font-bold text-green-400">
+          <div className="bg-surface p-6 rounded-lg">
+            <div className="text-sm text-secondary mb-2">Total Income</div>
+            <div className="text-2xl font-bold text-success">
               {formatCurrency(data.totalIncome)}
             </div>
           </div>
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Total Expenses</div>
-            <div className="text-2xl font-bold text-red-400">
+          <div className="bg-surface p-6 rounded-lg">
+            <div className="text-sm text-secondary mb-2">Total Expenses</div>
+            <div className="text-2xl font-bold text-error">
               {formatCurrency(data.totalExpenses)}
             </div>
           </div>
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Total Purchases</div>
+          <div className="bg-surface p-6 rounded-lg">
+            <div className="text-sm text-secondary mb-2">Total Purchases</div>
             <div className="text-2xl font-bold text-orange-400">
               {formatCurrency(data.totalPurchases)}
             </div>
           </div>
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <div className="text-sm text-gray-400 mb-2">Net Profit</div>
-            <div className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          <div className="bg-surface p-6 rounded-lg">
+            <div className="text-sm text-secondary mb-2">Net Profit</div>
+            <div className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-success' : 'text-error'}`}>
               {data.netProfit >= 0 ? '+' : ''}{formatCurrency(data.netProfit)}
             </div>
           </div>
         </div>
 
         {/* Chart Visualization */}
-        <div className="bg-gray-800 p-6 rounded-lg mb-8">
+        <div className="bg-surface p-6 rounded-lg mb-8">
           <h2 className="text-xl font-semibold mb-6">Income vs Expenses Trend</h2>
           <div className="overflow-x-auto">
             <div className="relative" style={{ minWidth: `${Math.max(800, data.cycles.length * 40)}px` }}>
               {/* Y-axis labels */}
-              <div className="absolute left-0 top-0 bottom-12 flex flex-col justify-between text-xs text-gray-400 pr-3 py-2">
+              <div className="absolute left-0 top-0 bottom-12 flex flex-col justify-between text-xs text-secondary pr-3 py-2">
                 {(() => {
                   const globalMax = Math.max(...data.cycles.map(c => Math.max(c.income, c.expenses)));
                   const maxRounded = Math.ceil(globalMax / 1000) * 1000;
@@ -237,7 +237,7 @@ function CycleSummaryPage() {
                               className="bg-green-500 hover:bg-green-400 transition-colors rounded-t w-full"
                               style={{ height: `${getBarHeight(cycle.income, globalMax) * 2.5}px`, minHeight: cycle.income > 0 ? '4px' : '0px' }}
                             />
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-background text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
                               Income: {formatCurrency(cycle.income)}
                             </div>
                           </div>
@@ -249,7 +249,7 @@ function CycleSummaryPage() {
                               className="bg-red-500 hover:bg-red-400 transition-colors rounded-t w-full"
                               style={{ height: `${getBarHeight(cycle.expenses, globalMax) * 2.5}px`, minHeight: cycle.expenses > 0 ? '4px' : '0px' }}
                             />
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-background text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
                               Expenses: {formatCurrency(cycle.expenses)}
                             </div>
                           </div>
@@ -267,7 +267,7 @@ function CycleSummaryPage() {
                   const showEvery = data.cycles.length > 30 ? 5 : data.cycles.length > 20 ? 3 : data.cycles.length > 10 ? 2 : 1;
                   if (index % showEvery === 0 || index === data.cycles.length - 1) {
                     return (
-                      <div key={cycle.cycleNumber} className="text-xs text-gray-400" style={{ width: `${36 * showEvery}px`, textAlign: index === data.cycles.length - 1 ? 'right' : 'left' }}>
+                      <div key={cycle.cycleNumber} className="text-xs text-secondary" style={{ width: `${36 * showEvery}px`, textAlign: index === data.cycles.length - 1 ? 'right' : 'left' }}>
                         C{cycle.cycleNumber}
                       </div>
                     );
@@ -280,53 +280,53 @@ function CycleSummaryPage() {
           <div className="flex justify-center gap-6 mt-6">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-400">Income</span>
+              <span className="text-sm text-secondary">Income</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span className="text-sm text-gray-400">Expenses</span>
+              <span className="text-sm text-secondary">Expenses</span>
             </div>
           </div>
         </div>
 
         {/* Detailed Cycle Table */}
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <div className="bg-surface rounded-lg overflow-hidden">
           <h2 className="text-xl font-semibold p-6 pb-4">Cycle Details</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-700">
+              <thead className="bg-surface-elevated">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                     Cycle
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Battle Credits
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Merchandising
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Streaming
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Total Income
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Repair Costs
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Operating Costs
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Total Expenses
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Purchases
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Net Profit
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
                     Balance
                   </th>
                 </tr>
@@ -337,34 +337,34 @@ function CycleSummaryPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       Cycle {cycle.cycleNumber}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-secondary">
                       {formatCurrency(cycle.breakdown.battleCredits)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-secondary">
                       {formatCurrency(cycle.breakdown.merchandising)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-secondary">
                       {formatCurrency(cycle.breakdown.streaming)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-success">
                       {formatCurrency(cycle.income)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-secondary">
                       {formatCurrency(cycle.breakdown.repairCosts)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-secondary">
                       {formatCurrency(cycle.breakdown.operatingCosts)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-red-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-error">
                       {formatCurrency(cycle.expenses)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-secondary">
                       <div className="group relative">
                         <span className="font-medium text-orange-400 cursor-help">
                           {formatCurrency(cycle.purchases)}
                         </span>
                         {cycle.purchases > 0 && (
-                          <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-2 px-3 whitespace-nowrap z-10 border border-gray-700">
+                          <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block bg-background text-white text-xs rounded py-2 px-3 whitespace-nowrap z-10 border border-white/10">
                             <div>Weapons: {formatCurrency(cycle.breakdown.weaponPurchases)}</div>
                             <div>Facilities: {formatCurrency(cycle.breakdown.facilityPurchases)}</div>
                             <div>Robots: {formatCurrency(cycle.breakdown.robotPurchases || 0)}</div>
@@ -374,11 +374,11 @@ function CycleSummaryPage() {
                       </div>
                     </td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-bold ${
-                      cycle.netProfit >= 0 ? 'text-green-400' : 'text-red-400'
+                      cycle.netProfit >= 0 ? 'text-success' : 'text-error'
                     }`}>
                       {cycle.netProfit >= 0 ? '+' : ''}{formatCurrency(cycle.netProfit)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-primary">
                       {formatCurrency(cycle.balance)}
                     </td>
                   </tr>

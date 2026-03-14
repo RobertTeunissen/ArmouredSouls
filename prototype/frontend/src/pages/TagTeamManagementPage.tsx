@@ -81,10 +81,10 @@ function TagTeamManagementPage() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
           <div>
             <h1 className="text-3xl font-bold text-white">Tag Team Management</h1>
-            <p className="text-gray-400 mt-1">Manage your 2v2 battle teams</p>
+            <p className="text-secondary mt-1">Manage your 2v2 battle teams</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -97,7 +97,7 @@ function TagTeamManagementPage() {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <p className="text-gray-400">Loading teams...</p>
+            <p className="text-secondary">Loading teams...</p>
           </div>
         )}
 
@@ -110,10 +110,10 @@ function TagTeamManagementPage() {
 
         {/* Empty State */}
         {!loading && !error && teams.length === 0 && (
-          <div className="bg-surface-elevated p-8 rounded-lg border border-gray-700 text-center">
+          <div className="bg-surface-elevated p-8 rounded-lg border border-white/10 text-center">
             <div className="max-w-2xl mx-auto">
               <h2 className="text-2xl font-bold mb-4">No Tag Teams Yet</h2>
-              <p className="text-gray-300 mb-6">
+              <p className="text-secondary mb-6">
                 Create your first tag team to compete in 2v2 battles! Select two robots from your stable to form a powerful duo.
               </p>
               <button
@@ -186,7 +186,7 @@ function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
   const teamName = getTeamName(team);
 
   return (
-    <div className="bg-surface-elevated border border-gray-700 rounded-lg p-6 hover:border-primary/50 transition-all">
+    <div className="bg-surface-elevated border border-white/10 rounded-lg p-6 hover:border-primary/50 transition-all">
       {/* Header with Team Name */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -214,12 +214,12 @@ function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
             <span className="text-warning font-semibold">Team Not Ready</span>
           </div>
           {!activeRobotReady && team.readiness?.activeRobotIssues && (
-            <div className="text-sm text-gray-300 ml-6">
+            <div className="text-sm text-secondary ml-6">
               <span className="font-semibold">{team.activeRobot.name}:</span> {team.readiness.activeRobotIssues.join(', ')}
             </div>
           )}
           {!reserveRobotReady && team.readiness?.reserveRobotIssues && (
-            <div className="text-sm text-gray-300 ml-6">
+            <div className="text-sm text-secondary ml-6">
               <span className="font-semibold">{team.reserveRobot.name}:</span> {team.readiness.reserveRobotIssues.join(', ')}
             </div>
           )}
@@ -233,13 +233,13 @@ function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
           className="bg-surface border border-gray-600 rounded-lg p-4 cursor-pointer hover:border-primary/50 transition-colors"
           onClick={() => navigate(`/robots/${team.activeRobot.id}`)}
         >
-          <div className="text-xs text-gray-400 mb-1">Active Robot</div>
+          <div className="text-xs text-secondary mb-1">Active Robot</div>
           <div className="font-semibold text-primary mb-2">{team.activeRobot.name}</div>
-          <div className="text-sm text-gray-300 space-y-1">
+          <div className="text-sm text-secondary space-y-1">
             <div>ELO: {team.activeRobot.elo}</div>
             <div className="flex items-center gap-2">
               <span>HP:</span>
-              <div className="flex-1 bg-gray-700 rounded-full h-2">
+              <div className="flex-1 bg-surface-elevated rounded-full h-2">
                 <div
                   className={`h-2 rounded-full ${
                     team.activeRobot.currentHP >= team.activeRobot.maxHP * 0.75
@@ -261,13 +261,13 @@ function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
           className="bg-surface border border-gray-600 rounded-lg p-4 cursor-pointer hover:border-primary/50 transition-colors"
           onClick={() => navigate(`/robots/${team.reserveRobot.id}`)}
         >
-          <div className="text-xs text-gray-400 mb-1">Reserve Robot</div>
+          <div className="text-xs text-secondary mb-1">Reserve Robot</div>
           <div className="font-semibold text-white mb-2">{team.reserveRobot.name}</div>
-          <div className="text-sm text-gray-300 space-y-1">
+          <div className="text-sm text-secondary space-y-1">
             <div>ELO: {team.reserveRobot.elo}</div>
             <div className="flex items-center gap-2">
               <span>HP:</span>
-              <div className="flex-1 bg-gray-700 rounded-full h-2">
+              <div className="flex-1 bg-surface-elevated rounded-full h-2">
                 <div
                   className={`h-2 rounded-full ${
                     team.reserveRobot.currentHP >= team.reserveRobot.maxHP * 0.75
@@ -286,23 +286,23 @@ function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 pt-4 border-t border-gray-700">
+      <div className="grid grid-cols-4 gap-4 pt-4 border-t border-white/10">
         <div className="text-center">
-          <div className="text-xs text-gray-400 mb-1">Combined ELO</div>
+          <div className="text-xs text-secondary mb-1">Combined ELO</div>
           <div className="text-lg font-semibold text-white">{combinedELO}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-gray-400 mb-1">League Points</div>
+          <div className="text-xs text-secondary mb-1">League Points</div>
           <div className="text-lg font-semibold text-primary">{team.tagTeamLeaguePoints}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-gray-400 mb-1">Record</div>
+          <div className="text-xs text-secondary mb-1">Record</div>
           <div className="text-sm font-semibold text-white">
             {team.totalTagTeamWins}W-{team.totalTagTeamLosses}L-{team.totalTagTeamDraws}D
           </div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-gray-400 mb-1">Matches</div>
+          <div className="text-xs text-secondary mb-1">Matches</div>
           <div className="text-lg font-semibold text-white">{totalMatches}</div>
         </div>
       </div>

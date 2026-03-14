@@ -36,7 +36,7 @@ function highlightMatch(text: string, query: string): React.ReactNode {
 const GuideSearchResults: React.FC<GuideSearchResultsProps> = ({ results, query, onSelect }) => {
   if (results.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-400">
+      <div className="p-4 text-center text-secondary">
         <p className="mb-2">No results found for "{query}"</p>
         <p className="text-sm">Try browsing sections from the navigation menu.</p>
       </div>
@@ -56,10 +56,10 @@ const GuideSearchResults: React.FC<GuideSearchResultsProps> = ({ results, query,
             <div className="text-sm font-medium text-white">
               {highlightMatch(result.title, query)}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">
+            <div className="text-xs text-tertiary mt-0.5">
               {highlightMatch(result.sectionTitle, query)}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5 truncate">
+            <div className="text-xs text-tertiary mt-0.5 truncate">
               {result.description}
             </div>
           </button>

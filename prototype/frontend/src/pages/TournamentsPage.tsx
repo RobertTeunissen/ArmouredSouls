@@ -56,11 +56,11 @@ function TournamentsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <span className="px-3 py-1 bg-green-900/50 text-green-400 rounded-full text-sm font-semibold">🔴 Live</span>;
+        return <span className="px-3 py-1 bg-green-900/50 text-success rounded-full text-sm font-semibold">🔴 Live</span>;
       case 'completed':
-        return <span className="px-3 py-1 bg-gray-700 text-gray-400 rounded-full text-sm font-semibold">✓ Completed</span>;
+        return <span className="px-3 py-1 bg-surface-elevated text-secondary rounded-full text-sm font-semibold">✓ Completed</span>;
       default:
-        return <span className="px-3 py-1 bg-gray-700 text-gray-400 rounded-full text-sm">{status}</span>;
+        return <span className="px-3 py-1 bg-surface-elevated text-secondary rounded-full text-sm">{status}</span>;
     }
   };
 
@@ -78,7 +78,7 @@ function TournamentsPage() {
   const completedTournaments = tournaments.filter(t => t.status === 'completed');
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
@@ -88,29 +88,29 @@ function TournamentsPage() {
             <span className="text-5xl">🏆</span>
             Tournaments
           </h1>
-          <p className="text-gray-400">View active and past tournaments</p>
+          <p className="text-secondary">View active and past tournaments</p>
         </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <div className="text-3xl font-bold text-green-400">{activeTournaments.length}</div>
-            <div className="text-gray-400 text-sm">Active Tournaments</div>
+          <div className="bg-surface p-6 rounded-lg border border-white/10">
+            <div className="text-3xl font-bold text-success">{activeTournaments.length}</div>
+            <div className="text-secondary text-sm">Active Tournaments</div>
           </div>
-          <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-            <div className="text-3xl font-bold text-gray-400">{completedTournaments.length}</div>
-            <div className="text-gray-400 text-sm">Completed</div>
+          <div className="bg-surface p-6 rounded-lg border border-white/10">
+            <div className="text-3xl font-bold text-secondary">{completedTournaments.length}</div>
+            <div className="text-secondary text-sm">Completed</div>
           </div>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-700">
+        <div className="flex gap-2 mb-6 border-b border-white/10">
           <button
             onClick={() => setFilter('all')}
             className={`px-4 py-2 font-semibold transition-colors ${
               filter === 'all'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
+                ? 'text-primary border-b-2 border-blue-400'
+                : 'text-secondary hover:text-secondary'
             }`}
           >
             All ({tournaments.length})
@@ -119,8 +119,8 @@ function TournamentsPage() {
             onClick={() => setFilter('active')}
             className={`px-4 py-2 font-semibold transition-colors ${
               filter === 'active'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
+                ? 'text-primary border-b-2 border-blue-400'
+                : 'text-secondary hover:text-secondary'
             }`}
           >
             Active ({activeTournaments.length})
@@ -129,8 +129,8 @@ function TournamentsPage() {
             onClick={() => setFilter('completed')}
             className={`px-4 py-2 font-semibold transition-colors ${
               filter === 'completed'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
+                ? 'text-primary border-b-2 border-blue-400'
+                : 'text-secondary hover:text-secondary'
             }`}
           >
             Completed ({completedTournaments.length})
@@ -139,15 +139,15 @@ function TournamentsPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="bg-gray-800 p-8 rounded-lg text-center">
-            <p className="text-gray-400">Loading tournaments...</p>
+          <div className="bg-surface p-8 rounded-lg text-center">
+            <p className="text-secondary">Loading tournaments...</p>
           </div>
         )}
 
         {/* Error State */}
         {error && !loading && (
           <div className="bg-red-900/20 border border-red-500 p-6 rounded-lg">
-            <p className="text-red-400">{error}</p>
+            <p className="text-error">{error}</p>
             <button
               onClick={fetchTournaments}
               className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded transition-colors"
@@ -159,10 +159,10 @@ function TournamentsPage() {
 
         {/* Empty State */}
         {!loading && !error && filteredTournaments.length === 0 && (
-          <div className="bg-gray-800 p-12 rounded-lg text-center">
+          <div className="bg-surface p-12 rounded-lg text-center">
             <div className="text-6xl mb-4">🏆</div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-300">No Tournaments Found</h3>
-            <p className="text-gray-400">
+            <h3 className="text-xl font-semibold mb-2 text-secondary">No Tournaments Found</h3>
+            <p className="text-secondary">
               {filter === 'all' ? 'No tournaments have been created yet.' : `No ${filter} tournaments.`}
             </p>
           </div>
@@ -174,41 +174,41 @@ function TournamentsPage() {
             {filteredTournaments.map((tournament) => (
               <div
                 key={tournament.id}
-                className="bg-gray-800 p-6 rounded-lg border-2 border-yellow-500/30 hover:border-yellow-500/50 transition-colors"
+                className="bg-surface p-6 rounded-lg border-2 border-yellow-500/30 hover:border-yellow-500/50 transition-colors"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-2xl font-bold text-yellow-400">{tournament.name}</h3>
+                      <h3 className="text-2xl font-bold text-warning">{tournament.name}</h3>
                       {getStatusBadge(tournament.status)}
                     </div>
-                    <p className="text-gray-400 text-sm">Tournament #{tournament.id}</p>
+                    <p className="text-secondary text-sm">Tournament #{tournament.id}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <div className="text-sm text-gray-400">Participants</div>
+                    <div className="text-sm text-secondary">Participants</div>
                     <div className="text-xl font-semibold">{tournament.totalParticipants}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-400">Current Round</div>
+                    <div className="text-sm text-secondary">Current Round</div>
                     <div className="text-xl font-semibold">
                       {tournament.status === 'active' ? (
-                        <span className="text-green-400">{getRoundName(tournament.currentRound, tournament.maxRounds)}</span>
+                        <span className="text-success">{getRoundName(tournament.currentRound, tournament.maxRounds)}</span>
                       ) : tournament.status === 'completed' ? (
-                        <span className="text-gray-400">Finished</span>
+                        <span className="text-secondary">Finished</span>
                       ) : (
-                        <span className="text-yellow-400">Not Started</span>
+                        <span className="text-warning">Not Started</span>
                       )}
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-400">Total Rounds</div>
+                    <div className="text-sm text-secondary">Total Rounds</div>
                     <div className="text-xl font-semibold">{tournament.maxRounds}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-400">Created</div>
+                    <div className="text-sm text-secondary">Created</div>
                     <div className="text-xl font-semibold text-sm">{formatDate(tournament.createdAt)}</div>
                   </div>
                 </div>
@@ -219,9 +219,9 @@ function TournamentsPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">👑</span>
                       <div>
-                        <div className="text-sm text-yellow-400 font-semibold">Champion</div>
+                        <div className="text-sm text-warning font-semibold">Champion</div>
                         <div className="text-xl font-bold">{tournament.winner.name}</div>
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-secondary">
                           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           Owned by {(tournament.winner as any).user?.username || 'Unknown'}
                         </div>
@@ -234,12 +234,12 @@ function TournamentsPage() {
                 {tournament.status === 'active' && (
                   <div className="mt-4">
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-400">Tournament Progress</span>
-                      <span className="text-gray-400">
+                      <span className="text-secondary">Tournament Progress</span>
+                      <span className="text-secondary">
                         Round {tournament.currentRound} of {tournament.maxRounds}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-surface-elevated rounded-full h-2">
                       <div
                         className="bg-yellow-500 h-2 rounded-full transition-all"
                         style={{ width: `${(tournament.currentRound / tournament.maxRounds) * 100}%` }}
@@ -252,7 +252,7 @@ function TournamentsPage() {
                 <div className="mt-4">
                   <button
                     onClick={() => navigate(`/tournaments/${tournament.id}`)}
-                    className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors font-semibold"
+                    className="w-full px-4 py-2 bg-primary hover:bg-blue-700 rounded transition-colors font-semibold"
                   >
                     View Tournament Details
                   </button>

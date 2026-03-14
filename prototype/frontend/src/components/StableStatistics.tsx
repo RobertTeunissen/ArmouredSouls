@@ -51,16 +51,16 @@ function StableStatistics() {
 
   if (loading) {
     return (
-      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h2 className="text-lg font-semibold mb-3">Stable Overview</h2>
-        <div className="text-center py-4 text-gray-400">Loading...</div>
+        <div className="text-center py-4 text-secondary">Loading...</div>
       </div>
     );
   }
 
   if (error || !stats) {
     return (
-      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h2 className="text-lg font-semibold mb-3">Stable Overview</h2>
         <div className="text-center py-4 text-error">{error || 'No data available'}</div>
       </div>
@@ -68,16 +68,16 @@ function StableStatistics() {
   }
 
   return (
-    <div className="bg-surface p-4 rounded-lg border border-gray-700">
+    <div className="bg-surface p-4 rounded-lg border border-white/10">
       <h2 className="text-lg font-semibold mb-3">Stable Overview</h2>
       
       <div className="space-y-3">
         {/* Prestige, Record, and ELO on same line */}
-        <div className="pb-3 border-b border-gray-700">
+        <div className="pb-3 border-b border-white/10">
           <div className="flex items-center justify-between gap-4">
             {/* Prestige */}
             <div>
-              <div className="text-xs text-gray-400 mb-1">Prestige</div>
+              <div className="text-xs text-secondary mb-1">Prestige</div>
               <div className="text-xl font-bold text-info">
                 {stats.prestige.toLocaleString()}
                 {stats.cycleChanges && stats.cycleChanges.prestige !== 0 && (
@@ -90,12 +90,12 @@ function StableStatistics() {
 
             {/* W/L Record */}
             <div>
-              <div className="text-xs text-gray-400 mb-1">Record</div>
+              <div className="text-xs text-secondary mb-1">Record</div>
               <div className="flex items-baseline gap-2">
                 <span className="text-success font-semibold">{stats.wins}W</span>
                 <span className="text-error font-semibold">{stats.losses}L</span>
                 {stats.cycleChanges && (stats.cycleChanges.wins !== 0 || stats.cycleChanges.losses !== 0) && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-secondary">
                     ({[
                       stats.cycleChanges.wins !== 0 && `+${stats.cycleChanges.wins}W`,
                       stats.cycleChanges.losses !== 0 && `+${stats.cycleChanges.losses}L`
@@ -107,7 +107,7 @@ function StableStatistics() {
 
             {/* Highest ELO */}
             <div>
-              <div className="text-xs text-gray-400 mb-1">Highest ELO</div>
+              <div className="text-xs text-secondary mb-1">Highest ELO</div>
               <div className="text-lg font-bold text-primary">
                 {stats.highestELO}
                 {stats.cycleChanges && formatChange(stats.cycleChanges.highestElo)}
@@ -120,7 +120,7 @@ function StableStatistics() {
         <div className="grid grid-cols-2 gap-3">
           {/* Highest League */}
           <div>
-            <div className="text-xs text-gray-400 mb-1">Highest League</div>
+            <div className="text-xs text-secondary mb-1">Highest League</div>
             <div className="text-sm font-semibold text-white">
               {formatLeague(stats.highestLeague)}
             </div>
@@ -128,7 +128,7 @@ function StableStatistics() {
 
           {/* Highest Tag Team League */}
           <div>
-            <div className="text-xs text-gray-400 mb-1">Tag Team League</div>
+            <div className="text-xs text-secondary mb-1">Tag Team League</div>
             <div className="text-sm font-semibold text-white">
               {stats.highestTagTeamLeague ? formatLeague(stats.highestTagTeamLeague) : 'None'}
             </div>
@@ -136,7 +136,7 @@ function StableStatistics() {
         </div>
 
         {/* Bottom Stats - Single Row */}
-        <div className="pt-3 border-t border-gray-700 flex justify-between text-xs text-gray-400">
+        <div className="pt-3 border-t border-white/10 flex justify-between text-xs text-secondary">
           <span>{stats.totalRobots} Robot{stats.totalRobots !== 1 ? 's' : ''}</span>
           <span>{stats.totalBattles} Battle{stats.totalBattles !== 1 ? 's' : ''}</span>
           <span className={stats.winRate >= 50 ? 'text-success' : 'text-error'}>

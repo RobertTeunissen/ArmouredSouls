@@ -89,11 +89,11 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
   // Battle readiness indicator
   const getBattleReadinessStatus = (): { text: string; color: string; icon: string } => {
     if (robot.battleReadiness >= 80) {
-      return { text: 'Combat Ready', color: 'text-green-400', icon: '✓' };
+      return { text: 'Combat Ready', color: 'text-success', icon: '✓' };
     } else if (robot.battleReadiness >= 50) {
-      return { text: 'Operational', color: 'text-yellow-400', icon: '⚠' };
+      return { text: 'Operational', color: 'text-warning', icon: '⚠' };
     } else {
-      return { text: 'Not Ready', color: 'text-red-400', icon: '✗' };
+      return { text: 'Not Ready', color: 'text-error', icon: '✗' };
     }
   };
 
@@ -121,10 +121,10 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg mb-6">
+    <div className="bg-surface p-4 rounded-lg mb-6">
       <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
         ⚔️ Battle Configuration
-        <span className="text-xs text-gray-400 font-normal">
+        <span className="text-xs text-secondary font-normal">
           Configure your robot for combat
         </span>
       </h2>
@@ -133,11 +133,11 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-gradient-to-br from-gray-700 to-gray-750 p-5 rounded-lg border border-gray-600 shadow-lg">
         {/* HP Bar with Color Coding */}
         <div className="space-y-2">
-          <div className="text-gray-300 text-sm font-semibold uppercase tracking-wide">Hull Integrity</div>
+          <div className="text-secondary text-sm font-semibold uppercase tracking-wide">Hull Integrity</div>
           <div className="text-2xl font-bold" style={{ color: getHPColor(hpPercent) }}>
             {robot.currentHP} / {robot.maxHP}
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-600">
+          <div className="w-full bg-surface rounded-full h-3 overflow-hidden border border-gray-600">
             <div
               className="h-full transition-all duration-300 ease-in-out"
               style={{
@@ -146,18 +146,18 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
               }}
             />
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-secondary">
             {Math.round(hpPercent)}% operational
           </div>
         </div>
 
         {/* Shield Bar with Color Coding */}
         <div className="space-y-2">
-          <div className="text-gray-300 text-sm font-semibold uppercase tracking-wide">Energy Shield</div>
+          <div className="text-secondary text-sm font-semibold uppercase tracking-wide">Energy Shield</div>
           <div className="text-2xl font-bold" style={{ color: getShieldColor(shieldPercent) }}>
             {robot.currentShield} / {robot.maxShield}
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-600">
+          <div className="w-full bg-surface rounded-full h-3 overflow-hidden border border-gray-600">
             <div
               className="h-full transition-all duration-300 ease-in-out"
               style={{
@@ -166,18 +166,18 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
               }}
             />
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-secondary">
             {Math.round(shieldPercent)}% capacity
           </div>
         </div>
 
         {/* Battle Readiness Indicator */}
         <div className="space-y-2">
-          <div className="text-gray-300 text-sm font-semibold uppercase tracking-wide">Battle Status</div>
+          <div className="text-secondary text-sm font-semibold uppercase tracking-wide">Battle Status</div>
           <div className={`text-2xl font-bold ${readinessStatus.color}`}>
             {readinessStatus.icon} {robot.battleReadiness}%
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-600">
+          <div className="w-full bg-surface rounded-full h-3 overflow-hidden border border-gray-600">
             <div
               className={`h-full transition-all duration-300 ease-in-out ${
                 robot.battleReadiness >= 80 ? 'bg-green-500' :
@@ -193,11 +193,11 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
 
         {/* Repair Cost */}
         <div className="space-y-2">
-          <div className="text-gray-300 text-sm font-semibold uppercase tracking-wide">Repair Cost</div>
-          <div className="text-2xl font-bold text-yellow-400">
+          <div className="text-secondary text-sm font-semibold uppercase tracking-wide">Repair Cost</div>
+          <div className="text-2xl font-bold text-warning">
             ₡{robot.repairCost.toLocaleString()}
           </div>
-          <div className="text-xs text-gray-400 mt-4">
+          <div className="text-xs text-secondary mt-4">
             Current damage repair estimate
           </div>
         </div>
@@ -213,7 +213,7 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
         
         {/* Weapon Slots with Enhanced Display */}
         <div className="mt-4">
-          <h4 className="text-md font-semibold mb-3 text-gray-300 uppercase tracking-wide">
+          <h4 className="text-md font-semibold mb-3 text-secondary uppercase tracking-wide">
             Equipped Weapons
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

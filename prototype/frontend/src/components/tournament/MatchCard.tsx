@@ -38,9 +38,9 @@ function RobotSlot({
     return <span className="text-gray-600 italic text-xs">TBD</span>;
   }
 
-  let nameClass = 'text-gray-300';
-  if (isWinner) nameClass = 'text-green-400 font-semibold';
-  else if (isLoser) nameClass = 'text-gray-500 line-through';
+  let nameClass = 'text-secondary';
+  if (isWinner) nameClass = 'text-success font-semibold';
+  else if (isLoser) nameClass = 'text-tertiary line-through';
   else if (isUserRobot) nameClass = 'text-blue-300 font-medium';
 
   const showSeed = seed !== undefined && seed <= 32;
@@ -48,7 +48,7 @@ function RobotSlot({
   return (
     <span className="text-xs truncate max-w-[130px] flex items-center gap-1">
       {showSeed && (
-        <span className="text-yellow-400 font-mono font-semibold shrink-0">#{seed}</span>
+        <span className="text-warning font-mono font-semibold shrink-0">#{seed}</span>
       )}
       <span className={nameClass + ' truncate'}>{robot.name}</span>
     </span>
@@ -63,8 +63,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
   const isRobot2User = match.robot2Id !== null && userRobotIds.has(match.robot2Id);
   const hasUserRobot = isRobot1User || isRobot2User;
 
-  let borderClass = 'border-gray-700';
-  let bgClass = 'bg-gray-800';
+  let borderClass = 'border-white/10';
+  let bgClass = 'bg-surface';
   if (hasUserRobot) { borderClass = 'border-blue-500'; bgClass = 'bg-blue-900/20'; }
   else if (isUserFuturePath) { borderClass = 'border-blue-500/30'; }
   if (matchState === 'bye' && !hasUserRobot) { borderClass = 'border-yellow-600/40'; }
@@ -91,17 +91,17 @@ const MatchCard: React.FC<MatchCardProps> = ({
       <div className="flex items-center justify-between gap-1">
         <RobotSlot robot={match.robot1} seed={robot1Seed}
           isWinner={isR1Win} isLoser={isR1Loss} isUserRobot={isRobot1User} />
-        {isRobot1User && <span className="text-[9px] text-blue-400 font-medium shrink-0">YOU</span>}
+        {isRobot1User && <span className="text-[9px] text-primary font-medium shrink-0">YOU</span>}
       </div>
-      <div className="border-t border-gray-700/50 my-0.5" />
+      <div className="border-t border-white/10/50 my-0.5" />
       <div className="flex items-center justify-between gap-1">
         {isByeMatch ? (
-          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">BYE</span>
+          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-warning">BYE</span>
         ) : (
           <>
             <RobotSlot robot={match.robot2} seed={robot2Seed}
               isWinner={isR2Win} isLoser={isR2Loss} isUserRobot={isRobot2User} />
-            {isRobot2User && <span className="text-[9px] text-blue-400 font-medium shrink-0">YOU</span>}
+            {isRobot2User && <span className="text-[9px] text-primary font-medium shrink-0">YOU</span>}
           </>
         )}
       </div>

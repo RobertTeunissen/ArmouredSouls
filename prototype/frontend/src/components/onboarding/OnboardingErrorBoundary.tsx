@@ -47,19 +47,19 @@ class OnboardingErrorBoundary extends Component<Props, State> {
             <h2 className="text-xl font-bold text-error mb-2">
               Something went wrong
             </h2>
-            <p className="text-gray-400 mb-4">
+            <p className="text-secondary mb-4">
               An unexpected error occurred in the tutorial. Your progress has been saved.
             </p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={this.handleRetry}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors text-white"
+                className="px-6 py-2 bg-primary hover:bg-primary-dark rounded transition-colors text-white"
               >
                 Try Again
               </button>
               <button
                 onClick={() => { window.location.href = '/dashboard'; }}
-                className="px-6 py-2 border border-gray-600 hover:border-gray-400 rounded transition-colors text-gray-300"
+                className="px-6 py-2 border border-gray-600 hover:border-gray-400 rounded transition-colors text-secondary"
               >
                 Go to Dashboard
               </button>

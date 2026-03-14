@@ -86,18 +86,18 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
   // Get status badge for a category
   const getStatusBadge = (spent: number, category: BudgetCategory): JSX.Element => {
     if (spent === 0) {
-      return <span className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-400">Not Started</span>;
+      return <span className="px-2 py-1 text-xs rounded bg-surface-elevated text-secondary">Not Started</span>;
     }
     
     if (spent < category.min) {
-      return <span className="px-2 py-1 text-xs rounded bg-yellow-900 bg-opacity-30 text-yellow-400 border border-yellow-700">Under Budget</span>;
+      return <span className="px-2 py-1 text-xs rounded bg-yellow-900 bg-opacity-30 text-warning border border-yellow-700">Under Budget</span>;
     }
     
     if (spent > category.max) {
-      return <span className="px-2 py-1 text-xs rounded bg-red-900 bg-opacity-30 text-red-400 border border-red-700">Over Budget</span>;
+      return <span className="px-2 py-1 text-xs rounded bg-red-900 bg-opacity-30 text-error border border-red-700">Over Budget</span>;
     }
     
-    return <span className="px-2 py-1 text-xs rounded bg-green-900 bg-opacity-30 text-green-400 border border-green-700">On Track</span>;
+    return <span className="px-2 py-1 text-xs rounded bg-green-900 bg-opacity-30 text-success border border-green-700">On Track</span>;
   };
 
   // Custom tooltip for pie chart
@@ -105,12 +105,12 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-gray-900 border border-gray-700 rounded p-3 shadow-lg">
+        <div className="bg-background border border-white/10 rounded p-3 shadow-lg">
           <p className="font-semibold text-white mb-1">{data.name}</p>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-secondary">
             Recommended: {formatCurrency(data.min)} - {formatCurrency(data.max)}
           </p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-secondary mt-1">
             Average: {formatCurrency(data.value)}
           </p>
         </div>
@@ -126,14 +126,14 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
         <h3 className="text-xl font-bold text-white mb-2">
           Recommended Budget Allocation
         </h3>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-secondary">
           These are guidelines to help you allocate your ₡3,000,000 starting budget. 
           You have flexibility to adjust based on your preferences.
         </p>
       </div>
 
       {/* Pie Chart */}
-      <div className="bg-gray-800 rounded-lg p-6">
+      <div className="bg-surface rounded-lg p-6">
         <h4 className="text-lg font-semibold text-white mb-4">Visual Breakdown</h4>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
@@ -160,7 +160,7 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
               verticalAlign="bottom" 
               height={36}
               formatter={(value, _entry: unknown) => (
-                <span className="text-gray-300">{value}</span>
+                <span className="text-secondary">{value}</span>
               )}
             />
           </PieChart>
@@ -169,16 +169,16 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
 
       {/* Budget Comparison Table */}
       {currentSpending && (
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-surface rounded-lg p-6">
           <h4 className="text-lg font-semibold text-white mb-4">Your Progress</h4>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Category</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Recommended</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Your Spending</th>
-                  <th className="text-center py-3 px-4 text-sm font-semibold text-gray-300">Status</th>
+                <tr className="border-b border-white/10">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-secondary">Category</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">Recommended</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">Your Spending</th>
+                  <th className="text-center py-3 px-4 text-sm font-semibold text-secondary">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -189,14 +189,14 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
                     : currentSpending[category];
                   const isLast = idx === arr.length - 1;
                   return (
-                    <tr key={category} className={`${isLast ? '' : 'border-b border-gray-700'} hover:bg-gray-750`}>
+                    <tr key={category} className={`${isLast ? '' : 'border-b border-white/10'} hover:bg-gray-750`}>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: rec.color }} />
                           <span className="text-white">{rec.label}</span>
                         </div>
                       </td>
-                      <td className="text-right py-3 px-4 text-gray-300">
+                      <td className="text-right py-3 px-4 text-secondary">
                         {formatCurrency(rec.min)} - {formatCurrency(rec.max)}
                       </td>
                       <td className="text-right py-3 px-4 text-white font-medium">
@@ -215,29 +215,29 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
       )}
 
       {/* Budget Summary */}
-      <div className="bg-gray-800 rounded-lg p-6">
+      <div className="bg-surface rounded-lg p-6">
         <h4 className="text-lg font-semibold text-white mb-4">Budget Summary</h4>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-gray-400">Starting Budget:</span>
+            <span className="text-secondary">Starting Budget:</span>
             <span className="text-white font-semibold text-lg">{formatCurrency(STARTING_BUDGET)}</span>
           </div>
           
           {currentSpending && (
             <>
               <div className="flex justify-between items-center">
-                <span className="text-gray-400">Total Spent:</span>
+                <span className="text-secondary">Total Spent:</span>
                 <span className="text-orange-400 font-semibold text-lg">{formatCurrency(totalSpent)}</span>
               </div>
               
-              <div className="flex justify-between items-center pt-3 border-t border-gray-700">
-                <span className="text-gray-300 font-medium">Remaining:</span>
+              <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                <span className="text-secondary font-medium">Remaining:</span>
                 <span className={`font-bold text-xl ${
                   STARTING_BUDGET - totalSpent >= recommendations.reserve.min 
-                    ? 'text-green-400' 
+                    ? 'text-success' 
                     : STARTING_BUDGET - totalSpent >= 200000
-                    ? 'text-yellow-400'
-                    : 'text-red-400'
+                    ? 'text-warning'
+                    : 'text-error'
                 }`}>
                   {formatCurrency(STARTING_BUDGET - totalSpent)}
                 </span>
@@ -249,7 +249,7 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
 
       {/* Important Notes */}
       <div className="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">
-        <h5 className="text-sm font-semibold text-blue-400 mb-2">💡 Important Notes</h5>
+        <h5 className="text-sm font-semibold text-primary mb-2">💡 Important Notes</h5>
         <ul className="text-sm text-blue-300 space-y-1 list-disc list-inside">
           <li>These are guidelines, not strict requirements</li>
           <li>Facility discounts compound over time - buy them early!</li>

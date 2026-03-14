@@ -111,8 +111,8 @@ function OnboardingNavBanner() {
       <div className="container mx-auto px-4 py-2 flex items-center gap-3 flex-wrap">
         {/* Step info */}
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-blue-400 text-sm">🎓</span>
-          <span className="text-sm text-gray-300 whitespace-nowrap">
+          <span className="text-primary text-sm">🎓</span>
+          <span className="text-sm text-secondary whitespace-nowrap">
             Step {step}/9:
           </span>
           <span className="text-sm font-medium text-gray-100 truncate">
@@ -121,9 +121,9 @@ function OnboardingNavBanner() {
         </div>
 
         {/* Progress bar */}
-        <div className="w-20 h-1.5 bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
+        <div className="w-20 h-1.5 bg-surface-elevated rounded-full overflow-hidden flex-shrink-0">
           <div
-            className="h-full bg-blue-500 rounded-full transition-all"
+            className="h-full bg-primary-dark rounded-full transition-all"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -138,7 +138,7 @@ function OnboardingNavBanner() {
             <button
               key={action.path}
               onClick={() => navigate(action.path)}
-              className="px-3 py-1 text-xs font-medium text-gray-200 bg-gray-700/60 hover:bg-gray-600 border border-gray-600 rounded transition-colors whitespace-nowrap"
+              className="px-3 py-1 text-xs font-medium text-gray-200 bg-surface-elevated/60 hover:bg-gray-600 border border-gray-600 rounded transition-colors whitespace-nowrap"
             >
               {action.icon} {action.label}
             </button>
@@ -147,7 +147,7 @@ function OnboardingNavBanner() {
         {/* Back to Tutorial button */}
         <button
           onClick={() => navigate('/onboarding')}
-          className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded transition-colors whitespace-nowrap"
+          className="px-3 py-1 text-xs font-semibold text-white bg-primary hover:bg-primary-dark rounded transition-colors whitespace-nowrap"
         >
           ← Back to Tutorial
         </button>

@@ -87,9 +87,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   ];
 
   const weaponTypes = [
-    { value: 'melee', label: 'Melee', color: 'text-red-400' },
+    { value: 'melee', label: 'Melee', color: 'text-error' },
     { value: 'ballistic', label: 'Ballistic', color: 'text-orange-400' },
-    { value: 'energy', label: 'Energy', color: 'text-blue-400' },
+    { value: 'energy', label: 'Energy', color: 'text-primary' },
     { value: 'shield', label: 'Shield', color: 'text-cyan-400' },
   ];
 
@@ -101,13 +101,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   ];
 
   return (
-    <div className="bg-gray-800 rounded-lg mb-6">
+    <div className="bg-surface rounded-lg mb-6">
       {/* Header - Always visible */}
       <div className="flex justify-between items-center p-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold">Filters</h2>
           <button
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-secondary hover:text-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setIsExpanded(!isExpanded);
@@ -125,7 +125,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </button>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-secondary">
             Showing {filteredCount} of {weaponCount} weapons
           </span>
           {hasActiveFilters && (
@@ -134,7 +134,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 e.stopPropagation();
                 handleClearAll();
               }}
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              className="text-sm text-primary hover:text-blue-300 transition-colors"
             >
               Clear All
             </button>
@@ -144,11 +144,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
       {/* Collapsible Content */}
       {isExpanded && (
-        <div className="px-6 pb-6 border-t border-gray-700 pt-4">
+        <div className="px-6 pb-6 border-t border-white/10 pt-4">
 
       {/* Loadout Type Filter */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-secondary mb-3 uppercase tracking-wide">
           Loadout Type
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -158,8 +158,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               onClick={() => handleLoadoutTypeToggle(type.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 filters.loadoutTypes.includes(type.value)
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  ? 'bg-primary text-white'
+                  : 'bg-surface-elevated text-secondary hover:bg-gray-600'
               }`}
             >
               {type.label}
@@ -170,7 +170,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
       {/* Weapon Type Filter */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-secondary mb-3 uppercase tracking-wide">
           Weapon Type
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -180,8 +180,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               onClick={() => handleWeaponTypeToggle(type.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 filters.weaponTypes.includes(type.value)
-                  ? `bg-blue-600 text-white`
-                  : `bg-gray-700 ${type.color} hover:bg-gray-600`
+                  ? `bg-primary text-white`
+                  : `bg-surface-elevated ${type.color} hover:bg-gray-600`
               }`}
             >
               {type.label}
@@ -192,7 +192,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
       {/* Price Range Filter */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-secondary mb-3 uppercase tracking-wide">
           Price Range
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -208,8 +208,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 }
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    ? 'bg-primary text-white'
+                    : 'bg-surface-elevated text-secondary hover:bg-gray-600'
                 }`}
               >
                 {range.label}
@@ -221,7 +221,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
       {/* Quick Filters */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-secondary mb-3 uppercase tracking-wide">
           Quick Filters
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -230,7 +230,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filters.canAffordOnly
                 ? 'bg-green-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                : 'bg-surface-elevated text-secondary hover:bg-gray-600'
             }`}
           >
             Can Afford (₡{userCredits.toLocaleString()})
@@ -240,7 +240,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filters.onlyOwnedWeapons
                 ? 'bg-purple-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                : 'bg-surface-elevated text-secondary hover:bg-gray-600'
             }`}
           >
             Only Owned Weapons

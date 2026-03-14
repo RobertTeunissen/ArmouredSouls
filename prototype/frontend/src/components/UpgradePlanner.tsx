@@ -36,10 +36,10 @@ interface UpgradePlan {
 
 // Category colors matching the design system
 const categoryColors = {
-  'Combat Systems': { bg: 'bg-red-900/30', text: 'text-red-400', icon: '⚔️' },
-  'Defensive Systems': { bg: 'bg-blue-900/30', text: 'text-blue-400', icon: '🛡️' },
-  'Chassis & Mobility': { bg: 'bg-green-900/30', text: 'text-green-400', icon: '⚙️' },
-  'AI Processing': { bg: 'bg-yellow-900/30', text: 'text-yellow-400', icon: '🧠' },
+  'Combat Systems': { bg: 'bg-red-900/30', text: 'text-error', icon: '⚔️' },
+  'Defensive Systems': { bg: 'bg-blue-900/30', text: 'text-primary', icon: '🛡️' },
+  'Chassis & Mobility': { bg: 'bg-green-900/30', text: 'text-success', icon: '⚙️' },
+  'AI Processing': { bg: 'bg-yellow-900/30', text: 'text-warning', icon: '🧠' },
   'Team Coordination': { bg: 'bg-purple-900/30', text: 'text-purple-400', icon: '🤝' },
 };
 
@@ -252,7 +252,7 @@ function UpgradePlanner({
   const canAfford = remainingCredits >= 0;
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg">
+    <div className="bg-surface p-4 rounded-lg">
       <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
         ⬆️ Upgrade Planner
       </h2>
@@ -294,7 +294,7 @@ function UpgradePlanner({
                   <span className="font-semibold text-sm">{category}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400">
+                  <span className="text-secondary">
                     Cap: {cap} (Academy Lv{academyLevel})
                   </span>
                   {categoryPlannedCost > 0 && (
@@ -347,34 +347,34 @@ function UpgradePlanner({
       </div>
 
       {/* Cost Summary - Sticky Bottom Panel */}
-      <div className="sticky bottom-0 bg-gray-900 border-t-2 border-gray-700 p-4 rounded-lg space-y-3">
+      <div className="sticky bottom-0 bg-background border-t-2 border-white/10 p-4 rounded-lg space-y-3">
         {/* Show original cost and savings if discounts apply */}
         {totalSavings > 0 && hasPlannedUpgrades && (
           <div className="bg-green-900/20 border border-green-700 rounded p-3 space-y-1">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-300">Original Cost:</span>
-              <span className="text-gray-400 line-through">₡{totalBaseCost.toLocaleString()}</span>
+              <span className="text-secondary">Original Cost:</span>
+              <span className="text-secondary line-through">₡{totalBaseCost.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-green-300 font-semibold">Total Savings:</span>
-              <span className="text-green-400 font-bold">-₡{totalSavings.toLocaleString()}</span>
+              <span className="text-success font-bold">-₡{totalSavings.toLocaleString()}</span>
             </div>
           </div>
         )}
         
         <div className="flex justify-between items-center text-xl">
-          <span className="text-gray-300 font-semibold">Total Planned Cost:</span>
-          <span className="text-yellow-400 font-bold text-2xl">₡{totalPlannedCost.toLocaleString()}</span>
+          <span className="text-secondary font-semibold">Total Planned Cost:</span>
+          <span className="text-warning font-bold text-2xl">₡{totalPlannedCost.toLocaleString()}</span>
         </div>
         
         <div className="flex justify-between items-center text-lg">
-          <span className="text-gray-300">Current Credits:</span>
+          <span className="text-secondary">Current Credits:</span>
           <span className="text-white font-bold">₡{currentCredits.toLocaleString()}</span>
         </div>
         
-        <div className="flex justify-between items-center text-xl border-t border-gray-700 pt-3">
-          <span className="text-gray-300 font-semibold">Remaining Credits:</span>
-          <span className={`font-bold ${remainingCredits >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+        <div className="flex justify-between items-center text-xl border-t border-white/10 pt-3">
+          <span className="text-secondary font-semibold">Remaining Credits:</span>
+          <span className={`font-bold ${remainingCredits >= 0 ? 'text-success' : 'text-error'}`}>
             ₡{remainingCredits.toLocaleString()}
           </span>
         </div>
@@ -387,8 +387,8 @@ function UpgradePlanner({
             className={`
               flex-1 py-3 rounded font-semibold transition-colors
               ${hasPlannedUpgrades && canAfford && !isCommitting
-                ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                ? 'bg-primary hover:bg-blue-700 text-white cursor-pointer'
+                : 'bg-surface-elevated text-tertiary cursor-not-allowed'
               }
             `}
           >
@@ -401,8 +401,8 @@ function UpgradePlanner({
             className={`
               px-6 py-3 rounded font-semibold transition-colors
               ${hasPlannedUpgrades && !isCommitting
-                ? 'bg-gray-700 hover:bg-gray-600 text-white cursor-pointer'
-                : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                ? 'bg-surface-elevated hover:bg-gray-600 text-white cursor-pointer'
+                : 'bg-surface text-gray-600 cursor-not-allowed'
               }
             `}
           >
@@ -430,10 +430,10 @@ function UpgradePlanner({
           title="Confirm Upgrades"
           message={
             <div className="space-y-3">
-              <p className="text-gray-300">
+              <p className="text-secondary">
                 You are about to upgrade {Object.keys(upgradePlan).length} attribute{Object.keys(upgradePlan).length > 1 ? 's' : ''}:
               </p>
-              <div className="bg-gray-900/50 rounded p-3 max-h-48 overflow-y-auto space-y-1">
+              <div className="bg-background/50 rounded p-3 max-h-48 overflow-y-auto space-y-1">
                 {Object.entries(upgradePlan).map(([attr, plan]) => {
                   const category = Object.entries(attributeCategories).find(([_, config]) =>
                     config.attributes.some(a => a.key === attr)
@@ -441,24 +441,24 @@ function UpgradePlanner({
                   const attrConfig = category?.[1].attributes.find(a => a.key === attr);
                   return (
                     <div key={attr} className="flex justify-between text-sm">
-                      <span className="text-gray-400">
+                      <span className="text-secondary">
                         {attrConfig?.icon} {attrConfig?.label}
                       </span>
-                      <span className="text-blue-400">
+                      <span className="text-primary">
                         {plan.currentLevel} → {plan.plannedLevel}
                       </span>
                     </div>
                   );
                 })}
               </div>
-              <div className="border-t border-gray-700 pt-3 space-y-2">
+              <div className="border-t border-white/10 pt-3 space-y-2">
                 <div className="flex justify-between text-base">
-                  <span className="text-gray-300">Total Cost:</span>
-                  <span className="text-yellow-400 font-bold">₡{totalPlannedCost.toLocaleString()}</span>
+                  <span className="text-secondary">Total Cost:</span>
+                  <span className="text-warning font-bold">₡{totalPlannedCost.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-base">
-                  <span className="text-gray-300">Remaining Credits:</span>
-                  <span className={`font-bold ${remainingCredits >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <span className="text-secondary">Remaining Credits:</span>
+                  <span className={`font-bold ${remainingCredits >= 0 ? 'text-success' : 'text-error'}`}>
                     ₡{remainingCredits.toLocaleString()}
                   </span>
                 </div>

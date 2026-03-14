@@ -106,7 +106,7 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-3 text-gray-100">Battle Readiness & Repair Costs</h1>
-        <p className="text-lg text-gray-300 max-w-3xl mx-auto">
+        <p className="text-lg text-secondary max-w-3xl mx-auto">
           Before your robot can fight, it needs to meet battle readiness requirements.
           After battles, you'll need to understand repair costs to manage your budget.
         </p>
@@ -117,7 +117,7 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
         <div className="flex items-start gap-4">
           <span className="text-3xl flex-shrink-0">🛡️</span>
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-blue-400 mb-4">
+            <h2 className="text-xl font-semibold text-primary mb-4">
               Battle Readiness Requirements
             </h2>
             <p className="text-gray-200 mb-4">
@@ -127,18 +127,18 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
               {READINESS_CHECKLIST.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start gap-3 bg-gray-800/50 rounded-lg p-3"
+                  className="flex items-start gap-3 bg-surface/50 rounded-lg p-3"
                   role="listitem"
                 >
                   <span className="text-2xl flex-shrink-0">{item.icon}</span>
                   <div>
                     <p className="font-semibold text-gray-100">{item.label}</p>
-                    <p className="text-sm text-gray-300">{item.description}</p>
+                    <p className="text-sm text-secondary">{item.description}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="text-sm text-gray-300 mt-4">
+            <p className="text-sm text-secondary mt-4">
               That's it! No minimum credit balance required. You can battle even with low credits,
               but you'll need to manage repair costs carefully.
             </p>
@@ -147,20 +147,20 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
       </section>
 
       {/* HP vs Shield Regeneration */}
-      <section className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto" aria-label="HP vs Shield Regeneration">
+      <section className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto" aria-label="HP vs Shield Regeneration">
         <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
           <span className="text-2xl">💡</span> HP vs Shield Regeneration
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* HP Card */}
           <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
-            <h3 className="font-bold text-red-400 mb-2 flex items-center gap-2">
+            <h3 className="font-bold text-error mb-2 flex items-center gap-2">
               <span>❤️</span> Hit Points (HP)
             </h3>
             <p className="text-gray-200 text-sm mb-2">
-              HP does <strong className="text-red-400">NOT</strong> regenerate between battles.
+              HP does <strong className="text-error">NOT</strong> regenerate between battles.
             </p>
-            <p className="text-gray-300 text-sm">
+            <p className="text-secondary text-sm">
               Once your robot takes damage, you must pay credits to repair it.
               If HP reaches 0, the robot cannot battle until repaired.
             </p>
@@ -168,13 +168,13 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
 
           {/* Shield Card */}
           <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
-            <h3 className="font-bold text-blue-400 mb-2 flex items-center gap-2">
+            <h3 className="font-bold text-primary mb-2 flex items-center gap-2">
               <span>🛡️</span> Shields
             </h3>
             <p className="text-gray-200 text-sm mb-2">
-              Shields <strong className="text-blue-400">DO</strong> regenerate between battles.
+              Shields <strong className="text-primary">DO</strong> regenerate between battles.
             </p>
-            <p className="text-gray-300 text-sm">
+            <p className="text-secondary text-sm">
               Shield points fully restore after each battle at no cost.
               Investing in shield attributes can reduce your long-term repair expenses.
             </p>
@@ -183,38 +183,38 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
       </section>
 
       {/* Repair Cost Mechanics */}
-      <section className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto" aria-label="Repair Cost Mechanics">
+      <section className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto" aria-label="Repair Cost Mechanics">
         <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
           <span className="text-2xl">🔧</span> How Repair Costs Work
         </h2>
         <div className="space-y-4">
-          <div className="bg-gray-700/50 rounded-lg p-4">
-            <h3 className="font-semibold text-yellow-400 mb-2">💰 Cost Per HP Damage</h3>
+          <div className="bg-surface-elevated/50 rounded-lg p-4">
+            <h3 className="font-semibold text-warning mb-2">💰 Cost Per HP Damage</h3>
             <p className="text-gray-200 text-sm">
               You pay a certain amount of credits for each HP point of damage your robot takes.
               The exact cost depends on your robot's attributes.
             </p>
           </div>
 
-          <div className="bg-gray-700/50 rounded-lg p-4">
+          <div className="bg-surface-elevated/50 rounded-lg p-4">
             <h3 className="font-semibold text-orange-400 mb-2">📈 Higher Attributes = Higher Costs</h3>
             <p className="text-gray-200 text-sm mb-2">
               Robots with higher attribute levels cost more to repair per HP.
               This is the trade-off for having a more powerful robot.
             </p>
-            <p className="text-gray-300 text-xs">
+            <p className="text-secondary text-xs">
               Example: A robot with all attributes at Level 1 costs less to repair than one with
               attributes at Level 5, even for the same amount of HP damage.
             </p>
           </div>
 
-          <div className="bg-gray-700/50 rounded-lg p-4">
-            <h3 className="font-semibold text-red-400 mb-2">💥 Destruction Penalty</h3>
+          <div className="bg-surface-elevated/50 rounded-lg p-4">
+            <h3 className="font-semibold text-error mb-2">💥 Destruction Penalty</h3>
             <p className="text-gray-200 text-sm mb-2">
               If your robot is <strong>destroyed</strong> (HP reaches 0), repair costs are significantly higher
               than if you had yielded before destruction.
             </p>
-            <p className="text-gray-300 text-xs">
+            <p className="text-secondary text-xs">
               This is why yielding strategically is important — it can save you a lot of credits.
             </p>
           </div>
@@ -226,7 +226,7 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
         <div className="flex items-start gap-4">
           <span className="text-3xl flex-shrink-0">🏳️</span>
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-yellow-400 mb-3">
+            <h2 className="text-xl font-semibold text-warning mb-3">
               Yielding: Your Cost-Saving Strategy
             </h2>
             <p className="text-gray-200 mb-4">
@@ -234,43 +234,43 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
               This is a critical strategy for managing repair costs.
             </p>
             
-            <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
+            <div className="bg-surface/50 rounded-lg p-4 mb-4">
               <h3 className="font-semibold text-yellow-300 mb-2">Why Yield?</h3>
               <ul className="space-y-2 text-sm text-gray-200">
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-400">•</span>
+                  <span className="text-warning">•</span>
                   <span><strong>Lower repair costs</strong> — Yielding before destruction avoids the destruction penalty</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-400">•</span>
+                  <span className="text-warning">•</span>
                   <span><strong>Preserve HP</strong> — Your robot keeps whatever HP it had when you yielded</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-400">•</span>
+                  <span className="text-warning">•</span>
                   <span><strong>Strategic retreat</strong> — Sometimes losing gracefully is better than losing expensively</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-gray-800/50 rounded-lg p-4">
+            <div className="bg-surface/50 rounded-lg p-4">
               <h3 className="font-semibold text-yellow-300 mb-2">When to Yield?</h3>
               <ul className="space-y-2 text-sm text-gray-200">
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-400">•</span>
+                  <span className="text-warning">•</span>
                   <span>When your robot is heavily damaged and likely to be destroyed</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-400">•</span>
+                  <span className="text-warning">•</span>
                   <span>When you're low on credits and can't afford expensive repairs</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-yellow-400">•</span>
+                  <span className="text-warning">•</span>
                   <span>When the battle is clearly lost and continuing would only increase costs</span>
                 </li>
               </ul>
             </div>
 
-            <p className="text-sm text-gray-300 mt-4">
+            <p className="text-sm text-secondary mt-4">
               You can set a <strong>yield threshold</strong> on your robot's detail page. When HP drops
               below this percentage, your robot will automatically yield to save on repair costs.
             </p>
@@ -279,7 +279,7 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
       </section>
 
       {/* Weapon Equipping Guidance */}
-      <section className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto" aria-label="Equip Your Weapon">
+      <section className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto" aria-label="Equip Your Weapon">
         <div className="flex items-start gap-4">
           <span className="text-3xl flex-shrink-0">⚔️</span>
           <div className="flex-1">
@@ -290,7 +290,7 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
               Visit your robot's detail page to equip the weapon you purchased.
               The loadout section lets you assign weapons to your robot's slots.
             </p>
-            <p className="text-sm text-gray-300 mb-3">
+            <p className="text-sm text-secondary mb-3">
               Once equipped, your robot's stats will update to reflect weapon attribute bonuses.
               Check the stat changes to see how your weapon improves your robot's combat effectiveness.
             </p>
@@ -304,13 +304,13 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
           <div className="flex items-start gap-4">
             <span className="text-3xl flex-shrink-0">🤖</span>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-blue-400 mb-3">
+              <h2 className="text-xl font-semibold text-primary mb-3">
                 {multiRobotInfo.heading}
               </h2>
               <ul className="space-y-3" role="list">
                 {multiRobotInfo.points.map((point, index) => (
                   <li key={index} className="flex items-start gap-2 text-gray-200" role="listitem">
-                    <span className="text-blue-400 flex-shrink-0">•</span>
+                    <span className="text-primary flex-shrink-0">•</span>
                     <span>{point}</span>
                   </li>
                 ))}
@@ -325,7 +325,7 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
         <button
           id="go-to-robot-detail-button"
           onClick={() => setShowOverlay(true)}
-          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+          className="px-8 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 min-h-[44px]"
           aria-label="Go to Robot Detail"
         >
           Go to Robot Detail
@@ -334,7 +334,7 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
         <div className="flex gap-4 mt-2">
           <button
             onClick={handlePrevious}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition-colors"
+            className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
             aria-label="Previous step"
           >
             Previous
@@ -342,14 +342,14 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
           <button
             onClick={handleNext}
             disabled={isSubmitting}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             aria-label="Next step"
           >
             {isSubmitting ? 'Loading...' : 'Next'}
           </button>
         </div>
 
-        <p className="text-sm text-gray-300 text-center max-w-md">
+        <p className="text-sm text-secondary text-center max-w-md">
           Visit your robot's detail page to equip your weapon and check battle readiness.
         </p>
       </div>
@@ -360,12 +360,12 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
           targetSelector="#go-to-robot-detail-button"
           tooltipContent={
             <div>
-              <p className="font-semibold text-blue-400 mb-2">Visit Robot Detail Page</p>
+              <p className="font-semibold text-primary mb-2">Visit Robot Detail Page</p>
               <p className="mb-2 text-gray-200">
                 Go to your robot's detail page to equip your weapon and check battle readiness status.
                 Look for the loadout section to assign your weapon.
               </p>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-secondary">
                 After equipping your weapon, your robot's stats will update with weapon bonuses.
               </p>
             </div>
@@ -381,11 +381,11 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
       {/* Educational Note */}
       <div className="mt-8 max-w-3xl mx-auto bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
           <div className="text-sm text-gray-200">
-            <strong className="text-blue-400">Tip:</strong> Shields are your best friend for reducing
+            <strong className="text-primary">Tip:</strong> Shields are your best friend for reducing
             repair costs. Since shields regenerate for free, investing in shield attributes means
             less HP damage and lower repair bills over time. Combine this with smart yielding for
             maximum cost efficiency.

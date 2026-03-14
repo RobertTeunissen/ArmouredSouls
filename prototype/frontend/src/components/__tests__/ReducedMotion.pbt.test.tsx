@@ -170,7 +170,7 @@ describe('Property 33: Reduced Motion Respect (Property-Based Test)', () => {
             link: (
               <a 
                 href="#" 
-                className="hover:text-blue-500 transition-colors" 
+                className="hover:text-primary transition-colors" 
                 data-testid="interactive-element"
               >
                 Link
@@ -237,7 +237,7 @@ describe('Property 33: Reduced Motion Respect (Property-Based Test)', () => {
               'animate-scale-in',
               'transition-all duration-300',
               'hover:-translate-y-0.5 transition-transform',
-              'hover:bg-gray-700 transition-colors'
+              'hover:bg-surface-elevated transition-colors'
             ),
             content: fc.string({ minLength: 1, maxLength: 20 }),
           }),

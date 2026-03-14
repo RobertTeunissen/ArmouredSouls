@@ -337,15 +337,15 @@ function RobotsPage() {
             <div className="flex items-start gap-3">
               <span className="text-xl flex-shrink-0" aria-hidden="true">🎓</span>
               <div className="flex-1">
-                <p className="text-blue-400 font-semibold mb-1">Tutorial Step 8: Equip Your Weapon</p>
-                <p className="text-gray-300 text-sm">
+                <p className="text-primary font-semibold mb-1">Tutorial Step 8: Equip Your Weapon</p>
+                <p className="text-secondary text-sm">
                   Select your robot below to visit its detail page. From there, go to the Battle Config tab
                   to equip the weapon you purchased. Once equipped, your robot will be battle-ready!
                 </p>
               </div>
               <button
                 onClick={() => navigate('/onboarding')}
-                className="text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+                className="text-sm text-secondary hover:text-white transition-colors whitespace-nowrap"
                 aria-label="Return to tutorial"
                 data-testid="return-to-tutorial"
               >
@@ -357,7 +357,7 @@ function RobotsPage() {
 
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">
-            My Robots <span className="text-gray-400 text-2xl">({robots.length}/{maxRobots})</span>
+            My Robots <span className="text-secondary text-2xl">({robots.length}/{maxRobots})</span>
           </h2>
           <div className="flex gap-4">
             {robots.length > 0 && (
@@ -367,7 +367,7 @@ function RobotsPage() {
                 className={`px-6 py-3 rounded-lg transition-colors font-semibold ${
                   needsRepair
                     ? 'bg-[#d29922] hover:bg-[#e0a832] text-white'
-                    : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                    : 'bg-surface-elevated text-secondary cursor-not-allowed'
                 }`}
                 title={needsRepair ? `Repair all robots for ₡${discountedCost.toLocaleString()}${discount > 0 ? ` (${discount}% off)` : ''}` : 'No repairs needed'}
               >
@@ -379,7 +379,7 @@ function RobotsPage() {
               disabled={atCapacity}
               className={`px-6 py-3 rounded-lg transition-colors font-semibold ${
                 atCapacity
-                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  ? 'bg-surface-elevated text-secondary cursor-not-allowed'
                   : 'bg-[#3fb950] hover:bg-[#4fc960] text-white'
               }`}
               title={atCapacity ? `Robot limit reached (${maxRobots}). Upgrade Roster Expansion facility to create more robots.` : 'Create a new robot'}
@@ -410,8 +410,8 @@ function RobotsPage() {
 
         {robots.length === 0 ? (
           <div className="bg-[#1a1f29] p-12 rounded-lg text-center">
-            <p className="text-xl text-gray-400 mb-4">You don&apos;t have any robots yet.</p>
-            <p className="text-gray-500 mb-6">Create your first robot to start battling!</p>
+            <p className="text-xl text-secondary mb-4">You don&apos;t have any robots yet.</p>
+            <p className="text-tertiary mb-6">Create your first robot to start battling!</p>
             <button
               onClick={() => navigate('/robots/create')}
               className="bg-[#3fb950] hover:bg-[#4fc960] px-8 py-3 rounded-lg transition-colors font-semibold"
@@ -423,13 +423,13 @@ function RobotsPage() {
           <>
             {/* Table View */}
             {viewMode === 'table' && (
-              <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <div className="bg-surface rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-900">
+                    <thead className="bg-background">
                       <tr>
                         <th 
-                          className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white transition-colors"
+                          className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('name')}
                         >
                           <div className="flex items-center gap-1">
@@ -440,7 +440,7 @@ function RobotsPage() {
                           </div>
                         </th>
                         <th 
-                          className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white transition-colors"
+                          className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('elo')}
                         >
                           <div className="flex items-center gap-1">
@@ -451,7 +451,7 @@ function RobotsPage() {
                           </div>
                         </th>
                         <th 
-                          className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white transition-colors"
+                          className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('fame')}
                         >
                           <div className="flex items-center gap-1">
@@ -462,7 +462,7 @@ function RobotsPage() {
                           </div>
                         </th>
                         <th 
-                          className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white transition-colors"
+                          className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('league')}
                         >
                           <div className="flex items-center gap-1">
@@ -473,7 +473,7 @@ function RobotsPage() {
                           </div>
                         </th>
                         <th 
-                          className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white transition-colors"
+                          className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('winRate')}
                         >
                           <div className="flex items-center gap-1">
@@ -484,7 +484,7 @@ function RobotsPage() {
                           </div>
                         </th>
                         <th 
-                          className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white transition-colors"
+                          className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('hp')}
                         >
                           <div className="flex items-center gap-1">
@@ -495,7 +495,7 @@ function RobotsPage() {
                           </div>
                         </th>
                         <th 
-                          className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white transition-colors"
+                          className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('shield')}
                         >
                           <div className="flex items-center gap-1">
@@ -505,9 +505,9 @@ function RobotsPage() {
                             )}
                           </div>
                         </th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Weapons</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-secondary">Weapons</th>
                         <th 
-                          className="px-4 py-3 text-left text-sm font-semibold text-gray-300 cursor-pointer hover:text-white transition-colors"
+                          className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleSort('readiness')}
                         >
                           <div className="flex items-center gap-1">
@@ -517,7 +517,7 @@ function RobotsPage() {
                             )}
                           </div>
                         </th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-300">Actions</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-secondary">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -540,7 +540,7 @@ function RobotsPage() {
                         return (
                           <tr 
                             key={robot.id}
-                            className="border-t border-gray-700 hover:bg-gray-750 transition-colors cursor-pointer"
+                            className="border-t border-white/10 hover:bg-gray-750 transition-colors cursor-pointer"
                             onClick={() => navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`)}
                           >
                             {/* Robot Name & Image */}
@@ -569,7 +569,7 @@ function RobotsPage() {
                             <td className="px-4 py-3">
                               <div className="flex flex-col">
                                 <span className="font-semibold capitalize">{robot.currentLeague}</span>
-                                <span className="text-xs text-gray-400">LP: {robot.leaguePoints}</span>
+                                <span className="text-xs text-secondary">LP: {robot.leaguePoints}</span>
                               </div>
                             </td>
                             
@@ -577,15 +577,15 @@ function RobotsPage() {
                             <td className="px-4 py-3">
                               <div className="flex flex-col">
                                 <span className="font-semibold text-sm">{robot.wins}W-{robot.losses}L-{robot.draws}D</span>
-                                <span className="text-xs text-gray-400">{winRate}% WR</span>
+                                <span className="text-xs text-secondary">{winRate}% WR</span>
                               </div>
                             </td>
                             
                             {/* HP */}
                             <td className="px-4 py-3">
                               <div className="flex flex-col gap-1">
-                                <span className="text-xs text-gray-400">{robot.currentHP}/{robot.maxHP}</span>
-                                <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <span className="text-xs text-secondary">{robot.currentHP}/{robot.maxHP}</span>
+                                <div className="w-24 h-2 bg-surface-elevated rounded-full overflow-hidden">
                                   <div
                                     className={`h-full transition-all ${getHPColor(robot.currentHP, robot.maxHP)}`}
                                     style={{ width: `${hpPercentage}%` }}
@@ -598,8 +598,8 @@ function RobotsPage() {
                             <td className="px-4 py-3">
                               {robot.maxShield > 0 ? (
                                 <div className="flex flex-col gap-1">
-                                  <span className="text-xs text-gray-400">{robot.currentShield}/{robot.maxShield}</span>
-                                  <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                  <span className="text-xs text-secondary">{robot.currentShield}/{robot.maxShield}</span>
+                                  <div className="w-24 h-2 bg-surface-elevated rounded-full overflow-hidden">
                                     <div
                                       className="h-full transition-all bg-[#58a6ff]"
                                       style={{ width: `${shieldPercentage}%` }}
@@ -607,7 +607,7 @@ function RobotsPage() {
                                   </div>
                                 </div>
                               ) : (
-                                <span className="text-gray-500 text-sm">N/A</span>
+                                <span className="text-tertiary text-sm">N/A</span>
                               )}
                             </td>
                             
@@ -618,11 +618,11 @@ function RobotsPage() {
                                   <>
                                     <div>{robot.mainWeapon.weapon.name}</div>
                                     {robot.offhandWeapon && (
-                                      <div className="text-gray-400">+ {robot.offhandWeapon.weapon.name}</div>
+                                      <div className="text-secondary">+ {robot.offhandWeapon.weapon.name}</div>
                                     )}
                                   </>
                                 ) : (
-                                  <span className="text-gray-500">None</span>
+                                  <span className="text-tertiary">None</span>
                                 )}
                               </div>
                             </td>
@@ -700,21 +700,21 @@ function RobotsPage() {
                   <div className="space-y-2 text-sm mb-4">
                     {/* ELO, League, League Points */}
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">ELO:</span>
+                      <span className="text-secondary">ELO:</span>
                       <span className="font-semibold text-[#58a6ff]">{robot.elo}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Fame:</span>
+                      <span className="text-secondary">Fame:</span>
                       <span className="font-semibold text-[#ffd700]">{robot.fame}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">League:</span>
+                      <span className="text-secondary">League:</span>
                       <span className="font-semibold capitalize">{robot.currentLeague} │ LP: {robot.leaguePoints}</span>
                     </div>
                     
                     {/* Win/Loss/Draw Record */}
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Record:</span>
+                      <span className="text-secondary">Record:</span>
                       <span className="font-semibold">
                         {robot.wins}W-{robot.losses}L-{robot.draws}D ({winRate}%)
                       </span>
@@ -723,7 +723,7 @@ function RobotsPage() {
 
                   {/* HP Bar */}
                   <div className="space-y-2 mb-3">
-                    <div className="flex justify-between text-xs text-gray-400">
+                    <div className="flex justify-between text-xs text-secondary">
                       <span>HP</span>
                       <span>{hpPercentage}%</span>
                     </div>
@@ -738,7 +738,7 @@ function RobotsPage() {
                   {/* Shield Bar */}
                   {robot.maxShield > 0 && (
                     <div className="space-y-2 mb-3">
-                      <div className="flex justify-between text-xs text-gray-400">
+                      <div className="flex justify-between text-xs text-secondary">
                         <span>Shield</span>
                         <span>{shieldPercentage}%</span>
                       </div>
@@ -754,14 +754,14 @@ function RobotsPage() {
                   {/* Weapon & Readiness */}
                   <div className="space-y-2 text-sm mb-4">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Weapon:</span>
+                      <span className="text-secondary">Weapon:</span>
                       <span className="font-semibold">
                         {robot.mainWeapon ? robot.mainWeapon.weapon.name : 'None'}
                         {robot.offhandWeapon && ` + ${robot.offhandWeapon.weapon.name}`}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Readiness:</span>
+                      <span className="text-secondary">Readiness:</span>
                       <span className={`font-semibold ${readinessStatus.color}`}>
                         {actualReadiness}% │ {readinessStatus.text}
                         {readinessStatus.reason && ` (${readinessStatus.reason})`}
@@ -794,12 +794,12 @@ function RobotsPage() {
           targetSelector=".robot-card-first"
           tooltipContent={
             <div>
-              <p className="font-semibold text-blue-400 mb-2">Select Your Robot</p>
+              <p className="font-semibold text-primary mb-2">Select Your Robot</p>
               <p className="mb-2">
                 Click on your robot to visit its detail page. From there, navigate to the
                 Battle Config tab to equip your weapon.
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-secondary">
                 Once your weapon is equipped, your robot's stats will update with weapon bonuses
                 and it will be battle-ready!
               </p>
@@ -820,17 +820,17 @@ function RobotsPage() {
               <p className="mb-2">
                 Are you sure you want to repair all robots?
               </p>
-              <div className="bg-gray-700 p-3 rounded mt-3">
+              <div className="bg-surface-elevated p-3 rounded mt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Total Cost:</span>
-                  <span className="text-xl font-bold text-green-400">
+                  <span className="text-secondary">Total Cost:</span>
+                  <span className="text-xl font-bold text-success">
                     ₡{repairCostInfo.discountedCost.toLocaleString()}
                   </span>
                 </div>
                 {repairCostInfo.discount > 0 && (
                   <div className="flex justify-between items-center mt-1 text-sm">
-                    <span className="text-gray-500">Repair Bay Discount:</span>
-                    <span className="text-blue-400">{repairCostInfo.discount}% off</span>
+                    <span className="text-tertiary">Repair Bay Discount:</span>
+                    <span className="text-primary">{repairCostInfo.discount}% off</span>
                   </div>
                 )}
               </div>

@@ -113,24 +113,24 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
 
   if (loading) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <div className="text-center text-gray-400">Loading analytics...</div>
+      <div className="bg-surface p-6 rounded-lg">
+        <div className="text-center text-secondary">Loading analytics...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <div className="text-center text-red-400">{error}</div>
+      <div className="bg-surface p-6 rounded-lg">
+        <div className="text-center text-error">{error}</div>
       </div>
     );
   }
 
   if (!summary) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <div className="text-center text-gray-400">No analytics data available</div>
+      <div className="bg-surface p-6 rounded-lg">
+        <div className="text-center text-secondary">No analytics data available</div>
       </div>
     );
   }
@@ -138,77 +138,77 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
   return (
     <div className="space-y-6">
       {/* Performance Summary */}
-      <div className="bg-gray-800 p-6 rounded-lg">
+      <div className="bg-surface p-6 rounded-lg">
         <h3 className="text-xl font-bold mb-4">
           Performance Summary (Last {lastNCycles} Cycles)
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Battles</div>
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Battles</div>
             <div className="text-2xl font-bold">{summary.battlesParticipated}</div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Win Rate</div>
-            <div className="text-2xl font-bold text-green-400">
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Win Rate</div>
+            <div className="text-2xl font-bold text-success">
               {summary.winRate.toFixed(1)}%
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Record</div>
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Record</div>
             <div className="text-lg font-bold">
               {summary.wins}W - {summary.losses}L - {summary.draws}D
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">ELO Change</div>
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">ELO Change</div>
             <div
               className={`text-2xl font-bold ${
-                summary.eloChange >= 0 ? 'text-green-400' : 'text-red-400'
+                summary.eloChange >= 0 ? 'text-success' : 'text-error'
               }`}
             >
               {summary.eloChange >= 0 ? '+' : ''}
               {summary.eloChange}
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Damage Dealt</div>
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Damage Dealt</div>
             <div className="text-xl font-bold text-orange-400">
               {summary.damageDealt.toLocaleString()}
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Damage Received</div>
-            <div className="text-xl font-bold text-red-400">
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Damage Received</div>
+            <div className="text-xl font-bold text-error">
               {summary.damageReceived.toLocaleString()}
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Credits Earned</div>
-            <div className="text-xl font-bold text-yellow-400">
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Credits Earned</div>
+            <div className="text-xl font-bold text-warning">
               ₡{summary.totalCreditsEarned.toLocaleString()}
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Repair Costs</div>
-            <div className="text-xl font-bold text-red-400">
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Repair Costs</div>
+            <div className="text-xl font-bold text-error">
               ₡{(summary.totalRepairCosts ?? 0).toLocaleString()}
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Fame Earned</div>
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Fame Earned</div>
             <div className="text-xl font-bold text-purple-400">
               {summary.totalFameEarned.toLocaleString()}
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Kills</div>
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Kills</div>
             <div className="text-xl font-bold text-orange-400">
               {summary.kills ?? 0}
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded">
-            <div className="text-gray-400 text-sm mb-1">Destructed</div>
-            <div className="text-xl font-bold text-red-400">
+          <div className="bg-surface-elevated p-4 rounded">
+            <div className="text-secondary text-sm mb-1">Destructed</div>
+            <div className="text-xl font-bold text-error">
               {summary.destructions ?? 0}
             </div>
           </div>
@@ -217,7 +217,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
 
       {/* ELO Progression Chart */}
       {eloProgression && eloProgression.dataPoints.length > 0 && (
-        <div className="bg-gray-800 p-6 rounded-lg">
+        <div className="bg-surface p-6 rounded-lg">
           <h3 className="text-xl font-bold mb-4">ELO Progression</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={eloProgression.dataPoints}>
@@ -256,18 +256,18 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
           </ResponsiveContainer>
           <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
             <div>
-              <span className="text-gray-400">Start ELO:</span>{' '}
+              <span className="text-secondary">Start ELO:</span>{' '}
               <span className="font-bold">{eloProgression.startValue}</span>
             </div>
             <div>
-              <span className="text-gray-400">End ELO:</span>{' '}
+              <span className="text-secondary">End ELO:</span>{' '}
               <span className="font-bold">{eloProgression.endValue}</span>
             </div>
             <div>
-              <span className="text-gray-400">Avg Change/Cycle:</span>{' '}
+              <span className="text-secondary">Avg Change/Cycle:</span>{' '}
               <span
                 className={`font-bold ${
-                  eloProgression.averageChange >= 0 ? 'text-green-400' : 'text-red-400'
+                  eloProgression.averageChange >= 0 ? 'text-success' : 'text-error'
                 }`}
               >
                 {eloProgression.averageChange >= 0 ? '+' : ''}
@@ -280,7 +280,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
 
       {/* Damage Progression Chart */}
       {damageProgression && damageProgression.dataPoints.length > 0 && (
-        <div className="bg-gray-800 p-6 rounded-lg">
+        <div className="bg-surface p-6 rounded-lg">
           <h3 className="text-xl font-bold mb-4">Damage Dealt Per Cycle</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={damageProgression.dataPoints}>
@@ -314,7 +314,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
             </LineChart>
           </ResponsiveContainer>
           <div className="mt-4 text-sm">
-            <span className="text-gray-400">Total Damage Dealt:</span>{' '}
+            <span className="text-secondary">Total Damage Dealt:</span>{' '}
             <span className="font-bold text-orange-400">
               {damageProgression.totalChange.toLocaleString()}
             </span>
@@ -324,7 +324,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
 
       {/* Credits Earned Chart */}
       {creditsProgression && creditsProgression.dataPoints.length > 0 && (
-        <div className="bg-gray-800 p-6 rounded-lg">
+        <div className="bg-surface p-6 rounded-lg">
           <h3 className="text-xl font-bold mb-4">Credits Earned Per Cycle</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={creditsProgression.dataPoints}>
@@ -359,8 +359,8 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
             </LineChart>
           </ResponsiveContainer>
           <div className="mt-4 text-sm">
-            <span className="text-gray-400">Total Credits Earned:</span>{' '}
-            <span className="font-bold text-yellow-400">
+            <span className="text-secondary">Total Credits Earned:</span>{' '}
+            <span className="font-bold text-warning">
               ₡{creditsProgression.totalChange.toLocaleString()}
             </span>
           </div>

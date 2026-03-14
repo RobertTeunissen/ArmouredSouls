@@ -69,23 +69,23 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
 
   const getPlacementBadge = (placement: number) => {
     if (placement === 1) {
-      return <span className="text-yellow-400 text-xl">🥇</span>;
+      return <span className="text-warning text-xl">🥇</span>;
     } else if (placement === 2) {
-      return <span className="text-gray-300 text-xl">🥈</span>;
+      return <span className="text-secondary text-xl">🥈</span>;
     } else if (placement === 3) {
       return <span className="text-amber-700 text-xl">🥉</span>;
     } else {
-      return <span className="text-gray-400 font-semibold">#{placement}</span>;
+      return <span className="text-secondary font-semibold">#{placement}</span>;
     }
   };
 
   if (isLoading) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4">
+      <div className="bg-surface rounded-lg p-4">
         <h3 className="text-base font-semibold mb-3">Battle Performance</h3>
         <div className="space-y-2">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-gray-700 rounded p-2 animate-pulse">
+            <div key={i} className="bg-surface-elevated rounded p-2 animate-pulse">
               <div className="h-4 bg-gray-600 rounded mb-1 w-1/3"></div>
               <div className="h-3 bg-gray-600 rounded"></div>
             </div>
@@ -97,15 +97,15 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
 
   if (error) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4">
+      <div className="bg-surface rounded-lg p-4">
         <h3 className="text-base font-semibold mb-3">Battle Performance</h3>
-        <p className="text-red-400 text-sm">{error}</p>
+        <p className="text-error text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4">
+    <div className="bg-surface rounded-lg p-4">
       <h3 className="text-base font-semibold mb-3">Battle Performance</h3>
 
       <div className="space-y-2">
@@ -113,8 +113,8 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
         <div>
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-base">🏆</span>
-            <h4 className="text-xs font-semibold text-gray-400">Leagues</h4>
-            {leagues.length === 0 && <span className="text-xs text-gray-500">No battles yet</span>}
+            <h4 className="text-xs font-semibold text-secondary">Leagues</h4>
+            {leagues.length === 0 && <span className="text-xs text-tertiary">No battles yet</span>}
           </div>
           
           {leagues.length > 0 && (
@@ -122,18 +122,18 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
               {leagues.map((league, index) => (
                 <div key={`${league.leagueName}-${index}`} className="ml-5">
                   <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-xs capitalize text-gray-300">{league.leagueName}</span>
+                    <span className="text-xs capitalize text-secondary">{league.leagueName}</span>
                     <div className="text-xs">
-                      <span className="text-green-400">{league.wins}W</span>
-                      <span className="text-gray-500 mx-0.5">-</span>
-                      <span className="text-red-400">{league.losses}L</span>
+                      <span className="text-success">{league.wins}W</span>
+                      <span className="text-tertiary mx-0.5">-</span>
+                      <span className="text-error">{league.losses}L</span>
                       {league.draws > 0 && (
                         <>
-                          <span className="text-gray-500 mx-0.5">-</span>
+                          <span className="text-tertiary mx-0.5">-</span>
                           <span className="text-amber-400">{league.draws}D</span>
                         </>
                       )}
-                      <span className="text-gray-500 ml-1">({league.winRate}%)</span>
+                      <span className="text-tertiary ml-1">({league.winRate}%)</span>
                     </div>
                   </div>
                   <div className="flex gap-0.5 h-1.5">
@@ -162,8 +162,8 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
         <div>
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-base">🏅</span>
-            <h4 className="text-xs font-semibold text-gray-400">Tournaments</h4>
-            {tournaments.length === 0 && <span className="text-xs text-gray-500">No battles yet</span>}
+            <h4 className="text-xs font-semibold text-secondary">Tournaments</h4>
+            {tournaments.length === 0 && <span className="text-xs text-tertiary">No battles yet</span>}
           </div>
           
           {tournaments.length > 0 && (
@@ -172,13 +172,13 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
                 <div key={tournament.tournamentId} className="ml-5">
                   <div className="flex items-center justify-between mb-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-300">{tournament.tournamentName}</span>
+                      <span className="text-xs text-secondary">{tournament.tournamentName}</span>
                       {getPlacementBadge(tournament.placement)}
                     </div>
                     <div className="text-xs">
-                      <span className="text-green-400">{tournament.wins}W</span>
-                      <span className="text-gray-500 mx-0.5">-</span>
-                      <span className="text-red-400">{tournament.losses}L</span>
+                      <span className="text-success">{tournament.wins}W</span>
+                      <span className="text-tertiary mx-0.5">-</span>
+                      <span className="text-error">{tournament.losses}L</span>
                     </div>
                   </div>
                   <div className="flex gap-0.5 h-1.5">
@@ -207,25 +207,25 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
         <div>
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-base">👥</span>
-            <h4 className="text-xs font-semibold text-gray-400">Tag Team</h4>
-            {(!tagTeam || tagTeam.totalBattles === 0) && <span className="text-xs text-gray-500">No battles yet</span>}
+            <h4 className="text-xs font-semibold text-secondary">Tag Team</h4>
+            {(!tagTeam || tagTeam.totalBattles === 0) && <span className="text-xs text-tertiary">No battles yet</span>}
           </div>
           
           {tagTeam && tagTeam.totalBattles > 0 && (
             <div className="ml-5">
               <div className="flex items-center justify-between mb-0.5">
-                <span className="text-xs text-gray-300">{tagTeam.totalBattles} battles</span>
+                <span className="text-xs text-secondary">{tagTeam.totalBattles} battles</span>
                 <div className="text-xs">
-                  <span className="text-green-400">{tagTeam.wins}W</span>
-                  <span className="text-gray-500 mx-0.5">-</span>
-                  <span className="text-red-400">{tagTeam.losses}L</span>
+                  <span className="text-success">{tagTeam.wins}W</span>
+                  <span className="text-tertiary mx-0.5">-</span>
+                  <span className="text-error">{tagTeam.losses}L</span>
                   {tagTeam.draws > 0 && (
                     <>
-                      <span className="text-gray-500 mx-0.5">-</span>
+                      <span className="text-tertiary mx-0.5">-</span>
                       <span className="text-amber-400">{tagTeam.draws}D</span>
                     </>
                   )}
-                  <span className="text-gray-500 ml-1">({tagTeam.winRate}%)</span>
+                  <span className="text-tertiary ml-1">({tagTeam.winRate}%)</span>
                 </div>
               </div>
               <div className="flex gap-0.5 h-1.5">

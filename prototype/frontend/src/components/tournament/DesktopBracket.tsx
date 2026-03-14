@@ -60,7 +60,7 @@ const DesktopBracket: React.FC<DesktopBracketProps> = ({
     <div
       ref={containerRef}
       data-testid="desktop-bracket"
-      className="overflow-auto relative bg-gray-900 rounded-lg border border-gray-700"
+      className="overflow-auto relative bg-background rounded-lg border border-white/10"
       style={{
         maxHeight: '80vh',
         cursor: zp.isPanning ? 'grabbing' : 'grab',
@@ -74,12 +74,12 @@ const DesktopBracket: React.FC<DesktopBracketProps> = ({
       onTouchEnd={zp.handleTouchEnd}
     >
       {/* Zoom controls */}
-      <div className="sticky top-0 left-0 z-10 flex items-center gap-2 p-2 bg-gray-900/90 backdrop-blur-sm text-xs text-gray-400">
-        <button className="px-2 py-0.5 bg-gray-700 rounded hover:bg-gray-600" onClick={zp.zoomOut}>−</button>
+      <div className="sticky top-0 left-0 z-10 flex items-center gap-2 p-2 bg-background/90 backdrop-blur-sm text-xs text-secondary">
+        <button className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600" onClick={zp.zoomOut}>−</button>
         <span>{Math.round(zp.scale * 100)}%</span>
-        <button className="px-2 py-0.5 bg-gray-700 rounded hover:bg-gray-600" onClick={zp.zoomIn}>+</button>
-        <button className="px-2 py-0.5 bg-gray-700 rounded hover:bg-gray-600 ml-2" onClick={zp.reset}>Reset</button>
-        <span className="ml-2 text-gray-500">Ctrl+scroll to zoom · Drag to pan</span>
+        <button className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600" onClick={zp.zoomIn}>+</button>
+        <button className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600 ml-2" onClick={zp.reset}>Reset</button>
+        <span className="ml-2 text-tertiary">Ctrl+scroll to zoom · Drag to pan</span>
       </div>
 
       <div
@@ -105,7 +105,7 @@ const DesktopBracket: React.FC<DesktopBracketProps> = ({
             <React.Fragment key={round}>
               <div
                 className={`absolute text-xs font-semibold text-center py-1 ${
-                  isCurrentRound ? 'text-yellow-400' : 'text-gray-400'
+                  isCurrentRound ? 'text-warning' : 'text-secondary'
                 }`}
                 style={{ left: `${x}px`, top: 0, width: `${COLUMN_WIDTH}px` }}
               >

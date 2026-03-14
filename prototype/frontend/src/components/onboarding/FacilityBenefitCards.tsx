@@ -205,7 +205,7 @@ const FacilityBenefitCards: React.FC<FacilityBenefitCardsProps> = memo(({ classN
         <div className="flex items-start gap-3">
           <span className="text-2xl">💡</span>
           <div>
-            <h3 className="text-blue-400 font-semibold mb-1">
+            <h3 className="text-primary font-semibold mb-1">
               Understanding Facility Value
             </h3>
             <p className="text-blue-200 text-sm">
@@ -219,16 +219,16 @@ const FacilityBenefitCards: React.FC<FacilityBenefitCardsProps> = memo(({ classN
       {FACILITY_BENEFITS.map((facility) => (
         <div
           key={facility.type}
-          className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-all"
+          className="bg-surface border border-white/10 rounded-lg overflow-hidden hover:border-gray-600 transition-all"
         >
           {/* Header */}
-          <div className="bg-gray-750 border-b border-gray-700 p-4">
+          <div className="bg-gray-750 border-b border-white/10 p-4">
             <div className="flex items-center gap-4">
               <FacilityIcon facilityType={facility.type} facilityName={facility.name} size="large" />
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-gray-100 mb-1">{facility.name}</h3>
                 {facility.discountRange && (
-                  <p className="text-sm text-green-400 font-medium">
+                  <p className="text-sm text-success font-medium">
                     Discount: {facility.discountRange}
                   </p>
                 )}
@@ -239,7 +239,7 @@ const FacilityBenefitCards: React.FC<FacilityBenefitCardsProps> = memo(({ classN
           {/* Content */}
           <div className="p-4 space-y-4">
             {/* Description */}
-            <p className="text-gray-300">{facility.description}</p>
+            <p className="text-secondary">{facility.description}</p>
 
             {/* Examples */}
             <div>
@@ -248,21 +248,21 @@ const FacilityBenefitCards: React.FC<FacilityBenefitCardsProps> = memo(({ classN
                 {facility.examples.map((example, index) => (
                   <div
                     key={index}
-                    className="bg-gray-750 border border-gray-700 rounded-lg p-4"
+                    className="bg-gray-750 border border-white/10 rounded-lg p-4"
                   >
                     <h5 className="font-semibold text-gray-200 mb-3">{example.scenario}</h5>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                       <div>
-                        <div className="text-gray-400 text-xs mb-1">Without Facility</div>
-                        <div className="text-red-400 font-semibold">{example.withoutFacility}</div>
+                        <div className="text-secondary text-xs mb-1">Without Facility</div>
+                        <div className="text-error font-semibold">{example.withoutFacility}</div>
                       </div>
                       <div>
-                        <div className="text-gray-400 text-xs mb-1">With Facility</div>
-                        <div className="text-green-400 font-semibold">{example.withFacility}</div>
+                        <div className="text-secondary text-xs mb-1">With Facility</div>
+                        <div className="text-success font-semibold">{example.withFacility}</div>
                       </div>
                       <div>
-                        <div className="text-gray-400 text-xs mb-1">Savings</div>
-                        <div className="text-yellow-400 font-bold">{example.savings}</div>
+                        <div className="text-secondary text-xs mb-1">Savings</div>
+                        <div className="text-warning font-bold">{example.savings}</div>
                       </div>
                     </div>
                   </div>
@@ -275,8 +275,8 @@ const FacilityBenefitCards: React.FC<FacilityBenefitCardsProps> = memo(({ classN
               <h4 className="text-lg font-semibold text-gray-100 mb-2">Key Points</h4>
               <ul className="space-y-2">
                 {facility.keyPoints.map((point, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-gray-300">
-                    <span className="text-green-400 mt-0.5">✓</span>
+                  <li key={index} className="flex items-start gap-2 text-sm text-secondary">
+                    <span className="text-success mt-0.5">✓</span>
                     <span>{point}</span>
                   </li>
                 ))}
@@ -286,9 +286,9 @@ const FacilityBenefitCards: React.FC<FacilityBenefitCardsProps> = memo(({ classN
             {/* Timing */}
             <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <span className="text-yellow-400 text-lg">⏰</span>
+                <span className="text-warning text-lg">⏰</span>
                 <div>
-                  <h5 className="text-yellow-400 font-semibold text-sm mb-1">When to Purchase</h5>
+                  <h5 className="text-warning font-semibold text-sm mb-1">When to Purchase</h5>
                   <p className="text-yellow-200 text-sm">{facility.timing}</p>
                 </div>
               </div>
@@ -298,9 +298,9 @@ const FacilityBenefitCards: React.FC<FacilityBenefitCardsProps> = memo(({ classN
       ))}
 
       {/* Summary */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+      <div className="bg-surface border border-white/10 rounded-lg p-6">
         <h3 className="text-xl font-semibold text-gray-100 mb-4">Facility Purchase Strategy</h3>
-        <div className="space-y-3 text-sm text-gray-300">
+        <div className="space-y-3 text-sm text-secondary">
           <div className="flex items-start gap-3">
             <span className="text-2xl">1️⃣</span>
             <div>

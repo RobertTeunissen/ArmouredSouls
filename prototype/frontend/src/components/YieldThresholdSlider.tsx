@@ -119,11 +119,11 @@ function YieldThresholdSlider({
 
   const getRiskLevel = (threshold: number): { color: string; text: string } => {
     if (threshold >= 30) {
-      return { color: 'text-green-400', text: 'Conservative' };
+      return { color: 'text-success', text: 'Conservative' };
     } else if (threshold >= 10) {
-      return { color: 'text-yellow-400', text: 'Balanced' };
+      return { color: 'text-warning', text: 'Balanced' };
     } else {
-      return { color: 'text-red-400', text: 'Aggressive' };
+      return { color: 'text-error', text: 'Aggressive' };
     }
   };
 
@@ -139,9 +139,9 @@ function YieldThresholdSlider({
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-300 uppercase tracking-wide">
+      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-secondary uppercase tracking-wide">
         🏳️ Yield Threshold
-        <span className="text-sm text-gray-400 font-normal normal-case">
+        <span className="text-sm text-secondary font-normal normal-case">
           (HP % where robot will try to surrender)
         </span>
       </h3>
@@ -157,7 +157,7 @@ function YieldThresholdSlider({
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-3xl font-bold">{threshold}%</span>
-            <span className={`text-sm font-semibold px-3 py-1 rounded ${riskLevel.color} bg-gray-800`}>
+            <span className={`text-sm font-semibold px-3 py-1 rounded ${riskLevel.color} bg-surface`}>
               {riskLevel.text}
             </span>
           </div>
@@ -173,7 +173,7 @@ function YieldThresholdSlider({
             className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
             disabled={loading}
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-secondary mt-1">
             <span>0% (High Risk)</span>
             <span>50% (Low Risk)</span>
           </div>
@@ -181,9 +181,9 @@ function YieldThresholdSlider({
 
         {/* Repair Cost Preview */}
         <div className="mt-4 border-t border-gray-600 pt-4">
-          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-gray-300">Repair Cost Scenarios</h4>
+          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-secondary">Repair Cost Scenarios</h4>
           {repairBayLevel > 0 && (
-            <p className="text-xs text-gray-400 mb-2">
+            <p className="text-xs text-secondary mb-2">
               Repair Bay Level {repairBayLevel}: {Math.min(repairBayLevel * (5 + activeRobotCount), 90)}% discount ({activeRobotCount} robot{activeRobotCount !== 1 ? 's' : ''})
             </p>
           )}
@@ -193,10 +193,10 @@ function YieldThresholdSlider({
               return (
                 <div
                   key={idx}
-                  className="flex justify-between items-center text-sm bg-gray-800 p-2 rounded border border-gray-700"
+                  className="flex justify-between items-center text-sm bg-surface p-2 rounded border border-white/10"
                 >
-                  <span className="text-gray-300">{scenario.label}</span>
-                  <span className="font-mono text-green-400 font-semibold">₡{cost.toLocaleString()}</span>
+                  <span className="text-secondary">{scenario.label}</span>
+                  <span className="font-mono text-success font-semibold">₡{cost.toLocaleString()}</span>
                 </div>
               );
             })}
@@ -223,7 +223,7 @@ function YieldThresholdSlider({
           <button
             onClick={handleSave}
             disabled={loading}
-            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors duration-150"
+            className="mt-4 w-full bg-primary hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors duration-150"
           >
             {loading ? 'Saving...' : 'Save Yield Threshold'}
           </button>

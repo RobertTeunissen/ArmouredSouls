@@ -94,7 +94,7 @@ const SkipTutorialButton = ({ onSkipped, className = '', disabled = false }: Ski
       <button
         onClick={handleSkipClick}
         disabled={disabled || skipping}
-        className={`px-4 py-2 text-sm text-gray-400 hover:text-gray-300 border border-gray-600 hover:border-gray-500 rounded transition-colors ${className}`}
+        className={`px-4 py-2 text-sm text-secondary hover:text-secondary border border-gray-600 hover:border-gray-500 rounded transition-colors ${className}`}
         aria-label="Skip Tutorial"
       >
         Skip Tutorial
@@ -107,18 +107,18 @@ const SkipTutorialButton = ({ onSkipped, className = '', disabled = false }: Ski
           aria-modal="true"
           aria-labelledby="skip-tutorial-title"
         >
-          <div ref={modalRef} className="bg-surface rounded-lg border border-gray-700 max-w-md w-full p-6">
+          <div ref={modalRef} className="bg-surface rounded-lg border border-white/10 max-w-md w-full p-6">
             <h3 id="skip-tutorial-title" className="text-xl font-bold mb-4">Skip Tutorial?</h3>
-            <p className="text-gray-400 mb-4">
+            <p className="text-secondary mb-4">
               Are you sure you want to skip the tutorial? You can always replay it from your profile settings.
             </p>
             {error && (
-              <p className="text-red-400 text-sm mb-4" role="alert">{error}</p>
+              <p className="text-error text-sm mb-4" role="alert">{error}</p>
             )}
             <div className="flex gap-4">
               <button
                 onClick={handleCancel}
-                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+                className="flex-1 px-4 py-2 bg-surface-elevated hover:bg-gray-600 rounded transition-colors"
                 disabled={skipping}
                 aria-label="Cancel skip"
               >

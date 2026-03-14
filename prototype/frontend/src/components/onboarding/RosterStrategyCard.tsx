@@ -146,7 +146,7 @@ const STRATEGY_DATA: Record<RosterStrategy, StrategyData> = {
  */
 const BudgetBreakdownMini = ({ breakdown }: { breakdown: StrategyData['budgetBreakdown'] }) => {
   const categories = [
-    { key: 'facilities', label: 'Facilities', color: 'bg-blue-500' },
+    { key: 'facilities', label: 'Facilities', color: 'bg-primary-dark' },
     { key: 'robots', label: 'Robots', color: 'bg-green-500' },
     { key: 'weapons', label: 'Weapons', color: 'bg-red-500' },
     { key: 'attributes', label: 'Attributes', color: 'bg-yellow-500' },
@@ -156,8 +156,8 @@ const BudgetBreakdownMini = ({ breakdown }: { breakdown: StrategyData['budgetBre
   const total = 3000000;
 
   return (
-    <div className="mt-4 pt-4 border-t border-gray-700">
-      <h4 className="text-xs font-medium text-gray-400 mb-2">Budget Breakdown</h4>
+    <div className="mt-4 pt-4 border-t border-white/10">
+      <h4 className="text-xs font-medium text-secondary mb-2">Budget Breakdown</h4>
       
       {/* Stacked bar chart */}
       <div className="h-6 flex rounded overflow-hidden mb-2">
@@ -185,7 +185,7 @@ const BudgetBreakdownMini = ({ breakdown }: { breakdown: StrategyData['budgetBre
           return (
             <div key={key} className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full ${color}`} />
-              <span className="text-gray-300 truncate">
+              <span className="text-secondary truncate">
                 {label}: {formatCurrency(avg)}
               </span>
             </div>
@@ -210,7 +210,7 @@ const RosterStrategyCard = ({ strategy, selected, onSelect }: RosterStrategyCard
         hover:shadow-lg hover:scale-[1.02]
         ${selected 
           ? 'border-blue-500 ring-4 ring-blue-500 ring-opacity-30 shadow-xl' 
-          : 'border-gray-700 hover:border-gray-600'
+          : 'border-white/10 hover:border-gray-600'
         }
       `}
       onClick={() => onSelect(strategy)}
@@ -227,7 +227,7 @@ const RosterStrategyCard = ({ strategy, selected, onSelect }: RosterStrategyCard
     >
       {/* Selected indicator */}
       {selected && (
-        <div className="absolute top-3 right-3 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10">
+        <div className="absolute top-3 right-3 bg-primary-dark text-white px-3 py-1 rounded-full text-xs font-bold z-10">
           SELECTED
         </div>
       )}
@@ -235,7 +235,7 @@ const RosterStrategyCard = ({ strategy, selected, onSelect }: RosterStrategyCard
       <div className="p-6">
         {/* Header with image */}
         <div className="mb-4">
-          <div className="aspect-[4/3] bg-gray-800 rounded-lg overflow-hidden mb-3">
+          <div className="aspect-[4/3] bg-surface rounded-lg overflow-hidden mb-3">
             <img
               src={data.imagePath}
               alt={data.name}
@@ -249,32 +249,32 @@ const RosterStrategyCard = ({ strategy, selected, onSelect }: RosterStrategyCard
           </div>
           
           <h3 className="text-xl font-bold text-gray-100 mb-1">{data.name}</h3>
-          <p className="text-sm text-gray-300">{data.description}</p>
+          <p className="text-sm text-secondary">{data.description}</p>
         </div>
 
         {/* Key stats grid */}
-        <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-gray-800 bg-opacity-50 rounded">
+        <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-surface bg-opacity-50 rounded">
           <div>
-            <div className="text-xs text-gray-400">Battles/Day</div>
+            <div className="text-xs text-secondary">Battles/Day</div>
             <div className="text-sm font-medium text-gray-100">{data.battlesPerDay}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400">Power Level</div>
+            <div className="text-xs text-secondary">Power Level</div>
             <div className="text-sm font-medium text-gray-100">{data.powerLevel}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400">Complexity</div>
+            <div className="text-xs text-secondary">Complexity</div>
             <div className="text-sm font-medium text-gray-100">{data.complexity}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400">Facility Cost</div>
+            <div className="text-xs text-secondary">Facility Cost</div>
             <div className="text-sm font-medium text-gray-100">{data.facilityInvestment}</div>
           </div>
         </div>
 
         {/* Advantages */}
         <div className="mb-4">
-          <h4 className="text-sm font-semibold text-green-400 mb-2 flex items-center gap-1">
+          <h4 className="text-sm font-semibold text-success mb-2 flex items-center gap-1">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
@@ -292,7 +292,7 @@ const RosterStrategyCard = ({ strategy, selected, onSelect }: RosterStrategyCard
 
         {/* Disadvantages */}
         <div className="mb-4">
-          <h4 className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-1">
+          <h4 className="text-sm font-semibold text-error mb-2 flex items-center gap-1">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>

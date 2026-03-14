@@ -79,13 +79,13 @@ function OnboardingAnalyticsPage() {
   // Early return for non-admin users
   if (!user || user.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-400 mb-6">This page is only accessible to administrators.</p>
+          <p className="text-secondary mb-6">This page is only accessible to administrators.</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded font-semibold transition-colors"
+            className="bg-primary hover:bg-blue-700 px-6 py-2 rounded font-semibold transition-colors"
           >
             Return to Dashboard
           </button>
@@ -95,7 +95,7 @@ function OnboardingAnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -103,17 +103,17 @@ function OnboardingAnalyticsPage() {
           <div>
             <button
               onClick={() => navigate('/admin')}
-              className="text-blue-400 hover:text-blue-300 mb-2 flex items-center gap-2"
+              className="text-primary hover:text-blue-300 mb-2 flex items-center gap-2"
             >
               ← Back to Admin
             </button>
             <h1 className="text-4xl font-bold">Onboarding Analytics</h1>
-            <p className="text-gray-400 mt-2">Track user progress through the tutorial system</p>
+            <p className="text-secondary mt-2">Track user progress through the tutorial system</p>
           </div>
           <button
             onClick={fetchAnalytics}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+            className="bg-primary hover:bg-blue-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
           >
             {loading ? 'Loading...' : 'Refresh'}
           </button>
@@ -128,9 +128,9 @@ function OnboardingAnalyticsPage() {
 
         {/* Loading State */}
         {loading && !summary && (
-          <div className="bg-gray-800 rounded-lg p-8 text-center">
+          <div className="bg-surface rounded-lg p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading analytics data...</p>
+            <p className="text-secondary">Loading analytics data...</p>
           </div>
         )}
 
@@ -140,56 +140,56 @@ function OnboardingAnalyticsPage() {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Total Events */}
-              <div className="bg-gray-800 rounded-lg p-6">
+              <div className="bg-surface rounded-lg p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-gray-400 text-sm font-semibold uppercase">Total Events</h3>
+                  <h3 className="text-secondary text-sm font-semibold uppercase">Total Events</h3>
                   <span className="text-2xl">📊</span>
                 </div>
                 <p className="text-3xl font-bold">{summary.totalEvents.toLocaleString()}</p>
-                <p className="text-gray-500 text-sm mt-1">Events tracked</p>
+                <p className="text-tertiary text-sm mt-1">Events tracked</p>
               </div>
 
               {/* Unique Users */}
-              <div className="bg-gray-800 rounded-lg p-6">
+              <div className="bg-surface rounded-lg p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-gray-400 text-sm font-semibold uppercase">Unique Users</h3>
+                  <h3 className="text-secondary text-sm font-semibold uppercase">Unique Users</h3>
                   <span className="text-2xl">👥</span>
                 </div>
                 <p className="text-3xl font-bold">{summary.uniqueUsers.toLocaleString()}</p>
-                <p className="text-gray-500 text-sm mt-1">Users tracked</p>
+                <p className="text-tertiary text-sm mt-1">Users tracked</p>
               </div>
 
               {/* Completion Rate */}
-              <div className="bg-gray-800 rounded-lg p-6">
+              <div className="bg-surface rounded-lg p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-gray-400 text-sm font-semibold uppercase">Completion Rate</h3>
+                  <h3 className="text-secondary text-sm font-semibold uppercase">Completion Rate</h3>
                   <span className="text-2xl">✅</span>
                 </div>
-                <p className="text-3xl font-bold text-green-400">{calculateCompletionRate()}%</p>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-3xl font-bold text-success">{calculateCompletionRate()}%</p>
+                <p className="text-tertiary text-sm mt-1">
                   {summary.completions} of {summary.uniqueUsers} users
                 </p>
               </div>
 
               {/* Skip Rate */}
-              <div className="bg-gray-800 rounded-lg p-6">
+              <div className="bg-surface rounded-lg p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-gray-400 text-sm font-semibold uppercase">Skip Rate</h3>
+                  <h3 className="text-secondary text-sm font-semibold uppercase">Skip Rate</h3>
                   <span className="text-2xl">⏭️</span>
                 </div>
-                <p className="text-3xl font-bold text-yellow-400">{calculateSkipRate()}%</p>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-3xl font-bold text-warning">{calculateSkipRate()}%</p>
+                <p className="text-tertiary text-sm mt-1">
                   {summary.skips} of {summary.uniqueUsers} users
                 </p>
               </div>
             </div>
 
             {/* Step Completion Funnel */}
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-surface rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-6">Step Completion Funnel</h2>
               
               {getStepCompletionData().length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-secondary">
                   No step completion data available yet
                 </div>
               ) : (
@@ -202,13 +202,13 @@ function OnboardingAnalyticsPage() {
                       <div key={step} className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="font-semibold">Step {step}</span>
-                          <span className="text-gray-400">
+                          <span className="text-secondary">
                             {count.toLocaleString()} completions ({percentage.toFixed(1)}%)
                           </span>
                         </div>
-                        <div className="w-full bg-gray-700 rounded-full h-6 overflow-hidden">
+                        <div className="w-full bg-surface-elevated rounded-full h-6 overflow-hidden">
                           <div
-                            className="bg-blue-500 h-full rounded-full transition-all duration-300 flex items-center justify-end pr-2"
+                            className="bg-primary-dark h-full rounded-full transition-all duration-300 flex items-center justify-end pr-2"
                             style={{ width: `${percentage}%` }}
                           >
                             {percentage > 10 && (
@@ -226,9 +226,9 @@ function OnboardingAnalyticsPage() {
             </div>
 
             {/* Additional Info */}
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-surface rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-4">About This Data</h2>
-              <div className="space-y-2 text-gray-300">
+              <div className="space-y-2 text-secondary">
                 <p>
                   <strong>Total Events:</strong> All analytics events collected from users going through onboarding
                 </p>
@@ -245,7 +245,7 @@ function OnboardingAnalyticsPage() {
                   <strong>Step Completion Funnel:</strong> Shows how many users completed each step of the tutorial. 
                   Drop-offs between steps indicate where users are struggling or losing interest.
                 </p>
-                <p className="text-yellow-400 mt-4">
+                <p className="text-warning mt-4">
                   ⚠️ Note: Analytics data is stored in-memory and capped at 10,000 events. 
                   Data will be lost on server restart.
                 </p>

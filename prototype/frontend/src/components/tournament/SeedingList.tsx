@@ -26,16 +26,16 @@ const SeedingList: React.FC<SeedingListProps> = ({ seedings, userRobotIds, onRob
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden">
+    <div className="bg-surface rounded-lg overflow-hidden">
       <button
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-gray-700 hover:bg-gray-600 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 bg-surface-elevated hover:bg-gray-600 transition-colors"
         aria-expanded={isExpanded}
         aria-controls="seeding-list-content"
       >
         <span className="text-sm font-semibold text-white">Top Seeds</span>
         <svg
-          className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-secondary transition-transform ${isExpanded ? 'rotate-180' : ''}`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -45,7 +45,7 @@ const SeedingList: React.FC<SeedingListProps> = ({ seedings, userRobotIds, onRob
       {isExpanded && (
         <ul id="seeding-list-content" className="divide-y divide-gray-700/50 max-h-96 overflow-y-auto">
           {top32.length === 0 && (
-            <li className="px-4 py-3 text-sm text-gray-500 text-center">
+            <li className="px-4 py-3 text-sm text-tertiary text-center">
               No seeding data available
             </li>
           )}
@@ -60,7 +60,7 @@ const SeedingList: React.FC<SeedingListProps> = ({ seedings, userRobotIds, onRob
 
           {userSeedings.length > 0 && (
             <>
-              <li className="px-4 py-1.5 text-[10px] text-gray-500 uppercase tracking-wider bg-gray-900/50">
+              <li className="px-4 py-1.5 text-[10px] text-tertiary uppercase tracking-wider bg-background/50">
                 Your robots
               </li>
               {userSeedings.map((entry) => (
@@ -97,25 +97,25 @@ function SeedRow({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
-      className={`px-4 py-2 flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-700/50 transition-colors ${
+      className={`px-4 py-2 flex items-center gap-2 text-sm cursor-pointer hover:bg-surface-elevated/50 transition-colors ${
         isUserRobot ? 'border-l-2 border-blue-500 bg-blue-900/20' : ''
       } ${isEliminated ? 'opacity-50' : ''}`}
     >
       <span className={`font-mono text-xs shrink-0 w-6 text-right ${
-        isEliminated ? 'text-gray-600' : entry.seed <= 32 ? 'text-yellow-400' : 'text-gray-500'
+        isEliminated ? 'text-gray-600' : entry.seed <= 32 ? 'text-warning' : 'text-tertiary'
       }`}>
         #{entry.seed}
       </span>
       <span className={`truncate ${
-        isEliminated ? 'text-gray-500 line-through' : isUserRobot ? 'text-blue-300' : 'text-white'
+        isEliminated ? 'text-tertiary line-through' : isUserRobot ? 'text-blue-300' : 'text-white'
       }`}>
         {entry.robotName}
       </span>
-      <span className={`ml-auto text-xs shrink-0 ${isEliminated ? 'text-gray-600' : 'text-gray-400'}`}>
+      <span className={`ml-auto text-xs shrink-0 ${isEliminated ? 'text-gray-600' : 'text-secondary'}`}>
         {entry.elo}
       </span>
       {isUserRobot && (
-        <span className="text-[9px] text-blue-400 font-medium shrink-0">YOU</span>
+        <span className="text-[9px] text-primary font-medium shrink-0">YOU</span>
       )}
     </li>
   );

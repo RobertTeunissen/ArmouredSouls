@@ -144,9 +144,9 @@ function DashboardPage() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Dashboard Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 pb-4 border-b border-white/10">
           <h1 className="text-3xl font-bold text-white">Command Center</h1>
-          <div className="text-lg text-gray-400">
+          <div className="text-lg text-secondary">
             <span className="font-semibold text-white">{user.stableName || user.username}</span>&apos;s Stable
           </div>
         </div>
@@ -190,7 +190,7 @@ function DashboardPage() {
                   className={`
                     px-4 py-2 rounded font-semibold text-sm transition-colors
                     ${notif.type === 'danger' ? 'bg-error hover:bg-error/90 text-white' : ''}
-                    ${notif.type === 'warning' ? 'bg-warning hover:bg-warning/90 text-gray-900' : ''}
+                    ${notif.type === 'warning' ? 'bg-warning hover:bg-warning/90 text-background' : ''}
                     ${notif.type === 'info' ? 'bg-primary hover:bg-primary/90 text-white' : ''}
                   `}
                 >

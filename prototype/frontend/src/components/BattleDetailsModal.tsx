@@ -94,13 +94,13 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-surface rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+        <div className="flex justify-between items-center p-6 border-b border-white/10">
           <h2 className="text-2xl font-bold text-white">Battle Details #{battleId}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl font-bold"
+            className="text-secondary hover:text-white text-2xl font-bold"
           >
             ×
           </button>
@@ -110,7 +110,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
         <div className="flex-1 overflow-y-auto p-6">
           {loading && (
             <div className="text-center py-12">
-              <div className="text-blue-400 text-xl">Loading battle details...</div>
+              <div className="text-primary text-xl">Loading battle details...</div>
             </div>
           )}
 
@@ -121,22 +121,22 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
           {battle && (
             <div className="space-y-6">
               {/* Battle Summary */}
-              <div className="bg-gray-700 rounded-lg p-4">
+              <div className="bg-surface-elevated rounded-lg p-4">
                 <h3 className="text-xl font-bold mb-3">Battle Summary</h3>
                 <div className="grid grid-cols-2 gap-6">
                   {/* Robot 1 */}
-                  <div className="bg-gray-800 rounded p-3">
-                    <h4 className="text-lg font-semibold text-blue-400 mb-2">
+                  <div className="bg-surface rounded p-3">
+                    <h4 className="text-lg font-semibold text-primary mb-2">
                       {battle.robot1.name}
                     </h4>
                     <div className="text-sm space-y-1">
                       <p>
                         HP: {battle.robot1FinalHP} / {battle.robot1.maxHP}
                         {battle.robot1Destroyed && (
-                          <span className="ml-2 text-red-400">💀 Destroyed</span>
+                          <span className="ml-2 text-error">💀 Destroyed</span>
                         )}
                         {battle.robot1Yielded && (
-                          <span className="ml-2 text-yellow-400">🏳️ Yielded</span>
+                          <span className="ml-2 text-warning">🏳️ Yielded</span>
                         )}
                       </p>
                       <p>Shield: {battle.robot1FinalShield}</p>
@@ -146,8 +146,8 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                         <span
                           className={
                             battle.robot1ELOAfter > battle.robot1ELOBefore
-                              ? 'text-green-400'
-                              : 'text-red-400'
+                              ? 'text-success'
+                              : 'text-error'
                           }
                         >
                           {battle.robot1ELOAfter}
@@ -162,7 +162,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                   </div>
 
                   {/* Robot 2 */}
-                  <div className="bg-gray-800 rounded p-3">
+                  <div className="bg-surface rounded p-3">
                     <h4 className="text-lg font-semibold text-purple-400 mb-2">
                       {battle.robot2.name}
                     </h4>
@@ -170,10 +170,10 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                       <p>
                         HP: {battle.robot2FinalHP} / {battle.robot2.maxHP}
                         {battle.robot2Destroyed && (
-                          <span className="ml-2 text-red-400">💀 Destroyed</span>
+                          <span className="ml-2 text-error">💀 Destroyed</span>
                         )}
                         {battle.robot2Yielded && (
-                          <span className="ml-2 text-yellow-400">🏳️ Yielded</span>
+                          <span className="ml-2 text-warning">🏳️ Yielded</span>
                         )}
                       </p>
                       <p>Shield: {battle.robot2FinalShield}</p>
@@ -183,8 +183,8 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                         <span
                           className={
                             battle.robot2ELOAfter > battle.robot2ELOBefore
-                              ? 'text-green-400'
-                              : 'text-red-400'
+                              ? 'text-success'
+                              : 'text-error'
                           }
                         >
                           {battle.robot2ELOAfter}
@@ -202,41 +202,41 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                 <div className="mt-4 text-center">
                   <div className="text-2xl font-bold">
                     {battle.winnerId === battle.robot1.id && (
-                      <span className="text-blue-400">🏆 {battle.robot1.name} Wins!</span>
+                      <span className="text-primary">🏆 {battle.robot1.name} Wins!</span>
                     )}
                     {battle.winnerId === battle.robot2.id && (
                       <span className="text-purple-400">🏆 {battle.robot2.name} Wins!</span>
                     )}
-                    {!battle.winnerId && <span className="text-gray-400">⚖️ Draw</span>}
+                    {!battle.winnerId && <span className="text-secondary">⚖️ Draw</span>}
                   </div>
-                  <div className="text-sm text-gray-400 mt-2">
+                  <div className="text-sm text-secondary mt-2">
                     Duration: {battle.durationSeconds}s | League: {battle.leagueType}
                   </div>
                 </div>
 
                 {/* Battle Rewards */}
-                <div className="mt-4 bg-gray-800 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold mb-3 text-yellow-400">💰 Battle Rewards</h4>
+                <div className="mt-4 bg-surface rounded-lg p-4">
+                  <h4 className="text-lg font-semibold mb-3 text-warning">💰 Battle Rewards</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     {/* Robot 1 Rewards */}
-                    <div className={`p-3 rounded ${battle.winnerId === battle.robot1.id ? 'bg-green-900/30 border border-green-700' : 'bg-gray-700'}`}>
-                      <div className="font-semibold text-blue-400 mb-2">{battle.robot1.name}</div>
+                    <div className={`p-3 rounded ${battle.winnerId === battle.robot1.id ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
+                      <div className="font-semibold text-primary mb-2">{battle.robot1.name}</div>
                       <div className="space-y-1">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Credits:</span>
-                          <span className="text-green-400">
+                          <span className="text-secondary">Credits:</span>
+                          <span className="text-success">
                             +₡{(battle.winnerId === battle.robot1.id ? battle.winnerReward : battle.loserReward)?.toLocaleString() || 0}
                           </span>
                         </div>
                         {battle.winnerId === battle.robot1.id && (
                           <>
                             <div className="flex justify-between">
-                              <span className="text-gray-400">Prestige:</span>
+                              <span className="text-secondary">Prestige:</span>
                               <span className="text-purple-400">+{battle.robot1PrestigeAwarded || 0}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-gray-400">Fame:</span>
-                              <span className="text-yellow-400">+{battle.robot1FameAwarded || 0}</span>
+                              <span className="text-secondary">Fame:</span>
+                              <span className="text-warning">+{battle.robot1FameAwarded || 0}</span>
                             </div>
                           </>
                         )}
@@ -244,24 +244,24 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                     </div>
 
                     {/* Robot 2 Rewards */}
-                    <div className={`p-3 rounded ${battle.winnerId === battle.robot2.id ? 'bg-green-900/30 border border-green-700' : 'bg-gray-700'}`}>
+                    <div className={`p-3 rounded ${battle.winnerId === battle.robot2.id ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
                       <div className="font-semibold text-purple-400 mb-2">{battle.robot2.name}</div>
                       <div className="space-y-1">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Credits:</span>
-                          <span className="text-green-400">
+                          <span className="text-secondary">Credits:</span>
+                          <span className="text-success">
                             +₡{(battle.winnerId === battle.robot2.id ? battle.winnerReward : battle.loserReward)?.toLocaleString() || 0}
                           </span>
                         </div>
                         {battle.winnerId === battle.robot2.id && (
                           <>
                             <div className="flex justify-between">
-                              <span className="text-gray-400">Prestige:</span>
+                              <span className="text-secondary">Prestige:</span>
                               <span className="text-purple-400">+{battle.robot2PrestigeAwarded || 0}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-gray-400">Fame:</span>
-                              <span className="text-yellow-400">+{battle.robot2FameAwarded || 0}</span>
+                              <span className="text-secondary">Fame:</span>
+                              <span className="text-warning">+{battle.robot2FameAwarded || 0}</span>
                             </div>
                           </>
                         )}
@@ -272,7 +272,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
               </div>
 
               {/* Attribute Comparison */}
-              <div className="bg-gray-700 rounded-lg p-4">
+              <div className="bg-surface-elevated rounded-lg p-4">
                 <h3 className="text-xl font-bold mb-3">Attribute Comparison</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                   {Object.keys(battle.robot1.attributes).map((attr) => {
@@ -280,22 +280,22 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                     const val2 = Number(battle.robot2.attributes[attr]);
                     const diff = val1 - val2;
                     return (
-                      <div key={attr} className="bg-gray-800 rounded p-2">
-                        <div className="text-gray-400 text-xs truncate" title={attr}>
+                      <div key={attr} className="bg-surface rounded p-2">
+                        <div className="text-secondary text-xs truncate" title={attr}>
                           {attr
                             .replace(/([A-Z])/g, ' $1')
                             .trim()
                             .replace(/^./, (str) => str.toUpperCase())}
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-blue-400">{val1.toFixed(1)}</span>
+                          <span className="text-primary">{val1.toFixed(1)}</span>
                           <span
                             className={`text-xs ${
                               Math.abs(diff) < 0.5
-                                ? 'text-gray-500'
+                                ? 'text-tertiary'
                                 : diff > 0
-                                ? 'text-green-400'
-                                : 'text-red-400'
+                                ? 'text-success'
+                                : 'text-error'
                             }`}
                           >
                             {diff > 0 ? '+' : ''}
@@ -311,13 +311,13 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
 
               {/* Combat Events */}
               {detailedEvents.length > 0 && (
-                <div className="bg-gray-700 rounded-lg p-4">
+                <div className="bg-surface-elevated rounded-lg p-4">
                   <h3 className="text-xl font-bold mb-3">
                     Combat Log ({detailedEvents.length} events)
                   </h3>
                   <div className="space-y-2 max-h-[48rem] overflow-y-auto">
                     {detailedEvents.map((event, idx) => (
-                      <div key={idx} className="bg-gray-800 rounded p-3">
+                      <div key={idx} className="bg-surface rounded p-3">
                         <div
                           className="flex items-start cursor-pointer"
                           onClick={() =>
@@ -328,13 +328,13 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <div className="text-sm">
-                                <span className="text-gray-400">
+                                <span className="text-secondary">
                                   [{event.timestamp.toFixed(1)}s]
                                 </span>{' '}
                                 <span>{event.message}</span>
                               </div>
                               {event.formulaBreakdown && (
-                                <button className="text-blue-400 text-xs hover:text-blue-300">
+                                <button className="text-primary text-xs hover:text-blue-300">
                                   {expandedEvent === idx ? '▼ Hide' : '▶ Details'}
                                 </button>
                               )}
@@ -343,7 +343,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                             {/* HP/Shield State */}
                             {(event.robot1HP !== undefined ||
                               event.robot2HP !== undefined) && (
-                              <div className="text-xs text-gray-400 mt-1 flex gap-4">
+                              <div className="text-xs text-secondary mt-1 flex gap-4">
                                 {event.robot1HP !== undefined && (
                                   <span>
                                     {battle.robot1.name}: {event.robot1HP}HP /{' '}
@@ -361,22 +361,22 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
 
                             {/* Formula Breakdown */}
                             {expandedEvent === idx && event.formulaBreakdown && (
-                              <div className="mt-3 bg-gray-900 rounded p-3">
-                                <div className="text-xs font-mono text-green-400 mb-2 whitespace-pre-line">
+                              <div className="mt-3 bg-background rounded p-3">
+                                <div className="text-xs font-mono text-success mb-2 whitespace-pre-line">
                                   {event.formulaBreakdown.calculation}
                                 </div>
                                 <div className="grid grid-cols-3 gap-2 text-xs">
                                   {Object.entries(event.formulaBreakdown.components).map(
                                     ([key, value]) => (
                                       <div key={key} className="flex justify-between">
-                                        <span className="text-gray-400">{key}:</span>
+                                        <span className="text-secondary">{key}:</span>
                                         <span
                                           className={
                                             value > 0
-                                              ? 'text-green-400'
+                                              ? 'text-success'
                                               : value < 0
-                                              ? 'text-red-400'
-                                              : 'text-gray-300'
+                                              ? 'text-error'
+                                              : 'text-secondary'
                                           }
                                         >
                                           {typeof value === 'number'
@@ -387,7 +387,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                                     )
                                   )}
                                 </div>
-                                <div className="mt-2 text-xs text-yellow-400">
+                                <div className="mt-2 text-xs text-warning">
                                   Result: {event.formulaBreakdown.result.toFixed(2)}
                                 </div>
                               </div>
@@ -416,10 +416,10 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-700 p-4 flex justify-end">
+        <div className="border-t border-white/10 p-4 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-gray-600 hover:bg-gray-700 px-6 py-2 rounded font-semibold"
+            className="bg-gray-600 hover:bg-surface-elevated px-6 py-2 rounded font-semibold"
           >
             Close
           </button>

@@ -32,7 +32,7 @@ const ResumeTutorialButton = ({
     <button
       onClick={handleClick}
       disabled={disabled}
-      className={`px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors ${className}`}
+      className={`px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded transition-colors ${className}`}
       aria-label={label}
     >
       {label}

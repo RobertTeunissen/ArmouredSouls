@@ -92,14 +92,14 @@ const BudgetTracker = () => {
 
   if (initialLoading) {
     return (
-      <div className="bg-surface px-4 py-2 rounded border border-gray-700">
-        <div className="text-xs text-gray-400">Loading budget...</div>
+      <div className="bg-surface px-4 py-2 rounded border border-white/10">
+        <div className="text-xs text-secondary">Loading budget...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-surface px-3 py-1.5 rounded border border-gray-700" role="region" aria-label="Budget Tracker">
+    <div className="bg-surface px-3 py-1.5 rounded border border-white/10" role="region" aria-label="Budget Tracker">
       {/* Current balance inline with progress bar */}
       <div className="flex items-center gap-2 mb-1.5">
         <div
@@ -116,7 +116,7 @@ const BudgetTracker = () => {
           {formatCurrency(remaining)}
         </div>
         <div
-          className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden"
+          className="flex-1 h-1.5 bg-surface-elevated rounded-full overflow-hidden"
           role="progressbar"
           aria-valuenow={Math.round(percentageRemaining)}
           aria-valuemin={0}
@@ -138,38 +138,38 @@ const BudgetTracker = () => {
 
       {/* Spending breakdown - compact */}
       <div className="space-y-0.5 text-xs">
-        <div className="flex justify-between text-gray-400">
+        <div className="flex justify-between text-secondary">
           <span>Starting:</span>
           <span className="font-medium">{formatCurrency(STARTING_BUDGET)}</span>
         </div>
-        <div className="flex justify-between text-gray-400">
+        <div className="flex justify-between text-secondary">
           <span>Spent:</span>
           <span className="font-medium">{formatCurrency(totalSpent)}</span>
         </div>
         
         {/* Category breakdown (if any spending occurred) */}
         {totalSpent > 0 && (
-          <div className="pl-3 space-y-0.5 mt-0.5 pt-0.5 border-t border-gray-700">
+          <div className="pl-3 space-y-0.5 mt-0.5 pt-0.5 border-t border-white/10">
             {budgetSpent.facilities > 0 && (
-              <div className="flex justify-between text-gray-400">
+              <div className="flex justify-between text-secondary">
                 <span>• Facilities:</span>
                 <span>{formatCurrency(budgetSpent.facilities)}</span>
               </div>
             )}
             {budgetSpent.robots > 0 && (
-              <div className="flex justify-between text-gray-400">
+              <div className="flex justify-between text-secondary">
                 <span>• Robots:</span>
                 <span>{formatCurrency(budgetSpent.robots)}</span>
               </div>
             )}
             {budgetSpent.weapons > 0 && (
-              <div className="flex justify-between text-gray-400">
+              <div className="flex justify-between text-secondary">
                 <span>• Weapons:</span>
                 <span>{formatCurrency(budgetSpent.weapons)}</span>
               </div>
             )}
             {budgetSpent.attributes > 0 && (
-              <div className="flex justify-between text-gray-400">
+              <div className="flex justify-between text-secondary">
                 <span>• Attributes:</span>
                 <span>{formatCurrency(budgetSpent.attributes)}</span>
               </div>
@@ -185,8 +185,8 @@ const BudgetTracker = () => {
           aria-live="assertive"
           className={`text-xs p-1 rounded mt-1.5 ${
             warningLevel === 'critical'
-              ? 'bg-red-900 bg-opacity-30 text-red-400 border border-red-700'
-              : 'bg-yellow-900 bg-opacity-30 text-yellow-400 border border-yellow-700'
+              ? 'bg-red-900 bg-opacity-30 text-error border border-red-700'
+              : 'bg-yellow-900 bg-opacity-30 text-warning border border-yellow-700'
           }`}
         >
           {warningMessage}
@@ -195,7 +195,7 @@ const BudgetTracker = () => {
 
       {/* Reserve recommendation */}
       {remaining < RESERVE_RECOMMENDATION * 2 && remaining > RESERVE_RECOMMENDATION && (
-        <div role="status" className="text-xs p-1 rounded bg-blue-900 bg-opacity-30 text-blue-400 border border-blue-700 mt-1.5">
+        <div role="status" className="text-xs p-1 rounded bg-blue-900 bg-opacity-30 text-primary border border-blue-700 mt-1.5">
           Tip: Keep at least {formatCurrency(RESERVE_RECOMMENDATION)} for repairs.
         </div>
       )}

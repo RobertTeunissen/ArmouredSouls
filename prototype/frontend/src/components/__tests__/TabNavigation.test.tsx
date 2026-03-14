@@ -26,7 +26,7 @@ describe('Property 1: Default Tab Selection', () => {
 
     const overviewTab = screen.getByRole('tab', { name: /overview/i });
     expect(overviewTab).toHaveAttribute('aria-selected', 'true');
-    expect(overviewTab).toHaveClass('bg-blue-600');
+    expect(overviewTab).toHaveClass('bg-primary');
   });
 });
 
@@ -150,13 +150,13 @@ describe('Property 4: Active Tab Visual Indication', () => {
     const overviewTab = screen.getByRole('tab', { name: /overview/i });
 
     // Active tab should have primary color background
-    expect(battleConfigTab).toHaveClass('bg-blue-600');
+    expect(battleConfigTab).toHaveClass('bg-primary');
     expect(battleConfigTab).toHaveClass('text-white');
     expect(battleConfigTab).toHaveAttribute('aria-selected', 'true');
 
     // Inactive tab should have different styling
-    expect(overviewTab).toHaveClass('bg-gray-800');
-    expect(overviewTab).toHaveClass('text-gray-400');
+    expect(overviewTab).toHaveClass('bg-surface');
+    expect(overviewTab).toHaveClass('text-secondary');
     expect(overviewTab).toHaveAttribute('aria-selected', 'false');
   });
 
@@ -182,6 +182,6 @@ describe('Property 4: Active Tab Visual Indication', () => {
     expect(activeTabs[0]).toBe(upgradesTab);
 
     // Active tab should have distinct styling
-    expect(upgradesTab).toHaveClass('bg-blue-600', 'text-white');
+    expect(upgradesTab).toHaveClass('bg-primary', 'text-white');
   });
 });

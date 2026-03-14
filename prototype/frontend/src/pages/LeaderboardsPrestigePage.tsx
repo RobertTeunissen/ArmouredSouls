@@ -77,11 +77,11 @@ function LeaderboardsPrestigePage() {
   const getRankColor = (rank: string) => {
     switch (rank) {
       case 'Legendary': return 'text-purple-400';
-      case 'Champion': return 'text-yellow-400';
+      case 'Champion': return 'text-warning';
       case 'Elite': return 'text-orange-400';
-      case 'Veteran': return 'text-blue-400';
-      case 'Established': return 'text-green-400';
-      default: return 'text-gray-400';
+      case 'Veteran': return 'text-primary';
+      case 'Established': return 'text-success';
+      default: return 'text-secondary';
     }
   };
 
@@ -224,9 +224,9 @@ function LeaderboardsPrestigePage() {
                         <span
                           className={`font-medium ${
                             entry.winRate >= 60
-                              ? 'text-green-400'
+                              ? 'text-success'
                               : entry.winRate >= 50
-                              ? 'text-yellow-400'
+                              ? 'text-warning'
                               : 'text-orange-400'
                           }`}
                         >
@@ -238,7 +238,7 @@ function LeaderboardsPrestigePage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm">
-                          <div className="text-green-400 font-medium">
+                          <div className="text-success font-medium">
                             +{entry.battleWinningsBonus}%
                           </div>
                           <div className="text-tertiary text-xs">
@@ -273,15 +273,15 @@ function LeaderboardsPrestigePage() {
         <h3 className="text-lg font-semibold text-primary mb-4">Prestige Ranks</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
-            <span className="text-gray-400 font-medium">Novice:</span>
+            <span className="text-secondary font-medium">Novice:</span>
             <span className="text-secondary ml-2">0-999</span>
           </div>
           <div>
-            <span className="text-green-400 font-medium">Established:</span>
+            <span className="text-success font-medium">Established:</span>
             <span className="text-secondary ml-2">1,000-4,999</span>
           </div>
           <div>
-            <span className="text-blue-400 font-medium">Veteran:</span>
+            <span className="text-primary font-medium">Veteran:</span>
             <span className="text-secondary ml-2">5,000-9,999</span>
           </div>
           <div>
@@ -289,7 +289,7 @@ function LeaderboardsPrestigePage() {
             <span className="text-secondary ml-2">10,000-24,999</span>
           </div>
           <div>
-            <span className="text-yellow-400 font-medium">Champion:</span>
+            <span className="text-warning font-medium">Champion:</span>
             <span className="text-secondary ml-2">25,000-49,999</span>
           </div>
           <div>

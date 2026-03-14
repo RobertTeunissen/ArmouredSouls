@@ -23,41 +23,41 @@ function DailyStableReport({ report }: DailyStableReportProps) {
     : 0;
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg font-mono text-sm">
+    <div className="bg-surface p-6 rounded-lg font-mono text-sm">
       {/* Report Header */}
       <div className="border-t-2 border-l-2 border-r-2 border-gray-600 p-4">
         <h2 className="text-xl font-bold text-center text-gray-200">
           DAILY STABLE REPORT
         </h2>
-        <p className="text-center text-gray-400 text-xs mt-1">{currentDate}</p>
+        <p className="text-center text-secondary text-xs mt-1">{currentDate}</p>
       </div>
 
       {/* Report Body */}
       <div className="border-2 border-gray-600 p-4 space-y-4">
         {/* Revenue Streams Section */}
         <div>
-          <h3 className="text-green-400 font-semibold mb-2">REVENUE STREAMS:</h3>
+          <h3 className="text-success font-semibold mb-2">REVENUE STREAMS:</h3>
           <div className="space-y-1 ml-2">
             <div className="flex justify-between">
-              <span className="text-gray-300">Battle Winnings:</span>
+              <span className="text-secondary">Battle Winnings:</span>
               <span className="text-gray-100">{formatCurrency(report.revenue.battleWinnings)}</span>
             </div>
             {prestigeBonusPercent > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-300">Prestige Bonus ({prestigeBonusPercent}%):</span>
+                <span className="text-secondary">Prestige Bonus ({prestigeBonusPercent}%):</span>
                 <span className="text-purple-400">{formatCurrency(report.revenue.prestigeBonus)}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-300">Merchandising:</span>
+              <span className="text-secondary">Merchandising:</span>
               <span className="text-gray-100">{formatCurrency(report.revenue.merchandising)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-300">Streaming (per battle):</span>
+              <span className="text-secondary">Streaming (per battle):</span>
               <span className="text-gray-100">
                 {formatCurrency(report.revenue.streaming)}
                 {(report.revenue.streamingBattleCount ?? 0) > 0 && (
-                  <span className="text-gray-400 text-xs ml-1">
+                  <span className="text-secondary text-xs ml-1">
                     (from {report.revenue.streamingBattleCount} {report.revenue.streamingBattleCount === 1 ? 'battle' : 'battles'})
                   </span>
                 )}
@@ -65,19 +65,19 @@ function DailyStableReport({ report }: DailyStableReportProps) {
             </div>
             <div className="border-t border-gray-600 my-2"></div>
             <div className="flex justify-between font-bold">
-              <span className="text-green-400">Total Revenue:</span>
-              <span className="text-green-400">{formatCurrency(report.revenue.total)}</span>
+              <span className="text-success">Total Revenue:</span>
+              <span className="text-success">{formatCurrency(report.revenue.total)}</span>
             </div>
           </div>
         </div>
 
         {/* Operating Costs Section */}
         <div>
-          <h3 className="text-yellow-400 font-semibold mb-2">OPERATING COSTS:</h3>
+          <h3 className="text-warning font-semibold mb-2">OPERATING COSTS:</h3>
           <div className="space-y-1 ml-2">
             {report.expenses.operatingCostsBreakdown.map((item) => (
               <div key={item.facilityType} className="flex justify-between">
-                <span className="text-gray-300">
+                <span className="text-secondary">
                   {/* eslint-disable @typescript-eslint/no-explicit-any */}
                   {item.facilityName} {(item as any).level !== undefined ? `(Lvl ${(item as any).level})` : ''}:
                   {/* eslint-enable @typescript-eslint/no-explicit-any */}
@@ -87,8 +87,8 @@ function DailyStableReport({ report }: DailyStableReportProps) {
             ))}
             <div className="border-t border-gray-600 my-2"></div>
             <div className="flex justify-between font-bold">
-              <span className="text-yellow-400">Total Operating Costs:</span>
-              <span className="text-yellow-400">{formatCurrency(report.expenses.operatingCosts)}</span>
+              <span className="text-warning">Total Operating Costs:</span>
+              <span className="text-warning">{formatCurrency(report.expenses.operatingCosts)}</span>
             </div>
           </div>
         </div>
@@ -96,16 +96,16 @@ function DailyStableReport({ report }: DailyStableReportProps) {
         {/* Repairs Section */}
         {report.expenses.repairs > 0 && (
           <div>
-            <h3 className="text-red-400 font-semibold mb-2">REPAIRS:</h3>
+            <h3 className="text-error font-semibold mb-2">REPAIRS:</h3>
             <div className="space-y-1 ml-2">
               <div className="flex justify-between">
-                <span className="text-gray-300">Total Repair Costs:</span>
+                <span className="text-secondary">Total Repair Costs:</span>
                 <span className="text-gray-100">{formatCurrency(report.expenses.repairs)}</span>
               </div>
               <div className="border-t border-gray-600 my-2"></div>
               <div className="flex justify-between font-bold">
-                <span className="text-red-400">Total Repair Costs:</span>
-                <span className="text-red-400">{formatCurrency(report.expenses.repairs)}</span>
+                <span className="text-error">Total Repair Costs:</span>
+                <span className="text-error">{formatCurrency(report.expenses.repairs)}</span>
               </div>
             </div>
           </div>
@@ -116,13 +116,13 @@ function DailyStableReport({ report }: DailyStableReportProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-lg font-bold">
               <span className="text-gray-200">NET INCOME:</span>
-              <span className={report.netIncome >= 0 ? 'text-green-400' : 'text-red-400'}>
+              <span className={report.netIncome >= 0 ? 'text-success' : 'text-error'}>
                 {report.netIncome >= 0 ? '+' : ''}{formatCurrency(report.netIncome)}
               </span>
             </div>
             <div className="flex justify-between text-lg font-bold">
               <span className="text-gray-200">CURRENT BALANCE:</span>
-              <span className="text-green-400">{formatCurrency(report.currentBalance)}</span>
+              <span className="text-success">{formatCurrency(report.currentBalance)}</span>
             </div>
           </div>
         </div>
@@ -131,13 +131,13 @@ function DailyStableReport({ report }: DailyStableReportProps) {
         <div className="border-t border-gray-600 pt-4">
           <div className="space-y-1 text-xs">
             <div className="flex justify-between">
-              <span className="text-gray-400">Financial Health:</span>
+              <span className="text-secondary">Financial Health:</span>
               <span className={
                 report.financialHealth === 'excellent' || report.financialHealth === 'good'
-                  ? 'text-green-400'
+                  ? 'text-success'
                   : report.financialHealth === 'stable'
-                  ? 'text-yellow-400'
-                  : 'text-red-400'
+                  ? 'text-warning'
+                  : 'text-error'
               }>
                 {report.financialHealth.charAt(0).toUpperCase() + report.financialHealth.slice(1)} {
                   report.financialHealth === 'excellent' || report.financialHealth === 'good' ? '✅' : 
@@ -146,12 +146,12 @@ function DailyStableReport({ report }: DailyStableReportProps) {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Daily profit margin:</span>
-              <span className="text-gray-300">{report.profitMargin.toFixed(1)}%</span>
+              <span className="text-secondary">Daily profit margin:</span>
+              <span className="text-secondary">{report.profitMargin.toFixed(1)}%</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Days until bankruptcy:</span>
-              <span className={report.daysToBankruptcy < 30 ? 'text-red-400' : 'text-gray-300'}>
+              <span className="text-secondary">Days until bankruptcy:</span>
+              <span className={report.daysToBankruptcy < 30 ? 'text-error' : 'text-secondary'}>
                 {report.daysToBankruptcy} days
               </span>
             </div>

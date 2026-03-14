@@ -238,7 +238,7 @@ function ProfilePage() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
           <h1 className="text-3xl font-bold text-white">My Profile</h1>
         </div>
 
@@ -264,25 +264,25 @@ function ProfilePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Account Information Section (Read-only) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700">
+          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
             <h2 className="text-xl font-semibold mb-4">Account Information</h2>
-            <div className="border-t border-gray-700 mb-4"></div>
+            <div className="border-t border-white/10 mb-4"></div>
             
             <div className="space-y-4">
               <div>
-                <div className="text-sm text-gray-400">Username</div>
+                <div className="text-sm text-secondary">Username</div>
                 <div className="text-base">{profile.username}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-400">Role</div>
+                <div className="text-sm text-secondary">Role</div>
                 <div className="text-base">{profile.role}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-400">Account ID</div>
+                <div className="text-sm text-secondary">Account ID</div>
                 <div className="text-base">#{profile.id}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-400">Join Date</div>
+                <div className="text-sm text-secondary">Join Date</div>
                 <div className="text-base">
                   {new Date(profile.createdAt).toLocaleDateString()}
                 </div>
@@ -291,16 +291,16 @@ function ProfilePage() {
           </div>
 
           {/* Stable Identity Section (Editable) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700">
+          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
             <h2 className="text-xl font-semibold mb-4">Stable Identity</h2>
-            <div className="border-t border-gray-700 mb-4"></div>
+            <div className="border-t border-white/10 mb-4"></div>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Stable Name</label>
                 <input
                   type="text"
-                  className={`w-full px-3 py-2 bg-surface border rounded ${
+                  className={`w-full px-3 py-2 bg-surface border rounded min-h-[44px] ${
                     errors.stableName ? 'border-red-500' : 'border-gray-600'
                   } focus:outline-none focus:border-primary`}
                   value={editedProfile.stableName ?? profile.stableName ?? ''}
@@ -320,13 +320,13 @@ function ProfilePage() {
                   placeholder={profile.username}
                   maxLength={30}
                 />
-                <div className={`text-xs mt-1 ${errors.stableName ? 'text-red-400' : 'text-gray-400'}`}>
+                <div className={`text-xs mt-1 ${errors.stableName ? 'text-error' : 'text-secondary'}`}>
                   {errors.stableName || `${(editedProfile.stableName ?? profile.stableName ?? '').length}/30 characters`}
                 </div>
               </div>
               
               <div>
-                <div className="text-sm text-gray-400">Display Name Preview</div>
+                <div className="text-sm text-secondary">Display Name Preview</div>
                 <div className="text-base">
                   {editedProfile.stableName ?? profile.stableName ?? profile.username}
                 </div>
@@ -335,42 +335,42 @@ function ProfilePage() {
           </div>
 
           {/* Statistics Section (Read-only) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700">
+          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
             <h2 className="text-xl font-semibold mb-4">Statistics</h2>
-            <div className="border-t border-gray-700 mb-4"></div>
+            <div className="border-t border-white/10 mb-4"></div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="text-sm text-gray-400">Currency</div>
+                <div className="text-sm text-secondary">Currency</div>
                 <div className="text-base">₡{profile.currency.toLocaleString()}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-400">Prestige</div>
+                <div className="text-sm text-secondary">Prestige</div>
                 <div className="text-base">{profile.prestige.toLocaleString()}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-400">Total Battles</div>
+                <div className="text-sm text-secondary">Total Battles</div>
                 <div className="text-base">{profile.totalBattles}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-400">Total Wins</div>
+                <div className="text-sm text-secondary">Total Wins</div>
                 <div className="text-base">{profile.totalWins}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-400">Highest ELO</div>
+                <div className="text-sm text-secondary">Highest ELO</div>
                 <div className="text-base">{profile.highestELO}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-400">Championship Titles</div>
+                <div className="text-sm text-secondary">Championship Titles</div>
                 <div className="text-base">{profile.championshipTitles}</div>
               </div>
             </div>
           </div>
 
           {/* Privacy Settings Section (Editable) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700">
+          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
             <h2 className="text-xl font-semibold mb-4">Privacy Settings</h2>
-            <div className="border-t border-gray-700 mb-4"></div>
+            <div className="border-t border-white/10 mb-4"></div>
             
             <div className="space-y-4">
               <label className="flex items-center cursor-pointer">
@@ -385,16 +385,16 @@ function ProfilePage() {
                 />
                 <span className="ml-3">Show my statistics on public leaderboards</span>
               </label>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-secondary">
                 When disabled, your statistics will be hidden from public leaderboards
               </div>
             </div>
           </div>
 
           {/* Display Preferences Section (Editable) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700">
+          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
             <h2 className="text-xl font-semibold mb-4">Display Preferences</h2>
-            <div className="border-t border-gray-700 mb-4"></div>
+            <div className="border-t border-white/10 mb-4"></div>
             
             <div className="space-y-4">
               <label className="flex items-center cursor-pointer">
@@ -426,7 +426,7 @@ function ProfilePage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Theme Preference</label>
                 <select
-                  className="w-full px-3 py-2 bg-surface border border-gray-600 rounded focus:outline-none focus:border-primary"
+                  className="w-full px-3 py-2 bg-surface border border-gray-600 rounded focus:outline-none focus:border-primary min-h-[44px]"
                   value={editedProfile.themePreference ?? profile.themePreference}
                   onChange={(e) => setEditedProfile({ 
                     ...editedProfile, 
@@ -442,16 +442,16 @@ function ProfilePage() {
           </div>
 
           {/* Security Section (Editable) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700">
+          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
             <h2 className="text-xl font-semibold mb-4">Security</h2>
-            <div className="border-t border-gray-700 mb-4"></div>
+            <div className="border-t border-white/10 mb-4"></div>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Current Password</label>
                 <input
                   type="password"
-                  className={`w-full px-3 py-2 bg-surface border rounded ${
+                  className={`w-full px-3 py-2 bg-surface border rounded min-h-[44px] ${
                     errors.currentPassword ? 'border-red-500' : 'border-gray-600'
                   } focus:outline-none focus:border-primary`}
                   value={passwordData.current}
@@ -467,7 +467,7 @@ function ProfilePage() {
                   }}
                 />
                 {errors.currentPassword && (
-                  <div className="text-xs text-red-400 mt-1">{errors.currentPassword}</div>
+                  <div className="text-xs text-error mt-1">{errors.currentPassword}</div>
                 )}
               </div>
               
@@ -475,7 +475,7 @@ function ProfilePage() {
                 <label className="block text-sm font-medium mb-2">New Password</label>
                 <input
                   type="password"
-                  className={`w-full px-3 py-2 bg-surface border rounded ${
+                  className={`w-full px-3 py-2 bg-surface border rounded min-h-[44px] ${
                     errors.newPassword ? 'border-red-500' : 'border-gray-600'
                   } focus:outline-none focus:border-primary`}
                   value={passwordData.new}
@@ -493,7 +493,7 @@ function ProfilePage() {
                     }
                   }}
                 />
-                <div className={`text-xs mt-1 ${errors.newPassword ? 'text-red-400' : 'text-gray-400'}`}>
+                <div className={`text-xs mt-1 ${errors.newPassword ? 'text-error' : 'text-secondary'}`}>
                   {errors.newPassword || 'Min 8 chars, 1 uppercase, 1 lowercase, 1 number'}
                 </div>
               </div>
@@ -507,7 +507,7 @@ function ProfilePage() {
         {/* Action Buttons */}
         <div className="mt-6 flex gap-4 justify-end">
           <button
-            className="px-6 py-2 border border-gray-600 rounded hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 border border-gray-600 rounded hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             onClick={() => {
               setEditedProfile({});
               setPasswordData({ current: '', new: '' });
@@ -520,7 +520,7 @@ function ProfilePage() {
           </button>
           
           <button
-            className="px-6 py-2 bg-primary hover:bg-primary-dark rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-primary hover:bg-primary-dark rounded disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             onClick={handleSave}
             disabled={
               loading || 

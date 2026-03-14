@@ -47,7 +47,7 @@ function HPBar({ current, max, label = 'HP', showPercentage = true, size = 'md' 
       {/* Label and percentage */}
       {showPercentage && (
         <div className="flex justify-between items-center mb-1">
-          <span className={`${textSizes[size]} text-gray-400`}>{label}:</span>
+          <span className={`${textSizes[size]} text-secondary`}>{label}:</span>
           <span className={`${textSizes[size]} font-semibold ${textColor}`}>
             {percentage}%
           </span>
@@ -55,7 +55,7 @@ function HPBar({ current, max, label = 'HP', showPercentage = true, size = 'md' 
       )}
       
       {/* Bar */}
-      <div className={`w-full ${heights[size]} bg-gray-700 rounded-full overflow-hidden`}>
+      <div className={`w-full ${heights[size]} bg-surface-elevated rounded-full overflow-hidden`}>
         <div
           className={`${heights[size]} ${barColor} rounded-full transition-all duration-300`}
           style={{ width: `${percentage}%` }}

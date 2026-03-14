@@ -107,7 +107,7 @@ const TournamentManagement = () => {
   const completedTournaments = tournaments.filter(t => t.status === 'completed').slice(0, 5);
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div className="bg-surface rounded-lg p-6 border border-white/10">
       <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
         <span className="text-3xl">🏆</span>
         Tournament Management
@@ -126,26 +126,26 @@ const TournamentManagement = () => {
       )}
 
       {/* Current Status */}
-      <div className="mb-6 p-4 bg-gray-900/50 rounded border border-gray-700">
+      <div className="mb-6 p-4 bg-background/50 rounded border border-white/10">
         <h3 className="text-lg font-semibold text-white mb-3">Current Status</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <div className="text-gray-400">Active Tournaments</div>
+            <div className="text-secondary">Active Tournaments</div>
             <div className="text-2xl font-bold text-white">{activeTournaments.length}</div>
           </div>
           <div>
-            <div className="text-gray-400">Pending Tournaments</div>
-            <div className="text-2xl font-bold text-yellow-400">{pendingTournaments.length}</div>
+            <div className="text-secondary">Pending Tournaments</div>
+            <div className="text-2xl font-bold text-warning">{pendingTournaments.length}</div>
           </div>
           <div>
-            <div className="text-gray-400">Eligible Robots</div>
-            <div className="text-2xl font-bold text-green-400">
+            <div className="text-secondary">Eligible Robots</div>
+            <div className="text-2xl font-bold text-success">
               {eligibleRobots?.eligibleCount || 0}
             </div>
           </div>
           <div>
-            <div className="text-gray-400">Total Robots</div>
-            <div className="text-2xl font-bold text-gray-400">
+            <div className="text-secondary">Total Robots</div>
+            <div className="text-2xl font-bold text-secondary">
               {eligibleRobots?.totalRobots || 0}
             </div>
           </div>
@@ -164,7 +164,7 @@ const TournamentManagement = () => {
           {loading ? 'Creating...' : '🏆 Create Single Elimination Tournament'}
         </button>
         {activeTournaments.length > 0 && (
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-sm text-secondary mt-2">
             Complete or cancel active tournament before creating a new one
           </p>
         )}
@@ -174,7 +174,7 @@ const TournamentManagement = () => {
       {activeTournament && (
         <div className="mb-6 p-4 bg-gradient-to-br from-yellow-900/20 to-orange-900/20 rounded border border-yellow-700/50">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-yellow-400">
+            <h3 className="text-xl font-bold text-warning">
               {activeTournament.name}
               <span className="ml-2 text-sm px-2 py-1 bg-green-600 rounded">ACTIVE</span>
             </h3>
@@ -182,19 +182,19 @@ const TournamentManagement = () => {
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
             <div>
-              <div className="text-gray-400">Current Round</div>
+              <div className="text-secondary">Current Round</div>
               <div className="text-lg font-bold text-white">
                 {getRoundName(activeTournament.currentRound, activeTournament.maxRounds)}
               </div>
             </div>
             <div>
-              <div className="text-gray-400">Total Participants</div>
+              <div className="text-secondary">Total Participants</div>
               <div className="text-lg font-bold text-white">
                 {activeTournament.totalParticipants}
               </div>
             </div>
             <div>
-              <div className="text-gray-400">In Matches</div>
+              <div className="text-secondary">In Matches</div>
               <div className="text-lg font-bold text-white">
                 {(() => {
                   const matches = activeTournament.currentRoundMatches || [];
@@ -204,7 +204,7 @@ const TournamentManagement = () => {
               </div>
             </div>
             <div>
-              <div className="text-gray-400">With Byes</div>
+              <div className="text-secondary">With Byes</div>
               <div className="text-lg font-bold text-white">
                 {(() => {
                   const matches = activeTournament.currentRoundMatches || [];
@@ -213,7 +213,7 @@ const TournamentManagement = () => {
               </div>
             </div>
             <div>
-              <div className="text-gray-400">Total Remaining</div>
+              <div className="text-secondary">Total Remaining</div>
               <div className="text-lg font-bold text-white">
                 {(() => {
                   const matches = activeTournament.currentRoundMatches || [];
@@ -224,7 +224,7 @@ const TournamentManagement = () => {
               </div>
             </div>
             <div>
-              <div className="text-gray-400">Pending Matches</div>
+              <div className="text-secondary">Pending Matches</div>
               <div className="text-lg font-bold text-white">
                 {(activeTournament.currentRoundMatches || []).filter(m => m.status !== 'completed').length}
               </div>
@@ -234,26 +234,26 @@ const TournamentManagement = () => {
           {/* Current Round Matches */}
           {activeTournament.currentRoundMatches && activeTournament.currentRoundMatches.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-semibold text-gray-300 mb-2">Current Round Matches:</h4>
+              <h4 className="text-sm font-semibold text-secondary mb-2">Current Round Matches:</h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {activeTournament.currentRoundMatches.map((match) => (
                   <div
                     key={match.id}
                     className={`p-2 rounded text-sm ${
                       match.status === 'completed'
-                        ? 'bg-gray-900/50 text-gray-400'
-                        : 'bg-gray-800 text-white'
+                        ? 'bg-background/50 text-secondary'
+                        : 'bg-surface text-white'
                     }`}
                   >
                     {match.isByeMatch ? (
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-yellow-400">🎖️</span>
+                          <span className="text-warning">🎖️</span>
                           <span className="font-semibold">{match.robot1?.name || 'TBD'}</span>
-                          <span className="text-gray-400 text-xs">(ELO: {match.robot1?.elo || 'N/A'})</span>
+                          <span className="text-secondary text-xs">(ELO: {match.robot1?.elo || 'N/A'})</span>
                         </div>
                         {match.robot1?.user && (
-                          <span className="text-xs text-gray-400 ml-6">
+                          <span className="text-xs text-secondary ml-6">
                             {match.robot1.user.stableName || match.robot1.user.username}
                           </span>
                         )}
@@ -265,29 +265,29 @@ const TournamentManagement = () => {
                           <div className="flex flex-col">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">{match.robot1?.name || 'TBD'}</span>
-                              <span className="text-gray-400 text-xs">(ELO: {match.robot1?.elo || 'N/A'})</span>
+                              <span className="text-secondary text-xs">(ELO: {match.robot1?.elo || 'N/A'})</span>
                             </div>
                             {match.robot1?.user && (
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-secondary">
                                 {match.robot1.user.stableName || match.robot1.user.username}
                               </span>
                             )}
                           </div>
-                          <span className="text-gray-500 mx-2">vs</span>
+                          <span className="text-tertiary mx-2">vs</span>
                           <div className="flex flex-col">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">{match.robot2?.name || 'TBD'}</span>
-                              <span className="text-gray-400 text-xs">(ELO: {match.robot2?.elo || 'N/A'})</span>
+                              <span className="text-secondary text-xs">(ELO: {match.robot2?.elo || 'N/A'})</span>
                             </div>
                             {match.robot2?.user && (
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-secondary">
                                 {match.robot2.user.stableName || match.robot2.user.username}
                               </span>
                             )}
                           </div>
                         </div>
                         {match.status === 'completed' && match.winnerId && (
-                          <span className="text-green-400 text-sm">
+                          <span className="text-success text-sm">
                             Winner: {match.winnerId === match.robot1Id ? match.robot1?.name : match.robot2?.name}
                           </span>
                         )}
@@ -316,11 +316,11 @@ const TournamentManagement = () => {
           <h3 className="text-lg font-semibold text-white mb-3">Pending Tournaments</h3>
           <div className="space-y-2">
             {pendingTournaments.map((tournament) => (
-              <div key={tournament.id} className="p-3 bg-gray-900/50 rounded border border-gray-700">
+              <div key={tournament.id} className="p-3 bg-background/50 rounded border border-white/10">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-semibold text-white">{tournament.name}</div>
-                    <div className="text-sm text-gray-400">
+                    <div className="text-sm text-secondary">
                       {tournament.totalParticipants} participants • {tournament.maxRounds} rounds
                     </div>
                   </div>
@@ -338,11 +338,11 @@ const TournamentManagement = () => {
           <h3 className="text-lg font-semibold text-white mb-3">Recent Completed Tournaments</h3>
           <div className="space-y-2">
             {completedTournaments.map((tournament) => (
-              <div key={tournament.id} className="p-3 bg-gray-900/50 rounded border border-gray-700">
+              <div key={tournament.id} className="p-3 bg-background/50 rounded border border-white/10">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-semibold text-white">{tournament.name}</div>
-                    <div className="text-sm text-gray-400">
+                    <div className="text-sm text-secondary">
                       Winner: {tournament.winner?.name || 'Unknown'} • 
                       {tournament.totalParticipants} participants
                     </div>
@@ -357,7 +357,7 @@ const TournamentManagement = () => {
 
       {/* No Active Tournaments */}
       {activeTournaments.length === 0 && pendingTournaments.length === 0 && (
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-secondary">
           <p className="text-lg mb-2">No active tournaments</p>
           <p className="text-sm">
             Create a new tournament to get started. Requires at least 4 eligible robots.

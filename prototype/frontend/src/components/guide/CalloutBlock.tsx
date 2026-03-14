@@ -51,7 +51,7 @@ const CalloutBlock: React.FC<CalloutBlockProps> = ({ variant, children }) => {
               );
             },
             code: ({ children: codeChildren }) => (
-              <code className="rounded bg-gray-800 px-1.5 py-0.5 text-sm">{codeChildren}</code>
+              <code className="rounded bg-surface px-1.5 py-0.5 text-sm">{codeChildren}</code>
             ),
           }}
         >

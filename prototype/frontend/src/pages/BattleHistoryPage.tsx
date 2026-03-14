@@ -332,14 +332,14 @@ function BattleHistoryPage() {
             />
 
             {/* Filter and Sort Controls */}
-            <div className="bg-[#252b38] border border-gray-700 rounded-lg p-4 mb-4">
-              <div className="flex flex-wrap gap-3">
+            <div className="bg-[#252b38] border border-white/10 rounded-lg p-4 mb-4">
+              <div className="flex flex-col lg:flex-row lg:flex-wrap gap-3">
                 {/* Outcome Filter */}
                 <select 
                   value={outcomeFilter}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onChange={(e) => setOutcomeFilter(e.target.value as any)}
-                  className="bg-[#1a1f29] border border-gray-700 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                  className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
                 >
                   <option value="all">All Outcomes</option>
                   <option value="win">Wins Only</option>
@@ -352,7 +352,7 @@ function BattleHistoryPage() {
                   value={sortBy}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-[#1a1f29] border border-gray-700 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                  className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
                 >
                   <option value="date-desc">Sort: Newest First</option>
                   <option value="date-asc">Sort: Oldest First</option>
@@ -368,14 +368,14 @@ function BattleHistoryPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search robot or opponent..."
-                  className="bg-[#1a1f29] border border-gray-700 rounded px-3 py-2 text-sm text-[#e6edf3] placeholder-[#57606a] flex-1 min-w-[200px] hover:border-[#58a6ff]/50 focus:border-[#58a6ff] focus:outline-none transition-colors"
+                  className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] placeholder-[#57606a] lg:flex-1 lg:min-w-[200px] hover:border-[#58a6ff]/50 focus:border-[#58a6ff] focus:outline-none transition-colors"
                 />
 
                 {/* Results Per Page */}
                 <select 
                   value={resultsPerPage}
                   onChange={(e) => setResultsPerPage(Number(e.target.value))}
-                  className="bg-[#1a1f29] border border-gray-700 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                  className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
                 >
                   <option value={20}>20 per page</option>
                   <option value={50}>50 per page</option>
@@ -386,7 +386,7 @@ function BattleHistoryPage() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="px-4 py-2 bg-[#1a1f29] border border-gray-700 rounded text-sm text-[#8b949e] hover:bg-[#252b38] hover:text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                    className="w-full lg:w-auto min-h-[44px] px-4 py-2 bg-[#1a1f29] border border-white/10 rounded text-sm text-[#8b949e] hover:bg-[#252b38] hover:text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
                   >
                     Clear Filters
                   </button>
@@ -404,7 +404,7 @@ function BattleHistoryPage() {
             {/* Battle List */}
             <div className="mb-6">
               {filteredAndSortedBattles.length === 0 ? (
-                <div className="bg-[#252b38] border border-gray-700 rounded-lg p-12 text-center">
+                <div className="bg-[#252b38] border border-white/10 rounded-lg p-12 text-center">
                   <div className="text-6xl mb-4 opacity-30">⚔️</div>
                   <h3 className="text-xl font-bold mb-2">No Battles Found</h3>
                   <p className="text-[#8b949e] mb-4">

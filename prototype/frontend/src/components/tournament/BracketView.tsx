@@ -71,8 +71,8 @@ const BracketView: React.FC<BracketViewProps> = ({
 
   if (matches.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-lg border border-gray-700 p-8 text-center">
-        <p className="text-gray-500">No matches available</p>
+      <div className="bg-surface rounded-lg border border-white/10 p-8 text-center">
+        <p className="text-tertiary">No matches available</p>
       </div>
     );
   }
@@ -88,7 +88,7 @@ const BracketView: React.FC<BracketViewProps> = ({
           <select
             onChange={handleMyBotSelect}
             defaultValue=""
-            className="bg-gray-800 border border-gray-700 text-sm text-gray-300 rounded px-3 py-1.5 hover:border-gray-500 focus:border-blue-500 focus:outline-none"
+            className="bg-surface border border-white/10 text-sm text-secondary rounded px-3 py-1.5 hover:border-gray-500 focus:border-blue-500 focus:outline-none"
           >
             <option value="">All matches</option>
             {userRobotsInTournament.map((r) => (
@@ -99,7 +99,7 @@ const BracketView: React.FC<BracketViewProps> = ({
 
         {/* Round range filter */}
         {!isMobile && maxRounds > 2 && (
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-secondary">
             <span>From</span>
             <select
               value={startRound}
@@ -108,7 +108,7 @@ const BracketView: React.FC<BracketViewProps> = ({
                 setStartRound(v);
                 if (v > endRound) setEndRound(v);
               }}
-              className="bg-gray-800 border border-gray-700 text-gray-300 rounded px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
+              className="bg-surface border border-white/10 text-secondary rounded px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
             >
               {roundOptions.map((r) => (
                 <option key={r} value={r}>{getRoundLabel(r, maxRounds)}</option>
@@ -122,7 +122,7 @@ const BracketView: React.FC<BracketViewProps> = ({
                 setEndRound(v);
                 if (v < startRound) setStartRound(v);
               }}
-              className="bg-gray-800 border border-gray-700 text-gray-300 rounded px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
+              className="bg-surface border border-white/10 text-secondary rounded px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
             >
               {roundOptions.filter((r) => r >= startRound).map((r) => (
                 <option key={r} value={r}>{getRoundLabel(r, maxRounds)}</option>

@@ -31,7 +31,7 @@ const CreditWarning = ({ currentCredits, purchaseCost, onboardingStep }: CreditW
     return (
       <div
         role="alert"
-        className="p-3 rounded bg-blue-900/10 text-blue-400 border border-blue-700 text-sm"
+        className="p-3 rounded bg-blue-900/10 text-primary border border-blue-700 text-sm"
       >
         <span className="font-medium">Facility purchases are locked</span> until you complete the
         budget allocation step (Step 4). Focus on learning about strategies and facilities first.
@@ -44,7 +44,7 @@ const CreditWarning = ({ currentCredits, purchaseCost, onboardingStep }: CreditW
     return (
       <div
         role="alert"
-        className="p-3 rounded bg-red-900/10 text-red-400 border border-red-700 text-sm"
+        className="p-3 rounded bg-red-900/10 text-error border border-red-700 text-sm"
       >
         <span className="font-medium">Insufficient credits.</span> You need{' '}
         {formatCurrency(purchaseCost)} but only have {formatCurrency(currentCredits)}.
@@ -60,7 +60,7 @@ const CreditWarning = ({ currentCredits, purchaseCost, onboardingStep }: CreditW
       <div
         key="critical"
         role="alert"
-        className="p-3 rounded bg-red-900/10 text-red-400 border border-red-700 text-sm"
+        className="p-3 rounded bg-red-900/10 text-error border border-red-700 text-sm"
       >
         <span className="font-medium">Critical budget warning.</span> Your credits are below{' '}
         {formatCurrency(CREDIT_THRESHOLDS.CRITICAL_BUDGET)}. Consider avoiding additional spending
@@ -75,7 +75,7 @@ const CreditWarning = ({ currentCredits, purchaseCost, onboardingStep }: CreditW
       <div
         key="low-reserve"
         role="status"
-        className="p-3 rounded bg-yellow-900/10 text-yellow-400 border border-yellow-700 text-sm"
+        className="p-3 rounded bg-yellow-900/10 text-warning border border-yellow-700 text-sm"
       >
         <span className="font-medium">Low reserve warning.</span> After this purchase you will have{' '}
         {formatCurrency(remainingAfterPurchase)} remaining. Keeping at least{' '}

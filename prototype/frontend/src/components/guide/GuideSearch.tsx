@@ -85,18 +85,18 @@ const GuideSearch: React.FC<GuideSearchProps> = ({ onResultSelect }) => {
           disabled={indexError}
           className={`w-full px-4 py-2 pl-9 rounded-lg text-sm transition-colors ${
             indexError
-              ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
-              : 'bg-gray-800 text-white border border-gray-700 focus:border-primary focus:outline-none'
+              ? 'bg-surface text-tertiary cursor-not-allowed border border-white/10'
+              : 'bg-surface text-white border border-white/10 focus:border-primary focus:outline-none'
           }`}
           aria-label="Search guide"
         />
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary text-sm">
           🔍
         </span>
       </div>
 
       {showResults && debouncedQuery.length >= 2 && searchIndex && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-surface-elevated border border-gray-700 rounded-lg shadow-xl z-30">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-surface-elevated border border-white/10 rounded-lg shadow-xl z-30">
           <GuideSearchResults
             results={results}
             query={debouncedQuery}

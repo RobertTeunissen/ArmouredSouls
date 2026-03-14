@@ -21,12 +21,12 @@ const BattleReadinessCheck = ({ robots, credits, onComplete }: BattleReadinessCh
   const navigate = useNavigate();
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg p-6" aria-label="Battle Readiness Check">
+    <div className="bg-surface border border-white/10 rounded-lg p-6" aria-label="Battle Readiness Check">
       {isReady ? (
         <div className="text-center">
           <span className="text-4xl block mb-3" role="img" aria-label="Green checkmark">✅</span>
-          <h3 className="text-xl font-bold text-green-400 mb-2">Battle Ready!</h3>
-          <p className="text-gray-400 mb-4">
+          <h3 className="text-xl font-bold text-success mb-2">Battle Ready!</h3>
+          <p className="text-secondary mb-4">
             Your robot is equipped and you have enough credits to cover repairs.
           </p>
           <button
@@ -39,22 +39,22 @@ const BattleReadinessCheck = ({ robots, credits, onComplete }: BattleReadinessCh
         </div>
       ) : (
         <div>
-          <h3 className="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-error mb-4 flex items-center gap-2">
             <span role="img" aria-label="Warning">⚠️</span>
             Not Battle Ready
           </h3>
-          <p className="text-gray-400 mb-4">
+          <p className="text-secondary mb-4">
             Fix the following issues before completing the tutorial:
           </p>
           <ul className="space-y-3 mb-6" role="list" aria-label="Readiness issues">
             {issues.map((issue, index) => (
               <li key={index} className="flex items-start gap-3" role="listitem">
-                <span className="text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true">✗</span>
+                <span className="text-error flex-shrink-0 mt-0.5" aria-hidden="true">✗</span>
                 <div className="flex-1">
-                  <p className="text-gray-300">{issue.message}</p>
+                  <p className="text-secondary">{issue.message}</p>
                   <button
                     onClick={() => navigate(issue.link)}
-                    className="text-sm text-blue-400 hover:text-blue-300 underline mt-1"
+                    className="text-sm text-primary hover:text-blue-300 underline mt-1"
                   >
                     {issue.action}
                   </button>
@@ -64,7 +64,7 @@ const BattleReadinessCheck = ({ robots, credits, onComplete }: BattleReadinessCh
           </ul>
           <button
             disabled
-            className="px-8 py-3 bg-gray-600 text-gray-400 rounded-lg font-semibold text-lg cursor-not-allowed opacity-50"
+            className="px-8 py-3 bg-gray-600 text-secondary rounded-lg font-semibold text-lg cursor-not-allowed opacity-50"
             aria-label="Complete Tutorial"
             aria-disabled="true"
           >

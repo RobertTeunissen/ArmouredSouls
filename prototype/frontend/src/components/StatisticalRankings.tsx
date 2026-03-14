@@ -108,11 +108,11 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4">
+      <div className="bg-surface rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-3">Statistical Rankings</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {[...Array(9)].map((_, i) => (
-            <div key={i} className="bg-gray-700 rounded-lg p-2 animate-pulse">
+            <div key={i} className="bg-surface-elevated rounded-lg p-2 animate-pulse">
               <div className="h-12 bg-gray-600 rounded"></div>
             </div>
           ))}
@@ -123,9 +123,9 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
 
   if (error) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4">
+      <div className="bg-surface rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-3">Statistical Rankings</h3>
-        <p className="text-red-400 text-sm">Failed to load rankings. Please try again later.</p>
+        <p className="text-error text-sm">Failed to load rankings. Please try again later.</p>
       </div>
     );
   }
@@ -137,7 +137,7 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
   const rankingEntries = Object.entries(rankings) as [keyof RobotRankings, RankingEntry][];
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4">
+    <div className="bg-surface rounded-lg p-4">
       <h3 className="text-base font-semibold mb-3">Statistical Rankings</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {rankingEntries.map(([category, ranking]) => {
@@ -149,7 +149,7 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
           return (
             <div
               key={category}
-              className="bg-gray-700 rounded-lg p-2 hover:bg-gray-650 transition-colors duration-150"
+              className="bg-surface-elevated rounded-lg p-2 hover:bg-gray-650 transition-colors duration-150"
             >
               <div className="flex items-center gap-2 mb-1">
                 {/* Icon and Name */}
@@ -176,12 +176,12 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
 
               <div className="flex items-center gap-2 mb-1">
                 {/* Rank */}
-                <div className="text-gray-300 text-xs">
+                <div className="text-secondary text-xs">
                   #{ranking.rank} / {ranking.total}
                 </div>
 
                 {/* Percentile */}
-                <div className="text-xs text-gray-400 ml-auto">
+                <div className="text-xs text-secondary ml-auto">
                   {ranking.percentile.toFixed(1)}%
                 </div>
               </div>

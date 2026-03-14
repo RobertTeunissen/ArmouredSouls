@@ -92,10 +92,10 @@ function LeagueStandingsPage() {
   };
 
   const getRankColor = (rank: number) => {
-    if (rank === 1) return 'text-yellow-400'; // Gold
-    if (rank === 2) return 'text-gray-300'; // Silver
+    if (rank === 1) return 'text-warning'; // Gold
+    if (rank === 2) return 'text-secondary'; // Silver
     if (rank === 3) return 'text-orange-600'; // Bronze
-    return 'text-gray-400';
+    return 'text-secondary';
   };
 
   // Transform league instance identifier to human-readable display text
@@ -113,7 +113,7 @@ function LeagueStandingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
@@ -134,14 +134,14 @@ function LeagueStandingsPage() {
                 onClick={() => setSelectedTier(tier)}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors relative ${
                   isActive
-                    ? `${tierColor} bg-gray-700 border-2 border-current`
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    ? `${tierColor} bg-surface-elevated border-2 border-current`
+                    : 'bg-surface text-secondary hover:bg-surface-elevated'
                 }`}
               >
                 <span>{tierIcon}</span>
                 <span>{tierName}</span>
                 {hasUserRobots && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-gray-900"></span>
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary-dark rounded-full border-2 border-background"></span>
                 )}
               </button>
             );
@@ -150,7 +150,7 @@ function LeagueStandingsPage() {
 
         {/* Instance Information */}
         {!loading && instances.length > 0 && (
-          <div className="bg-gray-800 p-4 rounded-lg mb-6">
+          <div className="bg-surface p-4 rounded-lg mb-6">
             <div 
               className="flex items-center justify-between cursor-pointer mb-2"
               onClick={() => setShowInstancesList(!showInstancesList)}
@@ -158,12 +158,12 @@ function LeagueStandingsPage() {
               <h2 className="text-lg font-semibold">
                 League Instances
                 {selectedInstance && (
-                  <span className="ml-2 text-sm text-gray-400">
+                  <span className="ml-2 text-sm text-secondary">
                     (Click selected to view all)
                   </span>
                 )}
               </h2>
-              <button className="text-gray-400 hover:text-white transition-colors">
+              <button className="text-secondary hover:text-white transition-colors">
                 {showInstancesList ? (
                   <span className="text-2xl">−</span>
                 ) : (
@@ -186,7 +186,7 @@ function LeagueStandingsPage() {
                       className={`p-3 rounded cursor-pointer transition-all relative ${
                         isSelected
                           ? 'bg-yellow-900 border-2 border-yellow-500 ring-2 ring-yellow-400'
-                          : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
+                          : 'bg-surface-elevated hover:bg-gray-600 border-2 border-transparent'
                       }`}
                     >
                       <div className={`text-sm ${tierColorClass} font-semibold`}>
@@ -195,9 +195,9 @@ function LeagueStandingsPage() {
                       <div className="text-lg font-semibold mt-1">
                         {instance.currentRobots} / {instance.maxRobots}
                       </div>
-                      <div className="text-xs text-gray-500">robots</div>
+                      <div className="text-xs text-tertiary">robots</div>
                       {hasUserRobots && (
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-gray-900"></span>
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary-dark rounded-full border-2 border-background"></span>
                       )}
                     </div>
                   );
@@ -208,38 +208,38 @@ function LeagueStandingsPage() {
         )}
 
         {loading && (
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <p className="text-gray-400">Loading standings...</p>
+          <div className="bg-surface p-6 rounded-lg">
+            <p className="text-secondary">Loading standings...</p>
           </div>
         )}
 
         {error && (
           <div className="bg-red-900 border border-red-600 p-6 rounded-lg">
-            <p className="text-red-400">{error}</p>
+            <p className="text-error">{error}</p>
           </div>
         )}
 
         {!loading && !error && robots.length === 0 && (
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <p className="text-gray-400">No robots in this tier yet.</p>
+          <div className="bg-surface p-6 rounded-lg">
+            <p className="text-secondary">No robots in this tier yet.</p>
           </div>
         )}
 
         {!loading && !error && robots.length > 0 && (
           <>
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-700">
+            <div className="bg-surface rounded-lg overflow-hidden">
+              <div className="overflow-x-auto scrollbar-thin">
+                <table className="w-full min-w-[600px]">
+                  <thead className="bg-surface-elevated">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold">Rank</th>
-                      <th className="px-4 py-3 text-left font-semibold">Robot</th>
-                      <th className="px-4 py-3 text-left font-semibold">Owner</th>
-                      <th className="px-4 py-3 text-center font-semibold">ELO</th>
-                      <th className="px-4 py-3 text-center font-semibold">LP</th>
-                      <th className="px-4 py-3 text-center font-semibold">Fame</th>
-                      <th className="px-4 py-3 text-center font-semibold">W-D-L</th>
-                      <th className="px-4 py-3 text-center font-semibold">Win Rate</th>
+                      <th className="px-2 lg:px-4 py-3 text-left font-semibold">Rank</th>
+                      <th className="px-2 lg:px-4 py-3 text-left font-semibold">Robot</th>
+                      <th className="px-2 lg:px-4 py-3 text-left font-semibold">Owner</th>
+                      <th className="px-2 lg:px-4 py-3 text-center font-semibold">ELO</th>
+                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">LP</th>
+                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">Fame</th>
+                      <th className="px-2 lg:px-4 py-3 text-center font-semibold">W-D-L</th>
+                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">Win Rate</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -255,41 +255,41 @@ function LeagueStandingsPage() {
                       return (
                         <tr
                           key={robot.id}
-                          className={`border-b border-gray-700 ${
-                            isMyBot ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-gray-700'
+                          className={`border-b border-white/10 ${
+                            isMyBot ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
-                          <td className={`px-4 py-3 font-bold ${rankColor}`}>
+                          <td className={`px-2 lg:px-4 py-3 font-bold ${rankColor}`}>
                             #{rank}
                           </td>
-                          <td className="px-4 py-3">
-                            <div className={`font-semibold ${isMyBot ? 'text-blue-400' : ''}`}>
+                          <td className="px-2 lg:px-4 py-3">
+                            <div className={`font-semibold ${isMyBot ? 'text-primary' : ''}`}>
                               {robot.name}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-400">
+                          <td className="px-2 lg:px-4 py-3 text-secondary">
                             {robot.user.stableName || robot.user.username}
                             {isMyBot && (
-                              <span className="ml-2 text-xs bg-blue-600 px-2 py-1 rounded">
+                              <span className="ml-2 text-xs bg-primary px-2 py-1 rounded">
                                 YOU
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-center font-mono">{robot.elo}</td>
-                          <td className="px-4 py-3 text-center font-mono text-yellow-400">
+                          <td className="px-2 lg:px-4 py-3 text-center font-mono">{robot.elo}</td>
+                          <td className="hidden lg:table-cell px-4 py-3 text-center font-mono text-warning">
                             {robot.leaguePoints}
                           </td>
-                          <td className="px-4 py-3 text-center font-mono text-purple-400">
+                          <td className="hidden lg:table-cell px-4 py-3 text-center font-mono text-purple-400">
                             {robot.fame}
                           </td>
-                          <td className="px-4 py-3 text-center font-mono">
-                            <span className="text-green-400">{robot.wins}</span>
-                            <span className="text-gray-500"> - </span>
-                            <span className="text-yellow-400">{robot.draws}</span>
-                            <span className="text-gray-500"> - </span>
-                            <span className="text-red-400">{robot.losses}</span>
+                          <td className="px-2 lg:px-4 py-3 text-center font-mono">
+                            <span className="text-success">{robot.wins}</span>
+                            <span className="text-tertiary"> - </span>
+                            <span className="text-warning">{robot.draws}</span>
+                            <span className="text-tertiary"> - </span>
+                            <span className="text-error">{robot.losses}</span>
                           </td>
-                          <td className="px-4 py-3 text-center font-mono">{winRate}%</td>
+                          <td className="hidden lg:table-cell px-4 py-3 text-center font-mono">{winRate}%</td>
                         </tr>
                       );
                     })}
@@ -304,19 +304,19 @@ function LeagueStandingsPage() {
                 <button
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
+                  className="px-4 py-2 bg-surface-elevated rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 min-h-[44px]"
                 >
                   Previous
                 </button>
 
-                <div className="px-4 py-2 bg-gray-800 rounded">
+                <div className="px-4 py-2 bg-surface rounded min-h-[44px] flex items-center">
                   Page {pagination.page} of {pagination.totalPages}
                 </div>
 
                 <button
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
+                  className="px-4 py-2 bg-surface-elevated rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 min-h-[44px]"
                 >
                   Next
                 </button>
