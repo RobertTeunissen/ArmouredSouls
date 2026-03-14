@@ -5,6 +5,7 @@ const base = require('./jest.config');
 const unitTestFiles = [
   'backup\\.property\\.test\\.ts',
   'combatMessageGenerator\\.test\\.ts',
+  'compute-seedings\\.unit\\.test\\.ts',
   'cors\\.property\\.test\\.ts',
   'damageDampeners\\.test\\.ts',
   'economyCalculations\\.test\\.ts',
@@ -16,6 +17,7 @@ const unitTestFiles = [
   'storageCalculations\\.test\\.ts',
   'streamingStudioOperatingCost\\.property\\.test\\.ts',
   'streamingStudioUpgradeCosts\\.property\\.test\\.ts',
+  'tournament-bracket-seeding\\.property\\.test\\.ts',
   'validation\\.property\\.test\\.ts',
 ];
 

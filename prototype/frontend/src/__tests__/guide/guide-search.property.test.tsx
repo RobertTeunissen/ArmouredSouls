@@ -3,7 +3,7 @@
 
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { filterAndRankResults } from '../../components/guide/GuideSearch';
+import { filterAndRankResults } from '../../utils/guideSearchUtils';
 import { SearchIndexEntry } from '../../utils/guideApi';
 
 /**
