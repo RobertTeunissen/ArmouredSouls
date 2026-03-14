@@ -2,11 +2,23 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import * as fc from 'fast-check';
 import StatisticalRankings from '../StatisticalRankings';
-import axios from 'axios';
+import apiClient from '../../utils/apiClient';
 
-// Mock axios
-vi.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+// Mock apiClient
+vi.mock('../../utils/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    interceptors: {
+      request: { use: vi.fn() },
+      response: { use: vi.fn() },
+    },
+  },
+}));
+
+const mockedApiClient = vi.mocked(apiClient);
 
 // Cleanup after each test
 afterEach(() => {
@@ -62,7 +74,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           };
           
           // Mock axios response
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -71,7 +83,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           expect(headers.length).toBeGreaterThan(0);
           
           // Property: Every ranking card must display rank in format "#X of Y"
-          const expectedFormat = `#${rank} of ${validTotal}`;
+          const expectedFormat = `#${rank} / ${validTotal}`;
           const rankDisplays = screen.getAllByText(expectedFormat);
           
           // Property: There should be at least 9 ranking cards (9 categories) - might be more from previous iterations
@@ -120,7 +132,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
             kdRatio: { rank, total, percentile, value: 2.5 },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -128,7 +140,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           expect(headers.length).toBeGreaterThan(0);
           
           // Property: Rank format must be correct for edge cases
-          const expectedFormat = `#${rank} of ${total}`;
+          const expectedFormat = `#${rank} / ${total}`;
           const rankDisplays = screen.getAllByText(expectedFormat);
           
           expect(rankDisplays.length).toBeGreaterThanOrEqual(9);
@@ -219,7 +231,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
             },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -241,7 +253,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           
           // Verify each category displays correct rank format
           for (const category of categories) {
-            const expectedFormat = `#${category.rank} of ${total}`;
+            const expectedFormat = `#${category.rank} / ${total}`;
             // Use getAllByText since multiple categories might have the same rank
             const rankDisplays = screen.getAllByText(expectedFormat);
             expect(rankDisplays.length).toBeGreaterThan(0);
@@ -285,7 +297,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
               kdRatio: { rank, total: validTotal, percentile, value: 2.5 },
             };
             
-            mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+            mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
             
             render(<StatisticalRankings robotId={robotId} />);
             
@@ -293,7 +305,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
             expect(headers.length).toBeGreaterThan(0);
             
             // Property: Format must be consistent across renders
-            const expectedFormat = `#${rank} of ${validTotal}`;
+            const expectedFormat = `#${rank} / ${validTotal}`;
             const rankDisplays = screen.getAllByText(expectedFormat);
             
             expect(rankDisplays.length).toBeGreaterThanOrEqual(9);
@@ -301,7 +313,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
             // Verify format structure: starts with #, contains " of ", ends with number
             rankDisplays.forEach(display => {
               const text = display.textContent || '';
-              expect(text).toMatch(/^#\d+ of \d+$/);
+              expect(text).toMatch(/^#\d+ \/ \d+$/);
               expect(text).toBe(expectedFormat);
             });
             
@@ -337,7 +349,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
             kdRatio: { rank, total: validTotal, percentile, value: 2.5 },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -345,7 +357,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           expect(headers.length).toBeGreaterThan(0);
           
           // Property: Format must have exact spacing and punctuation
-          const rankDisplays = screen.getAllByText(`#${rank} of ${validTotal}`);
+          const rankDisplays = screen.getAllByText(`#${rank} / ${validTotal}`);
           
           rankDisplays.forEach(display => {
             const text = display.textContent || '';
@@ -354,13 +366,12 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
             expect(text).toMatch(/^#/);
             
             // Must have exactly one space after rank number
-            expect(text).toMatch(/^#\d+ of/);
+            expect(text).toMatch(/^#\d+ \//);
             
             // Must have exactly one space before total number
-            expect(text).toMatch(/of \d+$/);
+            expect(text).toMatch(/\/ \d+$/);
             
-            // Must not have extra spaces
-            expect(text).not.toMatch(/ {2}/); // No double spaces
+            // Must not have extra spaces (except around /)
             expect(text).not.toMatch(/# /); // No space after #
             expect(text).not.toMatch(/ $/); // No trailing space
             expect(text).not.toMatch(/^ /); // No leading space
@@ -416,7 +427,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
             kdRatio: { rank, total, percentile, value: 2.5 },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -466,7 +477,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
             kdRatio: { rank, total, percentile, value: 2.5 },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -516,7 +527,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
             kdRatio: { rank, total, percentile, value: 2.5 },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -566,7 +577,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
             kdRatio: { rank, total, percentile, value: 2.5 },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -617,7 +628,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
             kdRatio: { rank, total, percentile, value: 2.5 },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -732,7 +743,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
             },
           };
           
-          mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
           
           render(<StatisticalRankings robotId={robotId} />);
           
@@ -791,7 +802,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
               kdRatio: { rank, total, percentile, value: 2.5 },
             };
             
-            mockedAxios.get.mockResolvedValueOnce({ data: mockRankings });
+            mockedApiClient.get.mockResolvedValueOnce({ data: mockRankings });
             
             render(<StatisticalRankings robotId={robotId} />);
             
@@ -887,45 +898,45 @@ describe('Property 7: Rankings Reflect Current Stats (Property-Based Test)', () 
           };
           
           // Clear any previous mocks
-          mockedAxios.get.mockClear();
+          mockedApiClient.get.mockClear();
           
-          mockedAxios.get.mockResolvedValueOnce({ data: initialMockRankings });
+          mockedApiClient.get.mockResolvedValueOnce({ data: initialMockRankings });
           
           const { unmount } = render(<StatisticalRankings robotId={robotId} />);
           
           try {
             // Wait for initial render
             await waitFor(() => {
-              const initialRankDisplays = screen.queryAllByText(`#${initialRanking.rank} of ${initialTotal}`);
+              const initialRankDisplays = screen.queryAllByText(`#${initialRanking.rank} / ${initialTotal}`);
               expect(initialRankDisplays.length).toBeGreaterThanOrEqual(9);
             }, { timeout: 3000 });
             
             // Verify initial rankings are displayed
-            const initialRankDisplays = screen.getAllByText(`#${initialRanking.rank} of ${initialTotal}`);
+            const initialRankDisplays = screen.getAllByText(`#${initialRanking.rank} / ${initialTotal}`);
             expect(initialRankDisplays.length).toBeGreaterThanOrEqual(9);
             
             // Unmount and remount with new data to simulate stats change
             unmount();
             cleanup();
             
-            mockedAxios.get.mockClear();
-            mockedAxios.get.mockResolvedValueOnce({ data: updatedMockRankings });
+            mockedApiClient.get.mockClear();
+            mockedApiClient.get.mockResolvedValueOnce({ data: updatedMockRankings });
             
             render(<StatisticalRankings robotId={robotId} />);
             
             // Wait for updated render
             await waitFor(() => {
-              const updatedRankDisplays = screen.queryAllByText(`#${updatedRanking.rank} of ${updatedTotal}`);
+              const updatedRankDisplays = screen.queryAllByText(`#${updatedRanking.rank} / ${updatedTotal}`);
               expect(updatedRankDisplays.length).toBeGreaterThanOrEqual(9);
             }, { timeout: 3000 });
             
             // Verify updated rankings are displayed
-            const updatedRankDisplays = screen.getAllByText(`#${updatedRanking.rank} of ${updatedTotal}`);
+            const updatedRankDisplays = screen.getAllByText(`#${updatedRanking.rank} / ${updatedTotal}`);
             expect(updatedRankDisplays.length).toBeGreaterThanOrEqual(9);
             
             // Verify old rankings are no longer displayed (only if they're different from updated)
-            const oldRankFormat = `#${initialRanking.rank} of ${initialTotal}`;
-            const newRankFormat = `#${updatedRanking.rank} of ${updatedTotal}`;
+            const oldRankFormat = `#${initialRanking.rank} / ${initialTotal}`;
+            const newRankFormat = `#${updatedRanking.rank} / ${updatedTotal}`;
             if (oldRankFormat !== newRankFormat) {
               const oldRankDisplays = screen.queryAllByText(oldRankFormat);
               expect(oldRankDisplays.length).toBe(0);

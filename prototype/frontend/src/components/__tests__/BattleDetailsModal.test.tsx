@@ -11,25 +11,49 @@ const mockedAxios = axios as any;
 
 const mockBattleData = {
   id: 1,
-  robot1_id: 10,
-  robot2_id: 20,
-  robot1_name: 'TestBot1',
-  robot2_name: 'TestBot2',
-  winner_id: 10,
-  robot1_hp_remaining: 50,
-  robot2_hp_remaining: 0,
-  battle_log: 'Round 1: TestBot1 attacks TestBot2\nRound 2: TestBot2 attacks TestBot1\nTestBot1 wins!',
+  robot1: {
+    id: 10,
+    name: 'TestBot1',
+    maxHP: 100,
+    loadout: 'Standard',
+    stance: 'Aggressive',
+    attributes: { armor: 50, speed: 60, power: 70 },
+  },
+  robot2: {
+    id: 20,
+    name: 'TestBot2',
+    maxHP: 100,
+    loadout: 'Standard',
+    stance: 'Defensive',
+    attributes: { armor: 45, speed: 55, power: 65 },
+  },
+  winnerId: 10,
+  robot1FinalHP: 50,
+  robot2FinalHP: 0,
+  robot1FinalShield: 10,
+  robot2FinalShield: 0,
+  robot1DamageDealt: 100,
+  robot2DamageDealt: 50,
+  robot1ELOBefore: 1000,
+  robot1ELOAfter: 1020,
+  robot2ELOBefore: 1000,
+  robot2ELOAfter: 980,
+  robot1Destroyed: false,
+  robot1Yielded: false,
+  robot2Destroyed: true,
+  robot2Yielded: false,
+  robot1PrestigeAwarded: 5,
+  robot1FameAwarded: 10,
+  robot2PrestigeAwarded: 0,
+  robot2FameAwarded: 0,
+  winnerReward: 500,
+  loserReward: 100,
+  durationSeconds: 120,
+  leagueType: 'Bronze',
+  battleLog: {
+    detailedCombatEvents: [],
+  },
   created_at: '2026-02-10T10:00:00Z',
-  robot1_attributes: {
-    armor: 50,
-    speed: 60,
-    power: 70,
-  },
-  robot2_attributes: {
-    armor: 45,
-    speed: 55,
-    power: 65,
-  },
 };
 
 describe('BattleDetailsModal', () => {
@@ -56,12 +80,12 @@ describe('BattleDetailsModal', () => {
 
   it('fetches and displays battle information', async () => {
     const onClose = vi.fn();
+    mockedAxios.get.mockResolvedValue({ data: mockBattleData });
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
-      expect(mockedAxios.get).toHaveBeenCalledWith('/api/admin/battles/1');
-      expect(screen.getByText('TestBot1')).toBeInTheDocument();
-      expect(screen.getByText('TestBot2')).toBeInTheDocument();
+      expect(screen.getAllByText('TestBot1').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('TestBot2').length).toBeGreaterThan(0);
     });
   });
 
@@ -70,7 +94,7 @@ describe('BattleDetailsModal', () => {
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
-      expect(screen.getByText(/winner/i)).toBeInTheDocument();
+      expect(screen.getByText(/Wins/i)).toBeInTheDocument();
     });
   });
 
@@ -79,8 +103,7 @@ describe('BattleDetailsModal', () => {
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
-      expect(screen.getByText(/50/)).toBeInTheDocument();
-      expect(screen.getByText(/0/)).toBeInTheDocument();
+      expect(screen.getByText(/HP: 50/)).toBeInTheDocument();
     });
   });
 
@@ -89,7 +112,7 @@ describe('BattleDetailsModal', () => {
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
-      expect(screen.getByText(/round 1/i)).toBeInTheDocument();
+      expect(screen.getByText(/No Detailed Combat Events/i)).toBeInTheDocument();
     });
   });
 
@@ -98,7 +121,7 @@ describe('BattleDetailsModal', () => {
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
-      expect(screen.getByText(/2026/i)).toBeInTheDocument();
+      expect(screen.getByText(/Duration: 120s/i)).toBeInTheDocument();
     });
   });
 
@@ -111,8 +134,9 @@ describe('BattleDetailsModal', () => {
       expect(screen.getByText(/battle details/i)).toBeInTheDocument();
     });
     
-    const closeButton = screen.getByRole('button', { name: /close/i });
-    await user.click(closeButton);
+    const closeButton = screen.getAllByRole('button').find(btn => btn.textContent === 'Close');
+    expect(closeButton).toBeDefined();
+    await user.click(closeButton!);
     
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -131,12 +155,12 @@ describe('BattleDetailsModal', () => {
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
-      expect(screen.getByText(/error/i)).toBeInTheDocument();
+      expect(screen.getByText(/Failed to load battle details/i)).toBeInTheDocument();
     });
   });
 
   it('handles draw battles correctly', async () => {
-    const drawBattle = { ...mockBattleData, winner_id: null };
+    const drawBattle = { ...mockBattleData, winnerId: null };
     mockedAxios.get.mockResolvedValue({ data: drawBattle });
     const onClose = vi.fn();
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);

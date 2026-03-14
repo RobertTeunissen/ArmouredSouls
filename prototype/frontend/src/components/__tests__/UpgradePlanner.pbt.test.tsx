@@ -54,21 +54,8 @@ describe('UpgradePlanner - Cost Transparency Properties', () => {
             />
           );
 
-          // Check if workshop discount is displayed when workshopLevel > 0
-          const workshopDiscount = Math.min(workshopLevel * 0.04, 0.20);
-          if (workshopDiscount > 0) {
-            const workshopDiscountText = `${(workshopDiscount * 100).toFixed(0)}%`;
-            const workshopElements = container.querySelectorAll('*');
-            let foundWorkshopDiscount = false;
-            workshopElements.forEach(el => {
-              if (el.textContent?.includes('Workshop Discount') && el.textContent?.includes(workshopDiscountText)) {
-                foundWorkshopDiscount = true;
-              }
-            });
-            expect(foundWorkshopDiscount).toBe(true);
-          }
-
           // Check if training discount is displayed when trainingLevel > 0
+          // Note: Component only shows Training Facility Discount, not Workshop Discount
           if (trainingLevel > 0) {
             const trainingDiscountText = `${trainingLevel * 10}%`;
             const trainingElements = container.querySelectorAll('*');

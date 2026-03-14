@@ -1,11 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
 import RobotPerformanceAnalytics from '../RobotPerformanceAnalytics';
+import apiClient from '../../utils/apiClient';
 
-vi.mock('axios');
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockedAxios = axios as any;
+// Mock apiClient (imported by RobotPerformanceAnalytics)
+vi.mock('../../utils/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
+  },
+}));
+
+const mockedApiClient = vi.mocked(apiClient);
 
 describe('RobotPerformanceAnalytics', () => {
   beforeEach(() => {
@@ -14,7 +21,7 @@ describe('RobotPerformanceAnalytics', () => {
   });
 
   it('renders loading state initially', () => {
-    mockedAxios.get.mockImplementation(() => new Promise(() => {}));
+    mockedApiClient.get.mockImplementation(() => new Promise(() => {}));
     
     render(<RobotPerformanceAnalytics robotId={1} lastNCycles={10} />);
     
@@ -22,7 +29,7 @@ describe('RobotPerformanceAnalytics', () => {
   });
 
   it('renders error state when API fails', async () => {
-    mockedAxios.get.mockRejectedValue({
+    mockedApiClient.get.mockRejectedValue({
       response: { data: { message: 'Failed to fetch data' } },
     });
 
@@ -42,7 +49,7 @@ describe('RobotPerformanceAnalytics', () => {
       wins: 15,
       losses: 8,
       draws: 2,
-      winRate: 0.6,
+      winRate: 60.0,
       damageDealt: 5000,
       damageReceived: 3000,
       totalCreditsEarned: 10000,
@@ -97,7 +104,7 @@ describe('RobotPerformanceAnalytics', () => {
       movingAverage: [],
     };
 
-    mockedAxios.get.mockImplementation((url: string) => {
+    mockedApiClient.get.mockImplementation((url: string) => {
       if (url.includes('/api/analytics/cycle/current')) {
         return Promise.resolve({ data: mockCurrentCycle });
       }
@@ -164,7 +171,7 @@ describe('RobotPerformanceAnalytics', () => {
       movingAverage: [],
     };
 
-    mockedAxios.get.mockImplementation((url: string) => {
+    mockedApiClient.get.mockImplementation((url: string) => {
       if (url.includes('/api/analytics/cycle/current')) {
         return Promise.resolve({ data: mockCurrentCycle });
       }

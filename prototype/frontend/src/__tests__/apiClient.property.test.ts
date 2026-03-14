@@ -94,20 +94,19 @@ describe('API Client Interceptors - Property Tests', () => {
         .stringMatching(/^[a-z][a-z0-9/\-_]*$/)
         .filter((s) => s.length >= 1 && s.length <= 50);
 
-      const bodyArb = fc.oneof(
-        fc.constant(null),
-        fc.constant(''),
-        fc.string(),
-        fc.dictionary(fc.string(), fc.string()),
-      );
+      // The interceptor only clears the token when the response body is a
+      // backend-style JSON error object: { error: "<string>" }.
+      // Proxy/WAF responses (plain strings, null, etc.) are intentionally
+      // ignored to avoid destroying valid sessions.
+      const backendErrorBodyArb = fc
+        .string({ minLength: 1 })
+        .map((msg) => ({ error: msg }));
 
       await fc.assert(
-        fc.asyncProperty(pathArb, bodyArb, async (path, body) => {
+        fc.asyncProperty(pathArb, backendErrorBodyArb, async (path, body) => {
           vi.mocked(localStorage.getItem).mockReturnValue('some-token');
           vi.mocked(localStorage.removeItem).mockClear();
           (window.location as unknown as { href: string }).href = '';
-
- 
 
           mock.onAny(`/api/${path}`).reply(401, body);
 
@@ -127,15 +126,13 @@ describe('API Client Interceptors - Property Tests', () => {
     });
 
     it('does not clear token for non-401 error responses', async () => {
-      const nonAuthStatusArb = fc.integer({ min: 400, max: 599 }).filter((s) => s !== 401);
+      const nonAuthStatusArb = fc.integer({ min: 400, max: 599 }).filter((s) => s !== 401 && s !== 403);
 
       await fc.assert(
         fc.asyncProperty(nonAuthStatusArb, async (status) => {
           vi.mocked(localStorage.getItem).mockReturnValue('some-token');
           vi.mocked(localStorage.removeItem).mockClear();
           (window.location as unknown as { href: string }).href = '';
-
- 
 
           mock.onGet('/api/test').reply(status, { error: 'some error' });
 

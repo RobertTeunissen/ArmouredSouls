@@ -56,7 +56,7 @@ vi.mock('../../../utils/apiClient', () => ({
 }));
 
 vi.mock('../../../utils/financialApi', () => ({
-  formatCurrency: (val: number) => `₡${val.toLocaleString()}`,
+  formatCurrency: (val: number) => `₡${(val ?? 0).toLocaleString()}`,
 }));
 
 vi.mock('../../../hooks/useBattleReadiness', () => ({
@@ -79,7 +79,7 @@ vi.mock('../../../hooks/useCreditValidation', () => ({
 }));
 
 vi.mock('../../../utils/formatters', () => ({
-  formatCurrency: (val: number) => `₡${val.toLocaleString()}`,
+  formatCurrency: (val: number) => `₡${(val ?? 0).toLocaleString()}`,
 }));
 
 // ============================================================
@@ -267,7 +267,7 @@ describe('GuidedUIOverlay - ARIA & Screen Reader', () => {
         tooltipContent={<div>Content</div>}
       />
     );
-    const overlay = container.querySelector('.bg-black.bg-opacity-60');
+    const overlay = container.querySelector('.bg-background.bg-opacity-40');
     expect(overlay).toHaveAttribute('aria-hidden', 'true');
   });
 

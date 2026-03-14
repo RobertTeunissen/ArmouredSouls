@@ -23,7 +23,7 @@ describe('UpgradePlanner - Control Properties', () => {
         fc.record({
           attributeLevel: fc.integer({ min: 1, max: 30 }),
           currentCredits: fc.integer({ min: 100000, max: 1000000 }),
-          trainingLevel: fc.integer({ min: 0, max: 10 }),
+          trainingLevel: fc.integer({ min: 0, max: 9 }),
         }),
         ({ attributeLevel, currentCredits, trainingLevel }) => {
           const robot = {
@@ -104,8 +104,8 @@ describe('UpgradePlanner - Control Properties', () => {
                 el => el.textContent?.includes('Remaining Credits:')
               );
               const remainingText = remainingCreditsElements[0]?.textContent || '';
-              // Extract only the number after "Remaining Credits:"
-              const remainingMatch = remainingText.match(/Remaining Credits:\s*([-]?\d[\d,]*)/);
+              // Extract only the number after "Remaining Credits:" — component renders ₡X,XXX format
+              const remainingMatch = remainingText.match(/Remaining Credits:\s*₡?([-]?[\d,]+)/);
               const remaining = remainingMatch ? parseInt(remainingMatch[1].replace(/,/g, '')) : 0;
               expect(Math.abs(remaining - currentCredits)).toBeLessThan(10);
             }

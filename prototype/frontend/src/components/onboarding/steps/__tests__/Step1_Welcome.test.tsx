@@ -39,7 +39,7 @@ describe('Step1_Welcome', () => {
       const mockOnNext = vi.fn();
       render(<Step1_Welcome onNext={mockOnNext} />);
       
-      expect(screen.getByText('The Fundamental Strategic Question')).toBeInTheDocument();
+      expect(screen.getByText(/How do you want to be the most successful manager/i)).toBeInTheDocument();
     });
   });
 
@@ -253,7 +253,7 @@ describe('Step1_Welcome', () => {
       const h1 = screen.getByRole('heading', { level: 1, name: /Welcome to Armoured Souls/i });
       expect(h1).toBeInTheDocument();
       
-      const h2 = screen.getByRole('heading', { level: 2, name: /The Fundamental Strategic Question/i });
+      const h2 = screen.getByRole('heading', { level: 2, name: /How do you want to be the most successful manager/i });
       expect(h2).toBeInTheDocument();
     });
 

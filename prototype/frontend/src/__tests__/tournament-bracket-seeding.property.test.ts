@@ -110,9 +110,9 @@ describe('Property 8: User robot match highlighting', () => {
 
         if (hasUserRobot) {
           expect(classList).toContain('border-blue-500');
-          expect(classList).not.toContain('border-gray-700');
+          expect(classList).not.toContain('border-white/10');
         } else {
-          expect(classList).toContain('border-gray-700');
+          expect(classList).toContain('border-white/10');
           expect(classList).not.toContain('border-blue-500');
         }
       }),

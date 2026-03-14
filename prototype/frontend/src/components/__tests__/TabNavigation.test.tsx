@@ -52,13 +52,15 @@ describe('Property 2: Owner-Only Tab Access Control', () => {
       </BrowserRouter>
     );
 
-    // Overview and Stats should be visible
+    // Overview and Matches should be visible
     expect(screen.getByRole('tab', { name: /overview/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /stats/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /matches/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /analytics/i })).toBeInTheDocument();
 
-    // Battle Config and Upgrades should NOT be visible
+    // Battle Config, Upgrades, and Stats should NOT be visible (owner-only)
     expect(screen.queryByRole('tab', { name: /battle config/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /upgrades/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /stats/i })).not.toBeInTheDocument();
   });
 
   it('should show all tabs when user is owner', () => {
