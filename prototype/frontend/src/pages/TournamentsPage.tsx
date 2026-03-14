@@ -2,56 +2,21 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import { listTournaments, getTournamentDetails, Tournament, TournamentDetails } from '../utils/tournamentApi';
-import { fetchMyRobots } from '../utils/robotApi';
+import { listTournaments, Tournament } from '../utils/tournamentApi';
+import { getRoundLabel } from '../utils/bracketUtils';
 
 function TournamentsPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [selectedTournament, setSelectedTournament] = useState<TournamentDetails | null>(null);
-  const [userRobots, setUserRobots] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
-  const [showOnlyUserRobots, setShowOnlyUserRobots] = useState(false);
-  const [matchesPage, setMatchesPage] = useState(1);
-  const [matchesPerPage, setMatchesPerPage] = useState(50);  useEffect(() => {
+
+  useEffect(() => {
     fetchTournaments();
-    fetchUserRobots();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const fetchUserRobots = async () => {
-    try {
-      const robots = await fetchMyRobots();
-      const robotIds = new Set<number>(robots.map((r) => r.id));
-      setUserRobots(robotIds);
-    } catch (err) {
-      console.error('Failed to fetch user robots:', err);
-    }
-  };
-
-  const fetchTournamentDetails = async (tournamentId: number) => {
-    try {
-      setDetailsLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const data = await getTournamentDetails(token, tournamentId);
-      setSelectedTournament(data.tournament);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to fetch tournament details:', err);
-      setError('Failed to load tournament details');
-    } finally {
-      setDetailsLoading(false);
-    }
-  };
 
   const fetchTournaments = async () => {
     try {
@@ -84,12 +49,8 @@ function TournamentsPage() {
     return tournaments.filter(t => t.status === filter);
   };
 
-  const getRoundName = (currentRound: number, maxRounds: number) => {
-    const remainingRounds = maxRounds - currentRound + 1;
-    if (remainingRounds === 1) return 'Finals';
-    if (remainingRounds === 2) return 'Semi-finals';
-    if (remainingRounds === 3) return 'Quarter-finals';
-    return `Round ${currentRound}/${maxRounds}`;
+  const getRoundName = (currentRound: number, maxRounds: number): string => {
+    return getRoundLabel(currentRound, maxRounds);
   };
 
   const getStatusBadge = (status: string) => {
@@ -290,7 +251,7 @@ function TournamentsPage() {
                 {/* View Details Button */}
                 <div className="mt-4">
                   <button
-                    onClick={() => fetchTournamentDetails(tournament.id)}
+                    onClick={() => navigate(`/tournaments/${tournament.id}`)}
                     className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors font-semibold"
                   >
                     View Tournament Details
@@ -301,285 +262,6 @@ function TournamentsPage() {
           </div>
         )}
 
-        {/* Tournament Details Modal */}
-        {selectedTournament && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <div className="bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto border-2 border-yellow-500/50">
-              {/* Header */}
-              <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex justify-between items-center">
-                <div>
-                  <h2 className="text-3xl font-bold text-yellow-400 mb-1">{selectedTournament.name}</h2>
-                  <div className="flex items-center gap-3">
-                    {getStatusBadge(selectedTournament.status)}
-                    <span className="text-gray-400">
-                      Round {selectedTournament.currentRound} of {selectedTournament.maxRounds}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedTournament(null)}
-                  className="text-gray-400 hover:text-white text-3xl leading-none"
-                >
-                  ×
-                </button>
-              </div>
-
-              {detailsLoading ? (
-                <div className="p-12 text-center">
-                  <p className="text-gray-400">Loading tournament details...</p>
-                </div>
-              ) : (
-                <div className="p-6">
-                  {/* Tournament Info */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gray-900 p-4 rounded-lg">
-                      <div className="text-sm text-gray-400">Total Participants</div>
-                      <div className="text-2xl font-bold">{selectedTournament.totalParticipants}</div>
-                    </div>
-                    <div className="bg-gray-900 p-4 rounded-lg">
-                      <div className="text-sm text-gray-400">Robots Remaining</div>
-                      <div className="text-2xl font-bold text-green-400">
-                        {(() => {
-                          const matches = selectedTournament.currentRoundMatches || [];
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          const regularMatches = matches.filter((m: any) => !m.isByeMatch).length;
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          const byeMatches = matches.filter((m: any) => m.isByeMatch).length;
-                          return (regularMatches * 2) + byeMatches;
-                        })()}
-                      </div>
-                    </div>
-                    <div className="bg-gray-900 p-4 rounded-lg">
-                      <div className="text-sm text-gray-400">Total Rounds</div>
-                      <div className="text-2xl font-bold">{selectedTournament.maxRounds}</div>
-                    </div>
-                    <div className="bg-gray-900 p-4 rounded-lg">
-                      <div className="text-sm text-gray-400">Your Robots</div>
-                      <div className="text-2xl font-bold text-blue-400">
-                        {(() => {
-                          const userRobotIds = new Set<number>();
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          selectedTournament.currentRoundMatches?.forEach((m: any) => {
-                            if (m.robot1Id && userRobots.has(m.robot1Id)) {
-                              userRobotIds.add(m.robot1Id);
-                            }
-                            if (m.robot2Id && userRobots.has(m.robot2Id)) {
-                              userRobotIds.add(m.robot2Id);
-                            }
-                          });
-                          return userRobotIds.size;
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* User's Robots in Tournament */}
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {selectedTournament.currentRoundMatches && selectedTournament.currentRoundMatches.some((m: any) => 
-                    (m.robot1Id && userRobots.has(m.robot1Id)) || 
-                    (m.robot2Id && userRobots.has(m.robot2Id))
-                  ) && (
-                    <div className="bg-blue-900/20 border border-blue-500/50 p-4 rounded-lg mb-6">
-                      <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center gap-2">
-                        <span>🤖</span>
-                        Your Robots Still In Tournament
-                      </h3>
-                      <div className="space-y-2">
-                        {selectedTournament.currentRoundMatches
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          .filter((m: any) => 
-                            (m.robot1Id && userRobots.has(m.robot1Id)) || 
-                            (m.robot2Id && userRobots.has(m.robot2Id))
-                          )
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          .map((match: any) => {
-                            const userRobot = userRobots.has(match.robot1Id) ? match.robot1 : match.robot2;
-                            const opponent = userRobots.has(match.robot1Id) ? match.robot2 : match.robot1;
-                            
-                            return (
-                              <div key={match.id} className="bg-gray-900 p-3 rounded flex justify-between items-center">
-                                <div>
-                                  <span className="font-bold text-blue-400">{userRobot?.name || 'Your Robot'}</span>
-                                  {match.status === 'completed' ? (
-                                    <span className="ml-2 text-sm">
-                                      {match.winnerId === userRobot?.id ? (
-                                        <span className="text-green-400">✓ Advanced</span>
-                                      ) : (
-                                        <span className="text-red-400">✗ Eliminated</span>
-                                      )}
-                                    </span>
-                                  ) : match.isByeMatch ? (
-                                    <span className="ml-2 text-sm text-yellow-400">Bye (Auto-advance)</span>
-                                  ) : (
-                                    <span className="ml-2 text-sm text-gray-400">
-                                      vs {opponent?.name || 'TBD'}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-sm text-gray-400">
-                                  {match.isByeMatch ? 'No Match' : 
-                                    match.status === 'completed' ? 'Completed' : 'Pending'}
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Current Round Matches */}
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-bold">
-                        {getRoundName(selectedTournament.currentRound, selectedTournament.maxRounds)} Matches
-                      </h3>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={showOnlyUserRobots}
-                            onChange={(e) => {
-                              setShowOnlyUserRobots(e.target.checked);
-                              setMatchesPage(1); // Reset to first page
-                            }}
-                            className="rounded"
-                          />
-                          <span className="text-gray-300">Show only my robots</span>
-                        </label>
-                        <select
-                          value={matchesPerPage}
-                          onChange={(e) => {
-                            setMatchesPerPage(Number(e.target.value));
-                            setMatchesPage(1); // Reset to first page
-                          }}
-                          className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm"
-                        >
-                          <option value={25}>25 per page</option>
-                          <option value={50}>50 per page</option>
-                          <option value={100}>100 per page</option>
-                          <option value={500}>500 per page</option>
-                        </select>
-                      </div>
-                    </div>
-                    
-                    {selectedTournament.currentRoundMatches && selectedTournament.currentRoundMatches.length > 0 ? (
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                          {(() => {
-                            // Filter matches if "show only my robots" is enabled
-                            const filteredMatches = showOnlyUserRobots
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              ? selectedTournament.currentRoundMatches.filter((m: any) =>
-                                  (m.robot1Id && userRobots.has(m.robot1Id)) ||
-                                  (m.robot2Id && userRobots.has(m.robot2Id))
-                                )
-                              : selectedTournament.currentRoundMatches;
-
-                            // Pagination
-                            const totalMatches = filteredMatches.length;
-                            const totalPages = Math.ceil(totalMatches / matchesPerPage);
-                            const startIndex = (matchesPage - 1) * matchesPerPage;
-                            const endIndex = startIndex + matchesPerPage;
-                            const paginatedMatches = filteredMatches.slice(startIndex, endIndex);
-
-                            return (
-                              <>
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {paginatedMatches.map((match: any) => (
-                                  <div
-                                    key={match.id}
-                                    className={`p-3 rounded border ${
-                                      match.status === 'completed'
-                                        ? 'bg-gray-900/50 border-gray-700'
-                                        : 'bg-gray-900 border-yellow-500/30'
-                                    }`}
-                                  >
-                                    {match.isByeMatch ? (
-                                      <div className="text-center py-2">
-                                        <div className="font-bold text-yellow-400">
-                                          {match.robot1?.name || 'Robot'}
-                                        </div>
-                                        <div className="text-xs text-gray-400">
-                                          ELO: {match.robot1?.elo || 'N/A'}
-                                        </div>
-                                        {match.robot1?.user && (
-                                          <div className="text-xs text-gray-500">
-                                            {match.robot1.user.stableName || match.robot1.user.username}
-                                          </div>
-                                        )}
-                                        <div className="text-xs text-yellow-300 mt-1">🎖️ Bye - Auto-advances</div>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <div className="flex justify-between items-start gap-2">
-                                          <div className={`flex-1 ${match.winnerId === match.robot1Id ? 'font-bold text-green-400' : ''}`}>
-                                            <div>{match.robot1?.name || 'TBD'}</div>
-                                            <div className="text-xs text-gray-400">
-                                              ELO: {match.robot1?.elo || 'N/A'}
-                                            </div>
-                                            {match.robot1?.user && (
-                                              <div className="text-xs text-gray-500">
-                                                {match.robot1.user.stableName || match.robot1.user.username}
-                                              </div>
-                                            )}
-                                          </div>
-                                          <div className="px-2 text-gray-500 text-xs pt-2">VS</div>
-                                          <div className={`flex-1 text-right ${match.winnerId === match.robot2Id ? 'font-bold text-green-400' : ''}`}>
-                                            <div>{match.robot2?.name || 'TBD'}</div>
-                                            <div className="text-xs text-gray-400">
-                                              ELO: {match.robot2?.elo || 'N/A'}
-                                            </div>
-                                            {match.robot2?.user && (
-                                              <div className="text-xs text-gray-500">
-                                                {match.robot2.user.stableName || match.robot2.user.username}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div className="text-center text-xs text-gray-500 mt-2">
-                                          {match.status === 'completed' ? '✓ Completed' : 'Pending'}
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                ))}
-
-                                {/* Pagination Controls */}
-                                {totalPages > 1 && (
-                                  <div className="col-span-full flex justify-center items-center gap-4 mt-4">
-                                    <button
-                                      onClick={() => setMatchesPage(Math.max(1, matchesPage - 1))}
-                                      disabled={matchesPage === 1}
-                                      className="px-4 py-2 bg-gray-800 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
-                                    >
-                                      Previous
-                                    </button>
-                                    <span className="text-gray-400">
-                                      Page {matchesPage} of {totalPages} ({totalMatches} matches)
-                                    </span>
-                                    <button
-                                      onClick={() => setMatchesPage(Math.min(totalPages, matchesPage + 1))}
-                                      disabled={matchesPage === totalPages}
-                                      className="px-4 py-2 bg-gray-800 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
-                                    >
-                                      Next
-                                    </button>
-                                  </div>
-                                )}
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </>
-                    ) : (
-                      <p className="text-gray-400 text-center py-8">No matches in current round</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

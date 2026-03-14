@@ -18,6 +18,7 @@ import LeaderboardsLossesPage from './pages/LeaderboardsLossesPage';
 import FinancialReportPage from './pages/FinancialReportPage';
 import HallOfRecordsPage from './pages/HallOfRecordsPage';
 import TournamentsPage from './pages/TournamentsPage';
+import TournamentDetailPage from './pages/TournamentDetailPage';
 import TagTeamManagementPage from './pages/TagTeamManagementPage';
 import TagTeamStandingsPage from './pages/TagTeamStandingsPage';
 import ProfilePage from './pages/ProfilePage';
@@ -170,6 +171,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TournamentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tournaments/:id"
+            element={
+              <ProtectedRoute>
+                <TournamentDetailPage />
               </ProtectedRoute>
             }
           />
