@@ -74,7 +74,7 @@ export async function getEligibleRobotsForTournament(): Promise<Robot[]> {
  * Seed robots by ELO rating (highest to lowest)
  * Used for fair bracket generation
  */
-function seedRobotsByELO(robots: Robot[]): Robot[] {
+export function seedRobotsByELO(robots: Robot[]): Robot[] {
   return [...robots].sort((a, b) => b.elo - a.elo);
 }
 
@@ -243,7 +243,7 @@ function generateBracketPairs(seededRobots: Robot[], maxRounds: number): Tournam
  * - Semifinals: 1v4 and 2v3
  * - Finals: 1v2
  */
-function generateStandardSeedOrder(bracketSize: number): number[] {
+export function generateStandardSeedOrder(bracketSize: number): number[] {
   if (bracketSize === 2) {
     return [1, 2];
   }
@@ -268,6 +268,131 @@ function generateStandardSeedOrder(bracketSize: number): number[] {
   }
   
   return result;
+}
+
+/**
+ * Seed entry representing a robot's seeding in a tournament bracket
+ */
+export interface SeedEntry {
+  seed: number;       // 1-based seed number
+  robotId: number;
+  robotName: string;
+  elo: number;
+  eliminated: boolean; // true if robot has lost a match
+}
+
+/**
+ * A round-1 match with robot relations for seedings computation.
+ * Matches must be ordered by matchNumber ascending.
+ */
+export interface Round1Match {
+  matchNumber: number;
+  robot1Id: number | null;
+  robot2Id: number | null;
+  robot1: { id: number; name: string; elo: number } | null;
+  robot2: { id: number; name: string; elo: number } | null;
+}
+
+/**
+ * A completed match used to determine elimination status.
+ */
+export interface CompletedMatch {
+  winnerId: number | null;
+  robot1Id: number | null;
+  robot2Id: number | null;
+  status: string;
+}
+
+/**
+ * Compute seedings array from round-1 matches and bracket size.
+ * 
+ * Algorithm:
+ * 1. Build inverse map from bracket slot → seed number using generateStandardSeedOrder
+ * 2. For each round-1 match at index i (0-based), bracket slots are 2*i and 2*i+1
+ * 3. Map each non-null robot to its seed number
+ * 4. Mark eliminated robots (losers in any completed match)
+ * 5. Return sorted by seed ascending
+ * 
+ * @param round1Matches - Round-1 matches ordered by matchNumber ascending
+ * @param bracketSize - Total bracket size (2^maxRounds)
+ * @param completedMatches - All completed matches to determine elimination
+ * @returns Array of SeedEntry sorted by seed ascending
+ */
+export function computeSeedings(
+  round1Matches: Round1Match[],
+  bracketSize: number,
+  completedMatches: CompletedMatch[]
+): SeedEntry[] {
+  // seedOrder[seedIndex] = bracketPosition (1-based)
+  // We need the inverse: bracketPosition → seedNumber (1-based)
+  const seedOrder = generateStandardSeedOrder(bracketSize);
+  const slotToSeed = new Map<number, number>();
+  for (let seedIdx = 0; seedIdx < seedOrder.length; seedIdx++) {
+    const bracketPos = seedOrder[seedIdx] - 1; // convert to 0-based slot
+    slotToSeed.set(bracketPos, seedIdx + 1);   // seed is 1-based
+  }
+
+  // Build set of eliminated robot IDs (losers in completed matches)
+  const eliminatedIds = new Set<number>();
+  for (const match of completedMatches) {
+    if (match.status === 'completed' && match.winnerId !== null) {
+      if (match.robot1Id !== null && match.robot1Id !== match.winnerId) {
+        eliminatedIds.add(match.robot1Id);
+      }
+      if (match.robot2Id !== null && match.robot2Id !== match.winnerId) {
+        eliminatedIds.add(match.robot2Id);
+      }
+    }
+  }
+
+  const seedings: SeedEntry[] = [];
+
+  for (let i = 0; i < round1Matches.length; i++) {
+    const match = round1Matches[i];
+    const slot0 = 2 * i;     // bracket slot for robot1
+    const slot1 = 2 * i + 1; // bracket slot for robot2
+
+    const isByeMatch = match.robot1 !== null && match.robot2 === null;
+
+    if (isByeMatch && match.robot1 !== null && match.robot1Id !== null) {
+      // Bye match: robot may have been normalized from either slot.
+      // Assign the lower (better) seed number of the two slots.
+      const seed = Math.min(slotToSeed.get(slot0) ?? bracketSize, slotToSeed.get(slot1) ?? bracketSize);
+      seedings.push({
+        seed,
+        robotId: match.robot1.id,
+        robotName: match.robot1.name,
+        elo: match.robot1.elo,
+        eliminated: eliminatedIds.has(match.robot1.id),
+      });
+    } else {
+      // Normal match with two robots
+      if (match.robot1 !== null && match.robot1Id !== null) {
+        seedings.push({
+          seed: slotToSeed.get(slot0) ?? 0,
+          robotId: match.robot1.id,
+          robotName: match.robot1.name,
+          elo: match.robot1.elo,
+          eliminated: eliminatedIds.has(match.robot1.id),
+        });
+      }
+
+      if (match.robot2 !== null && match.robot2Id !== null) {
+        seedings.push({
+          seed: slotToSeed.get(slot1) ?? 0,
+          robotId: match.robot2.id,
+          robotName: match.robot2.name,
+          elo: match.robot2.elo,
+          eliminated: eliminatedIds.has(match.robot2.id),
+        });
+      }
+    }
+  }
+
+  // Sort by seed ascending
+  seedings.sort((a, b) => a.seed - b.seed);
+
+  return seedings;
 }
 
 /**

@@ -1,6 +1,16 @@
 import apiClient from './apiClient';
+import type { TournamentMatchWithRobots } from './bracketUtils';
 
 // Types
+
+export interface SeedEntry {
+  seed: number;
+  robotId: number;
+  robotName: string;
+  elo: number;
+  eliminated: boolean;
+}
+
 export interface Tournament {
   id: number;
   name: string;
@@ -58,9 +68,10 @@ export interface TournamentMatch {
 }
 
 export interface TournamentDetails extends Tournament {
-  matches: TournamentMatch[];
+  matches: TournamentMatchWithRobots[];
   currentRoundMatches: TournamentMatch[];
   participantCount: number;
+  seedings: SeedEntry[];
 }
 
 export interface CreateTournamentResponse {
@@ -114,16 +125,18 @@ export const listTournaments = async (_token: string): Promise<{ tournaments: To
 export const getTournamentDetails = async (
   _token: string,
   tournamentId: number
-): Promise<{ tournament: TournamentDetails }> => {
+): Promise<{ tournament: TournamentDetails; seedings: SeedEntry[] }> => {
   const response = await apiClient.get(`/api/tournaments/${tournamentId}`);
   
-  // Backend returns tournament directly
-  const { tournament } = response.data;
+  // Backend returns tournament and seedings
+  const { tournament, seedings = [] } = response.data;
   return {
     tournament: {
       ...tournament,
       currentRoundMatches: tournament.matches?.filter((m: TournamentMatch) => m.round === tournament.currentRound) || [],
-    }
+      seedings,
+    },
+    seedings,
   };
 };
 

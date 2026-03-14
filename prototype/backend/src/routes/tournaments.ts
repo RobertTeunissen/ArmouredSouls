@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { getActiveTournaments } from '../services/tournamentService';
+import { getActiveTournaments, computeSeedings } from '../services/tournamentService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 
@@ -49,7 +49,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 
 /**
  * GET /api/tournaments/:id
- * Get tournament details (public access for all authenticated users)
+ * Get tournament details with all matches and seedings (public access for all authenticated users)
  */
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -59,16 +59,17 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
       return res.status(400).json({ error: 'Invalid tournament ID' });
     }
 
+    const robotSelect = { id: true, name: true, elo: true };
+
     const tournament = await prisma.tournament.findUnique({
       where: { id: tournamentId },
       include: {
-        winner: true,
+        winner: { select: robotSelect },
         matches: {
-          where: { round: { lte: await getCurrentRound(tournamentId) } },
           include: {
-            robot1: true,
-            robot2: true,
-            winner: true,
+            robot1: { select: robotSelect },
+            robot2: { select: robotSelect },
+            winner: { select: robotSelect },
           },
           orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
         },
@@ -79,9 +80,42 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
       return res.status(404).json({ error: 'Tournament not found' });
     }
 
+    // Compute seedings with graceful degradation
+    let seedings: ReturnType<typeof computeSeedings> = [];
+    try {
+      const round1Matches = tournament.matches
+        .filter((m) => m.round === 1)
+        .sort((a, b) => a.matchNumber - b.matchNumber);
+
+      const bracketSize = Math.pow(2, tournament.maxRounds);
+
+      const completedMatches = tournament.matches.filter(
+        (m) => m.status === 'completed'
+      );
+
+      seedings = computeSeedings(round1Matches, bracketSize, completedMatches);
+    } catch (seedError) {
+      logger.error(`[Tournaments] Failed to compute seedings for tournament ${tournamentId}:`, seedError);
+    }
+
     res.json({
       success: true,
-      tournament,
+      tournament: {
+        id: tournament.id,
+        name: tournament.name,
+        tournamentType: tournament.tournamentType,
+        status: tournament.status,
+        currentRound: tournament.currentRound,
+        maxRounds: tournament.maxRounds,
+        totalParticipants: tournament.totalParticipants,
+        winnerId: tournament.winnerId,
+        createdAt: tournament.createdAt,
+        startedAt: tournament.startedAt,
+        completedAt: tournament.completedAt,
+        winner: tournament.winner,
+        matches: tournament.matches,
+      },
+      seedings,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -92,16 +126,5 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     });
   }
 });
-
-/**
- * Helper function to get current round of a tournament
- */
-async function getCurrentRound(tournamentId: number): Promise<number> {
-  const tournament = await prisma.tournament.findUnique({
-    where: { id: tournamentId },
-    select: { currentRound: true },
-  });
-  return tournament?.currentRound || 1;
-}
 
 export default router;
