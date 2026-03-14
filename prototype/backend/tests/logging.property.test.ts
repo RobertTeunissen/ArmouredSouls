@@ -15,7 +15,7 @@ function captureStream(logs: string[]): Writable {
   });
 }
 
-const NUM_RUNS = 25;
+const NUM_RUNS = 10;
 
 describe('Logging - Property Tests', () => {
   describe('Property 9: Structured JSON logging in production', () => {

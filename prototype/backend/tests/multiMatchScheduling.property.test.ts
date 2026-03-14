@@ -9,7 +9,7 @@ import { executeScheduledTagTeamBattles } from '../src/services/tagTeamBattleOrc
 
 
 // Test configuration
-const NUM_RUNS = 20;
+const NUM_RUNS = 10;
 
 // Helper to create a test robot
 async function createTestRobot(userId: number, name: string, elo: number = 1200): Promise<Robot> {

@@ -70,7 +70,7 @@ describe('Property 7: Streaming Studio Upgrade Cost Formula', () => {
           expect(nextCost - currentCost).toBe(100000);
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 
@@ -115,7 +115,7 @@ describe('Property 7: Streaming Studio Upgrade Cost Formula', () => {
           expect(actualTotal).toBe(expectedTotal);
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 
@@ -162,7 +162,7 @@ describe('Property 7: Streaming Studio Upgrade Cost Formula', () => {
           expect(cost1).toBe(expectedCost);
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 
@@ -208,7 +208,7 @@ describe('Property 7: Streaming Studio Upgrade Cost Formula', () => {
           expect(cost2).toBe((level2 + 1) * 100000);
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   });
 });

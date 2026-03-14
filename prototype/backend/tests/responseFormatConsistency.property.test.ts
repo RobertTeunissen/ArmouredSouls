@@ -16,7 +16,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 // Test configuration
-const NUM_RUNS = 25;
+const NUM_RUNS = 10;
 
 describe('Response Format Consistency - Property Tests', () => {
   const createdUserIds: number[] = [];

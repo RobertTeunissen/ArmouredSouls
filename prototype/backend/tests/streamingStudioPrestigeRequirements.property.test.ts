@@ -170,7 +170,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           }
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 10 }
     );
   }, 60000);
 

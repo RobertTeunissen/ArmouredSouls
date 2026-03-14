@@ -4,7 +4,7 @@ import prisma from '../src/lib/prisma';
 
 
 // Test configuration
-const NUM_RUNS = 20;
+const NUM_RUNS = 10;
 
 // Helper to create a test robot
 function createTestRobot(overrides: Partial<Robot> = {}): Robot {

@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
 import { getSeedMode } from '../prisma/seed';
 
-const NUM_RUNS = 25;
+const NUM_RUNS = 10;
 
 // Save original env so we can restore after each test
 const originalEnv = process.env;

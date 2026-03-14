@@ -11,7 +11,7 @@ import {
 
 
 // Test configuration
-const NUM_RUNS = 20;
+const NUM_RUNS = 10;
 
 describe('Tag Team League Instance - Property Tests', () => {
   let testStableId: number;

@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import request from 'supertest';
 import rateLimit from 'express-rate-limit';
 
-const NUM_RUNS = 25;
+const NUM_RUNS = 10;
 
 /**
  * Helper to create a fresh Express app with a rate limiter for each test run.

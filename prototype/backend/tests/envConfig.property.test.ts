@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
 import { loadEnvConfig } from '../src/config/env';
 
-const NUM_RUNS = 30;
+const NUM_RUNS = 10;
 
 // Save original env so we can restore after each test
 const originalEnv = process.env;

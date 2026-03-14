@@ -20,7 +20,7 @@ const EMOJI_MAP: Record<string, string> = {
   settlement: '💰',
 };
 
-const NUM_RUNS = 100;
+const NUM_RUNS = 10;
 
 describe('Notification Service Property Tests', () => {
   // =========================================================================

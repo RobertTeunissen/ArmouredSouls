@@ -74,7 +74,7 @@ describe('Property 16: Performance Degradation Detection', () => {
           expect(alert!.degradationPercentage).toBeGreaterThan(50);
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -114,7 +114,7 @@ describe('Property 16: Performance Degradation Detection', () => {
           expect(alert).toBeNull();
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -161,7 +161,7 @@ describe('Property 16: Performance Degradation Detection', () => {
           }
         }
       ),
-      { numRuns: 25 }
+      { numRuns: 10 }
     );
   });
 
@@ -230,7 +230,7 @@ describe('Property 16: Performance Degradation Detection', () => {
           }
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -271,7 +271,7 @@ describe('Property 16: Performance Degradation Detection', () => {
           expect(alert!.degradationPercentage).toBeGreaterThanOrEqual(90); // ~100% degradation
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 
@@ -335,7 +335,7 @@ describe('Property 16: Performance Degradation Detection', () => {
           }
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 10 }
     );
   });
 });

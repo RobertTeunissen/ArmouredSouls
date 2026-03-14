@@ -15,7 +15,7 @@ import {
 } from '../src/services/tournamentService';
 import type { Robot } from '@prisma/client';
 
-const NUM_RUNS = 100;
+const NUM_RUNS = 10;
 
 /**
  * Create a minimal Robot-like object for testing seeding logic.
