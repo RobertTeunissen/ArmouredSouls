@@ -43,7 +43,7 @@ const ATTRIBUTE_CATEGORIES = [
   {
     category: 'Offensive',
     icon: '⚔️',
-    color: 'text-red-400',
+    color: 'text-error',
     attributes: [
       { name: 'Combat Power', effect: 'Increases damage dealt' },
       { name: 'Targeting Systems', effect: 'Improves hit accuracy' },
@@ -56,7 +56,7 @@ const ATTRIBUTE_CATEGORIES = [
   {
     category: 'Defensive',
     icon: '🛡️',
-    color: 'text-blue-400',
+    color: 'text-primary',
     attributes: [
       { name: 'Armor Plating', effect: 'Increases HP (hit points)' },
       { name: 'Shield Capacity', effect: 'Increases shield points' },
@@ -69,7 +69,7 @@ const ATTRIBUTE_CATEGORIES = [
   {
     category: 'Mobility',
     icon: '⚡',
-    color: 'text-yellow-400',
+    color: 'text-warning',
     attributes: [
       { name: 'Servo Motors', effect: 'Improves movement speed' },
       { name: 'Gyro Stabilizers', effect: 'Improves balance and stability' },
@@ -91,7 +91,7 @@ const ATTRIBUTE_CATEGORIES = [
   {
     category: 'Team Support',
     icon: '🤝',
-    color: 'text-green-400',
+    color: 'text-success',
     attributes: [
       { name: 'Sync Protocols', effect: 'Better team coordination' },
       { name: 'Support Systems', effect: 'Assists teammates' },
@@ -160,31 +160,31 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         <div className="flex items-start gap-4">
           <span className="text-3xl flex-shrink-0">🤖</span>
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-blue-400 mb-2">Your Strategy Summary</h2>
+            <h2 className="text-xl font-semibold text-primary mb-2">Your Strategy Summary</h2>
             <p className="text-gray-200 mb-3">
               <strong className="text-gray-100">Chosen Strategy:</strong>{' '}
               <span data-testid="strategy-name">{strategyName}</span>
             </p>
-            <p className="text-gray-300 text-sm">{strategySummary}</p>
+            <p className="text-secondary text-sm">{strategySummary}</p>
           </div>
         </div>
       </section>
 
       {/* Daily Cycle System with Diagram */}
       <section
-        className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
+        className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
         aria-label="Daily Cycle System"
       >
         <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
           <span className="text-2xl">🔄</span> Daily Cycle System
         </h2>
         <p className="text-gray-200 mb-4">
-          Armoured Souls runs on an <strong className="text-blue-400">automated daily cycle</strong>.
+          Armoured Souls runs on an <strong className="text-primary">automated daily cycle</strong>.
           Each day at specific times, the game processes battles, updates standings, and distributes rewards.
         </p>
         
         {/* Cycle Schedule Diagram */}
-        <div className="bg-gray-900/50 rounded-lg p-4 mb-4">
+        <div className="bg-background/50 rounded-lg p-4 mb-4">
           <img 
             src="/assets/onboarding/diagrams/cycle-schedule.svg" 
             alt="Daily cycle schedule showing league battles at 8 PM, tournaments at 8 AM, tag team at 12 PM, and settlement at 11 PM"
@@ -193,7 +193,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-gray-900/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-4">
             <h3 className="font-semibold text-gray-100 mb-2 flex items-center gap-2">
               <span>⚔️</span> League Battles (8 PM UTC)
             </h3>
@@ -202,7 +202,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
               Win to earn League Points and climb the rankings.
             </p>
           </div>
-          <div className="bg-gray-900/50 rounded-lg p-4">
+          <div className="bg-background/50 rounded-lg p-4">
             <h3 className="font-semibold text-gray-100 mb-2 flex items-center gap-2">
               <span>🏆</span> Tournaments (8 AM UTC)
             </h3>
@@ -216,7 +216,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
 
       {/* League Progression */}
       <section
-        className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
+        className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
         aria-label="League Progression"
       >
         <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
@@ -228,7 +228,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         
         <div className="space-y-3">
           <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
-            <h3 className="font-semibold text-green-400 mb-2">🔼 Promotion</h3>
+            <h3 className="font-semibold text-success mb-2">🔼 Promotion</h3>
             <p className="text-sm text-gray-200">
               Finish in the <strong>top positions</strong> of your league to get promoted to a higher league.
               Higher leagues mean tougher competition but better rewards.
@@ -236,7 +236,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
           </div>
           
           <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-400 mb-2">↔️ Stay</h3>
+            <h3 className="font-semibold text-primary mb-2">↔️ Stay</h3>
             <p className="text-sm text-gray-200">
               Finish in the <strong>middle positions</strong> to remain in your current league.
               Keep improving to push for promotion next cycle.
@@ -244,7 +244,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
           </div>
           
           <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
-            <h3 className="font-semibold text-red-400 mb-2">🔽 Relegation</h3>
+            <h3 className="font-semibold text-error mb-2">🔽 Relegation</h3>
             <p className="text-sm text-gray-200">
               Finish in the <strong>bottom positions</strong> to get relegated to a lower league.
               Don't worry — you can always climb back up!
@@ -252,14 +252,14 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
           </div>
         </div>
 
-        <p className="text-sm text-gray-300 mt-4">
+        <p className="text-sm text-secondary mt-4">
           Check the <strong>League Standings</strong> page to see your current position and promotion/relegation zones.
         </p>
       </section>
 
       {/* Facilities Guide */}
       <section
-        className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
+        className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
         aria-label="Facilities"
       >
         <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
@@ -267,31 +267,31 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         </h2>
         <p className="text-gray-200 mb-4">
           Facilities provide passive income, discounts, and other benefits. Visit the{' '}
-          <strong className="text-blue-400">Facilities page</strong> to:
+          <strong className="text-primary">Facilities page</strong> to:
         </p>
         
         <ul className="space-y-2 mb-4">
           <li className="flex items-start gap-2 text-gray-200">
-            <span className="text-green-400">•</span>
+            <span className="text-success">•</span>
             <span><strong>Build facilities</strong> like Training Facility, Weapons Workshop, Repair Bay</span>
           </li>
           <li className="flex items-start gap-2 text-gray-200">
-            <span className="text-green-400">•</span>
+            <span className="text-success">•</span>
             <span><strong>Upgrade facilities</strong> to increase their benefits</span>
           </li>
           <li className="flex items-start gap-2 text-gray-200">
-            <span className="text-green-400">•</span>
+            <span className="text-success">•</span>
             <span><strong>Earn passive income</strong> from Merchandising Hub and Streaming Studio</span>
           </li>
           <li className="flex items-start gap-2 text-gray-200">
-            <span className="text-green-400">•</span>
+            <span className="text-success">•</span>
             <span><strong>Get discounts</strong> on weapons, training, and repairs</span>
           </li>
         </ul>
 
         <button
           onClick={() => navigate('/facilities')}
-          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+          className="w-full px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors min-h-[44px]"
         >
           Go to Facilities Page
         </button>
@@ -299,7 +299,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
 
       {/* Robot Attributes Guide */}
       <section
-        className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
+        className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
         aria-label="Robot Attributes"
       >
         <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
@@ -307,12 +307,12 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         </h2>
         <p className="text-gray-200 mb-4">
           Your robots have 23 different attributes that affect their combat performance.
-          Visit your <strong className="text-blue-400">Robot Detail page</strong> to upgrade them.
+          Visit your <strong className="text-primary">Robot Detail page</strong> to upgrade them.
         </p>
 
         <div className="space-y-4 mb-4">
           {ATTRIBUTE_CATEGORIES.map((category) => (
-            <div key={category.category} className="bg-gray-900/50 rounded-lg p-4">
+            <div key={category.category} className="bg-background/50 rounded-lg p-4">
               <h3 className={`font-semibold ${category.color} mb-3 flex items-center gap-2`}>
                 <span>{category.icon}</span> {category.category} Attributes
               </h3>
@@ -320,7 +320,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
                 {category.attributes.map((attr) => (
                   <div key={attr.name} className="text-sm">
                     <span className="text-gray-200 font-medium">{attr.name}:</span>{' '}
-                    <span className="text-gray-300">{attr.effect}</span>
+                    <span className="text-secondary">{attr.effect}</span>
                   </div>
                 ))}
               </div>
@@ -330,14 +330,14 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
 
         <div className="bg-yellow-900/20 border border-yellow-600 rounded-lg p-4 mb-4">
           <p className="text-sm text-gray-200">
-            <strong className="text-yellow-400">Remember:</strong> Higher attributes mean higher repair costs.
+            <strong className="text-warning">Remember:</strong> Higher attributes mean higher repair costs.
             Balance power with affordability based on your strategy.
           </p>
         </div>
 
         <button
           onClick={() => navigate('/robots')}
-          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+          className="w-full px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors min-h-[44px]"
         >
           Go to Robots Page
         </button>
@@ -375,7 +375,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         <div className="flex items-start gap-3">
           <span className="text-2xl flex-shrink-0">🎮</span>
           <div className="text-sm text-gray-200">
-            <strong className="text-yellow-400">Remember:</strong> Everything in this tutorial
+            <strong className="text-warning">Remember:</strong> Everything in this tutorial
             was guidance, not rules. You have full control over how you play Armoured Souls.
             Experiment, adapt, and find the strategy that works best for you.
           </div>
@@ -388,7 +388,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
           className="bg-red-900/20 border border-red-600 rounded-lg p-4 mb-6 max-w-4xl mx-auto text-center"
           role="alert"
         >
-          <p className="text-red-400">{completionError}</p>
+          <p className="text-error">{completionError}</p>
         </div>
       )}
 
@@ -397,7 +397,7 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         <button
           onClick={handleCompleteTutorial}
           disabled={isCompleting}
-          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
           aria-label="Complete Tutorial"
         >
           {isCompleting ? 'Completing...' : 'Complete Tutorial & Start Playing'}
@@ -406,14 +406,14 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         <div className="flex gap-4 mt-2">
           <button
             onClick={handlePrevious}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg font-medium transition-colors"
+            className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-gray-200 rounded-lg font-medium transition-colors min-h-[44px]"
             aria-label="Previous step"
           >
             Previous
           </button>
           <button
             onClick={handleReplayTutorial}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg font-medium transition-colors"
+            className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-gray-200 rounded-lg font-medium transition-colors min-h-[44px]"
             aria-label="Replay Tutorial"
           >
             Replay Tutorial

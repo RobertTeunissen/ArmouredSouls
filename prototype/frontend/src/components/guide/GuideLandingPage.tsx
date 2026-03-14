@@ -25,7 +25,7 @@ const GuideLandingPage: React.FC<GuideLandingPageProps> = ({ sections }) => {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Game Guide</h1>
-        <p className="text-gray-400">
+        <p className="text-secondary">
           Everything you need to know about Armoured Souls. Browse sections below or use search to find specific topics.
         </p>
       </div>
@@ -35,7 +35,7 @@ const GuideLandingPage: React.FC<GuideLandingPageProps> = ({ sections }) => {
           <Link
             key={section.slug}
             to={`/guide/${section.slug}`}
-            className="block p-5 rounded-lg border border-gray-700 bg-surface-elevated hover:border-primary/50 hover:bg-primary/5 transition-all group"
+            className="block p-5 rounded-lg border border-white/10 bg-surface-elevated hover:border-primary/50 hover:bg-primary/5 transition-all group"
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl">{SECTION_ICONS[section.slug] || '📖'}</span>
@@ -44,11 +44,11 @@ const GuideLandingPage: React.FC<GuideLandingPageProps> = ({ sections }) => {
                   {section.title}
                 </h2>
                 {section.description && (
-                  <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+                  <p className="text-sm text-secondary mt-1 line-clamp-2">
                     {section.description}
                   </p>
                 )}
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-tertiary mt-2">
                   {section.articles.length} {section.articles.length === 1 ? 'article' : 'articles'}
                 </p>
               </div>

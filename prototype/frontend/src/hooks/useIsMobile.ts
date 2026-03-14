@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 
-const MOBILE_BREAKPOINT = 768;
+const MOBILE_BREAKPOINT = 1024;
 
 /**
- * Hook that returns true when the viewport width is below the mobile breakpoint (768px).
+ * Hook that returns true when the viewport width is below the mobile breakpoint (1024px).
  * Listens to resize events and cleans up on unmount.
  */
 export function useIsMobile(): boolean {

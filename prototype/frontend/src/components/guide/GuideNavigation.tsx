@@ -32,7 +32,7 @@ function SectionItem({ section, isCurrentSection, currentArticleSlug }: SectionI
         className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
           isCurrentSection
             ? 'text-primary bg-primary/10'
-            : 'text-gray-300 hover:text-white hover:bg-white/5'
+            : 'text-secondary hover:text-white hover:bg-white/5'
         }`}
         aria-expanded={expanded}
       >
@@ -49,7 +49,7 @@ function SectionItem({ section, isCurrentSection, currentArticleSlug }: SectionI
       </button>
 
       {expanded && section.articles.length > 0 && (
-        <div className="ml-3 mt-1 space-y-0.5 border-l border-gray-700 pl-3">
+        <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3">
           {section.articles.map((article) => {
             const isActive = isCurrentSection && currentArticleSlug === article.slug;
             return (
@@ -59,7 +59,7 @@ function SectionItem({ section, isCurrentSection, currentArticleSlug }: SectionI
                 className={`block px-2 py-1.5 rounded text-sm transition-colors ${
                   isActive
                     ? 'text-primary bg-primary/15 font-medium'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    : 'text-secondary hover:text-white hover:bg-white/5'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
               >
@@ -96,7 +96,7 @@ const GuideNavigation: React.FC<GuideNavigationProps> = ({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:block w-64 flex-shrink-0 overflow-y-auto border-r border-gray-700 bg-surface-elevated px-2">
+      <aside className="hidden md:block w-64 flex-shrink-0 overflow-y-auto border-r border-white/10 bg-surface-elevated px-2">
         {navContent}
       </aside>
 
@@ -109,11 +109,11 @@ const GuideNavigation: React.FC<GuideNavigationProps> = ({
             aria-hidden="true"
           />
           <aside className="md:hidden fixed top-0 left-0 bottom-0 w-72 bg-surface-elevated z-50 overflow-y-auto shadow-xl">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <h2 className="text-lg font-semibold text-white">Guide</h2>
               <button
                 onClick={onToggle}
-                className="text-gray-400 hover:text-white p-1"
+                className="text-secondary hover:text-white p-1"
                 aria-label="Close navigation"
               >
                 ✕

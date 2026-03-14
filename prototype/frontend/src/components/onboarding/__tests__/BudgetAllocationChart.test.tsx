@@ -181,7 +181,7 @@ describe('BudgetAllocationChart', () => {
       // Find the remaining element in the Budget Summary section
       const remainingLabel = screen.getByText('Remaining:');
       const remainingElement = remainingLabel.nextElementSibling as HTMLElement;
-      expect(remainingElement).toHaveClass('text-green-400');
+      expect(remainingElement).toHaveClass('text-success');
       expect(remainingElement.textContent).toBe('₡700,000');
     });
 
@@ -200,7 +200,7 @@ describe('BudgetAllocationChart', () => {
       // Find the remaining element in the Budget Summary section
       const remainingLabel = screen.getByText('Remaining:');
       const remainingElement = remainingLabel.nextElementSibling as HTMLElement;
-      expect(remainingElement).toHaveClass('text-yellow-400');
+      expect(remainingElement).toHaveClass('text-warning');
       expect(remainingElement.textContent).toBe('₡400,000');
     });
 
@@ -219,7 +219,7 @@ describe('BudgetAllocationChart', () => {
       // Find the remaining element in the Budget Summary section
       const remainingLabel = screen.getByText('Remaining:');
       const remainingElement = remainingLabel.nextElementSibling as HTMLElement;
-      expect(remainingElement).toHaveClass('text-red-400');
+      expect(remainingElement).toHaveClass('text-error');
       expect(remainingElement.textContent).toBe('₡150,000');
     });
   });

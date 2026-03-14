@@ -50,7 +50,7 @@ const RoundColumn: React.FC<RoundColumnProps> = ({
       data-testid={`round-column-${round}`}
       className={`flex flex-col items-center min-w-[11rem] ${columnClass}`}
     >
-      <div className="text-sm font-semibold text-gray-300 text-center mb-2 px-2">
+      <div className="text-sm font-semibold text-secondary text-center mb-2 px-2">
         {label}
       </div>
       <div

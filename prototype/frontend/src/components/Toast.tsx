@@ -19,7 +19,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 3000 }
   const bgColor = {
     success: 'bg-green-600',
     error: 'bg-red-600',
-    info: 'bg-blue-600',
+    info: 'bg-primary',
   }[type];
 
   const icon = {

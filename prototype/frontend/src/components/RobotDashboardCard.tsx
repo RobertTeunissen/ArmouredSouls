@@ -79,7 +79,7 @@ function RobotDashboardCard({ robot }: RobotDashboardCardProps) {
   return (
     <div 
       className="
-        bg-surface border border-gray-700 rounded-lg p-3
+        bg-surface border border-white/10 rounded-lg p-3
         hover:border-primary hover:shadow-lg transition-all duration-200
         cursor-pointer
       "
@@ -107,18 +107,18 @@ function RobotDashboardCard({ robot }: RobotDashboardCardProps) {
           {/* ELO and League - More compact */}
           <div className="flex items-center gap-3 mb-2 text-xs">
             <div className="flex items-center gap-1">
-              <span className="text-gray-400">ELO:</span>
+              <span className="text-secondary">ELO:</span>
               <span className="font-bold text-primary">{robot.elo}</span>
             </div>
             <div className="flex items-center gap-1 truncate">
-              <span className="text-gray-400">League:</span>
+              <span className="text-secondary">League:</span>
               <span className="font-semibold text-white truncate">
                 {formatLeague(robot.currentLeague)}
               </span>
             </div>
             {robot.leaguePoints !== undefined && (
               <div className="flex items-center gap-1">
-                <span className="text-gray-400">LP:</span>
+                <span className="text-secondary">LP:</span>
                 <span className="font-semibold text-white">
                   {robot.leaguePoints}
                 </span>
@@ -138,13 +138,13 @@ function RobotDashboardCard({ robot }: RobotDashboardCardProps) {
           
           {/* Win/Loss Record - More compact */}
           <div className="flex items-center gap-2 text-xs flex-wrap">
-            <span className="text-gray-400">Record:</span>
+            <span className="text-secondary">Record:</span>
             <span className="text-success font-semibold">{wins}W</span>
             <span className="text-error font-semibold">{losses}L</span>
             {draws > 0 && (
-              <span className="text-gray-400 font-semibold">{draws}D</span>
+              <span className="text-secondary font-semibold">{draws}D</span>
             )}
-            <span className="text-gray-400">
+            <span className="text-secondary">
               ({winRate}%)
             </span>
           </div>

@@ -52,9 +52,9 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-300 uppercase tracking-wide">
+      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-secondary uppercase tracking-wide">
         Weapon Loadout
-        <span className="text-sm text-gray-400 font-normal normal-case">
+        <span className="text-sm text-secondary font-normal normal-case">
           (Loadout bonuses applied in combat)
         </span>
       </h3>
@@ -91,11 +91,11 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
                   {formatLoadoutName(loadoutType)}
                 </h4>
                 {isSelected && (
-                  <span className="text-xs text-blue-400 block text-center">✓ Active</span>
+                  <span className="text-xs text-primary block text-center">✓ Active</span>
                 )}
               </div>
 
-              <p className="text-xs text-gray-400 mb-2 text-center">
+              <p className="text-xs text-secondary mb-2 text-center">
                 {getLoadoutDescription(loadoutType)}
               </p>
 
@@ -105,10 +105,10 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
                     const bonus = formatBonus(value);
                     return (
                       <div key={attr} className="flex justify-between text-xs">
-                        <span className="text-gray-400 capitalize">
+                        <span className="text-secondary capitalize">
                           {attr.replace(/([A-Z])/g, ' $1').trim()}:
                         </span>
-                        <span className={bonus.isPositive ? 'text-green-400' : 'text-red-400'}>
+                        <span className={bonus.isPositive ? 'text-success' : 'text-error'}>
                           {bonus.text}
                         </span>
                       </div>

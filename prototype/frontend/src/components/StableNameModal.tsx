@@ -40,15 +40,15 @@ function StableNameModal({ onComplete }: StableNameModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4">
+      <div className="bg-surface rounded-lg p-8 max-w-md w-full mx-4">
         <h2 className="text-3xl font-bold mb-4 text-white">Welcome to Armoured Souls!</h2>
-        <p className="text-gray-300 mb-6">
+        <p className="text-secondary mb-6">
           Before you begin your journey, you need to name your stable. This will be the home for all your battle robots.
         </p>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label htmlFor="stableName" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="stableName" className="block text-sm font-medium text-secondary mb-2">
               Stable Name
             </label>
             <input
@@ -56,13 +56,13 @@ function StableNameModal({ onComplete }: StableNameModalProps) {
               id="stableName"
               value={stableName}
               onChange={(e) => setStableName(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-surface-elevated border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
               placeholder="Enter your stable name..."
               maxLength={100}
               disabled={submitting}
               autoFocus
             />
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-secondary mt-1">
               Choose wisely - this represents your battle legacy!
             </p>
           </div>
@@ -76,13 +76,13 @@ function StableNameModal({ onComplete }: StableNameModalProps) {
           <button
             type="submit"
             disabled={submitting || !stableName.trim()}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded transition-colors"
+            className="w-full bg-primary hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded transition-colors"
           >
             {submitting ? 'Creating Stable...' : 'Begin Your Journey'}
           </button>
         </form>
 
-        <div className="mt-6 text-xs text-gray-500 text-center">
+        <div className="mt-6 text-xs text-tertiary text-center">
           💰 You start with ₡2,000,000 credits
         </div>
       </div>

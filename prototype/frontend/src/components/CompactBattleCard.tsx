@@ -89,7 +89,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       case 'win': return 'bg-[#3fb950]/20 text-[#3fb950]';
       case 'loss': return 'bg-[#f85149]/20 text-[#f85149]';
       case 'draw': return 'bg-[#57606a]/20 text-[#57606a]';
-      default: return 'bg-gray-700 text-gray-400';
+      default: return 'bg-surface-elevated text-secondary';
     }
   };
 
@@ -129,7 +129,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
     <div 
       onClick={onClick}
       className={`
-        bg-[#252b38] border border-gray-700 rounded-lg p-2 mb-1.5
+        bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
         border-l-4 ${getBorderColor()}
         hover:bg-[#1a1f29] hover:border-[#58a6ff]/50 cursor-pointer 
         transition-all duration-150 ease-out

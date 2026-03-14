@@ -12,7 +12,7 @@ const GuideTableOfContents: React.FC<GuideTableOfContentsProps> = ({ headings })
 
   return (
     <div className="sticky top-20 hidden lg:block w-56 flex-shrink-0 pl-6">
-      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-tertiary mb-3">
         On this page
       </h4>
       <nav className="space-y-1" aria-label="Table of contents">
@@ -21,7 +21,7 @@ const GuideTableOfContents: React.FC<GuideTableOfContentsProps> = ({ headings })
             key={heading.id}
             href={`#${heading.id}`}
             className={`block text-sm transition-colors hover:text-white ${
-              heading.level === 3 ? 'pl-4 text-gray-500' : 'text-gray-400'
+              heading.level === 3 ? 'pl-4 text-tertiary' : 'text-secondary'
             }`}
           >
             {heading.text}

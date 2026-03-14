@@ -45,22 +45,22 @@ interface StatusConfig {
 const STATUS_CONFIGS: Record<StatusType, StatusConfig> = {
   not_started: {
     label: 'Not Started',
-    className: 'bg-gray-700 text-gray-400',
+    className: 'bg-surface-elevated text-secondary',
     icon: '⏸️'
   },
   under: {
     label: 'Under Budget',
-    className: 'bg-yellow-900 bg-opacity-30 text-yellow-400 border border-yellow-700',
+    className: 'bg-yellow-900 bg-opacity-30 text-warning border border-yellow-700',
     icon: '⚠️'
   },
   on_track: {
     label: 'On Track',
-    className: 'bg-green-900 bg-opacity-30 text-green-400 border border-green-700',
+    className: 'bg-green-900 bg-opacity-30 text-success border border-green-700',
     icon: '✅'
   },
   over: {
     label: 'Over Budget',
-    className: 'bg-red-900 bg-opacity-30 text-red-400 border border-red-700',
+    className: 'bg-red-900 bg-opacity-30 text-error border border-red-700',
     icon: '❌'
   }
 };
@@ -105,27 +105,27 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b-2 border-gray-700">
-              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">
+            <tr className="border-b-2 border-white/10">
+              <th className="text-left py-3 px-4 text-sm font-semibold text-secondary">
                 Category
               </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">
+              <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">
                 Recommended Range
               </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">
+              <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">
                 Your Spending
               </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">
+              <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">
                 % of Target
               </th>
-              <th className="text-center py-3 px-4 text-sm font-semibold text-gray-300">
+              <th className="text-center py-3 px-4 text-sm font-semibold text-secondary">
                 Status
               </th>
             </tr>
           </thead>
           <tbody>
             {/* Facilities Row */}
-            <tr className="border-b border-gray-700 hover:bg-gray-750 transition-colors">
+            <tr className="border-b border-white/10 hover:bg-gray-750 transition-colors">
               <td className="py-3 px-4">
                 <div className="flex items-center gap-2">
                   <div 
@@ -135,18 +135,18 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   <div>
                     <div className="text-white font-medium">Facilities</div>
                     {recommendations.facilities.description && (
-                      <div className="text-xs text-gray-400">{recommendations.facilities.description}</div>
+                      <div className="text-xs text-secondary">{recommendations.facilities.description}</div>
                     )}
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-gray-300 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {formatCurrency(recommendations.facilities.min)} - {formatCurrency(recommendations.facilities.max)}
               </td>
               <td className="text-right py-3 px-4 text-white font-medium">
                 {formatCurrency(currentSpending.facilities)}
               </td>
-              <td className="text-right py-3 px-4 text-gray-400 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {getPercentageOfRange(currentSpending.facilities, recommendations.facilities).toFixed(0)}%
               </td>
               <td className="text-center py-3 px-4">
@@ -155,7 +155,7 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
             </tr>
 
             {/* Robots Row */}
-            <tr className="border-b border-gray-700 hover:bg-gray-750 transition-colors">
+            <tr className="border-b border-white/10 hover:bg-gray-750 transition-colors">
               <td className="py-3 px-4">
                 <div className="flex items-center gap-2">
                   <div 
@@ -165,18 +165,18 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   <div>
                     <div className="text-white font-medium">Robots</div>
                     {recommendations.robots.description && (
-                      <div className="text-xs text-gray-400">{recommendations.robots.description}</div>
+                      <div className="text-xs text-secondary">{recommendations.robots.description}</div>
                     )}
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-gray-300 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {formatCurrency(recommendations.robots.min)} - {formatCurrency(recommendations.robots.max)}
               </td>
               <td className="text-right py-3 px-4 text-white font-medium">
                 {formatCurrency(currentSpending.robots)}
               </td>
-              <td className="text-right py-3 px-4 text-gray-400 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {getPercentageOfRange(currentSpending.robots, recommendations.robots).toFixed(0)}%
               </td>
               <td className="text-center py-3 px-4">
@@ -185,7 +185,7 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
             </tr>
 
             {/* Weapons Row */}
-            <tr className="border-b border-gray-700 hover:bg-gray-750 transition-colors">
+            <tr className="border-b border-white/10 hover:bg-gray-750 transition-colors">
               <td className="py-3 px-4">
                 <div className="flex items-center gap-2">
                   <div 
@@ -195,18 +195,18 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   <div>
                     <div className="text-white font-medium">Weapons</div>
                     {recommendations.weapons.description && (
-                      <div className="text-xs text-gray-400">{recommendations.weapons.description}</div>
+                      <div className="text-xs text-secondary">{recommendations.weapons.description}</div>
                     )}
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-gray-300 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {formatCurrency(recommendations.weapons.min)} - {formatCurrency(recommendations.weapons.max)}
               </td>
               <td className="text-right py-3 px-4 text-white font-medium">
                 {formatCurrency(currentSpending.weapons)}
               </td>
-              <td className="text-right py-3 px-4 text-gray-400 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {getPercentageOfRange(currentSpending.weapons, recommendations.weapons).toFixed(0)}%
               </td>
               <td className="text-center py-3 px-4">
@@ -215,7 +215,7 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
             </tr>
 
             {/* Attributes Row */}
-            <tr className="border-b border-gray-700 hover:bg-gray-750 transition-colors">
+            <tr className="border-b border-white/10 hover:bg-gray-750 transition-colors">
               <td className="py-3 px-4">
                 <div className="flex items-center gap-2">
                   <div 
@@ -225,18 +225,18 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   <div>
                     <div className="text-white font-medium">Attributes</div>
                     {recommendations.attributes.description && (
-                      <div className="text-xs text-gray-400">{recommendations.attributes.description}</div>
+                      <div className="text-xs text-secondary">{recommendations.attributes.description}</div>
                     )}
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-gray-300 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {formatCurrency(recommendations.attributes.min)} - {formatCurrency(recommendations.attributes.max)}
               </td>
               <td className="text-right py-3 px-4 text-white font-medium">
                 {formatCurrency(currentSpending.attributes)}
               </td>
-              <td className="text-right py-3 px-4 text-gray-400 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {getPercentageOfRange(currentSpending.attributes, recommendations.attributes).toFixed(0)}%
               </td>
               <td className="text-center py-3 px-4">
@@ -255,18 +255,18 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   <div>
                     <div className="text-white font-medium">Reserve</div>
                     {recommendations.reserve.description && (
-                      <div className="text-xs text-gray-400">{recommendations.reserve.description}</div>
+                      <div className="text-xs text-secondary">{recommendations.reserve.description}</div>
                     )}
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-gray-300 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {formatCurrency(recommendations.reserve.min)} - {formatCurrency(recommendations.reserve.max)}
               </td>
               <td className="text-right py-3 px-4 text-white font-medium">
                 {formatCurrency(remaining)}
               </td>
-              <td className="text-right py-3 px-4 text-gray-400 text-sm">
+              <td className="text-right py-3 px-4 text-secondary text-sm">
                 {getPercentageOfRange(remaining, recommendations.reserve).toFixed(0)}%
               </td>
               <td className="text-center py-3 px-4">
@@ -278,17 +278,17 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-400">
+      <div className="mt-4 flex flex-wrap gap-4 text-xs text-secondary">
         <div className="flex items-center gap-2">
-          <span className="text-green-400">✅</span>
+          <span className="text-success">✅</span>
           <span>On Track: Within recommended range</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-yellow-400">⚠️</span>
+          <span className="text-warning">⚠️</span>
           <span>Under Budget: Below minimum recommendation</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-red-400">❌</span>
+          <span className="text-error">❌</span>
           <span>Over Budget: Exceeds maximum recommendation</span>
         </div>
       </div>

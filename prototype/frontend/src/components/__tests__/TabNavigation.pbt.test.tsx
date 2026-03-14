@@ -46,7 +46,7 @@ describe('Property 1: Default Tab Selection (Property-Based Test)', () => {
           expect(overviewTab).toHaveAttribute('aria-selected', 'true');
           
           // Verify the tab has active styling (primary color background)
-          expect(overviewTab).toHaveClass('bg-blue-600');
+          expect(overviewTab).toHaveClass('bg-primary');
           expect(overviewTab).toHaveClass('text-white');
           
           // Verify only one tab is active
@@ -98,10 +98,10 @@ describe('Property 1: Default Tab Selection (Property-Based Test)', () => {
           // Property: Overview tab should be active only when activeTab is 'overview'
           if (activeTab === 'overview') {
             expect(overviewTab).toHaveAttribute('aria-selected', 'true');
-            expect(overviewTab).toHaveClass('bg-blue-600');
+            expect(overviewTab).toHaveClass('bg-primary');
           } else {
             expect(overviewTab).toHaveAttribute('aria-selected', 'false');
-            expect(overviewTab).not.toHaveClass('bg-blue-600');
+            expect(overviewTab).not.toHaveClass('bg-primary');
           }
           
           // Cleanup
@@ -135,7 +135,7 @@ describe('Property 1: Default Tab Selection (Property-Based Test)', () => {
             // Property: Overview must be active in every render
             const overviewTab = screen.getByRole('tab', { name: /overview/i });
             expect(overviewTab).toHaveAttribute('aria-selected', 'true');
-            expect(overviewTab).toHaveClass('bg-blue-600');
+            expect(overviewTab).toHaveClass('bg-primary');
             
             // Cleanup after each render
             container.remove();
@@ -191,7 +191,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
           // Property: Initial tab should be active
           const initialTabElement = screen.getByRole('tab', { name: new RegExp(initialTab.replace('-', ' '), 'i') });
           expect(initialTabElement).toHaveAttribute('aria-selected', 'true');
-          expect(initialTabElement).toHaveClass('bg-blue-600');
+          expect(initialTabElement).toHaveClass('bg-primary');
           
           // Re-render multiple times with the same activeTab prop
           for (let i = 0; i < numRerenders; i++) {
@@ -209,7 +209,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
             // Property: Tab should remain active after each re-render
             const tabElement = screen.getByRole('tab', { name: new RegExp(initialTab.replace('-', ' '), 'i') });
             expect(tabElement).toHaveAttribute('aria-selected', 'true');
-            expect(tabElement).toHaveClass('bg-blue-600');
+            expect(tabElement).toHaveClass('bg-primary');
             
             // Property: onTabChange should not have been called (no explicit change)
             expect(mockOnTabChange).not.toHaveBeenCalled();
@@ -273,7 +273,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
             // Property: New tab should now be active
             activeTabElement = screen.getByRole('tab', { name: new RegExp(currentTab.replace('-', ' '), 'i') });
             expect(activeTabElement).toHaveAttribute('aria-selected', 'true');
-            expect(activeTabElement).toHaveClass('bg-blue-600');
+            expect(activeTabElement).toHaveClass('bg-primary');
             
             // Property: Only one tab should be active at a time
             const allTabs = screen.getAllByRole('tab');
@@ -335,7 +335,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
             // Property: Selected tab should remain active despite ownership changes
             activeTabElement = screen.getByRole('tab', { name: new RegExp(selectedTab.replace('-', ' '), 'i') });
             expect(activeTabElement).toHaveAttribute('aria-selected', 'true');
-            expect(activeTabElement).toHaveClass('bg-blue-600');
+            expect(activeTabElement).toHaveClass('bg-primary');
             
             // Property: onTabChange should not have been called
             expect(mockOnTabChange).not.toHaveBeenCalled();
@@ -401,7 +401,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
           expect(mockOnTabChange).not.toHaveBeenCalled();
           
           // Property: Tab state persists through all interactions
-          expect(activeTabElement).toHaveClass('bg-blue-600');
+          expect(activeTabElement).toHaveClass('bg-primary');
           
           // Cleanup
           container.remove();
@@ -449,7 +449,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
               name: new RegExp(state.activeTab.replace('-', ' '), 'i') 
             });
             expect(expectedActiveTab).toHaveAttribute('aria-selected', 'true');
-            expect(expectedActiveTab).toHaveClass('bg-blue-600');
+            expect(expectedActiveTab).toHaveClass('bg-primary');
             
             // Cleanup
             container.remove();
@@ -469,8 +469,8 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
  * (primary color background, white text) that differs from inactive tabs.
  * 
  * This property test verifies that across all possible tab selections and ownership states,
- * the active tab always has the correct visual styling (bg-blue-600, text-white) and
- * inactive tabs have different styling (bg-gray-800, text-gray-400).
+ * the active tab always has the correct visual styling (bg-primary, text-white) and
+ * inactive tabs have different styling (bg-surface, text-secondary).
  */
 describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () => {
   it('should always apply primary color background and white text to active tab', () => {
@@ -499,18 +499,18 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             </BrowserRouter>
           );
 
-          // Property: Active tab must have primary color background (bg-blue-600)
+          // Property: Active tab must have primary color background (bg-primary)
           const activeTabElement = screen.getByRole('tab', { 
             name: new RegExp(activeTab.replace('-', ' '), 'i') 
           });
           
           expect(activeTabElement).toHaveAttribute('aria-selected', 'true');
-          expect(activeTabElement).toHaveClass('bg-blue-600');
+          expect(activeTabElement).toHaveClass('bg-primary');
           expect(activeTabElement).toHaveClass('text-white');
           
           // Property: Active tab must NOT have inactive styling
-          expect(activeTabElement).not.toHaveClass('bg-gray-800');
-          expect(activeTabElement).not.toHaveClass('text-gray-400');
+          expect(activeTabElement).not.toHaveClass('bg-surface');
+          expect(activeTabElement).not.toHaveClass('text-secondary');
           
           // Cleanup
           container.remove();
@@ -554,15 +554,15 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             
             if (isActive) {
               // Active tab: primary color background, white text
-              expect(tab).toHaveClass('bg-blue-600');
+              expect(tab).toHaveClass('bg-primary');
               expect(tab).toHaveClass('text-white');
-              expect(tab).not.toHaveClass('bg-gray-800');
-              expect(tab).not.toHaveClass('text-gray-400');
+              expect(tab).not.toHaveClass('bg-surface');
+              expect(tab).not.toHaveClass('text-secondary');
             } else {
               // Inactive tab: surface-elevated background, secondary text
-              expect(tab).toHaveClass('bg-gray-800');
-              expect(tab).toHaveClass('text-gray-400');
-              expect(tab).not.toHaveClass('bg-blue-600');
+              expect(tab).toHaveClass('bg-surface');
+              expect(tab).toHaveClass('text-secondary');
+              expect(tab).not.toHaveClass('bg-primary');
               expect(tab).not.toHaveClass('text-white');
             }
           }
@@ -604,7 +604,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             // Property: Exactly one tab should have active styling
             const allTabs = screen.getAllByRole('tab');
             const tabsWithActiveStyle = allTabs.filter(tab => 
-              tab.classList.contains('bg-blue-600') && tab.classList.contains('text-white')
+              tab.classList.contains('bg-primary') && tab.classList.contains('text-white')
             );
             expect(tabsWithActiveStyle).toHaveLength(1);
             
@@ -617,9 +617,9 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             // Property: All other tabs should have inactive styling
             const inactiveTabs = allTabs.filter(tab => tab !== activeTabElement);
             for (const inactiveTab of inactiveTabs) {
-              expect(inactiveTab).toHaveClass('bg-gray-800');
-              expect(inactiveTab).toHaveClass('text-gray-400');
-              expect(inactiveTab).not.toHaveClass('bg-blue-600');
+              expect(inactiveTab).toHaveClass('bg-surface');
+              expect(inactiveTab).toHaveClass('text-secondary');
+              expect(inactiveTab).not.toHaveClass('bg-primary');
               expect(inactiveTab).not.toHaveClass('text-white');
             }
             
@@ -660,7 +660,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             });
             
             expect(activeTabElement).toHaveAttribute('aria-selected', 'true');
-            expect(activeTabElement).toHaveClass('bg-blue-600');
+            expect(activeTabElement).toHaveClass('bg-primary');
             expect(activeTabElement).toHaveClass('text-white');
             
             // Property: Inactive tabs should have consistent styling
@@ -670,8 +670,8 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             );
             
             for (const inactiveTab of inactiveTabs) {
-              expect(inactiveTab).toHaveClass('bg-gray-800');
-              expect(inactiveTab).toHaveClass('text-gray-400');
+              expect(inactiveTab).toHaveClass('bg-surface');
+              expect(inactiveTab).toHaveClass('text-secondary');
             }
             
             // Cleanup
@@ -714,10 +714,10 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
           
           for (const tab of allTabs) {
             const ariaSelected = tab.getAttribute('aria-selected') === 'true';
-            const hasActiveStyle = tab.classList.contains('bg-blue-600') && 
+            const hasActiveStyle = tab.classList.contains('bg-primary') && 
                                    tab.classList.contains('text-white');
-            const hasInactiveStyle = tab.classList.contains('bg-gray-800') && 
-                                     tab.classList.contains('text-gray-400');
+            const hasInactiveStyle = tab.classList.contains('bg-surface') && 
+                                     tab.classList.contains('text-secondary');
             
             // Property: aria-selected="true" must correspond to active styling
             if (ariaSelected) {
@@ -768,7 +768,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
           let activeTabElement = screen.getByRole('tab', { 
             name: new RegExp(currentTab.replace('-', ' '), 'i') 
           });
-          expect(activeTabElement).toHaveClass('bg-blue-600');
+          expect(activeTabElement).toHaveClass('bg-primary');
           expect(activeTabElement).toHaveClass('text-white');
           
           // Switch through tabs
@@ -791,7 +791,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
             activeTabElement = screen.getByRole('tab', { 
               name: new RegExp(currentTab.replace('-', ' '), 'i') 
             });
-            expect(activeTabElement).toHaveClass('bg-blue-600');
+            expect(activeTabElement).toHaveClass('bg-primary');
             expect(activeTabElement).toHaveClass('text-white');
             
             // Property: Previous active tab should now have inactive styling (if different)
@@ -799,9 +799,9 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
               const previousTabElement = screen.getByRole('tab', { 
                 name: new RegExp(previousTab.replace('-', ' '), 'i') 
               });
-              expect(previousTabElement).toHaveClass('bg-gray-800');
-              expect(previousTabElement).toHaveClass('text-gray-400');
-              expect(previousTabElement).not.toHaveClass('bg-blue-600');
+              expect(previousTabElement).toHaveClass('bg-surface');
+              expect(previousTabElement).toHaveClass('text-secondary');
+              expect(previousTabElement).not.toHaveClass('bg-primary');
             }
           }
           

@@ -116,9 +116,9 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-3 text-gray-100">Budget Allocation Guide</h1>
-        <p className="text-lg text-gray-400 max-w-3xl mx-auto">
+        <p className="text-lg text-secondary max-w-3xl mx-auto">
           See how to distribute your ₡3,000,000 starting budget across facilities, robots,
-          weapons, and attributes for the <strong className="text-blue-400">{details.name}</strong> strategy.
+          weapons, and attributes for the <strong className="text-primary">{details.name}</strong> strategy.
         </p>
       </div>
 
@@ -127,10 +127,10 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
         <div className="flex items-start gap-4">
           <span className="text-3xl flex-shrink-0">📋</span>
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-blue-400 mb-2">
+            <h2 className="text-xl font-semibold text-primary mb-2">
               These Are Guidelines, Not Rules
             </h2>
-            <p className="text-gray-300">
+            <p className="text-secondary">
               The budget ranges below are recommendations based on your chosen strategy.
               You have full flexibility to adjust spending based on your preferences and playstyle.
               Think of these as a starting framework, not strict requirements.
@@ -145,15 +145,15 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
       </div>
 
       {/* Strategy-Specific Highlights */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto">
+      <div className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto">
         <h2 className="text-xl font-bold mb-4 text-gray-100">
           Key Points for {details.name}
         </h2>
         <div className="space-y-3">
           {details.highlights.map((highlight, index) => (
             <div key={index} className="flex items-start gap-3">
-              <span className="text-green-400 text-xl flex-shrink-0">✓</span>
-              <p className="text-gray-300">{highlight}</p>
+              <span className="text-success text-xl flex-shrink-0">✓</span>
+              <p className="text-secondary">{highlight}</p>
             </div>
           ))}
         </div>
@@ -164,23 +164,23 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
         <div className="flex items-start gap-4">
           <span className="text-3xl flex-shrink-0">💰</span>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-yellow-400 mb-3">
+            <h2 className="text-xl font-bold text-warning mb-3">
               Why Buy Discount Facilities Early?
             </h2>
             <p className="text-gray-200 mb-3">
               Discount facilities save you money on every future purchase. The earlier you buy them,
               the more you save overall. This is why facilities appear first in the budget.
             </p>
-            <div className="bg-gray-900/50 rounded-lg p-4 space-y-2 text-sm">
-              <p className="text-gray-300">
+            <div className="bg-background/50 rounded-lg p-4 space-y-2 text-sm">
+              <p className="text-secondary">
                 <strong className="text-yellow-300">Training Facility:</strong> Saves 10-90% on attribute upgrades.
                 Since you'll upgrade attributes many times, this facility pays for itself quickly.
               </p>
-              <p className="text-gray-300">
+              <p className="text-secondary">
                 <strong className="text-yellow-300">Repair Bay:</strong> Reduces repair costs after every battle.
                 The more battles you fight, the more you save.
               </p>
-              <p className="text-gray-300">
+              <p className="text-secondary">
                 <strong className="text-yellow-300">Merchandising Hub & Streaming Studio:</strong> Generate passive income.
                 The earlier you buy them, the more total income they generate over time.
               </p>
@@ -190,14 +190,14 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
       </div>
 
       {/* Weapon Storage Note */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-8 max-w-4xl mx-auto">
+      <div className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto">
         <div className="flex items-start gap-4">
           <span className="text-3xl flex-shrink-0">📦</span>
           <div className="flex-1">
             <h2 className="text-lg font-bold text-gray-100 mb-2">
               Weapon Storage & Storage Facility
             </h2>
-            <p className="text-gray-300">{details.storageNote}</p>
+            <p className="text-secondary">{details.storageNote}</p>
           </div>
         </div>
       </div>
@@ -206,7 +206,7 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
       <div className="text-center mb-6">
         <button
           onClick={() => setShowComparison(!showComparison)}
-          className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 mx-auto"
+          className="px-6 py-3 bg-surface-elevated hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2 mx-auto min-h-[44px]"
         >
           {showComparison ? (
             <>
@@ -228,7 +228,7 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
 
       {/* Budget Comparison Table */}
       {showComparison && (
-        <div className="mb-8 max-w-4xl mx-auto bg-gray-800 rounded-lg p-6">
+        <div className="mb-8 max-w-4xl mx-auto bg-surface rounded-lg p-6">
           <h2 className="text-xl font-bold mb-4 text-center text-gray-100">Budget Comparison</h2>
           <BudgetComparisonTable
             recommendations={recommendations}
@@ -242,12 +242,12 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
         <button
           onClick={handleNext}
           disabled={isSubmitting}
-          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
         >
           {isSubmitting ? 'Loading...' : 'Next: Create Your Robot'}
         </button>
 
-        <p className="text-sm text-gray-500 text-center max-w-md">
+        <p className="text-sm text-tertiary text-center max-w-md">
           These budget guidelines will help you make informed spending decisions throughout the game
         </p>
       </div>
@@ -255,11 +255,11 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
       {/* Educational Note */}
       <div className="mt-8 max-w-3xl mx-auto bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
-          <div className="text-sm text-gray-300">
-            <strong className="text-blue-400">Remember:</strong> You can always revisit this information later.
+          <div className="text-sm text-secondary">
+            <strong className="text-primary">Remember:</strong> You can always revisit this information later.
             The budget tracker will help you stay on track as you make purchases.
           </div>
         </div>

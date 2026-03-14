@@ -153,7 +153,7 @@ function LeaderboardsLossesPage() {
       {/* Error State */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
-          <p className="text-red-400">{error}</p>
+          <p className="text-error">{error}</p>
         </div>
       )}
 
@@ -220,7 +220,7 @@ function LeaderboardsLossesPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-red-400 font-bold text-lg">
+                        <span className="text-error font-bold text-lg">
                           {entry.totalLosses}
                         </span>
                       </td>
@@ -228,9 +228,9 @@ function LeaderboardsLossesPage() {
                         <span
                           className={`font-semibold ${
                             entry.lossRatio >= 2.0
-                              ? 'text-green-400'
+                              ? 'text-success'
                               : entry.lossRatio >= 1.0
-                              ? 'text-yellow-400'
+                              ? 'text-warning'
                               : 'text-orange-400'
                           }`}
                         >
@@ -255,9 +255,9 @@ function LeaderboardsLossesPage() {
                         <span
                           className={`font-medium ${
                             entry.winRate >= 60
-                              ? 'text-green-400'
+                              ? 'text-success'
                               : entry.winRate >= 50
-                              ? 'text-yellow-400'
+                              ? 'text-warning'
                               : 'text-orange-400'
                           }`}
                         >

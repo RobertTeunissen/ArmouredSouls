@@ -90,9 +90,9 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
   // const _hasBreakdown = (stats.leagueStats.battles > 0 || stats.tournamentStats.battles > 0 || stats.tagTeamStats.battles > 0);
   
   return (
-    <div className="bg-[#252b38] border border-gray-700 rounded-lg p-4 mb-4">
+    <div className="bg-[#252b38] border border-white/10 rounded-lg p-4 mb-4">
       {/* View Toggle */}
-      <div className="flex gap-2 mb-4 pb-3 border-b border-gray-700">
+      <div className="flex gap-2 mb-4 pb-3 border-b border-white/10">
         <button
           onClick={() => onViewChange('overall')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
@@ -187,7 +187,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
       
       {/* Current Streak */}
       {view === 'overall' && stats.currentStreak && stats.currentStreak.count >= 3 && (
-        <div className="mt-4 pt-4 border-t border-gray-700">
+        <div className="mt-4 pt-4 border-t border-white/10">
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
             ${stats.currentStreak.type === 'win' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'}`}>
             <span>{stats.currentStreak.count}-game {stats.currentStreak.type} streak</span>

@@ -37,7 +37,7 @@ function AttributeUpgradeRow({
           transition-colors
           ${hasPlannedChange 
             ? 'bg-blue-900/30 border border-blue-500' 
-            : 'bg-gray-800/50 hover:bg-gray-750'
+            : 'bg-surface/50 hover:bg-gray-750'
           }
         `}
       >
@@ -45,8 +45,8 @@ function AttributeUpgradeRow({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span className="text-base">{icon}</span>
           <div className="flex flex-col min-w-0">
-            <div className="text-gray-300 text-xs font-medium truncate">{label}</div>
-            <div className="text-xs text-gray-500">
+            <div className="text-secondary text-xs font-medium truncate">{label}</div>
+            <div className="text-xs text-tertiary">
               {currentLevel}/{cap}
             </div>
           </div>
@@ -62,8 +62,8 @@ function AttributeUpgradeRow({
               w-6 h-6 rounded flex items-center justify-center font-bold text-sm
               transition-colors
               ${hasPlannedChange
-                ? 'bg-gray-700 hover:bg-gray-600 text-white cursor-pointer'
-                : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                ? 'bg-surface-elevated hover:bg-gray-600 text-white cursor-pointer'
+                : 'bg-surface text-gray-600 cursor-not-allowed'
               }
             `}
             aria-label={`Decrease ${label}`}
@@ -74,9 +74,9 @@ function AttributeUpgradeRow({
           {/* Level Display */}
           <div className="w-12 text-center">
             {hasPlannedChange ? (
-              <span className="text-blue-400 font-bold text-sm">{plannedLevel}</span>
+              <span className="text-primary font-bold text-sm">{plannedLevel}</span>
             ) : (
-              <span className="text-gray-400 text-sm">{currentLevel}</span>
+              <span className="text-secondary text-sm">{currentLevel}</span>
             )}
           </div>
 
@@ -88,8 +88,8 @@ function AttributeUpgradeRow({
               w-6 h-6 rounded flex items-center justify-center font-bold text-sm
               transition-colors
               ${!isAtCap
-                ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                ? 'bg-primary hover:bg-blue-700 text-white cursor-pointer'
+                : 'bg-surface text-gray-600 cursor-not-allowed'
               }
             `}
             aria-label={`Increase ${label}`}
@@ -101,7 +101,7 @@ function AttributeUpgradeRow({
           {/* Cost Display */}
           <div className="w-16 text-right">
             {hasPlannedChange ? (
-              <span className="text-yellow-400 font-semibold text-xs">
+              <span className="text-warning font-semibold text-xs">
                 ₡{cost.toLocaleString()}
               </span>
             ) : (
@@ -127,7 +127,7 @@ function AttributeUpgradeRow({
         transition-colors
         ${hasPlannedChange 
           ? 'bg-blue-900/30 border-l-2 border-blue-500' 
-          : 'bg-gray-800/50 hover:bg-gray-750'
+          : 'bg-surface/50 hover:bg-gray-750'
         }
         ${isCostEfficient && hasPlannedChange ? 'ring-1 ring-green-500/30' : ''}
       `}
@@ -136,8 +136,8 @@ function AttributeUpgradeRow({
       <div className="flex items-center gap-3 flex-1">
         <span className="text-xl w-6">{icon}</span>
         <div className="flex flex-col">
-          <span className="text-gray-300 text-sm min-w-[180px]">{label}</span>
-          <span className="text-xs text-gray-500">
+          <span className="text-secondary text-sm min-w-[180px]">{label}</span>
+          <span className="text-xs text-tertiary">
             Level {currentLevel} / {cap}
           </span>
         </div>
@@ -153,8 +153,8 @@ function AttributeUpgradeRow({
             w-8 h-8 rounded flex items-center justify-center font-bold text-lg
             transition-colors
             ${hasPlannedChange
-              ? 'bg-gray-700 hover:bg-gray-600 text-white cursor-pointer'
-              : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+              ? 'bg-surface-elevated hover:bg-gray-600 text-white cursor-pointer'
+              : 'bg-surface text-gray-600 cursor-not-allowed'
             }
           `}
           aria-label={`Decrease ${label}`}
@@ -165,8 +165,8 @@ function AttributeUpgradeRow({
         {/* Planned Level Display */}
         {hasPlannedChange && (
           <div className="flex items-center gap-2">
-            <span className="text-blue-400 text-sm">→</span>
-            <span className="text-blue-400 font-bold text-lg min-w-[40px] text-center">
+            <span className="text-primary text-sm">→</span>
+            <span className="text-primary font-bold text-lg min-w-[40px] text-center">
               {plannedLevel}
             </span>
           </div>
@@ -180,8 +180,8 @@ function AttributeUpgradeRow({
             w-8 h-8 rounded flex items-center justify-center font-bold text-lg
             transition-colors
             ${!isAtCap
-              ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-              : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+              ? 'bg-primary hover:bg-blue-700 text-white cursor-pointer'
+              : 'bg-surface text-gray-600 cursor-not-allowed'
             }
           `}
           aria-label={`Increase ${label}`}
@@ -197,10 +197,10 @@ function AttributeUpgradeRow({
               {/* Show original cost with strikethrough if discounts apply */}
               {hasDiscounts && (
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-xs line-through">
+                  <span className="text-tertiary text-xs line-through">
                     ₡{baseCost.toLocaleString()}
                   </span>
-                  <span className="text-green-400 text-xs font-semibold">
+                  <span className="text-success text-xs font-semibold">
                     -{Math.round((1 - cost / baseCost) * 100)}%
                   </span>
                 </div>
@@ -208,23 +208,23 @@ function AttributeUpgradeRow({
               
               {/* Final cost after discounts */}
               <div className="flex items-center gap-2">
-                <span className="text-yellow-400 font-semibold text-sm">
+                <span className="text-warning font-semibold text-sm">
                   ₡{cost.toLocaleString()}
                 </span>
                 {isCostEfficient && (
-                  <span className="text-green-400 text-xs" title="Cost efficient upgrade">
+                  <span className="text-success text-xs" title="Cost efficient upgrade">
                     ⭐
                   </span>
                 )}
               </div>
               
               {/* Cost per point */}
-              <span className="text-gray-400 text-xs">
+              <span className="text-secondary text-xs">
                 ₡{costPerPoint.toFixed(0)}/pt
               </span>
             </div>
           ) : (
-            <span className="text-gray-500 text-sm">
+            <span className="text-tertiary text-sm">
               {isAtCap ? 'At Cap' : '—'}
             </span>
           )}

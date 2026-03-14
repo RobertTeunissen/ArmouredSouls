@@ -79,7 +79,7 @@ function TutorialSettings() {
     }
 
     return (
-      <div className="flex items-center text-blue-400" data-testid="tutorial-status">
+      <div className="flex items-center text-primary" data-testid="tutorial-status">
         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
           <path
             fillRule="evenodd"
@@ -94,12 +94,12 @@ function TutorialSettings() {
 
   if (loading) {
     return (
-      <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700" data-testid="tutorial-settings">
+      <div className="bg-surface-elevated p-6 rounded-lg border border-white/10" data-testid="tutorial-settings">
         <h2 className="text-xl font-semibold mb-4">Tutorial</h2>
-        <div className="border-t border-gray-700 mb-4"></div>
+        <div className="border-t border-white/10 mb-4"></div>
         <div className="flex items-center justify-center py-6" data-testid="tutorial-loading">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-          <span className="ml-3 text-gray-400">Loading tutorial status...</span>
+          <span className="ml-3 text-secondary">Loading tutorial status...</span>
         </div>
       </div>
     );
@@ -107,9 +107,9 @@ function TutorialSettings() {
 
   if (error) {
     return (
-      <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700" data-testid="tutorial-settings">
+      <div className="bg-surface-elevated p-6 rounded-lg border border-white/10" data-testid="tutorial-settings">
         <h2 className="text-xl font-semibold mb-4">Tutorial</h2>
-        <div className="border-t border-gray-700 mb-4"></div>
+        <div className="border-t border-white/10 mb-4"></div>
         <div className="bg-error/10 border border-error rounded-lg p-4" data-testid="tutorial-error">
           <p className="text-error text-sm">{error}</p>
         </div>
@@ -118,14 +118,14 @@ function TutorialSettings() {
   }
 
   return (
-    <div className="bg-surface-elevated p-6 rounded-lg border border-gray-700" data-testid="tutorial-settings">
+    <div className="bg-surface-elevated p-6 rounded-lg border border-white/10" data-testid="tutorial-settings">
       <h2 className="text-xl font-semibold mb-4">Tutorial</h2>
-      <div className="border-t border-gray-700 mb-4"></div>
+      <div className="border-t border-white/10 mb-4"></div>
 
       <div className="space-y-6">
         {/* Status */}
         <div>
-          <div className="text-sm text-gray-400 mb-1">Status</div>
+          <div className="text-sm text-secondary mb-1">Status</div>
           {renderStatus()}
         </div>
 
@@ -139,7 +139,7 @@ function TutorialSettings() {
           >
             {replayLoading ? 'Starting Replay...' : 'Replay Tutorial'}
           </button>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-secondary mt-1">
             Walk through the tutorial again from the beginning.
           </p>
         </div>
@@ -153,7 +153,7 @@ function TutorialSettings() {
           >
             Reset Account
           </button>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-secondary mt-1">
             Deletes all robots, weapons, and facilities. Resets credits to ₡3,000,000 and restarts the tutorial.
           </p>
         </div>

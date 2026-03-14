@@ -74,13 +74,13 @@ function TagTeamReadinessWarning({ compact = false }: TagTeamReadinessWarningPro
               {team.activeRobot.name} + {team.reserveRobot.name}
             </div>
             {!team.readiness?.activeRobotReady && team.readiness?.activeRobotIssues && (
-              <div className="text-sm text-gray-300 ml-4">
+              <div className="text-sm text-secondary ml-4">
                 <span className="text-primary">{team.activeRobot.name}:</span>{' '}
                 {team.readiness.activeRobotIssues.join(', ')}
               </div>
             )}
             {!team.readiness?.reserveRobotReady && team.readiness?.reserveRobotIssues && (
-              <div className="text-sm text-gray-300 ml-4">
+              <div className="text-sm text-secondary ml-4">
                 <span className="text-white">{team.reserveRobot.name}:</span>{' '}
                 {team.readiness.reserveRobotIssues.join(', ')}
               </div>

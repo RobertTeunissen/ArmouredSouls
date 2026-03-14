@@ -128,13 +128,13 @@ export default function ComparisonModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-background rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-700 px-6 py-4 flex justify-between items-center">
+        <div className="sticky top-0 bg-background border-b border-white/10 px-6 py-4 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-white">Compare Weapons</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl leading-none"
+            className="text-secondary hover:text-white text-2xl leading-none"
           >
             ✕
           </button>
@@ -154,9 +154,9 @@ export default function ComparisonModal({
               const isBestAttributeValue = bestAttributeValue.weapon.id === weapon.id && metrics.attributeEfficiency > 0;
 
               return (
-                <div key={weapon.id} className="bg-gray-800 rounded-lg overflow-hidden">
+                <div key={weapon.id} className="bg-surface rounded-lg overflow-hidden">
                   {/* Weapon Image */}
-                  <div className="bg-gray-700 p-4 flex items-center justify-center">
+                  <div className="bg-surface-elevated p-4 flex items-center justify-center">
                     <img
                       src={getWeaponImagePath(weapon.name)}
                       alt={weapon.name}
@@ -173,40 +173,40 @@ export default function ComparisonModal({
                         <img src={getWeaponTypeIcon(weapon.weaponType)} alt="" className="w-5 h-5" />
                         <h3 className="text-lg font-bold text-white">{weapon.name}</h3>
                       </div>
-                      <p className="text-sm text-gray-400">{weapon.weaponType} • {weapon.loadoutType}</p>
+                      <p className="text-sm text-secondary">{weapon.weaponType} • {weapon.loadoutType}</p>
                     </div>
 
                     {/* Stats */}
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Base Damage:</span>
+                        <span className="text-secondary">Base Damage:</span>
                         <span className="text-white font-semibold">{weapon.baseDamage}</span>
                       </div>
                       {cooldown > 0 && (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Cooldown:</span>
+                            <span className="text-secondary">Cooldown:</span>
                             <span className="text-white">{cooldownStr}s</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-400">DPS:</span>
+                            <span className="text-secondary">DPS:</span>
                             <span className="text-white font-semibold">{metrics.dps.toFixed(1)}</span>
                           </div>
                         </>
                       )}
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Attributes:</span>
+                        <span className="text-secondary">Attributes:</span>
                         <span className="text-white">+{totalAttributes}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Cost:</span>
+                        <span className="text-secondary">Cost:</span>
                         <div className="text-right">
                           {discount > 0 && (
-                            <div className="text-xs text-gray-500 line-through">
+                            <div className="text-xs text-tertiary line-through">
                               ₡{weapon.cost.toLocaleString()}
                             </div>
                           )}
-                          <div className={`font-semibold ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
+                          <div className={`font-semibold ${canAfford ? 'text-success' : 'text-error'}`}>
                             ₡{discountedCost.toLocaleString()}
                             {discount > 0 && <span className="text-xs ml-1">(-{(discount * 100).toFixed(0)}%)</span>}
                           </div>
@@ -215,12 +215,12 @@ export default function ComparisonModal({
                     </div>
 
                     {/* Value Metrics */}
-                    <div className="border-t border-gray-700 pt-3 space-y-2">
-                      <p className="text-xs font-semibold text-gray-400 uppercase">Value Analysis</p>
+                    <div className="border-t border-white/10 pt-3 space-y-2">
+                      <p className="text-xs font-semibold text-secondary uppercase">Value Analysis</p>
                       {metrics.costPerDamage > 0 && (
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-400">Cost/Damage:</span>
-                          <span className={isBestDamageValue ? 'text-yellow-400 font-bold' : 'text-gray-300'}>
+                          <span className="text-secondary">Cost/Damage:</span>
+                          <span className={isBestDamageValue ? 'text-warning font-bold' : 'text-secondary'}>
                             ₡{metrics.costPerDamage.toFixed(0)}
                             {isBestDamageValue && ' ⭐'}
                           </span>
@@ -228,8 +228,8 @@ export default function ComparisonModal({
                       )}
                       {metrics.dpsPerThousand > 0 && (
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-400">DPS/₡1K:</span>
-                          <span className={isBestDPSValue ? 'text-yellow-400 font-bold' : 'text-gray-300'}>
+                          <span className="text-secondary">DPS/₡1K:</span>
+                          <span className={isBestDPSValue ? 'text-warning font-bold' : 'text-secondary'}>
                             {metrics.dpsPerThousand.toFixed(2)}
                             {isBestDPSValue && ' ⭐'}
                           </span>
@@ -237,8 +237,8 @@ export default function ComparisonModal({
                       )}
                       {metrics.attributeEfficiency > 0 && (
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-400">Attrs/₡1K:</span>
-                          <span className={isBestAttributeValue ? 'text-yellow-400 font-bold' : 'text-gray-300'}>
+                          <span className="text-secondary">Attrs/₡1K:</span>
+                          <span className={isBestAttributeValue ? 'text-warning font-bold' : 'text-secondary'}>
                             {metrics.attributeEfficiency.toFixed(2)}
                             {isBestAttributeValue && ' ⭐'}
                           </span>
@@ -254,7 +254,7 @@ export default function ComparisonModal({
                         className={`w-full py-2 px-4 rounded font-semibold ${
                           canAfford && !storageIsFull
                             ? 'bg-green-600 hover:bg-green-700 text-white'
-                            : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                            : 'bg-surface-elevated text-secondary cursor-not-allowed'
                         }`}
                       >
                         {purchasingId === weapon.id
@@ -267,7 +267,7 @@ export default function ComparisonModal({
                       </button>
                       <button
                         onClick={() => onRemove(weapon.id)}
-                        className="w-full py-1 px-4 text-sm text-gray-400 hover:text-white underline"
+                        className="w-full py-1 px-4 text-sm text-secondary hover:text-white underline"
                       >
                         Remove from comparison
                       </button>

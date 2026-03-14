@@ -84,11 +84,11 @@ function LeaderboardsFamePage() {
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'Mythical': return 'text-purple-400';
-      case 'Legendary': return 'text-yellow-400';
+      case 'Legendary': return 'text-warning';
       case 'Renowned': return 'text-orange-400';
-      case 'Famous': return 'text-blue-400';
-      case 'Known': return 'text-green-400';
-      default: return 'text-gray-400';
+      case 'Famous': return 'text-primary';
+      case 'Known': return 'text-success';
+      default: return 'text-secondary';
     }
   };
 
@@ -259,9 +259,9 @@ function LeaderboardsFamePage() {
                         <span
                           className={`font-medium ${
                             entry.winRate >= 60
-                              ? 'text-green-400'
+                              ? 'text-success'
                               : entry.winRate >= 50
-                              ? 'text-yellow-400'
+                              ? 'text-warning'
                               : 'text-orange-400'
                           }`}
                         >

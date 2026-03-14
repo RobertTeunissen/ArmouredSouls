@@ -29,7 +29,7 @@ const ImageWithFallback: React.FC<
 
   if (hasError) {
     return (
-      <div className="my-4 flex items-center justify-center rounded-lg border border-gray-700 bg-gray-800 p-8 text-sm text-gray-400">
+      <div className="my-4 flex items-center justify-center rounded-lg border border-white/10 bg-surface p-8 text-sm text-secondary">
         {alt || 'Image could not be loaded'}
       </div>
     );
@@ -90,7 +90,7 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content }) => {
 
       if (isInline) {
         return (
-          <code className="rounded bg-gray-800 px-1.5 py-0.5 text-sm text-gray-300" {...props}>
+          <code className="rounded bg-surface px-1.5 py-0.5 text-sm text-secondary" {...props}>
             {children}
           </code>
         );
@@ -107,8 +107,8 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content }) => {
       }
 
       return (
-        <pre className="overflow-x-auto rounded-lg bg-gray-800 p-4">
-          <code className={`text-sm text-gray-300 ${className || ''}`} {...props}>
+        <pre className="overflow-x-auto rounded-lg bg-surface p-4">
+          <code className={`text-sm text-secondary ${className || ''}`} {...props}>
             {children}
           </code>
         </pre>
@@ -123,25 +123,25 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content }) => {
     table: ({ children }) => {
       return (
         <div className="my-4 overflow-x-auto">
-          <table className="min-w-full border-collapse border border-gray-700 text-sm">
+          <table className="min-w-full border-collapse border border-white/10 text-sm">
             {children}
           </table>
         </div>
       );
     },
     thead: ({ children }) => {
-      return <thead className="bg-gray-800">{children}</thead>;
+      return <thead className="bg-surface">{children}</thead>;
     },
     th: ({ children }) => {
       return (
-        <th className="border border-gray-700 px-4 py-2 text-left font-semibold text-gray-200">
+        <th className="border border-white/10 px-4 py-2 text-left font-semibold text-gray-200">
           {children}
         </th>
       );
     },
     td: ({ children }) => {
       return (
-        <td className="border border-gray-700 px-4 py-2 text-gray-300">
+        <td className="border border-white/10 px-4 py-2 text-secondary">
           {children}
         </td>
       );
@@ -149,7 +149,7 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content }) => {
     a: ({ href, children }) => {
       if (href && href.startsWith('/guide/')) {
         return (
-          <Link to={href} className="text-blue-400 underline hover:text-blue-300">
+          <Link to={href} className="text-primary underline hover:text-blue-300">
             {children}
           </Link>
         );
@@ -160,33 +160,33 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({ content }) => {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-400 underline hover:text-blue-300"
+          className="text-primary underline hover:text-blue-300"
         >
           {children}
         </a>
       );
     },
     p: ({ children }) => {
-      return <p className="mb-4 leading-relaxed text-gray-300 break-words">{children}</p>;
+      return <p className="mb-4 leading-relaxed text-secondary break-words">{children}</p>;
     },
     ul: ({ children }) => {
-      return <ul className="mb-4 ml-6 list-disc space-y-1 text-gray-300">{children}</ul>;
+      return <ul className="mb-4 ml-6 list-disc space-y-1 text-secondary">{children}</ul>;
     },
     ol: ({ children }) => {
-      return <ol className="mb-4 ml-6 list-decimal space-y-1 text-gray-300">{children}</ol>;
+      return <ol className="mb-4 ml-6 list-decimal space-y-1 text-secondary">{children}</ol>;
     },
     li: ({ children }) => {
       return <li className="leading-relaxed">{children}</li>;
     },
     blockquote: ({ children }) => {
       return (
-        <blockquote className="my-4 border-l-4 border-gray-600 pl-4 italic text-gray-400">
+        <blockquote className="my-4 border-l-4 border-gray-600 pl-4 italic text-secondary">
           {children}
         </blockquote>
       );
     },
     hr: () => {
-      return <hr className="my-6 border-gray-700" />;
+      return <hr className="my-6 border-white/10" />;
     },
   };
 

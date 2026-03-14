@@ -94,13 +94,13 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface-elevated border border-gray-700 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface-elevated border border-white/10 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-surface-elevated border-b border-gray-700 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-surface-elevated border-b border-white/10 p-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-white">Create Tag Team</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl leading-none"
+            className="text-secondary hover:text-white text-2xl leading-none"
           >
             ×
           </button>
@@ -110,7 +110,7 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
         <div className="p-6">
           {loading && (
             <div className="text-center py-12">
-              <p className="text-gray-400">Loading robots...</p>
+              <p className="text-secondary">Loading robots...</p>
             </div>
           )}
 
@@ -118,7 +118,7 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
             <>
               {/* Instructions */}
               <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-300">
+                <p className="text-sm text-secondary">
                   Select two battle-ready robots to form a tag team. The active robot starts the match, and the reserve robot tags in when the active robot yields or is destroyed.
                 </p>
               </div>
@@ -133,23 +133,23 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
               {/* Selection Summary */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-surface border border-gray-600 rounded-lg p-4">
-                  <div className="text-sm text-gray-400 mb-2">Active Robot</div>
+                  <div className="text-sm text-secondary mb-2">Active Robot</div>
                   {activeRobotId ? (
                     <div className="text-primary font-semibold">
                       {robots.find(r => r.id === activeRobotId)?.name}
                     </div>
                   ) : (
-                    <div className="text-gray-500 italic">Not selected</div>
+                    <div className="text-tertiary italic">Not selected</div>
                   )}
                 </div>
                 <div className="bg-surface border border-gray-600 rounded-lg p-4">
-                  <div className="text-sm text-gray-400 mb-2">Reserve Robot</div>
+                  <div className="text-sm text-secondary mb-2">Reserve Robot</div>
                   {reserveRobotId ? (
                     <div className="text-white font-semibold">
                       {robots.find(r => r.id === reserveRobotId)?.name}
                     </div>
                   ) : (
-                    <div className="text-gray-500 italic">Not selected</div>
+                    <div className="text-tertiary italic">Not selected</div>
                   )}
                 </div>
               </div>
@@ -177,15 +177,15 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
               {/* Ineligible Robots */}
               {ineligibleRobots.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-400 mb-3">Not Battle-Ready</h3>
+                  <h3 className="text-lg font-semibold text-secondary mb-3">Not Battle-Ready</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {ineligibleRobots.map((robot) => (
                       <div
                         key={robot.id}
-                        className="bg-surface border border-gray-700 rounded-lg p-4 opacity-60"
+                        className="bg-surface border border-white/10 rounded-lg p-4 opacity-60"
                       >
-                        <div className="font-semibold text-gray-400 mb-2">{robot.name}</div>
-                        <div className="text-sm text-gray-500 space-y-1">
+                        <div className="font-semibold text-secondary mb-2">{robot.name}</div>
+                        <div className="text-sm text-tertiary space-y-1">
                           <div>ELO: {robot.elo}</div>
                           <div>HP: {robot.currentHP}/{robot.maxHP}</div>
                           <div className="text-warning text-xs mt-2">
@@ -201,7 +201,7 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
               {/* No Robots */}
               {robots.length === 0 && !loading && (
                 <div className="text-center py-12">
-                  <p className="text-gray-400">You don&apos;t have any robots yet. Create robots first!</p>
+                  <p className="text-secondary">You don&apos;t have any robots yet. Create robots first!</p>
                 </div>
               )}
 
@@ -218,10 +218,10 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-surface-elevated border-t border-gray-700 p-6 flex items-center justify-end gap-4">
+        <div className="sticky bottom-0 bg-surface-elevated border-t border-white/10 p-6 flex items-center justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-6 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-surface transition-colors"
+            className="px-6 py-2 border border-gray-600 text-secondary rounded-lg hover:bg-surface transition-colors"
             disabled={creating}
           >
             Cancel
@@ -254,7 +254,7 @@ function RobotSelectionCard({ robot, isActive, isReserve, onSelectActive, onSele
       isActive ? 'border-primary' : isReserve ? 'border-white' : 'border-gray-600'
     }`}>
       <div className="font-semibold text-white mb-2">{robot.name}</div>
-      <div className="text-sm text-gray-300 space-y-1 mb-3">
+      <div className="text-sm text-secondary space-y-1 mb-3">
         <div>ELO: {robot.elo}</div>
         <div>HP: {robot.currentHP}/{robot.maxHP}</div>
         <div>Weapon: {robot.mainWeapon ? '✓' : '✗'}</div>
@@ -266,7 +266,7 @@ function RobotSelectionCard({ robot, isActive, isReserve, onSelectActive, onSele
           className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${
             isActive
               ? 'bg-primary text-white'
-              : 'bg-surface-elevated border border-gray-600 text-gray-300 hover:border-primary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed'
+              : 'bg-surface-elevated border border-gray-600 text-secondary hover:border-primary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed'
           }`}
         >
           {isActive ? '✓ Active' : 'Set Active'}
@@ -277,7 +277,7 @@ function RobotSelectionCard({ robot, isActive, isReserve, onSelectActive, onSele
           className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${
             isReserve
               ? 'bg-white text-gray-900'
-              : 'bg-surface-elevated border border-gray-600 text-gray-300 hover:border-white hover:text-white disabled:opacity-50 disabled:cursor-not-allowed'
+              : 'bg-surface-elevated border border-gray-600 text-secondary hover:border-white hover:text-white disabled:opacity-50 disabled:cursor-not-allowed'
           }`}
         >
           {isReserve ? '✓ Reserve' : 'Set Reserve'}

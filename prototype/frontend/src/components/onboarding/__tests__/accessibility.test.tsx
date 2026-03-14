@@ -639,26 +639,26 @@ describe('WCAG 2.1 AA - Contrast Compliance', () => {
    * These tests verify that text elements use Tailwind classes
    * that meet WCAG 2.1 AA contrast requirements against dark backgrounds.
    *
-   * On dark backgrounds (bg-gray-800, bg-gray-900, bg-surface):
-   * - text-gray-300 (#D1D5DB) on bg-gray-900 (#111827) = ~11.4:1 ✓
-   * - text-gray-400 (#9CA3AF) on bg-gray-900 (#111827) = ~6.8:1 ✓
-   * - text-gray-500 (#6B7280) on bg-gray-900 (#111827) = ~4.0:1 ✗ (fails 4.5:1 for normal text)
+   * On dark backgrounds (bg-surface, bg-background, bg-surface):
+   * - text-secondary (#D1D5DB) on bg-background (#111827) = ~11.4:1 ✓
+   * - text-secondary (#9CA3AF) on bg-background (#111827) = ~6.8:1 ✓
+   * - text-tertiary (#6B7280) on bg-background (#111827) = ~4.0:1 ✗ (fails 4.5:1 for normal text)
    *
-   * We verify components avoid text-gray-500 for meaningful content on dark backgrounds.
+   * We verify components avoid text-tertiary for meaningful content on dark backgrounds.
    */
 
   describe('ProgressIndicator contrast', () => {
     it('should use sufficient contrast for step text', () => {
       const { container } = render(<ProgressIndicator current={3} total={9} />);
       const stepText = container.querySelector('#progress-label');
-      expect(stepText).toHaveClass('text-gray-300');
+      expect(stepText).toHaveClass('text-secondary');
     });
 
-    it('should use text-gray-400 or better for percentage (decorative, aria-hidden)', () => {
+    it('should use text-secondary or better for percentage (decorative, aria-hidden)', () => {
       const { container } = render(<ProgressIndicator current={3} total={9} />);
       const percentText = container.querySelector('[aria-hidden="true"]');
       // Even though aria-hidden, we upgraded to gray-400 for visual consistency
-      expect(percentText).toHaveClass('text-gray-400');
+      expect(percentText).toHaveClass('text-secondary');
     });
   });
 
@@ -677,8 +677,8 @@ describe('WCAG 2.1 AA - Contrast Compliance', () => {
         />
       );
       const dialog = screen.getByRole('dialog');
-      // bg-gray-900 with text-white provides excellent contrast
-      expect(dialog).toHaveClass('bg-gray-900', 'text-white');
+      // bg-background with text-white provides excellent contrast
+      expect(dialog).toHaveClass('bg-background', 'text-white');
     });
 
     it('should use white text on navigation buttons', () => {
@@ -698,7 +698,7 @@ describe('WCAG 2.1 AA - Contrast Compliance', () => {
   describe('SkipConfirmationModal contrast', () => {
     const modalRef = { current: null } as React.RefObject<HTMLDivElement | null>;
 
-    it('should use text-gray-300 for body text (sufficient contrast)', () => {
+    it('should use text-secondary for body text (sufficient contrast)', () => {
       const { container } = render(
         <SkipConfirmationModal
           modalRef={modalRef}
@@ -706,7 +706,7 @@ describe('WCAG 2.1 AA - Contrast Compliance', () => {
           onConfirm={vi.fn()}
         />
       );
-      const bodyText = container.querySelectorAll('.text-gray-300');
+      const bodyText = container.querySelectorAll('.text-secondary');
       expect(bodyText.length).toBeGreaterThan(0);
     });
 
@@ -726,11 +726,11 @@ describe('WCAG 2.1 AA - Contrast Compliance', () => {
   });
 
   describe('BudgetTracker contrast', () => {
-    it('should use text-gray-400 or better for labels', async () => {
+    it('should use text-secondary or better for labels', async () => {
       const { container } = render(<BudgetTracker />);
       // Wait for loading to complete
       await screen.findByRole('region', { name: 'Budget Tracker' });
-      const labels = container.querySelectorAll('.text-gray-400');
+      const labels = container.querySelectorAll('.text-secondary');
       // All label text should be gray-400 (6.8:1 contrast) or better
       expect(labels.length).toBeGreaterThan(0);
     });

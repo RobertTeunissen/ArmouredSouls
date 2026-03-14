@@ -141,7 +141,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
       {/* Semi-transparent overlay */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-gray-900 bg-opacity-40 z-[9998]"
+        className="fixed inset-0 bg-background bg-opacity-40 z-[9998]"
         style={{ pointerEvents: 'none' }}
         aria-hidden="true"
       />
@@ -165,7 +165,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
       {/* Tooltip */}
       <div
         ref={tooltipRef}
-        className={`fixed z-[10000] bg-gray-900 text-white rounded-lg shadow-2xl ${
+        className={`fixed z-[10000] bg-background text-white rounded-lg shadow-2xl ${
           isMobile ? 'left-4 right-4 max-w-none' : 'max-w-md'
         }`}
         style={
@@ -244,7 +244,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
               {showPrevious && onPrevious && (
                 <button
                   onClick={onPrevious}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors min-h-[44px] min-w-[44px]"
+                  className="px-4 py-2 bg-surface-elevated hover:bg-gray-600 text-white rounded transition-colors min-h-[44px] min-w-[44px]"
                   aria-label="Previous step"
                 >
                   Previous
@@ -256,7 +256,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
               {onClose && (
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors min-h-[44px] min-w-[44px]"
+                  className="px-4 py-2 bg-surface-elevated hover:bg-gray-600 text-white rounded transition-colors min-h-[44px] min-w-[44px]"
                   aria-label="Close tutorial"
                 >
                   Close
@@ -265,7 +265,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
               {showNext && onNext && (
                 <button
                   onClick={onNext}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors min-h-[44px] min-w-[44px]"
+                  className="px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded transition-colors min-h-[44px] min-w-[44px]"
                   aria-label="Next step"
                 >
                   Next

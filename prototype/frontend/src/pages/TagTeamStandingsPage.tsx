@@ -94,9 +94,9 @@ function TagTeamStandingsPage() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="mb-6 pb-4 border-b border-gray-700">
+        <div className="mb-6 pb-4 border-b border-white/10">
           <h1 className="text-3xl font-bold text-white">Tag Team League Standings</h1>
-          <p className="text-gray-400 mt-1">View rankings across all tag team league tiers</p>
+          <p className="text-secondary mt-1">View rankings across all tag team league tiers</p>
         </div>
 
         {/* Tier Tabs */}
@@ -116,14 +116,14 @@ function TagTeamStandingsPage() {
                   flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all relative
                   ${isActive
                     ? `${tierColor} bg-white/10 border-2 border-current`
-                    : 'text-gray-400 bg-surface-elevated border-2 border-gray-700 hover:border-gray-600'
+                    : 'text-secondary bg-surface-elevated border-2 border-white/10 hover:border-gray-600'
                   }
                 `}
               >
                 <span>{tierIcon}</span>
                 <span>{tierName}</span>
                 {hasUserTeams && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-gray-900"></span>
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary-dark rounded-full border-2 border-gray-900"></span>
                 )}
               </button>
             );
@@ -133,7 +133,7 @@ function TagTeamStandingsPage() {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <p className="text-gray-400">Loading standings...</p>
+            <p className="text-secondary">Loading standings...</p>
           </div>
         )}
 
@@ -146,25 +146,25 @@ function TagTeamStandingsPage() {
 
         {/* Empty State */}
         {!loading && !error && standings.length === 0 && (
-          <div className="bg-surface-elevated p-8 rounded-lg border border-gray-700 text-center">
-            <p className="text-gray-400">No teams in this tier yet</p>
+          <div className="bg-surface-elevated p-8 rounded-lg border border-white/10 text-center">
+            <p className="text-secondary">No teams in this tier yet</p>
           </div>
         )}
 
         {/* Standings Table */}
         {!loading && !error && standings.length > 0 && (
           <>
-            <div className="bg-surface-elevated rounded-lg border border-gray-700 overflow-hidden">
+            <div className="bg-surface-elevated rounded-lg border border-white/10 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-surface border-b border-gray-700">
+                  <thead className="bg-surface border-b border-white/10">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Rank</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Team</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">Combined ELO</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">League Points</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">Record</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">Matches</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase">Rank</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-secondary uppercase">Team</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase">Combined ELO</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase">League Points</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase">Record</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-secondary uppercase">Matches</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-700">
@@ -204,13 +204,13 @@ function TagTeamStandingsPage() {
                               </div>
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="text-primary">{team.activeRobot.name}</span>
-                                <span className="text-xs text-gray-500">(Active)</span>
+                                <span className="text-xs text-tertiary">(Active)</span>
                               </div>
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="text-white">{team.reserveRobot.name}</span>
-                                <span className="text-xs text-gray-500">(Reserve)</span>
+                                <span className="text-xs text-tertiary">(Reserve)</span>
                               </div>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-secondary">
                                 ELO: {team.activeRobot.elo} + {team.reserveRobot.elo}
                               </div>
                             </div>
@@ -232,7 +232,7 @@ function TagTeamStandingsPage() {
                               <div className="text-sm font-semibold text-white">
                                 {team.wins}W-{team.losses}L-{team.draws}D
                               </div>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-secondary">
                                 {winRate}% win rate
                               </div>
                             </div>
@@ -256,17 +256,17 @@ function TagTeamStandingsPage() {
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 bg-surface-elevated border border-gray-700 rounded-lg text-white hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-surface-elevated border border-white/10 rounded-lg text-white hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
-                <span className="text-gray-400">
+                <span className="text-secondary">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
-                  className="px-4 py-2 bg-surface-elevated border border-gray-700 rounded-lg text-white hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-surface-elevated border border-white/10 rounded-lg text-white hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                 </button>

@@ -26,15 +26,15 @@ function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled }: WeaponSlotP
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'energy':
-        return 'text-blue-400';
+        return 'text-primary';
       case 'ballistic':
         return 'text-orange-400';
       case 'melee':
-        return 'text-red-400';
+        return 'text-error';
       case 'explosive':
-        return 'text-yellow-400';
+        return 'text-warning';
       default:
-        return 'text-gray-400';
+        return 'text-secondary';
     }
   };
 
@@ -56,12 +56,12 @@ function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled }: WeaponSlotP
   return (
     <div className="bg-gradient-to-br from-gray-700 to-gray-750 p-4 rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-150">
       <div className="flex justify-between items-start mb-3">
-        <h4 className="font-semibold text-gray-300 uppercase tracking-wide text-sm">{label}</h4>
+        <h4 className="font-semibold text-secondary uppercase tracking-wide text-sm">{label}</h4>
         {weapon ? (
           <button
             onClick={onUnequip}
             disabled={disabled}
-            className="text-sm text-red-400 hover:text-red-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+            className="text-sm text-error hover:text-red-300 disabled:text-tertiary disabled:cursor-not-allowed transition-colors"
           >
             Unequip
           </button>
@@ -69,7 +69,7 @@ function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled }: WeaponSlotP
           <button
             onClick={onEquip}
             disabled={disabled}
-            className="text-sm text-blue-400 hover:text-blue-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+            className="text-sm text-primary hover:text-blue-300 disabled:text-tertiary disabled:cursor-not-allowed transition-colors"
           >
             Equip Weapon
           </button>
@@ -80,7 +80,7 @@ function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled }: WeaponSlotP
         <div>
           {/* Weapon Thumbnail (128×128px equivalent) */}
           <div className="flex items-center gap-4 mb-3">
-            <div className="w-24 h-24 bg-gray-800 rounded-lg border-2 border-gray-600 flex items-center justify-center overflow-hidden">
+            <div className="w-24 h-24 bg-surface rounded-lg border-2 border-gray-600 flex items-center justify-center overflow-hidden">
               {!imageError ? (
                 <img
                   src={getWeaponImagePath(weapon.weapon.name)}
@@ -96,21 +96,21 @@ function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled }: WeaponSlotP
               <div className="flex justify-between items-center mb-2">
                 <span className="font-semibold text-white text-lg">{weapon.weapon.name}</span>
               </div>
-              <span className={`text-xs uppercase font-semibold px-2 py-1 rounded ${getTypeColor(weapon.weapon.weaponType)} bg-gray-800`}>
+              <span className={`text-xs uppercase font-semibold px-2 py-1 rounded ${getTypeColor(weapon.weapon.weaponType)} bg-surface`}>
                 {weapon.weapon.weaponType}
               </span>
             </div>
           </div>
           
           {weapon.weapon.description && (
-            <p className="text-sm text-gray-400 mb-2">{weapon.weapon.description}</p>
+            <p className="text-sm text-secondary mb-2">{weapon.weapon.description}</p>
           )}
-          <div className="text-sm text-gray-400 bg-gray-800 p-2 rounded">
+          <div className="text-sm text-secondary bg-surface p-2 rounded">
             Base Damage: <span className="text-white font-semibold">{weapon.weapon.baseDamage}</span>
           </div>
         </div>
       ) : (
-        <div className="text-gray-500 text-sm italic text-center py-8">
+        <div className="text-tertiary text-sm italic text-center py-8">
           <div className="text-4xl mb-2">⚙️</div>
           No weapon equipped
         </div>

@@ -75,7 +75,7 @@ function StatComparison({ robot, attributes, showOnlyModified = false }: StatCom
 
   if (filteredAttributes.length === 0 && showOnlyModified) {
     return (
-      <div className="text-gray-400 text-sm italic text-center py-4">
+      <div className="text-secondary text-sm italic text-center py-4">
         No attributes are currently modified by weapons or loadout
       </div>
     );
@@ -89,23 +89,23 @@ function StatComparison({ robot, attributes, showOnlyModified = false }: StatCom
         return (
           <div
             key={key}
-            className={`bg-gray-700 p-3 rounded ${
+            className={`bg-surface-elevated p-3 rounded ${
               breakdown.isModified ? 'border-l-4 border-blue-500' : ''
             }`}
           >
             <div className="flex justify-between items-center mb-1">
-              <span className="font-semibold text-gray-300">{label}</span>
+              <span className="font-semibold text-secondary">{label}</span>
               <span className="text-lg font-bold text-white">{breakdown.effective}</span>
             </div>
 
             {breakdown.isModified && (
-              <div className="text-xs text-gray-400 flex items-center gap-2 flex-wrap">
-                <span className="text-blue-400">Base: {breakdown.base}</span>
+              <div className="text-xs text-secondary flex items-center gap-2 flex-wrap">
+                <span className="text-primary">Base: {breakdown.base}</span>
 
                 {breakdown.hasWeaponBonus && (
                   <span
                     className={`${
-                      breakdown.weapon > 0 ? 'text-green-400' : 'text-red-400'
+                      breakdown.weapon > 0 ? 'text-success' : 'text-error'
                     }`}
                   >
                     Weapon: {breakdown.weapon > 0 ? '+' : ''}
@@ -116,7 +116,7 @@ function StatComparison({ robot, attributes, showOnlyModified = false }: StatCom
                 {breakdown.hasLoadoutBonus && (
                   <span
                     className={`${
-                      breakdown.loadout > 0 ? 'text-green-400' : 'text-red-400'
+                      breakdown.loadout > 0 ? 'text-success' : 'text-error'
                     }`}
                   >
                     Loadout: {breakdown.loadout > 0 ? '+' : ''}
@@ -124,7 +124,7 @@ function StatComparison({ robot, attributes, showOnlyModified = false }: StatCom
                   </span>
                 )}
 
-                <span className="text-gray-500">→</span>
+                <span className="text-tertiary">→</span>
                 <span className="text-white font-semibold">
                   Effective: {breakdown.effective}
                 </span>
@@ -132,7 +132,7 @@ function StatComparison({ robot, attributes, showOnlyModified = false }: StatCom
             )}
 
             {!breakdown.isModified && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-tertiary">
                 No modifications
               </div>
             )}

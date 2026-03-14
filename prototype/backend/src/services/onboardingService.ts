@@ -56,7 +56,7 @@ export interface TutorialState {
 export interface TutorialStateUpdates {
   onboardingStep?: number;
   onboardingStrategy?: string;
-  onboardingChoices?: Record<string, unknown>;
+  onboardingChoices?: OnboardingChoices | Record<string, unknown>;
 }
 
 /**

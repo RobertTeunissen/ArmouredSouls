@@ -152,20 +152,20 @@ export const BATTLE_TYPE_INFO: Record<BattleType, BattleTypeInfo> = {
 const SchedulingInfo = ({ scheduling }: { scheduling: BattleTypeInfo['scheduling'] }) => {
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-        <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+      <h4 className="text-sm font-semibold text-secondary flex items-center gap-2">
+        <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
         </svg>
         Scheduling
       </h4>
       <div className="pl-6 space-y-1">
-        <div className="text-sm text-gray-400">
-          <span className="font-medium text-gray-300">Frequency:</span> {scheduling.frequency}
+        <div className="text-sm text-secondary">
+          <span className="font-medium text-secondary">Frequency:</span> {scheduling.frequency}
         </div>
-        <div className="text-sm text-gray-400">
-          <span className="font-medium text-gray-300">Cycle Time:</span> {scheduling.cycleTime}
+        <div className="text-sm text-secondary">
+          <span className="font-medium text-secondary">Cycle Time:</span> {scheduling.cycleTime}
         </div>
-        <div className="text-xs text-gray-400 italic">
+        <div className="text-xs text-secondary italic">
           ({scheduling.cycleName})
         </div>
       </div>
@@ -192,29 +192,29 @@ const RequirementsList = ({
 
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-        <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+      <h4 className="text-sm font-semibold text-secondary flex items-center gap-2">
+        <svg className="w-4 h-4 text-warning" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
         </svg>
         Requirements
       </h4>
       <ul className="pl-6 space-y-1">
         {requirements.map((req, index) => (
-          <li key={index} className="text-sm text-gray-400 flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+          <li key={index} className="text-sm text-secondary flex items-start gap-2">
+            <span className="text-primary mt-0.5">•</span>
             <span>{req}</span>
           </li>
         ))}
       </ul>
       
       {playerRobotCount !== undefined && !meetsRobotRequirement && (
-        <div className="mt-2 p-2 bg-red-900 bg-opacity-20 border border-red-700 rounded text-xs text-red-400">
+        <div className="mt-2 p-2 bg-red-900 bg-opacity-20 border border-red-700 rounded text-xs text-error">
           ⚠️ You need {minRobotsRequired} robot{minRobotsRequired > 1 ? 's' : ''} to participate (you have {playerRobotCount})
         </div>
       )}
       
       {playerRobotCount !== undefined && meetsRobotRequirement && minRobotsRequired > 1 && (
-        <div className="mt-2 p-2 bg-green-900 bg-opacity-20 border border-green-700 rounded text-xs text-green-400">
+        <div className="mt-2 p-2 bg-green-900 bg-opacity-20 border border-green-700 rounded text-xs text-success">
           ✓ You meet the robot requirement for this battle type
         </div>
       )}
@@ -229,8 +229,8 @@ const RequirementsList = ({
 const RewardsList = ({ rewards }: { rewards: string[] }) => {
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-        <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+      <h4 className="text-sm font-semibold text-secondary flex items-center gap-2">
+        <svg className="w-4 h-4 text-success" fill="currentColor" viewBox="0 0 20 20">
           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
         </svg>
@@ -238,8 +238,8 @@ const RewardsList = ({ rewards }: { rewards: string[] }) => {
       </h4>
       <ul className="pl-6 space-y-1">
         {rewards.map((reward, index) => (
-          <li key={index} className="text-sm text-gray-400 flex items-start gap-2">
-            <span className="text-green-400 mt-0.5">•</span>
+          <li key={index} className="text-sm text-secondary flex items-start gap-2">
+            <span className="text-success mt-0.5">•</span>
             <span>{reward}</span>
           </li>
         ))}
@@ -255,7 +255,7 @@ const RewardsList = ({ rewards }: { rewards: string[] }) => {
 const StrategicConsiderations = ({ considerations }: { considerations: string[] }) => {
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+      <h4 className="text-sm font-semibold text-secondary flex items-center gap-2">
         <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
           <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
@@ -264,7 +264,7 @@ const StrategicConsiderations = ({ considerations }: { considerations: string[] 
       </h4>
       <ul className="pl-6 space-y-1">
         {considerations.map((consideration, index) => (
-          <li key={index} className="text-sm text-gray-400 flex items-start gap-2">
+          <li key={index} className="text-sm text-secondary flex items-start gap-2">
             <span className="text-purple-400 mt-0.5">•</span>
             <span>{consideration}</span>
           </li>
@@ -294,7 +294,7 @@ const BattleTypeCard = ({
       <div
         className={`
           bg-surface rounded-lg border-2 p-4 transition-all duration-200
-          ${highlighted ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-30' : 'border-gray-700'}
+          ${highlighted ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-30' : 'border-white/10'}
           ${!meetsRequirement ? 'opacity-60' : ''}
         `}
       >
@@ -302,14 +302,14 @@ const BattleTypeCard = ({
           <div className="text-3xl">{info.icon}</div>
           <div className="flex-1">
             <h3 className="font-bold text-base mb-1 text-gray-100">{info.name}</h3>
-            <p className="text-xs text-gray-400 mb-2">{info.description}</p>
+            <p className="text-xs text-secondary mb-2">{info.description}</p>
             
-            <div className="text-xs text-gray-400">
-              <span className="font-medium text-gray-400">Scheduled:</span> {info.scheduling.frequency} at {info.scheduling.cycleTime}
+            <div className="text-xs text-secondary">
+              <span className="font-medium text-secondary">Scheduled:</span> {info.scheduling.frequency} at {info.scheduling.cycleTime}
             </div>
             
             {!meetsRequirement && (
-              <div className="mt-2 text-xs text-red-400">
+              <div className="mt-2 text-xs text-error">
                 ⚠️ Requires {info.minRobotsRequired} robot{info.minRobotsRequired > 1 ? 's' : ''}
               </div>
             )}
@@ -323,7 +323,7 @@ const BattleTypeCard = ({
     <div
       className={`
         bg-surface rounded-lg border-2 p-6 transition-all duration-200
-        ${highlighted ? 'border-blue-500 ring-4 ring-blue-500 ring-opacity-30 shadow-xl' : 'border-gray-700'}
+        ${highlighted ? 'border-blue-500 ring-4 ring-blue-500 ring-opacity-30 shadow-xl' : 'border-white/10'}
         ${!meetsRequirement ? 'opacity-75' : ''}
       `}
       role="article"
@@ -334,7 +334,7 @@ const BattleTypeCard = ({
         <div className="text-5xl">{info.icon}</div>
         <div className="flex-1">
           <h3 className="text-xl font-bold mb-1 text-gray-100">{info.name}</h3>
-          <p className="text-sm text-gray-400">{info.description}</p>
+          <p className="text-sm text-secondary">{info.description}</p>
         </div>
       </div>
 
@@ -359,11 +359,11 @@ const BattleTypeCard = ({
 
       {/* Features */}
       <div className="mb-4">
-        <h4 className="text-sm font-semibold text-gray-300 mb-2">Key Features</h4>
+        <h4 className="text-sm font-semibold text-secondary mb-2">Key Features</h4>
         <ul className="pl-6 space-y-1">
           {info.features.map((feature, index) => (
-            <li key={index} className="text-sm text-gray-400 flex items-start gap-2">
-              <span className="text-gray-400 mt-0.5">•</span>
+            <li key={index} className="text-sm text-secondary flex items-start gap-2">
+              <span className="text-secondary mt-0.5">•</span>
               <span>{feature}</span>
             </li>
           ))}
@@ -371,7 +371,7 @@ const BattleTypeCard = ({
       </div>
 
       {/* Strategic Considerations */}
-      <div className="pt-4 border-t border-gray-700">
+      <div className="pt-4 border-t border-white/10">
         <StrategicConsiderations considerations={info.strategicConsiderations} />
       </div>
     </div>

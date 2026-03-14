@@ -32,13 +32,13 @@ function RobotImage({
   if (!imageUrl || imageError) {
     return (
       <div 
-        className={`${sizeClass} ${className} bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 relative group`}
+        className={`${sizeClass} ${className} bg-surface-elevated rounded-lg flex items-center justify-center flex-shrink-0 relative group`}
       >
         <div className="text-center">
           <div className={`${size === 'hero' ? 'text-6xl' : size === 'large' ? 'text-5xl' : size === 'medium' ? 'text-4xl' : 'text-2xl'} mb-1`}>
             🤖
           </div>
-          <div className="text-gray-400 text-xs">{robotName.charAt(0).toUpperCase()}</div>
+          <div className="text-secondary text-xs">{robotName.charAt(0).toUpperCase()}</div>
         </div>
         {showEdit && onEditClick && (
           <button

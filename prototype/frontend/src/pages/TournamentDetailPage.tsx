@@ -79,19 +79,19 @@ function TournamentDetailPage(): JSX.Element {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-background text-white">
         <Navigation />
         <div className="w-full px-4 py-8">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 w-32 bg-gray-700 rounded" />
-            <div className="h-8 w-64 bg-gray-700 rounded" />
+            <div className="h-4 w-32 bg-surface-elevated rounded" />
+            <div className="h-8 w-64 bg-surface-elevated rounded" />
             <div className="flex gap-3 flex-wrap">
-              <div className="h-6 w-20 bg-gray-700 rounded-full" />
-              <div className="h-6 w-28 bg-gray-700 rounded" />
-              <div className="h-6 w-28 bg-gray-700 rounded" />
-              <div className="h-6 w-36 bg-gray-700 rounded" />
+              <div className="h-6 w-20 bg-surface-elevated rounded-full" />
+              <div className="h-6 w-28 bg-surface-elevated rounded" />
+              <div className="h-6 w-28 bg-surface-elevated rounded" />
+              <div className="h-6 w-36 bg-surface-elevated rounded" />
             </div>
-            <div className="h-96 bg-gray-800 rounded-lg" />
+            <div className="h-96 bg-surface rounded-lg" />
           </div>
         </div>
       </div>
@@ -101,14 +101,14 @@ function TournamentDetailPage(): JSX.Element {
   // 404 — tournament not found
   if (notFound) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-background text-white">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
-          <div className="bg-gray-800 border border-gray-700 p-8 rounded-lg text-center">
-            <p className="text-xl text-gray-300 mb-4">Tournament not found</p>
+          <div className="bg-surface border border-white/10 p-8 rounded-lg text-center">
+            <p className="text-xl text-secondary mb-4">Tournament not found</p>
             <Link
               to="/tournaments"
-              className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white"
+              className="inline-block px-4 py-2 bg-primary hover:bg-primary/80 rounded text-white"
             >
               Back to Tournaments
             </Link>
@@ -121,11 +121,11 @@ function TournamentDetailPage(): JSX.Element {
   // Error state with retry
   if (error || !tournament) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-background text-white">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-900/30 border border-red-600 p-6 rounded-lg">
-            <p className="text-red-400 mb-4">{error || 'Something went wrong'}</p>
+            <p className="text-error mb-4">{error || 'Something went wrong'}</p>
             <div className="flex gap-3">
               <button
                 onClick={fetchTournament}
@@ -135,7 +135,7 @@ function TournamentDetailPage(): JSX.Element {
               </button>
               <Link
                 to="/tournaments"
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white"
+                className="px-4 py-2 bg-surface-elevated hover:bg-surface-elevated/80 rounded text-white"
               >
                 Back to Tournaments
               </Link>
@@ -147,13 +147,13 @@ function TournamentDetailPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
       <div className="w-full px-4 py-6">
         {/* Back link */}
         <Link
           to="/tournaments"
-          className="inline-flex items-center text-gray-400 hover:text-white mb-4 text-sm"
+          className="inline-flex items-center text-secondary hover:text-white mb-4 text-sm"
         >
           ← Back to Tournaments
         </Link>
@@ -165,7 +165,7 @@ function TournamentDetailPage(): JSX.Element {
             <StatusBadge status={tournament.status} />
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-400 flex-wrap">
+          <div className="flex items-center gap-4 text-sm text-secondary flex-wrap">
             <span>
               Round {tournament.currentRound} / {tournament.maxRounds}
             </span>
@@ -181,7 +181,7 @@ function TournamentDetailPage(): JSX.Element {
           <div className="bg-yellow-900/30 border border-yellow-600 rounded-lg p-4 mb-6 flex items-center gap-3">
             <span className="text-2xl">🏆</span>
             <div>
-              <p className="text-yellow-400 font-semibold text-lg">
+              <p className="text-warning font-semibold text-lg">
                 Champion: {tournament.winner.name}
               </p>
               <p className="text-yellow-600 text-sm">Tournament Winner</p>
@@ -189,7 +189,8 @@ function TournamentDetailPage(): JSX.Element {
           </div>
         )}
 
-        {/* Bracket visualization */}
+        {/* Bracket visualization — overflow-x-auto for mobile scroll affordance */}
+        <div className="overflow-x-auto">
         <BracketView
           matches={tournament.matches}
           seedings={seedings}
@@ -198,6 +199,7 @@ function TournamentDetailPage(): JSX.Element {
           status={tournament.status}
           userRobotIds={userRobotIds}
         />
+        </div>
       </div>
     </div>
   );
@@ -206,9 +208,9 @@ function TournamentDetailPage(): JSX.Element {
 /** Status badge for tournament status */
 function StatusBadge({ status }: { status: string }): JSX.Element {
   const styles: Record<string, string> = {
-    pending: 'bg-gray-600 text-gray-200',
+    pending: 'bg-surface-elevated text-secondary',
     active: 'bg-green-700 text-green-200',
-    completed: 'bg-blue-700 text-blue-200',
+    completed: 'bg-primary text-white',
   };
 
   const labels: Record<string, string> = {
@@ -218,7 +220,7 @@ function StatusBadge({ status }: { status: string }): JSX.Element {
   };
 
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-600 text-gray-200'}`}>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || 'bg-surface-elevated text-secondary'}`}>
       {labels[status] || status}
     </span>
   );

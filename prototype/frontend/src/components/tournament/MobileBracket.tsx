@@ -43,12 +43,12 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
   return (
     <div className="flex flex-col gap-3">
       {/* View mode toggle */}
-      <div className="flex rounded-lg overflow-hidden border border-gray-700">
+      <div className="flex rounded-lg overflow-hidden border border-white/10">
         <button
           className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
             viewMode === 'myPath'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-gray-200'
+              ? 'bg-primary text-white'
+              : 'bg-surface text-secondary hover:text-gray-200'
           }`}
           onClick={() => setViewMode('myPath')}
         >
@@ -57,8 +57,8 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
         <button
           className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
             viewMode === 'roundList'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-gray-200'
+              ? 'bg-primary text-white'
+              : 'bg-surface text-secondary hover:text-gray-200'
           }`}
           onClick={() => setViewMode('roundList')}
         >
@@ -129,8 +129,8 @@ const MyPathView: React.FC<MyPathViewProps> = ({
 
   if (pathMatches.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 text-center">
-        <p className="text-gray-500 text-sm">
+      <div className="bg-surface rounded-lg border border-white/10 p-6 text-center">
+        <p className="text-tertiary text-sm">
           No matches found for your robots. Switch to Round List to browse all matches.
         </p>
       </div>
@@ -149,7 +149,7 @@ const MyPathView: React.FC<MyPathViewProps> = ({
         return (
           <React.Fragment key={match.id}>
             {showRoundLabel && (
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-2 pb-1 border-b border-gray-700/50">
+              <div className="text-xs font-semibold text-secondary uppercase tracking-wide pt-2 pb-1 border-b border-white/10/50">
                 {getRoundLabel(match.round, maxRounds)}
               </div>
             )}
@@ -225,9 +225,9 @@ const RoundListView: React.FC<RoundListViewProps> = ({
   return (
     <div className="flex flex-col gap-3">
       {/* Round navigation */}
-      <div className="flex items-center justify-between bg-gray-800 rounded-lg border border-gray-700 px-3 py-2">
+      <div className="flex items-center justify-between bg-surface rounded-lg border border-white/10 px-3 py-2">
         <button
-          className="text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1"
+          className="text-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1"
           disabled={selectedRound <= 1}
           onClick={() => setSelectedRound((r) => Math.max(1, r - 1))}
           aria-label="Previous round"
@@ -253,18 +253,18 @@ const RoundListView: React.FC<RoundListViewProps> = ({
         >
           <span
             className={
-              isCurrentRound ? 'text-blue-400' : 'text-gray-200'
+              isCurrentRound ? 'text-primary' : 'text-gray-200'
             }
           >
             {getRoundLabel(selectedRound, maxRounds)}
           </span>
           {isCurrentRound && (
-            <span className="text-[10px] bg-blue-600/30 text-blue-400 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] bg-primary/30 text-primary px-1.5 py-0.5 rounded">
               Current
             </span>
           )}
           <svg
-            className={`w-4 h-4 text-gray-500 transition-transform ${
+            className={`w-4 h-4 text-tertiary transition-transform ${
               isCollapsed ? '' : 'rotate-180'
             }`}
             fill="none"
@@ -281,7 +281,7 @@ const RoundListView: React.FC<RoundListViewProps> = ({
         </button>
 
         <button
-          className="text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1"
+          className="text-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1"
           disabled={selectedRound >= maxRounds}
           onClick={() =>
             setSelectedRound((r) => Math.min(maxRounds, r + 1))
@@ -308,7 +308,7 @@ const RoundListView: React.FC<RoundListViewProps> = ({
       {!isCollapsed && (
         <div className="flex flex-col gap-2">
           {roundMatches.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4">
+            <p className="text-tertiary text-sm text-center py-4">
               No matches in this round
             </p>
           ) : (
@@ -332,9 +332,9 @@ const RoundListView: React.FC<RoundListViewProps> = ({
             key={round}
             className={`w-2 h-2 rounded-full transition-colors ${
               round === selectedRound
-                ? 'bg-blue-500'
+                ? 'bg-primary-dark'
                 : round === currentRound && status === 'active'
-                  ? 'bg-blue-500/40'
+                  ? 'bg-primary-dark/40'
                   : 'bg-gray-600'
             }`}
             onClick={() => setSelectedRound(round)}

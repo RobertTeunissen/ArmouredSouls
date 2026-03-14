@@ -115,15 +115,15 @@ function WeaponSelectionModal({
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'energy':
-        return 'text-blue-400';
+        return 'text-primary';
       case 'ballistic':
         return 'text-orange-400';
       case 'melee':
-        return 'text-red-400';
+        return 'text-error';
       case 'explosive':
-        return 'text-yellow-400';
+        return 'text-warning';
       default:
-        return 'text-gray-400';
+        return 'text-secondary';
     }
   };
 
@@ -166,14 +166,14 @@ function WeaponSelectionModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-700">
+        <div className="p-6 border-b border-white/10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">{title}</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white text-2xl leading-none"
+              className="text-secondary hover:text-white text-2xl leading-none"
             >
               ×
             </button>
@@ -186,12 +186,12 @@ function WeaponSelectionModal({
               placeholder="Search weapons..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="flex-1 bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="flex-1 bg-surface-elevated border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
             />
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="bg-surface-elevated border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
             >
               <option value="all">All Types</option>
               {availableTypes.map((type) => (
@@ -206,7 +206,7 @@ function WeaponSelectionModal({
         {/* Weapon List */}
         <div className="flex-1 overflow-y-auto p-6">
           {filteredWeapons.length === 0 ? (
-            <div className="text-center text-gray-400 py-12">
+            <div className="text-center text-secondary py-12">
               No weapons found. Visit the Weapon Shop to purchase weapons.
             </div>
           ) : (
@@ -218,7 +218,7 @@ function WeaponSelectionModal({
                 return (
                   <div
                     key={inv.id}
-                    className={`bg-gray-700 p-4 rounded-lg cursor-pointer transition-all ${
+                    className={`bg-surface-elevated p-4 rounded-lg cursor-pointer transition-all ${
                       isCurrentlyEquipped
                         ? 'border-2 border-blue-500'
                         : 'border-2 border-transparent hover:border-gray-500'
@@ -236,11 +236,11 @@ function WeaponSelectionModal({
                     </div>
 
                     {inv.weapon.description && (
-                      <p className="text-sm text-gray-400 mb-2">{inv.weapon.description}</p>
+                      <p className="text-sm text-secondary mb-2">{inv.weapon.description}</p>
                     )}
 
                     <div className="text-sm mb-3">
-                      <span className="text-gray-400">Damage: </span>
+                      <span className="text-secondary">Damage: </span>
                       <span className="text-white font-semibold">{inv.weapon.baseDamage}</span>
                     </div>
 
@@ -263,7 +263,7 @@ function WeaponSelectionModal({
                     )}
 
                     {isCurrentlyEquipped && (
-                      <div className="mt-2 text-xs text-blue-400 font-semibold">
+                      <div className="mt-2 text-xs text-primary font-semibold">
                         ✓ Currently Equipped
                       </div>
                     )}
@@ -275,10 +275,10 @@ function WeaponSelectionModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700">
+        <div className="p-6 border-t border-white/10">
           <button
             onClick={onClose}
-            className="w-full bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded"
+            className="w-full bg-surface-elevated hover:bg-gray-600 text-white px-6 py-2 rounded"
           >
             Cancel
           </button>

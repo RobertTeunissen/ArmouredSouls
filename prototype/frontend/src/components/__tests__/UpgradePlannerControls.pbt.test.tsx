@@ -82,7 +82,7 @@ describe('UpgradePlanner - Control Properties', () => {
             fireEvent.click(plusButtons[1]);
             
             // Verify cost is greater than 0
-            let totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            let totalCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             let totalCost = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
             expect(totalCost).toBeGreaterThan(0);
             
@@ -95,7 +95,7 @@ describe('UpgradePlanner - Control Properties', () => {
               fireEvent.click(resetButton);
               
               // Verify cost is back to 0
-              totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+              totalCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
               totalCost = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
               expect(totalCost).toBe(0);
               
@@ -197,12 +197,12 @@ describe('UpgradePlanner - Control Properties', () => {
             expect(firstPlusButton.disabled).toBe(true);
             
             // Verify cost remains 0 even if we try to click
-            const initialCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            const initialCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             const initialCost = parseInt(initialCostText.replace(/[^0-9]/g, '')) || 0;
             
             fireEvent.click(firstPlusButton);
             
-            const afterClickCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+            const afterClickCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
             const afterClickCost = parseInt(afterClickCostText.replace(/[^0-9]/g, '')) || 0;
             
             // Cost should not have changed
@@ -287,7 +287,7 @@ describe('UpgradePlanner - Control Properties', () => {
           }
           
           // Get total cost
-          const totalCostText = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]')?.textContent || '0';
+          const totalCostText = container.querySelector('[class*="text-warning"][class*="text-2xl"]')?.textContent || '0';
           const totalCost = parseInt(totalCostText.replace(/[^0-9]/g, '')) || 0;
           
           // Find Commit Upgrades button

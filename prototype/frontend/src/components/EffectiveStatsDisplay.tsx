@@ -16,10 +16,10 @@ interface EffectiveStatsDisplayProps {
 
 // Category colors matching the design system
 const categoryColors = {
-  'Combat Systems': { bg: 'bg-red-900/30', text: 'text-red-400', icon: '⚔️' },
-  'Defensive Systems': { bg: 'bg-blue-900/30', text: 'text-blue-400', icon: '🛡️' },
-  'Chassis & Mobility': { bg: 'bg-green-900/30', text: 'text-green-400', icon: '⚙️' },
-  'AI Processing': { bg: 'bg-yellow-900/30', text: 'text-yellow-400', icon: '🧠' },
+  'Combat Systems': { bg: 'bg-red-900/30', text: 'text-error', icon: '⚔️' },
+  'Defensive Systems': { bg: 'bg-blue-900/30', text: 'text-primary', icon: '🛡️' },
+  'Chassis & Mobility': { bg: 'bg-green-900/30', text: 'text-success', icon: '⚙️' },
+  'AI Processing': { bg: 'bg-yellow-900/30', text: 'text-warning', icon: '🧠' },
   'Team Coordination': { bg: 'bg-purple-900/30', text: 'text-purple-400', icon: '🤝' },
 };
 
@@ -94,8 +94,8 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
   };
 
   const getModifierColor = (value: number) => {
-    if (value === 0) return 'text-gray-400';
-    return value > 0 ? 'text-green-400' : 'text-red-400';
+    if (value === 0) return 'text-secondary';
+    return value > 0 ? 'text-success' : 'text-error';
   };
 
   const toggleExpand = (attributeKey: string) => {
@@ -103,7 +103,7 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg">
+    <div className="bg-surface p-4 rounded-lg">
       <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
         📈 Effective Stats
       </h2>
@@ -139,7 +139,7 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
                         className={`
                           px-3 py-2 rounded flex items-center justify-between gap-3
                           hover:bg-gray-750 cursor-pointer transition-colors h-full
-                          ${isSignificant ? 'bg-yellow-900/20 border border-yellow-500' : 'bg-gray-800/50'}
+                          ${isSignificant ? 'bg-yellow-900/20 border border-yellow-500' : 'bg-surface/50'}
                         `}
                         onClick={() => toggleExpand(key)}
                         title="Click to see breakdown"
@@ -148,8 +148,8 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <span className="text-base">{icon}</span>
                           <div className="flex flex-col min-w-0">
-                            <div className="text-gray-300 text-xs font-medium truncate">{label}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-secondary text-xs font-medium truncate">{label}</div>
+                            <div className="text-xs text-tertiary">
                               Base: {stats.base}
                             </div>
                           </div>
@@ -163,7 +163,7 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
                           <span className="text-white font-bold text-sm min-w-[40px] text-right">
                             {stats.effective.toFixed(1)}
                           </span>
-                          <span className="text-gray-400 text-xs w-3">
+                          <span className="text-secondary text-xs w-3">
                             {isExpanded ? '▼' : '▶'}
                           </span>
                         </div>
@@ -172,42 +172,42 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
                       {/* Expandable Details - Overlay */}
                       {isExpanded && (
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setExpandedAttribute(null)}>
-                          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full border-2 border-gray-600" onClick={(e) => e.stopPropagation()}>
+                          <div className="bg-surface rounded-lg p-6 max-w-md w-full border-2 border-gray-600" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-2 mb-4">
                               <span className="text-2xl">{icon}</span>
                               <h3 className="text-xl font-semibold text-white">{label}</h3>
                             </div>
                             
                             <div className="space-y-3 text-sm">
-                              <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                <span className="text-gray-400">Base Value:</span>
+                              <div className="flex justify-between items-center py-2 border-b border-white/10">
+                                <span className="text-secondary">Base Value:</span>
                                 <span className="text-white font-semibold">{stats.base}</span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                <span className="text-gray-400">Weapon Bonus:</span>
+                              <div className="flex justify-between items-center py-2 border-b border-white/10">
+                                <span className="text-secondary">Weapon Bonus:</span>
                                 <span className={getModifierColor(stats.weapon)}>
                                   {stats.weapon > 0 ? `+${stats.weapon}` : stats.weapon || '0'}
                                 </span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                <span className="text-gray-400">Loadout Modifier:</span>
+                              <div className="flex justify-between items-center py-2 border-b border-white/10">
+                                <span className="text-secondary">Loadout Modifier:</span>
                                 <span className={getModifierColor(stats.loadout)}>
                                   {formatModifier(stats.loadout)}
                                 </span>
                               </div>
-                              <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                                <span className="text-gray-400">Stance Modifier:</span>
+                              <div className="flex justify-between items-center py-2 border-b border-white/10">
+                                <span className="text-secondary">Stance Modifier:</span>
                                 <span className={getModifierColor(stats.stance)}>
                                   {formatModifier(stats.stance)}
                                 </span>
                               </div>
-                              <div className="flex justify-between items-center py-2 bg-gray-900/50 rounded px-3">
-                                <span className="text-gray-300 font-semibold">Effective Value:</span>
+                              <div className="flex justify-between items-center py-2 bg-background/50 rounded px-3">
+                                <span className="text-secondary font-semibold">Effective Value:</span>
                                 <span className="text-white font-bold text-lg">{stats.effective.toFixed(2)}</span>
                               </div>
                               
-                              <div className="mt-4 pt-3 border-t border-gray-700">
-                                <span className="text-gray-500 text-xs font-mono block">
+                              <div className="mt-4 pt-3 border-t border-white/10">
+                                <span className="text-tertiary text-xs font-mono block">
                                   ({stats.base} + {stats.weapon}) × (1 {formatModifier(stats.loadout)}) × (1 {formatModifier(stats.stance)})
                                 </span>
                               </div>
@@ -215,7 +215,7 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
 
                             <button
                               onClick={() => setExpandedAttribute(null)}
-                              className="mt-6 w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors"
+                              className="mt-6 w-full bg-surface-elevated hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors"
                             >
                               Close
                             </button>
@@ -235,15 +235,15 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
         })}
       </div>
 
-      <div className="mt-6 text-sm text-gray-400 space-y-1">
+      <div className="mt-6 text-sm text-secondary space-y-1">
         <p>
-          <span className="text-green-400">Green</span> = Positive modifier | 
-          <span className="text-red-400 ml-2">Red</span> = Negative modifier
+          <span className="text-success">Green</span> = Positive modifier | 
+          <span className="text-error ml-2">Red</span> = Negative modifier
         </p>
         <p>
           <span className="text-yellow-500">Highlighted</span> = Significant modifier (&gt;20%)
         </p>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-tertiary mt-2">
           Click any attribute to see detailed breakdown
         </p>
       </div>

@@ -136,7 +136,7 @@ describe('UpgradePlanner - Cost Transparency Properties', () => {
           // by checking that cost calculations are done in useMemo (which is synchronous)
           
           // Verify initial state is rendered
-          const totalCostElement = container.querySelector('[class*="text-yellow-400"][class*="text-2xl"]');
+          const totalCostElement = container.querySelector('[class*="text-warning"][class*="text-2xl"]');
           expect(totalCostElement).toBeTruthy();
           
           // Verify remaining credits display exists

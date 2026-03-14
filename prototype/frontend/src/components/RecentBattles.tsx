@@ -52,7 +52,7 @@ const RecentBattles: React.FC<RecentBattlesProps> = ({ battles, robotId }) => {
 
   return (
     <div className="bg-[#252b38] rounded-lg overflow-hidden">
-      <div className="p-4 border-b border-gray-700">
+      <div className="p-4 border-b border-white/10">
         <h3 className="text-base font-semibold text-[#e6edf3]">Recent Battles</h3>
       </div>
       
@@ -77,7 +77,7 @@ const RecentBattles: React.FC<RecentBattlesProps> = ({ battles, robotId }) => {
         })}
       </div>
 
-      <div className="p-4 border-t border-gray-700 text-center">
+      <div className="p-4 border-t border-white/10 text-center">
         <button
           onClick={() => navigate('/battle-history')}
           className="text-[#58a6ff] hover:text-[#58a6ff]/80 font-medium transition-colors"

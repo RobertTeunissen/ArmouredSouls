@@ -76,7 +76,7 @@ describe('Property 20: Modifier Color Coding (Property-Based Test)', () => {
           const { container } = render(<EffectiveStatsDisplay robot={robot} />);
           
           // Find all modifier percentage displays
-          const modifierElements = container.querySelectorAll('[class*="text-green-400"], [class*="text-red-400"]');
+          const modifierElements = container.querySelectorAll('[class*="text-success"], [class*="text-error"]');
           
           // Property: At least some modifiers should be displayed with color coding
           expect(modifierElements.length).toBeGreaterThan(0);
@@ -84,8 +84,8 @@ describe('Property 20: Modifier Color Coding (Property-Based Test)', () => {
           // Property: Each colored modifier should be either green (positive) or red (negative)
           modifierElements.forEach((element) => {
             const classes = element.className;
-            const hasGreen = classes.includes('text-green-400');
-            const hasRed = classes.includes('text-red-400');
+            const hasGreen = classes.includes('text-success');
+            const hasRed = classes.includes('text-error');
             
             // Should have exactly one color (green XOR red)
             expect(hasGreen !== hasRed).toBe(true);
@@ -136,7 +136,7 @@ describe('Property 20: Modifier Color Coding (Property-Based Test)', () => {
           const { container } = render(<EffectiveStatsDisplay robot={robot} />);
           
           // Find red modifier elements (negative modifiers)
-          const redModifiers = container.querySelectorAll('.text-red-400');
+          const redModifiers = container.querySelectorAll('.text-error');
           
           // Property: Negative modifiers should exist for these loadouts
           expect(redModifiers.length).toBeGreaterThan(0);

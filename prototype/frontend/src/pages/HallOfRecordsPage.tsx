@@ -258,15 +258,15 @@ function HallOfRecordsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white pb-24 md:pb-8">
+    <div className="min-h-screen bg-background text-white pb-24 md:pb-8">
       <Navigation />
       <div className="container mx-auto px-4 py-8 max-w-[1800px]">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-yellow-400 mb-2">
+          <h1 className="text-4xl font-bold text-warning mb-2">
             🏆 Hall of Records
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-secondary text-lg">
             Legendary achievements and exceptional performances from across the arena
           </p>
         </div>
@@ -280,7 +280,7 @@ function HallOfRecordsPage() {
               className={`px-6 py-3 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === category.key
                   ? 'bg-yellow-500 text-gray-900'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  : 'bg-surface text-secondary hover:bg-surface-elevated'
               }`}
             >
               <span className="mr-2">{category.icon}</span>
@@ -292,14 +292,14 @@ function HallOfRecordsPage() {
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center items-center py-20">
-            <div className="text-gray-400 text-lg">Loading records...</div>
+            <div className="text-secondary text-lg">Loading records...</div>
           </div>
         )}
 
         {/* Error State */}
         {error && (
           <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 text-center">
-            <p className="text-red-400">{error}</p>
+            <p className="text-error">{error}</p>
             <button
               onClick={fetchRecords}
               className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg"
@@ -640,7 +640,7 @@ function HallOfRecordsPage() {
 
         {/* Empty State */}
         {!loading && !error && records && (
-          <div className="mt-8 text-center text-gray-500">
+          <div className="mt-8 text-center text-tertiary">
             <p className="text-sm">
               Records are updated in real-time. Keep battling to claim your spot in history!
             </p>
@@ -659,7 +659,7 @@ interface RecordSectionProps {
 function RecordSection({ title, children }: RecordSectionProps) {
   return (
     <div className="mb-10">
-      <h2 className="text-2xl font-bold text-gray-200 mb-6">{title}</h2>
+      <h2 className="text-2xl font-bold text-secondary mb-6">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {children}
       </div>
@@ -677,10 +677,10 @@ interface RecordCardProps {
 
 function RecordCard({ rank, value, description, details, onClick }: RecordCardProps) {
   const getRankColor = (rank: number) => {
-    if (rank === 1) return 'text-yellow-400';
-    if (rank === 2) return 'text-gray-300';
+    if (rank === 1) return 'text-warning';
+    if (rank === 2) return 'text-secondary';
     if (rank === 3) return 'text-orange-400';
-    return 'text-gray-500';
+    return 'text-tertiary';
   };
 
   const getRankBadge = (rank: number) => {
@@ -706,10 +706,10 @@ function RecordCard({ rank, value, description, details, onClick }: RecordCardPr
 
   return (
     <div
-      className={`bg-gray-800 border ${
-        isFirst ? 'border-yellow-500/70' : 'border-gray-700'
+      className={`bg-surface border ${
+        isFirst ? 'border-yellow-500/70' : 'border-white/10'
       } rounded-lg hover:border-yellow-500/50 transition-all flex items-start gap-4 ${cardClasses} ${
-        onClick ? 'cursor-pointer hover:bg-gray-750' : ''
+        onClick ? 'cursor-pointer hover:bg-surface-elevated' : ''
       }`}
       onClick={onClick}
     >
@@ -720,19 +720,19 @@ function RecordCard({ rank, value, description, details, onClick }: RecordCardPr
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className={`${valueSize} font-bold text-yellow-400 mb-1`}>{value}</div>
-        <p className={`text-gray-300 mb-2 ${descSize}`}>{description}</p>
+        <div className={`${valueSize} font-bold text-warning mb-1`}>{value}</div>
+        <p className={`text-secondary mb-2 ${descSize}`}>{description}</p>
         {details && details.length > 0 && (
           <div className={`space-y-1 ${isFirst ? '' : 'text-sm'}`}>
             {details.map((detail, index) => (
-              <p key={index} className="text-gray-500">
+              <p key={index} className="text-tertiary">
                 {detail}
               </p>
             ))}
           </div>
         )}
         {onClick && (
-          <div className={`mt-2 text-yellow-500 hover:text-yellow-400 ${isFirst ? 'text-base' : 'text-sm'}`}>
+          <div className={`mt-2 text-yellow-500 hover:text-warning ${isFirst ? 'text-base' : 'text-sm'}`}>
             View Battle Details →
           </div>
         )}

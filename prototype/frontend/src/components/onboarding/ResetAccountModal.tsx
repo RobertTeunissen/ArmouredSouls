@@ -124,9 +124,9 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
       />
 
       {/* Modal */}
-      <div className="relative bg-gray-800 rounded-lg shadow-2xl max-w-lg w-full mx-4 border border-gray-700 animate-scale-in">
+      <div className="relative bg-surface rounded-lg shadow-2xl max-w-lg w-full mx-4 border border-white/10 animate-scale-in">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-700">
+        <div className="px-6 py-4 border-b border-white/10">
           <h3 className="text-xl font-semibold text-white">Reset Account</h3>
         </div>
 
@@ -135,13 +135,13 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
           {isCheckingEligibility ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <span className="ml-3 text-gray-300">Checking eligibility...</span>
+              <span className="ml-3 text-secondary">Checking eligibility...</span>
             </div>
           ) : !canReset ? (
             <div>
               <div className="bg-error/10 border border-error rounded-lg p-4 mb-4">
                 <h4 className="text-error font-semibold mb-2">Cannot Reset Account</h4>
-                <p className="text-gray-300 text-sm mb-3">
+                <p className="text-secondary text-sm mb-3">
                   Your account cannot be reset at this time due to the following reasons:
                 </p>
                 <ul className="space-y-2">
@@ -158,12 +158,12 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
                           clipRule="evenodd"
                         />
                       </svg>
-                      <span className="text-gray-300 text-sm">{blocker.message}</span>
+                      <span className="text-secondary text-sm">{blocker.message}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <p className="text-gray-400 text-sm">
+              <p className="text-secondary text-sm">
                 Please wait for these conditions to clear before attempting to reset your account.
               </p>
             </div>
@@ -185,7 +185,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
                   </svg>
                   Warning: This Action Cannot Be Undone
                 </h4>
-                <p className="text-gray-300 text-sm">
+                <p className="text-secondary text-sm">
                   Resetting your account will permanently delete:
                 </p>
               </div>
@@ -204,7 +204,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-gray-300 text-sm">
+                  <span className="text-secondary text-sm">
                     <strong>All your robots</strong> and their battle history
                   </span>
                 </li>
@@ -220,7 +220,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-gray-300 text-sm">
+                  <span className="text-secondary text-sm">
                     <strong>All your weapons</strong> and equipment
                   </span>
                 </li>
@@ -236,7 +236,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-gray-300 text-sm">
+                  <span className="text-secondary text-sm">
                     <strong>All your facilities</strong> and upgrades
                   </span>
                 </li>
@@ -252,7 +252,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-gray-300 text-sm">
+                  <span className="text-secondary text-sm">
                     Your credits will be reset to <strong>₡3,000,000</strong>
                   </span>
                 </li>
@@ -268,7 +268,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-gray-300 text-sm">
+                  <span className="text-secondary text-sm">
                     You will restart the tutorial from <strong>Step 1</strong>
                   </span>
                 </li>
@@ -276,7 +276,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
 
               {/* Confirmation Input */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-secondary mb-2">
                   Type <span className="text-error font-bold">"RESET"</span> or{' '}
                   <span className="text-error font-bold">"START OVER"</span> to confirm:
                 </label>
@@ -285,7 +285,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
                   value={confirmationText}
                   onChange={(e) => setConfirmationText(e.target.value)}
                   placeholder="Type RESET or START OVER"
-                  className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+                  className="w-full px-4 py-2 bg-background border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary"
                   disabled={isLoading}
                 />
               </div>
@@ -301,11 +301,11 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-white/10 flex justify-end gap-3">
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-lg bg-surface-elevated text-secondary hover:bg-gray-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>

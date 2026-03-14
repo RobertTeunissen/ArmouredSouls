@@ -36,7 +36,7 @@ const CYCLE_EVENTS: CycleEvent[] = [
     name: 'Tag Team Cycle',
     utcTime: '12:00',
     icon: '🤝',
-    color: 'bg-blue-500',
+    color: 'bg-primary-dark',
     description: '2v2 team battles',
   },
   {
@@ -143,19 +143,19 @@ const TimelineEvent = ({
           mt-2 p-3 rounded-lg border-2 min-w-[140px] transition-all duration-200
           ${highlighted 
             ? `${event.color} border-white shadow-lg scale-110` 
-            : 'bg-gray-800 border-gray-600'
+            : 'bg-surface border-gray-600'
           }
         `}
       >
         <div className="text-center">
           <div className="text-2xl mb-1">{event.icon}</div>
-          <div className={`text-xs font-bold mb-1 ${highlighted ? 'text-white' : 'text-gray-300'}`}>
+          <div className={`text-xs font-bold mb-1 ${highlighted ? 'text-white' : 'text-secondary'}`}>
             {event.name}
           </div>
-          <div className={`text-xs ${highlighted ? 'text-white' : 'text-gray-400'}`}>
+          <div className={`text-xs ${highlighted ? 'text-white' : 'text-secondary'}`}>
             {localTime}
           </div>
-          <div className={`text-xs mt-1 ${highlighted ? 'text-white text-opacity-90' : 'text-gray-400'}`}>
+          <div className={`text-xs mt-1 ${highlighted ? 'text-white text-opacity-90' : 'text-secondary'}`}>
             {event.description}
           </div>
         </div>
@@ -172,7 +172,7 @@ const TimelineAxis = () => {
   const hours = Array.from({ length: 25 }, (_, i) => i);
   
   return (
-    <div className="relative w-full h-12 bg-gray-800 rounded-full">
+    <div className="relative w-full h-12 bg-surface rounded-full">
       {/* Hour markers */}
       {hours.map((hour) => {
         const position = (hour / 24) * 100;
@@ -189,7 +189,7 @@ const TimelineAxis = () => {
             
             {/* Hour label */}
             {showLabel && hour < 24 && (
-              <div className="text-xs text-gray-400 mt-1 text-center">
+              <div className="text-xs text-secondary mt-1 text-center">
                 {hour.toString().padStart(2, '0')}:00
               </div>
             )}
@@ -223,24 +223,24 @@ const CompactSchedule = ({
               flex items-center gap-3 p-3 rounded-lg border transition-all duration-200
               ${highlighted 
                 ? `${event.color} border-white shadow-md` 
-                : 'bg-gray-800 border-gray-700'
+                : 'bg-surface border-white/10'
               }
             `}
           >
             <div className="text-2xl">{event.icon}</div>
             <div className="flex-1">
-              <div className={`font-semibold text-sm ${highlighted ? 'text-white' : 'text-gray-300'}`}>
+              <div className={`font-semibold text-sm ${highlighted ? 'text-white' : 'text-secondary'}`}>
                 {event.name}
               </div>
-              <div className={`text-xs ${highlighted ? 'text-white text-opacity-90' : 'text-gray-400'}`}>
+              <div className={`text-xs ${highlighted ? 'text-white text-opacity-90' : 'text-secondary'}`}>
                 {event.description}
               </div>
             </div>
             <div className="text-right">
-              <div className={`text-sm font-bold ${highlighted ? 'text-white' : 'text-gray-300'}`}>
+              <div className={`text-sm font-bold ${highlighted ? 'text-white' : 'text-secondary'}`}>
                 {event.localTime}
               </div>
-              <div className={`text-xs ${highlighted ? 'text-white text-opacity-75' : 'text-gray-400'}`}>
+              <div className={`text-xs ${highlighted ? 'text-white text-opacity-75' : 'text-secondary'}`}>
                 {event.utcTime} UTC
               </div>
             </div>
@@ -289,7 +289,7 @@ const CycleScheduleVisualization = ({
         <div className="text-center">
           <h3 className="text-lg font-bold text-gray-200 mb-1">Daily Cycle Schedule</h3>
           {showTimezone && (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-secondary">
               Times shown in your timezone: {timezoneInfo.abbreviation} ({timezoneInfo.offset})
             </p>
           )}
@@ -299,7 +299,7 @@ const CycleScheduleVisualization = ({
         <CompactSchedule events={sortedEvents} highlightedTypes={highlightedTypes} />
 
         {/* Info note */}
-        <div className="text-xs text-gray-400 text-center p-3 bg-gray-800 bg-opacity-50 rounded-lg">
+        <div className="text-xs text-secondary text-center p-3 bg-surface bg-opacity-50 rounded-lg">
           <p>Robots are automatically matched during cycle times.</p>
           <p className="mt-1">Check battle results after each cycle completes.</p>
         </div>
@@ -313,7 +313,7 @@ const CycleScheduleVisualization = ({
       <div className="text-center">
         <h3 className="text-xl font-bold text-gray-200 mb-2">Daily Cycle Schedule</h3>
         {showTimezone && (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-secondary">
             Times shown in your timezone: <span className="font-semibold">{timezoneInfo.abbreviation}</span> ({timezoneInfo.offset})
           </p>
         )}
@@ -342,10 +342,10 @@ const CycleScheduleVisualization = ({
         {eventsWithLocalTime.map((event) => (
           <div
             key={event.name}
-            className="flex items-center gap-2 p-2 bg-gray-800 bg-opacity-50 rounded"
+            className="flex items-center gap-2 p-2 bg-surface bg-opacity-50 rounded"
           >
             <div className={`w-3 h-3 rounded-full ${event.color}`} />
-            <div className="text-xs text-gray-400">{event.name}</div>
+            <div className="text-xs text-secondary">{event.name}</div>
           </div>
         ))}
       </div>
@@ -358,21 +358,21 @@ const CycleScheduleVisualization = ({
           </svg>
           How Cycles Work
         </h4>
-        <ul className="space-y-1 text-xs text-gray-300">
+        <ul className="space-y-1 text-xs text-secondary">
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+            <span className="text-primary mt-0.5">•</span>
             <span>Robots are automatically matched during cycle times</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+            <span className="text-primary mt-0.5">•</span>
             <span>No manual battle initiation required</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+            <span className="text-primary mt-0.5">•</span>
             <span>Check battle results after cycle completes</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-400 mt-0.5">•</span>
+            <span className="text-primary mt-0.5">•</span>
             <span>Repair robots between battles to maintain readiness</span>
           </li>
         </ul>

@@ -198,19 +198,19 @@ const getQuintileLabel = (quintileNumber: number): string => {
 // Helper function to get battle outcome icon and description
 const getBattleOutcome = (battle: Battle): { icon: string; label: string; color: string } => {
   if (battle.winnerId === null) {
-    return { icon: '⚖️', label: 'Draw', color: 'text-gray-400' };
+    return { icon: '⚖️', label: 'Draw', color: 'text-secondary' };
   }
   
   const winnerHP = battle.winnerId === battle.robot1.id ? battle.robot1FinalHP : battle.robot2FinalHP;
   
   if (winnerHP > 50) {
-    return { icon: '🏆', label: 'Clear Victory', color: 'text-green-400' };
+    return { icon: '🏆', label: 'Clear Victory', color: 'text-success' };
   } else if (winnerHP > 0) {
-    return { icon: '💪', label: 'Narrow Victory', color: 'text-yellow-400' };
+    return { icon: '💪', label: 'Narrow Victory', color: 'text-warning' };
   }
   
   // Fallback for edge cases (shouldn't normally happen)
-  return { icon: '🏆', label: 'Victory', color: 'text-blue-400' };
+  return { icon: '🏆', label: 'Victory', color: 'text-primary' };
 };
 
 // Helper function to determine if battle is unusual (for border styling)
@@ -790,7 +790,7 @@ function AdminPage() {
   }, [activeTab]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -798,14 +798,14 @@ function AdminPage() {
           <div className="flex items-center gap-3">
             <Link
               to="/admin/onboarding-analytics"
-              className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded font-semibold transition-colors text-sm"
+              className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded font-semibold transition-colors text-sm min-h-[44px]"
             >
               🎓 Onboarding Analytics
             </Link>
             <button
               onClick={fetchStats}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+              className="bg-primary hover:bg-blue-700 disabled:bg-surface-elevated px-6 py-2 rounded font-semibold transition-colors min-h-[44px]"
             >
               {loading ? 'Loading...' : 'Refresh Stats'}
             </button>
@@ -823,18 +823,18 @@ function AdminPage() {
         )}
 
         {/* Tab Navigation */}
-        <div className="mb-6 border-b border-gray-700">
-          <div className="flex space-x-1" role="tablist" aria-label="Admin sections">
+        <div className="mb-6 border-b border-white/10">
+          <div className="flex space-x-1 overflow-x-auto flex-nowrap" role="tablist" aria-label="Admin sections">
             <button
               id="dashboard-tab"
               role="tab"
               aria-selected={activeTab === 'dashboard'}
               aria-controls="dashboard-panel"
               onClick={() => switchTab('dashboard')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'dashboard'
-                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-surface text-white border-b-2 border-primary'
+                  : 'text-secondary hover:text-white hover:bg-surface'
               }`}
             >
               📊 Dashboard
@@ -845,10 +845,10 @@ function AdminPage() {
               aria-selected={activeTab === 'cycles'}
               aria-controls="cycles-panel"
               onClick={() => switchTab('cycles')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'cycles'
-                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-surface text-white border-b-2 border-primary'
+                  : 'text-secondary hover:text-white hover:bg-surface'
               }`}
             >
               ⚙️ Cycle Controls
@@ -859,10 +859,10 @@ function AdminPage() {
               aria-selected={activeTab === 'tournaments'}
               aria-controls="tournaments-panel"
               onClick={() => switchTab('tournaments')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'tournaments'
-                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-surface text-white border-b-2 border-primary'
+                  : 'text-secondary hover:text-white hover:bg-surface'
               }`}
             >
               🏆 Tournaments
@@ -873,10 +873,10 @@ function AdminPage() {
               aria-selected={activeTab === 'battles'}
               aria-controls="battles-panel"
               onClick={() => switchTab('battles')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'battles'
-                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-surface text-white border-b-2 border-primary'
+                  : 'text-secondary hover:text-white hover:bg-surface'
               }`}
             >
               ⚔️ Battle Logs
@@ -887,10 +887,10 @@ function AdminPage() {
               aria-selected={activeTab === 'stats'}
               aria-controls="stats-panel"
               onClick={() => switchTab('stats')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'stats'
-                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-surface text-white border-b-2 border-primary'
+                  : 'text-secondary hover:text-white hover:bg-surface'
               }`}
             >
               🤖 Robot Stats
@@ -901,10 +901,10 @@ function AdminPage() {
               aria-selected={activeTab === 'system-health'}
               aria-controls="system-health-panel"
               onClick={() => switchTab('system-health')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'system-health'
-                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-surface text-white border-b-2 border-primary'
+                  : 'text-secondary hover:text-white hover:bg-surface'
               }`}
             >
               🏥 System Health
@@ -915,10 +915,10 @@ function AdminPage() {
               aria-selected={activeTab === 'recent-users'}
               aria-controls="recent-users-panel"
               onClick={() => switchTab('recent-users')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'recent-users'
-                  ? 'bg-gray-800 text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-surface text-white border-b-2 border-primary'
+                  : 'text-secondary hover:text-white hover:bg-surface'
               }`}
             >
               👥 Recent Users
@@ -931,15 +931,15 @@ function AdminPage() {
           <div role="tabpanel" id="dashboard-panel" aria-labelledby="dashboard-tab" className="space-y-8">
             {/* Statistics Display */}
             {stats && (
-              <div className="bg-gray-800 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
+              <div className="bg-surface rounded-lg p-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
                   {/* Robots Section */}
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 text-blue-400">Robots</h3>
+                    <h3 className="text-xl font-semibold mb-2 text-primary">Robots</h3>
                     <p>Total: {stats.robots.total}</p>
                     <p>Battle Ready: {stats.robots.battleReady} ({stats.robots.battleReadyPercentage.toFixed(1)}%)</p>
                     <div className="mt-2">
-                      <p className="text-sm text-gray-400">By Tier:</p>
+                      <p className="text-sm text-secondary">By Tier:</p>
                       {stats.robots.byTier.map((tier) => (
                         <p key={tier.league} className="text-sm ml-2">
                           {tier.league}: {tier.count}
@@ -950,7 +950,7 @@ function AdminPage() {
 
                   {/* Matches Section */}
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 text-green-400">Matches</h3>
+                    <h3 className="text-xl font-semibold mb-2 text-success">Matches</h3>
                     <p>Scheduled: {stats.matches.scheduled}</p>
                     <p>Completed: {stats.matches.completed}</p>
                   </div>
@@ -959,7 +959,7 @@ function AdminPage() {
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-purple-400 flex items-center gap-2">
                       Battles
-                      <span className="text-xs text-gray-400 font-normal" title="Battle statistics including outcomes and durations">ℹ️</span>
+                      <span className="text-xs text-secondary font-normal" title="Battle statistics including outcomes and durations">ℹ️</span>
                     </h3>
                     <p>Last 24 Hours: {stats.battles.last24Hours}</p>
                     <p>Total: {stats.battles.total}</p>
@@ -969,20 +969,20 @@ function AdminPage() {
                     <p className="text-sm" title="Battles where the loser was reduced to 0 HP">
                       Kills: {stats.battles.kills} ({stats.battles.killPercentage}%)
                     </p>
-                    <p className="text-sm text-gray-400 mt-1">Avg Duration: {stats.battles.avgDuration}s</p>
+                    <p className="text-sm text-secondary mt-1">Avg Duration: {stats.battles.avgDuration}s</p>
                   </div>
 
                   {/* Financial Section - New */}
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 text-yellow-400 flex items-center gap-2">
+                    <h3 className="text-xl font-semibold mb-2 text-warning flex items-center gap-2">
                       Finances
-                      <span className="text-xs text-gray-400 font-normal" title="Total credits in system and user balance statistics">ℹ️</span>
+                      <span className="text-xs text-secondary font-normal" title="Total credits in system and user balance statistics">ℹ️</span>
                     </h3>
                     <p>Total Credits: ₡{stats.finances.totalCredits.toLocaleString()}</p>
                     <p>Avg Balance: ₡{stats.finances.avgBalance.toLocaleString()}</p>
                     <p>Total Users: {stats.finances.totalUsers}</p>
                     <p 
-                      className={`mt-2 text-sm ${stats.finances.usersAtRisk > 0 ? 'text-red-400' : 'text-green-400'}`}
+                      className={`mt-2 text-sm ${stats.finances.usersAtRisk > 0 ? 'text-error' : 'text-success'}`}
                       title={`Users with balance below ₡10,000 (estimated 3 days of operating costs)`}
                     >
                       {stats.finances.usersAtRisk > 0 ? '⚠️ ' : '✓ '}
@@ -994,7 +994,7 @@ function AdminPage() {
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-cyan-400 flex items-center gap-2">
                       Facilities
-                      <span className="text-xs text-gray-400 font-normal" title="Facility purchases across all users">ℹ️</span>
+                      <span className="text-xs text-secondary font-normal" title="Facility purchases across all users">ℹ️</span>
                     </h3>
                     {stats.facilities.summary.length > 0 ? (
                       <>
@@ -1003,7 +1003,7 @@ function AdminPage() {
                           ? 'No facilities yet'
                           : stats.facilities.mostPopular.replace(/_/g, ' ')}</p>
                         <div className="mt-2">
-                          <p className="text-sm text-gray-400">Top 3:</p>
+                          <p className="text-sm text-secondary">Top 3:</p>
                           {stats.facilities.summary.slice(0, 3).map((facility, idx) => (
                             <p key={facility.type} className="text-sm ml-2">
                               {idx + 1}. {facility.type.replace(/_/g, ' ')}: {facility.purchaseCount}
@@ -1012,7 +1012,7 @@ function AdminPage() {
                         </div>
                       </>
                     ) : (
-                      <p className="text-sm text-gray-400">No facilities purchased yet</p>
+                      <p className="text-sm text-secondary">No facilities purchased yet</p>
                     )}
                   </div>
 
@@ -1020,11 +1020,11 @@ function AdminPage() {
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-orange-400 flex items-center gap-2">
                       Weapons
-                      <span className="text-xs text-gray-400 font-normal" title="Weapon purchases and equipment">ℹ️</span>
+                      <span className="text-xs text-secondary font-normal" title="Weapon purchases and equipment">ℹ️</span>
                     </h3>
                     <p>Total Bought: {stats.weapons.totalBought}</p>
                     <p>Equipped: {stats.weapons.equipped}</p>
-                    <p className="text-sm text-gray-400 mt-2">
+                    <p className="text-sm text-secondary mt-2">
                       {stats.weapons.totalBought > 0 
                         ? `${Math.round((stats.weapons.equipped / stats.weapons.totalBought) * 100)}% equipped`
                         : 'No weapons yet'}
@@ -1035,7 +1035,7 @@ function AdminPage() {
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-pink-400 flex items-center gap-2">
                       Stances
-                      <span className="text-xs text-gray-400 font-normal" title="Combat stances used by robots">ℹ️</span>
+                      <span className="text-xs text-secondary font-normal" title="Combat stances used by robots">ℹ️</span>
                     </h3>
                     {stats.stances.length > 0 ? (
                       stats.stances.map((s) => (
@@ -1044,7 +1044,7 @@ function AdminPage() {
                         </p>
                       ))
                     ) : (
-                      <p className="text-sm text-gray-400">No data</p>
+                      <p className="text-sm text-secondary">No data</p>
                     )}
                   </div>
 
@@ -1052,7 +1052,7 @@ function AdminPage() {
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-teal-400 flex items-center gap-2">
                       Loadouts
-                      <span className="text-xs text-gray-400 font-normal" title="Equipment configurations">ℹ️</span>
+                      <span className="text-xs text-secondary font-normal" title="Equipment configurations">ℹ️</span>
                     </h3>
                     {stats.loadouts.length > 0 ? (
                       stats.loadouts.map((l) => (
@@ -1061,7 +1061,7 @@ function AdminPage() {
                         </p>
                       ))
                     ) : (
-                      <p className="text-sm text-gray-400">No data</p>
+                      <p className="text-sm text-secondary">No data</p>
                     )}
                   </div>
 
@@ -1069,14 +1069,14 @@ function AdminPage() {
                   <div>
                     <h3 className="text-xl font-semibold mb-2 text-indigo-400 flex items-center gap-2">
                       Yield Thresholds
-                      <span className="text-xs text-gray-400 font-normal" title="HP % where robots surrender">ℹ️</span>
+                      <span className="text-xs text-secondary font-normal" title="HP % where robots surrender">ℹ️</span>
                     </h3>
                     {stats.yieldThresholds.distribution.length > 0 ? (
                       <>
                         <p className="text-sm">Most Common: {stats.yieldThresholds.mostCommon}%</p>
-                        <p className="text-xs text-gray-400">({stats.yieldThresholds.mostCommonCount} robots)</p>
+                        <p className="text-xs text-secondary">({stats.yieldThresholds.mostCommonCount} robots)</p>
                         <div className="mt-2">
-                          <p className="text-sm text-gray-400">Distribution:</p>
+                          <p className="text-sm text-secondary">Distribution:</p>
                           {stats.yieldThresholds.distribution.slice(0, 4).map((y) => (
                             <p key={y.threshold} className="text-sm ml-2">
                               {y.threshold}%: {y.count}
@@ -1085,7 +1085,7 @@ function AdminPage() {
                         </div>
                       </>
                     ) : (
-                      <p className="text-sm text-gray-400">No data</p>
+                      <p className="text-sm text-secondary">No data</p>
                     )}
                   </div>
                 </div>
@@ -1094,18 +1094,18 @@ function AdminPage() {
 
             {/* At-Risk Users Section */}
             {stats && stats.finances.usersAtRisk > 0 && (
-              <div className="bg-gray-800 rounded-lg p-6">
+              <div className="bg-surface rounded-lg p-6">
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-red-400">⚠️ Users At Risk of Bankruptcy</h2>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <h2 className="text-2xl font-bold text-error">⚠️ Users At Risk of Bankruptcy</h2>
+                    <p className="text-sm text-secondary mt-1">
                       Users with balance below ₡10,000 (threshold for financial stability)
                     </p>
                   </div>
                   <button
                     onClick={fetchAtRiskUsers}
                     disabled={atRiskLoading}
-                    className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+                    className="bg-red-600 hover:bg-red-700 disabled:bg-surface-elevated px-6 py-2 rounded font-semibold transition-colors min-h-[44px]"
                   >
                     {atRiskLoading ? 'Loading...' : showAtRiskUsers ? 'Refresh' : 'View Details'}
                   </button>
@@ -1113,22 +1113,22 @@ function AdminPage() {
 
                 {showAtRiskUsers && atRiskUsers && (
                   <div className="space-y-4">
-                    <div className="bg-gray-700 rounded p-4">
+                    <div className="bg-surface-elevated rounded p-4">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <p className="text-gray-400">Total At Risk</p>
-                          <p className="text-2xl font-bold text-red-400">{atRiskUsers.totalAtRisk}</p>
+                          <p className="text-secondary">Total At Risk</p>
+                          <p className="text-2xl font-bold text-error">{atRiskUsers.totalAtRisk}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400">Threshold</p>
+                          <p className="text-secondary">Threshold</p>
                           <p className="text-2xl font-bold">₡{atRiskUsers.threshold.toLocaleString()}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400">Current Cycle</p>
+                          <p className="text-secondary">Current Cycle</p>
                           <p className="text-2xl font-bold">{atRiskUsers.currentCycle}</p>
                         </div>
                         <div>
-                          <p className="text-gray-400">% of Users</p>
+                          <p className="text-secondary">% of Users</p>
                           <p className="text-2xl font-bold">
                             {stats.finances.totalUsers > 0 
                               ? ((atRiskUsers.totalAtRisk / stats.finances.totalUsers) * 100).toFixed(1)
@@ -1141,92 +1141,92 @@ function AdminPage() {
                     {/* User List */}
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-700">
+                        <thead className="bg-surface-elevated">
                           <tr>
-                            <th className="p-3 text-left">Stable</th>
-                            <th className="p-3 text-left">Balance</th>
-                            <th className="p-3 text-left">Repair Costs</th>
-                            <th className="p-3 text-left">Net Balance</th>
-                            <th className="p-3 text-left">Days of Runway</th>
-                            <th className="p-3 text-left">Cycles At Risk</th>
-                            <th className="p-3 text-left">Robots</th>
-                            <th className="p-3 text-left">History</th>
+                            <th className="p-2 lg:p-3 text-left">Stable</th>
+                            <th className="p-2 lg:p-3 text-left">Balance</th>
+                            <th className="p-2 lg:p-3 text-left">Repair Costs</th>
+                            <th className="p-2 lg:p-3 text-left">Net Balance</th>
+                            <th className="p-2 lg:p-3 text-left">Days of Runway</th>
+                            <th className="p-2 lg:p-3 text-left">Cycles At Risk</th>
+                            <th className="p-2 lg:p-3 text-left">Robots</th>
+                            <th className="p-2 lg:p-3 text-left">History</th>
                           </tr>
                         </thead>
                         <tbody>
                           {atRiskUsers.users.map((user) => (
-                            <tr key={user.userId} className="border-t border-gray-700 hover:bg-gray-750">
-                              <td className="p-3">
+                            <tr key={user.userId} className="border-t border-white/10 hover:bg-surface-elevated">
+                              <td className="p-2 lg:p-3">
                                 <div>
                                   <p className="font-semibold">{user.stableName}</p>
-                                  <p className="text-xs text-gray-400">@{user.username}</p>
+                                  <p className="text-xs text-secondary">@{user.username}</p>
                                 </div>
                               </td>
-                              <td className="p-3">
-                                <span className={user.currentBalance < 5000 ? 'text-red-400 font-bold' : 'text-yellow-400'}>
+                              <td className="p-2 lg:p-3">
+                                <span className={user.currentBalance < 5000 ? 'text-error font-bold' : 'text-warning'}>
                                   ₡{user.currentBalance.toLocaleString()}
                                 </span>
                               </td>
-                              <td className="p-3">
+                              <td className="p-2 lg:p-3">
                                 <span className="text-orange-400">
                                   ₡{user.totalRepairCost.toLocaleString()}
                                 </span>
                                 {user.damagedRobots > 0 && (
-                                  <p className="text-xs text-gray-400">
+                                  <p className="text-xs text-secondary">
                                     {user.damagedRobots} damaged
                                   </p>
                                 )}
                               </td>
-                              <td className="p-3">
-                                <span className={user.netBalance < 0 ? 'text-red-500 font-bold' : 'text-gray-300'}>
+                              <td className="p-2 lg:p-3">
+                                <span className={user.netBalance < 0 ? 'text-red-500 font-bold' : 'text-secondary'}>
                                   ₡{user.netBalance.toLocaleString()}
                                 </span>
                               </td>
-                              <td className="p-3">
+                              <td className="p-2 lg:p-3">
                                 <span className={
                                   user.daysOfRunway < 3 ? 'text-red-500 font-bold' :
-                                  user.daysOfRunway < 7 ? 'text-yellow-400' :
-                                  'text-green-400'
+                                  user.daysOfRunway < 7 ? 'text-warning' :
+                                  'text-success'
                                 }>
                                   {user.daysOfRunway < 999 ? `${user.daysOfRunway} days` : '∞'}
                                 </span>
                               </td>
-                              <td className="p-3">
+                              <td className="p-2 lg:p-3">
                                 <div>
                                   <span className="font-semibold">{user.cyclesAtRisk}</span>
                                   {user.firstAtRiskCycle && (
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-xs text-secondary">
                                       Since cycle {user.firstAtRiskCycle}
                                     </p>
                                   )}
                                 </div>
                               </td>
-                              <td className="p-3">
+                              <td className="p-2 lg:p-3">
                                 <span>{user.robotCount} robots</span>
                               </td>
-                              <td className="p-3">
+                              <td className="p-2 lg:p-3">
                                 {user.balanceHistory.length > 0 ? (
                                   <details className="cursor-pointer">
-                                    <summary className="text-blue-400 hover:underline">
+                                    <summary className="text-primary hover:underline min-h-[44px] flex items-center">
                                       View ({user.balanceHistory.length})
                                     </summary>
-                                    <div className="mt-2 space-y-1 text-xs bg-gray-800 p-2 rounded">
+                                    <div className="mt-2 space-y-1 text-xs bg-surface p-2 rounded">
                                       {user.balanceHistory.map((h) => (
                                         <div key={h.cycle} className="flex justify-between gap-2">
-                                          <span className="text-gray-400">Cycle {h.cycle}:</span>
+                                          <span className="text-secondary">Cycle {h.cycle}:</span>
                                           <span>₡{h.balance.toLocaleString()}</span>
                                           {h.dailyIncome > 0 && (
-                                            <span className="text-green-400">+₡{h.dailyIncome.toLocaleString()}</span>
+                                            <span className="text-success">+₡{h.dailyIncome.toLocaleString()}</span>
                                           )}
                                           {h.dailyCost > 0 && (
-                                            <span className="text-red-400">-₡{h.dailyCost.toLocaleString()}</span>
+                                            <span className="text-error">-₡{h.dailyCost.toLocaleString()}</span>
                                           )}
                                         </div>
                                       ))}
                                     </div>
                                   </details>
                                 ) : (
-                                  <span className="text-gray-500">No history</span>
+                                  <span className="text-tertiary">No history</span>
                                 )}
                               </td>
                             </tr>
@@ -1238,7 +1238,7 @@ function AdminPage() {
                 )}
 
                 {!showAtRiskUsers && (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-secondary">
                     <p>Click &quot;View Details&quot; to see which users are at risk and their financial history</p>
                   </div>
                 )}
@@ -1252,41 +1252,41 @@ function AdminPage() {
           <div role="tabpanel" id="cycles-panel" aria-labelledby="cycles-tab" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Daily Cycle Controls */}
-              <div className="bg-gray-800 rounded-lg p-6">
+              <div className="bg-surface rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-4">Daily Cycle Controls</h2>
                 <div className="grid grid-cols-1 gap-4">
                 <button
                   onClick={repairAllRobots}
                   disabled={loading}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-6 py-3 rounded font-semibold transition-colors"
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
                 >
                   🔧 Auto-Repair All Robots
                 </button>
                 <button
                   onClick={runMatchmaking}
                   disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-3 rounded font-semibold transition-colors"
+                  className="bg-primary hover:bg-blue-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
                 >
                   🎯 Run Matchmaking
                 </button>
                 <button
                   onClick={executeBattles}
                   disabled={loading}
-                  className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 px-6 py-3 rounded font-semibold transition-colors"
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
                 >
                   ⚔️ Execute Battles
                 </button>
                 <button
                   onClick={processDailyFinances}
                   disabled={loading}
-                  className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 px-6 py-3 rounded font-semibold transition-colors"
+                  className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
                 >
                   💰 Process Daily Finances
                 </button>
                 <button
                   onClick={rebalanceLeagues}
                   disabled={loading}
-                  className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 px-6 py-3 rounded font-semibold transition-colors"
+                  className="bg-purple-600 hover:bg-purple-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
                 >
                   📊 Rebalance Leagues
                 </button>
@@ -1294,7 +1294,7 @@ function AdminPage() {
             </div>
 
             {/* Bulk Cycle Testing */}
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-surface rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-4">Bulk Cycle Testing</h2>
               <div className="mb-4 space-y-3">
             <label className="block">
@@ -1305,7 +1305,7 @@ function AdminPage() {
                 max="100"
                 value={bulkCycles}
                 onChange={(e) => setBulkCycles(parseInt(e.target.value) || 1)}
-                className="ml-2 bg-gray-700 text-white px-3 py-1 rounded w-24"
+                className="ml-2 bg-surface-elevated text-white px-3 py-1 rounded w-24"
               />
             </label>
             <label className="flex items-center">
@@ -1343,7 +1343,7 @@ function AdminPage() {
                 className="mr-2"
               />
               Generate users per cycle
-              <span className="ml-2 text-sm text-gray-400">
+              <span className="ml-2 text-sm text-secondary">
                 (Adds N users each cycle: cycle 1 → 1 user, cycle 2 → 2 users, etc.)
               </span>
             </label>
@@ -1351,17 +1351,17 @@ function AdminPage() {
           <button
             onClick={runBulkCycles}
             disabled={loading}
-            className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 px-6 py-3 rounded font-semibold transition-colors"
+            className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
           >
             🚀 Run {bulkCycles} Cycle{bulkCycles !== 1 ? 's' : ''}
           </button>
 
               {bulkResults && (
-                <div className="mt-4 bg-gray-700 rounded p-4">
+                <div className="mt-4 bg-surface-elevated rounded p-4">
                   <h3 className="text-xl font-semibold mb-2">Bulk Cycle Results</h3>
                   <p>Cycles Completed: {bulkResults.cyclesCompleted}</p>
                   {bulkResults.totalCyclesInSystem && (
-                    <p className="text-green-400">Total Cycles in System: {bulkResults.totalCyclesInSystem}</p>
+                    <p className="text-success">Total Cycles in System: {bulkResults.totalCyclesInSystem}</p>
                   )}
                   <p>Total Duration: {bulkResults.totalDuration?.toFixed(2) || 0}s</p>
                   <p>Average Cycle Duration: {bulkResults.averageCycleDuration?.toFixed(2) || 0}s</p>
@@ -1370,13 +1370,13 @@ function AdminPage() {
                     <div className="mt-4 max-h-96 overflow-y-auto">
                       <h4 className="font-semibold mb-2">Cycle Details:</h4>
                       {bulkResults.results.map((result: CycleResult, idx: number) => (
-                        <div key={idx} className="mb-2 p-2 bg-gray-800 rounded text-sm">
+                        <div key={idx} className="mb-2 p-2 bg-surface rounded text-sm">
                           <p className="font-semibold">Cycle {result.cycle}:</p>
                           {result.userGeneration && (
-                            <div className="ml-2 text-green-400">
+                            <div className="ml-2 text-success">
                               <p>- Users: {result.userGeneration.usersCreated} new users created</p>
                               {result.userGeneration.error && (
-                                <p className="text-red-400 ml-2">• ⚠️ Error: {result.userGeneration.error}</p>
+                                <p className="text-error ml-2">• ⚠️ Error: {result.userGeneration.error}</p>
                               )}
                             </div>
                           )}
@@ -1389,11 +1389,11 @@ function AdminPage() {
                             </p>
                           )}
                           {result.finances && (
-                            <div className="ml-2 text-yellow-400">
+                            <div className="ml-2 text-warning">
                               <p>- Finances: ₡{result.finances.totalCostsDeducted.toLocaleString()} deducted</p>
                               <p className="ml-2">• {result.finances.usersProcessed} users processed</p>
                               {result.finances.bankruptUsers > 0 && (
-                                <p className="ml-2 text-red-400">• ⚠️ {result.finances.bankruptUsers} bankruptcies!</p>
+                                <p className="ml-2 text-error">• ⚠️ {result.finances.bankruptUsers} bankruptcies!</p>
                               )}
                             </div>
                           )}
@@ -1413,21 +1413,21 @@ function AdminPage() {
           </div>
 
           {/* Full Session Log */}
-          <div className="bg-gray-800 rounded-lg p-6">
+          <div className="bg-surface rounded-lg p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Session Log</h2>
                 <div className="flex gap-2">
                   <button
                     onClick={exportSessionLog}
                     disabled={sessionLog.length === 0}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors text-sm"
+                    className="bg-primary hover:bg-blue-700 disabled:bg-surface-elevated px-4 py-2 rounded font-semibold transition-colors text-sm min-h-[44px]"
                   >
                     Export
                   </button>
                   <button
                     onClick={clearSessionLog}
                     disabled={sessionLog.length === 0}
-                    className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors text-sm"
+                    className="bg-red-600 hover:bg-red-700 disabled:bg-surface-elevated px-4 py-2 rounded font-semibold transition-colors text-sm min-h-[44px]"
                   >
                     Clear
                   </button>
@@ -1456,12 +1456,12 @@ function AdminPage() {
                           {entry.type === 'info' && 'ℹ '}
                           {entry.message}
                         </span>
-                        <span className="text-xs text-gray-400 ml-2">
+                        <span className="text-xs text-secondary ml-2">
                           {new Date(entry.timestamp).toLocaleString()}
                         </span>
                       </div>
                       {entry.details !== undefined && entry.details !== null && (
-                        <pre className="mt-2 text-xs text-gray-400 overflow-x-auto">
+                        <pre className="mt-2 text-xs text-secondary overflow-x-auto">
                           {typeof entry.details === 'string' 
                             ? entry.details 
                             : JSON.stringify(entry.details, null, 2)}
@@ -1471,7 +1471,7 @@ function AdminPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400 text-center py-4">No log entries</p>
+                <p className="text-secondary text-center py-4">No log entries</p>
               )}
             </div>
           </div>
@@ -1479,57 +1479,57 @@ function AdminPage() {
 
         {/* Battle Logs Tab */}
         {activeTab === 'battles' && (
-          <div role="tabpanel" id="battles-panel" aria-labelledby="battles-tab" className="bg-gray-800 rounded-lg p-6">
-            <div className="flex justify-between items-center mb-4">
+          <div role="tabpanel" id="battles-panel" aria-labelledby="battles-tab" className="bg-surface rounded-lg p-6">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 mb-4">
               <h2 className="text-2xl font-bold">Battle Logs & Debugging</h2>
               <button
                 onClick={() => fetchBattles(1)}
                 disabled={battlesLoading}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors text-sm"
+                className="bg-primary hover:bg-blue-700 disabled:bg-surface-elevated px-4 py-2 rounded font-semibold transition-colors text-sm min-h-[44px]"
               >
                 {battlesLoading ? 'Loading...' : 'Refresh Battles'}
               </button>
             </div>
 
             {/* Visual Indicators Legend */}
-            <div className="mb-4 p-4 bg-gray-700 rounded-lg">
-              <h3 className="text-sm font-semibold mb-2 text-gray-300">Visual Indicators:</h3>
+            <div className="mb-4 p-4 bg-surface-elevated rounded-lg">
+              <h3 className="text-sm font-semibold mb-2 text-secondary">Visual Indicators:</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🏆</span>
-                  <span className="text-green-400">Clear Victory</span>
-                  <span className="text-gray-400">(HP &gt; 50)</span>
+                  <span className="text-success">Clear Victory</span>
+                  <span className="text-secondary">(HP &gt; 50)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">💪</span>
-                  <span className="text-yellow-400">Narrow Victory</span>
-                  <span className="text-gray-400">(HP 1-50)</span>
+                  <span className="text-warning">Narrow Victory</span>
+                  <span className="text-secondary">(HP 1-50)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">⚖️</span>
-                  <span className="text-gray-400">Draw</span>
-                  <span className="text-gray-400">(No winner)</span>
+                  <span className="text-secondary">Draw</span>
+                  <span className="text-secondary">(No winner)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-1 h-4 bg-red-500"></span>
-                  <span className="text-gray-300">Draw</span>
-                  <span className="text-gray-400">(rare event)</span>
+                  <span className="text-secondary">Draw</span>
+                  <span className="text-secondary">(rare event)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-1 h-4 bg-yellow-500"></span>
-                  <span className="text-gray-300">Long Battle</span>
-                  <span className="text-gray-400">(&gt;90s)</span>
+                  <span className="text-secondary">Long Battle</span>
+                  <span className="text-secondary">(&gt;90s)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-1 h-4 bg-blue-500"></span>
-                  <span className="text-gray-300">Big ELO Swing</span>
-                  <span className="text-gray-400">(&gt;50 points)</span>
+                  <span className="w-1 h-4 bg-primary-dark"></span>
+                  <span className="text-secondary">Big ELO Swing</span>
+                  <span className="text-secondary">(&gt;50 points)</span>
                 </div>
               </div>
             </div>
 
             {/* Search and Filter */}
-            <div className="mb-4 flex gap-4 flex-wrap">
+            <div className="mb-4 flex flex-col lg:flex-row gap-4">
               <div className="flex-1 min-w-[200px]">
                 <input
                   type="text"
@@ -1537,13 +1537,13 @@ function AdminPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full bg-gray-700 text-white px-4 py-2 rounded"
+                  className="w-full bg-surface-elevated text-white px-4 py-2 rounded min-h-[44px]"
                 />
               </div>
               <select
                 value={leagueFilter}
                 onChange={(e) => setLeagueFilter(e.target.value)}
-                className="bg-gray-700 text-white px-4 py-2 rounded"
+                className="w-full lg:w-auto bg-surface-elevated text-white px-4 py-2 rounded min-h-[44px]"
               >
                 <option value="all">All Leagues</option>
                 <option value="bronze">Bronze</option>
@@ -1556,7 +1556,7 @@ function AdminPage() {
               <select
                 value={battleTypeFilter}
                 onChange={(e) => setBattleTypeFilter(e.target.value)}
-                className="bg-gray-700 text-white px-4 py-2 rounded"
+                className="w-full lg:w-auto bg-surface-elevated text-white px-4 py-2 rounded min-h-[44px]"
               >
                 <option value="all">All Battle Types</option>
                 <option value="league">League Battles</option>
@@ -1565,7 +1565,7 @@ function AdminPage() {
               <button
                 onClick={handleSearch}
                 disabled={battlesLoading}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+                className="w-full lg:w-auto bg-green-600 hover:bg-green-700 disabled:bg-surface-elevated px-6 py-2 rounded font-semibold transition-colors min-h-[44px]"
               >
                 Search
               </button>
@@ -1576,7 +1576,7 @@ function AdminPage() {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-700">
+                    <thead className="bg-surface-elevated">
                       <tr>
                         <th className="p-3 text-left">ID</th>
                         <th className="p-3 text-left">Robot 1</th>
@@ -1596,18 +1596,18 @@ function AdminPage() {
                         return (
                           <tr 
                             key={battle.id} 
-                            className={`border-t border-gray-700 hover:bg-gray-750 ${highlight}`}
+                            className={`border-t border-white/10 hover:bg-surface-elevated ${highlight}`}
                           >
                             <td className="p-3">#{battle.id}</td>
                             <td className="p-3">
                               <Link 
                                 to={`/robots/${battle.robot1.id}`} 
-                                className="text-blue-400 hover:underline"
+                                className="text-primary hover:underline"
                                 aria-label={`View robot details for ${battle.robot1.name}`}
                               >
                                 {battle.robot1.name}
                               </Link>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-secondary">
                                 HP: {battle.robot1FinalHP} | ELO: {battle.robot1ELOBefore} → {battle.robot1ELOAfter}
                               </div>
                             </td>
@@ -1619,7 +1619,7 @@ function AdminPage() {
                               >
                                 {battle.robot2.name}
                               </Link>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-secondary">
                                 HP: {battle.robot2FinalHP} | ELO: {battle.robot2ELOBefore} → {battle.robot2ELOAfter}
                               </div>
                             </td>
@@ -1628,28 +1628,28 @@ function AdminPage() {
                                 <span className={outcome.color}>
                                   {outcome.icon} {battle.winnerName}
                                 </span>
-                                <span className="text-xs text-gray-400 mt-1">
+                                <span className="text-xs text-secondary mt-1">
                                   {outcome.label}
                                 </span>
                               </div>
                             </td>
                             <td className="p-3">
-                              <span className="px-2 py-1 bg-gray-700 rounded text-xs">
+                              <span className="px-2 py-1 bg-surface-elevated rounded text-xs">
                                 {battle.leagueType}
                               </span>
                             </td>
                             <td className="p-3">
-                              <span className={battle.durationSeconds > 90 ? 'text-yellow-400 font-semibold' : ''}>
+                              <span className={battle.durationSeconds > 90 ? 'text-warning font-semibold' : ''}>
                                 {battle.durationSeconds}s
                               </span>
                             </td>
-                            <td className="p-3 text-xs text-gray-400">
+                            <td className="p-3 text-xs text-secondary">
                               {new Date(battle.createdAt).toLocaleString()}
                             </td>
                             <td className="p-3">
                               <button
                                 onClick={() => handleViewBattle(battle.id)}
-                                className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold"
+                                className="bg-primary hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold min-h-[44px]"
                               >
                                 View Details
                               </button>
@@ -1663,8 +1663,8 @@ function AdminPage() {
 
                 {/* Pagination */}
                 {battlesPagination && (
-                  <div className="mt-4 flex justify-between items-center">
-                    <div className="text-sm text-gray-400">
+                  <div className="mt-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
+                    <div className="text-sm text-secondary">
                       Showing {battles.length} of {battlesPagination.totalBattles} battles
                       (Page {battlesPagination.page} of {battlesPagination.totalPages})
                     </div>
@@ -1672,14 +1672,14 @@ function AdminPage() {
                       <button
                         onClick={() => fetchBattles(currentPage - 1)}
                         disabled={currentPage === 1 || battlesLoading}
-                        className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 px-4 py-2 rounded font-semibold transition-colors"
+                        className="bg-surface-elevated hover:bg-surface disabled:bg-surface disabled:text-tertiary px-4 py-2 rounded font-semibold transition-colors min-h-[44px]"
                       >
                         Previous
                       </button>
                       <button
                         onClick={() => fetchBattles(currentPage + 1)}
                         disabled={!battlesPagination.hasMore || battlesLoading}
-                        className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 px-4 py-2 rounded font-semibold transition-colors"
+                        className="bg-surface-elevated hover:bg-surface disabled:bg-surface disabled:text-tertiary px-4 py-2 rounded font-semibold transition-colors min-h-[44px]"
                       >
                         Next
                       </button>
@@ -1688,7 +1688,7 @@ function AdminPage() {
                 )}
               </>
             ) : (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-secondary">
                 {battlesLoading ? (
                   <div>Loading battles...</div>
                 ) : (
@@ -1696,7 +1696,7 @@ function AdminPage() {
                     <p className="mb-2">No battles found.</p>
                     <button
                       onClick={() => fetchBattles(1)}
-                      className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold"
+                      className="bg-primary hover:bg-blue-700 px-4 py-2 rounded font-semibold min-h-[44px]"
                     >
                       Load Battles
                     </button>
@@ -1716,20 +1716,20 @@ function AdminPage() {
 
         {/* Robot Stats Tab */}
         {activeTab === 'stats' && (
-          <div role="tabpanel" id="stats-panel" aria-labelledby="stats-tab" className="bg-gray-800 rounded-lg p-6">
+          <div role="tabpanel" id="stats-panel" aria-labelledby="stats-tab" className="bg-surface rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">🤖 Robot Attribute Statistics</h2>
               <button
                 onClick={fetchRobotStats}
                 disabled={robotStatsLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-surface-elevated px-6 py-2 rounded font-semibold transition-colors min-h-[44px]"
               >
                 {robotStatsLoading ? 'Loading...' : showRobotStats ? 'Refresh Stats' : 'Load Statistics'}
               </button>
             </div>
 
             {!showRobotStats && !robotStatsLoading && (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-secondary">
                 <p className="mb-4">Click &quot;Load Statistics&quot; to analyze robot attributes and find outliers</p>
                 <p className="text-sm">This will show:</p>
                 <ul className="text-sm mt-2 space-y-1">
@@ -1743,7 +1743,7 @@ function AdminPage() {
             )}
 
             {robotStatsLoading && (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-secondary">
                 <div className="animate-pulse">Loading robot statistics...</div>
               </div>
             )}
@@ -1751,39 +1751,39 @@ function AdminPage() {
             {showRobotStats && robotStats && (
               <div className="space-y-6">
                 {/* Summary Stats */}
-                <div className="bg-gray-700 rounded-lg p-4">
+                <div className="bg-surface-elevated rounded-lg p-4">
                   <h3 className="text-xl font-semibold mb-3">Summary</h3>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-400">Total Robots</p>
+                      <p className="text-secondary">Total Robots</p>
                       <p className="text-2xl font-bold">{robotStats.summary.totalRobots}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">With Battles</p>
+                      <p className="text-secondary">With Battles</p>
                       <p className="text-2xl font-bold">{robotStats.summary.robotsWithBattles}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Total Battles</p>
+                      <p className="text-secondary">Total Battles</p>
                       <p className="text-2xl font-bold">{robotStats.summary.totalBattles}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Win Rate</p>
+                      <p className="text-secondary">Win Rate</p>
                       <p className="text-2xl font-bold">{robotStats.summary.overallWinRate.toFixed(1)}%</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Avg ELO</p>
+                      <p className="text-secondary">Avg ELO</p>
                       <p className="text-2xl font-bold">{robotStats.summary.averageElo}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Attribute Selector */}
-                <div className="bg-gray-700 rounded-lg p-4">
+                <div className="bg-surface-elevated rounded-lg p-4">
                   <h3 className="text-xl font-semibold mb-3">Select Attribute to Analyze</h3>
                   <select
                     value={selectedAttribute}
                     onChange={(e) => setSelectedAttribute(e.target.value)}
-                    className="w-full bg-gray-800 text-white px-4 py-2 rounded"
+                    className="w-full bg-surface text-white px-4 py-2 rounded"
                   >
                     <optgroup label="Combat Systems">
                       <option value="combatPower">Combat Power</option>
@@ -1823,14 +1823,14 @@ function AdminPage() {
 
                 {/* Attribute Statistics */}
                 {robotStats.attributeStats[selectedAttribute] && (
-                  <div className="bg-gray-700 rounded-lg p-4">
+                  <div className="bg-surface-elevated rounded-lg p-4">
                     <h3 className="text-xl font-semibold mb-3">
                       {selectedAttribute.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} - Statistics
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                       {Object.entries(robotStats.attributeStats[selectedAttribute]).map(([key, value]) => (
                         <div key={key}>
-                          <p className="text-gray-400">{key.toUpperCase()}</p>
+                          <p className="text-secondary">{key.toUpperCase()}</p>
                           <p className="text-lg font-bold">{Number(value).toFixed(2)}</p>
                         </div>
                       ))}
@@ -1840,13 +1840,13 @@ function AdminPage() {
 
                 {/* Outliers */}
                 {robotStats.outliers[selectedAttribute] && robotStats.outliers[selectedAttribute].length > 0 && (
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-xl font-semibold mb-3 text-yellow-400">
+                  <div className="bg-surface-elevated rounded-lg p-4">
+                    <h3 className="text-xl font-semibold mb-3 text-warning">
                       ⚠️ Outliers Detected ({robotStats.outliers[selectedAttribute].length})
                     </h3>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-800">
+                        <thead className="bg-surface">
                           <tr>
                             <th className="p-2 text-left">Robot</th>
                             <th className="p-2 text-left">Value</th>
@@ -1857,19 +1857,19 @@ function AdminPage() {
                         </thead>
                         <tbody>
                           {robotStats.outliers[selectedAttribute].map((outlier, idx) => (
-                            <tr key={idx} className="border-t border-gray-600">
+                            <tr key={idx} className="border-t border-white/10">
                               <td className="p-2">
                                 <Link 
                                   to={`/robots/${outlier.id}`}
-                                  className="text-blue-400 hover:underline"
+                                  className="text-primary hover:underline"
                                   aria-label={`View robot details for ${outlier.name}`}
                                 >
                                   {outlier.name}
                                 </Link>
                               </td>
-                              <td className="p-2 font-bold text-yellow-400">{outlier.value}</td>
+                              <td className="p-2 font-bold text-warning">{outlier.value}</td>
                               <td className="p-2">
-                                <span className="px-2 py-1 bg-gray-800 rounded text-xs">{outlier.league}</span>
+                                <span className="px-2 py-1 bg-surface rounded text-xs">{outlier.league}</span>
                               </td>
                               <td className="p-2">{outlier.elo}</td>
                               <td className="p-2">{outlier.winRate}%</td>
@@ -1883,11 +1883,11 @@ function AdminPage() {
 
                 {/* Win Rate Analysis */}
                 {robotStats.winRateAnalysis[selectedAttribute] && robotStats.winRateAnalysis[selectedAttribute].length > 0 && (
-                  <div className="bg-gray-700 rounded-lg p-4">
+                  <div className="bg-surface-elevated rounded-lg p-4">
                     <h3 className="text-xl font-semibold mb-3">🎯 Win Rate Correlation</h3>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-800">
+                        <thead className="bg-surface">
                           <tr>
                             <th className="p-2 text-left">Quintile</th>
                             <th className="p-2 text-left">Avg Value</th>
@@ -1898,13 +1898,13 @@ function AdminPage() {
                         </thead>
                         <tbody>
                           {robotStats.winRateAnalysis[selectedAttribute].map((quintile, idx) => (
-                            <tr key={idx} className="border-t border-gray-600">
+                            <tr key={idx} className="border-t border-white/10">
                               <td className="p-2">{getQuintileLabel(quintile.quintile)}</td>
                               <td className="p-2 font-bold">{quintile.avgValue.toFixed(2)}</td>
-                              <td className="p-2 font-bold text-green-400">{quintile.avgWinRate.toFixed(1)}%</td>
+                              <td className="p-2 font-bold text-success">{quintile.avgWinRate.toFixed(1)}%</td>
                               <td className="p-2">{quintile.sampleSize}</td>
                               <td className="p-2">
-                                <div className="bg-gray-800 rounded h-4 overflow-hidden">
+                                <div className="bg-surface rounded h-4 overflow-hidden">
                                   <div 
                                     className="bg-green-500 h-full"
                                     style={{ width: `${quintile.avgWinRate}%` }}
@@ -1916,7 +1916,7 @@ function AdminPage() {
                         </tbody>
                       </table>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-secondary mt-2">
                       💡 Higher win rate in top quintile = attribute strongly impacts success
                     </p>
                   </div>
@@ -1924,11 +1924,11 @@ function AdminPage() {
 
                 {/* League Comparison */}
                 {robotStats.statsByLeague && Object.keys(robotStats.statsByLeague).length > 0 && (
-                  <div className="bg-gray-700 rounded-lg p-4">
+                  <div className="bg-surface-elevated rounded-lg p-4">
                     <h3 className="text-xl font-semibold mb-3">🏆 League Comparison</h3>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-800">
+                        <thead className="bg-surface">
                           <tr>
                             <th className="p-2 text-left">League</th>
                             <th className="p-2 text-left">Robots</th>
@@ -1943,7 +1943,7 @@ function AdminPage() {
                             if (!leagueData) return null;
                             const attrData = leagueData.attributes[selectedAttribute];
                             return (
-                              <tr key={league} className="border-t border-gray-600">
+                              <tr key={league} className="border-t border-white/10">
                                 <td className="p-2 capitalize font-semibold">{league}</td>
                                 <td className="p-2">{leagueData.count}</td>
                                 <td className="p-2">{leagueData.averageElo}</td>
@@ -1960,26 +1960,26 @@ function AdminPage() {
 
                 {/* Top Performers */}
                 {robotStats.topPerformers[selectedAttribute] && robotStats.topPerformers[selectedAttribute].length > 0 && (
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-xl font-semibold mb-3 text-green-400">🌟 Top 5 Performers</h3>
+                  <div className="bg-surface-elevated rounded-lg p-4">
+                    <h3 className="text-xl font-semibold mb-3 text-success">🌟 Top 5 Performers</h3>
                     <div className="space-y-2">
                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {robotStats.topPerformers[selectedAttribute].map((robot: any, idx: number) => (
-                        <div key={idx} className="bg-gray-800 rounded p-3 flex justify-between items-center">
+                        <div key={idx} className="bg-surface rounded p-3 flex justify-between items-center">
                           <div>
                             <Link 
                               to={`/robots/${robot.id}`}
-                              className="font-bold text-lg text-green-400 hover:underline"
+                              className="font-bold text-lg text-success hover:underline"
                               aria-label={`View robot details for ${robot.name}`}
                             >
                               #{idx + 1} {robot.name}
                             </Link>
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-secondary">
                               {robot.league} | ELO: {robot.elo} | Win Rate: {robot.winRate}%
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-2xl font-bold text-green-400">{robot.value}</p>
+                            <p className="text-2xl font-bold text-success">{robot.value}</p>
                           </div>
                         </div>
                       ))}
@@ -1989,26 +1989,26 @@ function AdminPage() {
 
                 {/* Bottom Performers */}
                 {robotStats.bottomPerformers[selectedAttribute] && robotStats.bottomPerformers[selectedAttribute].length > 0 && (
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-xl font-semibold mb-3 text-red-400">📉 Bottom 5 Performers</h3>
+                  <div className="bg-surface-elevated rounded-lg p-4">
+                    <h3 className="text-xl font-semibold mb-3 text-error">📉 Bottom 5 Performers</h3>
                     <div className="space-y-2">
                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {robotStats.bottomPerformers[selectedAttribute].map((robot: any, idx: number) => (
-                        <div key={idx} className="bg-gray-800 rounded p-3 flex justify-between items-center">
+                        <div key={idx} className="bg-surface rounded p-3 flex justify-between items-center">
                           <div>
                             <Link 
                               to={`/robots/${robot.id}`}
-                              className="font-bold text-red-400 hover:underline"
+                              className="font-bold text-error hover:underline"
                               aria-label={`View robot details for ${robot.name}`}
                             >
                               {robot.name}
                             </Link>
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-secondary">
                               {robot.league} | ELO: {robot.elo} | Win Rate: {robot.winRate}%
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-xl font-bold text-red-400">{robot.value}</p>
+                            <p className="text-xl font-bold text-error">{robot.value}</p>
                           </div>
                         </div>
                       ))}
@@ -2031,16 +2031,16 @@ function AdminPage() {
         {activeTab === 'recent-users' && (
           <div role="tabpanel" id="recent-users-panel" aria-labelledby="recent-users-tab" className="space-y-6">
             {/* Controls */}
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-surface rounded-lg p-6">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h2 className="text-2xl font-bold">👥 Recent Real Users</h2>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-secondary mt-1">
                     Registered users only — excludes auto-generated bots, WimpBots, and seeded test accounts
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="text-sm text-gray-400">
+                  <label className="text-sm text-secondary">
                     Last
                     <input
                       type="number"
@@ -2048,14 +2048,14 @@ function AdminPage() {
                       max="200"
                       value={recentUsersCycles}
                       onChange={(e) => setRecentUsersCycles(Math.max(1, Math.min(200, parseInt(e.target.value) || 10)))}
-                      className="mx-2 bg-gray-700 text-white px-3 py-1 rounded w-20 text-center"
+                      className="mx-2 bg-surface-elevated text-white px-3 py-1 rounded w-20 text-center min-h-[44px]"
                     />
                     cycles
                   </label>
                   <button
                     onClick={() => fetchRecentUsers()}
                     disabled={recentUsersLoading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-6 py-2 rounded font-semibold transition-colors"
+                    className="bg-primary hover:bg-blue-700 disabled:bg-surface-elevated px-6 py-2 rounded font-semibold transition-colors min-h-[44px]"
                   >
                     {recentUsersLoading ? 'Loading...' : recentUsers ? 'Refresh' : 'Load Users'}
                   </button>
@@ -2065,22 +2065,22 @@ function AdminPage() {
               {/* Summary cards */}
               {recentUsers && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div className="bg-gray-700 rounded p-3">
-                    <p className="text-gray-400">Total Real Users</p>
-                    <p className="text-2xl font-bold text-blue-400">{recentUsers.totalUsers}</p>
+                  <div className="bg-surface-elevated rounded p-3">
+                    <p className="text-secondary">Total Real Users</p>
+                    <p className="text-2xl font-bold text-primary">{recentUsers.totalUsers}</p>
                   </div>
-                  <div className="bg-gray-700 rounded p-3">
-                    <p className="text-gray-400">With Issues</p>
-                    <p className={`text-2xl font-bold ${recentUsers.usersWithIssues > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
+                  <div className="bg-surface-elevated rounded p-3">
+                    <p className="text-secondary">With Issues</p>
+                    <p className={`text-2xl font-bold ${recentUsers.usersWithIssues > 0 ? 'text-warning' : 'text-success'}`}>
                       {recentUsers.usersWithIssues}
                     </p>
                   </div>
-                  <div className="bg-gray-700 rounded p-3">
-                    <p className="text-gray-400">Current Cycle</p>
+                  <div className="bg-surface-elevated rounded p-3">
+                    <p className="text-secondary">Current Cycle</p>
                     <p className="text-2xl font-bold">{recentUsers.currentCycle}</p>
                   </div>
-                  <div className="bg-gray-700 rounded p-3">
-                    <p className="text-gray-400">Looking Back</p>
+                  <div className="bg-surface-elevated rounded p-3">
+                    <p className="text-secondary">Looking Back</p>
                     <p className="text-2xl font-bold">{recentUsers.cyclesBack} cycles</p>
                   </div>
                 </div>
@@ -2089,19 +2089,19 @@ function AdminPage() {
 
             {/* User list */}
             {recentUsersLoading && (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-secondary">
                 <div className="animate-pulse">Loading recent users...</div>
               </div>
             )}
 
             {!recentUsers && !recentUsersLoading && (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-secondary">
                 <p>Click &quot;Load Users&quot; to see recently registered real users and their activity</p>
               </div>
             )}
 
             {recentUsers && recentUsers.users.length === 0 && (
-              <div className="bg-gray-800 rounded-lg p-6 text-center text-gray-400">
+              <div className="bg-surface rounded-lg p-6 text-center text-secondary">
                 <p>No real users registered in the last {recentUsers.cyclesBack} cycles.</p>
                 <p className="text-sm mt-2">Try increasing the cycle range.</p>
               </div>
@@ -2110,22 +2110,22 @@ function AdminPage() {
             {recentUsers && recentUsers.users.length > 0 && (
               <div className="space-y-4">
                 {recentUsers.users.map((user) => (
-                  <div key={user.userId} className={`bg-gray-800 rounded-lg p-5 ${user.issues.length > 0 ? 'border-l-4 border-yellow-500' : ''}`}>
+                  <div key={user.userId} className={`bg-surface rounded-lg p-5 ${user.issues.length > 0 ? 'border-l-4 border-yellow-500' : ''}`}>
                     {/* User header */}
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-bold">{user.stableName || user.username}</span>
-                          {user.stableName && <span className="text-sm text-gray-400">@{user.username}</span>}
+                          {user.stableName && <span className="text-sm text-secondary">@{user.username}</span>}
                           {user.role === 'admin' && <span className="px-2 py-0.5 bg-red-800 rounded text-xs">admin</span>}
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-secondary mt-1">
                           Registered: {new Date(user.createdAt).toLocaleString()} · ID: {user.userId}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm">₡{user.currency.toLocaleString()}</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-secondary">
                           {user.summary.totalRobots} robot{user.summary.totalRobots !== 1 ? 's' : ''} · {user.summary.facilitiesPurchased} facilit{user.summary.facilitiesPurchased !== 1 ? 'ies' : 'y'}
                         </p>
                       </div>
@@ -2136,7 +2136,7 @@ function AdminPage() {
                       {user.onboarding.completed ? (
                         <span className="px-2 py-1 bg-green-900 text-green-300 rounded text-xs">✓ Onboarding complete</span>
                       ) : user.onboarding.skipped ? (
-                        <span className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs">⏭ Onboarding skipped</span>
+                        <span className="px-2 py-1 bg-surface-elevated text-secondary rounded text-xs">⏭ Onboarding skipped</span>
                       ) : (
                         <span className="px-2 py-1 bg-yellow-900 text-yellow-300 rounded text-xs">
                           ⏳ Onboarding step {user.onboarding.currentStep}/9
@@ -2158,7 +2158,7 @@ function AdminPage() {
                     {/* Issues */}
                     {user.issues.length > 0 && (
                       <div className="mb-3 p-2 bg-yellow-900 bg-opacity-30 rounded">
-                        <p className="text-xs text-yellow-400 font-semibold mb-1">⚠️ Potential issues:</p>
+                        <p className="text-xs text-warning font-semibold mb-1">⚠️ Potential issues:</p>
                         {user.issues.map((issue, idx) => (
                           <p key={idx} className="text-xs text-yellow-300 ml-2">• {issue}</p>
                         ))}
@@ -2169,7 +2169,7 @@ function AdminPage() {
                     {user.robots.length > 0 && (
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs">
-                          <thead className="bg-gray-700">
+                          <thead className="bg-surface-elevated">
                             <tr>
                               <th className="p-2 text-left">Robot</th>
                               <th className="p-2 text-left">HP</th>
@@ -2184,17 +2184,17 @@ function AdminPage() {
                           </thead>
                           <tbody>
                             {user.robots.map((robot) => (
-                              <tr key={robot.id} className="border-t border-gray-700">
+                              <tr key={robot.id} className="border-t border-white/10">
                                 <td className="p-2">
-                                  <Link to={`/robots/${robot.id}`} className="text-blue-400 hover:underline">
+                                  <Link to={`/robots/${robot.id}`} className="text-primary hover:underline">
                                     {robot.name}
                                   </Link>
                                 </td>
                                 <td className="p-2">
-                                  <span className={robot.hpPercent < 50 ? 'text-red-400' : robot.hpPercent < 80 ? 'text-yellow-400' : 'text-green-400'}>
+                                  <span className={robot.hpPercent < 50 ? 'text-error' : robot.hpPercent < 80 ? 'text-warning' : 'text-success'}>
                                     {robot.hpPercent}%
                                   </span>
-                                  <span className="text-gray-500 ml-1">({robot.currentHP}/{robot.maxHP})</span>
+                                  <span className="text-tertiary ml-1">({robot.currentHP}/{robot.maxHP})</span>
                                 </td>
                                 <td className="p-2 capitalize">{robot.league}</td>
                                 <td className="p-2">{robot.elo}</td>
@@ -2204,19 +2204,19 @@ function AdminPage() {
                                   {robot.hasWeapon ? (
                                     <span className="capitalize">{robot.loadout.replace('_', ' ')}</span>
                                   ) : (
-                                    <span className="text-red-400">No weapon</span>
+                                    <span className="text-error">No weapon</span>
                                   )}
                                   {' · '}
-                                  <span className="capitalize text-gray-400">{robot.stance}</span>
+                                  <span className="capitalize text-secondary">{robot.stance}</span>
                                 </td>
                                 <td className="p-2">
                                   {robot.battleReady ? (
-                                    <span className="text-green-400">Ready</span>
+                                    <span className="text-success">Ready</span>
                                   ) : (
-                                    <span className="text-red-400">Not ready</span>
+                                    <span className="text-error">Not ready</span>
                                   )}
                                 </td>
-                                <td className="p-2 text-gray-400">{new Date(robot.createdAt).toLocaleDateString()}</td>
+                                <td className="p-2 text-secondary">{new Date(robot.createdAt).toLocaleDateString()}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -2225,7 +2225,7 @@ function AdminPage() {
                     )}
 
                     {user.robots.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">No robots created yet</p>
+                      <p className="text-sm text-tertiary italic">No robots created yet</p>
                     )}
                   </div>
                 ))}

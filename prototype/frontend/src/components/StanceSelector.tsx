@@ -75,9 +75,9 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-300 uppercase tracking-wide">
+      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-secondary uppercase tracking-wide">
         Battle Stance
-        <span className="text-sm text-gray-400 font-normal normal-case">
+        <span className="text-sm text-secondary font-normal normal-case">
           (Applied before battle)
         </span>
       </h3>
@@ -108,13 +108,13 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
                 <div className="text-center">
                   <h4 className="font-bold text-lg">{stance.name}</h4>
                   {isSelected && (
-                    <span className="text-xs text-blue-400">✓ Active</span>
+                    <span className="text-xs text-primary">✓ Active</span>
                   )}
                 </div>
               </div>
 
               {/* Description */}
-              <p className="text-sm text-gray-300 mb-3 text-center">{stance.description}</p>
+              <p className="text-sm text-secondary mb-3 text-center">{stance.description}</p>
 
               {/* Bonuses */}
               <div className="space-y-1 border-t border-gray-600 pt-3">
@@ -123,13 +123,13 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
                     {bonus.value && (
                       <span
                         className={`font-mono font-semibold ${
-                          bonus.positive ? 'text-green-400' : 'text-red-400'
+                          bonus.positive ? 'text-success' : 'text-error'
                         }`}
                       >
                         {bonus.value}
                       </span>
                     )}
-                    <span className="text-gray-300">{bonus.attr}</span>
+                    <span className="text-secondary">{bonus.attr}</span>
                   </div>
                 ))}
               </div>
@@ -139,7 +139,7 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
       </div>
 
       {loading && (
-        <div className="mt-3 text-center text-sm text-gray-400">
+        <div className="mt-3 text-center text-sm text-secondary">
           Updating stance...
         </div>
       )}

@@ -473,7 +473,7 @@ function RobotDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-white flex items-center justify-center">
         <div className="text-xl">Loading robot details...</div>
       </div>
     );
@@ -481,12 +481,12 @@ function RobotDetailPage() {
 
   if (!robot) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-xl mb-4">Robot not found</p>
           <button
             onClick={() => navigate('/robots')}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded"
+            className="bg-primary hover:bg-blue-700 px-6 py-2 rounded"
           >
             Back to Robots
           </button>
@@ -499,7 +499,7 @@ function RobotDetailPage() {
   const isOwner = user && robot.userId === user.id;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
@@ -514,15 +514,15 @@ function RobotDetailPage() {
             <div className="flex items-start gap-3">
               <span className="text-xl flex-shrink-0" aria-hidden="true">🎓</span>
               <div className="flex-1">
-                <p className="text-blue-400 font-semibold mb-1">Tutorial Step 8: Equip Your Weapon</p>
-                <p className="text-gray-300 text-sm">
+                <p className="text-primary font-semibold mb-1">Tutorial Step 8: Equip Your Weapon</p>
+                <p className="text-secondary text-sm">
                   Navigate to the Battle Config tab below to equip the weapon you purchased.
                   Once equipped, your robot will gain weapon attribute bonuses and be battle-ready!
                 </p>
               </div>
               <button
                 onClick={() => navigate('/onboarding')}
-                className="text-sm text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+                className="text-sm text-secondary hover:text-white transition-colors whitespace-nowrap"
                 aria-label="Return to tutorial"
                 data-testid="return-to-tutorial"
               >
@@ -537,14 +537,14 @@ function RobotDetailPage() {
           <div className="mb-4">
             <button
               onClick={() => navigate('/robots')}
-              className="text-blue-400 hover:text-blue-300"
+              className="text-primary hover:text-blue-300"
             >
               ← Back to Robots
             </button>
           </div>
           
           {/* Robot Header Card */}
-          <div className="bg-gray-800 p-6 rounded-lg">
+          <div className="bg-surface p-6 rounded-lg">
             <div className="flex items-start gap-6">
               {/* Robot Image with Edit Button */}
               <RobotImage
@@ -561,7 +561,7 @@ function RobotDetailPage() {
                   <h1 className="text-3xl font-bold">{robot.name}</h1>
                   {robot.user && (
                     <div className="text-right text-sm">
-                      <div className="text-gray-400">Owner</div>
+                      <div className="text-secondary">Owner</div>
                       <div className="text-white font-semibold">
                         {robot.user.stableName || robot.user.username}
                       </div>
@@ -570,17 +570,17 @@ function RobotDetailPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400">ELO:</span>
+                    <span className="text-secondary">ELO:</span>
                     <span className="text-white font-semibold">{robot.elo}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Current League:</span>
+                    <span className="text-secondary">Current League:</span>
                     <span className="text-white font-semibold capitalize">
                       {robot.currentLeague} {robot.leagueId ? robot.leagueId.split('_')[1] : ''}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Win Rate:</span>
+                    <span className="text-secondary">Win Rate:</span>
                     <span className="text-white font-semibold">
                       {robot.totalBattles > 0 
                         ? ((robot.wins / robot.totalBattles) * 100).toFixed(1) 
@@ -588,11 +588,11 @@ function RobotDetailPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Battles:</span>
+                    <span className="text-secondary">Battles:</span>
                     <span className="text-white font-semibold">{robot.totalBattles}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Record:</span>
+                    <span className="text-secondary">Record:</span>
                     <span className="text-white font-semibold">
                       {robot.wins}W - {robot.losses}L - {robot.draws}D
                     </span>
@@ -601,43 +601,43 @@ function RobotDetailPage() {
 
                 {/* Performance Stats - Compact Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                  <div className="bg-gray-700 p-2 rounded">
-                    <div className="text-gray-400 mb-1">League Points</div>
+                  <div className="bg-surface-elevated p-2 rounded">
+                    <div className="text-secondary mb-1">League Points</div>
                     <div className="text-white font-semibold">
                       {robot.leaguePoints}
                       {leagueRank && (
-                        <span className="text-gray-400 text-xs ml-1">
+                        <span className="text-secondary text-xs ml-1">
                           (#{leagueRank.rank}/{leagueRank.total}, Top {leagueRank.percentile.toFixed(0)}%)
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="bg-gray-700 p-2 rounded">
-                    <div className="text-gray-400 mb-1">Fame</div>
-                    <div className="text-yellow-400 font-semibold">{robot.fame}</div>
+                  <div className="bg-surface-elevated p-2 rounded">
+                    <div className="text-secondary mb-1">Fame</div>
+                    <div className="text-warning font-semibold">{robot.fame}</div>
                   </div>
-                  <div className="bg-gray-700 p-2 rounded">
-                    <div className="text-gray-400 mb-1">Damage (Dealt / Taken)</div>
+                  <div className="bg-surface-elevated p-2 rounded">
+                    <div className="text-secondary mb-1">Damage (Dealt / Taken)</div>
                     <div className="text-white font-semibold">
                       {robot.damageDealtLifetime.toLocaleString()} / {robot.damageTakenLifetime.toLocaleString()}
                     </div>
                   </div>
-                  <div className="bg-gray-700 p-2 rounded">
-                    <div className="text-gray-400 mb-1">Destroyed / Ratio</div>
-                    <div className="text-green-400 font-semibold">
+                  <div className="bg-surface-elevated p-2 rounded">
+                    <div className="text-secondary mb-1">Destroyed / Ratio</div>
+                    <div className="text-success font-semibold">
                       {robot.kills} / {robot.losses > 0 
                         ? (robot.kills / robot.losses).toFixed(2) 
                         : robot.kills.toFixed(2)}
                     </div>
                   </div>
-                  <div className="bg-gray-700 p-2 rounded">
-                    <div className="text-gray-400 mb-1">Lifetime Repairs</div>
+                  <div className="bg-surface-elevated p-2 rounded">
+                    <div className="text-secondary mb-1">Lifetime Repairs</div>
                     <div className="text-white font-semibold">₡{robot.totalRepairsPaid.toLocaleString()}</div>
                   </div>
                   {robot.titles && robot.titles.trim() && (
-                    <div className="bg-gray-700 p-2 rounded">
-                      <div className="text-gray-400 mb-1">Titles</div>
-                      <div className="text-yellow-400 font-semibold text-xs truncate">
+                    <div className="bg-surface-elevated p-2 rounded">
+                      <div className="text-secondary mb-1">Titles</div>
+                      <div className="text-warning font-semibold text-xs truncate">
                         {robot.titles.split(',').length} earned
                       </div>
                     </div>
@@ -757,15 +757,15 @@ function RobotDetailPage() {
 
           {/* Non-Owner View for owner-only tabs */}
           {!isOwner && (activeTab === 'battle-config' || activeTab === 'upgrades' || activeTab === 'stats') && (
-            <div className="bg-gray-800 p-6 rounded-lg text-center">
-              <p className="text-gray-400 text-lg">
+            <div className="bg-surface p-6 rounded-lg text-center">
+              <p className="text-secondary text-lg">
                 {activeTab === 'stats' 
                   ? 'Detailed stats are only visible to the robot owner.'
                   : 'You can only view battle configuration and upgrades for your own robots.'}
               </p>
               <button
                 onClick={() => navigate('/robots')}
-                className="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded"
+                className="mt-4 bg-primary hover:bg-blue-700 px-6 py-2 rounded"
               >
                 View My Robots
               </button>

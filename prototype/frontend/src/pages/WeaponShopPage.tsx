@@ -497,11 +497,11 @@ function WeaponShopPage() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'energy': return 'text-blue-400';
+      case 'energy': return 'text-primary';
       case 'ballistic': return 'text-orange-400';
-      case 'melee': return 'text-red-400';
-      case 'explosive': return 'text-yellow-400';
-      default: return 'text-gray-400';
+      case 'melee': return 'text-error';
+      case 'explosive': return 'text-warning';
+      default: return 'text-secondary';
     }
   };
 
@@ -546,38 +546,38 @@ function WeaponShopPage() {
     switch (loadoutType) {
       case 'shield': return 'text-cyan-400';
       case 'two_handed': return 'text-purple-400';
-      case 'one_handed': return 'text-green-400';
-      default: return 'text-gray-400';
+      case 'one_handed': return 'text-success';
+      default: return 'text-secondary';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <Navigation />
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Weapon Shop</h1>
-          <p className="text-gray-400">Purchase weapons to equip your robots. Weapons provide attribute bonuses and combat capabilities.</p>
+          <p className="text-secondary">Purchase weapons to equip your robots. Weapons provide attribute bonuses and combat capabilities.</p>
         </div>
 
         {/* Onboarding banner */}
         {isOnboarding && (
           <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               <div className="flex-1">
-                <p className="text-blue-400 font-semibold mb-1">Tutorial Step 7: Weapon Purchase</p>
-                <p className="text-gray-300 text-sm mb-3">
+                <p className="text-primary font-semibold mb-1">Tutorial Step 7: Weapon Purchase</p>
+                <p className="text-secondary text-sm mb-3">
                   Browse the weapons below and purchase one or more for your robot(s). We've filtered to show
                   budget-friendly options under ₡300,000. You can buy multiple weapons if you're planning
                   to use Dual-Wield or have multiple robots.
                 </p>
                 <button
                   onClick={() => navigate('/onboarding')}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-sm font-semibold"
+                  className="px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded transition-colors text-sm font-semibold"
                 >
                   Return to Tutorial
                 </button>
@@ -588,7 +588,7 @@ function WeaponShopPage() {
 
         {/* Storage Capacity */}
         {storageStatus && (
-          <div className="bg-gray-800 p-6 rounded-lg mb-6">
+          <div className="bg-surface p-6 rounded-lg mb-6">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-semibold">Storage Capacity</h3>
               <span className="text-lg font-bold">
@@ -597,11 +597,11 @@ function WeaponShopPage() {
             </div>
             
             {/* Dual-color progress bar showing equipped vs available */}
-            <div className="w-full bg-gray-700 rounded-full h-4 mb-2 overflow-hidden flex">
+            <div className="w-full bg-surface-elevated rounded-full h-4 mb-2 overflow-hidden flex">
               {/* Equipped weapons segment (blue) */}
               {equippedWeaponsCount > 0 && (
                 <div
-                  className="h-4 bg-blue-500 transition-all"
+                  className="h-4 bg-primary-dark transition-all"
                   style={{ width: `${(equippedWeaponsCount / storageStatus.maxCapacity) * 100}%` }}
                   title={`${equippedWeaponsCount} weapon(s) equipped`}
                 />
@@ -626,8 +626,8 @@ function WeaponShopPage() {
             <div className="flex items-center justify-between gap-4 text-sm mb-2">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                  <span className="text-gray-300">Equipped: {equippedWeaponsCount}</span>
+                  <div className="w-3 h-3 bg-primary-dark rounded"></div>
+                  <span className="text-secondary">Equipped: {equippedWeaponsCount}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className={`w-3 h-3 rounded ${
@@ -637,18 +637,18 @@ function WeaponShopPage() {
                       ? 'bg-yellow-500'
                       : 'bg-green-500'
                   }`}></div>
-                  <span className="text-gray-300">Available: {storageStatus.currentWeapons - equippedWeaponsCount}</span>
+                  <span className="text-secondary">Available: {storageStatus.currentWeapons - equippedWeaponsCount}</span>
                 </div>
               </div>
             </div>
             
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-secondary">
               {storageStatus.isFull ? (
-                <span className="text-red-400 font-semibold">
+                <span className="text-error font-semibold">
                   ⚠️ Storage full! Upgrade Storage Facility to increase capacity.
                 </span>
               ) : storageStatus.percentageFull >= 80 ? (
-                <span className="text-yellow-400">
+                <span className="text-warning">
                   Running low on storage space. {storageStatus.remainingSlots} slot(s) remaining.
                 </span>
               ) : (
@@ -659,7 +659,7 @@ function WeaponShopPage() {
         )}
 
         {loading && (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-secondary">
             Loading weapons...
           </div>
         )}
@@ -700,7 +700,7 @@ function WeaponShopPage() {
 
             {/* Table View */}
             {viewMode === 'table' && (
-              <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <div className="bg-surface rounded-lg overflow-hidden">
                 <WeaponTable
                   weapons={processedWeapons}
                   onPurchase={handlePurchase}
@@ -721,9 +721,9 @@ function WeaponShopPage() {
             {viewMode === 'card' && (
               <>
                 {processedWeapons.length === 0 ? (
-                  <div className="bg-gray-800 rounded-lg p-12 text-center">
-                    <p className="text-gray-400 text-lg mb-2">No weapons match your filters</p>
-                    <p className="text-gray-500 text-sm">Try adjusting your filters to see more weapons</p>
+                  <div className="bg-surface rounded-lg p-12 text-center">
+                    <p className="text-secondary text-lg mb-2">No weapons match your filters</p>
+                    <p className="text-tertiary text-sm">Try adjusting your filters to see more weapons</p>
                   </div>
                 ) : (
                   <>
@@ -733,14 +733,14 @@ function WeaponShopPage() {
                           <h2 className={`text-2xl font-bold mb-4 ${getLoadoutTypeColor(loadoutType)}`}>
                             {getLoadoutTypeLabel(loadoutType)}
                           </h2>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     {weaponList.map((weapon) => {
                       const bonuses = getAttributeBonuses(weapon);
                       const discountedPrice = calculateDiscountedPrice(weapon.cost);
                       const hasDiscount = weaponWorkshopLevel > 0;
                       const isSelected = selectedForComparison.includes(weapon.id);
                       return (
-                        <div key={weapon.id} className="bg-gray-800 p-6 rounded-lg relative">
+                        <div key={weapon.id} className="bg-surface p-6 rounded-lg relative">
                           {/* Owned Indicator */}
                           {ownedWeapons.get(weapon.id) && (
                             <div className="absolute top-4 right-4 z-10 bg-blue-900/50 border border-blue-600 px-2 py-1 rounded text-xs font-semibold text-blue-300">
@@ -750,15 +750,15 @@ function WeaponShopPage() {
                           
                           {/* Comparison Checkbox */}
                           <div className="absolute top-4 left-4 z-10">
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
                                 onChange={() => toggleComparison(weapon.id)}
                                 disabled={!isSelected && selectedForComparison.length >= 3}
-                                className="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800"
+                                className="w-5 h-5 rounded border-white/10 text-primary focus:ring-blue-500 focus:ring-offset-surface"
                               />
-                              <span className="text-sm text-gray-400">Compare</span>
+                              <span className="text-sm text-secondary">Compare</span>
                             </label>
                           </div>
                           
@@ -777,7 +777,7 @@ function WeaponShopPage() {
 
                           <div className="flex justify-between items-start mb-4">
                             <h3 
-                              className="text-xl font-semibold cursor-pointer hover:text-blue-400 transition-colors"
+                              className="text-xl font-semibold cursor-pointer hover:text-primary transition-colors"
                               onClick={() => setSelectedWeapon(weapon)}
                             >
                               {weapon.name}
@@ -787,28 +787,28 @@ function WeaponShopPage() {
                             </span>
                           </div>
 
-                          <p className="text-gray-400 text-sm mb-4">{weapon.description}</p>
+                          <p className="text-secondary text-sm mb-4">{weapon.description}</p>
 
                           <div className="space-y-2 mb-4">
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-400">Loadout Type:</span>
+                              <span className="text-secondary">Loadout Type:</span>
                               <span className="font-semibold capitalize">{weapon.loadoutType.replace('_', ' ')}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-400">Base Damage:</span>
+                              <span className="text-secondary">Base Damage:</span>
                               <span className="font-semibold">{weapon.baseDamage}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-400">Cooldown:</span>
+                              <span className="text-secondary">Cooldown:</span>
                               <span className="font-semibold">{calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage)}s</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-400">Cost:</span>
+                              <span className="text-secondary">Cost:</span>
                               <div className="flex flex-col items-end">
                                 {hasDiscount && (
-                                  <span className="text-xs text-gray-500 line-through">₡{weapon.cost.toLocaleString()}</span>
+                                  <span className="text-xs text-tertiary line-through">₡{weapon.cost.toLocaleString()}</span>
                                 )}
-                                <span className="font-semibold text-green-400">
+                                <span className="font-semibold text-success">
                                   ₡{discountedPrice.toLocaleString()}
                                   {hasDiscount && <span className="text-xs ml-1">({calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}% off)</span>}
                                 </span>
@@ -817,11 +817,11 @@ function WeaponShopPage() {
                           </div>
 
                           {bonuses.length > 0 && (
-                            <div className="mb-4 p-3 bg-gray-700 rounded">
-                              <div className="text-xs text-gray-400 mb-2">Attribute Bonuses:</div>
+                            <div className="mb-4 p-3 bg-surface-elevated rounded">
+                              <div className="text-xs text-secondary mb-2">Attribute Bonuses:</div>
                               <div className="flex flex-wrap gap-1">
                                 {bonuses.map((bonus, idx) => (
-                                  <span key={idx} className="text-xs bg-gray-600 px-2 py-1 rounded">
+                                  <span key={idx} className="text-xs bg-surface-elevated px-2 py-1 rounded">
                                     {bonus}
                                   </span>
                                 ))}
@@ -836,14 +836,14 @@ function WeaponShopPage() {
                               !!(user && user.currency < discountedPrice) ||
                               !!(storageStatus && storageStatus.isFull)
                             }
-                            className={`w-full py-2 rounded transition-colors ${
+                            className={`w-full py-2 min-h-[44px] rounded transition-colors ${
                               storageStatus && storageStatus.isFull
                                 ? 'bg-red-900 text-red-300 cursor-not-allowed'
                                 : user && user.currency < discountedPrice
-                                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                ? 'bg-surface-elevated text-tertiary cursor-not-allowed'
                                 : purchasing === weapon.id
-                                ? 'bg-gray-700 text-gray-400'
-                                : 'bg-blue-600 hover:bg-blue-700'
+                                ? 'bg-surface-elevated text-secondary'
+                                : 'bg-primary hover:bg-blue-700'
                             }`}
                           >
                             {storageStatus && storageStatus.isFull
@@ -926,15 +926,15 @@ function WeaponShopPage() {
       {/* Onboarding guided overlay */}
       {isOnboarding && onboardingGuideStep === 0 && !loading && (
         <GuidedUIOverlay
-          targetSelector=".bg-gray-800.p-6.rounded-lg"
+          targetSelector=".bg-surface.p-6.rounded-lg"
           tooltipContent={
             <div>
-              <p className="font-semibold text-blue-400 mb-2">Choose a Weapon</p>
+              <p className="font-semibold text-primary mb-2">Choose a Weapon</p>
               <p className="mb-2">
                 Browse the weapons below. We've filtered to show affordable options
                 under ₡300,000 that fit your budget.
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-secondary">
                 Look for weapons with attribute bonuses that complement your robot's build.
                 After purchasing, you'll return to the tutorial.
               </p>

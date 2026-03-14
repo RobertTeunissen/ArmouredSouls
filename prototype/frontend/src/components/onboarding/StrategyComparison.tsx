@@ -71,8 +71,8 @@ const ComparisonTable = ({ selectedStrategy }: { selectedStrategy?: RosterStrate
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b-2 border-gray-700">
-            <th className="text-left p-3 text-sm font-semibold text-gray-400">Metric</th>
+          <tr className="border-b-2 border-white/10">
+            <th className="text-left p-3 text-sm font-semibold text-secondary">Metric</th>
             {strategies.map((strategy) => {
               const data = STRATEGY_DATA[strategy];
               const isSelected = selectedStrategy === strategy;
@@ -81,12 +81,12 @@ const ComparisonTable = ({ selectedStrategy }: { selectedStrategy?: RosterStrate
                 <th
                   key={strategy}
                   className={`p-3 text-sm font-semibold text-center transition-colors ${
-                    isSelected ? 'bg-blue-900 bg-opacity-30 text-blue-400' : 'text-gray-300'
+                    isSelected ? 'bg-blue-900 bg-opacity-30 text-primary' : 'text-secondary'
                   }`}
                 >
                   {data.name}
                   {isSelected && (
-                    <div className="text-xs font-normal text-blue-400 mt-1">SELECTED</div>
+                    <div className="text-xs font-normal text-primary mt-1">SELECTED</div>
                   )}
                 </th>
               );
@@ -98,13 +98,13 @@ const ComparisonTable = ({ selectedStrategy }: { selectedStrategy?: RosterStrate
             <tr
               key={metric.label}
               className={`border-b border-gray-800 ${
-                metric.highlight ? 'bg-gray-800 bg-opacity-30' : ''
+                metric.highlight ? 'bg-surface bg-opacity-30' : ''
               }`}
             >
               <td className="p-3">
                 <div className="text-sm font-medium">{metric.label}</div>
                 {metric.description && (
-                  <div className="text-xs text-gray-400 mt-1">{metric.description}</div>
+                  <div className="text-xs text-secondary mt-1">{metric.description}</div>
                 )}
               </td>
               {strategies.map((strategy) => {
@@ -138,7 +138,7 @@ const ComparisonTable = ({ selectedStrategy }: { selectedStrategy?: RosterStrate
 const BudgetComparisonChart = ({ selectedStrategy }: { selectedStrategy?: RosterStrategy }) => {
   const strategies: RosterStrategy[] = ['1_mighty', '2_average', '3_flimsy'];
   const categories = [
-    { key: 'facilities', label: 'Facilities', color: 'bg-blue-500' },
+    { key: 'facilities', label: 'Facilities', color: 'bg-primary-dark' },
     { key: 'robots', label: 'Robots', color: 'bg-green-500' },
     { key: 'weapons', label: 'Weapons', color: 'bg-red-500' },
     { key: 'attributes', label: 'Attributes', color: 'bg-yellow-500' },
@@ -160,13 +160,13 @@ const BudgetComparisonChart = ({ selectedStrategy }: { selectedStrategy?: Roster
             className={`p-4 rounded-lg border transition-all ${
               isSelected
                 ? 'border-blue-500 bg-blue-900 bg-opacity-20'
-                : 'border-gray-700 bg-gray-800 bg-opacity-30'
+                : 'border-white/10 bg-surface bg-opacity-30'
             }`}
           >
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold text-gray-100">{data.name}</h4>
               {isSelected && (
-                <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                <span className="text-xs bg-primary-dark text-white px-2 py-1 rounded-full">
                   SELECTED
                 </span>
               )}
@@ -205,10 +205,10 @@ const BudgetComparisonChart = ({ selectedStrategy }: { selectedStrategy?: Roster
                   <div key={key} className="flex flex-col">
                     <div className="flex items-center gap-1 mb-1">
                       <div className={`w-2 h-2 rounded-full ${color}`} />
-                      <span className="text-gray-400">{label}</span>
+                      <span className="text-secondary">{label}</span>
                     </div>
                     <div className="font-medium">{formatCurrency(avg)}</div>
-                    <div className="text-gray-500">
+                    <div className="text-tertiary">
                       {formatCurrency(min)}-{formatCurrency(max)}
                     </div>
                   </div>
@@ -271,19 +271,19 @@ const TradeoffsComparison = () => {
       <h3 className="text-lg font-semibold mb-4 text-gray-100">Key Trade-offs</h3>
       
       {tradeoffs.map((tradeoff, index) => (
-        <div key={index} className="bg-gray-800 bg-opacity-30 rounded-lg p-4">
+        <div key={index} className="bg-surface bg-opacity-30 rounded-lg p-4">
           <h4 className="font-semibold mb-1 text-gray-100">{tradeoff.title}</h4>
-          <p className="text-sm text-gray-400 mb-3">{tradeoff.description}</p>
+          <p className="text-sm text-secondary mb-3">{tradeoff.description}</p>
           
           <div className="space-y-2">
             {tradeoff.comparison.map((item, idx) => {
               const data = STRATEGY_DATA[item.strategy as RosterStrategy];
               return (
                 <div key={idx} className="flex items-start gap-3 text-sm">
-                  <div className="w-32 flex-shrink-0 font-medium text-gray-300">
+                  <div className="w-32 flex-shrink-0 font-medium text-secondary">
                     {data.name}:
                   </div>
-                  <div className="text-gray-400">{item.value}</div>
+                  <div className="text-secondary">{item.value}</div>
                 </div>
               );
             })}
@@ -319,18 +319,18 @@ const RecommendationGuide = () => {
 
   return (
     <div className="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-6">
-      <h3 className="text-lg font-semibold mb-4 text-blue-400">Which Strategy is Right for You?</h3>
+      <h3 className="text-lg font-semibold mb-4 text-primary">Which Strategy is Right for You?</h3>
       
       <div className="space-y-4">
         {recommendations.map((rec, index) => {
           const data = STRATEGY_DATA[rec.strategy];
           return (
             <div key={index} className="flex items-start gap-3">
-              <div className="text-blue-400 text-xl">→</div>
+              <div className="text-primary text-xl">→</div>
               <div>
                 <div className="font-semibold mb-1">{rec.preference}</div>
-                <div className="text-sm text-gray-300">
-                  <span className="text-blue-400 font-medium">{data.name}</span> - {rec.reason}
+                <div className="text-sm text-secondary">
+                  <span className="text-primary font-medium">{data.name}</span> - {rec.reason}
                 </div>
               </div>
             </div>
@@ -338,7 +338,7 @@ const RecommendationGuide = () => {
         })}
       </div>
 
-      <div className="mt-6 pt-4 border-t border-blue-800 text-sm text-gray-400">
+      <div className="mt-6 pt-4 border-t border-blue-800 text-sm text-secondary">
         <strong>Remember:</strong> You can reset your account later if you want to try a different strategy.
         All strategies are viable - choose what sounds most fun to you!
       </div>
@@ -356,24 +356,24 @@ const StrategyComparison = ({ selectedStrategy, onSelectStrategy }: StrategyComp
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">Compare Roster Strategies</h2>
-        <p className="text-gray-400">
+        <p className="text-secondary">
           Understand the trade-offs between different approaches to help you make an informed decision.
         </p>
       </div>
 
       {/* Comparison Table */}
-      <div className="bg-surface rounded-lg border border-gray-700 p-6">
+      <div className="bg-surface rounded-lg border border-white/10 p-6">
         <h3 className="text-lg font-semibold mb-4">Strategy Comparison</h3>
         <ComparisonTable selectedStrategy={selectedStrategy} />
       </div>
 
       {/* Budget Comparison */}
-      <div className="bg-surface rounded-lg border border-gray-700 p-6">
+      <div className="bg-surface rounded-lg border border-white/10 p-6">
         <BudgetComparisonChart selectedStrategy={selectedStrategy} />
       </div>
 
       {/* Trade-offs */}
-      <div className="bg-surface rounded-lg border border-gray-700 p-6">
+      <div className="bg-surface rounded-lg border border-white/10 p-6">
         <TradeoffsComparison />
       </div>
 
@@ -394,8 +394,8 @@ const StrategyComparison = ({ selectedStrategy, onSelectStrategy }: StrategyComp
                 className={`
                   px-6 py-3 rounded-lg font-semibold transition-all
                   ${isSelected
-                    ? 'bg-blue-600 hover:bg-blue-500 text-white ring-4 ring-blue-500 ring-opacity-30'
-                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    ? 'bg-primary hover:bg-primary-dark text-white ring-4 ring-blue-500 ring-opacity-30'
+                    : 'bg-surface-elevated hover:bg-gray-600 text-secondary'
                   }
                 `}
               >

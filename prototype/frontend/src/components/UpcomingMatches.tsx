@@ -195,16 +195,16 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
 
   if (loading) {
     return (
-      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
-        <p className="text-sm text-gray-400">Loading...</p>
+        <p className="text-sm text-secondary">Loading...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
         <p className="text-sm text-error">{error}</p>
       </div>
@@ -213,15 +213,15 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
 
   if (matches.length === 0) {
     return (
-      <div className="bg-surface p-4 rounded-lg border border-gray-700">
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h2 className="text-lg font-semibold mb-3">Upcoming Matches</h2>
-        <p className="text-sm text-gray-400">No upcoming matches scheduled</p>
+        <p className="text-sm text-secondary">No upcoming matches scheduled</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-surface p-4 rounded-lg border border-gray-700">
+    <div className="bg-surface p-4 rounded-lg border border-white/10">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold">Upcoming Matches</h2>
         {battleReadiness && !battleReadiness.isReady && (
@@ -267,7 +267,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
               <div 
                 key={match.id} 
                 className={`
-                  bg-[#252b38] border border-gray-700 rounded-lg p-2 mb-1.5
+                  bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
                   border-l-4 border-l-cyan-400
                   hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
                   transition-all duration-150 ease-out
@@ -283,7 +283,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                   
                   {/* Status Badge */}
                   <div className="flex-shrink-0 w-16">
-                    <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-blue-500/20 text-blue-400">
+                    <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-primary-dark/20 text-primary">
                       PENDING
                     </div>
                   </div>
@@ -333,7 +333,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5">
                       <span className="text-base">🤝</span>
-                      <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                      <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-primary-dark/20 text-primary">
                         PENDING
                       </div>
                       <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
@@ -393,7 +393,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
               <div 
                 key={match.id} 
                 className={`
-                  bg-[#252b38] border border-gray-700 rounded-lg p-2 mb-1.5
+                  bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
                   border-l-4 border-l-[#d29922]
                   transition-all duration-150 ease-out
                 `}
@@ -402,7 +402,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                 <div className="hidden md:flex items-center gap-3">
                   <div className="flex-shrink-0 w-6 text-center text-base">🏆</div>
                   <div className="flex-shrink-0 w-16">
-                    <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-yellow-500/20 text-yellow-400">
+                    <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-yellow-500/20 text-warning">
                       BYE
                     </div>
                   </div>
@@ -410,7 +410,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                     <div className="text-xs text-[#d29922] mb-0.5">{tournamentLabel}</div>
                     <div className="font-medium text-xs">
                       <span className="text-[#58a6ff]">{myRobot.name}</span>
-                      <span className="text-yellow-400 ml-2">auto-advances to next round</span>
+                      <span className="text-warning ml-2">auto-advances to next round</span>
                     </div>
                   </div>
                   <div className="flex-shrink-0 w-48 text-right">
@@ -425,7 +425,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5">
                       <span className="text-base">🏆</span>
-                      <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
+                      <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-warning">
                         BYE
                       </div>
                     </div>
@@ -433,7 +433,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                   <div className="text-xs text-[#d29922] mb-1.5">{tournamentLabel}</div>
                   <div className="text-sm font-medium mb-1">
                     <span className="text-[#58a6ff]">{myRobot.name}</span>
-                    <span className="text-yellow-400 ml-2">auto-advances</span>
+                    <span className="text-warning ml-2">auto-advances</span>
                   </div>
                   <div className="text-xs text-[#8b949e]">
                     Top seed — no opponent in this round
@@ -459,7 +459,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
             <div 
               key={match.id} 
               className={`
-                bg-[#252b38] border border-gray-700 rounded-lg p-2 mb-1.5
+                bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
                 border-l-4 ${getBorderColor()}
                 hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
                 transition-all duration-150 ease-out
@@ -475,7 +475,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                 
                 {/* Status Badge */}
                 <div className="flex-shrink-0 w-16">
-                  <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-blue-500/20 text-blue-400">
+                  <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-primary-dark/20 text-primary">
                     PENDING
                   </div>
                 </div>
@@ -516,7 +516,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-base">{isTournament ? '🏆' : '⚔️'}</span>
-                    <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                    <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-primary-dark/20 text-primary">
                       PENDING
                     </div>
                   </div>
