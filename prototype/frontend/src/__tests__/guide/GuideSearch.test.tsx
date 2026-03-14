@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import GuideSearch, { filterAndRankResults } from '../../components/guide/GuideSearch';
+import GuideSearch from '../../components/guide/GuideSearch';
+import { filterAndRankResults } from '../../utils/guideSearchUtils';
 import * as guideApi from '../../utils/guideApi';
 
 vi.mock('../../utils/guideApi', async () => {

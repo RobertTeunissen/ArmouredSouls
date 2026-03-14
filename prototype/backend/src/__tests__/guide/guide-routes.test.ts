@@ -109,9 +109,9 @@ describe('Guide Router', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedGuideService.getSections.mockReturnValue(MOCK_SECTIONS as any);
-    mockedGuideService.getArticle.mockReturnValue(MOCK_ARTICLE as any);
-    mockedGuideService.getSearchIndex.mockReturnValue(MOCK_SEARCH_INDEX as any);
+    mockedGuideService.getSections.mockReturnValue(MOCK_SECTIONS as unknown as ReturnType<typeof guideService.getSections>);
+    mockedGuideService.getArticle.mockReturnValue(MOCK_ARTICLE as unknown as ReturnType<typeof guideService.getArticle>);
+    mockedGuideService.getSearchIndex.mockReturnValue(MOCK_SEARCH_INDEX as unknown as ReturnType<typeof guideService.getSearchIndex>);
   });
 
   // --- 401 for unauthenticated requests ---

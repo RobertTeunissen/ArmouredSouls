@@ -87,7 +87,7 @@ describe('MatchCard', () => {
         robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
         isByeMatch: true, status: 'completed', winnerId: 10,
       });
-      const { container } = render(
+      render(
         <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const byeBadge = screen.getByText('BYE');

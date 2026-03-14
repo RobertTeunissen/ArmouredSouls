@@ -28,6 +28,7 @@ export function useZoomPan(resetDeps: unknown[] = []): ZoomPanState {
   const translateStart = useRef({ x: 0, y: 0 });
   const lastTouchDistance = useRef<number | null>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setScale(1);
     setTranslate({ x: 0, y: 0 });

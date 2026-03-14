@@ -1,58 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SearchIndexEntry, fetchSearchIndex } from '../../utils/guideApi';
-import GuideSearchResults, { SearchResult } from './GuideSearchResults';
+import GuideSearchResults from './GuideSearchResults';
+import { filterAndRankResults } from '../../utils/guideSearchUtils';
 
 interface GuideSearchProps {
   onResultSelect?: (sectionSlug: string, articleSlug: string) => void;
-}
-
-export function filterAndRankResults(
-  entries: SearchIndexEntry[],
-  query: string
-): SearchResult[] {
-  if (query.length < 2) return [];
-
-  const lowerQuery = query.toLowerCase();
-  const titleMatches: SearchResult[] = [];
-  const sectionMatches: SearchResult[] = [];
-  const bodyMatches: SearchResult[] = [];
-
-  for (const entry of entries) {
-    const titleMatch = entry.title.toLowerCase().includes(lowerQuery);
-    const sectionMatch = entry.sectionTitle.toLowerCase().includes(lowerQuery);
-    const bodyMatch = entry.bodyText.toLowerCase().includes(lowerQuery);
-
-    if (titleMatch) {
-      titleMatches.push({
-        slug: entry.slug,
-        title: entry.title,
-        sectionSlug: entry.sectionSlug,
-        sectionTitle: entry.sectionTitle,
-        description: entry.description,
-        matchType: 'title',
-      });
-    } else if (sectionMatch) {
-      sectionMatches.push({
-        slug: entry.slug,
-        title: entry.title,
-        sectionSlug: entry.sectionSlug,
-        sectionTitle: entry.sectionTitle,
-        description: entry.description,
-        matchType: 'section',
-      });
-    } else if (bodyMatch) {
-      bodyMatches.push({
-        slug: entry.slug,
-        title: entry.title,
-        sectionSlug: entry.sectionSlug,
-        sectionTitle: entry.sectionTitle,
-        description: entry.description,
-        matchType: 'body',
-      });
-    }
-  }
-
-  return [...titleMatches, ...sectionMatches, ...bodyMatches];
 }
 
 const GuideSearch: React.FC<GuideSearchProps> = ({ onResultSelect }) => {
