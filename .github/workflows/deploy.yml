@@ -231,23 +231,25 @@ jobs:
             ./prototype/frontend/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/
 
+      - name: Download frontend build artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: frontend-build
+          path: prototype/frontend/dist/
+
+      - name: Transfer pre-built frontend to VPS
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/frontend/dist/ \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/dist/
+
       - name: Transfer shared utilities via rsync
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./prototype/shared/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/shared/
-
-      - name: Build frontend on VPS
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.ACC_VPS_IP }}
-          username: ${{ secrets.ACC_VPS_USER }}
-          key: ${{ secrets.ACC_SSH_KEY }}
-          script: |
-            cd /opt/armouredsouls/frontend
-            npm ci
-            npm run build
 
       - name: Transfer ecosystem config
         run: |
@@ -368,23 +370,25 @@ jobs:
             ./prototype/frontend/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/
 
+      - name: Download frontend build artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: frontend-build
+          path: prototype/frontend/dist/
+
+      - name: Transfer pre-built frontend to VPS
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./prototype/frontend/dist/ \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/dist/
+
       - name: Transfer shared utilities via rsync
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./prototype/shared/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/shared/
-
-      - name: Build frontend on VPS
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.PRD_VPS_IP }}
-          username: ${{ secrets.PRD_VPS_USER }}
-          key: ${{ secrets.PRD_SSH_KEY }}
-          script: |
-            cd /opt/armouredsouls/frontend
-            npm ci
-            npm run build
 
       - name: Transfer ecosystem config
         run: |
