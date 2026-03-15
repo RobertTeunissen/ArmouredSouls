@@ -35,14 +35,15 @@ const BYE_ROBOT_NAME = 'Bye Robot';
 
 /**
  * Get the current cycle number from metadata
- * Returns the CURRENT cycle (totalCycles + 1) since totalCycles represents COMPLETED cycles
+ * Returns the CURRENT cycle number (same as totalCycles in cycleMetadata)
+ * The settlement job increments totalCycles when closing a cycle,
+ * so totalCycles always represents the active cycle number.
  * Returns 1 if metadata doesn't exist (e.g., during tests or first cycle)
  */
 export async function getCurrentCycleNumber(): Promise<number> {
   try {
     const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    // totalCycles = completed cycles, so current cycle = totalCycles + 1
-    return (metadata?.totalCycles || 0) + 1;
+    return metadata?.totalCycles || 1;
   } catch (error) {
     // If cycleMetadata table doesn't exist or query fails, return 1 (first cycle)
     logger.warn('[BattleOrchestrator] Could not fetch cycle number, defaulting to 1:', error);

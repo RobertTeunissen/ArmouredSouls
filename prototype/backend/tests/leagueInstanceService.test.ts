@@ -169,7 +169,8 @@ describe('League Instance Service', () => {
       
       expect(stats.totalRobots).toBe(100);
       expect(stats.averagePerInstance).toBe(50);
-      expect(stats.needsRebalancing).toBe(false); // Changed: needsRebalancing only true when instance > MAX_ROBOTS_PER_INSTANCE (100)
+      // Deviation of 30 exceeds REBALANCE_THRESHOLD (20), so rebalancing is needed
+      expect(stats.needsRebalancing).toBe(true);
 
       // Clean up
       await prisma.robot.deleteMany({ where: { userId: user.id } });
@@ -355,22 +356,19 @@ describe('League Instance Service', () => {
 
       await rebalanceInstances('champion');
 
-      // Since neither instance exceeds MAX_ROBOTS_PER_INSTANCE (100), rebalancing won't trigger
-      // The instances will remain as they were (80 and 20)
+      // Deviation of 30 exceeds REBALANCE_THRESHOLD (20), so rebalancing triggers
+      // Round-robin redistribution should produce 50/50 split
       const instances = await getInstancesForTier('champion');
       const totalRobots = instances.reduce(
         (sum, instance) => sum + instance.currentRobots,
         0,
       );
       expect(totalRobots).toBe(100);
-      
-      // Should still have 2 instances since rebalancing didn't trigger
       expect(instances).toHaveLength(2);
-      
-      // Verify no instance exceeds the limit
-      instances.forEach((instance) => {
-        expect(instance.currentRobots).toBeLessThanOrEqual(100);
-      });
+
+      // Each instance should have 50 robots after round-robin redistribution
+      expect(instances[0].currentRobots).toBe(50);
+      expect(instances[1].currentRobots).toBe(50);
 
       // Clean up
       await prisma.robot.deleteMany({ where: { userId: user.id } });

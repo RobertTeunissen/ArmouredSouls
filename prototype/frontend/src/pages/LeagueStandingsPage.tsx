@@ -229,16 +229,16 @@ function LeagueStandingsPage() {
           <>
             <div className="bg-surface rounded-lg overflow-hidden">
               <div className="overflow-x-auto scrollbar-thin">
-                <table className="w-full min-w-[600px]">
+                <table className="w-full">
                   <thead className="bg-surface-elevated">
                     <tr>
-                      <th className="px-2 lg:px-4 py-3 text-left font-semibold">Rank</th>
-                      <th className="px-2 lg:px-4 py-3 text-left font-semibold">Robot</th>
-                      <th className="px-2 lg:px-4 py-3 text-left font-semibold">Owner</th>
-                      <th className="px-2 lg:px-4 py-3 text-center font-semibold">ELO</th>
-                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">LP</th>
+                      <th className="px-1.5 lg:px-4 py-3 text-left font-semibold text-sm lg:text-base">#</th>
+                      <th className="px-1.5 lg:px-4 py-3 text-left font-semibold text-sm lg:text-base">Robot</th>
+                      <th className="px-1.5 lg:px-4 py-3 text-left font-semibold text-sm lg:text-base">Owner</th>
+                      <th className="px-1.5 lg:px-4 py-3 text-center font-semibold text-sm lg:text-base">LP</th>
+                      <th className="px-1.5 lg:px-4 py-3 text-center font-semibold text-sm lg:text-base">ELO</th>
                       <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">Fame</th>
-                      <th className="px-2 lg:px-4 py-3 text-center font-semibold">W-D-L</th>
+                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">W-D-L</th>
                       <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">Win Rate</th>
                     </tr>
                   </thead>
@@ -259,30 +259,32 @@ function LeagueStandingsPage() {
                             isMyBot ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
-                          <td className={`px-2 lg:px-4 py-3 font-bold ${rankColor}`}>
+                          <td className={`px-1.5 lg:px-4 py-3 font-bold ${rankColor} text-sm lg:text-base`}>
                             #{rank}
                           </td>
-                          <td className="px-2 lg:px-4 py-3">
-                            <div className={`font-semibold ${isMyBot ? 'text-primary' : ''}`}>
+                          <td className="px-1.5 lg:px-4 py-3">
+                            <div className={`font-semibold text-sm lg:text-base truncate max-w-[100px] lg:max-w-none ${isMyBot ? 'text-primary' : ''}`}>
                               {robot.name}
                             </div>
                           </td>
-                          <td className="px-2 lg:px-4 py-3 text-secondary">
-                            {robot.user.stableName || robot.user.username}
+                          <td className="px-1.5 lg:px-4 py-3 text-secondary text-sm lg:text-base">
+                            <span className="truncate block max-w-[80px] lg:max-w-none">
+                              {robot.user.stableName || robot.user.username}
+                            </span>
                             {isMyBot && (
-                              <span className="ml-2 text-xs bg-primary px-2 py-1 rounded">
+                              <span className="ml-1 text-xs bg-primary px-1.5 py-0.5 rounded">
                                 YOU
                               </span>
                             )}
                           </td>
-                          <td className="px-2 lg:px-4 py-3 text-center font-mono">{robot.elo}</td>
-                          <td className="hidden lg:table-cell px-4 py-3 text-center font-mono text-warning">
+                          <td className="px-1.5 lg:px-4 py-3 text-center font-mono text-sm lg:text-base text-warning">
                             {robot.leaguePoints}
                           </td>
+                          <td className="px-1.5 lg:px-4 py-3 text-center font-mono text-sm lg:text-base">{robot.elo}</td>
                           <td className="hidden lg:table-cell px-4 py-3 text-center font-mono text-purple-400">
                             {robot.fame}
                           </td>
-                          <td className="px-2 lg:px-4 py-3 text-center font-mono">
+                          <td className="hidden lg:table-cell px-4 py-3 text-center font-mono">
                             <span className="text-success">{robot.wins}</span>
                             <span className="text-tertiary"> - </span>
                             <span className="text-warning">{robot.draws}</span>

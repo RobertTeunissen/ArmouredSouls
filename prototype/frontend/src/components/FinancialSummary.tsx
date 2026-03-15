@@ -75,7 +75,7 @@ function FinancialSummary() {
         </div>
 
         {/* Daily Net Income */}
-        <div className="pb-3 border-b border-white/10">
+        <div className="pb-3">
           <div className="text-xs text-secondary mb-1">Daily Passive Net</div>
           <div className={`text-lg font-bold ${isPositive ? 'text-success' : 'text-error'}`}>
             {isPositive ? '+' : ''}{formatCurrency(summary.netPassiveIncome)}
