@@ -42,7 +42,7 @@ const mockTournaments = [
   {
     id: 1,
     name: 'Grand Arena Championship',
-    type: 'single_elimination',
+    tournamentType: 'single_elimination',
     status: 'active' as const,
     currentRound: 3,
     maxRounds: 7,
@@ -55,7 +55,7 @@ const mockTournaments = [
   {
     id: 2,
     name: 'Rookie Rumble',
-    type: 'single_elimination',
+    tournamentType: 'single_elimination',
     status: 'completed' as const,
     currentRound: 5,
     maxRounds: 5,

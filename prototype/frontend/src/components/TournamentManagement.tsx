@@ -252,11 +252,6 @@ const TournamentManagement = () => {
                           <span className="font-semibold">{match.robot1?.name || 'TBD'}</span>
                           <span className="text-secondary text-xs">(ELO: {match.robot1?.elo || 'N/A'})</span>
                         </div>
-                        {match.robot1?.user && (
-                          <span className="text-xs text-secondary ml-6">
-                            {match.robot1.user.stableName || match.robot1.user.username}
-                          </span>
-                        )}
                         <span className="text-xs text-yellow-300 ml-6">(Bye - Auto-advance)</span>
                       </div>
                     ) : (
@@ -267,11 +262,6 @@ const TournamentManagement = () => {
                               <span className="font-semibold">{match.robot1?.name || 'TBD'}</span>
                               <span className="text-secondary text-xs">(ELO: {match.robot1?.elo || 'N/A'})</span>
                             </div>
-                            {match.robot1?.user && (
-                              <span className="text-xs text-secondary">
-                                {match.robot1.user.stableName || match.robot1.user.username}
-                              </span>
-                            )}
                           </div>
                           <span className="text-tertiary mx-2">vs</span>
                           <div className="flex flex-col">
@@ -279,11 +269,6 @@ const TournamentManagement = () => {
                               <span className="font-semibold">{match.robot2?.name || 'TBD'}</span>
                               <span className="text-secondary text-xs">(ELO: {match.robot2?.elo || 'N/A'})</span>
                             </div>
-                            {match.robot2?.user && (
-                              <span className="text-xs text-secondary">
-                                {match.robot2.user.stableName || match.robot2.user.username}
-                              </span>
-                            )}
                           </div>
                         </div>
                         {match.status === 'completed' && match.winnerId && (

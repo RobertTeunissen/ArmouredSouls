@@ -526,7 +526,7 @@ describe('TournamentDetailPage', () => {
       tournament: {
         id: 1,
         name: 'Test Tournament',
-        type: 'single_elimination',
+        tournamentType: 'single_elimination',
         status: 'completed',
         currentRound: 3,
         maxRounds: 3,
@@ -569,7 +569,7 @@ describe('TournamentDetailPage', () => {
       tournament: {
         id: 1,
         name: 'Recovered Tournament',
-        type: 'single_elimination',
+        tournamentType: 'single_elimination',
         status: 'active',
         currentRound: 1,
         maxRounds: 3,
@@ -598,7 +598,7 @@ describe('TournamentDetailPage', () => {
       tournament: {
         id: 1,
         name: 'Grand Championship',
-        type: 'single_elimination',
+        tournamentType: 'single_elimination',
         status: 'active',
         currentRound: 2,
         maxRounds: 4,

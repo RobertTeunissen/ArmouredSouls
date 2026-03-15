@@ -2,9 +2,9 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 2.1  
+**Version**: 3.0  
 **Date**: February 10, 2026  
-**Status**: ✅ IMPLEMENTED - Comprehensive admin portal with tabbed interface
+**Status**: ✅ IMPLEMENTED - Decomposed admin portal with 7-tab interface
 
 ---
 
@@ -15,6 +15,7 @@
 - v1.3 - Updated to acknowledge PRD_AUTO_USER_GENERATION.md has been implemented
 - v2.0 - **MAJOR UPDATE**: Consolidated all admin_page documentation, verified implementation status, updated with actual features
 - v2.1 - Added comprehensive frontend test suite (41 tests) for AdminPage and BattleDetailsModal components
+- v3.0 - **MAJOR OVERHAUL**: Decomposed monolithic AdminPage into thin shell + 6 tab components. Consolidated to 7 tabs (Dashboard, Cycle Controls, Tournaments, Battle Logs, Robot Stats, Bankruptcy Monitor, Recent Users). Integrated System Health into Dashboard as collapsible section. Promoted Bankruptcy Monitor to dedicated tab. Added tag team battle support in Battle Logs and BattleDetailsModal. Removed broken onboarding analytics link. Rewrote test suite as per-component tests.
 
 ---
 
@@ -23,17 +24,22 @@
 The Admin Page (`/admin`) is the primary testing and monitoring tool for Armoured Souls during the prototype phase. It provides comprehensive system management, battle debugging, robot analytics, and tournament administration through a modern tabbed interface.
 
 **Implemented Feature Overview:**
-- ✅ Tabbed interface (Dashboard, Cycle Controls, Tournaments, Battle Logs, Robot Stats)
+- ✅ Decomposed architecture: thin AdminPage shell + 6 independent tab components
+- ✅ 7-tab interface (Dashboard, Cycle Controls, Tournaments, Battle Logs, Robot Stats, Bankruptcy Monitor, Recent Users)
+- ✅ System Health integrated into Dashboard as collapsible section
+- ✅ Dedicated Bankruptcy Monitor tab (always renders, shows zero-state when no users at risk)
+- ✅ Tag team battle support in Battle Logs (Tag Team filter, 2v2 indicator) and BattleDetailsModal (team layout)
 - ✅ System statistics visible by default with auto-refresh
 - ✅ Enhanced session logging with localStorage persistence
 - ✅ Robot name click-through links to detail pages
-- ✅ Comprehensive battle viewer with formula breakdowns
+- ✅ Comprehensive battle viewer with formula breakdowns (1v1 and 2v2)
 - ✅ Robot statistics with outlier detection and win-rate analysis
-- ✅ Tournament management interface
+- ✅ Tournament management interface (aligned with bracket seeding API contracts)
 - ✅ Bulk cycle runner with detailed progress tracking
 - ✅ Auto-user generation per cycle
 - ✅ Visual indicators for battle outcomes (draws, long battles, ELO swings)
-- ✅ Battle type filtering (league vs tournament battles)
+- ✅ Battle type filtering (league, tournament, tag team)
+- ✅ Per-component test suite (AdminPage shell + individual tab component tests)
 
 ---
 
@@ -57,12 +63,15 @@ The Admin Page (`/admin`) is the primary testing and monitoring tool for Armoure
 The Admin Page has been fully implemented with the following features:
 
 #### 1. **Tabbed Interface** ✅ COMPLETE
-- Five main tabs: Dashboard, Cycle Controls, Tournaments, Battle Logs, Robot Stats
+- Seven main tabs: Dashboard, Cycle Controls, Tournaments, Battle Logs, Robot Stats, Bankruptcy Monitor, Recent Users
 - Tab state persists in localStorage and URL hash
 - Keyboard accessible with proper ARIA labels
 - Responsive design works on all screen sizes
+- AdminPage is a thin shell (~100-200 lines) that handles tab navigation and renders the active tab component
+- Each tab is an independent component in `components/admin/` with its own state management and data fetching
 
 #### 2. **Dashboard Tab** ✅ COMPLETE
+- **Component**: `DashboardTab.tsx` in `components/admin/`
 - **System Statistics** (auto-loaded on page mount):
   - Robot stats: Total, by tier, battle-ready percentage
   - Match stats: Scheduled, completed
@@ -76,8 +85,16 @@ The Admin Page has been fully implemented with the following features:
 - All statistics displayed in responsive grid layout
 - Tooltips provide context for each metric
 - Color-coded sections for easy visual parsing
+- **System Health Section** ✅ INTEGRATED (collapsible `<details>` section):
+  - Absorbed from the former standalone System Health tab
+  - Fetches from `/api/analytics/performance`, `/api/analytics/integrity`, `/api/analytics/logs/summary`
+  - Cycle performance metrics: average duration, step durations, degradations
+  - Data integrity status: valid/invalid cycles, issues
+  - Event log statistics: total events, active users/robots, events by type
+  - Collapsible by default to keep Dashboard clean; expand on demand
 
 #### 3. **Cycle Controls Tab** ✅ COMPLETE
+- **Component**: `CycleControlsTab.tsx` in `components/admin/`
 - **Individual Cycle Controls**:
   - 🔧 Auto-Repair All Robots
   - 🎯 Run Matchmaking
@@ -105,10 +122,12 @@ The Admin Page has been fully implemented with the following features:
 - View tournament brackets and results
 
 #### 5. **Battle Logs Tab** ✅ COMPLETE
+- **Component**: `BattleLogsTab.tsx` in `components/admin/`
 - **Battle Table**:
   - Paginated list (20 battles per page)
   - Auto-loads on page mount (no manual click required)
   - Clickable robot names linking to robot detail pages
+  - **Battle format indicator**: "1v1" or "2v2" displayed per battle row to distinguish standard and tag team battles
   - Visual outcome indicators:
     - 🏆 Clear Victory (HP > 50)
     - 💪 Narrow Victory (HP 1-50)
@@ -117,17 +136,19 @@ The Admin Page has been fully implemented with the following features:
     - Red: Draw (rare event)
     - Yellow: Long battle (>90s)
     - Blue: Large ELO swing (>50 points)
-  - Displays: Battle ID, robot names, final HP, ELO changes, winner, league, duration, date
+  - Displays: Battle ID, robot names, final HP, ELO changes, winner, league, duration, date, battle format
 - **Search & Filtering**:
   - Search by robot name (case-insensitive)
   - Filter by league (bronze, silver, gold, platinum, diamond, champion)
-  - Filter by battle type (all, league, tournament) ✅ NEW
+  - Filter by battle type (all, league, tournament, **tag team**) ✅ TAG TEAM ADDED
+  - "Tag Team" filter sends `battleType=tagteam` query parameter to backend
   - Pagination with previous/next buttons
 - **Visual Indicators Legend**:
   - Explains all icons and border colors
   - Helps users quickly identify interesting battles
 
 #### 6. **Robot Stats Tab** ✅ COMPLETE
+- **Component**: `RobotStatsTab.tsx` in `components/admin/`
 - **Summary Statistics**:
   - Total robots, robots with battles, total battles
   - Overall win rate, average ELO
@@ -174,14 +195,38 @@ The Admin Page has been fully implemented with the following features:
 - **Exploits**: Same robot appearing as outlier in multiple attributes suggests investigation needed
 - **League Balancing**: Compare adjacent leagues to ensure proper progression gaps (20-30% increase expected)
 
-#### 7. **Battle Details Modal** ✅ COMPLETE
-- **Battle Summary**:
+#### 8. **Bankruptcy Monitor Tab** ✅ COMPLETE
+- **Component**: `BankruptcyMonitorTab.tsx` in `components/admin/`
+- Dedicated tab for monitoring users at risk of bankruptcy
+- Fetches from `GET /api/admin/users/at-risk`
+- **Always renders** — never hidden behind conditional logic:
+  - When `totalAtRisk === 0`: shows green "✓ No users at risk of bankruptcy" confirmation with the bankruptcy threshold displayed
+  - When users are at risk: shows full detailed list with balance history, runway days, and robot damage info
+- Replaces the old conditional `{stats.finances.usersAtRisk > 0 && (...)}` section that was buried in the Dashboard tab
+- Loading state while fetching at-risk data
+
+#### 9. **Recent Users Tab** ✅ COMPLETE
+- **Component**: `RecentUsersTab.tsx` in `components/admin/`
+- Recent real users list with per-user onboarding status
+- Onboarding status badges (completed, skipped, in-progress)
+- Robot details per user
+- Issue detection for problematic accounts
+- Cycle range control for filtering user activity
+
+#### 10. **Battle Details Modal** ✅ COMPLETE
+- **1v1 Battle Summary** (unchanged):
   - Side-by-side robot cards with all key metrics
   - Final HP, shields, damage dealt
   - ELO before/after with color-coded changes
   - Loadout and stance information
   - Winner announcement with trophy icon
   - Duration and league type
+- **2v2 Tag Team Battle Summary** ✅ NEW:
+  - Detects tag team format via `battleFormat === '2v2'` or presence of `teams` field
+  - Renders Team 1 (active + reserve robots) vs Team 2 (active + reserve robots) layout
+  - Shows team-level stats and individual robot stats per team member
+  - Displays active robot and reserve robot for each side
+  - Combat log appropriate for 2v2 battles
 - **Attribute Comparison**:
   - All 23 attributes displayed in responsive grid
   - Shows values for both robots
@@ -225,10 +270,15 @@ All admin endpoints are implemented and operational:
 6. **POST /api/admin/cycles/bulk** - Run bulk cycles with options
 7. **GET /api/admin/stats** - Get system statistics
 8. **GET /api/admin/battles** - Get paginated battle list with filtering
-   - Query params: `page`, `limit`, `search` (robot name), `leagueType`, `battleType` (all/league/tournament)
-   - Returns: Paginated battle list with robot names, final HP, ELO changes, winner, league, duration
+   - Query params: `page`, `limit`, `search` (robot name), `leagueType`, `battleType` (all/league/tournament/**tagteam**)
+   - When `battleType=tagteam`: queries `TagTeamMatch` joined with `Battle` and `TagTeam` (with robot relations)
+   - When `battleType=all`: unions 1v1 battle results with tag team battle results
+   - Returns: Paginated battle list with robot names, final HP, ELO changes, winner, league, duration, **`battleFormat` field (`'1v1'` or `'2v2'`)**
 9. **GET /api/admin/battles/:id** - Get detailed battle information
    - Returns: Complete battle data including all 23 attributes, loadout, stance, combat events with formula breakdowns
+   - Detects if battle has an associated `TagTeamMatch` record
+   - When tag team: returns `battleFormat: '2v2'` and team data (team1/team2 with activeRobot and reserveRobot)
+   - When 1v1: returns standard robot1/robot2 data (unchanged)
 10. **GET /api/admin/stats/robots** - Get comprehensive robot statistics
     - Returns: Statistical analysis, outlier detection, win rate correlation, league comparison, top/bottom performers
 
@@ -240,38 +290,51 @@ All admin endpoints are implemented and operational:
 - ✅ Match routes tests (`matches.test.ts`)
 - ✅ Complete daily cycle integration test (`integration.test.ts`)
 
-**Frontend Tests**: ✅ IMPLEMENTED (Pending Dependency Installation)
-- ✅ **AdminPage Component Tests** (`src/pages/__tests__/AdminPage.test.tsx`)
-  - 30 comprehensive tests covering all functionality
-  - Tab navigation (6 tests)
-  - Dashboard tab (4 tests)
-  - Cycle Controls tab (6 tests)
-  - Battle Logs tab (5 tests)
-  - Robot Stats tab (6 tests)
-  - Tournaments tab (1 test)
-  - Error handling (2 tests)
-  - **Expected Coverage**: >85%
+**Frontend Tests**: ✅ COMPLETE (Per-Component Test Suite)
+- ✅ **AdminPage Shell Tests** (`src/pages/__tests__/AdminPage.test.tsx`)
+  - Tests only the thin shell: 7-tab rendering, tab switching, URL hash persistence, localStorage persistence
+  - Tab components are mocked — shell tests verify navigation and routing only
+  - `describe.skip` removed — all tests run and pass
 
-- ✅ **BattleDetailsModal Component Tests** (`src/components/__tests__/BattleDetailsModal.test.tsx`)
-  - 11 comprehensive tests
-  - Modal rendering and visibility
-  - Battle information display
-  - User interactions (close, click outside)
-  - Edge cases (draws, null battles)
-  - **Expected Coverage**: >90%
+- ✅ **DashboardTab Tests** (`src/components/admin/__tests__/DashboardTab.test.tsx`)
+  - Stats grid rendering with mock SystemStats data
+  - System Health collapsible section expand/collapse
+  - Loading state
 
-**Total Frontend Tests**: 41 tests
+- ✅ **CycleControlsTab Tests** (`src/components/admin/__tests__/CycleControlsTab.test.tsx`)
+  - All cycle control buttons render
+  - Session log display with entries
+  - Clear and export session log functionality
+
+- ✅ **BattleLogsTab Tests** (`src/components/admin/__tests__/BattleLogsTab.test.tsx`)
+  - Search input, league filter, battle type filter (including "Tag Team" option)
+  - Pagination controls
+  - Battle row rendering with 1v1 and 2v2 indicators
+
+- ✅ **RobotStatsTab Tests** (`src/components/admin/__tests__/RobotStatsTab.test.tsx`)
+  - Attribute selector dropdown
+  - Stats display sections
+
+- ✅ **BankruptcyMonitorTab Tests** (`src/components/admin/__tests__/BankruptcyMonitorTab.test.tsx`)
+  - At-risk users display with mock data
+  - Zero-state rendering ("✓ No users at risk of bankruptcy")
+  - Loading state
+
+- ✅ **RecentUsersTab Tests** (`src/components/admin/__tests__/RecentUsersTab.test.tsx`)
+  - User list rendering with onboarding status badges
+  - Cycle range control
+
+- ✅ **BattleDetailsModal Tests** (`src/components/admin/__tests__/BattleDetailsModal.test.tsx`)
+  - 1v1 rendering: robot1 vs robot2 side-by-side, attribute comparison, combat log, formula breakdowns
+  - 2v2 tag team rendering: team layout with active + reserve robots per side
+  - Draw handling
 
 **Test Infrastructure**:
 - ✅ Vitest configuration updated with setupFiles
 - ✅ Test setup file created (`src/setupTests.ts`)
 - ✅ Test utilities updated with proper imports
 - ✅ Mock data and helpers configured
-- ⚠️ **Action Required**: Install testing dependencies
-  ```bash
-  cd prototype/frontend
-  npm install --save-dev @testing-library/react @testing-library/jest-dom @testing-library/user-event
-  ```
+- ✅ Testing dependencies installed (@testing-library/react, @testing-library/jest-dom, @testing-library/user-event)
 
 **Running Tests**:
 ```bash
@@ -286,19 +349,25 @@ npm run test:ui
 ```
 
 **Test Coverage Goals**:
-- AdminPage.tsx: Target >85% (comprehensive coverage of all tabs and features)
-- BattleDetailsModal.tsx: Target >90% (all props and interactions covered)
+- AdminPage.tsx (shell): Target >85% (tab navigation and persistence)
+- Per-tab components: Target >80% each
+- BattleDetailsModal.tsx: Target >90% (all props and interactions covered, 1v1 + 2v2)
 - Overall Frontend: Target >80%
 
 **Manual Testing Checklist** (All Verified ✅):
-- ✅ Tab navigation works correctly
+- ✅ Tab navigation works correctly (7 tabs)
 - ✅ System statistics load automatically
+- ✅ System Health collapsible section expands/collapses in Dashboard
+- ✅ Bankruptcy Monitor tab shows zero-state when no users at risk
+- ✅ Bankruptcy Monitor tab shows at-risk user details when users are at risk
 - ✅ Session log persists across page refreshes
 - ✅ Battle list loads automatically on page mount
-- ✅ Search and filtering work correctly
+- ✅ Search and filtering work correctly (including Tag Team filter)
+- ✅ Tag team battles display with 2v2 indicator
 - ✅ Pagination handles large datasets
 - ✅ Robot name links navigate correctly
-- ✅ Battle details modal displays all information
+- ✅ Battle details modal displays 1v1 information correctly
+- ✅ Battle details modal displays 2v2 tag team layout correctly
 - ✅ Formula breakdowns expand/collapse
 - ✅ Robot statistics load and display correctly
 - ✅ Outlier detection identifies extreme values
@@ -306,6 +375,7 @@ npm run test:ui
 - ✅ Bulk cycle runner executes successfully
 - ✅ Session log tracks all operations
 - ✅ Export/clear log functions work
+- ✅ No onboarding analytics link in admin header
 
 ---
 
@@ -314,16 +384,35 @@ npm run test:ui
 ### File Structure
 
 **Frontend**:
-- `prototype/frontend/src/pages/AdminPage.tsx` (1,694 lines)
-  - Main admin portal component
-  - Implements all tabs and functionality
-  - State management for all features
-- `prototype/frontend/src/components/BattleDetailsModal.tsx` (420 lines)
-  - Battle analysis modal
+- `prototype/frontend/src/pages/AdminPage.tsx` (~100-200 lines)
+  - Thin shell component handling tab navigation, URL hash persistence, localStorage persistence
+  - Imports and renders active tab component based on selected tab
+  - Passes shared state (session log, addSessionLog) as props to tab components
+- `prototype/frontend/src/components/admin/` — Per-tab components:
+  - `types.ts` — Shared interfaces (`SystemStats`, `Battle`, `SessionLogEntry`, `RobotStats`, `AtRiskUser`, `TagTeamBattle`, etc.)
+  - `index.ts` — Barrel export for all tab components
+  - `DashboardTab.tsx` — System statistics grid + System Health collapsible section
+  - `CycleControlsTab.tsx` — Individual cycle controls, bulk cycle runner, session log
+  - `BattleLogsTab.tsx` — Battle table with search/filtering (including tag team), pagination, visual indicators
+  - `RobotStatsTab.tsx` — Attribute selector, statistical analysis, outlier detection, win rate correlation, league comparison, top/bottom performers
+  - `BankruptcyMonitorTab.tsx` — Dedicated at-risk users view, always renders (zero-state when no users at risk)
+  - `RecentUsersTab.tsx` — Recent real users list with per-user onboarding status, robot details, issue detection
+- `prototype/frontend/src/components/BattleDetailsModal.tsx` (~500 lines)
+  - Battle analysis modal supporting both 1v1 and 2v2 tag team layouts
   - Attribute comparison
   - Combat log with formula breakdowns
 - `prototype/frontend/src/components/TournamentManagement.tsx`
-  - Tournament administration interface
+  - Tournament administration interface (aligned with bracket seeding API contracts)
+
+**Frontend Tests**:
+- `prototype/frontend/src/pages/__tests__/AdminPage.test.tsx` — Shell-only tests
+- `prototype/frontend/src/components/admin/__tests__/DashboardTab.test.tsx`
+- `prototype/frontend/src/components/admin/__tests__/CycleControlsTab.test.tsx`
+- `prototype/frontend/src/components/admin/__tests__/BattleLogsTab.test.tsx`
+- `prototype/frontend/src/components/admin/__tests__/RobotStatsTab.test.tsx`
+- `prototype/frontend/src/components/admin/__tests__/BankruptcyMonitorTab.test.tsx`
+- `prototype/frontend/src/components/admin/__tests__/RecentUsersTab.test.tsx`
+- `prototype/frontend/src/components/admin/__tests__/BattleDetailsModal.test.tsx`
 
 **Backend**:
 - `prototype/backend/src/routes/admin.ts` (1,000+ lines)
@@ -348,14 +437,18 @@ npm run test:ui
 
 ### Key Design Decisions
 
-1. **Tabbed Interface**: Reduces clutter, separates concerns, improves navigation
-2. **Auto-loading**: Statistics and battles load automatically for better UX
-3. **localStorage Persistence**: Tab state and session log persist across refreshes
-4. **Color Coding**: Consistent color scheme for quick visual parsing
-5. **Clickable Links**: Robot names link to detail pages for seamless navigation
-6. **Expandable Details**: Formula breakdowns expand on-demand to reduce clutter
-7. **Responsive Design**: Works on desktop, tablet, and mobile devices
-8. **Visual Indicators**: Icons and colored borders highlight interesting battles
+1. **Component Decomposition**: Monolithic AdminPage decomposed into thin shell + 6 independent tab components for testability and maintainability
+2. **Tabbed Interface**: 7 tabs reduce clutter, separate concerns, improve navigation
+3. **Auto-loading**: Statistics and battles load automatically for better UX
+4. **localStorage Persistence**: Tab state and session log persist across refreshes
+5. **Color Coding**: Consistent color scheme for quick visual parsing
+6. **Clickable Links**: Robot names link to detail pages for seamless navigation
+7. **Expandable Details**: Formula breakdowns and System Health section expand on-demand to reduce clutter
+8. **Responsive Design**: Works on desktop, tablet, and mobile devices
+9. **Visual Indicators**: Icons and colored borders highlight interesting battles
+10. **Always-Render Bankruptcy Monitor**: Dedicated tab always shows status, even when no users are at risk — critical monitoring should never be hidden
+11. **Per-Tab Data Fetching**: Each tab component manages its own data fetching and refresh, eliminating the global loading state anti-pattern
+12. **Tag Team Battle Support**: Battle Logs and BattleDetailsModal support both 1v1 and 2v2 formats with clear visual distinction
 
 ---
 
@@ -367,26 +460,20 @@ npm run test:ui
    - Workaround: Check session log for progress
    - Future: WebSocket implementation for real-time updates
 
-2. **Frontend Tests Pending Dependency Installation**: Test suite created but dependencies not yet installed
-   - Status: 41 comprehensive tests written and ready to run
-   - Action Required: Install @testing-library packages
-   - Expected Coverage: >85% for AdminPage, >90% for BattleDetailsModal
-   - Future: Run tests and verify coverage meets targets
-
-3. **Large Dataset Performance**: Robot statistics can be slow with 1000+ robots
+2. **Large Dataset Performance**: Robot statistics can be slow with 1000+ robots
    - Current: ~0.5s for 150 robots, ~1.5s for 500 robots, ~3s for 1000 robots
    - Mitigation: Caching recommended for production (Redis with 5-10 minute TTL)
    - Future: Add Redis caching layer or pre-calculate statistics on schedule
 
-4. **No Export Functionality**: Battle data and statistics cannot be exported to CSV/JSON
+3. **No Export Functionality**: Battle data and statistics cannot be exported to CSV/JSON
    - Workaround: Use browser dev tools to copy data
    - Future: Add CSV/JSON export buttons for battles and robot statistics
 
-5. **Limited Error Recovery**: Some operations don't have retry mechanisms
+4. **Limited Error Recovery**: Some operations don't have retry mechanisms
    - Impact: Failed operations require manual intervention
    - Future: Add automatic retry with exponential backoff
 
-6. **Old Battles Missing Detailed Events**: Battles created before formula breakdown implementation show warning
+5. **Old Battles Missing Detailed Events**: Battles created before formula breakdown implementation show warning
    - Impact: Cannot debug old battles with formula-level detail
    - Workaround: Re-run battles to generate new detailed logs
    - Note: Bye-matches also don't generate detailed events (by design)
@@ -529,10 +616,11 @@ npm run test:ui
 - Fallback: Refresh page or re-login
 
 **Issue: Battles not appearing**
-- Check: Battle type filter (all vs league vs tournament)
+- Check: Battle type filter (all vs league vs tournament vs tag team)
 - Fix: Reset filters and search
 - Fallback: Check database for battles
 - Note: Battles auto-load on page mount (no manual click required)
+- Note: Tag team battles only appear with "All" or "Tag Team" filter — they are not included in "League" or "Tournament" results
 
 **Issue: Robot statistics slow**
 - Check: Number of robots in system
@@ -574,47 +662,63 @@ npm run test:ui
 ### Component Hierarchy
 
 ```
-AdminPage (Main Container)
+AdminPage (Thin Shell — tab navigation, URL hash/localStorage persistence)
 ├── Navigation (Global)
-├── Tab Navigation
-│   ├── Dashboard Tab
-│   │   └── System Statistics (auto-loaded)
-│   ├── Cycle Controls Tab
+├── Tab Navigation (7 tabs)
+│   ├── DashboardTab (components/admin/DashboardTab.tsx)
+│   │   ├── System Statistics Grid (auto-loaded)
+│   │   └── System Health (collapsible <details> section)
+│   │       ├── Cycle Performance Metrics
+│   │       ├── Data Integrity Status
+│   │       └── Event Log Statistics
+│   ├── CycleControlsTab (components/admin/CycleControlsTab.tsx)
 │   │   ├── Individual Cycle Controls
 │   │   ├── Bulk Cycle Runner
 │   │   └── Session Log
 │   ├── Tournaments Tab
 │   │   └── TournamentManagement Component
-│   ├── Battle Logs Tab
-│   │   ├── Search & Filter Controls
+│   ├── BattleLogsTab (components/admin/BattleLogsTab.tsx)
+│   │   ├── Search & Filter Controls (including Tag Team filter)
 │   │   ├── Visual Indicators Legend
-│   │   ├── Battle Table (paginated)
+│   │   ├── Battle Table (paginated, 1v1 + 2v2 indicators)
 │   │   └── Pagination Controls
-│   └── Robot Stats Tab
-│       ├── Summary Statistics
-│       ├── Attribute Selector
-│       ├── Statistical Analysis
-│       ├── Outlier Detection
-│       ├── Win Rate Correlation
-│       ├── League Comparison
-│       ├── Top Performers
-│       └── Bottom Performers
+│   ├── RobotStatsTab (components/admin/RobotStatsTab.tsx)
+│   │   ├── Summary Statistics
+│   │   ├── Attribute Selector
+│   │   ├── Statistical Analysis
+│   │   ├── Outlier Detection
+│   │   ├── Win Rate Correlation
+│   │   ├── League Comparison
+│   │   ├── Top Performers
+│   │   └── Bottom Performers
+│   ├── BankruptcyMonitorTab (components/admin/BankruptcyMonitorTab.tsx)
+│   │   ├── At-Risk Users List (when totalAtRisk > 0)
+│   │   └── Zero-State Confirmation (when totalAtRisk === 0)
+│   └── RecentUsersTab (components/admin/RecentUsersTab.tsx)
+│       ├── Recent Real Users List
+│       ├── Per-User Onboarding Status
+│       ├── Robot Details
+│       └── Issue Detection
 └── BattleDetailsModal (Overlay)
-    ├── Battle Summary
-    ├── Attribute Comparison
-    └── Combat Log with Formula Breakdowns
+    ├── 1v1 Layout (robot1 vs robot2)
+    │   ├── Battle Summary
+    │   ├── Attribute Comparison
+    │   └── Combat Log with Formula Breakdowns
+    └── 2v2 Tag Team Layout (team1 vs team2)
+        ├── Team Summary (active + reserve robots per side)
+        ├── Team-Level Stats
+        └── Combat Log
 ```
 
 ### State Management
 
-**Local State** (useState):
+**AdminPage Shell State** (useState):
 - `activeTab`: Current tab selection
-- `sessionLog`: Operation history (persisted to localStorage)
-- `stats`: System statistics
-- `battles`: Battle list
-- `robotStats`: Robot analytics data
-- `loading`: Loading states for async operations
-- `message`: Toast notification messages
+- `sessionLog`: Operation history (persisted to localStorage) — passed as props to tab components that need it
+
+**Per-Tab Component State** (useState within each tab component):
+- Each tab manages its own loading states, data, and refresh logic independently
+- No global loading state — eliminates the old anti-pattern where Refresh Stats disabled unrelated buttons
 
 **Persistent State** (localStorage):
 - `adminActiveTab`: Last viewed tab
@@ -622,7 +726,7 @@ AdminPage (Main Container)
 - `adminRobotStatsLoaded`: Flag for auto-load behavior
 
 **URL State** (hash):
-- `#dashboard`, `#cycles`, `#tournaments`, `#battles`, `#stats`
+- `#dashboard`, `#cycles`, `#tournaments`, `#battles`, `#stats`, `#bankruptcy-monitor`, `#recent-users`
 
 ### API Integration
 
@@ -639,11 +743,19 @@ POST /api/admin/daily-finances/process   // Process finances
 POST /api/admin/cycles/bulk              // Run bulk cycles
 
 // Battle Analysis
-GET  /api/admin/battles                  // List battles (paginated)
-GET  /api/admin/battles/:id              // Battle details
+GET  /api/admin/battles                  // List battles (paginated, supports battleType=tagteam)
+GET  /api/admin/battles/:id              // Battle details (includes tag team data when applicable)
 
 // Robot Analytics
 GET  /api/admin/stats/robots             // Robot statistics
+
+// Bankruptcy Monitoring
+GET  /api/admin/users/at-risk            // At-risk users for bankruptcy monitor
+
+// System Health (integrated into Dashboard)
+GET  /api/analytics/performance          // Cycle performance metrics
+GET  /api/analytics/integrity            // Data integrity status
+GET  /api/analytics/logs/summary         // Event log statistics
 ```
 
 ---
@@ -730,14 +842,17 @@ GET  /api/admin/stats/robots             // Robot statistics
 
 The Admin Page is a fully-implemented, comprehensive administration portal for Armoured Souls. It provides:
 
+✅ **Decomposed Architecture** - Thin AdminPage shell + 6 independent tab components for maintainability and testability  
 ✅ **Complete System Management** - All game systems controllable from one interface  
-✅ **Deep Battle Analysis** - Formula-level debugging with expandable breakdowns verifying all 23 attributes matter  
+✅ **Deep Battle Analysis** - Formula-level debugging with expandable breakdowns for both 1v1 and 2v2 tag team battles  
 ✅ **Advanced Robot Analytics** - Statistical analysis with IQR-based outlier detection and win rate correlation  
-✅ **Tournament Administration** - Full tournament lifecycle management  
+✅ **Tournament Administration** - Full tournament lifecycle management (aligned with bracket seeding API)  
+✅ **Bankruptcy Monitoring** - Dedicated tab always showing at-risk user status  
+✅ **System Health Integration** - Cycle performance and data integrity metrics in Dashboard collapsible section  
+✅ **Tag Team Battle Support** - Tag Team filter in Battle Logs, 2v2 indicators, team layout in BattleDetailsModal  
 ✅ **Audit Trail** - Complete session logging with localStorage persistence and export capabilities  
-✅ **Intuitive UX** - Tabbed interface with auto-loading, visual indicators, and clickable navigation  
+✅ **Intuitive UX** - 7-tab interface with auto-loading, visual indicators, and clickable navigation  
 ✅ **Debugging Tools** - Comprehensive workflows for investigating balance, exploits, and battle outcomes  
-
-The implementation exceeds the original requirements and provides a solid foundation for future enhancements. All major features are operational and well-documented.
+✅ **Per-Component Test Suite** - Shell tests + individual tab component tests replacing the old skipped monolithic test file
 
 ---

@@ -30,6 +30,36 @@ interface CombatEvent {
   };
 }
 
+interface TeamRobot {
+  id: number;
+  name: string;
+  userId?: number;
+}
+
+interface TeamData {
+  id: number;
+  activeRobot: TeamRobot;
+  reserveRobot: TeamRobot;
+  stableId: number;
+  league: string;
+}
+
+interface BattleParticipant {
+  robotId: number;
+  team: number | null;
+  role: string | null;
+  credits: number | null;
+  streamingRevenue: number | null;
+  eloBefore: number | null;
+  eloAfter: number | null;
+  prestigeAwarded: number | null;
+  fameAwarded: number | null;
+  damageDealt: number | null;
+  finalHP: number | null;
+  yielded: boolean | null;
+  destroyed: boolean | null;
+}
+
 function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalProps) {
   const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,12 +122,173 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
   const detailedEvents: CombatEvent[] =
     battle?.battleLog?.detailedCombatEvents || [];
 
+  const isTagTeam = battle?.battleFormat === '2v2' || !!battle?.teams;
+  const teams: { team1: TeamData; team2: TeamData | null } | null = battle?.teams ?? null;
+  const participants: BattleParticipant[] = battle?.participants ?? [];
+
+  /** Find participant stats for a given robot ID */
+  const getParticipant = (robotId: number): BattleParticipant | undefined =>
+    participants.find((p) => p.robotId === robotId);
+
+  /** Render a single team member card */
+  const renderTeamMember = (
+    robot: TeamRobot,
+    role: 'Active' | 'Reserve',
+    colorClass: string
+  ): JSX.Element => {
+    const p = getParticipant(robot.id);
+    return (
+      <div className="bg-surface rounded p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className={`text-sm font-semibold ${colorClass}`}>{robot.name}</span>
+          <span className={`text-xs px-1.5 py-0.5 rounded ${role === 'Active' ? 'bg-green-900/40 text-green-300' : 'bg-yellow-900/40 text-yellow-300'}`}>
+            {role}
+          </span>
+        </div>
+        {p && (
+          <div className="text-xs space-y-0.5 text-secondary">
+            {p.finalHP !== null && <p>Final HP: {p.finalHP}{p.destroyed ? ' 💀' : ''}{p.yielded ? ' 🏳️' : ''}</p>}
+            {p.damageDealt !== null && <p>Damage Dealt: {p.damageDealt}</p>}
+            {p.eloBefore !== null && p.eloAfter !== null && (
+              <p>
+                ELO: {p.eloBefore} →{' '}
+                <span className={p.eloAfter > p.eloBefore ? 'text-success' : 'text-error'}>
+                  {p.eloAfter}
+                </span>
+                {' ('}{p.eloAfter > p.eloBefore ? '+' : ''}{p.eloAfter - p.eloBefore})
+              </p>
+            )}
+            {p.credits !== null && <p>Credits: +₡{p.credits.toLocaleString()}</p>}
+            {(p.prestigeAwarded ?? 0) > 0 && <p>Prestige: +{p.prestigeAwarded}</p>}
+            {(p.fameAwarded ?? 0) > 0 && <p>Fame: +{p.fameAwarded}</p>}
+          </div>
+        )}
+        {!p && <div className="text-xs text-tertiary">No participant data</div>}
+      </div>
+    );
+  };
+
+  /** Render the tag team (2v2) battle summary */
+  const renderTagTeamSummary = (): JSX.Element => (
+    <div className="bg-surface-elevated rounded-lg p-4">
+      <div className="flex items-center gap-3 mb-4">
+        <h3 className="text-xl font-bold">Tag Team Battle Summary</h3>
+        <span className="text-xs px-2 py-1 rounded bg-purple-900/40 text-purple-300 font-semibold">2v2</span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        {/* Team 1 */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h4 className="text-lg font-semibold text-primary">Team 1</h4>
+            {teams?.team1.league && (
+              <span className="text-xs px-2 py-0.5 rounded bg-blue-900/30 text-blue-300">{teams.team1.league}</span>
+            )}
+          </div>
+          {teams?.team1 ? (
+            <>
+              {renderTeamMember(teams.team1.activeRobot, 'Active', 'text-primary')}
+              {renderTeamMember(teams.team1.reserveRobot, 'Reserve', 'text-primary')}
+            </>
+          ) : (
+            <div className="bg-surface rounded p-3">
+              <div className="text-sm text-primary mb-1">{battle.robot1.name}</div>
+              <div className="text-xs text-secondary">Active robot (team data unavailable)</div>
+            </div>
+          )}
+          {/* Tag-out info */}
+          {battle.team1TagOutTime !== null && battle.team1TagOutTime !== undefined && (
+            <div className="text-xs text-secondary">🔄 Tag-out at {battle.team1TagOutTime.toFixed(1)}s</div>
+          )}
+        </div>
+
+        {/* Team 2 */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h4 className="text-lg font-semibold text-purple-400">Team 2</h4>
+            {teams?.team2?.league && (
+              <span className="text-xs px-2 py-0.5 rounded bg-purple-900/30 text-purple-300">{teams.team2.league}</span>
+            )}
+          </div>
+          {teams?.team2 ? (
+            <>
+              {renderTeamMember(teams.team2.activeRobot, 'Active', 'text-purple-400')}
+              {renderTeamMember(teams.team2.reserveRobot, 'Reserve', 'text-purple-400')}
+            </>
+          ) : (
+            <div className="bg-surface rounded p-3">
+              <div className="text-sm text-purple-400 mb-1">{battle.robot2.name}</div>
+              <div className="text-xs text-secondary">Active robot (team data unavailable)</div>
+            </div>
+          )}
+          {battle.team2TagOutTime !== null && battle.team2TagOutTime !== undefined && (
+            <div className="text-xs text-secondary">🔄 Tag-out at {battle.team2TagOutTime.toFixed(1)}s</div>
+          )}
+        </div>
+      </div>
+
+      {/* Winner / Draw */}
+      <div className="mt-4 text-center">
+        <div className="text-2xl font-bold">
+          {battle.winnerId === battle.robot1.id && (
+            <span className="text-primary">🏆 Team 1 Wins!</span>
+          )}
+          {battle.winnerId === battle.robot2.id && (
+            <span className="text-purple-400">🏆 Team 2 Wins!</span>
+          )}
+          {!battle.winnerId && <span className="text-secondary">⚖️ Draw</span>}
+        </div>
+        <div className="text-sm text-secondary mt-2">
+          Duration: {battle.durationSeconds}s | League: {battle.leagueType}
+        </div>
+      </div>
+
+      {/* Team Rewards from participants */}
+      {participants.length > 0 && (
+        <div className="mt-4 bg-surface rounded-lg p-4">
+          <h4 className="text-lg font-semibold mb-3 text-warning">💰 Battle Rewards</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            {/* Team 1 Rewards */}
+            <div className={`p-3 rounded ${battle.winnerId === battle.robot1.id ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
+              <div className="font-semibold text-primary mb-2">Team 1</div>
+              <div className="space-y-1">
+                {participants.filter((p: BattleParticipant) => p.team === 1).map((p: BattleParticipant) => (
+                  <div key={p.robotId} className="flex justify-between">
+                    <span className="text-secondary">Credits:</span>
+                    <span className="text-success">+₡{(p.credits ?? 0).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Team 2 Rewards */}
+            <div className={`p-3 rounded ${battle.winnerId === battle.robot2.id ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
+              <div className="font-semibold text-purple-400 mb-2">Team 2</div>
+              <div className="space-y-1">
+                {participants.filter((p: BattleParticipant) => p.team === 2).map((p: BattleParticipant) => (
+                  <div key={p.robotId} className="flex justify-between">
+                    <span className="text-secondary">Credits:</span>
+                    <span className="text-success">+₡{(p.credits ?? 0).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="bg-surface rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-white/10">
-          <h2 className="text-2xl font-bold text-white">Battle Details #{battleId}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-white">Battle Details #{battleId}</h2>
+            {isTagTeam && (
+              <span className="text-xs px-2 py-1 rounded bg-purple-900/40 text-purple-300 font-semibold">2v2 Tag Team</span>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="text-secondary hover:text-white text-2xl font-bold"
@@ -120,7 +311,8 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
 
           {battle && (
             <div className="space-y-6">
-              {/* Battle Summary */}
+              {/* Battle Summary — conditional on format */}
+              {isTagTeam ? renderTagTeamSummary() : (
               <div className="bg-surface-elevated rounded-lg p-4">
                 <h3 className="text-xl font-bold mb-3">Battle Summary</h3>
                 <div className="grid grid-cols-2 gap-6">
@@ -270,6 +462,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Attribute Comparison */}
               <div className="bg-surface-elevated rounded-lg p-4">
