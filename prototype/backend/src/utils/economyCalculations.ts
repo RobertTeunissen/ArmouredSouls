@@ -636,6 +636,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
     revenue: {
       battleWinnings: number;
       merchandising: number;
+      streaming: number;
       total: number;
     };
     costs: {
@@ -754,14 +755,19 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
           robot2Id: true,
           battleType: true,
           createdAt: true,
+          participants: {
+            where: { robotId: robot.id },
+            select: { streamingRevenue: true },
+          },
         },
         orderBy: {
           createdAt: 'desc',
         },
       });
 
-      // Calculate battle winnings and build battle details array
+      // Calculate battle winnings, streaming revenue, and build battle details array
       let battleWinnings = 0;
+      let streamingRevenue = 0;
       const battleDetails = [];
 
       for (const battle of recentBattles) {
@@ -769,6 +775,12 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
         const reward = isWinner ? (battle.winnerReward || 0) : (battle.loserReward || 0);
 
         battleWinnings += reward;
+
+        // Sum streaming revenue from battle participants
+        const participantStreaming = battle.participants?.reduce(
+          (sum, p) => sum + (p.streamingRevenue || 0), 0
+        ) || 0;
+        streamingRevenue += participantStreaming;
 
         battleDetails.push({
           id: battle.id,
@@ -792,7 +804,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       // and is not included in passive income calculations
 
       // Calculate totals
-      const totalRevenue = battleWinnings + merchandising;
+      const totalRevenue = battleWinnings + merchandising + streamingRevenue;
       const totalCosts = repairCosts + allocatedFacilityCostPerRobot;
       const netIncome = totalRevenue - totalCosts;
       const roi = totalCosts > 0 ? (netIncome / totalCosts) * 100 : 0;
@@ -816,6 +828,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
         revenue: {
           battleWinnings,
           merchandising,
+          streaming: streamingRevenue,
           total: totalRevenue,
         },
         costs: {

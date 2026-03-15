@@ -409,6 +409,13 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       logger.info(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
 
       try {
+        // Advance cycle number in DB so getCurrentCycleNumber() returns the
+        // correct value when called by battle orchestrators during this cycle.
+        await prisma.cycleMetadata.update({
+          where: { id: 1 },
+          data: { totalCycles: currentCycleNumber },
+        });
+
         // Log cycle start
         await eventLogger.logCycleStart(currentCycleNumber, 'manual');
 
@@ -649,15 +656,14 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           logger.info(`[Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle ${currentCycleNumber})`);
         }
 
-        // Step 10: Increment Cycle Counters
-        logger.info(`[Admin] Step 10: Increment Cycle Counters`);
+        // Step 10: Finalize Cycle Counters
+        logger.info(`[Admin] Step 10: Finalize Cycle Counters`);
         const step10Start = Date.now();
         
-        // Update cycle metadata with current cycle number
+        // Update lastCycleAt timestamp (totalCycles already set at cycle start)
         await prisma.cycleMetadata.update({
           where: { id: 1 },
           data: {
-            totalCycles: currentCycleNumber,
             lastCycleAt: new Date(),
           },
         });

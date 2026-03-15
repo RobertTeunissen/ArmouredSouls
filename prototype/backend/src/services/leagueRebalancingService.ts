@@ -372,19 +372,17 @@ export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
     }
   }
 
-  // Rebalance instances for each tier after all moves (ONLY if instance exceeds 100 robots)
+  // Rebalance instances for each tier after all moves
   logger.info('\n[Rebalancing] Checking instances for rebalancing...');
   for (const tier of LEAGUE_TIERS) {
     try {
       const instances = await getInstancesForTier(tier);
-      const needsRebalancing = instances.some(inst => inst.currentRobots > MAX_ROBOTS_PER_INSTANCE);
-      
-      if (needsRebalancing) {
-        logger.info(`[Rebalancing] ${tier}: Instance exceeds ${MAX_ROBOTS_PER_INSTANCE} robots, rebalancing...`);
-        await rebalanceInstances(tier);
-      } else {
-        logger.info(`[Rebalancing] ${tier}: All instances at or under ${MAX_ROBOTS_PER_INSTANCE} robots, skipping rebalancing`);
+      if (instances.length < 2) {
+        logger.info(`[Rebalancing] ${tier}: Single instance, skipping`);
+        continue;
       }
+
+      await rebalanceInstances(tier);
     } catch (error) {
       logger.error(`[Rebalancing] Error checking ${tier} instances:`, error);
     }
