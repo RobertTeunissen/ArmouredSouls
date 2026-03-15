@@ -14,7 +14,7 @@ export interface SeedEntry {
 export interface Tournament {
   id: number;
   name: string;
-  type: string;
+  tournamentType: string;
   status: 'pending' | 'active' | 'completed';
   currentRound: number;
   maxRounds: number;
@@ -45,31 +45,17 @@ export interface TournamentMatch {
     id: number;
     name: string;
     elo: number;
-    currentHP: number;
-    maxHP: number;
-    user?: {
-      id: number;
-      username: string;
-      stableName: string | null;
-    };
   };
   robot2?: {
     id: number;
     name: string;
     elo: number;
-    currentHP: number;
-    maxHP: number;
-    user?: {
-      id: number;
-      username: string;
-      stableName: string | null;
-    };
   };
 }
 
 export interface TournamentDetails extends Tournament {
   matches: TournamentMatchWithRobots[];
-  currentRoundMatches: TournamentMatch[];
+  currentRoundMatches: TournamentMatchWithRobots[];
   participantCount: number;
   seedings: SeedEntry[];
 }
@@ -133,7 +119,7 @@ export const getTournamentDetails = async (
   return {
     tournament: {
       ...tournament,
-      currentRoundMatches: tournament.matches?.filter((m: TournamentMatch) => m.round === tournament.currentRound) || [],
+      currentRoundMatches: tournament.matches?.filter((m: TournamentMatchWithRobots) => m.round === tournament.currentRound) || [],
       seedings,
     },
     seedings,
