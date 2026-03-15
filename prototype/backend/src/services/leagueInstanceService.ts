@@ -79,11 +79,16 @@ export async function getLeagueInstanceStats(tier: LeagueTier): Promise<LeagueIn
   const averagePerInstance = instances.length > 0 ? totalRobots / instances.length : 0;
 
   // Check if rebalancing is needed:
-  // Only when any instance exceeds the maximum robot limit
-  // (Deviation check not needed since assignLeagueInstance fills evenly)
-  const needsRebalancing = instances.some((inst) => 
+  // 1. Any instance exceeds the maximum robot limit (overflow)
+  // 2. Significant imbalance between instances (deviation > 10 from target)
+  const hasOverflow = instances.some((inst) => 
     inst.currentRobots > MAX_ROBOTS_PER_INSTANCE
   );
+  const targetPerInstance = instances.length > 0 ? Math.ceil(totalRobots / instances.length) : 0;
+  const hasImbalance = instances.length >= 2 && instances.some((inst) =>
+    Math.abs(inst.currentRobots - targetPerInstance) > REBALANCE_THRESHOLD
+  );
+  const needsRebalancing = hasOverflow || hasImbalance;
 
   return {
     tier,
