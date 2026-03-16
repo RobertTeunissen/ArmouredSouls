@@ -1149,8 +1149,10 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
     }
 
     // Calculate total cost
+    const MANUAL_REPAIR_DISCOUNT = 0.5;
     const totalBaseCost = robotsNeedingRepair.reduce((sum, robot) => sum + robot.calculatedRepairCost, 0);
-    const finalCost = Math.floor(totalBaseCost * (1 - discount / 100));
+    const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100));
+    const finalCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
 
     // Check if user has enough credits
     if (user.currency < finalCost) {
@@ -1187,11 +1189,38 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
       return { user: updatedUser, robots: updatedRobots };
     });
 
+    // Log repair events for each repaired robot
+    try {
+      for (const robot of robotsNeedingRepair) {
+        const perRobotBaseCost = robot.calculatedRepairCost;
+        const perRobotCostAfterRepairBay = Math.floor(perRobotBaseCost * (1 - discount / 100));
+        const perRobotFinalCost = Math.floor(perRobotCostAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
+        const damageRepaired = robot.maxHP - robot.currentHP;
+
+        await eventLogger.logRobotRepair(
+          userId,
+          robot.id,
+          perRobotFinalCost,
+          damageRepaired,
+          discount,
+          undefined,
+          'manual',
+          50,
+          perRobotCostAfterRepairBay
+        );
+      }
+    } catch (logError) {
+      logger.error('Failed to log manual repair events:', logError);
+      // Don't fail the request if logging fails
+    }
+
     res.json({
       success: true,
       repairedCount: robotsNeedingRepair.length,
       totalBaseCost,
       discount,
+      manualRepairDiscount: 50,
+      preDiscountCost: costAfterRepairBay,
       finalCost,
       newCurrency: result.user.currency,
       message: `Successfully repaired ${robotsNeedingRepair.length} robot(s) for ₡${finalCost.toLocaleString()}`,

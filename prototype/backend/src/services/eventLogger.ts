@@ -540,7 +540,10 @@ export class EventLogger {
     cost: number,
     damageRepaired: number,
     discountPercent: number,
-    cycleNumber?: number
+    cycleNumber?: number,
+    repairType?: 'manual' | 'automatic',
+    manualRepairDiscount?: number,
+    preDiscountCost?: number
   ): Promise<void> {
     // Use provided cycle number, or get current cycle number from metadata
     let actualCycleNumber = cycleNumber;
@@ -551,14 +554,26 @@ export class EventLogger {
       actualCycleNumber = cycleMetadata?.totalCycles || 0;
     }
     
+    const payload: BaseEventPayload = {
+      cost,
+      damageRepaired,
+      discountPercent,
+    };
+
+    if (repairType !== undefined) {
+      payload.repairType = repairType;
+    }
+    if (manualRepairDiscount !== undefined) {
+      payload.manualRepairDiscount = manualRepairDiscount;
+    }
+    if (preDiscountCost !== undefined) {
+      payload.preDiscountCost = preDiscountCost;
+    }
+
     await this.logEvent(
       actualCycleNumber,
       EventType.ROBOT_REPAIR,
-      {
-        cost,
-        damageRepaired,
-        discountPercent,
-      },
+      payload,
       { userId, robotId }
     );
   }

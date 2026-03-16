@@ -443,6 +443,13 @@ critical_multiplier = 2.0 - (medical_bay_level × 0.1)
 - Medical Bay Level 1: 1.9× multiplier
 - Medical Bay Level 10: 1.0× (no critical penalty)
 
+**Manual Repair Discount (50%)**:
+- When players use the "Repair All" button on the Robots page, they receive a 50% discount on repair costs
+- This discount stacks with the Repair Bay discount (applied after Repair Bay discount)
+- Automatic repairs during cycle processing pay full price
+- Formula: `finalManualCost = Math.floor(costAfterRepairBay × 0.5)`
+- Incentivizes active play between cycles
+
 **Battle Readiness Requirements**:
 - Robot must have at least one weapon equipped
 - Robot must have HP > 0 (not destroyed)

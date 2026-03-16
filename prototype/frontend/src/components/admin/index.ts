@@ -9,5 +9,6 @@ export { BattleLogsTab } from './BattleLogsTab';
 export { RobotStatsTab } from './RobotStatsTab';
 export { BankruptcyMonitorTab } from './BankruptcyMonitorTab';
 export { RecentUsersTab } from './RecentUsersTab';
+export { RepairLogTab } from './RepairLogTab';
 
 export * from './types';

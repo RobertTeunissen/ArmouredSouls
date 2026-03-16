@@ -21,6 +21,7 @@
 - v1.8 (Feb 2, 2026): **CRITICAL FIX** - Repair All button frontend now calculates cost based on actual HP damage, not just repairCost field - works for any robot with HP < maxHP
 - v1.8.1 (Feb 2, 2026): **BACKEND FIX** - Backend repair-all endpoint now matches frontend HP-based cost calculation - end-to-end repair functionality complete
 - v1.9 (Feb 10, 2026): **PRD CLEANUP** - Updated PRD to reflect implementation status, removed outdated sections, added test coverage information, resolved open questions
+- v2.0 (Mar 16, 2026): **MANUAL REPAIR DISCOUNT** - 50% discount on manual repairs via Repair All button, confirmation modal shows discount breakdown (Repair Bay + Manual Repair Discount), updated cost calculation
 
 ---
 
@@ -242,11 +243,15 @@ So that I can quickly prepare my entire fleet for battle
 
 Acceptance Criteria:
 - "Repair All Robots" button displayed in page header
-- Button shows total repair cost for all damaged robots
+- Button shows total repair cost for all damaged robots (after all discounts)
 - Cost includes Repair Bay discount if facility is upgraded
-- Discount percentage displayed (e.g., "₡15,000 (25% off)")
+- Cost includes 50% manual repair discount (applied after Repair Bay discount)
+- Discount percentage displayed (e.g., "₡7,500 (25% + 50% manual off)")
 - Button disabled if no robots need repair or insufficient credits
-- Confirmation modal shows cost breakdown before repair
+- Confirmation modal shows cost breakdown before repair:
+  - Repair Bay Discount: X% off
+  - Manual Repair Discount: 50% off
+  - Final Cost: ₡Y
 - Success message confirms repairs completed
 - Robot HP/Shield bars update after repair
 ```
@@ -311,14 +316,16 @@ Acceptance Criteria:
 - Backend endpoint: POST /api/robots/repair-all
 - Calculate total repair cost for all damaged robots
 - Apply Repair Bay discount (5% per level)
-- Check user has sufficient credits
+- Apply 50% manual repair discount (after Repair Bay discount)
+- Check user has sufficient credits (against discounted cost)
 - Deduct credits from user account
 - Update all robots: currentHP = maxHP, currentShield = maxShield, repairCost = 0
-- Return success message with repair count and costs
-- Frontend shows confirmation dialog before repair
+- Return success message with repair count, costs, and discount breakdown
+- Response includes manualRepairDiscount and preDiscountCost fields
+- Frontend shows confirmation dialog with discount breakdown before repair
 - Frontend shows success message after repair
 - Frontend refreshes robots list to show updated status
-- Handle errors (insufficient credits, etc.)
+- Handle errors (insufficient credits uses discounted cost in error, etc.)
 ```
 
 **US-13: Robot Capacity Indicator** (v1.4)

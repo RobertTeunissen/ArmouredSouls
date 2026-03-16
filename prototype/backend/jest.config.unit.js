@@ -16,6 +16,8 @@ const unitTestFiles = [
   'passwordHashing\\.property\\.test\\.ts',
   'passwordService\\.test\\.ts',
   'recommendationEngine\\.test\\.ts',
+  'manualRepairDiscount\\.property\\.test\\.ts',
+  'manualRepairDiscount\\.test\\.ts',
   'repairCostMultiRobot\\.test\\.ts',
   'storageCalculations\\.test\\.ts',
   'streamingStudioOperatingCost\\.property\\.test\\.ts',

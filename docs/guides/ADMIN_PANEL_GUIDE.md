@@ -4,7 +4,7 @@
 
 The Admin Panel provides tools for managing the game's daily cycle, tournaments, battles, and system operations. Access it at `/admin` (requires admin role).
 
-The panel is organized into 7 tabs:
+The panel is organized into 8 tabs:
 1. **Dashboard** — System statistics overview with integrated System Health monitoring
 2. **Cycle Controls** — Run matchmaking, battles, rebalancing, repairs, and bulk cycles
 3. **Tournaments** — Create and manage competitive tournaments
@@ -12,6 +12,7 @@ The panel is organized into 7 tabs:
 5. **Robot Stats** — Statistical analysis, outlier detection, and performance analytics
 6. **Bankruptcy Monitor** — Monitor users at risk of bankruptcy (always visible)
 7. **Recent Users** — Recent real users with onboarding status and issue detection
+8. **Repair Log** — View and filter manual vs automatic repair activity with savings tracking
 
 ## Component Architecture
 
@@ -25,6 +26,7 @@ The Admin Page uses a **thin shell + tab components** pattern:
   - `RobotStatsTab.tsx`
   - `BankruptcyMonitorTab.tsx`
   - `RecentUsersTab.tsx`
+  - `RepairLogTab.tsx`
 - **Shared types** — `components/admin/types.ts` contains shared interfaces (`SystemStats`, `Battle`, `SessionLogEntry`, `RobotStats`, `AtRiskUser`, etc.)
 - **Barrel export** — `components/admin/index.ts` re-exports all tab components
 
@@ -282,6 +284,48 @@ Displays recent real users with:
 - Robot details per user
 - Issue detection flags
 - Cycle range control for filtering the time window
+
+## Repair Log Tab
+
+The Repair Log tab provides visibility into manual vs automatic repair activity across all players. It helps admins track the impact of the 50% manual repair discount.
+
+**Data Source:** `GET /api/admin/audit-log/repairs`
+
+### Summary Stats
+
+Three summary cards at the top of the tab:
+- **Total Manual Repairs** — Count of repairs triggered via the Repair All button
+- **Total Automatic Repairs** — Count of repairs triggered during cycle processing
+- **Total Savings** — Sum of credits saved from the 50% manual repair discount
+
+### Filters
+
+| Filter | Control | Default |
+|--------|---------|---------|
+| Repair Type | Select: All / Manual / Automatic | All |
+| Start Date | Date picker | 7 days ago |
+| End Date | Date picker | Today |
+
+Changing any filter triggers a re-fetch from the API.
+
+### Data Table
+
+| Column | Description |
+|--------|-------------|
+| Player | Stable name |
+| Robot | Robot name |
+| Repair Type | Badge-styled: green for manual, gray for automatic |
+| Cost | Final cost paid (₡X) |
+| Pre-Discount Cost | Cost before manual discount (₡X), shown as `—` for automatic repairs |
+| Savings | Credits saved from manual discount (₡X), shown as `—` for automatic repairs |
+| Timestamp | When the repair occurred |
+
+Pagination with Previous/Next buttons (default 25 rows per page).
+
+**When to use:**
+- To monitor how players are using manual vs automatic repairs
+- To track the economic impact of the 50% manual repair discount
+- To identify players who are actively managing their repair costs
 
 ## Best Practices
 

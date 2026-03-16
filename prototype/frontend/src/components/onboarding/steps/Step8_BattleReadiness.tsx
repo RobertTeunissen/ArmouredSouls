@@ -196,6 +196,19 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
             </p>
           </div>
 
+          <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4">
+            <h3 className="font-semibold text-success mb-2">🏷️ 50% Manual Repair Discount</h3>
+            <p className="text-gray-200 text-sm mb-2">
+              When you manually repair your robots using the <strong>"Repair All"</strong> button
+              on the Robots page, you get a <strong className="text-success">50% discount</strong> on
+              repair costs. This stacks with your Repair Bay discount.
+            </p>
+            <p className="text-secondary text-xs">
+              Automatic repairs during battle cycles pay full price. Repairing manually between
+              cycles is always cheaper — stay active to save credits.
+            </p>
+          </div>
+
           <div className="bg-surface-elevated/50 rounded-lg p-4">
             <h3 className="font-semibold text-orange-400 mb-2">📈 Higher Attributes = Higher Costs</h3>
             <p className="text-gray-200 text-sm mb-2">
@@ -387,7 +400,8 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
           <div className="text-sm text-gray-200">
             <strong className="text-primary">Tip:</strong> Shields are your best friend for reducing
             repair costs. Since shields regenerate for free, investing in shield attributes means
-            less HP damage and lower repair bills over time. Combine this with smart yielding for
+            less HP damage and lower repair bills over time. Combine this with smart yielding and
+            the 50% manual repair discount (use the Repair All button between cycles) for
             maximum cost efficiency.
           </div>
         </div>

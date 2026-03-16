@@ -52,6 +52,7 @@ const TAB_LABELS = [
   '🤖 Robot Stats',
   '💰 Bankruptcy Monitor',
   '👥 Recent Users',
+  '🔧 Repair Log',
 ];
 
 function renderAdminPage() {
@@ -72,7 +73,7 @@ describe('AdminPage shell', () => {
   it('should render all 7 tab buttons', () => {
     renderAdminPage();
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(7);
+    expect(tabs).toHaveLength(8);
     for (const label of TAB_LABELS) {
       expect(screen.getByRole('tab', { name: label })).toBeInTheDocument();
     }

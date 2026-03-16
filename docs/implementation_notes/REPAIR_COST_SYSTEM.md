@@ -1,6 +1,6 @@
 # Repair Cost System
 
-**Last Updated**: February 17, 2026  
+**Last Updated**: March 16, 2026  
 **Status**: Authoritative Reference
 
 ## Overview
@@ -167,6 +167,47 @@ Key points:
 3. **Clear Expenses**: All expenses (repairs, purchases, operating costs) tracked consistently
 4. **Strategic Decisions**: Players can upgrade Repair Bay before repairing to save money
 5. **Audit Trail**: Complete history of all repair actions and costs
+6. **Active Play Incentive**: 50% manual repair discount rewards players who repair between cycles
+
+## Manual Repair Discount (50%)
+
+**Added**: March 16, 2026
+
+When players manually repair robots via the "Repair All" button on the `/robots` page, a 50% discount is applied on top of all existing facility discounts. Automatic repairs during cycle processing pay full price.
+
+### Discount Stacking Order
+
+```
+Base Cost → Repair Bay discount → Math.floor → 50% manual discount → Math.floor
+```
+
+```typescript
+const MANUAL_REPAIR_DISCOUNT = 0.5;
+const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100));
+const finalCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
+```
+
+The discount is multiplicative, not additive. A player with 90% Repair Bay discount pays `Math.floor(baseCost × 0.10 × 0.50)` = 5% of base cost for manual repairs.
+
+### Where the Discount is Applied
+
+- **Manual repairs** (`POST /api/robots/repair-all` in `robots.ts`): 50% discount applied after Repair Bay discount
+- **Automatic repairs** (`repairAllRobots()` in `repairService.ts`): No manual discount — full price
+
+The discount is applied in the endpoint handler, not inside `calculateRepairCost()`, to keep the shared utility function unchanged and avoid any risk to the automatic repair path.
+
+### Audit Log Differentiation
+
+Repair events now include a `repairType` field:
+- `repairType: 'manual'` — triggered via the Repair All button, includes `manualRepairDiscount: 50` and `preDiscountCost`
+- `repairType: 'automatic'` — triggered during cycle processing, no manual discount fields
+
+### Admin Repair Log
+
+A dedicated "🔧 Repair Log" tab in the Admin Panel (`GET /api/admin/audit-log/repairs`) provides:
+- Filtering by repair type (manual/automatic) and date range
+- Summary stats: total manual repairs, total automatic repairs, total savings from manual discounts
+- Detailed table with player, robot, repair type, cost, pre-discount cost, savings, and timestamp
 
 ## Implementation Details
 
@@ -182,7 +223,9 @@ Key points:
 ### Audit Logging
 - **Service**: `eventLogger.logRobotRepair()`
 - **Event Type**: `'robot_repair'`
-- **Payload**: `{ cost, robotId, damageTaken, repairBayDiscount }`
+- **Payload**: `{ cost, robotId, damageTaken, repairBayDiscount, repairType, manualRepairDiscount?, preDiscountCost? }`
+- **repairType**: `'manual'` (from Repair All button) or `'automatic'` (from cycle processing)
+- Manual repairs also include `manualRepairDiscount: 50` and `preDiscountCost` in the payload
 
 ### Cycle Aggregation
 - **Service**: `cycleSnapshotService.createSnapshot()`
