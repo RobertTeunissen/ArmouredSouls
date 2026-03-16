@@ -86,7 +86,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.2 rebalancing w
 - Type: Shield
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
-- Bonuses: Shield Capacity +7, Counter Protocols +6, Power Core +4, Servo Motors -2
+- Bonuses: Shield Capacity +7, Counter Protocols +6, Power Core +4, Evasion Thrusters -2
 - Description: Advanced shield with energy-reactive plating
 
 **8. Machine Gun** (₡150,000)
@@ -116,7 +116,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.2 rebalancing w
 - Type: Melee, One-handed
 - Base Damage: 13, Cooldown: 3s, DPS: 4.33
 - Loadout: Single, Weapon+Shield, Dual-Wield
-- Bonuses: Attack Speed +5, Hydraulic Systems +4, Weapon Control +3
+- Bonuses: Attack Speed +5, Combat Power +4, Weapon Control +3
 - Description: Energy-infused blade for swift strikes
 
 **12. Laser Rifle** (₡244,000)
@@ -130,7 +130,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.2 rebalancing w
 - Type: Melee, One-handed
 - Base Damage: 14, Cooldown: 3s, DPS: 4.67
 - Loadout: Single, Weapon+Shield, Dual-Wield
-- Bonuses: Hydraulic Systems +5, Attack Speed +4, Critical Systems +3, Gyro Stabilizers +2
+- Bonuses: Combat Power +5, Attack Speed +4, Critical Systems +3, Gyro Stabilizers +2
 - Description: Energy-enhanced melee blade with rapid strikes
 
 ### Premium Tier (₡275K-₡400K) - 5 Weapons
@@ -146,7 +146,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.2 rebalancing w
 - Type: Melee, One-handed
 - Base Damage: 20, Cooldown: 3s, DPS: 6.67
 - Loadout: Single, Weapon+Shield, Dual-Wield
-- Bonuses: Hydraulic Systems +7, Counter Protocols +5, Gyro Stabilizers +4, Combat Power +3
+- Bonuses: Penetration +7, Critical Systems +5, Weapon Control +4, Combat Power +3
 - Description: High-tech melee weapon with superior handling
 
 **16. Shotgun** (₡269,000) - Two-handed
@@ -176,7 +176,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.2 rebalancing w
 - Type: Melee, Two-handed
 - Base Damage: 23, Cooldown: 4s, DPS: 5.75
 - Loadout: Two-Handed only
-- Bonuses: Hydraulic Systems +6, Combat Power +4, Critical Systems +3, Servo Motors -2
+- Bonuses: Penetration +6, Combat Power +4, Critical Systems +3, Attack Speed -2
 - Description: Brutal melee weapon with devastating power
 
 **20. Plasma Cannon** (₡400,000) - Two-handed
@@ -190,7 +190,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.2 rebalancing w
 - Type: Melee, Two-handed
 - Base Damage: 29, Cooldown: 5s, DPS: 5.8
 - Loadout: Two-Handed only
-- Bonuses: Hydraulic Systems +8, Combat Power +7, Critical Systems +4, Servo Motors -3
+- Bonuses: Penetration +8, Combat Power +7, Critical Systems +4, Attack Speed -3
 - Description: Massive impact weapon for maximum damage
 
 **22. Railgun** (₡488,000) - Two-handed
@@ -204,7 +204,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.2 rebalancing w
 - Type: Energy, Two-handed
 - Base Damage: 24, Cooldown: 4s, DPS: 6.0
 - Loadout: Two-Handed only
-- Bonuses: Penetration +10, Shield Capacity +8, Attack Speed +5, Targeting Systems +4
+- Bonuses: Penetration +10, Combat Power +8, Attack Speed +5, Targeting Systems +4
 - Description: Focused energy beam with shield disruption
 
 ### Weapon Summary by Loadout Type

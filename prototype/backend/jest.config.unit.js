@@ -24,6 +24,7 @@ const unitTestFiles = [
   'streamingStudioUpgradeCosts\\.property\\.test\\.ts',
   'tournament-bracket-seeding\\.property\\.test\\.ts',
   'validation\\.property\\.test\\.ts',
+  'weapon-bonus-rebalance\\.test\\.ts',
 ];
 
 module.exports = {
