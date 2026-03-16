@@ -151,7 +151,8 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
           repairCost,
           damageTaken,
           repairBayDiscount,
-          cycleNumber
+          cycleNumber,
+          'automatic'
         );
         
         // Get user's stable name for logging

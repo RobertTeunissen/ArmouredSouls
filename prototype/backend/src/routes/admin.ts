@@ -2516,6 +2516,159 @@ router.get('/users/recent', authenticateToken, requireAdmin, async (req: Request
 });
 
 /**
+ * GET /api/admin/audit-log/repairs
+ * Get paginated repair audit log events with optional filtering by repairType and date range.
+ * Returns events, summary stats, and pagination.
+ */
+router.get('/audit-log/repairs', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const repairType = req.query.repairType as string | undefined;
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 25), 100);
+    const skip = (page - 1) * limit;
+
+    // Validate repairType if provided
+    if (repairType && repairType !== 'manual' && repairType !== 'automatic') {
+      return res.status(400).json({
+        error: "Invalid repairType. Must be 'manual' or 'automatic'",
+      });
+    }
+
+    // Build where clause for audit log query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {
+      eventType: 'robot_repair',
+    };
+
+    // Date range filtering
+    if (startDate || endDate) {
+      where.eventTimestamp = {};
+      if (startDate) {
+        where.eventTimestamp.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.eventTimestamp.lte = new Date(endDate);
+      }
+    }
+
+    // For repairType filtering, we need to filter on the JSON payload field.
+    // Prisma supports JSON filtering with `path` for PostgreSQL.
+    if (repairType) {
+      where.payload = {
+        path: ['repairType'],
+        equals: repairType,
+      };
+    }
+
+    // Get total count for pagination
+    const totalEvents = await prisma.auditLog.count({ where });
+
+    // Fetch paginated audit log events
+    const auditEvents = await prisma.auditLog.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { eventTimestamp: 'desc' },
+      select: {
+        userId: true,
+        robotId: true,
+        payload: true,
+        eventTimestamp: true,
+      },
+    });
+
+    // Collect unique user and robot IDs for batch lookup
+    const userIds = [...new Set(auditEvents.map(e => e.userId).filter((id): id is number => id !== null))];
+    const robotIds = [...new Set(auditEvents.map(e => e.robotId).filter((id): id is number => id !== null))];
+
+    // Batch fetch users and robots
+    const [users, robots] = await Promise.all([
+      prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, stableName: true, username: true },
+      }),
+      prisma.robot.findMany({
+        where: { id: { in: robotIds } },
+        select: { id: true, name: true },
+      }),
+    ]);
+
+    const userMap = new Map(users.map(u => [u.id, u.stableName || u.username]));
+    const robotMap = new Map(robots.map(r => [r.id, r.name]));
+
+    // Map events to response shape
+    const events = auditEvents.map(event => {
+      const payload = event.payload as Record<string, unknown>;
+      return {
+        userId: event.userId || 0,
+        stableName: userMap.get(event.userId || 0) || 'Unknown',
+        robotId: event.robotId || 0,
+        robotName: robotMap.get(event.robotId || 0) || 'Unknown',
+        repairType: (payload.repairType as 'manual' | 'automatic') || 'automatic',
+        cost: (payload.cost as number) || 0,
+        preDiscountCost: (payload.preDiscountCost as number) ?? null,
+        manualRepairDiscount: (payload.manualRepairDiscount as number) ?? null,
+        eventTimestamp: event.eventTimestamp.toISOString(),
+      };
+    });
+
+    // Calculate summary stats from ALL matching events (not just current page)
+    // We need to fetch all matching events for summary calculation
+    const allEvents = await prisma.auditLog.findMany({
+      where,
+      select: {
+        payload: true,
+      },
+    });
+
+    let totalManualRepairs = 0;
+    let totalAutomaticRepairs = 0;
+    let totalSavings = 0;
+
+    for (const event of allEvents) {
+      const payload = event.payload as Record<string, unknown>;
+      const eventRepairType = (payload.repairType as string) || 'automatic';
+      if (eventRepairType === 'manual') {
+        totalManualRepairs++;
+        const preDiscount = payload.preDiscountCost as number | undefined;
+        const cost = payload.cost as number | undefined;
+        if (preDiscount != null && cost != null) {
+          totalSavings += preDiscount - cost;
+        }
+      } else {
+        totalAutomaticRepairs++;
+      }
+    }
+
+    const totalPages = Math.ceil(totalEvents / limit);
+
+    res.json({
+      events,
+      summary: {
+        totalManualRepairs,
+        totalAutomaticRepairs,
+        totalSavings,
+      },
+      pagination: {
+        page,
+        limit,
+        totalEvents,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    });
+  } catch (error) {
+    logger.error('[Admin] Repair audit log error:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve repair audit log',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+/**
  * GET /api/admin/scheduler/status
  * Return the current state of the Cycle Scheduler
  */

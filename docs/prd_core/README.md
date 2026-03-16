@@ -23,6 +23,7 @@ Core PRDs define the fundamental game systems, mechanics, and architecture that 
 - `STABLE_SYSTEM.md` - Facility and stable management
 
 ### Combat & Battles
+- `BATTLE_SIMULATION_ARCHITECTURE.md` - How the combat simulator, 3 orchestrators, narrative pipeline, and audit log tie together
 - `COMBAT_FORMULAS.md` - All combat calculation formulas
 - `COMBAT_MESSAGES.md` - Battle message generation system
 - `PRD_BATTLE_STANCES_AND_YIELD.md` - Battle stance mechanics

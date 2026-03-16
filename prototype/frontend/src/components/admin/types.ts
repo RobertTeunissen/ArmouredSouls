@@ -245,3 +245,33 @@ export interface TagTeamBattle extends Battle {
     };
   };
 }
+
+/** Repair log event from the admin audit-log repairs endpoint */
+export interface RepairLogEvent {
+  userId: number;
+  stableName: string;
+  robotId: number;
+  robotName: string;
+  repairType: 'manual' | 'automatic';
+  cost: number;
+  preDiscountCost: number | null;
+  manualRepairDiscount: number | null;
+  eventTimestamp: string;
+}
+
+/** Response shape for GET /api/admin/audit-log/repairs */
+export interface RepairLogResponse {
+  events: RepairLogEvent[];
+  summary: {
+    totalManualRepairs: number;
+    totalAutomaticRepairs: number;
+    totalSavings: number;
+  };
+  pagination: {
+    page: number;
+    limit: number;
+    totalEvents: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+}

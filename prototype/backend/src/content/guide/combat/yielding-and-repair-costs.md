@@ -2,7 +2,7 @@
 title: "Yielding & Repair Costs"
 description: "How the yield system works, how it affects repair costs, and the strategic trade-offs between aggressive and conservative surrender settings."
 order: 4
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-03-16"
 relatedArticles:
   - combat/stances
   - combat/battle-flow
@@ -95,10 +95,12 @@ Your [stance choice](/guide/combat/stances) interacts with yield threshold in im
 
 The [Repair Bay](/guide/facilities/repair-bay) facility reduces repair costs through a discount that scales with both the facility level and the number of active robots in your stable. This discount applies *after* the damage and destruction multipliers.
 
-With a well-upgraded Repair Bay and a large roster, even aggressive yield thresholds become more affordable. Players running three robots with a high-level Repair Bay can afford to set lower yield thresholds because the discount cushions the blow.
+On top of the Repair Bay discount, you can save even more by repairing manually. Using the **Repair All** button on the Robots page gives you a **50% manual repair discount** that stacks with the Repair Bay discount. Automatic repairs during the daily cycle don't receive this bonus.
+
+With a well-upgraded Repair Bay, a large roster, and manual repairs, even aggressive yield thresholds become very affordable. Players running three robots with a high-level Repair Bay who repair manually can see their repair costs drop to a fraction of the base price.
 
 ```callout-info
-The Repair Bay discount makes a dramatic difference for multi-robot stables. A player with 7+ robots and a level 5+ Repair Bay can see repair costs drop by more than half, making aggressive play much more economically viable.
+The combination of Repair Bay discount and manual repair discount makes a dramatic difference for multi-robot stables. A player with 7+ robots, a level 5+ Repair Bay, and manual repairs can see repair costs drop far more than half, making aggressive play much more economically viable.
 ```
 
 ## Practical Guidelines
@@ -110,6 +112,7 @@ The Repair Bay discount makes a dramatic difference for multi-robot stables. A p
 | Weak robot, tough league tier | 20–30% | Preserve your budget. Live to fight another day. |
 | Budget is tight, can't afford repairs | 25–40% | Prioritize survival over wins until finances recover. |
 | Robot with high Repair Bay discount | 5–10% | The discount makes aggressive play affordable. |
+| Repairing manually between cycles | 5–15% | The 50% manual repair discount cushions aggressive play. |
 | Climbing the league rankings | 5–15% | You need wins to earn LP. Accept higher repair costs. |
 
 ## Reading Your Results

@@ -2,7 +2,7 @@
 title: "Operating Costs & Repairs"
 description: "All the ways Credits flow out of your stable — facility daily costs, repair expenses, and how damage severity and robot attributes influence what you pay."
 order: 3
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-03-16"
 relatedArticles:
   - economy/credits-and-income
   - economy/daily-financial-cycle
@@ -75,9 +75,21 @@ Defensive attributes also play a role:
 Investing in defensive attributes doesn't just help you win battles — it also saves you money on repairs. A well-armored robot that wins with 80% HP remaining costs far less to repair than a glass cannon that wins with 10% HP.
 ```
 
+### Manual Repair Discount
+
+When you manually repair your robots using the **Repair All** button on the Robots page, you receive a **50% discount** on the total repair cost. This discount is applied on top of any Repair Bay savings, so the two stack together for significant savings.
+
+Automatic repairs that happen during the daily cycle do **not** receive this discount — they're charged at the standard rate. This means actively managing your repairs between cycles is one of the most effective ways to save Credits.
+
+```callout-tip
+Always repair your robots manually before the next cycle starts. The 50% manual repair discount can save you thousands of Credits per cycle, especially if you're running multiple robots with heavy battle damage.
+```
+
 ### The Repair Bay Facility
 
 The **Repair Bay** facility reduces repair costs for all your robots. At higher levels, it provides increasingly significant discounts. If you're running multiple robots, the Repair Bay also offers a multi-robot discount that makes it one of the most cost-effective early investments.
+
+Combined with the manual repair discount, a well-upgraded Repair Bay can reduce your repair bills dramatically — making aggressive play much more affordable.
 
 See the [Repair Bay Guide](/guide/facilities/repair-bay) for details on level progression and cost savings.
 
@@ -96,18 +108,21 @@ Track your expenses-to-income ratio. If your total daily expenses are consistent
 - Keep facilities minimal — Training Facility and Repair Bay are usually enough
 - Set yield thresholds conservatively (higher %) to limit repair costs
 - Focus on one or two robots to keep total repair bills manageable
+- **Repair manually** between cycles to take advantage of the 50% manual repair discount
 
 ### Mid Game
 
 - Add income-generating facilities (Merchandising Hub, Streaming Studio) only when your Prestige and Fame justify the operating cost
 - Invest in defensive attributes to reduce per-battle repair costs
 - Consider the Self-Repair Systems attribute for robots that frequently take heavy damage
+- Combine the Repair Bay discount with manual repairs for maximum savings
 
 ### Late Game
 
 - Higher-tier rewards should comfortably cover all operating costs
 - Optimize yield thresholds based on your financial cushion — you can afford to fight more aggressively
 - Facility operating costs become a smaller percentage of total income as battle rewards scale up
+- Even at high income levels, manual repairs still save meaningful Credits over automatic repairs
 
 ## What's Next?
 

@@ -2,7 +2,7 @@
 title: "Yield Threshold Strategy"
 description: "The strategic implications of yield threshold settings — cost/benefit analysis for aggressive vs conservative approaches and how to optimize for your build."
 order: 2
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-03-16"
 relatedArticles:
   - strategy/build-archetypes
   - getting-started/starting-budget
@@ -72,8 +72,10 @@ The yield threshold directly affects your [repair costs](/guide/economy/repair-c
 | 30% | ~25% HP | ₡5,000–₡10,000 | Comfortable margin |
 | 50% | ~45% HP | ₡2,000–₡5,000 | Very safe |
 
+These estimates assume automatic repairs. If you repair manually using the Repair All button, all of these costs drop by 50% thanks to the [manual repair discount](/guide/economy/repair-costs). That shifts the economics significantly — a 5% yield threshold with manual repairs costs roughly the same as a 30% yield threshold with automatic repairs.
+
 ```callout-tip
-In the early game when your budget is tight, err on the side of higher yield thresholds (35–50%). As your income grows and you can absorb repair costs comfortably, you can lower the threshold to win more fights.
+In the early game when your budget is tight, err on the side of higher yield thresholds (35–50%). As your income grows and you can absorb repair costs comfortably, you can lower the threshold to win more fights. Repairing manually between cycles halves your repair bill regardless of your yield setting.
 ```
 
 ## Adjusting Over Time
@@ -85,6 +87,8 @@ Your optimal yield threshold changes as your stable evolves:
 | Early game | Conservative (35–50%) | Budget is tight, can't afford big repair bills |
 | Mid game | Moderate (20–35%) | Income supports moderate repairs, need wins for promotion |
 | Late game | Aggressive (5–20%) | Income easily covers repairs, every win matters for LP |
+
+If you're repairing manually between cycles, you can afford to be one tier more aggressive than these recommendations suggest, since the 50% manual discount effectively halves your downside risk.
 
 ```callout-tip
 Review your yield threshold every time you promote to a new league tier. Higher tiers mean tougher opponents and more damage taken — you may need to adjust upward temporarily until your robot is competitive at the new level.

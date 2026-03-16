@@ -119,7 +119,7 @@ function RobotsPage() {
   const [repairBayLevel, setRepairBayLevel] = useState(0);
   const [rosterLevel, setRosterLevel] = useState(0);
   const [showRepairConfirmation, setShowRepairConfirmation] = useState(false);
-  const [repairCostInfo, setRepairCostInfo] = useState({ discountedCost: 0, discount: 0 });
+  const [repairCostInfo, setRepairCostInfo] = useState({ discountedCost: 0, discount: 0, totalBaseCost: 0 });
   const [viewMode, setViewMode] = useState<'card' | 'table'>(() => {
     const saved = localStorage.getItem('robotsViewMode');
     return (saved as 'card' | 'table') || 'card';
@@ -210,13 +210,17 @@ function RobotsPage() {
     // New formula: discount = repairBayLevel × (5 + activeRobotCount), capped at 90%
     const activeRobotCount = robots.filter(r => r.name !== 'Bye Robot').length;
     const discount = Math.min(90, repairBayLevel * (5 + activeRobotCount));
-    const discountedCost = Math.floor(totalBaseCost * (1 - discount / 100));
+    const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100));
+    
+    // Apply 50% manual repair discount on top of Repair Bay discount
+    const MANUAL_REPAIR_DISCOUNT = 0.5;
+    const discountedCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
     
     return { totalBaseCost, discountedCost, discount };
   };
 
   const handleRepairAll = async () => {
-    const { discountedCost, discount } = calculateTotalRepairCost();
+    const { totalBaseCost, discountedCost, discount } = calculateTotalRepairCost();
     
     if (discountedCost === 0) {
       alert('No robots need repair!');
@@ -224,7 +228,7 @@ function RobotsPage() {
     }
 
     // Store cost info and show confirmation modal
-    setRepairCostInfo({ discountedCost, discount });
+    setRepairCostInfo({ discountedCost, discount, totalBaseCost });
     setShowRepairConfirmation(true);
   };
 
@@ -820,19 +824,23 @@ function RobotsPage() {
               <p className="mb-2">
                 Are you sure you want to repair all robots?
               </p>
-              <div className="bg-surface-elevated p-3 rounded mt-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-secondary">Total Cost:</span>
-                  <span className="text-xl font-bold text-success">
-                    ₡{repairCostInfo.discountedCost.toLocaleString()}
-                  </span>
-                </div>
+              <div className="bg-surface-elevated p-3 rounded mt-3 space-y-2">
                 {repairCostInfo.discount > 0 && (
-                  <div className="flex justify-between items-center mt-1 text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <span className="text-tertiary">Repair Bay Discount:</span>
                     <span className="text-primary">{repairCostInfo.discount}% off</span>
                   </div>
                 )}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-tertiary">Manual Repair Discount:</span>
+                  <span className="text-primary">50% off</span>
+                </div>
+                <div className="border-t border-white/10 pt-2 flex justify-between items-center">
+                  <span className="text-secondary">Final Cost:</span>
+                  <span className="text-xl font-bold text-success">
+                    ₡{repairCostInfo.discountedCost.toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
           }

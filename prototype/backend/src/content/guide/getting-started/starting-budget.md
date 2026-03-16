@@ -2,7 +2,7 @@
 title: "Your Starting Budget"
 description: "How to spend your initial ₡3,000,000 wisely and set your stable up for long-term success."
 order: 3
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-03-16"
 relatedArticles:
   - getting-started/roster-strategy
   - economy/credits-and-income
@@ -107,6 +107,7 @@ Optional facilities to consider with remaining budget:
 ## Early Game Tips
 
 - **Buy discount facilities before the items they discount** — This is the single most impactful thing you can do with your starting budget.
+- **Repair manually between cycles** — Using the Repair All button gives you a 50% discount on repairs compared to automatic cycle repairs. This adds up fast, especially with multiple robots.
 - **Upgrade attributes in batches** — Focus on 6–8 key attributes rather than spreading thin across all 23.
 - **Watch your cash flow** — After a few cycles, check your Financial Report to make sure income exceeds expenses.
 - **Don't overbuy facilities** — Each facility has daily operating costs. Only buy what you'll actively benefit from right away.
