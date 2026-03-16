@@ -9,7 +9,7 @@
  * **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6**
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import axios from 'axios';
