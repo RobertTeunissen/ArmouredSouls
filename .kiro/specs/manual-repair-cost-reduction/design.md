@@ -23,9 +23,8 @@ flowchart TD
     C --> D[Apply Repair Bay discount]
     D --> E[Apply 50% manual discount]
     E --> F[Math.floor final cost]
-    F --> G{Currency >= cost?}
-    G -->|Yes| H[Execute repairs in transaction]
-    G -->|No| I[Return insufficient credits error with discounted amount]
+    F --> G[Deduct cost from balance]
+    G --> H[Execute repairs in transaction]
     H --> J[Log audit event with repairType: manual]
     H --> K[Return response with discount breakdown]
 
@@ -313,11 +312,11 @@ The following properties were derived from the acceptance criteria prework analy
 
 **Validates: Requirements 2.1, 2.2, 2.3**
 
-### Property 3: Currency validation uses discounted cost
+### Property 3: Manual repairs always allowed (no currency gate)
 
-*For any* player currency value and any manual repair cost, the repair shall be allowed if and only if the player's currency is greater than or equal to the discounted final cost (after the 50% manual discount). When rejected, the error's `required` field shall equal the discounted cost.
+*For any* player currency value (including negative) and any manual repair cost, the repair shall always be allowed. The player's balance after repair equals currency minus the discounted final cost, and may be negative. Manual repairs are the only transaction permitted with negative credits.
 
-**Validates: Requirements 4.1, 4.2**
+**Validates: Requirements 4.1, 4.2, 4.3**
 
 ### Property 4: Manual cost is at most automatic cost
 
@@ -344,12 +343,11 @@ The following properties were derived from the acceptance criteria prework analy
 | Scenario | HTTP Status | Error Response |
 |---|---|---|
 | No robots need repair | 400 | `{ error: "No robots need repair" }` |
-| Insufficient credits (after manual discount) | 400 | `{ error: "Insufficient credits", required: <discountedCost>, current: <playerCurrency> }` |
 | User not found | 404 | `{ error: "User not found" }` |
 | Audit log write failure | N/A (non-blocking) | Log error, continue with repair — repair should not fail because logging failed |
 | Invalid repairType filter on admin endpoint | 400 | `{ error: "Invalid repairType. Must be 'manual' or 'automatic'" }` |
 
-The currency check must use the discounted cost (Property 3). The existing error format is preserved — only the `required` amount changes to reflect the discount.
+The manual repair endpoint has no currency gate — repairs are always allowed and the balance can go negative. This is the only transaction in the game that permits spending into negative credits, incentivizing active play during financial hardship.
 
 ### Frontend
 
@@ -367,7 +365,7 @@ Each correctness property maps to a single property-based test with minimum 100 
 |---|---|---|
 | Manual discount formula | Property 1 | `fc.nat(1_000_000)` for baseCost, `fc.integer({min:0, max:90})` for repairBayDiscount |
 | Automatic cost unchanged | Property 2 | `fc.integer({min:1, max:500})` for attributeSum, `fc.float({min:0, max:100})` for damagePercent/hpPercent, `fc.integer({min:0, max:10})` for levels, `fc.integer({min:1, max:20})` for robotCount |
-| Currency validation threshold | Property 3 | `fc.nat(10_000_000)` for currency, `fc.nat(1_000_000)` for repairCost |
+| Currency validation threshold | Property 3 | `fc.integer({min:-5_000_000, max:10_000_000})` for currency (includes negative), `fc.nat(1_000_000)` for repairCost |
 | Manual <= automatic | Property 4 | Same generators as Property 1 |
 | Manual cost non-negative | Property 5 | Same generators as Property 1 |
 | Repair type tagging | Property 6 | `fc.constantFrom('manual', 'automatic')` for repairType, verify payload field matches |
@@ -386,9 +384,9 @@ Unit tests go in `prototype/backend/tests/manualRepairDiscount.test.ts`. Focus o
 - Repair Bay 90% + manual 50% stacking (e.g., base 100000 → after 90% = 10000 → after 50% = 5000)
 - Repair Bay 0% + manual 50% (edge case from Req 1.3)
 - Zero damage → zero cost (no discount needed)
+- Repair allowed with negative balance (balance can go further negative)
 - API response contains `manualRepairDiscount` field
 - API response contains `preDiscountCost` field
-- Insufficient credits error uses discounted cost in `required` field
 
 ### Regression Tests
 

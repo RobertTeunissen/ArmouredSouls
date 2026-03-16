@@ -1154,14 +1154,9 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
     const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100));
     const finalCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
 
-    // Check if user has enough credits
-    if (user.currency < finalCost) {
-      return res.status(400).json({ 
-        error: 'Insufficient credits',
-        required: finalCost,
-        current: user.currency,
-      });
-    }
+    // Manual repairs are always allowed, even with negative balance.
+    // This is the ONLY transaction permitted when a player has negative credits,
+    // incentivizing active play during financial hardship.
 
     // Perform repairs in a transaction
     const result = await prisma.$transaction(async (tx) => {

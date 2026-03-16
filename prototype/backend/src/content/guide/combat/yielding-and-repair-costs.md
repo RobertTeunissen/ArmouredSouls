@@ -95,7 +95,7 @@ Your [stance choice](/guide/combat/stances) interacts with yield threshold in im
 
 The [Repair Bay](/guide/facilities/repair-bay) facility reduces repair costs through a discount that scales with both the facility level and the number of active robots in your stable. This discount applies *after* the damage and destruction multipliers.
 
-On top of the Repair Bay discount, you can save even more by repairing manually. Using the **Repair All** button on the Robots page gives you a **50% manual repair discount** that stacks with the Repair Bay discount. Automatic repairs during the daily cycle don't receive this bonus.
+On top of the Repair Bay discount, you can save even more by repairing manually. Using the **Repair All** button on the Robots page gives you a **50% manual repair discount** that stacks with the Repair Bay discount. Automatic repairs during the daily cycle don't receive this bonus. Manual repairs are also the only action available when your balance is negative — so even in tough financial times, you can keep your robots fighting.
 
 With a well-upgraded Repair Bay, a large roster, and manual repairs, even aggressive yield thresholds become very affordable. Players running three robots with a high-level Repair Bay who repair manually can see their repair costs drop to a fraction of the base price.
 

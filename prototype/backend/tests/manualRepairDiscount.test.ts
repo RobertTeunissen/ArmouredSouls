@@ -16,7 +16,8 @@ function calculateManualRepairCost(baseCost: number, repairBayDiscount: number) 
   return { costAfterRepairBay, finalCost };
 }
 
-/** Simulates the response shape returned by the endpoint */
+/** Simulates the response shape returned by the endpoint.
+ *  Manual repairs are always allowed — no currency gate. Balance can go negative. */
 function buildRepairResponse(
   totalBaseCost: number,
   repairBayDiscount: number,
@@ -24,14 +25,6 @@ function buildRepairResponse(
   playerCurrency: number,
 ) {
   const { costAfterRepairBay, finalCost } = calculateManualRepairCost(totalBaseCost, repairBayDiscount);
-
-  if (playerCurrency < finalCost) {
-    return {
-      error: 'Insufficient credits',
-      required: finalCost,
-      current: playerCurrency,
-    };
-  }
 
   return {
     success: true,
@@ -101,34 +94,41 @@ describe('Manual Repair Discount — Unit Tests', () => {
     });
   });
 
-  describe('Insufficient credits with discounted cost', () => {
-    // Validates: Requirements 4.1, 4.2
-    it('should return error with discounted required amount when credits are insufficient', () => {
+  describe('Negative balance allowed for manual repairs', () => {
+    // Validates: Requirements 4.1, 4.2 (updated — no currency gate)
+    it('should allow repair even when credits are less than discounted cost (balance goes negative)', () => {
       // Base 10000, no Repair Bay → discounted cost = 5000
-      // Player has 3000 credits — less than 5000
+      // Player has 3000 credits — less than 5000 → allowed, balance = -2000
       const response = buildRepairResponse(10000, 0, 2, 3000);
-      expect(response).toEqual({
-        error: 'Insufficient credits',
-        required: 5000,
-        current: 3000,
-      });
+      expect(response).toHaveProperty('success', true);
+      expect(response).toHaveProperty('newCurrency', -2000);
     });
 
-    it('should allow repair when credits exactly equal discounted cost', () => {
+    it('should allow repair when credits exactly equal discounted cost (balance = 0)', () => {
       const response = buildRepairResponse(10000, 0, 1, 5000);
       expect(response).toHaveProperty('success', true);
       expect(response).toHaveProperty('newCurrency', 0);
     });
 
-    it('should use discounted cost (not pre-discount) for the required field', () => {
-      // Base 100000, Repair Bay 90% → pre-discount 9999 (floating-point), discounted 4999
-      // Player has 4998 credits — less than 4999
-      const response = buildRepairResponse(100000, 90, 3, 4998);
-      expect(response).toEqual({
-        error: 'Insufficient credits',
-        required: 4999,
-        current: 4998,
-      });
+    it('should allow repair when credits are zero (balance goes negative)', () => {
+      const response = buildRepairResponse(10000, 0, 1, 0);
+      expect(response).toHaveProperty('success', true);
+      expect(response).toHaveProperty('newCurrency', -5000);
+    });
+
+    it('should allow repair when credits are already negative (balance goes further negative)', () => {
+      const response = buildRepairResponse(10000, 0, 1, -3000);
+      expect(response).toHaveProperty('success', true);
+      expect(response).toHaveProperty('newCurrency', -8000);
+    });
+
+    it('should apply Repair Bay + manual discount even with negative balance', () => {
+      // Base 100000, Repair Bay 90% → after RB = 9999, after manual = 4999
+      // Player has -1000 credits → allowed, balance = -1000 - 4999 = -5999
+      const response = buildRepairResponse(100000, 90, 3, -1000);
+      expect(response).toHaveProperty('success', true);
+      expect(response).toHaveProperty('finalCost', 4999);
+      expect(response).toHaveProperty('newCurrency', -5999);
     });
   });
 

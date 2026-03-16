@@ -205,7 +205,8 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
             </p>
             <p className="text-secondary text-xs">
               Automatic repairs during battle cycles pay full price. Repairing manually between
-              cycles is always cheaper — stay active to save credits.
+              cycles is always cheaper — stay active to save credits. This is also the only action
+              available when your balance is negative, so it helps you recover from tough times.
             </p>
           </div>
 

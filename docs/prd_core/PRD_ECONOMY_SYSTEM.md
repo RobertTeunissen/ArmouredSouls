@@ -1149,6 +1149,7 @@ final_repair_cost = 32,200 × (1 - 0.60) = ₡12,880
 - HP does NOT regenerate automatically (must pay repair cost)
 - Energy shields regenerate automatically between battles (no cost)
 - **Manual repairs** via the Repair All button on the `/robots` page receive a **50% discount** on top of all facility discounts, incentivizing active play between cycles
+- **Manual repairs have no currency gate** — they are always allowed regardless of the player's credit balance, even if negative. This is the only transaction permitted with negative credits.
 - **Automatic repairs** during cycle processing pay full price (no manual discount)
 
 **Manual Repair Discount (50%)**:
@@ -1161,7 +1162,7 @@ costAfterRepairBay = Math.floor(baseCost × (1 - repairBayDiscount / 100))
 finalManualCost = Math.floor(costAfterRepairBay × 0.5)
 ```
 
-The discount is multiplicative. A player with 90% Repair Bay discount pays `Math.floor(baseCost × 0.10 × 0.50)` = 5% of base cost for manual repairs. Automatic repairs during cycle processing are unaffected.
+The discount is multiplicative. A player with 90% Repair Bay discount pays `Math.floor(baseCost × 0.10 × 0.50)` = 5% of base cost for manual repairs. Automatic repairs during cycle processing are unaffected. The player's balance can go negative as a result of manual repairs — this is by design to help struggling players stay active.
 
 ### 6. Operating Costs (Daily Recurring)
 

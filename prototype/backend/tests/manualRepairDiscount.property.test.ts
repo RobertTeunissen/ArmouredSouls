@@ -16,30 +16,25 @@ function calculateManualRepairCost(baseCost: number, repairBayDiscount: number):
   return finalCost;
 }
 
-// Feature: manual-repair-cost-reduction, Property 3: Currency validation uses discounted cost
+// Feature: manual-repair-cost-reduction, Property 3: Manual repairs always allowed (no currency gate)
 
 /**
- * Simulates the currency validation logic for manual repairs.
+ * Manual repairs are always allowed regardless of the player's current balance.
+ * The player's balance can go negative as a result. This is the only transaction
+ * in the game that permits spending into negative credits.
  *
- * Given a player's currency, a base repair cost, and a Repair Bay discount
- * percentage, calculates the discounted cost (after Repair Bay + 50% manual
- * discount) and determines whether the repair is allowed.
- *
- * - If playerCurrency >= discountedCost → { allowed: true, cost: discountedCost }
- * - If playerCurrency < discountedCost  → { allowed: false, required: discountedCost, current: playerCurrency }
+ * Given any player currency (including negative), base cost, and Repair Bay discount,
+ * the repair is always allowed and the resulting balance equals currency - discountedCost.
  */
 function validateCurrencyForRepair(
   playerCurrency: number,
   baseCost: number,
   repairBayDiscount: number
-): { allowed: true; cost: number } | { allowed: false; required: number; current: number } {
+): { allowed: true; cost: number; newBalance: number } {
   const costAfterRepairBay = Math.floor(baseCost * (1 - repairBayDiscount / 100));
   const discountedCost = Math.floor(costAfterRepairBay * 0.5);
 
-  if (playerCurrency >= discountedCost) {
-    return { allowed: true, cost: discountedCost };
-  }
-  return { allowed: false, required: discountedCost, current: playerCurrency };
+  return { allowed: true, cost: discountedCost, newBalance: playerCurrency - discountedCost };
 }
 
 // Feature: manual-repair-cost-reduction, Property 6: Repair type correctly tagged
@@ -168,19 +163,19 @@ describe('Manual Repair Discount - Property Tests', () => {
     });
   });
 
-  // Feature: manual-repair-cost-reduction, Property 3: Currency validation uses discounted cost
-  describe('Property 3: Currency validation uses discounted cost', () => {
+  // Feature: manual-repair-cost-reduction, Property 3: Manual repairs always allowed (no currency gate)
+  describe('Property 3: Manual repairs always allowed (no currency gate)', () => {
     /**
      * **Validates: Requirements 4.1, 4.2**
      *
-     * For any player currency value, base cost, and Repair Bay discount (0–90),
-     * the repair is allowed iff playerCurrency >= discountedCost (after 50% manual
-     * discount). When rejected, the error's `required` field equals the discounted cost.
+     * For any player currency value (including negative), base cost, and Repair Bay
+     * discount (0–90), the manual repair is always allowed. The resulting balance
+     * equals playerCurrency - discountedCost and may be negative.
      */
-    test('repair allowed iff currency >= discounted cost; rejected error required equals discounted cost', () => {
+    test('repair is always allowed regardless of currency; new balance equals currency minus discounted cost', () => {
       fc.assert(
         fc.property(
-          fc.nat(10_000_000),                     // playerCurrency
+          fc.integer({ min: -5_000_000, max: 10_000_000 }), // playerCurrency (can be negative)
           fc.nat(1_000_000),                      // baseCost
           fc.integer({ min: 0, max: 90 }),        // repairBayDiscount
           (playerCurrency, baseCost, repairBayDiscount) => {
@@ -189,15 +184,10 @@ describe('Manual Repair Discount - Property Tests', () => {
             const costAfterRepairBay = Math.floor(baseCost * (1 - repairBayDiscount / 100));
             const discountedCost = Math.floor(costAfterRepairBay * 0.5);
 
-            if (playerCurrency >= discountedCost) {
-              expect(result.allowed).toBe(true);
-              expect((result as { allowed: true; cost: number }).cost).toBe(discountedCost);
-            } else {
-              expect(result.allowed).toBe(false);
-              const rejected = result as { allowed: false; required: number; current: number };
-              expect(rejected.required).toBe(discountedCost);
-              expect(rejected.current).toBe(playerCurrency);
-            }
+            // Manual repairs are always allowed
+            expect(result.allowed).toBe(true);
+            expect(result.cost).toBe(discountedCost);
+            expect(result.newBalance).toBe(playerCurrency - discountedCost);
           }
         ),
         { numRuns: 100 }

@@ -10,9 +10,9 @@ Apply a 50% discount to manual robot repairs while preserving automatic repair c
   - [x] 1.1 Modify `POST /api/robots/repair-all` in `prototype/backend/src/routes/robots.ts` to apply `MANUAL_REPAIR_DISCOUNT = 0.5`
     - Add `const MANUAL_REPAIR_DISCOUNT = 0.5;` constant
     - Change `finalCost` calculation to: `const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100)); const finalCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);`
-    - Update currency check to compare against the new discounted `finalCost`
+    - Remove currency check — manual repairs are always allowed (balance can go negative)
     - Update response payload to include `manualRepairDiscount: 50`, `preDiscountCost: costAfterRepairBay`
-    - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.2_
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.2, 4.3_
 
   - [x] 1.2 Write property tests for manual discount formula
     - **Property 1: Manual discount formula** — For any valid base cost and Repair Bay discount (0–90), manual cost equals `Math.floor(Math.floor(baseCost * (1 - repairBayDiscount / 100)) * 0.5)`
@@ -34,8 +34,10 @@ Apply a 50% discount to manual robot repairs while preserving automatic repair c
     - Test Repair Bay 0% + manual 50% (edge case from Req 1.3)
     - Test zero damage → zero cost
     - Test response contains `manualRepairDiscount` and `preDiscountCost` fields
-    - Test insufficient credits error uses discounted cost in `required` field
-    - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.2, 6.1, 6.2, 6.7_
+    - Test negative balance allowed (credits < cost → balance goes negative)
+    - Test zero credits → balance goes negative
+    - Test already-negative credits → balance goes further negative
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.2, 4.3, 6.1, 6.2, 6.7_
 
 - [x] 2. Update audit logging with repairType field
   - [x] 2.1 Extend `EventLogger.logRobotRepair()` in `prototype/backend/src/services/eventLogger.ts`
@@ -81,8 +83,8 @@ Apply a 50% discount to manual robot repairs while preserving automatic repair c
     - _Requirements: 7.4, 7.5, 7.6_
 
   - [x] 4.2 Write property test for currency validation
-    - **Property 3: Currency validation uses discounted cost** — Repair allowed iff currency ≥ discounted cost; error `required` field equals discounted cost
-    - **Validates: Requirements 4.1, 4.2**
+    - **Property 3: Manual repairs always allowed (no currency gate)** — Repair always allowed regardless of balance; new balance equals currency minus discounted cost (can be negative)
+    - **Validates: Requirements 4.1, 4.2, 4.3**
     - Add to `prototype/backend/tests/manualRepairDiscount.property.test.ts`
 
 - [x] 5. Update frontend cost display on robots page

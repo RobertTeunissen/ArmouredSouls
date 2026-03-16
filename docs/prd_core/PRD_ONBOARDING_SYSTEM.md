@@ -449,6 +449,7 @@ critical_multiplier = 2.0 - (medical_bay_level × 0.1)
 - Automatic repairs during cycle processing pay full price
 - Formula: `finalManualCost = Math.floor(costAfterRepairBay × 0.5)`
 - Incentivizes active play between cycles
+- Manual repairs are the only action allowed with negative credits — helps struggling players stay active and recover
 
 **Battle Readiness Requirements**:
 - Robot must have at least one weapon equipped
