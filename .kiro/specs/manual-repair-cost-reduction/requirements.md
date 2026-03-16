@@ -50,14 +50,15 @@ This feature reduces the cost of all manual robot repairs by 50%. When a player 
 3. WHEN the player has a Repair Bay discount active, THE Frontend_Cost_Display SHALL show both the Repair Bay discount percentage and the 50% manual repair discount as separate line items in the confirmation modal.
 4. WHEN no robots need repair, THE Frontend_Cost_Display SHALL continue to disable the "Repair All" button regardless of the Manual_Repair_Discount.
 
-### Requirement 4: Currency Validation with Discounted Cost
+### Requirement 4: No Currency Gate on Manual Repairs
 
-**User Story:** As a player, I want the system to check my credits against the discounted price, so that I am not blocked from repairing when I can afford the reduced cost.
+**User Story:** As a player with negative credits, I want to still be able to manually repair my robots at the discounted price, so that I can stay competitive and recover from financial hardship through active play.
 
 #### Acceptance Criteria
 
-1. WHEN a player triggers a manual repair, THE Repair_Cost_System SHALL compare the player's currency against the cost after the 50% Manual_Repair_Discount is applied.
-2. IF the player's currency is less than the discounted final cost, THEN THE Repair_Cost_System SHALL return an "Insufficient credits" error with the discounted `required` amount.
+1. WHEN a player triggers a manual repair, THE Repair_Cost_System SHALL allow the repair regardless of the player's current credit balance, including negative balances.
+2. THE Repair_Cost_System SHALL deduct the discounted final cost from the player's balance, which may result in a negative balance.
+3. Manual repairs SHALL be the ONLY transaction in the game permitted when a player has negative credits. All other purchases (weapons, facilities, upgrades) remain blocked.
 
 ### Requirement 5: Audit Logging for Manual Repair Discount
 

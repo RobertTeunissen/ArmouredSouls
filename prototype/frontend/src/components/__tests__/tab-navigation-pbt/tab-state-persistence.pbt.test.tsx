@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import TabNavigation from '../../TabNavigation';
-import { ALL_TABS, PUBLIC_TABS, isOwnerOnlyTab, type TabId } from './helpers';
+import { ALL_TABS, isOwnerOnlyTab, type TabId } from './helpers';
 
 /**
  * Property 3: Tab State Persistence

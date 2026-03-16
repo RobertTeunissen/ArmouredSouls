@@ -135,7 +135,7 @@ function AdminPage(): JSX.Element {
 
         {/* Tab Navigation */}
         <div className="mb-6 border-b border-white/10">
-          <div className="flex space-x-1 overflow-x-auto flex-nowrap" role="tablist" aria-label="Admin sections">
+          <div className="flex flex-wrap gap-1" role="tablist" aria-label="Admin sections">
             {VALID_TABS.map((tab) => (
               <button
                 key={tab}
@@ -144,7 +144,7 @@ function AdminPage(): JSX.Element {
                 aria-selected={activeTab === tab}
                 aria-controls={`${tab}-panel`}
                 onClick={() => switchTab(tab)}
-                className={`px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
+                className={`px-3 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                   activeTab === tab
                     ? 'bg-surface text-white border-b-2 border-primary'
                     : 'text-secondary hover:text-white hover:bg-surface'

@@ -107,7 +107,7 @@ Optional facilities to consider with remaining budget:
 ## Early Game Tips
 
 - **Buy discount facilities before the items they discount** — This is the single most impactful thing you can do with your starting budget.
-- **Repair manually between cycles** — Using the Repair All button gives you a 50% discount on repairs compared to automatic cycle repairs. This adds up fast, especially with multiple robots.
+- **Repair manually between cycles** — Using the Repair All button gives you a 50% discount on repairs compared to automatic cycle repairs. This adds up fast, especially with multiple robots. Manual repairs work even if your balance goes negative — it's the only action in the game that allows this.
 - **Upgrade attributes in batches** — Focus on 6–8 key attributes rather than spreading thin across all 23.
 - **Watch your cash flow** — After a few cycles, check your Financial Report to make sure income exceeds expenses.
 - **Don't overbuy facilities** — Each facility has daily operating costs. Only buy what you'll actively benefit from right away.

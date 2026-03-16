@@ -6,8 +6,8 @@
  *
  * **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6**
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import axios from 'axios';
@@ -158,7 +158,7 @@ describe('Property 2: Preservation — Existing Admin Functionality Unchanged', 
           // Mock the axios GET to return our generated battle data
           mockedAxios.get.mockResolvedValueOnce({ data: battleData });
 
-          const { container, unmount } = render(
+          const { unmount } = render(
             <BrowserRouter>
               <BattleDetailsModal isOpen={true} onClose={() => {}} battleId={42} />
             </BrowserRouter>

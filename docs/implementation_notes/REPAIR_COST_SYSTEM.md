@@ -175,6 +175,8 @@ Key points:
 
 When players manually repair robots via the "Repair All" button on the `/robots` page, a 50% discount is applied on top of all existing facility discounts. Automatic repairs during cycle processing pay full price.
 
+Manual repairs have no currency gate — they are always allowed regardless of the player's current credit balance, even if negative. This is the only transaction in the game permitted with negative credits, incentivizing active play during financial hardship. The player's balance can go further negative as a result.
+
 ### Discount Stacking Order
 
 ```

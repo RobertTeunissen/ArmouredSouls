@@ -72,7 +72,7 @@ The yield threshold directly affects your [repair costs](/guide/economy/repair-c
 | 30% | ~25% HP | ₡5,000–₡10,000 | Comfortable margin |
 | 50% | ~45% HP | ₡2,000–₡5,000 | Very safe |
 
-These estimates assume automatic repairs. If you repair manually using the Repair All button, all of these costs drop by 50% thanks to the [manual repair discount](/guide/economy/repair-costs). That shifts the economics significantly — a 5% yield threshold with manual repairs costs roughly the same as a 30% yield threshold with automatic repairs.
+These estimates assume automatic repairs. If you repair manually using the Repair All button, all of these costs drop by 50% thanks to the [manual repair discount](/guide/economy/repair-costs). That shifts the economics significantly — a 5% yield threshold with manual repairs costs roughly the same as a 30% yield threshold with automatic repairs. And even if your balance is negative, manual repairs are still available — it's the only action in the game that works with negative credits.
 
 ```callout-tip
 In the early game when your budget is tight, err on the side of higher yield thresholds (35–50%). As your income grows and you can absorb repair costs comfortably, you can lower the threshold to win more fights. Repairing manually between cycles halves your repair bill regardless of your yield setting.

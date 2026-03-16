@@ -81,8 +81,10 @@ When you manually repair your robots using the **Repair All** button on the Robo
 
 Automatic repairs that happen during the daily cycle do **not** receive this discount — they're charged at the standard rate. This means actively managing your repairs between cycles is one of the most effective ways to save Credits.
 
+Manual repairs are also the only action you can take when your balance is negative. Even if you're deep in the red, you can still repair your robots at the discounted rate — your balance will go further negative, but your robots will be battle-ready. This is designed to help struggling players stay active and recover.
+
 ```callout-tip
-Always repair your robots manually before the next cycle starts. The 50% manual repair discount can save you thousands of Credits per cycle, especially if you're running multiple robots with heavy battle damage.
+Always repair your robots manually before the next cycle starts. The 50% manual repair discount can save you thousands of Credits per cycle, especially if you're running multiple robots with heavy battle damage. Even if your balance is negative, manual repairs are still available.
 ```
 
 ### The Repair Bay Facility

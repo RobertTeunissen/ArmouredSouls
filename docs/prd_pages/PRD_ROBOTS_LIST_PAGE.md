@@ -21,7 +21,7 @@
 - v1.8 (Feb 2, 2026): **CRITICAL FIX** - Repair All button frontend now calculates cost based on actual HP damage, not just repairCost field - works for any robot with HP < maxHP
 - v1.8.1 (Feb 2, 2026): **BACKEND FIX** - Backend repair-all endpoint now matches frontend HP-based cost calculation - end-to-end repair functionality complete
 - v1.9 (Feb 10, 2026): **PRD CLEANUP** - Updated PRD to reflect implementation status, removed outdated sections, added test coverage information, resolved open questions
-- v2.0 (Mar 16, 2026): **MANUAL REPAIR DISCOUNT** - 50% discount on manual repairs via Repair All button, confirmation modal shows discount breakdown (Repair Bay + Manual Repair Discount), updated cost calculation
+- v2.0 (Mar 16, 2026): **MANUAL REPAIR DISCOUNT** - 50% discount on manual repairs via Repair All button, no currency gate (balance can go negative), confirmation modal shows discount breakdown (Repair Bay + Manual Repair Discount), updated cost calculation
 
 ---
 
@@ -247,7 +247,8 @@ Acceptance Criteria:
 - Cost includes Repair Bay discount if facility is upgraded
 - Cost includes 50% manual repair discount (applied after Repair Bay discount)
 - Discount percentage displayed (e.g., "₡7,500 (25% + 50% manual off)")
-- Button disabled if no robots need repair or insufficient credits
+- Button disabled if no robots need repair
+- Manual repairs are always allowed regardless of credit balance (balance can go negative)
 - Confirmation modal shows cost breakdown before repair:
   - Repair Bay Discount: X% off
   - Manual Repair Discount: 50% off
@@ -317,7 +318,7 @@ Acceptance Criteria:
 - Calculate total repair cost for all damaged robots
 - Apply Repair Bay discount (5% per level)
 - Apply 50% manual repair discount (after Repair Bay discount)
-- Check user has sufficient credits (against discounted cost)
+- No currency gate — manual repairs always allowed (balance can go negative)
 - Deduct credits from user account
 - Update all robots: currentHP = maxHP, currentShield = maxShield, repairCost = 0
 - Return success message with repair count, costs, and discount breakdown
@@ -325,7 +326,7 @@ Acceptance Criteria:
 - Frontend shows confirmation dialog with discount breakdown before repair
 - Frontend shows success message after repair
 - Frontend refreshes robots list to show updated status
-- Handle errors (insufficient credits uses discounted cost in error, etc.)
+- Handle errors (no robots need repair, etc.)
 ```
 
 **US-13: Robot Capacity Indicator** (v1.4)
@@ -594,7 +595,7 @@ Note: New robots have repairCost = 0 (expected). Button is correctly disabled un
   - Color: Warning (#d29922, amber) - attention-grabbing for maintenance
   - Hover: Lighter shade
   - Position: Top-right, left of Create button
-  - Disabled if: No robots need repair OR insufficient credits
+  - Disabled if: No robots need repair
   - Shows tooltip with breakdown on hover
   
 - **Create New Robot Button**:
@@ -1289,7 +1290,7 @@ All questions from the initial PRD have been resolved through implementation:
    - Backend: Added POST `/api/robots/repair-all` endpoint
    - Features:
      - Calculates total cost with Repair Bay discount
-     - Checks sufficient credits
+     - No currency gate — always allows repair (balance can go negative)
      - Updates all damaged robots in transaction
      - Deducts credits from user
    - Frontend: Calls endpoint, shows confirmation, handles errors
