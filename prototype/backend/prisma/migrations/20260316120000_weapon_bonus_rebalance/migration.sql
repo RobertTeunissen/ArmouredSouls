@@ -2,19 +2,19 @@
 -- 7 weapons modified, magnitudes preserved, prices unchanged
 
 -- Energy Blade: hydraulicSystems +4 → combatPower +4
-UPDATE "Weapon"
+UPDATE "weapons"
 SET "hydraulic_systems_bonus" = 0,
     "combat_power_bonus" = 4
 WHERE "name" = 'Energy Blade';
 
 -- Plasma Blade: hydraulicSystems +5 → combatPower +5
-UPDATE "Weapon"
+UPDATE "weapons"
 SET "hydraulic_systems_bonus" = 0,
     "combat_power_bonus" = 5
 WHERE "name" = 'Plasma Blade';
 
 -- Power Sword: hydraulicSystems +7 → penetration +7, counterProtocols +5 → criticalSystems +5, gyroStabilizers +4 → weaponControl +4
-UPDATE "Weapon"
+UPDATE "weapons"
 SET "hydraulic_systems_bonus" = 0,
     "counter_protocols_bonus" = 0,
     "gyro_stabilizers_bonus" = 0,
@@ -24,7 +24,7 @@ SET "hydraulic_systems_bonus" = 0,
 WHERE "name" = 'Power Sword';
 
 -- Battle Axe: hydraulicSystems +6 → penetration +6, servoMotors -2 → attackSpeed -2
-UPDATE "Weapon"
+UPDATE "weapons"
 SET "hydraulic_systems_bonus" = 0,
     "servo_motors_bonus" = 0,
     "penetration_bonus" = 6,
@@ -32,7 +32,7 @@ SET "hydraulic_systems_bonus" = 0,
 WHERE "name" = 'Battle Axe';
 
 -- Heavy Hammer: hydraulicSystems +8 → penetration +8, servoMotors -3 → attackSpeed -3
-UPDATE "Weapon"
+UPDATE "weapons"
 SET "hydraulic_systems_bonus" = 0,
     "servo_motors_bonus" = 0,
     "penetration_bonus" = 8,
@@ -40,13 +40,13 @@ SET "hydraulic_systems_bonus" = 0,
 WHERE "name" = 'Heavy Hammer';
 
 -- Reactive Shield: servoMotors -2 → evasionThrusters -2
-UPDATE "Weapon"
+UPDATE "weapons"
 SET "servo_motors_bonus" = 0,
     "evasion_thrusters_bonus" = -2
 WHERE "name" = 'Reactive Shield';
 
 -- Ion Beam: shieldCapacity +8 → combatPower +8
-UPDATE "Weapon"
+UPDATE "weapons"
 SET "shield_capacity_bonus" = 0,
     "combat_power_bonus" = 8
 WHERE "name" = 'Ion Beam';
