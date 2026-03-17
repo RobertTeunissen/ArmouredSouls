@@ -1,11 +1,12 @@
 ---
 title: "Loadout Types"
-description: "The four loadout configurations in Armoured Souls — Single, Weapon+Shield, Two-Handed, and Dual-Wield — with their bonuses, penalties, and strategic trade-offs."
+description: "The four loadout configurations in Armoured Souls — Single, Weapon+Shield, Two-Handed, and Dual-Wield — with their bonuses, penalties, range considerations, and strategic trade-offs."
 order: 2
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-03-17"
 relatedArticles:
   - weapons/dual-wield-mechanics
   - combat/battle-flow
+  - combat/movement-and-positioning
   - combat/stances
   - strategy/build-archetypes
 ---
@@ -179,6 +180,29 @@ Loadout bonuses are **percentage-based multipliers** applied to your robot's eff
 
 This means loadout bonuses become more powerful as your attributes grow. A +20% Shield Capacity bonus on a robot with 10 Shield Capacity adds 2 effective points. On a robot with 40 Shield Capacity, it adds 8. This is why loadout choice remains strategically important at every stage of the game.
 
+## Weapon Range Bands
+
+Every weapon has an **optimal range band** that determines where it deals the most damage. Fighting at the right distance is critical — see [Movement & Positioning](/guide/combat/movement-and-positioning) for the full breakdown.
+
+| Optimal Range | Weapons | Distance |
+|--------------|---------|----------|
+| **Melee** (0–2 units) | All melee weapons (Energy Blade, Vibro Sword, Power Fist, Chain Sword, Thermal Lance), all shields | Cannot attack beyond 2 units |
+| **Short** (3–6 units) | One-handed ranged (Laser Pistol, Plasma Pistol, Machine Pistol, Pulse Rifle, Ion Pistol) | Best for Single and Dual-Wield |
+| **Mid** (7–12 units) | Two-handed ranged (Shotgun, Grenade Launcher, Plasma Cannon) | Best for Two-Handed loadout |
+| **Long** (13+ units) | Sniper Rifle, Railgun, Ion Beam | Best for Two-Handed loadout |
+
+Range penalties apply when fighting outside your weapon's optimal band:
+
+| Situation | Damage Multiplier |
+|-----------|------------------|
+| At optimal range | **1.1×** (+10% bonus) |
+| One band away | **0.75×** (-25%) |
+| Two+ bands away | **0.5×** (-50%) |
+
+```callout-tip
+Your loadout choice and weapon range should align. A Dual-Wield build with two melee weapons needs high Servo Motors to close the gap. A Two-Handed Sniper Rifle build wants to maintain long range. Mismatched range strategy is one of the most common mistakes — a robot with a long-range weapon that keeps getting caught in melee range is fighting at half damage.
+```
+
 ## Matching Loadout to Strategy
 
 | Strategy | Recommended Loadout | Why |
@@ -193,5 +217,5 @@ This means loadout bonuses become more powerful as your attributes grow. A +20% 
 ## What's Next?
 
 - [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) — Per-hand bonuses and offhand attack rules for dual-wielding robots
-- [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) — Per-hand bonuses and offhand attack rules for dual-wielding robots
-- [Stances](/guide/combat/stances) — How Offensive, Defensive, and Balanced stances interact with your loadouttes and weapons
+- [Movement & Positioning](/guide/combat/movement-and-positioning) — Range bands, weapon ranges, and spatial combat mechanics
+- [Stances](/guide/combat/stances) — How Offensive, Defensive, and Balanced stances interact with your loadout and weapons

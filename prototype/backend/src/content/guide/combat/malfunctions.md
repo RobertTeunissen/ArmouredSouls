@@ -1,7 +1,7 @@
 ---
 title: "Weapon Malfunctions"
 description: "How the Weapon Control attribute prevents misfires, with examples at different investment levels and strategies for managing reliability."
-order: 2
+order: 3
 lastUpdated: "2026-03-11"
 relatedArticles:
   - combat/battle-flow

@@ -57,6 +57,10 @@ interface TagTeamBattleResult {
   team2ReserveSurvivalTime: number; // Time in combat for team2 reserve robot
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   battleLog: any[]; // Complete battle log with all events
+  // 2D arena spatial metadata (from first phase)
+  arenaRadius?: number;
+  startingPositions?: Record<string, { x: number; y: number }>;
+  endingPositions?: Record<string, { x: number; y: number }>;
   phases: Array<{
     robot1Name: string;
     robot2Name: string;
@@ -353,6 +357,11 @@ async function simulateTagTeamBattle(
     battleEvents.push(...phase1Result.events);
   }
 
+  // Capture arena metadata from phase 1 (same radius for all phases)
+  const arenaRadius = phase1Result.arenaRadius;
+  const startingPositions = phase1Result.startingPositions;
+  let endingPositions = phase1Result.endingPositions;
+
   // Check for tag-outs (Requirement 3.3: HP ≤ yield threshold OR HP ≤ 0)
   // Also check phase1 winnerId as a fallback: if the simulator ended the battle
   // (via yield or destruction), the losing robot must tag out even if shouldTagOut
@@ -409,6 +418,7 @@ async function simulateTagTeamBattle(
       teamNumber: 1,
       robotId: team1CurrentRobot.id,
       reason: team1TagOutEvent.reason,
+      robot1HP: team1TagOutEvent.finalHP,
       message: CombatMessageGenerator.generateTagOut({
         robotName: team1CurrentRobot.name,
         teamName: `Team ${team1.id}`,
@@ -423,6 +433,7 @@ async function simulateTagTeamBattle(
       teamNumber: 2,
       robotId: team2CurrentRobot.id,
       reason: team2TagOutEvent.reason,
+      robot2HP: team2TagOutEvent.finalHP,
       message: CombatMessageGenerator.generateTagOut({
         robotName: team2CurrentRobot.name,
         teamName: `Team ${team2.id}`,
@@ -526,6 +537,7 @@ async function simulateTagTeamBattle(
       teamNumber: 1,
       robotId: team1CurrentRobot.id,
       reason: team1TagOutEvent.reason,
+      robot1HP: team1TagOutEvent.finalHP,
       message: CombatMessageGenerator.generateTagOut({
         robotName: team1CurrentRobot.name,
         teamName: `Team ${team1.id}`,
@@ -604,6 +616,7 @@ async function simulateTagTeamBattle(
           teamNumber: 2,
           robotId: team2CurrentRobot.id,
           reason: team2TagOutEvent.reason,
+          robot2HP: team2TagOutEvent.finalHP,
           message: CombatMessageGenerator.generateTagOut({
             robotName: team2CurrentRobot.name,
             teamName: `Team ${team2.id}`,
@@ -684,6 +697,7 @@ async function simulateTagTeamBattle(
       teamNumber: 2,
       robotId: team2CurrentRobot.id,
       reason: team2TagOutEvent.reason,
+      robot2HP: team2TagOutEvent.finalHP,
       message: CombatMessageGenerator.generateTagOut({
         robotName: team2CurrentRobot.name,
         teamName: `Team ${team2.id}`,
@@ -762,6 +776,7 @@ async function simulateTagTeamBattle(
           teamNumber: 1,
           robotId: team1CurrentRobot.id,
           reason: team1TagOutEvent.reason,
+          robot1HP: team1TagOutEvent.finalHP,
           message: CombatMessageGenerator.generateTagOut({
             robotName: team1CurrentRobot.name,
             teamName: `Team ${team1.id}`,
@@ -864,6 +879,16 @@ async function simulateTagTeamBattle(
     isDraw = true;
   }
 
+  // Compute final endingPositions from the last events with position data
+  // (later phases override phase1's endingPositions)
+  for (let i = battleEvents.length - 1; i >= 0; i--) {
+    const evt = battleEvents[i];
+    if (evt.positions && Object.keys(evt.positions).length > 0) {
+      endingPositions = evt.positions;
+      break;
+    }
+  }
+
   return {
     battleId: 0, // Will be set after creating battle record
     winnerId,
@@ -886,6 +911,9 @@ async function simulateTagTeamBattle(
     team2ActiveSurvivalTime,
     team2ReserveSurvivalTime,
     battleLog: battleEvents, // Raw events - will be converted to narrative in createTagTeamBattleRecord
+    arenaRadius,
+    startingPositions,
+    endingPositions,
     // Phase tracking for narrative conversion
     phases: (() => {
       const phases: Array<{
@@ -1026,6 +1054,10 @@ async function createTagTeamBattleRecord(
         tagTeamBattle: true,
         team1TagOutTime: result.team1TagOutTime,
         team2TagOutTime: result.team2TagOutTime,
+        // 2D arena spatial metadata
+        arenaRadius: result.arenaRadius,
+        startingPositions: result.startingPositions,
+        endingPositions: result.endingPositions,
       },
       durationSeconds: result.durationSeconds,
 

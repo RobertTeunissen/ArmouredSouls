@@ -407,6 +407,55 @@ export class CombatMessageGenerator {
     '⚡ {robotName} tags in - {teamName} brings fresh firepower to the battle!',
   ];
 
+  // ── Spatial Movement Messages (3-5 variations) ─────────────────────────
+  private static movementMessages = [
+    '🏃 {robotName} advances toward {targetName}, closing to {distance} units',
+    '🏃 {robotName} repositions, now {distance} units from {targetName}',
+    '💨 {robotName} dashes across the arena — {distance} units to {targetName}',
+    '🏃 {robotName} maneuvers toward {targetName}, distance: {distance} units',
+    '⚡ {robotName} surges forward, closing the gap to {distance} units from {targetName}',
+  ];
+
+  // ── Range Transition Messages (3-5 variations) ────────────────────────
+  private static rangeTransitionMessages = [
+    '📏 {robotName} enters {rangeBand} range against {targetName}',
+    '📏 Distance shift! {robotName} is now at {rangeBand} range from {targetName}',
+    '📏 {robotName} transitions to {rangeBand} range with {targetName}',
+    '📏 Range change — {robotName} moves into {rangeBand} range of {targetName}',
+  ];
+
+  // ── Out of Range Messages (3-5 variations) ────────────────────────────
+  private static outOfRangeMessages = [
+    '🚫 {robotName}\'s {weaponName} can\'t reach {targetName} at {distance} units!',
+    '🚫 Out of range! {robotName}\'s {weaponName} falls short — {targetName} is {distance} units away!',
+    '🚫 {robotName} swings {weaponName} but {targetName} is too far at {distance} units!',
+    '🚫 {robotName}\'s {weaponName} misses the mark — {distance} units to {targetName}!',
+  ];
+
+  // ── Counter Out of Range Messages (3-5 variations) ────────────────────
+  private static counterOutOfRangeMessages = [
+    '🔄🚫 {robotName}\'s counter with {weaponName} blocked — {targetName} is out of range!',
+    '🔄🚫 {robotName} tries to counter with {weaponName} but {targetName} is too far away!',
+    '🔄🚫 Counter failed! {robotName}\'s {weaponName} can\'t reach {targetName}!',
+    '🔄🚫 {robotName} attempts a counter-strike with {weaponName} — {targetName} out of reach!',
+  ];
+
+  // ── Backstab Messages (3-5 variations) ────────────────────────────────
+  private static backstabMessages = [
+    '🗡️ {attackerName} strikes {defenderName} from behind!',
+    '🗡️ BACKSTAB! {attackerName} catches {defenderName} facing the wrong way!',
+    '🗡️ {attackerName} exploits {defenderName}\'s blind spot with a rear attack!',
+    '🗡️ {defenderName} is hit from behind by {attackerName}\'s surprise strike!',
+  ];
+
+  // ── Flanking Messages (3-5 variations) ────────────────────────────────
+  private static flankingMessages = [
+    '🎯 {attackerName} flanks {defenderName} from multiple angles!',
+    '🎯 FLANKING! {attackerName} attacks {defenderName} from a wide angle!',
+    '🎯 {attackerName} coordinates a flanking strike on {defenderName}!',
+    '🎯 {defenderName} is caught in a crossfire — {attackerName} flanks from the side!',
+  ];
+
   // ── Utility Methods ────────────────────────────────────────────────────
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -581,6 +630,38 @@ export class CombatMessageGenerator {
 
   static generateTagIn(event: TagInEvent): string {
     return this.interpolate(this.selectRandom(this.tagInMessages), event);
+  }
+
+  // ── Spatial Event Generators ─────────────────────────────────────────
+
+  static generateMovement(robotName: string, targetName: string, distance: number): string {
+    const template = this.selectRandom(this.movementMessages);
+    return this.interpolate(template, { robotName, targetName, distance });
+  }
+
+  static generateRangeTransition(robotName: string, targetName: string, rangeBand: string): string {
+    const template = this.selectRandom(this.rangeTransitionMessages);
+    return this.interpolate(template, { robotName, targetName, rangeBand });
+  }
+
+  static generateOutOfRange(robotName: string, weaponName: string, targetName: string, distance: number): string {
+    const template = this.selectRandom(this.outOfRangeMessages);
+    return this.interpolate(template, { robotName, weaponName, targetName, distance });
+  }
+
+  static generateCounterOutOfRange(robotName: string, weaponName: string, targetName: string): string {
+    const template = this.selectRandom(this.counterOutOfRangeMessages);
+    return this.interpolate(template, { robotName, weaponName, targetName });
+  }
+
+  static generateBackstab(attackerName: string, defenderName: string): string {
+    const template = this.selectRandom(this.backstabMessages);
+    return this.interpolate(template, { attackerName, defenderName });
+  }
+
+  static generateFlanking(attackerName: string, defenderName: string): string {
+    const template = this.selectRandom(this.flankingMessages);
+    return this.interpolate(template, { attackerName, defenderName });
   }
 
   // ══════════════════════════════════════════════════════════════════════
@@ -854,6 +935,71 @@ export class CombatMessageGenerator {
           timestamp: ts,
           type: 'shield_regen',
           message: this.generateShieldRegen(robotName),
+        });
+
+      } else if (event.type === 'movement') {
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'movement',
+          message: this.generateMovement(
+            event.attacker || '',
+            event.defender || '',
+            event.distance || 0,
+          ),
+        });
+
+      } else if (event.type === 'range_transition') {
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'range_transition',
+          message: this.generateRangeTransition(
+            event.attacker || '',
+            event.defender || '',
+            event.rangeBand || 'unknown',
+          ),
+        });
+
+      } else if (event.type === 'out_of_range') {
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'out_of_range',
+          message: this.generateOutOfRange(
+            event.attacker || '',
+            event.weapon || 'Fists',
+            event.defender || '',
+            event.distance || 0,
+          ),
+        });
+
+      } else if (event.type === 'counter_out_of_range') {
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'counter_out_of_range',
+          message: this.generateCounterOutOfRange(
+            event.attacker || '',
+            event.weapon || 'Fists',
+            event.defender || '',
+          ),
+        });
+
+      } else if (event.type === 'backstab') {
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'backstab',
+          message: this.generateBackstab(
+            event.attacker || '',
+            event.defender || '',
+          ),
+        });
+
+      } else if (event.type === 'flanking') {
+        narrativeEvents.push({
+          timestamp: ts,
+          type: 'flanking',
+          message: this.generateFlanking(
+            event.attacker || '',
+            event.defender || '',
+          ),
         });
       }
 

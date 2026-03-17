@@ -2,7 +2,7 @@
 title: "Training Academy System"
 description: "How the four Training Academies control attribute caps for each category — Combat, Defense, Mobility, and AI — raising the ceiling from level 10 to the maximum of 50."
 order: 3
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-03-17"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -28,7 +28,7 @@ This article covers the academy system from a facilities perspective — costs, 
 | **Mobility Training Academy** | Chassis & Mobility | 5 attributes | 10 → 50 |
 | **AI Training Academy** | AI Processing + Team Coordination | 7 attributes | 10 → 50 |
 
-All four academies share identical pricing, level progression, and prestige gates. The only difference is which attributes they unlock.
+All four academies share identical pricing, level progression, and prestige gates. The only difference is which attributes they unlock. All 23 attributes controlled by these academies are active in the combat simulator — including AI Processing (decision-making, adaptation, pressure performance) and Team Coordination (sync volleys, shield regen boost, wall-bracing).
 
 ## Level Progression
 
@@ -92,7 +92,8 @@ Not every build needs all four academies equally. Focus your investment on the a
 | Glass Cannon | Combat | Mobility | Max damage, with hull HP as backup |
 | Speed Demon | Mobility | Combat | Evasion and attack speed first |
 | Counter Striker | Defense | Combat | Counter Protocols need high caps |
-| Sniper | Combat | AI | Targeting and critical systems |
+| Sniper | Combat | AI | Targeting, Critical Systems, and Combat Algorithms |
+| Melee Brawler | Mobility | Combat | Servo Motors and Hydraulic Systems for close-range dominance |
 
 See the [Strategy Guides](/guide/strategy/build-archetypes) for full build recommendations.
 

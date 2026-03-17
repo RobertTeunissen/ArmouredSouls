@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { getRangeBandColor, getRangeBandBgColor } from '../utils/weaponRange';
 
 export interface WeaponFilters {
   loadoutTypes: string[];
   weaponTypes: string[];
+  rangeBands: string[];
   priceRange: { min: number; max: number } | null;
   canAffordOnly: boolean;
   onlyOwnedWeapons: boolean;
@@ -50,6 +52,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     onFiltersChange({ ...filters, weaponTypes: newTypes });
   };
 
+  const handleRangeBandToggle = (band: string) => {
+    const newBands = filters.rangeBands.includes(band)
+      ? filters.rangeBands.filter(b => b !== band)
+      : [...filters.rangeBands, band];
+    onFiltersChange({ ...filters, rangeBands: newBands });
+  };
+
   const handlePriceRangeChange = (range: { min: number; max: number } | null) => {
     onFiltersChange({ ...filters, priceRange: range });
   };
@@ -66,6 +75,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     onFiltersChange({
       loadoutTypes: [],
       weaponTypes: [],
+      rangeBands: [],
       priceRange: null,
       canAffordOnly: false,
       onlyOwnedWeapons: false,
@@ -75,6 +85,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const hasActiveFilters = 
     filters.loadoutTypes.length > 0 ||
     filters.weaponTypes.length > 0 ||
+    filters.rangeBands.length > 0 ||
     filters.priceRange !== null ||
     filters.canAffordOnly ||
     filters.onlyOwnedWeapons;
@@ -91,6 +102,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     { value: 'ballistic', label: 'Ballistic', color: 'text-orange-400' },
     { value: 'energy', label: 'Energy', color: 'text-primary' },
     { value: 'shield', label: 'Shield', color: 'text-cyan-400' },
+  ];
+
+  const rangeBandOptions = [
+    { value: 'melee', label: 'Melee', color: getRangeBandColor('melee'), bgColor: getRangeBandBgColor('melee') },
+    { value: 'short', label: 'Short', color: getRangeBandColor('short'), bgColor: getRangeBandBgColor('short') },
+    { value: 'mid', label: 'Mid', color: getRangeBandColor('mid'), bgColor: getRangeBandBgColor('mid') },
+    { value: 'long', label: 'Long', color: getRangeBandColor('long'), bgColor: getRangeBandBgColor('long') },
   ];
 
   const priceRanges = [
@@ -185,6 +203,28 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               }`}
             >
               {type.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Range Band Filter */}
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-secondary mb-3 uppercase tracking-wide">
+          Range Band
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {rangeBandOptions.map(band => (
+            <button
+              key={band.value}
+              onClick={() => handleRangeBandToggle(band.value)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                filters.rangeBands.includes(band.value)
+                  ? 'bg-primary text-white'
+                  : `bg-surface-elevated ${band.color} hover:bg-gray-600`
+              }`}
+            >
+              {band.label}
             </button>
           ))}
         </div>

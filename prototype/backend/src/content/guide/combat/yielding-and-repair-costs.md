@@ -1,7 +1,7 @@
 ---
 title: "Yielding & Repair Costs"
 description: "How the yield system works, how it affects repair costs, and the strategic trade-offs between aggressive and conservative surrender settings."
-order: 4
+order: 5
 lastUpdated: "2026-03-16"
 relatedArticles:
   - combat/stances

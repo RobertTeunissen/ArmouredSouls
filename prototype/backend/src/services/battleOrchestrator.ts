@@ -63,6 +63,10 @@ export interface BattleResult {
   isByeMatch: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   combatEvents?: any[]; // Detailed combat events for admin debugging
+  // 2D arena spatial metadata
+  arenaRadius?: number;
+  startingPositions?: Record<string, { x: number; y: number }>;
+  endingPositions?: Record<string, { x: number; y: number }>;
 }
 
 export interface BattleExecutionSummary {
@@ -186,6 +190,9 @@ function simulateBattleWrapper(robot1: Robot, robot2: Robot): BattleResult {
     isDraw: combatResult.isDraw,
     isByeMatch: false,
     combatEvents: combatResult.events, // Store detailed combat events for debugging
+    arenaRadius: combatResult.arenaRadius,
+    startingPositions: combatResult.startingPositions,
+    endingPositions: combatResult.endingPositions,
   };
 }
 
@@ -405,6 +412,10 @@ async function createBattleRecord(
         events: battleLog,
         isByeMatch: result.isByeMatch,
         detailedCombatEvents: result.combatEvents || [], // Admin debugging: formula breakdowns, attribute usage
+        // 2D arena spatial metadata
+        arenaRadius: result.arenaRadius,
+        startingPositions: result.startingPositions,
+        endingPositions: result.endingPositions,
       },
       durationSeconds: result.durationSeconds,
       

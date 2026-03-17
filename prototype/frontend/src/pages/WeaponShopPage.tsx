@@ -17,6 +17,7 @@ import GuidedUIOverlay from '../components/onboarding/GuidedUIOverlay';
 import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../utils/weaponImages';
+import { getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
 
 interface Weapon {
   id: number;
@@ -94,6 +95,7 @@ function WeaponShopPage() {
   const [filters, setFilters] = useState<WeaponFilters>({
     loadoutTypes: [],
     weaponTypes: [],
+    rangeBands: [],
     priceRange: isOnboarding ? { min: 0, max: 300000 } : null,
     canAffordOnly: isOnboarding,
     onlyOwnedWeapons: false,
@@ -206,6 +208,8 @@ function WeaponShopPage() {
       newFilters.loadoutTypes = newFilters.loadoutTypes.filter(t => t !== value);
     } else if (filterType === 'weaponType' && value) {
       newFilters.weaponTypes = newFilters.weaponTypes.filter(t => t !== value);
+    } else if (filterType === 'rangeBand' && value) {
+      newFilters.rangeBands = newFilters.rangeBands.filter(b => b !== value);
     } else if (filterType === 'priceRange') {
       newFilters.priceRange = null;
     } else if (filterType === 'canAfford') {
@@ -320,6 +324,14 @@ function WeaponShopPage() {
       // Weapon type filter (OR logic within category)
       if (filters.weaponTypes.length > 0) {
         if (!filters.weaponTypes.includes(weapon.weaponType)) {
+          return false;
+        }
+      }
+
+      // Range band filter (OR logic within category, AND with other filters)
+      if (filters.rangeBands.length > 0) {
+        const weaponRange = getWeaponOptimalRange({ weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name });
+        if (!filters.rangeBands.includes(weaponRange)) {
           return false;
         }
       }
@@ -786,6 +798,18 @@ function WeaponShopPage() {
                               {weapon.weaponType}
                             </span>
                           </div>
+
+                          {/* Optimal Range Badge */}
+                          {(() => {
+                            const range = getWeaponOptimalRange({ weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name });
+                            return (
+                              <div className="mb-3">
+                                <span className={`text-xs px-2 py-0.5 rounded border ${getRangeBandBgColor(range)} ${getRangeBandColor(range)}`}>
+                                  {getRangeBandLabel(range)} Range
+                                </span>
+                              </div>
+                            );
+                          })()}
 
                           <p className="text-secondary text-sm mb-4">{weapon.description}</p>
 

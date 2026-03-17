@@ -1,7 +1,7 @@
 ---
 title: "Counter-Attacks & Shield Regeneration"
 description: "How Counter Protocols give your robot free retaliatory strikes and how Energy Shields regenerate during battle based on Power Core."
-order: 5
+order: 6
 lastUpdated: "2026-03-12"
 relatedArticles:
   - combat/battle-flow
