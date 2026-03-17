@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
 import { BattlePlaybackViewer } from '../BattlePlaybackViewer';
 import { usePlaybackEngine } from '../usePlaybackEngine';

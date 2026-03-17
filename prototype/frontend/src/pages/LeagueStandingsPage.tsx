@@ -273,14 +273,16 @@ function LeagueStandingsPage() {
                             </div>
                           </td>
                           <td className="px-1.5 lg:px-4 py-3 text-secondary text-sm lg:text-base">
-                            <span className="truncate block max-w-[80px] lg:max-w-none">
-                              {robot.user.stableName || robot.user.username}
-                            </span>
-                            {isMyBot && (
-                              <span className="ml-1 text-xs bg-primary px-1.5 py-0.5 rounded">
-                                YOU
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate max-w-[80px] lg:max-w-none">
+                                {robot.user.stableName || robot.user.username}
                               </span>
-                            )}
+                              {isMyBot && (
+                                <span className="shrink-0 text-xs bg-primary px-1.5 py-0.5 rounded">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-1.5 lg:px-4 py-3 text-center font-mono text-sm lg:text-base text-warning">
                             {robot.leaguePoints}

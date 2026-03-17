@@ -18,7 +18,6 @@ import {
   normalizeVector,
   rotateVector,
   lerp,
-  angleBetween,
 } from './vector2d';
 import {
   ArenaConfig,
@@ -94,14 +93,11 @@ export function getPreferredRange(state: RobotCombatState): RangeBand {
     const mainDPS = mainWeapon.baseDamage / Math.max(mainWeapon.cooldown, 1);
     const offhandDPS = offhandWeapon.baseDamage / Math.max(offhandWeapon.cooldown, 1);
     const totalDPS = mainDPS + offhandDPS;
-    let mainWeight = totalDPS > 0 ? mainDPS / totalDPS : 0.5;
+    const mainWeight = totalDPS > 0 ? mainDPS / totalDPS : 0.5;
 
     // Dynamic adjustment for high combat algorithm score (Req 10.5)
-    if (state.combatAlgorithmScore > 0.5 && state.currentTarget !== null) {
-      // We don't have direct access to opponent state here, so the caller
-      // should set currentTarget. The dynamic adjustment is applied in
-      // calculateMovementIntent where opponent state is available.
-    }
+    // is applied in calculateMovementIntent via getPreferredRangeWithDynamic
+    // where opponent state is available.
 
     return mainWeight >= 0.5 ? mainRange : offhandRange;
   }

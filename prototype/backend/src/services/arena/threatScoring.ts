@@ -11,7 +11,7 @@
  * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 12.3, 12.4
  */
 
-import { euclideanDistance, Position } from './vector2d';
+import { euclideanDistance } from './vector2d';
 import { RobotCombatState, ThreatScore } from './types';
 import { getWeaponOptimalRange, classifyRangeBand, WeaponLike } from './rangeBands';
 
