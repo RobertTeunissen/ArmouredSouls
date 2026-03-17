@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { fetchMyRobots } from '../utils/robotApi';
 import {
@@ -16,6 +17,7 @@ const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
 function LeagueStandingsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedTier, setSelectedTier] = useState('bronze');
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const [robots, setRobots] = useState<LeagueRobot[]>([]);
@@ -263,7 +265,10 @@ function LeagueStandingsPage() {
                             #{rank}
                           </td>
                           <td className="px-1.5 lg:px-4 py-3">
-                            <div className={`font-semibold text-sm lg:text-base truncate max-w-[100px] lg:max-w-none ${isMyBot ? 'text-primary' : ''}`}>
+                            <div 
+                              className={`font-semibold text-sm lg:text-base truncate max-w-[100px] lg:max-w-none cursor-pointer hover:underline transition-colors ${isMyBot ? 'text-primary hover:text-blue-300' : 'hover:text-[#58a6ff]'}`}
+                              onClick={() => navigate(`/robots/${robot.id}`)}
+                            >
                               {robot.name}
                             </div>
                           </td>

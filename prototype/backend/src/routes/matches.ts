@@ -443,12 +443,8 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
 
     const robotIds = userRobots.map(r => r.id);
 
-    // If robotId filter is provided, verify ownership
-    if (robotId !== undefined && !robotIds.includes(robotId)) {
-      return res.status(403).json({ error: 'Access denied to robot data' });
-    }
-
-    // Build where clause
+    // If robotId filter is provided, allow viewing any robot's battles (public scouting)
+    // If no robotId, default to showing only the current user's robot battles
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: Record<string, any> = {
       OR: [
@@ -847,6 +843,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         id: battleData.robot1.id,
         name: battleData.robot1.name,
         owner: battleData.robot1.user.username,
+        maxHP: battleData.robot1.maxHP,
+        maxShield: battleData.robot1.maxShield,
         eloBefore: robot1Participant?.eloBefore || 0,
         eloAfter: robot1Participant?.eloAfter || 0,
         finalHP: robot1Participant?.finalHP ?? 0,
@@ -861,6 +859,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         id: battleData.robot2.id,
         name: battleData.robot2.name,
         owner: battleData.robot2.user.username,
+        maxHP: battleData.robot2.maxHP,
+        maxShield: battleData.robot2.maxShield,
         eloBefore: robot2Participant?.eloBefore || 0,
         eloAfter: robot2Participant?.eloAfter || 0,
         finalHP: robot2Participant?.finalHP ?? 0,

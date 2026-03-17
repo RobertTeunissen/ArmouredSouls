@@ -197,7 +197,8 @@ export const getUpcomingMatches = async (): Promise<ScheduledMatch[]> => {
 export const getMatchHistory = async (
   page: number = 1,
   pageSize: number = 10,
-  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team'
+  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team',
+  robotId?: number
 ): Promise<PaginatedResponse<BattleHistory>> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const params: any = { page, perPage: pageSize };
@@ -205,6 +206,11 @@ export const getMatchHistory = async (
   // Add battleType filter if not 'overall'
   if (battleType && battleType !== 'overall') {
     params.battleType = battleType;
+  }
+
+  // Add robotId filter to fetch battles for a specific robot
+  if (robotId) {
+    params.robotId = robotId;
   }
   
   console.log('[API] getMatchHistory params:', params);
@@ -377,6 +383,8 @@ export interface BattleLogResponse {
     id: number;
     name: string;
     owner: string;
+    maxHP?: number;
+    maxShield?: number;
     eloBefore: number;
     eloAfter: number;
     finalHP: number;
@@ -399,6 +407,8 @@ export interface BattleLogResponse {
     id: number;
     name: string;
     owner: string;
+    maxHP?: number;
+    maxShield?: number;
     eloBefore: number;
     eloAfter: number;
     finalHP: number;
@@ -420,11 +430,17 @@ export interface BattleLogResponse {
   winner: 'robot1' | 'robot2' | null;
   battleLog: {
     events: BattleLogEvent[];
+    // Raw simulator events with full spatial data (positions, HP, shields)
+    detailedCombatEvents?: BattleLogEvent[];
     // Tournament metadata
     isTournament?: boolean;
     round?: number;
     maxRounds?: number;
     isFinals?: boolean;
+    // 2D arena spatial metadata
+    arenaRadius?: number;
+    startingPositions?: Record<string, { x: number; y: number }>;
+    endingPositions?: Record<string, { x: number; y: number }>;
   };
   // Tag team specific fields
   tagTeam?: {

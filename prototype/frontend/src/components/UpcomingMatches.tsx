@@ -488,7 +488,12 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                   <div className="font-medium text-xs truncate">
                     <span className="text-[#58a6ff]">{myRobot.name}</span>
                     <span className="text-[#57606a] mx-1.5">vs</span>
-                    <span className="text-[#e6edf3]">{opponent.name}</span>
+                    <span 
+                      className="text-[#e6edf3] hover:text-[#58a6ff] cursor-pointer hover:underline transition-colors"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/robots/${opponent.id}`); }}
+                    >
+                      {opponent.name}
+                    </span>
                   </div>
                 </div>
                 
@@ -535,7 +540,12 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
                   <div className="text-sm font-medium">
                     <span className="text-[#58a6ff]">{myRobot.name}</span>
                     <span className="text-[#57606a] mx-1.5">vs</span>
-                    <span className="text-[#e6edf3]">{opponent.name}</span>
+                    <span 
+                      className="text-[#e6edf3] hover:text-[#58a6ff] cursor-pointer hover:underline transition-colors"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/robots/${opponent.id}`); }}
+                    >
+                      {opponent.name}
+                    </span>
                   </div>
                 </div>
                 
