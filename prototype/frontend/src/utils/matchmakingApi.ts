@@ -449,11 +449,15 @@ export interface BattleLogResponse {
         id: number;
         name: string;
         owner: string;
+        maxHP?: number;
+        maxShield?: number;
       } | null;
       reserveRobot: {
         id: number;
         name: string;
         owner: string;
+        maxHP?: number;
+        maxShield?: number;
       } | null;
       tagOutTime: number | null;
       stableName?: string | null;
@@ -464,11 +468,15 @@ export interface BattleLogResponse {
         id: number;
         name: string;
         owner: string;
+        maxHP?: number;
+        maxShield?: number;
       } | null;
       reserveRobot: {
         id: number;
         name: string;
         owner: string;
+        maxHP?: number;
+        maxShield?: number;
       } | null;
       tagOutTime: number | null;
       stableName?: string | null;

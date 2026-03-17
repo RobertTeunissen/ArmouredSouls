@@ -10,6 +10,8 @@ import {
   formatDuration,
   getLeagueTierName,
 } from '../utils/matchmakingApi';
+import { BattlePlaybackViewer } from '../components/BattlePlaybackViewer/BattlePlaybackViewer';
+import type { PlaybackCombatResult, PlaybackRobotInfo } from '../components/BattlePlaybackViewer/types';
 
 function BattleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -100,6 +102,118 @@ function BattleDetailPage() {
       </div>
     );
   }
+
+  // Determine if this battle has spatial data for the playback viewer
+  const hasSpatialData = !!battleLog.battleLog.arenaRadius && battleLog.battleLog.arenaRadius > 0;
+  const isTagTeam = battleLog.battleType === 'tag_team';
+  const is1v1 = !isTagTeam && !!battleLog.robot1 && !!battleLog.robot2;
+  const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam);
+
+  // Use detailedCombatEvents (raw simulator events with positions) for spatial animation,
+  // falling back to narrative events if detailed events aren't available
+  const spatialEvents = battleLog.battleLog.detailedCombatEvents ?? battleLog.battleLog.events;
+
+  const playbackResult: PlaybackCombatResult | null = showPlaybackViewer ? {
+    winnerId: battleLog.winner === 'robot1' ? 1 : battleLog.winner === 'robot2' ? 2 : null,
+    robot1FinalHP: battleLog.robot1?.finalHP ?? 0,
+    robot2FinalHP: battleLog.robot2?.finalHP ?? 0,
+    durationSeconds: battleLog.duration,
+    isDraw: !battleLog.winner,
+    events: spatialEvents.map((e: BattleLogEvent) => ({
+      timestamp: e.timestamp,
+      type: e.type,
+      attacker: e.attacker,
+      defender: e.defender,
+      weapon: e.weapon,
+      damage: e.damage,
+      hit: e.hit,
+      critical: e.critical,
+      message: e.message,
+      positions: e.positions,
+      facingDirections: e.facingDirections,
+      distance: e.distance,
+      rangeBand: e.rangeBand,
+      backstab: e.backstab,
+      flanking: e.flanking,
+      robot1HP: e.robot1HP,
+      robot2HP: e.robot2HP,
+      robot1Shield: e.robot1Shield,
+      robot2Shield: e.robot2Shield,
+    })),
+    arenaRadius: battleLog.battleLog.arenaRadius,
+    startingPositions: battleLog.battleLog.startingPositions,
+    endingPositions: battleLog.battleLog.endingPositions,
+  } : null;
+
+  // Narrative events for the combat log text panel
+  const narrativePlaybackEvents = showPlaybackViewer ? battleLog.battleLog.events.map((e: BattleLogEvent) => ({
+    timestamp: e.timestamp,
+    type: e.type,
+    attacker: e.attacker,
+    defender: e.defender,
+    weapon: e.weapon,
+    damage: e.damage,
+    hit: e.hit,
+    critical: e.critical,
+    message: e.message,
+    positions: e.positions,
+    facingDirections: e.facingDirections,
+    distance: e.distance,
+    rangeBand: e.rangeBand,
+    backstab: e.backstab,
+    flanking: e.flanking,
+    robot1HP: e.robot1HP,
+    robot2HP: e.robot2HP,
+    robot1Shield: e.robot1Shield,
+    robot2Shield: e.robot2Shield,
+  })) : undefined;
+
+  // Derive starting HP/shield from the first spatial event (accurate to battle time,
+  // even if the robot's maxHP has changed since then due to upgrades/repairs)
+  const firstSpatialEvent = spatialEvents.find((e: BattleLogEvent) => e.robot1HP !== undefined);
+  const startingRobot1HP = firstSpatialEvent?.robot1HP;
+  const startingRobot2HP = firstSpatialEvent?.robot2HP;
+  const startingRobot1Shield = firstSpatialEvent?.robot1Shield;
+  const startingRobot2Shield = firstSpatialEvent?.robot2Shield;
+
+  const robot1PlaybackInfo: PlaybackRobotInfo | null = (() => {
+    if (!showPlaybackViewer) return null;
+    if (isTagTeam && battleLog.tagTeam?.team1.activeRobot) {
+      const r = battleLog.tagTeam.team1.activeRobot;
+      return { name: r.name, teamIndex: 0, maxHP: startingRobot1HP ?? r.maxHP ?? 100, maxShield: startingRobot1Shield ?? r.maxShield ?? 0 };
+    }
+    if (battleLog.robot1) {
+      return { name: battleLog.robot1.name, teamIndex: 0, maxHP: startingRobot1HP ?? battleLog.robot1.maxHP ?? 100, maxShield: startingRobot1Shield ?? battleLog.robot1.maxShield ?? 0 };
+    }
+    return null;
+  })();
+
+  const robot2PlaybackInfo: PlaybackRobotInfo | null = (() => {
+    if (!showPlaybackViewer) return null;
+    if (isTagTeam && battleLog.tagTeam?.team2.activeRobot) {
+      const r = battleLog.tagTeam.team2.activeRobot;
+      return { name: r.name, teamIndex: 1, maxHP: startingRobot2HP ?? r.maxHP ?? 100, maxShield: startingRobot2Shield ?? r.maxShield ?? 0 };
+    }
+    if (battleLog.robot2) {
+      return { name: battleLog.robot2.name, teamIndex: 1, maxHP: startingRobot2HP ?? battleLog.robot2.maxHP ?? 100, maxShield: startingRobot2Shield ?? battleLog.robot2.maxShield ?? 0 };
+    }
+    return null;
+  })();
+
+  // Extra robots for tag team battles (reserve robots that enter mid-battle)
+  const extraPlaybackRobots: PlaybackRobotInfo[] | undefined = (() => {
+    if (!showPlaybackViewer || !isTagTeam || !battleLog.tagTeam) return undefined;
+    const extras: PlaybackRobotInfo[] = [];
+    if (battleLog.tagTeam.team1.reserveRobot) {
+      const r = battleLog.tagTeam.team1.reserveRobot;
+      extras.push({ name: r.name, teamIndex: 0, maxHP: r.maxHP ?? 100, maxShield: r.maxShield ?? 0 });
+    }
+    if (battleLog.tagTeam.team2.reserveRobot) {
+      const r = battleLog.tagTeam.team2.reserveRobot;
+      extras.push({ name: r.name, teamIndex: 1, maxHP: r.maxHP ?? 100, maxShield: r.maxShield ?? 0 });
+    }
+    return extras.length > 0 ? extras : undefined;
+  })();
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -369,7 +483,7 @@ function BattleDetailPage() {
                   )}
                   <div className="flex items-center justify-between bg-background rounded px-2 py-1">
                     <span className="text-secondary">Final HP</span>
-                    <span>{battleLog.robot1.finalHP}%</span>
+                    <span>{battleLog.robot1.maxHP ? Math.round((battleLog.robot1.finalHP / battleLog.robot1.maxHP) * 100) : battleLog.robot1.finalHP}%</span>
                   </div>
                   <div className="flex items-center justify-between bg-background rounded px-2 py-1">
                     <span className="text-secondary">Damage</span>
@@ -405,7 +519,7 @@ function BattleDetailPage() {
                   )}
                   <div className="flex items-center justify-between bg-background rounded px-2 py-1">
                     <span className="text-secondary">Final HP</span>
-                    <span>{battleLog.robot2.finalHP}%</span>
+                    <span>{battleLog.robot2.maxHP ? Math.round((battleLog.robot2.finalHP / battleLog.robot2.maxHP) * 100) : battleLog.robot2.finalHP}%</span>
                   </div>
                   <div className="flex items-center justify-between bg-background rounded px-2 py-1">
                     <span className="text-secondary">Damage</span>
@@ -465,108 +579,299 @@ function BattleDetailPage() {
           )}
         </div>
 
-        {/* Combat Log */}
-        <div className="bg-surface p-4 rounded-lg">
-          <h2 className="text-xl font-bold mb-3">Combat Messages</h2>
-          <div className="space-y-2 max-h-[600px] overflow-y-auto">
-            {battleLog.battleLog.events && battleLog.battleLog.events.length > 0 ? (
-              battleLog.battleLog.events
-                .filter((event: BattleLogEvent) => {
-                  // Filter out financial/reward messages since they're now in the top summary
-                  if (event.type === 'tournament_reward' || event.type === 'reward_summary' || 
-                      event.type === 'reward_detail' || event.type === 'reward_breakdown') {
-                    return false;
-                  }
-                  const message = event.message.toLowerCase();
-                  return !message.includes('financial') && 
-                         !message.includes('₡') && 
-                         !message.includes('credits') &&
-                         !message.includes('winner (') &&
-                         !message.includes('loser (') &&
-                         !message.includes('league base') &&
-                         !message.includes('participation') &&
-                         !message.includes('prestige:') &&
-                         !message.includes('fame:') &&
-                         !message.includes('tournament size') &&
-                         !message.includes('round progress') &&
-                         !message.includes('championship finals');
-                })
-                .map((event: BattleLogEvent, index: number) => {
-                // Determine event color based on type
-                let eventColor = 'border-gray-600';
-                let bgColor = 'bg-surface-elevated';
-                let icon = '';
-                
-                if (event.type === 'battle_start') {
-                  eventColor = 'border-blue-500';
-                  bgColor = 'bg-blue-900/20';
-                } else if (event.type === 'battle_end') {
-                  eventColor = 'border-green-500';
-                  bgColor = 'bg-green-900/20';
-                } else if (event.type === 'stance') {
-                  eventColor = 'border-purple-500';
-                  bgColor = 'bg-purple-900/20';
-                } else if (event.type === 'tag_out') {
-                  eventColor = 'border-orange-500';
-                  bgColor = 'bg-orange-900/20';
-                  icon = '🔄';
-                } else if (event.type === 'tag_in') {
-                  eventColor = 'border-cyan-500';
-                  bgColor = 'bg-cyan-900/20';
-                  icon = '⚡';
-                } else if (event.type === 'critical') {
-                  eventColor = 'border-red-500';
-                  bgColor = 'bg-red-900/20';
-                } else if (event.type === 'attack' && event.message.includes('CRITICAL')) {
-                  eventColor = 'border-red-500';
-                  bgColor = 'bg-red-900/20';
-                } else if (event.type === 'counter') {
-                  eventColor = 'border-yellow-500';
-                  bgColor = 'bg-yellow-900/20';
-                } else if (event.type === 'miss') {
-                  eventColor = 'border-gray-500';
-                  bgColor = 'bg-surface';
-                } else if (event.type === 'malfunction') {
-                  eventColor = 'border-amber-500';
-                  bgColor = 'bg-amber-900/20';
-                } else if (event.type === 'shield_break') {
-                  eventColor = 'border-red-400';
-                  bgColor = 'bg-red-900/15';
-                } else if (event.type === 'shield_regen') {
-                  eventColor = 'border-teal-500';
-                  bgColor = 'bg-teal-900/20';
-                } else if (event.type === 'yield') {
-                  eventColor = 'border-yellow-400';
-                  bgColor = 'bg-yellow-900/20';
-                } else if (event.type === 'destroyed') {
-                  eventColor = 'border-red-600';
-                  bgColor = 'bg-red-900/30';
-                } else if (event.type === 'damage_status') {
-                  eventColor = 'border-orange-400';
-                  bgColor = 'bg-orange-900/15';
-                } else if (event.type === 'draw') {
-                  eventColor = 'border-gray-400';
-                  bgColor = 'bg-surface-elevated/50';
+        {/* Spatial Summary - only shown for 2D arena battles */}
+        {battleLog.battleLog.arenaRadius && (() => {
+          const bl = battleLog.battleLog;
+          // Use detailedCombatEvents for spatial calculations (narrative events don't have positions)
+          const spatialEvts = bl.detailedCombatEvents ?? bl.events ?? [];
+
+          // Collect ALL robot names from startingPositions AND all events' positions
+          // This ensures reserve robots that tag in mid-battle are included
+          const robotNameSet = new Set<string>();
+          if (bl.startingPositions) {
+            for (const name of Object.keys(bl.startingPositions)) {
+              robotNameSet.add(name);
+            }
+          }
+          for (const event of spatialEvts) {
+            if (event.positions) {
+              for (const name of Object.keys(event.positions)) {
+                robotNameSet.add(name);
+              }
+            }
+          }
+          const robotNames = Array.from(robotNameSet);
+
+          // Calculate total distance moved per robot from movement events
+          const totalDistance: Record<string, number> = {};
+          const lastPos: Record<string, { x: number; y: number }> = {};
+
+          // Initialize from starting positions (for active robots)
+          if (bl.startingPositions) {
+            for (const name of Object.keys(bl.startingPositions)) {
+              totalDistance[name] = 0;
+              lastPos[name] = bl.startingPositions[name];
+            }
+          }
+
+          // Track first and last known positions for ALL robots
+          const firstKnownPos: Record<string, { x: number; y: number }> = {};
+          const lastKnownPos: Record<string, { x: number; y: number }> = {};
+
+          // Seed from startingPositions
+          if (bl.startingPositions) {
+            for (const name of Object.keys(bl.startingPositions)) {
+              firstKnownPos[name] = bl.startingPositions[name];
+              lastKnownPos[name] = bl.startingPositions[name];
+            }
+          }
+
+          for (const event of spatialEvts) {
+            if (event.positions) {
+              for (const name of robotNames) {
+                const pos = event.positions[name];
+                if (!pos) continue;
+
+                // Track first appearance for reserves
+                if (!firstKnownPos[name]) {
+                  firstKnownPos[name] = pos;
+                  totalDistance[name] = 0;
                 }
 
-                return (
-                  <div
-                    key={index}
-                    className={`${bgColor} p-3 rounded border-l-4 ${eventColor} flex items-start gap-3 transition-colors hover:bg-gray-600/50`}
-                  >
-                    <div className="text-secondary text-sm font-mono whitespace-nowrap flex-shrink-0 min-w-[50px]">
-                      {event.timestamp.toFixed(1)}s
-                    </div>
-                    {icon && <div className="text-lg flex-shrink-0">{icon}</div>}
-                    <div className="flex-1 text-sm leading-relaxed">{event.message}</div>
+                // Accumulate distance
+                if (lastPos[name]) {
+                  const dx = pos.x - lastPos[name].x;
+                  const dy = pos.y - lastPos[name].y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  if (dist > 0.01) {
+                    totalDistance[name] = (totalDistance[name] || 0) + dist;
+                  }
+                }
+                lastPos[name] = pos;
+                lastKnownPos[name] = pos;
+              }
+            }
+          }
+
+          // Override lastKnownPos with endingPositions where available
+          if (bl.endingPositions) {
+            for (const name of Object.keys(bl.endingPositions)) {
+              lastKnownPos[name] = bl.endingPositions[name];
+            }
+          }
+
+          // Range band distribution from events with rangeBand
+          const rangeBandCounts: Record<string, number> = { melee: 0, short: 0, mid: 0, long: 0 };
+          let totalRangeBandEvents = 0;
+          for (const event of spatialEvts) {
+            if (event.rangeBand && rangeBandCounts[event.rangeBand] !== undefined) {
+              rangeBandCounts[event.rangeBand]++;
+              totalRangeBandEvents++;
+            }
+          }
+
+          const rangeBandColors: Record<string, string> = {
+            melee: 'text-red-400',
+            short: 'text-yellow-400',
+            mid: 'text-green-400',
+            long: 'text-blue-400',
+          };
+
+          return (
+            <div className="bg-surface rounded-lg mb-3 p-3">
+              <h2 className="text-lg font-bold mb-2 text-blue-400">🗺️ Arena Summary</h2>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                {/* Arena Info */}
+                <div className="space-y-1">
+                  <div className="flex justify-between bg-background rounded px-2 py-1">
+                    <span className="text-secondary">Arena Radius</span>
+                    <span>{bl.arenaRadius} units</span>
                   </div>
-                );
-              })
-            ) : (
-              <p className="text-secondary">No combat messages available for this battle.</p>
-            )}
+                  <div className="flex justify-between bg-background rounded px-2 py-1">
+                    <span className="text-secondary">Arena Diameter</span>
+                    <span>{bl.arenaRadius! * 2} units</span>
+                  </div>
+                </div>
+
+                {/* Distance Moved */}
+                <div className="space-y-1">
+                  {robotNames.map((name) => (
+                    <div key={name} className="flex justify-between bg-background rounded px-2 py-1">
+                      <span className="text-secondary">{name} moved</span>
+                      <span>{(totalDistance[name] || 0).toFixed(1)} units</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Starting & Ending Positions */}
+              {robotNames.length > 0 && (
+                <div className="grid grid-cols-2 gap-4 text-xs mt-2">
+                  <div className="space-y-1">
+                    <div className="text-xs text-secondary font-semibold mb-1">Starting Positions</div>
+                    {robotNames.map((name) => {
+                      const pos = firstKnownPos[name];
+                      return pos ? (
+                        <div key={name} className="flex justify-between bg-background rounded px-2 py-1">
+                          <span className="text-secondary">{name}</span>
+                          <span className="font-mono text-xs">({pos.x.toFixed(1)}, {pos.y.toFixed(1)})</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs text-secondary font-semibold mb-1">Ending Positions</div>
+                    {robotNames.map((name) => {
+                      const pos = lastKnownPos[name];
+                      return pos ? (
+                        <div key={name} className="flex justify-between bg-background rounded px-2 py-1">
+                          <span className="text-secondary">{name}</span>
+                          <span className="font-mono text-xs">({pos.x.toFixed(1)}, {pos.y.toFixed(1)})</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Range Band Distribution */}
+              {totalRangeBandEvents > 0 && (
+                <div className="mt-2">
+                  <div className="text-xs text-secondary font-semibold mb-1">Range Band Distribution</div>
+                  <div className="flex gap-2">
+                    {(['melee', 'short', 'mid', 'long'] as const).map((band) => {
+                      const count = rangeBandCounts[band];
+                      const pct = totalRangeBandEvents > 0 ? (count / totalRangeBandEvents) * 100 : 0;
+                      return (
+                        <div key={band} className="flex-1 bg-background rounded px-2 py-1 text-center text-xs">
+                          <div className={`font-semibold capitalize ${rangeBandColors[band]}`}>{band}</div>
+                          <div>{pct.toFixed(0)}%</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Battle Playback / Combat Log */}
+        {showPlaybackViewer && playbackResult && robot1PlaybackInfo && robot2PlaybackInfo ? (
+          <div className="bg-surface p-3 rounded-lg">
+            <h2 className="text-lg font-bold mb-2">Battle Playback</h2>
+            <BattlePlaybackViewer
+              battleResult={playbackResult}
+              robot1Info={robot1PlaybackInfo}
+              robot2Info={robot2PlaybackInfo}
+              extraRobots={extraPlaybackRobots}
+              narrativeEvents={narrativePlaybackEvents}
+              isTagTeam={isTagTeam}
+            />
           </div>
-        </div>
+        ) : (
+          <div className="bg-surface p-3 rounded-lg">
+            <h2 className="text-lg font-bold mb-2">Combat Messages</h2>
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {battleLog.battleLog.events && battleLog.battleLog.events.length > 0 ? (
+                battleLog.battleLog.events
+                  .filter((event: BattleLogEvent) => {
+                    // Filter out financial/reward messages since they're now in the top summary
+                    if (event.type === 'tournament_reward' || event.type === 'reward_summary' || 
+                        event.type === 'reward_detail' || event.type === 'reward_breakdown') {
+                      return false;
+                    }
+                    const message = event.message.toLowerCase();
+                    return !message.includes('financial') && 
+                           !message.includes('₡') && 
+                           !message.includes('credits') &&
+                           !message.includes('winner (') &&
+                           !message.includes('loser (') &&
+                           !message.includes('league base') &&
+                           !message.includes('participation') &&
+                           !message.includes('prestige:') &&
+                           !message.includes('fame:') &&
+                           !message.includes('tournament size') &&
+                           !message.includes('round progress') &&
+                           !message.includes('championship finals');
+                  })
+                  .map((event: BattleLogEvent, index: number) => {
+                  // Determine event color based on type
+                  let eventColor = 'border-gray-600';
+                  let bgColor = 'bg-surface-elevated';
+                  let icon = '';
+                  
+                  if (event.type === 'battle_start') {
+                    eventColor = 'border-blue-500';
+                    bgColor = 'bg-blue-900/20';
+                  } else if (event.type === 'battle_end') {
+                    eventColor = 'border-green-500';
+                    bgColor = 'bg-green-900/20';
+                  } else if (event.type === 'stance') {
+                    eventColor = 'border-purple-500';
+                    bgColor = 'bg-purple-900/20';
+                  } else if (event.type === 'tag_out') {
+                    eventColor = 'border-orange-500';
+                    bgColor = 'bg-orange-900/20';
+                    icon = '🔄';
+                  } else if (event.type === 'tag_in') {
+                    eventColor = 'border-cyan-500';
+                    bgColor = 'bg-cyan-900/20';
+                    icon = '⚡';
+                  } else if (event.type === 'critical') {
+                    eventColor = 'border-red-500';
+                    bgColor = 'bg-red-900/20';
+                  } else if (event.type === 'attack' && event.message.includes('CRITICAL')) {
+                    eventColor = 'border-red-500';
+                    bgColor = 'bg-red-900/20';
+                  } else if (event.type === 'counter') {
+                    eventColor = 'border-yellow-500';
+                    bgColor = 'bg-yellow-900/20';
+                  } else if (event.type === 'miss') {
+                    eventColor = 'border-gray-500';
+                    bgColor = 'bg-surface';
+                  } else if (event.type === 'malfunction') {
+                    eventColor = 'border-amber-500';
+                    bgColor = 'bg-amber-900/20';
+                  } else if (event.type === 'shield_break') {
+                    eventColor = 'border-red-400';
+                    bgColor = 'bg-red-900/15';
+                  } else if (event.type === 'shield_regen') {
+                    eventColor = 'border-teal-500';
+                    bgColor = 'bg-teal-900/20';
+                  } else if (event.type === 'yield') {
+                    eventColor = 'border-yellow-400';
+                    bgColor = 'bg-yellow-900/20';
+                  } else if (event.type === 'destroyed') {
+                    eventColor = 'border-red-600';
+                    bgColor = 'bg-red-900/30';
+                  } else if (event.type === 'damage_status') {
+                    eventColor = 'border-orange-400';
+                    bgColor = 'bg-orange-900/15';
+                  } else if (event.type === 'draw') {
+                    eventColor = 'border-gray-400';
+                    bgColor = 'bg-surface-elevated/50';
+                  }
+
+                  return (
+                    <div
+                      key={index}
+                      className={`${bgColor} p-3 rounded border-l-4 ${eventColor} flex items-start gap-3 transition-colors hover:bg-gray-600/50`}
+                    >
+                      <div className="text-secondary text-sm font-mono whitespace-nowrap flex-shrink-0 min-w-[50px]">
+                        {event.timestamp.toFixed(1)}s
+                      </div>
+                      {icon && <div className="text-lg flex-shrink-0">{icon}</div>}
+                      <div className="flex-1 text-sm leading-relaxed">{event.message}</div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-secondary">No combat messages available for this battle.</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

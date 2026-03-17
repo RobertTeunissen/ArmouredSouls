@@ -11,10 +11,12 @@ type WeaponDef = (typeof WEAPON_DEFINITIONS)[number];
 // Constants
 // ============================================================================
 
-/** The 9 dead attribute bonus fields — no combat formula references */
+/**
+ * Dead attribute bonus fields — no combat formula references.
+ * NOTE: hydraulicSystems, servoMotors, and gyroStabilizers were activated by
+ * the 2D Combat Arena spec and are no longer dead. Only 7 remain truly dead.
+ */
 const DEAD_BONUS_FIELDS = [
-  'hydraulicSystemsBonus',
-  'servoMotorsBonus',
   'combatAlgorithmsBonus',
   'threatAnalysisBonus',
   'adaptiveAIBonus',
@@ -51,14 +53,8 @@ const ALL_BONUS_FIELDS = [
   'formationTacticsBonus',
 ] as const;
 
-/** The 7 weapons modified in this rebalance */
+/** The 1 weapon still modified after partial revert (Ion Beam flavour fix kept) */
 const MODIFIED_WEAPON_NAMES = [
-  'Energy Blade',
-  'Plasma Blade',
-  'Power Sword',
-  'Battle Axe',
-  'Heavy Hammer',
-  'Reactive Shield',
   'Ion Beam',
 ] as const;
 
@@ -357,12 +353,43 @@ const UNMODIFIED_WEAPON_SNAPSHOTS: Record<string, Record<string, unknown>> = {
     specialProperty: null, description: 'Ultra-high velocity kinetic weapon with extreme penetration',
     penetrationBonus: 12, targetingSystemsBonus: 7, combatPowerBonus: 5, attackSpeedBonus: -4,
   },
+  'Energy Blade': {
+    name: 'Energy Blade', weaponType: 'melee', baseDamage: 13, cooldown: 3,
+    cost: 238000, handsRequired: 'one', damageType: 'melee', loadoutType: 'single',
+    specialProperty: null, description: 'Energy-infused blade for swift strikes',
+    attackSpeedBonus: 5, hydraulicSystemsBonus: 4, weaponControlBonus: 3,
+  },
+  'Plasma Blade': {
+    name: 'Plasma Blade', weaponType: 'melee', baseDamage: 14, cooldown: 3,
+    cost: 269000, handsRequired: 'one', damageType: 'melee', loadoutType: 'single',
+    specialProperty: null, description: 'Energy-enhanced melee blade with rapid strikes',
+    hydraulicSystemsBonus: 5, attackSpeedBonus: 4, criticalSystemsBonus: 3, gyroStabilizersBonus: 2,
+  },
+  'Power Sword': {
+    name: 'Power Sword', weaponType: 'melee', baseDamage: 20, cooldown: 3,
+    cost: 350000, handsRequired: 'one', damageType: 'melee', loadoutType: 'single',
+    specialProperty: null, description: 'High-tech melee weapon with superior handling',
+    hydraulicSystemsBonus: 7, counterProtocolsBonus: 5, gyroStabilizersBonus: 4, combatPowerBonus: 3,
+  },
+  'Battle Axe': {
+    name: 'Battle Axe', weaponType: 'melee', baseDamage: 23, cooldown: 4,
+    cost: 388000, handsRequired: 'two', damageType: 'melee', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Brutal melee weapon with devastating power',
+    hydraulicSystemsBonus: 6, combatPowerBonus: 4, criticalSystemsBonus: 3, servoMotorsBonus: -2,
+  },
+  'Heavy Hammer': {
+    name: 'Heavy Hammer', weaponType: 'melee', baseDamage: 29, cooldown: 5,
+    cost: 450000, handsRequired: 'two', damageType: 'melee', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Massive impact weapon for maximum damage',
+    hydraulicSystemsBonus: 8, combatPowerBonus: 7, criticalSystemsBonus: 4, servoMotorsBonus: -3,
+  },
+  'Reactive Shield': {
+    name: 'Reactive Shield', weaponType: 'shield', baseDamage: 0, cooldown: 0,
+    cost: 113000, handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield',
+    specialProperty: null, description: 'Advanced shield with energy-reactive plating',
+    shieldCapacityBonus: 7, counterProtocolsBonus: 6, powerCoreBonus: 4, servoMotorsBonus: -2,
+  },
 };
-
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 /** Get a bonus field value from a weapon, treating missing fields as 0 */
 function getBonus(weapon: WeaponDef, field: string): number {
@@ -529,61 +556,61 @@ describe('Feature: weapon-bonus-rebalance', () => {
       expect(WEAPON_DEFINITIONS.length).toBe(23);
     });
 
-    test('Energy Blade has correct bonuses after rebalance', () => {
+    test('Energy Blade has original spatial bonuses (rebalance reverted)', () => {
       const w = findWeapon('Energy Blade');
-      expect(getBonus(w, 'combatPowerBonus')).toBe(4);
-      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(0);
+      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(4);
+      expect(getBonus(w, 'combatPowerBonus')).toBe(0);
       expect(getBonus(w, 'attackSpeedBonus')).toBe(5);
       expect(getBonus(w, 'weaponControlBonus')).toBe(3);
     });
 
-    test('Plasma Blade has correct bonuses after rebalance', () => {
+    test('Plasma Blade has original spatial bonuses (rebalance reverted)', () => {
       const w = findWeapon('Plasma Blade');
-      expect(getBonus(w, 'combatPowerBonus')).toBe(5);
-      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(0);
+      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(5);
+      expect(getBonus(w, 'combatPowerBonus')).toBe(0);
       expect(getBonus(w, 'attackSpeedBonus')).toBe(4);
       expect(getBonus(w, 'criticalSystemsBonus')).toBe(3);
       expect(getBonus(w, 'gyroStabilizersBonus')).toBe(2);
     });
 
-    test('Power Sword has correct bonuses after rebalance', () => {
+    test('Power Sword has original spatial bonuses (rebalance reverted)', () => {
       const w = findWeapon('Power Sword');
-      expect(getBonus(w, 'penetrationBonus')).toBe(7);
-      expect(getBonus(w, 'criticalSystemsBonus')).toBe(5);
-      expect(getBonus(w, 'weaponControlBonus')).toBe(4);
+      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(7);
+      expect(getBonus(w, 'counterProtocolsBonus')).toBe(5);
+      expect(getBonus(w, 'gyroStabilizersBonus')).toBe(4);
       expect(getBonus(w, 'combatPowerBonus')).toBe(3);
-      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(0);
-      expect(getBonus(w, 'counterProtocolsBonus')).toBe(0);
-      expect(getBonus(w, 'gyroStabilizersBonus')).toBe(0);
+      expect(getBonus(w, 'penetrationBonus')).toBe(0);
+      expect(getBonus(w, 'criticalSystemsBonus')).toBe(0);
+      expect(getBonus(w, 'weaponControlBonus')).toBe(0);
     });
 
-    test('Battle Axe has correct bonuses after rebalance', () => {
+    test('Battle Axe has original spatial bonuses (rebalance reverted)', () => {
       const w = findWeapon('Battle Axe');
-      expect(getBonus(w, 'penetrationBonus')).toBe(6);
-      expect(getBonus(w, 'attackSpeedBonus')).toBe(-2);
+      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(6);
+      expect(getBonus(w, 'servoMotorsBonus')).toBe(-2);
       expect(getBonus(w, 'combatPowerBonus')).toBe(4);
       expect(getBonus(w, 'criticalSystemsBonus')).toBe(3);
-      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(0);
-      expect(getBonus(w, 'servoMotorsBonus')).toBe(0);
+      expect(getBonus(w, 'penetrationBonus')).toBe(0);
+      expect(getBonus(w, 'attackSpeedBonus')).toBe(0);
     });
 
-    test('Heavy Hammer has correct bonuses after rebalance', () => {
+    test('Heavy Hammer has original spatial bonuses (rebalance reverted)', () => {
       const w = findWeapon('Heavy Hammer');
-      expect(getBonus(w, 'penetrationBonus')).toBe(8);
-      expect(getBonus(w, 'attackSpeedBonus')).toBe(-3);
+      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(8);
+      expect(getBonus(w, 'servoMotorsBonus')).toBe(-3);
       expect(getBonus(w, 'combatPowerBonus')).toBe(7);
       expect(getBonus(w, 'criticalSystemsBonus')).toBe(4);
-      expect(getBonus(w, 'hydraulicSystemsBonus')).toBe(0);
-      expect(getBonus(w, 'servoMotorsBonus')).toBe(0);
+      expect(getBonus(w, 'penetrationBonus')).toBe(0);
+      expect(getBonus(w, 'attackSpeedBonus')).toBe(0);
     });
 
-    test('Reactive Shield has correct bonuses after rebalance', () => {
+    test('Reactive Shield has original spatial bonuses (rebalance reverted)', () => {
       const w = findWeapon('Reactive Shield');
-      expect(getBonus(w, 'evasionThrustersBonus')).toBe(-2);
+      expect(getBonus(w, 'servoMotorsBonus')).toBe(-2);
+      expect(getBonus(w, 'evasionThrustersBonus')).toBe(0);
       expect(getBonus(w, 'shieldCapacityBonus')).toBe(7);
       expect(getBonus(w, 'counterProtocolsBonus')).toBe(6);
       expect(getBonus(w, 'powerCoreBonus')).toBe(4);
-      expect(getBonus(w, 'servoMotorsBonus')).toBe(0);
     });
 
     test('Ion Beam has correct bonuses after rebalance', () => {

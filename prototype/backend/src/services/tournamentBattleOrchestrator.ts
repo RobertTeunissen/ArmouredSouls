@@ -427,6 +427,10 @@ async function createTournamentBattleRecord(
         maxRounds,
         isFinals: round === maxRounds,
         detailedCombatEvents: combatResult.events || [],
+        // 2D arena spatial metadata
+        arenaRadius: combatResult.arenaRadius,
+        startingPositions: combatResult.startingPositions,
+        endingPositions: combatResult.endingPositions,
       },
       durationSeconds: combatResult.durationSeconds,
 

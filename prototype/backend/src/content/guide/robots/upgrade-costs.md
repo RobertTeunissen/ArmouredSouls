@@ -85,7 +85,7 @@ Higher Training Facility levels require Prestige thresholds to unlock (Level 4 n
 
 The Training Facility discount applies to every attribute upgrade for every robot in your stable. The savings compound dramatically:
 
-- **1 robot, levels 1→10 on 14 active attributes**: Without discount: 14 × ₡81,000 = ₡1,134,000. With Level 1 Training Facility (10% off): 14 × ₡72,900 = ₡1,020,600. Savings: ₡113,400.
+- **1 robot, levels 1→10 on all 23 attributes**: Without discount: 23 × ₡81,000 = ₡1,863,000. With Level 1 Training Facility (10% off): 23 × ₡72,900 = ₡1,676,700. Savings: ₡186,300.
 - **3 robots, all upgrading actively**: The savings triple, making the facility investment pay back even faster
 - **Late game, pushing attributes to 30+**: Without the discount, high-level upgrades are painfully expensive. With a Level 7+ Training Facility, they become manageable
 
@@ -96,11 +96,11 @@ The Training Facility discount applies to every attribute upgrade for every robo
 With your initial ₡3,000,000, prioritize:
 
 1. **Buy Training Facility Level 1** (₡150,000) — immediate 10% savings on everything
-2. **Focus upgrades on the 14 active attributes** rather than all 23 (see [Attributes Overview](/guide/robots/attributes-overview) for which are active)
+2. **All 23 attributes are active** — but you don't need to upgrade all of them equally. Focus on the ones that match your build (see [Attributes Overview](/guide/robots/attributes-overview))
 3. **Get key attributes to level 10** — at ₡81,000 per attribute (₡72,900 with Training Facility), this is the initial cap before academies and gives strong returns
-4. **Prioritize 6–8 core attributes** for your build rather than spreading thin across all 14
+4. **Prioritize 8–10 core attributes** for your build rather than spreading thin across all 23
 
-With the 1-robot strategy (₡1,550,000 for attributes), you can comfortably get all 14 active attributes to level 10 with the Training Facility discount (14 × ₡72,900 = ₡1,020,600). With 3 robots (₡650,000 total), you'll need to be more selective — focus on 6–8 key attributes per robot.
+With the 1-robot strategy (₡1,550,000 for attributes), you can get your 8–10 core attributes to level 10 with the Training Facility discount (10 × ₡72,900 = ₡729,000) and still have budget for secondary attributes. With 3 robots (₡650,000 total), you'll need to be more selective — focus on 6–8 key attributes per robot.
 
 ### Mid Game
 

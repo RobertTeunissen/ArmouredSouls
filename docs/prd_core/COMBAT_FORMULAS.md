@@ -879,8 +879,216 @@ For dual wield loadouts:
    - Rare weapons might have extreme bonuses with drawbacks
    - Weapon quality tiers (common, rare, legendary) affect bonus magnitude
 
+## 2D Arena Spatial Formulas
+
+These formulas govern the spatial combat mechanics introduced by the 2D Combat Arena system. All calculations are performed per simulation tick (0.1s) within the circular arena.
+
+### Movement_Speed
+
+Base movement speed derived from servo motors, modified by stance and strain:
+
+```
+baseSpeed = 7.0 + servoMotors × 0.2
+// Range: 7.2 (servoMotors=1) to 17.0 (servoMotors=50)
+
+Stance modifiers:
+  defensive = 0.80   // -20% speed
+  offensive = 1.10   // +10% speed
+  balanced  = 1.00   // no change
+
+Servo strain reduction:
+  strainReduction = 1.0 - (servoStrain / 100)
+
+effectiveSpeed = baseSpeed × stanceModifier × strainReduction
+
+Melee closing bonus (exempt from strain):
+  Activates when: hasMeleeWeapon AND distance > 2 AND opponentHasRangedWeapon
+  speedGap = max(0, opponentSpeed - baseSpeed)
+  closingBonus = 1.15 + speedGap × 0.01   // +15% base + 1% per speed diff
+  effectiveSpeed = baseSpeed × stanceModifier × closingBonus
+  // Closing bonus does NOT accumulate servo strain
+```
+
+### Servo_Strain
+
+Accumulated fatigue from sustained high-speed movement:
+
+```
+Each tick (0.1s):
+  currentSpeedRatio = actualMovement / (maxSpeed × tickDuration)
+
+  Accumulation:
+    If currentSpeedRatio > 0.80 AND NOT usingClosingBonus:
+      sustainedMovementTime += 0.1
+      If sustainedMovementTime > 3.0s:
+        servoStrain += 2.0 × 0.1   // +2%/s = +0.2%/tick
+        servoStrain = min(servoStrain, 30)   // Capped at 30%
+
+  Decay:
+    If currentSpeedRatio < 0.50:
+      servoStrain -= 5.0 × 0.1   // -5%/s = -0.5%/tick
+      servoStrain = max(servoStrain, 0)
+
+  Melee closing bonus movement is exempt from strain accumulation.
+```
+
+### Range_Penalty
+
+Damage multiplier based on distance between attacker and defender relative to weapon's optimal range:
+
+```
+Range bands (in grid units):
+  melee:  0–2
+  short:  3–6
+  mid:    7–12
+  long:   13+
+
+Range penalty multipliers:
+  optimal (same band):    1.1    // +10% bonus
+  one band away:          0.75   // -25% penalty
+  two or more bands away: 0.5    // -50% penalty
+
+Special: Melee weapons cannot attack beyond 2 units (emits out_of_range event).
+```
+
+### Hydraulic_Bonus
+
+Proximity-based damage bonus from hydraulic systems:
+
+```
+Melee range:
+  bonus = 1 + hydraulicSystems × 0.03
+  // Range: 1.03 (hydro=1) to 2.5 (hydro=50)
+
+Short range:
+  bonus = 1 + hydraulicSystems × 0.015
+  // Range: 1.015 (hydro=1) to 1.75 (hydro=50)
+
+Mid/Long range:
+  bonus = 1.0   // No bonus
+```
+
+### Backstab
+
+Positional bonus when attacking from behind the defender:
+
+```
+Trigger: attacker is >120° from defender's facing direction
+
+Base bonus: +10% damage
+
+Reductions:
+  gyroReduction = gyroStabilizers × 0.0025      // 0.25% per point
+  threatAnalysisReduction = 0
+  if threatAnalysis > 25:
+    threatAnalysisReduction = (threatAnalysis - 25) × 0.01   // 1% per point above 25
+
+effectiveBonus = max(0, 0.10 - gyroReduction - threatAnalysisReduction)
+```
+
+### Flanking
+
+Multi-robot positional bonus when attackers surround a defender:
+
+```
+Trigger: 2+ attackers are >90° apart relative to defender (multi-robot battles only)
+
+Base bonus: +20% damage
+
+Reductions:
+  gyroReduction = gyroStabilizers × 0.003        // 0.3% per point
+  threatAnalysisReduction = 0
+  if threatAnalysis > 25:
+    threatAnalysisReduction = (threatAnalysis - 25) × 0.01   // 1% per point above 25
+
+effectiveBonus = max(0, 0.20 - gyroReduction - threatAnalysisReduction)
+```
+
+### Patience_Timer
+
+Forces engagement after prolonged inactivity:
+
+```
+patienceLimit = 15 - (combatAlgorithms / 50) × 5
+// Range: 10s (combatAlgorithms=50) to 15s (combatAlgorithms=0)
+
+When patienceTimer >= patienceLimit: robot is forced to attack at current range.
+```
+
+### Adaptation_Bonus
+
+Incremental combat learning from adaptive AI:
+
+```
+On damage_taken:
+  adaptationHitBonus   += adaptiveAI × 0.02
+  adaptationDamageBonus += adaptiveAI × 0.01
+
+On miss:
+  adaptationHitBonus   += adaptiveAI × 0.03
+
+Caps:
+  maxHitBonus    = adaptiveAI × 0.5
+  maxDamageBonus = adaptiveAI × 0.25
+
+Effectiveness reduction:
+  If HP > 70%: bonuses apply at 50% effectiveness
+```
+
+### Pressure Effects (Logic Cores)
+
+Performance under low-HP pressure, governed by logic cores:
+
+```
+Pressure threshold = 15 + logicCores × 0.6   // % HP where pressure activates
+
+When HP% < pressureThreshold:
+  accuracyPenalty = max(0, 15 - logicCores × 0.5)
+  damagePenalty   = max(0, 10 - logicCores × 0.33)
+
+Death spiral cap (logicCores < 10):
+  accuracyPenalty ≤ 10%
+  damagePenalty   ≤ 8%
+
+Composure bonus (logicCores > 30):
+  composureBonus = (logicCores - 30) × 0.5
+  // Applied as positive modifier to offset penalties
+```
+
+### Threat_Score
+
+Target priority scoring for AI target selection:
+
+```
+score = combatPowerThreat × hpFactor × weaponThreat × proximityDecay
+        × targetingMe × (0.5 + threatAnalysis / 100)
+
+proximityDecay = 1 / (1 + normalizedDistance × 5)
+normalizedDistance = distance / (arenaRadius × 2)
+```
+
+### Turn_Speed
+
+Rotation rate for facing direction updates:
+
+```
+turnSpeed = 180 + gyroStabilizers × 6   // degrees per second
+// Range: 186°/s (gyro=1) to 480°/s (gyro=50)
+```
+
+### Counter-Attack Range Check
+
+Spatial constraints on counter-attacks:
+
+```
+Melee counters: blocked beyond 2 units distance.
+Dual-wield fallback: if main weapon out of range, offhand attacks at 50% damage.
+Hydraulic bonus applies to melee counters within range.
+```
+
 ## Version History
 
+- **2026-03-16:** Added 2D Arena Spatial Formulas section (Movement, Range, Hydraulic, Backstab, Flanking, Patience, Adaptation, Pressure, Threat Score, Turn Speed, Counter Range)
 - **2026-02-03:** Initial documentation
   - Added weapon bonus mechanics
   - Documented offhand attack rules

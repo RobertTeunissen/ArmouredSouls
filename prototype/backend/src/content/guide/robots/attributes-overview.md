@@ -2,7 +2,7 @@
 title: "Robot Attributes Overview"
 description: "A complete guide to all 23 robot attributes organized across five categories — Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, and Team Coordination."
 order: 1
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-03-17"
 relatedArticles:
   - robots/attribute-combat-influence
   - robots/hull-and-shields
@@ -12,9 +12,11 @@ relatedArticles:
 
 ## Overview
 
-Every robot in Armoured Souls is defined by **23 core attributes** spread across five categories. These attributes determine everything about how your robot performs — from raw damage output to how well it dodges incoming fire to how effectively it coordinates with teammates.
+Every robot in Armoured Souls is defined by **23 core attributes** spread across five categories. These attributes determine everything about how your robot performs — from raw damage output to how well it dodges incoming fire, how it moves and positions in the 2D arena, how it adapts mid-battle, and how effectively it coordinates with teammates.
 
 All attributes start at level 1 and can be upgraded to a maximum of level 50 using Credits. However, attributes are capped at level 10 until you invest in [Training Academies](/guide/robots/training-academies) to unlock higher levels.
+
+All 23 attributes are active in the combat simulator and directly influence battle outcomes.
 
 ![Robot attribute categories overview](/images/guide/robots/attribute-categories-overview.png)
 
@@ -53,51 +55,55 @@ Energy shields regenerate during battle (based on your Power Core attribute) and
 
 ## 🟢 Chassis & Mobility (5 Attributes)
 
-Chassis & Mobility attributes define your robot's physical structure, movement capabilities, and energy systems.
+Chassis & Mobility attributes define your robot's physical structure, movement capabilities, and energy systems. All five attributes are active in combat.
 
-| Attribute | What It Does | Status |
-|-----------|-------------|--------|
-| **Hull Integrity** | Determines your robot's maximum HP. More hull integrity means more hits you can take before going down. See [Hull & Shields](/guide/robots/hull-and-shields) for details. | ✅ Active |
-| **Servo Motors** | Improves movement speed and positioning in battle. | ⚠️ Not yet active |
-| **Gyro Stabilizers** | Enhances balance and dodging ability. Reduces the opponent's hit chance, making your robot harder to hit. | ✅ Active |
-| **Hydraulic Systems** | Increases physical force for melee impact and carry capacity. | ⚠️ Not yet active |
-| **Power Core** | Governs energy generation, which drives energy shield regeneration during battle. | ✅ Active |
+| Attribute | What It Does |
+|-----------|-------------|
+| **Hull Integrity** | Determines your robot's maximum HP. More hull integrity means more hits you can take before going down. See [Hull & Shields](/guide/robots/hull-and-shields) for details. |
+| **Servo Motors** | Determines movement speed in the 2D arena. Higher values let your robot close distance faster or reposition to maintain optimal weapon range. Base speed: 7.0 + servoMotors × 0.2 units/second. |
+| **Gyro Stabilizers** | Enhances balance, turn speed, and dodging ability. Reduces the opponent's hit chance and reduces backstab/flanking damage bonuses against you. |
+| **Hydraulic Systems** | Increases melee and close-range damage. At melee range (0–2 units): up to +150% bonus damage at level 50. At short range (3–6 units): up to +75% bonus. No effect at mid/long range. |
+| **Power Core** | Governs energy generation, which drives energy shield regeneration during battle. |
 
-```callout-warning
-Servo Motors and Hydraulic Systems are defined in the attribute system but do not currently influence combat outcomes. They exist in the database and can be upgraded, but the combat simulator does not use them yet. Avoid investing heavily in these until they are activated in a future update.
+```callout-tip
+Servo Motors and Hydraulic Systems are essential for melee builds. Servo Motors lets you close the gap to reach melee range, while Hydraulic Systems massively amplifies your damage once you get there. A robot with high values in both can be devastating up close.
 ```
 
 ```callout-tip
-Gyro Stabilizers reduces the opponent's hit chance — it's a defensive attribute that stacks with Evasion Thrusters to make your robot harder to hit.
+Gyro Stabilizers has a triple role: it reduces the opponent's hit chance, increases your turn speed (making backstabs harder to land on you), and directly reduces backstab and flanking damage bonuses. It's one of the most versatile defensive investments.
 ```
 
-## 🟡 AI Processing (4 Attributes) — ⚠️ Not Yet Active
+## 🟡 AI Processing (4 Attributes)
 
-AI Processing attributes are designed to control your robot's autonomous decision-making during combat. These attributes exist in the database and can be upgraded, but the combat simulator does not use them yet. They are planned for a future update.
+AI Processing attributes control your robot's autonomous decision-making during combat. These determine how smartly your robot fights — from target selection to mid-battle adaptation.
 
-| Attribute | Planned Effect | Status |
-|-----------|---------------|--------|
-| **Combat Algorithms** | Will improve battle strategy and decision quality. | ⚠️ Not yet active |
-| **Threat Analysis** | Will enhance target priority and positioning. | ⚠️ Not yet active |
-| **Adaptive AI** | Will allow your robot to learn opponent patterns during battle. | ⚠️ Not yet active |
-| **Logic Cores** | Will improve performance under pressure — potentially gaining bonuses when damaged. | ⚠️ Not yet active |
+| Attribute | What It Does |
+|-----------|-------------|
+| **Combat Algorithms** | Improves battle strategy and decision quality. Grants a hit chance bonus when the algorithm score exceeds 0.5, and controls the patience timer that determines how long your robot waits for optimal range before forcing an attack. |
+| **Threat Analysis** | Enhances facing/turning speed with a predictive turn bias. At high levels (25+), your robot anticipates opponents moving behind it and turns faster to prevent backstabs. Also reduces backstab and flanking damage taken. |
+| **Adaptive AI** | Allows your robot to learn during battle. Each time your robot misses or takes damage, it accumulates hit and damage bonuses. Higher Adaptive AI means faster adaptation. Bonuses are halved when HP is above 70% to prevent snowballing. |
+| **Logic Cores** | Improves performance under pressure. Sets the HP threshold below which your robot enters "pressure mode," gaining accuracy and damage bonuses. Higher Logic Cores raises this threshold, activating the bonus earlier. |
 
-```callout-warning
-None of the AI Processing attributes currently affect combat. Upgrading them has no impact on battle outcomes right now. Save your credits for attributes that are active unless you want to invest ahead of future updates.
+```callout-tip
+Adaptive AI is especially powerful in longer fights. Against tanky opponents, your robot gradually becomes more accurate and hits harder as the battle progresses. Pair it with defensive attributes to survive long enough for the adaptation to kick in.
 ```
 
-## 🟣 Team Coordination (3 Attributes) — ⚠️ Not Yet Active
+```callout-info
+Combat Algorithms controls the patience timer — how long your robot will wait for the opponent to enter optimal weapon range before forcing an attack anyway. Higher values mean your robot is smarter about when to engage, but won't wait forever.
+```
 
-Team Coordination attributes are designed to enhance your robot's effectiveness in multi-robot arena battles (2v2, 3v3, and larger formats). These attributes exist in the database and can be upgraded, but the combat simulator does not use them yet.
+## 🟣 Team Coordination (3 Attributes)
 
-| Attribute | Planned Effect | Status |
-|-----------|---------------|--------|
-| **Sync Protocols** | Will improve coordination with allied robots in team battles. | ⚠️ Not yet active |
-| **Support Systems** | Will enable your robot to buff adjacent allies. | ⚠️ Not yet active |
-| **Formation Tactics** | Will improve positioning within team formations. | ⚠️ Not yet active |
+Team Coordination attributes enhance your robot's effectiveness in combat. Even in 1v1 battles, these provide solo combat benefits through self-synergy mechanics.
 
-```callout-warning
-None of the Team Coordination attributes currently affect combat — not even in Tag Team battles. The Tag Team system uses the same combat simulator as 1v1, which does not read these attributes. Avoid investing in them until a future update activates them.
+| Attribute | What It Does |
+|-----------|-------------|
+| **Sync Protocols** | In dual-wield builds, grants a damage bonus when both main and offhand weapons are ready within a 1-second window. Bonus: 0.2% per point. In team modes, improves coordination with allied robots. |
+| **Support Systems** | Provides a passive shield regeneration boost during combat. Bonus: 0.1% increased shield regen per point per tick. In team modes, enables buffing adjacent allies. |
+| **Formation Tactics** | Grants a damage reduction bonus when your robot is within 3 grid units of the arena boundary (wall-bracing). Bonus: 0.3% per point. In team modes, improves positioning within formations. |
+
+```callout-tip
+Formation Tactics rewards positional awareness. If your robot tends to fight near the arena edge, the wall-bracing bonus from Formation Tactics provides meaningful damage reduction. This pairs well with defensive builds that don't need to chase opponents.
 ```
 
 ## Attribute Summary Table
@@ -106,11 +112,11 @@ None of the Team Coordination attributes currently affect combat — not even in
 |----------|-----------|-------|-------------|--------|
 | 🔴 Combat Systems | Combat Power, Targeting, Critical Systems, Penetration, Weapon Control, Attack Speed | 6 | Dealing damage | ✅ All active |
 | 🔵 Defensive Systems | Armor Plating, Shield Capacity, Evasion, Damage Dampeners, Counter Protocols | 5 | Surviving damage | ✅ All active |
-| 🟢 Chassis & Mobility | Hull Integrity, Servo Motors, Gyro Stabilizers, Hydraulic Systems, Power Core | 5 | Structure and movement | ⚠️ 3 of 5 active |
-| 🟡 AI Processing | Combat Algorithms, Threat Analysis, Adaptive AI, Logic Cores | 4 | Smart decision-making | ⚠️ None active |
-| 🟣 Team Coordination | Sync Protocols, Support Systems, Formation Tactics | 3 | Teamwork bonuses | ⚠️ None active |
+| 🟢 Chassis & Mobility | Hull Integrity, Servo Motors, Gyro Stabilizers, Hydraulic Systems, Power Core | 5 | Structure, movement, and positioning | ✅ All active |
+| 🟡 AI Processing | Combat Algorithms, Threat Analysis, Adaptive AI, Logic Cores | 4 | Smart decision-making and adaptation | ✅ All active |
+| 🟣 Team Coordination | Sync Protocols, Support Systems, Formation Tactics | 3 | Self-synergy and teamwork bonuses | ✅ All active |
 
-Of the 23 total attributes, **14 are currently active** in the combat simulator and directly influence battle outcomes. The remaining 9 (Servo Motors, Hydraulic Systems, all 4 AI Processing, and all 3 Team Coordination) can be upgraded but have no effect on combat yet.
+All 23 attributes are active in the combat simulator and directly influence battle outcomes.
 
 ## What's Next?
 

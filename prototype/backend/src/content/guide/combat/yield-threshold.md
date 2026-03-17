@@ -1,7 +1,7 @@
 ---
 title: "Yield Threshold"
 description: "How the yield threshold mechanic works — when your robot surrenders, how it affects battle outcomes, and the HP percentage settings that control it."
-order: 5
+order: 7
 lastUpdated: "2026-03-13"
 relatedArticles:
   - combat/battle-flow

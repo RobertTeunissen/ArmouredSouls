@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.3
-**Date**: February 10, 2026  
+**Version**: v1.4
+**Date**: March 16, 2026  
 **Status**: ✅ Implemented & Verified 
 
 ---
@@ -24,6 +24,11 @@
   - Confirmed HP calculation: 50 + (hull_integrity × 5)
   - Confirmed all 23 attributes are implemented correctly
   - All combat formulas verified against combatSimulator.ts
+- v1.4 - 2D Arena Combat Roles (March 16, 2026)
+  - Documented spatial combat roles for 9 previously inert attributes
+  - Servo Motors, Gyro Stabilizers, Hydraulic Systems now have arena movement/positioning mechanics
+  - Combat Algorithms, Threat Analysis, Adaptive AI, Logic Cores now have spatial AI mechanics
+  - Sync Protocols, Support Systems, Formation Tactics now have 1v1 solo bonuses
 
 ---
 
@@ -121,8 +126,21 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 
 12. **Hull Integrity** - Maximum health points (structural HP)
 13. **Servo Motors** - Movement speed and positioning
+    - **2D Arena Role**: Determines base movement speed in the arena: `7.0 + servoMotors × 0.2` (range 7.2–17.0 units/s)
+    - Higher servo motors = faster arena traversal
+    - Subject to servo strain at sustained high speeds (>80% for >3s)
+    - See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for Movement_Speed and Servo_Strain formulas
 14. **Gyro Stabilizers** - Balance, dodging ability, and reaction time
+    - **2D Arena Role**: Determines turn speed: `180 + gyroStabilizers × 6` degrees/s (range 186–480°/s)
+    - Reduces backstab bonus (0.25% reduction per point)
+    - Reduces flanking bonus (0.3% reduction per point)
+    - Higher gyro = harder to exploit positionally
 15. **Hydraulic Systems** - Physical force for melee impact and carry capacity
+    - **2D Arena Role**: Proximity-based damage bonus in the arena
+    - Melee range damage bonus: `1 + hydraulicSystems × 0.03` (up to 2.5×)
+    - Short range damage bonus: `1 + hydraulicSystems × 0.015` (up to 1.75×)
+    - No bonus at mid/long range
+    - Also applies to melee counter-attacks
 16. **Power Core** - Energy generation for energy shield regeneration
 
 ### 🟡 AI Processing (4)
@@ -130,17 +148,46 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 **Autonomous intelligence and combat decision-making**
 
 17. **Combat Algorithms** - Battle strategy and decision quality
+    - **2D Arena Role**: Controls movement AI strategy quality
+    - Score < 0.3 = random_bias, 0.3–0.6 = direct_path, > 0.6 = calculated_path
+    - Movement prediction at score ≥ 0.4
+    - Patience timer: `15 - (score × 5)` seconds (10–15s range)
+    - Higher combat algorithms = smarter positioning and engagement timing
 18. **Threat Analysis** - Target priority and positioning
+    - **2D Arena Role**: Spatial awareness and threat-aware positioning
+    - Threat score accuracy: scales by `0.5 + threatAnalysis/100`
+    - Threat-aware positioning at > 15 points
+    - Flank approach bias at > 20 points
+    - Reduces backstab/flanking bonus when > 25 points (1% per point above 25)
+    - Predictive turn bias at > 20 points
 19. **Adaptive AI** - Learns opponent patterns and adapts tactics
+    - **2D Arena Role**: Accumulates combat bonuses over the course of a fight
+    - Hit bonus accumulation: +0.02 per hit taken, +0.03 per miss (capped at adaptiveAI × 0.5)
+    - Damage bonus accumulation: +0.01 per hit taken (capped at adaptiveAI × 0.25)
+    - 50% effectiveness when HP > 70% (winning robots benefit less)
 20. **Logic Cores** - Performance under pressure and critical decisions
+    - **2D Arena Role**: Composure system under low-HP pressure
+    - Pressure threshold: `15 + logicCores × 0.6` (% HP)
+    - Negates accuracy/damage penalties under pressure
+    - At logicCores = 30: fully negates all pressure penalties
+    - At logicCores > 30: composure bonus of `(logicCores - 30) × 0.5`
+    - Death spiral cap for logicCores < 10
 
 ### 🟣 Team Coordination (3)
 
 **Attributes for multi-robot arena battles (2v2, 3v3, etc.)**
 
 21. **Sync Protocols** - Coordination with allied robots
+    - **1v1 Solo Bonus**: Coordinated volley for dual-wield (both weapons within 1.0s window)
+    - Volley bonus: `syncProtocols × 0.2%` per point
+    - In team battles: coordination with allied robots
 22. **Support Systems** - Ability to assist/buff teammates
+    - **1v1 Solo Bonus**: Shield regeneration boost of `supportSystems × 0.1%` per tick
+    - In team battles: ability to assist/buff teammates
 23. **Formation Tactics** - Positioning within team formations
+    - **1v1 Solo Bonus**: Arena edge defense bonus when within 3 units of boundary
+    - Edge defense: `formationTactics × 0.3%` damage reduction
+    - In team battles: positioning within team formations
 
 ---
 

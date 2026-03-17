@@ -1,7 +1,7 @@
 ---
 title: "Battle Stances"
 description: "Compare Offensive, Defensive, and Balanced stances — how each modifies your robot's combat attributes and when to use them."
-order: 3
+order: 4
 lastUpdated: "2026-03-12"
 relatedArticles:
   - combat/battle-flow

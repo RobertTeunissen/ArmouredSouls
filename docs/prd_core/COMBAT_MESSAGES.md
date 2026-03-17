@@ -5,7 +5,7 @@
 **Date**: March 1, 2026  
 **Status**: Implementation Complete  
 **Purpose**: Textual descriptions for battle log events
-**Version**: v2.0  
+**Version**: v2.1  
 
 ---
 
@@ -23,6 +23,8 @@
   - Heavy/moderate/light damage status thresholds implemented
   - Real weapon names shown in all combat messages
   - Tag team events converted through narrative generator
+- v2.1 - 2D Arena Spatial Messages (March 16, 2026)
+  - Added spatial combat event message templates: movement, range_transition, out_of_range, counter_out_of_range, backstab, flanking
 
 ---
 
@@ -115,6 +117,12 @@ All three orchestrators now use the narrative conversion pipeline:
 | Tag-Out (Yield) | 8 | Robot yields and tags out |
 | Tag-Out (Destruction) | 8 | Robot destroyed, reserve enters |
 | Tag-In | 10 | Reserve robot enters arena |
+| Movement | 4 | Position change events |
+| Range Transition | 3 | Range band change events |
+| Out of Range | 3 | Melee blocked by distance |
+| Counter Out of Range | 2 | Counter blocked by distance |
+| Backstab | 3 | Rear attack events |
+| Flanking | 3 | Multi-angle attack events |
 
 ### Not Implemented ❌
 
@@ -347,6 +355,50 @@ Tag Team (5 variations):
 "⚡ Fresh fighter! {robotName} tags in for {teamName} with {hp} HP!"
 ```
 
+### 13. Spatial Combat Events (2D Arena)
+
+**Movement** (emitted when robot moves significantly, >1 unit or >0.5s interval):
+```
+"🏃 {robotName} advances toward {targetName}, closing the distance"
+"🏃 {robotName} repositions across the arena"
+"🏃 {robotName} circles around {targetName}, seeking an opening"
+"🏃 {robotName} retreats to maintain optimal range"
+```
+
+**Range Transition** (emitted when range band changes between robots):
+```
+"📏 {robot1Name} and {robot2Name} are now at {rangeBand} range"
+"📏 The distance shifts — {robot1Name} and {robot2Name} enter {rangeBand} range"
+"📏 Range change: {robot1Name} vs {robot2Name} now fighting at {rangeBand} distance"
+```
+
+**Out of Range** (emitted when melee weapon can't reach target):
+```
+"🚫 {robotName}'s {weaponName} can't reach {targetName} — too far for melee!"
+"❌ {robotName} swings {weaponName} but {targetName} is out of melee range!"
+"🚫 {robotName} attempts a melee strike but {targetName} is beyond reach"
+```
+
+**Counter Out of Range** (emitted when counter-attack blocked by distance):
+```
+"🔄🚫 {robotName}'s counter-attack fails — {weaponName} can't reach at this distance!"
+"🔄❌ {robotName} tries to counter with {weaponName} but the attacker is out of range!"
+```
+
+**Backstab** (emitted when attack lands from behind):
+```
+"🗡️ BACKSTAB! {attackerName} strikes {defenderName} from behind with {weaponName}!"
+"🔪 {attackerName} exploits {defenderName}'s blind spot — backstab with {weaponName}!"
+"🗡️ {defenderName} didn't see it coming! {attackerName} lands a backstab!"
+```
+
+**Flanking** (emitted in multi-robot battles when attackers surround defender):
+```
+"⚔️ FLANKING! {attacker1Name} and {attacker2Name} attack {defenderName} from multiple angles!"
+"🎯 {defenderName} is caught in a crossfire — flanking attack!"
+"⚔️ Coordinated flanking maneuver against {defenderName}!"
+```
+
 ---
 
 ## Battle Log JSON Structure
@@ -406,11 +458,17 @@ The `BattleDetailPage.tsx` component renders combat messages with color-coded bo
 | draw | Gray-400 | Gray tint |
 | tag_out | Orange | Orange tint |
 | tag_in | Cyan | Cyan tint |
+| movement | Indigo | Indigo tint |
+| range_transition | Sky | Sky tint |
+| out_of_range | Red-300 | Red tint |
+| counter_out_of_range | Red-300 | Red tint |
+| backstab | Purple-500 | Purple tint |
+| flanking | Amber-500 | Amber tint |
 
 Financial/reward messages are filtered from the combat log (shown in the battle summary section instead).
 
 ---
 
-**Status**: v2.0 - All core combat message categories implemented  
+**Status**: v2.1 - All core combat message categories implemented including 2D arena spatial events  
 **Implementation**: `combatMessageGenerator.ts` converts real simulator events into narrative messages  
 **All orchestrators**: League, Tournament, and Tag Team use the narrative conversion pipeline

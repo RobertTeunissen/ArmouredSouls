@@ -2,7 +2,7 @@
 title: "Training Academies"
 description: "How the four Training Academies control attribute caps and unlock higher levels of robot power — from the initial cap of 10 all the way to the maximum of 50."
 order: 5
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-03-17"
 relatedArticles:
   - robots/attributes-overview
   - robots/upgrade-costs
@@ -30,7 +30,7 @@ Each academy controls the attribute caps for one category of attributes:
 | **AI Training Academy** | 🟡 AI Processing + 🟣 Team Coordination (7 attributes) | Combat Algorithms, Threat Analysis, Adaptive AI, Logic Cores, Sync Protocols, Support Systems, Formation Tactics |
 
 ```callout-info
-The AI Training Academy covers both AI Processing and Team Coordination attributes — that's 7 attributes total, making it the broadest academy. If you plan to compete in team modes, this academy unlocks both your decision-making and teamwork capabilities.
+The AI Training Academy covers both AI Processing and Team Coordination attributes — that's 7 attributes total, making it the broadest academy. All 7 attributes are active in combat: AI Processing controls decision-making, adaptation, and pressure performance, while Team Coordination provides self-synergy bonuses (sync volleys, shield regen boost, wall-bracing) even in 1v1 battles. Investing in this academy is essential for competitive play.
 ```
 
 ## Academy Levels and Attribute Caps
@@ -101,7 +101,7 @@ With established income streams and high Prestige:
 
 1. **Push primary academy to Level 8–10** for attribute caps of 45–50
 2. **Bring secondary academies to Level 5–6** for caps of 35–40
-3. **Max the AI Academy** if you're competing in team modes
+3. **Invest in the AI Academy** — AI Processing attributes (Combat Algorithms, Threat Analysis, Adaptive AI, Logic Cores) provide significant combat advantages at high levels, and Team Coordination attributes offer useful solo bonuses
 
 ## Academy and Training Facility Synergy
 
@@ -130,9 +130,10 @@ The answer depends on your build archetype:
 | **Glass Cannon** | Combat | Mobility | Max damage output, with hull HP as backup |
 | **Speed Demon** | Mobility | Combat | Attack speed, evasion, and movement first |
 | **Counter Striker** | Defense | Combat | Counter Protocols and Armor Plating are key |
-| **Sniper** | Combat | AI | Targeting, Critical Systems, and smart decision-making |
-| **Tactical AI** | AI | Combat or Defense | Decision quality drives everything |
+| **Sniper** | Combat | AI | Targeting, Critical Systems, and Combat Algorithms for smart range management |
+| **Tactical AI** | AI | Combat or Defense | Adaptive AI and Logic Cores drive mid-battle performance gains |
 | **Team Player** | AI | Defense or Combat | Team Coordination + AI Processing in one academy |
+| **Melee Brawler** | Mobility | Combat | Servo Motors to close distance, Hydraulic Systems for melee damage |
 
 ## What's Next?
 
