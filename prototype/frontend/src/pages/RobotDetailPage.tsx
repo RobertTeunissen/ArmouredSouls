@@ -305,26 +305,14 @@ function RobotDetailPage() {
         console.error('Failed to fetch facilities:', err);
       }
 
-      // Fetch recent battles using the same API as battle history
-      const recentBattlesData = await getMatchHistory(1, 10);
-      
-      // Filter for this specific robot
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const robotBattles = recentBattlesData.data.filter((battle: any) => {
-        // Check if this robot participated in the battle
-        if (battle.battleType === 'tag_team') {
-          return (
-            battle.team1ActiveRobotId === parseInt(id!) ||
-            battle.team1ReserveRobotId === parseInt(id!) ||
-            battle.team2ActiveRobotId === parseInt(id!) ||
-            battle.team2ReserveRobotId === parseInt(id!)
-          );
-        } else {
-          return battle.robot1Id === parseInt(id!) || battle.robot2Id === parseInt(id!);
-        }
-      });
-      
-      setRecentBattles(robotBattles);
+      // Fetch recent battles for this specific robot via API
+      try {
+        const recentBattlesData = await getMatchHistory(1, 10, undefined, parseInt(id!));
+        setRecentBattles(recentBattlesData.data);
+      } catch (err) {
+        console.error('Failed to fetch recent battles:', err);
+        // Don't fail the entire page if battle history fails
+      }
 
       // Calculate battle readiness
       const hpPercentage = (robotData.currentHP / robotData.maxHP) * 100;
