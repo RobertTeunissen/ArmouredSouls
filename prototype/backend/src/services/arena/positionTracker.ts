@@ -111,8 +111,8 @@ function isMovingTowardRearArc(
   state: FacingState,
   opponent: OpponentState,
 ): boolean {
-  // Direction from robot to opponent
-  const opponentAngle = angleBetween(state.position, opponent.position);
+  // Direction from robot to opponent (used for context, not directly in calculation)
+  const _opponentAngle = angleBetween(state.position, opponent.position);
   // Angle of opponent's velocity
   const velMag = Math.sqrt(
     opponent.velocity.x * opponent.velocity.x +

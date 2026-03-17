@@ -12,7 +12,6 @@ import {
   LEAGUE_TIERS,
   LeagueTier,
   getInstancesForTier,
-  MAX_ROBOTS_PER_INSTANCE 
 } from './leagueInstanceService';
 
 // Promotion/Demotion thresholds
