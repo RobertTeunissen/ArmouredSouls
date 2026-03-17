@@ -1,7 +1,7 @@
 import { Robot, Weapon, WeaponInventory } from '@prisma/client';
 
 // Spatial subsystem imports
-import { Position, euclideanDistance } from './arena/vector2d';
+import { Position, euclideanDistance, angleBetween } from './arena/vector2d';
 import { createArena } from './arena/arenaLayout';
 import { classifyRangeBand, getRangePenalty, getWeaponOptimalRange, canAttack, WeaponLike } from './arena/rangeBands';
 import { calculateHydraulicBonus } from './arena/hydraulicBonus';
@@ -9,7 +9,7 @@ import { checkBackstab, updateFacing, calculateTurnSpeed } from './arena/positio
 import { updateAdaptation, getEffectiveAdaptation } from './arena/adaptationTracker';
 import { calculatePressureEffects } from './arena/pressureSystem';
 import { calculateBaseSpeed, calculateEffectiveSpeed, updateServoStrain } from './arena/servoStrain';
-import { calculateMovementIntent, applyMovement, getPreferredRange, getPatienceLimit } from './arena/movementAI';
+import { calculateMovementIntent, applyMovement, getPatienceLimit } from './arena/movementAI';
 import { checkSyncVolley, getSupportShieldBoost, getFormationDefenseBonus } from './arena/teamCoordination';
 import { resolveCounter } from './arena/counterAttack';
 import { selectTarget as _selectTarget } from './arena/threatScoring';
