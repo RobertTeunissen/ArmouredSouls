@@ -207,3 +207,21 @@ The 2D battle playback viewer shows robot positions, movement, and range bands i
 - [Stances](/guide/combat/stances) — How Offensive, Defensive, and Balanced stances modify your stats
 - [Yielding & Repair Costs](/guide/combat/yielding-and-repair-costs) — The surrender system and its economic implications
 - [Counter-Attacks & Shield Regeneration](/guide/combat/counter-attacks) — Defensive mechanics between attacks
+
+
+## King of the Hill Mode
+
+In addition to standard 1v1 league battles, robots can compete in **King of the Hill** — a 5-6 robot free-for-all zone-control mode. KotH runs on the same unified combat simulator as all other match types, using the full 7-phase tick loop with all 23 attributes active. The difference is in the *game mode configuration*: KotH plugs in custom strategy objects that modify target selection, movement intent, and win conditions.
+
+### What's shared with 1v1
+All core combat mechanics apply in KotH: the full attack resolution chain (malfunction → hit → crit → damage → shield → armor → counter-attack), range bands with penalties, backstab/flanking bonuses, shield regeneration, offhand attacks for dual-wield builds, yield mechanics, adaptation (Adaptive AI), pressure system (Logic Cores), and servo strain.
+
+### What's different in KotH
+- **Target selection**: Zone contesters are prioritized 3× over standard threats. Robots approaching the zone get 2× priority. Threat Analysis scales zone awareness.
+- **Movement AI**: Robots are biased toward the control zone. High Combat Algorithms robots may wait outside for opponents to weaken each other before entering.
+- **Win condition**: First to reach a score threshold (30 points fixed zone, 45 rotating) or highest score at time limit. Last-standing gets a 10-second scoring window.
+- **Zone scoring**: 1 point per second of uncontested zone occupation, +5 kill bonus.
+- **Anti-passive penalties**: Robots that stay outside the zone too long suffer accuracy and damage reduction penalties.
+- **No ELO changes**: KotH is a standalone mode with placement-based rewards.
+
+See the [King of the Hill](/guide/king-of-the-hill/zone-control-basics) section for full details on zone control, scoring, and rewards.

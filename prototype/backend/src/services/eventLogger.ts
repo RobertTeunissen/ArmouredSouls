@@ -39,10 +39,20 @@ export enum EventType {
   WEAPON_SALE = 'weapon_sale',
   
   // Tournament events
+  /**
+   * @deprecated Use BATTLE_COMPLETE for all battle types. Kept for backward
+   * compatibility with old audit log records in the database. New code should
+   * never emit this event type.
+   */
   TOURNAMENT_MATCH = 'tournament_match',
   TOURNAMENT_COMPLETE = 'tournament_complete',
   
   // Tag team events
+  /**
+   * @deprecated Use BATTLE_COMPLETE for all battle types. Kept for backward
+   * compatibility with old audit log records in the database. New code should
+   * never emit this event type.
+   */
   TAG_TEAM_BATTLE = 'tag_team_battle',
   
   // Cycle execution events

@@ -15,6 +15,9 @@ export function buildSuccessMessage(context: JobContext, appBaseUrl: string): st
       return `Tag Team battles have been completed! 🤝 Click here to see the results! ${link}`;
     case 'settlement':
       return `Daily settlement complete! 💰 Check your income and expenses! ${link}`;
+    case 'koth':
+      if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
+      return `King of the Hill: ${context.matchesCompleted} matches completed! 👑 Click here to see the results! ${link}`;
   }
 }
 

@@ -75,91 +75,10 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
     });
   }
 
-  // Get tag team battle events for this cycle
-  const tagTeamEvents = await prisma.auditLog.findMany({
-    where: {
-      cycleNumber,
-      eventType: 'tag_team_battle',
-    },
-    orderBy: { id: 'asc' },
-  });
-
-  for (const event of tagTeamEvents) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload = event.payload as any;
-    
-    // Get team details
-    const team1 = await prisma.tagTeam.findUnique({
-      where: { id: payload.team1Id },
-      include: {
-        activeRobot: true,
-        reserveRobot: true,
-      },
-    });
-    
-    const team2 = payload.team2Id ? await prisma.tagTeam.findUnique({
-      where: { id: payload.team2Id },
-      include: {
-        activeRobot: true,
-        reserveRobot: true,
-      },
-    }) : null;
-
-    if (!team1) continue;
-
-    const isByeMatch = !team2;
-    const isDraw = payload.isDraw || false;
-    const winnerId = payload.winnerId;
-
-    // Determine results
-    let team1Result = 'loss';
-    let team2Result = 'loss';
-    
-    if (isDraw) {
-      team1Result = 'draw';
-      team2Result = 'draw';
-    } else if (winnerId === team1.id) {
-      team1Result = 'win';
-      team2Result = 'loss';
-    } else if (team2 && winnerId === team2.id) {
-      team1Result = 'loss';
-      team2Result = 'win';
-    }
-
-    // Add row for team1 (using active robot as representative)
-    rows.push({
-      cycle: cycleNumber,
-      battle_id: payload.battleId,
-      robot_id: team1.activeRobot.id,
-      robot_name: `${team1.activeRobot.name} (Team)`,
-      opponent_id: team2?.activeRobot.id || 0,
-      opponent_name: team2 ? `${team2.activeRobot.name} (Team)` : 'Bye',
-      result: team1Result,
-      winnings: team1Result === 'win' ? (payload.winnerReward || 0) : (payload.loserReward || 0),
-      streaming_revenue: isByeMatch ? 0 : (payload.streamingRevenue1 || 0),
-      repair_cost: (payload.team1Robot1RepairCost || 0) + (payload.team1Robot2RepairCost || 0),
-      prestige_awarded: payload.team1PrestigeAwarded || 0,
-      fame_awarded: payload.team1FameAwarded || 0,
-    });
-
-    // Add row for team2 if not bye match
-    if (team2) {
-      rows.push({
-        cycle: cycleNumber,
-        battle_id: payload.battleId,
-        robot_id: team2.activeRobot.id,
-        robot_name: `${team2.activeRobot.name} (Team)`,
-        opponent_id: team1.activeRobot.id,
-        opponent_name: `${team1.activeRobot.name} (Team)`,
-        result: team2Result,
-        winnings: team2Result === 'win' ? (payload.winnerReward || 0) : (payload.loserReward || 0),
-        streaming_revenue: payload.streamingRevenue2 || 0,
-        repair_cost: (payload.team2Robot1RepairCost || 0) + (payload.team2Robot2RepairCost || 0),
-        prestige_awarded: payload.team2PrestigeAwarded || 0,
-        fame_awarded: payload.team2FameAwarded || 0,
-      });
-    }
-  }
+  // NOTE: Tag team battles now emit per-robot 'battle_complete' events (via
+  // logBattleAuditEvent in battlePostCombat.ts), so they are already captured
+  // by the query above. The old 'tag_team_battle' event type is deprecated and
+  // no longer emitted by new code.
 
   // Generate CSV
   const header = 'cycle,battle_id,robot_id,robot_name,opponent_id,opponent_name,result,winnings,streaming_revenue,repair_cost,prestige_awarded,fame_awarded\n';

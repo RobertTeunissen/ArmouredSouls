@@ -103,7 +103,7 @@ Upgrading a single attribute from level 1 to level 10 costs **₡82,500** total.
 
 ### Weapons and Loadouts
 
-**Weapons** provide combat bonuses and come in different types. Weapon costs range from **₡50,000** (budget weapons like Practice Sword) to **₡500,000** (premium weapons like Plasma Cannon).
+**Weapons** provide combat bonuses and come in different types. Weapon costs range from **₡50,000** (budget weapons like Practice Sword) to **₡544,000** (premium weapons like Ion Beam).
 
 **Loadout Types** determine how you equip weapons:
 
@@ -495,19 +495,19 @@ The core of Speed Demon is the synergy between Dual-Wield loadout and mobility a
 
 Speed Demon has flexibility in weapon selection:
 
-**Option 1: Dual Machine Guns** (2× ₡150,000 = ₡300,000)
+**Option 1: Dual Machine Guns** (2× ₡107,000 = ₡214,000)
 - Maximizes ranged attack frequency
 - Best for pure DPS optimization
 - Requires high Weapon Control for accuracy
 - Synergizes with Targeting Systems
 
-**Option 2: Dual Plasma Blades** (2× ₡200,000 = ₡400,000)
+**Option 2: Dual Plasma Blades** (2× ₡202,000 = ₡404,000)
 - Maximizes melee attack frequency
 - Best for close-range brawling
 - Requires positioning mastery
 - Synergizes with Hydraulic Systems
 
-**Option 3: Mixed Loadout** (Machine Gun ₡150,000 + Plasma Blade ₡200,000 = ₡350,000)
+**Option 3: Mixed Loadout** (Machine Gun ₡107,000 + Plasma Blade ₡202,000 = ₡309,000)
 - Provides versatility for different ranges
 - Best for adaptable playstyle
 - Requires balanced attribute investment
@@ -707,7 +707,7 @@ The core of Balanced Brawler is the Single loadout's simplicity and flexibility:
 - Maximum flexibility - can switch weapons without rebuilding attributes
 
 **Why Single Loadout for Balanced Brawler?**
-- **Cost Efficiency**: One weapon (₡150,000-₡250,000) vs two weapons (₡300,000-₡500,000)
+- **Cost Efficiency**: One weapon (₡107,000-₡258,000) vs two weapons (₡214,000-₡544,000)
 - **Simplicity**: Focus on learning combat mechanics without complex loadout interactions
 - **Flexibility**: Can experiment with different weapons as you learn preferences
 - **Attribute Freedom**: Don't need to specialize attributes for specific loadout bonuses
@@ -717,25 +717,25 @@ The core of Balanced Brawler is the Single loadout's simplicity and flexibility:
 
 Balanced Brawler has flexibility in weapon selection:
 
-**Option 1: Power Sword** (₡200,000)
+**Option 1: Power Sword** (₡325,000)
 - Versatile melee weapon with good damage and speed
 - Works well with balanced attributes
 - No extreme requirements (unlike Heavy Hammer needing high Hydraulic Systems)
 - Good for learning melee combat fundamentals
 
-**Option 2: Plasma Rifle** (₡250,000)
+**Option 2: Plasma Rifle** (₡258,000)
 - Versatile ranged weapon with good damage and accuracy
 - Works well with balanced attributes
 - Safer than melee (can attack from distance)
 - Good for learning ranged combat fundamentals
 
-**Option 3: Machine Gun** (₡150,000)
+**Option 3: Machine Gun** (₡107,000)
 - Budget-friendly ranged weapon with high attack speed
 - Leaves more budget for attributes or reserve buffer
 - Good damage output through volume of fire
 - Excellent for learning positioning and accuracy
 
-**Recommendation**: Most Balanced Brawler players choose **Plasma Rifle** (₡250,000) for the combination of good damage, ranged safety, and versatility. However, all three options are viable, and you can experiment later once you've built up reserves.
+**Recommendation**: Most Balanced Brawler players choose **Plasma Rifle** (₡258,000) for the combination of good damage, ranged safety, and versatility. However, all three options are viable, and you can experiment later once you've built up reserves.
 
 **The Balanced Attribute Distribution**:
 
@@ -821,7 +821,7 @@ Balanced Brawler is the most forgiving, beginner-friendly archetype in Armoured 
 
 **Loadout Type**: Single (Practice Sword, Machine Gun, or budget weapon)
 
-The Single loadout with budget weapons is the most cost-efficient option for Facility Investor. You're not trying to win through superior firepower - you're trying to win through superior economics. A Practice Sword (₡50,000) or Machine Gun (₡150,000) provides adequate combat capability while preserving maximum budget for facility investments. You can always upgrade to premium weapons later once your facilities are generating returns.
+The Single loadout with budget weapons is the most cost-efficient option for Facility Investor. You're not trying to win through superior firepower - you're trying to win through superior economics. A Practice Sword (₡50,000) or Machine Gun (₡107,000) provides adequate combat capability while preserving maximum budget for facility investments. You can always upgrade to premium weapons later once your facilities are generating returns.
 
 **Attribute Focus**: 
 
@@ -1327,14 +1327,14 @@ Two-Robot Specialist is the versatility and matchup selection archetype in Armou
 
 Melee Specialist has two viable loadout approaches:
 
-**Option 1: Two-Handed Melee** (Heavy Hammer ₡400,000 or Battle Axe ₡350,000)
+**Option 1: Two-Handed Melee** (Heavy Hammer ₡478,000 or Battle Axe ₡402,000)
 - Provides +20% damage bonus from Two-Handed loadout
 - Maximizes single-strike impact damage
 - Best for aggressive, offensive melee play
 - Higher risk (no shield) but higher damage output
 - Synergizes with Glass Cannon philosophy applied to melee
 
-**Option 2: Weapon+Shield** (Power Sword ₡250,000 + Combat Shield ₡200,000)
+**Option 2: Weapon+Shield** (Power Sword ₡325,000 + Combat Shield ₡78,000)
 - Provides +10% defense bonus from Weapon+Shield loadout
 - Balances offense with survivability
 - Best for tactical, positioning-focused melee play
@@ -1532,14 +1532,14 @@ This means investing in Hydraulic Systems has exponential returns for melee dama
 
 **Loadout Choice Deep Dive**:
 
-**Two-Handed Melee** (Heavy Hammer ₡400,000 or Battle Axe ₡350,000):
+**Two-Handed Melee** (Heavy Hammer ₡478,000 or Battle Axe ₡402,000):
 
 **Pros**:
 - +20% damage bonus from Two-Handed loadout
 - Highest melee damage potential in the game
 - Can end battles in 2-3 hits with high Hydraulic Systems
 - Intimidating and satisfying gameplay (crushing opponents with massive hammer)
-- Lower weapon cost if choosing Battle Axe (₡350K vs. ₡450K for Weapon+Shield combo)
+- Lower weapon cost if choosing Battle Axe (₡402K vs. ₡403K for Weapon+Shield combo)
 
 **Cons**:
 - No shield protection during approach phase
@@ -1550,7 +1550,7 @@ This means investing in Hydraulic Systems has exponential returns for melee dama
 
 **Best For**: Aggressive players, skilled players, those who want maximum damage, players comfortable with high risk/high reward
 
-**Weapon+Shield** (Power Sword ₡250,000 + Combat Shield ₡200,000):
+**Weapon+Shield** (Power Sword ₡325,000 + Combat Shield ₡78,000):
 
 **Pros**:
 - +10% defense bonus from Weapon+Shield loadout
@@ -1631,9 +1631,9 @@ Melee Specialist is the positioning-focused, high-impact melee combat archetype 
 The Two-Handed loadout provides +20% damage bonus and enables the most powerful ranged weapons in the game. These weapons require both hands but deliver devastating long-range strikes with superior accuracy and penetration. This loadout excels at maintaining maximum engagement distance while dealing lethal damage.
 
 **Ranged Weapon Options**:
-- **Railgun** (₡450,000) - Highest penetration, bypasses armor completely, best against heavily armored opponents
-- **Sniper Rifle** (₡400,000) - Highest accuracy, critical hit focused, best for precision strikes on weak points
-- **Plasma Cannon** (₡500,000) - Highest raw damage, area effect potential, best for overwhelming firepower
+- **Railgun** (₡527,000) - Highest penetration, bypasses armor completely, best against heavily armored opponents
+- **Sniper Rifle** (₡387,000) - Highest accuracy, critical hit focused, best for precision strikes on weak points
+- **Plasma Cannon** (₡408,000) - Highest raw damage, area effect potential, best for overwhelming firepower
 
 All three weapons synergize with Targeting Systems and benefit from the Two-Handed damage bonus, making them excellent choices for Ranged Sniper builds.
 
@@ -1840,7 +1840,7 @@ High Targeting Systems + high Penetration = shots that hit accurately AND bypass
 
 **Weapon Choice Deep Dive**:
 
-**Railgun** (₡450,000):
+**Railgun** (₡527,000):
 
 **Pros**:
 - Highest penetration in the game (bypasses 80-90% of armor)
@@ -1850,20 +1850,20 @@ High Targeting Systems + high Penetration = shots that hit accurately AND bypass
 - "Tank killer" weapon - your specialty
 
 **Cons**:
-- Highest cost (₡450,000)
+- Highest cost (₡527,000)
 - Moderate base damage (relies on penetration for effectiveness)
 - Less spike damage than Sniper Rifle (fewer critical hits)
 - Requires high Penetration attributes to maximize value
 
 **Best For**: Players facing armored opponents, Gold+ league play, consistent damage preference, "tank killer" specialization
 
-**Sniper Rifle** (₡400,000):
+**Sniper Rifle** (₡387,000):
 
 **Pros**:
 - Highest accuracy in the game (easiest to land shots)
 - Critical hit focused (high spike damage potential)
 - Best for precision strikes on weak points
-- Lower cost than Railgun (₡400K vs. ₡450K)
+- Lower cost than Railgun (₡387K vs. ₡527K)
 - Excellent against evasive opponents (high accuracy compensates)
 
 **Cons**:
@@ -1874,7 +1874,7 @@ High Targeting Systems + high Penetration = shots that hit accurately AND bypass
 
 **Best For**: Players who want maximum accuracy, critical hit optimization, lower weapon cost, fighting evasive opponents
 
-**Plasma Cannon** (₡500,000):
+**Plasma Cannon** (₡408,000):
 
 **Pros**:
 - Highest raw damage in the game
@@ -1883,7 +1883,7 @@ High Targeting Systems + high Penetration = shots that hit accurately AND bypass
 - Intimidating and satisfying gameplay
 
 **Cons**:
-- Highest cost (₡500,000)
+- Highest cost (₡408,000)
 - Lower accuracy than Sniper Rifle
 - Lower penetration than Railgun
 - Less specialized (more generalist ranged weapon)
@@ -2275,23 +2275,23 @@ You don't have obvious weaknesses for opponents to exploit. Your AI adapts to wh
 
 Since AI Tactician is loadout-agnostic, choose based on preference or budget:
 
-**Budget Option: Single** (₡150,000-₡250,000 weapon)
+**Budget Option: Single** (₡50,000-₡258,000 weapon)
 - Lowest weapon cost
 - Simple, effective
 - AI optimizes single weapon usage
 - Best for: New AI Tacticians, budget-conscious players
 
-**Defensive Option: Weapon+Shield** (₡200,000-₡300,000 weapon + ₡150,000 shield)
+**Defensive Option: Weapon+Shield** (₡175,000-₡325,000 weapon + ₡78,000 shield)
 - +10% defense bonus
 - AI decides when to block vs. attack
 - Best for: Players who want more survivability, defensive preference
 
-**Offensive Option: Two-Handed** (₡400,000-₡500,000 weapon)
+**Offensive Option: Two-Handed** (₡408,000-₡527,000 weapon)
 - +20% damage bonus
 - AI times devastating strikes optimally
 - Best for: Players who want more damage, offensive preference
 
-**Balanced Option: Dual-Wield** (2× ₡150,000-₡250,000 weapons)
+**Balanced Option: Dual-Wield** (2× ₡107,000-₡258,000 weapons)
 - +15% attack speed bonus
 - AI coordinates dual weapon attacks
 - Best for: Players who want DPS optimization, speed preference
@@ -2365,12 +2365,12 @@ Unlike specialized archetypes that commit to specific loadouts for thematic reas
 - **Proven performance**: Stick with loadouts that have demonstrated high win rates
 
 **Typical Choices**:
-- **Weapon+Shield**: Solid defensive value, good against aggressive builds, moderate cost (₡250,000-₡350,000 for shield + weapon)
-- **Single**: Most cost-effective, allows maximum attribute investment, flexible (₡150,000-₡300,000 for one good weapon)
-- **Dual-Wield**: High DPS, good against defensive builds, moderate-high cost (₡300,000-₡500,000 for two weapons)
+- **Weapon+Shield**: Solid defensive value, good against aggressive builds, moderate cost (₡250,000-₡403,000 for shield + weapon)
+- **Single**: Most cost-effective, allows maximum attribute investment, flexible (₡107,000-₡325,000 for one good weapon)
+- **Dual-Wield**: High DPS, good against defensive builds, moderate-high cost (₡214,000-₡544,000 for two weapons)
 
 **Avoid**:
-- **Two-Handed**: Often too expensive (₡400,000-₡500,000 for premium two-handed weapons) and creates Glass Cannon fragility that hurts win rate consistency
+- **Two-Handed**: Often too expensive (₡408,000-₡527,000 for premium two-handed weapons) and creates Glass Cannon fragility that hurts win rate consistency
 
 The key insight is that Prestige Rusher doesn't care about playstyle fantasy or thematic consistency - you choose whatever loadout provides the best win rate for your budget. If Weapon+Shield is meta, you use Weapon+Shield. If Single becomes dominant, you switch to Single. Flexibility and pragmatism over specialization.
 
@@ -2828,18 +2828,18 @@ This section provides exact spending breakdowns for each archetype's ₡3,000,00
 
 #### Weapon Purchases
 
-**Main Weapon: Power Sword** - ₡350,000
+**Main Weapon: Power Sword** - ₡325,000
 - Type: Melee, One-handed
-- Base Damage: 20, Cooldown: 3s, DPS: 6.67
+- Base Damage: 15, Cooldown: 3s, DPS: 5.0
 - Bonuses: Hydraulic Systems +7, Counter Protocols +5, Gyro Stabilizers +4, Combat Power +3
 - Rationale: Premium melee weapon with +5 Counter Protocols bonus that stacks with your Counter Protocols investment
 
-**Offhand: Combat Shield** - ₡100,000
+**Offhand: Combat Shield** - ₡78,000
 - Type: Shield
 - Bonuses: Armor Plating +6, Counter Protocols +3, Shield Capacity +5, Evasion Thrusters -2
 - Rationale: Essential for Weapon+Shield loadout (+10% defense bonus), provides +6 Armor Plating and +5 Shield Capacity
 
-**Total Weapon Cost: ₡450,000**
+**Total Weapon Cost: ₡403,000**
 
 **Weapon Synergy**: Power Sword + Combat Shield = +8 Counter Protocols total from weapons, combined with 12 attribute levels = 20 total Counter Protocols
 
@@ -2866,10 +2866,10 @@ This section provides exact spending breakdowns for each archetype's ₡3,000,00
 | Robot Purchase | ₡500,000 | 16.67% |
 | Facilities (Defense + Combat Academies) | ₡400,000 | 13.33% |
 | Attribute Upgrades | ₡894,000 | 29.80% |
-| Weapons (Power Sword + Combat Shield) | ₡450,000 | 15.00% |
-| Reserve Buffer | ₡756,000 | 25.20% |
-| **Total Spent** | **₡2,244,000** | **74.80%** |
-| **Remaining** | **₡756,000** | **25.20%** |
+| Weapons (Power Sword + Combat Shield) | ₡403,000 | 13.43% |
+| Reserve Buffer | ₡803,000 | 26.77% |
+| **Total Spent** | **₡2,197,000** | **73.23%** |
+| **Remaining** | **₡803,000** | **26.77%** |
 
 **Allocation Philosophy**: Tank Fortress balances Training Academy investment (₡200K) with massive safety buffer (₡756K). The ₡3,500/week operating cost is easily covered by low repair costs (₡8-9K per loss vs ₡15-20K for Glass Cannon).
 
@@ -2899,7 +2899,7 @@ If you prefer to avoid Training Academy costs and operating expenses:
 
 **Total Attribute Upgrade Cost: ₡660,000** (8 attributes at level 10)
 
-**Weapons**: Power Sword (₡350,000) + Combat Shield (₡100,000) = ₡450,000
+**Weapons**: Power Sword (₡325,000) + Combat Shield (₡78,000) = ₡403,000
 
 #### Budget Summary (Strategy B: No Training Academies)
 
@@ -2908,10 +2908,10 @@ If you prefer to avoid Training Academy costs and operating expenses:
 | Robot Purchase | ₡500,000 | 16.67% |
 | Facilities | ₡0 | 0.00% |
 | Attribute Upgrades (all at level 10) | ₡660,000 | 22.00% |
-| Weapons (Power Sword + Combat Shield) | ₡450,000 | 15.00% |
-| Reserve Buffer | ₡1,390,000 | 46.33% |
-| **Total Spent** | **₡1,610,000** | **53.67%** |
-| **Remaining** | **₡1,390,000** | **46.33%** |
+| Weapons (Power Sword + Combat Shield) | ₡403,000 | 13.43% |
+| Reserve Buffer | ₡1,437,000 | 47.90% |
+| **Total Spent** | **₡1,563,000** | **52.10%** |
+| **Remaining** | **₡1,437,000** | **47.90%** |
 
 **Strategy B Benefits**:
 - **Massive buffer**: ₡1.39M = 150+ repairs at ₡9K per loss
@@ -3005,29 +3005,29 @@ This distribution creates an offensive powerhouse that can eliminate most oppone
 
 #### Weapon Purchases
 
-**Main Weapon: Plasma Cannon** - ₡500,000
+**Main Weapon: Plasma Cannon** - ₡408,000
 - Type: Ranged, Two-handed
-- Base Damage: 30, Cooldown: 5s, DPS: 6.0
+- Base Damage: 20, Cooldown: 5s, DPS: 4.0
 - Bonuses: Combat Power +10, Penetration +8, Critical Systems +6, Targeting Systems +5
 - Rationale: Premium two-handed ranged weapon that synergizes perfectly with Glass Cannon strategy. The +10 Combat Power and +6 Critical Systems bonuses stack with your massive attribute investments, creating devastating alpha strikes.
 
 **Alternative Weapon Options**:
 
-**Option 1: Railgun** (₡450,000) - Saves ₡50,000
+**Option 1: Railgun** (₡527,000) - Costs ₡119,000 more
 - Type: Ranged, Two-handed
-- Base Damage: 28, Cooldown: 5s, DPS: 5.6
+- Base Damage: 25, Cooldown: 6s, DPS: 4.2
 - Bonuses: Penetration +10, Targeting Systems +8, Critical Systems +5, Combat Power +4
 - Rationale: Slightly cheaper alternative with higher penetration focus. Best if facing many Tank Fortress opponents.
 
-**Option 2: Heavy Hammer** (₡400,000) - Saves ₡100,000
+**Option 2: Heavy Hammer** (₡478,000) - Costs ₡70,000 more
 - Type: Melee, Two-handed
-- Base Damage: 25, Cooldown: 4s, DPS: 6.25
+- Base Damage: 22, Cooldown: 5s, DPS: 4.4
 - Bonuses: Hydraulic Systems +10, Combat Power +8, Critical Systems +6, Penetration +4
 - Rationale: Melee alternative with highest DPS. Requires closing distance (risky for glass cannon), but delivers devastating melee strikes.
 
-**Recommendation**: Plasma Cannon for maximum safety (ranged) and highest burst damage potential. Railgun if you need extra penetration. Heavy Hammer only if you're skilled at melee positioning and want to save ₡100,000.
+**Recommendation**: Plasma Cannon for maximum safety (ranged) and highest burst damage potential. Railgun if you need extra penetration. Heavy Hammer only if you're skilled at melee positioning and want higher DPS.
 
-**Total Weapon Cost: ₡500,000**
+**Total Weapon Cost: ₡408,000**
 
 **Weapon Synergy Analysis**:
 - Plasma Cannon + 15 Combat Power + 15 Critical Systems = approximately 250 base damage, 500-625 crit damage
@@ -3069,10 +3069,10 @@ This corrected allocation has a much larger buffer (₡946K vs ₡60K in the inc
 | Robot Purchase | ₡500,000 | 16.67% |
 | Facilities (Combat Training Academy) | ₡100,000 | 3.33% |
 | Attribute Upgrades | ₡853,500 | 28.45% |
-| Weapons (Plasma Cannon) | ₡500,000 | 16.67% |
-| Reserve Buffer | ₡946,500 | 31.55% |
-| **Total Spent** | **₡2,053,500** | **68.45%** |
-| **Remaining** | **₡946,500** | **31.55%** |
+| Weapons (Plasma Cannon) | ₡408,000 | 13.60% |
+| Reserve Buffer | ₡1,038,500 | 34.62% |
+| **Total Spent** | **₡1,961,500** | **65.38%** |
+| **Remaining** | **₡1,038,500** | **34.62%** |
 
 **Allocation Philosophy**:
 
@@ -3129,19 +3129,19 @@ The ₡200,000 investment is mandatory for this archetype to function.
 
 #### Weapon Purchases
 
-**Main Weapon: Machine Gun** - ₡150,000
+**Main Weapon: Machine Gun** - ₡107,000
 - Type: Ranged, One-handed
-- Base Damage: 12, Cooldown: 2s, DPS: 6.0
+- Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Bonuses: Attack Speed +6, Weapon Control +5, Targeting Systems +4, Penetration +3
 - Rationale: Budget-friendly ranged weapon with excellent attack speed synergy. The +6 Attack Speed bonus stacks with your attribute levels, creating high attack frequency.
 
-**Offhand: Machine Gun** - ₡150,000
+**Offhand: Machine Gun** - ₡107,000
 - Type: Ranged, One-handed
-- Base Damage: 12, Cooldown: 2s, DPS: 6.0
+- Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Bonuses: Attack Speed +6, Weapon Control +5, Targeting Systems +4, Penetration +3
 - Rationale: Second Machine Gun for dual-wield. Two Machine Guns = +12 Attack Speed total from weapon bonuses, stacking with your attribute levels for extreme speed.
 
-**Total Weapon Cost: ₡300,000**
+**Total Weapon Cost: ₡214,000**
 
 **Weapon Synergy Analysis**:
 - Dual Machine Guns provide +12 Attack Speed and +10 Weapon Control from weapon bonuses
@@ -3156,7 +3156,7 @@ The ₡200,000 investment is mandatory for this archetype to function.
 Total Budget:           ₡3,000,000
 - Robot:                  ₡500,000
 - Facilities:             ₡400,000
-- Weapons:                ₡300,000
+- Weapons:                ₡214,000
 - Reserve Buffer:          ₡10,000
 = Available:           ₡1,790,000
 ```
@@ -3277,7 +3277,7 @@ Weekly operating costs (₡14,000) significantly impact profitability:
 |----------|--------|------------|
 | Robot Purchase | ₡500,000 | 16.67% |
 | Facilities (2 Academies) | ₡400,000 | 13.33% |
-| Weapons (Dual Machine Guns) | ₡300,000 | 10.00% |
+| Weapons (Dual Machine Guns) | ₡214,000 | 7.13% |
 | Attribute Upgrades | ₡1,723,500 | 57.45% |
 | Reserve Buffer | ₡10,000 | 0.33% |
 | **Total Spent** | **₡2,933,500** | **97.78%** |
@@ -3343,32 +3343,32 @@ This distribution creates a speed-focused attacker that overwhelms opponents thr
 
 #### Weapon Purchases
 
-**Main Weapon: Machine Gun** - ₡150,000
+**Main Weapon: Machine Gun** - ₡107,000
 - Type: Ranged, One-handed
-- Base Damage: 12, Cooldown: 2s, DPS: 6.0
+- Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Bonuses: Attack Speed +6, Weapon Control +5, Targeting Systems +4, Penetration +3
 - Rationale: Budget-friendly ranged weapon with excellent attack speed synergy. The +6 Attack Speed bonus stacks with your 28 attribute levels, creating extreme attack frequency.
 
-**Offhand: Machine Gun** - ₡150,000
+**Offhand: Machine Gun** - ₡107,000
 - Type: Ranged, One-handed
-- Base Damage: 12, Cooldown: 2s, DPS: 6.0
+- Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Bonuses: Attack Speed +6, Weapon Control +5, Targeting Systems +4, Penetration +3
 - Rationale: Second Machine Gun for dual-wield. Two Machine Guns = +12 Attack Speed total from weapon bonuses, stacking with your 28 attribute levels for extreme speed.
 
-**Total Weapon Cost: ₡300,000**
+**Total Weapon Cost: ₡214,000**
 
 **Alternative Weapon Options**:
 
-**Option 1: Dual Plasma Blades** (2× ₡200,000 = ₡400,000)
+**Option 1: Dual Plasma Blades** (2× ₡202,000 = ₡404,000)
 - Type: Melee, One-handed
-- Base Damage: 15, Cooldown: 2.5s, DPS: 6.0
+- Base Damage: 11, Cooldown: 3s, DPS: 3.7
 - Bonuses: Attack Speed +7, Hydraulic Systems +6, Gyro Stabilizers +5, Combat Power +4
-- Rationale: Melee alternative with higher damage per hit and better Attack Speed bonuses (+14 total). Requires closing distance but delivers more damage. Costs ₡100,000 more.
+- Rationale: Melee alternative with higher damage per hit and better Attack Speed bonuses (+14 total). Requires closing distance but delivers more damage. Costs ₡190,000 more.
 
-**Option 2: Mixed Loadout** (Machine Gun ₡150,000 + Plasma Blade ₡200,000 = ₡350,000)
-- Rationale: Versatility for different ranges. Machine Gun for ranged safety, Plasma Blade for melee power. Costs ₡50,000 more than dual Machine Guns.
+**Option 2: Mixed Loadout** (Machine Gun ₡107,000 + Plasma Blade ₡202,000 = ₡309,000)
+- Rationale: Versatility for different ranges. Machine Gun for ranged safety, Plasma Blade for melee power. Costs ₡95,000 more than dual Machine Guns.
 
-**Recommendation**: Dual Machine Guns for budget efficiency (₡300,000) and ranged safety. Dual Plasma Blades if you can afford ₡100,000 more and are comfortable with melee. Mixed loadout for versatility.
+**Recommendation**: Dual Machine Guns for budget efficiency (₡214,000) and ranged safety. Dual Plasma Blades if you can afford ₡190,000 more and are comfortable with melee. Mixed loadout for versatility.
 
 **Weapon Synergy Analysis**:
 - Dual Machine Guns + 28 Attack Speed + 20 Weapon Control = approximately 4-5× attack frequency with 90%+ hit rate
@@ -3409,11 +3409,11 @@ Speed Demon has a larger buffer than Glass Cannon (₡59,650) because:
 |----------|--------|------------|
 | Robot Purchase | ₡500,000 | 16.67% |
 | Attribute Upgrades | ₡2,418,000 | 80.60% |
-| Weapons (Dual Machine Guns) | ₡300,000 | 10.00% |
+| Weapons (Dual Machine Guns) | ₡214,000 | 7.13% |
 | Facilities | ₡0 | 0.00% |
-| Reserve Buffer | ₡282,000 | 9.40% |
-| **Total Spent** | **₡2,718,000** | **90.60%** |
-| **Remaining** | **₡282,000** | **9.40%** |
+| Reserve Buffer | ₡368,000 | 12.27% |
+| **Total Spent** | **₡2,632,000** | **87.73%** |
+| **Remaining** | **₡368,000** | **12.27%** |
 
 **Allocation Philosophy**:
 
@@ -3421,11 +3421,11 @@ Speed Demon allocates budget for speed optimization with safety:
 
 - **80.60% on Attributes**: Heavy investment in mobility and attack speed attributes
 - **16.67% on Robot**: Standard robot purchase (₡500,000)
-- **10.00% on Weapons**: Budget dual-wield weapons (2× Machine Guns)
+- **7.13% on Weapons**: Budget dual-wield weapons (2× Machine Guns)
 - **0.00% on Facilities**: No facilities at start, preserving budget for robot power and buffer
-- **9.40% Buffer**: Substantial safety net for learning and experimentation
+- **12.27% Buffer**: Substantial safety net for learning and experimentation
 
-**Key Insight**: Speed Demon achieves extreme attack frequency (4-5× baseline) through heavy attribute investment (₡2.4M) while maintaining a large safety buffer (₡282K). The budget weapons (₡300K total) are sufficient because your strategy relies on attack volume, not individual hit damage.
+**Key Insight**: Speed Demon achieves extreme attack frequency (4-5× baseline) through heavy attribute investment (₡2.4M) while maintaining a large safety buffer (₡368K). The budget weapons (₡214K total) are sufficient because your strategy relies on attack volume, not individual hit damage.
 
 ---
 
@@ -3484,43 +3484,43 @@ This distribution creates a well-rounded robot that's competent at everything: d
 
 #### Weapon Purchases
 
-**Main Weapon: Plasma Rifle** - ₡250,000
+**Main Weapon: Plasma Rifle** - ₡258,000
 - Type: Ranged, One-handed
-- Base Damage: 18, Cooldown: 3s, DPS: 6.0
+- Base Damage: 13, Cooldown: 3s, DPS: 4.3
 - Bonuses: Combat Power +6, Targeting Systems +5, Weapon Control +4, Penetration +3
 - Rationale: Versatile ranged weapon that works well with balanced attributes. Good damage, good accuracy, ranged safety. The +6 Combat Power and +4 Weapon Control bonuses complement your balanced build.
 
 **Alternative Weapon Options**:
 
-**Option 1: Power Sword** (₡200,000) - Saves ₡50,000
+**Option 1: Power Sword** (₡325,000) - Costs ₡75,000 more
 - Type: Melee, One-handed
-- Rationale: Melee alternative with good damage. Saves ₡50,000 for larger buffer. Choose if you prefer melee combat.
+- Rationale: Melee alternative with good damage. Choose if you prefer melee combat.
 
-**Option 2: Machine Gun** (₡150,000) - Saves ₡100,000
+**Option 2: Machine Gun** (₡107,000) - Saves ₡143,000
 - Type: Ranged, One-handed
-- Rationale: Budget option with high attack speed. Saves ₡100,000 for much larger buffer. Good for learning fundamentals.
+- Rationale: Budget option with high attack speed. Saves ₡143,000 for much larger buffer. Good for learning fundamentals.
 
 **Recommendation**: Plasma Rifle for versatility and ranged safety. Power Sword if you prefer melee. Machine Gun if you want maximum buffer.
 
-**Total Weapon Cost: ₡250,000**
+**Total Weapon Cost: ₡258,000**
 
 #### Weapon Purchases
 
-**Main Weapon: Plasma Rifle** - ₡250,000
+**Main Weapon: Plasma Rifle** - ₡258,000
 - Type: Ranged, One-handed
-- Base Damage: 18, Cooldown: 3s, DPS: 6.0
+- Base Damage: 13, Cooldown: 3s, DPS: 4.3
 - Bonuses: Combat Power +6, Targeting Systems +5, Weapon Control +4, Penetration +3
 - Rationale: Versatile ranged weapon that works well with balanced attributes. Good damage, good accuracy, ranged safety. The +6 Combat Power and +4 Weapon Control bonuses complement your balanced build.
 
 **Alternative Weapon Options**:
 
-**Option 1: Power Sword** (₡200,000) - Saves ₡50,000
+**Option 1: Power Sword** (₡325,000) - Costs ₡75,000 more
 - Type: Melee, One-handed
-- Rationale: Melee alternative with good damage. Saves ₡50,000 for even larger buffer. Choose if you prefer melee combat.
+- Rationale: Melee alternative with good damage. Choose if you prefer melee combat.
 
-**Option 2: Machine Gun** (₡150,000) - Saves ₡100,000
+**Option 2: Machine Gun** (₡107,000) - Saves ₡143,000
 - Type: Ranged, One-handed
-- Rationale: Budget option with high attack speed. Saves ₡100,000 for maximum buffer. Good for learning fundamentals.
+- Rationale: Budget option with high attack speed. Saves ₡143,000 for maximum buffer. Good for learning fundamentals.
 
 **Recommendation**: Plasma Rifle for versatility and ranged safety. Power Sword if you prefer melee. Machine Gun if you want maximum buffer.
 
@@ -3562,11 +3562,11 @@ Balanced Brawler has the largest buffer because:
 |----------|--------|------------|
 | Robot Purchase | ₡500,000 | 16.67% |
 | Attribute Upgrades | ₡495,000 | 16.50% |
-| Weapons (Plasma Rifle) | ₡250,000 | 8.33% |
+| Weapons (Plasma Rifle) | ₡258,000 | 8.60% |
 | Facilities | ₡0 | 0.00% |
-| Reserve Buffer | ₡1,755,000 | 58.50% |
-| **Total Spent** | **₡1,245,000** | **41.50%** |
-| **Remaining** | **₡1,755,000** | **58.50%** |
+| Reserve Buffer | ₡1,747,000 | 58.23% |
+| **Total Spent** | **₡1,253,000** | **41.77%** |
+| **Remaining** | **₡1,747,000** | **58.23%** |
 
 **Allocation Philosophy**:
 
@@ -3702,11 +3702,11 @@ Repair Bay's value comes from scaling:
 
 #### Weapon Purchases
 
-**Main Weapon: Machine Gun** - ₡150,000
+**Main Weapon: Machine Gun** - ₡107,000
 - Type: Ranged, One-handed
 - Rationale: Budget weapon that's sufficient for Bronze/Silver. Saves money for facility investments.
 
-**Total Weapon Cost: ₡150,000**
+**Total Weapon Cost: ₡107,000**
 
 #### Reserve Buffer
 
@@ -3721,7 +3721,7 @@ Repair Bay's value comes from scaling:
 | Robot Purchase | ₡500,000 | 16.67% |
 | Facilities (Income Generator + Training + Repair Bay) | ₡1,300,000 | 43.33% |
 | Attribute Upgrades | ₡470,250 | 15.68% |
-| Weapons (Machine Gun) | ₡150,000 | 5.00% |
+| Weapons (Machine Gun) | ₡107,000 | 3.57% |
 | Reserve Buffer | ₡579,750 | 19.33% |
 | **Total Spent** | **₡2,420,250** | **80.68%** |
 | **Remaining** | **₡579,750** | **19.33%** |
@@ -3813,17 +3813,17 @@ Roster Expansion is unique because it's not about ROI - it's a hard gate. You CA
 #### Weapon Purchases
 
 **Robot 1 Weapons (Tank Build)**:
-- **Power Sword** (₡200,000) + **Combat Shield** (₡100,000) = ₡300,000
+- **Power Sword** (₡325,000) + **Combat Shield** (₡78,000) = ₡403,000
 - Rationale: Weapon+Shield loadout for defensive play
 
 **Robot 2 Weapons (Glass Cannon Build)**:
-- **Plasma Rifle** (₡250,000)
+- **Plasma Rifle** (₡258,000)
 - Rationale: Versatile ranged weapon for offensive play
 
 **Alternative: Budget Approach**
-- Robot 1: Power Sword (₡200,000) + Combat Shield (₡100,000) = ₡300,000
-- Robot 2: Machine Gun (₡150,000) instead of Plasma Rifle (₡250,000)
-- Saves ₡100,000 for larger buffer
+- Robot 1: Power Sword (₡325,000) + Combat Shield (₡78,000) = ₡403,000
+- Robot 2: Machine Gun (₡107,000) instead of Plasma Rifle (₡250,000)
+- Saves ₡143,000 for larger buffer
 
 **Total Weapon Cost: ₡550,000** (or ₡450,000 with budget approach)
 
@@ -3966,26 +3966,26 @@ This distribution creates a melee powerhouse that can eliminate most opponents i
 
 #### Weapon Purchases
 
-**Main Weapon: Heavy Hammer** - ₡400,000
+**Main Weapon: Heavy Hammer** - ₡478,000
 - Type: Melee, Two-handed
-- Base Damage: 25, Cooldown: 4s, DPS: 6.25
+- Base Damage: 22, Cooldown: 5s, DPS: 4.4
 - Bonuses: Hydraulic Systems +10, Combat Power +8, Critical Systems +6, Penetration +4
 - Rationale: Premium two-handed melee weapon that synergizes perfectly with Hydraulic Systems focus. The +10 Hydraulic Systems bonus stacks with your 15 attribute levels, creating extreme melee damage. Two-Handed loadout provides +20% damage bonus, further multiplying your already massive melee strikes.
 
 **Alternative Weapon Options**:
 
-**Option 1: Battle Axe** (₡350,000) - Saves ₡50,000
+**Option 1: Battle Axe** (₡402,000) - Saves ₡76,000
 - Type: Melee, Two-handed
-- Base Damage: 23, Cooldown: 4s, DPS: 5.75
+- Base Damage: 17, Cooldown: 4s, DPS: 4.3
 - Bonuses: Hydraulic Systems +9, Combat Power +7, Penetration +6, Critical Systems +4
-- Rationale: Slightly cheaper alternative with similar synergy. Saves ₡50,000 for larger buffer.
+- Rationale: Slightly cheaper alternative with similar synergy. Saves ₡76,000 for larger buffer.
 
-**Option 2: Power Sword + Combat Shield** (₡200,000 + ₡100,000 = ₡300,000) - Saves ₡100,000
-- Rationale: Weapon+Shield loadout for more defensive melee play. Lower damage but better survivability. Saves ₡100,000 for much larger buffer.
+**Option 2: Power Sword + Combat Shield** (₡325,000 + ₡78,000 = ₡403,000) - Saves ₡75,000
+- Rationale: Weapon+Shield loadout for more defensive melee play. Lower damage but better survivability. Saves ₡75,000 for larger buffer.
 
-**Recommendation**: Heavy Hammer for maximum melee damage. Battle Axe if you want to save ₡50,000. Power Sword + Shield if you prefer defensive melee play.
+**Recommendation**: Heavy Hammer for maximum melee damage. Battle Axe if you want to save ₡76,000. Power Sword + Shield if you prefer defensive melee play.
 
-**Total Weapon Cost: ₡400,000**
+**Total Weapon Cost: ₡478,000**
 
 **Weapon Synergy Analysis**:
 - Heavy Hammer + 15 Hydraulic Systems + 15 Combat Power = approximately 280-320 damage per melee hit
@@ -4027,10 +4027,10 @@ Melee Specialist has a moderate buffer because:
 | Robot Purchase | ₡500,000 | 16.67% |
 | Facilities (Combat + Mobility Academies) | ₡400,000 | 13.33% |
 | Attribute Upgrades | ₡1,002,000 | 33.40% |
-| Weapons (Heavy Hammer) | ₡400,000 | 13.33% |
-| Reserve Buffer | ₡698,000 | 23.27% |
-| **Total Spent** | **₡2,302,000** | **76.73%** |
-| **Remaining** | **₡698,000** | **23.27%** |
+| Weapons (Heavy Hammer) | ₡478,000 | 15.93% |
+| Reserve Buffer | ₡620,000 | 20.67% |
+| **Total Spent** | **₡2,380,000** | **79.33%** |
+| **Remaining** | **₡620,000** | **20.67%** |
 
 **Allocation Philosophy**:
 
@@ -4126,27 +4126,27 @@ This distribution creates a precision shooter that rarely misses, bypasses armor
 
 #### Weapon Purchases
 
-**Main Weapon: Railgun** - ₡450,000
+**Main Weapon: Railgun** - ₡527,000
 - Type: Ranged, Two-handed
-- Base Damage: 28, Cooldown: 5s, DPS: 5.6
+- Base Damage: 25, Cooldown: 6s, DPS: 4.2
 - Bonuses: Penetration +10, Targeting Systems +8, Critical Systems +5, Combat Power +4
 - Rationale: Premium two-handed ranged weapon that synergizes perfectly with Ranged Sniper strategy. The +8 Targeting Systems and +10 Penetration bonuses stack with your attribute investments, creating high accuracy and armor bypass. Two-Handed loadout provides +20% damage bonus.
 
 **Alternative Weapon Options**:
 
-**Option 1: Plasma Cannon** (₡500,000) - Costs ₡50,000 more
+**Option 1: Plasma Cannon** (₡408,000) - Saves ₡119,000
 - Type: Ranged, Two-handed
-- Base Damage: 30, Cooldown: 5s, DPS: 6.0
+- Base Damage: 20, Cooldown: 5s, DPS: 4.0
 - Bonuses: Combat Power +10, Penetration +8, Critical Systems +6, Targeting Systems +5
-- Rationale: Higher damage alternative with better Combat Power and Critical Systems bonuses. Costs ₡50,000 more but delivers higher burst damage.
+- Rationale: Cheaper alternative with better Combat Power and Critical Systems bonuses. Saves ₡119,000 for larger buffer.
 
-**Option 2: Sniper Rifle** (₡400,000) - Saves ₡50,000
+**Option 2: Sniper Rifle** (₡387,000) - Saves ₡140,000
 - Type: Ranged, Two-handed
-- Base Damage: 26, Cooldown: 5s, DPS: 5.2
+- Base Damage: 22, Cooldown: 6s, DPS: 3.7
 - Bonuses: Targeting Systems +9, Penetration +7, Critical Systems +6, Combat Power +3
-- Rationale: Slightly cheaper alternative with excellent Targeting Systems bonus. Saves ₡50,000 for larger buffer.
+- Rationale: Cheapest option with excellent Targeting Systems bonus. Saves ₡140,000 for larger buffer.
 
-**Recommendation**: Railgun for best balance of damage, accuracy, and penetration. Plasma Cannon if you can afford ₡50,000 more for higher damage. Sniper Rifle if you want to save ₡50,000.
+**Recommendation**: Railgun for best balance of damage, accuracy, and penetration. Plasma Cannon if you want to save ₡119,000. Sniper Rifle if you want maximum savings.
 
 **Total Weapon Cost: ₡450,000**
 
@@ -4286,21 +4286,21 @@ This distribution creates an AI-driven robot that makes optimal decisions in eve
 
 #### Weapon Purchases
 
-**Main Weapon: Plasma Rifle** - ₡250,000
+**Main Weapon: Plasma Rifle** - ₡258,000
 - Type: Ranged, One-handed
-- Base Damage: 18, Cooldown: 3s, DPS: 6.0
+- Base Damage: 13, Cooldown: 3s, DPS: 4.3
 - Bonuses: Combat Power +6, Targeting Systems +5, Weapon Control +4, Penetration +3
 - Rationale: Versatile ranged weapon that works well with AI-focused build. The AI will optimize its usage based on combat situation.
 
 **Alternative Weapon Options**:
 
-**Option 1: Power Sword** (₡200,000) - Saves ₡50,000
+**Option 1: Power Sword** (₡325,000) - Costs ₡75,000 more
 - Type: Melee, One-handed
-- Rationale: Melee alternative. Saves ₡50,000 for larger buffer.
+- Rationale: Melee alternative. Choose if you prefer melee combat.
 
-**Option 2: Machine Gun** (₡150,000) - Saves ₡100,000
+**Option 2: Machine Gun** (₡107,000) - Saves ₡143,000
 - Type: Ranged, One-handed
-- Rationale: Budget option. Saves ₡100,000 for much larger buffer.
+- Rationale: Budget option. Saves ₡143,000 for much larger buffer.
 
 **Recommendation**: Plasma Rifle for versatility. Power Sword or Machine Gun if you want larger buffer.
 
@@ -4319,10 +4319,10 @@ This distribution creates an AI-driven robot that makes optimal decisions in eve
 | Robot Purchase | ₡500,000 | 16.67% |
 | Facilities (AI Training Academy Level 1) | ₡100,000 | 3.33% |
 | Attribute Upgrades | ₡1,495,500 | 49.85% |
-| Weapons (Plasma Rifle) | ₡250,000 | 8.33% |
-| Reserve Buffer | ₡504,500 | 16.82% |
-| **Total Spent** | **₡2,495,500** | **83.18%** |
-| **Remaining** | **₡504,500** | **16.82%** |
+| Weapons (Plasma Rifle) | ₡258,000 | 8.60% |
+| Reserve Buffer | ₡496,500 | 16.55% |
+| **Total Spent** | **₡2,503,500** | **83.45%** |
+| **Remaining** | **₡496,500** | **16.55%** |
 
 **Allocation Philosophy**:
 
@@ -4432,25 +4432,25 @@ This distribution creates a well-rounded competitive robot that excels at winnin
 
 #### Weapon Purchases
 
-**Main Weapon: Plasma Cannon** - ₡500,000
+**Main Weapon: Plasma Cannon** - ₡408,000
 - Type: Ranged, Two-handed
-- Base Damage: 30, Cooldown: 5s, DPS: 6.0
+- Base Damage: 20, Cooldown: 5s, DPS: 4.0
 - Bonuses: Combat Power +10, Penetration +8, Critical Systems +6, Targeting Systems +5
 - Rationale: Premium two-handed ranged weapon for maximum damage output. The +10 Combat Power bonus stacks with your 15 attribute levels for devastating strikes. Two-Handed loadout provides +20% damage bonus.
 
 **Alternative Weapon Options**:
 
-**Option 1: Railgun** (₡450,000) - Saves ₡50,000
+**Option 1: Railgun** (₡527,000) - Costs ₡119,000 more
 - Type: Ranged, Two-handed
-- Rationale: Slightly cheaper alternative with excellent penetration. Saves ₡50,000 for larger buffer.
+- Rationale: Higher penetration alternative. Costs ₡119,000 more but excels against armored opponents.
 
-**Option 2: Heavy Hammer** (₡400,000) - Saves ₡100,000
+**Option 2: Heavy Hammer** (₡478,000) - Costs ₡70,000 more
 - Type: Melee, Two-handed
-- Rationale: Melee alternative with high DPS. Saves ₡100,000 for larger buffer but requires closing distance.
+- Rationale: Melee alternative with high DPS. Costs ₡70,000 more and requires closing distance.
 
-**Recommendation**: Plasma Cannon for maximum damage and ranged safety. Railgun if you want to save ₡50,000. Heavy Hammer only if you're skilled at melee positioning.
+**Recommendation**: Plasma Cannon for maximum damage and ranged safety. Railgun if you need extra penetration. Heavy Hammer only if you're skilled at melee positioning.
 
-**Total Weapon Cost: ₡500,000**
+**Total Weapon Cost: ₡408,000**
 
 #### Reserve Buffer
 
@@ -4486,10 +4486,10 @@ Prestige Rusher has a moderate buffer because:
 | Robot Purchase | ₡500,000 | 16.67% |
 | Facilities (Combat + Defense + Mobility Academies) | ₡600,000 | 20.00% |
 | Attribute Upgrades | ₡1,099,500 | 36.65% |
-| Weapons (Plasma Cannon) | ₡500,000 | 16.67% |
-| Reserve Buffer | ₡300,500 | 10.02% |
-| **Total Spent** | **₡2,699,500** | **89.98%** |
-| **Remaining** | **₡300,500** | **10.02%** |
+| Weapons (Plasma Cannon) | ₡408,000 | 13.60% |
+| Reserve Buffer | ₡392,500 | 13.08% |
+| **Total Spent** | **₡2,607,500** | **86.92%** |
+| **Remaining** | **₡392,500** | **13.08%** |
 
 **Allocation Philosophy**:
 
@@ -6177,8 +6177,8 @@ After establishing your early game foundation, the mid game is about strategic e
 **Robot/Weapon Expansion**:
 - **Don't rush second robot** - Tank Fortress works best with single specialized robot
 - Consider weapon experimentation only if balance exceeds ₡1M:
-  - Try different shields (Energy Shield ₡200K vs Combat Shield ₡150K)
-  - Try different weapons (War Hammer ₡300K vs Power Sword ₡200K)
+  - Try different shields (Reactive Shield ₡92K vs Combat Shield ₡78K)
+  - Try different weapons (Heavy Hammer ₡478K vs Power Sword ₡325K)
 - Storage Facility not needed unless collecting 5+ weapons
 
 **Days 61-120 (Months 3-4)**
@@ -6236,8 +6236,8 @@ After establishing your early game foundation, the mid game is about strategic e
 
 **Robot/Weapon Expansion**:
 - **Weapon upgrades**: Consider premium two-handed weapons
-  - Plasma Cannon (₡500,000) - highest damage output
-  - Railgun (₡400,000) - armor penetration specialist
+  - Plasma Cannon (₡408,000) - highest damage output
+  - Railgun (₡527,000) - armor penetration specialist
 - **Don't add second robot** - Glass Cannon is all-in on one devastating unit
 - Storage Facility not needed (you're using one weapon)
 
@@ -6292,8 +6292,8 @@ After establishing your early game foundation, the mid game is about strategic e
 
 **Robot/Weapon Expansion**:
 - **Weapon experimentation**: Try different dual-wield combinations
-  - 2× Plasma Blades (₡200K each) - melee speed demon
-  - 2× Machine Guns (₡150K each) - ranged speed demon
+  - 2× Plasma Blades (₡202K each) - melee speed demon
+  - 2× Machine Guns (₡107K each) - ranged speed demon
   - Mixed (Plasma Blade + Machine Gun) - hybrid approach
 - **Storage Facility Level 1** (₡150,000) - Needed if collecting 5+ weapons
 - **Don't add second robot** - Speed Demon works best with single specialized unit
@@ -6349,9 +6349,9 @@ After establishing your early game foundation, the mid game is about strategic e
 
 **Robot/Weapon Expansion**:
 - **Weapon experimentation**: Try different weapon types to find preference
-  - Two-handed weapons (₡300-500K)
-  - Dual-wield (₡150-200K each)
-  - Weapon+Shield (₡150K shield + ₡200K weapon)
+  - Two-handed weapons (₡283-544K)
+  - Dual-wield (₡107-202K each)
+  - Weapon+Shield (₡78K shield + ₡325K weapon)
 - **Storage Facility Level 1** (₡150,000) - Useful for weapon collection
 - **Second robot** - Good option for Balanced Brawler
   - Roster Expansion (₡150,000)
@@ -6411,7 +6411,7 @@ After establishing your early game foundation, the mid game is about strategic e
   - Bring all attributes to Level 10-12
   - Focus on balanced build for consistent performance
 - **Weapon upgrades**: Replace budget weapons with mid-tier options
-  - Power Sword (₡200,000) or Plasma Rifle (₡250,000)
+  - Power Sword (₡325,000) or Plasma Rifle (₡258,000)
 
 **Days 61-120 (Months 3-4)**
 
@@ -6473,8 +6473,8 @@ After establishing your early game foundation, the mid game is about strategic e
   - Tank robot: Hull Integrity, Armor Plating, Shield Capacity
   - Glass Cannon robot: Combat Power, Penetration, Critical Systems
 - **Weapon upgrades**: Replace budget weapons with better options
-  - Tank: Upgrade to Energy Shield (₡200K) + War Hammer (₡300K)
-  - Glass Cannon: Upgrade to Plasma Cannon (₡500K)
+  - Tank: Upgrade to Reactive Shield (₡92K) + Heavy Hammer (₡478K)
+  - Glass Cannon: Upgrade to Plasma Cannon (₡408K)
 - **Third robot consideration**: Only if balance exceeds ₡1.5M
   - Speed Demon build for matchup coverage
   - Requires Roster Expansion Level 2
@@ -6531,9 +6531,9 @@ After establishing your early game foundation, the mid game is about strategic e
 
 **Robot/Weapon Expansion**:
 - **Weapon upgrades**: Consider premium melee weapons
-  - War Hammer (₡300,000) - highest melee damage
-  - Battle Axe (₡350,000) - armor penetration specialist
-  - Energy Shield (₡200,000) - if using Weapon+Shield loadout
+  - Heavy Hammer (₡478,000) - highest melee damage
+  - Battle Axe (₡402,000) - armor penetration specialist
+  - Reactive Shield (₡92,000) - if using Weapon+Shield loadout
 - **Don't add second robot** - Melee Specialist works best with single specialized unit
 - Storage Facility not needed unless experimenting with multiple melee weapons
 
@@ -6592,9 +6592,9 @@ After establishing your early game foundation, the mid game is about strategic e
 
 **Robot/Weapon Expansion**:
 - **Weapon upgrades**: Consider premium ranged weapons
-  - Plasma Cannon (₡500,000) - highest ranged damage
-  - Railgun (₡400,000) - ultimate armor penetration
-  - Sniper Rifle (₡350,000) - precision specialist
+  - Plasma Cannon (₡408,000) - highest ranged damage
+  - Railgun (₡527,000) - ultimate armor penetration
+  - Sniper Rifle (₡387,000) - precision specialist
 - **Don't add second robot** - Ranged Sniper works best with single specialized unit
 - Storage Facility not needed unless experimenting with multiple ranged weapons
 
@@ -6763,8 +6763,8 @@ This section explains how each archetype aligns with robot builds, combat system
 **Robot Build Type**: Tank (High Defense, High Survivability)
 
 **Loadout Type**: Weapon+Shield
-- **Primary**: Combat Shield (₡150,000) or Energy Shield (₡200,000)
-- **Secondary**: Power Sword (₡200,000) or War Hammer (₡300,000)
+- **Primary**: Combat Shield (₡78,000) or Reactive Shield (₡92,000)
+- **Secondary**: Power Sword (₡325,000) or Heavy Hammer (₡478,000)
 - **Rationale**: Shield provides massive damage reduction, weapon provides counter-attack capability
 
 **Battle Stance**: Defensive (70% defensive, 30% offensive)
@@ -6791,10 +6791,10 @@ This section explains how each archetype aligns with robot builds, combat system
 
 **Weapon Synergies**:
 - **Combat Shield + Power Sword**: Classic tank combo - shield blocks, sword counters
-- **Energy Shield + War Hammer**: Premium tank combo - energy shield has higher capacity, hammer hits harder
+- **Reactive Shield + Heavy Hammer**: Premium tank combo - reactive shield has higher capacity, hammer hits harder
 - **Shield Capacity attribute** directly increases shield effectiveness
 - **Counter Protocols attribute** makes counter-attacks more devastating
-- **Hydraulic Systems** (if using War Hammer) increases melee damage
+- **Hydraulic Systems** (if using Heavy Hammer) increases melee damage
 
 **Why This Build Works**:
 - High defensive attributes make you extremely hard to kill
@@ -6810,7 +6810,7 @@ This section explains how each archetype aligns with robot builds, combat system
 **Robot Build Type**: Glass Cannon (High Offense, Low Defense)
 
 **Loadout Type**: Two-Handed
-- **Weapon**: Plasma Cannon (₡500,000), Railgun (₡400,000), or Heavy Hammer (₡350,000)
+- **Weapon**: Plasma Cannon (₡408,000), Railgun (₡527,000), or Heavy Hammer (₡478,000)
 - **Rationale**: Two-handed weapons deal massive damage - eliminate opponent before they can respond
 
 **Battle Stance**: Offensive (90% offensive, 10% defensive)
@@ -6905,7 +6905,7 @@ This section explains how each archetype aligns with robot builds, combat system
 **Robot Build Type**: Balanced (Moderate Offense, Moderate Defense, Moderate Mobility)
 
 **Loadout Type**: Single Weapon
-- **Weapon**: Power Sword (₡200,000), Plasma Rifle (₡250,000), or versatile weapon
+- **Weapon**: Power Sword (₡325,000), Plasma Rifle (₡258,000), or versatile weapon
 - **Rationale**: Single weapon is flexible - no commitment to specific playstyle
 
 **Battle Stance**: Balanced (50% offensive, 50% defensive)
@@ -6954,7 +6954,7 @@ This section explains how each archetype aligns with robot builds, combat system
 **Robot Build Type**: Balanced (Sufficient for Bronze/Silver)
 
 **Loadout Type**: Single Weapon
-- **Weapon**: Practice Sword (₡50,000) or Machine Gun (₡150,000)
+- **Weapon**: Practice Sword (₡50,000) or Machine Gun (₡107,000)
 - **Rationale**: Budget weapon - save credits for facilities
 
 **Battle Stance**: Balanced (50% offensive, 50% defensive)
@@ -7055,8 +7055,8 @@ This section explains how each archetype aligns with robot builds, combat system
 **Robot Build Type**: Melee Powerhouse (High Hydraulic Systems, High Combat Power)
 
 **Loadout Type**: Two-Handed Melee or Weapon+Shield
-- **Two-Handed**: Heavy Hammer (₡350,000) or Battle Axe (₡300,000)
-- **Weapon+Shield**: Power Sword (₡200,000) + Combat Shield (₡300,000)
+- **Two-Handed**: Heavy Hammer (₡478,000) or Battle Axe (₡402,000)
+- **Weapon+Shield**: Power Sword (₡325,000) + Combat Shield (₡78,000)
 - **Rationale**: Maximize melee damage and positioning control
 
 **Battle Stance**: Offensive (70% offensive, 30% defensive)
@@ -7105,7 +7105,7 @@ This section explains how each archetype aligns with robot builds, combat system
 **Robot Build Type**: Precision Striker (High Targeting Systems, High Penetration)
 
 **Loadout Type**: Two-Handed Ranged
-- **Weapons**: Railgun (₡350,000), Sniper Rifle (₡300,000), or Plasma Cannon (₡400,000)
+- **Weapons**: Railgun (₡527,000), Sniper Rifle (₡387,000), or Plasma Cannon (₡408,000)
 - **Rationale**: Maximize accuracy, penetration, and critical hit potential
 
 **Battle Stance**: Defensive (40% offensive, 60% defensive)
@@ -7202,7 +7202,7 @@ This section explains how each archetype aligns with robot builds, combat system
 **Robot Build Type**: Win-Optimized (Balanced Offense/Defense for maximum win rate)
 
 **Loadout Type**: Cost-Effective
-- **Weapons**: Power Sword (₡200,000), Plasma Rifle (₡250,000), or Machine Gun (₡150,000)
+- **Weapons**: Power Sword (₡325,000), Plasma Rifle (₡258,000), or Machine Gun (₡107,000)
 - **Rationale**: Maximize win probability per credit spent
 
 **Battle Stance**: Balanced (50% offensive, 50% defensive)
@@ -7656,10 +7656,10 @@ One of the most common mistakes new players make is over-investing in weapons ea
 **Timing**: Mid-game (Months 3-6), after establishing stable economics
 
 **Example**: Balanced Brawler wants to try dual-wield
-- **Current**: Single weapon (Power Sword, ₡200K)
-- **Purchase**: 2× one-handed weapons (2× Machine Guns, ₡300K)
-- **Cost**: ₡300,000 for experimentation
-- **Risk**: If dual-wield doesn't work, ₡300K is wasted
+- **Current**: Single weapon (Power Sword, ₡325K)
+- **Purchase**: 2× one-handed weapons (2× Machine Guns, ₡214K)
+- **Cost**: ₡214,000 for experimentation
+- **Risk**: If dual-wield doesn't work, ₡214K is wasted
 
 **When This Makes Sense**:
 - You have ₡500,000+ balance (can afford to experiment)
@@ -7753,13 +7753,13 @@ One of the most common mistakes new players make is over-investing in weapons ea
 
 Every credit spent on weapons is a credit not spent on attributes or facilities. Let's compare the value:
 
-#### Option A: Purchase 2nd Weapon (₡300,000)
+#### Option A: Purchase 2nd Weapon (₡214,000)
 
 **Example**: Balanced Brawler buys 2× Machine Guns to try dual-wield
-- **Cost**: ₡300,000
+- **Cost**: ₡214,000
 - **Benefit**: Ability to experiment with dual-wield loadout
-- **Risk**: If dual-wield doesn't work, ₡300K is wasted
-- **Reversibility**: Can sell weapons for 50% value (₡150K recovery)
+- **Risk**: If dual-wield doesn't work, ₡214K is wasted
+- **Reversibility**: Can sell weapons for 50% value (₡107K recovery)
 
 #### Option B: Upgrade Attributes (₡300,000)
 
@@ -8994,16 +8994,16 @@ This section provides summary tables and cheat sheets for quick lookup. Use thes
 
 | Archetype | Robot Cost | Attribute Upgrades | Weapons | Facilities | Reserve | Total |
 |-----------|------------|-------------------|---------|------------|---------|-------|
-| Tank Fortress | ₡500,000 | ₡850,000 | ₡500,000 (Shield+Sword) | ₡600,000 (Repair Bay) | ₡50,000 | ₡2,500,000 |
-| Glass Cannon | ₡500,000 | ₡1,200,000 | ₡400,000 (Plasma Cannon) | ₡300,000 (Training Facility) | ₡100,000 | ₡2,500,000 |
-| Speed Demon | ₡500,000 | ₡900,000 | ₡400,000 (2× Plasma Blades) | ₡550,000 (Training + Workshop) | ₡150,000 | ₡2,500,000 |
-| Balanced Brawler | ₡500,000 | ₡800,000 | ₡200,000 (Power Sword) | ₡500,000 (Training + Repair) | ₡500,000 | ₡2,500,000 |
-| Facility Investor | ₡500,000 | ₡600,000 | ₡150,000 (Machine Gun) | ₡1,500,000 (Income + Repair + Training) | ₡250,000 | ₡3,000,000 |
+| Tank Fortress | ₡500,000 | ₡850,000 | ₡403,000 (Shield+Sword) | ₡600,000 (Repair Bay) | ₡50,000 | ₡2,500,000 |
+| Glass Cannon | ₡500,000 | ₡1,200,000 | ₡408,000 (Plasma Cannon) | ₡300,000 (Training Facility) | ₡100,000 | ₡2,500,000 |
+| Speed Demon | ₡500,000 | ₡900,000 | ₡404,000 (2× Plasma Blades) | ₡550,000 (Training + Workshop) | ₡150,000 | ₡2,500,000 |
+| Balanced Brawler | ₡500,000 | ₡800,000 | ₡325,000 (Power Sword) | ₡500,000 (Training + Repair) | ₡500,000 | ₡2,500,000 |
+| Facility Investor | ₡500,000 | ₡600,000 | ₡107,000 (Machine Gun) | ₡1,500,000 (Income + Repair + Training) | ₡250,000 | ₡3,000,000 |
 | Two-Robot Specialist | ₡1,000,000 (2 robots) | ₡800,000 | ₡700,000 (2 weapons) | ₡300,000 (Roster Expansion) | ₡200,000 | ₡3,000,000 |
-| Melee Specialist | ₡500,000 | ₡1,000,000 | ₡350,000 (Heavy Hammer) | ₡300,000 (Training Facility) | ₡350,000 | ₡2,500,000 |
-| Ranged Sniper | ₡500,000 | ₡1,000,000 | ₡350,000 (Railgun) | ₡300,000 (Training Facility) | ₡350,000 | ₡2,500,000 |
-| AI Tactician | ₡500,000 | ₡900,000 | ₡250,000 (Plasma Rifle) | ₡100,000 (AI Training Academy) | ₡350,000 | ₡2,500,000 |
-| Prestige Rusher | ₡500,000 | ₡1,200,000 | ₡200,000 (Power Sword) | ₡400,000 (Booking Office) | ₡200,000 | ₡2,500,000 |
+| Melee Specialist | ₡500,000 | ₡1,000,000 | ₡478,000 (Heavy Hammer) | ₡300,000 (Training Facility) | ₡350,000 | ₡2,500,000 |
+| Ranged Sniper | ₡500,000 | ₡1,000,000 | ₡527,000 (Railgun) | ₡300,000 (Training Facility) | ₡350,000 | ₡2,500,000 |
+| AI Tactician | ₡500,000 | ₡900,000 | ₡258,000 (Plasma Rifle) | ₡100,000 (AI Training Academy) | ₡350,000 | ₡2,500,000 |
+| Prestige Rusher | ₡500,000 | ₡1,200,000 | ₡325,000 (Power Sword) | ₡400,000 (Booking Office) | ₡200,000 | ₡2,500,000 |
 
 **Note**: Most archetypes spend ₡2.5M of the ₡3M budget, keeping ₡500K for early operations. Facility Investor and Two-Robot Specialist spend closer to ₡3M due to high initial investments.
 
@@ -9046,28 +9046,28 @@ This section provides summary tables and cheat sheets for quick lookup. Use thes
 
 ### Weapon Cost Reference (By Tier)
 
-#### Budget Tier (₡50,000-₡150,000)
+#### Budget Tier (₡50,000-₡110,000)
 | Weapon | Cost | Type | Loadout | Best For |
 |--------|------|------|---------|----------|
 | Practice Sword | ₡50,000 | Melee | Single | Facility Investor (budget option) |
-| Machine Gun | ₡150,000 | Ranged | Single/Dual-Wield | Speed Demon, Balanced Brawler |
+| Machine Gun | ₡107,000 | Ranged | Single/Dual-Wield | Speed Demon, Balanced Brawler |
 
-#### Mid Tier (₡200,000-₡250,000)
+#### Mid Tier (₡175,000-₡260,000)
 | Weapon | Cost | Type | Loadout | Best For |
 |--------|------|------|---------|----------|
-| Power Sword | ₡200,000 | Melee | Single/Weapon+Shield | Tank Fortress, Balanced Brawler |
-| Plasma Blade | ₡200,000 | Melee | Single/Dual-Wield | Speed Demon (melee variant) |
-| Plasma Rifle | ₡250,000 | Ranged | Single | Balanced Brawler, AI Tactician |
+| Power Sword | ₡325,000 | Melee | Single/Weapon+Shield | Tank Fortress, Balanced Brawler |
+| Plasma Blade | ₡202,000 | Melee | Single/Dual-Wield | Speed Demon (melee variant) |
+| Plasma Rifle | ₡258,000 | Ranged | Single | Balanced Brawler, AI Tactician |
 
-#### Premium Tier (₡300,000-₡400,000)
+#### Premium Tier (₡280,000-₡550,000)
 | Weapon | Cost | Type | Loadout | Best For |
 |--------|------|------|---------|----------|
-| Battle Axe | ₡300,000 | Melee | Two-Handed | Melee Specialist |
-| Sniper Rifle | ₡300,000 | Ranged | Two-Handed | Ranged Sniper |
-| Combat Shield | ₡300,000 | Shield | Weapon+Shield | Tank Fortress (required) |
-| Railgun | ₡350,000 | Ranged | Two-Handed | Glass Cannon, Ranged Sniper |
-| Heavy Hammer | ₡350,000 | Melee | Two-Handed | Melee Specialist |
-| Plasma Cannon | ₡400,000 | Ranged | Two-Handed | Glass Cannon |
+| Battle Axe | ₡402,000 | Melee | Two-Handed | Melee Specialist |
+| Sniper Rifle | ₡387,000 | Ranged | Two-Handed | Ranged Sniper |
+| Combat Shield | ₡78,000 | Shield | Weapon+Shield | Tank Fortress (required) |
+| Railgun | ₡527,000 | Ranged | Two-Handed | Glass Cannon, Ranged Sniper |
+| Heavy Hammer | ₡478,000 | Melee | Two-Handed | Melee Specialist |
+| Plasma Cannon | ₡408,000 | Ranged | Two-Handed | Glass Cannon |
 
 #### Prestige-Locked Tier (₡500,000-₡800,000)
 | Weapon | Cost | Prestige Required | Type | Loadout | Best For |
@@ -9280,19 +9280,19 @@ This appendix lists all 23 weapons with costs, damage, cooldown, and bonuses. We
 ##### Budget Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
 |--------|------|--------|----------|---------|---------------|----------|
-| Practice Sword | ₡50,000 | 50 | 3 turns | Single | None | Facility Investor (budget option) |
+| Practice Sword | ₡50,000 | 6 | 3 turns | Single | None | Facility Investor (budget option) |
 
 ##### Mid Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
 |--------|------|--------|----------|---------|---------------|----------|
-| Power Sword | ₡200,000 | 120 | 2 turns | Single/Weapon+Shield | +10% critical chance | Tank Fortress, Balanced Brawler |
-| Plasma Blade | ₡200,000 | 110 | 2 turns | Single/Dual-Wield | +15% attack speed | Speed Demon (melee variant) |
+| Power Sword | ₡325,000 | 15 | 3 turns | Single/Weapon+Shield | +10% critical chance | Tank Fortress, Balanced Brawler |
+| Plasma Blade | ₡202,000 | 11 | 3 turns | Single/Dual-Wield | +15% attack speed | Speed Demon (melee variant) |
 
 ##### Premium Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
 |--------|------|--------|----------|---------|---------------|----------|
-| Battle Axe | ₡300,000 | 180 | 3 turns | Two-Handed | +20% damage vs armor | Melee Specialist |
-| Heavy Hammer | ₡350,000 | 200 | 4 turns | Two-Handed | +30% damage, stun chance | Melee Specialist |
+| Battle Axe | ₡402,000 | 17 | 4 turns | Two-Handed | +20% damage vs armor | Melee Specialist |
+| Heavy Hammer | ₡478,000 | 22 | 5 turns | Two-Handed | +30% damage, stun chance | Melee Specialist |
 
 ##### Prestige-Locked Tier
 | Weapon | Cost | Prestige | Damage | Cooldown | Loadout | Special Bonus | Best For |
@@ -9307,19 +9307,19 @@ This appendix lists all 23 weapons with costs, damage, cooldown, and bonuses. We
 ##### Budget Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
 |--------|------|--------|----------|---------|---------------|----------|
-| Machine Gun | ₡150,000 | 80 | 1 turn | Single/Dual-Wield | +25% attack speed | Speed Demon, Balanced Brawler |
+| Machine Gun | ₡107,000 | 5 | 2 turns | Single/Dual-Wield | +25% attack speed | Speed Demon, Balanced Brawler |
 
 ##### Mid Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
 |--------|------|--------|----------|---------|---------------|----------|
-| Plasma Rifle | ₡250,000 | 130 | 2 turns | Single | +15% penetration | Balanced Brawler, AI Tactician |
+| Plasma Rifle | ₡258,000 | 13 | 3 turns | Single | +15% penetration | Balanced Brawler, AI Tactician |
 
 ##### Premium Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
 |--------|------|--------|----------|---------|---------------|----------|
-| Sniper Rifle | ₡300,000 | 160 | 3 turns | Two-Handed | +30% critical chance | Ranged Sniper |
-| Railgun | ₡350,000 | 190 | 3 turns | Two-Handed | +40% penetration | Glass Cannon, Ranged Sniper |
-| Plasma Cannon | ₡400,000 | 210 | 3 turns | Two-Handed | +25% damage, energy-based | Glass Cannon |
+| Sniper Rifle | ₡387,000 | 22 | 6 turns | Two-Handed | +30% critical chance | Ranged Sniper |
+| Railgun | ₡527,000 | 25 | 6 turns | Two-Handed | +40% penetration | Glass Cannon, Ranged Sniper |
+| Plasma Cannon | ₡408,000 | 20 | 5 turns | Two-Handed | +25% damage, energy-based | Glass Cannon |
 
 ##### Prestige-Locked Tier
 | Weapon | Cost | Prestige | Damage | Cooldown | Loadout | Special Bonus | Best For |
@@ -9333,7 +9333,7 @@ This appendix lists all 23 weapons with costs, damage, cooldown, and bonuses. We
 ##### Premium Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
 |--------|------|--------|----------|---------|---------------|----------|
-| Combat Shield | ₡300,000 | 0 (defense) | N/A | Weapon+Shield | +50 shield HP, +20% defense | Tank Fortress (required) |
+| Combat Shield | ₡78,000 | 0 (defense) | N/A | Weapon+Shield | +50 shield HP, +20% defense | Tank Fortress (required) |
 
 **Note**: Combat Shield is required for weapon+shield loadout. It provides no direct damage but adds shield HP and defense bonus.
 

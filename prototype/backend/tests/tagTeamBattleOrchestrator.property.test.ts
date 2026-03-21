@@ -80,6 +80,15 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     yieldThreshold: 10,
     loadoutType: 'single',
     stance: 'balanced',
+    // KotH Statistics
+    kothWins: 0,
+    kothMatches: 0,
+    kothTotalZoneScore: 0,
+    kothTotalZoneTime: 0,
+    kothKills: 0,
+    kothBestPlacement: null,
+    kothCurrentWinStreak: 0,
+    kothBestWinStreak: 0,
     // Equipment
     mainWeaponId: null,
     offhandWeaponId: null,
@@ -409,10 +418,9 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
       isDraw: boolean
     ): number {
       const TAG_TEAM_REWARD_MULTIPLIER = 2;
-      const { getLeagueBaseReward, getParticipationReward } = require('../src/utils/economyCalculations');
+      const { getLeagueWinReward, getParticipationReward } = require('../src/utils/economyCalculations');
       
-      const baseRewardData = getLeagueBaseReward(league);
-      const baseReward = baseRewardData.midpoint;
+      const baseReward = getLeagueWinReward(league);
       const participationReward = getParticipationReward(league);
 
       let reward: number;
@@ -436,14 +444,13 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
             const isWinner = outcome === 'win';
             const isDraw = outcome === 'draw';
 
-            const { getLeagueBaseReward, getParticipationReward } = require('../src/utils/economyCalculations');
+            const { getLeagueWinReward, getParticipationReward } = require('../src/utils/economyCalculations');
 
             // Calculate tag team reward
             const tagTeamReward = calculateTagTeamRewards(league, isWinner, isDraw);
 
             // Calculate standard reward
-            const baseRewardData = getLeagueBaseReward(league);
-            const baseReward = baseRewardData.midpoint;
+            const baseReward = getLeagueWinReward(league);
             const participationReward = getParticipationReward(league);
             let standardReward: number;
             if (isDraw) {
@@ -467,11 +474,10 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
           (league) => {
-            const { getLeagueBaseReward, getParticipationReward } = require('../src/utils/economyCalculations');
+            const { getLeagueWinReward, getParticipationReward } = require('../src/utils/economyCalculations');
 
             const tagTeamWinReward = calculateTagTeamRewards(league, true, false);
-            const baseRewardData = getLeagueBaseReward(league);
-            const standardWinReward = baseRewardData.midpoint + getParticipationReward(league);
+            const standardWinReward = getLeagueWinReward(league) + getParticipationReward(league);
 
             expect(tagTeamWinReward).toBe(standardWinReward * 2);
           }

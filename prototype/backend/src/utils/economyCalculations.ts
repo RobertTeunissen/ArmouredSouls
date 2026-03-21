@@ -452,31 +452,27 @@ function getFacilityName(type: string): string {
 }
 
 /**
- * Get league base reward range (midpoint used for estimates)
+ * Get the base win reward for a league tier.
+ * Participation reward is derived as 20% of this value.
  */
-export function getLeagueBaseReward(league: string): { min: number; max: number; midpoint: number } {
-  const rewards: { [key: string]: { min: number; max: number } } = {
-    bronze: { min: 5000, max: 10000 },
-    silver: { min: 10000, max: 20000 },
-    gold: { min: 20000, max: 40000 },
-    platinum: { min: 40000, max: 80000 },
-    diamond: { min: 80000, max: 150000 },
-    champion: { min: 150000, max: 300000 },
+export function getLeagueWinReward(league: string): number {
+  const rewards: Record<string, number> = {
+    bronze: 7500,
+    silver: 15000,
+    gold: 30000,
+    platinum: 60000,
+    diamond: 115000,
+    champion: 225000,
   };
   
-  const reward = rewards[league.toLowerCase()] || rewards.bronze;
-  return {
-    ...reward,
-    midpoint: Math.round((reward.min + reward.max) / 2),
-  };
+  return rewards[league.toLowerCase()] || rewards.bronze;
 }
 
 /**
- * Calculate participation reward (30% of league base)
+ * Calculate participation reward (20% of league win reward)
  */
 export function getParticipationReward(league: string): number {
-  const baseReward = getLeagueBaseReward(league);
-  return Math.round(baseReward.min * 0.3);
+  return Math.round(getLeagueWinReward(league) * 0.2);
 }
 
 // ==================== DAILY FINANCIAL PROCESSING ====================

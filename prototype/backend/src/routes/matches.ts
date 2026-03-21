@@ -34,7 +34,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
     const teamIds = userTeams.map(t => t.id);
 
     // Get scheduled league matches involving user's robots
-    const leagueMatches = await prisma.scheduledMatch.findMany({
+    const leagueMatches = await prisma.scheduledLeagueMatch.findMany({
       where: {
         status: 'scheduled',
         OR: [
@@ -70,7 +70,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
     });
 
     // Get tournament matches involving user's robots (pending or scheduled status, not completed)
-    const tournamentMatches = await prisma.tournamentMatch.findMany({
+    const tournamentMatches = await prisma.scheduledTournamentMatch.findMany({
       where: {
         status: { in: ['pending', 'scheduled'] },
         OR: [
@@ -121,7 +121,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
     });
 
     const tournamentByeMatches = activeTournaments.length > 0
-      ? await prisma.tournamentMatch.findMany({
+      ? await prisma.scheduledTournamentMatch.findMany({
       where: {
         isByeMatch: true,
         status: 'completed',
@@ -260,7 +260,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
     }));
 
     // Get scheduled tag team matches involving user's teams
-    const tagTeamMatches = await prisma.tagTeamMatch.findMany({
+    const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
       where: {
         status: 'scheduled',
         OR: [
@@ -400,8 +400,57 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       },
     }));
 
+    // Get scheduled KotH matches involving user's robots
+    const kothMatches = await prisma.scheduledKothMatch.findMany({
+      where: {
+        status: 'scheduled',
+        participants: {
+          some: {
+            robotId: { in: robotIds },
+          },
+        },
+      },
+      include: {
+        participants: {
+          include: {
+            robot: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        scheduledFor: 'asc',
+      },
+    });
+
+    // Format KotH matches
+    const formattedKothMatches = kothMatches.map(match => ({
+      id: `koth-${match.id}`,
+      matchType: 'koth',
+      scheduledFor: match.scheduledFor,
+      status: match.status,
+      zoneVariant: match.rotatingZone ? 'rotating' : 'fixed',
+      participantCount: match.participants.length,
+      participants: match.participants.map(p => ({
+        robotId: p.robot.id,
+        robotName: p.robot.name,
+        userId: p.robot.userId,
+        user: {
+          username: p.robot.user.username,
+        },
+      })),
+    }));
+
     // Combine all types of matches
-    const allMatches = [...formattedLeagueMatches, ...formattedTournamentMatches, ...formattedByeMatches, ...formattedTagTeamMatches];
+    const allMatches = [...formattedLeagueMatches, ...formattedTournamentMatches, ...formattedByeMatches, ...formattedTagTeamMatches, ...formattedKothMatches];
 
     res.json({
       matches: allMatches,
@@ -409,6 +458,7 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       leagueMatches: formattedLeagueMatches.length,
       tournamentMatches: formattedTournamentMatches.length + formattedByeMatches.length,
       tagTeamMatches: formattedTagTeamMatches.length,
+      kothMatches: formattedKothMatches.length,
     });
   } catch (error) {
     logger.error('[Matches API] Error fetching upcoming matches:', error);
@@ -446,22 +496,39 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
     // If robotId filter is provided, allow viewing any robot's battles (public scouting)
     // If no robotId, default to showing only the current user's robot battles
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const whereClause: Record<string, any> = {
-      OR: [
-        { robot1Id: { in: robotId !== undefined ? [robotId] : robotIds } },
-        { robot2Id: { in: robotId !== undefined ? [robotId] : robotIds } },
-      ],
-    };
+    const whereClause: Record<string, any> = {};
+    const targetRobotIds = robotId !== undefined ? [robotId] : robotIds;
 
     // Add battle type filter if specified
     if (battleType === 'league') {
-      whereClause.AND = [
-        { battleType: { notIn: ['tournament', 'tag_team'] } }
-      ];
+      whereClause.battleType = { notIn: ['tournament', 'tag_team', 'koth'] };
     } else if (battleType === 'tournament') {
       whereClause.battleType = 'tournament';
     } else if (battleType === 'tag_team') {
       whereClause.battleType = 'tag_team';
+    } else if (battleType === 'koth') {
+      whereClause.battleType = 'koth';
+    }
+
+    // For KotH battles, use BattleParticipant to find all battles a robot participated in
+    // (robot1Id/robot2Id only stores 1st and 2nd place, missing 3rd-6th)
+    if (battleType === 'koth') {
+      whereClause.participants = {
+        some: { robotId: { in: targetRobotIds } },
+      };
+    } else if (!battleType || battleType === 'overall') {
+      // Overall view: include all battle types. Use OR to catch both
+      // standard battles (via robot1Id/robot2Id) and KotH (via participants)
+      whereClause.OR = [
+        { robot1Id: { in: targetRobotIds } },
+        { robot2Id: { in: targetRobotIds } },
+        { battleType: 'koth', participants: { some: { robotId: { in: targetRobotIds } } } },
+      ];
+    } else {
+      whereClause.OR = [
+        { robot1Id: { in: targetRobotIds } },
+        { robot2Id: { in: targetRobotIds } },
+      ];
     }
 
     // Get total count
@@ -555,9 +622,61 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
         },
       };
 
+      // Add KotH specific data if it's a KotH battle
+      if (battle.battleType === 'koth') {
+        // Find the user's participant record for placement data
+        const userParticipant = battle.participants.find(p => targetRobotIds.includes(p.robotId));
+        
+        // Extract zone score from battle log placements
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const battleLogData = typeof battle.battleLog === 'object' ? battle.battleLog as Record<string, any> : {};
+        const logPlacements = (battleLogData.placements || []) as Array<{ robotId: number; zoneScore: number }>;
+        const userLogEntry = userParticipant ? logPlacements.find(lp => lp.robotId === userParticipant.robotId) : null;
+        
+        // Look up the scheduled match for rotatingZone flag
+        const kothMatch = await prisma.scheduledKothMatch.findFirst({
+          where: { battleId: battle.id },
+          select: { rotatingZone: true },
+        });
+
+        // If user's robot isn't robot1 or robot2 (placed 3rd-6th), override robot1 with their robot
+        // so the frontend can identify it as "myRobot"
+        const kothData = {
+          ...baseData,
+          // Override rewards with user's actual KotH reward (base winnerReward/loserReward are 0)
+          winnerReward: userParticipant?.credits ?? 0,
+          loserReward: userParticipant?.credits ?? 0,
+          kothPlacement: userParticipant?.placement ?? null,
+          kothParticipantCount: battle.participants.length,
+          kothZoneScore: userLogEntry?.zoneScore ?? null,
+          kothRotatingZone: kothMatch?.rotatingZone ?? false,
+        };
+
+        if (userParticipant && userParticipant.robotId !== battle.robot1Id && userParticipant.robotId !== battle.robot2Id) {
+          // User's robot placed 3rd-6th — look up their robot data
+          const userRobot = await prisma.robot.findUnique({
+            where: { id: userParticipant.robotId },
+            include: { user: { select: { id: true, username: true } } },
+          });
+          if (userRobot) {
+            kothData.robot1Id = userRobot.id;
+            kothData.robot1 = {
+              id: userRobot.id,
+              name: userRobot.name,
+              userId: userRobot.userId,
+              currentLeague: userRobot.currentLeague,
+              leagueId: userRobot.leagueId,
+              user: { username: userRobot.user.username },
+            };
+          }
+        }
+
+        return kothData;
+      }
+
       // Add tag team specific data if it's a tag team battle
       if (battle.battleType === 'tag_team') {
-        const tagTeamMatch = await prisma.tagTeamMatch.findFirst({
+        const tagTeamMatch = await prisma.scheduledTagTeamMatch.findFirst({
           where: { battleId: battle.id },
           include: {
             team1: {
@@ -728,7 +847,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       ]);
 
       // Get the tag team match to find team IDs
-      const tagTeamMatch = await prisma.tagTeamMatch.findFirst({
+      const tagTeamMatch = await prisma.scheduledTagTeamMatch.findFirst({
         where: { battleId: battleData.id },
         select: { team1Id: true, team2Id: true },
       });
@@ -844,6 +963,50 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         totalFame: team2Fame,
         streamingRevenue: team2StreamingRevenue,
       };
+    } else if (battleData.battleType === 'koth') {
+      // KotH: return all participants with placements, scores, and rewards
+      const allParticipants = await prisma.battleParticipant.findMany({
+        where: { battleId },
+        include: {
+          robot: {
+            include: {
+              user: { select: { id: true, username: true } },
+            },
+          },
+        },
+        orderBy: { placement: 'asc' }, // KotH placement (1st through 6th)
+      });
+
+      const battleLogData = typeof battleData.battleLog === 'object' ? battleData.battleLog as Record<string, any> : {};
+      const logPlacements = (battleLogData.placements || []) as Array<{ robotId: number; zoneScore: number; zoneTime: number; kills: number; destroyed: boolean }>;
+
+      baseResponse.kothParticipants = allParticipants.map(p => {
+        const logEntry = logPlacements.find(lp => lp.robotId === p.robotId);
+        return {
+          robotId: p.robot.id,
+          robotName: p.robot.name,
+          owner: p.robot.user.username,
+          placement: p.placement ?? p.team, // prefer placement column, fall back to team for old records
+          zoneScore: logEntry?.zoneScore ?? 0,
+          zoneTime: logEntry?.zoneTime ?? 0,
+          kills: logEntry?.kills ?? 0,
+          damageDealt: p.damageDealt,
+          finalHP: p.finalHP,
+          destroyed: p.destroyed,
+          credits: p.credits,
+          fame: p.fameAwarded,
+          prestige: p.prestigeAwarded,
+          streamingRevenue: p.streamingRevenue || 0,
+        };
+      });
+
+      // Winner display for backward compatibility
+      baseResponse.winner = battleData.winnerId === battleData.robot1Id ? 'robot1' : null;
+
+      // Include kothData for playback viewer
+      if (battleLogData.kothData) {
+        baseResponse.kothData = battleLogData.kothData;
+      }
     } else {
       // For 1v1 and tournament battles, provide robot-level details from BattleParticipant
       
@@ -881,7 +1044,12 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
     }
 
     // Determine winner based on battle type
-    if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {
+    if (battleData.battleType === 'koth') {
+      // KotH: winner already set in kothParticipants branch above
+      if (baseResponse.winner === undefined) {
+        baseResponse.winner = battleData.winnerId === battleData.robot1Id ? 'robot1' : null;
+      }
+    } else if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {
       // For tag team battles, winnerId is the team ID, not robot ID
       const team1Id = baseResponse.tagTeam.team1.teamId;
       const team2Id = baseResponse.tagTeam.team2.teamId;

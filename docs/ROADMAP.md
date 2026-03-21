@@ -407,7 +407,7 @@ Note: the overview above is not up to date, more facilities are actually working
 - ✅ **Schema cleanup**: Removed 12 old per-robot columns from Battle table
 - ✅ **Migration created**: `20260220201630_remove_old_battle_columns`
 - ✅ **Single write path**: Battle orchestrators now write only to BattleParticipant
-- ✅ **3 orchestrators updated**: battleOrchestrator.ts, tournamentBattleOrchestrator.ts, tagTeamBattleOrchestrator.ts
+- ✅ **4 orchestrators updated**: leagueBattleOrchestrator.ts, tournamentBattleOrchestrator.ts, tagTeamBattleOrchestrator.ts, kothBattleOrchestrator.ts (shared helpers in battlePostCombat.ts)
 - ✅ **No duplication**: Single source of truth for per-robot battle data
 
 **Removed Columns**:

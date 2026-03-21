@@ -182,7 +182,7 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
     }
 
     // Get current round matches that need execution
-    const currentRoundMatches = await prisma.tournamentMatch.findMany({
+    const currentRoundMatches = await prisma.scheduledTournamentMatch.findMany({
       where: {
         tournamentId,
         round: tournament.currentRound,

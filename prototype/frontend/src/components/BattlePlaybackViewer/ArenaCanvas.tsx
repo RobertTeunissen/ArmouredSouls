@@ -5,6 +5,8 @@ import {
   AttackIndicator,
   RangeBand,
   Position,
+  KothZoneState,
+  KothScoreEntry,
 } from './types';
 import {
   clearCanvas,
@@ -13,6 +15,9 @@ import {
   renderAttackIndicator,
   renderRangeBandIndicator,
   arenaToPixel,
+  renderKothZone,
+  renderKothScoreboard,
+  renderZoneOccupationIndicator,
 } from './canvasRenderer';
 
 interface ArenaCanvasProps {
@@ -24,6 +29,12 @@ interface ArenaCanvasProps {
   focusedRangeBand?: RangeBand;
   /** Names of the two currently fighting robots (for range band indicator) */
   activeRobotNames?: [string, string];
+  /** KotH zone state (only present for KotH battles) */
+  kothZone?: KothZoneState;
+  /** KotH scores for scoreboard */
+  kothScores?: KothScoreEntry[];
+  /** KotH score threshold */
+  kothScoreThreshold?: number;
 }
 
 const CANVAS_SIZE = 500;
@@ -44,6 +55,9 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   currentTime,
   focusedRangeBand,
   activeRobotNames,
+  kothZone,
+  kothScores,
+  kothScoreThreshold,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -56,6 +70,9 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   const currentTimeRef = useRef(currentTime);
   const focusedRangeBandRef = useRef(focusedRangeBand);
   const activeRobotNamesRef = useRef(activeRobotNames);
+  const kothZoneRef = useRef(kothZone);
+  const kothScoresRef = useRef(kothScores);
+  const kothScoreThresholdRef = useRef(kothScoreThreshold);
 
   useEffect(() => { frameRef.current = frame; }, [frame]);
   useEffect(() => { robotsRef.current = robots; }, [robots]);
@@ -63,6 +80,9 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   useEffect(() => { currentTimeRef.current = currentTime; }, [currentTime]);
   useEffect(() => { focusedRangeBandRef.current = focusedRangeBand; }, [focusedRangeBand]);
   useEffect(() => { activeRobotNamesRef.current = activeRobotNames; }, [activeRobotNames]);
+  useEffect(() => { kothZoneRef.current = kothZone; }, [kothZone]);
+  useEffect(() => { kothScoresRef.current = kothScores; }, [kothScores]);
+  useEffect(() => { kothScoreThresholdRef.current = kothScoreThreshold; }, [kothScoreThreshold]);
 
   // Set canvas pixel dimensions once on mount
   useEffect(() => {
@@ -85,6 +105,9 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     const time = currentTimeRef.current;
     const rangeBand = focusedRangeBandRef.current;
     const activePair = activeRobotNamesRef.current;
+    const zone = kothZoneRef.current;
+    const scores = kothScoresRef.current;
+    const threshold = kothScoreThresholdRef.current;
 
     const toPixel = (pos: { x: number; y: number }): { x: number; y: number } =>
       arenaToPixel(pos, width, height, arenaRadius);
@@ -97,6 +120,24 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     const edgePoint = toPixel({ x: arenaRadius, y: 0 });
     const radiusPixels = Math.abs(edgePoint.x - center.x);
     renderArenaBoundary(ctx, center.x, center.y, radiusPixels);
+
+    // KotH zone overlay (rendered after arena boundary, before robots)
+    if (zone) {
+      const zoneCenterPx = toPixel(zone.center);
+      const zoneEdgePx = toPixel({ x: zone.center.x + zone.radius, y: zone.center.y });
+      const zoneRadiusPx = Math.abs(zoneEdgePx.x - zoneCenterPx.x);
+      const controllerIndex = zone.controllingRobotName
+        ? robs.findIndex(r => r.name === zone.controllingRobotName)
+        : undefined;
+      renderKothZone(
+        ctx,
+        zoneCenterPx,
+        zoneRadiusPx,
+        zone.state,
+        controllerIndex !== undefined && controllerIndex >= 0 ? controllerIndex : undefined,
+        time,
+      );
+    }
 
     // Range band indicator between the two currently active robots
     if (rangeBand) {
@@ -137,9 +178,25 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       );
     }
 
+    // Zone occupation indicators (after robots, so crown renders on top)
+    if (zone) {
+      const occupantSet = new Set(zone.occupantNames);
+      for (const robot of robs) {
+        if (!occupantSet.has(robot.name)) continue;
+        const pos = f.positions[robot.name];
+        if (!pos) continue;
+        renderZoneOccupationIndicator(ctx, toPixel(pos));
+      }
+    }
+
     // Attack indicators
     for (const indicator of indicators) {
       renderAttackIndicator(ctx, indicator, time, toPixel);
+    }
+
+    // KotH scoreboard (rendered last, on top of everything)
+    if (scores && threshold !== undefined) {
+      renderKothScoreboard(ctx, scores, width, threshold);
     }
   }, [arenaRadius]);
 

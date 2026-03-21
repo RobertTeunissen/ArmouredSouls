@@ -1974,35 +1974,35 @@ const processedWeapons = useMemo(() => {
 **Current Catalog** (actual implementation prices from seed.ts):
 
 **Melee Weapons** (7):
-1. Practice Sword (₡62,500) - Starter weapon
-2. Combat Knife (₡113,000) - Quick strikes
-3. Energy Blade (₡238,000) - Energy-infused melee
-4. Power Sword (₡350,000) - High damage
-5. Battle Axe (₡388,000) - Heavy impact
-6. Plasma Blade (₡269,000) - Premium melee
-7. Heavy Hammer (₡450,000) - Maximum damage
+1. Practice Sword (₡50,000) - Starter weapon
+2. Combat Knife (₡93,000) - Quick strikes
+3. Energy Blade (₡175,000) - Energy-infused melee
+4. Power Sword (₡325,000) - High damage
+5. Battle Axe (₡402,000) - Heavy impact
+6. Plasma Blade (₡202,000) - Premium melee
+7. Heavy Hammer (₡478,000) - Maximum damage
 
 **Ballistic Weapons** (8):
 8. Machine Pistol (₡94,000) - Rapid-fire sidearm
-9. Machine Gun (₡150,000) - Sustained fire
-10. Burst Rifle (₡181,000) - Controlled bursts
-11. Assault Rifle (₡188,000) - Balanced rifle
-12. Shotgun (₡269,000) - Close-range
-13. Grenade Launcher (₡294,000) - Area effect
-14. Sniper Rifle (₡369,000) - Long-range precision
-15. Railgun (₡488,000) - Armor-piercing
+9. Machine Gun (₡107,000) - Sustained fire
+10. Burst Rifle (₡117,000) - Controlled bursts
+11. Assault Rifle (₡173,000) - Balanced rifle
+12. Shotgun (₡283,000) - Close-range
+13. Grenade Launcher (₡293,000) - Area effect
+14. Sniper Rifle (₡387,000) - Long-range precision
+15. Railgun (₡527,000) - Armor-piercing
 
 **Energy Weapons** (5):
-16. Laser Pistol (₡94,000) - Energy sidearm
-17. Laser Rifle (₡244,000) - Energy rifle
-18. Plasma Rifle (₡275,000) - High-energy
-19. Plasma Cannon (₡400,000) - Heavy energy
-20. Ion Beam (₡538,000) - Sustained beam
+16. Laser Pistol (₡57,000) - Energy sidearm
+17. Laser Rifle (₡202,000) - Energy rifle
+18. Plasma Rifle (₡258,000) - High-energy
+19. Plasma Cannon (₡408,000) - Heavy energy
+20. Ion Beam (₡544,000) - Sustained beam
 
 **Shields** (3):
-21. Light Shield (₡62,500) - Basic defense
-22. Combat Shield (₡100,000) - Standard defense
-23. Reactive Shield (₡113,000) - Advanced defense
+21. Light Shield (₡51,000) - Basic defense
+22. Combat Shield (₡78,000) - Standard defense
+23. Reactive Shield (₡92,000) - Advanced defense
 
 **Loadout Type Distribution**:
 - Single: 15 weapons (can be used alone or with shield)
@@ -2291,13 +2291,13 @@ During onboarding Step 7 (Weapon Purchase Guidance), the Weapon Shop integrates 
 **Budget Warning Example**:
 ```
 ┌──────────────────────────────────────────────────── [⚠️ Expensive]
-│ ⚔️  Plasma Cannon                          ₡450,000
-│     Two-Handed | Energy | 85 base damage
+│ ⚔️  Plasma Cannon                          ₡408,000
+│     Two-Handed | Energy | 20 base damage
 │     
 │ ⚠️ This weapon costs more than ₡300K.
 │    New players should consider budget options first.
 │    
-│ [View Details]                    [Purchase - ₡450,000]
+│ [View Details]                    [Purchase - ₡408,000]
 └─────────────────────────────────────────────────────────────
 ```
 

@@ -456,6 +456,129 @@ export class CombatMessageGenerator {
     '🎯 {defenderName} is caught in a crossfire — {attackerName} flanks from the side!',
   ];
 
+  // ── KotH Zone Enter Messages (Req 12.6) ───────────────────────────────
+  private static kothZoneEnterMessages = [
+    '👑 {robotName} enters the control zone!',
+    '👑 {robotName} pushes into the control zone — claiming territory!',
+    '👑 {robotName} moves into the control zone and begins contesting!',
+  ];
+
+  private static kothZoneEnterContestedMessages = [
+    '⚔️👑 {robotName} enters the contested zone — the fight for control intensifies!',
+    '⚔️👑 {robotName} charges into the zone — it\'s now contested!',
+    '⚔️👑 {robotName} joins the zone battle — control is disputed!',
+  ];
+
+  private static kothZoneEnterUncontestedMessages = [
+    '👑✨ {robotName} takes sole control of the zone — scoring begins!',
+    '👑✨ {robotName} claims the zone unopposed — points are ticking!',
+    '👑✨ {robotName} secures the control zone — uncontested dominance!',
+  ];
+
+  // ── KotH Zone Exit Messages ───────────────────────────────────────────
+  private static kothZoneExitMessages = [
+    '🚪 {robotName} leaves the control zone',
+    '🚪 {robotName} retreats from the control zone',
+    '🚪 {robotName} exits the zone — relinquishing position',
+  ];
+
+  private static kothZoneExitForcedMessages = [
+    '💥🚪 {robotName} is forced out of the control zone!',
+    '💥🚪 {robotName} is knocked from the zone by enemy fire!',
+    '💥🚪 {robotName} is driven out of the control zone under pressure!',
+  ];
+
+  // ── KotH Score Tick Messages ──────────────────────────────────────────
+  private static kothScoreTickUncontestedMessages = [
+    '👑 {robotName} holds the zone unopposed — Zone Score: {score}',
+    '👑 {robotName} maintains sole control — scoring at 1 pt/sec (Score: {score})',
+    '👑 {robotName} dominates the zone — Zone Score climbing to {score}',
+  ];
+
+  private static kothScoreTickContestedMessages = [
+    '⚔️ The zone is contested — no points awarded this tick',
+    '⚔️ Multiple robots in the zone — scoring paused!',
+    '⚔️ Zone control disputed — no one scores while contested',
+  ];
+
+  // ── KotH Kill Bonus Messages ──────────────────────────────────────────
+  private static kothKillBonusMessages = [
+    '💀👑 {killerName} eliminates {victimName} and earns a kill bonus of {bonus} points!',
+    '💀👑 {killerName} destroys {victimName} — +{bonus} Zone Score bonus!',
+    '💀👑 Kill confirmed! {killerName} takes down {victimName} for {bonus} bonus points!',
+  ];
+
+  // ── KotH Robot Eliminated Messages ────────────────────────────────────
+  private static kothEliminatedDestroyedMessages = [
+    '💀 {robotName} has been destroyed! Final Zone Score: {score} — placed {placement}',
+    '💀 {robotName} is eliminated by destruction! Zone Score: {score}',
+    '💀 {robotName} falls in combat — permanently eliminated with {score} points',
+  ];
+
+  private static kothEliminatedYieldedMessages = [
+    '🏳️ {robotName} yields and is eliminated! Final Zone Score: {score}',
+    '🏳️ {robotName} surrenders — removed from the match with {score} points',
+    '🏳️ {robotName} concedes defeat — eliminated with Zone Score: {score}',
+  ];
+
+  // ── KotH Passive Warning/Penalty Messages ─────────────────────────────
+  private static kothPassiveWarningMessages = [
+    '⚠️ {robotName} has been outside the zone for 20 seconds — return to the zone!',
+    '⚠️ Warning: {robotName} is lingering outside the control zone!',
+    '⚠️ {robotName} risks penalties — 20 seconds outside the zone!',
+  ];
+
+  private static kothPassivePenaltyDamageMessages = [
+    '📉 {robotName} suffers a {penalty}% damage reduction for staying outside the zone',
+    '📉 Passive penalty: {robotName}\'s damage output reduced by {penalty}%',
+    '📉 {robotName}\'s weapons weaken — {penalty}% damage penalty for zone avoidance',
+  ];
+
+  private static kothPassivePenaltyAccuracyMessages = [
+    '📉🎯 {robotName} suffers a 15% accuracy penalty — 60 seconds outside the zone!',
+    '📉🎯 {robotName}\'s targeting systems degrade — accuracy reduced by 15%!',
+    '📉🎯 Severe penalty: {robotName} loses 15% accuracy for prolonged zone avoidance!',
+  ];
+
+  // ── KotH Zone Moving/Active Messages (Rotating Variant) ───────────────
+  private static kothZoneMovingMessages = [
+    '🔄 The control zone is moving in {countdown} seconds!',
+    '🔄 Warning: Zone relocation imminent — {countdown} seconds!',
+    '🔄 The zone is about to shift — prepare to reposition in {countdown}s!',
+  ];
+
+  private static kothZoneActiveMessages = [
+    '🔄✨ The control zone has moved to a new position!',
+    '🔄✨ Zone relocated — the fight shifts to a new area!',
+    '🔄✨ New zone active — robots must adapt to the new position!',
+  ];
+
+  // ── KotH Last Standing Messages ───────────────────────────────────────
+  private static kothLastStandingMessages = [
+    '🏆 {robotName} is the last robot standing — 10 seconds to score!',
+    '🏆 Only {robotName} remains — final 10-second countdown begins!',
+    '🏆 {robotName} survives as the last combatant — 10 seconds left!',
+  ];
+
+  // ── KotH Match End Messages ───────────────────────────────────────────
+  private static kothMatchEndScoreMessages = [
+    '👑🏆 {winnerName} wins by reaching the score threshold! Final Score: {score}',
+    '👑🏆 Score threshold reached! {winnerName} claims victory with {score} points!',
+    '👑🏆 {winnerName} dominates the zone and wins with {score} Zone Score!',
+  ];
+
+  private static kothMatchEndTimeMessages = [
+    '⏱️👑 Time\'s up! {winnerName} wins with the highest Zone Score: {score}',
+    '⏱️👑 Match time expired — {winnerName} leads with {score} points!',
+    '⏱️👑 Time limit reached! {winnerName} takes the crown with {score} Zone Score!',
+  ];
+
+  private static kothMatchEndLastStandingMessages = [
+    '🏆👑 Last standing phase ends! {winnerName} wins with Zone Score: {score}',
+    '🏆👑 {winnerName} claims victory as the last robot standing — Score: {score}',
+    '🏆👑 Final countdown complete! {winnerName} wins with {score} points!',
+  ];
+
   // ── Utility Methods ────────────────────────────────────────────────────
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -497,7 +620,7 @@ export class CombatMessageGenerator {
   // ── Individual Message Generators (kept for standalone use) ────────────
 
   static generateBattleStart(event: BattleStartEvent & {
-    battleType?: 'league' | 'tournament' | 'tag_team';
+    battleType?: 'league' | 'tournament' | 'tag_team' | 'koth';
     team1Name?: string;
     team2Name?: string;
     robot3Name?: string;
@@ -664,6 +787,80 @@ export class CombatMessageGenerator {
     return this.interpolate(template, { attackerName, defenderName });
   }
 
+  // ── KotH Event Generators ────────────────────────────────────────────
+
+  static generateKothZoneEnter(robotName: string, zoneState?: string): string {
+    if (zoneState === 'contested') {
+      return this.interpolate(this.selectRandom(this.kothZoneEnterContestedMessages), { robotName });
+    }
+    if (zoneState === 'uncontested') {
+      return this.interpolate(this.selectRandom(this.kothZoneEnterUncontestedMessages), { robotName });
+    }
+    return this.interpolate(this.selectRandom(this.kothZoneEnterMessages), { robotName });
+  }
+
+  static generateKothZoneExit(robotName: string, forced = false): string {
+    const messages = forced ? this.kothZoneExitForcedMessages : this.kothZoneExitMessages;
+    return this.interpolate(this.selectRandom(messages), { robotName });
+  }
+
+  static generateKothScoreTick(robotName: string, score: number, contested: boolean): string {
+    if (contested) {
+      return this.selectRandom(this.kothScoreTickContestedMessages);
+    }
+    return this.interpolate(this.selectRandom(this.kothScoreTickUncontestedMessages), { robotName, score });
+  }
+
+  static generateKothKillBonus(killerName: string, victimName: string, bonus: number): string {
+    return this.interpolate(this.selectRandom(this.kothKillBonusMessages), { killerName, victimName, bonus });
+  }
+
+  static generateKothEliminated(robotName: string, reason: 'destroyed' | 'yielded', score: number, placement?: number): string {
+    const messages = reason === 'destroyed' ? this.kothEliminatedDestroyedMessages : this.kothEliminatedYieldedMessages;
+    return this.interpolate(this.selectRandom(messages), { robotName, score, placement: placement ?? '?' });
+  }
+
+  static generateKothPassiveWarning(robotName: string): string {
+    return this.interpolate(this.selectRandom(this.kothPassiveWarningMessages), { robotName });
+  }
+
+  static generateKothPassivePenalty(robotName: string, damageReduction: number, accuracyPenalty: number): string {
+    if (accuracyPenalty > 0) {
+      return this.interpolate(this.selectRandom(this.kothPassivePenaltyAccuracyMessages), { robotName });
+    }
+    const penalty = Math.round(damageReduction * 100);
+    return this.interpolate(this.selectRandom(this.kothPassivePenaltyDamageMessages), { robotName, penalty });
+  }
+
+  static generateKothZoneMoving(countdown: number): string {
+    return this.interpolate(this.selectRandom(this.kothZoneMovingMessages), { countdown });
+  }
+
+  static generateKothZoneActive(): string {
+    return this.selectRandom(this.kothZoneActiveMessages);
+  }
+
+  static generateKothLastStanding(robotName: string): string {
+    return this.interpolate(this.selectRandom(this.kothLastStandingMessages), { robotName });
+  }
+
+  static generateKothMatchEnd(winnerName: string, score: number, reason: string): string {
+    let messages: string[];
+    switch (reason) {
+      case 'score_threshold':
+        messages = this.kothMatchEndScoreMessages;
+        break;
+      case 'last_standing':
+        messages = this.kothMatchEndLastStandingMessages;
+        break;
+      case 'time_limit':
+      default:
+        messages = this.kothMatchEndTimeMessages;
+        break;
+    }
+    return this.interpolate(this.selectRandom(messages), { winnerName, score });
+  }
+
   // ══════════════════════════════════════════════════════════════════════
   // CORE METHOD: Convert real simulator events into narrative messages
   // This replaces the old generateBattleLog which fabricated fake events
@@ -698,7 +895,7 @@ export class CombatMessageGenerator {
       robot1ELO: number;
       robot2ELO: number;
       leagueType: string;
-      battleType?: 'league' | 'tournament' | 'tag_team';
+      battleType?: 'league' | 'tournament' | 'tag_team' | 'koth';
       // Tag team fields
       team1Name?: string;
       team2Name?: string;
@@ -718,6 +915,9 @@ export class CombatMessageGenerator {
     const robot2ThresholdsCrossed = new Set<number>();
     // Track if we've already emitted the battle start + stance intro
     let battleStartEmitted = false;
+    // Track if we've already emitted a destruction/battle_end to avoid duplicates
+    // (the simulator emits two 'destroyed' events: one for the robot dying, one for the winner)
+    let battleEndEmitted = false;
 
     for (const event of simulatorEvents) {
       // ── First event: emit battle start + stances ──
@@ -894,6 +1094,11 @@ export class CombatMessageGenerator {
         }
 
       } else if (event.type === 'destroyed') {
+        // The simulator emits two 'destroyed' events: one when the robot's HP hits 0,
+        // and a second "X wins!" event. Only process the first one.
+        if (battleEndEmitted) continue;
+        battleEndEmitted = true;
+
         const isRobot1Destroyed = event.robot1HP === 0;
         const destroyedRobot = isRobot1Destroyed ? context.robot1Name : context.robot2Name;
         const winnerRobot = isRobot1Destroyed ? context.robot2Name : context.robot1Name;
@@ -1011,7 +1216,8 @@ export class CombatMessageGenerator {
     // If the last simulator event was a yield, add a victory message
     const lastEvent = simulatorEvents[simulatorEvents.length - 1];
     const lastNarrative = narrativeEvents[narrativeEvents.length - 1];
-    if (lastEvent && lastEvent.type === 'yield' && lastNarrative && lastNarrative.type === 'yield') {
+    if (lastEvent && lastEvent.type === 'yield' && lastNarrative && lastNarrative.type === 'yield' && !battleEndEmitted) {
+      battleEndEmitted = true;
       // Use HP percentages to determine who yielded (not message parsing)
       const robot1HpPct = (lastEvent.robot1HP || 0) / context.robot1MaxHP;
       const robot2HpPct = (lastEvent.robot2HP || 0) / context.robot2MaxHP;
@@ -1081,8 +1287,8 @@ export class CombatMessageGenerator {
   ): void {
     const thresholds = [75, 50, 25]; // Light, Moderate, Heavy
 
-    // Check defender HP
-    if (event.defender === context.robot1Name && event.robot1HP !== undefined) {
+    // Check defender HP (suppress when HP=0 — the destruction message handles that)
+    if (event.defender === context.robot1Name && event.robot1HP !== undefined && event.robot1HP > 0) {
       const pct = (event.robot1HP / context.robot1MaxHP) * 100;
       for (const t of thresholds) {
         if (pct <= t && !robot1Thresholds.has(t)) {
@@ -1095,7 +1301,7 @@ export class CombatMessageGenerator {
         }
       }
     }
-    if (event.defender === context.robot2Name && event.robot2HP !== undefined) {
+    if (event.defender === context.robot2Name && event.robot2HP !== undefined && event.robot2HP > 0) {
       const pct = (event.robot2HP / context.robot2MaxHP) * 100;
       for (const t of thresholds) {
         if (pct <= t && !robot2Thresholds.has(t)) {
@@ -1211,7 +1417,7 @@ export class CombatMessageGenerator {
   // Now delegates to convertSimulatorEvents when real events are provided
   // ══════════════════════════════════════════════════════════════════════
 
-  static generateBattleLog(battleData: {
+  static convertBattleEvents(battleData: {
     robot1Name: string;
     robot2Name: string;
     robot1ELOBefore: number;
@@ -1239,7 +1445,7 @@ export class CombatMessageGenerator {
     robot2Stance?: string;
     robot1MaxHP?: number;
     robot2MaxHP?: number;
-    battleType?: 'league' | 'tournament' | 'tag_team';
+    battleType?: 'league' | 'tournament' | 'tag_team' | 'koth';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): any[] {
     // If real simulator events are provided, convert them
@@ -1287,5 +1493,164 @@ export class CombatMessageGenerator {
     });
 
     return log;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  KotH Battle Log Builder
+  // ══════════════════════════════════════════════════════════════════════
+
+  /**
+   * Convert raw simulator events into narrative messages for KotH (N-robot) battles.
+   *
+   * Reuses the same narrative generators (generateAttack, generateCounter, etc.)
+   * as 1v1 battles. KotH-specific events (zone_enter, zone_exit, score_tick, etc.)
+   * already have narrative messages and are passed through unchanged.
+   */
+  static convertKothSimulatorEvents(
+    simulatorEvents: CombatEvent[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): any[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const narrativeEvents: any[] = [];
+
+    for (const event of simulatorEvents) {
+      const ts = event.timestamp;
+
+      if (event.type === 'malfunction') {
+        narrativeEvents.push({
+          ...event,
+          message: this.generateAttack({
+            attackerName: event.attacker || '',
+            defenderName: event.defender || '',
+            weaponName: event.weapon || 'Fists',
+            damage: 0, hit: false, critical: false, malfunction: true,
+          }),
+        });
+      } else if (event.type === 'miss') {
+        narrativeEvents.push({
+          ...event,
+          message: this.generateAttack({
+            attackerName: event.attacker || '',
+            defenderName: event.defender || '',
+            weaponName: event.weapon || 'Fists',
+            damage: 0, hit: false, critical: false,
+          }),
+        });
+      } else if (event.type === 'attack' || event.type === 'critical') {
+        // Skip the simulator's battle-start event (timestamp 0, no weapon)
+        if (ts === 0 && !event.weapon) continue;
+        narrativeEvents.push({
+          ...event,
+          message: this.generateAttack({
+            attackerName: event.attacker || '',
+            defenderName: event.defender || '',
+            weaponName: event.weapon || 'Fists',
+            damage: event.damage || 0,
+            hit: true,
+            critical: event.type === 'critical',
+            shieldDamage: event.shieldDamage,
+            hpDamage: event.hpDamage,
+          }),
+        });
+      } else if (event.type === 'counter') {
+        if (event.hit === false) {
+          narrativeEvents.push({
+            ...event,
+            message: this.generateCounterMiss(
+              event.attacker || '', event.defender || '', event.weapon || 'Fists',
+            ),
+          });
+        } else {
+          narrativeEvents.push({
+            ...event,
+            message: this.generateCounter(
+              event.attacker || '', event.defender || '', event.weapon || 'Fists',
+              event.damage || 0, 100, // maxHP not critical for message generation
+            ),
+          });
+        }
+      } else if (event.type === 'destroyed') {
+        const robotName = event.message?.includes('wins')
+          ? undefined // Skip "X wins!" events — KotH has its own end logic
+          : (event.attacker || event.defender || '');
+        if (robotName) {
+          narrativeEvents.push({
+            ...event,
+            message: this.generateDestruction(robotName),
+          });
+        }
+      } else if (event.type === 'yield') {
+        // Pass through with original message (KotH yield messages are already narrative)
+        narrativeEvents.push(event);
+      } else if (event.type === 'shield_break') {
+        narrativeEvents.push({
+          ...event,
+          message: this.generateShieldBreak(event.attacker || event.defender || ''),
+        });
+      } else if (event.type === 'shield_regen') {
+        narrativeEvents.push({
+          ...event,
+          message: this.generateShieldRegen(event.attacker || event.defender || ''),
+        });
+      } else {
+        // KotH-specific events (zone_enter, zone_exit, score_tick, etc.)
+        // and movement events — pass through with original message
+        narrativeEvents.push(event);
+      }
+    }
+
+    return narrativeEvents;
+  }
+
+  /**
+   * Build the battle log JSON for a KotH battle.
+   *
+   * Combat events (attack, counter, destroyed, etc.) are converted to narrative
+   * messages using the same generators as 1v1 battles. KotH-specific events
+   * (zone_enter, score_tick, etc.) already have narrative messages from the
+   * simulation and are passed through unchanged.
+   */
+  static buildKothBattleLog(data: {
+    events: CombatEvent[];
+    participantCount: number;
+    arenaRadius: number;
+    startingPositions: Record<string, { x: number; y: number }>;
+    endingPositions: Record<string, { x: number; y: number }>;
+    scoreThreshold: number;
+    zoneRadius: number;
+    placements: Array<{
+      robotId: number;
+      robotName: string;
+      placement: number;
+      zoneScore: number;
+      zoneTime: number;
+      kills: number;
+      destroyed: boolean;
+    }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }): Record<string, any> {
+    // Convert combat events to narrative messages (attack, counter, etc.)
+    // while passing through KotH-specific events (zone_enter, score_tick) unchanged
+    const narrativeEvents = this.convertKothSimulatorEvents(
+      data.events.filter(e => e.type !== 'movement' && e.type !== 'out_of_range')
+    );
+
+    return {
+      events: narrativeEvents,
+      detailedCombatEvents: data.events,
+      isKothMatch: true,
+      participantCount: data.participantCount,
+      arenaRadius: data.arenaRadius,
+      startingPositions: data.startingPositions,
+      endingPositions: data.endingPositions,
+      kothData: {
+        isKoth: true,
+        participantCount: data.participantCount,
+        scoreThreshold: data.scoreThreshold,
+        zoneRadius: data.zoneRadius,
+        colorPalette: ['#3B82F6', '#EF4444', '#22C55E', '#F97316', '#A855F7', '#06B6D4'],
+      },
+      placements: data.placements,
+    };
   }
 }

@@ -11,7 +11,7 @@ import {
   getLeagueTierName,
 } from '../utils/matchmakingApi';
 import { BattlePlaybackViewer } from '../components/BattlePlaybackViewer/BattlePlaybackViewer';
-import type { PlaybackCombatResult, PlaybackRobotInfo } from '../components/BattlePlaybackViewer/types';
+import type { PlaybackCombatResult, PlaybackRobotInfo, KothPlaybackData } from '../components/BattlePlaybackViewer/types';
 
 function BattleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +50,12 @@ function BattleDetailPage() {
   const getWinnerText = () => {
     if (!battleLog) return '';
     if (!battleLog.winner) return 'DRAW';
+    
+    // For KotH battles, show the 1st place robot
+    if (battleLog.battleType === 'koth' && battleLog.kothParticipants?.length) {
+      const winner = battleLog.kothParticipants.find(p => p.placement === 1);
+      return winner ? `${winner.robotName.toUpperCase()} WINS` : 'WINNER';
+    }
     
     // For tag team battles, show team victory with team name
     if (battleLog.battleType === 'tag_team' && battleLog.tagTeam) {
@@ -106,8 +112,9 @@ function BattleDetailPage() {
   // Determine if this battle has spatial data for the playback viewer
   const hasSpatialData = !!battleLog.battleLog.arenaRadius && battleLog.battleLog.arenaRadius > 0;
   const isTagTeam = battleLog.battleType === 'tag_team';
-  const is1v1 = !isTagTeam && !!battleLog.robot1 && !!battleLog.robot2;
-  const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam);
+  const isKoth = battleLog.battleType === 'koth';
+  const is1v1 = !isTagTeam && !isKoth && !!battleLog.robot1 && !!battleLog.robot2;
+  const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam || isKoth);
 
   // Use detailedCombatEvents (raw simulator events with positions) for spatial animation,
   // falling back to narrative events if detailed events aren't available
@@ -117,7 +124,7 @@ function BattleDetailPage() {
     winnerId: battleLog.winner === 'robot1' ? 1 : battleLog.winner === 'robot2' ? 2 : null,
     robot1FinalHP: battleLog.robot1?.finalHP ?? 0,
     robot2FinalHP: battleLog.robot2?.finalHP ?? 0,
-    durationSeconds: battleLog.duration,
+    durationSeconds: battleLog.duration + 0.5, // Add buffer so playback reaches final events at exactly durationSeconds
     isDraw: !battleLog.winner,
     events: spatialEvents.map((e: BattleLogEvent) => ({
       timestamp: e.timestamp,
@@ -139,6 +146,9 @@ function BattleDetailPage() {
       robot2HP: e.robot2HP,
       robot1Shield: e.robot1Shield,
       robot2Shield: e.robot2Shield,
+      robotHP: e.robotHP,
+      robotShield: e.robotShield,
+      kpiData: e.kpiData,
     })),
     arenaRadius: battleLog.battleLog.arenaRadius,
     startingPositions: battleLog.battleLog.startingPositions,
@@ -166,6 +176,8 @@ function BattleDetailPage() {
     robot2HP: e.robot2HP,
     robot1Shield: e.robot1Shield,
     robot2Shield: e.robot2Shield,
+    robotHP: e.robotHP,
+    robotShield: e.robotShield,
   })) : undefined;
 
   // Derive starting HP/shield from the first spatial event (accurate to battle time,
@@ -176,8 +188,18 @@ function BattleDetailPage() {
   const startingRobot1Shield = firstSpatialEvent?.robot1Shield;
   const startingRobot2Shield = firstSpatialEvent?.robot2Shield;
 
+  // For KotH: derive per-robot maxHP/maxShield from the first event's robotHP/robotShield maps
+  // (robots are auto-repaired to full before KotH, so first event values = max values)
+  const firstKothEvent = isKoth ? spatialEvents.find((e: BattleLogEvent) => e.robotHP) : null;
+  const kothStartingHP: Record<string, number> = firstKothEvent?.robotHP ?? {};
+  const kothStartingShield: Record<string, number> = firstKothEvent?.robotShield ?? {};
+
   const robot1PlaybackInfo: PlaybackRobotInfo | null = (() => {
     if (!showPlaybackViewer) return null;
+    if (isKoth && battleLog.kothParticipants?.length) {
+      const p = battleLog.kothParticipants[0];
+      return { name: p.robotName, teamIndex: 0, maxHP: kothStartingHP[p.robotName] ?? 100, maxShield: kothStartingShield[p.robotName] ?? 0 };
+    }
     if (isTagTeam && battleLog.tagTeam?.team1.activeRobot) {
       const r = battleLog.tagTeam.team1.activeRobot;
       return { name: r.name, teamIndex: 0, maxHP: startingRobot1HP ?? r.maxHP ?? 100, maxShield: startingRobot1Shield ?? r.maxShield ?? 0 };
@@ -190,6 +212,10 @@ function BattleDetailPage() {
 
   const robot2PlaybackInfo: PlaybackRobotInfo | null = (() => {
     if (!showPlaybackViewer) return null;
+    if (isKoth && battleLog.kothParticipants?.length && battleLog.kothParticipants.length >= 2) {
+      const p = battleLog.kothParticipants[1];
+      return { name: p.robotName, teamIndex: 1, maxHP: kothStartingHP[p.robotName] ?? 100, maxShield: kothStartingShield[p.robotName] ?? 0 };
+    }
     if (isTagTeam && battleLog.tagTeam?.team2.activeRobot) {
       const r = battleLog.tagTeam.team2.activeRobot;
       return { name: r.name, teamIndex: 1, maxHP: startingRobot2HP ?? r.maxHP ?? 100, maxShield: startingRobot2Shield ?? r.maxShield ?? 0 };
@@ -200,9 +226,18 @@ function BattleDetailPage() {
     return null;
   })();
 
-  // Extra robots for tag team battles (reserve robots that enter mid-battle)
+  // Extra robots for tag team battles (reserve robots) or KotH (participants 3+)
   const extraPlaybackRobots: PlaybackRobotInfo[] | undefined = (() => {
-    if (!showPlaybackViewer || !isTagTeam || !battleLog.tagTeam) return undefined;
+    if (!showPlaybackViewer) return undefined;
+    if (isKoth && battleLog.kothParticipants && battleLog.kothParticipants.length > 2) {
+      return battleLog.kothParticipants.slice(2).map((p, i) => ({
+        name: p.robotName,
+        teamIndex: i + 2,
+        maxHP: kothStartingHP[p.robotName] ?? 100,
+        maxShield: kothStartingShield[p.robotName] ?? 0,
+      }));
+    }
+    if (!isTagTeam || !battleLog.tagTeam) return undefined;
     const extras: PlaybackRobotInfo[] = [];
     if (battleLog.tagTeam.team1.reserveRobot) {
       const r = battleLog.tagTeam.team1.reserveRobot;
@@ -213,6 +248,31 @@ function BattleDetailPage() {
       extras.push({ name: r.name, teamIndex: 1, maxHP: r.maxHP ?? 100, maxShield: r.maxShield ?? 0 });
     }
     return extras.length > 0 ? extras : undefined;
+  })();
+
+  // Build KotH playback data from API response
+  const kothPlaybackData: KothPlaybackData | undefined = (() => {
+    if (!isKoth || !battleLog.kothData) return undefined;
+    // Build robotId → robotName mapping from placements or participants
+    const robotIdToName: Record<string, string> = {};
+    const placements = battleLog.battleLog.placements as Array<{ robotId: number; robotName: string }> | undefined;
+    if (placements) {
+      for (const p of placements) {
+        robotIdToName[String(p.robotId)] = p.robotName;
+      }
+    } else if (battleLog.kothParticipants) {
+      for (const p of battleLog.kothParticipants) {
+        robotIdToName[String(p.robotId)] = p.robotName;
+      }
+    }
+    return {
+      isKoth: true,
+      participantCount: battleLog.kothData.participantCount,
+      scoreThreshold: battleLog.kothData.scoreThreshold,
+      zoneRadius: battleLog.kothData.zoneRadius,
+      colorPalette: battleLog.kothData.colorPalette,
+      robotIdToName,
+    };
   })();
 
   return (
@@ -235,6 +295,8 @@ function BattleDetailPage() {
         {/* Battle Result Banner */}
         <div className={`mb-3 p-3 rounded-lg text-center ${
           !battleLog.winner ? 'bg-yellow-900/20 border-2 border-yellow-600' :
+          battleLog.battleType === 'koth' && battleLog.kothParticipants?.some(p => p.placement === 1 && p.owner === user?.username) ? 'bg-green-900/20 border-2 border-green-600' :
+          battleLog.battleType === 'koth' ? 'bg-orange-900/20 border-2 border-orange-600' :
           battleLog.winner === 'robot1' && battleLog.robot1?.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
           battleLog.winner === 'robot2' && battleLog.robot2?.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
           'bg-red-900/20 border-2 border-red-600'
@@ -245,6 +307,8 @@ function BattleDetailPage() {
           <div className="text-secondary text-sm">
             {battleLog.battleType === 'tag_team' ? (
               <>🤝 Tag Team Battle • Duration: {formatDuration(battleLog.duration)}</>
+            ) : battleLog.battleType === 'koth' ? (
+              <>⛰️ King of the Hill • {battleLog.kothParticipants?.length || battleLog.battleLog.participantCount || 0} Participants • Duration: {formatDuration(battleLog.duration)}</>
             ) : battleLog.battleType === 'tournament' || battleLog.battleLog.isTournament ? (
               <>🏆 Tournament Round {battleLog.battleLog.round || '?'}/{battleLog.battleLog.maxRounds || '?'}
               {battleLog.battleLog.isFinals ? ' (Finals)' : ''} • Duration: {formatDuration(battleLog.duration)}</>
@@ -306,7 +370,46 @@ function BattleDetailPage() {
           </div>
         )}
 
+        {/* KotH Participants */}
+        {battleLog.battleType === 'koth' && battleLog.kothParticipants && (
+          <div className="bg-orange-900/20 border border-orange-600 rounded-lg mb-3 p-3">
+            <h3 className="text-lg font-bold text-orange-400 mb-3">⛰️ King of the Hill Results</h3>
+            <div className="space-y-2">
+              {battleLog.kothParticipants.map((p) => {
+                const isCurrentUser = p.owner === user?.username;
+                const placementEmoji = p.placement === 1 ? '🥇' : p.placement === 2 ? '🥈' : p.placement === 3 ? '🥉' : `#${p.placement}`;
+                const bgColor = isCurrentUser ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-background';
+                
+                return (
+                  <div key={p.robotId} className={`${bgColor} rounded-lg p-2 flex items-center gap-3`}>
+                    <div className="text-xl w-8 text-center flex-shrink-0">{placementEmoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold ${isCurrentUser ? 'text-orange-300' : 'text-white'}`}>{p.robotName}</span>
+                        <span className="text-secondary text-xs">({p.owner})</span>
+                        {p.destroyed && <span className="text-red-400 text-xs">💀 Destroyed</span>}
+                      </div>
+                      <div className="flex gap-3 text-xs text-secondary mt-1">
+                        <span>Zone Score: <span className="text-orange-400 font-medium">{p.zoneScore}</span></span>
+                        <span>Zone Time: <span className="text-cyan-400 font-medium">{p.zoneTime}s</span></span>
+                        <span>Kills: <span className="text-red-400 font-medium">{p.kills}</span></span>
+                        <span>Damage: <span className="text-yellow-400 font-medium">{p.damageDealt}</span></span>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 text-xs space-y-0.5">
+                      <div className="text-success font-medium">₡{p.credits.toLocaleString()}</div>
+                      {p.fame > 0 && <div className="text-warning">+{p.fame} fame</div>}
+                      {p.prestige > 0 && <div className="text-purple-400">+{p.prestige} prestige</div>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Battle Summary - Horizontal Compact Layout */}
+        {battleLog.battleType !== 'koth' && (
         <div className="bg-surface rounded-lg mb-3 p-3">
           {battleLog.battleType === 'tag_team' && battleLog.tagTeam ? (
             <>
@@ -578,6 +681,7 @@ function BattleDetailPage() {
             <p className="text-secondary">Battle summary data unavailable.</p>
           )}
         </div>
+        )}
 
         {/* Spatial Summary - only shown for 2D arena battles */}
         {battleLog.battleLog.arenaRadius && (() => {
@@ -767,6 +871,7 @@ function BattleDetailPage() {
               extraRobots={extraPlaybackRobots}
               narrativeEvents={narrativePlaybackEvents}
               isTagTeam={isTagTeam}
+              kothData={kothPlaybackData}
             />
           </div>
         ) : (

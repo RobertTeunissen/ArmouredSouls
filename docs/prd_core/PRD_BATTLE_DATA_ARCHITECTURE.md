@@ -57,6 +57,9 @@ model BattleParticipant {
   team              Int      // 1 or 2
   role              String?  // "active" or "reserve" for tag team, null for 1v1
   
+  // KotH placement (null for non-KotH battles)
+  placement         Int?     // 1-6 final placement for KotH battles
+  
   // Economic effects
   credits           Int
   streamingRevenue  Int
@@ -134,8 +137,18 @@ model Battle {
 - **4 BattleParticipant records** (2 per team)
 - `team`: 1 or 2
 - `role`: "active" or "reserve"
+- `placement`: null
 - Credits split evenly between team members
 - ELO changes only for active robots
+
+#### KotH Battles
+- **5-6 BattleParticipant records** (one per robot)
+- `team`: 1 (free-for-all, no team affiliation)
+- `role`: null
+- `placement`: 1-6 (final placement in the match)
+- `Battle.battleType = "koth"`
+- No ELO changes
+- Placement-based rewards (1st through 6th)
 
 ---
 
@@ -185,6 +198,7 @@ participants.forEach(participant => {
 **Current support:**
 - 1v1: 2 participants
 - Tag team (2v2): 4 participants
+- KotH (free-for-all): 5-6 participants
 
 **Future support (no schema changes needed):**
 - 3v3: 6 participants
@@ -268,9 +282,10 @@ The migration was executed in 7 stages to ensure zero downtime:
 ### Battle Creation
 
 **Battle Orchestrators Updated:**
-- `battleOrchestrator.ts` - 1v1 and league battles
+- `leagueBattleOrchestrator.ts` - 1v1 and league battles
 - `tournamentBattleOrchestrator.ts` - Tournament battles
 - `tagTeamBattleOrchestrator.ts` - Tag team battles
+- `kothBattleOrchestrator.ts` - King of the Hill battles
 
 **New pattern:**
 ```typescript
@@ -428,8 +443,9 @@ CREATE UNIQUE INDEX "BattleParticipant_battleId_robotId_key" ON "BattleParticipa
 - `onDelete: Cascade`
 
 **Validation rules:**
-- `team` must be 1 or 2
+- `team` must be 1 or 2 (for 1v1/tournament/tag team) or 1 (for KotH free-for-all)
 - `role` must be null, "active", or "reserve"
+- `placement` must be null (non-KotH) or 1-6 (KotH)
 - `credits` must be non-negative
 - `eloBefore` and `eloAfter` must be valid ELO values (800-2500)
 
@@ -439,6 +455,7 @@ CREATE UNIQUE INDEX "BattleParticipant_battleId_robotId_key" ON "BattleParticipa
 - 1v1 battles: exactly 2 participants
 - Tournament battles: exactly 2 participants
 - Tag team battles: exactly 4 participants
+- KotH battles: 5-6 participants
 
 **Team balance validation:**
 - Each team must have at least 1 participant
@@ -514,9 +531,11 @@ CREATE UNIQUE INDEX "BattleParticipant_battleId_robotId_key" ON "BattleParticipa
 
 ### Implementation Files
 - `prototype/backend/prisma/schema.prisma` - Schema definition
-- `prototype/backend/src/services/battleOrchestrator.ts` - 1v1 battle creation
+- `prototype/backend/src/services/leagueBattleOrchestrator.ts` - 1v1 league battle creation
 - `prototype/backend/src/services/tournamentBattleOrchestrator.ts` - Tournament battles
 - `prototype/backend/src/services/tagTeamBattleOrchestrator.ts` - Tag team battles
+- `prototype/backend/src/services/kothBattleOrchestrator.ts` - KotH battles
+- `prototype/backend/src/services/battlePostCombat.ts` - Shared post-combat helpers
 
 ### Migration Documents
 - `BATTLEPARTICIPANT_IMPLEMENTATION.md` - Implementation guide

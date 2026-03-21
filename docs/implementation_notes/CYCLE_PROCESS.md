@@ -2,37 +2,12 @@
 
 ## Overview
 
-The daily cycle is the core game loop that processes all automated game activities. Each cycle represents one "day" in the game world and consists of 8 sequential steps designed to ensure fair gameplay and proper resource management.
+The daily cycle is the core game loop that processes all automated game activities. Each cycle represents one "day" in the game world and consists of multiple sequential steps designed to ensure fair gameplay and proper resource management.
 
 ## Cycle Flow
 
-### Step 1: Repair All Robots (Pre-Tournament)
-- **Purpose**: Ensure all robots are at full health before tournament battles
-- **Process**:
-  - Identifies all robots with HP < maxHP (excluding Bye Robot)
-  - Calculates repair costs: `hpToRestore × 50 credits per HP`
-  - Applies Repair Bay facility discount (5% per level, max 50%)
-  - Restores robots to full HP and maxShield
-  - Sets battleReadiness to 100
-  - **Deducts costs from user currency balances**
-- **Why**: Tournament battles require all participants to start at full strength
-
-### Step 2: Tournament Execution / Scheduling
-- **Purpose**: Process active tournament rounds and create new tournaments
-- **Process**:
-  - Executes all pending matches in current tournament rounds
-  - Advances winners to next rounds
-  - Marks completed tournaments
-  - Auto-creates next tournament if none are active
-- **Why**: Tournaments are special events that run independently of league play
-
-### Step 3: Repair All Robots (Post-Tournament)
-- **Purpose**: Repair damage from tournament battles before league play
-- **Process**: Same as Step 1
-- **Why**: Ensures robots damaged in tournaments can participate in league battles
-
-### Step 4: Execute League Battles
-- **Purpose**: Run all scheduled league matches
+### Step 1: Execute League Battles (1v1)
+- **Purpose**: Run all scheduled league matches from the previous cycle's matchmaking
 - **Process**:
   - Executes all scheduled matches with status='scheduled'
   - Processes combat, updates ELO, awards rewards
@@ -40,7 +15,64 @@ The daily cycle is the core game loop that processes all automated game activiti
   - Updates robot HP based on damage taken
 - **Why**: League battles are the core competitive gameplay
 
-### Step 5: Rebalance Leagues
+### Step 2: Repair All Robots (Post-League)
+- **Purpose**: Repair damage from league battles before tag team play
+- **Process**:
+  - Identifies all robots with HP < maxHP (excluding Bye Robot)
+  - Calculates repair costs using attribute-based formula
+  - Applies Repair Bay facility discount (5% per level, max 50%)
+  - Restores robots to full HP and maxShield
+  - **Deducts costs from user currency balances**
+- **Why**: Ensures robots damaged in league battles can participate in tag team and KotH
+
+### Step 3: Execute Tag Team Battles (odd cycles only)
+- **Purpose**: Run scheduled tag team matches
+- **Condition**: Only runs on odd-numbered cycles
+- **Process**: Executes all scheduled tag team battles
+- **Why**: Tag team battles run on alternating cycles to spread activity
+
+### Step 4: Repair All Robots (Post-Tag-Team)
+- **Purpose**: Repair damage from tag team battles
+- **Process**: Same as Step 2
+- **Why**: Ensures robots are healthy before KotH and tournament phases
+
+### Step 4.5: Execute KotH Battles (Mon/Wed/Fri only)
+- **Purpose**: Run scheduled King of the Hill matches
+- **Condition**: Only runs on KotH days (Monday, Wednesday, Friday)
+- **Bulk cycle simulation**: Uses `simulatedDayOfWeek = ((cycleNumber - 1) % 7) + 1` to determine day (1=Mon through 7=Sun)
+- **Process**: Executes all scheduled KotH battles for the current date
+- **Why**: KotH is a periodic event with zone-control gameplay
+
+### Step 4.6: Repair All Robots (Post-KotH)
+- **Purpose**: Repair damage from KotH battles
+- **Condition**: Only runs if KotH battles were executed
+- **Process**: Same as Step 2
+- **Why**: Ensures robots are healthy before tournament phase
+
+### Step 4.7: KotH Matchmaking (Mon/Wed/Fri only)
+- **Purpose**: Schedule KotH matches for the next KotH day
+- **Condition**: Only runs on KotH days
+- **Process**: Runs KotH matchmaking with a `scheduledFor` date adjusted to the simulated day of week, so the correct zone variant is selected (fixed zone on Mon/Fri, rotating zone on Wed)
+- **Why**: Pre-schedules KotH groups for the next event
+
+### Step 5: Tournament Execution / Scheduling
+- **Purpose**: Process active tournament rounds and create new tournaments
+- **Process**:
+  - Gets all active tournaments
+  - For each tournament, gets current round matches
+  - Auto-completes bye matches (robot1Id set, robot2Id null) before attempting battle execution
+  - Executes real matches via `processTournamentBattle`
+  - Advances winners to next rounds (with automatic bye detection in later rounds)
+  - Marks completed tournaments
+  - Auto-creates next tournament if none are active
+- **Why**: Tournaments are special events that run independently of league play
+
+### Step 6: Repair All Robots (Post-Tournament)
+- **Purpose**: Repair damage from tournament battles before league rebalancing
+- **Process**: Same as Step 2
+- **Why**: Ensures robots are at full health for next cycle
+
+### Step 7: Rebalance Leagues
 - **Purpose**: Promote/demote robots between league tiers
 - **Process**:
   - Evaluates robots based on league points and performance
@@ -49,7 +81,12 @@ The daily cycle is the core game loop that processes all automated game activiti
   - Resets cyclesInCurrentLeague for moved robots
 - **Why**: Maintains competitive balance and progression
 
-### Step 6: Auto Generate New Users
+### Step 7.5: Rebalance Tag Team Leagues (odd cycles only)
+- **Purpose**: Promote/demote tag teams between league tiers
+- **Condition**: Only runs on odd-numbered cycles (same as tag team battles)
+- **Why**: Maintains competitive balance in tag team leagues
+
+### Step 8: Auto Generate New Users
 - **Purpose**: Add new AI-controlled players to the ecosystem (optional)
 - **Process**:
   - Generates N users per cycle (where N = cycle number)
@@ -58,12 +95,7 @@ The daily cycle is the core game loop that processes all automated game activiti
 - **Why**: Keeps the player pool active and competitive
 - **Note**: This step is optional and controlled by `generateUsersPerCycle` parameter
 
-### Step 7: Repair All Robots (Post-League)
-- **Purpose**: Repair damage from league battles before matchmaking
-- **Process**: Same as Step 1
-- **Why**: Ensures only healthy robots are considered for next cycle's matches
-
-### Step 8: Matchmaking for Leagues
+### Step 9: Matchmaking for Leagues (1v1)
 - **Purpose**: Schedule matches for the next cycle
 - **Process**:
   - Builds matchmaking queues per league instance
@@ -73,9 +105,15 @@ The daily cycle is the core game loop that processes all automated game activiti
   - Schedules matches 1 second in the future
 - **Why**: Pre-scheduling allows players to see upcoming matches and prepare
 
+### Step 9.5: Matchmaking for Tag Teams (odd cycles only)
+- **Purpose**: Schedule tag team matches for the next odd cycle
+- **Condition**: Only runs on odd-numbered cycles
+- **Process**: Runs tag team matchmaking algorithm
+- **Why**: Pre-schedules tag team matches
+
 ## Post-Cycle Cleanup
 
-After all 8 steps complete:
+After all steps complete:
 - Increments `cyclesInCurrentLeague` for all robots
 - Updates global cycle metadata (totalCycles, lastCycleAt)
 - Records cycle duration and results
@@ -267,7 +305,7 @@ Check server logs for cycle execution details.
 ## Related Documentation
 
 - [Matchmaking System](../prototype/backend/src/services/matchmakingService.ts)
-- [Battle Orchestrator](../prototype/backend/src/services/battleOrchestrator.ts)
+- [Battle Orchestrator (League)](../prototype/backend/src/services/leagueBattleOrchestrator.ts)
 - [League Rebalancing](../prototype/backend/src/services/leagueRebalancingService.ts)
 - [Tournament System](./prd_core/PRD_TOURNAMENT_SYSTEM.md)
 - [Economy System](./prd_core/PRD_ECONOMY_SYSTEM.md)

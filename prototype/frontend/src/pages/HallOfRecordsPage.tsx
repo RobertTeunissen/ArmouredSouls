@@ -35,6 +35,15 @@ interface RecordsData {
     highestPrestige: HighestPrestige[];
     mostTitles: MostTitles[];
   };
+  koth: {
+    mostWins: KothMostWins[];
+    highestAvgZoneScore: KothHighestAvgZoneScore[];
+    mostKillsCareer: KothMostKillsCareer[];
+    longestWinStreak: KothLongestWinStreak[];
+    mostZoneTime: KothMostZoneTime[];
+    bestPlacement: KothBestPlacement[];
+    zoneDominator: KothZoneDominator[];
+  };
   timestamp: string;
 }
 
@@ -193,7 +202,65 @@ interface MostTitles {
   robotCount: number;
 }
 
-type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige';
+interface KothMostWins {
+  robotId: number;
+  robotName: string;
+  username: string;
+  kothWins: number;
+  kothMatches: number;
+  winRate: number;
+}
+
+interface KothHighestAvgZoneScore {
+  robotId: number;
+  robotName: string;
+  username: string;
+  avgZoneScore: number;
+  kothMatches: number;
+}
+
+interface KothMostKillsCareer {
+  robotId: number;
+  robotName: string;
+  username: string;
+  kothKills: number;
+  kothMatches: number;
+}
+
+interface KothLongestWinStreak {
+  robotId: number;
+  robotName: string;
+  username: string;
+  bestWinStreak: number;
+  kothWins: number;
+}
+
+interface KothMostZoneTime {
+  robotId: number;
+  robotName: string;
+  username: string;
+  totalZoneTime: number;
+  kothMatches: number;
+}
+
+interface KothBestPlacement {
+  robotId: number;
+  robotName: string;
+  username: string;
+  bestPlacement: number;
+  kothMatches: number;
+}
+
+interface KothZoneDominator {
+  robotId: number;
+  robotName: string;
+  username: string;
+  avgZoneScore: number;
+  kothMatches: number;
+  totalZoneScore: number;
+}
+
+type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige' | 'koth';
 
 function HallOfRecordsPage() {
   const { user } = useAuth();
@@ -251,6 +318,7 @@ function HallOfRecordsPage() {
     { key: 'career' as CategoryKey, label: 'Career', icon: '🏅' },
     { key: 'economic' as CategoryKey, label: 'Economic', icon: '💰' },
     { key: 'prestige' as CategoryKey, label: 'Prestige', icon: '👑' },
+    { key: 'koth' as CategoryKey, label: 'King of the Hill', icon: '⛰️' },
   ];
 
   if (!user) {
@@ -279,7 +347,9 @@ function HallOfRecordsPage() {
               onClick={() => setActiveCategory(category.key)}
               className={`px-6 py-3 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === category.key
-                  ? 'bg-yellow-500 text-gray-900'
+                  ? category.key === 'koth'
+                    ? 'bg-orange-500 text-gray-900'
+                    : 'bg-yellow-500 text-gray-900'
                   : 'bg-surface text-secondary hover:bg-surface-elevated'
               }`}
             >
@@ -628,6 +698,131 @@ function HallOfRecordsPage() {
                         details={[
                           `Prestige: ${record.prestige.toLocaleString()}`,
                           `Robots: ${record.robotCount}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
+                )}
+              </>
+            )}
+
+            {/* KotH Records */}
+            {activeCategory === 'koth' && (
+              <>
+                {/* Most KotH Wins */}
+                {records.koth.mostWins?.length > 0 && (
+                  <RecordSection title="👑 Most KotH Wins">
+                    {records.koth.mostWins.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.kothWins} wins`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Matches: ${record.kothMatches}`,
+                          `Win Rate: ${record.winRate}%`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
+                )}
+
+                {/* Highest Avg Zone Score */}
+                {records.koth.highestAvgZoneScore?.length > 0 && (
+                  <RecordSection title="🎯 Highest Avg Zone Score">
+                    {records.koth.highestAvgZoneScore.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.avgZoneScore.toFixed(1)} avg`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Matches: ${record.kothMatches}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
+                )}
+
+                {/* Most KotH Kills (Career) */}
+                {records.koth.mostKillsCareer?.length > 0 && (
+                  <RecordSection title="☠️ Most KotH Kills (Career)">
+                    {records.koth.mostKillsCareer.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.kothKills} kills`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Matches: ${record.kothMatches}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
+                )}
+
+                {/* Longest Win Streak */}
+                {records.koth.longestWinStreak?.length > 0 && (
+                  <RecordSection title="🔥 Longest Win Streak">
+                    {records.koth.longestWinStreak.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.bestWinStreak} streak`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Total Wins: ${record.kothWins}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
+                )}
+
+                {/* Most Zone Time (Career) */}
+                {records.koth.mostZoneTime?.length > 0 && (
+                  <RecordSection title="⏱️ Most Zone Time (Career)">
+                    {records.koth.mostZoneTime.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={formatDuration(record.totalZoneTime)}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Matches: ${record.kothMatches}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
+                )}
+
+                {/* Best Placement */}
+                {records.koth.bestPlacement?.length > 0 && (
+                  <RecordSection title="🏆 Best Placement">
+                    {records.koth.bestPlacement.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`#${record.bestPlacement}`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Matches: ${record.kothMatches}`,
+                        ]}
+                      />
+                    ))}
+                  </RecordSection>
+                )}
+
+                {/* Zone Dominator */}
+                {records.koth.zoneDominator?.length > 0 && (
+                  <RecordSection title="🏰 Zone Dominator">
+                    {records.koth.zoneDominator.map((record, index) => (
+                      <RecordCard
+                        key={record.robotId}
+                        rank={index + 1}
+                        value={`${record.totalZoneScore} total`}
+                        description={`${record.robotName} by ${record.username}`}
+                        details={[
+                          `Matches: ${record.kothMatches}`,
                         ]}
                       />
                     ))}

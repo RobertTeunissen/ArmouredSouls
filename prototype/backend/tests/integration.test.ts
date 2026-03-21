@@ -4,7 +4,7 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { executeScheduledBattles } from '../src/services/battleOrchestrator';
+import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
 import { runMatchmaking } from '../src/services/matchmakingService';
 import { rebalanceLeagues } from '../src/services/leagueRebalancingService';
 

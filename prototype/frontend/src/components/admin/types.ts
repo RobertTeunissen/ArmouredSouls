@@ -84,6 +84,8 @@ export interface Battle {
   createdAt: string;
   /** Distinguishes 1v1 from 2v2 battles when returned by the admin battles endpoint */
   battleFormat?: '1v1' | '2v2';
+  /** Battle type: league, tournament, tagteam, or koth */
+  battleType?: 'league' | 'tournament' | 'tagteam' | 'koth';
 }
 
 export interface BattleListResponse {

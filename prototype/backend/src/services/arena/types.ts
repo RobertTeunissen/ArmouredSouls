@@ -144,7 +144,11 @@ export interface CombatEvent {
     | 'shield_break' | 'shield_regen' | 'yield' | 'destroyed' | 'malfunction'
     // New spatial event types
     | 'movement' | 'range_transition' | 'out_of_range'
-    | 'counter_out_of_range' | 'backstab' | 'flanking';
+    | 'counter_out_of_range' | 'backstab' | 'flanking'
+    // KotH event types
+    | 'zone_defined' | 'zone_enter' | 'zone_exit' | 'score_tick'
+    | 'kill_bonus' | 'zone_moving' | 'zone_active' | 'robot_eliminated'
+    | 'passive_warning' | 'passive_penalty' | 'last_standing' | 'match_end';
   attacker?: string;
   defender?: string;
   weapon?: string;
@@ -163,6 +167,10 @@ export interface CombatEvent {
   message: string;
   formulaBreakdown?: FormulaBreakdown;
 
+  // === Per-robot HP/shield maps for N-robot modes (KotH/FFA) ===
+  robotHP?: Record<string, number>;
+  robotShield?: Record<string, number>;
+
   // === New optional position fields (Req 14.3, 15.4) ===
   positions?: Record<string, Position>;
   facingDirections?: Record<string, number>;
@@ -172,6 +180,34 @@ export interface CombatEvent {
   backstab?: boolean;
   flanking?: boolean;
   attackAngle?: number;
+
+  // === KotH-specific fields (Req 12.1–12.5) ===
+  kpiData?: {
+    robotId?: number;
+    killerRobotId?: number;
+    victimRobotId?: number;
+    bonus?: number;
+    bonusAmount?: number;
+    zoneScores?: Record<number, number>;
+    zoneScore?: number;
+    zoneState?: string;
+    center?: { x: number; y: number };
+    radius?: number;
+    newCenter?: { x: number; y: number };
+    countdown?: number;
+    survivorId?: number;
+    winnerId?: number | null;
+    placements?: Array<{ robotId: number; placement: number; zoneScore: number }>;
+    reason?: string;
+    damageReduction?: number;
+    accuracyPenalty?: number;
+    timeOutside?: number;
+    duration?: number;
+    occupants?: number[];
+    rotationCount?: number;
+    destroyerRobotId?: number;
+    winReason?: string;
+  };
 }
 
 // ─── Extended CombatResult (Backward Compatible — Req 15.7) ────────
@@ -196,6 +232,24 @@ export interface CombatResult {
   arenaRadius?: number;
   startingPositions?: Record<string, Position>;
   endingPositions?: Record<string, Position>;
+
+  // === KotH metadata (Req 12.3, 12.4, 12.5) ===
+  kothMetadata?: {
+    finalZoneScores?: Record<number, number>;
+    placementOrder?: Array<{ robotId: number; placement: number; zoneScore: number }>;
+    zoneOccupationTimes?: Record<number, number>;
+    uncontestedTimes?: Record<number, number>;
+    zoneEntries?: Record<number, number>;
+    zoneExits?: Record<number, number>;
+    killCounts?: Record<number, number>;
+    eliminationStatuses?: Record<number, 'destroyed' | 'yielded' | 'survived'>;
+    matchDuration?: number;
+    winReason?: string;
+    zoneVariant?: 'fixed' | 'rotating';
+  };
+
+  // === Final combat states for N-robot modes (optional) ===
+  finalStates?: RobotCombatState[];
 }
 
 // ─── Extensibility Interfaces (Req 16.1–16.7) ──────────────────────

@@ -34,12 +34,26 @@ interface SummaryStats {
     winRate: number;
     avgELOChange: number;
   };
+  kothStats: {
+    battles: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+    avgELOChange: number;
+    avgZoneScore: number;
+    totalCredits: number;
+    totalKills: number;
+    placements: { first: number; second: number; third: number; other: number };
+  };
 }
+
+type BattleFilterView = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth';
 
 interface BattleHistorySummaryProps {
   stats: SummaryStats;
-  view: 'overall' | 'league' | 'tournament' | 'tag_team';
-  onViewChange: (view: 'overall' | 'league' | 'tournament' | 'tag_team') => void;
+  view: BattleFilterView;
+  onViewChange: (view: BattleFilterView) => void;
 }
 
 const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view, onViewChange }) => {
@@ -73,6 +87,16 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         draws: stats.tagTeamStats.draws,
         winRate: stats.tagTeamStats.winRate,
         avgELOChange: stats.tagTeamStats.avgELOChange,
+      };
+    }
+    if (view === 'koth') {
+      return {
+        battles: stats.kothStats.battles,
+        wins: stats.kothStats.wins,
+        losses: stats.kothStats.losses,
+        draws: stats.kothStats.draws,
+        winRate: stats.kothStats.winRate,
+        avgELOChange: stats.kothStats.avgELOChange,
       };
     }
     // Overall
@@ -133,6 +157,16 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         >
           🤝 Tag Team
         </button>
+        <button
+          onClick={() => onViewChange('koth')}
+          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            view === 'koth' 
+              ? 'bg-[#58a6ff] text-white' 
+              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+          }`}
+        >
+          👑 KotH
+        </button>
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -142,7 +176,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
             {view === 'overall' ? 'Total Battles' : 
              view === 'league' ? 'League Battles' : 
              view === 'tournament' ? 'Tournament Battles' : 
-             'Tag Team Battles'}
+             view === 'tag_team' ? 'Tag Team Battles' :
+             'KotH Battles'}
           </div>
           <div className="text-2xl font-bold text-[#58a6ff]">{displayStats.battles}</div>
         </div>
@@ -192,6 +227,41 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
             ${stats.currentStreak.type === 'win' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'}`}>
             <span>{stats.currentStreak.count}-game {stats.currentStreak.type} streak</span>
             {stats.currentStreak.type === 'win' && <span>🔥</span>}
+          </div>
+        </div>
+      )}
+
+      {/* KotH Summary Stats */}
+      {view === 'koth' && stats.kothStats.battles > 0 && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div className="text-sm text-[#8b949e]">Placements</div>
+              <div className="text-sm font-medium">
+                <span className="text-yellow-400">🥇 {stats.kothStats.placements.first}</span>
+                {' · '}
+                <span className="text-gray-300">🥈 {stats.kothStats.placements.second}</span>
+                {' · '}
+                <span className="text-orange-500">🥉 {stats.kothStats.placements.third}</span>
+                {stats.kothStats.placements.other > 0 && (
+                  <span className="text-[#8b949e]"> · {stats.kothStats.placements.other} other</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-[#8b949e]">Avg Zone Score</div>
+              <div className="text-2xl font-bold text-orange-500">
+                ⏱ {stats.kothStats.avgZoneScore.toFixed(1)}s
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-[#8b949e]">Total Credits</div>
+              <div className="text-2xl font-bold text-[#e6edf3]">₡{stats.kothStats.totalCredits.toLocaleString()}</div>
+            </div>
+            <div>
+              <div className="text-sm text-[#8b949e]">Total Kills</div>
+              <div className="text-2xl font-bold text-[#f85149]">{stats.kothStats.totalKills}</div>
+            </div>
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@
  * Handles tournament creation, bracket generation, and progression logic
  */
 
-import { Robot, Tournament, TournamentMatch } from '@prisma/client';
+import { Robot, Tournament, ScheduledTournamentMatch } from '@prisma/client';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { checkSchedulingReadiness } from './matchmakingService';
@@ -14,7 +14,7 @@ const AUTO_START_THRESHOLD = 8; // Minimum robots for auto-tournament creation
 
 export interface TournamentCreationResult {
   tournament: Tournament;
-  bracket: TournamentMatch[];
+  bracket: ScheduledTournamentMatch[];
   participantCount: number;
 }
 
@@ -149,8 +149,8 @@ export function seedRobotsByELO(robots: Robot[]): Robot[] {
  * - Seeds are distributed to ensure top seeds only meet in later rounds
  * - Sequential winner advancement maintains bracket structure
  */
-function generateBracketPairs(seededRobots: Robot[], maxRounds: number): TournamentMatch[] {
-  const matches: TournamentMatch[] = [];
+function generateBracketPairs(seededRobots: Robot[], maxRounds: number): ScheduledTournamentMatch[] {
+  const matches: ScheduledTournamentMatch[] = [];
   const bracketSize = Math.pow(2, maxRounds); // Next power of 2
   
   // Create bracket slots (some will be byes)
@@ -451,12 +451,12 @@ export async function createSingleEliminationTournament(): Promise<TournamentCre
     isByeMatch: match.isByeMatch,
   }));
 
-  await prisma.tournamentMatch.createMany({
+  await prisma.scheduledTournamentMatch.createMany({
     data: bracketData,
   });
 
   // Fetch created matches for return
-  const bracket = await prisma.tournamentMatch.findMany({
+  const bracket = await prisma.scheduledTournamentMatch.findMany({
     where: { tournamentId: tournament.id },
     orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
   });
@@ -464,7 +464,7 @@ export async function createSingleEliminationTournament(): Promise<TournamentCre
   // Automatically complete bye matches
   const byeMatches = bracket.filter(match => match.isByeMatch && match.round === 1);
   for (const byeMatch of byeMatches) {
-    await prisma.tournamentMatch.update({
+    await prisma.scheduledTournamentMatch.update({
       where: { id: byeMatch.id },
       data: {
         winnerId: byeMatch.robot1Id,
@@ -533,7 +533,7 @@ export async function getTournamentById(tournamentId: number): Promise<Tournamen
 /**
  * Get current round matches for a tournament
  */
-export async function getCurrentRoundMatches(tournamentId: number): Promise<TournamentMatch[]> {
+export async function getCurrentRoundMatches(tournamentId: number): Promise<ScheduledTournamentMatch[]> {
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
   });
@@ -542,7 +542,7 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Tour
     throw new Error(`Tournament ${tournamentId} not found`);
   }
 
-  return prisma.tournamentMatch.findMany({
+  return prisma.scheduledTournamentMatch.findMany({
     where: {
       tournamentId,
       round: tournament.currentRound,
@@ -587,7 +587,7 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   }
 
   // Get completed matches from current round
-  const currentRoundMatches = await prisma.tournamentMatch.findMany({
+  const currentRoundMatches = await prisma.scheduledTournamentMatch.findMany({
     where: {
       tournamentId,
       round: tournament.currentRound,
@@ -597,7 +597,7 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   });
 
   // Check if all matches in current round are completed
-  const allMatches = await prisma.tournamentMatch.findMany({
+  const allMatches = await prisma.scheduledTournamentMatch.findMany({
     where: {
       tournamentId,
       round: tournament.currentRound,
@@ -627,7 +627,7 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
 
   // Get next round placeholder matches
   const nextRound = tournament.currentRound + 1;
-  const nextRoundMatches = await prisma.tournamentMatch.findMany({
+  const nextRoundMatches = await prisma.scheduledTournamentMatch.findMany({
     where: {
       tournamentId,
       round: nextRound,
@@ -639,9 +639,9 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   // Winners are paired: match 1 & 2 → next match 1, match 3 & 4 → next match 2, etc.
   for (let i = 0; i < nextRoundMatches.length; i++) {
     const robot1Id = winners[i * 2];
-    const robot2Id = winners[i * 2 + 1] || null; // Handle odd number of winners (shouldn't happen in single elimination)
+    const robot2Id = winners[i * 2 + 1] || null; // Handle odd number of winners
 
-    await prisma.tournamentMatch.update({
+    await prisma.scheduledTournamentMatch.update({
       where: { id: nextRoundMatches[i].id },
       data: {
         robot1Id,
@@ -649,6 +649,28 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
         status: 'pending',
       },
     });
+  }
+
+  // Auto-complete any next-round match that has robot1 but no robot2 (bye match)
+  // This mirrors what createSingleEliminationTournament does for round 1 byes
+  const updatedNextRoundMatches = await prisma.scheduledTournamentMatch.findMany({
+    where: { tournamentId, round: nextRound },
+    orderBy: { matchNumber: 'asc' },
+  });
+
+  for (const match of updatedNextRoundMatches) {
+    if (match.robot1Id !== null && match.robot2Id === null) {
+      await prisma.scheduledTournamentMatch.update({
+        where: { id: match.id },
+        data: {
+          winnerId: match.robot1Id,
+          status: 'completed',
+          isByeMatch: true,
+          completedAt: new Date(),
+        },
+      });
+      logger.info(`[Tournament] Auto-completed bye match ${match.id} in round ${nextRound} (winner: robot ${match.robot1Id})`);
+    }
   }
 
   // Advance to next round
@@ -660,6 +682,20 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   });
 
   logger.info(`[Tournament] Advanced to round ${nextRound} with ${winners.length} winners`);
+
+  // Check if all next-round matches are already completed (all byes) — need to recurse
+  const pendingNextRound = await prisma.scheduledTournamentMatch.count({
+    where: { tournamentId, round: nextRound, status: { in: ['pending', 'scheduled'] } },
+  });
+  const completedNextRound = await prisma.scheduledTournamentMatch.findMany({
+    where: { tournamentId, round: nextRound, status: 'completed' },
+  });
+
+  if (pendingNextRound === 0 && completedNextRound.length > 0) {
+    // All matches in next round are byes — advance again
+    logger.info(`[Tournament] All matches in round ${nextRound} are byes, advancing again...`);
+    await advanceWinnersToNextRound(tournamentId);
+  }
 }
 
 /**

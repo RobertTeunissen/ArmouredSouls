@@ -4,7 +4,7 @@ import prisma from '../src/lib/prisma';
 import { createTeam } from '../src/services/tagTeamService';
 import { runMatchmaking } from '../src/services/matchmakingService';
 import { runTagTeamMatchmaking } from '../src/services/tagTeamMatchmakingService';
-import { executeScheduledBattles } from '../src/services/battleOrchestrator';
+import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
 import { executeScheduledTagTeamBattles } from '../src/services/tagTeamBattleOrchestrator';
 
 

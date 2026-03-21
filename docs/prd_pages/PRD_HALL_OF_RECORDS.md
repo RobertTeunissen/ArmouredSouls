@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.2  
-**Date**: February 9, 2026  
+**Version**: v1.3  
+**Date**: March 18, 2026  
 **Status**: ✅ Implemented 
 
 ---
@@ -12,6 +12,7 @@
 - v1.0 - Initial draft by GitHub Copilot (February 6, 2026)
 - v1.1 - Review done by Robert Teunissen (February 9, 2026)
 - v1.2 - Implementation verification, added core design references, enhanced future enhancements (February 9, 2026) 
+- v1.3 - Added King of the Hill Records category (7 records), updated category tabs with 👑 KotH tab (March 18, 2026)
 
 ---
 
@@ -33,7 +34,7 @@
 
 The **Hall of Records** is a feature that displays prestigious achievements and statistical records from across the Armoured Souls battle arena. This page serves as a leaderboard of exceptional performances, creating aspirational goals for players and highlighting impressive feats.
 
-**Implementation Status**: ✅ Fully implemented with all 5 record categories (Combat, Upsets, Career, Economic, Prestige) and 17 individual records.
+**Implementation Status**: ✅ Fully implemented with all 5 record categories (Combat, Upsets, Career, Economic, Prestige) and 17 individual records. King of the Hill records (7 additional) added March 2026.
 
 ---
 
@@ -88,8 +89,9 @@ The **Hall of Records** is a feature that displays prestigious achievements and 
 3. ✅ Career Records (5 records)
 4. ✅ Economic Records (3 records)
 5. ✅ Prestige Records (2 records)
+6. ✅ King of the Hill Records (7 records)
 
-**Total**: 17 individual records implemented
+**Total**: 24 individual records implemented
 
 ---
 
@@ -306,6 +308,78 @@ The **Hall of Records** is a feature that displays prestigious achievements and 
 - **Why It's Cool:** Recognizes competitive success
 - **Implementation**: Lines 379-396 in `records.ts`
 
+#### 6. **King of the Hill Records** 👑 — Added March 18, 2026
+
+KotH records are only displayed after 5+ KotH events have been completed. A new "King of the Hill" tab with 👑 icon is added to the category tabs alongside Combat ⚔️, Upsets 🎯, Career 🏅, Economic 💰, and Prestige 👑.
+
+##### 6.1 Most KotH Wins
+- **Metric:** Robot with the most 1st place finishes in KotH matches
+- **Display:**
+  - Robot name and owner
+  - Total KotH wins (e.g., "42 wins")
+  - Total KotH matches played
+  - Win rate percentage
+- **Database Query:** `MAX(kothWins)` from Robot table
+- **Why It's Cool:** Shows the dominant zone controller
+
+##### 6.2 Highest Single-Match Zone Score
+- **Metric:** Best zone score achieved in a single KotH match
+- **Display:**
+  - Robot name and owner
+  - Zone score (e.g., "47.3 points")
+  - Match date and zone variant (fixed/rotating)
+  - Win reason (score threshold, time limit, last standing)
+- **Database Query:** `MAX(zoneScore)` from BattleParticipant where Battle.battleType = 'koth'
+- **Why It's Cool:** Showcases total zone dominance in a single match
+
+##### 6.3 Most KotH Kills (Career)
+- **Metric:** Robot with the most career kills across all KotH matches
+- **Display:**
+  - Robot name and owner
+  - Total KotH kills (e.g., "156 kills")
+  - Total KotH matches
+  - Kills per match average
+- **Database Query:** `MAX(kothKills)` from Robot table
+- **Why It's Cool:** Recognizes the most lethal zone fighter
+
+##### 6.4 Longest KotH Win Streak
+- **Metric:** Best consecutive 1st place streak in KotH matches
+- **Display:**
+  - Robot name and owner
+  - Win streak length (e.g., "12 consecutive wins")
+  - Current streak (if active)
+- **Database Query:** `MAX(kothBestWinStreak)` from Robot table
+- **Why It's Cool:** Shows sustained excellence in zone control
+
+##### 6.5 Most Zone Time (Single Match)
+- **Metric:** Longest total zone occupation time in a single KotH match
+- **Display:**
+  - Robot name and owner
+  - Zone time (e.g., "127.4 seconds")
+  - Match duration and zone variant
+- **Database Query:** `MAX(zoneOccupationTime)` from BattleParticipant where Battle.battleType = 'koth'
+- **Why It's Cool:** Shows the robot that held the zone the longest in one match
+
+##### 6.6 Fastest Threshold Victory
+- **Metric:** Quickest time to reach the score threshold and win a KotH match
+- **Display:**
+  - Robot name and owner
+  - Match duration (e.g., "43.2 seconds")
+  - Score threshold reached (30 or 45)
+  - Zone variant (fixed/rotating)
+- **Database Query:** `MIN(durationSeconds)` from Battle where battleType = 'koth' AND win reason = 'score_threshold'
+- **Why It's Cool:** Shows blitz-style zone domination
+
+##### 6.7 Zone Dominator (Career)
+- **Metric:** Highest career cumulative zone score across all KotH matches
+- **Display:**
+  - Robot name and owner
+  - Total zone score (e.g., "1,247.5 points")
+  - Total KotH matches
+  - Average zone score per match
+- **Database Query:** `MAX(kothTotalZoneScore)` from Robot table
+- **Why It's Cool:** Recognizes the all-time greatest zone controller
+
 ---
 
 ## Known Issues
@@ -433,6 +507,7 @@ HallOfRecordsPage.tsx
   - Career 🏅
   - Economic 💰
   - Prestige 👑
+  - King of the Hill 👑
 
 ### Information Hierarchy ✅ Implemented
 1. **Record value** (largest, most prominent - `text-3xl font-bold text-yellow-400`)

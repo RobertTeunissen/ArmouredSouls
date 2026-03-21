@@ -41,8 +41,11 @@ jest.mock('../src/config/logger', () => ({
 jest.mock('../src/services/repairService', () => ({
   repairAllRobots: jest.fn().mockResolvedValue(undefined),
 }));
-jest.mock('../src/services/battleOrchestrator', () => ({
+jest.mock('../src/services/leagueBattleOrchestrator', () => ({
   executeScheduledBattles: jest.fn().mockResolvedValue({ totalBattles: 0 }),
+}));
+jest.mock('../src/services/kothBattleOrchestrator', () => ({
+  executeScheduledKothBattles: jest.fn().mockResolvedValue({ totalMatches: 0, successfulMatches: 0, failedMatches: 0 }),
 }));
 jest.mock('../src/services/leagueRebalancingService', () => ({
   rebalanceLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),

@@ -7,6 +7,7 @@
  */
 
 import express, { Request, Response } from 'express';
+import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { cycleSnapshotService } from '../services/cycleSnapshotService';
 import { robotPerformanceService } from '../services/robotPerformanceService';
 import type { RobotMetric } from '../services/robotPerformanceService';
@@ -1257,12 +1258,51 @@ router.get('/facility/:userId/recommendations', async (req: Request, res: Respon
   }
 });
 
+/**
+ * GET /api/analytics/robot/:id/koth-performance
+ * Robot's cumulative KotH stats
+ */
+router.get('/robot/:id/koth-performance', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const robotId = parseInt(req.params.id);
+    const robot = await prisma.robot.findUnique({
+      where: { id: robotId },
+      select: {
+        id: true, name: true,
+        kothMatches: true, kothWins: true,
+        kothTotalZoneScore: true, kothTotalZoneTime: true,
+        kothKills: true, kothBestPlacement: true,
+        kothCurrentWinStreak: true, kothBestWinStreak: true,
+      },
+    });
+
+    if (!robot || robot.kothMatches === 0) {
+      return res.status(404).json({ error: 'No KotH data for this robot' });
+    }
+
+    res.json({
+      robotId: robot.id,
+      robotName: robot.name,
+      kothMatches: robot.kothMatches,
+      kothWins: robot.kothWins,
+      podiumRate: robot.kothMatches > 0 ? Number(((robot.kothWins) / robot.kothMatches * 100).toFixed(1)) : 0,
+      avgZoneScore: robot.kothMatches > 0 ? Number((robot.kothTotalZoneScore / robot.kothMatches).toFixed(1)) : 0,
+      totalZoneTime: robot.kothTotalZoneTime,
+      kothKills: robot.kothKills,
+      bestPlacement: robot.kothBestPlacement,
+      currentWinStreak: robot.kothCurrentWinStreak,
+      bestWinStreak: robot.kothBestWinStreak,
+    });
+  } catch (error) {
+    logger.error('[Analytics API] Error fetching KotH performance:', error);
+    res.status(500).json({ error: 'Failed to fetch KotH performance' });
+  }
+});
+
 export default router;
 
 /**
  * GET /api/analytics/performance
- * 
- * Returns cycle performance metrics for a range of cycles.
  * Validates: Requirements 15.4, 15.5
  * 
  * Query params:

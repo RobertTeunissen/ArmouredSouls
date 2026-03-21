@@ -9,7 +9,7 @@ export interface Integration {
   send(message: string): Promise<NotificationResult>;
 }
 
-export type JobName = 'league' | 'tournament' | 'tag-team' | 'settlement';
+export type JobName = 'league' | 'tournament' | 'tag-team' | 'settlement' | 'koth';
 
 export interface JobContext {
   jobName: JobName;
@@ -17,4 +17,5 @@ export interface JobContext {
   tournamentRound?: number;
   tournamentMaxRounds?: number;
   isEvenCycle?: boolean;
+  matchesCompleted?: number;
 }

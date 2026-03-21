@@ -1,7 +1,8 @@
 import cron, { ScheduledTask } from 'node-cron';
 import logger from '../config/logger';
 import { repairAllRobots } from './repairService';
-import { executeScheduledBattles } from './battleOrchestrator';
+import { executeScheduledBattles } from './leagueBattleOrchestrator';
+import { executeScheduledKothBattles } from './kothBattleOrchestrator';
 import { rebalanceLeagues } from './leagueRebalancingService';
 import { runMatchmaking } from './matchmakingService';
 import {
@@ -14,6 +15,7 @@ import { processTournamentBattle } from './tournamentBattleOrchestrator';
 import { executeScheduledTagTeamBattles } from './tagTeamBattleOrchestrator';
 import { rebalanceTagTeamLeagues } from './tagTeamLeagueRebalancingService';
 import { runTagTeamMatchmaking } from './tagTeamMatchmakingService';
+import { runKothMatchmaking } from './kothMatchmakingService';
 import prisma from '../lib/prisma';
 import { EventLogger } from './eventLogger';
 import { JobContext } from './notifications/integration';
@@ -29,10 +31,11 @@ export interface SchedulerConfig {
   tournamentSchedule: string;   // cron: default '0 8 * * *'
   tagTeamSchedule: string;      // cron: default '0 12 * * *'
   settlementSchedule: string;   // cron: default '0 23 * * *'
+  kothSchedule: string;          // cron: default '0 16 * * 1,3,5'
 }
 
 export interface JobState {
-  name: 'league' | 'tournament' | 'tagTeam' | 'settlement';
+  name: 'league' | 'tournament' | 'tagTeam' | 'settlement' | 'koth';
   schedule: string;
   lastRunAt: Date | null;
   lastRunDurationMs: number | null;
@@ -444,6 +447,46 @@ async function executeSettlement(): Promise<JobContext> {
   return { jobName: 'settlement' };
 }
 
+// --- KotH cycle handler ---
+
+function getNextKothScheduledDate(): Date {
+  const now = new Date();
+  const kothDays = [1, 3, 5]; // Monday, Wednesday, Friday
+
+  for (let daysAhead = 1; daysAhead <= 7; daysAhead++) {
+    const candidate = new Date(now);
+    candidate.setUTCDate(candidate.getUTCDate() + daysAhead);
+    candidate.setUTCHours(16, 0, 0, 0);
+    if (kothDays.includes(candidate.getUTCDay())) {
+      return candidate;
+    }
+  }
+  // Fallback (should never reach here)
+  const fallback = new Date(now);
+  fallback.setUTCDate(fallback.getUTCDate() + 2);
+  fallback.setUTCHours(16, 0, 0, 0);
+  return fallback;
+}
+
+async function executeKothCycle(): Promise<JobContext> {
+  // Step 1: Repair all robots
+  logger.info('KotH Cycle: Step 1 — Repairing all robots');
+  await repairAllRobots(true);
+
+  // Step 2: Execute scheduled KotH battles
+  logger.info('KotH Cycle: Step 2 — Executing scheduled KotH battles');
+  const battleSummary = await executeScheduledKothBattles(new Date());
+  logger.info(`KotH Cycle: ${battleSummary.successfulMatches} KotH matches executed (${battleSummary.failedMatches} failed)`);
+
+  // Step 3: Schedule KotH matchmaking for next Mon/Wed/Fri at 16:00 UTC
+  logger.info('KotH Cycle: Step 3 — Scheduling KotH matchmaking');
+  const scheduledFor = getNextKothScheduledDate();
+  const matchesCreated = await runKothMatchmaking(scheduledFor);
+  logger.info(`KotH Cycle: ${matchesCreated} KotH matches scheduled for ${scheduledFor.toISOString()}`);
+
+  return { jobName: 'koth', matchesCompleted: battleSummary.successfulMatches };
+}
+
 // --- Job runner with concurrency lock, logging, and error handling ---
 
 export async function runJob(jobName: JobState['name'], handler: () => Promise<JobContext | void>): Promise<void> {
@@ -529,6 +572,7 @@ export function initScheduler(config: SchedulerConfig): void {
     { name: 'tournament', schedule: config.tournamentSchedule, handler: executeTournamentCycle },
     { name: 'tagTeam', schedule: config.tagTeamSchedule, handler: executeTagTeamCycle },
     { name: 'settlement', schedule: config.settlementSchedule, handler: executeSettlement },
+    { name: 'koth', schedule: config.kothSchedule, handler: executeKothCycle },
   ];
 
   for (const job of jobs) {
@@ -556,7 +600,7 @@ export function initScheduler(config: SchedulerConfig): void {
     logger.info(`Scheduler: registered "${job.name}" job with schedule "${job.schedule}" (UTC)`);
   }
 
-  logger.info('Scheduler: all 4 jobs registered and active');
+  logger.info('Scheduler: all 5 jobs registered and active');
 }
 
 // --- State query ---

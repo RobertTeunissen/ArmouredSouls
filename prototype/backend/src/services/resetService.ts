@@ -74,7 +74,7 @@ export async function validateResetEligibility(userId: number): Promise<ResetEli
   }
 
   // Check for scheduled matches
-  const scheduledMatches = await prisma.scheduledMatch.count({
+  const scheduledMatches = await prisma.scheduledLeagueMatch.count({
     where: {
       OR: [
         { robot1Id: { in: robotIds } },
@@ -93,7 +93,7 @@ export async function validateResetEligibility(userId: number): Promise<ResetEli
   }
 
   // Check for active tournament participation
-  const activeTournamentMatches = await prisma.tournamentMatch.count({
+  const activeTournamentMatches = await prisma.scheduledTournamentMatch.count({
     where: {
       OR: [
         { robot1Id: { in: robotIds } },

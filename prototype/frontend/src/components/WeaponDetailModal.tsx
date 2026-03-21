@@ -1,5 +1,5 @@
 import React from 'react';
-import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
+import { ATTRIBUTE_LABELS, calculateDPS as calcDPS } from '../utils/weaponConstants';
 import { getWeaponImagePath } from '../utils/weaponImages';
 import MeleeIcon from '../assets/icons/weapon-types/melee.svg?react';
 import BallisticIcon from '../assets/icons/weapon-types/ballistic.svg?react';
@@ -46,8 +46,8 @@ const WeaponDetailModal: React.FC<WeaponDetailModalProps> = ({
   const discountedPrice = calculateDiscountedPrice(weapon.cost);
   const canAfford = userCredits >= discountedPrice;
   const canPurchase = canAfford && !isFull && !purchasing;
-  const cooldown = calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage);
-  const dps = weapon.baseDamage / parseFloat(cooldown);
+  const cooldown = weapon.cooldown;
+  const dps = calcDPS(weapon.baseDamage, cooldown);
 
   const getWeaponTypeIcon = (type: string) => {
     const iconClass = "w-8 h-8";
@@ -150,7 +150,7 @@ const WeaponDetailModal: React.FC<WeaponDetailModalProps> = ({
               </div>
               <div className="bg-surface-elevated rounded p-3">
                 <div className="text-sm text-secondary">DPS</div>
-                <div className="text-2xl font-bold text-primary">{Math.round(dps)}</div>
+                <div className="text-2xl font-bold text-primary">{dps}</div>
               </div>
               <div className="bg-surface-elevated rounded p-3">
                 <div className="text-sm text-secondary">Total Attributes</div>

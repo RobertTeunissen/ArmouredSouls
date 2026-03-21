@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getUpcomingMatches, ScheduledMatch, formatDateTime, getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
+import { getUpcomingMatches, ScheduledMatch } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { KothMatchCard, TagTeamMatchCard, ByeMatchCard, StandardMatchCard } from './match-cards';
 
 interface BattleReadiness {
   isReady: boolean;
@@ -10,8 +11,8 @@ interface BattleReadiness {
 }
 
 interface UpcomingMatchesProps {
-  robotId?: number; // Optional: filter matches for specific robot
-  battleReadiness?: BattleReadiness; // Optional: show battle readiness warnings
+  robotId?: number;
+  battleReadiness?: BattleReadiness;
 }
 
 function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}) {
@@ -19,7 +20,9 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
   const navigate = useNavigate();
   const [matches, setMatches] = useState<ScheduledMatch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);  useEffect(() => {
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
     fetchMatches();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -28,7 +31,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem('token');
       if (!token) {
         console.error('[UpcomingMatches] No authentication token found');
@@ -36,7 +39,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
         navigate('/login');
         return;
       }
-      
+
       console.log('[UpcomingMatches] Fetching upcoming matches...');
       const data = await getUpcomingMatches();
       console.log('[UpcomingMatches] Received matches:', {
@@ -45,7 +48,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
         tournamentMatches: data.filter(m => m.matchType === 'tournament').length,
         matches: data,
       });
-      
+
       // Filter by robotId if provided
       let filteredMatches = data;
       if (robotId) {
@@ -62,11 +65,10 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
           }
         });
       }
-      
+
       setMatches(filteredMatches);
       setError(null);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      // Handle 401 Unauthorized errors
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         console.error('[UpcomingMatches] Authentication error:', err);
         logout();
@@ -85,86 +87,41 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
     }
   };
 
-  const isMyRobot = (robotUserId: number) => {
-    return user && robotUserId === user.id;
+  const isMyRobot = (robotUserId: number): boolean => {
+    return user != null && robotUserId === user.id;
   };
 
   const getMatchResult = (match: ScheduledMatch) => {
-    // Basic validation
-    if (!match) {
-      console.warn('[UpcomingMatches] Null match encountered');
-      return null;
-    }
-    
-    // Handle tag team matches
+    if (!match) return null;
+
     if (match.matchType === 'tag_team') {
-      if (!match.team1 || !match.team2) {
-        console.error('[UpcomingMatches] Invalid tag team match data:', match);
-        return null;
-      }
-      
-      // Validate team robots exist
-      if (!match.team1.activeRobot || !match.team2.activeRobot || 
-          !match.team1.reserveRobot || !match.team2.reserveRobot) {
-        console.error('[UpcomingMatches] Missing robots in tag team match:', match);
-        return null;
-      }
-      
-      // Validate user IDs exist
-      if (!match.team1.activeRobot.userId || !match.team2.activeRobot.userId) {
-        console.error('[UpcomingMatches] Missing userId in tag team robots:', match);
-        return null;
-      }
-      
+      if (!match.team1 || !match.team2) return null;
+      if (!match.team1.activeRobot || !match.team2.activeRobot ||
+          !match.team1.reserveRobot || !match.team2.reserveRobot) return null;
+      if (!match.team1.activeRobot.userId || !match.team2.activeRobot.userId) return null;
+
       const myTeam = isMyRobot(match.team1.activeRobot.userId) ? match.team1 : match.team2;
       const opponentTeam = isMyRobot(match.team1.activeRobot.userId) ? match.team2 : match.team1;
-      
-      return { 
-        myTeam, 
-        opponentTeam,
-        isTagTeam: true,
-      };
+      return { myTeam, opponentTeam, isTagTeam: true as const };
     }
-    
-    // For tournament matches, robot1 or robot2 might be null (placeholder matches)
-    // But allow bye matches through - they only have robot1
+
     if (match.matchType === 'tournament' && !match.isByeMatch && (!match.robot1 || !match.robot2)) {
-      console.log('[UpcomingMatches] Skipping incomplete tournament match:', match.id);
-      return null; // Don't display incomplete tournament matches
+      return null;
     }
-    
-    // Handle bye matches - only robot1 exists
+
     if (match.isByeMatch && match.robot1) {
-      return { myRobot: match.robot1, opponent: null, isTagTeam: false, isByeMatch: true };
+      return { myRobot: match.robot1, opponent: null, isTagTeam: false as const, isByeMatch: true as const };
     }
-    
-    // For league matches, both robots should be present
-    if (!match.robot1 || !match.robot2) {
-      console.error('[UpcomingMatches] Invalid match data - missing robots:', {
-        matchId: match.id,
-        matchType: match.matchType,
-        robot1: match.robot1,
-        robot2: match.robot2,
-      });
-      return null;
-    }
-    
-    // Validate that we have the minimum required data
-    if (!match.robot1.userId || !match.robot2.userId) {
-      console.error('[UpcomingMatches] Invalid match data - missing userId:', {
-        matchId: match.id,
-        robot1UserId: match.robot1.userId,
-        robot2UserId: match.robot2.userId,
-      });
-      return null;
-    }
-    
+
+    if (!match.robot1 || !match.robot2) return null;
+    if (!match.robot1.userId || !match.robot2.userId) return null;
+
     const myRobot = isMyRobot(match.robot1.userId) ? match.robot1 : match.robot2;
     const opponent = isMyRobot(match.robot1.userId) ? match.robot2 : match.robot1;
-    return { myRobot, opponent, isTagTeam: false };
+    return { myRobot, opponent, isTagTeam: false as const };
   };
 
-  const getRoundName = (round: number, maxRounds: number) => {
+  const getRoundName = (round: number, maxRounds: number): string => {
     const remainingRounds = maxRounds - round + 1;
     if (remainingRounds === 1) return 'Finals';
     if (remainingRounds === 2) return 'Semi-finals';
@@ -172,19 +129,16 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
     return `Round ${round}/${maxRounds}`;
   };
 
-  const getReadinessWarningColor = () => {
+  const getReadinessWarningColor = (): string => {
     if (battleReadiness && !battleReadiness.isReady) {
       const hasLowHP = battleReadiness.warnings.some(w => w.includes('HP'));
-      const hasNoWeapons = battleReadiness.warnings.some(w => w.includes('weapons'));
-      
       if (hasLowHP) return 'text-[#f85149]';
-      if (hasNoWeapons) return 'text-[#d29922]';
       return 'text-[#d29922]';
     }
     return 'text-[#3fb950]';
   };
 
-  const getReadinessIcon = () => {
+  const getReadinessIcon = (): string => {
     if (battleReadiness && !battleReadiness.isReady) {
       const hasLowHP = battleReadiness.warnings.some(w => w.includes('HP'));
       if (hasLowHP) return '🔴';
@@ -220,6 +174,64 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
     );
   }
 
+  const renderMatchCard = (match: ScheduledMatch) => {
+    // KotH matches
+    if (match.matchType === 'koth') {
+      return <KothMatchCard key={match.id} match={match} />;
+    }
+
+    const matchResult = getMatchResult(match);
+    if (!matchResult) {
+      console.log('[UpcomingMatches] Filtering out match:', {
+        id: match.id,
+        matchType: match.matchType,
+        hasRobot1: !!match.robot1,
+        hasRobot2: !!match.robot2,
+      });
+      return null;
+    }
+
+    // Tag team matches
+    if (matchResult.isTagTeam && matchResult.myTeam && matchResult.opponentTeam) {
+      return (
+        <TagTeamMatchCard
+          key={match.id}
+          match={match}
+          myTeam={matchResult.myTeam}
+          opponentTeam={matchResult.opponentTeam}
+        />
+      );
+    }
+
+    const { myRobot, opponent } = matchResult as { myRobot: any; opponent: any; isTagTeam: false; isByeMatch?: boolean }; // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (!myRobot) return null;
+
+    // Bye matches
+    if (matchResult.isByeMatch) {
+      return (
+        <ByeMatchCard
+          key={match.id}
+          match={match}
+          myRobot={myRobot}
+          getRoundName={getRoundName}
+        />
+      );
+    }
+
+    if (!opponent) return null;
+
+    // Standard 1v1 matches (league / tournament)
+    return (
+      <StandardMatchCard
+        key={match.id}
+        match={match}
+        myRobot={myRobot}
+        opponent={opponent}
+        getRoundName={getRoundName}
+      />
+    );
+  };
+
   return (
     <div className="bg-surface p-4 rounded-lg border border-white/10">
       <div className="flex items-center justify-between mb-3">
@@ -241,329 +253,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
         </div>
       )}
       <div className="space-y-0 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-        {matches.map((match) => {
-          const matchResult = getMatchResult(match);
-          
-          // Skip invalid matches safely
-          if (!matchResult) {
-            console.log('[UpcomingMatches] Filtering out match:', {
-              id: match.id,
-              matchType: match.matchType,
-              hasRobot1: !!match.robot1,
-              hasRobot2: !!match.robot2,
-            });
-            return null;
-          }
-          
-          const isTagTeam = matchResult.isTagTeam;
-          const isTournament = match.matchType === 'tournament';
-          
-          // Handle tag team matches
-          if (isTagTeam && matchResult.myTeam && matchResult.opponentTeam) {
-            const tierColor = getLeagueTierColor(match.tagTeamLeague || 'bronze');
-            const tierName = getLeagueTierName(match.tagTeamLeague || 'bronze');
-            
-            return (
-              <div 
-                key={match.id} 
-                className={`
-                  bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
-                  border-l-4 border-l-cyan-400
-                  hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
-                  transition-all duration-150 ease-out
-                  hover:-translate-y-0.5
-                `}
-              >
-                {/* Desktop Layout */}
-                <div className="hidden md:flex items-center gap-3">
-                  {/* Icon */}
-                  <div className="flex-shrink-0 w-6 text-center text-base">
-                    🤝
-                  </div>
-                  
-                  {/* Status Badge */}
-                  <div className="flex-shrink-0 w-16">
-                    <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-primary-dark/20 text-primary">
-                      PENDING
-                    </div>
-                  </div>
-                  
-                  {/* Match Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
-                        2v2
-                      </span>
-                      <div className={`text-xs ${tierColor}`}>
-                        {tierName} Tag Team
-                      </div>
-                    </div>
-                    <div className="font-medium text-xs truncate">
-                      <span className="text-[#58a6ff]">
-                        {matchResult.myTeam.activeRobot.name} & {matchResult.myTeam.reserveRobot.name}
-                      </span>
-                      <span className="text-[#57606a] mx-1.5">vs</span>
-                      <span className="text-[#e6edf3]">
-                        {matchResult.opponentTeam.activeRobot.name} & {matchResult.opponentTeam.reserveRobot.name}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Date */}
-                  <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
-                    {formatDateTime(match.scheduledFor)}
-                  </div>
-                  
-                  {/* ELO */}
-                  <div className="flex-shrink-0 w-20 text-center">
-                    <div className="text-xs text-[#8b949e]">
-                      {matchResult.myTeam.combinedELO} vs {matchResult.opponentTeam.combinedELO}
-                    </div>
-                  </div>
-                  
-                  {/* Arrow Icon */}
-                  <div className="flex-shrink-0 w-6 text-center text-[#58a6ff] text-sm">
-                    →
-                  </div>
-                </div>
-                
-                {/* Mobile Layout */}
-                <div className="md:hidden">
-                  {/* Header Row */}
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-base">🤝</span>
-                      <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-primary-dark/20 text-primary">
-                        PENDING
-                      </div>
-                      <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
-                        2v2
-                      </span>
-                    </div>
-                    <div className="text-xs text-[#8b949e]">
-                      {formatDateTime(match.scheduledFor)}
-                    </div>
-                  </div>
-                  
-                  {/* Battle Type */}
-                  <div className={`text-xs ${tierColor} mb-1.5`}>
-                    {tierName} Tag Team
-                  </div>
-                  
-                  {/* Matchup Row */}
-                  <div className="mb-1.5">
-                    <div className="text-sm font-medium">
-                      <span className="text-[#58a6ff]">
-                        {matchResult.myTeam.activeRobot.name} & {matchResult.myTeam.reserveRobot.name}
-                      </span>
-                      <span className="text-[#57606a] mx-1.5">vs</span>
-                      <span className="text-[#e6edf3]">
-                        {matchResult.opponentTeam.activeRobot.name} & {matchResult.opponentTeam.reserveRobot.name}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Stats Row */}
-                  <div className="flex justify-between text-xs">
-                    <div>
-                      <span className="text-[#57606a]">ELO: </span>
-                      <span className="text-[#e6edf3]">{matchResult.myTeam.combinedELO}</span>
-                    </div>
-                    <div>
-                      <span className="text-[#57606a]">vs </span>
-                      <span className="text-[#e6edf3]">{matchResult.opponentTeam.combinedELO}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          }
-          
-          // Handle 1v1 matches (league and tournament)
-          const { myRobot, opponent } = matchResult;
-          if (!myRobot) return null;
-          
-          // Handle bye matches - show informational card
-          if (matchResult.isByeMatch) {
-            const tournamentLabel = match.tournamentRound && match.maxRounds 
-              ? `${match.tournamentName || 'Tournament'} • ${getRoundName(match.tournamentRound, match.maxRounds)}`
-              : match.tournamentName || 'Tournament';
-            
-            return (
-              <div 
-                key={match.id} 
-                className={`
-                  bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
-                  border-l-4 border-l-[#d29922]
-                  transition-all duration-150 ease-out
-                `}
-              >
-                {/* Desktop Layout */}
-                <div className="hidden md:flex items-center gap-3">
-                  <div className="flex-shrink-0 w-6 text-center text-base">🏆</div>
-                  <div className="flex-shrink-0 w-16">
-                    <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-yellow-500/20 text-warning">
-                      BYE
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-[#d29922] mb-0.5">{tournamentLabel}</div>
-                    <div className="font-medium text-xs">
-                      <span className="text-[#58a6ff]">{myRobot.name}</span>
-                      <span className="text-warning ml-2">auto-advances to next round</span>
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0 w-48 text-right">
-                    <div className="text-xs text-[#8b949e]">
-                      Top seed — no opponent in this round
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Mobile Layout */}
-                <div className="md:hidden">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-base">🏆</span>
-                      <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-warning">
-                        BYE
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-[#d29922] mb-1.5">{tournamentLabel}</div>
-                  <div className="text-sm font-medium mb-1">
-                    <span className="text-[#58a6ff]">{myRobot.name}</span>
-                    <span className="text-warning ml-2">auto-advances</span>
-                  </div>
-                  <div className="text-xs text-[#8b949e]">
-                    Top seed — no opponent in this round
-                  </div>
-                </div>
-              </div>
-            );
-          }
-          
-          if (!opponent) return null;
-          const tierColor = isTournament ? 'text-[#d29922]' : getLeagueTierColor(match.leagueType);
-          const tierName = isTournament 
-            ? (match.tournamentRound && match.maxRounds 
-                ? `${match.tournamentName || 'Tournament'} • ${getRoundName(match.tournamentRound, match.maxRounds)}`
-                : match.tournamentName || 'Tournament')
-            : `${getLeagueTierName(match.leagueType)} League`;
-          
-          const getBorderColor = () => {
-            return isTournament ? 'border-l-[#d29922]' : 'border-l-[#58a6ff]';
-          };
-          
-          return (
-            <div 
-              key={match.id} 
-              className={`
-                bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
-                border-l-4 ${getBorderColor()}
-                hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
-                transition-all duration-150 ease-out
-                hover:-translate-y-0.5
-              `}
-            >
-              {/* Desktop Layout */}
-              <div className="hidden md:flex items-center gap-3">
-                {/* Icon */}
-                <div className="flex-shrink-0 w-6 text-center text-base">
-                  {isTournament ? '🏆' : '⚔️'}
-                </div>
-                
-                {/* Status Badge */}
-                <div className="flex-shrink-0 w-16">
-                  <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-primary-dark/20 text-primary">
-                    PENDING
-                  </div>
-                </div>
-                
-                {/* Match Info */}
-                <div className="flex-1 min-w-0">
-                  <div className={`text-xs ${tierColor} mb-0.5`}>
-                    {tierName}
-                  </div>
-                  <div className="font-medium text-xs truncate">
-                    <span className="text-[#58a6ff]">{myRobot.name}</span>
-                    <span className="text-[#57606a] mx-1.5">vs</span>
-                    <span 
-                      className="text-[#e6edf3] hover:text-[#58a6ff] cursor-pointer hover:underline transition-colors"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/robots/${opponent.id}`); }}
-                    >
-                      {opponent.name}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Date */}
-                <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
-                  {formatDateTime(match.scheduledFor)}
-                </div>
-                
-                {/* ELO */}
-                <div className="flex-shrink-0 w-20 text-center">
-                  <div className="text-xs text-[#8b949e]">
-                    {myRobot.elo} vs {opponent.elo}
-                  </div>
-                </div>
-                
-                {/* Arrow Icon */}
-                <div className="flex-shrink-0 w-6 text-center text-[#58a6ff] text-sm">
-                  →
-                </div>
-              </div>
-              
-              {/* Mobile Layout */}
-              <div className="md:hidden">
-                {/* Header Row */}
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-base">{isTournament ? '🏆' : '⚔️'}</span>
-                    <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-primary-dark/20 text-primary">
-                      PENDING
-                    </div>
-                  </div>
-                  <div className="text-xs text-[#8b949e]">
-                    {formatDateTime(match.scheduledFor)}
-                  </div>
-                </div>
-                
-                {/* Battle Type */}
-                <div className={`text-xs ${tierColor} mb-1.5`}>
-                  {tierName}
-                </div>
-                
-                {/* Matchup Row */}
-                <div className="mb-1.5">
-                  <div className="text-sm font-medium">
-                    <span className="text-[#58a6ff]">{myRobot.name}</span>
-                    <span className="text-[#57606a] mx-1.5">vs</span>
-                    <span 
-                      className="text-[#e6edf3] hover:text-[#58a6ff] cursor-pointer hover:underline transition-colors"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/robots/${opponent.id}`); }}
-                    >
-                      {opponent.name}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Stats Row */}
-                <div className="flex justify-between text-xs">
-                  <div>
-                    <span className="text-[#57606a]">ELO: </span>
-                    <span className="text-[#e6edf3]">{myRobot.elo}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#57606a]">vs </span>
-                    <span className="text-[#e6edf3]">{opponent.elo}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {matches.map(renderMatchCard)}
       </div>
     </div>
   );

@@ -1,8 +1,11 @@
-# King of the Hill — Future Game Mode Analysis
+# King of the Hill — Game Mode Analysis
 
-**Status**: 📋 FUTURE RELEASE — Design notes only  
-**Depends on**: 2D Combat Arena (`.kiro/specs/2d-combat-arena/`)  
-**Date**: March 16, 2026
+**Status**: ✅ Implemented  
+**Implemented via**: Unified combat simulator (`combatSimulator.ts`) + KotH strategy objects (`arena/kothEngine.ts`) + orchestration in `kothBattleOrchestrator.ts`  
+**Original design date**: March 16, 2026  
+**Implementation date**: March 18, 2026
+
+> **Note**: This document was originally written as a future design analysis. KotH is now fully implemented using the unified N-robot combat simulator with pluggable `GameModeConfig` strategies. The design notes below reflect the original thinking; see the "Implementation Decisions" section at the bottom for how each open question was resolved.
 
 ---
 
@@ -91,8 +94,42 @@ Compared to standard 1v1 league battles, king of the hill changes which attribut
 
 ## Dependencies
 
-- 2D Combat Arena must be fully implemented (spatial positioning, range bands, movement)
-- Requirement 16 (Extensibility) provides the architectural hooks needed
-- Arena zones (Req 16, AC 4) provide the control zone implementation
-- Pluggable target priority (Req 16, AC 5) provides the targeting override
-- Pluggable movement intent (Req 16, AC 6) provides the zone-biased movement
+- ✅ 2D Combat Arena fully implemented (spatial positioning, range bands, movement)
+- ✅ Requirement 16 (Extensibility) provides the architectural hooks — used via `GameModeConfig`
+- ✅ Arena zones (Req 16, AC 4) provide the control zone implementation
+- ✅ Pluggable target priority (Req 16, AC 5) — implemented as `KothTargetPriorityStrategy`
+- ✅ Pluggable movement intent (Req 16, AC 6) — implemented as `KothMovementIntentModifier`
+
+---
+
+## Implementation Decisions
+
+Resolved during implementation (March 18, 2026). These answer the "Open Questions" above.
+
+### Q1: Zone visibility vs. Threat Analysis awareness
+**Decision**: Zone is visible to all robots. Threat Analysis influences *target prioritization* near the zone (zone contesters weighted 3×, approachers 2×), not zone visibility itself. Higher Threat Analysis robots make smarter decisions about *who* to fight near the zone, not *whether* they know where it is.
+
+### Q2: Capture mechanic vs. instant scoring
+**Decision**: Instant scoring — 1 point per second of uncontested occupation. No capture delay. This keeps the pace fast and rewards aggressive zone entry. Contested zones (multiple robots from different teams inside) score nothing.
+
+### Q3: Yield threshold interaction
+**Decision**: Yield mechanics are active in KotH via the unified simulator. A robot that yields exits the match (treated as eliminated). Its accumulated zone score is preserved for final placement. Yielding does not forfeit score — it just stops the robot from scoring further.
+
+### Q4: Respawning
+**Decision**: No respawning. Elimination is permanent. This creates meaningful risk for entering the zone and rewards builds that can survive sustained multi-robot combat. A "last standing" phase gives the final survivor 10 seconds to accumulate score before the match ends.
+
+### Q5: Rewards
+**Decision**: Placement-based rewards, separate from league/tournament systems:
+- 1st: 25,000 credits, 8 fame, 15 prestige
+- 2nd: 17,500 credits, 5 fame, 8 prestige
+- 3rd: 10,000 credits, 3 fame, 3 prestige
+- 4th-6th: 5,000 credits, 0 fame, 0 prestige
+- Zone dominance bonus: +25% all rewards if >75% of score came from uncontested time
+- No ELO changes. No league points. Streaming revenue awarded to all participants.
+
+### Format
+- Free-for-all with 5-6 robots per match (one per stable, highest ELO selected)
+- Two zone variants: Fixed (Mon/Fri) and Rotating (Wed)
+- Fixed: 30-point threshold, 150s time limit
+- Rotating: 45-point threshold, 210s time limit, zone moves every 30s
+- Anti-passive penalties for robots that avoid the zone too long

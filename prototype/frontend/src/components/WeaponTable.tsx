@@ -3,7 +3,7 @@ import MeleeIcon from '../assets/icons/weapon-types/melee.svg?react';
 import BallisticIcon from '../assets/icons/weapon-types/ballistic.svg?react';
 import EnergyIcon from '../assets/icons/weapon-types/energy.svg?react';
 import ShieldIcon from '../assets/icons/weapon-types/shield.svg?react';
-import { calculateWeaponCooldown } from '../utils/weaponConstants';
+import { calculateDPS as calcDPS } from '../utils/weaponConstants';
 
 interface Weapon {
   id: number;
@@ -65,10 +65,8 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
     }
   };
 
-  const calculateDPS = (weapon: Weapon): number => {
-    const cooldownStr = calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage);
-    const cooldown = parseFloat(cooldownStr);
-    return Math.round(weapon.baseDamage / cooldown);
+  const calculateDPS = (weapon: Weapon): string => {
+    return calcDPS(weapon.baseDamage, weapon.cooldown);
   };
 
   const calculateAttributeTotal = (weapon: Weapon): number => {
@@ -101,12 +99,12 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
 
       switch (sortField) {
         case 'cooldown':
-          aValue = parseFloat(calculateWeaponCooldown(a.weaponType, a.baseDamage));
-          bValue = parseFloat(calculateWeaponCooldown(b.weaponType, b.baseDamage));
+          aValue = a.cooldown;
+          bValue = b.cooldown;
           break;
         case 'dps':
-          aValue = calculateDPS(a);
-          bValue = calculateDPS(b);
+          aValue = parseFloat(calculateDPS(a));
+          bValue = parseFloat(calculateDPS(b));
           break;
         case 'cost':
           aValue = calculateDiscountedPrice(a.cost);
@@ -211,7 +209,6 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
           {sortedWeapons.map((weapon) => {
             const discountedPrice = calculateDiscountedPrice(weapon.cost);
             const dps = calculateDPS(weapon);
-            const cooldown = calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage);
             const attributeTotal = calculateAttributeTotal(weapon);
             const canAfford = userCredits >= discountedPrice;
             const canPurchase = canAfford && !isFull && purchasing !== weapon.id;
@@ -251,7 +248,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
                   <span className="font-mono">{weapon.baseDamage}</span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <span className="font-mono text-secondary">{cooldown}s</span>
+                  <span className="font-mono text-secondary">{weapon.cooldown}s</span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <span className="font-mono">{dps}</span>

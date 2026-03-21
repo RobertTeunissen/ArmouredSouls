@@ -47,6 +47,15 @@ export interface PlaybackCombatEvent {
   robot2HP?: number;
   robot1Shield?: number;
   robot2Shield?: number;
+  /** Per-robot HP map for N-robot KotH playback */
+  robotHP?: Record<string, number>;
+  /** Per-robot shield map for N-robot KotH playback */
+  robotShield?: Record<string, number>;
+  /** KotH-specific event data (zone scores, kill bonuses, etc.) */
+  kpiData?: {
+    zoneScores?: Record<string | number, number>;
+    [key: string]: unknown;
+  };
 }
 
 /** Combat result from the backend (subset of fields needed for playback) */
@@ -78,4 +87,33 @@ export interface AttackIndicator {
   type: 'hit' | 'miss' | 'critical' | 'malfunction';
   isRanged: boolean;
   duration: number; // seconds to display
+}
+
+/** KotH zone state for rendering */
+export interface KothZoneState {
+  center: Position;
+  radius: number;
+  state: 'uncontested' | 'contested' | 'empty' | 'inactive';
+  controllingRobotName?: string;
+  occupantNames: string[];
+}
+
+/** KotH scoreboard entry */
+export interface KothScoreEntry {
+  robotName: string;
+  zoneScore: number;
+  isEliminated: boolean;
+  placement?: number;
+}
+
+/** Extended playback result with KotH data */
+export interface KothPlaybackData {
+  isKoth: boolean;
+  participantCount: number;
+  scoreThreshold: number;
+  zoneRadius: number;
+  /** 6-color palette for participants */
+  colorPalette: string[];
+  /** Robot ID → name mapping for score resolution */
+  robotIdToName?: Record<string, string>;
 }

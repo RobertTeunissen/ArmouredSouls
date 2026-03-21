@@ -24,6 +24,7 @@ const implementedPages = new Set([
   '/weapon-shop',
   '/battle-history',
   '/league-standings',
+  '/koth-standings',
   '/tournaments',
   '/tag-teams',
   '/tag-teams/standings',
@@ -53,6 +54,7 @@ const allPages = {
     items: [
       { path: '/battle-history', label: 'Battle History' },
       { path: '/league-standings', label: 'League Standings' },
+      { path: '/koth-standings', label: 'King of the Hill Standings' },
       { path: '/tag-teams', label: 'Tag Team Management' },
       { path: '/tag-teams/standings', label: 'Tag Team Standings' },
       { path: '/practice', label: 'Practice Arena' },

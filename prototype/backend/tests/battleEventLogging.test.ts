@@ -5,7 +5,7 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { processBattle } from '../src/services/battleOrchestrator';
+import { processBattle } from '../src/services/leagueBattleOrchestrator';
 import { EventType, clearSequenceCache } from '../src/services/eventLogger';
 
 

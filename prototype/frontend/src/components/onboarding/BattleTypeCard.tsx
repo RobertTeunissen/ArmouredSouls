@@ -13,7 +13,7 @@
  * Requirements: 15.1-15.11
  */
 
-export type BattleType = 'league' | 'tag_team' | 'tournament';
+export type BattleType = 'league' | 'tag_team' | 'tournament' | 'koth';
 
 export interface BattleTypeInfo {
   name: string;
@@ -140,6 +140,41 @@ export const BATTLE_TYPE_INFO: Record<BattleType, BattleTypeInfo> = {
       'Elimination format (one loss = out)',
       'Requires peak robot condition',
       'Strategic timing for participation',
+    ],
+    minRobotsRequired: 1,
+  },
+  koth: {
+    name: 'King of the Hill',
+    description: 'Free-for-all zone control battles with 5-6 robots competing for dominance',
+    icon: '⛰️',
+    scheduling: {
+      frequency: 'Mon / Wed / Fri',
+      cycleTime: '16:00 UTC',
+      cycleName: 'King of the Hill Cycle',
+    },
+    requirements: [
+      'At least 1 robot',
+      'Robot must be battle-ready (HP > 0, weapon equipped)',
+      'One robot per stable per match',
+      'No league tier restriction',
+    ],
+    rewards: [
+      'Credits based on placement (1st–6th tiers)',
+      'Fame and prestige for top finishers',
+      'Kill bonus (+5 zone score per elimination)',
+      'Zone dominance bonus (+25% at >75% uncontested)',
+    ],
+    features: [
+      '5-6 robot free-for-all arena',
+      'Zone control scoring (1 pt/sec uncontested)',
+      'Fixed and rotating zone variants',
+      'Permanent elimination on destruction',
+    ],
+    strategicConsiderations: [
+      'Zone control vs combat aggression balance',
+      'servoMotors and threatAnalysis are key attributes',
+      'Anti-passive penalties for staying outside zone',
+      'Kill bonuses can swing the match',
     ],
     minRobotsRequired: 1,
   },

@@ -3,7 +3,7 @@ import apiClient from './apiClient';
 // Types
 export interface ScheduledMatch {
   id: number | string; // Can be number for league or "tournament-X" string for tournaments or "tag-team-X" for tag teams
-  matchType?: 'league' | 'tournament' | 'tag_team';
+  matchType?: 'league' | 'tournament' | 'tag_team' | 'koth';
   tournamentId?: number;
   tournamentName?: string;
   tournamentRound?: number;
@@ -92,6 +92,10 @@ export interface ScheduledMatch {
     };
     combinedELO: number;
   };
+  // KotH specific fields
+  kothParticipantCount?: number;
+  kothRotatingZone?: boolean;
+  kothParticipants?: Array<{ id: number; name: string; elo: number }>;
 }
 
 export interface BattleHistory {
@@ -115,6 +119,11 @@ export interface BattleHistory {
   tournamentRound?: number | null;
   tournamentName?: string | null;
   tournamentMaxRounds?: number | null;
+  // KotH specific fields
+  kothPlacement?: number;
+  kothParticipantCount?: number;
+  kothZoneScore?: number;
+  kothRotatingZone?: boolean;
   // Tag team specific fields
   team1Id?: number | null;
   team2Id?: number | null;
@@ -197,7 +206,7 @@ export const getUpcomingMatches = async (): Promise<ScheduledMatch[]> => {
 export const getMatchHistory = async (
   page: number = 1,
   pageSize: number = 10,
-  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team',
+  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth',
   robotId?: number
 ): Promise<PaginatedResponse<BattleHistory>> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -437,6 +446,9 @@ export interface BattleLogResponse {
     round?: number;
     maxRounds?: number;
     isFinals?: boolean;
+    // KotH metadata
+    isKothMatch?: boolean;
+    participantCount?: number;
     // 2D arena spatial metadata
     arenaRadius?: number;
     startingPositions?: Record<string, { x: number; y: number }>;
@@ -514,6 +526,31 @@ export interface BattleLogResponse {
       robotFame: number;
       studioLevel: number;
     } | null;
+  };
+  // KotH specific fields
+  kothParticipants?: Array<{
+    robotId: number;
+    robotName: string;
+    owner: string;
+    placement: number;
+    zoneScore: number;
+    zoneTime: number;
+    kills: number;
+    damageDealt: number;
+    finalHP: number;
+    destroyed: boolean;
+    credits: number;
+    fame: number;
+    prestige: number;
+    streamingRevenue: number;
+  }>;
+  // KotH playback data
+  kothData?: {
+    isKoth: boolean;
+    participantCount: number;
+    scoreThreshold: number;
+    zoneRadius: number;
+    colorPalette: string[];
   };
 }
 

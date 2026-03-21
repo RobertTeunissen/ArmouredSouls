@@ -3,7 +3,7 @@
  * Centralizes ELO, prestige, fame, and league point calculations.
  *
  * Used by:
- *  - battleOrchestrator.ts (1v1)
+ *  - leagueBattleOrchestrator.ts (1v1)
  *  - tagTeamBattleOrchestrator.ts (tag team)
  */
 
@@ -42,24 +42,24 @@ export function calculateExpectedScore(ratingA: number, ratingB: number): number
 
 /**
  * Calculate ELO changes for a match between two ratings.
- * Works for both 1v1 (individual ELO) and tag team (combined ELO).
+ * Works for all battle types: 1v1 (individual ELO), tag team (combined ELO),
+ * tournament, and any future mode. K-factor is always 32.
  */
 export function calculateELOChange(
   winnerELO: number,
   loserELO: number,
   isDraw: boolean = false,
-  kFactor: number = ELO_K_FACTOR
 ): { winnerChange: number; loserChange: number } {
   const expectedWinner = calculateExpectedScore(winnerELO, loserELO);
   const expectedLoser = calculateExpectedScore(loserELO, winnerELO);
 
   if (isDraw) {
-    const winnerChange = Math.round(kFactor * (0.5 - expectedWinner));
-    const loserChange = Math.round(kFactor * (0.5 - expectedLoser));
+    const winnerChange = Math.round(ELO_K_FACTOR * (0.5 - expectedWinner));
+    const loserChange = Math.round(ELO_K_FACTOR * (0.5 - expectedLoser));
     return { winnerChange, loserChange };
   } else {
-    const winnerChange = Math.round(kFactor * (1 - expectedWinner));
-    const loserChange = Math.round(kFactor * (0 - expectedLoser));
+    const winnerChange = Math.round(ELO_K_FACTOR * (1 - expectedWinner));
+    const loserChange = Math.round(ELO_K_FACTOR * (0 - expectedLoser));
     return { winnerChange, loserChange };
   }
 }

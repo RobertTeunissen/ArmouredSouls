@@ -14,7 +14,7 @@ import ComparisonModal from '../components/ComparisonModal';
 import WeaponDetailModal from '../components/WeaponDetailModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import GuidedUIOverlay from '../components/onboarding/GuidedUIOverlay';
-import { calculateWeaponCooldown, ATTRIBUTE_LABELS } from '../utils/weaponConstants';
+import { ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../utils/weaponImages';
 import { getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
@@ -824,7 +824,7 @@ function WeaponShopPage() {
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-secondary">Cooldown:</span>
-                              <span className="font-semibold">{calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage)}s</span>
+                              <span className="font-semibold">{weapon.cooldown}s</span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-secondary">Cost:</span>

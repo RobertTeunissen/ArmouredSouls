@@ -10,44 +10,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../../utils/apiClient';
 import BattleDetailsModal from '../BattleDetailsModal';
+import { BattleLogLegend } from './BattleLogLegend';
+import { getBattleOutcome, getBattleHighlight } from './battleLogHelpers';
 import type { Battle, BattleListResponse } from './types';
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-/** Battle outcome icon, label, and colour based on winner / HP. */
-const getBattleOutcome = (battle: Battle): { icon: string; label: string; color: string } => {
-  if (battle.winnerId === null) {
-    return { icon: '⚖️', label: 'Draw', color: 'text-secondary' };
-  }
-
-  const winnerHP =
-    battle.winnerId === battle.robot1.id ? battle.robot1FinalHP : battle.robot2FinalHP;
-
-  if (winnerHP > 50) {
-    return { icon: '🏆', label: 'Clear Victory', color: 'text-success' };
-  } else if (winnerHP > 0) {
-    return { icon: '💪', label: 'Narrow Victory', color: 'text-warning' };
-  }
-
-  return { icon: '🏆', label: 'Victory', color: 'text-primary' };
-};
-
-/** Left-border highlight for unusual battles (draw, long, big ELO swing). */
-const getBattleHighlight = (battle: Battle): string => {
-  if (battle.winnerId === null) {
-    return 'border-l-4 border-red-500';
-  }
-  if (battle.durationSeconds > 90) {
-    return 'border-l-4 border-yellow-500';
-  }
-  const eloSwing = Math.abs(battle.robot1ELOAfter - battle.robot1ELOBefore);
-  if (eloSwing > 50) {
-    return 'border-l-4 border-blue-500';
-  }
-  return '';
-};
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -137,41 +102,7 @@ export function BattleLogsTab(): JSX.Element {
       )}
 
       {/* Visual Indicators Legend */}
-      <div className="mb-4 p-4 bg-surface-elevated rounded-lg">
-        <h3 className="text-sm font-semibold mb-2 text-secondary">Visual Indicators:</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🏆</span>
-            <span className="text-success">Clear Victory</span>
-            <span className="text-secondary">(HP &gt; 50)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">💪</span>
-            <span className="text-warning">Narrow Victory</span>
-            <span className="text-secondary">(HP 1-50)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">⚖️</span>
-            <span className="text-secondary">Draw</span>
-            <span className="text-secondary">(No winner)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-1 h-4 bg-red-500"></span>
-            <span className="text-secondary">Draw</span>
-            <span className="text-secondary">(rare event)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-1 h-4 bg-yellow-500"></span>
-            <span className="text-secondary">Long Battle</span>
-            <span className="text-secondary">(&gt;90s)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-1 h-4 bg-primary-dark"></span>
-            <span className="text-secondary">Big ELO Swing</span>
-            <span className="text-secondary">(&gt;50 points)</span>
-          </div>
-        </div>
-      </div>
+      <BattleLogLegend />
 
       {/* Search and Filter */}
       <div className="mb-4 flex flex-col lg:flex-row gap-4">
@@ -207,6 +138,7 @@ export function BattleLogsTab(): JSX.Element {
           <option value="league">League Battles</option>
           <option value="tournament">Tournament Battles</option>
           <option value="tagteam">Tag Team Battles</option>
+          <option value="koth">KotH Battles</option>
         </select>
         <button
           onClick={handleSearch}
@@ -239,7 +171,7 @@ export function BattleLogsTab(): JSX.Element {
                 {battles.map((battle) => {
                   const outcome = getBattleOutcome(battle);
                   const highlight = getBattleHighlight(battle);
-                  const format = battle.battleFormat === '2v2' ? '2v2' : '1v1';
+                  const format = battle.battleType === 'koth' ? 'koth' : battle.battleFormat === '2v2' ? '2v2' : '1v1';
 
                   return (
                     <tr
@@ -251,12 +183,14 @@ export function BattleLogsTab(): JSX.Element {
                       <td className="p-3">
                         <span
                           className={`px-2 py-1 rounded text-xs font-semibold ${
-                            format === '2v2'
+                            format === 'koth'
+                              ? 'bg-orange-600/30 text-orange-300'
+                              : format === '2v2'
                               ? 'bg-purple-600/30 text-purple-300'
                               : 'bg-blue-600/30 text-blue-300'
                           }`}
                         >
-                          {format}
+                          {format === 'koth' ? '👑 KotH' : format}
                         </span>
                       </td>
                       <td className="p-3">

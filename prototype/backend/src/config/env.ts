@@ -13,6 +13,7 @@ export interface EnvConfig {
   tournamentSchedule: string;
   tagTeamSchedule: string;
   settlementSchedule: string;
+  kothSchedule: string;
 }
 
 /**
@@ -77,6 +78,7 @@ export function loadEnvConfig(): EnvConfig {
     tournamentSchedule: process.env.TOURNAMENT_SCHEDULE || '0 8 * * *',
     tagTeamSchedule: process.env.TAGTEAM_SCHEDULE || '0 12 * * *',
     settlementSchedule: process.env.SETTLEMENT_SCHEDULE || '0 23 * * *',
+    kothSchedule: process.env.KOTH_SCHEDULE || '0 16 * * 1,3,5',
   };
 }
 

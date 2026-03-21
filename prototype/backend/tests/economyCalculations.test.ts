@@ -10,7 +10,7 @@ import {
   getMerchandisingBaseRate,
   calculateMerchandisingIncome,
   calculateFinancialHealth,
-  getLeagueBaseReward,
+  getLeagueWinReward,
   getParticipationReward,
 } from '../src/utils/economyCalculations';
 
@@ -85,19 +85,19 @@ describe('Economy Calculations', () => {
   });
 
   describe('League Rewards', () => {
-    it('should return correct base rewards for each league', () => {
-      expect(getLeagueBaseReward('bronze')).toEqual({ min: 5000, max: 10000, midpoint: 7500 });
-      expect(getLeagueBaseReward('silver')).toEqual({ min: 10000, max: 20000, midpoint: 15000 });
-      expect(getLeagueBaseReward('gold')).toEqual({ min: 20000, max: 40000, midpoint: 30000 });
-      expect(getLeagueBaseReward('platinum')).toEqual({ min: 40000, max: 80000, midpoint: 60000 });
-      expect(getLeagueBaseReward('diamond')).toEqual({ min: 80000, max: 150000, midpoint: 115000 });
-      expect(getLeagueBaseReward('champion')).toEqual({ min: 150000, max: 300000, midpoint: 225000 });
+    it('should return correct win rewards for each league', () => {
+      expect(getLeagueWinReward('bronze')).toBe(7500);
+      expect(getLeagueWinReward('silver')).toBe(15000);
+      expect(getLeagueWinReward('gold')).toBe(30000);
+      expect(getLeagueWinReward('platinum')).toBe(60000);
+      expect(getLeagueWinReward('diamond')).toBe(115000);
+      expect(getLeagueWinReward('champion')).toBe(225000);
     });
 
-    it('should return participation rewards (30% of league base)', () => {
-      expect(getParticipationReward('bronze')).toBe(1500); // 30% of 5000
-      expect(getParticipationReward('silver')).toBe(3000); // 30% of 10000
-      expect(getParticipationReward('gold')).toBe(6000); // 30% of 20000
+    it('should return participation rewards (20% of win reward)', () => {
+      expect(getParticipationReward('bronze')).toBe(1500); // 20% of 7500
+      expect(getParticipationReward('silver')).toBe(3000); // 20% of 15000
+      expect(getParticipationReward('gold')).toBe(6000); // 20% of 30000
     });
   });
 

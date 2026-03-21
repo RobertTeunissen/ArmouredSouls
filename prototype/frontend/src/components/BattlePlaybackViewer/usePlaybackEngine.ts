@@ -128,6 +128,25 @@ function getLatestHPShield(
   const hp: Record<string, number> = {};
   const shield: Record<string, number> = {};
 
+  // KotH path: events carry robotHP and robotShield maps with all participants' data
+  const hasRobotHPMap = events.some(e => e.robotHP);
+  if (hasRobotHPMap) {
+    for (let i = 0; i <= eventIndex && i < events.length; i++) {
+      const evt = events[i];
+      if (evt.robotHP) {
+        for (const [name, hpVal] of Object.entries(evt.robotHP)) {
+          hp[name] = hpVal;
+        }
+      }
+      if (evt.robotShield) {
+        for (const [name, shieldVal] of Object.entries(evt.robotShield)) {
+          shield[name] = shieldVal;
+        }
+      }
+    }
+    return { hp, shield };
+  }
+
   // Track the current phase's robot pair
   // For 1v1: always robot1Name/robot2Name (stable, never changes)
   // For tag team: derived from positions keys (changes on phase transitions)
@@ -192,6 +211,12 @@ function computeInitialFacing(startingPositions: Record<string, Position>): Reco
     const p2 = startingPositions[n2];
     facing[n1] = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
     facing[n2] = Math.atan2(p1.y - p2.y, p1.x - p2.x) * (180 / Math.PI);
+  } else if (names.length > 2) {
+    // N-robot (KotH): each robot faces toward arena center (0,0)
+    for (const name of names) {
+      const p = startingPositions[name];
+      facing[name] = Math.atan2(-p.y, -p.x) * (180 / Math.PI);
+    }
   }
 
   return facing;

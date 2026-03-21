@@ -12,12 +12,15 @@ import { calculateBaseSpeed, calculateEffectiveSpeed, updateServoStrain } from '
 import { calculateMovementIntent, applyMovement, getPatienceLimit } from './arena/movementAI';
 import { checkSyncVolley, getSupportShieldBoost, getFormationDefenseBonus } from './arena/teamCoordination';
 import { resolveCounter } from './arena/counterAttack';
-import { selectTarget as _selectTarget } from './arena/threatScoring';
+import { selectTarget } from './arena/threatScoring';
 import {
   RobotCombatState as SpatialRobotCombatState,
-  CombatEvent as _SpatialCombatEvent,
-  CombatResult as _SpatialCombatResult,
+  CombatEvent as SpatialCombatEvent,
+  CombatResult as SpatialCombatResult,
   RangeBand,
+  ArenaConfig,
+  GameModeConfig,
+  GameModeState,
 } from './arena/types';
 
 /**
@@ -36,7 +39,10 @@ export interface RobotWithWeapons extends Robot {
 export interface CombatEvent {
   timestamp: number;
   type: 'attack' | 'miss' | 'critical' | 'counter' | 'shield_break' | 'shield_regen' | 'yield' | 'destroyed' | 'malfunction'
-    | 'movement' | 'range_transition' | 'out_of_range' | 'counter_out_of_range' | 'backstab' | 'flanking';
+    | 'movement' | 'range_transition' | 'out_of_range' | 'counter_out_of_range' | 'backstab' | 'flanking'
+    | 'zone_defined' | 'zone_enter' | 'zone_exit' | 'score_tick'
+    | 'kill_bonus' | 'zone_moving' | 'zone_active' | 'robot_eliminated'
+    | 'passive_warning' | 'passive_penalty' | 'last_standing' | 'match_end';
   attacker?: string;
   defender?: string;
   weapon?: string;
@@ -63,6 +69,33 @@ export interface CombatEvent {
   backstab?: boolean;
   flanking?: boolean;
   attackAngle?: number;
+  // KotH-specific fields
+  kpiData?: {
+    robotId?: number;
+    killerRobotId?: number;
+    victimRobotId?: number;
+    bonus?: number;
+    bonusAmount?: number;
+    zoneScores?: Record<number, number>;
+    zoneScore?: number;
+    zoneState?: string;
+    center?: { x: number; y: number };
+    radius?: number;
+    newCenter?: { x: number; y: number };
+    countdown?: number;
+    survivorId?: number;
+    winnerId?: number | null;
+    placements?: Array<{ robotId: number; placement: number; zoneScore: number }>;
+    reason?: string;
+    damageReduction?: number;
+    accuracyPenalty?: number;
+    timeOutside?: number;
+    duration?: number;
+    occupants?: number[];
+    rotationCount?: number;
+    destroyerRobotId?: number;
+    winReason?: string;
+  };
 }
 
 export interface FormulaBreakdown {
@@ -88,9 +121,23 @@ export interface CombatResult {
   arenaRadius?: number;
   startingPositions?: Record<string, Position>;
   endingPositions?: Record<string, Position>;
+  // KotH metadata
+  kothMetadata?: {
+    finalZoneScores?: Record<number, number>;
+    placementOrder?: Array<{ robotId: number; placement: number; zoneScore: number }>;
+    zoneOccupationTimes?: Record<number, number>;
+    uncontestedTimes?: Record<number, number>;
+    zoneEntries?: Record<number, number>;
+    zoneExits?: Record<number, number>;
+    killCounts?: Record<number, number>;
+    eliminationStatuses?: Record<number, 'destroyed' | 'yielded' | 'survived'>;
+    matchDuration?: number;
+    winReason?: string;
+    zoneVariant?: 'fixed' | 'rotating';
+  };
 }
 
-const BASE_WEAPON_COOLDOWN = 4; // seconds
+export const BASE_WEAPON_COOLDOWN = 4; // seconds
 const MAX_BATTLE_DURATION = 120; // seconds
 const SIMULATION_TICK = 0.1; // 100ms per tick
 
@@ -105,21 +152,21 @@ const MOVEMENT_EVENT_MIN_INTERVAL = 0.5; // seconds
 /**
  * Clamp a value between min and max
  */
-function clamp(value: number, min: number, max: number): number {
+export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
 /**
  * Get random value between min and max
  */
-function random(min: number, max: number): number {
+export function random(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
 /**
  * Get effective attribute value including weapon bonuses
  */
-function getEffectiveAttribute(
+export function getEffectiveAttribute(
   robot: RobotWithWeapons,
   baseAttribute: number | string | { toNumber(): number },
   hand: 'main' | 'offhand',
@@ -142,7 +189,7 @@ function getEffectiveAttribute(
 /**
  * Calculate hit chance based on attacker and defender attributes
  */
-function calculateHitChance(
+export function calculateHitChance(
   attacker: RobotWithWeapons,
   defender: RobotWithWeapons,
   attackerHand: 'main' | 'offhand' = 'main',
@@ -194,7 +241,7 @@ function calculateHitChance(
 /**
  * Calculate critical hit chance
  */
-function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { critChance: number; breakdown: FormulaBreakdown } {
+export function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { critChance: number; breakdown: FormulaBreakdown } {
   const baseCrit = 5;
   const effectiveCritSystems = getEffectiveAttribute(attacker, attacker.criticalSystems, attackerHand, 'criticalSystemsBonus');
   const critBonus = effectiveCritSystems / 8;
@@ -225,7 +272,7 @@ function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'main' | 
 /**
  * Calculate weapon malfunction chance based on weapon control
  */
-function calculateMalfunctionChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { malfunctionChance: number; breakdown: FormulaBreakdown } {
+export function calculateMalfunctionChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { malfunctionChance: number; breakdown: FormulaBreakdown } {
   const effectiveWeaponControl = getEffectiveAttribute(attacker, attacker.weaponControl, attackerHand, 'weaponControlBonus');
   const baseMalfunction = 20;
   const reductionPerPoint = 0.4;
@@ -249,7 +296,7 @@ function calculateMalfunctionChance(attacker: RobotWithWeapons, attackerHand: 'm
 /**
  * Calculate base damage before defense
  */
-function calculateBaseDamage(
+export function calculateBaseDamage(
   attacker: RobotWithWeapons,
   weaponBaseDamage: number,
   attackerHand: 'main' | 'offhand' = 'main',
@@ -323,7 +370,7 @@ function calculateBaseDamage(
 /**
  * Apply damage through Energy Shields and armor
  */
-function applyDamage(
+export function applyDamage(
   baseDamage: number,
   attacker: RobotWithWeapons,
   defender: RobotWithWeapons,
@@ -481,7 +528,7 @@ function shouldYield(state: SpatialRobotCombatState): boolean {
 /**
  * Get weapon info for display
  */
-function getWeaponInfo(robot: RobotWithWeapons, hand: 'main' | 'offhand'): { name: string; baseDamage: number } {
+export function getWeaponInfo(robot: RobotWithWeapons, hand: 'main' | 'offhand'): { name: string; baseDamage: number } {
   const weaponInventory = hand === 'main' ? robot.mainWeapon : robot.offhandWeapon;
   if (weaponInventory?.weapon) {
     return {
@@ -539,19 +586,31 @@ function getWeaponBonusesSummary(robot: RobotWithWeapons): string {
  * Build position snapshot for events
  */
 function buildPositionSnapshot(
-  state1: SpatialRobotCombatState,
-  state2: SpatialRobotCombatState
+  ...states: SpatialRobotCombatState[]
 ): { positions: Record<string, Position>; facingDirections: Record<string, number> } {
-  return {
-    positions: {
-      [state1.robot.name]: { x: state1.position.x, y: state1.position.y },
-      [state2.robot.name]: { x: state2.position.x, y: state2.position.y },
-    },
-    facingDirections: {
-      [state1.robot.name]: state1.facingDirection,
-      [state2.robot.name]: state2.facingDirection,
-    },
-  };
+  const positions: Record<string, Position> = {};
+  const facingDirections: Record<string, number> = {};
+  for (const s of states) {
+    positions[s.robot.name] = { x: s.position.x, y: s.position.y };
+    facingDirections[s.robot.name] = s.facingDirection;
+  }
+  return { positions, facingDirections };
+}
+
+/**
+ * Build per-robot HP and shield maps for N-robot battles (KotH/FFA).
+ * Returns robotHP and robotShield keyed by robot name.
+ */
+function buildHPShieldSnapshot(
+  states: SpatialRobotCombatState[],
+): { robotHP: Record<string, number>; robotShield: Record<string, number> } {
+  const robotHP: Record<string, number> = {};
+  const robotShield: Record<string, number> = {};
+  for (const s of states) {
+    robotHP[s.robot.name] = Math.max(0, s.currentHP);
+    robotShield[s.robot.name] = Math.max(0, s.currentShield);
+  }
+  return { robotHP, robotShield };
 }
 
 /**
@@ -661,8 +720,8 @@ function performAttack(
       spatialContext.formationDefenseBonus
     );
 
-    attackerState.totalDamageDealt += hpDamage;
-    defenderState.totalDamageTaken += hpDamage;
+    attackerState.totalDamageDealt += hpDamage + shieldDamage;
+    defenderState.totalDamageTaken += hpDamage + shieldDamage;
 
     const totalDamage = hpDamage + shieldDamage;
 
@@ -825,8 +884,8 @@ function performAttack(
       counterDamage, defenderState.robot, attackerState.robot, attackerState, false, counterResult.hand
     );
 
-    defenderState.totalDamageDealt += counterHP;
-    attackerState.totalDamageTaken += counterHP;
+    defenderState.totalDamageDealt += counterHP + counterShield;
+    attackerState.totalDamageTaken += counterHP + counterShield;
 
     events.push({
       timestamp: Number(currentTime.toFixed(1)),
@@ -898,7 +957,7 @@ function performAttack(
 function initializeCombatState(
   robot: RobotWithWeapons,
   spawnPosition: Position,
-  opponentPosition: Position,
+  facingTarget: Position,
   teamIndex: number,
   attackCooldown: number,
   offhandCooldown: number,
@@ -906,7 +965,7 @@ function initializeCombatState(
   const servoMotors = Number(robot.servoMotors ?? 1);
   const baseSpeed = calculateBaseSpeed(servoMotors);
   const combatAlgorithms = Number(robot.combatAlgorithms ?? 1);
-  const facingDirection = angleBetween(spawnPosition, opponentPosition);
+  const facingDirection = angleBetween(spawnPosition, facingTarget);
 
   return {
     robot,
@@ -956,147 +1015,271 @@ function initializeCombatState(
 
 
 /**
- * Simulate a complete battle between two robots with 2D spatial mechanics.
- * @param robot1 First robot
- * @param robot2 Second robot
- * @param isTournament If true, resolves draws with HP tiebreaker
+ * Configuration for the unified battle simulator.
+ * Replaces the old `isTournament` boolean with a general config object.
  */
-export function simulateBattle(
-  robot1: RobotWithWeapons,
-  robot2: RobotWithWeapons,
-  isTournament: boolean = false
-): CombatResult {
-  // === 1. Arena setup ===
-  const arena = createArena([1, 1]);
-  const spawn1 = arena.spawnPositions[0];
-  const spawn2 = arena.spawnPositions[1];
+export interface BattleConfig {
+  /** If true, time-limit draws are resolved by HP tiebreaker (highest HP% wins) */
+  allowDraws: boolean;
+  /** Max battle duration in seconds (defaults to MAX_BATTLE_DURATION) */
+  maxDuration?: number;
+  /** Optional game mode config for extensible mechanics (KotH zones, targeting, etc.) */
+  gameModeConfig?: GameModeConfig;
+  /** Optional game mode state (zone scores, custom data, etc.) */
+  gameModeState?: GameModeState;
+  /** Optional arena radius override */
+  arenaRadius?: number;
+}
 
-  // === 2. Weapon cooldowns ===
-  const mainWeapon1 = robot1.mainWeapon?.weapon;
-  const offhandWeapon1 = robot1.offhandWeapon?.weapon;
-  const mainWeapon2 = robot2.mainWeapon?.weapon;
-  const offhandWeapon2 = robot2.offhandWeapon?.weapon;
+// ─── Helper: calculate weapon cooldown ───────────────────────────────
+function calcCooldown(robot: RobotWithWeapons, weaponCooldown: number | undefined, hand: 'main' | 'offhand'): number {
+  const baseCooldown = weaponCooldown || BASE_WEAPON_COOLDOWN;
+  const cooldownWithPenalty = hand === 'offhand' ? baseCooldown * 1.4 : baseCooldown;
+  const effectiveAttackSpeed = getEffectiveAttribute(robot, robot.attackSpeed, hand, 'attackSpeedBonus');
+  return cooldownWithPenalty / (1 + Number(effectiveAttackSpeed) / 50);
+}
 
-  const calcCooldown = (robot: RobotWithWeapons, weaponCooldown: number | undefined, hand: 'main' | 'offhand'): number => {
-    const baseCooldown = weaponCooldown || BASE_WEAPON_COOLDOWN;
-    const cooldownWithPenalty = hand === 'offhand' ? baseCooldown * 1.4 : baseCooldown;
-    const effectiveAttackSpeed = getEffectiveAttribute(robot, robot.attackSpeed, hand, 'attackSpeedBonus');
-    return cooldownWithPenalty / (1 + Number(effectiveAttackSpeed) / 50);
+// ─── Helper: build spatial context for an attack pair ────────────────
+function buildSpatialContext(
+  attacker: SpatialRobotCombatState,
+  defender: SpatialRobotCombatState,
+  hand: 'main' | 'offhand',
+  currentTime: number,
+  arena: ArenaConfig,
+  allStates: SpatialRobotCombatState[],
+): {
+  distance: number;
+  rangeBand: RangeBand;
+  rangePenaltyMult: number;
+  hydraulicMult: number;
+  backstabBonus: number;
+  adaptationHit: number;
+  adaptationDmg: number;
+  pressureAccuracy: number;
+  pressureDamage: number;
+  combatAlgorithmScore: number;
+  syncVolleyBonus: number;
+  formationDefenseBonus: number;
+  positionSnapshot: { positions: Record<string, Position>; facingDirections: Record<string, number> };
+  isBackstab: boolean;
+  attackAngle: number;
+} {
+  const dist = euclideanDistance(attacker.position, defender.position);
+  const rangeBand = classifyRangeBand(dist);
+
+  const weapon = hand === 'main' ? attacker.robot.mainWeapon?.weapon : attacker.robot.offhandWeapon?.weapon;
+  const weaponLike: WeaponLike | null = weapon ? { weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name } : null;
+  const optimalRange = weaponLike ? getWeaponOptimalRange(weaponLike) : 'short';
+  const rangePenaltyMult = getRangePenalty(optimalRange, rangeBand);
+  const hydraulicMult = calculateHydraulicBonus(Number(attacker.robot.hydraulicSystems ?? 0), rangeBand);
+
+  const backstabResult = checkBackstab(
+    { position: attacker.position, facingDirection: attacker.facingDirection, gyroStabilizers: Number(attacker.robot.gyroStabilizers ?? 1), threatAnalysis: Number(attacker.robot.threatAnalysis ?? 1) },
+    { position: defender.position, facingDirection: defender.facingDirection, gyroStabilizers: Number(defender.robot.gyroStabilizers ?? 1), threatAnalysis: Number(defender.robot.threatAnalysis ?? 1) },
+  );
+
+  const adaptation = getEffectiveAdaptation({
+    adaptiveAI: Number(attacker.robot.adaptiveAI ?? 1),
+    adaptationHitBonus: attacker.adaptationHitBonus,
+    adaptationDamageBonus: attacker.adaptationDamageBonus,
+    currentHP: attacker.currentHP,
+    maxHP: attacker.maxHP,
+  });
+
+  const pressure = calculatePressureEffects({
+    logicCores: Number(attacker.robot.logicCores ?? 1),
+    currentHP: attacker.currentHP,
+    maxHP: attacker.maxHP,
+  });
+
+  const syncBonus = checkSyncVolley(attacker, currentTime);
+  const formationBonus = getFormationDefenseBonus(defender, arena);
+
+  return {
+    distance: dist,
+    rangeBand,
+    rangePenaltyMult,
+    hydraulicMult,
+    backstabBonus: backstabResult.bonus,
+    adaptationHit: adaptation.hitBonus,
+    adaptationDmg: adaptation.damageBonus,
+    pressureAccuracy: pressure.accuracyMod,
+    pressureDamage: pressure.damageMod,
+    combatAlgorithmScore: attacker.combatAlgorithmScore,
+    syncVolleyBonus: syncBonus,
+    formationDefenseBonus: formationBonus,
+    positionSnapshot: buildPositionSnapshot(...allStates),
+    isBackstab: backstabResult.isBackstab,
+    attackAngle: backstabResult.angle,
   };
+}
 
 
-  // === 3. Initialize extended combat states ===
-  const state1 = initializeCombatState(
-    robot1, spawn1, spawn2, 0,
-    calcCooldown(robot1, mainWeapon1?.cooldown, 'main'),
-    calcCooldown(robot1, offhandWeapon1?.cooldown, 'offhand'),
-  );
-  const state2 = initializeCombatState(
-    robot2, spawn2, spawn1, 1,
-    calcCooldown(robot2, mainWeapon2?.cooldown, 'main'),
-    calcCooldown(robot2, offhandWeapon2?.cooldown, 'offhand'),
-  );
+/**
+ * Unified N-robot battle simulator with full spatial mechanics.
+ *
+ * Handles any number of robots (1v1, FFA, KotH, battle royale, etc.)
+ * using the complete 7-phase tick loop with all 23 robot attributes.
+ *
+ * Game mode-specific behavior (zone scoring, custom targeting, win conditions)
+ * is injected via the optional GameModeConfig/GameModeState in BattleConfig.
+ *
+ * @param robots Array of robots to fight (N >= 2)
+ * @param config Battle configuration (draw rules, duration, game mode hooks)
+ * @returns SpatialCombatResult with full arena metadata
+ */
+export function simulateBattleMulti(
+  robots: RobotWithWeapons[],
+  config: BattleConfig = { allowDraws: true },
+): SpatialCombatResult {
+  const n = robots.length;
+  if (n < 2) throw new Error('simulateBattleMulti requires at least 2 robots');
+
+  const maxDuration = config.gameModeConfig?.maxDuration ?? config.maxDuration ?? MAX_BATTLE_DURATION;
+  const gameModeConfig = config.gameModeConfig;
+  const gameModeState = config.gameModeState;
+
+  // === 1. Arena setup ===
+  const teamSizes = robots.map(() => 1); // Each robot is its own "team" for FFA/KotH
+  const arena = createArena(teamSizes, config.arenaRadius);
+  if (gameModeConfig?.arenaZones) {
+    arena.zones = gameModeConfig.arenaZones;
+  }
+
+  // For N>2 FFA/KotH: override spawn positions to distribute evenly around perimeter
+  if (n > 2) {
+    const spawnDistance = arena.radius - 2;
+    const angleStep = (2 * Math.PI) / n;
+    arena.spawnPositions = [];
+    for (let i = 0; i < n; i++) {
+      const angle = i * angleStep;
+      arena.spawnPositions.push({
+        x: Math.round(spawnDistance * Math.cos(angle) * 1000) / 1000,
+        y: Math.round(spawnDistance * Math.sin(angle) * 1000) / 1000,
+      });
+    }
+  }
+
+  // === 2. Initialize combat states ===
+  const states: SpatialRobotCombatState[] = robots.map((robot, i) => {
+    const spawn = arena.spawnPositions[i] ?? { x: 0, y: 0 };
+    const facingTarget = n === 2
+      ? (arena.spawnPositions[1 - i] ?? arena.center)
+      : arena.center;
+    const mainCd = calcCooldown(robot, robot.mainWeapon?.weapon?.cooldown, 'main');
+    const offCd = calcCooldown(robot, robot.offhandWeapon?.weapon?.cooldown, 'offhand');
+    return initializeCombatState(robot, spawn, facingTarget, i, mainCd, offCd);
+  });
 
   // Record starting positions
-  const startingPositions: Record<string, Position> = {
-    [robot1.name]: { x: spawn1.x, y: spawn1.y },
-    [robot2.name]: { x: spawn2.x, y: spawn2.y },
-  };
+  const startingPositions: Record<string, Position> = {};
+  for (const s of states) {
+    startingPositions[s.robot.name] = { x: s.position.x, y: s.position.y };
+  }
 
-  const events: CombatEvent[] = [];
+  const rawEvents: SpatialCombatEvent[] = [];
   let currentTime = 0;
   let battleEnded = false;
   let winnerId: number | null = null;
 
-  // Movement event throttling state
-  let lastMoveEventTime1 = 0;
-  let lastMoveEventPos1: Position = { x: spawn1.x, y: spawn1.y };
-  let lastMoveEventTime2 = 0;
-  let lastMoveEventPos2: Position = { x: spawn2.x, y: spawn2.y };
+  // For N>2 battles, create a proxy that auto-injects robotHP/robotShield maps
+  // on every event push, so all events (including those from performAttack) get enriched.
+  const events: SpatialCombatEvent[] = n > 2
+    ? new Proxy(rawEvents, {
+        get(target, prop, receiver) {
+          if (prop === 'push') {
+            return (...args: SpatialCombatEvent[]): number => {
+              const snapshot = buildHPShieldSnapshot(states);
+              for (const evt of args) {
+                evt.robotHP = snapshot.robotHP;
+                evt.robotShield = snapshot.robotShield;
+              }
+              return target.push(...args);
+            };
+          }
+          return Reflect.get(target, prop, receiver);
+        },
+      })
+    : rawEvents;
 
-  // Range band tracking for transition events
-  let lastRangeBand: RangeBand = classifyRangeBand(euclideanDistance(spawn1, spawn2));
+  // Movement event throttling per robot
+  const lastMoveEventTime: number[] = states.map(() => 0);
+  const lastMoveEventPos: Position[] = states.map(s => ({ x: s.position.x, y: s.position.y }));
 
+  // Range band tracking per robot (for transition events)
+  const lastRangeBandToTarget: Map<number, RangeBand> = new Map();
 
-  // === 4. Battle start event ===
-  const weaponStats1 = getWeaponStatsSummary(robot1);
-  const weaponStats2 = getWeaponStatsSummary(robot2);
-  const weaponBonuses1 = getWeaponBonusesSummary(robot1);
-  const weaponBonuses2 = getWeaponBonusesSummary(robot2);
-  const initDist = euclideanDistance(spawn1, spawn2);
+  // === 3. Battle start event ===
+  const participantSummary = states.map(s => {
+    const ws = getWeaponStatsSummary(s.robot);
+    return `${s.robot.name} (${s.robot.stance}): ${s.currentHP}HP/${s.maxHP}HP, ${s.currentShield}S/${s.maxShield}S | ${ws} | Speed: ${s.movementSpeed.toFixed(1)}`;
+  }).join('\n');
 
   events.push({
     timestamp: 0,
     type: 'attack',
-    message: `⚔️ Battle commences! ${robot1.name} (${robot1.stance}) vs ${robot2.name} (${robot2.stance})`,
-    robot1HP: state1.currentHP,
-    robot2HP: state2.currentHP,
-    robot1Shield: state1.currentShield,
-    robot2Shield: state2.currentShield,
+    message: `⚔️ Battle commences! ${robots.map(r => r.name).join(' vs ')}`,
+    robot1HP: states[0]?.currentHP ?? 0,
+    robot2HP: states[1]?.currentHP ?? 0,
+    robot1Shield: states[0]?.currentShield ?? 0,
+    robot2Shield: states[1]?.currentShield ?? 0,
     formulaBreakdown: {
-      calculation: `${robot1.name}: ${state1.currentHP}HP / ${state1.maxHP}HP, ${state1.currentShield}S / ${state1.maxShield}S
-Weapons: ${weaponStats1}
-Main CD: ${state1.attackCooldown.toFixed(2)}s${robot1.loadoutType === 'dual_wield' && offhandWeapon1 ? `, Offhand CD: ${state1.offhandCooldown.toFixed(2)}s (40% penalty applied)` : ''}
-Speed: ${state1.movementSpeed.toFixed(1)} units/s
-Weapon Attribute Bonuses:
-${weaponBonuses1}
-
-${robot2.name}: ${state2.currentHP}HP / ${state2.maxHP}HP, ${state2.currentShield}S / ${state2.maxShield}S
-Weapons: ${weaponStats2}
-Main CD: ${state2.attackCooldown.toFixed(2)}s${robot2.loadoutType === 'dual_wield' && offhandWeapon2 ? `, Offhand CD: ${state2.offhandCooldown.toFixed(2)}s (40% penalty applied)` : ''}
-Speed: ${state2.movementSpeed.toFixed(1)} units/s
-Weapon Attribute Bonuses:
-${weaponBonuses2}
-
-Arena: radius ${arena.radius}, starting distance ${initDist.toFixed(1)} units (${classifyRangeBand(initDist)} range)`,
-      components: {
-        robot1_hp: state1.currentHP,
-        robot1_max_hp: state1.maxHP,
-        robot1_shield: state1.currentShield,
-        robot1_max_shield: state1.maxShield,
-        robot1_main_cooldown: state1.attackCooldown,
-        robot1_offhand_cooldown: state1.offhandCooldown,
-        robot1_speed: state1.movementSpeed,
-        robot2_hp: state2.currentHP,
-        robot2_max_hp: state2.maxHP,
-        robot2_shield: state2.currentShield,
-        robot2_max_shield: state2.maxShield,
-        robot2_main_cooldown: state2.attackCooldown,
-        robot2_offhand_cooldown: state2.offhandCooldown,
-        robot2_speed: state2.movementSpeed,
-        arenaRadius: arena.radius,
-        startingDistance: initDist,
-      },
+      calculation: participantSummary + `\nArena: radius ${arena.radius}`,
+      components: { arenaRadius: arena.radius, participantCount: n },
       result: 0,
     },
-    positions: startingPositions,
-    facingDirections: {
-      [robot1.name]: state1.facingDirection,
-      [robot2.name]: state2.facingDirection,
-    },
-    distance: initDist,
-    rangeBand: classifyRangeBand(initDist),
+    ...buildPositionSnapshot(...states),
   });
 
-
-  // === 5. Main simulation loop ===
-  while (currentTime < MAX_BATTLE_DURATION && !battleEnded) {
+  // === 4. Main simulation loop ===
+  while (currentTime < maxDuration && !battleEnded) {
     currentTime += SIMULATION_TICK;
+    const aliveStates = states.filter(s => s.isAlive);
+    if (aliveStates.length <= 1 && !gameModeConfig?.winCondition) {
+      battleEnded = true;
+      break;
+    }
+
+    // Sync states to gameModeState so movement/target modifiers can access all robots
+    if (gameModeState?.customData) {
+      (gameModeState.customData as Record<string, unknown>).robots = states;
+    }
 
     // ── PHASE 1: MOVEMENT ──
-    // Calculate movement intent and apply movement for each robot
-    for (const [state, opponent] of [[state1, state2], [state2, state1]] as [SpatialRobotCombatState, SpatialRobotCombatState][]) {
-      if (!state.isAlive) continue;
+    for (const state of aliveStates) {
+      const opponents = states.filter(s => s !== state && s.isAlive);
 
-      // Determine if opponent has ranged weapon (for closing bonus)
-      const opponentMainWeapon = opponent.robot.mainWeapon?.weapon;
+      // No opponents: skip movement unless a game mode modifier can still direct us
+      // (e.g. KotH last-standing phase needs the robot to move toward the zone)
+      if (opponents.length === 0 && !gameModeConfig?.movementModifier) continue;
+
+      // Select target via game mode strategy or default threat scoring
+      let target: SpatialRobotCombatState | null = null;
+      if (opponents.length > 0) {
+        let targetIdx: number | null = null;
+        if (gameModeConfig?.targetPriority) {
+          const priorities = gameModeConfig.targetPriority.selectTargets(
+            state, opponents, arena, gameModeState,
+          );
+          targetIdx = priorities.length > 0 ? priorities[0] : null;
+        }
+        if (targetIdx === null) {
+          const threat = selectTarget(state, opponents, arena.radius);
+          targetIdx = threat?.robotIndex ?? opponents[0].teamIndex;
+        }
+        state.currentTarget = targetIdx;
+        target = states.find(s => s.teamIndex === targetIdx) ?? opponents[0];
+      } else {
+        state.currentTarget = null;
+      }
+
+      // Effective speed with servo strain
+      const opponentMainWeapon = target?.robot.mainWeapon?.weapon;
       const hasRangedOpponent = opponentMainWeapon
         ? opponentMainWeapon.weaponType !== 'melee' && opponentMainWeapon.weaponType !== 'shield'
         : false;
-
-      // Calculate effective speed with servo strain
       const hasMeleeWeapon = state.robot.mainWeapon?.weapon?.weaponType === 'melee';
-      const distToOpponent = euclideanDistance(state.position, opponent.position);
+      const distToTarget = target ? euclideanDistance(state.position, target.position) : 0;
       const servoState = {
         servoMotors: Number(state.robot.servoMotors ?? 1),
         servoStrain: state.servoStrain,
@@ -1104,477 +1287,364 @@ Arena: radius ${arena.radius}, starting distance ${initDist.toFixed(1)} units ($
         isUsingClosingBonus: state.isUsingClosingBonus,
         stance: (state.robot.stance ?? 'balanced') as 'defensive' | 'offensive' | 'balanced',
         hasMeleeWeapon,
-        distanceToTarget: distToOpponent,
-        currentSpeedRatio: 0, // Will be updated after movement
+        distanceToTarget: distToTarget,
+        currentSpeedRatio: 0,
       };
-
       const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(
-        servoState, opponent.effectiveMovementSpeed, hasRangedOpponent
+        servoState, target?.effectiveMovementSpeed ?? 0, hasRangedOpponent,
       );
       state.effectiveMovementSpeed = effectiveSpeed;
       state.isUsingClosingBonus = isClosingBonus;
 
-      // Calculate movement intent
-      state.currentTarget = opponent.teamIndex;
-      const intent = calculateMovementIntent(state, [opponent], arena);
+      // Movement intent (with optional game mode modifier)
+      const intent = calculateMovementIntent(
+        state, opponents, arena, gameModeConfig?.movementModifier, gameModeState,
+      );
       state.movementIntent = intent;
 
       // Apply movement
       const oldPos = { x: state.position.x, y: state.position.y };
       const newPos = applyMovement(state, intent, arena, SIMULATION_TICK);
       state.position = newPos;
-
-      // Calculate velocity for prediction
       state.velocity = {
         x: (newPos.x - oldPos.x) / SIMULATION_TICK,
         y: (newPos.y - oldPos.y) / SIMULATION_TICK,
       };
 
-      // Update speed ratio for servo strain
+      // Servo strain update
       const actualMove = euclideanDistance(oldPos, newPos);
       const maxMove = effectiveSpeed * SIMULATION_TICK;
       servoState.currentSpeedRatio = maxMove > 0 ? actualMove / maxMove : 0;
       servoState.isUsingClosingBonus = state.isUsingClosingBonus;
       servoState.servoStrain = state.servoStrain;
       servoState.sustainedMovementTime = state.sustainedMovementTime;
-
-      // Update servo strain
       updateServoStrain(servoState, SIMULATION_TICK);
       state.servoStrain = servoState.servoStrain;
       state.sustainedMovementTime = servoState.sustainedMovementTime;
     }
 
-
     // ── PHASE 2: FACING ──
-    const distance = euclideanDistance(state1.position, state2.position);
-    const currentRangeBand = classifyRangeBand(distance);
-
-    if (state1.isAlive) {
-      const turnSpeed1 = calculateTurnSpeed(Number(state1.robot.gyroStabilizers ?? 1));
-      const facingState1 = { position: state1.position, facingDirection: state1.facingDirection, turnSpeed: turnSpeed1 };
-      const opponentState1 = { position: state2.position, velocity: state2.velocity };
-      updateFacing(facingState1, state2.position, SIMULATION_TICK, opponentState1, Number(state1.robot.threatAnalysis ?? 1));
-      state1.facingDirection = facingState1.facingDirection;
-    }
-
-    if (state2.isAlive) {
-      const turnSpeed2 = calculateTurnSpeed(Number(state2.robot.gyroStabilizers ?? 1));
-      const facingState2 = { position: state2.position, facingDirection: state2.facingDirection, turnSpeed: turnSpeed2 };
-      const opponentState2 = { position: state1.position, velocity: state1.velocity };
-      updateFacing(facingState2, state1.position, SIMULATION_TICK, opponentState2, Number(state2.robot.threatAnalysis ?? 1));
-      state2.facingDirection = facingState2.facingDirection;
-    }
-
-    // ── Emit range transition events ──
-    if (currentRangeBand !== lastRangeBand) {
-      const closingOrFalling = distance < euclideanDistance(lastMoveEventPos1, lastMoveEventPos2)
-        ? 'closes to' : 'falls back to';
-      events.push({
-        timestamp: Number(currentTime.toFixed(1)),
-        type: 'range_transition',
-        attacker: robot1.name,
-        defender: robot2.name,
-        message: `📏 Combat ${closingOrFalling} ${currentRangeBand} range (${distance.toFixed(1)} units)`,
-        robot1HP: state1.currentHP,
-        robot2HP: state2.currentHP,
-        robot1Shield: state1.currentShield,
-        robot2Shield: state2.currentShield,
-        ...buildPositionSnapshot(state1, state2),
-        distance,
-        rangeBand: currentRangeBand,
-      });
-      lastRangeBand = currentRangeBand;
-    }
-
-
-    // ── PHASE 3: ATTACKS (range-gated) ──
-    const posSnapshot = buildPositionSnapshot(state1, state2);
-
-    // Helper to build spatial context for an attack
-    const buildSpatialContext = (
-      attacker: SpatialRobotCombatState,
-      defender: SpatialRobotCombatState,
-      hand: 'main' | 'offhand',
-    ): {
-      distance: number;
-      rangeBand: RangeBand;
-      rangePenaltyMult: number;
-      hydraulicMult: number;
-      backstabBonus: number;
-      adaptationHit: number;
-      adaptationDmg: number;
-      pressureAccuracy: number;
-      pressureDamage: number;
-      combatAlgorithmScore: number;
-      syncVolleyBonus: number;
-      formationDefenseBonus: number;
-      positionSnapshot: { positions: Record<string, Position>; facingDirections: Record<string, number> };
-      isBackstab: boolean;
-      attackAngle: number;
-    } => {
-      const weapon = hand === 'main' ? attacker.robot.mainWeapon?.weapon : attacker.robot.offhandWeapon?.weapon;
-      const weaponLike: WeaponLike | null = weapon ? { weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name } : null;
-      const optimalRange = weaponLike ? getWeaponOptimalRange(weaponLike) : 'short';
-      const rangePenaltyMult = getRangePenalty(optimalRange, currentRangeBand);
-      const hydraulicMult = calculateHydraulicBonus(Number(attacker.robot.hydraulicSystems ?? 0), currentRangeBand);
-
-      const backstabResult = checkBackstab(
-        { position: attacker.position, facingDirection: attacker.facingDirection, gyroStabilizers: Number(attacker.robot.gyroStabilizers ?? 1), threatAnalysis: Number(attacker.robot.threatAnalysis ?? 1) },
-        { position: defender.position, facingDirection: defender.facingDirection, gyroStabilizers: Number(defender.robot.gyroStabilizers ?? 1), threatAnalysis: Number(defender.robot.threatAnalysis ?? 1) },
-      );
-
-      const adaptation = getEffectiveAdaptation({
-        adaptiveAI: Number(attacker.robot.adaptiveAI ?? 1),
-        adaptationHitBonus: attacker.adaptationHitBonus,
-        adaptationDamageBonus: attacker.adaptationDamageBonus,
-        currentHP: attacker.currentHP,
-        maxHP: attacker.maxHP,
-      });
-
-      const pressure = calculatePressureEffects({
-        logicCores: Number(attacker.robot.logicCores ?? 1),
-        currentHP: attacker.currentHP,
-        maxHP: attacker.maxHP,
-      });
-
-      const syncBonus = checkSyncVolley(attacker, currentTime);
-      const formationBonus = getFormationDefenseBonus(defender, arena);
-
-      return {
-        distance,
-        rangeBand: currentRangeBand,
-        rangePenaltyMult,
-        hydraulicMult,
-        backstabBonus: backstabResult.bonus,
-        adaptationHit: adaptation.hitBonus,
-        adaptationDmg: adaptation.damageBonus,
-        pressureAccuracy: pressure.accuracyMod,
-        pressureDamage: pressure.damageMod,
-        combatAlgorithmScore: attacker.combatAlgorithmScore,
-        syncVolleyBonus: syncBonus,
-        formationDefenseBonus: formationBonus,
-        positionSnapshot: posSnapshot,
-        isBackstab: backstabResult.isBackstab,
-        attackAngle: backstabResult.angle,
+    for (const state of aliveStates) {
+      if (state.currentTarget === null) continue;
+      const target = states.find(s => s.teamIndex === state.currentTarget);
+      if (!target) continue;
+      const turnSpeed = calculateTurnSpeed(Number(state.robot.gyroStabilizers ?? 1));
+      const facingState = {
+        position: state.position,
+        facingDirection: state.facingDirection,
+        turnSpeed,
       };
-    };
+      const opponentState = { position: target.position, velocity: target.velocity };
+      updateFacing(
+        facingState, target.position, SIMULATION_TICK,
+        opponentState, Number(state.robot.threatAnalysis ?? 1),
+      );
+      state.facingDirection = facingState.facingDirection;
+    }
 
-    // Robot 1 main weapon attack
-    let robot1AttackedThisTick = false;
-    if (currentTime - state1.lastAttackTime >= state1.attackCooldown && state1.currentHP > 0 && state1.isAlive) {
-      const weapon1 = robot1.mainWeapon?.weapon;
-      const weaponLike1: WeaponLike | null = weapon1 ? { weaponType: weapon1.weaponType, handsRequired: weapon1.handsRequired, name: weapon1.name } : null;
-
-      // Check patience timer — force attack even if out of range
-      const patienceLimit = getPatienceLimit(state1.combatAlgorithmScore);
-      const forceAttack = state1.patienceTimer >= patienceLimit;
-
-      if (!weaponLike1 || canAttack(weaponLike1, distance) || forceAttack) {
-        const ctx = buildSpatialContext(state1, state2, 'main');
-        performAttack(state1, state2, robot1.name, robot2.name, currentTime, 'main', events, ctx);
-        state1.lastAttackTime = currentTime;
-        state1.patienceTimer = 0;
-        robot1AttackedThisTick = true;
-      } else {
-        // Melee out of range — emit event
+    // ── Emit range transition events (per robot → target pair) ──
+    for (const state of aliveStates) {
+      if (state.currentTarget === null) continue;
+      const target = states.find(s => s.teamIndex === state.currentTarget);
+      if (!target) continue;
+      const dist = euclideanDistance(state.position, target.position);
+      const currentBand = classifyRangeBand(dist);
+      const prevBand = lastRangeBandToTarget.get(state.teamIndex);
+      if (prevBand !== undefined && currentBand !== prevBand) {
+        const closingOrFalling = dist < euclideanDistance(
+          lastMoveEventPos[state.teamIndex], target.position,
+        ) ? 'closes to' : 'falls back to';
         events.push({
           timestamp: Number(currentTime.toFixed(1)),
-          type: 'out_of_range',
-          attacker: robot1.name,
-          defender: robot2.name,
-          weapon: weaponLike1.name,
-          message: `🚫 ${robot1.name}'s ${weaponLike1.name} can't reach ${robot2.name} at ${distance.toFixed(1)} units (need ≤2)`,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          ...posSnapshot,
-          distance,
-          rangeBand: currentRangeBand,
+          type: 'range_transition',
+          attacker: state.robot.name,
+          defender: target.robot.name,
+          message: `📏 Combat ${closingOrFalling} ${currentBand} range (${dist.toFixed(1)} units)`,
+          robot1HP: states[0]?.currentHP ?? 0,
+          robot2HP: states[1]?.currentHP ?? 0,
+          robot1Shield: states[0]?.currentShield ?? 0,
+          robot2Shield: states[1]?.currentShield ?? 0,
+          ...buildPositionSnapshot(...states),
+          distance: dist,
+          rangeBand: currentBand,
         });
       }
+      lastRangeBandToTarget.set(state.teamIndex, currentBand);
     }
 
-    // Robot 1 offhand attack (dual wield)
-    if (robot1.loadoutType === 'dual_wield' &&
-        robot1.offhandWeapon?.weapon &&
-        currentTime - state1.lastOffhandAttackTime >= state1.offhandCooldown &&
-        state1.currentHP > 0 && state1.isAlive) {
-      const offWeapon1 = robot1.offhandWeapon.weapon;
-      const offWeaponLike1: WeaponLike = { weaponType: offWeapon1.weaponType, handsRequired: offWeapon1.handsRequired, name: offWeapon1.name };
+    // ── PHASE 3: ATTACKS (range-gated, per robot) ──
+    const attackedThisTick: Set<number> = new Set();
 
-      if (canAttack(offWeaponLike1, distance) || state1.patienceTimer >= getPatienceLimit(state1.combatAlgorithmScore)) {
-        const ctx = buildSpatialContext(state1, state2, 'offhand');
-        performAttack(state1, state2, robot1.name, robot2.name, currentTime, 'offhand', events, ctx);
-        state1.lastOffhandAttackTime = currentTime;
-        state1.patienceTimer = 0;
-        robot1AttackedThisTick = true;
+    for (const state of aliveStates) {
+      if (state.currentTarget === null) continue;
+      let target = states.find(s => s.teamIndex === state.currentTarget);
+      if (!target || !target.isAlive) continue;
+
+      let dist = euclideanDistance(state.position, target.position);
+      let didAttack = false;
+
+      // Main weapon attack
+      if (currentTime - state.lastAttackTime >= state.attackCooldown
+          && state.currentHP > 0 && state.isAlive) {
+        const weapon = state.robot.mainWeapon?.weapon;
+        const weaponLike: WeaponLike | null = weapon
+          ? { weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name }
+          : null;
+        const patienceLimit = getPatienceLimit(state.combatAlgorithmScore);
+        const forceAttack = state.patienceTimer >= patienceLimit;
+
+        // Target-of-opportunity: if melee weapon can't reach primary target,
+        // find the nearest in-range opponent to attack instead (FFA/KotH only)
+        if (weaponLike && !canAttack(weaponLike, dist) && !forceAttack && n > 2) {
+          const nearestInRange = states
+            .filter(s => s !== state && s.isAlive && s.teamIndex !== state.teamIndex)
+            .map(s => ({ state: s, dist: euclideanDistance(state.position, s.position) }))
+            .filter(({ dist: d }) => canAttack(weaponLike, d))
+            .sort((a, b) => a.dist - b.dist)[0];
+          if (nearestInRange) {
+            target = nearestInRange.state;
+            dist = nearestInRange.dist;
+          }
+        }
+
+        if (!weaponLike || canAttack(weaponLike, dist) || forceAttack) {
+          const ctx = buildSpatialContext(state, target, 'main', currentTime, arena, states);
+          performAttack(
+            state, target, state.robot.name, target.robot.name,
+            currentTime, 'main', events, ctx,
+          );
+          state.lastAttackTime = currentTime;
+          state.patienceTimer = 0;
+          didAttack = true;
+        } else {
+          events.push({
+            timestamp: Number(currentTime.toFixed(1)),
+            type: 'out_of_range',
+            attacker: state.robot.name,
+            defender: target.robot.name,
+            weapon: weaponLike.name,
+            message: `🚫 ${state.robot.name}'s ${weaponLike.name} can't reach ${target.robot.name} at ${dist.toFixed(1)} units (need ≤2)`,
+            robot1HP: states[0]?.currentHP ?? 0,
+            robot2HP: states[1]?.currentHP ?? 0,
+            robot1Shield: states[0]?.currentShield ?? 0,
+            robot2Shield: states[1]?.currentShield ?? 0,
+            ...buildPositionSnapshot(...states),
+            distance: dist,
+            rangeBand: classifyRangeBand(dist),
+          });
+        }
+      }
+
+      // Offhand attack (dual wield)
+      if (state.robot.loadoutType === 'dual_wield'
+          && state.robot.offhandWeapon?.weapon
+          && currentTime - state.lastOffhandAttackTime >= state.offhandCooldown
+          && state.currentHP > 0 && state.isAlive) {
+        const offWeapon = state.robot.offhandWeapon.weapon;
+        const offWeaponLike: WeaponLike = {
+          weaponType: offWeapon.weaponType,
+          handsRequired: offWeapon.handsRequired,
+          name: offWeapon.name,
+        };
+        const patienceLimit = getPatienceLimit(state.combatAlgorithmScore);
+
+        // Target-of-opportunity for offhand melee weapon in FFA/KotH
+        let offTarget = target;
+        let offDist = dist;
+        if (!canAttack(offWeaponLike, offDist) && !(state.patienceTimer >= patienceLimit) && n > 2) {
+          const nearestInRange = states
+            .filter(s => s !== state && s.isAlive && s.teamIndex !== state.teamIndex)
+            .map(s => ({ state: s, dist: euclideanDistance(state.position, s.position) }))
+            .filter(({ dist: d }) => canAttack(offWeaponLike, d))
+            .sort((a, b) => a.dist - b.dist)[0];
+          if (nearestInRange) {
+            offTarget = nearestInRange.state;
+            offDist = nearestInRange.dist;
+          }
+        }
+
+        if (canAttack(offWeaponLike, offDist) || state.patienceTimer >= patienceLimit) {
+          const ctx = buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states);
+          performAttack(
+            state, offTarget, state.robot.name, offTarget.robot.name,
+            currentTime, 'offhand', events, ctx,
+          );
+          state.lastOffhandAttackTime = currentTime;
+          state.patienceTimer = 0;
+          didAttack = true;
+        }
+      }
+
+      if (didAttack) attackedThisTick.add(state.teamIndex);
+    }
+
+    // Update patience timers for robots that didn't attack
+    for (const state of aliveStates) {
+      if (!attackedThisTick.has(state.teamIndex)) {
+        state.patienceTimer += SIMULATION_TICK;
       }
     }
-
-
-    // Robot 2 main weapon attack
-    let robot2AttackedThisTick = false;
-    if (currentTime - state2.lastAttackTime >= state2.attackCooldown && state2.currentHP > 0 && state2.isAlive) {
-      const weapon2 = robot2.mainWeapon?.weapon;
-      const weaponLike2: WeaponLike | null = weapon2 ? { weaponType: weapon2.weaponType, handsRequired: weapon2.handsRequired, name: weapon2.name } : null;
-
-      const patienceLimit2 = getPatienceLimit(state2.combatAlgorithmScore);
-      const forceAttack2 = state2.patienceTimer >= patienceLimit2;
-
-      if (!weaponLike2 || canAttack(weaponLike2, distance) || forceAttack2) {
-        const ctx = buildSpatialContext(state2, state1, 'main');
-        performAttack(state2, state1, robot2.name, robot1.name, currentTime, 'main', events, ctx);
-        state2.lastAttackTime = currentTime;
-        state2.patienceTimer = 0;
-        robot2AttackedThisTick = true;
-      } else {
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: 'out_of_range',
-          attacker: robot2.name,
-          defender: robot1.name,
-          weapon: weaponLike2.name,
-          message: `🚫 ${robot2.name}'s ${weaponLike2.name} can't reach ${robot1.name} at ${distance.toFixed(1)} units (need ≤2)`,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          ...posSnapshot,
-          distance,
-          rangeBand: currentRangeBand,
-        });
-      }
-    }
-
-    // Robot 2 offhand attack (dual wield)
-    if (robot2.loadoutType === 'dual_wield' &&
-        robot2.offhandWeapon?.weapon &&
-        currentTime - state2.lastOffhandAttackTime >= state2.offhandCooldown &&
-        state2.currentHP > 0 && state2.isAlive) {
-      const offWeapon2 = robot2.offhandWeapon.weapon;
-      const offWeaponLike2: WeaponLike = { weaponType: offWeapon2.weaponType, handsRequired: offWeapon2.handsRequired, name: offWeapon2.name };
-
-      if (canAttack(offWeaponLike2, distance) || state2.patienceTimer >= getPatienceLimit(state2.combatAlgorithmScore)) {
-        const ctx = buildSpatialContext(state2, state1, 'offhand');
-        performAttack(state2, state1, robot2.name, robot1.name, currentTime, 'offhand', events, ctx);
-        state2.lastOffhandAttackTime = currentTime;
-        state2.patienceTimer = 0;
-        robot2AttackedThisTick = true;
-      }
-    }
-
-    // Update patience timers if no attack occurred
-    if (!robot1AttackedThisTick) state1.patienceTimer += SIMULATION_TICK;
-    if (!robot2AttackedThisTick) state2.patienceTimer += SIMULATION_TICK;
-
 
     // ── PHASE 5: SHIELD REGEN ──
-    const supportBoost1 = getSupportShieldBoost(state1);
-    const supportBoost2 = getSupportShieldBoost(state2);
-
-    const shield1Before = state1.currentShield;
-    const shield2Before = state2.currentShield;
-    regenerateShields(state1, SIMULATION_TICK, supportBoost1);
-    regenerateShields(state2, SIMULATION_TICK, supportBoost2);
-
-    // Emit shield_regen events at 25% thresholds
-    if (state1.maxShield > 0 && shield1Before < state1.currentShield) {
-      const oldPct = Math.floor((shield1Before / state1.maxShield) * 4);
-      const newPct = Math.floor((state1.currentShield / state1.maxShield) * 4);
-      if (newPct > oldPct) {
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: 'shield_regen',
-          attacker: robot1.name,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          message: `🛡️⚡ ${robot1.name}'s shields regenerate to ${Math.round((state1.currentShield / state1.maxShield) * 100)}%`,
-          ...buildPositionSnapshot(state1, state2),
-        });
+    for (const state of aliveStates) {
+      const supportBoost = getSupportShieldBoost(state);
+      const shieldBefore = state.currentShield;
+      regenerateShields(state, SIMULATION_TICK, supportBoost);
+      if (state.maxShield > 0 && shieldBefore < state.currentShield) {
+        const oldPct = Math.floor((shieldBefore / state.maxShield) * 4);
+        const newPct = Math.floor((state.currentShield / state.maxShield) * 4);
+        if (newPct > oldPct) {
+          events.push({
+            timestamp: Number(currentTime.toFixed(1)),
+            type: 'shield_regen',
+            attacker: state.robot.name,
+            robot1HP: states[0]?.currentHP ?? 0,
+            robot2HP: states[1]?.currentHP ?? 0,
+            robot1Shield: states[0]?.currentShield ?? 0,
+            robot2Shield: states[1]?.currentShield ?? 0,
+            message: `🛡️⚡ ${state.robot.name}'s shields regenerate to ${Math.round((state.currentShield / state.maxShield) * 100)}%`,
+            ...buildPositionSnapshot(...states),
+          });
+        }
       }
     }
-    if (state2.maxShield > 0 && shield2Before < state2.currentShield) {
-      const oldPct = Math.floor((shield2Before / state2.maxShield) * 4);
-      const newPct = Math.floor((state2.currentShield / state2.maxShield) * 4);
-      if (newPct > oldPct) {
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: 'shield_regen',
-          attacker: robot2.name,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          message: `🛡️⚡ ${robot2.name}'s shields regenerate to ${Math.round((state2.currentShield / state2.maxShield) * 100)}%`,
-          ...buildPositionSnapshot(state1, state2),
-        });
-      }
-    }
-
 
     // ── PHASE 6: STATE CHECKS ──
-    if (state1.currentHP <= 0) {
-      state1.isAlive = false;
-      winnerId = robot2.id;
-      battleEnded = true;
-      events.push({
-        timestamp: Number(currentTime.toFixed(1)),
-        type: 'destroyed',
-        message: `💀 ${robot1.name} destroyed! ${robot2.name} wins!`,
-        robot1HP: 0,
-        robot2HP: state2.currentHP,
-        robot1Shield: state1.currentShield,
-        robot2Shield: state2.currentShield,
-        ...buildPositionSnapshot(state1, state2),
-      });
-    } else if (state2.currentHP <= 0) {
-      state2.isAlive = false;
-      winnerId = robot1.id;
-      battleEnded = true;
-      events.push({
-        timestamp: Number(currentTime.toFixed(1)),
-        type: 'destroyed',
-        message: `💀 ${robot2.name} destroyed! ${robot1.name} wins!`,
-        robot1HP: state1.currentHP,
-        robot2HP: 0,
-        robot1Shield: state1.currentShield,
-        robot2Shield: state2.currentShield,
-        ...buildPositionSnapshot(state1, state2),
-      });
-    } else if (shouldYield(state1)) {
-      state1.isAlive = false;
-      winnerId = robot2.id;
-      battleEnded = true;
-      events.push({
-        timestamp: Number(currentTime.toFixed(1)),
-        type: 'yield',
-        message: `🏳️ ${robot1.name} yields at ${((state1.currentHP / state1.maxHP) * 100).toFixed(0)}% HP! ${robot2.name} wins!`,
-        robot1HP: state1.currentHP,
-        robot2HP: state2.currentHP,
-        robot1Shield: state1.currentShield,
-        robot2Shield: state2.currentShield,
-        ...buildPositionSnapshot(state1, state2),
-      });
-    } else if (shouldYield(state2)) {
-      state2.isAlive = false;
-      winnerId = robot1.id;
-      battleEnded = true;
-      events.push({
-        timestamp: Number(currentTime.toFixed(1)),
-        type: 'yield',
-        message: `🏳️ ${robot2.name} yields at ${((state2.currentHP / state2.maxHP) * 100).toFixed(0)}% HP! ${robot1.name} wins!`,
-        robot1HP: state1.currentHP,
-        robot2HP: state2.currentHP,
-        robot1Shield: state1.currentShield,
-        robot2Shield: state2.currentShield,
-        ...buildPositionSnapshot(state1, state2),
-      });
+    for (const state of states) {
+      if (!state.isAlive) continue;
+      if (state.currentHP <= 0) {
+        state.isAlive = false;
+        events.push({
+          timestamp: Number(currentTime.toFixed(1)),
+          type: 'destroyed',
+          message: `💀 ${state.robot.name} destroyed!`,
+          robot1HP: states[0]?.currentHP ?? 0,
+          robot2HP: states[1]?.currentHP ?? 0,
+          robot1Shield: states[0]?.currentShield ?? 0,
+          robot2Shield: states[1]?.currentShield ?? 0,
+          ...buildPositionSnapshot(...states),
+        });
+      } else if (shouldYield(state)) {
+        state.isAlive = false;
+        events.push({
+          timestamp: Number(currentTime.toFixed(1)),
+          type: 'yield',
+          message: `🏳️ ${state.robot.name} yields at ${((state.currentHP / state.maxHP) * 100).toFixed(0)}% HP!`,
+          robot1HP: states[0]?.currentHP ?? 0,
+          robot2HP: states[1]?.currentHP ?? 0,
+          robot1Shield: states[0]?.currentShield ?? 0,
+          robot2Shield: states[1]?.currentShield ?? 0,
+          ...buildPositionSnapshot(...states),
+        });
+      }
     }
 
-    // Update pressure state
-    state1.isUnderPressure = (state1.currentHP / state1.maxHP) * 100 < state1.pressureThreshold;
-    state2.isUnderPressure = (state2.currentHP / state2.maxHP) * 100 < state2.pressureThreshold;
+    // Update pressure state for all robots
+    for (const state of states) {
+      state.isUnderPressure = (state.currentHP / state.maxHP) * 100 < state.pressureThreshold;
+    }
 
+    // Game mode win condition check (KotH score threshold, last-standing, time limit, etc.)
+    if (gameModeConfig?.winCondition && !battleEnded) {
+      const teams = states.map(s => [s]); // Each robot is its own team for FFA
+      const result = gameModeConfig.winCondition.evaluate(teams, currentTime, gameModeState);
+      if (result?.ended) {
+        winnerId = result.winnerId;
+        battleEnded = true;
+        // Retrieve any events the win condition evaluator stored on gameState
+        const wcEvents = gameModeState?.customData?.pendingEvents as SpatialCombatEvent[] | undefined;
+        if (wcEvents?.length) {
+          events.push(...wcEvents);
+          (gameModeState!.customData as Record<string, unknown>).pendingEvents = [];
+        }
+      }
+    }
+
+    // Default elimination check: if only 1 robot alive and no custom win condition, they win
+    if (!battleEnded) {
+      const alive = states.filter(s => s.isAlive);
+      if (alive.length <= 1 && !gameModeConfig?.winCondition) {
+        winnerId = alive.length === 1 ? alive[0].robot.id : null;
+        battleEnded = true;
+        if (alive.length === 1) {
+          events.push({
+            timestamp: Number(currentTime.toFixed(1)),
+            type: 'destroyed',
+            message: `🏆 ${alive[0].robot.name} wins!`,
+            robot1HP: states[0]?.currentHP ?? 0,
+            robot2HP: states[1]?.currentHP ?? 0,
+            robot1Shield: states[0]?.currentShield ?? 0,
+            robot2Shield: states[1]?.currentShield ?? 0,
+            ...buildPositionSnapshot(...states),
+          });
+        }
+      }
+    }
 
     // ── PHASE 7: POSITION SNAPSHOTS (throttled movement events) ──
     if (!battleEnded) {
-      // Robot 1 movement event
-      const moveDist1 = euclideanDistance(state1.position, lastMoveEventPos1);
-      const moveTime1 = currentTime - lastMoveEventTime1;
-      if (moveDist1 >= MOVEMENT_EVENT_THRESHOLD || moveTime1 >= MOVEMENT_EVENT_MIN_INTERVAL) {
-        if (moveDist1 > 0.01) { // Only emit if actually moved
+      for (let i = 0; i < states.length; i++) {
+        const state = states[i];
+        if (!state.isAlive) continue;
+        const moveDist = euclideanDistance(state.position, lastMoveEventPos[i]);
+        const moveTime = currentTime - lastMoveEventTime[i];
+        if ((moveDist >= MOVEMENT_EVENT_THRESHOLD || moveTime >= MOVEMENT_EVENT_MIN_INTERVAL)
+            && moveDist > 0.01) {
+          const nearestOpp = states
+            .filter(s => s !== state && s.isAlive)
+            .sort((a, b) =>
+              euclideanDistance(state.position, a.position) - euclideanDistance(state.position, b.position),
+            )[0];
+          const distToNearest = nearestOpp
+            ? euclideanDistance(state.position, nearestOpp.position) : 0;
           events.push({
             timestamp: Number(currentTime.toFixed(1)),
             type: 'movement',
-            attacker: robot1.name,
-            defender: robot2.name,
-            message: `🏃 ${robot1.name} moves to (${state1.position.x.toFixed(1)}, ${state1.position.y.toFixed(1)}) — ${distance.toFixed(1)} units from ${robot2.name}`,
-            robot1HP: state1.currentHP,
-            robot2HP: state2.currentHP,
-            robot1Shield: state1.currentShield,
-            robot2Shield: state2.currentShield,
-            ...buildPositionSnapshot(state1, state2),
-            distance,
-            rangeBand: currentRangeBand,
+            attacker: state.robot.name,
+            defender: nearestOpp?.robot.name,
+            message: `🏃 ${state.robot.name} moves to (${state.position.x.toFixed(1)}, ${state.position.y.toFixed(1)})${nearestOpp ? ` — ${distToNearest.toFixed(1)} units from ${nearestOpp.robot.name}` : ''}`,
+            robot1HP: states[0]?.currentHP ?? 0,
+            robot2HP: states[1]?.currentHP ?? 0,
+            robot1Shield: states[0]?.currentShield ?? 0,
+            robot2Shield: states[1]?.currentShield ?? 0,
+            ...buildPositionSnapshot(...states),
+            distance: distToNearest,
+            rangeBand: classifyRangeBand(distToNearest),
           });
-          lastMoveEventTime1 = currentTime;
-          lastMoveEventPos1 = { x: state1.position.x, y: state1.position.y };
+          lastMoveEventTime[i] = currentTime;
+          lastMoveEventPos[i] = { x: state.position.x, y: state.position.y };
         }
       }
+    }
 
-      // Robot 2 movement event
-      const moveDist2 = euclideanDistance(state2.position, lastMoveEventPos2);
-      const moveTime2 = currentTime - lastMoveEventTime2;
-      if (moveDist2 >= MOVEMENT_EVENT_THRESHOLD || moveTime2 >= MOVEMENT_EVENT_MIN_INTERVAL) {
-        if (moveDist2 > 0.01) {
-          events.push({
-            timestamp: Number(currentTime.toFixed(1)),
-            type: 'movement',
-            attacker: robot2.name,
-            defender: robot1.name,
-            message: `🏃 ${robot2.name} moves to (${state2.position.x.toFixed(1)}, ${state2.position.y.toFixed(1)}) — ${distance.toFixed(1)} units from ${robot1.name}`,
-            robot1HP: state1.currentHP,
-            robot2HP: state2.currentHP,
-            robot1Shield: state1.currentShield,
-            robot2Shield: state2.currentShield,
-            ...buildPositionSnapshot(state1, state2),
-            distance,
-            rangeBand: currentRangeBand,
-          });
-          lastMoveEventTime2 = currentTime;
-          lastMoveEventPos2 = { x: state2.position.x, y: state2.position.y };
-        }
+    // ── Game mode per-tick hooks (zone scoring, passive penalties, zone rotation) ──
+    if (gameModeState?.customData && !battleEnded) {
+      const tickHook = gameModeState.customData.tickHook as
+        ((st: SpatialRobotCombatState[], t: number, dt: number, ev: SpatialCombatEvent[], ar: ArenaConfig) => void) | undefined;
+      if (tickHook) {
+        tickHook(states, currentTime, SIMULATION_TICK, events, arena);
       }
     }
   } // end main loop
 
-
-  // === 6. Time limit handling ===
+  // === 5. Time limit handling ===
   if (!battleEnded) {
-    if (isTournament && winnerId === null) {
-      const robot1FinalHP = Math.max(0, state1.currentHP);
-      const robot2FinalHP = Math.max(0, state2.currentHP);
-      const hpPercent1 = robot1FinalHP / state1.maxHP;
-      const hpPercent2 = robot2FinalHP / state2.maxHP;
-
-      if (hpPercent1 > hpPercent2) {
-        winnerId = robot1.id;
+    if (!config.allowDraws) {
+      // HP tiebreaker — highest HP% wins
+      const alive = states.filter(s => s.isAlive);
+      alive.sort((a, b) => (b.currentHP / b.maxHP) - (a.currentHP / a.maxHP));
+      if (alive.length > 0) {
+        winnerId = alive[0].robot.id;
+        const pct = ((alive[0].currentHP / alive[0].maxHP) * 100).toFixed(1);
         events.push({
           timestamp: Number(currentTime.toFixed(1)),
           type: 'yield',
-          message: `⏱️ Time limit! ${robot1.name} wins by HP (${(hpPercent1 * 100).toFixed(1)}% vs ${(hpPercent2 * 100).toFixed(1)}%)`,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          ...buildPositionSnapshot(state1, state2),
-        });
-      } else if (hpPercent2 > hpPercent1) {
-        winnerId = robot2.id;
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: 'yield',
-          message: `⏱️ Time limit! ${robot2.name} wins by HP (${(hpPercent2 * 100).toFixed(1)}% vs ${(hpPercent1 * 100).toFixed(1)}%)`,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          ...buildPositionSnapshot(state1, state2),
-        });
-      } else {
-        winnerId = robot1.id;
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: 'yield',
-          message: `⏱️ Time limit! Perfect tie! ${robot1.name} wins (tournament tiebreaker)`,
-          robot1HP: state1.currentHP,
-          robot2HP: state2.currentHP,
-          robot1Shield: state1.currentShield,
-          robot2Shield: state2.currentShield,
-          ...buildPositionSnapshot(state1, state2),
+          message: `⏱️ Time limit! ${alive[0].robot.name} wins by HP (${pct}%)`,
+          robot1HP: states[0]?.currentHP ?? 0,
+          robot2HP: states[1]?.currentHP ?? 0,
+          robot1Shield: states[0]?.currentShield ?? 0,
+          robot2Shield: states[1]?.currentShield ?? 0,
+          ...buildPositionSnapshot(...states),
         });
       }
     } else {
@@ -1582,34 +1652,100 @@ Arena: radius ${arena.radius}, starting distance ${initDist.toFixed(1)} units ($
         timestamp: Number(currentTime.toFixed(1)),
         type: 'yield',
         message: `⏱️ Time limit reached - Draw!`,
-        robot1HP: state1.currentHP,
-        robot2HP: state2.currentHP,
-        robot1Shield: state1.currentShield,
-        robot2Shield: state2.currentShield,
-        ...buildPositionSnapshot(state1, state2),
+        robot1HP: states[0]?.currentHP ?? 0,
+        robot2HP: states[1]?.currentHP ?? 0,
+        robot1Shield: states[0]?.currentShield ?? 0,
+        robot2Shield: states[1]?.currentShield ?? 0,
+        ...buildPositionSnapshot(...states),
       });
     }
   }
 
-  // === 7. Return CombatResult with arena metadata ===
+  // === 6. Build result ===
+  const endingPositions: Record<string, Position> = {};
+  for (const s of states) {
+    endingPositions[s.robot.name] = { x: s.position.x, y: s.position.y };
+  }
+
+  // Build kothMetadata if game mode state has zone scores
+  let kothMetadata: SpatialCombatResult['kothMetadata'];
+  if (gameModeState?.mode === 'zone_control' && gameModeState.zoneScores) {
+    const scoreState = gameModeState.customData?.scoreState as {
+      zoneOccupationTimes?: Record<number, number>;
+      uncontestedTimes?: Record<number, number>;
+      zoneEntries?: Record<number, number>;
+      zoneExits?: Record<number, number>;
+      killCounts?: Record<number, number>;
+    } | undefined;
+    kothMetadata = {
+      finalZoneScores: { ...gameModeState.zoneScores },
+      zoneOccupationTimes: scoreState?.zoneOccupationTimes ? { ...scoreState.zoneOccupationTimes } : undefined,
+      uncontestedTimes: scoreState?.uncontestedTimes ? { ...scoreState.uncontestedTimes } : undefined,
+      zoneEntries: scoreState?.zoneEntries ? { ...scoreState.zoneEntries } : undefined,
+      zoneExits: scoreState?.zoneExits ? { ...scoreState.zoneExits } : undefined,
+      killCounts: scoreState?.killCounts ? { ...scoreState.killCounts } : undefined,
+      matchDuration: Number(currentTime.toFixed(1)),
+    };
+  }
+
   return {
     winnerId,
-    robot1FinalHP: Math.max(0, state1.currentHP),
-    robot2FinalHP: Math.max(0, state2.currentHP),
-    robot1FinalShield: state1.currentShield,
-    robot2FinalShield: state2.currentShield,
-    robot1Damage: state1.totalDamageTaken,
-    robot2Damage: state2.totalDamageTaken,
-    robot1DamageDealt: state1.totalDamageDealt,
-    robot2DamageDealt: state2.totalDamageDealt,
+    robot1FinalHP: Math.max(0, states[0]?.currentHP ?? 0),
+    robot2FinalHP: Math.max(0, states[1]?.currentHP ?? 0),
+    robot1FinalShield: states[0]?.currentShield ?? 0,
+    robot2FinalShield: states[1]?.currentShield ?? 0,
+    robot1Damage: states[0]?.totalDamageTaken ?? 0,
+    robot2Damage: states[1]?.totalDamageTaken ?? 0,
+    robot1DamageDealt: states[0]?.totalDamageDealt ?? 0,
+    robot2DamageDealt: states[1]?.totalDamageDealt ?? 0,
     durationSeconds: Number(currentTime.toFixed(1)),
     isDraw: winnerId === null,
-    events,
+    events: rawEvents,
     arenaRadius: arena.radius,
     startingPositions,
-    endingPositions: {
-      [robot1.name]: { x: state1.position.x, y: state1.position.y },
-      [robot2.name]: { x: state2.position.x, y: state2.position.y },
-    },
+    endingPositions,
+    kothMetadata,
+    finalStates: states,
+  };
+}
+
+
+/**
+ * Backward-compatible 1v1 battle simulator.
+ *
+ * Delegates to simulateBattleMulti() with 2 robots.
+ * Preserves the exact same signature and return shape used by
+ * league, tournament, and tag team orchestrators.
+ *
+ * @param robot1 First robot
+ * @param robot2 Second robot
+ * @param isTournament If true, resolves draws with HP tiebreaker
+ */
+export function simulateBattle(
+  robot1: RobotWithWeapons,
+  robot2: RobotWithWeapons,
+  isTournament: boolean = false,
+): CombatResult {
+  const result = simulateBattleMulti([robot1, robot2], {
+    allowDraws: !isTournament,
+  });
+
+  // Map SpatialCombatResult back to the legacy CombatResult shape
+  return {
+    winnerId: result.winnerId,
+    robot1FinalHP: result.robot1FinalHP,
+    robot2FinalHP: result.robot2FinalHP,
+    robot1FinalShield: result.robot1FinalShield,
+    robot2FinalShield: result.robot2FinalShield,
+    robot1Damage: result.robot1Damage,
+    robot2Damage: result.robot2Damage,
+    robot1DamageDealt: result.robot1DamageDealt,
+    robot2DamageDealt: result.robot2DamageDealt,
+    durationSeconds: result.durationSeconds,
+    isDraw: result.isDraw,
+    events: result.events,
+    arenaRadius: result.arenaRadius,
+    startingPositions: result.startingPositions,
+    endingPositions: result.endingPositions,
   };
 }
