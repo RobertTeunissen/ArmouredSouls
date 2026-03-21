@@ -525,7 +525,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           const kothScheduledFor = new Date();
           kothScheduledFor.setUTCHours(16, 0, 0, 0);
           // Our simulatedDayOfWeek: 1=Mon,...,7=Sun → JS: 1=Mon,...,6=Sat,0=Sun
-          const jsDayOfWeek = simulatedDayOfWeek === 7 ? 0 : simulatedDayOfWeek;
+          const jsDayOfWeek = (simulatedDayOfWeek as number) === 7 ? 0 : simulatedDayOfWeek;
           const currentJsDay = kothScheduledFor.getUTCDay();
           let daysUntil = jsDayOfWeek - currentJsDay;
           if (daysUntil <= 0) daysUntil += 7; // always schedule in the future
