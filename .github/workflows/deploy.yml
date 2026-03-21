@@ -293,6 +293,16 @@ jobs:
             cd /opt/armouredsouls/backend
             npx prisma migrate deploy
 
+      - name: Seed database (weapons, facilities, essential data)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/backend
+            NODE_ENV=acceptance npx prisma db seed
+
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
         with:
