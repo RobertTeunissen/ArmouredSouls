@@ -44,7 +44,7 @@ This document has been thoroughly reviewed against the current codebase implemen
 
 ### Key Verifications:
 ✅ **HP Formula**: `50 + (hull_integrity × 5)` - Correctly implemented  
-✅ **Shield Formula**: `shield_capacity × 2` - Correctly implemented  
+✅ **Shield Formula**: `shield_capacity × 4` - Correctly implemented  
 ✅ **Weapon Control**: Malfunction reduction + damage multiplier (1 + WC/150) - Correctly implemented  
 ✅ **Damage Dampeners**: Pre-shield mitigation (0.2% per point, capped at 15%) + crit reduction - Correctly implemented  
 ✅ **Armor Plating**: 1.5% damage reduction per point (no cap) - Correctly implemented  
@@ -755,12 +755,12 @@ Example:
 
 **Energy Shield HP (separate pool):**
 ```
-base_shield = shield_capacity * 2
+base_shield = shield_capacity * 4
 
 Example:
-- Shield Capacity 1: 2 energy shield HP
-- Shield Capacity 20: 40 energy shield HP
-- Shield Capacity 40: 80 energy shield HP
+- Shield Capacity 1: 4 energy shield HP
+- Shield Capacity 20: 80 energy shield HP
+- Shield Capacity 40: 160 energy shield HP
 ```
 
 ---
@@ -820,6 +820,38 @@ Example:
 - Equipment: Versatile weapons
 - Stance: Balanced
 - Strategy: Optimal decision-making, adapt to opponent
+
+---
+
+## KotH Attribute Value Shifts
+
+In King of the Hill (KotH) free-for-all zone-control matches, several attributes gain additional strategic importance beyond their standard 1v1 roles.
+
+### Servo Motors — Zone Approach Speed
+
+Higher servo motors = faster zone approach, critical for zone control. Robots with low servo motors struggle to contest the zone after respawning at the arena edge or repositioning after a zone rotation (Wednesday rotating variant). In KotH, the difference between reaching the zone first and arriving second can determine uncontested scoring windows.
+
+### Threat Analysis — Zone-Aware Targeting Weights
+
+Scales the effectiveness of KotH-specific target priority weights applied by `KothTargetPriorityStrategy`:
+- `threatAnalysis < 10`: Zone-aware weights operate at 50% effectiveness (robot poorly identifies zone threats)
+- `threatAnalysis 10–30`: Linear interpolation from 50% to 100% effectiveness
+- `threatAnalysis > 30`: Full 100% effectiveness on all zone-aware targeting weights (contesters 3×, approachers 2×)
+
+### Combat Algorithms — Wait-and-Enter Tactic
+
+Controls the `KothMovementIntentModifier` wait-and-enter behavior:
+- `combatAlgorithms > 25` AND zone contested by 2+ opponents → robot holds position 2 units outside zone edge
+- Waits until a contester is eliminated or drops below 30% HP before entering
+- Lower combat algorithms robots charge into contested zones regardless of tactical disadvantage
+
+### Hull Integrity — FFA Survivability
+
+In multi-robot FFA, robots take damage from multiple opponents simultaneously. Higher hull integrity provides a larger HP pool to sustain zone occupation through overlapping engagements. The difference between 55 HP (hull=1) and 300 HP (hull=50) is far more impactful in KotH than in 1v1 where only one opponent deals damage.
+
+### Armor Plating — Multi-Attacker Damage Reduction
+
+Armor's percentage-based damage reduction (1.5% per point) compounds in value when absorbing hits from multiple attackers in zone contests. A robot with 30 armor plating reduces incoming damage by 45% from every attacker, making it significantly harder to dislodge from the zone.
 
 ---
 

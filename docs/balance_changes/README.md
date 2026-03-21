@@ -19,6 +19,10 @@ Balance change documents capture:
 ### Training Facility
 - `TRAINING_FACILITY_REBALANCE.md` - Training facility balance adjustments
 
+### Combat Targeting
+- `THREAT_SCORING_TARGET_SELECTION_INTEGRATION.md` - Threat-based target selection integration into combat simulator
+- `COUNTER_ATTACK_SYSTEM_REWORK.md` - Counter-attack trigger and damage rework
+
 ### Implementation Options
 - `OPTION_C_IMPLEMENTATION.md` - Specific balance implementation approach
 

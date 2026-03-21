@@ -1,7 +1,9 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
-import { executeScheduledBattles } from '../services/battleOrchestrator';
+import { executeScheduledBattles } from '../services/leagueBattleOrchestrator';
+import { executeScheduledKothBattles } from '../services/kothBattleOrchestrator';
 import { runMatchmaking } from '../services/matchmakingService';
+import { runKothMatchmaking } from '../services/kothMatchmakingService';
 import { rebalanceLeagues } from '../services/leagueRebalancingService';
 import logger from '../config/logger';
 import { rebalanceTagTeamLeagues } from '../services/tagTeamLeagueRebalancingService';
@@ -376,7 +378,8 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       cycles = 1, 
       _includeDailyFinances = false, // Deprecated, kept for backwards compatibility
       generateUsersPerCycle = false,
-      includeTournaments = true
+      includeTournaments = true,
+      includeKoth = true
     } = req.body;
     const maxCycles = 100;
     const cycleCount = Math.min(Math.max(1, cycles), maxCycles);
@@ -474,6 +477,74 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           { robotsRepaired: repair2Summary.robotsRepaired, totalCost: repair2Summary.totalFinalCost }
         );
 
+        // Step 4.5: Execute Scheduled KotH Battles
+        // KotH only runs on Mon/Wed/Fri. In bulk testing, simulate day-of-week
+        // using cycle number: cycle 1 = Mon(1), cycle 2 = Tue(2), ..., cycle 7 = Sun(0), cycle 8 = Mon(1), etc.
+        const simulatedDayOfWeek = ((currentCycleNumber - 1) % 7) + 1; // 1=Mon, 2=Tue, ..., 7=Sun
+        const isKothDay = simulatedDayOfWeek === 1 || simulatedDayOfWeek === 3 || simulatedDayOfWeek === 5; // Mon, Wed, Fri
+        let kothBattleSummary = null;
+        if (includeKoth && isKothDay) {
+          logger.info(`[Admin] Step 4.5: Execute Scheduled KotH Battles (simulated day ${simulatedDayOfWeek})`);
+          const step4_5Start = Date.now();
+          kothBattleSummary = await executeScheduledKothBattles(new Date());
+          await eventLogger.logCycleStepComplete(
+            currentCycleNumber,
+            'execute_koth_battles',
+            4.5,
+            Date.now() - step4_5Start,
+            { battlesExecuted: kothBattleSummary.totalMatches }
+          );
+        } else if (includeKoth && !isKothDay) {
+          logger.info(`[Admin] Step 4.5: Skipping KotH Battles (not a KotH day, simulated day ${simulatedDayOfWeek})`);
+        } else {
+          logger.info(`[Admin] Step 4.5: Skipping KotH Battles (includeKoth=false)`);
+        }
+
+        // Step 4.6: Repair All Robots (post-KotH)
+        let repairKothSummary = null;
+        if (includeKoth && kothBattleSummary && kothBattleSummary.totalMatches > 0) {
+          logger.info(`[Admin] Step 4.6: Repair All Robots (post-KotH)`);
+          const step4_6Start = Date.now();
+          repairKothSummary = await repairAllRobots(true, currentCycleNumber);
+          await eventLogger.logCycleStepComplete(
+            currentCycleNumber,
+            'repair_post_koth',
+            4.6,
+            Date.now() - step4_6Start,
+            { robotsRepaired: repairKothSummary.robotsRepaired, totalCost: repairKothSummary.totalFinalCost }
+          );
+        }
+
+        // Step 4.7: KotH Matchmaking (only on KotH days — schedule for next KotH day)
+        let kothMatchmakingSummary = null;
+        if (includeKoth && isKothDay) {
+          logger.info(`[Admin] Step 4.7: KotH Matchmaking (simulated day ${simulatedDayOfWeek})`);
+          const step4_7Start = Date.now();
+          // Build a scheduledFor date for the NEXT occurrence of the simulated day of week
+          // so runKothMatchmaking picks the correct zone variant (rotating on Wed)
+          const kothScheduledFor = new Date();
+          kothScheduledFor.setUTCHours(16, 0, 0, 0);
+          // Our simulatedDayOfWeek: 1=Mon,...,7=Sun → JS: 1=Mon,...,6=Sat,0=Sun
+          const jsDayOfWeek = (simulatedDayOfWeek as number) === 7 ? 0 : simulatedDayOfWeek;
+          const currentJsDay = kothScheduledFor.getUTCDay();
+          let daysUntil = jsDayOfWeek - currentJsDay;
+          if (daysUntil <= 0) daysUntil += 7; // always schedule in the future
+          kothScheduledFor.setUTCDate(kothScheduledFor.getUTCDate() + daysUntil);
+          const kothMatchesCreated = await runKothMatchmaking(kothScheduledFor);
+          kothMatchmakingSummary = { matchesCreated: kothMatchesCreated };
+          await eventLogger.logCycleStepComplete(
+            currentCycleNumber,
+            'matchmaking_koth',
+            4.7,
+            Date.now() - step4_7Start,
+            { matchesCreated: kothMatchesCreated }
+          );
+        } else if (includeKoth && !isKothDay) {
+          logger.info(`[Admin] Step 4.7: Skipping KotH Matchmaking (not a KotH day, simulated day ${simulatedDayOfWeek})`);
+        } else {
+          logger.info(`[Admin] Step 4.7: Skipping KotH Matchmaking (includeKoth=false)`);
+        }
+
         // Step 5: Tournament Execution / Scheduling
         logger.info(`[Admin] Step 5: Tournament Execution / Scheduling`);
         const step5Start = Date.now();
@@ -498,8 +569,30 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
                 const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
                 
                 if (currentRoundMatches.length > 0) {
-                  // Execute matches
+                  // Execute matches — skip bye matches (robot2Id is null)
                   for (const match of currentRoundMatches) {
+                    // Auto-complete bye matches that slipped through
+                    if (match.robot1Id && !match.robot2Id) {
+                      await prisma.scheduledTournamentMatch.update({
+                        where: { id: match.id },
+                        data: {
+                          winnerId: match.robot1Id,
+                          status: 'completed',
+                          isByeMatch: true,
+                          completedAt: new Date(),
+                        },
+                      });
+                      logger.info(`[Admin] Auto-completed bye match ${match.id} in tournament ${tournament.id}`);
+                      tournamentSummary.matchesExecuted++;
+                      continue;
+                    }
+
+                    // Skip matches with no robots at all
+                    if (!match.robot1Id && !match.robot2Id) {
+                      tournamentSummary.errors.push(`Tournament ${tournament.id} Match ${match.id}: No robots assigned`);
+                      continue;
+                    }
+
                     try {
                       await processTournamentBattle(match);
                       tournamentSummary.matchesExecuted++;
@@ -906,6 +999,9 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         // Display Cycle Summary
         logger.info(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
         logger.info(`[Admin] Battles: ${battleSummary.totalBattles}`);
+        if (kothBattleSummary) {
+          logger.info(`[Admin] KotH Battles: ${kothBattleSummary.totalMatches} (${kothBattleSummary.successfulMatches} successful, ${kothBattleSummary.failedMatches} failed)`);
+        }
         const totalStreamingRevenue = (battleSummary.totalStreamingRevenue || 0) + (tagTeamBattleSummary?.totalStreamingRevenue || 0);
         if (totalStreamingRevenue > 0) {
           logger.info(`[Admin] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()}`);
@@ -918,6 +1014,9 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
           repair1: repair1Summary,
           tagTeamBattles: tagTeamBattleSummary,
           repair2: repair2Summary,
+          kothBattles: kothBattleSummary,
+          repairPostKoth: repairKothSummary,
+          kothMatchmaking: kothMatchmakingSummary,
           tournaments: tournamentSummary,
           repair3: repair3Summary,
           rebalancing: rebalancingSummary,
@@ -951,6 +1050,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
       cyclesCompleted: cycleCount,
       totalCyclesInSystem: currentCycleNumber,
       includeTournaments,
+      includeKoth,
       generateUsersPerCycleEnabled: generateUsersPerCycle,
       totalDuration,
       averageCycleDuration: Math.round(totalDuration / cycleCount),
@@ -1066,11 +1166,11 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
     });
 
     // Scheduled matches
-    const scheduledMatches = await prisma.scheduledMatch.count({
+    const scheduledMatches = await prisma.scheduledLeagueMatch.count({
       where: { status: 'scheduled' },
     });
 
-    const completedMatches = await prisma.scheduledMatch.count({
+    const completedMatches = await prisma.scheduledLeagueMatch.count({
       where: { status: 'completed' },
     });
 
@@ -1579,9 +1679,9 @@ function mapTagTeamRecord(match: any) {
 async function fetchTagTeamBattles({ page, limit, skip, search, leagueType }: BattleQueryParams) {
   const where = buildTagTeamWhere(search, leagueType);
 
-  const totalBattles = await prisma.tagTeamMatch.count({ where });
+  const totalBattles = await prisma.scheduledTagTeamMatch.count({ where });
 
-  const tagTeamMatches = await prisma.tagTeamMatch.findMany({
+  const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
     where,
     skip,
     take: limit,
@@ -1646,6 +1746,42 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
       return res.json(tagTeamResult);
     }
 
+    // KotH only: query battles with battleType 'koth'
+    if (battleType === 'koth') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const kothWhere: any = { battleType: 'koth' };
+      if (search) {
+        kothWhere.OR = [
+          { robot1: { name: { contains: search, mode: 'insensitive' } } },
+          { robot2: { name: { contains: search, mode: 'insensitive' } } },
+        ];
+      }
+
+      const totalBattles = await prisma.battle.count({ where: kothWhere });
+      const kothBattles = await prisma.battle.findMany({
+        where: kothWhere,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          robot1: { select: { id: true, name: true, userId: true } },
+          robot2: { select: { id: true, name: true, userId: true } },
+          participants: true,
+        },
+      });
+
+      return res.json({
+        battles: kothBattles.map(battle => mapBattleRecord(battle, '1v1')),
+        pagination: {
+          page,
+          limit,
+          totalBattles,
+          totalPages: Math.ceil(totalBattles / limit),
+          hasMore: skip + kothBattles.length < totalBattles,
+        },
+      });
+    }
+
     // Build where clause for standard battle query
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {};
@@ -1681,7 +1817,7 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
       const oneVOneCount = await prisma.battle.count({ where: oneVOneWhere });
 
       // Count tag team battles
-      const tagTeamCount = await prisma.tagTeamMatch.count({
+      const tagTeamCount = await prisma.scheduledTagTeamMatch.count({
         where: buildTagTeamWhere(search, leagueType),
       });
 
@@ -1701,7 +1837,7 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
       });
 
       // Fetch tag team battles
-      const tagTeamMatches = await prisma.tagTeamMatch.findMany({
+      const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
         where: buildTagTeamWhere(search, leagueType),
         skip,
         take: limit,
@@ -1811,7 +1947,7 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
     }
 
     // Check if this battle has an associated TagTeamMatch record
-    const tagTeamMatch = await prisma.tagTeamMatch.findFirst({
+    const tagTeamMatch = await prisma.scheduledTagTeamMatch.findFirst({
       where: { battleId: battle.id },
       include: {
         team1: {
@@ -2675,6 +2811,44 @@ router.get('/audit-log/repairs', authenticateToken, requireAdmin, async (req: Re
 router.get('/scheduler/status', authenticateToken, requireAdmin, (_req: Request, res: Response) => {
   const state = getSchedulerState();
   res.json(state);
+});
+
+/**
+ * POST /api/admin/koth/trigger
+ * Manually trigger a KotH cycle execution (admin-only)
+ */
+router.post('/koth/trigger', authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const { runJob } = await import('../services/cycleScheduler');
+    const { executeScheduledKothBattles } = await import('../services/kothBattleOrchestrator');
+    const { runKothMatchmaking } = await import('../services/kothMatchmakingService');
+
+    logger.info('[Admin] Manually triggering KotH cycle...');
+
+    await runJob('koth', async () => {
+      const battleSummary = await executeScheduledKothBattles(new Date());
+      const scheduledFor = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h ahead
+      const matchesCreated = await runKothMatchmaking(scheduledFor);
+
+      return {
+        jobName: 'koth' as const,
+        matchesCompleted: battleSummary.successfulMatches,
+        matchesScheduled: matchesCreated,
+      };
+    });
+
+    res.json({
+      success: true,
+      message: 'KotH cycle triggered successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('[Admin] KotH trigger error:', error);
+    res.status(500).json({
+      error: 'Failed to trigger KotH cycle',
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 });
 
 export default router;

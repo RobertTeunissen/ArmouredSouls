@@ -28,18 +28,20 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
 }) => {
   const isTournament = battle.battleType === 'tournament';
   const isTagTeam = battle.battleType === 'tag_team';
+  const isKoth = battle.battleType === 'koth';
   
-  const getBattleTypeIcon = () => {
-    if (isTournament) {
-      return '🏆';
-    }
-    if (isTagTeam) {
-      return '🤝';
-    }
+  const getBattleTypeIcon = (): string => {
+    if (isKoth) return '👑';
+    if (isTournament) return '🏆';
+    if (isTagTeam) return '🤝';
     return '⚔️'; // League match
   };
   
-  const getBattleTypeText = () => {
+  const getBattleTypeText = (): React.ReactNode => {
+    if (isKoth) {
+      const variant = battle.kothRotatingZone ? 'Rotating Zone' : 'Fixed Zone';
+      return `King of the Hill • ${variant}`;
+    }
     if (isTournament && battle.tournamentName) {
       const roundName = battle.tournamentRound && battle.tournamentMaxRounds 
         ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
@@ -70,7 +72,9 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
     return 'League Match';
   };
   
-  const getBorderColor = () => {
+  const getBorderColor = (): string => {
+    // KotH battles get orange border
+    if (isKoth) return 'border-l-orange-500';
     // Tournament battles get yellow border regardless of outcome
     if (isTournament) return 'border-l-[#d29922]';
     // Tag team battles get cyan border regardless of outcome
@@ -82,6 +86,21 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       case 'draw': return 'border-l-[#57606a]';
       default: return 'border-l-gray-700';
     }
+  };
+
+  const getKothPlacementSuffix = (placement: number): string => {
+    if (placement === 1) return 'st';
+    if (placement === 2) return 'nd';
+    if (placement === 3) return 'rd';
+    return 'th';
+  };
+
+  const getKothPlacementBadgeClass = (): string => {
+    const placement = battle.kothPlacement;
+    if (placement === 1) return 'bg-warning/20 text-warning';
+    if (placement === 2) return 'bg-gray-400/20 text-gray-300';
+    if (placement === 3) return 'bg-orange-600/20 text-orange-500';
+    return 'bg-surface-elevated text-secondary';
   };
   
   const getOutcomeBadgeClass = () => {
@@ -145,12 +164,34 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         
         {/* Outcome Badge */}
         <div className="flex-shrink-0 w-16">
-          <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center ${getOutcomeBadgeClass()}`}>
-            {outcome === 'win' ? 'WIN' : outcome === 'loss' ? 'LOSS' : 'DRAW'}
-          </div>
+          {isKoth && battle.kothPlacement != null && battle.kothParticipantCount != null ? (
+            <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center ${getKothPlacementBadgeClass()}`}>
+              {battle.kothPlacement}{getKothPlacementSuffix(battle.kothPlacement)} of {battle.kothParticipantCount}
+            </div>
+          ) : (
+            <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center ${getOutcomeBadgeClass()}`}>
+              {outcome === 'win' ? 'WIN' : outcome === 'loss' ? 'LOSS' : 'DRAW'}
+            </div>
+          )}
         </div>
         
-        {isTagTeam && battle.team1Id && battle.team2Id ? (
+        {isKoth ? (
+          /* KotH Layout — free-for-all, no 1v1 matchup */
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 rounded text-orange-400 font-semibold">
+                FFA
+              </span>
+              <div className="text-xs text-[#8b949e]">
+                {getBattleTypeText()}
+              </div>
+            </div>
+            <div className="font-medium text-xs truncate">
+              <span className="text-[#58a6ff]">{myRobot.name}</span>
+              <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
+            </div>
+          </div>
+        ) : isTagTeam && battle.team1Id && battle.team2Id ? (
           /* Tag Team Layout */
           <>
             <div className="flex-1 min-w-0">
@@ -188,11 +229,17 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           {formatDateTime(battle.createdAt)}
         </div>
         
-        {/* ELO Change */}
+        {/* ELO Change / Zone Score */}
         <div className="flex-shrink-0 w-20 text-center">
-          <div className={`text-xs font-bold ${eloChange >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
-            {eloChange > 0 ? '+' : ''}{eloChange}
-          </div>
+          {isKoth && battle.kothZoneScore != null ? (
+            <div className="text-xs font-bold text-orange-500">
+              ⏱ {battle.kothZoneScore}s
+            </div>
+          ) : (
+            <div className={`text-xs font-bold ${eloChange >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
+              {eloChange > 0 ? '+' : ''}{eloChange}
+            </div>
+          )}
         </div>
         
         {/* Reward */}
@@ -212,9 +259,20 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
             <span className="text-base">{getBattleTypeIcon()}</span>
-            <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getOutcomeBadgeClass()}`}>
-              {outcome === 'win' ? 'WIN' : outcome === 'loss' ? 'LOSS' : 'DRAW'}
-            </div>
+            {isKoth && battle.kothPlacement != null && battle.kothParticipantCount != null ? (
+              <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getKothPlacementBadgeClass()}`}>
+                {battle.kothPlacement}{getKothPlacementSuffix(battle.kothPlacement)} of {battle.kothParticipantCount}
+              </div>
+            ) : (
+              <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getOutcomeBadgeClass()}`}>
+                {outcome === 'win' ? 'WIN' : outcome === 'loss' ? 'LOSS' : 'DRAW'}
+              </div>
+            )}
+            {isKoth && (
+              <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 rounded text-orange-400 font-semibold">
+                FFA
+              </span>
+            )}
             {isTagTeam && (
               <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
                 2v2
@@ -231,14 +289,14 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           {getBattleTypeText()}
         </div>
         
-        {/* Battle Type */}
-        <div className="text-xs text-[#8b949e] mb-1.5">
-          {getBattleTypeText()}
-        </div>
-        
         {/* Matchup Row */}
         <div className="mb-1.5">
-          {isTagTeam && battle.team1Id && battle.team2Id ? (
+          {isKoth ? (
+            <div className="text-sm font-medium">
+              <span className="text-[#58a6ff]">{myRobot.name}</span>
+              <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
+            </div>
+          ) : isTagTeam && battle.team1Id && battle.team2Id ? (
             <>
               <div className="text-sm font-medium mb-1">
                 <span className="text-[#58a6ff]">{myTeamRobots}</span>
@@ -258,10 +316,16 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         {/* Stats Row */}
         <div className="flex justify-between text-xs">
           <div>
-            <span className="text-[#57606a]">ELO: </span>
-            <span className={`font-bold ${eloChange >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
-              {eloChange > 0 ? '+' : ''}{eloChange}
-            </span>
+            <span className="text-[#57606a]">{isKoth ? 'Zone: ' : 'ELO: '}</span>
+            {isKoth && battle.kothZoneScore != null ? (
+              <span className="font-bold text-orange-500">
+                ⏱ {battle.kothZoneScore}s
+              </span>
+            ) : (
+              <span className={`font-bold ${eloChange >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
+                {eloChange > 0 ? '+' : ''}{eloChange}
+              </span>
+            )}
           </div>
           <div>
             <span className="text-[#57606a]">₡</span>

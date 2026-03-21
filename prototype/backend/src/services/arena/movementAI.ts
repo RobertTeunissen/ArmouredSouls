@@ -21,6 +21,7 @@ import {
 } from './vector2d';
 import {
   ArenaConfig,
+  GameModeState,
   MovementIntent,
   MovementIntentModifier,
   RobotCombatState,
@@ -265,6 +266,7 @@ export function calculateMovementIntent(
   opponents: RobotCombatState[],
   arena: ArenaConfig,
   movementModifier?: MovementIntentModifier,
+  gameState?: GameModeState,
 ): MovementIntent {
   const score = state.combatAlgorithmScore;
   const ta = state.robot.threatAnalysis
@@ -282,13 +284,17 @@ export function calculateMovementIntent(
     : null;
 
   if (!target) {
-    // No living opponents — stay put
-    return {
+    // No living opponents — stay put (unless a game mode modifier overrides)
+    let intent: MovementIntent = {
       targetPosition: state.position,
       strategy: 'direct_path',
       preferredRange: getPreferredRange(state),
       stanceSpeedModifier: getStanceModifier(state),
     };
+    if (movementModifier) {
+      intent = movementModifier.modify(intent, state, arena, gameState);
+    }
+    return intent;
   }
 
   const preferredRange = getPreferredRangeWithDynamic(state, target);
@@ -402,7 +408,7 @@ export function calculateMovementIntent(
 
   // Apply extensibility modifier if provided (Req 16.6)
   if (movementModifier) {
-    intent = movementModifier.modify(intent, state, arena);
+    intent = movementModifier.modify(intent, state, arena, gameState);
   }
 
   return intent;

@@ -1,6 +1,6 @@
 # Product Requirements Document: Cycle System
 
-**Last Updated**: February 23, 2026  
+**Last Updated**: March 18, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Game Systems - Time Management
@@ -603,6 +603,57 @@ Response:
 - Historical comparisons
 - Performance heatmaps
 - Predictive analytics
+
+---
+
+## King of the Hill Cycle
+
+**Last Updated**: March 18, 2026  
+**Status**: ✅ Implemented
+
+### Cron Schedule
+
+```
+0 16 * * 1,3,5    (Monday, Wednesday, Friday at 16:00 UTC)
+```
+
+The KotH cycle is the 5th independent cron job registered in `cycleScheduler.ts`, alongside league, tournament, tag team, and settlement.
+
+### Daily Timeline Position
+
+```
+UTC   Job
+08:00 Tournament Cycle
+12:00 Tag Team Cycle (battles on odd cycles only)
+16:00 KotH Cycle (Mon/Wed/Fri only) ← NEW
+20:00 League Cycle
+23:00 Settlement
+```
+
+The 4-hour gap between Tag Team (12:00) and KotH (16:00), and between KotH (16:00) and League (20:00), provides ample separation.
+
+### Execution Order
+
+```
+KotH Cycle Steps:
+  1. repairAllRobots(true)                    — Ensure full HP before KotH
+  2. executeScheduledKothBattles(new Date())   — Run all scheduled KotH matches
+  3. runKothMatchmaking(nextScheduledFor)       — Schedule next KotH event
+  4. dispatchNotification({ jobName: 'koth' }) — Discord webhook (if matches > 0)
+```
+
+### Mutex Lock
+
+The KotH job acquires the same in-memory mutex lock as all other jobs (`acquireLock()`), preventing overlap with league, tournament, tag team, or settlement execution.
+
+### Manual Trigger
+
+```
+POST /api/admin/koth/trigger
+Authorization: Bearer <admin-token>
+```
+
+Executes the full KotH cycle on demand (repair → battles → matchmaking → notification). Available to admin users for testing and manual intervention.
 
 ---
 

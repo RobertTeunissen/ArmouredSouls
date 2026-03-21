@@ -64,6 +64,18 @@ interface CycleResult {
     errors?: string[];
     error?: string;
   };
+  kothBattles?: {
+    successfulMatches: number;
+    failedMatches: number;
+    totalMatches: number;
+  };
+  repairPostKoth?: {
+    robotsRepaired: number;
+    totalFinalCost: number;
+  };
+  kothMatchmaking?: {
+    matchesCreated: number;
+  };
   finances?: {
     usersProcessed: number;
     totalCostsDeducted: number;
@@ -108,6 +120,7 @@ export function CycleControlsTab({
   const [bulkCycles, setBulkCycles] = useState(1);
   const [autoRepair, setAutoRepair] = useState(true);
   const [includeTournaments, setIncludeTournaments] = useState(true);
+  const [includeKoth, setIncludeKoth] = useState(true);
   const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
   const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -203,6 +216,22 @@ export function CycleControlsTab({
     }
   };
 
+  const triggerKothCycle = async (): Promise<void> => {
+    setLoading(true);
+    try {
+      const response = await apiClient.post('/api/admin/koth/trigger', {});
+      const text = `KotH cycle triggered successfully!${response.data.message ? ` ${response.data.message}` : ''}`;
+      addSessionLog('success', text);
+      showMessage('success', text);
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'KotH cycle trigger failed';
+      addSessionLog('error', `KotH cycle trigger failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /* ---------- Bulk cycle runner ---------- */
 
   const runBulkCycles = async (): Promise<void> => {
@@ -223,6 +252,7 @@ export function CycleControlsTab({
         cycles: bulkCycles,
         includeTournaments,
         generateUsersPerCycle,
+        includeKoth,
       });
       setBulkResults(response.data);
 
@@ -279,6 +309,16 @@ export function CycleControlsTab({
           }
           if (result.matchmaking) {
             addSessionLog('success', `Cycle ${result.cycle}: Step 8 - Created ${result.matchmaking.matchesCreated} match(es)`);
+          }
+          if (result.kothBattles) {
+            const { successfulMatches, failedMatches, totalMatches } = result.kothBattles;
+            addSessionLog(
+              failedMatches > 0 ? 'warning' : 'success',
+              `Cycle ${result.cycle}: KotH - ${successfulMatches}/${totalMatches} matches completed${failedMatches > 0 ? ` (${failedMatches} failed)` : ''}`
+            );
+          }
+          if (result.kothMatchmaking) {
+            addSessionLog('success', `Cycle ${result.cycle}: KotH Matchmaking - ${result.kothMatchmaking.matchesCreated} match(es) scheduled`);
           }
         });
       }
@@ -349,6 +389,13 @@ export function CycleControlsTab({
             >
               📊 Rebalance Leagues
             </button>
+            <button
+              onClick={triggerKothCycle}
+              disabled={loading}
+              className="bg-orange-600 hover:bg-orange-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
+            >
+              👑 Trigger KotH Cycle
+            </button>
           </div>
         </div>
 
@@ -384,6 +431,15 @@ export function CycleControlsTab({
                 className="mr-2"
               />
               Include tournament execution
+            </label>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={includeKoth}
+                onChange={(e) => setIncludeKoth(e.target.checked)}
+                className="mr-2"
+              />
+              Include King of the Hill battles
             </label>
             <label className="flex items-center">
               <input
@@ -462,6 +518,13 @@ export function CycleControlsTab({
                           {result.rebalancing.summary.totalDemoted} demoted
                         </p>
                       )}
+                      {result.kothBattles && (
+                        <p>
+                          - KotH: {result.kothBattles.successfulMatches}/
+                          {result.kothBattles.totalMatches} matches
+                        </p>
+                      )}
+                      {result.kothMatchmaking && <p>- KotH Matches Scheduled: {result.kothMatchmaking.matchesCreated}</p>}
                     </div>
                   ))}
                 </div>

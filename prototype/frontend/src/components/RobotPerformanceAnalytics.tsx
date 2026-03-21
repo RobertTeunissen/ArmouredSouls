@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../utils/apiClient';
+import { getKothRobotPerformance, KothRobotPerformance } from '../utils/kothApi';
 import {
   LineChart,
   Line,
@@ -58,7 +59,8 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
   const [summary, setSummary] = useState<PerformanceSummary | null>(null);
   const [eloProgression, setEloProgression] = useState<MetricProgression | null>(null);
   const [damageProgression, setDamageProgression] = useState<MetricProgression | null>(null);
-  const [creditsProgression, setCreditsProgression] = useState<MetricProgression | null>(null);  useEffect(() => {
+  const [creditsProgression, setCreditsProgression] = useState<MetricProgression | null>(null);
+  const [kothStats, setKothStats] = useState<KothRobotPerformance | null>(null);  useEffect(() => {
     fetchAnalytics();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [robotId, lastNCycles]);
@@ -101,6 +103,18 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
         `/api/analytics/robot/${robotId}/metric/creditsEarned?cycleRange=${cycleRange}`
       );
       setCreditsProgression(creditsResponse.data);
+
+      // Fetch KotH performance
+      try {
+        const kothResponse = await getKothRobotPerformance(robotId);
+        if (kothResponse && kothResponse.kothMatches > 0) {
+          setKothStats(kothResponse);
+        } else {
+          setKothStats(null);
+        }
+      } catch {
+        setKothStats(null);
+      }
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (import.meta.env.DEV) {
         console.error('Failed to fetch analytics:', err);
@@ -214,6 +228,47 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
           </div>
         </div>
       </div>
+
+      {/* KotH Performance */}
+      {kothStats && kothStats.kothMatches > 0 && (
+        <div className="bg-surface-elevated rounded-lg p-4 mt-6">
+          <h3 className="text-lg font-semibold mb-4">👑 King of the Hill Performance</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.kothMatches}</div>
+              <div className="text-xs text-secondary">KotH Matches</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.kothWins}</div>
+              <div className="text-xs text-secondary">1st Place Finishes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.podiumRate.toFixed(1)}%</div>
+              <div className="text-xs text-secondary">Podium Rate</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.avgZoneScore.toFixed(1)}</div>
+              <div className="text-xs text-secondary">Avg Zone Score</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.kothTotalZoneTime.toFixed(0)}s</div>
+              <div className="text-xs text-secondary">Total Zone Time</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.kothKills}</div>
+              <div className="text-xs text-secondary">KotH Kills</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.kothBestPlacement ? `#${kothStats.kothBestPlacement}` : '—'}</div>
+              <div className="text-xs text-secondary">Best Placement</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.kothCurrentWinStreak}</div>
+              <div className="text-xs text-secondary">Current Win Streak</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ELO Progression Chart */}
       {eloProgression && eloProgression.dataPoints.length > 0 && (

@@ -150,6 +150,16 @@ model Robot {
   timesTaggedIn       Int @default(0) @map("times_tagged_in") // Number of times robot tagged in as reserve
   timesTaggedOut      Int @default(0) @map("times_tagged_out") // Number of times robot tagged out (yield or destruction)
 
+  // ===== KOTH CUMULATIVE STATISTICS =====
+  kothWins             Int   @default(0) @map("koth_wins")
+  kothMatches          Int   @default(0) @map("koth_matches")
+  kothTotalZoneScore   Float @default(0) @map("koth_total_zone_score")
+  kothTotalZoneTime    Float @default(0) @map("koth_total_zone_time") // seconds
+  kothKills            Int   @default(0) @map("koth_kills")
+  kothBestPlacement    Int?  @map("koth_best_placement") // 1 = best
+  kothCurrentWinStreak Int   @default(0) @map("koth_current_win_streak")
+  kothBestWinStreak    Int   @default(0) @map("koth_best_win_streak") // for Hall of Records
+
   // ===== ECONOMIC STATE =====
   repairCost       Int @default(0) @map("repair_cost") // Cost to fully repair (formula-based)
   battleReadiness  Int @default(100) @map("battle_readiness") // Percentage (100% = full HP, 0% = critical)
@@ -172,20 +182,21 @@ model Robot {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // ===== RELATIONS =====
-  user                      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mainWeapon                WeaponInventory?    @relation("MainWeapon", fields: [mainWeaponId], references: [id])
-  offhandWeapon             WeaponInventory?    @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
-  battlesAsRobot1           Battle[]            @relation("Robot1")
-  battlesAsRobot2           Battle[]            @relation("Robot2")
-  scheduledMatchesAsRobot1  ScheduledMatch[]    @relation("ScheduledRobot1")
-  scheduledMatchesAsRobot2  ScheduledMatch[]    @relation("ScheduledRobot2")
-  tournamentsWon            Tournament[]        @relation("TournamentWinner")
-  tournamentMatchesAsRobot1 TournamentMatch[]   @relation("TournamentRobot1")
-  tournamentMatchesAsRobot2 TournamentMatch[]   @relation("TournamentRobot2")
-  tournamentMatchesWon      TournamentMatch[]   @relation("TournamentMatchWinner")
-  tagTeamsAsActive          TagTeam[]           @relation("TagTeamActiveRobot")
-  tagTeamsAsReserve         TagTeam[]           @relation("TagTeamReserveRobot")
+  user                      User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mainWeapon                WeaponInventory?                @relation("MainWeapon", fields: [mainWeaponId], references: [id])
+  offhandWeapon             WeaponInventory?                @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
+  battlesAsRobot1           Battle[]                        @relation("Robot1")
+  battlesAsRobot2           Battle[]                        @relation("Robot2")
+  scheduledMatchesAsRobot1  ScheduledLeagueMatch[]          @relation("ScheduledRobot1")
+  scheduledMatchesAsRobot2  ScheduledLeagueMatch[]          @relation("ScheduledRobot2")
+  tournamentsWon            Tournament[]                    @relation("TournamentWinner")
+  tournamentMatchesAsRobot1 ScheduledTournamentMatch[]      @relation("TournamentRobot1")
+  tournamentMatchesAsRobot2 ScheduledTournamentMatch[]      @relation("TournamentRobot2")
+  tournamentMatchesWon      ScheduledTournamentMatch[]      @relation("TournamentMatchWinner")
+  tagTeamsAsActive          TagTeam[]                       @relation("TagTeamActiveRobot")
+  tagTeamsAsReserve         TagTeam[]                       @relation("TagTeamReserveRobot")
   battleParticipations      BattleParticipant[]
+  kothMatchParticipations   ScheduledKothMatchParticipant[]
 
   @@unique([userId, name])
   @@index([userId])
@@ -277,8 +288,11 @@ model BattleParticipant {
   id       Int     @id @default(autoincrement())
   battleId Int     @map("battle_id")
   robotId  Int     @map("robot_id")
-  team     Int // 1 or 2
+  team     Int // 1 or 2 (team affiliation for 1v1/tournament/tag team)
   role     String? @db.VarChar(20) // "active" or "reserve" for tag team, null for 1v1
+
+  // KotH placement (null for non-KotH battles)
+  placement Int? // 1-6 final placement for KotH battles
 
   // Economic effects
   credits          Int
@@ -360,13 +374,14 @@ model Battle {
   createdAt DateTime @default(now()) @map("created_at")
 
   // ===== RELATIONS =====
-  robot1            Robot               @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2            Robot               @relation("Robot2", fields: [robot2Id], references: [id])
-  tournament        Tournament?         @relation("TournamentBattles", fields: [tournamentId], references: [id])
-  scheduledMatch    ScheduledMatch[]
-  tournamentMatches TournamentMatch[]
-  tagTeamMatches    TagTeamMatch[]      @relation("TagTeamBattle")
-  participants      BattleParticipant[] // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
+  robot1             Robot                @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2             Robot                @relation("Robot2", fields: [robot2Id], references: [id])
+  tournament         Tournament?          @relation("TournamentBattles", fields: [tournamentId], references: [id])
+  scheduledMatch     ScheduledLeagueMatch[]
+  tournamentMatches  ScheduledTournamentMatch[]
+  tagTeamMatches     ScheduledTagTeamMatch[]  @relation("TagTeamBattle")
+  participants       BattleParticipant[] // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
+  scheduledKothMatch ScheduledKothMatch[] // KotH match that produced this battle
 
   @@index([robot1Id])
   @@index([robot2Id])
@@ -376,7 +391,7 @@ model Battle {
   @@map("battles")
 }
 
-model ScheduledMatch {
+model ScheduledLeagueMatch {
   id           Int      @id @default(autoincrement())
   robot1Id     Int      @map("robot1_id")
   robot2Id     Int      @map("robot2_id")
@@ -495,7 +510,7 @@ model Tournament {
 
   // Relations
   winner  Robot?            @relation("TournamentWinner", fields: [winnerId], references: [id])
-  matches TournamentMatch[]
+  matches ScheduledTournamentMatch[]
   battles Battle[]          @relation("TournamentBattles")
 
   @@index([status])
@@ -504,7 +519,7 @@ model Tournament {
 }
 
 // Tournament match model for tracking individual battles within a tournament
-model TournamentMatch {
+model ScheduledTournamentMatch {
   id           Int @id @default(autoincrement())
   tournamentId Int @map("tournament_id")
   round        Int // Round number (1 = first round, 2 = quarter-finals, etc.)
@@ -564,8 +579,8 @@ model TagTeam {
   stable         User           @relation(fields: [stableId], references: [id], onDelete: Cascade)
   activeRobot    Robot          @relation("TagTeamActiveRobot", fields: [activeRobotId], references: [id])
   reserveRobot   Robot          @relation("TagTeamReserveRobot", fields: [reserveRobotId], references: [id])
-  matchesAsTeam1 TagTeamMatch[] @relation("Team1")
-  matchesAsTeam2 TagTeamMatch[] @relation("Team2")
+  matchesAsTeam1 ScheduledTagTeamMatch[] @relation("Team1")
+  matchesAsTeam2 ScheduledTagTeamMatch[] @relation("Team2")
 
   @@unique([activeRobotId, reserveRobotId])
   @@index([stableId])
@@ -576,7 +591,7 @@ model TagTeam {
 }
 
 // Tag Team Match model for tracking scheduled 2v2 battles
-model TagTeamMatch {
+model ScheduledTagTeamMatch {
   id            Int      @id @default(autoincrement())
   team1Id       Int      @map("team1_id")
   team2Id       Int?     @map("team2_id") // Nullable for bye-matches
@@ -618,4 +633,42 @@ model ResetLog {
   @@index([userId])
   @@index([resetAt])
   @@map("reset_logs")
+}
+
+model ScheduledKothMatch {
+  id           Int      @id @default(autoincrement())
+  scheduledFor DateTime @map("scheduled_for")
+  status       String   @default("scheduled") @db.VarChar(20) // "scheduled", "completed", "failed", "cancelled"
+  battleId     Int?     @map("battle_id") // Links to Battle after completion
+  rotatingZone Boolean  @default(false) @map("rotating_zone")
+
+  // Optional config overrides (null = use defaults)
+  scoreThreshold Int? @map("score_threshold")
+  timeLimit      Int? @map("time_limit")
+  zoneRadius     Int? @map("zone_radius")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  battle       Battle?                         @relation(fields: [battleId], references: [id])
+  participants ScheduledKothMatchParticipant[]
+
+  @@index([scheduledFor, status])
+  @@index([status])
+  @@map("scheduled_koth_matches")
+}
+
+model ScheduledKothMatchParticipant {
+  id      Int @id @default(autoincrement())
+  matchId Int @map("match_id")
+  robotId Int @map("robot_id")
+
+  // Relations
+  match ScheduledKothMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  robot Robot              @relation(fields: [robotId], references: [id])
+
+  @@unique([matchId, robotId])
+  @@index([matchId])
+  @@index([robotId])
+  @@map("scheduled_koth_match_participants")
 }

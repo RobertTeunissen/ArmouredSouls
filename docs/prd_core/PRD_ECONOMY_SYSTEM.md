@@ -87,7 +87,7 @@
    - `GET /api/finances/revenue-streams` - Income sources
    - `GET /api/finances/projections` - Forecasts
 
-3. `prototype/backend/src/services/battleOrchestrator.ts` (enhanced)
+3. `prototype/backend/src/services/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
    - League-based battle rewards
    - Prestige multipliers (5%-20%)
    - Participation rewards (30% of base)
@@ -546,7 +546,7 @@ This section tracks the chronological evolution of the economy system implementa
 **Files Created/Modified:**
 - `prototype/backend/src/utils/economyCalculations.ts` (620+ lines)
 - `prototype/backend/src/routes/finances.ts` (165 lines)
-- `prototype/backend/src/services/battleOrchestrator.ts` (enhanced)
+- `prototype/backend/src/services/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
 - `prototype/backend/src/routes/admin.ts` (enhanced)
 - `prototype/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests)
 
@@ -1230,12 +1230,12 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 - Split attribute upgrades (100 levels total): ~₡585,000
 - **Buffer**: ₡15,000 (emergency only)
 
-**Power Maximizer** (₡1,995,000 spent, ₡5K buffer - very risky):
+**Power Maximizer** (₡1,925,000 spent, ₡75K buffer - very risky):
 - 1 Robot: ₡500,000
-- 1 Premium weapon (e.g., Plasma Cannon): ₡400,000
+- 1 Premium weapon (e.g., Plasma Cannon): ₡408,000
 - Repair Bay Level 1: ₡100,000
 - Heavy attribute investment (200 levels): ~₡895,000
-- **Buffer**: ₡5,000 (forced to win first battle or bankrupt)
+- **Buffer**: ₡75,000 (forced to win first battle or bankrupt)
 
 **Economic Safeguards Needed**:
 1. **Low balance warnings**: Alert when balance < ₡100K (before battle matchmaking)
@@ -2233,3 +2233,44 @@ total_revenue = battle_winnings + merchandising_daily + streaming_daily + achiev
 - ✅ Long-term progression goals (facility maxing, prestige unlocks)
 - ✅ Economic sustainability (players can operate profitably)
 - ✅ Meaningful choices (which facilities to prioritize)
+
+---
+
+## King of the Hill Rewards
+
+**Last Updated**: March 18, 2026  
+**Status**: ✅ Implemented
+
+### Credit Rewards (Placement-Based)
+
+| Placement | Credits |
+|-----------|---------|
+| 1st | ₡25,000 |
+| 2nd | ₡17,500 |
+| 3rd | ₡10,000 |
+| 4th–6th | ₡5,000 |
+
+### Zone Dominance Bonus
+
+If a robot's uncontested zone score exceeds 75% of their total zone score, all rewards receive a 1.25× multiplier:
+
+```
+if uncontestedScore / totalScore > 0.75:
+  credits *= 1.25
+  fame *= 1.25
+  prestige *= 1.25
+```
+
+Example: 1st place with zone dominance earns ₡25,000 × 1.25 = ₡31,250.
+
+### Streaming Revenue
+
+Streaming revenue is awarded to **all 5–6 participants** in a KotH match, using the same per-battle streaming formula as league battles. Participation in KotH counts toward the robot's `totalBattles` for streaming revenue scaling.
+
+### No ELO Change
+
+KotH battles do not affect ELO ratings. For all participants: `eloChange = 0`, `eloBefore === eloAfter`. ELO is used only for matchmaking group balancing via snake-draft.
+
+### Repair Costs
+
+Standard repair costs apply after KotH battles. Robots are repaired to full HP before KotH execution (Step 1 of the KotH cycle), and post-battle damage follows the normal repair cost formula with facility discounts.

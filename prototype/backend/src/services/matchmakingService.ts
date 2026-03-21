@@ -217,7 +217,7 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
   });
   
   // Check if robots are already scheduled for a match
-  const scheduledRobotIds = await prisma.scheduledMatch.findMany({
+  const scheduledRobotIds = await prisma.scheduledLeagueMatch.findMany({
     where: {
       status: 'scheduled',
       OR: [
@@ -325,7 +325,7 @@ async function createScheduledMatches(matches: MatchPair[], scheduledFor: Date):
     status: 'scheduled',
   }));
   
-  await prisma.scheduledMatch.createMany({
+  await prisma.scheduledLeagueMatch.createMany({
     data: matchData,
   });
   

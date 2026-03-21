@@ -276,7 +276,7 @@ The continuous tournament model ensures:
     - Performance bonus based on HP remaining after victory
   - **Participation Reward**: Loser receives 30% of winner's credits (not winner-take-all)
   - **Championship Title**: +1 championshipTitles for tournament winner (finals only)
-  - **No Streaming Income**: Tournament battles do NOT count toward streaming multiplier (no audience for individual matches) 
+  - **Streaming Income**: Tournament battles award streaming revenue using the same formula as league battles. Both winner and loser receive streaming income based on their robot's streaming multiplier. Bye matches do not generate streaming income (no match to stream).
 
 #### User Story 4.2: Reward Calculation
 - **As a system**, I calculate tournament rewards using tournament-specific formulas
@@ -293,7 +293,7 @@ The continuous tournament model ensures:
     - NO rewards awarded (no match occurred)
     - NO streaming income (no match to stream)
     - Simply updates TournamentMatch.winnerId and status
-    - **League byes still fight "Bye Robot" for income** (handled in battleOrchestrator.ts)
+    - **League byes still fight "Bye Robot" for income** (handled in leagueBattleOrchestrator.ts)
   - All rewards deposited immediately after battle 
 
 #### User Story 4.3: Financial Tracking
@@ -505,7 +505,7 @@ export function calculateTournamentFame(totalParticipants: number, robotsRemaini
 export async function calculateTournamentBattleRewards(...): Promise<TournamentRewards>
 ```
 
-#### Battle Orchestrator Updates (`battleOrchestrator.ts`)
+#### Battle Orchestrator Updates (`leagueBattleOrchestrator.ts`)
 
 ```typescript
 // Add tournament battle support
@@ -844,6 +844,8 @@ Round 5 - Finals (1 match):
 
 4. Advance to Round 2 → currentRound: 2
    - Populate Round 2 TournamentMatches with Round 1 winners
+   - Auto-complete any match where robot1Id is set but robot2Id is null (bye)
+   - If all matches in the round are byes, recurse to advance again
    - Create ScheduledMatch records for Round 2
    - Repeat until...
 
@@ -893,7 +895,7 @@ Round 5 - Finals (1 match):
 - Robot fights "Bye Robot" (system robot)
 - Battle record created with participation rewards
 - Ensures income on days with odd number of league participants
-- Handled separately in battleOrchestrator.ts
+- Handled separately in leagueBattleOrchestrator.ts
 
 **When Byes Occur:**
 - Participant count not a power of 2 (e.g., 350 participants → 512 bracket → 162 byes)
@@ -911,7 +913,11 @@ Round 5 - Finals (1 match):
   - `isByeMatch` = true
   - `completedAt` = timestamp
 - Robot advances to next round placeholder match
-- Happens immediately when tournament created (all byes auto-complete)
+
+**When Byes Are Auto-Completed:**
+- **Round 1**: All byes auto-complete immediately at tournament creation
+- **Later rounds**: `advanceWinnersToNextRound` auto-completes any match where `robot1Id` is set but `robot2Id` is null (odd number of winners advancing). If all matches in a round are byes, the function recurses to advance again until a round with real matches is reached or the tournament completes.
+- **Bulk cycle safety net**: The bulk cycle tournament loop also detects and auto-completes bye matches before attempting battle execution, preventing errors from matches with missing robots.
 
 ### Tournament Rewards Summary
 
@@ -928,7 +934,7 @@ Round 5 - Finals (1 match):
 | Prestige (Win)  | 15 × (3/4) × (1 + log10(10) × 0.5) | +17 prestige |
 | Fame (Win)      | 10 × (25/100)^-0.5 × perfBonus | +20 fame |
 | Championship    | N/A (Finals only) | +1 Title (Finals) |
-| Streaming Income | No streaming for tournaments | N/A |
+| Streaming Income | Same formula as league battles | Per-robot streaming revenue |
 
 **Scaling Examples:**
 - **Small Tournament** (15 robots, Round 2/4):

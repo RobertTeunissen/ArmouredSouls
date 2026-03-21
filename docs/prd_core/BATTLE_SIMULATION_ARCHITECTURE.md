@@ -1,6 +1,6 @@
 # Battle Simulation Architecture
 
-**Last Updated**: March 15, 2026
+**Last Updated**: March 19, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 **Epic**: Battle System - Simulation & Orchestration
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document provides a unified architectural overview of the battle simulation system. It ties together the shared combat engine, the three battle orchestrators (league, tournament, tag team), the narrative generation pipeline, the BattleParticipant data model, and the audit log — all of which were previously documented in isolation.
+This document provides a unified architectural overview of the battle simulation system. It ties together the shared combat engine, the four battle orchestrators (league, tournament, tag team, KotH), the narrative generation pipeline, the BattleParticipant data model, and the audit log — all of which were previously documented in isolation.
 
 ---
 
@@ -18,7 +18,7 @@ This document provides a unified architectural overview of the battle simulation
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                     CYCLE SCHEDULER (cycleScheduler.ts)                 │
-│                     4 independent cron jobs via node-cron               │
+│                     5 independent cron jobs via node-cron               │
 │                                                                         │
 │  ┌─────────────────────┐  ┌─────────────────────┐                      │
 │  │  LEAGUE CYCLE        │  │  TOURNAMENT CYCLE    │                      │
@@ -32,57 +32,77 @@ This document provides a unified architectural overview of the battle simulation
 │  └──────────┬───────────┘  └──────────┬───────────┘                      │
 │             │                         │                                  │
 │  ┌──────────┴──────────┐  ┌──────────┴───────────┐                      │
-│  │  TAG TEAM CYCLE      │  │  SETTLEMENT           │                      │
-│  │  cron: 0 12 * * *    │  │  cron: 0 23 * * *     │                      │
-│  │  (daily 12:00 UTC)   │  │  (daily 23:00 UTC)    │                      │
+│  │  TAG TEAM CYCLE      │  │  KOTH CYCLE           │                      │
+│  │  cron: 0 12 * * *    │  │  cron: 0 16 * * 1,3,5 │                      │
+│  │  (daily 12:00 UTC)   │  │  (Mon/Wed/Fri 16:00)  │                      │
 │  │                      │  │                       │                      │
-│  │  1. Repair robots    │  │  1. Passive income    │                      │
-│  │  2. Execute battles  │  │  2. Operating costs   │                      │
-│  │     (odd cycles only)│  │  3. End-of-cycle      │                      │
-│  │  3. Rebalance leagues│  │     balance logging   │                      │
-│  │  4. Matchmaking (48h)│  │  4. Increment cycle   │                      │
-│  └──────────┬───────────┘  │  5. Analytics snapshot │                      │
-│             │              │  6. Auto-generate users│                      │
-│             │              └──────────┬────────────┘                      │
-│             │                        │                                   │
+│  │  1. Repair robots    │  │  1. Repair robots     │                      │
+│  │  2. Execute battles  │  │  2. Execute KotH      │                      │
+│  │     (odd cycles only)│  │     battles            │                      │
+│  │  3. Rebalance leagues│  │  3. KotH matchmaking   │                      │
+│  │  4. Matchmaking (48h)│  │     (next Mon/Wed/Fri) │                      │
+│  └──────────┬───────────┘  └──────────┬────────────┘                      │
+│             │                         │                                  │
+│  ┌──────────┴─────────────────────────┴─────────────┐                    │
+│  │  SETTLEMENT            cron: 0 23 * * *           │                    │
+│  │  (daily 23:00 UTC)                                │                    │
+│  │                                                   │                    │
+│  │  1. Passive income    4. Increment cycle          │                    │
+│  │  2. Operating costs   5. Analytics snapshot        │                    │
+│  │  3. Balance logging   6. Auto-generate users      │                    │
+│  └──────────┬────────────────────────────────────────┘                    │
+│             │                                                            │
 │  Also triggered via:    POST /api/admin/cycles/bulk (manual/dev)         │
-└─────────────┼────────────────────────┼───────────────────────────────────┘
-              │                        │
-  ┌───────────▼────────────────────────▼───────────────────┐
-  │                                                         │
+└─────────────┼────────────────────────────────────────────────────────────┘
+              │
+  ┌───────────▼────────────────────────────────────────┐
+  │                                                     │
   │  ┌──────────────────┐ ┌──────────────┐ ┌────────────┐  │
   │  │ League            │ │ Tournament   │ │ Tag Team   │  │
   │  │ Orchestrator      │ │ Orchestrator │ │ Orchestrator│  │
-  │  │ battleOrchestrator│ │ tournament   │ │ tagTeamBattle│ │
-  │  │ .ts               │ │ Battle       │ │ Orchestrator│  │
+  │  │ leagueBattle      │ │ tournament   │ │ tagTeamBattle│ │
+  │  │ Orchestrator.ts   │ │ Battle       │ │ Orchestrator│  │
   │  │                   │ │ Orchestrator │ │ .ts         │  │
   │  │                   │ │ .ts          │ │             │  │
   │  └────────┬──────────┘ └──────┬──────┘ └──────┬──────┘  │
   │           │                   │               │          │
+  │  ┌────────┴──────────┐                                   │
+  │  │ KotH Orchestrator │                                   │
+  │  │ kothBattle        │                                   │
+  │  │ Orchestrator.ts   │                                   │
+  │  └────────┬──────────┘                                   │
+  │           │                                              │
   └───────────┼───────────────────┼───────────────┼──────────┘
               │                   │               │
         ┌─────▼───────────────────▼───────────────▼────────┐
         │              COMBAT SIMULATOR                     │
         │            (combatSimulator.ts)                    │
         │                                                    │
-        │  simulateBattle(robot1, robot2, isTournament?)     │
+        │  simulateBattleMulti(robots[], config)             │
+        │    └─ N-robot unified entry point                  │
         │                                                    │
-        │  Returns: CombatResult                             │
+        │  simulateBattle(robot1, robot2, isTournament?)     │
+        │    └─ Backward-compatible 1v1 wrapper              │
+        │       delegates to simulateBattleMulti()           │
+        │                                                    │
+        │  Returns: CombatResult / SpatialCombatResult       │
         │    ├─ winnerId                                     │
         │    ├─ robot1FinalHP / robot2FinalHP                │
         │    ├─ robot1Damage / robot2Damage                  │
         │    ├─ durationSeconds                              │
         │    ├─ isDraw                                       │
-        │    └─ events: CombatEvent[]                        │
+        │    ├─ events: CombatEvent[]                        │
+        │    └─ kothMetadata (optional, zone control only)   │
         └──────────────────────┬───────────────────────────┘
                                │
         ┌──────────────────────▼───────────────────────────┐
         │          COMBAT MESSAGE GENERATOR                 │
         │        (combatMessageGenerator.ts)                 │
         │                                                    │
-        │  generateBattleLog({ simulatorEvents, ... })       │
+        │  convertBattleEvents({ simulatorEvents, ... })     │
         │    └─ convertSimulatorEvents()  (1v1/tournament)   │
         │    └─ convertTagTeamEvents()    (tag team)         │
+        │    └─ buildKothBattleLog()      (KotH)             │
         │                                                    │
         │  Raw CombatEvent[] → Narrative battle log          │
         └──────────────────────┬───────────────────────────┘
@@ -130,7 +150,7 @@ This document provides a unified architectural overview of the battle simulation
 
 ---
 
-## The Three Orchestrators
+## The Four Orchestrators
 
 Each orchestrator handles a different match type but follows the same core pattern:
 
@@ -160,7 +180,7 @@ Each orchestrator handles a different match type but follows the same core patte
 ```
 
 
-### 1. League Battle Orchestrator (`battleOrchestrator.ts`)
+### 1. League Battle Orchestrator (`leagueBattleOrchestrator.ts`)
 
 | Aspect | Detail |
 |---|---|
@@ -185,7 +205,7 @@ Each orchestrator handles a different match type but follows the same core patte
 | Draw handling | Not allowed — `isTournament=true` flag triggers HP% tiebreaker, then deterministic fallback |
 | Rewards | Round-based tournament rewards (scale with bracket depth), prestige, fame, streaming revenue |
 | League points | Not affected |
-| Audit event type | `tournament_match` (2 events) |
+| Audit event type | `battle_complete` (2 events) |
 | Cycle step | Step 2 |
 
 ### 3. Tag Team Battle Orchestrator (`tagTeamBattleOrchestrator.ts`)
@@ -200,14 +220,31 @@ Each orchestrator handles a different match type but follows the same core patte
 | Bye handling | Creates a synthetic bye-team with 2 robots (combined ELO 2000) |
 | Draw handling | Allowed |
 | Rewards | 2× credit multiplier, 1.6× prestige multiplier vs standard 1v1 |
-| Audit event type | `tag_team_battle` (4 events, one per robot) |
+| Audit event type | `battle_complete` (4 events, one per robot) |
 | Cycle step | Independent scheduling |
+
+### 4. KotH Battle Orchestrator (`kothBattleOrchestrator.ts`)
+
+| Aspect | Detail |
+|---|---|
+| Match source | `ScheduledKothMatch` + `ScheduledKothMatchParticipant` records |
+| Battle type | `"koth"` |
+| Participants | 5-6 robots → 5-6 BattleParticipant records |
+| Simulator call | `simulateBattleMulti(robots, kothConfig)` with `GameModeConfig` from `kothEngine.ts` |
+| Draw handling | Not possible — score tiebreaker (zone score → zone time → damage dealt) |
+| Rewards | Placement-based: 1st 25K credits, 2nd 17.5K, 3rd 10K, 4th-6th 5K. Zone dominance bonus +25% |
+| ELO | No ELO changes |
+| League points | Not affected (standalone mode) |
+| Audit event type | `battle_complete` (one per robot, 5-6 events) |
+| Cycle step | KotH cycle (Mon/Wed/Fri 16:00 UTC) |
 
 ---
 
 ## Combat Simulator Deep Dive
 
-The combat simulator (`combatSimulator.ts`) is the shared, stateless engine used by all three orchestrators. It has no database dependencies — it takes two `RobotWithWeapons` objects and returns a `CombatResult`.
+The combat simulator (`combatSimulator.ts`) is the shared, stateless engine used by all orchestrators. It has no database dependencies — it takes an array of `RobotWithWeapons` objects and a `BattleConfig`, and returns a `SpatialCombatResult`.
+
+The primary entry point is `simulateBattleMulti(robots[], config)` which supports N-robot battles. The legacy `simulateBattle(robot1, robot2, isTournament?)` function is preserved as a backward-compatible wrapper that delegates to `simulateBattleMulti()`.
 
 ### Simulation Model
 
@@ -217,7 +254,7 @@ The combat simulator (`combatSimulator.ts`) is the shared, stateless engine used
   │  Tick-based simulation (100ms per tick)          │
   │                                                  │
   │  Each tick:                                      │
-  │    1. Regenerate shields (both robots)            │
+  │    1. Regenerate shields (all robots)             │
   │    2. Check attack cooldowns                      │
   │    3. Perform attacks (main + offhand if dual)    │
   │       a. Malfunction check (weapon control)       │
@@ -229,7 +266,8 @@ The combat simulator (`combatSimulator.ts`) is the shared, stateless engine used
   │    4. Check end conditions:                       │
   │       - HP ≤ 0 → destroyed                        │
   │       - HP < yield threshold → yield              │
-  │       - Time limit → draw (or HP tiebreaker)      │
+  │       - Time limit → draw (or HP% tiebreaker)     │
+  │       - Game mode win condition (e.g. KotH score)  │
   └──────────────────────────────────────────────────┘
 ```
 
@@ -246,23 +284,33 @@ The combat simulator (`combatSimulator.ts`) is the shared, stateless engine used
 ### Input / Output Contract
 
 ```
-┌─────────────────────────────┐         ┌─────────────────────────────┐
-│  INPUT: RobotWithWeapons ×2 │         │  OUTPUT: CombatResult       │
-│                             │         │                             │
-│  All 23 robot attributes:   │         │  winnerId: number | null    │
-│  - combatPower              │  ────►  │  robot1FinalHP              │
-│  - weaponControl            │         │  robot2FinalHP              │
-│  - accuracy, evasion        │         │  robot1Damage (taken)       │
-│  - armor, penetration       │         │  robot2Damage (taken)       │
-│  - critChance, critDamage   │         │  robot1DamageDealt          │
-│  - attackSpeed              │         │  robot2DamageDealt          │
-│  - counterChance            │         │  durationSeconds            │
-│  - shieldCapacity, etc.     │         │  isDraw                     │
-│                             │         │  events: CombatEvent[]      │
-│  + mainWeapon, offhandWeapon│         │                             │
-│  + stance                   │         │                             │
-│  + isTournament flag        │         │                             │
-└─────────────────────────────┘         └─────────────────────────────┘
+┌─────────────────────────────────┐       ┌─────────────────────────────────┐
+│  INPUT: simulateBattleMulti()   │       │  OUTPUT: SpatialCombatResult    │
+│                                 │       │                                 │
+│  robots: RobotWithWeapons[]     │       │  winnerId: number | null        │
+│    All 23 robot attributes:     │       │  robot1FinalHP                  │
+│    - combatPower                │ ────► │  robot2FinalHP                  │
+│    - weaponControl              │       │  robot1Damage (taken)           │
+│    - accuracy, evasion          │       │  robot2Damage (taken)           │
+│    - armor, penetration         │       │  robot1DamageDealt              │
+│    - critChance, critDamage     │       │  robot2DamageDealt              │
+│    - attackSpeed                │       │  durationSeconds                │
+│    - counterChance              │       │  isDraw                         │
+│    - shieldCapacity, etc.       │       │  events: CombatEvent[]          │
+│    + mainWeapon, offhandWeapon  │       │  arenaRadius                    │
+│    + stance                     │       │  startingPositions              │
+│                                 │       │  endingPositions                │
+│  config: BattleConfig           │       │  kothMetadata (optional)        │
+│    - allowDraws                 │       │                                 │
+│    - maxDuration                │       │                                 │
+│    - gameModeConfig (optional)  │       │                                 │
+│    - gameModeState (optional)   │       │                                 │
+│    - arenaRadius (optional)     │       │                                 │
+└─────────────────────────────────┘       └─────────────────────────────────┘
+
+Legacy wrapper: simulateBattle(robot1, robot2, isTournament?)
+  → simulateBattleMulti([robot1, robot2], { allowDraws: !isTournament })
+  → Maps SpatialCombatResult back to CombatResult shape
 ```
 
 ELO is NOT used in combat calculations — it's only for matchmaking.
@@ -271,7 +319,7 @@ ELO is NOT used in combat calculations — it's only for matchmaking.
 
 ## Narrative Generation Pipeline
 
-All three orchestrators convert raw `CombatEvent[]` into human-readable battle narratives using `CombatMessageGenerator`:
+The orchestrators convert raw `CombatEvent[]` into human-readable battle narratives, but each takes a different approach based on its event structure:
 
 ```
   CombatEvent[]                    Narrative Battle Log
@@ -291,9 +339,10 @@ All three orchestrators convert raw `CombatEvent[]` into human-readable battle n
 
 | Method | Used by | Purpose |
 |---|---|---|
-| `generateBattleLog()` | All orchestrators | Entry point — delegates to converter or generates minimal log for byes |
-| `convertSimulatorEvents()` | League + Tournament | Converts 1v1 CombatEvent[] to narrative messages |
-| `convertTagTeamEvents()` | Tag Team | Handles phase transitions, tag-outs, reserve activations |
+| `convertBattleEvents()` | League, Tournament | Unified entry point — delegates to `convertSimulatorEvents()` or generates minimal log for byes |
+| `convertSimulatorEvents()` | League, Tournament (via `convertBattleEvents()`), Tag Team (per phase) | Low-level converter: raw 1v1 `CombatEvent[]` → narrative messages |
+| `convertTagTeamEvents()` | Tag Team | Multi-phase event stream converter — handles tag-out/tag-in transitions, calls `convertSimulatorEvents()` per phase |
+| `buildKothBattleLog()` | KotH | Assembles battle log structure from raw events (already contain inline narrative from KotH tick hooks), spatial metadata, and placement data |
 
 ---
 
@@ -351,11 +400,16 @@ This is the complete write path for a single battle:
 
 ### Audit Event Types by Orchestrator
 
+All orchestrators emit the unified `battle_complete` event type via the shared `logBattleAuditEvent()` helper in `battlePostCombat.ts`. Type-specific metadata (e.g., KotH placement, tag team role) is included in the `extras` field of the payload.
+
 | Orchestrator | Event Type | Events per Battle |
 |---|---|---|
 | League | `battle_complete` | 2 (one per robot) |
-| Tournament | `tournament_match` | 2 (one per robot) |
-| Tag Team | `tag_team_battle` | 4 (one per robot) |
+| Tournament | `battle_complete` | 2 (one per robot) |
+| Tag Team | `battle_complete` | 4 (one per robot) |
+| KotH | `battle_complete` | 5-6 (one per robot) |
+
+> **Note:** The `EventType` enum in `eventLogger.ts` still contains `TOURNAMENT_MATCH` and `TAG_TEAM_BATTLE` for backward compatibility with old audit log records in the database. New code should never emit these event types.
 
 ---
 
@@ -369,11 +423,11 @@ The orchestrators share several utility modules:
   │                                                              │
   │  battleMath.ts                                               │
   │    ├─ calculateExpectedScore()    ELO expected outcome       │
-  │    ├─ calculateELOChange()        ELO delta after battle     │
-  │    └─ ELO_K_FACTOR               K-factor constant           │
+  │    ├─ calculateELOChange()        ELO delta (K=32 hardcoded) │
+  │    └─ ELO_K_FACTOR               K-factor constant (32)     │
   │                                                              │
   │  economyCalculations.ts                                      │
-  │    ├─ getLeagueBaseReward()       Credits by league tier     │
+  │    ├─ getLeagueWinReward()        Credits by league tier     │
   │    ├─ getParticipationReward()    Loser/draw credits         │
   │    ├─ calculateBattleWinnings()   Total credit calculation   │
   │    └─ getPrestigeMultiplier()     Prestige bonus %           │
@@ -383,8 +437,8 @@ The orchestrators share several utility modules:
   │    └─ getTournamentRewardBreakdown()                         │
   │                                                              │
   │  streamingRevenueService.ts                                  │
-  │    ├─ calculateStreamingRevenue()       (1v1)                │
-  │    ├─ calculateTagTeamStreamingRevenue() (tag team)          │
+  │    ├─ calculateStreamingRevenue()       (per-robot)          │
+  │    ├─ getStreamingStudioLevel()         (facility query)     │
   │    └─ awardStreamingRevenue()           (DB write)           │
   │                                                              │
   │  eventLogger.ts                                              │
@@ -393,6 +447,126 @@ The orchestrators share several utility modules:
   │       └─ logEventBatch()                                     │
   └─────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Shared Post-Combat Layer
+
+**Added**: March 18, 2026
+
+All four orchestrators previously duplicated the same 6-step post-combat pipeline. This has been extracted into two shared modules:
+
+### `battlePostCombat.ts` — Shared Post-Combat Helpers
+
+Reusable functions that eliminate copy-paste across orchestrators. Each orchestrator still owns its own `processBattle()` flow and reward formulas — these helpers just handle the repetitive DB writes:
+
+```
+  ┌─────────────────────────────────────────────────────────────┐
+  │              battlePostCombat.ts (shared helpers)            │
+  │                                                              │
+  │  awardStreamingRevenueForParticipant()                       │
+  │    └─ calc + award + update BattleParticipant in one call    │
+  │    └─ Replaces 3-step pattern across all orchestrators       │
+  │                                                              │
+  │  logBattleAuditEvent()                                       │
+  │    └─ One audit event per robot with standard fields         │
+  │    └─ Type-specific extras merged via AuditEventExtras       │
+  │    └─ Replaces ~50-line eventLogger.logEvent blocks          │
+  │                                                              │
+  │  updateRobotCombatStats()                                    │
+  │    └─ wins/losses/draws/kills/damage lifetime + ELO + HP     │
+  │    └─ Optional LP change with min-0 clamping                 │
+  │    └─ Optional fame increment                                │
+  │    └─ Replaces per-orchestrator prisma.robot.update blocks   │
+  │                                                              │
+  │  awardCreditsToUser()                                        │
+  │    └─ Simple currency increment (no-op if amount ≤ 0)        │
+  │                                                              │
+  │  awardPrestigeToUser()                                       │
+  │    └─ Simple prestige increment (no-op if amount ≤ 0)        │
+  │                                                              │
+  │  awardFameToRobot()                                          │
+  │    └─ Simple fame increment (no-op if amount ≤ 0)            │
+  │                                                              │
+  │  Shared types:                                               │
+  │    ParticipantOutcome, RobotStatUpdateOptions,               │
+  │    AuditEventExtras                                          │
+  └─────────────────────────────────────────────────────────────┘
+```
+
+### `battleStrategy.ts` — Strategy Pattern for New Match Types
+
+Defines the `BattleStrategy<TMatch>` interface and `BattleProcessor` class. New match types implement the strategy (~100-150 lines of unique logic) and plug into the shared 11-step pipeline:
+
+```
+  ┌─────────────────────────────────────────────────────────────┐
+  │              BattleProcessor (battleStrategy.ts)              │
+  │                                                              │
+  │  process(match) executes this pipeline:                      │
+  │                                                              │
+  │   1. loadParticipants()          ← strategy provides         │
+  │   2. simulate()                  ← strategy provides         │
+  │   3. calculateELO()              ← shared (opt-out via flag) │
+  │   4. calculateRewards()          ← strategy provides         │
+  │   5. createBattleRecord()        ← shared structure          │
+  │   6. createParticipants()        ← shared structure          │
+  │   7. updateRobotStats()          ← shared via postCombat     │
+  │   8. awardStreamingRevenue()     ← shared via postCombat     │
+  │   9. logAuditEvents()            ← shared via postCombat     │
+  │  10. updateScheduleRecord()      ← strategy provides         │
+  │  11. postProcess()               ← strategy hook (optional)  │
+  │                                                              │
+  │  Config flags per strategy:                                  │
+  │    affectsELO, affectsLeaguePoints, allowsDraws,             │
+  │    hasStreamingRevenue, hasByeMatches                         │
+  └─────────────────────────────────────────────────────────────┘
+```
+
+### How Existing Orchestrators Use the Shared Layer
+
+The four existing orchestrators have been refactored to use `battlePostCombat.ts` helpers directly within their existing `processBattle()` flows. They do NOT use `BattleProcessor` — their battle-tested flows are preserved:
+
+| Orchestrator | Shared Helpers Used |
+|---|---|
+| League | `updateRobotCombatStats()`, `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+| Tournament | `updateRobotCombatStats()`, `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+| Tag Team | `awardCreditsToUser()`, `awardPrestigeToUser()`, `logBattleAuditEvent()` |
+| KotH | `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardFameToRobot()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+
+### How to Add a New Match Type
+
+New match types should use `BattleProcessor` instead of writing a full orchestrator from scratch. Here's the pattern:
+
+```typescript
+// 1. Implement BattleStrategy (~100-150 lines)
+class MyNewBattleStrategy implements BattleStrategy<MyMatchRecord> {
+  readonly battleType = 'my_new_type';
+  readonly leagueType = 'my_league';
+  readonly affectsELO = true;
+  readonly affectsLeaguePoints = false;
+  readonly allowsDraws = true;
+  readonly hasStreamingRevenue = true;
+  readonly hasByeMatches = false;
+
+  async loadParticipants(match: MyMatchRecord) { /* load robots from DB */ }
+  simulate(participants, match) { /* call simulateBattle() or simulateBattleMulti() */ }
+  async calculateRewards(result, participants, match) { /* your reward formulas */ }
+  buildBattleLog(result, participants, match) { /* narrative generation */ }
+  getExtraBattleFields(result, match) { return {}; }
+  getExtraParticipantFields(robotId, result, match) { return {}; }
+  getAuditExtras(robotId, result, match) { return {}; }
+  async updateScheduleRecord(match, battleId) { /* mark schedule as completed */ }
+}
+
+// 2. Use BattleProcessor to run it
+const strategy = new MyNewBattleStrategy();
+const processor = new BattleProcessor(strategy);
+const result = await processor.process(matchRecord);
+// → Creates Battle + BattleParticipants, updates robot stats,
+//   awards credits/prestige/fame/streaming, logs audit events
+```
+
+The `BattleProcessor` handles all 11 pipeline steps. You only write the parts that are genuinely unique to your match type.
 
 ---
 
@@ -429,11 +603,24 @@ The battle system is driven by `cycleScheduler.ts`, which registers 4 independen
   │  │  (Even cycles: repair only, skip battles)              │      │
   │  └────────────────────────────────────────────────────────┘      │
   │                                                                  │
+  │  16:00    KOTH CYCLE (Mon/Wed/Fri only)                          │
+  │  ├────────────────────────────────────────────────────────┐      │
+  │  │  1. Repair all robots                                  │      │
+  │  │  2. Execute scheduled KotH battles (5-6 robots each)   │      │
+  │  │     └─ kothBattleOrchestrator                           │     │
+  │  │        .executeScheduledKothBattles()                   │     │
+  │  │     └─ simulateBattleMulti(robots, kothConfig)          │     │
+  │  │     └─ Zone scoring, placement-based rewards, no ELO   │      │
+  │  │  3. KotH matchmaking (next Mon/Wed/Fri)                │      │
+  │  │  (Mon/Fri = Fixed Zone, Wed = Rotating Zone)           │      │
+  │  └────────────────────────────────────────────────────────┘      │
+  │                                                                  │
   │  20:00    LEAGUE CYCLE                                           │
   │  ├────────────────────────────────────────────────────────┐      │
   │  │  1. Repair all robots                                  │      │
   │  │  2. Execute scheduled league battles (1v1)             │      │
-  │  │     └─ battleOrchestrator.executeScheduledBattles()    │      │
+  │  │     └─ leagueBattleOrchestrator                        │      │
+  │  │        .executeScheduledBattles()                      │      │
   │  │     └─ simulateBattle(r1, r2, isTournament=false)      │      │
   │  │     └─ Draws allowed                                   │      │
   │  │  3. Rebalance leagues (promote/demote)                 │      │
@@ -455,11 +642,12 @@ The battle system is driven by `cycleScheduler.ts`, which registers 4 independen
   └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Why 4 Independent Jobs?
+### Why 5 Independent Jobs?
 
 The acc/production environment uses individual cron triggers rather than a monolithic cycle. This gives:
-- Independent scheduling per battle type (tournaments morning, leagues evening)
+- Independent scheduling per battle type (tournaments morning, KotH afternoon, leagues evening)
 - Tag team battles on a 48h cadence (odd cycles only) without blocking league play
+- KotH on a Mon/Wed/Fri schedule with alternating zone variants
 - Settlement runs last, after all battles are done, to capture the full day's economic activity
 - Each job repairs robots first, so no battle type depends on another job having run
 - Lock-based mutual exclusion prevents overlapping execution
@@ -470,9 +658,12 @@ The acc/production environment uses individual cron triggers rather than a monol
 
 | File | Purpose |
 |---|---|
-| `src/services/cycleScheduler.ts` | 4 independent cron jobs (league, tournament, tag team, settlement) |
+| `src/services/cycleScheduler.ts` | 5 independent cron jobs (league, tournament, tag team, KotH, settlement) |
 | `src/services/combatSimulator.ts` | Shared combat engine — tick-based simulation using all 23 attributes |
-| `src/services/battleOrchestrator.ts` | League 1v1 battle orchestration, ELO, rewards, audit logging |
+| `src/services/battlePostCombat.ts` | Shared post-combat helpers (streaming revenue, audit logging, robot stats, credits/prestige/fame) |
+| `src/services/battleStrategy.ts` | Strategy Pattern interface (`BattleStrategy`) + `BattleProcessor` for new match types |
+| `src/services/leagueBattleOrchestrator.ts` | League 1v1 battle orchestration, ELO, rewards, audit logging |
+| `src/services/kothBattleOrchestrator.ts` | KotH battle orchestration, placement rewards, zone scoring |
 | `src/services/tournamentBattleOrchestrator.ts` | Tournament bracket battles, round-based rewards |
 | `src/services/tagTeamBattleOrchestrator.ts` | 2v2 tag team battles, tag-out mechanics, 4-robot participation |
 | `src/services/combatMessageGenerator.ts` | Raw events → narrative battle log conversion |
@@ -483,6 +674,60 @@ The acc/production environment uses individual cron triggers rather than a monol
 | `src/utils/tournamentRewards.ts` | Tournament-specific reward scaling |
 
 All paths relative to `prototype/backend/`.
+
+---
+
+## King of the Hill Integration
+
+**Last Updated**: March 18, 2026  
+**Status**: ✅ Implemented
+
+### Architecture Approach
+
+KotH plugs into the existing battle simulation architecture via the `GameModeConfig` extensibility system. The core `combatSimulator.ts` is **unchanged** — KotH provides strategy implementations that the simulator consumes through its existing interfaces:
+
+| Interface | KotH Implementation | Purpose |
+|---|---|---|
+| `TargetPriorityStrategy` | `KothTargetPriorityStrategy` | Zone contesters 3×, approachers 2×, threat-analysis-scaled weights |
+| `MovementIntentModifier` | `KothMovementIntentModifier` | Zone-biased movement, wait-and-enter tactic |
+| `WinConditionEvaluator` | `KothWinConditionEvaluator` | Score threshold, last standing (10s), time limit, tiebreakers |
+| `ArenaZone` | `createControlZone()` | Center {0,0}, configurable radius [3,8], rotating zone support |
+
+### New Files
+
+| File | Purpose |
+|---|---|
+| `src/services/arena/kothEngine.ts` | Pure functions + strategy classes: zone scoring, anti-passive mechanics, spawn positions, rotating zone generation, `buildKothGameModeConfig()` |
+| `src/services/kothMatchmakingService.ts` | ELO-balanced snake-draft group matchmaking, one-per-stable filtering, zone variant by day of week |
+
+### Extended Files
+
+| File | Change |
+|---|---|
+| `src/services/battleOrchestrator.ts` → `src/services/leagueBattleOrchestrator.ts` | Renamed for consistency. League-only orchestration. KotH code extracted to `kothBattleOrchestrator.ts`. |
+| `src/services/kothBattleOrchestrator.ts` | Extracted from `battleOrchestrator.ts` — `executeScheduledKothBattles()`, `processKothBattle()`, `calculateKothRewards()`, `updateKothRobotStats()`. Imports `getCurrentCycleNumber` from `leagueBattleOrchestrator.ts`. |
+| `src/services/battlePostCombat.ts` | Shared post-combat helpers extracted from all 4 orchestrators. Used by league, tournament, tag team, and KotH. |
+| `src/services/battleStrategy.ts` | Strategy Pattern interface (`BattleStrategy<TMatch>`) + `BattleProcessor` class for new match types. |
+| `src/services/cycleScheduler.ts` | Added 5th cron job (`koth`, `0 16 * * 1,3,5`) with `executeKothCycle()` handler |
+| `src/services/combatSimulator.ts` | **Unchanged** — KotH plugs in via `GameModeConfig` |
+
+### Daily Timeline with KotH
+
+```
+UTC   Job
+08:00 Tournament Cycle
+12:00 Tag Team Cycle (battles on odd cycles only)
+16:00 KotH Cycle (Mon/Wed/Fri only) ← NEW
+20:00 League Cycle
+23:00 Settlement
+```
+
+### Updated File Reference
+
+| File | Purpose |
+|---|---|
+| `src/services/arena/kothEngine.ts` | KotH game mode config, zone scoring, anti-passive, AI strategies |
+| `src/services/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
 
 ---
 

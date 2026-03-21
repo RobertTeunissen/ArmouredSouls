@@ -2,10 +2,10 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Date**: March 1, 2026  
+**Date**: March 18, 2026  
 **Status**: Implementation Complete  
 **Purpose**: Textual descriptions for battle log events
-**Version**: v2.1  
+**Version**: v2.2  
 
 ---
 
@@ -25,6 +25,9 @@
   - Tag team events converted through narrative generator
 - v2.1 - 2D Arena Spatial Messages (March 16, 2026)
   - Added spatial combat event message templates: movement, range_transition, out_of_range, counter_out_of_range, backstab, flanking
+- v2.2 - King of the Hill Events (March 18, 2026)
+  - Added 12 KotH event types: zone_enter, zone_exit, score_tick, kill_bonus, robot_eliminated, passive_warning, passive_penalty, zone_moving, zone_active, last_standing, match_end, zone_defined
+  - Added KotH events to Frontend Display table with orange (#F97316) color coding
 
 ---
 
@@ -74,9 +77,10 @@ Stored in battle record as battleLog.events (player-facing)
 
 All three orchestrators now use the narrative conversion pipeline:
 
-- **League** (`battleOrchestrator.ts`): Calls `generateBattleLog()` with `simulatorEvents`, which delegates to `convertSimulatorEvents()`
+- **League** (`leagueBattleOrchestrator.ts`): Calls `convertBattleEvents()` with `simulatorEvents`, which delegates to `convertSimulatorEvents()`
 - **Tournament** (`tournamentBattleOrchestrator.ts`): Same as league, with `battleType: 'tournament'`
 - **Tag Team** (`tagTeamBattleOrchestrator.ts`): Calls `convertTagTeamEvents()` which handles mixed arrays of raw simulator events and narrative tag_out/tag_in events, converting each combat phase separately
+- **KotH** (`kothBattleOrchestrator.ts`): Calls `buildKothBattleLog()` which assembles the battle log from raw events (already contain inline narrative from KotH tick hooks), spatial metadata, and placement data
 
 ---
 
@@ -399,6 +403,79 @@ Tag Team (5 variations):
 "⚔️ Coordinated flanking maneuver against {defenderName}!"
 ```
 
+### 14. King of the Hill Events
+
+**Zone Enter** (emitted when robot enters the control zone):
+```
+"👑 {robotName} enters the control zone — uncontested!"
+"👑 {robotName} enters the control zone — contested by {contestCount} opponents!"
+"👑 {robotName} moves into the zone, challenging {opponentName} for control!"
+```
+
+**Zone Exit** (emitted when robot leaves the control zone):
+```
+"🚪 {robotName} leaves the control zone voluntarily"
+"🚪 {robotName} is knocked out of the control zone by {attackerName}!"
+"🚪 {robotName} retreats from the zone under heavy fire"
+```
+
+**Score Tick** (emitted every 1s game time during zone occupation):
+```
+"📊 {robotName} holds the zone unopposed — +1 point ({totalScore} total)"
+"⚔️ The zone is contested — no points awarded"
+"📊 {robotName} maintains uncontested control ({totalScore} points)"
+```
+
+**Kill Bonus** (emitted on robot destruction in KotH):
+```
+"💀 {robotName} eliminates {opponentName} and earns 5 bonus points!"
+"💀 {robotName} destroys {opponentName} — +5 kill bonus! ({totalScore} total)"
+```
+
+**Robot Eliminated** (emitted when robot is destroyed or yields):
+```
+"💀 {robotName} has been destroyed — finishes in {placement} place with {zoneScore} points"
+"🏳️ {robotName} yields — finishes in {placement} place with {zoneScore} points"
+```
+
+**Passive Warning** (emitted at 20s outside zone):
+```
+"⚠️ {robotName} has been outside the zone for 20 seconds — penalties incoming!"
+"⚠️ Warning: {robotName} risks passive penalties — return to the zone!"
+```
+
+**Passive Penalty** (emitted at 30s and 60s thresholds):
+```
+"🔻 {robotName} suffers {damageReduction}% damage reduction for staying outside the zone"
+"🔻 {robotName} receives a 15% accuracy penalty — 60 seconds outside the zone!"
+"🔻 Passive penalties active on {robotName}: {damageReduction}% damage, {accuracyPenalty}% accuracy"
+```
+
+**Zone Moving** (emitted 5s before zone transition in rotating variant):
+```
+"🔄 WARNING: The control zone is about to move! New position in 5 seconds..."
+"🔄 Zone transition incoming — prepare to reposition!"
+```
+
+**Zone Active** (emitted when zone activates at new position):
+```
+"📍 The control zone has moved to a new position! Radius: {radius}"
+"📍 New zone active — all robots must reposition!"
+```
+
+**Last Standing** (emitted when only one robot remains):
+```
+"👑 {robotName} is the last robot standing — 10 seconds to score!"
+"👑 Only {robotName} remains — final scoring window begins!"
+```
+
+**Match End** (emitted when KotH match concludes):
+```
+"🏆 {winnerName} wins the King of the Hill! Reason: {winReason} — Final score: {score}"
+"🏆 KING OF THE HILL COMPLETE! {winnerName} claims victory with {score} points!"
+"🏆 Match over — {winnerName} wins by {winReason}! Final standings: 1st {p1} ({s1}), 2nd {p2} ({s2}), 3rd {p3} ({s3})"
+```
+
 ---
 
 ## Battle Log JSON Structure
@@ -464,11 +541,23 @@ The `BattleDetailPage.tsx` component renders combat messages with color-coded bo
 | counter_out_of_range | Red-300 | Red tint |
 | backstab | Purple-500 | Purple tint |
 | flanking | Amber-500 | Amber tint |
+| zone_enter | Orange (#F97316) | Orange tint |
+| zone_exit | Orange (#F97316) | Orange tint |
+| score_tick | Orange (#F97316) | Orange tint |
+| kill_bonus | Orange (#F97316) | Orange tint |
+| robot_eliminated | Orange (#F97316) | Orange tint |
+| passive_warning | Orange (#F97316) | Orange tint |
+| passive_penalty | Orange (#F97316) | Orange tint |
+| zone_moving | Orange (#F97316) | Orange tint |
+| zone_active | Orange (#F97316) | Orange tint |
+| last_standing | Orange (#F97316) | Orange tint |
+| match_end | Orange (#F97316) | Orange tint |
+| zone_defined | Orange (#F97316) | Orange tint |
 
 Financial/reward messages are filtered from the combat log (shown in the battle summary section instead).
 
 ---
 
-**Status**: v2.1 - All core combat message categories implemented including 2D arena spatial events  
+**Status**: v2.2 - All core combat message categories implemented including 2D arena spatial events and King of the Hill events  
 **Implementation**: `combatMessageGenerator.ts` converts real simulator events into narrative messages  
-**All orchestrators**: League, Tournament, and Tag Team use the narrative conversion pipeline
+**All orchestrators**: League, Tournament, Tag Team, and KotH use the narrative conversion pipeline

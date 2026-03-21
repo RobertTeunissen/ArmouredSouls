@@ -1,7 +1,7 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Version**: 1.1  
-**Last Updated**: February 5, 2026  
+**Version**: 1.2  
+**Last Updated**: March 21, 2026  
 **Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
 **Epic**: Weapon System Economy Redesign
@@ -9,6 +9,7 @@
 **Change Log:**
 - **v1.0** (Feb 2, 2026): Initial pricing formula and weapon catalog
 - **v1.1** (Feb 5, 2026): Updated for combat rebalancing - reduced weapon damage values
+- **v1.2** (Mar 21, 2026): ~25% weapon damage reduction + shield capacity doubled (×2 → ×4)
 
 ---
 
@@ -25,6 +26,81 @@ This PRD defines the requirements for the weapon economy system in Armoured Soul
 **Context**: The combat system was rebalanced to eliminate 70% shield absorption and 30% bleed-through mechanics, resulting in 2-3x faster damage application. Weapon damage was reduced proportionally to maintain target battle duration of 40-60 seconds.
 
 **Success Criteria**: All weapons have fair pricing based on transparent formula, maintain value proposition relative to each other, and support faster battle times without economy disruption.
+
+---
+
+## Version 1.2 Updates (March 21, 2026)
+
+### Problem Statement
+
+Battles were averaging 21-29 seconds (target: 35-50s) with a 40%+ kill rate. Damage output was too high relative to HP/shield pools, causing robots to die before yield checks could trigger.
+
+### Changes Applied
+
+**1. Weapon Damage Reduction (~25%)**
+
+All 23 weapons had base damage reduced by approximately 25%. The new baseline is Practice Sword at 6 damage / 3s = 2.0 DPS (was 8/3 = 2.67 DPS).
+
+| Weapon | v1.1 Dmg | v1.2 Dmg | v1.1 DPS | v1.2 DPS |
+|--------|----------|----------|----------|----------|
+| Practice Sword | 8 | 6 | 2.67 | 2.0 |
+| Machine Pistol | 6 | 5 | 3.0 | 2.5 |
+| Laser Pistol | 8 | 6 | 2.67 | 2.0 |
+| Combat Knife | 6 | 5 | 3.0 | 2.5 |
+| Machine Gun | 7 | 5 | 3.5 | 2.5 |
+| Burst Rifle | 11 | 8 | 3.67 | 2.7 |
+| Assault Rifle | 13 | 10 | 4.33 | 3.3 |
+| Energy Blade | 13 | 10 | 4.33 | 3.3 |
+| Laser Rifle | 15 | 11 | 5.0 | 3.7 |
+| Plasma Blade | 14 | 11 | 4.67 | 3.7 |
+| Plasma Rifle | 17 | 13 | 5.67 | 4.3 |
+| Power Sword | 20 | 15 | 6.67 | 5.0 |
+| Shotgun | 18 | 14 | 4.5 | 3.5 |
+| Grenade Launcher | 21 | 16 | 4.2 | 3.2 |
+| Sniper Rifle | 29 | 22 | 4.83 | 3.7 |
+| Battle Axe | 23 | 17 | 5.75 | 4.3 |
+| Plasma Cannon | 27 | 20 | 5.4 | 4.0 |
+| Heavy Hammer | 29 | 22 | 5.8 | 4.4 |
+| Railgun | 33 | 25 | 5.5 | 4.2 |
+| Ion Beam | 24 | 18 | 6.0 | 4.5 |
+
+Shields (0 damage) unchanged.
+
+**2. Shield Capacity Formula Doubled**
+
+Shield HP per point of Shield Capacity increased from ×2 to ×4:
+- Old: `maxShield = shieldCapacity × 2`
+- New: `maxShield = shieldCapacity × 4`
+
+This gives shields more staying power, extending the early phase of combat where damage is absorbed before hitting HP directly.
+
+**3. Pricing Formula Updated**
+
+- DPS Cost multiplier M increased from 2.67 to 3.0
+- Baseline DPS changed from 2.67 to 2.0
+
+```
+DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 3.0
+DPS Ratio = (baseDamage / cooldown) / 2.0
+```
+
+Net effect: cheap weapons got cheaper, expensive weapons stayed relatively similar. The price spread compressed slightly.
+
+### Expected Impact
+
+- Longer battles (targeting 35-50s average)
+- Lower kill rate (more yields before destruction)
+- Shield phase lasts longer, giving defensive builds more value
+- Two-handed burst damage still viable via critical hits (2.5× multiplier)
+- Dual-wield raw DPS advantage preserved but less lethal overall
+
+### Files Modified
+
+- `prototype/backend/prisma/seed.ts` — weapon damage/cost values, shield formula
+- `prototype/backend/src/utils/robotCalculations.ts` — `shieldCapacity * 4`
+- `prototype/frontend/src/utils/robotStats.ts` — `shieldCapacity * 4`
+- `prototype/backend/src/routes/robots.ts` — new robot shield calc
+- `prototype/backend/src/utils/userGeneration.ts` — archetype shield values
 
 ---
 

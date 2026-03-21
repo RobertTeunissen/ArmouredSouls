@@ -1,5 +1,4 @@
 import { getWeaponImagePath } from '../utils/weaponImages';
-import { calculateWeaponCooldown } from '../utils/weaponConstants';
 import meleeIcon from '../assets/icons/weapon-types/melee.svg';
 import ballisticIcon from '../assets/icons/weapon-types/ballistic.svg';
 import energyIcon from '../assets/icons/weapon-types/energy.svg';
@@ -12,6 +11,7 @@ interface Weapon {
   loadoutType: string;
   description: string;
   baseDamage: number;
+  cooldown: number;
   cost: number;
   combatPowerBonus: number;
   targetingSystemsBonus: number;
@@ -70,8 +70,7 @@ function getTotalAttributes(weapon: Weapon): number {
 }
 
 function calculateValueMetrics(weapon: Weapon, discountedCost: number) {
-  const cooldownStr = calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage);
-  const cooldown = parseFloat(cooldownStr);
+  const cooldown = weapon.cooldown;
   const dps = cooldown > 0 ? weapon.baseDamage / cooldown : 0;
   const totalAttributes = getTotalAttributes(weapon);
 
@@ -145,8 +144,7 @@ export default function ComparisonModal({
           <div className={`grid ${weapons.length === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-6`}>
             {weaponsWithMetrics.map(({ weapon, discountedCost, metrics }) => {
               const canAfford = userCurrency >= discountedCost;
-              const cooldownStr = calculateWeaponCooldown(weapon.weaponType, weapon.baseDamage);
-              const cooldown = parseFloat(cooldownStr);
+              const cooldown = weapon.cooldown;
               const totalAttributes = getTotalAttributes(weapon);
 
               const isBestDamageValue = bestDamageValue.weapon.id === weapon.id && metrics.costPerDamage > 0;
@@ -186,7 +184,7 @@ export default function ComparisonModal({
                         <>
                           <div className="flex justify-between">
                             <span className="text-secondary">Cooldown:</span>
-                            <span className="text-white">{cooldownStr}s</span>
+                            <span className="text-white">{cooldown}s</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-secondary">DPS:</span>

@@ -130,6 +130,16 @@ The championship title includes the tournament identifier, the date, and your ro
 The +500 prestige championship bonus is massive compared to normal prestige gains. A single tournament win can be worth more prestige than dozens of league battles. This makes deep tournament runs one of the fastest paths to higher prestige ranks.
 ```
 
+## ELO Impact
+
+Tournament battles **do** affect your robot's ELO rating. Wins and losses are calculated using the standard K=32 formula, the same one used in league battles. This means a strong tournament run will boost your ELO, which in turn influences your league matchmaking and future tournament seeding.
+
+This is different from [King of the Hill](/guide/king-of-the-hill/rewards), where ELO is unaffected. The reasoning: tournaments are competitive, bracket-seeded events where results should carry weight. KotH is a more casual, free-for-all format where ELO is used only for matchmaking group balancing.
+
+```callout-info
+Since tournament seeding is based on ELO, doing well in tournaments creates a positive feedback loop — higher ELO means better seeding in the next tournament, which can mean easier early-round matchups and more byes.
+```
+
 ## Losing Rewards
 
 Losing a tournament battle still earns a participation reward — **30% of what the winner earns** for that round. Tournament losses don't penalize you beyond the elimination itself.

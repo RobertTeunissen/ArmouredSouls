@@ -132,9 +132,9 @@ describe('CombatMessageGenerator', () => {
     });
   });
 
-  describe('generateBattleLog', () => {
+  describe('convertBattleEvents', () => {
     it('should generate minimal battle log without simulator events (fallback for bye matches)', () => {
-      const log = CombatMessageGenerator.generateBattleLog({
+      const log = CombatMessageGenerator.convertBattleEvents({
         robot1Name: 'Iron Gladiator',
         robot2Name: 'Steel Warrior',
         robot1ELOBefore: 1200,
@@ -171,7 +171,7 @@ describe('CombatMessageGenerator', () => {
 
     it('should include timestamps in correct order', () => {
       const battleDurationSeconds = 45;
-      const log = CombatMessageGenerator.generateBattleLog({
+      const log = CombatMessageGenerator.convertBattleEvents({
         robot1Name: 'Iron Gladiator',
         robot2Name: 'Steel Warrior',
         robot1ELOBefore: 1200,

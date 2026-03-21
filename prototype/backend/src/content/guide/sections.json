@@ -36,33 +36,39 @@
     "order": 6
   },
   {
+    "slug": "king-of-the-hill",
+    "title": "King of the Hill",
+    "description": "Zone-control battle mode with 5-6 robot free-for-all combat",
+    "order": 7
+  },
+  {
     "slug": "economy",
     "title": "Economy & Finances",
     "description": "Credits, income, expenses, and financial management",
-    "order": 7
+    "order": 8
   },
   {
     "slug": "facilities",
     "title": "Stable & Facilities",
     "description": "Facility types, upgrades, and investment strategy",
-    "order": 8
+    "order": 9
   },
   {
     "slug": "prestige-fame",
     "title": "Prestige & Fame",
     "description": "Reputation systems and progression rewards",
-    "order": 9
+    "order": 10
   },
   {
     "slug": "strategy",
     "title": "Strategy Guides",
     "description": "Build archetypes, budget allocation, and advanced tactics",
-    "order": 10
+    "order": 11
   },
   {
     "slug": "integrations",
     "title": "Integrations & API",
     "description": "Webhooks, notifications, and community integrations",
-    "order": 11
+    "order": 12
   }
 ]

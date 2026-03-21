@@ -177,7 +177,7 @@ model AuditLog {
 
 ### Battle Events
 
-**battle_complete** - Battle finished (2 events per 1v1 battle, 4 events per tag team battle)
+**battle_complete** - Battle finished (2 events per 1v1 battle, 4 events per tag team battle, 5-6 events per KotH battle)
 - **Architecture**: Each robot gets its own event with their perspective of the battle
 - **Payload Structure**: 
   - `result`: 'win', 'loss', or 'draw' (from this robot's perspective)
@@ -190,7 +190,7 @@ model AuditLog {
   - `streamingRevenue`: Streaming revenue earned by this robot
   - `battleType`, `leagueType`, `durationSeconds`: Battle metadata
 - **Metadata**: `userId`, `robotId`, `battleId` stored in metadata columns (not payload)
-- **Created by**: Battle orchestrators (`battleOrchestrator.ts`, `tagTeamBattleOrchestrator.ts`)
+- **Created by**: Battle orchestrators (`leagueBattleOrchestrator.ts`, `tournamentBattleOrchestrator.ts`, `tagTeamBattleOrchestrator.ts`, `kothBattleOrchestrator.ts`) via shared `logBattleAuditEvent()` in `battlePostCombat.ts`
 - **Used for**: Cycle snapshots, battle history, analytics, streaming revenue aggregation
 - **Rationale**: Separate events per robot enable efficient per-robot and per-user queries without parsing complex payloads
 
@@ -785,7 +785,7 @@ if (event.battleId) {
 
 ### Implementation Files
 - `prototype/backend/src/services/eventLogger.ts` - Event logging service
-- `prototype/backend/src/services/battleOrchestrator.ts` - Battle event creation
+- `prototype/backend/src/services/leagueBattleOrchestrator.ts` - Battle event creation (via shared `battlePostCombat.ts` helpers)
 - `prototype/backend/src/services/cycleSnapshotService.ts` - Snapshot aggregation
 
 ### Migration Documents

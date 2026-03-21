@@ -1,6 +1,6 @@
 # Armoured Souls - Game Design Document
 
-**Last Updated**: February 9, 2026
+**Last Updated**: March 18, 2026
 
 ## Overview
 
@@ -154,6 +154,15 @@ This document captures the core game design decisions for Armoured Souls, a stra
    - Special rewards and prestige ✅
    - Single elimination format ✅
    - Continuous tournament system (auto-creates new tournaments) ✅
+
+4. **King of the Hill** (Zone Control Mode) - ✅ IMPLEMENTED
+   - 5-6 robot free-for-all zone control battles ✅
+   - Mon/Wed/Fri at 16:00 UTC schedule ✅
+   - Fixed and rotating zone variants ✅
+   - Placement-based rewards (credits, fame, prestige) ✅
+   - No ELO impact ✅
+   - Anti-passive mechanics to encourage zone engagement ✅
+   - KotH standings page and Hall of Records integration ✅
 
 ### Post-Launch Modes - ❌ NOT IMPLEMENTED
 
@@ -499,6 +508,7 @@ Development focuses on:
 - Robot management with 23 attributes and weapon system
 - Matchmaking and league system (6 tiers)
 - Tournament system (single elimination)
+- King of the Hill (zone control FFA, Mon/Wed/Fri)
 - Economy system (currency, prestige, fame)
 - Facility system (14 types, 10 levels each)
 - Daily cycle automation

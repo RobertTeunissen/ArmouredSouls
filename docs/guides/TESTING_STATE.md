@@ -189,7 +189,8 @@ Fixed 5 additional failing tests in `leagueRebalancingService.test.ts` by updati
 - `integration/tagTeamLeagueRebalancing.test.ts`: ✅ 4/4 passing
 - `matchListInclusion.property.test.ts`: ✅ 2/2 passing
 - `multiMatchScheduling.property.test.ts`: ✅ 4/4 passing
-- `battleOrchestrator.test.ts`: ✅ 12/12 passing
+- `battleOrchestrator.test.ts`: ✅ 12/12 passing (tests league orchestrator, file kept for backward compat)
+- `battlePostCombat.test.ts`: ✅ 26/26 passing (shared post-combat helpers)
 
 ### Known Issues Resolved
 - ✅ `leagueRebalancingService.test.ts`: Fixed LP retention expectations
@@ -215,7 +216,7 @@ Fixed 5 additional failing tests in `leagueRebalancingService.test.ts` by updati
      - `tests/tagTeamStreamingRevenue.test.ts` - ✅ Passing
      - `tests/tagTeamLeagueRebalancing.test.ts` - ✅ All 24 tests passing (was 18/24)
      - `tests/tagTeamService.test.ts` - ✅ All 20 tests passing (was failing cleanup)
-     - `tests/battleOrchestrator.test.ts` - Already had correct order
+     - `tests/battleOrchestrator.test.ts` - Already had correct order (tests leagueBattleOrchestrator)
      - `tests/leagueRebalancingService.test.ts` - Already had correct order
 
 ### Property Test Fixes

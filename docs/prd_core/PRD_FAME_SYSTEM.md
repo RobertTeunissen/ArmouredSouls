@@ -96,7 +96,7 @@ Potential additions to the fame system:
 
 ## Implementation Details
 
-**Location**: `prototype/backend/src/services/battleOrchestrator.ts`
+**Location**: `prototype/backend/src/services/leagueBattleOrchestrator.ts` (league), with shared helpers in `battlePostCombat.ts`
 
 **Function**: `calculateFameForBattle()`
 

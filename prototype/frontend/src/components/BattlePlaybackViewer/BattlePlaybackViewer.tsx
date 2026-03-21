@@ -5,8 +5,10 @@ import {
   PlaybackCombatEvent,
   AttackIndicator,
   RangeBand,
+  KothPlaybackData,
 } from './types';
 import { usePlaybackEngine } from './usePlaybackEngine';
+import { useKothPlaybackState } from './useKothPlaybackState';
 import { ArenaCanvas } from './ArenaCanvas';
 import { PlaybackControls } from './PlaybackControls';
 import { CombatLogPanel } from './CombatLogPanel';
@@ -21,6 +23,8 @@ interface BattlePlaybackViewerProps {
   narrativeEvents?: PlaybackCombatEvent[];
   /** Whether this is a tag team battle (affects HP mapping strategy) */
   isTagTeam?: boolean;
+  /** KotH-specific playback data */
+  kothData?: KothPlaybackData;
 }
 
 const ATTACK_INDICATOR_DURATION = 0.6; // seconds
@@ -63,6 +67,7 @@ export const BattlePlaybackViewer: React.FC<BattlePlaybackViewerProps> = ({
   extraRobots,
   narrativeEvents,
   isTagTeam,
+  kothData,
 }) => {
   const hasSpatialData = battleResult.arenaRadius !== undefined && battleResult.arenaRadius > 0;
   const robots = useMemo(
@@ -157,6 +162,9 @@ export const BattlePlaybackViewer: React.FC<BattlePlaybackViewerProps> = ({
     return undefined;
   }, [currentEventIndex, battleResult.events]);
 
+  // Derive KotH zone state and scores from events up to currentEventIndex
+  const kothState = useKothPlaybackState(kothData, currentEventIndex, battleResult.events);
+
   // Compute the current log event index from playback time against the logEvents array,
   // since logEvents and battleResult.events are different arrays (narrative vs spatial).
   const currentLogEventIndex = useMemo((): number => {
@@ -214,6 +222,9 @@ export const BattlePlaybackViewer: React.FC<BattlePlaybackViewerProps> = ({
           currentTime={state.currentTime}
           focusedRangeBand={focusedRangeBand}
           activeRobotNames={activeRobotNames}
+          kothZone={kothState?.zone}
+          kothScores={kothState?.scores}
+          kothScoreThreshold={kothData?.scoreThreshold}
         />
         <PlaybackControls
           state={state}

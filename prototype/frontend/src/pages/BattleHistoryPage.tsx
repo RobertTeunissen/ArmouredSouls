@@ -12,6 +12,7 @@ import {
   getELOChange,
   getBattleReward,
 } from '../utils/matchmakingApi';
+import { computeBattleSummary, EMPTY_SUMMARY } from '../utils/battleHistoryStats';
 
 function BattleHistoryPage() {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ function BattleHistoryPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [battleFilter, setBattleFilter] = useState<'overall' | 'league' | 'tournament' | 'tag_team'>('overall');
+  const [battleFilter, setBattleFilter] = useState<'overall' | 'league' | 'tournament' | 'tag_team' | 'koth'>('overall');
   
   // Filter and sort state
   const [outcomeFilter, setOutcomeFilter] = useState<'all' | 'win' | 'loss' | 'draw'>('all');
@@ -73,164 +74,29 @@ function BattleHistoryPage() {
   };
 
   const getMatchData = (battle: BattleHistory) => {
-    const myRobot = isMyRobot(battle.robot1.userId) ? battle.robot1 : battle.robot2;
-    const opponent = isMyRobot(battle.robot1.userId) ? battle.robot2 : battle.robot1;
+    const isKoth = battle.battleType === 'koth';
+    const isMyRobot1 = isMyRobot(battle.robot1.userId);
+
+    // For KotH, backend ensures user's robot is in robot1 (even for 3rd-6th place)
+    const myRobot = isMyRobot1 ? battle.robot1 : battle.robot2;
+    const opponent = isMyRobot1 ? battle.robot2 : battle.robot1;
     const myRobotId = myRobot.id;
-    const outcome = getBattleOutcome(battle, myRobotId);
+
+    // For KotH, derive outcome from placement (1st = win, rest = loss)
+    const outcome = isKoth
+      ? (battle.kothPlacement === 1 ? 'win' : 'loss')
+      : getBattleOutcome(battle, myRobotId);
+
     const eloChange = getELOChange(battle, myRobotId);
 
     return { myRobot, opponent, outcome, eloChange, myRobotId };
   };
 
-  // Calculate summary statistics
-   
-  const summaryStats = useMemo(() => {
-    if (battles.length === 0) {
-      return {
-        totalBattles: 0,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        winRate: 0,
-        avgELOChange: 0,
-        totalCreditsEarned: 0,
-        leagueStats: { battles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0 },
-        tournamentStats: { battles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0 },
-        tagTeamStats: { battles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0 },
-      };
-    }
-
-    let wins = 0;
-    let losses = 0;
-    let draws = 0;
-    let totalELOChange = 0;
-    let totalCredits = 0;
-    
-    // For streak calculation: count consecutive outcomes from most recent battle
-    let streakCount = 0;
-    let streakType: 'win' | 'loss' | null = null;
-    let firstBattleOutcome: 'win' | 'loss' | 'draw' | null = null;
-    let streakBroken = false; // Flag to stop counting once streak is broken
-
-    // League vs Tournament vs Tag Team breakdown
-    let leagueWins = 0, leagueLosses = 0, leagueDraws = 0, leagueELOChange = 0, leagueBattles = 0;
-    let tournamentWins = 0, tournamentLosses = 0, tournamentDraws = 0, tournamentELOChange = 0, tournamentBattles = 0;
-    let tagTeamWins = 0, tagTeamLosses = 0, tagTeamDraws = 0, tagTeamELOChange = 0, tagTeamBattles = 0;
-
-    battles.forEach((battle, index) => {
-      const { outcome, eloChange, myRobotId } = getMatchData(battle);
-      const reward = getBattleReward(battle, myRobotId);
-      const isTournament = battle.battleType === 'tournament';
-      const isTagTeam = battle.battleType === 'tag_team';
-
-      if (outcome === 'win') {
-        wins++;
-        if (isTournament) tournamentWins++;
-        else if (isTagTeam) tagTeamWins++;
-        else leagueWins++;
-      } else if (outcome === 'loss') {
-        losses++;
-        if (isTournament) tournamentLosses++;
-        else if (isTagTeam) tagTeamLosses++;
-        else leagueLosses++;
-      } else if (outcome === 'draw') {
-        draws++;
-        if (isTournament) tournamentDraws++;
-        else if (isTagTeam) tagTeamDraws++;
-        else leagueDraws++;
-      }
-
-      totalELOChange += eloChange;
-      totalCredits += reward;
-
-      if (isTournament) {
-        tournamentBattles++;
-        tournamentELOChange += eloChange;
-      } else if (isTagTeam) {
-        tagTeamBattles++;
-        tagTeamELOChange += eloChange;
-      } else {
-        leagueBattles++;
-        leagueELOChange += eloChange;
-      }
-
-      // Track streak: count consecutive outcomes starting from most recent (index 0)
-      // Stop counting once the streak is broken
-      if (!streakBroken) {
-        if (index === 0) {
-          // First battle (most recent) - establish the streak type
-          if (outcome === 'win' || outcome === 'loss') {
-            streakCount = 1;
-            streakType = outcome as 'win' | 'loss';
-            firstBattleOutcome = outcome;
-          } else {
-            // First battle is a draw - no streak
-            firstBattleOutcome = 'draw';
-            streakCount = 0;
-            streakType = null;
-            streakBroken = true; // Draw breaks the streak
-          }
-        } else if (firstBattleOutcome === 'win' || firstBattleOutcome === 'loss') {
-          // We have an established streak type, check if this battle continues it
-          if (outcome === firstBattleOutcome) {
-            streakCount++;
-          } else {
-            // Outcome doesn't match or is a draw - streak is broken, stop counting
-            streakBroken = true;
-          }
-        }
-      }
-    });
-
-    const totalBattles = wins + losses + draws;
-    const winRate = totalBattles > 0 ? wins / totalBattles : 0;
-    const avgELOChange = totalBattles > 0 ? totalELOChange / totalBattles : 0;
-
-    const leagueWinRate = leagueBattles > 0 ? leagueWins / leagueBattles : 0;
-    const leagueAvgELO = leagueBattles > 0 ? leagueELOChange / leagueBattles : 0;
-
-    const tournamentWinRate = tournamentBattles > 0 ? tournamentWins / tournamentBattles : 0;
-    const tournamentAvgELO = tournamentBattles > 0 ? tournamentELOChange / tournamentBattles : 0;
-
-    const tagTeamWinRate = tagTeamBattles > 0 ? tagTeamWins / tagTeamBattles : 0;
-    const tagTeamAvgELO = tagTeamBattles > 0 ? tagTeamELOChange / tagTeamBattles : 0;
-
-    return {
-      totalBattles,
-      wins,
-      losses,
-      draws,
-      winRate,
-      avgELOChange,
-      totalCreditsEarned: totalCredits,
-      currentStreak: streakCount >= 3 ? { type: streakType!, count: streakCount } : undefined,
-      leagueStats: {
-        battles: leagueBattles,
-        wins: leagueWins,
-        losses: leagueLosses,
-        draws: leagueDraws,
-        winRate: leagueWinRate,
-        avgELOChange: leagueAvgELO,
-      },
-      tournamentStats: {
-        battles: tournamentBattles,
-        wins: tournamentWins,
-        losses: tournamentLosses,
-        draws: tournamentDraws,
-        winRate: tournamentWinRate,
-        avgELOChange: tournamentAvgELO,
-      },
-      tagTeamStats: {
-        battles: tagTeamBattles,
-        wins: tagTeamWins,
-        losses: tagTeamLosses,
-        draws: tagTeamDraws,
-        winRate: tagTeamWinRate,
-        avgELOChange: tagTeamAvgELO,
-      },
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [battles]);
+  // Calculate summary statistics (extracted to battleHistoryStats.ts)
+  const summaryStats = useMemo(
+    () => (user ? computeBattleSummary(battles, user.id) : EMPTY_SUMMARY),
+    [battles, user],
+  );
 
   // Filter and sort battles (battle type filter now handled by backend)
   const filteredAndSortedBattles = useMemo(() => {

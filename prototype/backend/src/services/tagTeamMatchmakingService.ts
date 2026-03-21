@@ -67,7 +67,7 @@ export async function getEligibleTeams(
   }
 
   // Get already scheduled team IDs
-  const scheduledMatches = await prisma.tagTeamMatch.findMany({
+  const scheduledMatches = await prisma.scheduledTagTeamMatch.findMany({
     where: {
       status: 'scheduled',
       OR: [
@@ -105,7 +105,7 @@ export async function getEligibleTeams(
  */
 async function getRecentOpponents(teamId: number, limit: number = TAG_TEAM_RECENT_OPPONENT_LIMIT): Promise<number[]> {
   // Get recent tag team matches where this team participated
-  const recentMatches = await prisma.tagTeamMatch.findMany({
+  const recentMatches = await prisma.scheduledTagTeamMatch.findMany({
     where: {
       status: 'completed',
       OR: [
@@ -281,6 +281,15 @@ function createByeTeam(league: string, leagueId: string): TagTeamWithRobots {
     yieldThreshold: 10,
     loadoutType: 'single',
     stance: 'balanced',
+    // KotH Statistics
+    kothWins: 0,
+    kothMatches: 0,
+    kothTotalZoneScore: 0,
+    kothTotalZoneTime: 0,
+    kothKills: 0,
+    kothBestPlacement: null,
+    kothCurrentWinStreak: 0,
+    kothBestWinStreak: 0,
     // Equipment
     mainWeaponId: null,
     offhandWeaponId: null,
@@ -384,7 +393,7 @@ export async function pairTeams(teams: TagTeamWithRobots[]): Promise<TagTeamMatc
 
 /**
  * Schedule matches in the database
- * Requirement 2.7: Create TagTeamMatch records with scheduledFor timestamp
+ * Requirement 2.7: Create ScheduledTagTeamMatch records with scheduledFor timestamp
  */
 export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor: Date): Promise<void> {
   // Separate bye-matches from regular matches
@@ -401,14 +410,14 @@ export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor:
       status: 'scheduled' as const,
     }));
 
-    await prisma.tagTeamMatch.createMany({
+    await prisma.scheduledTagTeamMatch.createMany({
       data: regularMatchData,
     });
   }
 
   // Create bye-matches individually (team2Id = null for bye-team)
   for (const match of byeMatches) {
-    await prisma.tagTeamMatch.create({
+    await prisma.scheduledTagTeamMatch.create({
       data: {
         team1Id: match.team1.id,
         team2Id: null, // Bye-team (no actual team2)

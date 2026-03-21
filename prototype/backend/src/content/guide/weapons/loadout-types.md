@@ -219,3 +219,8 @@ Your loadout choice and weapon range should align. A Dual-Wield build with two m
 - [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) — Per-hand bonuses and offhand attack rules for dual-wielding robots
 - [Movement & Positioning](/guide/combat/movement-and-positioning) — Range bands, weapon ranges, and spatial combat mechanics
 - [Stances](/guide/combat/stances) — How Offensive, Defensive, and Balanced stances interact with your loadout and weapons
+
+
+## Loadout Considerations for King of the Hill
+
+In KotH's 5-6 robot free-for-all, loadout choice takes on new dimensions. **Weapon+Shield** builds excel at holding the Control Zone under pressure from multiple attackers, while **Two-Handed** sniper builds can rack up kill bonuses (5 points each) from outside the zone. **Dual-Wield** builds benefit from sustained DPS to quickly clear contested zones. Consider survivability more heavily than in 1v1 — being eliminated early in a KotH match means a poor placement and minimal rewards. See the [KotH Strategy](/guide/king-of-the-hill/koth-strategy) guide for detailed build recommendations.

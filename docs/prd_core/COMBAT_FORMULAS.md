@@ -1,6 +1,6 @@
 # Combat Formulas and Battle Mechanics
 
-**Last Updated**: February 5, 2026  
+**Last Updated**: March 18, 2026  
 **Status**: Authoritative Reference - Defines formulas, implementation, and display formats
 
 This document is the **authoritative source** for all combat formulas, weapon bonus applications, and battle mechanics in Armoured Souls. It defines:
@@ -1086,8 +1086,97 @@ Dual-wield fallback: if main weapon out of range, offhand attacks at 50% damage.
 Hydraulic bonus applies to melee counters within range.
 ```
 
+## King of the Hill Zone Scoring Formulas
+
+These formulas govern the zone-control scoring, anti-passive penalties, and reward bonuses specific to King of the Hill (KotH) matches.
+
+### Zone Scoring
+
+Points accumulate per simulation tick (0.1s) when exactly one robot occupies the control zone:
+
+```
+Per tick (0.1s):
+  occupants = robots where euclideanDistance(robot.position, zone.center) <= zone.radius
+
+  If |occupants| == 1 (uncontested):
+    occupant.zoneScore += 0.1          // 1 point per second
+    occupant.zoneOccupationTime += 0.1
+    occupant.uncontestedTime += 0.1
+
+  If |occupants| >= 2 (contested):
+    No score change for any robot       // 0 points when contested
+
+  If |occupants| == 0 (empty):
+    No score change for any robot       // 0 points when empty
+```
+
+### Kill Bonus
+
+Awarded on robot destruction (HP reaches 0), not on yield:
+
+```
+On robot destruction:
+  killer.zoneScore += 5                 // Exactly 5 points
+  killer.killCounts += 1
+  // Emits 'kill_bonus' event
+```
+
+### Anti-Passive Damage Reduction
+
+Applied to outgoing damage when a robot stays outside the zone too long:
+
+```
+If passiveTimer > 30:
+  secondsOverThreshold = passiveTimer - 30
+  damageReduction = min(0.30, floor(secondsOverThreshold / 5) * 0.03)
+
+  // Applied as multiplier on outgoing damage:
+  effectiveDamage = baseDamage * (1 - damageReduction)
+
+Examples:
+  passiveTimer = 35:  floor(5/5) * 0.03 = 0.03  →  3% reduction
+  passiveTimer = 45:  floor(15/5) * 0.03 = 0.09 →  9% reduction
+  passiveTimer = 60:  floor(30/5) * 0.03 = 0.18 → 18% reduction
+  passiveTimer = 80:  floor(50/5) * 0.03 = 0.30 → 30% reduction (capped)
+```
+
+### Anti-Passive Accuracy Penalty
+
+Additional penalty at 60 seconds outside the zone:
+
+```
+If passiveTimer >= 60:
+  accuracyPenalty = 0.15               // 15% accuracy reduction on all attacks
+```
+
+### Penalty Decay on Zone Entry
+
+When a penalized robot enters the zone, penalties decay linearly over 3 seconds:
+
+```
+On zone entry (passiveTimer > 30):
+  decayProgress = min(1.0, timeInZone / 3.0)
+  effectiveDamageReduction = damageReduction * (1 - decayProgress)
+  effectiveAccuracyPenalty = accuracyPenalty * (1 - decayProgress)
+
+  After 3 seconds in zone: all penalties fully removed, passiveTimer reset to 0
+```
+
+### Zone Dominance Bonus
+
+Post-match reward multiplier for dominant zone control:
+
+```
+If uncontestedScore / totalScore > 0.75:
+  rewards *= 1.25                      // +25% to credits, fame, and prestige
+
+// uncontestedScore = points earned while sole occupant
+// totalScore = robot's total zone score (uncontested + kill bonuses)
+```
+
 ## Version History
 
+- **2026-03-18:** Added King of the Hill Zone Scoring Formulas (zone scoring, kill bonus, anti-passive penalties, zone dominance bonus)
 - **2026-03-16:** Added 2D Arena Spatial Formulas section (Movement, Range, Hydraulic, Backstab, Flanking, Patience, Adaptation, Pressure, Threat Score, Turn Speed, Counter Range)
 - **2026-02-03:** Initial documentation
   - Added weapon bonus mechanics

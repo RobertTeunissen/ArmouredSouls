@@ -25,6 +25,13 @@ const unitTestFiles = [
   'tournament-bracket-seeding\\.property\\.test\\.ts',
   'validation\\.property\\.test\\.ts',
   'weapon-bonus-rebalance\\.test\\.ts',
+  'kothMatchmaking\\.property\\.test\\.ts',
+  'kothMatchmaking\\.test\\.ts',
+  'kothOrchestrator\\.property\\.test\\.ts',
+  'kothOrchestrator\\.test\\.ts',
+  'kothNotification\\.property\\.test\\.ts',
+  'kothStandings\\.property\\.test\\.ts',
+  'kothApi\\.test\\.ts',
 ];
 
 module.exports = {

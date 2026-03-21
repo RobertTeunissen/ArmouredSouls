@@ -191,7 +191,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       // Formula: maxHP = 50 + (hullIntegrity × 5), maxShield = shieldCapacity × 2
       // Using direct calculation since all attributes are at default values
       const maxHP = 50 + (hullIntegrity * 5); // = 55 HP
-      const maxShield = shieldCapacity * 2; // = 2 Shield
+      const maxShield = shieldCapacity * 4; // = 4 Shield
       
       // Assign to least-full bronze instance instead of relying on schema default
       const bronzeLeagueId = await assignLeagueInstance('bronze');
@@ -1020,7 +1020,7 @@ router.get('/:id/upcoming', authenticateToken, async (req: AuthRequest, res: Res
     }
 
     // Get scheduled matches
-    const matches = await prisma.scheduledMatch.findMany({
+    const matches = await prisma.scheduledLeagueMatch.findMany({
       where: {
         status: 'scheduled',
         OR: [
@@ -1586,7 +1586,7 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
     const tournamentStats = await Promise.all(
       Array.from(tournamentStatsMap.values()).map(async (stats) => {
         // Get tournament matches to determine placement
-        const tournamentMatches = await prisma.tournamentMatch.findMany({
+        const tournamentMatches = await prisma.scheduledTournamentMatch.findMany({
           where: {
             tournamentId: stats.tournamentId,
             OR: [
@@ -1777,7 +1777,7 @@ router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, 
     }
 
     // Fetch scheduled league matches
-    const scheduledMatches = await prisma.scheduledMatch.findMany({
+    const scheduledMatches = await prisma.scheduledLeagueMatch.findMany({
       where: {
         OR: [
           { robot1Id: robotId },
@@ -1810,7 +1810,7 @@ router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, 
     });
 
     // Fetch upcoming tournament matches
-    const tournamentMatches = await prisma.tournamentMatch.findMany({
+    const tournamentMatches = await prisma.scheduledTournamentMatch.findMany({
       where: {
         OR: [
           { robot1Id: robotId },
@@ -1847,7 +1847,7 @@ router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, 
     });
 
     // Fetch upcoming tag team matches where this robot is involved
-    const tagTeamMatches = await prisma.tagTeamMatch.findMany({
+    const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
       where: {
         OR: [
           {

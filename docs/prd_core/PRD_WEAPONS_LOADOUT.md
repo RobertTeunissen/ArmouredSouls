@@ -566,11 +566,11 @@ The game features **23 implemented weapons** across 4 categories. For complete s
 
 ### DPS Rankings (Top 5)
 
-1. **Power Sword**: 6.67 DPS (₡350K) - One-handed
-2. **Ion Beam**: 6.0 DPS (₡538K) - Two-handed (Highest DPS in game)
-3. **Heavy Hammer**: 5.8 DPS (₡450K) - Two-handed
-4. **Battle Axe**: 5.75 DPS (₡388K) - Two-handed
-5. **Plasma Rifle**: 5.67 DPS (₡275K) - One-handed
+1. **Power Sword**: 5.0 DPS (₡325K) - One-handed
+2. **Ion Beam**: 4.5 DPS (₡544K) - Two-handed (Highest DPS in game)
+3. **Heavy Hammer**: 4.4 DPS (₡478K) - Two-handed
+4. **Plasma Rifle**: 4.3 DPS (₡258K) - One-handed
+5. **Battle Axe**: 4.3 DPS (₡402K) - Two-handed
 
 See [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md) for complete weapon specifications.
 
@@ -606,8 +606,8 @@ Total Cost = (Base Cost + Attribute Cost + DPS Cost) × Hand Multiplier
 Where:
 - Base Cost = ₡50,000
 - Attribute Cost = Σ(500 × bonus²) for all bonuses
-- DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 2.67
-- DPS Ratio = (weapon DPS) / (baseline DPS of 2.67)
+- DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 3.0
+- DPS Ratio = (weapon DPS) / (baseline DPS of 2.0)
 - Hand Multiplier = 1.0, 1.6, or 0.9
 ```
 
@@ -634,34 +634,34 @@ The **Weapons Workshop** facility provides purchase discounts:
 **Operating Cost**: ₡1,000/day at Level 1, +₡500/day per level
 
 **Example Cost Calculation:**
-- Plasma Cannon base cost: ₡400,000
-- With Workshop Level 5 (25% discount): ₡300,000
-- With Workshop Level 10 (50% discount): ₡200,000
+- Plasma Cannon base cost: ₡408,000
+- With Workshop Level 5 (25% discount): ₡306,000
+- With Workshop Level 10 (50% discount): ₡204,000
 
 ### Investment Strategy (₡3M Starting Budget)
 
-**Early Game** (₡62K-₡150K range):
-- Practice Sword (₡62.5K) - baseline weapon
-- Combat Shield (₡100K) - defensive option
-- Machine Gun (₡150K) - solid one-handed
+**Early Game** (₡50K-₡107K range):
+- Practice Sword (₡50K) - baseline weapon
+- Combat Shield (₡78K) - defensive option
+- Machine Gun (₡107K) - solid one-handed
 - **Strategy**: Focus on robot attribute upgrades first
-- **Budget**: ₡300K-₡500K for initial weapons
+- **Budget**: ₡200K-₡400K for initial weapons
 
-**Mid Game** (₡175K-₡275K range):
-- Laser Rifle (₡244K) - precision energy
-- Plasma Blade (₡269K) - fast melee
-- Plasma Rifle (₡275K) - high damage
+**Mid Game** (₡117K-₡258K range):
+- Laser Rifle (₡202K) - precision energy
+- Plasma Blade (₡202K) - fast melee
+- Plasma Rifle (₡258K) - high damage
 - **Strategy**: Upgrade Weapons Workshop for discounts
-- **Budget**: ₡500K-₡800K for quality weapons
+- **Budget**: ₡400K-₡700K for quality weapons
 
-**Late Game** (₡375K-₡538K range):
-- Battle Axe (₡388K) - melee powerhouse
-- Plasma Cannon (₡400K) - energy elite
-- Heavy Hammer (₡450K) - maximum impact
-- Railgun (₡488K) - ultra penetration
-- Ion Beam (₡538K) - highest DPS
+**Late Game** (₡283K-₡544K range):
+- Battle Axe (₡402K) - melee powerhouse
+- Plasma Cannon (₡408K) - energy elite
+- Heavy Hammer (₡478K) - maximum impact
+- Railgun (₡527K) - ultra penetration
+- Ion Beam (₡544K) - highest DPS
 - **Strategy**: Craft custom legendary weapons
-- **Budget**: ₡1M+ for elite arsenal
+- **Budget**: ₡800K+ for elite arsenal
 
 ### Strategic Options with ₡3M Budget
 

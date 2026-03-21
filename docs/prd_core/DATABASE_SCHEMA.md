@@ -2,9 +2,9 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: March 5, 2026  
+**Last Updated**: March 18, 2026  
 **Status**: Current Implementation  
-**Version**: v1.3
+**Version**: v1.4
 
 ---
 
@@ -13,6 +13,7 @@
 - v1.1 - Review done by Robert Teunissen
 - v1.2 - Updated to match current implementation (Decimal attributes, HP formula, tournament system, v1.2 weapon pricing)
 - v1.3 - Added onboarding tracking fields to User model (7 new columns for tutorial system) and ResetLog table for account reset tracking
+- v1.4 - Added King of the Hill (KotH) tables: ScheduledKothMatch, ScheduledKothMatchParticipant. Extended Robot model with 8 KotH cumulative stat fields. Added KotH relation on Battle model.
 
 ---
 
@@ -29,6 +30,9 @@ This document defines the **complete database schema** for Armoured Souls, inclu
 - ✅ Battle system with complete tracking
 - ✅ Tournament system (single elimination, brackets, matches)
 - ✅ Matchmaking system (scheduled matches, cycle metadata)
+- ✅ King of the Hill system (scheduled KotH matches, participants, cumulative robot stats)
+- ✅ Tag Team system (tag teams, tag team matches, per-robot stats)
+- ✅ Battle Participant system (N-participant battle data)
 
 **This schema represents the CURRENT implementation** as of February 9, 2026.
 
@@ -172,6 +176,24 @@ model Robot {
   fame                  Int     @default(0)                             // Individual robot reputation - See PRD_PRESTIGE_AND_FAME.md
   titles                String? @db.Text                                // Comma-separated achievements
   
+  // ===== TAG TEAM STATISTICS =====
+  totalTagTeamBattles Int  @default(0)          // Lifetime tag team battle count
+  totalTagTeamWins    Int  @default(0)          // Tag team victory count
+  totalTagTeamLosses  Int  @default(0)          // Tag team defeat count
+  totalTagTeamDraws   Int  @default(0)          // Tag team draw count
+  timesTaggedIn       Int  @default(0)          // Number of times robot tagged in as reserve
+  timesTaggedOut      Int  @default(0)          // Number of times robot tagged out (yield or destruction)
+  
+  // ===== KOTH CUMULATIVE STATISTICS =====
+  kothWins              Int    @default(0)      // Total 1st place finishes in KotH
+  kothMatches           Int    @default(0)      // Total KotH matches participated in
+  kothTotalZoneScore    Float  @default(0)      // Cumulative zone score across all KotH matches
+  kothTotalZoneTime     Float  @default(0)      // Total seconds spent in control zone (career)
+  kothKills             Int    @default(0)      // Total kills in KotH matches
+  kothBestPlacement     Int?                    // Best placement achieved (1 = best, null = no matches)
+  kothCurrentWinStreak  Int    @default(0)      // Current consecutive 1st place finishes
+  kothBestWinStreak     Int    @default(0)      // All-time best consecutive win streak (for Hall of Records)
+  
   // ===== ECONOMIC STATE =====
   repairCost          Int  @default(0)          // Cost to fully repair (formula-based)
   battleReadiness     Int  @default(100)        // Percentage (100% = full HP, 0% = critical)
@@ -202,6 +224,10 @@ model Robot {
   tournamentMatchesAsRobot1 TournamentMatch[] @relation("TournamentRobot1")
   tournamentMatchesAsRobot2 TournamentMatch[] @relation("TournamentRobot2")
   tournamentMatchesWon      TournamentMatch[] @relation("TournamentMatchWinner")
+  tagTeamsAsActive          TagTeam[]         @relation("TagTeamActiveRobot")
+  tagTeamsAsReserve         TagTeam[]         @relation("TagTeamReserveRobot")
+  battleParticipations      BattleParticipant[]
+  kothMatchParticipations   ScheduledKothMatchParticipant[]
   
   @@unique([userId, name])
   @@index([userId])
@@ -440,7 +466,7 @@ model Battle {
   robot1Id        Int                           // First combatant
   robot2Id        Int                           // Second combatant
   winnerId        Int?                          // Winner's robot ID (null if draw)
-  battleType      String   @db.VarChar(20)     // "league", "tournament"
+  battleType      String   @db.VarChar(20)     // "league", "tournament", "tag_team", "koth"
   leagueType      String   @db.VarChar(20)     // "bronze", "silver", "gold", etc.
   
   // ===== TOURNAMENT REFERENCE (optional) =====
@@ -494,6 +520,9 @@ model Battle {
   tournament        Tournament?       @relation("TournamentBattles", fields: [tournamentId], references: [id])
   scheduledMatch    ScheduledMatch[]
   tournamentMatches TournamentMatch[]
+  tagTeamMatches    TagTeamMatch[]      @relation("TagTeamBattle")
+  participants      BattleParticipant[]
+  scheduledKothMatch ScheduledKothMatch[] // KotH match that produced this battle
   
   @@index([userId])
   @@index([robot1Id])
@@ -570,6 +599,92 @@ model ScheduledMatch {
 - Created by matchmaking system during cycle execution
 - Links to Battle record after match is executed
 - Status tracks lifecycle: scheduled → completed/cancelled
+
+---
+
+## ScheduledKothMatch Model
+
+Tracks scheduled King of the Hill matches for the KotH cycle (Mon/Wed/Fri at 16:00 UTC). Each match involves 5–6 robots in a free-for-all zone-control battle.
+
+```prisma
+model ScheduledKothMatch {
+  id            Int      @id @default(autoincrement())
+  scheduledFor  DateTime @map("scheduled_for")
+  status        String   @default("scheduled") @db.VarChar(20) // "scheduled", "completed", "failed", "cancelled"
+  battleId      Int?     @map("battle_id")       // Links to Battle after completion
+  rotatingZone  Boolean  @default(false) @map("rotating_zone")
+
+  // Optional config overrides (null = use defaults)
+  scoreThreshold Int?    @map("score_threshold")  // Default 30 (fixed) or 45 (rotating)
+  timeLimit      Int?    @map("time_limit")       // Default 150s (fixed) or 210s (rotating)
+  zoneRadius     Int?    @map("zone_radius")      // Default 5, range [3, 8]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  battle       Battle?                        @relation(fields: [battleId], references: [id])
+  participants ScheduledKothMatchParticipant[]
+
+  @@index([scheduledFor, status])
+  @@index([status])
+  @@map("scheduled_koth_matches")
+}
+```
+
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `Int` (PK) | Auto-increment | Unique match identifier |
+| `scheduledFor` | `DateTime` | — | When the match is scheduled to execute |
+| `status` | `String` (VarChar 20) | `"scheduled"` | Match lifecycle: `"scheduled"`, `"completed"`, `"failed"`, `"cancelled"` |
+| `battleId` | `Int?` | `null` | Links to Battle record after match execution |
+| `rotatingZone` | `Boolean` | `false` | Whether this match uses the rotating zone variant (Wednesday matches) |
+| `scoreThreshold` | `Int?` | `null` | Override for score threshold (null = use default 30/45) |
+| `timeLimit` | `Int?` | `null` | Override for time limit in seconds (null = use default 150/210) |
+| `zoneRadius` | `Int?` | `null` | Override for zone radius (null = use default 5) |
+| `createdAt` | `DateTime` | `now()` | Record creation timestamp |
+
+**Notes**:
+- Created by `runKothMatchmaking()` during the KotH cycle
+- Zone variant determined by day of week: Mon/Fri = fixed center zone, Wed = rotating zone
+- Config overrides allow admin customization; null values use game defaults
+- Links to Battle record after execution (robot1Id = 1st place, robot2Id = 2nd place, battleType = 'koth')
+- Status lifecycle: scheduled → completed/failed
+
+---
+
+## ScheduledKothMatchParticipant Model
+
+Join table linking robots to their scheduled KotH matches. Each match has 5–6 participants.
+
+```prisma
+model ScheduledKothMatchParticipant {
+  id      Int @id @default(autoincrement())
+  matchId Int @map("match_id")
+  robotId Int @map("robot_id")
+
+  // Relations
+  match ScheduledKothMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  robot Robot              @relation(fields: [robotId], references: [id])
+
+  @@unique([matchId, robotId])
+  @@index([matchId])
+  @@index([robotId])
+  @@map("scheduled_koth_match_participants")
+}
+```
+
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `Int` (PK) | Auto-increment | Unique participant record identifier |
+| `matchId` | `Int` | — | Reference to the ScheduledKothMatch |
+| `robotId` | `Int` | — | Reference to the participating Robot |
+
+**Constraints**: Unique on `(matchId, robotId)` — a robot can only appear once per match.
+
+**Notes**:
+- Cascade delete: removing a ScheduledKothMatch removes all its participants
+- One robot per stable (user) per match, enforced at application level by matchmaking
+- Robots are distributed into groups via snake-draft ordering by ELO for balanced matches
 
 ---
 
@@ -793,8 +908,9 @@ npx prisma db seed
 - Weapon.handsRequired: "one", "two", "shield"
 - Weapon.damageType: "energy", "ballistic", "melee", "explosive", "none"
 - Weapon.loadoutType: "single", "weapon_shield", "two_handed", "dual_wield", "any"
-- Battle.battleType: "league", "tournament"
+- Battle.battleType: "league", "tournament", "tag_team", "koth"
 - ScheduledMatch.status: "scheduled", "completed", "cancelled"
+- ScheduledKothMatch.status: "scheduled", "completed", "failed", "cancelled"
 - Tournament.status: "pending", "active", "completed"
 - Tournament.tournamentType: "single_elimination", "double_elimination", "swiss"
 - TournamentMatch.status: "pending", "scheduled", "completed"
@@ -906,12 +1022,11 @@ model ResetLog {
 
 These features are planned but not yet implemented:
 
-1. **Team Battles** - 2v2, 3v3 team management models
-2. **Achievement System** - Achievement tracking tables
-3. **Daily Income/Expense Report** - Income tracking and reporting
-4. **Custom Weapon Design** - Weapon crafting system
-5. **Double Elimination Tournaments** - Extended tournament bracket support
-6. **Swiss Tournament Format** - Round-robin style tournament support
+1. **Achievement System** - Achievement tracking tables
+2. **Daily Income/Expense Report** - Income tracking and reporting
+3. **Custom Weapon Design** - Weapon crafting system
+4. **Double Elimination Tournaments** - Extended tournament bracket support
+5. **Swiss Tournament Format** - Round-robin style tournament support
 
 ---
 

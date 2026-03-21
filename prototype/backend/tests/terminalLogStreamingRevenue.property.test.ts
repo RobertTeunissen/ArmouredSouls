@@ -14,7 +14,7 @@
 
 import fc from 'fast-check';
 import { Prisma } from '@prisma/client';
-import { executeScheduledBattles } from '../src/services/battleOrchestrator';
+import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
 import { clearSequenceCache } from '../src/services/eventLogger';
 import prisma from '../src/lib/prisma';
 import logger from '../src/config/logger';

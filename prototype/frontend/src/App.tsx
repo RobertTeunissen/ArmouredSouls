@@ -11,6 +11,7 @@ import WeaponShopPage from './pages/WeaponShopPage';
 import BattleHistoryPage from './pages/BattleHistoryPage';
 import BattleDetailPage from './pages/BattleDetailPage';
 import LeagueStandingsPage from './pages/LeagueStandingsPage';
+import KothStandingsPage from './pages/KothStandingsPage';
 import AdminPage from './pages/AdminPage';
 import LeaderboardsFamePage from './pages/LeaderboardsFamePage';
 import LeaderboardsPrestigePage from './pages/LeaderboardsPrestigePage';
@@ -111,6 +112,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <LeagueStandingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/koth-standings"
+            element={
+              <ProtectedRoute>
+                <KothStandingsPage />
               </ProtectedRoute>
             }
           />

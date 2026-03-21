@@ -201,7 +201,7 @@ export function calculateMaxHP(robot: Robot): number {
  */
 export function calculateMaxShield(robot: Robot): number {
   const effectiveStats = calculateEffectiveStats(robot);
-  return effectiveStats.shieldCapacity * 2;
+  return effectiveStats.shieldCapacity * 4;
 }
 
 /**

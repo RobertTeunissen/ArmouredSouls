@@ -2783,3 +2783,54 @@ The Armoured Souls matchmaking system is **fully implemented and operational** a
 - ✅ Testing procedures and validation
 - ✅ API reference and configuration
 - ✅ Future enhancement suggestions
+
+---
+
+## King of the Hill Matchmaking
+
+**Last Updated**: March 18, 2026  
+**Status**: ✅ Implemented  
+**Service**: `kothMatchmakingService.ts` (independent from league matchmaking)
+
+### Schedule
+
+KotH matchmaking runs as part of the KotH cycle on **Monday, Wednesday, and Friday at 16:00 UTC** (`0 16 * * 1,3,5`). After executing the current day's scheduled KotH battles, the system runs matchmaking to create groups for the next scheduled KotH event.
+
+### Eligibility Requirements
+
+All of the following must be true for a robot to be eligible:
+1. **Weapon readiness**: All required weapons equipped for the robot's loadout type (same check as league scheduling readiness)
+2. **Not already scheduled**: Robot must not have a pending `ScheduledKothMatchParticipant` record
+3. **One robot per stable**: Only the highest-ELO robot per user is selected (prevents same-stable multi-entry)
+
+### No League Restriction
+
+Unlike league matchmaking, KotH has **no league tier restriction**. Bronze and Champion robots can appear in the same match. ELO-balanced grouping ensures competitive fairness across tiers.
+
+### Snake-Draft Group Distribution
+
+1. Query all eligible robots
+2. Filter to one robot per stable (highest ELO)
+3. Sort by ELO descending
+4. Determine group count: `Math.floor(eligible.length / 6)`
+   - Remainder ≥ 5: create one extra group of 5
+   - Remainder < 5: distribute remainder into existing groups (some groups get 5 instead of 6)
+5. Snake-draft distribution:
+   - Round 1 (left→right): robot[0]→group[0], robot[1]→group[1], ..., robot[N-1]→group[N-1]
+   - Round 2 (right→left): robot[N]→group[N-1], robot[N+1]→group[N-2], ..., robot[2N-1]→group[0]
+   - Repeat until all robots assigned
+6. This minimizes total ELO variance between groups with O(n log n) complexity
+
+### Zone Variant by Day of Week
+
+- **Monday (day 1)**: `rotatingZone: false` (fixed center zone)
+- **Wednesday (day 3)**: `rotatingZone: true` (rotating zone)
+- **Friday (day 5)**: `rotatingZone: false` (fixed center zone)
+
+The variant is stored in the `ScheduledKothMatch.rotatingZone` field.
+
+### Edge Cases
+
+- **Fewer than 5 eligible robots**: Skip matchmaking, log `"insufficient eligible robots for KotH"`, no matches created
+- **One-per-stable enforcement**: If a user has multiple robots, only the highest-ELO robot is selected; others are excluded
+- **Odd remainder < 5**: Distributed into existing groups rather than forming an undersized group

@@ -3,7 +3,7 @@ import {
   calculateELOChange,
   processBattle,
   executeScheduledBattles,
-} from '../src/services/battleOrchestrator';
+} from '../src/services/leagueBattleOrchestrator';
 
 
 describe('Battle Orchestrator', () => {
@@ -17,6 +17,8 @@ describe('Battle Orchestrator', () => {
 
   beforeAll(async () => {
     // Clean up in correct order to respect foreign key constraints
+    await prisma.scheduledKothMatchParticipant.deleteMany({});
+    await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledMatch.deleteMany({});
     await prisma.tagTeamMatch.deleteMany({}); // Delete tag team matches before tag teams
     await prisma.battle.deleteMany({});
@@ -57,6 +59,8 @@ describe('Battle Orchestrator', () => {
     await prisma.auditLog.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
+    await prisma.scheduledKothMatchParticipant.deleteMany({});
+    await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledMatch.deleteMany({});
     await prisma.tagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
@@ -78,6 +82,8 @@ describe('Battle Orchestrator', () => {
     await prisma.auditLog.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
+    await prisma.scheduledKothMatchParticipant.deleteMany({});
+    await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledMatch.deleteMany({});
     await prisma.tagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});

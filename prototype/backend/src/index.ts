@@ -18,6 +18,7 @@ import tagTeamsRoutes from './routes/tagTeams';
 import analyticsRoutes from './routes/analytics';
 import onboardingRoutes from './routes/onboarding';
 import guideRoutes from './routes/guide';
+import kothRoutes from './routes/koth';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycleScheduler';
 import { createGeneralLimiter, createAuthLimiter } from './middleware/rateLimiter';
@@ -87,6 +88,7 @@ app.use('/api/tag-teams', tagTeamsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/guide', guideRoutes);
+app.use('/api/koth', kothRoutes);
 
 // Error handling middleware — logs stack traces, redacts them from production responses
 app.use((_err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -119,5 +121,6 @@ app.listen(config.port, host, () => {
     tournamentSchedule: config.tournamentSchedule,
     tagTeamSchedule: config.tagTeamSchedule,
     settlementSchedule: config.settlementSchedule,
+    kothSchedule: config.kothSchedule,
   });
 });

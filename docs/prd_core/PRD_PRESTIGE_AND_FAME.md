@@ -32,13 +32,13 @@ This PRD defines the requirements for implementing the Prestige and Fame systems
 - ✅ Database schema with `fame` field on Robot model (robot-level) - `prototype/backend/prisma/schema.prisma`
 
 **Backend - Prestige Earning:**
-- ✅ **Battle wins award prestige** - `prototype/backend/src/services/battleOrchestrator.ts:64-76`
+- ✅ **Battle wins award prestige** - `prototype/backend/src/services/leagueBattleOrchestrator.ts` (league), shared via `battlePostCombat.ts:awardPrestigeToUser()`
   - Bronze: +5 | Silver: +10 | Gold: +20 | Platinum: +30 | Diamond: +50 | Champion: +75
-  - Applied to User model via `updateRobotStats()` (lines 313-394)
+  - Applied to User model via `awardPrestigeToUser()` in shared post-combat helpers
   - Only winners earn prestige (no prestige for draws or bye-matches)
 
 **Backend - Fame Earning:**
-- ✅ **Battle wins award fame with performance bonuses** - `prototype/backend/src/services/battleOrchestrator.ts:82-116`
+- ✅ **Battle wins award fame with performance bonuses** - `prototype/backend/src/services/leagueBattleOrchestrator.ts` (league), shared via `battlePostCombat.ts:awardFameToRobot()`
   - Base fame by league: Bronze: +2 | Silver: +5 | Gold: +10 | Platinum: +15 | Diamond: +25 | Champion: +40
   - Perfect victory (no damage): 2x multiplier
   - Dominating victory (>80% HP): 1.5x multiplier
@@ -1651,12 +1651,12 @@ The battle execution summary includes prestige/fame totals:
 When battles execute, prestige and fame are logged to console:
 
 ```
-[BattleOrchestrator] Executing battle 12345...
-[BattleOrchestrator] Winner: Thunderstrike (robot_456)
-[BattleOrchestrator] Prestige: +20 → user_123 (Gold league win)
-[BattleOrchestrator] Fame: +15 → Thunderstrike (+5 dominating bonus)
-[BattleOrchestrator] ✅ Milestone: 100 Total Wins (+50 prestige)
-[BattleOrchestrator] Battle complete: 45 seconds
+[LeagueBattleOrchestrator] Executing battle 12345...
+[LeagueBattleOrchestrator] Winner: Thunderstrike (robot_456)
+[LeagueBattleOrchestrator] Prestige: +20 → user_123 (Gold league win)
+[LeagueBattleOrchestrator] Fame: +15 → Thunderstrike (+5 dominating bonus)
+[LeagueBattleOrchestrator] ✅ Milestone: 100 Total Wins (+50 prestige)
+[LeagueBattleOrchestrator] Battle complete: 45 seconds
 ```
 
 ### Admin Bulk Cycle Integration
@@ -2299,3 +2299,54 @@ router.get('/prestige', async (req: Request, res: Response) => {
 - ✅ Success metrics and KPIs
 - ✅ Risk analysis and mitigation strategies
 - ✅ Future enhancement roadmap
+
+---
+
+## King of the Hill Prestige and Fame Awards
+
+**Last Updated**: March 18, 2026  
+**Status**: ✅ Implemented
+
+### Prestige Awards (Stable-Level)
+
+KotH prestige is awarded as flat values based on placement, independent of league tier:
+
+| Placement | Prestige |
+|-----------|----------|
+| 1st | +15 |
+| 2nd | +8 |
+| 3rd | +3 |
+| 4th–6th | +0 |
+
+### Fame Awards (Robot-Level)
+
+KotH fame is awarded as flat base values based on placement, independent of league tier:
+
+| Placement | Base Fame |
+|-----------|-----------|
+| 1st | +8 |
+| 2nd | +5 |
+| 3rd | +3 |
+| 4th–6th | +0 |
+
+### Zone Dominance Bonus
+
+The zone dominance bonus applies to both prestige and fame awards. If a robot's uncontested zone score exceeds 75% of their total zone score, all reputation rewards receive a 1.25× multiplier:
+
+```
+if uncontestedScore / totalScore > 0.75:
+  prestige = floor(basePrestige * 1.25)
+  fame = floor(baseFame * 1.25)
+```
+
+**Examples with zone dominance:**
+- 1st place: 15 prestige × 1.25 = 18 prestige, 8 fame × 1.25 = 10 fame
+- 2nd place: 8 prestige × 1.25 = 10 prestige, 5 fame × 1.25 = 6 fame
+- 3rd place: 3 prestige × 1.25 = 3 prestige, 3 fame × 1.25 = 3 fame
+
+### Design Notes
+
+- KotH prestige/fame is **independent of league tier** — a Bronze robot earns the same prestige/fame as a Champion robot for the same placement
+- This differs from league battles where prestige/fame scales with tier (Bronze +5 → Champion +75)
+- The flat award structure ensures KotH is equally rewarding for all players regardless of league progression
+- KotH fame contributes to the robot's total fame for streaming revenue calculations and fame tier progression

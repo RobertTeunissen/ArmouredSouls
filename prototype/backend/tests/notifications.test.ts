@@ -113,7 +113,7 @@ jest.mock('../src/services/repairService', () => ({
   repairAllRobots: jest.fn(),
 }));
 
-jest.mock('../src/services/battleOrchestrator', () => ({
+jest.mock('../src/services/leagueBattleOrchestrator', () => ({
   executeScheduledBattles: jest.fn(),
 }));
 

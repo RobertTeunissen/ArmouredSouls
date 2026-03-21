@@ -72,6 +72,14 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   totalTagTeamDraws: 0,
   timesTaggedIn: 0,
   timesTaggedOut: 0,
+  kothWins: 0,
+  kothMatches: 0,
+  kothTotalZoneScore: 0,
+  kothTotalZoneTime: 0,
+  kothKills: 0,
+  kothBestPlacement: null,
+  kothCurrentWinStreak: 0,
+  kothBestWinStreak: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -358,8 +366,8 @@ describe('Robot Calculations', () => {
 
       const maxShield = calculateMaxShield(robot);
 
-      // Shield capacity 10 * 2 = 20
-      expect(maxShield).toBe(20);
+      // Shield capacity 10 * 4 = 40
+      expect(maxShield).toBe(40);
     });
 
     it('should include weapon and loadout bonuses in shield calculation', () => {
@@ -387,8 +395,8 @@ describe('Robot Calculations', () => {
 
       const maxShield = calculateMaxShield(robotWithWeapon);
 
-      // (Shield capacity 10 + weapon 5) * 1.20 * 2 = 36
-      expect(maxShield).toBe(36);
+      // (Shield capacity 10 + weapon 5) * 1.20 * 4 = 72
+      expect(maxShield).toBe(72);
     });
   });
 

@@ -62,7 +62,21 @@ function RecentMatches() {
     const myRobot = isMyRobot(battle.robot1.userId) ? battle.robot1 : battle.robot2;
     const opponent = isMyRobot(battle.robot1.userId) ? battle.robot2 : battle.robot1;
     const myRobotId = myRobot.id;
-    const outcome = getBattleOutcome(battle, myRobotId);
+    
+    let outcome: 'win' | 'loss' | 'draw';
+    if (battle.battleType === 'koth' && battle.kothPlacement != null) {
+      // KotH: 1st = win, 2nd-3rd = draw (podium), 4th+ = loss
+      if (battle.kothPlacement === 1) {
+        outcome = 'win';
+      } else if (battle.kothPlacement <= 3) {
+        outcome = 'draw';
+      } else {
+        outcome = 'loss';
+      }
+    } else {
+      outcome = getBattleOutcome(battle, myRobotId);
+    }
+    
     const eloChange = getELOChange(battle, myRobotId);
     
     return { myRobot, opponent, outcome, eloChange, myRobotId };

@@ -368,27 +368,27 @@ The onboarding consists of 9 sequential steps. Each step teaches a strategic con
 
 **Recommended First Weapons by Budget**:
 
-**Budget Tier (₡62K–₡150K)** — Best for 3-robot strategy:
+**Budget Tier (₡50K–₡120K)** — Best for 3-robot strategy:
 | Weapon | Price | Type | DPS | Notes |
 |--------|-------|------|-----|-------|
-| Practice Sword | ₡62,500 | Melee | 2.67 | Cheapest option, decent starter |
-| Machine Pistol | ₡75,000 | Ballistic | 2.67 | Ranged budget option |
-| Laser Pistol | ₡87,500 | Energy | 2.67 | Energy budget option |
-| Machine Gun | ₡150,000 | Ballistic | 4.0 | Best budget DPS |
+| Practice Sword | ₡50,000 | Melee | 2.0 | Cheapest option, decent starter |
+| Machine Pistol | ₡94,000 | Ballistic | 2.5 | Ranged budget option |
+| Laser Pistol | ₡57,000 | Energy | 2.0 | Energy budget option |
+| Machine Gun | ₡107,000 | Ballistic | 2.5 | Best budget DPS |
 
-**Mid Tier (₡175K–₡275K)** — Best for 2-robot strategy:
+**Mid Tier (₡117K–₡260K)** — Best for 2-robot strategy:
 | Weapon | Price | Type | DPS | Notes |
 |--------|-------|------|-----|-------|
-| Assault Rifle | ₡200,000 | Ballistic | 4.33 | Solid all-rounder |
-| Laser Rifle | ₡243,750 | Energy | 4.0 | Good energy option |
-| Plasma Rifle | ₡275,000 | Energy | 5.67 | High DPS energy |
+| Assault Rifle | ₡173,000 | Ballistic | 3.3 | Solid all-rounder |
+| Laser Rifle | ₡202,000 | Energy | 3.7 | Good energy option |
+| Plasma Rifle | ₡258,000 | Energy | 4.3 | High DPS energy |
 
-**Premium Tier (₡275K–₡400K)** — Best for 1-robot strategy:
+**Premium Tier (₡283K–₡410K)** — Best for 1-robot strategy:
 | Weapon | Price | Type | DPS | Notes |
 |--------|-------|------|-----|-------|
-| Power Sword | ₡350,000 | Melee | 6.67 | Highest one-handed DPS |
-| Shotgun | ₡275,000 | Ballistic | 5.0 | Strong two-handed |
-| Plasma Cannon | ₡400,000 | Energy | 5.0 | Elite energy two-handed |
+| Power Sword | ₡325,000 | Melee | 5.0 | Highest one-handed DPS |
+| Shotgun | ₡283,000 | Ballistic | 3.5 | Strong two-handed |
+| Plasma Cannon | ₡408,000 | Energy | 4.0 | Elite energy two-handed |
 
 **Player Action**: Purchase weapon(s) using the actual weapon shop API. Real purchase, not simulation.
 
@@ -562,7 +562,7 @@ This section provides detailed analysis of each roster strategy to inform the on
 
 **Recommended Loadout**: Two-Handed or Weapon + Shield (maximize the single robot's power or survivability)
 
-**Recommended First Weapon**: Power Sword (₡350,000) or Plasma Cannon (₡400,000)
+**Recommended First Weapon**: Power Sword (₡325,000) or Plasma Cannon (₡408,000)
 
 ### 2 Average Robots — Detailed Analysis
 
@@ -581,7 +581,7 @@ This section provides detailed analysis of each roster strategy to inform the on
 
 **Recommended Loadout**: One offensive (Single or Two-Handed) + one defensive (Weapon + Shield)
 
-**Recommended First Weapons**: Assault Rifle (₡200,000) + Combat Shield (₡100,000) or two mid-tier weapons
+**Recommended First Weapons**: Assault Rifle (₡173,000) + Combat Shield (₡78,000) or two mid-tier weapons
 
 ### 3 Flimsy Robots — Detailed Analysis
 
@@ -601,7 +601,7 @@ This section provides detailed analysis of each roster strategy to inform the on
 
 **Recommended Loadout**: Mix of Single Weapon (cheap, no penalties) and Dual-Wield (maximize attack speed)
 
-**Recommended First Weapons**: Practice Sword (₡62,500) × 3 or Machine Pistol (₡75,000) × 3
+**Recommended First Weapons**: Practice Sword (₡50,000) × 3 or Machine Pistol (₡94,000) × 3
 
 ---
 
