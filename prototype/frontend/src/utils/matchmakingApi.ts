@@ -453,6 +453,7 @@ export interface BattleLogResponse {
     arenaRadius?: number;
     startingPositions?: Record<string, { x: number; y: number }>;
     endingPositions?: Record<string, { x: number; y: number }>;
+    placements?: Array<{ robotId: number; robotName: string; zoneScore: number; zoneTime: number; kills: number; destroyed: boolean }>;
   };
   // Tag team specific fields
   tagTeam?: {

@@ -13,7 +13,7 @@ import {
   KothScoreState,
   KothZoneState,
 } from './arena/kothEngine';
-import { getCurrentCycleNumber } from './leagueBattleOrchestrator';
+
 import {
   awardStreamingRevenueForParticipant,
   logBattleAuditEvent,
@@ -395,7 +395,7 @@ async function processKothBattle(
  * Queries ScheduledKothMatch with status 'scheduled', processes each,
  * and returns a summary of results.
  */
-export async function executeScheduledKothBattles(scheduledFor?: Date): Promise<KothBattleExecutionSummary> {
+export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise<KothBattleExecutionSummary> {
   logger.info('[KotH Orchestrator] Executing scheduled KotH battles');
 
   const scheduledMatches = await prisma.scheduledKothMatch.findMany({

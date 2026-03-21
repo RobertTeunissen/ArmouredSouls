@@ -39,8 +39,6 @@ import {
   updateRobotCombatStats,
   awardCreditsToUser,
   awardPrestigeToUser,
-  awardFameToRobot,
-  ParticipantOutcome,
   AuditEventExtras,
 } from './battlePostCombat';
 
@@ -240,7 +238,7 @@ export class BattleProcessor<TMatch = unknown> {
     const simResult = strategy.simulate(participants, match);
 
     // 3. Calculate ELO (if applicable)
-    let eloChanges = new Map<number, { before: number; after: number }>();
+    const eloChanges = new Map<number, { before: number; after: number }>();
     if (strategy.affectsELO && participants.length === 2 && !isBye) {
       const [p1, p2] = participants;
       const isP1Winner = simResult.winnerId === p1.robot.id;
@@ -298,7 +296,7 @@ export class BattleProcessor<TMatch = unknown> {
     });
 
     // 6. Create BattleParticipant records
-    const participantData = participants.map((p, idx) => {
+    const participantData = participants.map((p, _idx) => {
       const elo = eloChanges.get(p.robot.id)!;
       const reward = rewardMap.get(p.robot.id);
       const combat = simResult.participants.get(p.robot.id);

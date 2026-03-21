@@ -562,7 +562,7 @@ function getWeaponStatsSummary(robot: RobotWithWeapons): string {
 /**
  * Get weapon attribute bonuses summary for robot
  */
-function getWeaponBonusesSummary(robot: RobotWithWeapons): string {
+function _getWeaponBonusesSummary(robot: RobotWithWeapons): string {
   const parts: string[] = [];
 
   const summarizeWeapon = (w: Weapon, label: string): void => {

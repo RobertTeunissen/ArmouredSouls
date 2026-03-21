@@ -977,7 +977,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         orderBy: { placement: 'asc' }, // KotH placement (1st through 6th)
       });
 
-      const battleLogData = typeof battleData.battleLog === 'object' ? battleData.battleLog as Record<string, any> : {};
+      const battleLogData = typeof battleData.battleLog === 'object' ? battleData.battleLog as Record<string, unknown> : {};
       const logPlacements = (battleLogData.placements || []) as Array<{ robotId: number; zoneScore: number; zoneTime: number; kills: number; destroyed: boolean }>;
 
       baseResponse.kothParticipants = allParticipants.map(p => {

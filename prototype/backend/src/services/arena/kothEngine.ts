@@ -711,7 +711,7 @@ export function tickPassivePenalties(
       }
     } else {
       // Inside zone: reset timer, decay penalties
-      const prevTimer = scoreState.passiveTimers[robotId] ?? 0;
+      const _prevTimer = scoreState.passiveTimers[robotId] ?? 0;
 
       // Reset timer on zone entry
       scoreState.passiveTimers[robotId] = 0;
@@ -859,7 +859,7 @@ export function removeFromZoneOccupants(
 export function handleRobotYield(
   scoreState: KothScoreState,
   robotId: number,
-  zoneState: KothZoneState,
+  _zoneState: KothZoneState,
 ): KothCombatEvent {
   // Permanently eliminate the robot
   scoreState.eliminatedRobots.add(robotId);
@@ -902,7 +902,7 @@ export function handleRobotDestruction(
   scoreState: KothScoreState,
   destroyerRobotId: number,
   destroyedRobotId: number,
-  zoneState: KothZoneState,
+  _zoneState: KothZoneState,
 ): KothCombatEvent[] {
   // Permanently eliminate the destroyed robot
   scoreState.eliminatedRobots.add(destroyedRobotId);

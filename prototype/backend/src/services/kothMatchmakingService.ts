@@ -7,7 +7,6 @@
  * Requirements: 16.1-16.7, 17.1-17.4, 18.7, 18.8
  */
 
-import { Robot } from '@prisma/client';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 

@@ -16,7 +16,6 @@
  */
 
 import prisma from '../lib/prisma';
-import logger from '../config/logger';
 import { calculateStreamingRevenue, awardStreamingRevenue, StreamingRevenueCalculation } from './streamingRevenueService';
 import { eventLogger, EventType } from './eventLogger';
 import { getCurrentCycleNumber } from './leagueBattleOrchestrator';

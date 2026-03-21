@@ -4,7 +4,6 @@ import logger from '../config/logger';
 import { simulateBattle } from './combatSimulator';
 import { getLeagueWinReward, getParticipationReward } from '../utils/economyCalculations';
 import { CombatMessageGenerator } from './combatMessageGenerator';
-import { getCurrentCycleNumber } from './leagueBattleOrchestrator';
 import {
   calculateELOChange,
 } from '../utils/battleMath';

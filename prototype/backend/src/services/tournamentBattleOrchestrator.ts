@@ -12,7 +12,6 @@ import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { simulateBattle } from './combatSimulator';
 import { CombatMessageGenerator } from './combatMessageGenerator';
-import { getCurrentCycleNumber } from './leagueBattleOrchestrator';
 import { calculateELOChange } from '../utils/battleMath';
 import {
   calculateTournamentBattleRewards,
