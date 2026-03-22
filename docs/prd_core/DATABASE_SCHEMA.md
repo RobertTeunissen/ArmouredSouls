@@ -22,7 +22,7 @@
 This document defines the **complete database schema** for Armoured Souls, including:
 - ✅ All 23 robot attributes (Decimal type for fractional values)
 - ✅ All 14 facilities with 10 levels
-- ✅ Complete weapon system (23 weapons in catalog)
+- ✅ Complete weapon system (26 weapons in catalog)
 - ✅ League tracking, damage tracking, repair costs, yield thresholds, stances
 - ✅ All combat state fields (current HP, shields, damage taken)
 - ✅ Loadout system (single, weapon+shield, two-handed, dual-wield)
@@ -288,12 +288,12 @@ repairCost = base_repair × damage_percentage × multiplier
 
 Represents weapon types available for purchase. Players buy weapons into inventory.
 
-**Current Implementation**: 23 weapons across all loadout types (v1.2 pricing)
+**Current Implementation**: 26 weapons across all loadout types (v1.2 pricing)
 
 **For complete weapon specifications, damage values, and pricing methodology, see:**
 - **[WEAPONS_AND_LOADOUT.md](../WEAPONS_AND_LOADOUT.md)** - Complete weapon catalog with v1.2 pricing
 - **[PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
-- **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)** - Complete seed data including all 23 weapons
+- **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)** - Complete seed data including all 26 weapons
 
 ```prisma
 model Weapon {
@@ -352,7 +352,7 @@ model Weapon {
 ```
 
 **Notes**:
-- This is the **catalog** of available weapons (23 total in current implementation)
+- This is the **catalog** of available weapons (26 total in current implementation)
 - Players purchase weapons from this catalog into their inventory
 - `loadoutType` indicates which loadouts can use this weapon
 - All 23 attribute bonuses match Robot attribute names exactly
@@ -360,10 +360,10 @@ model Weapon {
 - Weapons are populated during database seeding (see SEED_DATA_SPECIFICATION.md)
 
 **Weapon Distribution by Loadout Type**:
-- **Single Loadout**: 15 one-handed weapons (Practice Sword, Machine Pistol, Laser Pistol, Combat Knife, Machine Gun, Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle, Plasma Blade, Plasma Rifle, Power Sword, and others)
-- **Weapon + Shield**: 15 one-handed weapons + 3 shields (Light Shield, Combat Shield, Reactive Shield)
-- **Two-Handed**: 8 weapons (Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam)
-- **Dual-Wield**: 15 one-handed weapons (same as single loadout)
+- **Single Loadout**: 16 one-handed weapons (Practice Sword, Practice Blaster, Machine Pistol, Laser Pistol, Combat Knife, Machine Gun, Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle, Plasma Blade, Plasma Rifle, Power Sword, and others)
+- **Weapon + Shield**: 16 one-handed weapons + 3 shields (Light Shield, Combat Shield, Reactive Shield)
+- **Two-Handed**: 10 weapons (Training Rifle, Training Beam, Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam)
+- **Dual-Wield**: 16 one-handed weapons (same as single loadout)
 
 ---
 
@@ -827,12 +827,12 @@ model TournamentMatch {
 
 ## Seed Data
 
-For complete seed data specifications including all 23 weapons, test users, and initial data, see:
+For complete seed data specifications including all 26 weapons, test users, and initial data, see:
 
 **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)**
 
 **Summary**:
-- 23 weapons in catalog (v1.2 pricing)
+- 26 weapons in catalog (v1.2 pricing)
 - 144 user accounts (admin, players, test users, attribute-focused, loadout-focused, bye-robot)
 - 471 robots for testing
 - CycleMetadata singleton initialized
@@ -879,7 +879,7 @@ For complete seed data specifications including all 23 weapons, test users, and 
 1. Drop existing migrations folder
 2. Create new base migration with COMPLETE schema
 3. Run `npx prisma migrate dev --name complete_schema`
-4. Run seed script with all 11 weapons
+4. Run seed script with all 26 weapons
 
 ### Schema Updates (Prisma)
 ```bash

@@ -179,9 +179,9 @@ async function simulateSeed(mockPrisma: ReturnType<typeof createMockPrisma>, mod
     }
   }
 
-  // Development only: WimpBot users
-  if (mode === 'development') {
-    for (let i = 1; i <= 100; i++) {
+  // Development + Acceptance: WimpBot users (200 total, 50 per weapon)
+  if (mode === 'development' || mode === 'acceptance') {
+    for (let i = 1; i <= 200; i++) {
       const username = `test_user_${String(i).padStart(3, '0')}`;
       await mockPrisma.user.upsert({
         where: { username },
@@ -398,7 +398,7 @@ describe('Seed Script - Property Tests', () => {
       );
     });
 
-    test('acceptance mode seeds admin and players but not WimpBot or attribute users', async () => {
+    test('acceptance mode seeds admin, players, and WimpBot users but not attribute users', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.integer({ min: 1, max: 3 }),
@@ -411,12 +411,14 @@ describe('Seed Script - Property Tests', () => {
             expect(usernames).toContain('admin');
             expect(usernames).toContain('player1');
             expect(usernames).toContain('player5');
+            expect(usernames).toContain('test_user_001');
+            expect(usernames).toContain('test_user_200');
             const wimpBots = usernames.filter(u => u.startsWith('test_user_'));
+            expect(wimpBots.length).toBe(200);
             const attrUsers = usernames.filter(u => u.startsWith('attr_'));
-            expect(wimpBots).toEqual([]);
             expect(attrUsers).toEqual([]);
-            // bye_robot_user + admin + player1-5 = 7
-            expect(usernames.length).toBe(7);
+            // bye_robot_user + admin + player1-5 + WimpBot(200) = 207
+            expect(usernames.length).toBe(207);
           }
         ),
         { numRuns: NUM_RUNS }
@@ -435,10 +437,10 @@ describe('Seed Script - Property Tests', () => {
             expect(usernames).toContain('admin');
             expect(usernames).toContain('player1');
             expect(usernames).toContain('test_user_001');
-            expect(usernames).toContain('test_user_100');
+            expect(usernames).toContain('test_user_200');
             expect(usernames.some(u => u.startsWith('attr_'))).toBe(true);
-            // bye_robot_user(1) + admin(1) + player1-5(5) + WimpBot(100) + attr(230) = 337
-            expect(usernames.length).toBe(337);
+            // bye_robot_user(1) + admin(1) + player1-5(5) + WimpBot(200) + attr(230) = 437
+            expect(usernames.length).toBe(437);
           }
         ),
         { numRuns: NUM_RUNS }

@@ -50,7 +50,7 @@
 The Weapon & Loadout System enables players to purchase weapons, manage inventory, equip weapons to robots, and configure tactical loadouts. The system supports 4 distinct loadout types with **23 implemented weapons** across 4 categories.
 
 **Key Features:**
-- ✅ 23 weapons across 4 categories (Energy, Ballistic, Melee, Shield)
+- ✅ 26 weapons across 4 categories (Energy, Ballistic, Melee, Shield)
 - ✅ Weapon purchase from shop with Workshop discounts (5-50%)
 - ✅ Stable-level weapon inventory with storage capacity management
 - ✅ 4 loadout configurations with strategic bonuses/penalties
@@ -78,7 +78,7 @@ The Weapon & Loadout System enables players to purchase weapons, manage inventor
 **What Exists:**
 - ✅ Complete database schema (Weapon, WeaponInventory, Robot models with all fields)
 - ✅ Comprehensive design documentation (WEAPONS_AND_LOADOUT.md, ROBOT_ATTRIBUTES.md)
-- ✅ 23 weapons defined with complete specifications across 4 categories
+- ✅ 26 weapons defined with complete specifications across 4 categories
 - ✅ Backend API: GET /api/weapons (list all weapons)
 - ✅ Backend API: POST /api/weapon-inventory/purchase (purchase weapon)
 - ✅ Backend API: GET /api/weapon-inventory (get user's weapon inventory)
@@ -97,7 +97,7 @@ The Weapon & Loadout System enables players to purchase weapons, manage inventor
 
 ### Design References
 
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (23 weapons)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (26 weapons)
 - **⭐ [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
 - **[PRD_ROBOT_ATTRIBUTES.md](../prd_core/PRD_ROBOT_ATTRIBUTES.md)** - Robot attributes and loadout bonuses
 - **[DATABASE_SCHEMA.md](../prd_core/DATABASE_SCHEMA.md)** - Database structure
@@ -400,7 +400,7 @@ Originally planned as separate page, but integrated into Weapon Shop for better 
 
 ### Related Documentation
 
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (23 weapons)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (26 weapons)
 - **⭐ [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
 - **[PRD_ROBOT_ATTRIBUTES.md](../prd_core/PRD_ROBOT_ATTRIBUTES.md)** - Robot attributes and combat mechanics
 - **[STABLE_SYSTEM.md](../STABLE_SYSTEM.md)** - Stable management and facilities
@@ -536,8 +536,9 @@ The game features **23 implemented weapons** across 4 categories. For complete s
 
 ### Price Tiers
 
-**Budget Tier (₡62K-₡150K)** - 8 weapons:
-- Practice Sword, Machine Pistol, Laser Pistol, Combat Knife
+**Budget Tier (₡50K-₡150K)** - 11 weapons:
+- Practice Sword, Practice Blaster, Training Rifle, Training Beam
+- Machine Pistol, Laser Pistol, Combat Knife
 - Light Shield, Combat Shield, Reactive Shield, Machine Gun
 
 **Mid Tier (₡175K-₡250K)** - 5 weapons:
@@ -551,17 +552,18 @@ The game features **23 implemented weapons** across 4 categories. For complete s
 
 ### Loadout Coverage
 
-**Single Loadout** (15 one-handed weapons):
+**Single Loadout** (16 one-handed weapons):
 - All one-handed weapons can be used in single loadout
 
-**Weapon + Shield** (15 one-handed + 3 shields):
+**Weapon + Shield** (16 one-handed + 3 shields):
 - All one-handed weapons + Light Shield, Combat Shield, Reactive Shield
 
-**Two-Handed** (8 weapons):
+**Two-Handed** (10 weapons):
+- Training Rifle, Training Beam
 - Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe
 - Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
 
-**Dual-Wield** (15 one-handed weapons):
+**Dual-Wield** (16 one-handed weapons):
 - All one-handed weapons (same as single loadout)
 
 ### DPS Rankings (Top 5)
@@ -641,7 +643,10 @@ The **Weapons Workshop** facility provides purchase discounts:
 ### Investment Strategy (₡3M Starting Budget)
 
 **Early Game** (₡50K-₡107K range):
-- Practice Sword (₡50K) - baseline weapon
+- Practice Sword (₡50K) - melee baseline
+- Practice Blaster (₡50K) - short-range baseline
+- Training Rifle (₡50K) - mid-range baseline
+- Training Beam (₡50K) - long-range baseline
 - Combat Shield (₡78K) - defensive option
 - Machine Gun (₡107K) - solid one-handed
 - **Strategy**: Focus on robot attribute upgrades first
@@ -939,7 +944,7 @@ function calculateMaxShield(shieldCapacity: number, weaponBonuses: number, loado
 
 **Backend:**
 - ✅ Complete database schema (Weapon, WeaponInventory, Robot models)
-- ✅ 23 weapons seeded in database
+- ✅ 26 weapons seeded in database
 - ✅ GET /api/weapons (list all weapons)
 - ✅ POST /api/weapon-inventory/purchase (purchase weapon)
 - ✅ GET /api/weapon-inventory (get user's inventory)
@@ -1084,7 +1089,7 @@ function calculateMaxShield(shieldCapacity: number, weaponBonuses: number, loado
 
 **Technical:**
 - Database schema already in place (Weapon, WeaponInventory, Robot models)
-- Weapon seed data exists (23 weapons defined)
+- Weapon seed data exists (26 weapons defined)
 - Backend infrastructure (Express, Prisma) operational
 - Frontend infrastructure (React, Tailwind) operational
 
@@ -1402,9 +1407,7 @@ The Weapons & Loadout System provides a comprehensive, balanced, and strategic e
 - ✅ Comprehensive testing coverage
 
 **Primary References:**
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (23 weapons)
-- **⭐ [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
-- **[OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md)** - Current economy (₡3M starting budget)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (26 weapons)
 
 **Future Roadmap:**
 - Weapon crafting and modifications

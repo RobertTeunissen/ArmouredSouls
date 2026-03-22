@@ -18,7 +18,7 @@ export interface WeaponLike {
 }
 
 /** Named long-range specialist weapons */
-const LONG_RANGE_WEAPONS = ['Sniper Rifle', 'Railgun', 'Ion Beam'];
+const LONG_RANGE_WEAPONS = ['Sniper Rifle', 'Railgun', 'Ion Beam', 'Training Beam'];
 
 /**
  * Determine a weapon's optimal range band.

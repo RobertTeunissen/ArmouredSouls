@@ -22,7 +22,7 @@ Here's a quick breakdown of the major expenses you'll face:
 | Item | Cost | Notes |
 |------|------|-------|
 | Robot frame | ₡500,000 | Bare chassis with all 23 attributes at level 1 |
-| Weapons | ₡62,500–₡538,000 | Practice Sword (₡62.5K) to Ion Beam (₡538K). Budget weapons start around ₡94K. |
+| Weapons | ₡50,000–₡544,000 | Practice Sword (₡50K) to Ion Beam (₡544K). Starter weapons at ₡50K for each range band. |
 | Attribute upgrade (per level) | (level + 1) × ₡1,500 | Level 1→2 costs ₡3,000. Level 9→10 costs ₡15,000. Discounted by Training Facility. |
 | Repair Bay (Level 1) | ₡100,000 | Reduces repair costs. Scales with number of robots. |
 | Training Facility (Level 1) | ₡150,000 | 10% discount on all attribute upgrades. |

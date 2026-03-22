@@ -1181,6 +1181,7 @@ export function simulateBattleMulti(
   let currentTime = 0;
   let battleEnded = false;
   let winnerId: number | null = null;
+  let winReason: string | undefined;
 
   // For N>2 battles, create a proxy that auto-injects robotHP/robotShield maps
   // on every event push, so all events (including those from performAttack) get enriched.
@@ -1544,12 +1545,23 @@ export function simulateBattleMulti(
       state.isUnderPressure = (state.currentHP / state.maxHP) * 100 < state.pressureThreshold;
     }
 
+    // ── Game mode per-tick hooks (zone scoring, passive penalties, zone rotation) ──
+    // Runs BEFORE win condition check so scores are current when evaluated.
+    if (gameModeState?.customData && !battleEnded) {
+      const tickHook = gameModeState.customData.tickHook as
+        ((st: SpatialRobotCombatState[], t: number, dt: number, ev: SpatialCombatEvent[], ar: ArenaConfig) => void) | undefined;
+      if (tickHook) {
+        tickHook(states, currentTime, SIMULATION_TICK, events, arena);
+      }
+    }
+
     // Game mode win condition check (KotH score threshold, last-standing, time limit, etc.)
     if (gameModeConfig?.winCondition && !battleEnded) {
       const teams = states.map(s => [s]); // Each robot is its own team for FFA
       const result = gameModeConfig.winCondition.evaluate(teams, currentTime, gameModeState);
       if (result?.ended) {
         winnerId = result.winnerId;
+        winReason = result.reason;
         battleEnded = true;
         // Retrieve any events the win condition evaluator stored on gameState
         const wcEvents = gameModeState?.customData?.pendingEvents as SpatialCombatEvent[] | undefined;
@@ -1564,9 +1576,9 @@ export function simulateBattleMulti(
     if (!battleEnded) {
       const alive = states.filter(s => s.isAlive);
       if (alive.length <= 1 && !gameModeConfig?.winCondition) {
-        winnerId = alive.length === 1 ? alive[0].robot.id : null;
-        battleEnded = true;
         if (alive.length === 1) {
+          winnerId = alive[0].robot.id;
+          battleEnded = true;
           events.push({
             timestamp: Number(currentTime.toFixed(1)),
             type: 'destroyed',
@@ -1577,6 +1589,26 @@ export function simulateBattleMulti(
             robot2Shield: states[1]?.currentShield ?? 0,
             ...buildPositionSnapshot(...states),
           });
+        } else if (alive.length === 0 && !config.allowDraws) {
+          // Mutual destruction/yield: use HP tiebreaker (highest HP% wins)
+          const sorted = [...states].sort((a, b) => (b.currentHP / b.maxHP) - (a.currentHP / a.maxHP));
+          winnerId = sorted[0].robot.id;
+          battleEnded = true;
+          const pct = ((sorted[0].currentHP / sorted[0].maxHP) * 100).toFixed(1);
+          events.push({
+            timestamp: Number(currentTime.toFixed(1)),
+            type: 'yield',
+            message: `⚔️ Mutual takedown! ${sorted[0].robot.name} wins by HP tiebreaker (${pct}%)`,
+            robot1HP: states[0]?.currentHP ?? 0,
+            robot2HP: states[1]?.currentHP ?? 0,
+            robot1Shield: states[0]?.currentShield ?? 0,
+            robot2Shield: states[1]?.currentShield ?? 0,
+            ...buildPositionSnapshot(...states),
+          });
+        } else {
+          // All eliminated and draws allowed — draw
+          winnerId = null;
+          battleEnded = true;
         }
       }
     }
@@ -1614,15 +1646,6 @@ export function simulateBattleMulti(
           lastMoveEventTime[i] = currentTime;
           lastMoveEventPos[i] = { x: state.position.x, y: state.position.y };
         }
-      }
-    }
-
-    // ── Game mode per-tick hooks (zone scoring, passive penalties, zone rotation) ──
-    if (gameModeState?.customData && !battleEnded) {
-      const tickHook = gameModeState.customData.tickHook as
-        ((st: SpatialRobotCombatState[], t: number, dt: number, ev: SpatialCombatEvent[], ar: ArenaConfig) => void) | undefined;
-      if (tickHook) {
-        tickHook(states, currentTime, SIMULATION_TICK, events, arena);
       }
     }
   } // end main loop
@@ -1685,6 +1708,7 @@ export function simulateBattleMulti(
       zoneExits: scoreState?.zoneExits ? { ...scoreState.zoneExits } : undefined,
       killCounts: scoreState?.killCounts ? { ...scoreState.killCounts } : undefined,
       matchDuration: Number(currentTime.toFixed(1)),
+      winReason,
     };
   }
 

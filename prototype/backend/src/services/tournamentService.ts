@@ -638,8 +638,8 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   // Populate next round matches with winners
   // Winners are paired: match 1 & 2 → next match 1, match 3 & 4 → next match 2, etc.
   for (let i = 0; i < nextRoundMatches.length; i++) {
-    const robot1Id = winners[i * 2];
-    const robot2Id = winners[i * 2 + 1] || null; // Handle odd number of winners
+    const robot1Id = winners[i * 2] ?? null;
+    const robot2Id = winners[i * 2 + 1] ?? null;
 
     await prisma.scheduledTournamentMatch.update({
       where: { id: nextRoundMatches[i].id },
@@ -670,6 +670,29 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
         },
       });
       logger.info(`[Tournament] Auto-completed bye match ${match.id} in round ${nextRound} (winner: robot ${match.robot1Id})`);
+    } else if (match.robot1Id === null && match.robot2Id !== null) {
+      // Reverse bye: robot2 has no opponent due to missing winner upstream
+      await prisma.scheduledTournamentMatch.update({
+        where: { id: match.id },
+        data: {
+          winnerId: match.robot2Id,
+          status: 'completed',
+          isByeMatch: true,
+          completedAt: new Date(),
+        },
+      });
+      logger.info(`[Tournament] Auto-completed reverse bye match ${match.id} in round ${nextRound} (winner: robot ${match.robot2Id})`);
+    } else if (match.robot1Id === null && match.robot2Id === null) {
+      // Both slots empty — no winners fed into this match; mark completed with no winner
+      await prisma.scheduledTournamentMatch.update({
+        where: { id: match.id },
+        data: {
+          status: 'completed',
+          isByeMatch: true,
+          completedAt: new Date(),
+        },
+      });
+      logger.warn(`[Tournament] Empty match ${match.id} in round ${nextRound} — no robots assigned, auto-completed`);
     }
   }
 

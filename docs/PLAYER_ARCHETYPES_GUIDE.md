@@ -6,7 +6,7 @@ Welcome to the Player Archetypes and Starting Strategies Guide for Armoured Soul
 
 ### Why This Guide Exists
 
-Armoured Souls features deep economic and progression systems with 23 attributes, 23 weapons, 14 facilities, and multiple viable paths to success. New players often face decision paralysis when confronted with so many choices. This guide reduces cognitive load by organizing strategies into 10 distinct archetypes, each with clear spending plans and progression roadmaps.
+Armoured Souls features deep economic and progression systems with 23 attributes, 26 weapons, 14 facilities, and multiple viable paths to success. New players often face decision paralysis when confronted with so many choices. This guide reduces cognitive load by organizing strategies into 10 distinct archetypes, each with clear spending plans and progression roadmaps.
 
 ### How to Use This Guide
 
@@ -103,7 +103,7 @@ Upgrading a single attribute from level 1 to level 10 costs **₡82,500** total.
 
 ### Weapons and Loadouts
 
-**Weapons** provide combat bonuses and come in different types. Weapon costs range from **₡50,000** (budget weapons like Practice Sword) to **₡544,000** (premium weapons like Ion Beam).
+**Weapons** provide combat bonuses and come in different types. Weapon costs range from **₡50,000** (starter weapons like Practice Sword, Practice Blaster, Training Rifle, Training Beam) to **₡544,000** (premium weapons like Ion Beam).
 
 **Loadout Types** determine how you equip weapons:
 
@@ -9273,7 +9273,7 @@ This appendix lists all 23 robot attributes organized by category, with brief de
 
 ### Appendix B: Complete Weapon Catalog
 
-This appendix lists all 23 weapons with costs, damage, cooldown, and bonuses. Weapons are organized by type and tier.
+This appendix lists all 26 weapons with costs, damage, cooldown, and bonuses. Weapons are organized by type and tier.
 
 #### Melee Weapons
 
@@ -9307,7 +9307,10 @@ This appendix lists all 23 weapons with costs, damage, cooldown, and bonuses. We
 ##### Budget Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
 |--------|------|--------|----------|---------|---------------|----------|
+| Practice Blaster | ₡50,000 | 6 | 3 turns | Single | None (short-range baseline) | Facility Investor (budget ranged option) |
 | Machine Gun | ₡107,000 | 5 | 2 turns | Single/Dual-Wield | +25% attack speed | Speed Demon, Balanced Brawler |
+| Training Rifle | ₡50,000 | 6 | 3 turns | Two-Handed | None (mid-range baseline) | Range testing, budget two-handed |
+| Training Beam | ₡50,000 | 6 | 3 turns | Two-Handed | None (long-range baseline) | Range testing, budget long-range |
 
 ##### Mid Tier
 | Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |

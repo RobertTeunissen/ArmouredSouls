@@ -445,7 +445,7 @@ function getWeaponOptimalRange(weapon: Weapon): RangeBand {
 }
 ```
 
-This produces the following mapping for all 23 weapons:
+This produces the following mapping for all 26 weapons:
 
 | Weapon | Type | Hands | Optimal Range |
 |--------|------|-------|---------------|
@@ -456,6 +456,7 @@ This produces the following mapping for all 23 weapons:
 | Power Sword | melee | one | melee |
 | Battle Axe | melee | two | melee |
 | Heavy Hammer | melee | two | melee |
+| Practice Blaster | ballistic | one | short |
 | Laser Pistol | energy | one | short |
 | Machine Pistol | ballistic | one | short |
 | Machine Gun | ballistic | one | short |
@@ -463,10 +464,11 @@ This produces the following mapping for all 23 weapons:
 | Assault Rifle | ballistic | one | short |
 | Laser Rifle | energy | one | short |
 | Plasma Rifle | energy | one | short |
-| Plasma Blade | melee | one | melee |
+| Training Rifle | ballistic | two | mid |
 | Shotgun | ballistic | two | mid |
 | Grenade Launcher | ballistic | two | mid |
 | Plasma Cannon | energy | two | mid |
+| Training Beam | energy | two | long |
 | Sniper Rifle | ballistic | two | long |
 | Railgun | ballistic | two | long |
 | Ion Beam | energy | two | long |

@@ -34,7 +34,7 @@ The Single loadout is the most straightforward configuration — one weapon, no 
 
 **Penalties:** None.
 
-**Compatible Weapons:** All 15 one-handed weapons (Energy, Ballistic, and Melee categories).
+**Compatible Weapons:** All 16 one-handed weapons (Energy, Ballistic, and Melee categories).
 
 ```callout-tip
 Single loadout is often underestimated. The absence of penalties means every attribute point you invest works at full value. Combined with the Gyro Stabilizers bonus, Single-loadout robots are surprisingly hard to hit — making this a strong choice for balanced or evasion-focused builds.
@@ -95,7 +95,7 @@ The Two-Handed loadout is built for maximum burst damage. It provides offensive 
 |---------|--------|
 | **Evasion Thrusters** | -10% — Reduced ability to dodge incoming attacks |
 
-**Compatible Weapons:** Only the 8 two-handed weapons — Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, and Ion Beam.
+**Compatible Weapons:** Only the 10 two-handed weapons — Training Rifle, Training Beam, Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, and Ion Beam.
 
 ```callout-tip
 The combination of +20% Critical Systems and the 2.5× critical multiplier makes Two-Handed the undisputed king of burst damage. When a critical hit lands with a two-handed weapon, the damage spike can be devastating. Pair this with Offensive stance for maximum impact.
@@ -125,7 +125,7 @@ Dual-Wield is the sustained DPS loadout. Two weapons means two independent attac
 | **Penetration** | -20% — Reduced ability to bypass armor |
 | **Combat Power** | -10% — Each individual hit deals less damage |
 
-**Compatible Weapons:** All 15 one-handed weapons in both slots. You can equip two copies of the same weapon or mix different weapons for asymmetric builds.
+**Compatible Weapons:** All 16 one-handed weapons in both slots. You can equip two copies of the same weapon or mix different weapons for asymmetric builds.
 
 ```callout-info
 Dual-Wield's offhand weapon has significant combat penalties — 50% base hit chance (vs 70% for main hand) and a 40% cooldown penalty. These are fundamental to the loadout's balance. See [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) for the full breakdown of how per-hand bonuses and offhand rules work.
