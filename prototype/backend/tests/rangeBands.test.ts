@@ -125,12 +125,14 @@ describe('getWeaponOptimalRange', () => {
     expect(getWeaponOptimalRange(longRangeWeapon('Sniper Rifle'))).toBe('long');
     expect(getWeaponOptimalRange({ weaponType: 'ballistic', handsRequired: 'two', name: 'Railgun' })).toBe('long');
     expect(getWeaponOptimalRange({ weaponType: 'energy', handsRequired: 'two', name: 'Ion Beam' })).toBe('long');
+    expect(getWeaponOptimalRange({ weaponType: 'energy', handsRequired: 'two', name: 'Training Beam' })).toBe('long');
   });
 
   it('should return mid for two-handed ranged (non-sniper)', () => {
     expect(getWeaponOptimalRange(twoHandedRanged('Shotgun'))).toBe('mid');
     expect(getWeaponOptimalRange({ weaponType: 'ballistic', handsRequired: 'two', name: 'Grenade Launcher' })).toBe('mid');
     expect(getWeaponOptimalRange({ weaponType: 'energy', handsRequired: 'two', name: 'Plasma Cannon' })).toBe('mid');
+    expect(getWeaponOptimalRange({ weaponType: 'ballistic', handsRequired: 'two', name: 'Training Rifle' })).toBe('mid');
   });
 
   it('should return short for one-handed energy/ballistic', () => {
@@ -138,6 +140,7 @@ describe('getWeaponOptimalRange', () => {
     expect(getWeaponOptimalRange({ weaponType: 'ballistic', handsRequired: 'one', name: 'Machine Pistol' })).toBe('short');
     expect(getWeaponOptimalRange({ weaponType: 'ballistic', handsRequired: 'one', name: 'Assault Rifle' })).toBe('short');
     expect(getWeaponOptimalRange({ weaponType: 'energy', handsRequired: 'one', name: 'Plasma Rifle' })).toBe('short');
+    expect(getWeaponOptimalRange({ weaponType: 'ballistic', handsRequired: 'one', name: 'Practice Blaster' })).toBe('short');
   });
 });
 

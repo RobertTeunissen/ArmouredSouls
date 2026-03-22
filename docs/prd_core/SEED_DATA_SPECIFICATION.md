@@ -11,7 +11,7 @@
 ## Document Purpose
 
 This document specifies the complete seed data loaded into the database during initialization. Seed data provides:
-- Initial weapon catalog (23 weapons)
+- Initial weapon catalog (26 weapons)
 - Test user accounts for development and testing
 - Test robots for matchmaking and balance testing
 - System metadata initialization
@@ -33,64 +33,89 @@ This document specifies the complete seed data loaded into the database during i
 
 ---
 
-## Weapon Catalog (23 Weapons)
+## Weapon Catalog (26 Weapons)
 
 All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: ~25% weapon damage reduction (baseline DPS 2.67 → 2.0), pricing formula M=3.0 with baseline DPS=2.0.
 
-### Starter/Practice Weapons (1)
+### Starter/Practice Weapons (4)
 
 **1. Practice Sword** (₡50,000)
 - Type: Melee, One-handed
+- Range: Melee
 - Base Damage: 6, Cooldown: 3s, DPS: 2.0
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: None (baseline weapon)
 - Description: Basic training weapon establishing baseline cost
 
+**2. Practice Blaster** (₡50,000)
+- Type: Ballistic, One-handed
+- Range: Short
+- Base Damage: 6, Cooldown: 3s, DPS: 2.0
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: None (baseline weapon)
+- Description: Basic training sidearm establishing short-range baseline
+
+**3. Training Rifle** (₡50,000)
+- Type: Ballistic, Two-handed
+- Range: Mid
+- Base Damage: 6, Cooldown: 3s, DPS: 2.0
+- Loadout: Two-Handed
+- Bonuses: None (baseline weapon)
+- Description: Standard-issue drill rifle establishing mid-range baseline
+
+**4. Training Beam** (₡50,000)
+- Type: Energy, Two-handed
+- Range: Long
+- Base Damage: 6, Cooldown: 3s, DPS: 2.0
+- Loadout: Two-Handed
+- Bonuses: None (baseline weapon)
+- Description: Basic long-range energy trainer establishing long-range baseline
+
 ### Budget Tier (₡62K-₡150K) - 7 Weapons
 
-**2. Machine Pistol** (₡94,000)
+**5. Machine Pistol** (₡94,000)
 - Type: Ballistic, One-handed
 - Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Attack Speed +3, Weapon Control +2
 - Description: Rapid-fire sidearm with quick attacks
 
-**3. Laser Pistol** (₡57,000)
+**6. Laser Pistol** (₡57,000)
 - Type: Energy, One-handed
 - Base Damage: 6, Cooldown: 3s, DPS: 2.0
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Targeting Systems +3, Combat Power +2
 - Description: Precise energy sidearm with good accuracy
 
-**4. Combat Knife** (₡93,000)
+**7. Combat Knife** (₡93,000)
 - Type: Melee, One-handed
 - Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Attack Speed +3, Gyro Stabilizers +1
 - Description: Fast melee weapon for close combat
 
-**5. Light Shield** (₡51,000)
+**8. Light Shield** (₡51,000)
 - Type: Shield
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
 - Bonuses: Armor Plating +3, Shield Capacity +2
 - Description: Basic defensive shield for protection
 
-**6. Combat Shield** (₡78,000)
+**9. Combat Shield** (₡78,000)
 - Type: Shield
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
 - Bonuses: Armor Plating +6, Counter Protocols +3, Evasion Thrusters -2, Shield Capacity +5
 - Description: Heavy-duty shield with counter capabilities
 
-**7. Reactive Shield** (₡92,000)
+**10. Reactive Shield** (₡92,000)
 - Type: Shield
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
 - Bonuses: Shield Capacity +7, Counter Protocols +6, Power Core +4, Evasion Thrusters -2
 - Description: Advanced shield with energy-reactive plating
 
-**8. Machine Gun** (₡107,000)
+**11. Machine Gun** (₡107,000)
 - Type: Ballistic, One-handed
 - Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Loadout: Single, Weapon+Shield, Dual-Wield
@@ -99,35 +124,35 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### Mid Tier (₡175K-₡250K) - 5 Weapons
 
-**9. Burst Rifle** (₡117,000)
+**12. Burst Rifle** (₡117,000)
 - Type: Ballistic, One-handed
 - Base Damage: 8, Cooldown: 3s, DPS: 2.7
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Attack Speed +4, Targeting Systems +3, Critical Systems +3
 - Description: 3-round burst fire weapon with controlled recoil
 
-**10. Assault Rifle** (₡173,000)
+**13. Assault Rifle** (₡173,000)
 - Type: Ballistic, One-handed
 - Base Damage: 10, Cooldown: 3s, DPS: 3.3
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Combat Power +4, Targeting Systems +4, Weapon Control +3, Attack Speed +2
 - Description: Versatile military-grade firearm
 
-**11. Energy Blade** (₡175,000)
+**14. Energy Blade** (₡175,000)
 - Type: Melee, One-handed
 - Base Damage: 10, Cooldown: 3s, DPS: 3.3
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Attack Speed +5, Combat Power +4, Weapon Control +3
 - Description: Energy-infused blade for swift strikes
 
-**12. Laser Rifle** (₡202,000)
+**15. Laser Rifle** (₡202,000)
 - Type: Energy, One-handed
 - Base Damage: 11, Cooldown: 3s, DPS: 3.7
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Targeting Systems +5, Weapon Control +4, Attack Speed +3, Combat Power +2
 - Description: Precision energy rifle with excellent accuracy
 
-**13. Plasma Blade** (₡202,000)
+**16. Plasma Blade** (₡202,000)
 - Type: Melee, One-handed
 - Base Damage: 11, Cooldown: 3s, DPS: 3.7
 - Loadout: Single, Weapon+Shield, Dual-Wield
@@ -136,35 +161,35 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### Premium Tier (₡275K-₡400K) - 5 Weapons
 
-**14. Plasma Rifle** (₡258,000)
+**17. Plasma Rifle** (₡258,000)
 - Type: Energy, One-handed
 - Base Damage: 13, Cooldown: 3s, DPS: 4.3
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Combat Power +6, Targeting Systems +4, Weapon Control +3, Power Core -2
 - Description: Advanced energy weapon with high damage output
 
-**15. Power Sword** (₡325,000)
+**18. Power Sword** (₡325,000)
 - Type: Melee, One-handed
 - Base Damage: 15, Cooldown: 3s, DPS: 5.0
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Penetration +7, Critical Systems +5, Weapon Control +4, Combat Power +3
 - Description: High-tech melee weapon with superior handling
 
-**16. Shotgun** (₡283,000) - Two-handed
+**19. Shotgun** (₡283,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Base Damage: 14, Cooldown: 4s, DPS: 3.5
 - Loadout: Two-Handed only
 - Bonuses: Combat Power +4, Critical Systems +3, Targeting Systems -2
 - Description: Close-range devastation with wide spread
 
-**17. Grenade Launcher** (₡293,000) - Two-handed
+**20. Grenade Launcher** (₡293,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Base Damage: 16, Cooldown: 5s, DPS: 3.2
 - Loadout: Two-Handed only
 - Bonuses: Combat Power +6, Penetration +5, Critical Systems +4, Targeting Systems -3
 - Description: Explosive area damage with arc trajectory
 
-**18. Sniper Rifle** (₡387,000) - Two-handed
+**21. Sniper Rifle** (₡387,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Base Damage: 22, Cooldown: 6s, DPS: 3.7
 - Loadout: Two-Handed only
@@ -173,35 +198,35 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### Elite Tier (₡375K+) - 5 Weapons
 
-**19. Battle Axe** (₡402,000) - Two-handed
+**22. Battle Axe** (₡402,000) - Two-handed
 - Type: Melee, Two-handed
 - Base Damage: 17, Cooldown: 4s, DPS: 4.3
 - Loadout: Two-Handed only
 - Bonuses: Penetration +6, Combat Power +4, Critical Systems +3, Attack Speed -2
 - Description: Brutal melee weapon with devastating power
 
-**20. Plasma Cannon** (₡408,000) - Two-handed
+**23. Plasma Cannon** (₡408,000) - Two-handed
 - Type: Energy, Two-handed
 - Base Damage: 20, Cooldown: 5s, DPS: 4.0
 - Loadout: Two-Handed only
 - Bonuses: Combat Power +7, Critical Systems +6, Penetration +4, Power Core -3
 - Description: Heavy plasma weapon with devastating firepower
 
-**21. Heavy Hammer** (₡478,000) - Two-handed
+**24. Heavy Hammer** (₡478,000) - Two-handed
 - Type: Melee, Two-handed
 - Base Damage: 22, Cooldown: 5s, DPS: 4.4
 - Loadout: Two-Handed only
 - Bonuses: Penetration +8, Combat Power +7, Critical Systems +4, Attack Speed -3
 - Description: Massive impact weapon for maximum damage
 
-**22. Railgun** (₡527,000) - Two-handed
+**25. Railgun** (₡527,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Base Damage: 25, Cooldown: 6s, DPS: 4.2
 - Loadout: Two-Handed only
 - Bonuses: Penetration +12, Targeting Systems +7, Combat Power +5, Attack Speed -4
 - Description: Ultra-high velocity kinetic weapon with extreme penetration
 
-**23. Ion Beam** (₡544,000) - Two-handed (Highest DPS)
+**26. Ion Beam** (₡544,000) - Two-handed (Highest DPS)
 - Type: Energy, Two-handed
 - Base Damage: 18, Cooldown: 4s, DPS: 4.5
 - Loadout: Two-Handed only
@@ -210,21 +235,22 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### Weapon Summary by Loadout Type
 
-**Single Loadout** (15 weapons):
-- Practice Sword, Machine Pistol, Laser Pistol, Combat Knife, Machine Gun
+**Single Loadout** (16 weapons):
+- Practice Sword, Practice Blaster, Machine Pistol, Laser Pistol, Combat Knife, Machine Gun
 - Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle, Plasma Blade
 - Plasma Rifle, Power Sword
 - (All one-handed weapons can be used in single loadout)
 
-**Weapon + Shield** (15 one-handed + 3 shields):
+**Weapon + Shield** (16 one-handed + 3 shields):
 - All one-handed weapons above
 - Light Shield, Combat Shield, Reactive Shield
 
-**Two-Handed** (8 weapons):
+**Two-Handed** (10 weapons):
+- Training Rifle, Training Beam
 - Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe
 - Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
 
-**Dual-Wield** (15 weapons):
+**Dual-Wield** (16 weapons):
 - All one-handed weapons (same as single loadout)
 
 ---

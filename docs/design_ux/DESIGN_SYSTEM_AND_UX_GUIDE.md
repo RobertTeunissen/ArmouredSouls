@@ -465,7 +465,7 @@ The Robot Detail Page has **tiered visibility** to allow browsing other players'
 - **Logo**: Direction B in navigation
 - **Header**: "Weapon Shop" with Credits balance, storage capacity (X/Y)
 - **Filter Tabs**: All / Melee / Ranged / Shields / Two-Handed
-- **Weapon Cards** (11 weapons total):
+- **Weapon Cards** (26 weapons total):
   - Weapon thumbnail/illustration (primary visual)
   - Weapon name
   - Weapon type badge (Melee, Ballistic, Energy, Shield)
@@ -961,7 +961,7 @@ Based on the comprehensive design system, the following asset categories are def
   - Shield: Translucent blue energy
   - **Note**: Weapon type system needs mechanical refinement for consistency
 
-- **Quantity**: 11 weapons (including Practice Sword)
+- **Quantity**: 26 weapons (including Practice Sword, Practice Blaster, Training Rifle, Training Beam)
 
 **2.2 Weapon Type Icons**
 - **Purpose**: Category identification, filtering
@@ -1548,26 +1548,29 @@ robot-chassis-scout-green.webp
 
 ### Weapon Asset Specifications
 
-**11 Weapons (Current)**:
+**26 Weapons (Current)**:
 
 **Melee Weapons (4)**:
 1. **Power Sword** - Energized blade with blue glow
 2. **Hammer** - Heavy impact weapon
 3. **Plasma Blade** - Plasma-edged melee weapon
-4. **Practice Sword** - Basic training sword (FREE starter weapon)
+4. **Practice Sword** - Basic training sword (starter weapon, melee range)
 
-**Ballistic Weapons (3)**:
-5. **Machine Gun** - Rapid-fire automatic weapon
-6. **Railgun** - High-velocity magnetic accelerator
-7. **Shotgun** - Spread damage weapon
+**Ballistic Weapons (5)**:
+5. **Practice Blaster** - Basic training sidearm (starter weapon, short range)
+6. **Machine Gun** - Rapid-fire automatic weapon
+7. **Training Rifle** - Standard-issue drill rifle (starter weapon, mid range)
+8. **Railgun** - High-velocity magnetic accelerator
+9. **Shotgun** - Spread damage weapon
 
-**Energy Weapons (3)**:
-8. **Laser Rifle** - Precision beam weapon
-9. **Plasma Cannon** - Heavy plasma weapon
-10. **Ion Beam** - Sustained energy beam
+**Energy Weapons (4)**:
+10. **Training Beam** - Basic long-range energy trainer (starter weapon, long range)
+11. **Laser Rifle** - Precision beam weapon
+12. **Plasma Cannon** - Heavy plasma weapon
+13. **Ion Beam** - Sustained energy beam
 
 **Shield (1)**:
-11. **Combat Shield** - Defensive energy shield emitter
+14. **Combat Shield** - Defensive energy shield emitter
 
 **Technical Specs**:
 - Format: WEBP

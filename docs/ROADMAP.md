@@ -143,7 +143,7 @@ Note: the overview above is not up to date, more facilities are actually working
 **Implemented**: January 29-30, 2026 (PR #17, #19, #20, #24)
 
 - ✅ **Weapon inventory system** (stable-level weapon storage)
-- ✅ **Weapon Shop page** with 11 weapons available
+- ✅ **Weapon Shop page** with 26 weapons available
 - ✅ **Weapons Workshop discount** applied correctly (actual discount percentages need verification)
 - ✅ **4 loadout configurations**:
   - Single weapon

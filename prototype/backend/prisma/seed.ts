@@ -62,6 +62,42 @@ export const WEAPON_DEFINITIONS = [
     description: 'Basic training weapon establishing baseline cost',
   },
   {
+    name: 'Practice Blaster',
+    weaponType: 'ballistic',
+    baseDamage: 6,
+    cooldown: 3,
+    cost: 50000,
+    handsRequired: 'one',
+    damageType: 'ballistic',
+    loadoutType: 'single',
+    specialProperty: null,
+    description: 'Basic training sidearm establishing short-range baseline',
+  },
+  {
+    name: 'Training Rifle',
+    weaponType: 'ballistic',
+    baseDamage: 6,
+    cooldown: 3,
+    cost: 50000,
+    handsRequired: 'two',
+    damageType: 'ballistic',
+    loadoutType: 'two_handed',
+    specialProperty: null,
+    description: 'Standard-issue drill rifle establishing mid-range baseline',
+  },
+  {
+    name: 'Training Beam',
+    weaponType: 'energy',
+    baseDamage: 6,
+    cooldown: 3,
+    cost: 50000,
+    handsRequired: 'two',
+    damageType: 'energy',
+    loadoutType: 'two_handed',
+    specialProperty: null,
+    description: 'Basic long-range energy trainer establishing long-range baseline',
+  },
+  {
     name: 'Machine Pistol',
     weaponType: 'ballistic',
     baseDamage: 5,
@@ -577,14 +613,29 @@ async function seedCoreTestUsers(practiceSword: { id: number }) {
   return { adminUser, playerUsers };
 }
 
-/** Seeds 100 WimpBot test users — development only */
-async function seedWimpBotUsers(practiceSword: { id: number }) {
-  console.log('Creating 100 test users with WimpBot robots...');
+/** Seeds 200 WimpBot test users — development & acceptance */
+async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
+  console.log('Creating 200 test users with WimpBot robots...');
   const testHashedPassword = await bcrypt.hash('testpass123', 10);
 
-  for (let i = 1; i <= 100; i++) {
+  const weaponGroups: { weapon: { id: number; name: string }; tag: string }[] = [
+    { weapon: weapons.find((w) => w.name === 'Practice Sword')!, tag: 'Sword' },
+    { weapon: weapons.find((w) => w.name === 'Training Beam')!, tag: 'Beam' },
+    { weapon: weapons.find((w) => w.name === 'Training Rifle')!, tag: 'Rifle' },
+    { weapon: weapons.find((w) => w.name === 'Practice Blaster')!, tag: 'Blaster' },
+  ];
+
+  for (const group of weaponGroups) {
+    if (!group.weapon) {
+      throw new Error(`Weapon "${group.tag}" not found in seeded weapons array`);
+    }
+  }
+
+  for (let i = 1; i <= 200; i++) {
     const username = `test_user_${String(i).padStart(3, '0')}`;
-    const robotName = `WimpBot ${i}`;
+    const groupIndex = Math.ceil(i / 50) - 1; // 1-50 → 0, 51-100 → 1, 101-150 → 2, 151-200 → 3
+    const { weapon, tag } = weaponGroups[groupIndex];
+    const robotName = `WimpBot-${tag} ${i}`;
 
     const user = await upsertUser({
       username,
@@ -592,7 +643,7 @@ async function seedWimpBotUsers(practiceSword: { id: number }) {
       currency: 100000,
     });
 
-    const weaponInv = await ensureWeaponInventory(user.id, practiceSword.id);
+    const weaponInv = await ensureWeaponInventory(user.id, weapon.id);
 
     await upsertRobot({
       userId: user.id,
@@ -614,12 +665,12 @@ async function seedWimpBotUsers(practiceSword: { id: number }) {
       yieldThreshold: 10,
     });
 
-    if (i % 10 === 0) {
-      console.log(`   Created ${i}/100 test users with WimpBot robots...`);
+    if (i % 50 === 0) {
+      console.log(`   Created ${i}/200 WimpBot robots (${tag} group done)`);
     }
   }
 
-  console.log('✅ 100 WimpBot test users upserted');
+  console.log('✅ 200 WimpBot test users upserted (50 per weapon type)');
 }
 
 /** Seeds 230 attribute test users — development only */
@@ -723,7 +774,7 @@ async function main() {
 
   // --- Full test data (development + acceptance) ---
   if (seedMode === 'development' || seedMode === 'acceptance') {
-    await seedWimpBotUsers(practiceSword);
+    await seedWimpBotUsers(weapons);
   }
 
   // --- Attribute test users (development only) ---
@@ -748,7 +799,7 @@ async function main() {
     console.log('   🔄 Cycle metadata initialized');
     console.log('   🤖 Bye-Robot for matchmaking');
     console.log('   👤 Admin + player1-5 test accounts');
-    console.log('   👤 100 WimpBot test users');
+    console.log('   👤 200 WimpBot test users (50 per weapon type)');
     console.log('   ❌ No attribute test users');
   } else {
     console.log('📊 Development seed summary:');
@@ -756,7 +807,7 @@ async function main() {
     console.log('   🔄 Cycle metadata initialized');
     console.log('   🤖 Bye-Robot for matchmaking');
     console.log('   👤 Admin + player1-5 test accounts');
-    console.log('   👤 100 WimpBot test users');
+    console.log('   👤 200 WimpBot test users (50 per weapon type)');
     console.log('   👤 230 attribute test users');
   }
 

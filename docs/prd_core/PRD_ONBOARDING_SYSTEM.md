@@ -331,7 +331,7 @@ The onboarding consists of 9 sequential steps. Each step teaches a strategic con
 | Category | Weapons | Damage Type | Characteristics |
 |----------|---------|-------------|-----------------|
 | Energy | 7 weapons | Energy (+20% vs shields) | Precise, consistent damage. Good against shielded opponents. |
-| Ballistic | 8 weapons | Kinetic | Variable damage, high penetration. Reliable all-around. |
+| Ballistic | 10 weapons | Kinetic | Variable damage, high penetration. Reliable all-around. |
 | Melee | 7 weapons | Impact | High burst damage. Benefits from Hydraulic Systems attribute. |
 | Shield | 3 weapons | N/A (defensive) | Defensive bonuses, enables counter-attacks. Offhand only. |
 
@@ -371,7 +371,10 @@ The onboarding consists of 9 sequential steps. Each step teaches a strategic con
 **Budget Tier (₡50K–₡120K)** — Best for 3-robot strategy:
 | Weapon | Price | Type | DPS | Notes |
 |--------|-------|------|-----|-------|
-| Practice Sword | ₡50,000 | Melee | 2.0 | Cheapest option, decent starter |
+| Practice Sword | ₡50,000 | Melee | 2.0 | Cheapest melee starter |
+| Practice Blaster | ₡50,000 | Ballistic | 2.0 | Cheapest short-range starter |
+| Training Rifle | ₡50,000 | Ballistic | 2.0 | Cheapest mid-range starter (two-handed) |
+| Training Beam | ₡50,000 | Energy | 2.0 | Cheapest long-range starter (two-handed) |
 | Machine Pistol | ₡94,000 | Ballistic | 2.5 | Ranged budget option |
 | Laser Pistol | ₡57,000 | Energy | 2.0 | Energy budget option |
 | Machine Gun | ₡107,000 | Ballistic | 2.5 | Best budget DPS |

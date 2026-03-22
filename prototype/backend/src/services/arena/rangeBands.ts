@@ -22,7 +22,7 @@ export interface WeaponLike {
 const BAND_ORDER: RangeBand[] = ['melee', 'short', 'mid', 'long'];
 
 /** Named long-range specialist weapons */
-const LONG_RANGE_WEAPONS = ['Sniper Rifle', 'Railgun', 'Ion Beam'];
+const LONG_RANGE_WEAPONS = ['Sniper Rifle', 'Railgun', 'Ion Beam', 'Training Beam'];
 
 /**
  * Classify a distance (in grid units) into a range band.

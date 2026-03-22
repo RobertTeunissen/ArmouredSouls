@@ -893,7 +893,7 @@ The Streaming Studio dramatically increases streaming revenue earned per battle 
 
 ### 3. Weapon Purchases
 
-**Phase 1 Implemented Weapons** (23 total):
+**Phase 1 Implemented Weapons** (26 total):
 
 > **For complete weapon catalog, pricing, and methodology**: See **[PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md)** - the authoritative document for weapon economy system (implemented in `prototype/backend/prisma/seed.ts`).
 

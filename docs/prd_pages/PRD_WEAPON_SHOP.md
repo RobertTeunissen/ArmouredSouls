@@ -19,7 +19,7 @@
 - v1.1 (Feb 4, 2026): Table view added
 - v1.0 (Feb 4, 2026): Initial PRD created
 
-> **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from 23 weapons to 500+ weapons. All core features (Phases 1-4) are implemented and production-ready.
+> **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from 26 weapons to 500+ weapons. All core features (Phases 1-4) are implemented and production-ready.
 
 ---
 
@@ -41,7 +41,7 @@
 
 ## Executive Summary
 
-The Weapon Shop (`/weapon-shop`) is the primary economic interface where players browse, compare, and purchase weapons for their robot stable. The implementation successfully scales from 23 weapons to 500+ weapons while maintaining intuitive navigation and strategic decision-making.
+The Weapon Shop (`/weapon-shop`) is the primary economic interface where players browse, compare, and purchase weapons for their robot stable. The implementation successfully scales from 26 weapons to 500+ weapons while maintaining intuitive navigation and strategic decision-making.
 
 ### Key Achievements
 
@@ -86,7 +86,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 - "Clear All Filters" button
 - Weapon count display ("Showing X of Y weapons")
 - Empty state handling
-- Client-side filtering <50ms for 23 weapons, <200ms projected for 500 weapons
+- Client-side filtering <50ms for 26 weapons, <200ms projected for 500 weapons
 
 **Components**: FilterPanel.tsx (196 lines), ActiveFiltersDisplay.tsx (122 lines)
 
@@ -136,7 +136,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 
 **Components**: SearchBar.tsx (75 lines), SortDropdown.tsx (98 lines)
 
-**Performance**: Search <50ms, sort <20ms, combined <100ms for 23 weapons
+**Performance**: Search <50ms, sort <20ms, combined <100ms for 26 weapons
 
 #### Phase 4: Visual Polish & View Modes
 **Status**: Complete (February 4, 2026)
@@ -146,7 +146,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 - Card view: Visual grid grouped by loadout type, 3-4 columns desktop
 - Table view: Compact sortable table, 8 columns, 15-20+ weapons per screen
 - View preference localStorage persistence
-- 23 weapon placeholder SVG images (256×256px, color-coded by type)
+- 26 weapon placeholder SVG images (256×256px, color-coded by type)
 - 6 icon assets (weapon type icons: melee, ballistic, energy, shield; view mode icons: grid, list)
 - Weapon images integrated into cards with graceful error handling
 - Table column sorting (click headers, visual sort indicators ↑/↓)
@@ -157,7 +157,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 
 **Components**: ViewModeToggle.tsx (58 lines), WeaponTable.tsx (331 lines), WeaponDetailModal.tsx, ConfirmationModal.tsx, weaponImages.ts (30 lines)
 
-**Assets**: 29 SVG files (23 weapons + 4 weapon type icons + 2 view mode icons)
+**Assets**: 32 SVG files (26 weapons + 4 weapon type icons + 2 view mode icons)
 
 ### 📊 Implementation Statistics
 
@@ -363,7 +363,7 @@ npm run test:e2e:debug    # Run in debug mode
 - **Current Risk**: Low-Medium - 52 unit tests provide strong foundation
 - **Mitigation**: Comprehensive unit test coverage for all critical logic
 - **Remaining Risk**: E2E tests need execution, component tests needed
-- **Impact**: Low for current 23 weapons, increases with catalog growth
+- **Impact**: Low for current 26 weapons, increases with catalog growth
 - **Recommendation**: Execute E2E tests before adding 50+ more weapons
 
 **Test Files Created**:
@@ -399,7 +399,7 @@ npm run test:e2e:debug    # Run in debug mode
 ### Current State
 
 **Database & Backend** (✅ Complete):
-- 23 weapons with full specifications (baseDamage, cost, 15 attribute bonuses)
+- 26 weapons with full specifications (baseDamage, cost, 15 attribute bonuses)
 - Backend APIs: `GET /api/weapons`, `POST /api/weapon-inventory/purchase`, `GET /api/weapon-inventory/storage-status`, `GET /api/weapon-inventory`
 - Weapon Workshop discount system: 5% per level, max 50% at level 10
 - Storage capacity system: 5 base + (5 × Storage Facility Level), max 55 weapons
@@ -753,7 +753,7 @@ Acceptance Criteria:
 ⏳ Lazy loading of weapon images (not needed yet)
 ⏳ "Load More" button or automatic scroll loading (not needed yet)
 
-Note: Performance excellent for current 23 weapons, optimization deferred until 100+ weapons
+Note: Performance excellent for current 26 weapons, optimization deferred until 100+ weapons
 ```
 
 
@@ -789,7 +789,7 @@ Note: Performance excellent for current 23 weapons, optimization deferred until 
 - ✅ Collapsible filter groups on mobile
 
 **Technical Specifications**:
-- ✅ Client-side filtering for instant response (<50ms for 23 weapons)
+- ✅ Client-side filtering for instant response (<50ms for 26 weapons)
 - ✅ Multiple filters applied with AND logic (all must match)
 - ✅ Exception: Loadout type uses OR within category
 - ✅ Filter state persists in localStorage between sessions
@@ -1236,7 +1236,7 @@ Note: Performance excellent for current 23 weapons, optimization deferred until 
 
 #### 10.1 Large Catalog Handling (100+ weapons)
 
-**Status**: Not needed yet (current catalog: 23 weapons)
+**Status**: Not needed yet (current catalog: 26 weapons)
 
 **Requirements** (Future):
 
@@ -1510,7 +1510,7 @@ const processedWeapons = useMemo(() => {
 - ✅ localStorage for view mode and sort preferences
 
 **Performance Metrics**:
-| Operation | Current (23 weapons) | Projected (500 weapons) | Target | Status |
+| Operation | Current (26 weapons) | Projected (500 weapons) | Target | Status |
 |-----------|----------------------|-------------------------|--------|--------|
 | Search (debounced) | <50ms | <150ms | <200ms | ✅ |
 | Filter | <20ms | <100ms | <200ms | ✅ |
@@ -1826,7 +1826,7 @@ const processedWeapons = useMemo(() => {
 
 ## Performance & Scalability
 
-### Current Performance (23 Weapons)
+### Current Performance (26 Weapons)
 
 **Operation Timings**:
 - Page load: <1 second
@@ -1868,7 +1868,7 @@ const processedWeapons = useMemo(() => {
 ### Scalability Analysis
 
 **Current Architecture Supports**:
-- ✅ 23 weapons: Excellent performance (<100ms)
+- ✅ 26 weapons: Excellent performance (<100ms)
 - ✅ 100 weapons: Good performance (<200ms projected)
 - ✅ 500 weapons: Acceptable performance (<300ms projected)
 - ⏳ 1,000+ weapons: Requires optimization (pagination, server-side filtering)
@@ -1969,7 +1969,7 @@ const processedWeapons = useMemo(() => {
 
 ## Appendices
 
-### A. Weapon Catalog (23 Weapons)
+### A. Weapon Catalog (26 Weapons)
 
 **Current Catalog** (actual implementation prices from seed.ts):
 
@@ -1982,33 +1982,36 @@ const processedWeapons = useMemo(() => {
 6. Plasma Blade (₡202,000) - Premium melee
 7. Heavy Hammer (₡478,000) - Maximum damage
 
-**Ballistic Weapons** (8):
-8. Machine Pistol (₡94,000) - Rapid-fire sidearm
-9. Machine Gun (₡107,000) - Sustained fire
-10. Burst Rifle (₡117,000) - Controlled bursts
-11. Assault Rifle (₡173,000) - Balanced rifle
-12. Shotgun (₡283,000) - Close-range
-13. Grenade Launcher (₡293,000) - Area effect
-14. Sniper Rifle (₡387,000) - Long-range precision
-15. Railgun (₡527,000) - Armor-piercing
+**Ballistic Weapons** (10):
+8. Practice Blaster (₡50,000) - Starter short-range
+9. Machine Pistol (₡94,000) - Rapid-fire sidearm
+10. Machine Gun (₡107,000) - Sustained fire
+11. Burst Rifle (₡117,000) - Controlled bursts
+12. Assault Rifle (₡173,000) - Balanced rifle
+13. Training Rifle (₡50,000) - Starter mid-range
+14. Shotgun (₡283,000) - Close-range
+15. Grenade Launcher (₡293,000) - Area effect
+16. Sniper Rifle (₡387,000) - Long-range precision
+17. Railgun (₡527,000) - Armor-piercing
 
-**Energy Weapons** (5):
-16. Laser Pistol (₡57,000) - Energy sidearm
-17. Laser Rifle (₡202,000) - Energy rifle
-18. Plasma Rifle (₡258,000) - High-energy
-19. Plasma Cannon (₡408,000) - Heavy energy
-20. Ion Beam (₡544,000) - Sustained beam
+**Energy Weapons** (6):
+18. Laser Pistol (₡57,000) - Energy sidearm
+19. Laser Rifle (₡202,000) - Energy rifle
+20. Plasma Rifle (₡258,000) - High-energy
+21. Training Beam (₡50,000) - Starter long-range
+22. Plasma Cannon (₡408,000) - Heavy energy
+23. Ion Beam (₡544,000) - Sustained beam
 
 **Shields** (3):
-21. Light Shield (₡51,000) - Basic defense
-22. Combat Shield (₡78,000) - Standard defense
-23. Reactive Shield (₡92,000) - Advanced defense
+24. Light Shield (₡51,000) - Basic defense
+25. Combat Shield (₡78,000) - Standard defense
+26. Reactive Shield (₡92,000) - Advanced defense
 
 **Loadout Type Distribution**:
-- Single: 15 weapons (can be used alone or with shield)
-- Two-Handed: 4 weapons (requires both hands)
+- Single: 16 weapons (can be used alone or with shield)
+- Two-Handed: 10 weapons (requires both hands)
 - Shield: 3 weapons (offhand only)
-- Dual-Wield: 8 weapons (can be paired)
+- Dual-Wield: 16 weapons (can be paired)
 
 **Price Range Distribution**:
 - Budget (<₡100K): 7 weapons
@@ -2021,7 +2024,7 @@ const processedWeapons = useMemo(() => {
 **Image Location**: `/prototype/frontend/src/assets/weapons/`  
 **Image Format**: SVG (256×256px viewBox), scalable vector graphics  
 **Naming Convention**: Weapon name in lowercase with hyphens (e.g., `practice-sword.svg`)  
-**Current Status**: ✅ All 23 weapon placeholder images created
+**Current Status**: ✅ All 26 weapon placeholder images created
 
 **Image List** (Color-coded by type):
 
@@ -2035,26 +2038,29 @@ const processedWeapons = useMemo(() => {
 7. `heavy-hammer.svg` - Heavy Hammer
 
 **Ballistic Weapons** (Orange/Gray theme):
-8. `machine-pistol.svg` - Machine Pistol
-9. `machine-gun.svg` - Machine Gun
-10. `burst-rifle.svg` - Burst Rifle
-11. `assault-rifle.svg` - Assault Rifle
-12. `shotgun.svg` - Shotgun
-13. `grenade-launcher.svg` - Grenade Launcher (yellow theme)
-14. `sniper-rifle.svg` - Sniper Rifle
-15. `railgun.svg` - Railgun
+8. `practice-blaster.svg` - Practice Blaster
+9. `machine-pistol.svg` - Machine Pistol
+10. `machine-gun.svg` - Machine Gun
+11. `burst-rifle.svg` - Burst Rifle
+12. `assault-rifle.svg` - Assault Rifle
+13. `training-rifle.svg` - Training Rifle
+14. `shotgun.svg` - Shotgun
+15. `grenade-launcher.svg` - Grenade Launcher (yellow theme)
+16. `sniper-rifle.svg` - Sniper Rifle
+17. `railgun.svg` - Railgun
 
 **Energy Weapons** (Blue/Purple theme):
-16. `laser-pistol.svg` - Laser Pistol (blue)
-17. `laser-rifle.svg` - Laser Rifle (blue)
-18. `plasma-rifle.svg` - Plasma Rifle (purple)
-19. `plasma-cannon.svg` - Plasma Cannon (purple)
-20. `ion-beam.svg` - Ion Beam (blue)
+18. `laser-pistol.svg` - Laser Pistol (blue)
+19. `laser-rifle.svg` - Laser Rifle (blue)
+20. `plasma-rifle.svg` - Plasma Rifle (purple)
+21. `training-beam.svg` - Training Beam (blue)
+22. `plasma-cannon.svg` - Plasma Cannon (purple)
+23. `ion-beam.svg` - Ion Beam (blue)
 
 **Shields** (Cyan/Blue theme):
-21. `light-shield.svg` - Light Shield
-22. `combat-shield.svg` - Combat Shield
-23. `reactive-shield.svg` - Reactive Shield
+24. `light-shield.svg` - Light Shield
+25. `combat-shield.svg` - Combat Shield
+26. `reactive-shield.svg` - Reactive Shield
 
 **Image Loading**:
 - ✅ Images loaded via `getWeaponImagePath()` utility function
