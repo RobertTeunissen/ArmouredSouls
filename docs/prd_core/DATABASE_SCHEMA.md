@@ -22,7 +22,7 @@
 This document defines the **complete database schema** for Armoured Souls, including:
 - ✅ All 23 robot attributes (Decimal type for fractional values)
 - ✅ All 14 facilities with 10 levels
-- ✅ Complete weapon system (26 weapons in catalog)
+- ✅ Complete weapon system (47 weapons in catalog)
 - ✅ League tracking, damage tracking, repair costs, yield thresholds, stances
 - ✅ All combat state fields (current HP, shields, damage taken)
 - ✅ Loadout system (single, weapon+shield, two-handed, dual-wield)
@@ -288,12 +288,12 @@ repairCost = base_repair × damage_percentage × multiplier
 
 Represents weapon types available for purchase. Players buy weapons into inventory.
 
-**Current Implementation**: 26 weapons across all loadout types (v1.2 pricing)
+**Current Implementation**: 47 weapons across all loadout types (v1.5 pricing)
 
 **For complete weapon specifications, damage values, and pricing methodology, see:**
 - **[WEAPONS_AND_LOADOUT.md](../WEAPONS_AND_LOADOUT.md)** - Complete weapon catalog with v1.2 pricing
 - **[PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
-- **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)** - Complete seed data including all 26 weapons
+- **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)** - Complete seed data including all 47 weapons
 
 ```prisma
 model Weapon {
@@ -352,7 +352,7 @@ model Weapon {
 ```
 
 **Notes**:
-- This is the **catalog** of available weapons (26 total in current implementation)
+- This is the **catalog** of available weapons (47 total in current implementation)
 - Players purchase weapons from this catalog into their inventory
 - `loadoutType` indicates which loadouts can use this weapon
 - All 23 attribute bonuses match Robot attribute names exactly
@@ -827,12 +827,12 @@ model TournamentMatch {
 
 ## Seed Data
 
-For complete seed data specifications including all 26 weapons, test users, and initial data, see:
+For complete seed data specifications including all 47 weapons, test users, and initial data, see:
 
 **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)**
 
 **Summary**:
-- 26 weapons in catalog (v1.2 pricing)
+- 47 weapons in catalog (v1.5 pricing)
 - 144 user accounts (admin, players, test users, attribute-focused, loadout-focused, bye-robot)
 - 471 robots for testing
 - CycleMetadata singleton initialized
@@ -879,7 +879,7 @@ For complete seed data specifications including all 26 weapons, test users, and 
 1. Drop existing migrations folder
 2. Create new base migration with COMPLETE schema
 3. Run `npx prisma migrate dev --name complete_schema`
-4. Run seed script with all 26 weapons
+4. Run seed script with all 47 weapons
 
 ### Schema Updates (Prisma)
 ```bash

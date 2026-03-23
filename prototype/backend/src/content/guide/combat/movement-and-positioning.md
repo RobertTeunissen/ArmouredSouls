@@ -47,10 +47,10 @@ Distance between robots is classified into four range bands:
 
 | Range Band | Distance (grid units) | Weapon Types |
 |-----------|----------------------|-------------|
-| **Melee** | 0–2 | Melee weapons, Shields |
-| **Short** | 3–6 | One-handed energy/ballistic (Laser Pistol, Plasma Pistol, Machine Pistol, etc.) |
-| **Mid** | 7–12 | Two-handed ranged (Shotgun, Grenade Launcher, Plasma Cannon, Heavy Hammer, Battle Axe) |
-| **Long** | 13+ | Sniper Rifle, Railgun, Ion Beam |
+| **Melee** | 0–2 | Melee weapons (Energy Blade, Vibro Mace, War Club, Shock Maul, Thermal Lance, etc.), Shields |
+| **Short** | 3–6 | One-handed short (Laser Pistol, Machine Pistol, Volt Sabre, etc.), two-handed short (Scatter Cannon, Laser Rifle, Pulse Accelerator, Arc Projector) |
+| **Mid** | 7–12 | One-handed mid (Bolt Carbine, Flux Repeater, Disruptor Cannon, Nova Caster), two-handed mid (Shotgun, Grenade Launcher, Plasma Cannon, Mortar System) |
+| **Long** | 13+ | One-handed long (Beam Pistol, Photon Marksman, Gauss Pistol, Particle Lance), two-handed long (Sniper Rifle, Railgun, Ion Beam, Siege Cannon) |
 
 ### Range Penalties
 
@@ -72,11 +72,14 @@ This makes Servo Motors critical for melee builds — without the speed to close
 
 | Weapon Category | Optimal Range | Examples |
 |----------------|--------------|---------|
-| Melee weapons | Melee (0–2) | Energy Blade, Vibro Sword, Power Fist, Chain Sword, Thermal Lance |
-| Shield weapons | Melee (0–2) | Light Shield, Combat Shield, Reactive Shield |
-| One-handed ranged | Short (3–6) | Laser Pistol, Plasma Pistol, Machine Pistol, Pulse Rifle, Ion Pistol |
-| Two-handed ranged | Mid (7–12) | Shotgun, Grenade Launcher, Plasma Cannon, Heavy Hammer, Battle Axe |
-| Long-range specialists | Long (13+) | Sniper Rifle, Railgun, Ion Beam |
+| Melee weapons | Melee (0–2) | Energy Blade, Vibro Mace, War Club, Shock Maul, Thermal Lance, Power Sword, Heavy Hammer |
+| Shield weapons | Melee (0–2) | Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, Aegis Bulwark |
+| One-handed short ranged | Short (3–6) | Laser Pistol, Machine Pistol, Burst Rifle, Plasma Rifle, Assault Rifle, Volt Sabre |
+| Two-handed short ranged | Short (3–6) | Scatter Cannon, Laser Rifle, Pulse Accelerator, Arc Projector |
+| One-handed mid ranged | Mid (7–12) | Bolt Carbine, Flux Repeater, Disruptor Cannon, Nova Caster |
+| Two-handed mid ranged | Mid (7–12) | Shotgun, Grenade Launcher, Plasma Cannon, Mortar System |
+| One-handed long-range | Long (13+) | Beam Pistol, Photon Marksman, Gauss Pistol, Particle Lance |
+| Two-handed long-range | Long (13+) | Sniper Rifle, Railgun, Ion Beam, Siege Cannon |
 
 ```callout-info
 Two-handed melee weapons like Battle Axe and Heavy Hammer are classified as two-handed but their weapon type determines optimal range. If the weapon type is "melee", optimal range is melee regardless of hands required.

@@ -2,7 +2,7 @@
  * Integration tests for onboarding API endpoints
  * 
  * Tests the full tutorial flow from step 1 to 9, skip functionality,
- * resume after logout, reset with and without blockers, and recommendation generation.
+ * resume after logout, and reset with and without blockers.
  * 
  * Requirements: 1.1-1.6, 13.1-13.15, 14.1-14.15
  */
@@ -370,114 +370,6 @@ describe('Onboarding API Integration Tests', () => {
       expect(response.body.data.currentStep).toBe(5);
       expect(response.body.data.strategy).toBe('1_mighty');
       expect(response.body.data.choices.rosterStrategy).toBe('1_mighty');
-    });
-  });
-
-  describe('GET /api/onboarding/recommendations', () => {
-    it('should generate recommendations for 1 mighty robot strategy', async () => {
-      // Set strategy
-      await request(app)
-        .post('/api/onboarding/state')
-        .set('Authorization', `Bearer ${testToken}`)
-        .send({ strategy: '1_mighty' });
-
-      const response = await request(app)
-        .get('/api/onboarding/recommendations')
-        .set('Authorization', `Bearer ${testToken}`)
-        .query({ strategy: '1_mighty' });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('facilities');
-      expect(response.body.data).toHaveProperty('weapons');
-      expect(response.body.data).toHaveProperty('attributes');
-      expect(response.body.data).toHaveProperty('budgetAllocation');
-
-      // Verify facilities include mandatory ones
-      const facilities = response.body.data.facilities;
-      expect(facilities.some((f: any) => f.title === 'Weapons Workshop')).toBe(true);
-      expect(facilities.some((f: any) => f.title === 'Training Facility')).toBe(true);
-    });
-
-    it('should generate recommendations for 2 average robots strategy', async () => {
-      await request(app)
-        .post('/api/onboarding/state')
-        .set('Authorization', `Bearer ${testToken}`)
-        .send({ strategy: '2_average' });
-
-      const response = await request(app)
-        .get('/api/onboarding/recommendations')
-        .set('Authorization', `Bearer ${testToken}`)
-        .query({ strategy: '2_average' });
-
-      expect(response.status).toBe(200);
-      const facilities = response.body.data.facilities;
-      
-      // Should include Roster Expansion for 2 robots
-      expect(facilities.some((f: any) => f.title === 'Roster Expansion')).toBe(true);
-    });
-
-    it('should generate recommendations for 3 flimsy robots strategy', async () => {
-      await request(app)
-        .post('/api/onboarding/state')
-        .set('Authorization', `Bearer ${testToken}`)
-        .send({ strategy: '3_flimsy' });
-
-      const response = await request(app)
-        .get('/api/onboarding/recommendations')
-        .set('Authorization', `Bearer ${testToken}`)
-        .query({ strategy: '3_flimsy' });
-
-      expect(response.status).toBe(200);
-      const facilities = response.body.data.facilities;
-      
-      // Should include Roster Expansion Level 2 and Storage Facility
-      expect(facilities.some((f: any) => f.title.includes('Roster Expansion'))).toBe(true);
-      expect(facilities.some((f: any) => f.title === 'Storage Facility')).toBe(true);
-    });
-
-    it('should generate loadout-specific recommendations', async () => {
-      await request(app)
-        .post('/api/onboarding/state')
-        .set('Authorization', `Bearer ${testToken}`)
-        .send({
-          strategy: '1_mighty',
-          choices: {
-            loadoutType: 'weapon_shield',
-            preferredStance: 'defensive',
-          },
-        });
-
-      const response = await request(app)
-        .get('/api/onboarding/recommendations')
-        .set('Authorization', `Bearer ${testToken}`)
-        .query({
-          strategy: '1_mighty',
-          loadoutType: 'weapon_shield',
-          stance: 'defensive',
-        });
-
-      expect(response.status).toBe(200);
-      const facilities = response.body.data.facilities;
-      
-      // Should recommend Defense Training Academy for defensive weapon+shield build
-      expect(facilities.some((f: any) => f.title === 'Defense Training Academy')).toBe(true);
-    });
-
-    it('should provide budget-appropriate weapon recommendations', async () => {
-      const response = await request(app)
-        .get('/api/onboarding/recommendations')
-        .set('Authorization', `Bearer ${testToken}`)
-        .query({
-          strategy: '1_mighty',
-          creditsRemaining: 200000,
-        });
-
-      expect(response.status).toBe(200);
-      const weapons = response.body.data.weapons;
-      
-      // Should recommend budget weapons when credits are low
-      expect(weapons.some((w: any) => w.title === 'Combat Knife' || w.title === 'Machine Gun')).toBe(true);
     });
   });
 

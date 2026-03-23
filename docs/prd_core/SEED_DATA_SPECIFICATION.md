@@ -4,14 +4,14 @@
 **Document Type**: Technical Specification  
 **Last Updated**: March 21, 2026  
 **Status**: Current Implementation  
-**Version**: v1.4
+**Version**: v1.5
 
 ---
 
 ## Document Purpose
 
 This document specifies the complete seed data loaded into the database during initialization. Seed data provides:
-- Initial weapon catalog (26 weapons)
+- Initial weapon catalog (47 weapons)
 - Test user accounts for development and testing
 - Test robots for matchmaking and balance testing
 - System metadata initialization
@@ -30,10 +30,11 @@ This document specifies the complete seed data loaded into the database during i
 - **v1.2** (Feb 5, 2026): Added 12 additional weapons, updated two-handed weapon pricing
 - **v1.3** (Feb 11, 2026): Added 10 player archetype test users, removed attribute-focused and loadout test users, renamed test user robots to "WimpBot", added dynamic user generation system for cycles
 - **v1.4** (Mar 21, 2026): Weapon damage reduction (~25%), shield capacity formula doubled (×2 → ×4), weapon pricing updated with M=3.0 baseline DPS=2.0
+- **v1.5** (Mar 21, 2026): Weapon roster expansion from 26 to 47 weapons — added 21 new weapons filling all empty grid slots, reclassified Laser Rifle (now 2H Short Mid) and Assault Rifle (now 1H Short Premium), acknowledged Battle Axe tier correction to Luxury, added `rangeBand` field to all weapons, simplified range classification logic
 
 ---
 
-## Weapon Catalog (26 Weapons)
+## Weapon Catalog (47 Weapons)
 
 All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: ~25% weapon damage reduction (baseline DPS 2.67 → 2.0), pricing formula M=3.0 with baseline DPS=2.0.
 
@@ -131,12 +132,13 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Attack Speed +4, Targeting Systems +3, Critical Systems +3
 - Description: 3-round burst fire weapon with controlled recoil
 
-**13. Assault Rifle** (₡173,000)
+**13. Assault Rifle** (₡293,000) *(Reclassified: 1H Short Mid → 1H Short Premium)*
 - Type: Ballistic, One-handed
-- Base Damage: 10, Cooldown: 3s, DPS: 3.3
+- Range: Short
+- Base Damage: 14, Cooldown: 3s, DPS: 4.67
 - Loadout: Single, Weapon+Shield, Dual-Wield
-- Bonuses: Combat Power +4, Targeting Systems +4, Weapon Control +3, Attack Speed +2
-- Description: Versatile military-grade firearm
+- Bonuses: Combat Power +6, Targeting Systems +5, Weapon Control +4, Attack Speed +3
+- Description: Elite military-grade firearm with enhanced targeting
 
 **14. Energy Blade** (₡175,000)
 - Type: Melee, One-handed
@@ -145,12 +147,13 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Attack Speed +5, Combat Power +4, Weapon Control +3
 - Description: Energy-infused blade for swift strikes
 
-**15. Laser Rifle** (₡202,000)
-- Type: Energy, One-handed
-- Base Damage: 11, Cooldown: 3s, DPS: 3.7
-- Loadout: Single, Weapon+Shield, Dual-Wield
+**15. Laser Rifle** (₡243,000) *(Reclassified: 1H Short Mid → 2H Short Mid)*
+- Type: Energy, Two-handed
+- Range: Short
+- Base Damage: 9, Cooldown: 3s, DPS: 3.0
+- Loadout: Two-Handed only
 - Bonuses: Targeting Systems +5, Weapon Control +4, Attack Speed +3, Combat Power +2
-- Description: Precision energy rifle with excellent accuracy
+- Description: Heavy precision energy rifle reconfigured for two-handed operation
 
 **16. Plasma Blade** (₡202,000)
 - Type: Melee, One-handed
@@ -228,29 +231,205 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 **26. Ion Beam** (₡544,000) - Two-handed (Highest DPS)
 - Type: Energy, Two-handed
+- Range: Long
 - Base Damage: 18, Cooldown: 4s, DPS: 4.5
 - Loadout: Two-Handed only
 - Bonuses: Penetration +10, Combat Power +8, Attack Speed +5, Targeting Systems +4
 - Description: Focused energy beam with shield disruption
 
+### New Weapons — Roster Expansion v1.5 (21 Weapons)
+
+**27. Vibro Mace** (₡425,000)
+- Type: Melee, One-handed
+- Range: Melee
+- Base Damage: 18, Cooldown: 3s, DPS: 6.0
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Hydraulic Systems +8, Combat Power +6, Counter Protocols +5, Gyro Stabilizers +4, Attack Speed +3
+- Description: Vibration-enhanced mace that shatters armor plating on impact
+
+**28. War Club** (₡84,000) - Two-handed
+- Type: Melee, Two-handed
+- Range: Melee
+- Base Damage: 6, Cooldown: 3s, DPS: 2.0
+- Loadout: Two-Handed only
+- Bonuses: Hydraulic Systems +2, Combat Power +1
+- Description: Crude but effective bludgeon for budget-conscious brawlers
+
+**29. Shock Maul** (₡183,000) - Two-handed
+- Type: Energy, Two-handed
+- Range: Melee
+- Base Damage: 8, Cooldown: 3s, DPS: 2.67
+- Loadout: Two-Handed only
+- Bonuses: Hydraulic Systems +4, Combat Power +3, Power Core +2
+- Description: Electrified maul that channels energy through hydraulic strikes
+
+**30. Thermal Lance** (₡279,000) - Two-handed
+- Type: Energy, Two-handed
+- Range: Melee
+- Base Damage: 13, Cooldown: 4s, DPS: 3.25
+- Loadout: Two-Handed only
+- Bonuses: Hydraulic Systems +5, Combat Power +4, Critical Systems +4, Power Core -2
+- Description: Superheated polearm that melts through armor at close range
+
+**31. Volt Sabre** (₡425,000)
+- Type: Energy, One-handed
+- Range: Short
+- Base Damage: 18, Cooldown: 3s, DPS: 6.0
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Combat Power +8, Targeting Systems +6, Weapon Control +5, Attack Speed +4, Power Core -3
+- Description: Arc-charged blade pistol delivering devastating short-range energy bursts
+
+**32. Scatter Cannon** (₡84,000) - Two-handed
+- Type: Ballistic, Two-handed
+- Range: Short
+- Base Damage: 6, Cooldown: 3s, DPS: 2.0
+- Loadout: Two-Handed only
+- Bonuses: Combat Power +2, Weapon Control +1
+- Description: Wide-bore scatter weapon effective at close quarters
+
+**33. Pulse Accelerator** (₡273,000) - Two-handed
+- Type: Energy, Two-handed
+- Range: Short
+- Base Damage: 13, Cooldown: 4s, DPS: 3.25
+- Loadout: Two-Handed only
+- Bonuses: Combat Power +5, Targeting Systems +4, Weapon Control +3, Attack Speed -2
+- Description: Charged-particle accelerator delivering focused energy pulses at short range
+
+**34. Arc Projector** (₡488,000) - Two-handed
+- Type: Energy, Two-handed
+- Range: Short
+- Base Damage: 18, Cooldown: 4s, DPS: 4.5
+- Loadout: Two-Handed only
+- Bonuses: Combat Power +7, Targeting Systems +6, Critical Systems +5, Penetration +4, Attack Speed -3
+- Description: Devastating arc-lightning projector that chains energy across short distances
+
+**35. Bolt Carbine** (₡93,000)
+- Type: Ballistic, One-handed
+- Range: Mid
+- Base Damage: 5, Cooldown: 2s, DPS: 2.5
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Targeting Systems +3, Weapon Control +1
+- Description: Compact carbine optimized for mid-range engagements
+
+**36. Flux Repeater** (₡147,000)
+- Type: Energy, One-handed
+- Range: Mid
+- Base Damage: 9, Cooldown: 3s, DPS: 3.0
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Targeting Systems +5, Combat Power +3, Weapon Control +3
+- Description: Rapid-cycling energy repeater with excellent mid-range accuracy
+
+**37. Disruptor Cannon** (₡293,000)
+- Type: Energy, One-handed
+- Range: Mid
+- Base Damage: 14, Cooldown: 3s, DPS: 4.67
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Combat Power +6, Targeting Systems +5, Weapon Control +4, Penetration +3
+- Description: Heavy energy disruptor that destabilizes enemy systems at mid-range
+
+**38. Nova Caster** (₡425,000)
+- Type: Energy, One-handed
+- Range: Mid
+- Base Damage: 18, Cooldown: 3s, DPS: 6.0
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Combat Power +8, Targeting Systems +6, Penetration +5, Weapon Control +4, Power Core -3
+- Description: Miniaturized nova reactor unleashing devastating mid-range energy blasts
+
+**39. Mortar System** (₡163,000) - Two-handed
+- Type: Ballistic, Two-handed
+- Range: Mid
+- Base Damage: 10, Cooldown: 4s, DPS: 2.5
+- Loadout: Two-Handed only
+- Bonuses: Combat Power +4, Penetration +3, Targeting Systems -2
+- Description: Indirect-fire ballistic system for area suppression at mid-range
+
+**40. Beam Pistol** (₡93,000)
+- Type: Energy, One-handed
+- Range: Long
+- Base Damage: 5, Cooldown: 2s, DPS: 2.5
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Targeting Systems +3, Penetration +1
+- Description: Compact long-range energy sidearm with focused beam optics
+
+**41. Photon Marksman** (₡147,000)
+- Type: Energy, One-handed
+- Range: Long
+- Base Damage: 9, Cooldown: 3s, DPS: 3.0
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Targeting Systems +5, Penetration +3, Combat Power +3
+- Description: Precision photon emitter for accurate long-range fire from a one-handed platform
+
+**42. Gauss Pistol** (₡291,000)
+- Type: Ballistic, One-handed
+- Range: Long
+- Base Damage: 14, Cooldown: 3s, DPS: 4.67
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Targeting Systems +6, Penetration +5, Combat Power +4, Attack Speed -2
+- Description: Magnetically accelerated sidearm delivering extreme long-range kinetic rounds
+
+**43. Particle Lance** (₡425,000)
+- Type: Energy, One-handed
+- Range: Long
+- Base Damage: 18, Cooldown: 3s, DPS: 6.0
+- Loadout: Single, Weapon+Shield, Dual-Wield
+- Bonuses: Targeting Systems +8, Penetration +6, Combat Power +5, Critical Systems +4, Attack Speed -3
+- Description: Focused particle beam weapon capable of precision strikes at extreme range
+
+**44. Siege Cannon** (₡163,000) - Two-handed
+- Type: Ballistic, Two-handed
+- Range: Long
+- Base Damage: 10, Cooldown: 4s, DPS: 2.5
+- Loadout: Two-Handed only
+- Bonuses: Targeting Systems +4, Penetration +3, Combat Power -2
+- Description: Heavy long-range bombardment cannon for sustained siege operations
+
+**45. Barrier Shield** (₡111,000)
+- Type: Shield
+- Range: Melee
+- Base Damage: 0, Cooldown: N/A, DPS: N/A
+- Loadout: Weapon+Shield only
+- Bonuses: Armor Plating +8, Shield Capacity +7, Counter Protocols +5, Evasion Thrusters -3
+- Description: Reinforced energy barrier providing solid mid-tier protection
+
+**46. Fortress Shield** (₡291,000)
+- Type: Shield
+- Range: Melee
+- Base Damage: 0, Cooldown: N/A, DPS: N/A
+- Loadout: Weapon+Shield only
+- Bonuses: Armor Plating +15, Shield Capacity +14, Counter Protocols +10, Evasion Thrusters -4, Servo Motors -3
+- Description: Heavy fortress-class shield with layered defensive systems
+
+**47. Aegis Bulwark** (₡409,000)
+- Type: Shield
+- Range: Melee
+- Base Damage: 0, Cooldown: N/A, DPS: N/A
+- Loadout: Weapon+Shield only
+- Bonuses: Armor Plating +15, Shield Capacity +15, Counter Protocols +14, Power Core +11, Evasion Thrusters -5, Servo Motors -4
+- Description: Ultimate defensive platform with multi-layered reactive shielding
+
 ### Weapon Summary by Loadout Type
 
-**Single Loadout** (16 weapons):
+**Single Loadout** (22 weapons):
 - Practice Sword, Practice Blaster, Machine Pistol, Laser Pistol, Combat Knife, Machine Gun
-- Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle, Plasma Blade
-- Plasma Rifle, Power Sword
+- Burst Rifle, Assault Rifle, Energy Blade, Plasma Blade
+- Plasma Rifle, Power Sword, Vibro Mace, Volt Sabre
+- Bolt Carbine, Flux Repeater, Beam Pistol, Photon Marksman, Gauss Pistol
+- Disruptor Cannon, Nova Caster, Particle Lance
 - (All one-handed weapons can be used in single loadout)
 
-**Weapon + Shield** (16 one-handed + 3 shields):
+**Weapon + Shield** (22 one-handed + 6 shields):
 - All one-handed weapons above
-- Light Shield, Combat Shield, Reactive Shield
+- Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, Aegis Bulwark
 
-**Two-Handed** (10 weapons):
-- Training Rifle, Training Beam
+**Two-Handed** (19 weapons):
+- Training Rifle, Training Beam, Laser Rifle
+- War Club, Shock Maul, Thermal Lance
+- Scatter Cannon, Pulse Accelerator, Arc Projector
+- Mortar System, Siege Cannon
 - Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe
 - Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
 
-**Dual-Wield** (16 weapons):
+**Dual-Wield** (22 weapons):
 - All one-handed weapons (same as single loadout)
 
 ---
@@ -1030,7 +1209,7 @@ Examples:
 - 1 tag team for Two-Robot Specialist archetype user
 - Additional tag teams created automatically during cycles for Two-Robot Specialist users
 
-**Weapons**: 23 in catalog
+**Weapons**: 47 in catalog
 
 **Weapon Inventory Entries**: Varies by user type
 

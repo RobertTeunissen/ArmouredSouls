@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <rect x="85" y="100" width="55" height="18" fill="#8b5cf6" stroke="#7c3aed" stroke-width="2" rx="3"/>
+  <path d="M140 100 L160 90 L162 128 L140 118 Z" fill="#a78bfa" stroke="#7c3aed" stroke-width="1"/>
+  <line x1="155" y1="95" x2="165" y2="92" stroke="#c4b5fd" stroke-width="2" opacity="0.6"/>
+  <line x1="155" y1="109" x2="168" y2="109" stroke="#c4b5fd" stroke-width="2" opacity="0.6"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Arc Projector</text>
+</svg>

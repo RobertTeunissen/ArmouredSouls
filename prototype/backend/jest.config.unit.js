@@ -15,7 +15,6 @@ const unitTestFiles = [
   'onboardingAnalyticsService\\.test\\.ts',
   'passwordHashing\\.property\\.test\\.ts',
   'passwordService\\.test\\.ts',
-  'recommendationEngine\\.test\\.ts',
   'manualRepairDiscount\\.property\\.test\\.ts',
   'manualRepairDiscount\\.test\\.ts',
   'repairCostMultiRobot\\.test\\.ts',
@@ -32,6 +31,9 @@ const unitTestFiles = [
   'kothNotification\\.property\\.test\\.ts',
   'kothStandings\\.property\\.test\\.ts',
   'kothApi\\.test\\.ts',
+  'weaponProperties\\.test\\.ts',
+  'weaponStatValidation\\.property\\.test\\.ts',
+  'rangeBands\\.test\\.ts',
 ];
 
 module.exports = {

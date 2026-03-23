@@ -1,6 +1,6 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Version**: 1.2  
+**Version**: 1.3  
 **Last Updated**: March 21, 2026  
 **Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
@@ -10,6 +10,7 @@
 - **v1.0** (Feb 2, 2026): Initial pricing formula and weapon catalog
 - **v1.1** (Feb 5, 2026): Updated for combat rebalancing - reduced weapon damage values
 - **v1.2** (Mar 21, 2026): ~25% weapon damage reduction + shield capacity doubled (×2 → ×4)
+- **v1.3** (Mar 21, 2026): Weapon roster expansion from 26 to 47 weapons — 21 new weapons, 2 reclassifications (Laser Rifle → 2H Short, Assault Rifle → 1H Short Premium), tier boundary alignment (Budget <100K, Mid 100–250K, Premium 250–400K, Luxury 400K+), rangeBand column added
 
 ---
 
@@ -39,7 +40,7 @@ Battles were averaging 21-29 seconds (target: 35-50s) with a 40%+ kill rate. Dam
 
 **1. Weapon Damage Reduction (~25%)**
 
-All 23 weapons had base damage reduced by approximately 25%. The new baseline is Practice Sword at 6 damage / 3s = 2.0 DPS (was 8/3 = 2.67 DPS).
+All 23 original weapons had base damage reduced by approximately 25%. The new baseline is Practice Sword at 6 damage / 3s = 2.0 DPS (was 8/3 = 2.67 DPS).
 
 | Weapon | v1.1 Dmg | v1.2 Dmg | v1.1 DPS | v1.2 DPS |
 |--------|----------|----------|----------|----------|
@@ -188,7 +189,7 @@ The DPS Cost multiplier was increased from 2.0 to 2.67 to partially offset the l
 ### Original State (v1.0)
 
 **What Exists:**
-- ✅ 23 weapons implemented in database and seed data
+- ✅ 47 weapons implemented in database and seed data (expanded from original 23)
 - ✅ Weapon purchase system functional
 - ✅ Weapon inventory management working
 - ✅ Loadout system with 4 types (single, weapon_shield, two_handed, dual_wield)
@@ -448,10 +449,10 @@ Two-handed weapons must compete with dual-wielding, where a player can equip TWO
 
 Based on the complete formula with DPS factored in, weapons now fall into these tiers:
 
-- **Budget Tier** (₡50,000 - ₡100,000): Low DPS, minimal bonuses
-- **Mid Tier** (₡100,000 - ₡200,000): Moderate DPS, balanced bonuses
-- **Premium Tier** (₡200,000 - ₡300,000): High DPS, specialized bonuses
-- **Elite Tier** (₡400,000+): Very high DPS, maximum specialization
+- **Budget Tier** (< ₡100,000): Low DPS, minimal bonuses
+- **Mid Tier** (₡100,000 - ₡249,999): Moderate DPS, balanced bonuses
+- **Premium Tier** (₡250,000 - ₡399,999): High DPS, specialized bonuses
+- **Luxury Tier** (₡400,000+): Very high DPS, maximum specialization
 
 **Key Insight**: DPS now dominates pricing. Weapons with similar attribute bonuses but higher DPS cost significantly more.
 
@@ -461,50 +462,80 @@ Based on the complete formula with DPS factored in, weapons now fall into these 
 
 ### Design Requirements
 
-For each loadout type, we need:
-- **Budget option** (₡50K-₡100K): Entry-level, accessible to new players
-- **Mid-tier option** (₡100K-₡200K): Solid upgrade, good value
-- **Premium option** (₡200K-₡400K): High performance, significant investment
+For each Range × Hand Type column, we need at least one weapon per price tier:
+- **Budget option** (< ₡100K): Entry-level, accessible to new players
+- **Mid-tier option** (₡100K-₡250K): Solid upgrade, good value
+- **Premium option** (₡250K-₡400K): High performance, significant investment
+- **Luxury option** (₡400K+): Top-tier, maximum specialization
 
 ### Loadout Type Coverage
 
-**Single (one-handed in main slot only)**:
-- Practice Sword (₡50K) - starter
-- Laser Pistol (₡75K) - budget
-- Assault Rifle (₡150K) - mid
-- Plasma Rifle (₡220K) - premium
+**Single (one-handed in main slot only)** — 22 weapons:
+- Practice Sword (₡50K) - starter, melee
+- Practice Blaster (₡50K) - starter, short
+- Combat Knife (₡93K) - budget, melee
+- Laser Pistol (₡57K) - budget, short
+- Machine Pistol (₡94K) - budget, short
+- Bolt Carbine (₡93K) - budget, mid
+- Beam Pistol (₡93K) - budget, long
+- Machine Gun (₡107K) - mid, short
+- Burst Rifle (₡117K) - mid, short
+- Energy Blade (₡175K) - mid, melee
+- Plasma Blade (₡202K) - mid, melee
+- Flux Repeater (₡147K) - mid, mid
+- Photon Marksman (₡147K) - mid, long
+- Plasma Rifle (₡258K) - premium, short
+- Assault Rifle (₡293K) - premium, short *(reclassified from Mid)*
+- Power Sword (₡325K) - premium, melee
+- Disruptor Cannon (₡293K) - premium, mid
+- Gauss Pistol (₡291K) - premium, long
+- Vibro Mace (₡425K) - luxury, melee
+- Volt Sabre (₡425K) - luxury, short
+- Nova Caster (₡425K) - luxury, mid
+- Particle Lance (₡425K) - luxury, long
 
-**Weapon + Shield (one-handed main + shield offhand)**:
-- Light Shield (₡50K) - budget shield
-- Combat Shield (₡80K) - mid shield
-- Reactive Shield (₡90K) - premium shield
-- Can use any one-handed weapon in main slot
+**Weapon + Shield** (one-handed main + shield offhand):
+- All one-handed weapons above
+- Light Shield (₡51K) - budget
+- Combat Shield (₡78K) - budget
+- Reactive Shield (₡92K) - budget
+- Barrier Shield (₡111K) - mid
+- Fortress Shield (₡291K) - premium
+- Aegis Bulwark (₡409K) - luxury
 
-**Two-Handed (two-handed weapon, both slots)**:
-- Shotgun (₡325K) - high-burst specialist
-- Grenade Launcher (₡325K) - area damage
-- Sniper Rifle (₡425K) - precision elite
-- Battle Axe (₡430K) - melee powerhouse
-- Plasma Cannon (₡440K) - energy elite
-- Heavy Hammer (₡490K) - maximum impact
-- Railgun (₡545K) - ultra penetration
-- Ion Beam (₡565K) - supreme elite
+**Two-Handed** — 19 weapons:
+- Training Rifle (₡50K) - starter, mid
+- Training Beam (₡50K) - starter, long
+- War Club (₡84K) - budget, melee
+- Scatter Cannon (₡84K) - budget, short
+- Shock Maul (₡183K) - mid, melee
+- Laser Rifle (₡243K) - mid, short *(reclassified from 1H)*
+- Mortar System (₡163K) - mid, mid
+- Siege Cannon (₡163K) - mid, long
+- Thermal Lance (₡279K) - premium, melee
+- Pulse Accelerator (₡273K) - premium, short
+- Shotgun (₡283K) - premium, mid
+- Grenade Launcher (₡293K) - premium, mid
+- Sniper Rifle (₡387K) - premium, long
+- Battle Axe (₡402K) - luxury, melee
+- Heavy Hammer (₡478K) - luxury, melee
+- Arc Projector (₡488K) - luxury, short
+- Plasma Cannon (₡408K) - luxury, mid
+- Railgun (₡527K) - luxury, long
+- Ion Beam (₡544K) - luxury, long
 
-**Dual-Wield (one-handed in both slots)**:
-- Machine Pistol (₡75K) - budget
-- Machine Gun (₡120K) - mid
-- Plasma Blade (₡215K) - premium
-- Power Sword (₡280K) - elite
+**Dual-Wield** (two one-handed):
+- All one-handed weapons except shields
 
 ### Weapon Type Distribution
 
-Across all weapons, ensure representation of:
-- **Energy Weapons**: 6-8 weapons (laser, plasma, ion)
-- **Ballistic Weapons**: 6-8 weapons (bullets, railgun, shotgun)
-- **Melee Weapons**: 4-6 weapons (blades, hammers, fists)
-- **Shield Weapons**: 2-3 options (light, medium, heavy)
+Across all 47 weapons:
+- **Energy Weapons**: 20 weapons (43%) — Laser Pistol, Energy Blade, Plasma Blade, Plasma Rifle, Laser Rifle, Plasma Cannon, Ion Beam, Volt Sabre, Shock Maul, Thermal Lance, Pulse Accelerator, Arc Projector, Flux Repeater, Disruptor Cannon, Nova Caster, Beam Pistol, Photon Marksman, Particle Lance, Power Sword, Training Beam
+- **Ballistic Weapons**: 16 weapons (34%) — Practice Blaster, Machine Pistol, Machine Gun, Burst Rifle, Assault Rifle, Shotgun, Grenade Launcher, Sniper Rifle, Railgun, Scatter Cannon, Bolt Carbine, Mortar System, Gauss Pistol, Siege Cannon, Training Rifle, War Club
+- **Melee Weapons**: 5 weapons (11%) — Practice Sword, Combat Knife, Battle Axe, Heavy Hammer, Vibro Mace
+- **Shield Weapons**: 6 weapons (13%) — Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, Aegis Bulwark
 
-**Total Target**: 20-25 weapons covering all loadouts and price ranges
+**Total**: 47 weapons covering all 36 grid slots (4 ranges × 2 hand types × 4 tiers + 4 shield tiers)
 
 ---
 
@@ -828,7 +859,7 @@ Across all weapons, ensure representation of:
 - DPS: 48/5 = 9.6 (ratio 2.88) → DPS Cost: 50k × 1.88 × 2.0 = ₡188,000
 - Total: (50k + 69k + 188k) × 1.6 = ₡490,000
 
-### Elite Tier (₡400,000+)
+### Luxury Tier (₡400,000+)
 
 #### 17. Railgun
 - **Cost**: ₡545,000
@@ -864,13 +895,13 @@ Across all weapons, ensure representation of:
 - **Description**: Focused energy beam with shield disruption
 - **Loadout**: Two-Handed only
 
-**Calculation**: [50k + (500×10² + 500×8² + 500×5² + 500×4²)] × 1.6 = [50k + 50,000 + 32,000 + 12,500 + 8,000] × 1.6 = 152,500 × 1.6 = ₡244,000 → ₡245,000 (adjusted for elite tier)
+**Calculation**: [50k + (500×10² + 500×8² + 500×5² + 500×4²)] × 1.6 = [50k + 50,000 + 32,000 + 12,500 + 8,000] × 1.6 = 152,500 × 1.6 = ₡244,000 → ₡245,000 (adjusted for luxury tier)
 
 ---
 
 ## Additional Weapons for Variety
 
-To reach 20-25 total weapons, we can add:
+To complete the full 47-weapon roster, we added:
 
 ### More One-Handed Options
 
@@ -978,62 +1009,99 @@ To reach 20-25 total weapons, we can add:
 
 ### By Loadout Type
 
-**Single (one-handed only)**:
+**Single (one-handed only)** — 22 weapons:
 - Practice Sword (₡50K)
-- Machine Pistol (₡75K)
-- Laser Pistol (₡75K)
-- Combat Knife (₡90K)
-- Burst Rifle (₡145K)
-- Assault Rifle (₡150K)
-- Energy Blade (₡190K)
-- Laser Rifle (₡195K)
-- Plasma Blade (₡215K)
-- Plasma Rifle (₡220K)
-- Power Sword (₡280K)
+- Practice Blaster (₡50K)
+- Laser Pistol (₡57K)
+- Combat Knife (₡93K)
+- Machine Pistol (₡94K)
+- Bolt Carbine (₡93K)
+- Beam Pistol (₡93K)
+- Machine Gun (₡107K)
+- Burst Rifle (₡117K)
+- Flux Repeater (₡147K)
+- Photon Marksman (₡147K)
+- Energy Blade (₡175K)
+- Plasma Blade (₡202K)
+- Plasma Rifle (₡258K)
+- Gauss Pistol (₡291K)
+- Assault Rifle (₡293K)
+- Disruptor Cannon (₡293K)
+- Power Sword (₡325K)
+- Vibro Mace (₡425K)
+- Volt Sabre (₡425K)
+- Nova Caster (₡425K)
+- Particle Lance (₡425K)
 
 **Weapon + Shield** (one-handed + shield):
 - All one-handed weapons above
-- Light Shield (₡50K)
-- Combat Shield (₡80K)
-- Reactive Shield (₡90K)
+- Light Shield (₡51K)
+- Combat Shield (₡78K)
+- Reactive Shield (₡92K)
+- Barrier Shield (₡111K)
+- Fortress Shield (₡291K)
+- Aegis Bulwark (₡409K)
 
-**Two-Handed**:
-- Shotgun (₡325K)
-- Grenade Launcher (₡325K)
-- Sniper Rifle (₡425K)
-- Battle Axe (₡430K)
-- Plasma Cannon (₡440K)
-- Heavy Hammer (₡490K)
-- Railgun (₡545K)
-- Ion Beam (₡565K)
+**Two-Handed** — 19 weapons:
+- Training Rifle (₡50K)
+- Training Beam (₡50K)
+- War Club (₡84K)
+- Scatter Cannon (₡84K)
+- Mortar System (₡163K)
+- Siege Cannon (₡163K)
+- Shock Maul (₡183K)
+- Laser Rifle (₡243K)
+- Pulse Accelerator (₡273K)
+- Thermal Lance (₡279K)
+- Shotgun (₡283K)
+- Grenade Launcher (₡293K)
+- Sniper Rifle (₡387K)
+- Battle Axe (₡402K)
+- Plasma Cannon (₡408K)
+- Heavy Hammer (₡478K)
+- Arc Projector (₡488K)
+- Railgun (₡527K)
+- Ion Beam (₡544K)
 
 **Dual-Wield** (two one-handed):
 - All one-handed weapons except shields
 
 ### By Type
 
-**Energy Weapons** (7):
-- Laser Pistol, Laser Rifle, Plasma Rifle, Energy Blade, Plasma Blade, Plasma Cannon, Ion Beam
+**Energy Weapons** (20):
+- Laser Pistol, Energy Blade, Plasma Blade, Plasma Rifle, Laser Rifle, Plasma Cannon, Ion Beam, Training Beam, Power Sword, Volt Sabre, Shock Maul, Thermal Lance, Pulse Accelerator, Arc Projector, Flux Repeater, Disruptor Cannon, Nova Caster, Beam Pistol, Photon Marksman, Particle Lance
 
-**Ballistic Weapons** (8):
-- Machine Pistol, Machine Gun, Shotgun, Assault Rifle, Burst Rifle, Grenade Launcher, Sniper Rifle, Railgun
+**Ballistic Weapons** (16):
+- Practice Blaster, Machine Pistol, Machine Gun, Burst Rifle, Assault Rifle, Shotgun, Grenade Launcher, Sniper Rifle, Railgun, Training Rifle, Scatter Cannon, Bolt Carbine, Mortar System, Gauss Pistol, Siege Cannon, War Club
 
-**Melee Weapons** (7):
-- Practice Sword, Combat Knife, Battle Axe, Heavy Hammer, Plasma Blade, Power Sword, Energy Blade
+**Melee Weapons** (5):
+- Practice Sword, Combat Knife, Battle Axe, Heavy Hammer, Vibro Mace
 
-**Shield Weapons** (3):
-- Light Shield, Combat Shield, Reactive Shield
+**Shield Weapons** (6):
+- Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, Aegis Bulwark
+
+### By Range Band
+
+**Melee** (17): Practice Sword, Combat Knife, Energy Blade, Plasma Blade, Power Sword, Vibro Mace, War Club, Shock Maul, Thermal Lance, Battle Axe, Heavy Hammer, Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, Aegis Bulwark
+
+**Short** (12): Practice Blaster, Laser Pistol, Machine Pistol, Machine Gun, Burst Rifle, Assault Rifle, Plasma Rifle, Volt Sabre, Scatter Cannon, Laser Rifle, Pulse Accelerator, Arc Projector
+
+**Mid** (9): Training Rifle, Shotgun, Grenade Launcher, Plasma Cannon, Mortar System, Bolt Carbine, Flux Repeater, Disruptor Cannon, Nova Caster
+
+**Long** (9): Training Beam, Sniper Rifle, Railgun, Ion Beam, Siege Cannon, Beam Pistol, Photon Marksman, Gauss Pistol, Particle Lance
 
 ### Price Distribution
 
-- **₡50K-₡100K**: 6 weapons (budget tier) - Practice Sword, Light Shield, Machine Pistol, Laser Pistol, Combat Shield, Reactive Shield, Combat Knife
-- **₡100K-₡200K**: 5 weapons (mid tier) - Machine Gun, Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle
-- **₡200K-₡300K**: 4 weapons (premium tier) - Plasma Blade, Plasma Rifle, Power Sword
-- **₡300K-₡600K**: 8 weapons (elite tier) - Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
+- **Budget** (< ₡100K): 14 weapons — Practice Sword, Practice Blaster, Training Rifle, Training Beam, Laser Pistol, Machine Pistol, Combat Knife, Light Shield, Combat Shield, Reactive Shield, War Club, Scatter Cannon, Bolt Carbine, Beam Pistol
+- **Mid** (₡100K-₡250K): 11 weapons — Machine Gun, Burst Rifle, Energy Blade, Plasma Blade, Laser Rifle, Shock Maul, Flux Repeater, Photon Marksman, Mortar System, Siege Cannon, Barrier Shield
+- **Premium** (₡250K-₡400K): 11 weapons — Assault Rifle, Plasma Rifle, Power Sword, Shotgun, Grenade Launcher, Sniper Rifle, Thermal Lance, Pulse Accelerator, Disruptor Cannon, Gauss Pistol, Fortress Shield
+- **Luxury** (₡400K+): 11 weapons — Battle Axe, Heavy Hammer, Plasma Cannon, Railgun, Ion Beam, Vibro Mace, Volt Sabre, Arc Projector, Nova Caster, Particle Lance, Aegis Bulwark
 
-**Total**: 23 weapons
+**Total**: 47 weapons
 
-**Key Insight with DPS Pricing**: Two-handed weapons with high DPS now cost significantly more (₡300K-₡600K), properly reflecting their combat effectiveness. This makes dual-wielding two mid-tier one-handed weapons (2× ₡150K = ₡300K) a competitive alternative to a single elite two-handed weapon.
+**Tier distribution**: Budget 14, Mid 11, Premium 11, Luxury 11
+
+**Key Insight with DPS Pricing**: Two-handed weapons with high DPS cost significantly more (₡400K+), properly reflecting their combat effectiveness. The expanded roster ensures every Range × Hand Type × Price Tier combination has at least one weapon, giving players meaningful choices at every budget level.
 
 ---
 
@@ -1045,7 +1113,7 @@ To reach 20-25 total weapons, we can add:
 1. Remove `specialProperty` field from all weapons (set to NULL or empty string)
 2. Update all weapon costs to match new pricing formula
 3. Ensure all attribute bonuses follow exponential pricing pattern
-4. Add new weapons to catalog (if implementing full 23-weapon set)
+4. Add new weapons to catalog (full 47-weapon set implemented)
 
 ### Seed Data Updates
 
@@ -1227,11 +1295,11 @@ function calculateWeaponCost(weapon: Weapon): number {
 2. Update weapon tables with new costs
 3. Add pricing formula explanation to docs
 
-### Phase 3: Expanded Catalog (Optional)
+### Phase 3: Expanded Catalog (Completed)
 
-1. Add new weapons to reach 20-25 total
-2. Ensure all loadouts have complete coverage
-3. Test balance in actual gameplay
+1. Expanded weapon roster from 26 to 47 weapons
+2. All 36 grid slots filled with at least one weapon
+3. Balance validated via property-based tests
 
 ### Phase 4: Pricing Formula UI (Future)
 
@@ -1307,7 +1375,7 @@ Potential future feature:
 - ✅ Practice Sword baseline: ₡50,000 with zero bonuses
 - ✅ Zero special properties in weapon data
 - ✅ Each loadout has 3+ weapons at different price points
-- ✅ Total weapon count: 20-25 (if expanded catalog)
+- ✅ Total weapon count: 47 (expanded catalog)
 - ✅ All documentation updated and accurate
 
 ### Subjective Validation
@@ -1337,21 +1405,21 @@ Potential future feature:
 
 ### Loadout Coverage Matrix
 
-|  | Budget | Mid | Premium | Elite |
+|  | Budget | Mid | Premium | Luxury |
 |---|---|---|---|---|
-| **Single** | 4 options | 3 options | 2 options | 0 |
-| **Weapon+Shield** | 2 shields | 1 shield | 1 shield | 0 |
-| **Two-Handed** | 1 option | 2 options | 3 options | 2 options |
+| **Single** | 7 options | 5 options | 6 options | 4 options |
+| **Weapon+Shield** | 3 shields | 1 shield | 1 shield | 1 shield |
+| **Two-Handed** | 4 options | 4 options | 5 options | 6 options |
 | **Dual-Wield** | (Use one-handed weapons) |
 
 ### Weapon Type Distribution
 
-- **Energy**: 7 weapons (30%)
-- **Ballistic**: 8 weapons (35%)
-- **Melee**: 5 weapons (22%)
-- **Shield**: 3 weapons (13%)
+- **Energy**: 20 weapons (43%)
+- **Ballistic**: 16 weapons (34%)
+- **Melee**: 5 weapons (11%)
+- **Shield**: 6 weapons (13%)
 
-**Total**: 23 weapons
+**Total**: 47 weapons
 
 ---
 

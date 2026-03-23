@@ -20,29 +20,37 @@ const BAND_INDEX: Record<RangeBand, number> = {
   long: 3,
 };
 
+/** All valid range bands */
+const ALL_BANDS: RangeBand[] = ['melee', 'short', 'mid', 'long'];
+
 /** Arbitrary for non-negative distances */
 const arbDistance = (): fc.Arbitrary<number> =>
   fc.double({ min: 0, max: 1e4, noNaN: true, noDefaultInfinity: true });
 
+/** Arbitrary for a weapon with any range band */
+const arbWeapon = (): fc.Arbitrary<WeaponLike> =>
+  fc.record({
+    name: fc.string({ minLength: 1, maxLength: 30 }),
+    rangeBand: fc.constantFrom(...ALL_BANDS),
+  });
+
 /** Arbitrary for a melee weapon */
 const arbMeleeWeapon = (): fc.Arbitrary<WeaponLike> =>
   fc.record({
-    weaponType: fc.constant('melee'),
-    handsRequired: fc.oneof(fc.constant('one'), fc.constant('two')),
     name: fc.string({ minLength: 1, maxLength: 30 }),
+    rangeBand: fc.constant('melee' as RangeBand),
   });
 
-/** Arbitrary for a shield weapon */
+/** Arbitrary for a shield weapon (shields have melee rangeBand) */
 const arbShieldWeapon = (): fc.Arbitrary<WeaponLike> =>
   fc.record({
-    weaponType: fc.constant('shield'),
-    handsRequired: fc.constant('shield'),
     name: fc.oneof(
       fc.constant('Light Shield'),
       fc.constant('Combat Shield'),
       fc.constant('Reactive Shield'),
       fc.string({ minLength: 1, maxLength: 30 })
     ),
+    rangeBand: fc.constant('melee' as RangeBand),
   });
 
 describe('rangeBands property tests', () => {
@@ -71,9 +79,8 @@ describe('rangeBands property tests', () => {
    */
   describe('Property 8: getRangePenalty optimal at same band', () => {
     it('should return exactly 1.1 when weaponRange equals currentRange for all range bands', () => {
-      const allBands: RangeBand[] = ['melee', 'short', 'mid', 'long'];
       fc.assert(
-        fc.property(fc.constantFrom(...allBands), (band: RangeBand) => {
+        fc.property(fc.constantFrom(...ALL_BANDS), (band: RangeBand) => {
           expect(getRangePenalty(band, band)).toBe(1.1);
         }),
         { numRuns: 500 }
@@ -82,11 +89,20 @@ describe('rangeBands property tests', () => {
   });
 
   /**
-   * Property 9: All melee weapons return 'melee' optimal range, all shield weapons return 'melee' optimal range
-   * **Validates: Requirement 3.2**
+   * Property 9: getWeaponOptimalRange always returns the stored rangeBand
+   * **Validates: Requirement 3.4**
    */
-  describe('Property 9: melee and shield weapons always map to melee optimal range', () => {
-    it('should return melee optimal range for any melee weapon regardless of name or hands', () => {
+  describe('Property 9: getWeaponOptimalRange returns stored rangeBand', () => {
+    it('should return the weapon rangeBand for any weapon', () => {
+      fc.assert(
+        fc.property(arbWeapon(), (weapon: WeaponLike) => {
+          expect(getWeaponOptimalRange(weapon)).toBe(weapon.rangeBand);
+        }),
+        { numRuns: 500 }
+      );
+    });
+
+    it('should return melee for any melee weapon', () => {
       fc.assert(
         fc.property(arbMeleeWeapon(), (weapon: WeaponLike) => {
           expect(getWeaponOptimalRange(weapon)).toBe('melee');
@@ -95,7 +111,7 @@ describe('rangeBands property tests', () => {
       );
     });
 
-    it('should return melee optimal range for any shield weapon regardless of name', () => {
+    it('should return melee for any shield weapon', () => {
       fc.assert(
         fc.property(arbShieldWeapon(), (weapon: WeaponLike) => {
           expect(getWeaponOptimalRange(weapon)).toBe('melee');

@@ -8,6 +8,7 @@ import Navigation from '../components/Navigation';
 import TabNavigation from '../components/TabNavigation';
 import BattleConfigTab from '../components/BattleConfigTab';
 import EffectiveStatsDisplay from '../components/EffectiveStatsDisplay';
+import { RangeBand } from '../utils/weaponRange';
 import RobotImage from '../components/RobotImage';
 import RobotImageSelector from '../components/RobotImageSelector';
 import StatisticalRankings from '../components/StatisticalRankings';
@@ -94,6 +95,7 @@ interface Weapon {
   weaponType: string;
   loadoutType: string;
   handsRequired: string;
+  rangeBand: RangeBand;
   description: string | null;
   baseDamage: number;
   cooldown: number;

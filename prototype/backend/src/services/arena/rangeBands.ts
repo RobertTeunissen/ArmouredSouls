@@ -13,16 +13,12 @@ import { RangeBand, RANGE_BAND_BOUNDARIES, RANGE_PENALTY } from './types';
 
 /** Minimal weapon shape needed for range classification */
 export interface WeaponLike {
-  weaponType: string;
-  handsRequired: string;
   name: string;
+  rangeBand: RangeBand;
 }
 
 /** Ordered range bands from closest to farthest */
 const BAND_ORDER: RangeBand[] = ['melee', 'short', 'mid', 'long'];
-
-/** Named long-range specialist weapons */
-const LONG_RANGE_WEAPONS = ['Sniper Rifle', 'Railgun', 'Ion Beam', 'Training Beam'];
 
 /**
  * Classify a distance (in grid units) into a range band.
@@ -56,19 +52,10 @@ export function getRangePenalty(weaponRange: RangeBand, currentRange: RangeBand)
 }
 
 /**
- * Determine a weapon's optimal range band based on its type, hands, and name.
- *
- * - melee / shield → melee
- * - Sniper Rifle / Railgun / Ion Beam → long
- * - Two-handed ranged → mid
- * - One-handed energy/ballistic → short
+ * Determine a weapon's optimal range band from its stored rangeBand value.
  */
 export function getWeaponOptimalRange(weapon: WeaponLike): RangeBand {
-  if (weapon.weaponType === 'melee') return 'melee';
-  if (weapon.weaponType === 'shield') return 'melee';
-  if (LONG_RANGE_WEAPONS.includes(weapon.name)) return 'long';
-  if (weapon.handsRequired === 'two') return 'mid';
-  return 'short';
+  return weapon.rangeBand;
 }
 
 /**
@@ -78,7 +65,7 @@ export function getWeaponOptimalRange(weapon: WeaponLike): RangeBand {
  * All other weapons can attack at any distance.
  */
 export function canAttack(weapon: WeaponLike, distance: number): boolean {
-  if (weapon.weaponType === 'melee' && distance > RANGE_BAND_BOUNDARIES.melee.max) {
+  if (weapon.rangeBand === 'melee' && distance > RANGE_BAND_BOUNDARIES.melee.max) {
     return false;
   }
   return true;

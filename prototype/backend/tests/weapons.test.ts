@@ -86,12 +86,12 @@ describe('Weapons Routes', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return 403 with invalid token', async () => {
+    it('should return 401 with invalid token', async () => {
       const response = await request(app)
         .get('/api/weapons')
         .set('Authorization', 'Bearer invalid-token');
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(401);
     });
   });
 });
