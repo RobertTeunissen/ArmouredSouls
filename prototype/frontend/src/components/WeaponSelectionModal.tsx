@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
+import { RangeBand, getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
 
 interface Weapon {
   id: number;
@@ -7,6 +7,7 @@ interface Weapon {
   weaponType: string;
   handsRequired: string;
   loadoutType: string;
+  rangeBand: RangeBand;
   description: string | null;
   baseDamage: number;
   cost: number;
@@ -233,7 +234,7 @@ function WeaponSelectionModal({
                       <h3 className="font-semibold text-lg">{inv.weapon.name}</h3>
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const range = getWeaponOptimalRange({ weaponType: inv.weapon.weaponType, handsRequired: inv.weapon.handsRequired, name: inv.weapon.name });
+                          const range = getWeaponOptimalRange({ name: inv.weapon.name, rangeBand: inv.weapon.rangeBand });
                           return (
                             <span className={`text-xs px-2 py-0.5 rounded border ${getRangeBandBgColor(range)} ${getRangeBandColor(range)}`}>
                               {getRangeBandLabel(range)} Range

@@ -17,7 +17,7 @@ import GuidedUIOverlay from '../components/onboarding/GuidedUIOverlay';
 import { ATTRIBUTE_LABELS } from '../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../utils/weaponImages';
-import { getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
+import { RangeBand, getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
 
 interface Weapon {
   id: number;
@@ -26,7 +26,7 @@ interface Weapon {
   loadoutType: string;
   handsRequired: string;
   description: string;
-  rangeBand: string;
+  rangeBand: RangeBand;
   baseDamage: number;
   cost: number;
   cooldown: number;

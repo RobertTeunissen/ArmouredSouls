@@ -4,6 +4,7 @@ import WeaponSlot from './WeaponSlot';
 import StanceSelector from './StanceSelector';
 import YieldThresholdSlider from './YieldThresholdSlider';
 import WeaponSelectionModal from './WeaponSelectionModal';
+import { RangeBand } from '../utils/weaponRange';
 
 interface Robot {
   id: number;
@@ -33,6 +34,7 @@ interface WeaponInventory {
     weaponType: string;
     handsRequired: string;
     loadoutType: string;
+    rangeBand: RangeBand;
     description: string | null;
     baseDamage: number;
     cost: number;
