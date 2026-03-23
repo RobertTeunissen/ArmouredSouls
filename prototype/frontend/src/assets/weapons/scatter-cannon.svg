@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <rect x="88" y="100" width="50" height="18" fill="#f97316" stroke="#ea580c" stroke-width="2" rx="3"/>
+  <path d="M138 100 L155 95 L155 123 L138 118 Z" fill="#9ca3af" stroke="#6b7280" stroke-width="1"/>
+  <rect x="100" y="118" width="8" height="15" fill="#78716c"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Scatter Cannon</text>
+</svg>

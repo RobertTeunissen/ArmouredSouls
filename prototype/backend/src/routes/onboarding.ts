@@ -2,10 +2,9 @@
  * @module routes/onboarding
  *
  * Express router for onboarding/tutorial endpoints.
- * Manages tutorial state, progression, recommendations, and account reset functionality.
+ * Manages tutorial state, progression, and account reset functionality.
  *
  * @see {@link ../services/onboardingService} for tutorial state management
- * @see {@link ../services/recommendationEngine} for personalized recommendations
  * @see {@link ../services/resetService} for account reset logic
  */
 import express, { Response } from 'express';
@@ -20,7 +19,6 @@ import {
   OnboardingChoices,
 } from '../services/onboardingService';
 import { OnboardingError, OnboardingErrorCode } from '../errors/onboardingErrors';
-import { recommendationEngine } from '../services/recommendationEngine';
 import {
   validateResetEligibility,
   performAccountReset,
@@ -283,91 +281,6 @@ router.post('/skip', authenticateToken, async (req: AuthRequest, res: Response) 
     });
   } catch (error) {
     handleOnboardingError(res, error, 'Skip tutorial error', req.user?.userId);
-  }
-});
-
-/**
- * GET /api/onboarding/recommendations
- *
- * Get personalized recommendations based on player's strategic choices.
- * Returns facility, weapon, and attribute recommendations tailored to the player's
- * roster strategy, loadout type, and battle stance preferences.
- *
- * **Query parameters:**
- * - `strategy` (string, optional) — Roster strategy ("1_mighty", "2_average", "3_flimsy")
- * - `loadoutType` (string, optional) — Loadout type ("single", "weapon_shield", "two_handed", "dual_wield")
- * - `stance` (string, optional) — Battle stance ("offensive", "defensive", "balanced")
- * - `creditsRemaining` (number, optional) — Player's remaining credits
- *
- * **Responses:**
- * - `200 OK` — `{ success: true, data: { facilities: [...], weapons: [...], attributes: [...] } }`
- * - `400 Bad Request` — Invalid parameters
- * - `401 Unauthorized` — Not authenticated
- * - `500 Internal Server Error` — Database error
- *
- * @example
- * GET /api/onboarding/recommendations?strategy=2_average&loadoutType=weapon_shield&stance=defensive
- * // → 200 { success: true, data: { facilities: [...], weapons: [...], attributes: [...] } }
- *
- * Requirements: 13.1-13.15
- */
-router.get('/recommendations', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const { strategy, loadoutType, stance, creditsRemaining } = req.query;
-
-    // Get tutorial state to use stored choices if not provided
-    const state = await getTutorialState(userId);
-
-    // Use query params or fall back to stored choices
-    const rosterStrategy = (strategy as string) || state?.onboardingStrategy || '1_mighty';
-    const loadout = (loadoutType as string) || state?.onboardingChoices?.loadoutType;
-    const battleStance = (stance as string) || state?.onboardingChoices?.preferredStance;
-    const credits = creditsRemaining ? parseInt(creditsRemaining as string) : undefined;
-
-    // Validate strategy
-    const validStrategies = ['1_mighty', '2_average', '3_flimsy'];
-    if (!validStrategies.includes(rosterStrategy)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid strategy. Must be one of: 1_mighty, 2_average, 3_flimsy',
-      });
-    }
-
-    // Generate recommendations
-    const facilities = recommendationEngine.generateFacilityRecommendations(
-      rosterStrategy as '1_mighty' | '2_average' | '3_flimsy',
-      loadout as 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
-      battleStance as 'offensive' | 'defensive' | 'balanced'
-    );
-
-    const weapons = recommendationEngine.generateWeaponRecommendations(
-      rosterStrategy as '1_mighty' | '2_average' | '3_flimsy',
-      loadout as 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
-      credits
-    );
-
-    const attributes = recommendationEngine.generateAttributeRecommendations(
-      rosterStrategy as '1_mighty' | '2_average' | '3_flimsy',
-      loadout as 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
-      battleStance as 'offensive' | 'defensive' | 'balanced'
-    );
-
-    const budgetAllocation = recommendationEngine.calculateBudgetAllocation(
-      rosterStrategy as '1_mighty' | '2_average' | '3_flimsy'
-    );
-
-    res.json({
-      success: true,
-      data: {
-        facilities,
-        weapons,
-        attributes,
-        budgetAllocation,
-      },
-    });
-  } catch (error) {
-    handleOnboardingError(res, error, 'Get recommendations error', req.user?.userId);
   }
 });
 

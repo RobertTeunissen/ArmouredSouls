@@ -330,10 +330,10 @@ The onboarding consists of 9 sequential steps. Each step teaches a strategic con
 
 | Category | Weapons | Damage Type | Characteristics |
 |----------|---------|-------------|-----------------|
-| Energy | 7 weapons | Energy (+20% vs shields) | Precise, consistent damage. Good against shielded opponents. |
-| Ballistic | 10 weapons | Kinetic | Variable damage, high penetration. Reliable all-around. |
-| Melee | 7 weapons | Impact | High burst damage. Benefits from Hydraulic Systems attribute. |
-| Shield | 3 weapons | N/A (defensive) | Defensive bonuses, enables counter-attacks. Offhand only. |
+| Energy | 13 weapons | Energy (+20% vs shields) | Precise, consistent damage. Good against shielded opponents. |
+| Ballistic | 17 weapons | Kinetic | Variable damage, high penetration. Reliable all-around. |
+| Melee | 11 weapons | Impact | High burst damage. Benefits from Hydraulic Systems attribute. |
+| Shield | 6 weapons | N/A (defensive) | Defensive bonuses, enables counter-attacks. Offhand only. |
 
 **Loadout Types**:
 
@@ -368,30 +368,53 @@ The onboarding consists of 9 sequential steps. Each step teaches a strategic con
 
 **Recommended First Weapons by Budget**:
 
-**Budget Tier (₡50K–₡120K)** — Best for 3-robot strategy:
+**Budget Tier (<₡100K)** — Best for 3-robot strategy:
 | Weapon | Price | Type | DPS | Notes |
 |--------|-------|------|-----|-------|
 | Practice Sword | ₡50,000 | Melee | 2.0 | Cheapest melee starter |
 | Practice Blaster | ₡50,000 | Ballistic | 2.0 | Cheapest short-range starter |
 | Training Rifle | ₡50,000 | Ballistic | 2.0 | Cheapest mid-range starter (two-handed) |
 | Training Beam | ₡50,000 | Energy | 2.0 | Cheapest long-range starter (two-handed) |
-| Machine Pistol | ₡94,000 | Ballistic | 2.5 | Ranged budget option |
 | Laser Pistol | ₡57,000 | Energy | 2.0 | Energy budget option |
-| Machine Gun | ₡107,000 | Ballistic | 2.5 | Best budget DPS |
+| War Club | ₡84,000 | Melee | 2.0 | Budget two-handed melee |
+| Scatter Cannon | ₡84,000 | Ballistic | 2.0 | Budget two-handed short-range |
+| Bolt Carbine | ₡93,000 | Ballistic | 2.5 | One-handed mid-range option |
+| Beam Pistol | ₡93,000 | Energy | 2.5 | One-handed long-range option |
+| Machine Pistol | ₡94,000 | Ballistic | 2.5 | Ranged budget option |
 
-**Mid Tier (₡117K–₡260K)** — Best for 2-robot strategy:
+**Mid Tier (₡100K–₡250K)** — Best for 2-robot strategy:
 | Weapon | Price | Type | DPS | Notes |
 |--------|-------|------|-----|-------|
-| Assault Rifle | ₡173,000 | Ballistic | 3.3 | Solid all-rounder |
-| Laser Rifle | ₡202,000 | Energy | 3.7 | Good energy option |
-| Plasma Rifle | ₡258,000 | Energy | 4.3 | High DPS energy |
+| Machine Gun | ₡107,000 | Ballistic | 2.5 | Reliable short-range |
+| Barrier Shield | ₡111,000 | Shield | — | Mid-tier defensive option |
+| Burst Rifle | ₡117,000 | Ballistic | 2.67 | Solid short-range DPS |
+| Flux Repeater | ₡147,000 | Energy | 3.0 | One-handed mid-range energy |
+| Photon Marksman | ₡147,000 | Energy | 3.0 | One-handed long-range energy |
+| Mortar System | ₡163,000 | Ballistic | 2.5 | Two-handed mid-range |
+| Shock Maul | ₡183,000 | Energy | 2.67 | Two-handed melee energy |
+| Laser Rifle | ₡243,000 | Energy | 3.0 | Two-handed short-range precision |
 
-**Premium Tier (₡283K–₡410K)** — Best for 1-robot strategy:
+**Premium Tier (₡250K–₡400K)** — Best for 1-robot strategy:
 | Weapon | Price | Type | DPS | Notes |
 |--------|-------|------|-----|-------|
-| Power Sword | ₡325,000 | Melee | 5.0 | Highest one-handed DPS |
-| Shotgun | ₡283,000 | Ballistic | 3.5 | Strong two-handed |
-| Plasma Cannon | ₡408,000 | Energy | 4.0 | Elite energy two-handed |
+| Plasma Rifle | ₡258,000 | Energy | 4.33 | High DPS short-range energy |
+| Thermal Lance | ₡279,000 | Energy | 3.25 | Two-handed melee energy |
+| Shotgun | ₡283,000 | Ballistic | 3.5 | Strong two-handed mid-range |
+| Fortress Shield | ₡291,000 | Shield | — | Heavy defensive shield |
+| Assault Rifle | ₡293,000 | Ballistic | 4.67 | Elite short-range ballistic |
+| Disruptor Cannon | ₡293,000 | Energy | 4.67 | One-handed mid-range energy |
+| Power Sword | ₡325,000 | Melee | 5.0 | Highest one-handed melee DPS |
+| Sniper Rifle | ₡387,000 | Ballistic | 3.67 | Two-handed long-range |
+
+**Luxury Tier (₡400K+)** — Elite weapons for focused builds:
+| Weapon | Price | Type | DPS | Notes |
+|--------|-------|------|-----|-------|
+| Plasma Cannon | ₡408,000 | Energy | 4.0 | Elite two-handed mid-range |
+| Aegis Bulwark | ₡409,000 | Shield | — | Ultimate defensive shield |
+| Vibro Mace | ₡425,000 | Melee | 6.0 | Top one-handed melee |
+| Volt Sabre | ₡425,000 | Energy | 6.0 | Top one-handed short-range |
+| Nova Caster | ₡425,000 | Energy | 6.0 | Top one-handed mid-range |
+| Particle Lance | ₡425,000 | Energy | 6.0 | Top one-handed long-range |
 
 **Player Action**: Purchase weapon(s) using the actual weapon shop API. Real purchase, not simulation.
 
@@ -584,7 +607,7 @@ This section provides detailed analysis of each roster strategy to inform the on
 
 **Recommended Loadout**: One offensive (Single or Two-Handed) + one defensive (Weapon + Shield)
 
-**Recommended First Weapons**: Assault Rifle (₡173,000) + Combat Shield (₡78,000) or two mid-tier weapons
+**Recommended First Weapons**: Bolt Carbine (₡93,000) + Combat Shield (₡78,000) or two mid-tier weapons (e.g., Flux Repeater ₡147,000, Photon Marksman ₡147,000)
 
 ### 3 Flimsy Robots — Detailed Analysis
 
@@ -884,7 +907,7 @@ model User {
     { "id": 124, "name": "Guardian-02" }
   ],
   "weaponsPurchased": [
-    { "id": 456, "name": "Assault Rifle", "cost": 200000 },
+    { "id": 456, "name": "Bolt Carbine", "cost": 93000 },
     { "id": 457, "name": "Combat Shield", "cost": 100000 }
   ],
   "loadoutsChosen": [

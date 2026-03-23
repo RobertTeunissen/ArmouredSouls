@@ -2,7 +2,7 @@
  * @module utils/onboardingApi
  *
  * API client functions for onboarding/tutorial endpoints.
- * Provides functions to manage tutorial state, get recommendations, and reset accounts.
+ * Provides functions to manage tutorial state and reset accounts.
  *
  * All functions use the shared apiClient with automatic JWT authentication.
  *
@@ -43,39 +43,6 @@ export interface OnboardingChoices {
     attributes: number;
   };
   isReplay?: boolean;
-}
-
-/**
- * Recommendation structure
- */
-export interface Recommendation {
-  type: 'facility' | 'weapon' | 'attribute' | 'strategy';
-  priority: 'high' | 'medium' | 'low';
-  title: string;
-  description: string;
-  reasoning: string;
-  estimatedCost?: number;
-}
-
-/**
- * Budget allocation structure
- */
-export interface BudgetAllocation {
-  facilities: { min: number; max: number };
-  robots: { min: number; max: number };
-  weapons: { min: number; max: number };
-  attributes: { min: number; max: number };
-  reserve: { min: number; max: number };
-}
-
-/**
- * Recommendations response
- */
-export interface RecommendationsResponse {
-  facilities: Recommendation[];
-  weapons: Recommendation[];
-  attributes: Recommendation[];
-  budgetAllocation: BudgetAllocation;
 }
 
 /**
@@ -279,97 +246,6 @@ export async function replayTutorial(): Promise<TutorialState> {
   }
 }
 
-/** Recommendation cache with 5-minute TTL */
-const recommendationCache: {
-  data: RecommendationsResponse | null;
-  key: string;
-  expiresAt: number;
-} = { data: null, key: '', expiresAt: 0 };
-
-const RECOMMENDATION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-/** Build a cache key from recommendation parameters */
-function buildRecommendationCacheKey(
-  strategy?: string,
-  loadoutType?: string,
-  stance?: string,
-  creditsRemaining?: number,
-): string {
-  return `${strategy || ''}-${loadoutType || ''}-${stance || ''}-${creditsRemaining ?? ''}`;
-}
-
-/** Clear the recommendation cache (e.g. after strategy change) */
-export function clearRecommendationCache(): void {
-  recommendationCache.data = null;
-  recommendationCache.key = '';
-  recommendationCache.expiresAt = 0;
-}
-
-/**
- * Get personalized recommendations based on player's strategic choices.
- * Results are cached for 5 minutes with the same parameters.
- *
- * @param strategy - Roster strategy (optional, uses stored choice if not provided)
- * @param loadoutType - Loadout type (optional)
- * @param stance - Battle stance (optional)
- * @param creditsRemaining - Player's remaining credits (optional)
- * @returns Promise resolving to recommendations
- * @throws Error if request fails
- *
- * @example
- * const recommendations = await getRecommendations('2_average', 'weapon_shield', 'defensive');
- * console.log(`${recommendations.facilities.length} facility recommendations`);
- *
- * @example
- * // Use stored choices from tutorial state
- * const recommendations = await getRecommendations();
- *
- * Requirements: 13.1-13.15
- */
-export async function getRecommendations(
-  strategy?: '1_mighty' | '2_average' | '3_flimsy',
-  loadoutType?: 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
-  stance?: 'offensive' | 'defensive' | 'balanced',
-  creditsRemaining?: number
-): Promise<RecommendationsResponse> {
-  // Check cache first
-  const cacheKey = buildRecommendationCacheKey(strategy, loadoutType, stance, creditsRemaining);
-  if (
-    recommendationCache.data &&
-    recommendationCache.key === cacheKey &&
-    Date.now() < recommendationCache.expiresAt
-  ) {
-    return recommendationCache.data;
-  }
-
-  try {
-    const params = new URLSearchParams();
-    if (strategy) params.append('strategy', strategy);
-    if (loadoutType) params.append('loadoutType', loadoutType);
-    if (stance) params.append('stance', stance);
-    if (creditsRemaining !== undefined) params.append('creditsRemaining', creditsRemaining.toString());
-
-    const url = `/api/onboarding/recommendations${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await apiClient.get<ApiResponse<RecommendationsResponse>>(url);
-
-    if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.error || 'Failed to get recommendations');
-    }
-
-    // Store in cache
-    recommendationCache.data = response.data.data;
-    recommendationCache.key = cacheKey;
-    recommendationCache.expiresAt = Date.now() + RECOMMENDATION_CACHE_TTL;
-
-    return response.data.data;
-  } catch (error: unknown) {
-    const err = error as ApiError;
-    throw new Error(
-      err.response?.data?.error || err.message || 'Failed to get recommendations'
-    );
-  }
-}
-
 /**
  * Reset the user's account to starting state.
  * Deletes all robots, weapons, facilities, and resets credits to ₡3,000,000.
@@ -520,21 +396,3 @@ export async function updateTutorialStateWithRetry(updates: {
   return withRetry(() => updateTutorialState(updates));
 }
 
-/**
- * Get recommendations with automatic retry on failure.
- *
- * @param strategy - Roster strategy (optional)
- * @param loadoutType - Loadout type (optional)
- * @param stance - Battle stance (optional)
- * @param creditsRemaining - Player's remaining credits (optional)
- * @returns Promise resolving to recommendations
- * @throws Error if all retries fail
- */
-export async function getRecommendationsWithRetry(
-  strategy?: '1_mighty' | '2_average' | '3_flimsy',
-  loadoutType?: 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
-  stance?: 'offensive' | 'defensive' | 'balanced',
-  creditsRemaining?: number
-): Promise<RecommendationsResponse> {
-  return withRetry(() => getRecommendations(strategy, loadoutType, stance, creditsRemaining));
-}

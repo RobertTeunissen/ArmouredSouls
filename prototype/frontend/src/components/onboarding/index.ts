@@ -14,7 +14,6 @@ export { default as BudgetComparisonTable } from './BudgetComparisonTable';
 export { default as FacilityPriorityList } from './FacilityPriorityList';
 export { default as FacilityBenefitCards } from './FacilityBenefitCards';
 export { default as LoadoutDiagram } from './LoadoutDiagram';
-export { default as WeaponRecommendationCard, STARTER_WEAPONS } from './WeaponRecommendationCard';
 export { default as LoadoutSelectorEducational } from './LoadoutSelectorEducational';
 export { default as BattleTypeCard, BATTLE_TYPE_INFO } from './BattleTypeCard';
 export { default as CycleScheduleVisualization } from './CycleScheduleVisualization';
@@ -28,7 +27,6 @@ export { default as Step1_Welcome } from './steps/Step1_Welcome';
 // Re-export types
 export type { RosterStrategy, StrategyData } from './RosterStrategyCard';
 export type { LoadoutType } from './LoadoutDiagram';
-export type { WeaponRecommendation } from './WeaponRecommendationCard';
 export type { BattleType, BattleTypeInfo } from './BattleTypeCard';
 export type { CycleEvent } from './CycleScheduleVisualization';
 export type { RobotHealthExample } from './BattleReadinessEducation';

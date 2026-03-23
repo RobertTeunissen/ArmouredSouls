@@ -240,6 +240,7 @@ model Weapon {
   loadoutType     String  @map("loadout_type") @db.VarChar(20) // "single", "weapon_shield", "two_handed", "dual_wield", "any"
   specialProperty String? @map("special_property") @db.Text // Special effects description
   description     String? @db.Text // Flavor text
+  rangeBand       String  @map("range_band") @db.VarChar(10) // "melee", "short", "mid", "long"
 
   // ===== ATTRIBUTE BONUSES (Can be positive or negative) =====
   // Combat Systems

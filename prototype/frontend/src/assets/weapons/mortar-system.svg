@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <rect x="118" y="80" width="20" height="45" fill="#6b7280" stroke="#4b5563" stroke-width="2" rx="3"/>
+  <ellipse cx="128" cy="78" rx="12" ry="5" fill="#4b5563"/>
+  <path d="M110 130 L118 125 L138 125 L146 130 Z" fill="#78716c"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Mortar System</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <rect x="100" y="100" width="35" height="12" fill="#3b82f6" stroke="#2563eb" stroke-width="2" rx="3"/>
+  <rect x="115" y="112" width="8" height="18" fill="#6b7280" rx="2"/>
+  <circle cx="97" cy="106" r="3" fill="#93c5fd"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Beam Pistol</text>
+</svg>

@@ -259,7 +259,7 @@ With Option C, multiple strategies are viable:
    - All 14 facility cost arrays updated to 50% of original
 
 4. **`prototype/backend/prisma/seed.ts`**
-   - All 23 weapon costs increased by 25%
+   - All 47 weapon costs increased by 25%
 
 ### Migration Required
 - Database migration needed for existing users (starting money change)

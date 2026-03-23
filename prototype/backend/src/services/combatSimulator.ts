@@ -4,6 +4,7 @@ import { Robot, Weapon, WeaponInventory } from '@prisma/client';
 import { Position, euclideanDistance, angleBetween } from './arena/vector2d';
 import { createArena } from './arena/arenaLayout';
 import { classifyRangeBand, getRangePenalty, getWeaponOptimalRange, canAttack, WeaponLike } from './arena/rangeBands';
+import { RangeBand } from './arena/types';
 import { calculateHydraulicBonus } from './arena/hydraulicBonus';
 import { checkBackstab, updateFacing, calculateTurnSpeed } from './arena/positionTracker';
 import { updateAdaptation, getEffectiveAdaptation } from './arena/adaptationTracker';
@@ -1068,7 +1069,7 @@ function buildSpatialContext(
   const rangeBand = classifyRangeBand(dist);
 
   const weapon = hand === 'main' ? attacker.robot.mainWeapon?.weapon : attacker.robot.offhandWeapon?.weapon;
-  const weaponLike: WeaponLike | null = weapon ? { weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name } : null;
+  const weaponLike: WeaponLike | null = weapon ? { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand } : null;
   const optimalRange = weaponLike ? getWeaponOptimalRange(weaponLike) : 'short';
   const rangePenaltyMult = getRangePenalty(optimalRange, rangeBand);
   const hydraulicMult = calculateHydraulicBonus(Number(attacker.robot.hydraulicSystems ?? 0), rangeBand);
@@ -1389,7 +1390,7 @@ export function simulateBattleMulti(
           && state.currentHP > 0 && state.isAlive) {
         const weapon = state.robot.mainWeapon?.weapon;
         const weaponLike: WeaponLike | null = weapon
-          ? { weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name }
+          ? { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand }
           : null;
         const patienceLimit = getPatienceLimit(state.combatAlgorithmScore);
         const forceAttack = state.patienceTimer >= patienceLimit;
@@ -1443,9 +1444,8 @@ export function simulateBattleMulti(
           && state.currentHP > 0 && state.isAlive) {
         const offWeapon = state.robot.offhandWeapon.weapon;
         const offWeaponLike: WeaponLike = {
-          weaponType: offWeapon.weaponType,
-          handsRequired: offWeapon.handsRequired,
           name: offWeapon.name,
+          rangeBand: offWeapon.rangeBand as RangeBand,
         };
         const patienceLimit = getPatienceLimit(state.combatAlgorithmScore);
 

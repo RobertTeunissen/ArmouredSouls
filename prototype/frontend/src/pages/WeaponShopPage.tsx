@@ -26,6 +26,7 @@ interface Weapon {
   loadoutType: string;
   handsRequired: string;
   description: string;
+  rangeBand: string;
   baseDamage: number;
   cost: number;
   cooldown: number;
@@ -96,7 +97,7 @@ function WeaponShopPage() {
     loadoutTypes: [],
     weaponTypes: [],
     rangeBands: [],
-    priceRange: isOnboarding ? { min: 0, max: 300000 } : null,
+    priceRange: isOnboarding ? { min: 0, max: 250000 } : null,
     canAffordOnly: isOnboarding,
     onlyOwnedWeapons: false,
   });
@@ -330,7 +331,7 @@ function WeaponShopPage() {
 
       // Range band filter (OR logic within category, AND with other filters)
       if (filters.rangeBands.length > 0) {
-        const weaponRange = getWeaponOptimalRange({ weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name });
+        const weaponRange = getWeaponOptimalRange(weapon);
         if (!filters.rangeBands.includes(weaponRange)) {
           return false;
         }
@@ -584,7 +585,7 @@ function WeaponShopPage() {
                 <p className="text-primary font-semibold mb-1">Tutorial Step 7: Weapon Purchase</p>
                 <p className="text-secondary text-sm mb-3">
                   Browse the weapons below and purchase one or more for your robot(s). We've filtered to show
-                  budget-friendly options under ₡300,000. You can buy multiple weapons if you're planning
+                  budget-friendly options under ₡250,000. You can buy multiple weapons if you're planning
                   to use Dual-Wield or have multiple robots.
                 </p>
                 <button
@@ -801,7 +802,7 @@ function WeaponShopPage() {
 
                           {/* Optimal Range Badge */}
                           {(() => {
-                            const range = getWeaponOptimalRange({ weaponType: weapon.weaponType, handsRequired: weapon.handsRequired, name: weapon.name });
+                            const range = getWeaponOptimalRange(weapon);
                             return (
                               <div className="mb-3">
                                 <span className={`text-xs px-2 py-0.5 rounded border ${getRangeBandBgColor(range)} ${getRangeBandColor(range)}`}>
@@ -956,7 +957,7 @@ function WeaponShopPage() {
               <p className="font-semibold text-primary mb-2">Choose a Weapon</p>
               <p className="mb-2">
                 Browse the weapons below. We've filtered to show affordable options
-                under ₡300,000 that fit your budget.
+                under ₡250,000 that fit your budget.
               </p>
               <p className="text-sm text-secondary">
                 Look for weapons with attribute bonuses that complement your robot's build.

@@ -465,7 +465,7 @@ The Robot Detail Page has **tiered visibility** to allow browsing other players'
 - **Logo**: Direction B in navigation
 - **Header**: "Weapon Shop" with Credits balance, storage capacity (X/Y)
 - **Filter Tabs**: All / Melee / Ranged / Shields / Two-Handed
-- **Weapon Cards** (26 weapons total):
+- **Weapon Cards** (47 weapons total):
   - Weapon thumbnail/illustration (primary visual)
   - Weapon name
   - Weapon type badge (Melee, Ballistic, Energy, Shield)
@@ -961,7 +961,7 @@ Based on the comprehensive design system, the following asset categories are def
   - Shield: Translucent blue energy
   - **Note**: Weapon type system needs mechanical refinement for consistency
 
-- **Quantity**: 26 weapons (including Practice Sword, Practice Blaster, Training Rifle, Training Beam)
+- **Quantity**: 47 weapons (including Practice Sword, Practice Blaster, Training Rifle, Training Beam)
 
 **2.2 Weapon Type Icons**
 - **Purpose**: Category identification, filtering
@@ -1548,7 +1548,7 @@ robot-chassis-scout-green.webp
 
 ### Weapon Asset Specifications
 
-**26 Weapons (Current)**:
+**47 Weapons (Current)**:
 
 **Melee Weapons (4)**:
 1. **Power Sword** - Energized blade with blue glow

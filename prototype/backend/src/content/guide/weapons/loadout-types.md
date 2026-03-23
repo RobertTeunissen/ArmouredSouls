@@ -34,7 +34,7 @@ The Single loadout is the most straightforward configuration — one weapon, no 
 
 **Penalties:** None.
 
-**Compatible Weapons:** All 16 one-handed weapons (Energy, Ballistic, and Melee categories).
+**Compatible Weapons:** All 22 one-handed weapons (Energy, Ballistic, and Melee categories).
 
 ```callout-tip
 Single loadout is often underestimated. The absence of penalties means every attribute point you invest works at full value. Combined with the Gyro Stabilizers bonus, Single-loadout robots are surprisingly hard to hit — making this a strong choice for balanced or evasion-focused builds.
@@ -64,7 +64,7 @@ The Weapon+Shield loadout is the defensive powerhouse. It provides the strongest
 |---------|--------|
 | **Attack Speed** | -15% — Slower attacks due to the weight of carrying a shield |
 
-**Compatible Weapons:** Any one-handed weapon in the main slot + any shield (Light Shield, Combat Shield, or Reactive Shield) in the offhand slot. Your main weapon must be equipped before you can equip a shield.
+**Compatible Weapons:** Any one-handed weapon in the main slot + any shield (Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, or Aegis Bulwark) in the offhand slot. Your main weapon must be equipped before you can equip a shield.
 
 ```callout-info
 The -15% Attack Speed penalty sounds harsh, but defensive builds often don't mind. If your strategy is to absorb damage and counter-attack, you're winning through durability rather than speed. The +10% Counter Protocols bonus partially compensates by giving you free bonus attacks.
@@ -95,7 +95,7 @@ The Two-Handed loadout is built for maximum burst damage. It provides offensive 
 |---------|--------|
 | **Evasion Thrusters** | -10% — Reduced ability to dodge incoming attacks |
 
-**Compatible Weapons:** Only the 10 two-handed weapons — Training Rifle, Training Beam, Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, and Ion Beam.
+**Compatible Weapons:** All 19 two-handed weapons — Training Rifle, Training Beam, Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam, War Club, Shock Maul, Thermal Lance, Laser Rifle, Scatter Cannon, Pulse Accelerator, Arc Projector, Mortar System, and Siege Cannon.
 
 ```callout-tip
 The combination of +20% Critical Systems and the 2.5× critical multiplier makes Two-Handed the undisputed king of burst damage. When a critical hit lands with a two-handed weapon, the damage spike can be devastating. Pair this with Offensive stance for maximum impact.
@@ -125,7 +125,7 @@ Dual-Wield is the sustained DPS loadout. Two weapons means two independent attac
 | **Penetration** | -20% — Reduced ability to bypass armor |
 | **Combat Power** | -10% — Each individual hit deals less damage |
 
-**Compatible Weapons:** All 16 one-handed weapons in both slots. You can equip two copies of the same weapon or mix different weapons for asymmetric builds.
+**Compatible Weapons:** All 22 one-handed weapons in both slots. You can equip two copies of the same weapon or mix different weapons for asymmetric builds.
 
 ```callout-info
 Dual-Wield's offhand weapon has significant combat penalties — 50% base hit chance (vs 70% for main hand) and a 40% cooldown penalty. These are fundamental to the loadout's balance. See [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) for the full breakdown of how per-hand bonuses and offhand rules work.
@@ -156,9 +156,9 @@ Not every weapon works with every loadout. Here's the compatibility matrix:
 
 | Weapon Type | Single | Weapon+Shield | Two-Handed | Dual-Wield |
 |-------------|--------|---------------|------------|------------|
-| One-handed weapons (15) | ✅ Main | ✅ Main only | ❌ | ✅ Both slots |
-| Two-handed weapons (8) | ❌ | ❌ | ✅ Main (both hands) | ❌ |
-| Shield weapons (3) | ❌ | ✅ Offhand only | ❌ | ❌ |
+| One-handed weapons (22) | ✅ Main | ✅ Main only | ❌ | ✅ Both slots |
+| Two-handed weapons (19) | ❌ | ❌ | ✅ Main (both hands) | ❌ |
+| Shield weapons (6) | ❌ | ✅ Offhand only | ❌ | ❌ |
 
 ```callout-tip
 You can change your loadout type at any time from the robot detail page. However, if your currently equipped weapons aren't compatible with the new loadout, you'll need to unequip them first. Plan your weapon purchases with your target loadout in mind.
@@ -186,10 +186,10 @@ Every weapon has an **optimal range band** that determines where it deals the mo
 
 | Optimal Range | Weapons | Distance |
 |--------------|---------|----------|
-| **Melee** (0–2 units) | All melee weapons (Energy Blade, Vibro Sword, Power Fist, Chain Sword, Thermal Lance), all shields | Cannot attack beyond 2 units |
-| **Short** (3–6 units) | One-handed ranged (Laser Pistol, Plasma Pistol, Machine Pistol, Pulse Rifle, Ion Pistol) | Best for Single and Dual-Wield |
-| **Mid** (7–12 units) | Two-handed ranged (Shotgun, Grenade Launcher, Plasma Cannon) | Best for Two-Handed loadout |
-| **Long** (13+ units) | Sniper Rifle, Railgun, Ion Beam | Best for Two-Handed loadout |
+| **Melee** (0–2 units) | All melee weapons (Energy Blade, Vibro Sword, Power Fist, Chain Sword, Thermal Lance, Vibro Mace, War Club, Shock Maul), all shields | Cannot attack beyond 2 units |
+| **Short** (3–6 units) | One-handed ranged (Laser Pistol, Plasma Pistol, Machine Pistol, Pulse Rifle, Ion Pistol, Volt Sabre), two-handed short (Scatter Cannon, Laser Rifle, Pulse Accelerator, Arc Projector) | Best for Single and Dual-Wield |
+| **Mid** (7–12 units) | One-handed mid (Bolt Carbine, Flux Repeater, Disruptor Cannon, Nova Caster), two-handed mid (Shotgun, Grenade Launcher, Plasma Cannon, Mortar System) | Best for varied loadouts |
+| **Long** (13+ units) | One-handed long (Beam Pistol, Photon Marksman, Gauss Pistol, Particle Lance), two-handed long (Sniper Rifle, Railgun, Ion Beam, Siege Cannon) | Best for Two-Handed loadout |
 
 Range penalties apply when fighting outside your weapon's optimal band:
 

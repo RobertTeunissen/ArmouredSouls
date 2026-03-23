@@ -79,6 +79,9 @@ const NON_BONUS_FIELDS = [
 
 const EXPECTED_SUM_OF_SQUARES: Record<string, number> = {
   'Practice Sword': 0,
+  'Practice Blaster': 0,
+  'Training Rifle': 0,
+  'Training Beam': 0,
   'Machine Pistol': 13,
   'Laser Pistol': 13,
   'Combat Knife': 10,
@@ -87,7 +90,7 @@ const EXPECTED_SUM_OF_SQUARES: Record<string, number> = {
   'Reactive Shield': 105,
   'Machine Gun': 38,
   'Burst Rifle': 34,
-  'Assault Rifle': 45,
+  'Assault Rifle': 86,
   'Energy Blade': 50,
   'Laser Rifle': 54,
   'Plasma Blade': 54,
@@ -101,10 +104,34 @@ const EXPECTED_SUM_OF_SQUARES: Record<string, number> = {
   'Heavy Hammer': 138,
   'Railgun': 234,
   'Ion Beam': 205,
+  'Vibro Mace': 150,
+  'War Club': 5,
+  'Shock Maul': 29,
+  'Thermal Lance': 61,
+  'Volt Sabre': 150,
+  'Scatter Cannon': 5,
+  'Pulse Accelerator': 54,
+  'Arc Projector': 135,
+  'Bolt Carbine': 10,
+  'Flux Repeater': 43,
+  'Disruptor Cannon': 86,
+  'Nova Caster': 150,
+  'Mortar System': 29,
+  'Beam Pistol': 10,
+  'Photon Marksman': 43,
+  'Gauss Pistol': 81,
+  'Particle Lance': 150,
+  'Siege Cannon': 29,
+  'Barrier Shield': 147,
+  'Fortress Shield': 546,
+  'Aegis Bulwark': 808,
 };
 
 const EXPECTED_COST: Record<string, number> = {
   'Practice Sword': 50000,
+  'Practice Blaster': 50000,
+  'Training Rifle': 50000,
+  'Training Beam': 50000,
   'Machine Pistol': 94000,
   'Laser Pistol': 57000,
   'Combat Knife': 93000,
@@ -113,9 +140,9 @@ const EXPECTED_COST: Record<string, number> = {
   'Reactive Shield': 92000,
   'Machine Gun': 107000,
   'Burst Rifle': 117000,
-  'Assault Rifle': 173000,
+  'Assault Rifle': 293000,
   'Energy Blade': 175000,
-  'Laser Rifle': 202000,
+  'Laser Rifle': 243000,
   'Plasma Blade': 202000,
   'Plasma Rifle': 258000,
   'Power Sword': 325000,
@@ -127,6 +154,27 @@ const EXPECTED_COST: Record<string, number> = {
   'Heavy Hammer': 478000,
   'Railgun': 527000,
   'Ion Beam': 544000,
+  'Vibro Mace': 425000,
+  'War Club': 84000,
+  'Shock Maul': 183000,
+  'Thermal Lance': 279000,
+  'Volt Sabre': 425000,
+  'Scatter Cannon': 84000,
+  'Pulse Accelerator': 273000,
+  'Arc Projector': 488000,
+  'Bolt Carbine': 93000,
+  'Flux Repeater': 147000,
+  'Disruptor Cannon': 293000,
+  'Nova Caster': 425000,
+  'Mortar System': 163000,
+  'Beam Pistol': 93000,
+  'Photon Marksman': 147000,
+  'Gauss Pistol': 291000,
+  'Particle Lance': 425000,
+  'Siege Cannon': 163000,
+  'Barrier Shield': 111000,
+  'Fortress Shield': 291000,
+  'Aegis Bulwark': 409000,
 };
 
 
@@ -139,6 +187,21 @@ const NON_BONUS_SNAPSHOT: Record<string, Record<string, unknown>> = {
     name: 'Practice Sword', baseDamage: 6, cooldown: 3, weaponType: 'melee',
     handsRequired: 'one', damageType: 'melee', loadoutType: 'single',
     cost: 50000, specialProperty: null, description: 'Basic training weapon establishing baseline cost',
+  },
+  'Practice Blaster': {
+    name: 'Practice Blaster', baseDamage: 6, cooldown: 3, weaponType: 'ballistic',
+    handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
+    cost: 50000, specialProperty: null, description: 'Basic training sidearm establishing short-range baseline',
+  },
+  'Training Rifle': {
+    name: 'Training Rifle', baseDamage: 6, cooldown: 3, weaponType: 'ballistic',
+    handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed',
+    cost: 50000, specialProperty: null, description: 'Standard-issue drill rifle establishing mid-range baseline',
+  },
+  'Training Beam': {
+    name: 'Training Beam', baseDamage: 6, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    cost: 50000, specialProperty: null, description: 'Basic long-range energy trainer establishing long-range baseline',
   },
   'Machine Pistol': {
     name: 'Machine Pistol', baseDamage: 5, cooldown: 2, weaponType: 'ballistic',
@@ -181,9 +244,9 @@ const NON_BONUS_SNAPSHOT: Record<string, Record<string, unknown>> = {
     cost: 117000, specialProperty: null, description: '3-round burst fire weapon with controlled recoil',
   },
   'Assault Rifle': {
-    name: 'Assault Rifle', baseDamage: 10, cooldown: 3, weaponType: 'ballistic',
+    name: 'Assault Rifle', baseDamage: 14, cooldown: 3, weaponType: 'ballistic',
     handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
-    cost: 173000, specialProperty: null, description: 'Versatile military-grade firearm',
+    cost: 293000, specialProperty: null, description: 'Elite military-grade firearm with enhanced targeting',
   },
   'Energy Blade': {
     name: 'Energy Blade', baseDamage: 10, cooldown: 3, weaponType: 'melee',
@@ -191,9 +254,9 @@ const NON_BONUS_SNAPSHOT: Record<string, Record<string, unknown>> = {
     cost: 175000, specialProperty: null, description: 'Energy-infused blade for swift strikes',
   },
   'Laser Rifle': {
-    name: 'Laser Rifle', baseDamage: 11, cooldown: 3, weaponType: 'energy',
-    handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
-    cost: 202000, specialProperty: null, description: 'Precision energy rifle with excellent accuracy',
+    name: 'Laser Rifle', baseDamage: 9, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    cost: 243000, specialProperty: null, description: 'Heavy precision energy rifle reconfigured for two-handed operation',
   },
   'Plasma Blade': {
     name: 'Plasma Blade', baseDamage: 11, cooldown: 3, weaponType: 'melee',
@@ -250,6 +313,111 @@ const NON_BONUS_SNAPSHOT: Record<string, Record<string, unknown>> = {
     handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
     cost: 544000, specialProperty: null, description: 'Focused energy beam with shield disruption',
   },
+  'Vibro Mace': {
+    name: 'Vibro Mace', baseDamage: 18, cooldown: 3, weaponType: 'melee',
+    handsRequired: 'one', damageType: 'melee', loadoutType: 'single',
+    cost: 425000, specialProperty: null, description: 'Vibration-enhanced mace that shatters armor plating on impact',
+  },
+  'War Club': {
+    name: 'War Club', baseDamage: 6, cooldown: 3, weaponType: 'melee',
+    handsRequired: 'two', damageType: 'melee', loadoutType: 'two_handed',
+    cost: 84000, specialProperty: null, description: 'Crude but effective bludgeon for budget-conscious brawlers',
+  },
+  'Shock Maul': {
+    name: 'Shock Maul', baseDamage: 8, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    cost: 183000, specialProperty: null, description: 'Electrified maul that channels energy through hydraulic strikes',
+  },
+  'Thermal Lance': {
+    name: 'Thermal Lance', baseDamage: 13, cooldown: 4, weaponType: 'energy',
+    handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    cost: 279000, specialProperty: null, description: 'Superheated polearm that melts through armor at close range',
+  },
+  'Volt Sabre': {
+    name: 'Volt Sabre', baseDamage: 18, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    cost: 425000, specialProperty: null, description: 'Arc-charged blade pistol delivering devastating short-range energy bursts',
+  },
+  'Scatter Cannon': {
+    name: 'Scatter Cannon', baseDamage: 6, cooldown: 3, weaponType: 'ballistic',
+    handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed',
+    cost: 84000, specialProperty: null, description: 'Wide-bore scatter weapon effective at close quarters',
+  },
+  'Pulse Accelerator': {
+    name: 'Pulse Accelerator', baseDamage: 13, cooldown: 4, weaponType: 'energy',
+    handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    cost: 273000, specialProperty: null, description: 'Charged-particle accelerator delivering focused energy pulses at short range',
+  },
+  'Arc Projector': {
+    name: 'Arc Projector', baseDamage: 18, cooldown: 4, weaponType: 'energy',
+    handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    cost: 488000, specialProperty: null, description: 'Devastating arc-lightning projector that chains energy across short distances',
+  },
+  'Bolt Carbine': {
+    name: 'Bolt Carbine', baseDamage: 5, cooldown: 2, weaponType: 'ballistic',
+    handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
+    cost: 93000, specialProperty: null, description: 'Compact carbine optimized for mid-range engagements',
+  },
+  'Flux Repeater': {
+    name: 'Flux Repeater', baseDamage: 9, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    cost: 147000, specialProperty: null, description: 'Rapid-cycling energy repeater with excellent mid-range accuracy',
+  },
+  'Disruptor Cannon': {
+    name: 'Disruptor Cannon', baseDamage: 14, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    cost: 293000, specialProperty: null, description: 'Heavy energy disruptor that destabilizes enemy systems at mid-range',
+  },
+  'Nova Caster': {
+    name: 'Nova Caster', baseDamage: 18, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    cost: 425000, specialProperty: null, description: 'Miniaturized nova reactor unleashing devastating mid-range energy blasts',
+  },
+  'Mortar System': {
+    name: 'Mortar System', baseDamage: 10, cooldown: 4, weaponType: 'ballistic',
+    handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed',
+    cost: 163000, specialProperty: null, description: 'Indirect-fire ballistic system for area suppression at mid-range',
+  },
+  'Beam Pistol': {
+    name: 'Beam Pistol', baseDamage: 5, cooldown: 2, weaponType: 'energy',
+    handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    cost: 93000, specialProperty: null, description: 'Compact long-range energy sidearm with focused beam optics',
+  },
+  'Photon Marksman': {
+    name: 'Photon Marksman', baseDamage: 9, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    cost: 147000, specialProperty: null, description: 'Precision photon emitter for accurate long-range fire from a one-handed platform',
+  },
+  'Gauss Pistol': {
+    name: 'Gauss Pistol', baseDamage: 14, cooldown: 3, weaponType: 'ballistic',
+    handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
+    cost: 291000, specialProperty: null, description: 'Magnetically accelerated sidearm delivering extreme long-range kinetic rounds',
+  },
+  'Particle Lance': {
+    name: 'Particle Lance', baseDamage: 18, cooldown: 3, weaponType: 'energy',
+    handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    cost: 425000, specialProperty: null, description: 'Focused particle beam weapon capable of precision strikes at extreme range',
+  },
+  'Siege Cannon': {
+    name: 'Siege Cannon', baseDamage: 10, cooldown: 4, weaponType: 'ballistic',
+    handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed',
+    cost: 163000, specialProperty: null, description: 'Heavy long-range bombardment cannon for sustained siege operations',
+  },
+  'Barrier Shield': {
+    name: 'Barrier Shield', baseDamage: 0, cooldown: 0, weaponType: 'shield',
+    handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield',
+    cost: 111000, specialProperty: null, description: 'Reinforced energy barrier providing solid mid-tier protection',
+  },
+  'Fortress Shield': {
+    name: 'Fortress Shield', baseDamage: 0, cooldown: 0, weaponType: 'shield',
+    handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield',
+    cost: 291000, specialProperty: null, description: 'Heavy fortress-class shield with layered defensive systems',
+  },
+  'Aegis Bulwark': {
+    name: 'Aegis Bulwark', baseDamage: 0, cooldown: 0, weaponType: 'shield',
+    handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield',
+    cost: 409000, specialProperty: null, description: 'Ultimate defensive platform with multi-layered reactive shielding',
+  },
 };
 
 
@@ -262,6 +430,21 @@ const UNMODIFIED_WEAPON_SNAPSHOTS: Record<string, Record<string, unknown>> = {
     name: 'Practice Sword', weaponType: 'melee', baseDamage: 6, cooldown: 3,
     cost: 50000, handsRequired: 'one', damageType: 'melee', loadoutType: 'single',
     specialProperty: null, description: 'Basic training weapon establishing baseline cost',
+  },
+  'Practice Blaster': {
+    name: 'Practice Blaster', weaponType: 'ballistic', baseDamage: 6, cooldown: 3,
+    cost: 50000, handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
+    specialProperty: null, description: 'Basic training sidearm establishing short-range baseline',
+  },
+  'Training Rifle': {
+    name: 'Training Rifle', weaponType: 'ballistic', baseDamage: 6, cooldown: 3,
+    cost: 50000, handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Standard-issue drill rifle establishing mid-range baseline',
+  },
+  'Training Beam': {
+    name: 'Training Beam', weaponType: 'energy', baseDamage: 6, cooldown: 3,
+    cost: 50000, handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Basic long-range energy trainer establishing long-range baseline',
   },
   'Machine Pistol': {
     name: 'Machine Pistol', weaponType: 'ballistic', baseDamage: 5, cooldown: 2,
@@ -306,15 +489,15 @@ const UNMODIFIED_WEAPON_SNAPSHOTS: Record<string, Record<string, unknown>> = {
     attackSpeedBonus: 4, targetingSystemsBonus: 3, criticalSystemsBonus: 3,
   },
   'Assault Rifle': {
-    name: 'Assault Rifle', weaponType: 'ballistic', baseDamage: 10, cooldown: 3,
-    cost: 173000, handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
-    specialProperty: null, description: 'Versatile military-grade firearm',
-    combatPowerBonus: 4, targetingSystemsBonus: 4, weaponControlBonus: 3, attackSpeedBonus: 2,
+    name: 'Assault Rifle', weaponType: 'ballistic', baseDamage: 14, cooldown: 3,
+    cost: 293000, handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
+    specialProperty: null, description: 'Elite military-grade firearm with enhanced targeting',
+    combatPowerBonus: 6, targetingSystemsBonus: 5, weaponControlBonus: 4, attackSpeedBonus: 3,
   },
   'Laser Rifle': {
-    name: 'Laser Rifle', weaponType: 'energy', baseDamage: 11, cooldown: 3,
-    cost: 202000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
-    specialProperty: null, description: 'Precision energy rifle with excellent accuracy',
+    name: 'Laser Rifle', weaponType: 'energy', baseDamage: 9, cooldown: 3,
+    cost: 243000, handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Heavy precision energy rifle reconfigured for two-handed operation',
     targetingSystemsBonus: 5, weaponControlBonus: 4, attackSpeedBonus: 3, combatPowerBonus: 2,
   },
   'Plasma Rifle': {
@@ -388,6 +571,132 @@ const UNMODIFIED_WEAPON_SNAPSHOTS: Record<string, Record<string, unknown>> = {
     cost: 92000, handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield',
     specialProperty: null, description: 'Advanced shield with energy-reactive plating',
     shieldCapacityBonus: 7, counterProtocolsBonus: 6, powerCoreBonus: 4, servoMotorsBonus: -2,
+  },
+  'Vibro Mace': {
+    name: 'Vibro Mace', weaponType: 'melee', baseDamage: 18, cooldown: 3,
+    cost: 425000, handsRequired: 'one', damageType: 'melee', loadoutType: 'single',
+    specialProperty: null, description: 'Vibration-enhanced mace that shatters armor plating on impact',
+    hydraulicSystemsBonus: 8, combatPowerBonus: 6, counterProtocolsBonus: 5, gyroStabilizersBonus: 4, attackSpeedBonus: 3,
+  },
+  'War Club': {
+    name: 'War Club', weaponType: 'melee', baseDamage: 6, cooldown: 3,
+    cost: 84000, handsRequired: 'two', damageType: 'melee', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Crude but effective bludgeon for budget-conscious brawlers',
+    hydraulicSystemsBonus: 2, combatPowerBonus: 1,
+  },
+  'Shock Maul': {
+    name: 'Shock Maul', weaponType: 'energy', baseDamage: 8, cooldown: 3,
+    cost: 183000, handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Electrified maul that channels energy through hydraulic strikes',
+    hydraulicSystemsBonus: 4, combatPowerBonus: 3, powerCoreBonus: 2,
+  },
+  'Thermal Lance': {
+    name: 'Thermal Lance', weaponType: 'energy', baseDamage: 13, cooldown: 4,
+    cost: 279000, handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Superheated polearm that melts through armor at close range',
+    hydraulicSystemsBonus: 5, combatPowerBonus: 4, criticalSystemsBonus: 4, powerCoreBonus: -2,
+  },
+  'Volt Sabre': {
+    name: 'Volt Sabre', weaponType: 'energy', baseDamage: 18, cooldown: 3,
+    cost: 425000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    specialProperty: null, description: 'Arc-charged blade pistol delivering devastating short-range energy bursts',
+    combatPowerBonus: 8, targetingSystemsBonus: 6, weaponControlBonus: 5, attackSpeedBonus: 4, powerCoreBonus: -3,
+  },
+  'Scatter Cannon': {
+    name: 'Scatter Cannon', weaponType: 'ballistic', baseDamage: 6, cooldown: 3,
+    cost: 84000, handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Wide-bore scatter weapon effective at close quarters',
+    combatPowerBonus: 2, weaponControlBonus: 1,
+  },
+  'Pulse Accelerator': {
+    name: 'Pulse Accelerator', weaponType: 'energy', baseDamage: 13, cooldown: 4,
+    cost: 273000, handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Charged-particle accelerator delivering focused energy pulses at short range',
+    combatPowerBonus: 5, targetingSystemsBonus: 4, weaponControlBonus: 3, attackSpeedBonus: -2,
+  },
+  'Arc Projector': {
+    name: 'Arc Projector', weaponType: 'energy', baseDamage: 18, cooldown: 4,
+    cost: 488000, handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Devastating arc-lightning projector that chains energy across short distances',
+    combatPowerBonus: 7, targetingSystemsBonus: 6, criticalSystemsBonus: 5, penetrationBonus: 4, attackSpeedBonus: -3,
+  },
+  'Bolt Carbine': {
+    name: 'Bolt Carbine', weaponType: 'ballistic', baseDamage: 5, cooldown: 2,
+    cost: 93000, handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
+    specialProperty: null, description: 'Compact carbine optimized for mid-range engagements',
+    targetingSystemsBonus: 3, weaponControlBonus: 1,
+  },
+  'Flux Repeater': {
+    name: 'Flux Repeater', weaponType: 'energy', baseDamage: 9, cooldown: 3,
+    cost: 147000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    specialProperty: null, description: 'Rapid-cycling energy repeater with excellent mid-range accuracy',
+    targetingSystemsBonus: 5, combatPowerBonus: 3, weaponControlBonus: 3,
+  },
+  'Disruptor Cannon': {
+    name: 'Disruptor Cannon', weaponType: 'energy', baseDamage: 14, cooldown: 3,
+    cost: 293000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    specialProperty: null, description: 'Heavy energy disruptor that destabilizes enemy systems at mid-range',
+    combatPowerBonus: 6, targetingSystemsBonus: 5, weaponControlBonus: 4, penetrationBonus: 3,
+  },
+  'Nova Caster': {
+    name: 'Nova Caster', weaponType: 'energy', baseDamage: 18, cooldown: 3,
+    cost: 425000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    specialProperty: null, description: 'Miniaturized nova reactor unleashing devastating mid-range energy blasts',
+    combatPowerBonus: 8, targetingSystemsBonus: 6, penetrationBonus: 5, weaponControlBonus: 4, powerCoreBonus: -3,
+  },
+  'Mortar System': {
+    name: 'Mortar System', weaponType: 'ballistic', baseDamage: 10, cooldown: 4,
+    cost: 163000, handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Indirect-fire ballistic system for area suppression at mid-range',
+    combatPowerBonus: 4, penetrationBonus: 3, targetingSystemsBonus: -2,
+  },
+  'Beam Pistol': {
+    name: 'Beam Pistol', weaponType: 'energy', baseDamage: 5, cooldown: 2,
+    cost: 93000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    specialProperty: null, description: 'Compact long-range energy sidearm with focused beam optics',
+    targetingSystemsBonus: 3, penetrationBonus: 1,
+  },
+  'Photon Marksman': {
+    name: 'Photon Marksman', weaponType: 'energy', baseDamage: 9, cooldown: 3,
+    cost: 147000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    specialProperty: null, description: 'Precision photon emitter for accurate long-range fire from a one-handed platform',
+    targetingSystemsBonus: 5, penetrationBonus: 3, combatPowerBonus: 3,
+  },
+  'Gauss Pistol': {
+    name: 'Gauss Pistol', weaponType: 'ballistic', baseDamage: 14, cooldown: 3,
+    cost: 291000, handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single',
+    specialProperty: null, description: 'Magnetically accelerated sidearm delivering extreme long-range kinetic rounds',
+    targetingSystemsBonus: 6, penetrationBonus: 5, combatPowerBonus: 4, attackSpeedBonus: -2,
+  },
+  'Particle Lance': {
+    name: 'Particle Lance', weaponType: 'energy', baseDamage: 18, cooldown: 3,
+    cost: 425000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single',
+    specialProperty: null, description: 'Focused particle beam weapon capable of precision strikes at extreme range',
+    targetingSystemsBonus: 8, penetrationBonus: 6, combatPowerBonus: 5, criticalSystemsBonus: 4, attackSpeedBonus: -3,
+  },
+  'Siege Cannon': {
+    name: 'Siege Cannon', weaponType: 'ballistic', baseDamage: 10, cooldown: 4,
+    cost: 163000, handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed',
+    specialProperty: null, description: 'Heavy long-range bombardment cannon for sustained siege operations',
+    targetingSystemsBonus: 4, penetrationBonus: 3, combatPowerBonus: -2,
+  },
+  'Barrier Shield': {
+    name: 'Barrier Shield', weaponType: 'shield', baseDamage: 0, cooldown: 0,
+    cost: 111000, handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield',
+    specialProperty: null, description: 'Reinforced energy barrier providing solid mid-tier protection',
+    armorPlatingBonus: 8, shieldCapacityBonus: 7, counterProtocolsBonus: 5, evasionThrustersBonus: -3,
+  },
+  'Fortress Shield': {
+    name: 'Fortress Shield', weaponType: 'shield', baseDamage: 0, cooldown: 0,
+    cost: 291000, handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield',
+    specialProperty: null, description: 'Heavy fortress-class shield with layered defensive systems',
+    armorPlatingBonus: 15, shieldCapacityBonus: 14, counterProtocolsBonus: 10, evasionThrustersBonus: -4, servoMotorsBonus: -3,
+  },
+  'Aegis Bulwark': {
+    name: 'Aegis Bulwark', weaponType: 'shield', baseDamage: 0, cooldown: 0,
+    cost: 409000, handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield',
+    specialProperty: null, description: 'Ultimate defensive platform with multi-layered reactive shielding',
+    armorPlatingBonus: 15, shieldCapacityBonus: 15, counterProtocolsBonus: 14, powerCoreBonus: 11, evasionThrustersBonus: -5, servoMotorsBonus: -4,
   },
 };
 
@@ -552,8 +861,8 @@ describe('Feature: weapon-bonus-rebalance', () => {
   // Unit Tests: Modified weapon specific bonus values
   // --------------------------------------------------------------------------
   describe('Unit tests: modified weapon bonus values', () => {
-    test('WEAPON_DEFINITIONS.length === 23', () => {
-      expect(WEAPON_DEFINITIONS.length).toBe(23);
+    test('WEAPON_DEFINITIONS.length === 47', () => {
+      expect(WEAPON_DEFINITIONS.length).toBe(47);
     });
 
     test('Energy Blade has original spatial bonuses (rebalance reverted)', () => {

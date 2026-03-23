@@ -6,7 +6,7 @@ Welcome to the Player Archetypes and Starting Strategies Guide for Armoured Soul
 
 ### Why This Guide Exists
 
-Armoured Souls features deep economic and progression systems with 23 attributes, 26 weapons, 14 facilities, and multiple viable paths to success. New players often face decision paralysis when confronted with so many choices. This guide reduces cognitive load by organizing strategies into 10 distinct archetypes, each with clear spending plans and progression roadmaps.
+Armoured Souls features deep economic and progression systems with 23 attributes, 47 weapons, 14 facilities, and multiple viable paths to success. New players often face decision paralysis when confronted with so many choices. This guide reduces cognitive load by organizing strategies into 10 distinct archetypes, each with clear spending plans and progression roadmaps.
 
 ### How to Use This Guide
 
@@ -9273,72 +9273,111 @@ This appendix lists all 23 robot attributes organized by category, with brief de
 
 ### Appendix B: Complete Weapon Catalog
 
-This appendix lists all 26 weapons with costs, damage, cooldown, and bonuses. Weapons are organized by type and tier.
+This appendix lists all 47 weapons with costs, damage, cooldown, and bonuses. Weapons are organized by range band and price tier, with rangeBand information included. Price tiers: Budget (<₡100K), Mid (₡100–250K), Premium (₡250–400K), Luxury (₡400K+).
 
-#### Melee Weapons
+#### 1H Melee (Range: Melee)
 
-##### Budget Tier
-| Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|--------|----------|---------|---------------|----------|
-| Practice Sword | ₡50,000 | 6 | 3 turns | Single | None | Facility Investor (budget option) |
+| Tier | Weapon | Cost | Damage | Cooldown | DPS | Type | Loadout | rangeBand | Best For |
+|------|--------|------|--------|----------|-----|------|---------|-----------|----------|
+| Budget | Practice Sword | ₡50,000 | 6 | 3s | 2.0 | melee | Single | melee | Facility Investor (starter) |
+| Budget | Combat Knife | ₡93,000 | 5 | 2s | 2.5 | melee | Single | melee | Budget melee builds |
+| Mid | Energy Blade | ₡175,000 | 10 | 3s | 3.33 | melee | Single | melee | Speed Demon (melee variant) |
+| Mid | Plasma Blade | ₡202,000 | 11 | 3s | 3.67 | melee | Single | melee | Speed Demon (dual-wield) |
+| Premium | Power Sword | ₡325,000 | 15 | 3s | 5.0 | melee | Single | melee | Tank Fortress, Balanced Brawler |
+| Luxury | Vibro Mace | ₡425,000 | 18 | 3s | 6.0 | melee | Single | melee | Melee Specialist (top-tier 1H) |
 
-##### Mid Tier
-| Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|--------|----------|---------|---------------|----------|
-| Power Sword | ₡325,000 | 15 | 3 turns | Single/Weapon+Shield | +10% critical chance | Tank Fortress, Balanced Brawler |
-| Plasma Blade | ₡202,000 | 11 | 3 turns | Single/Dual-Wield | +15% attack speed | Speed Demon (melee variant) |
+#### 2H Melee (Range: Melee)
 
-##### Premium Tier
-| Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|--------|----------|---------|---------------|----------|
-| Battle Axe | ₡402,000 | 17 | 4 turns | Two-Handed | +20% damage vs armor | Melee Specialist |
-| Heavy Hammer | ₡478,000 | 22 | 5 turns | Two-Handed | +30% damage, stun chance | Melee Specialist |
+| Tier | Weapon | Cost | Damage | Cooldown | DPS | Type | Loadout | rangeBand | Best For |
+|------|--------|------|--------|----------|-----|------|---------|-----------|----------|
+| Budget | War Club | ₡84,000 | 6 | 3s | 2.0 | melee | Two-Handed | melee | Budget 2H melee builds |
+| Mid | Shock Maul | ₡183,000 | 8 | 3s | 2.67 | energy | Two-Handed | melee | Mid-tier melee brawlers |
+| Premium | Thermal Lance | ₡279,000 | 13 | 4s | 3.25 | energy | Two-Handed | melee | Melee Specialist (premium) |
+| Luxury | Battle Axe | ₡402,000 | 17 | 4s | 4.25 | melee | Two-Handed | melee | Melee Specialist |
+| Luxury | Heavy Hammer | ₡478,000 | 22 | 5s | 4.4 | melee | Two-Handed | melee | Melee Specialist (max damage) |
 
-##### Prestige-Locked Tier
-| Weapon | Cost | Prestige | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|----------|--------|----------|---------|---------------|----------|
-| Quantum Blade | ₡600,000 | 10,000 | 250 | 2 turns | Single/Two-Handed | +30% damage, +20% critical | Prestige Rusher (upgrade) |
-| Graviton Hammer | ₡800,000 | 20,000 | 350 | 4 turns | Two-Handed | +50% damage, gravity well | Melee Specialist (upgrade) |
+#### 1H Short (Range: Short)
 
----
+| Tier | Weapon | Cost | Damage | Cooldown | DPS | Type | Loadout | rangeBand | Best For |
+|------|--------|------|--------|----------|-----|------|---------|-----------|----------|
+| Budget | Practice Blaster | ₡50,000 | 6 | 3s | 2.0 | ballistic | Single | short | Facility Investor (starter) |
+| Budget | Laser Pistol | ₡57,000 | 4 | 2s | 2.0 | energy | Single | short | Budget energy sidearm |
+| Budget | Machine Pistol | ₡94,000 | 5 | 2s | 2.5 | ballistic | Single | short | Speed Demon (dual-wield) |
+| Mid | Machine Gun | ₡107,000 | 5 | 2s | 2.5 | ballistic | Single | short | Speed Demon, Balanced Brawler |
+| Mid | Burst Rifle | ₡117,000 | 8 | 3s | 2.67 | ballistic | Single | short | Balanced Brawler |
+| Premium | Plasma Rifle | ₡258,000 | 13 | 3s | 4.33 | energy | Single | short | Balanced Brawler, AI Tactician |
+| Premium | Assault Rifle | ₡293,000 | 14 | 3s | 4.67 | ballistic | Single | short | Glass Cannon (1H short) |
+| Luxury | Volt Sabre | ₡425,000 | 18 | 3s | 6.0 | energy | Single | short | Glass Cannon (max short-range) |
 
-#### Ranged Weapons
+#### 2H Short (Range: Short)
 
-##### Budget Tier
-| Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|--------|----------|---------|---------------|----------|
-| Practice Blaster | ₡50,000 | 6 | 3 turns | Single | None (short-range baseline) | Facility Investor (budget ranged option) |
-| Machine Gun | ₡107,000 | 5 | 2 turns | Single/Dual-Wield | +25% attack speed | Speed Demon, Balanced Brawler |
-| Training Rifle | ₡50,000 | 6 | 3 turns | Two-Handed | None (mid-range baseline) | Range testing, budget two-handed |
-| Training Beam | ₡50,000 | 6 | 3 turns | Two-Handed | None (long-range baseline) | Range testing, budget long-range |
+| Tier | Weapon | Cost | Damage | Cooldown | DPS | Type | Loadout | rangeBand | Best For |
+|------|--------|------|--------|----------|-----|------|---------|-----------|----------|
+| Budget | Scatter Cannon | ₡84,000 | 6 | 3s | 2.0 | ballistic | Two-Handed | short | Budget 2H short builds |
+| Mid | Laser Rifle | ₡243,000 | 9 | 3s | 3.0 | energy | Two-Handed | short | Balanced Brawler (2H short) |
+| Premium | Pulse Accelerator | ₡273,000 | 13 | 4s | 3.25 | energy | Two-Handed | short | Ranged builds (premium short) |
+| Luxury | Arc Projector | ₡488,000 | 18 | 4s | 4.5 | energy | Two-Handed | short | Glass Cannon (2H short) |
 
-##### Mid Tier
-| Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|--------|----------|---------|---------------|----------|
-| Plasma Rifle | ₡258,000 | 13 | 3 turns | Single | +15% penetration | Balanced Brawler, AI Tactician |
+#### 1H Mid (Range: Mid)
 
-##### Premium Tier
-| Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|--------|----------|---------|---------------|----------|
-| Sniper Rifle | ₡387,000 | 22 | 6 turns | Two-Handed | +30% critical chance | Ranged Sniper |
-| Railgun | ₡527,000 | 25 | 6 turns | Two-Handed | +40% penetration | Glass Cannon, Ranged Sniper |
-| Plasma Cannon | ₡408,000 | 20 | 5 turns | Two-Handed | +25% damage, energy-based | Glass Cannon |
+| Tier | Weapon | Cost | Damage | Cooldown | DPS | Type | Loadout | rangeBand | Best For |
+|------|--------|------|--------|----------|-----|------|---------|-----------|----------|
+| Budget | Bolt Carbine | ₡93,000 | 5 | 2s | 2.5 | ballistic | Single | mid | Budget mid-range builds |
+| Mid | Flux Repeater | ₡147,000 | 9 | 3s | 3.0 | energy | Single | mid | AI Tactician, Balanced Brawler |
+| Premium | Disruptor Cannon | ₡293,000 | 14 | 3s | 4.67 | energy | Single | mid | Ranged Sniper (1H mid) |
+| Luxury | Nova Caster | ₡425,000 | 18 | 3s | 6.0 | energy | Single | mid | Glass Cannon (mid-range) |
 
-##### Prestige-Locked Tier
-| Weapon | Cost | Prestige | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|----------|--------|----------|---------|---------------|----------|
-| Fusion Cannon | ₡700,000 | 15,000 | 320 | 3 turns | Two-Handed | +40% damage, fusion reaction | Glass Cannon (upgrade) |
+#### 2H Mid (Range: Mid)
 
----
+| Tier | Weapon | Cost | Damage | Cooldown | DPS | Type | Loadout | rangeBand | Best For |
+|------|--------|------|--------|----------|-----|------|---------|-----------|----------|
+| Budget | Training Rifle | ₡50,000 | 6 | 3s | 2.0 | ballistic | Two-Handed | mid | Facility Investor (starter) |
+| Mid | Mortar System | ₡163,000 | 10 | 4s | 2.5 | ballistic | Two-Handed | mid | Area suppression builds |
+| Premium | Shotgun | ₡283,000 | 14 | 4s | 3.5 | ballistic | Two-Handed | mid | Balanced Brawler (2H mid) |
+| Premium | Grenade Launcher | ₡293,000 | 16 | 5s | 3.2 | ballistic | Two-Handed | mid | Glass Cannon (area damage) |
+| Luxury | Plasma Cannon | ₡408,000 | 20 | 5s | 4.0 | energy | Two-Handed | mid | Glass Cannon |
 
-#### Shield Weapons
+#### 1H Long (Range: Long)
 
-##### Premium Tier
-| Weapon | Cost | Damage | Cooldown | Loadout | Special Bonus | Best For |
-|--------|------|--------|----------|---------|---------------|----------|
-| Combat Shield | ₡78,000 | 0 (defense) | N/A | Weapon+Shield | +50 shield HP, +20% defense | Tank Fortress (required) |
+| Tier | Weapon | Cost | Damage | Cooldown | DPS | Type | Loadout | rangeBand | Best For |
+|------|--------|------|--------|----------|-----|------|---------|-----------|----------|
+| Budget | Beam Pistol | ₡93,000 | 5 | 2s | 2.5 | energy | Single | long | Budget long-range sidearm |
+| Mid | Photon Marksman | ₡147,000 | 9 | 3s | 3.0 | energy | Single | long | Ranged Sniper (1H long) |
+| Premium | Gauss Pistol | ₡291,000 | 14 | 3s | 4.67 | ballistic | Single | long | Ranged Sniper (premium 1H) |
+| Luxury | Particle Lance | ₡425,000 | 18 | 3s | 6.0 | energy | Single | long | Ranged Sniper (max long-range) |
 
-**Note**: Combat Shield is required for weapon+shield loadout. It provides no direct damage but adds shield HP and defense bonus.
+#### 2H Long (Range: Long)
+
+| Tier | Weapon | Cost | Damage | Cooldown | DPS | Type | Loadout | rangeBand | Best For |
+|------|--------|------|--------|----------|-----|------|---------|-----------|----------|
+| Budget | Training Beam | ₡50,000 | 6 | 3s | 2.0 | energy | Two-Handed | long | Facility Investor (starter) |
+| Mid | Siege Cannon | ₡163,000 | 10 | 4s | 2.5 | ballistic | Two-Handed | long | Siege and bombardment builds |
+| Premium | Sniper Rifle | ₡387,000 | 22 | 6s | 3.67 | ballistic | Two-Handed | long | Ranged Sniper |
+| Luxury | Railgun | ₡527,000 | 25 | 6s | 4.17 | ballistic | Two-Handed | long | Glass Cannon, Ranged Sniper |
+| Luxury | Ion Beam | ₡544,000 | 27 | 6s | 4.5 | energy | Two-Handed | long | Glass Cannon (max long-range) |
+
+#### Shield Weapons (Range: Melee)
+
+| Tier | Weapon | Cost | Armor Plating | Shield Capacity | Counter Protocols | Loadout | rangeBand | Best For |
+|------|--------|------|---------------|-----------------|-------------------|---------|-----------|----------|
+| Budget | Light Shield | ₡51,000 | +3 | +2 | — | Weapon+Shield | melee | Budget defensive builds |
+| Budget | Combat Shield | ₡78,000 | +5 | +5 | +4 | Weapon+Shield | melee | Tank Fortress (required) |
+| Budget | Reactive Shield | ₡92,000 | +6 | +5 | +6 | Weapon+Shield | melee | Tank Fortress (upgrade) |
+| Mid | Barrier Shield | ₡111,000 | +8 | +7 | +5 | Weapon+Shield | melee | Mid-tier defensive builds |
+| Premium | Fortress Shield | ₡291,000 | +15 | +14 | +10 | Weapon+Shield | melee | Tank Fortress (premium) |
+| Luxury | Aegis Bulwark | ₡409,000 | +15 | +15 | +14 | Weapon+Shield | melee | Tank Fortress (ultimate) |
+
+#### Weapon Type Summary
+
+| Weapon Type | Count |
+|-------------|-------|
+| Energy | 13 |
+| Ballistic | 17 |
+| Melee | 11 |
+| Shield | 6 |
+| **Total** | **47** |
+
+**Note**: Laser Rifle was reclassified from 1H Short to 2H Short (now two-handed, baseDamage 9, cost ₡243,000). Assault Rifle was upgraded from 1H Short Mid to 1H Short Premium (baseDamage 14, cost ₡293,000).
 
 ---
 

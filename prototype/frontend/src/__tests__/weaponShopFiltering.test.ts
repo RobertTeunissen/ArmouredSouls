@@ -218,18 +218,18 @@ describe('Weapon Shop Filtering Logic', () => {
       expect(filtered).toHaveLength(3); // Practice Sword, Machine Pistol, Light Shield
     });
 
-    it('should filter mid-range weapons (100K-300K)', () => {
-      const filtered = mockWeapons.filter(w => w.cost >= 100000 && w.cost <= 300000);
-      expect(filtered).toHaveLength(1); // Plasma Rifle
+    it('should filter mid-range weapons (100K-250K)', () => {
+      const filtered = mockWeapons.filter(w => w.cost >= 100000 && w.cost <= 250000);
+      expect(filtered).toHaveLength(0); // None in mock data (Plasma Rifle at 275K is above 250K)
     });
 
-    it('should filter premium weapons (300K-500K)', () => {
-      const filtered = mockWeapons.filter(w => w.cost >= 300000 && w.cost <= 500000);
-      expect(filtered).toHaveLength(1); // Battle Axe
+    it('should filter premium weapons (250K-400K)', () => {
+      const filtered = mockWeapons.filter(w => w.cost >= 250000 && w.cost <= 400000);
+      expect(filtered).toHaveLength(2); // Plasma Rifle (275K), Battle Axe (388K)
     });
 
-    it('should filter luxury weapons (>500K)', () => {
-      const filtered = mockWeapons.filter(w => w.cost > 500000);
+    it('should filter luxury weapons (>400K)', () => {
+      const filtered = mockWeapons.filter(w => w.cost > 400000);
       expect(filtered).toHaveLength(0); // None in mock data
     });
   });

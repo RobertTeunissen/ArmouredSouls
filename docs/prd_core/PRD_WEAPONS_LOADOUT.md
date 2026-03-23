@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Comprehensive Reference  
-**Version**: v3.0  
+**Version**: v3.1  
 **Date**: February 10, 2026  
 **Status**: ✅ Implemented  
 
@@ -12,6 +12,7 @@
 **This Document**: Complete consolidated guide integrating all weapon and loadout system documentation. Includes full user stories, functional requirements, technical design, UI/UX specifications, testing requirements, and implementation details.
 
 **Revision History:**
+- v3.1 (Feb 10, 2026): Weapon roster expansion — updated counts, categories, DPS rankings, price tiers, and loadout coverage for 47-weapon catalog; added rangeBand as weapon attribute
 - v3.0 (Feb 10, 2026): Full consolidation - integrated all content from PRD_WEAPON_LOADOUT.md and WEAPONS_AND_LOADOUT.md
 - v2.1 (Feb 10, 2026): Updated to reference authoritative sources, incorporated economy overhaul, updated starting budget to ₡3M
 - v2.0 (Feb 10, 2026): Initial consolidated guide
@@ -47,10 +48,10 @@
 
 ## Executive Summary
 
-The Weapon & Loadout System enables players to purchase weapons, manage inventory, equip weapons to robots, and configure tactical loadouts. The system supports 4 distinct loadout types with **23 implemented weapons** across 4 categories.
+The Weapon & Loadout System enables players to purchase weapons, manage inventory, equip weapons to robots, and configure tactical loadouts. The system supports 4 distinct loadout types with **47 weapons** across 4 categories.
 
 **Key Features:**
-- ✅ 26 weapons across 4 categories (Energy, Ballistic, Melee, Shield)
+- ✅ 47 weapons across 4 categories (Energy 13, Ballistic 17, Melee 11, Shield 6)
 - ✅ Weapon purchase from shop with Workshop discounts (5-50%)
 - ✅ Stable-level weapon inventory with storage capacity management
 - ✅ 4 loadout configurations with strategic bonuses/penalties
@@ -78,7 +79,7 @@ The Weapon & Loadout System enables players to purchase weapons, manage inventor
 **What Exists:**
 - ✅ Complete database schema (Weapon, WeaponInventory, Robot models with all fields)
 - ✅ Comprehensive design documentation (WEAPONS_AND_LOADOUT.md, ROBOT_ATTRIBUTES.md)
-- ✅ 26 weapons defined with complete specifications across 4 categories
+- ✅ 47 weapons defined with complete specifications across 4 categories
 - ✅ Backend API: GET /api/weapons (list all weapons)
 - ✅ Backend API: POST /api/weapon-inventory/purchase (purchase weapon)
 - ✅ Backend API: GET /api/weapon-inventory (get user's weapon inventory)
@@ -97,7 +98,7 @@ The Weapon & Loadout System enables players to purchase weapons, manage inventor
 
 ### Design References
 
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (26 weapons)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
 - **⭐ [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
 - **[PRD_ROBOT_ATTRIBUTES.md](../prd_core/PRD_ROBOT_ATTRIBUTES.md)** - Robot attributes and loadout bonuses
 - **[DATABASE_SCHEMA.md](../prd_core/DATABASE_SCHEMA.md)** - Database structure
@@ -400,7 +401,7 @@ Originally planned as separate page, but integrated into Weapon Shop for better 
 
 ### Related Documentation
 
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (26 weapons)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
 - **⭐ [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
 - **[PRD_ROBOT_ATTRIBUTES.md](../prd_core/PRD_ROBOT_ATTRIBUTES.md)** - Robot attributes and combat mechanics
 - **[STABLE_SYSTEM.md](../STABLE_SYSTEM.md)** - Stable management and facilities
@@ -416,7 +417,7 @@ Originally planned as separate page, but integrated into Weapon Shop for better 
 
 **Navigation:**
 - Weapon Shop accessible via main navigation menu
-- Browse all 23 available weapons from catalog
+- Browse all 47 available weapons from catalog
 - Check storage capacity before purchase
 - Purchase using Credits (₡)
 
@@ -510,69 +511,98 @@ Loadouts use **percentage-based bonuses** rather than flat bonuses for critical 
 
 **⭐ AUTHORITATIVE SOURCE**: [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)
 
-The game features **23 implemented weapons** across 4 categories. For complete specifications, damage values, cooldowns, attribute bonuses, and exact pricing, refer to SEED_DATA_SPECIFICATION.md.
+The game features **47 weapons** across 4 categories. For complete specifications, damage values, cooldowns, attribute bonuses, and exact pricing, refer to SEED_DATA_SPECIFICATION.md.
 
 ### Weapon Categories
 
-**Energy Weapons (7 total):**
+**Energy Weapons (13 total):**
 - Damage Type: Energy (+20% vs energy shields)
 - Characteristics: Precise, consistent damage
-- Examples: Laser Pistol, Laser Rifle, Plasma Rifle, Plasma Cannon, Ion Beam
+- Examples: Laser Pistol, Laser Rifle, Plasma Rifle, Plasma Cannon, Ion Beam, Volt Sabre, Pulse Accelerator, Arc Projector, Flux Repeater, Disruptor Cannon, Nova Caster, Beam Pistol, Photon Marksman
 
-**Ballistic Weapons (8 total):**
+**Ballistic Weapons (17 total):**
 - Damage Type: Kinetic (standard vs armor)
 - Characteristics: Variable damage, high penetration
-- Examples: Machine Pistol, Machine Gun, Assault Rifle, Burst Rifle, Shotgun, Grenade Launcher, Sniper Rifle, Railgun
+- Examples: Machine Pistol, Machine Gun, Assault Rifle, Burst Rifle, Shotgun, Grenade Launcher, Sniper Rifle, Railgun, Scatter Cannon, Bolt Carbine, Mortar System, Gauss Pistol, Siege Cannon, Particle Lance
 
-**Melee Weapons (7 total):**
+**Melee Weapons (11 total):**
 - Damage Type: Impact (benefits from Hydraulic Systems)
 - Characteristics: High burst damage, positioning-dependent
-- Examples: Practice Sword, Combat Knife, Energy Blade, Plasma Blade, Power Sword, Battle Axe, Heavy Hammer
+- Examples: Practice Sword, Combat Knife, Energy Blade, Plasma Blade, Power Sword, Battle Axe, Heavy Hammer, Vibro Mace, War Club, Shock Maul, Thermal Lance
 
-**Shield Weapons (3 total):**
+**Shield Weapons (6 total):**
 - Damage Type: N/A (defensive equipment)
 - Characteristics: Provides defensive bonuses, enables counters
-- Examples: Light Shield, Combat Shield, Reactive Shield
+- Examples: Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, Aegis Bulwark
 
 ### Price Tiers
 
-**Budget Tier (₡50K-₡150K)** - 11 weapons:
+**Budget Tier (<₡100K)** - 14 weapons:
 - Practice Sword, Practice Blaster, Training Rifle, Training Beam
-- Machine Pistol, Laser Pistol, Combat Knife
-- Light Shield, Combat Shield, Reactive Shield, Machine Gun
+- Laser Pistol, Machine Pistol, Combat Knife
+- Light Shield, Combat Shield, Reactive Shield
+- War Club, Scatter Cannon, Bolt Carbine, Beam Pistol
 
-**Mid Tier (₡175K-₡250K)** - 5 weapons:
-- Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle, Plasma Blade
+**Mid Tier (₡100-250K)** - 11 weapons:
+- Machine Gun, Burst Rifle, Energy Blade, Plasma Blade, Laser Rifle
+- Shock Maul, Flux Repeater, Photon Marksman
+- Barrier Shield, Mortar System, Siege Cannon
 
-**Premium Tier (₡275K-₡400K)** - 5 weapons:
-- Plasma Rifle, Power Sword, Shotgun, Grenade Launcher, Sniper Rifle
+**Premium Tier (₡250-400K)** - 11 weapons:
+- Plasma Rifle, Assault Rifle, Power Sword, Shotgun, Grenade Launcher, Sniper Rifle
+- Thermal Lance, Pulse Accelerator, Disruptor Cannon, Gauss Pistol, Fortress Shield
 
-**Elite Tier (₡375K+)** - 5 weapons:
+**Luxury Tier (₡400K+)** - 11 weapons:
 - Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
+- Vibro Mace, Volt Sabre, Arc Projector, Nova Caster, Particle Lance, Aegis Bulwark
 
 ### Loadout Coverage
 
-**Single Loadout** (16 one-handed weapons):
+**Single Loadout** (22 one-handed weapons):
 - All one-handed weapons can be used in single loadout
 
-**Weapon + Shield** (16 one-handed + 3 shields):
-- All one-handed weapons + Light Shield, Combat Shield, Reactive Shield
+**Weapon + Shield** (22 one-handed + 6 shields):
+- All one-handed weapons + Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, Aegis Bulwark
 
-**Two-Handed** (10 weapons):
+**Two-Handed** (19 weapons):
 - Training Rifle, Training Beam
 - Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe
 - Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
+- Laser Rifle, War Club, Shock Maul, Thermal Lance
+- Scatter Cannon, Pulse Accelerator, Arc Projector, Mortar System, Siege Cannon
 
-**Dual-Wield** (16 one-handed weapons):
+**Dual-Wield** (22 one-handed weapons):
 - All one-handed weapons (same as single loadout)
 
-### DPS Rankings (Top 5)
+### DPS Rankings by Range Band
 
-1. **Power Sword**: 5.0 DPS (₡325K) - One-handed
-2. **Ion Beam**: 4.5 DPS (₡544K) - Two-handed (Highest DPS in game)
-3. **Heavy Hammer**: 4.4 DPS (₡478K) - Two-handed
-4. **Plasma Rifle**: 4.3 DPS (₡258K) - One-handed
-5. **Battle Axe**: 4.3 DPS (₡402K) - Two-handed
+**Melee (Top 5):**
+1. **Vibro Mace**: 6.0 DPS (₡425K) - 1H
+2. **Power Sword**: 5.0 DPS (₡325K) - 1H
+3. **Heavy Hammer**: 4.4 DPS (₡478K) - 2H
+4. **Battle Axe**: 4.25 DPS (₡402K) - 2H
+5. **Plasma Blade**: 3.67 DPS (₡202K) - 1H
+
+**Short Range (Top 5):**
+1. **Volt Sabre**: 6.0 DPS (₡425K) - 1H
+2. **Assault Rifle**: 4.67 DPS (₡293K) - 1H
+3. **Arc Projector**: 4.5 DPS (₡488K) - 2H
+4. **Plasma Rifle**: 4.33 DPS (₡258K) - 1H
+5. **Pulse Accelerator**: 3.25 DPS (₡273K) - 2H
+
+**Mid Range (Top 5):**
+1. **Nova Caster**: 6.0 DPS (₡425K) - 1H
+2. **Disruptor Cannon**: 4.67 DPS (₡293K) - 1H
+3. **Plasma Cannon**: 4.0 DPS (₡408K) - 2H
+4. **Shotgun**: 3.5 DPS (₡283K) - 2H
+5. **Grenade Launcher**: 3.2 DPS (₡293K) - 2H
+
+**Long Range (Top 5):**
+1. **Particle Lance**: 6.0 DPS (₡425K) - 1H
+2. **Gauss Pistol**: 4.67 DPS (₡291K) - 1H
+3. **Ion Beam**: 4.5 DPS (₡544K) - 2H
+4. **Railgun**: 4.17 DPS (₡527K) - 2H
+5. **Sniper Rifle**: 3.67 DPS (₡387K) - 2H
 
 See [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md) for complete weapon specifications.
 
@@ -652,9 +682,10 @@ The **Weapons Workshop** facility provides purchase discounts:
 - **Strategy**: Focus on robot attribute upgrades first
 - **Budget**: ₡200K-₡400K for initial weapons
 
-**Mid Game** (₡117K-₡258K range):
-- Laser Rifle (₡202K) - precision energy
+**Mid Game** (₡117K-₡293K range):
+- Laser Rifle (₡243K) - heavy precision energy (two-handed)
 - Plasma Blade (₡202K) - fast melee
+- Assault Rifle (₡293K) - elite military-grade firearm
 - Plasma Rifle (₡258K) - high damage
 - **Strategy**: Upgrade Weapons Workshop for discounts
 - **Budget**: ₡400K-₡700K for quality weapons
@@ -901,7 +932,7 @@ function calculateMaxShield(shieldCapacity: number, weaponBonuses: number, loado
 
 **Weapon Model:**
 - id, name, description, weaponType, handsRequired, damageType
-- baseDamage, cooldown, cost
+- baseDamage, cooldown, cost, rangeBand
 - 23 attribute bonus fields (one per robot attribute)
 
 **WeaponInventory Model:**
@@ -944,7 +975,7 @@ function calculateMaxShield(shieldCapacity: number, weaponBonuses: number, loado
 
 **Backend:**
 - ✅ Complete database schema (Weapon, WeaponInventory, Robot models)
-- ✅ 26 weapons seeded in database
+- ✅ 47 weapons seeded in database
 - ✅ GET /api/weapons (list all weapons)
 - ✅ POST /api/weapon-inventory/purchase (purchase weapon)
 - ✅ GET /api/weapon-inventory (get user's inventory)
@@ -1002,9 +1033,9 @@ function calculateMaxShield(shieldCapacity: number, weaponBonuses: number, loado
 - Limited availability
 
 **Additional Features:**
-- Advanced range mechanics (short/medium/long)
+- ✅ Expanded weapon catalog (47 weapons across all range bands and tiers)
+- ✅ Range band classification stored on weapon (`rangeBand` attribute)
 - Special weapon properties in combat
-- Expanded weapon catalog
 - Weapon trading/marketplace
 
 
@@ -1089,7 +1120,7 @@ function calculateMaxShield(shieldCapacity: number, weaponBonuses: number, loado
 
 **Technical:**
 - Database schema already in place (Weapon, WeaponInventory, Robot models)
-- Weapon seed data exists (26 weapons defined)
+- Weapon seed data exists (47 weapons defined)
 - Backend infrastructure (Express, Prisma) operational
 - Frontend infrastructure (React, Tailwind) operational
 
@@ -1253,7 +1284,7 @@ maxShield = effective_shield_capacity × 2
 
 **Weapon Model:**
 - id, name, description, weaponType, handsRequired, damageType
-- baseDamage, cooldown, cost
+- baseDamage, cooldown, cost, rangeBand
 - 23 attribute bonus fields (one per robot attribute)
 
 **WeaponInventory Model:**
@@ -1370,16 +1401,16 @@ maxShield = effective_shield_capacity × 2
 
 | Weapon Type | Hands | Compatible Loadouts | Notes |
 |-------------|-------|---------------------|-------|
-| One-handed weapons (15) | One | Single, Weapon+Shield, Dual-Wield | Can equip in main or offhand |
-| Two-handed weapons (8) | Two | Two-Handed only | Occupies both slots |
-| Shield weapons (3) | Shield | Weapon+Shield (offhand only) | Requires main weapon equipped |
+| One-handed weapons (22) | One | Single, Weapon+Shield, Dual-Wield | Can equip in main or offhand |
+| Two-handed weapons (19) | Two | Two-Handed only | Occupies both slots |
+| Shield weapons (6) | Shield | Weapon+Shield (offhand only) | Requires main weapon equipped |
 
 ### Weapon Pricing by Tier
 
-**Budget Tier (₡62K-₡150K):** 8 weapons  
-**Mid Tier (₡175K-₡250K):** 5 weapons  
-**Premium Tier (₡275K-₡400K):** 5 weapons  
-**Elite Tier (₡375K+):** 5 weapons
+**Budget Tier (<₡100K):** 14 weapons  
+**Mid Tier (₡100-250K):** 11 weapons  
+**Premium Tier (₡250-400K):** 11 weapons  
+**Luxury Tier (₡400K+):** 11 weapons
 
 See [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md) for complete pricing.
 
@@ -1396,7 +1427,7 @@ See [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md) for com
 
 ## Conclusion
 
-The Weapons & Loadout System provides a comprehensive, balanced, and strategic equipment system for Armoured Souls. With 23 implemented weapons, 4 distinct loadout types, and a robust DPS-inclusive pricing formula, players have meaningful choices that affect combat performance.
+The Weapons & Loadout System provides a comprehensive, balanced, and strategic equipment system for Armoured Souls. With 47 weapons, 4 distinct loadout types, and a robust DPS-inclusive pricing formula, players have meaningful choices that affect combat performance.
 
 **Key Achievements:**
 - ✅ Complete weapon lifecycle (purchase → equip → battle → unequip)
@@ -1407,13 +1438,11 @@ The Weapons & Loadout System provides a comprehensive, balanced, and strategic e
 - ✅ Comprehensive testing coverage
 
 **Primary References:**
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (26 weapons)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
 
 **Future Roadmap:**
 - Weapon crafting and modifications
 - Legendary weapons
-- Advanced range mechanics
-- Expanded weapon catalog
 - Special weapon abilities
 
 
@@ -1434,9 +1463,9 @@ The Weapons & Loadout System provides a comprehensive, balanced, and strategic e
 
 | Weapon Type | Hands Required | Compatible Loadouts | Notes |
 |-------------|----------------|---------------------|-------|
-| One-handed weapons (15) | One | Single, Weapon+Shield, Dual-Wield | Can equip in main or offhand |
-| Two-handed weapons (8) | Two | Two-Handed only | Occupies both slots |
-| Shield weapons (3) | Shield | Weapon+Shield (offhand only) | Requires main weapon equipped |
+| One-handed weapons (22) | One | Single, Weapon+Shield, Dual-Wield | Can equip in main or offhand |
+| Two-handed weapons (19) | Two | Two-Handed only | Occupies both slots |
+| Shield weapons (6) | Shield | Weapon+Shield (offhand only) | Requires main weapon equipped |
 
 **Compatibility Rules:**
 - One-handed weapons: Can be used in multiple loadouts and slots. Players can own 2 copies of the same weapon and equip both for Dual-Wield

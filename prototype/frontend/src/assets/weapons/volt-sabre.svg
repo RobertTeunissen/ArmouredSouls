@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <path d="M120 85 L128 80 L136 85 L130 130 L126 130 Z" fill="#a78bfa" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="122" y="130" width="12" height="15" fill="#6b7280" rx="2"/>
+  <line x1="128" y1="85" x2="128" y2="120" stroke="#c4b5fd" stroke-width="1" opacity="0.5"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Volt Sabre</text>
+</svg>

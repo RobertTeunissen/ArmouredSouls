@@ -43,6 +43,7 @@ const createMockWeapon = (overrides?: Partial<Weapon>): Weapon => ({
   syncProtocolsBonus: 0,
   supportSystemsBonus: 0,
   formationTacticsBonus: 0,
+  rangeBand: 'short',
   createdAt: new Date(),
   ...overrides,
 });

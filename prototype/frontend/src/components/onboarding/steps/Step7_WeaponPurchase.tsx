@@ -6,7 +6,7 @@
  * - Explain robots require weapons to battle
  * - Explain weapon stats (damage, speed, DPS)
  * - Explain shields vs 2H weapons
- * - Warn against expensive weapons (>₡300K) during onboarding
+ * - Warn against expensive weapons (>₡250K) during onboarding
  * - Navigate to weapon shop with guided overlay
  * - Return to onboarding after weapon purchased
  *
@@ -22,7 +22,7 @@ interface Step7_WeaponPurchaseProps {
   onNext?: () => void;
 }
 
-const EXPENSIVE_THRESHOLD = 300_000;
+const EXPENSIVE_THRESHOLD = 250_000;
 
 /** Strategy-specific weapon guidance */
 const MULTI_ROBOT_WEAPON_GUIDANCE: Record<string, {
@@ -33,7 +33,7 @@ const MULTI_ROBOT_WEAPON_GUIDANCE: Record<string, {
     heading: '2 Robot Strategy: Weapon Reminders',
     points: [
       'You\'ll need at least 2 weapons — one for each robot.',
-      'Consider buying 2 affordable weapons (e.g., 2× Machine Gun = ₡300K) rather than 1 expensive one.',
+      'Consider buying 2 affordable weapons (e.g., 2× Machine Gun = ₡250K) rather than 1 expensive one.',
       'Each robot needs its own weapon equipped to be battle-ready.',
       'Weapons can be equipped/unequipped, but only one robot can wield a weapon at any given time.',
     ],
@@ -42,7 +42,7 @@ const MULTI_ROBOT_WEAPON_GUIDANCE: Record<string, {
     heading: '3 Robot Strategy: Weapon Reminders',
     points: [
       'You\'ll need at least 3 weapons — one for each robot.',
-      'Budget-friendly options like Combat Knife (₡100K each, ₡300K total) help stretch your credits.',
+      'Budget-friendly options like Combat Knife (₡100K each, ₡250K total) help stretch your credits.',
       'Base storage holds only 5 weapons — consider the Storage Facility if you need more.',
       'Weapons can be equipped/unequipped, but only one robot can wield a weapon at any given time.',
     ],

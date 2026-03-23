@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <path d="M100 85 Q128 80 156 85 L156 135 Q128 145 100 135 Z" fill="#0891b2" stroke="#0e7490" stroke-width="2" opacity="0.8"/>
+  <path d="M110 92 Q128 88 146 92 L146 128 Q128 135 110 128 Z" fill="#06b6d4" opacity="0.4"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Barrier Shield</text>
+</svg>

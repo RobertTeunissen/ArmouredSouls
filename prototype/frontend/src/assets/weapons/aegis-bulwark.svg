@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <path d="M90 80 Q128 72 166 80 L166 145 Q128 158 90 145 Z" fill="#0891b2" stroke="#0e7490" stroke-width="3" opacity="0.9"/>
+  <path d="M100 88 Q128 82 156 88 L156 138 Q128 148 100 138 Z" fill="#06b6d4" opacity="0.3"/>
+  <path d="M112 96 Q128 92 144 96 L144 130 Q128 136 112 130 Z" fill="#22d3ee" opacity="0.3"/>
+  <circle cx="128" cy="112" r="8" fill="#0e7490" opacity="0.6"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Aegis Bulwark</text>
+</svg>

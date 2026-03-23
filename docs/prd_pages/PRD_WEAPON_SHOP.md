@@ -6,6 +6,7 @@
 **Epic**: Weapon Shop & Inventory System  
 
 **Revision History:**
+- v2.1 (Weapon Roster Expansion): Updated weapon counts from 26 to 47, price tier boundaries aligned (Budget <100K, Mid 100-250K, Premium 250-400K, Luxury 400K+), added rangeBand attribute, updated catalog and image lists
 - v2.0 (Feb 9, 2026): **CONSOLIDATED VERSION** - Merged all 8 weapon shop documents into single authoritative source. Updated all status markers to reflect actual implementation. Reorganized for clarity.
 - v1.10 (Feb 4, 2026): Filters collapsed by default, storage capacity color coding
 - v1.9 (Feb 4, 2026): Manual review, bug fixes documented
@@ -19,7 +20,7 @@
 - v1.1 (Feb 4, 2026): Table view added
 - v1.0 (Feb 4, 2026): Initial PRD created
 
-> **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from 26 weapons to 500+ weapons. All core features (Phases 1-4) are implemented and production-ready.
+> **⚠️ COMPREHENSIVE DESIGN DOCUMENT**: This PRD defines the complete Weapon Shop experience, designed to scale from 47 weapons to 500+ weapons. All core features (Phases 1-4) are implemented and production-ready.
 
 ---
 
@@ -41,7 +42,7 @@
 
 ## Executive Summary
 
-The Weapon Shop (`/weapon-shop`) is the primary economic interface where players browse, compare, and purchase weapons for their robot stable. The implementation successfully scales from 26 weapons to 500+ weapons while maintaining intuitive navigation and strategic decision-making.
+The Weapon Shop (`/weapon-shop`) is the primary economic interface where players browse, compare, and purchase weapons for their robot stable. The implementation successfully scales from 47 weapons to 500+ weapons while maintaining intuitive navigation and strategic decision-making.
 
 ### Key Achievements
 
@@ -78,7 +79,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 - Multi-criteria filtering system with 5 categories
 - Loadout type filter (Single, Weapon+Shield, Two-Handed, Dual-Wield)
 - Weapon type filter (Melee, Ballistic, Energy, Shield)
-- Price range filter (Budget <₡100K, Mid ₡100-300K, Premium ₡300-500K, Luxury ₡500K+)
+- Price range filter (Budget <₡100K, Mid ₡100-250K, Premium ₡250-400K, Luxury ₡400K+)
 - "Can Afford" quick filter (based on user credits)
 - "Only Owned Weapons" quick filter (shows inventory, eliminates need for separate inventory page)
 - Collapsible filter panel (collapsed by default, localStorage persistence)
@@ -86,7 +87,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 - "Clear All Filters" button
 - Weapon count display ("Showing X of Y weapons")
 - Empty state handling
-- Client-side filtering <50ms for 26 weapons, <200ms projected for 500 weapons
+- Client-side filtering <50ms for 47 weapons, <200ms projected for 500 weapons
 
 **Components**: FilterPanel.tsx (196 lines), ActiveFiltersDisplay.tsx (122 lines)
 
@@ -121,7 +122,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 
 **Implemented**:
 - Real-time text search with 300ms debouncing
-- Multi-field search (weapon name, description, weapon type, loadout type)
+- Multi-field search (weapon name, description, weapon type, loadout type, range band)
 - Search result count display ("5 results for 'plasma'")
 - Sort dropdown with 5 options:
   - Name (A-Z)
@@ -136,7 +137,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 
 **Components**: SearchBar.tsx (75 lines), SortDropdown.tsx (98 lines)
 
-**Performance**: Search <50ms, sort <20ms, combined <100ms for 26 weapons
+**Performance**: Search <50ms, sort <20ms, combined <100ms for 47 weapons
 
 #### Phase 4: Visual Polish & View Modes
 **Status**: Complete (February 4, 2026)
@@ -146,7 +147,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 - Card view: Visual grid grouped by loadout type, 3-4 columns desktop
 - Table view: Compact sortable table, 8 columns, 15-20+ weapons per screen
 - View preference localStorage persistence
-- 26 weapon placeholder SVG images (256×256px, color-coded by type)
+- 47 weapon placeholder SVG images (256×256px, color-coded by type)
 - 6 icon assets (weapon type icons: melee, ballistic, energy, shield; view mode icons: grid, list)
 - Weapon images integrated into cards with graceful error handling
 - Table column sorting (click headers, visual sort indicators ↑/↓)
@@ -157,12 +158,12 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 
 **Components**: ViewModeToggle.tsx (58 lines), WeaponTable.tsx (331 lines), WeaponDetailModal.tsx, ConfirmationModal.tsx, weaponImages.ts (30 lines)
 
-**Assets**: 32 SVG files (26 weapons + 4 weapon type icons + 2 view mode icons)
+**Assets**: 53 SVG files (47 weapons + 4 weapon type icons + 2 view mode icons)
 
 ### 📊 Implementation Statistics
 
 **Total Code**: 1,235 lines across 9 components  
-**Total Assets**: 29 SVG files  
+**Total Assets**: 53 SVG files  
 **Backend Changes**: 0 (100% client-side)  
 **Development Time**: 1 day (February 4, 2026)  
 **Performance**: All operations <200ms for 500 weapons  
@@ -216,7 +217,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 - ✅ Melee, Ballistic, Energy, Shield filters
 
 **Price Range Filtering** (4 tests):
-- ✅ Budget (<₡100K), Mid (₡100-300K), Premium (₡300-500K), Luxury (>₡500K)
+- ✅ Budget (<₡100K), Mid (₡100-250K), Premium (₡250-400K), Luxury (>₡400K)
 
 **Combined Filtering** (4 tests):
 - ✅ Multiple filter combinations
@@ -363,8 +364,8 @@ npm run test:e2e:debug    # Run in debug mode
 - **Current Risk**: Low-Medium - 52 unit tests provide strong foundation
 - **Mitigation**: Comprehensive unit test coverage for all critical logic
 - **Remaining Risk**: E2E tests need execution, component tests needed
-- **Impact**: Low for current 26 weapons, increases with catalog growth
-- **Recommendation**: Execute E2E tests before adding 50+ more weapons
+- **Impact**: Low for current 47 weapons, increases with catalog growth
+- **Recommendation**: Execute E2E tests before adding 100+ more weapons
 
 **Test Files Created**:
 1. `prototype/frontend/src/utils/__tests__/weaponConstants.test.ts` (67 lines)
@@ -399,7 +400,7 @@ npm run test:e2e:debug    # Run in debug mode
 ### Current State
 
 **Database & Backend** (✅ Complete):
-- 26 weapons with full specifications (baseDamage, cost, 15 attribute bonuses)
+- 47 weapons with full specifications (baseDamage, cost, rangeBand, 15 attribute bonuses)
 - Backend APIs: `GET /api/weapons`, `POST /api/weapon-inventory/purchase`, `GET /api/weapon-inventory/storage-status`, `GET /api/weapon-inventory`
 - Weapon Workshop discount system: 5% per level, max 50% at level 10
 - Storage capacity system: 5 base + (5 × Storage Facility Level), max 55 weapons
@@ -440,7 +441,7 @@ npm run test:e2e:debug    # Run in debug mode
 - **Balance Visibility**: Players see pricing fairness
 
 **Technical Scalability**:
-- **Future-Proof**: Works for 23 or 500 weapons
+- **Future-Proof**: Works for 47 or 500 weapons
 - **Performance**: Client-side operations maintain <200ms response
 - **Maintainability**: Component-based architecture simplifies updates
 
@@ -544,7 +545,7 @@ So that I can focus on specific weapon categories
 Acceptance Criteria:
 ✅ Filter options: Melee, Ballistic, Energy, Shield
 ✅ Visual type badges on weapon cards
-✅ Filter count indicators ("Energy (7)")
+✅ Filter count indicators ("Energy (13)")
 ✅ Can combine with loadout type filter
 ✅ Clear filter indicators show active selections
 ```
@@ -555,7 +556,7 @@ As a player, I want to filter weapons by price range
 So that I can focus on weapons within my budget
 
 Acceptance Criteria:
-✅ Price range options: Budget (<₡100K), Mid (₡100-300K), Premium (₡300K+), Luxury (₡500K+)
+✅ Price range options: Budget (<₡100K), Mid (₡100-250K), Premium (₡250-400K), Luxury (₡400K+)
 ✅ "Can Afford" quick filter shows only weapons within current credits
 ✅ Visual affordability indicators (green checkmark, red x)
 ✅ Discount prices used for filtering (not base prices)
@@ -753,7 +754,7 @@ Acceptance Criteria:
 ⏳ Lazy loading of weapon images (not needed yet)
 ⏳ "Load More" button or automatic scroll loading (not needed yet)
 
-Note: Performance excellent for current 26 weapons, optimization deferred until 100+ weapons
+Note: Performance excellent for current 47 weapons, optimization deferred until 100+ weapons
 ```
 
 
@@ -772,11 +773,12 @@ Note: Performance excellent for current 26 weapons, optimization deferred until 
 **Filter Categories**:
 1. ✅ **Loadout Type**: Single, Weapon+Shield, Two-Handed, Dual-Wield
 2. ✅ **Weapon Type**: Melee, Ballistic, Energy, Shield
-3. ✅ **Price Range**: Budget (<₡100K), Mid (₡100-300K), Premium (₡300K+), Luxury (₡500K+)
+3. ✅ **Price Range**: Budget (<₡100K), Mid (₡100-250K), Premium (₡250-400K), Luxury (₡400K+)
 4. ✅ **Affordability**: Can Afford (within current credits)
 5. ✅ **Ownership**: Show All, Show Only Owned
-6. ⏳ **Attribute Focus**: Offensive/Defensive/Mobility/Balanced (deferred - low priority)
-7. ⏳ **Availability**: In Stock (storage available) (deferred - always shown)
+6. ⏳ **Range Band**: Melee, Short, Mid, Long (available via `rangeBand` attribute on each weapon)
+7. ⏳ **Attribute Focus**: Offensive/Defensive/Mobility/Balanced (deferred - low priority)
+8. ⏳ **Availability**: In Stock (storage available) (deferred - always shown)
 
 **UI Implementation**:
 - ✅ Filter panel at top of page
@@ -789,7 +791,7 @@ Note: Performance excellent for current 26 weapons, optimization deferred until 
 - ✅ Collapsible filter groups on mobile
 
 **Technical Specifications**:
-- ✅ Client-side filtering for instant response (<50ms for 26 weapons)
+- ✅ Client-side filtering for instant response (<50ms for 47 weapons)
 - ✅ Multiple filters applied with AND logic (all must match)
 - ✅ Exception: Loadout type uses OR within category
 - ✅ Filter state persists in localStorage between sessions
@@ -1236,7 +1238,7 @@ Note: Performance excellent for current 26 weapons, optimization deferred until 
 
 #### 10.1 Large Catalog Handling (100+ weapons)
 
-**Status**: Not needed yet (current catalog: 26 weapons)
+**Status**: Not needed yet (current catalog: 47 weapons)
 
 **Requirements** (Future):
 
@@ -1337,6 +1339,7 @@ interface Weapon {
   baseDamage: number;
   cooldown: number; // seconds
   cost: number; // base cost
+  rangeBand: 'melee' | 'short' | 'mid' | 'long'; // optimal range classification
   
   // 15 attribute bonuses
   combatPowerBonus: number;
@@ -1487,7 +1490,7 @@ const processedWeapons = useMemo(() => {
 **Why No Backend Changes Needed**:
 - All filter criteria already in weapon data
 - All sort fields can be calculated client-side
-- Text search done client-side (23-500 weapons is manageable)
+- Text search done client-side (47-500 weapons is manageable)
 - View modes are presentational (frontend)
 - Comparison is client-side state management
 - Recommendations can be generated client-side
@@ -1510,7 +1513,7 @@ const processedWeapons = useMemo(() => {
 - ✅ localStorage for view mode and sort preferences
 
 **Performance Metrics**:
-| Operation | Current (26 weapons) | Projected (500 weapons) | Target | Status |
+| Operation | Current (47 weapons) | Projected (500 weapons) | Target | Status |
 |-----------|----------------------|-------------------------|--------|--------|
 | Search (debounced) | <50ms | <150ms | <200ms | ✅ |
 | Filter | <20ms | <100ms | <200ms | ✅ |
@@ -1531,7 +1534,7 @@ const processedWeapons = useMemo(() => {
 
 **Example URL**:
 ```
-/weapon-shop?view=table&loadout=two_handed,dual_wield&type=melee&priceMax=300000&sort=damage-desc&search=sword
+/weapon-shop?view=table&loadout=two_handed,dual_wield&type=melee&priceMax=250000&sort=damage-desc&search=sword
 ```
 
 **Benefits**:
@@ -1826,7 +1829,7 @@ const processedWeapons = useMemo(() => {
 
 ## Performance & Scalability
 
-### Current Performance (26 Weapons)
+### Current Performance (47 Weapons)
 
 **Operation Timings**:
 - Page load: <1 second
@@ -1868,7 +1871,7 @@ const processedWeapons = useMemo(() => {
 ### Scalability Analysis
 
 **Current Architecture Supports**:
-- ✅ 26 weapons: Excellent performance (<100ms)
+- ✅ 47 weapons: Excellent performance (<100ms)
 - ✅ 100 weapons: Good performance (<200ms projected)
 - ✅ 500 weapons: Acceptable performance (<300ms projected)
 - ⏳ 1,000+ weapons: Requires optimization (pagination, server-side filtering)
@@ -1969,62 +1972,83 @@ const processedWeapons = useMemo(() => {
 
 ## Appendices
 
-### A. Weapon Catalog (26 Weapons)
+### A. Weapon Catalog (47 Weapons)
 
 **Current Catalog** (actual implementation prices from seed.ts):
 
-**Melee Weapons** (7):
+**Melee Weapons** (11):
 1. Practice Sword (₡50,000) - Starter weapon
 2. Combat Knife (₡93,000) - Quick strikes
 3. Energy Blade (₡175,000) - Energy-infused melee
-4. Power Sword (₡325,000) - High damage
-5. Battle Axe (₡402,000) - Heavy impact
-6. Plasma Blade (₡202,000) - Premium melee
-7. Heavy Hammer (₡478,000) - Maximum damage
+4. Plasma Blade (₡202,000) - Premium melee
+5. Power Sword (₡325,000) - High damage
+6. Vibro Mace (₡425,000) - Vibration-enhanced mace
+7. War Club (₡84,000) - Budget two-handed bludgeon
+8. Shock Maul (₡183,000) - Electrified maul
+9. Thermal Lance (₡279,000) - Superheated polearm
+10. Battle Axe (₡402,000) - Heavy impact
+11. Heavy Hammer (₡478,000) - Maximum damage
 
-**Ballistic Weapons** (10):
-8. Practice Blaster (₡50,000) - Starter short-range
-9. Machine Pistol (₡94,000) - Rapid-fire sidearm
-10. Machine Gun (₡107,000) - Sustained fire
-11. Burst Rifle (₡117,000) - Controlled bursts
-12. Assault Rifle (₡173,000) - Balanced rifle
-13. Training Rifle (₡50,000) - Starter mid-range
-14. Shotgun (₡283,000) - Close-range
-15. Grenade Launcher (₡293,000) - Area effect
-16. Sniper Rifle (₡387,000) - Long-range precision
-17. Railgun (₡527,000) - Armor-piercing
+**Ballistic Weapons** (17):
+12. Practice Blaster (₡50,000) - Starter short-range
+13. Machine Pistol (₡94,000) - Rapid-fire sidearm
+14. Machine Gun (₡107,000) - Sustained fire
+15. Burst Rifle (₡117,000) - Controlled bursts
+16. Assault Rifle (₡293,000) - Elite military-grade firearm
+17. Scatter Cannon (₡84,000) - Wide-bore scatter weapon
+18. Training Rifle (₡50,000) - Starter mid-range
+19. Shotgun (₡283,000) - Close-range
+20. Grenade Launcher (₡293,000) - Area effect
+21. Mortar System (₡163,000) - Indirect-fire ballistic system
+22. Bolt Carbine (₡93,000) - Compact mid-range carbine
+23. Gauss Pistol (₡291,000) - Magnetically accelerated sidearm
+24. Siege Cannon (₡163,000) - Heavy long-range bombardment
+25. Sniper Rifle (₡387,000) - Long-range precision
+26. Railgun (₡527,000) - Armor-piercing
 
-**Energy Weapons** (6):
-18. Laser Pistol (₡57,000) - Energy sidearm
-19. Laser Rifle (₡202,000) - Energy rifle
-20. Plasma Rifle (₡258,000) - High-energy
-21. Training Beam (₡50,000) - Starter long-range
-22. Plasma Cannon (₡408,000) - Heavy energy
-23. Ion Beam (₡544,000) - Sustained beam
+**Energy Weapons** (13):
+27. Laser Pistol (₡57,000) - Energy sidearm
+28. Laser Rifle (₡243,000) - Heavy precision energy rifle (two-handed)
+29. Plasma Rifle (₡258,000) - High-energy
+30. Volt Sabre (₡425,000) - Arc-charged blade pistol
+31. Pulse Accelerator (₡273,000) - Charged-particle accelerator
+32. Arc Projector (₡488,000) - Devastating arc-lightning projector
+33. Flux Repeater (₡147,000) - Rapid-cycling energy repeater
+34. Disruptor Cannon (₡293,000) - Heavy energy disruptor
+35. Nova Caster (₡425,000) - Miniaturized nova reactor
+36. Beam Pistol (₡93,000) - Compact long-range energy sidearm
+37. Photon Marksman (₡147,000) - Precision photon emitter
+38. Particle Lance (₡425,000) - Focused particle beam weapon
+39. Training Beam (₡50,000) - Starter long-range
+40. Plasma Cannon (₡408,000) - Heavy energy
+41. Ion Beam (₡544,000) - Sustained beam
 
-**Shields** (3):
-24. Light Shield (₡51,000) - Basic defense
-25. Combat Shield (₡78,000) - Standard defense
-26. Reactive Shield (₡92,000) - Advanced defense
+**Shields** (6):
+42. Light Shield (₡51,000) - Basic defense
+43. Combat Shield (₡78,000) - Standard defense
+44. Reactive Shield (₡92,000) - Advanced defense
+45. Barrier Shield (₡111,000) - Reinforced energy barrier
+46. Fortress Shield (₡291,000) - Heavy fortress-class shield
+47. Aegis Bulwark (₡409,000) - Ultimate defensive platform
 
 **Loadout Type Distribution**:
-- Single: 16 weapons (can be used alone or with shield)
-- Two-Handed: 10 weapons (requires both hands)
-- Shield: 3 weapons (offhand only)
-- Dual-Wield: 16 weapons (can be paired)
+- Single (1H): 22 weapons (can be used alone or with shield)
+- Two-Handed: 19 weapons (requires both hands)
+- Shield: 6 weapons (offhand only)
+- Dual-Wield: 22 weapons (can be paired, same as 1H)
 
 **Price Range Distribution**:
-- Budget (<₡100K): 7 weapons
-- Entry (₡100-200K): 5 weapons
-- Mid (₡200-400K): 5 weapons
-- Premium (₡400K+): 6 weapons
+- Budget (<₡100K): 12 weapons
+- Mid (₡100-250K): 12 weapons
+- Premium (₡250-400K): 13 weapons
+- Luxury (₡400K+): 10 weapons
 
 ### B. Weapon Images Documentation
 
 **Image Location**: `/prototype/frontend/src/assets/weapons/`  
 **Image Format**: SVG (256×256px viewBox), scalable vector graphics  
 **Naming Convention**: Weapon name in lowercase with hyphens (e.g., `practice-sword.svg`)  
-**Current Status**: ✅ All 26 weapon placeholder images created
+**Current Status**: ✅ All 47 weapon placeholder images created
 
 **Image List** (Color-coded by type):
 
@@ -2034,33 +2058,54 @@ const processedWeapons = useMemo(() => {
 3. `energy-blade.svg` - Energy Blade (blue theme)
 4. `plasma-blade.svg` - Plasma Blade (purple theme)
 5. `power-sword.svg` - Power Sword
-6. `battle-axe.svg` - Battle Axe
-7. `heavy-hammer.svg` - Heavy Hammer
+6. `vibro-mace.svg` - Vibro Mace
+7. `war-club.svg` - War Club
+8. `shock-maul.svg` - Shock Maul (blue theme)
+9. `thermal-lance.svg` - Thermal Lance (blue theme)
+10. `battle-axe.svg` - Battle Axe
+11. `heavy-hammer.svg` - Heavy Hammer
 
 **Ballistic Weapons** (Orange/Gray theme):
-8. `practice-blaster.svg` - Practice Blaster
-9. `machine-pistol.svg` - Machine Pistol
-10. `machine-gun.svg` - Machine Gun
-11. `burst-rifle.svg` - Burst Rifle
-12. `assault-rifle.svg` - Assault Rifle
-13. `training-rifle.svg` - Training Rifle
-14. `shotgun.svg` - Shotgun
-15. `grenade-launcher.svg` - Grenade Launcher (yellow theme)
-16. `sniper-rifle.svg` - Sniper Rifle
-17. `railgun.svg` - Railgun
+12. `practice-blaster.svg` - Practice Blaster
+13. `machine-pistol.svg` - Machine Pistol
+14. `machine-gun.svg` - Machine Gun
+15. `burst-rifle.svg` - Burst Rifle
+16. `assault-rifle.svg` - Assault Rifle
+17. `scatter-cannon.svg` - Scatter Cannon
+18. `training-rifle.svg` - Training Rifle
+19. `shotgun.svg` - Shotgun
+20. `grenade-launcher.svg` - Grenade Launcher (yellow theme)
+21. `mortar-system.svg` - Mortar System
+22. `bolt-carbine.svg` - Bolt Carbine
+23. `gauss-pistol.svg` - Gauss Pistol
+24. `siege-cannon.svg` - Siege Cannon
+25. `sniper-rifle.svg` - Sniper Rifle
+26. `railgun.svg` - Railgun
 
 **Energy Weapons** (Blue/Purple theme):
-18. `laser-pistol.svg` - Laser Pistol (blue)
-19. `laser-rifle.svg` - Laser Rifle (blue)
-20. `plasma-rifle.svg` - Plasma Rifle (purple)
-21. `training-beam.svg` - Training Beam (blue)
-22. `plasma-cannon.svg` - Plasma Cannon (purple)
-23. `ion-beam.svg` - Ion Beam (blue)
+27. `laser-pistol.svg` - Laser Pistol (blue)
+28. `laser-rifle.svg` - Laser Rifle (blue)
+29. `plasma-rifle.svg` - Plasma Rifle (purple)
+30. `volt-sabre.svg` - Volt Sabre
+31. `pulse-accelerator.svg` - Pulse Accelerator
+32. `arc-projector.svg` - Arc Projector
+33. `flux-repeater.svg` - Flux Repeater
+34. `disruptor-cannon.svg` - Disruptor Cannon
+35. `nova-caster.svg` - Nova Caster
+36. `beam-pistol.svg` - Beam Pistol
+37. `photon-marksman.svg` - Photon Marksman
+38. `particle-lance.svg` - Particle Lance
+39. `training-beam.svg` - Training Beam (blue)
+40. `plasma-cannon.svg` - Plasma Cannon (purple)
+41. `ion-beam.svg` - Ion Beam (blue)
 
 **Shields** (Cyan/Blue theme):
-24. `light-shield.svg` - Light Shield
-25. `combat-shield.svg` - Combat Shield
-26. `reactive-shield.svg` - Reactive Shield
+42. `light-shield.svg` - Light Shield
+43. `combat-shield.svg` - Combat Shield
+44. `reactive-shield.svg` - Reactive Shield
+45. `barrier-shield.svg` - Barrier Shield
+46. `fortress-shield.svg` - Fortress Shield
+47. `aegis-bulwark.svg` - Aegis Bulwark
 
 **Image Loading**:
 - ✅ Images loaded via `getWeaponImagePath()` utility function
@@ -2163,6 +2208,7 @@ const processedWeapons = useMemo(() => {
 - **DPS per ₡1K**: DPS efficiency per 1,000 credits (value metric, higher is better)
 - **Attributes per ₡1K**: Total attribute bonus per 1,000 credits (value metric, higher is better)
 - **Loadout Type**: Robot configuration determining weapon slot usage (Single, Weapon+Shield, Two-Handed, Dual-Wield)
+- **Range Band**: Optimal engagement distance for a weapon (Melee, Short, Mid, Long), stored as `rangeBand` on each weapon record
 - **Storage Capacity**: Maximum number of weapons a stable can own (5 base + 5 per Storage Facility level, max 55)
 - **Value Score**: Composite metric indicating weapon cost-effectiveness
 - **Weapon Type**: Damage category (Melee, Ballistic, Energy, Shield) - currently cosmetic
@@ -2171,7 +2217,7 @@ const processedWeapons = useMemo(() => {
 ### E. Known Issues & Bug Fixes
 
 **Fixed Issues** ✅:
-1. **Infinity Bug**: Price range filter "Luxury (₡500K+)" used `Infinity` as max value, causing blank pages
+1. **Infinity Bug**: Price range filter "Luxury (₡400K+)" used `Infinity` as max value, causing blank pages
    - **Fix**: Changed to `999999999` in FilterPanel.tsx
    - **Status**: ✅ Resolved
 
@@ -2276,9 +2322,9 @@ During onboarding Step 7 (Weapon Purchase Guidance), the Weapon Shop integrates 
 
 | Weapon | Type | Loadout | Cost | Why Recommended |
 |--------|------|---------|------|-----------------|
-| Laser Rifle | Energy | Single/Dual-Wield | Budget-friendly | Balanced damage and attribute bonuses, good all-rounder |
 | Machine Gun | Ballistic | Single/Dual-Wield | Budget-friendly | High DPS, reliable damage output |
 | Combat Knife | Melee | Single/Dual-Wield | Budget-friendly | Low cost, decent melee bonuses, good for budget builds |
+| Bolt Carbine | Ballistic | Single/Dual-Wield | Budget-friendly | Compact mid-range carbine, good all-rounder |
 
 - Recommendations are adjusted based on the player's chosen loadout type from onboarding Step 6
 - For Weapon+Shield loadouts, shields (Light Shield, Combat Shield) are also highlighted
@@ -2289,7 +2335,7 @@ During onboarding Step 7 (Weapon Purchase Guidance), the Weapon Shop integrates 
 **Condition**: When the user's `hasCompletedOnboarding = false`
 
 **Behavior**:
-- Weapons costing more than ₡300,000 display a warning badge: "⚠️ Expensive for new players"
+- Weapons costing more than ₡250,000 display a warning badge: "⚠️ Expensive for new players"
 - The warning tooltip explains: "Consider starting with a budget weapon. You'll need credits for facilities, repairs, and attribute upgrades."
 - The "Can Afford" filter is pre-activated during onboarding to show only purchasable weapons
 - Premium and Luxury price range filters show a subtle advisory: "These weapons may strain your starting budget"
@@ -2300,7 +2346,7 @@ During onboarding Step 7 (Weapon Purchase Guidance), the Weapon Shop integrates 
 │ ⚔️  Plasma Cannon                          ₡408,000
 │     Two-Handed | Energy | 20 base damage
 │     
-│ ⚠️ This weapon costs more than ₡300K.
+│ ⚠️ This weapon costs more than ₡250K.
 │    New players should consider budget options first.
 │    
 │ [View Details]                    [Purchase - ₡408,000]
@@ -2323,7 +2369,7 @@ All onboarding-specific weapon shop behavior (recommendation badges, budget warn
 
 ---
 
-**Document Version**: 2.0 (Consolidated)  
+**Document Version**: 2.1 (Weapon Roster Expansion)  
 **Last Updated**: February 9, 2026  
 **Status**: Complete and Production-Ready  
 **Maintained By**: Robert Teunissen

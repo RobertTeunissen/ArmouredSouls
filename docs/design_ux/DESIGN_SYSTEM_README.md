@@ -66,7 +66,7 @@ Located in `/docs/` - These define **CONTENT** to visualize
 2. **FRONTEND_UI_REFERENCE.md** - Page structure and UI mapping
 3. **ROBOT_ATTRIBUTES.md** - 23 attributes system
 4. **STABLE_SYSTEM.md** - 14 facilities system
-5. **WEAPONS_AND_LOADOUT.md** - 26 weapons catalog (including Practice/Training starter weapons)
+5. **WEAPONS_AND_LOADOUT.md** - 47 weapons catalog (including Practice/Training starter weapons)
 
 **Status**: Content inventory defined, docs being updated for accuracy
 
@@ -110,7 +110,7 @@ Located in `/docs/` - These define **CONTENT** to visualize
 #### Phase 1 (P0) - MVP Core Identity
 1. **Direction B Logo** (all sizes: 32px, 40px, 64px)
 2. **Robot Portraits** (3-5 frames: 256×256px, 512×512px)
-3. **Weapon Illustrations** (26 weapons: 256×256px, 128×128px)
+3. **Weapon Illustrations** (47 weapons: 256×256px, 128×128px)
 4. **HP/Shield Bars** (component with color coding)
 5. **Currency Icons** (₡ Credits, Prestige)
 

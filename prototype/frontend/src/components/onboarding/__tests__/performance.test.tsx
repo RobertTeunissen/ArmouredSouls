@@ -5,7 +5,6 @@
  * - Lazy loading: step components load on demand via React.lazy/Suspense
  * - Memoization: React.memo prevents unnecessary re-renders of step components
  * - Debouncing: updateChoices batches rapid calls into a single API request
- * - Recommendation caching: repeated calls with same params use cached data
  *
  * Requirements: 28.1-28.7
  */
@@ -17,11 +16,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { OnboardingProvider, useOnboarding } from '../../../contexts/OnboardingContext';
 import { AuthProvider } from '../../../contexts/AuthContext';
 import apiClient from '../../../utils/apiClient';
-import {
-  getRecommendations,
-  clearRecommendationCache,
-} from '../../../utils/onboardingApi';
-
 // Mock apiClient
 vi.mock('../../../utils/apiClient');
 
@@ -63,20 +57,6 @@ function setupApiMocks(overrides: Record<string, unknown> = {}) {
         data: {
           success: true,
           data: { ...defaultOnboardingState, ...overrides },
-        },
-      });
-    }
-    // Recommendations endpoint
-    if (url.startsWith('/api/onboarding/recommendations')) {
-      return Promise.resolve({
-        data: {
-          success: true,
-          data: {
-            facilities: [{ name: 'Weapons Workshop', priority: 1 }],
-            weapons: [{ name: 'Laser Rifle', cost: 150000 }],
-            attributes: [{ name: 'armor', recommended: 80 }],
-            budgetAllocation: { facilities: 500000, robots: 500000 },
-          },
         },
       });
     }
@@ -318,44 +298,4 @@ describe('Debouncing', () => {
   });
 });
 
-// ─── Recommendation Caching Tests ────────────────────────────────────
 
-describe('Recommendation Caching', () => {
-  beforeEach(() => {
-    clearRecommendationCache();
-    setupApiMocks();
-  });
-
-  it('should cache recommendations and return cached data on subsequent calls', async () => {
-    // First call — hits the API
-    const result1 = await getRecommendations('1_mighty', 'single', 'offensive', 1000000);
-    expect(result1.facilities).toHaveLength(1);
-    expect(vi.mocked(apiClient.get)).toHaveBeenCalledTimes(1);
-
-    // Second call with same params — should use cache
-    const result2 = await getRecommendations('1_mighty', 'single', 'offensive', 1000000);
-    expect(result2).toEqual(result1);
-    // Should NOT have made another API call
-    expect(vi.mocked(apiClient.get)).toHaveBeenCalledTimes(1);
-  });
-
-  it('should make a new API call when parameters change', async () => {
-    await getRecommendations('1_mighty', 'single', 'offensive', 1000000);
-    expect(vi.mocked(apiClient.get)).toHaveBeenCalledTimes(1);
-
-    // Different strategy — should bypass cache
-    await getRecommendations('2_average', 'single', 'offensive', 1000000);
-    expect(vi.mocked(apiClient.get)).toHaveBeenCalledTimes(2);
-  });
-
-  it('should clear cache when clearRecommendationCache is called', async () => {
-    await getRecommendations('1_mighty');
-    expect(vi.mocked(apiClient.get)).toHaveBeenCalledTimes(1);
-
-    clearRecommendationCache();
-
-    // Same params but cache was cleared — should hit API again
-    await getRecommendations('1_mighty');
-    expect(vi.mocked(apiClient.get)).toHaveBeenCalledTimes(2);
-  });
-});

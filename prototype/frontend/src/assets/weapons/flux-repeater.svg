@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <rect x="88" y="100" width="55" height="14" fill="#3b82f6" stroke="#2563eb" stroke-width="2" rx="3"/>
+  <rect x="143" y="103" width="12" height="8" fill="#60a5fa"/>
+  <circle cx="85" cy="107" r="4" fill="#93c5fd"/>
+  <circle cx="95" cy="107" r="2" fill="#93c5fd" opacity="0.6"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Flux Repeater</text>
+</svg>

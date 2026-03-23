@@ -270,22 +270,22 @@ describe('WeaponShopPage - Onboarding Integration', () => {
       });
     });
 
-    it('should show Back to Tutorial button', async () => {
+    it('should show Return to Tutorial button', async () => {
       renderInOnboardingMode();
       await waitFor(() => {
-        expect(screen.getByText('Back to Tutorial')).toBeInTheDocument();
+        expect(screen.getByText('Return to Tutorial')).toBeInTheDocument();
       });
     });
 
-    it('should navigate to /onboarding when Back to Tutorial is clicked', async () => {
+    it('should navigate to /onboarding when Return to Tutorial is clicked', async () => {
       const user = userEvent.setup();
       renderInOnboardingMode();
 
       await waitFor(() => {
-        expect(screen.getByText('Back to Tutorial')).toBeInTheDocument();
+        expect(screen.getByText('Return to Tutorial')).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('Back to Tutorial'));
+      await user.click(screen.getByText('Return to Tutorial'));
 
       expect(mockNavigate).toHaveBeenCalledWith('/onboarding');
     });
@@ -300,11 +300,11 @@ describe('WeaponShopPage - Onboarding Integration', () => {
       });
     });
 
-    it('should auto-apply price range max of 300000 in onboarding mode', async () => {
+    it('should auto-apply price range max of 250000 in onboarding mode', async () => {
       renderInOnboardingMode();
       await waitFor(() => {
         const filterPanel = screen.getByTestId('filter-panel');
-        expect(filterPanel.getAttribute('data-price-max')).toBe('300000');
+        expect(filterPanel.getAttribute('data-price-max')).toBe('250000');
       });
     });
 

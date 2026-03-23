@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#1f2937"/>
+  <rect x="64" y="64" width="128" height="128" fill="#374151" rx="8"/>
+  <rect x="125" y="80" width="6" height="70" fill="#ef4444" stroke="#dc2626" stroke-width="1" rx="2"/>
+  <polygon points="128,75 122,85 134,85" fill="#f97316" stroke="#ea580c" stroke-width="1"/>
+  <line x1="128" y1="80" x2="128" y2="90" stroke="#fbbf24" stroke-width="1" opacity="0.6"/>
+  <text x="128" y="210" font-family="Arial" font-size="14" fill="#9ca3af" text-anchor="middle">Thermal Lance</text>
+</svg>
