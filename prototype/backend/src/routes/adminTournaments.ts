@@ -254,27 +254,4 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
   }
 });
 
-/**
- * GET /api/admin/tournaments/eligible-robots
- * Get robots eligible for tournament participation
- */
-router.get('/eligible-robots', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const eligibleRobots = await getEligibleRobotsForTournament();
-
-    res.json({
-      success: true,
-      eligibleRobots,
-      count: eligibleRobots.length,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    logger.error('[Admin] Eligible robots fetch error:', error);
-    res.status(500).json({
-      error: 'Failed to fetch eligible robots',
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
-});
-
 export default router;
