@@ -4,7 +4,7 @@ A next-generation strategy simulation game where thousands of players manage the
 
 ## 🚀 Quick Start
 
-**→ See [Complete Setup Guide](docs/SETUP.md) for detailed instructions**
+**→ See [Complete Setup Guide](docs/guides/SETUP.md) for detailed instructions**
 
 To run the Phase 1 prototype locally:
 
@@ -33,12 +33,12 @@ npm run dev  # Terminal 2
 
 Open http://localhost:3000 - Login with `player1` / `password123`
 
-📖 **For testing new versions and database reset:** See [SETUP.md](docs/SETUP.md)
-🔧 **Having installation issues?** → See the "🐛 Troubleshooting" section in [SETUP.md](docs/SETUP.md)
+📖 **For testing new versions and database reset:** See [SETUP.md](docs/guides/SETUP.md)
+🔧 **Having installation issues?** → See the "🐛 Troubleshooting" section in [SETUP.md](docs/guides/SETUP.md)
 
-⚠️ **If you see "Environment variable not found: DATABASE_URL"**: You forgot to create the `.env` file. Run: `cd prototype/backend && cp .env.example .env` — See [TROUBLESHOOTING_DATABASE_URL.md](docs/TROUBLESHOOTING_DATABASE_URL.md) for details.
+⚠️ **If you see "Environment variable not found: DATABASE_URL"**: You forgot to create the `.env` file. Run: `cd prototype/backend && cp .env.example .env` — See the troubleshooting section in [SETUP.md](docs/guides/SETUP.md) for details.
 
-⚠️ **If `prisma generate` fails**: Your local `schema.prisma` may be corrupted. Run: `git restore prototype/backend/prisma/schema.prisma` then try again. See the troubleshooting section in [SETUP.md](docs/SETUP.md) for details.
+⚠️ **If `prisma generate` fails**: Your local `schema.prisma` may be corrupted. Run: `git restore prototype/backend/prisma/schema.prisma` then try again. See the troubleshooting section in [SETUP.md](docs/guides/SETUP.md) for details.
 
 ## 🎮 Project Vision
 
@@ -61,48 +61,29 @@ Armoured Souls is designed to be a highly scalable, secure, and portable multipl
 ## 📚 Documentation
 
 ### Getting Started
-- [**Setup Guide**](docs/SETUP.md) - Complete setup, quick testing reference, and troubleshooting
-- [**Robot Attributes System**](docs/ROBOT_ATTRIBUTES.md) - Complete attribute system, currency, weapons, and economy
+- [**Setup Guide**](docs/guides/SETUP.md) - Complete setup, quick testing reference, and troubleshooting
+- [**Robot Attributes System**](docs/prd_core/PRD_ROBOT_ATTRIBUTES.md) - Complete attribute system, currency, weapons, and economy
 
 ### Testing & Admin Access
-- [**Testing Guide**](docs/MATCHMAKING_TESTING_GUIDE.md) - Complete testing instructions with admin access
 - **Admin Login**: Username `admin`, Password `admin123`
-- **Quick Testing**: See the "Quick Testing Reference" section in [SETUP.md](docs/SETUP.md)
+- **Quick Testing**: See the "Quick Testing Reference" section in [SETUP.md](docs/guides/SETUP.md)
 
-### Matchmaking System
-- [**System Guide**](docs/MATCHMAKING_SYSTEM_GUIDE.md) - Complete matchmaking documentation
-- [**PRD: Matchmaking**](docs/PRD_MATCHMAKING.md) - Product requirements and specifications
-- [**Implementation Plan**](docs/IMPLEMENTATION_PLAN_MATCHMAKING.md) - Detailed 11-phase plan
-- [**GitHub Issues (Copy-Paste)**](docs/GITHUB_ISSUES_MATCHMAKING.md) - Ready-to-use issue templates
-- [**Quick Reference**](docs/QUICK_REFERENCE_MATCHMAKING.md) - Visual guides and flow charts
+### Core Game Systems
+- [**PRD: Matchmaking**](docs/prd_core/PRD_MATCHMAKING.md) - Product requirements and specifications
+- [**PRD: Weapon Loadout**](docs/prd_core/PRD_WEAPONS_LOADOUT.md) - Product requirements and specifications
+- [**PRD: Economy System**](docs/prd_core/PRD_ECONOMY_SYSTEM.md) - Complete economic system documentation
+- [**PRD: Prestige and Fame**](docs/prd_core/PRD_PRESTIGE_AND_FAME.md) - ⭐ **Authoritative** - Dual reputation systems (stable prestige + robot fame)
+- [**Stable System**](docs/prd_core/STABLE_SYSTEM.md) - Facility costs, prestige formulas, and income/expense details
 
-### Weapon Loadout System
-- [**PRD: Weapon Loadout**](docs/PRD_WEAPON_LOADOUT.md) - Product requirements and specifications
-- [**Implementation Plan**](docs/IMPLEMENTATION_PLAN_WEAPON_LOADOUT.md) - Detailed 11-issue sequential plan with technical specs
-- [**GitHub Issues (Copy-Paste)**](docs/GITHUB_ISSUES_WEAPON_LOADOUT.md) - Ready-to-use issue templates
-- [**Quick Reference**](docs/QUICK_REFERENCE_WEAPON_LOADOUT.md) - Visual guides and dependency charts
-
-### Economy System
-- [**PRD: Economy System**](docs/PRD_ECONOMY_SYSTEM.md) - Complete economic system documentation
-- [**PRD: Prestige and Fame**](docs/PRD_PRESTIGE_AND_FAME.md) - ⭐ **Authoritative** - Dual reputation systems (stable prestige + robot fame)
-- [**Quick Reference**](docs/QUICK_REFERENCE_ECONOMY_SYSTEM.md) - At-a-glance costs, income, and formulas
-- [**Stable System**](docs/STABLE_SYSTEM.md) - Facility costs, prestige formulas, and income/expense details
-
-### My Robots Page (Robot Roster Management)
-- [**PRD: My Robots List Page**](docs/PRD_MY_ROBOTS_LIST_PAGE.md) - ⭐ Comprehensive PRD (v1.8.1 - Complete)
-- [**Documentation Index**](docs/MY_ROBOTS_PAGE_DOCS_INDEX.md) - Navigation hub for all My Robots page docs
-- [**Quick Start Guide**](docs/MY_ROBOTS_PAGE_README.md) - Testing instructions and feature overview
-- **Features**: Robot cards, HP/Shield bars, Battle Readiness, Repair All, Capacity management, ELO sorting
+### Pages
+- [**PRD: My Robots List Page**](docs/prd_pages/PRD_ROBOTS_LIST_PAGE.md) - ⭐ Comprehensive PRD (v1.8.1 - Complete)
 
 ### General Documentation
-- [Phase 1 Plan](docs/PHASE1_PLAN.md) - Detailed plan for local prototype development
-- [Game Design Document](docs/GAME_DESIGN.md) - High-level game design and vision
-- [Architecture Overview](docs/ARCHITECTURE.md) - System design and technical architecture
-- [Module Structure](docs/MODULE_STRUCTURE.md) - Breakdown of system modules and components
-- [Security Strategy](docs/SECURITY.md) - Security requirements and implementation approach
-- [Testing Strategy](docs/TESTING_STRATEGY.md) - Automated testing approach and standards
-- [Portability Strategy](docs/PORTABILITY.md) - Cross-platform development strategy
-- [Planning Questions](docs/QUESTIONS.md) - Key questions and decisions
+- [Game Design Document](docs/prd_core/GAME_DESIGN.md) - High-level game design and vision
+- [Architecture Overview](docs/prd_core/ARCHITECTURE.md) - System design and technical architecture
+- [Module Structure](docs/guides/MODULE_STRUCTURE.md) - Breakdown of system modules and components
+- [Security Strategy](docs/guides/SECURITY.md) - Security requirements and implementation approach
+- [Portability Strategy](docs/guides/PORTABILITY.md) - Cross-platform development strategy
 
 ## 🗂️ Repository Structure
 
@@ -127,9 +108,9 @@ ArmouredSouls/
 - ✅ Basic project structure and configuration
 - ✅ Database schema (Users, Robots, Components, Battles)
 - ✅ Development environment setup
-- 🚧 Authentication system
-- 🚧 Robot creation and management
-- 🚧 Battle simulation engine
+- ✅ Authentication system
+- ✅ Robot creation and management
+- ✅ Battle simulation engine
 - 🚧 Basic UI pages
 
 ### Phase 2: Foundation (Upcoming)

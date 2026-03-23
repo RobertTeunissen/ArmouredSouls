@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "tests/project-quality-preservation.pbt.test.ts", "tests/project-quality-audit.pbt.test.ts"],
   "exclude": ["node_modules", "dist", "src/__tests__", "src/**/*.test.ts"]
 }

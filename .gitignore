@@ -1,4 +1,4 @@
-# Node.js / Python / General
+# Dependencies / language caches
 node_modules/
 __pycache__/
 *.py[cod]
@@ -8,9 +8,7 @@ __pycache__/
 env/
 venv/
 ENV/
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -24,13 +22,14 @@ wheels/
 .installed.cfg
 *.egg
 
-# IDEs
+# Editors / OS files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
 # Environment variables
 .env
@@ -47,7 +46,7 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
-# Testing
+# Test outputs
 coverage/
 .nyc_output
 .coverage
@@ -81,12 +80,6 @@ temp/
 *.cert
 secrets.yaml
 secrets.json
-
-# OS files
-Thumbs.db
-.DS_Store
-*.swp
-*.swo
 
 # Docker
 .docker/
