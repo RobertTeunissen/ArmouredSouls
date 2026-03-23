@@ -4,6 +4,7 @@ import BallisticIcon from '../assets/icons/weapon-types/ballistic.svg?react';
 import EnergyIcon from '../assets/icons/weapon-types/energy.svg?react';
 import ShieldIcon from '../assets/icons/weapon-types/shield.svg?react';
 import { calculateDPS as calcDPS } from '../utils/weaponConstants';
+import { getRangeBandLabel, getRangeBandColor, RangeBand } from '../utils/weaponRange';
 
 interface Weapon {
   id: number;
@@ -31,7 +32,7 @@ interface WeaponTableProps {
   ownedWeapons?: Map<number, number>;
 }
 
-type SortField = 'name' | 'weaponType' | 'loadoutType' | 'baseDamage' | 'cooldown' | 'dps' | 'cost' | 'attributes';
+type SortField = 'name' | 'weaponType' | 'loadoutType' | 'rangeBand' | 'baseDamage' | 'cooldown' | 'dps' | 'cost' | 'attributes';
 type SortDirection = 'asc' | 'desc';
 
 const WeaponTable: React.FC<WeaponTableProps> = ({
@@ -97,7 +98,13 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let bValue: any;
 
+      const rangeBandOrder: Record<string, number> = { melee: 0, short: 1, mid: 2, long: 3 };
+
       switch (sortField) {
+        case 'rangeBand':
+          aValue = rangeBandOrder[a.rangeBand] ?? 99;
+          bValue = rangeBandOrder[b.rangeBand] ?? 99;
+          break;
         case 'cooldown':
           aValue = a.cooldown;
           bValue = b.cooldown;
@@ -169,6 +176,12 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
               onClick={() => handleSort('weaponType')}
             >
               Type <SortIndicator field="weaponType" />
+            </th>
+            <th 
+              className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white"
+              onClick={() => handleSort('rangeBand')}
+            >
+              Range <SortIndicator field="rangeBand" />
             </th>
             <th 
               className="px-4 py-3 text-right text-sm font-semibold text-secondary cursor-pointer hover:text-white"
@@ -243,6 +256,11 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
                 </td>
                 <td className="px-4 py-3">
                   <span className="text-sm capitalize">{weapon.weaponType}</span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`text-sm font-medium ${getRangeBandColor(weapon.rangeBand as RangeBand)}`}>
+                    {getRangeBandLabel(weapon.rangeBand as RangeBand)}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <span className="font-mono">{weapon.baseDamage}</span>
