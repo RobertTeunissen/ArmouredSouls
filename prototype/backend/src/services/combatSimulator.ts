@@ -4,7 +4,6 @@ import { Robot, Weapon, WeaponInventory } from '@prisma/client';
 import { Position, euclideanDistance, angleBetween } from './arena/vector2d';
 import { createArena } from './arena/arenaLayout';
 import { classifyRangeBand, getRangePenalty, getWeaponOptimalRange, canAttack, WeaponLike } from './arena/rangeBands';
-import { RangeBand } from './arena/types';
 import { calculateHydraulicBonus } from './arena/hydraulicBonus';
 import { checkBackstab, updateFacing, calculateTurnSpeed } from './arena/positionTracker';
 import { updateAdaptation, getEffectiveAdaptation } from './arena/adaptationTracker';
