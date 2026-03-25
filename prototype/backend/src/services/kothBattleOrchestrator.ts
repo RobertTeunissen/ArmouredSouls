@@ -2,6 +2,14 @@
 
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+
+/** Yield the event loop so Express can serve requests between heavy DB work */
+const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+/** Delay between processing each KotH match (ms) */
+const MATCH_THROTTLE_MS = 2000;
+/** Delay between processing each participant's post-combat DB writes (ms) */
+const PARTICIPANT_THROTTLE_MS = 200;
 import { simulateBattleMulti, RobotWithWeapons, BattleConfig } from './combatSimulator';
 import {
   buildKothGameModeConfig,
@@ -22,7 +30,6 @@ import {
   awardFameToRobot,
 } from './battlePostCombat';
 import { CombatMessageGenerator } from './combatMessageGenerator';
-import { calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
 
 /** Summary of a KotH battle execution run */
 export interface KothBattleExecutionSummary {
@@ -164,48 +171,11 @@ async function processKothBattle(
     throw new Error(`KotH match ${match.id}: expected at least 5 robots, found ${robots.length}`);
   }
 
-  // 1b. Auto-repair all participants to full HP/shield before battle (full cost, no manual discount)
+  // 1b. Ensure in-memory HP/shield is at max for simulation
+  // (Actual repair + cost deduction already happened in executeKothCycle Step 1 via repairAllRobots)
   for (const robot of robots) {
-    if (robot.currentHP < robot.maxHP || robot.currentShield < robot.maxShield) {
-      const damageTaken = robot.maxHP - robot.currentHP;
-      if (damageTaken > 0) {
-        const sumOfAllAttributes = calculateAttributeSum(robot);
-        const damagePercent = (damageTaken / robot.maxHP) * 100;
-        const hpPercent = (robot.currentHP / robot.maxHP) * 100;
-
-        // Get repair bay and medical bay levels for discount calculation
-        const facilities = await prisma.facility.findMany({
-          where: { userId: robot.userId, facilityType: { in: ['repair_bay', 'medical_bay'] } },
-        });
-        const repairBayLevel = facilities.find(f => f.facilityType === 'repair_bay')?.level ?? 0;
-        const medicalBayLevel = facilities.find(f => f.facilityType === 'medical_bay')?.level ?? 0;
-        const activeRobotCount = await prisma.robot.count({
-          where: { userId: robot.userId, NOT: { name: 'Bye Robot' } },
-        });
-
-        const repairCost = calculateRepairCost(
-          sumOfAllAttributes, damagePercent, hpPercent,
-          repairBayLevel, medicalBayLevel, activeRobotCount,
-        );
-
-        if (repairCost > 0) {
-          await prisma.user.update({
-            where: { id: robot.userId },
-            data: { currency: { decrement: repairCost } },
-          });
-          logger.info(`[KotH] Auto-repair: Robot ${robot.id} (${robot.name}) cost ₡${repairCost}`);
-        }
-      }
-
-      // Restore to full HP and shield for the battle
-      robot.currentHP = robot.maxHP;
-      robot.currentShield = robot.maxShield;
-
-      await prisma.robot.update({
-        where: { id: robot.id },
-        data: { currentHP: robot.maxHP, currentShield: robot.maxShield, repairCost: 0 },
-      });
-    }
+    robot.currentHP = robot.maxHP;
+    robot.currentShield = robot.maxShield;
   }
 
   // 2. Resolve config values
@@ -304,6 +274,8 @@ async function processKothBattle(
 
   // 8. Create BattleParticipant records + calculate rewards
   for (const p of enrichedPlacements) {
+    // Yield event loop between participants so Express stays responsive
+    await throttle(PARTICIPANT_THROTTLE_MS);
     const robot = robots.find(r => r.id === p.robotId)!;
     const isWinner = robot.id === winnerId;
     const hpPercent = robot.maxHP > 0 ? (p.finalHP / robot.maxHP) * 100 : 0;
@@ -415,7 +387,15 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
     errors: [],
   };
 
-  for (const match of scheduledMatches) {
+  for (let i = 0; i < scheduledMatches.length; i++) {
+    const match = scheduledMatches[i];
+
+    // Throttle between matches so the event loop can serve API requests
+    if (i > 0) {
+      logger.info(`[KotH Orchestrator] Throttling ${MATCH_THROTTLE_MS}ms before match ${match.id}`);
+      await throttle(MATCH_THROTTLE_MS);
+    }
+
     try {
       const result = await processKothBattle(match);
       summary.successfulMatches++;
