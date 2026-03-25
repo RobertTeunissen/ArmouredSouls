@@ -374,16 +374,12 @@ async function processKothBattle(
 export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise<KothBattleExecutionSummary> {
   logger.info('[KotH Orchestrator] Executing scheduled KotH battles');
 
-  const scheduledMatches = await prisma.scheduledKothMatch.findMany({
-    where: { status: 'scheduled' },
-    include: { participants: true },
-    orderBy: { createdAt: 'asc' },
-  });
-
-  logger.info(`[KotH Orchestrator] Found ${scheduledMatches.length} KotH matches to execute`);
+  // Count total scheduled matches without loading them all into memory
+  const totalCount = await prisma.scheduledKothMatch.count({ where: { status: 'scheduled' } });
+  logger.info(`[KotH Orchestrator] Found ${totalCount} KotH matches to execute`);
 
   const summary: KothBattleExecutionSummary = {
-    totalMatches: scheduledMatches.length,
+    totalMatches: totalCount,
     successfulMatches: 0,
     failedMatches: 0,
     totalRobotsInvolved: 0,
@@ -391,16 +387,25 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
     errors: [],
   };
 
-  for (let i = 0; i < scheduledMatches.length; i++) {
-    const match = scheduledMatches[i];
+  let processed = 0;
 
-    // Batch cooldown: after every BATCH_SIZE matches, pause longer to let GC reclaim memory
-    if (i > 0 && i % BATCH_SIZE === 0) {
-      logger.info(`[KotH Orchestrator] Batch cooldown: ${BATCH_COOLDOWN_MS}ms after ${i} matches (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
-      if (global.gc) global.gc();
+  // Process one match at a time: fetch → execute → release memory → repeat
+  // This prevents accumulating all match data in memory simultaneously
+  while (processed < totalCount) {
+    // Fetch the next single scheduled match
+    const match = await prisma.scheduledKothMatch.findFirst({
+      where: { status: 'scheduled' },
+      include: { participants: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (!match) break; // No more scheduled matches
+
+    // Throttle: longer cooldown at batch boundaries, short yield otherwise
+    if (processed > 0 && processed % BATCH_SIZE === 0) {
+      logger.info(`[KotH Orchestrator] Batch cooldown after ${processed} matches (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
       await throttle(BATCH_COOLDOWN_MS);
-    } else if (i > 0) {
-      // Normal throttle between matches within a batch
+    } else if (processed > 0) {
       await throttle(MATCH_THROTTLE_MS);
     }
 
@@ -408,13 +413,32 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       const result = await processKothBattle(match);
       summary.successfulMatches++;
       summary.totalRobotsInvolved += match.participants.length;
+      // Only store lightweight placement data, not the full result
       summary.matchResults.push({ matchId: match.id, ...result });
     } catch (error) {
       summary.failedMatches++;
       const errorMsg = error instanceof Error ? error.message : String(error);
       summary.errors.push(`KotH Match ${match.id}: ${errorMsg}`);
       logger.error(`[KotH Orchestrator] Failed to process match ${match.id}:`, error);
+
+      // Skip this match for now — it stays 'scheduled' and will be retried next cycle.
+      // Mark it so the while loop doesn't re-fetch it in this run.
+      await prisma.scheduledKothMatch.update({
+        where: { id: match.id },
+        data: { status: 'error' },
+      }).catch(() => {});
     }
+
+    processed++;
+  }
+
+  // Reset any matches marked 'error' during this run back to 'scheduled' for retry next cycle
+  if (summary.failedMatches > 0) {
+    await prisma.scheduledKothMatch.updateMany({
+      where: { status: 'error' },
+      data: { status: 'scheduled' },
+    });
+    logger.info(`[KotH Orchestrator] Reset ${summary.failedMatches} failed matches back to 'scheduled' for retry`);
   }
 
   logger.info(`[KotH Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);

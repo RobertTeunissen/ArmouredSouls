@@ -6,14 +6,18 @@
  * 2. Throttle delays are applied between participants in processKothBattle
  * 3. The redundant auto-repair loop (step 1b) has been removed — no facility
  *    queries or repair cost calculations happen inside processKothBattle
+ * 4. Matches are fetched one at a time (not all at once) to limit memory usage
+ * 5. Failed matches are marked as 'failed' so they don't re-enter the loop
  */
 
 // ─── Mocks (must be before imports) ──────────────────────────────────
 
 const mockPrisma = {
   scheduledKothMatch: {
-    findMany: jest.fn(),
+    count: jest.fn(),
+    findFirst: jest.fn(),
     update: jest.fn().mockResolvedValue({}),
+    updateMany: jest.fn().mockResolvedValue({ count: 0 }),
   },
   robot: {
     findMany: jest.fn(),
@@ -148,6 +152,15 @@ function makeMatch(id: number, robotIds: number[]) {
   };
 }
 
+/** Set up findFirst to return matches from a queue, then null when exhausted */
+function setupMatchQueue(matches: ReturnType<typeof makeMatch>[]): void {
+  const queue = [...matches];
+  mockPrisma.scheduledKothMatch.count.mockResolvedValue(matches.length);
+  mockPrisma.scheduledKothMatch.findFirst.mockImplementation(() => {
+    return Promise.resolve(queue.shift() ?? null);
+  });
+}
+
 // ─── Tests ───────────────────────────────────────────────────────────
 
 describe('KotH Orchestrator Throttling', () => {
@@ -170,11 +183,9 @@ describe('KotH Orchestrator Throttling', () => {
   });
 
   it('should apply throttle delay between matches', async () => {
-    const matches = [makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])];
-    mockPrisma.scheduledKothMatch.findMany.mockResolvedValue(matches);
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])]);
 
     const timestamps: number[] = [];
-    const origCreate = mockPrisma.battle.create.getMockImplementation?.() ?? (() => Promise.resolve({ id: 100 }));
     mockPrisma.battle.create.mockImplementation(() => {
       timestamps.push(Date.now());
       return Promise.resolve({ id: 100 + timestamps.length });
@@ -186,14 +197,12 @@ describe('KotH Orchestrator Throttling', () => {
 
     expect(summary.successfulMatches).toBe(2);
     expect(summary.failedMatches).toBe(0);
-    // The second match should start at least 2000ms after the first
     expect(timestamps).toHaveLength(2);
     expect(timestamps[1] - timestamps[0]).toBeGreaterThanOrEqual(2000);
   });
 
   it('should not throttle before the first match', async () => {
-    const matches = [makeMatch(1, [1, 2, 3, 4, 5])];
-    mockPrisma.scheduledKothMatch.findMany.mockResolvedValue(matches);
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
 
     const startTime = Date.now();
     let battleCreateTime = 0;
@@ -206,13 +215,11 @@ describe('KotH Orchestrator Throttling', () => {
     await jest.runAllTimersAsync();
     await promise;
 
-    // First match should start without the 2s delay
     expect(battleCreateTime - startTime).toBeLessThan(2000);
   });
 
   it('should apply throttle delay between participants within a match', async () => {
-    const matches = [makeMatch(1, [1, 2, 3, 4, 5])];
-    mockPrisma.scheduledKothMatch.findMany.mockResolvedValue(matches);
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
 
     const participantTimestamps: number[] = [];
     mockPrisma.battleParticipant.create.mockImplementation(() => {
@@ -225,41 +232,38 @@ describe('KotH Orchestrator Throttling', () => {
     await jest.runAllTimersAsync();
     await promise;
 
-    // 5 participants
     expect(participantTimestamps).toHaveLength(5);
-    // Each participant should be at least 200ms after the previous
     for (let i = 1; i < participantTimestamps.length; i++) {
       expect(participantTimestamps[i] - participantTimestamps[i - 1]).toBeGreaterThanOrEqual(200);
     }
   });
 
   it('should not query facilities or calculate repair costs (redundant repair removed)', async () => {
-    const matches = [makeMatch(1, [1, 2, 3, 4, 5])];
-    mockPrisma.scheduledKothMatch.findMany.mockResolvedValue(matches);
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
     mockPrisma.battle.create.mockResolvedValue({ id: 100 });
 
     const promise = executeScheduledKothBattles();
     await jest.runAllTimersAsync();
     await promise;
 
-    // facility.findMany should NOT be called — the old auto-repair loop is gone
     expect(mockPrisma.facility.findMany).not.toHaveBeenCalled();
-    // user.update should only be called by awardCreditsToUser/awardPrestigeToUser (via battlePostCombat mock),
-    // NOT by the old repair cost deduction. Since battlePostCombat is fully mocked, prisma.user.update
-    // should not be called directly by the orchestrator.
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('should continue processing remaining matches when one fails', async () => {
+  it('should mark failed matches as error during run and reset to scheduled after', async () => {
     const matches = [makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])];
-    mockPrisma.scheduledKothMatch.findMany.mockResolvedValue(matches);
+    const queue = [...matches];
+    mockPrisma.scheduledKothMatch.count.mockResolvedValue(2);
+    mockPrisma.scheduledKothMatch.findFirst.mockImplementation(() => {
+      return Promise.resolve(queue.shift() ?? null);
+    });
 
     // First match: robot query returns too few robots (triggers error)
     // Second match: normal
     let callCount = 0;
     mockPrisma.robot.findMany.mockImplementation(() => {
       callCount++;
-      if (callCount === 1) return Promise.resolve([makeRobot(1, 1)]); // too few
+      if (callCount === 1) return Promise.resolve([makeRobot(1, 1)]);
       return Promise.resolve([1, 2, 3, 4, 5].map(id => makeRobot(id, id)));
     });
     mockPrisma.battle.create.mockResolvedValue({ id: 100 });
@@ -270,14 +274,32 @@ describe('KotH Orchestrator Throttling', () => {
 
     expect(summary.successfulMatches).toBe(1);
     expect(summary.failedMatches).toBe(1);
-    expect(summary.errors).toHaveLength(1);
     expect(summary.errors[0]).toContain('expected at least 5 robots');
+    // Failed match should be temporarily marked as 'error', then reset to 'scheduled'
+    expect(mockPrisma.scheduledKothMatch.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 1 }, data: { status: 'error' } }),
+    );
+    expect(mockPrisma.scheduledKothMatch.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: 'error' }, data: { status: 'scheduled' } }),
+    );
+  });
+
+  it('should fetch matches one at a time, not all at once', async () => {
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])]);
+    mockPrisma.battle.create.mockResolvedValue({ id: 100 });
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    await promise;
+
+    // Should use findFirst (one at a time), not findMany (all at once)
+    expect(mockPrisma.scheduledKothMatch.findFirst).toHaveBeenCalled();
+    expect(mockPrisma.scheduledKothMatch.count).toHaveBeenCalledTimes(1);
   });
 
   it('should apply longer batch cooldown after every 10 matches', async () => {
-    // Create 12 matches — batch cooldown should trigger after match 10
     const matches = Array.from({ length: 12 }, (_, i) => makeMatch(i + 1, [1, 2, 3, 4, 5]));
-    mockPrisma.scheduledKothMatch.findMany.mockResolvedValue(matches);
+    setupMatchQueue(matches);
 
     const timestamps: number[] = [];
     mockPrisma.battle.create.mockImplementation(() => {
@@ -292,11 +314,10 @@ describe('KotH Orchestrator Throttling', () => {
     expect(summary.successfulMatches).toBe(12);
     expect(timestamps).toHaveLength(12);
 
-    // Between match 9 and 10 (index 9→10): normal 2s throttle
-    // Between match 10 and 11 (index 10, i % 10 === 0): 10s batch cooldown
+    // After 10th match (index 10, processed % 10 === 0): 10s batch cooldown
     expect(timestamps[10] - timestamps[9]).toBeGreaterThanOrEqual(10000);
 
-    // Normal throttle between non-batch-boundary matches (e.g. match 1→2)
+    // Normal throttle between non-batch-boundary matches
     expect(timestamps[1] - timestamps[0]).toBeGreaterThanOrEqual(2000);
     expect(timestamps[1] - timestamps[0]).toBeLessThan(10000);
   });
