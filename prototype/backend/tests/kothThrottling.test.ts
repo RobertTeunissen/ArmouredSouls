@@ -273,4 +273,31 @@ describe('KotH Orchestrator Throttling', () => {
     expect(summary.errors).toHaveLength(1);
     expect(summary.errors[0]).toContain('expected at least 5 robots');
   });
+
+  it('should apply longer batch cooldown after every 10 matches', async () => {
+    // Create 12 matches — batch cooldown should trigger after match 10
+    const matches = Array.from({ length: 12 }, (_, i) => makeMatch(i + 1, [1, 2, 3, 4, 5]));
+    mockPrisma.scheduledKothMatch.findMany.mockResolvedValue(matches);
+
+    const timestamps: number[] = [];
+    mockPrisma.battle.create.mockImplementation(() => {
+      timestamps.push(Date.now());
+      return Promise.resolve({ id: 100 + timestamps.length });
+    });
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    const summary = await promise;
+
+    expect(summary.successfulMatches).toBe(12);
+    expect(timestamps).toHaveLength(12);
+
+    // Between match 9 and 10 (index 9→10): normal 2s throttle
+    // Between match 10 and 11 (index 10, i % 10 === 0): 10s batch cooldown
+    expect(timestamps[10] - timestamps[9]).toBeGreaterThanOrEqual(10000);
+
+    // Normal throttle between non-batch-boundary matches (e.g. match 1→2)
+    expect(timestamps[1] - timestamps[0]).toBeGreaterThanOrEqual(2000);
+    expect(timestamps[1] - timestamps[0]).toBeLessThan(10000);
+  });
 });

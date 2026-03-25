@@ -10,6 +10,10 @@ const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeou
 const MATCH_THROTTLE_MS = 2000;
 /** Delay between processing each participant's post-combat DB writes (ms) */
 const PARTICIPANT_THROTTLE_MS = 200;
+/** Number of matches to process before a longer cooldown pause */
+const BATCH_SIZE = 10;
+/** Cooldown pause between batches to allow GC and free memory (ms) */
+const BATCH_COOLDOWN_MS = 10000;
 import { simulateBattleMulti, RobotWithWeapons, BattleConfig } from './combatSimulator';
 import {
   buildKothGameModeConfig,
@@ -390,9 +394,13 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
   for (let i = 0; i < scheduledMatches.length; i++) {
     const match = scheduledMatches[i];
 
-    // Throttle between matches so the event loop can serve API requests
-    if (i > 0) {
-      logger.info(`[KotH Orchestrator] Throttling ${MATCH_THROTTLE_MS}ms before match ${match.id}`);
+    // Batch cooldown: after every BATCH_SIZE matches, pause longer to let GC reclaim memory
+    if (i > 0 && i % BATCH_SIZE === 0) {
+      logger.info(`[KotH Orchestrator] Batch cooldown: ${BATCH_COOLDOWN_MS}ms after ${i} matches (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
+      if (global.gc) global.gc();
+      await throttle(BATCH_COOLDOWN_MS);
+    } else if (i > 0) {
+      // Normal throttle between matches within a batch
       await throttle(MATCH_THROTTLE_MS);
     }
 
@@ -409,6 +417,6 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
     }
   }
 
-  logger.info(`[KotH Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.failedMatches} failed`);
+  logger.info(`[KotH Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
   return summary;
 }
