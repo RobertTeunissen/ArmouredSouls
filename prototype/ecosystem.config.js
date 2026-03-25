@@ -7,6 +7,7 @@ module.exports = {
       instances: 1,
       autorestart: true,
       max_restarts: 10,
+      max_memory_restart: '1500M',
       min_uptime: '5s',
       restart_delay: 5000,
       env: {
