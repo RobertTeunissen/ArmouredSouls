@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
@@ -68,7 +68,6 @@ type ViewMode = 'card' | 'table';
 function WeaponShopPage() {
   const { user, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const isOnboarding = searchParams.get('onboarding') === 'true';
 

@@ -512,10 +512,10 @@ export function CycleControlsTab({
                           )}
                         </div>
                       )}
-                      {result.rebalancing && (
+                      {result.rebalancing?.summary && (
                         <p>
-                          - Rebalancing: {result.rebalancing.totalPromoted} promoted,{' '}
-                          {result.rebalancing.totalDemoted} demoted
+                          - Rebalancing: {result.rebalancing.summary.totalPromoted} promoted,{' '}
+                          {result.rebalancing.summary.totalDemoted} demoted
                         </p>
                       )}
                       {result.kothBattles && (
