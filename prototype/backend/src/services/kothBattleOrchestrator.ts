@@ -30,14 +30,10 @@ import {
 } from './arena/kothEngine';
 
 import {
-  awardStreamingRevenueForParticipant,
   logBattleAuditEvent,
-  awardCreditsToUser,
-  awardPrestigeToUser,
-  awardFameToRobot,
 } from './battlePostCombat';
 import { CombatMessageGenerator } from './combatMessageGenerator';
-import { calculateStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
+import { calculateStreamingRevenue } from './streamingRevenueService';
 import { getCurrentCycleNumber } from './leagueBattleOrchestrator';
 
 /** Prepared participant data for batched DB operations */
@@ -362,7 +358,7 @@ async function processKothBattle(
   });
 
   // 10. BATCHED: Calculate streaming revenue in parallel, then batch update
-  const cycleNumber = await getCurrentCycleNumber();
+  const _cycleNumber = await getCurrentCycleNumber();
   const streamingCalcs = await Promise.all(
     preparedParticipants.map(p => calculateStreamingRevenue(p.robot.id, p.robot.userId, false))
   );

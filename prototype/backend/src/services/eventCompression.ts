@@ -10,7 +10,7 @@
  * - Redundant field removal: ~50-100 bytes per event
  */
 
-import type { CombatEvent, FormulaBreakdown } from './combatSimulator';
+import type { CombatEvent } from './combatSimulator';
 
 /**
  * Fields that are only needed for admin debugging, not playback.
