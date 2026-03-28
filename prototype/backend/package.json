@@ -12,7 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "db:reset": "prisma migrate reset --force && prisma db seed",
+    "db:reset": "prisma db push --force-reset && prisma migrate deploy && prisma db seed",
     "test": "jest --config jest.config.unit.js --forceExit; jest --config jest.config.integration.js --forceExit",
     "test:unit": "jest --config jest.config.unit.js --forceExit",
     "test:integration": "jest --config jest.config.integration.js --forceExit",
