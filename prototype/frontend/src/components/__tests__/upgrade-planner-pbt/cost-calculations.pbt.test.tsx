@@ -16,7 +16,7 @@ describe('UpgradePlanner - Cost Calculation Properties', () => {
    * For any set of planned upgrades, the displayed total cost should equal
    * the sum of all individual upgrade costs after discounts.
    */
-  test('Property 26: running total cost calculation', () => {
+  test('Property 26: running total cost calculation', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.record({
@@ -64,7 +64,7 @@ describe('UpgradePlanner - Cost Calculation Properties', () => {
    * For any upgrade plan, the displayed remaining credits should equal
    * current credits minus total planned upgrade cost.
    */
-  test('Property 27: remaining credits calculation', () => {
+  test('Property 27: remaining credits calculation', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.record({

@@ -160,7 +160,7 @@ Raw damage is calculated from multiple factors:
 - **Combat Power** — Primary damage-scaling attribute
 - **Weapon Control** — Secondary damage multiplier
 - **Range penalty** — 1.1× at optimal range, 0.75× one band away, 0.5× two+ bands away
-- **Hydraulic Systems bonus** — Up to +150% at melee range, +75% at short range
+- **Hydraulic Systems bonus** — Up to +100% at melee range, +75% at short range
 - **Backstab/flanking bonus** — Up to +10% (backstab) or +20% (flanking) for positional advantage
 - **Adaptation bonus** — Accumulated damage bonus from Adaptive AI
 - **Pressure bonus** — Damage bonus from Logic Cores when HP is low

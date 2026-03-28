@@ -61,18 +61,21 @@ describe('Property 11: Error Message Display', () => {
 
         // Fill in all form fields with valid data and matching passwords
         fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } });
-        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@email' } });
+        fireEvent.change(screen.getByLabelText(/stable name/i), { target: { value: 'Test Stable' } });
+        fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@email.com' } });
         fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'password123' } });
         fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: 'password123' } });
 
         // Submit the form
         await user.click(screen.getByRole('button', { name: /create account/i }));
 
-        // Wait for the error message to appear in the alert element
+        // Wait for the error message to appear in an alert element
+        // The error could be in the general error banner or in a field error
         await waitFor(() => {
-          const alert = screen.getByRole('alert');
-          expect(alert).toBeInTheDocument();
-          expect(alert).toHaveTextContent(errorMessage);
+          const alerts = screen.getAllByRole('alert');
+          expect(alerts.length).toBeGreaterThan(0);
+          const hasErrorMessage = alerts.some(alert => alert.textContent?.includes(errorMessage));
+          expect(hasErrorMessage).toBe(true);
         });
 
         // onSuccess should not have been called

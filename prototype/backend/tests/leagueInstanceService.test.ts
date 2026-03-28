@@ -14,7 +14,7 @@ import {
 describe('League Instance Service', () => {
   beforeAll(async () => {
     // Clean up test data
-    await prisma.scheduledMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
@@ -25,7 +25,7 @@ describe('League Instance Service', () => {
 
   afterEach(async () => {
     // Clean up after each test to prevent data pollution
-    await prisma.scheduledMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});

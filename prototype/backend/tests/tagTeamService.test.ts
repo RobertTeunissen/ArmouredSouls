@@ -29,7 +29,7 @@ describe('TagTeamService', () => {
     
     // Delete tag team matches first
     if (testTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTeamIds } },
@@ -59,7 +59,7 @@ describe('TagTeamService', () => {
           ],
         },
       });
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: testRobotIds } },
@@ -256,7 +256,7 @@ describe('TagTeamService', () => {
       expect(result.errors).toContain('Robots must be from the same stable');
     });
 
-    it('should reject team with unready robot (low HP)', async () => {
+    it('should accept team with low HP robot (repairs happen before battles)', async () => {
       // Create a robot with low HP for this test
       const weapon = await prisma.weapon.findFirst();
       const weaponInv = await prisma.weaponInventory.create({
@@ -268,7 +268,7 @@ describe('TagTeamService', () => {
           userId: testUserId,
           name: `TagTeam_UnreadyRobot_${Date.now()}`,
           hullIntegrity: 10.0,
-          currentHP: 50, // Low HP - not battle ready
+          currentHP: 50, // Low HP - but still valid since repairs happen before battles
           maxHP: 100,
           currentShield: 0,
           maxShield: 0,
@@ -278,9 +278,9 @@ describe('TagTeamService', () => {
         },
       });
 
+      // Low HP robots are now valid for team creation since repairs happen before battles
       const result = await validateTeam(testRobot1Id, unreadyRobot.id);
-      expect(result.isValid).toBe(false);
-      expect(result.errors.some(e => e.includes('Reserve robot not ready'))).toBe(true);
+      expect(result.isValid).toBe(true);
 
       // Clean up
       await prisma.robot.deleteMany({ where: { id: unreadyRobot.id } });

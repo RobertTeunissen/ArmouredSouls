@@ -4,7 +4,7 @@
  * Validates that after successful login, the app checks onboarding status
  * and redirects new players to /onboarding instead of /dashboard.
  *
- * Covers both LoginPage (standalone) and FrontPage (tabbed login/register).
+ * Covers FrontPage (tabbed login/register).
  *
  * Requirements: 1.3
  */
@@ -12,7 +12,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import LoginPage from '../LoginPage';
 import FrontPage from '../FrontPage';
 
 // --- Mocks ---
@@ -22,11 +21,9 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-const mockLogin = vi.fn();
 const mockRefreshUser = vi.fn();
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
-    login: mockLogin,
     refreshUser: mockRefreshUser,
   }),
 }));
@@ -47,149 +44,6 @@ vi.mock('../../utils/apiClient', () => ({
     },
   },
 }));
-
-// --- Helpers ---
-
-async function submitLoginPage(identifier = 'testuser', password = 'password123') {
-  const user = userEvent.setup();
-  await user.type(screen.getByLabelText(/username or email/i), identifier);
-  await user.type(screen.getByLabelText(/password/i), password);
-  await user.click(screen.getByRole('button', { name: /login/i }));
-}
-
-// ============================================================
-// LoginPage (standalone) tests
-// ============================================================
-describe('LoginPage - Onboarding Redirect', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockLogin.mockResolvedValue(undefined);
-  });
-
-  it('should redirect to /onboarding when hasCompletedOnboarding is false and not skipped', async () => {
-    mockGetTutorialState.mockResolvedValue({
-      currentStep: 1,
-      hasCompletedOnboarding: false,
-      onboardingSkipped: false,
-      strategy: null,
-      choices: {},
-      startedAt: null,
-      completedAt: null,
-    });
-
-    render(<LoginPage />);
-    await submitLoginPage();
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/onboarding');
-    });
-    expect(mockNavigate).not.toHaveBeenCalledWith('/dashboard');
-  });
-
-  it('should redirect to /dashboard when hasCompletedOnboarding is true', async () => {
-    mockGetTutorialState.mockResolvedValue({
-      currentStep: 9,
-      hasCompletedOnboarding: true,
-      onboardingSkipped: false,
-      strategy: '2_average',
-      choices: {},
-      startedAt: '2026-01-01T00:00:00Z',
-      completedAt: '2026-01-01T01:00:00Z',
-    });
-
-    render(<LoginPage />);
-    await submitLoginPage();
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
-    });
-    expect(mockNavigate).not.toHaveBeenCalledWith('/onboarding');
-  });
-
-  it('should redirect to /dashboard when onboardingSkipped is true', async () => {
-    mockGetTutorialState.mockResolvedValue({
-      currentStep: 3,
-      hasCompletedOnboarding: false,
-      onboardingSkipped: true,
-      strategy: null,
-      choices: {},
-      startedAt: '2026-01-01T00:00:00Z',
-      completedAt: null,
-    });
-
-    render(<LoginPage />);
-    await submitLoginPage();
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
-    });
-    expect(mockNavigate).not.toHaveBeenCalledWith('/onboarding');
-  });
-
-  it('should redirect to /dashboard when onboarding state fetch fails', async () => {
-    mockGetTutorialState.mockRejectedValue(new Error('Network error'));
-
-    render(<LoginPage />);
-    await submitLoginPage();
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
-    });
-  });
-
-  it('should still show error when login itself fails', async () => {
-    mockLogin.mockRejectedValue(new Error('Invalid credentials'));
-
-    render(<LoginPage />);
-    await submitLoginPage();
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toBeInTheDocument();
-      expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
-    });
-    expect(mockNavigate).not.toHaveBeenCalled();
-    expect(mockGetTutorialState).not.toHaveBeenCalled();
-  });
-
-  it('should call getTutorialState after successful login', async () => {
-    mockGetTutorialState.mockResolvedValue({
-      currentStep: 9,
-      hasCompletedOnboarding: true,
-      onboardingSkipped: false,
-      strategy: '2_average',
-      choices: {},
-      startedAt: null,
-      completedAt: null,
-    });
-
-    render(<LoginPage />);
-    await submitLoginPage();
-
-    await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('testuser', 'password123');
-      expect(mockGetTutorialState).toHaveBeenCalled();
-    });
-  });
-
-  it('should resume from last step by redirecting to /onboarding for partially completed tutorial', async () => {
-    mockGetTutorialState.mockResolvedValue({
-      currentStep: 5,
-      hasCompletedOnboarding: false,
-      onboardingSkipped: false,
-      strategy: '1_mighty',
-      choices: { rosterStrategy: '1_mighty' },
-      startedAt: '2026-01-01T00:00:00Z',
-      completedAt: null,
-    });
-
-    render(<LoginPage />);
-    await submitLoginPage();
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/onboarding');
-    });
-  });
-});
 
 // ============================================================
 // FrontPage (tabbed login) tests

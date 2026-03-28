@@ -195,7 +195,7 @@ The onboarding consists of 9 sequential steps. Each step teaches a strategic con
 **Tier 2 — Recommended Early** (Buy within first few cycles):
 | Facility | Cost | Why Early |
 |----------|------|-----------|
-| Weapons Workshop (Level 1) | ₡75,000 | 5% discount on weapon purchases. Buy before your first weapon to save immediately. |
+| Weapons Workshop (Level 1) | ₡75,000 | 10% discount on weapon purchases. Buy before your first weapon to save immediately. |
 | Merchandising Hub (Level 1) | ₡75,000 | Generates passive income from prestige. Start earning early. |
 | Streaming Studio (Level 1) | ₡50,000 | Doubles streaming revenue per battle. More battles = more value. |
 
@@ -704,8 +704,8 @@ Facilities are ordered by ROI (Return on Investment) and strategic necessity. Th
 ### ROI Calculations
 
 **Repair Bay (Level 1)** — Tier 1 Mandatory:
-- Cost: ₡75,000
-- Operating cost: ₡1,000/day
+- Cost: ₡50,000
+- Operating cost: ₡100/day
 - Discount: `level × (5 + active_robots)` percent
 - With 2 robots: 7% repair discount
 - Average daily repair savings: ~₡2,100 (assuming ₡30,000 daily repairs)
@@ -723,10 +723,10 @@ Facilities are ordered by ROI (Return on Investment) and strategic necessity. Th
 
 **Weapons Workshop (Level 1)** — Tier 2 Recommended:
 - Cost: ₡75,000
-- Operating cost: ₡1,000/day
-- Discount: 5% on weapon purchases
-- Savings per weapon: ₡3,125–₡26,875 depending on weapon price
-- **Break-even**: After purchasing 3–5 weapons
+- Operating cost: ₡100/day
+- Discount: 10% on weapon purchases
+- Savings per weapon: ₡6,250–₡53,750 depending on weapon price
+- **Break-even**: After purchasing 1–2 weapons
 
 **Streaming Studio (Level 1)** — Tier 2 Recommended:
 - Cost: ₡50,000

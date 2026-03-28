@@ -11,6 +11,7 @@
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 23.1
  */
 
+import React from 'react';
 import { useCreditValidation, CREDIT_THRESHOLDS } from '../../hooks/useCreditValidation';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -52,7 +53,7 @@ const CreditWarning = ({ currentCredits, purchaseCost, onboardingStep }: CreditW
     );
   }
 
-  const warnings: JSX.Element[] = [];
+  const warnings: React.JSX.Element[] = [];
 
   // Critical budget warning
   if (isCriticalBudget) {

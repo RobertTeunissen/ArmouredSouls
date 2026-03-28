@@ -19,12 +19,16 @@ export interface ServoStrainState {
   servoStrain: number;
   /** Seconds of sustained high-speed movement */
   sustainedMovementTime: number;
-  /** Whether the robot is currently using the melee closing bonus */
+  /** Whether the robot is currently using the melee closing bonus or ranged kiting bonus */
   isUsingClosingBonus: boolean;
   /** Current combat stance */
   stance: 'defensive' | 'offensive' | 'balanced';
   /** Whether the robot has a melee weapon equipped */
   hasMeleeWeapon: boolean;
+  /** Whether the robot has a ranged weapon equipped */
+  hasRangedWeapon: boolean;
+  /** The optimal range midpoint for the robot's weapon (grid units) */
+  weaponOptimalRangeMidpoint: number;
   /** Distance to the current target in grid units */
   distanceToTarget: number;
   /** Ratio of actual movement this tick to max possible (0–1) */
@@ -62,6 +66,12 @@ const CLOSING_BONUS_BASE = 1.15;
 /** Melee closing bonus per-speed-diff multiplier */
 const CLOSING_BONUS_PER_DIFF = 0.01;
 
+/** Ranged kiting bonus base multiplier (weaker than closing: 10% vs 15%) */
+const KITING_BONUS_BASE = 1.10;
+
+/** Ranged kiting bonus per-speed-diff multiplier (weaker than closing: 0.8% vs 1%) */
+const KITING_BONUS_PER_DIFF = 0.008;
+
 /** Melee range band max distance */
 const MELEE_RANGE_MAX = 2;
 
@@ -77,19 +87,24 @@ export function calculateBaseSpeed(servoMotors: number): number {
 
 /**
  * Calculate effective movement speed after applying stance modifier,
- * servo strain reduction, and melee closing bonus.
+ * servo strain reduction, melee closing bonus, or ranged kiting bonus.
  *
  * When the melee closing bonus applies (melee weapon, distance > 2,
  * opponent has ranged weapon), strain reduction is NOT applied —
  * the closing bonus is exempt from strain (Req 2.7).
  *
- * Returns the effective speed in units/second and whether the
- * closing bonus is active.
+ * When the ranged kiting bonus applies (ranged weapon, distance < optimal range,
+ * opponent has melee weapon), strain reduction is NOT applied —
+ * the kiting bonus is exempt from strain to allow ranged builds to maintain distance.
+ *
+ * Returns the effective speed in units/second and whether a movement
+ * bonus (closing or kiting) is active.
  */
 export function calculateEffectiveSpeed(
   state: ServoStrainState,
   opponentSpeed: number,
   hasRangedOpponent: boolean,
+  hasMeleeOpponent: boolean = false,
 ): { effectiveSpeed: number; isClosingBonus: boolean } {
   const baseSpeed = calculateBaseSpeed(state.servoMotors);
   const stanceModifier = STANCE_MODIFIERS[state.stance] ?? 1.0;
@@ -101,6 +116,21 @@ export function calculateEffectiveSpeed(
     return {
       effectiveSpeed: baseSpeed * stanceModifier * closingBonus,
       isClosingBonus: true,
+    };
+  }
+
+  // Ranged kiting bonus — exempt from strain (mirrors closing bonus for ranged builds)
+  // Activates when: ranged weapon, distance < optimal range midpoint, opponent has melee weapon
+  if (
+    state.hasRangedWeapon &&
+    state.distanceToTarget < state.weaponOptimalRangeMidpoint &&
+    hasMeleeOpponent
+  ) {
+    const speedGap = Math.max(0, opponentSpeed - baseSpeed);
+    const kitingBonus = KITING_BONUS_BASE + speedGap * KITING_BONUS_PER_DIFF;
+    return {
+      effectiveSpeed: baseSpeed * stanceModifier * kitingBonus,
+      isClosingBonus: true, // Reusing flag — means "exempt from strain"
     };
   }
 

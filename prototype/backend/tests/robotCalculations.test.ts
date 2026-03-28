@@ -6,7 +6,7 @@ import {
   getLoadoutModifiedAttributes,
   LOADOUT_BONUSES 
 } from '../src/utils/robotCalculations';
-import { Robot, WeaponInventory, Weapon, Prisma } from '@prisma/client';
+import { Robot, WeaponInventory, Weapon, Prisma } from '../generated/prisma';
 
 // Mock robot data
 const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
@@ -95,6 +95,7 @@ const createMockWeapon = (overrides?: Partial<Weapon>): Weapon => ({
   handsRequired: 'one',
   damageType: 'energy',
   loadoutType: 'any',
+  rangeBand: 'mid',
   specialProperty: null,
   description: null,
   combatPowerBonus: 5,

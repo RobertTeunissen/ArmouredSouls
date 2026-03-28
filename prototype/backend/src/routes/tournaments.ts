@@ -21,7 +21,11 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       tournaments = await prisma.tournament.findMany({
         where: status ? { status: String(status) } : undefined,
         include: {
-          winner: true,
+          winner: {
+            include: {
+              user: { select: { id: true, username: true, stableName: true } },
+            },
+          },
           matches: {
             orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
             take: 50,
@@ -53,13 +57,13 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
  */
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const tournamentId = parseInt(req.params.id);
+    const tournamentId = parseInt(String(req.params.id));
 
     if (isNaN(tournamentId)) {
       return res.status(400).json({ error: 'Invalid tournament ID' });
     }
 
-    const robotSelect = { id: true, name: true, elo: true };
+    const robotSelect = { id: true, name: true, elo: true, user: { select: { id: true, username: true, stableName: true } } };
 
     const tournament = await prisma.tournament.findUnique({
       where: { id: tournamentId },

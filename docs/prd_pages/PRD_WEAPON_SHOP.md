@@ -402,7 +402,7 @@ npm run test:e2e:debug    # Run in debug mode
 **Database & Backend** (✅ Complete):
 - 47 weapons with full specifications (baseDamage, cost, rangeBand, 15 attribute bonuses)
 - Backend APIs: `GET /api/weapons`, `POST /api/weapon-inventory/purchase`, `GET /api/weapon-inventory/storage-status`, `GET /api/weapon-inventory`
-- Weapon Workshop discount system: 5% per level, max 50% at level 10
+- Weapon Workshop discount system: 10% per level, max 100% at level 10
 - Storage capacity system: 5 base + (5 × Storage Facility Level), max 55 weapons
 - Weapon pricing formula: DPS-inclusive exponential pricing
 
@@ -995,7 +995,7 @@ Note: Performance excellent for current 47 weapons, optimization deferred until 
 - ✅ Discount percentage: "(15% off)"
 
 **Discount Tooltip**:
-- ✅ "Your Level 3 Weapons Workshop provides 15% discount"
+- ✅ "Your Level 3 Weapons Workshop provides 30% discount"
 - ⏳ Link to Stable Management: "Upgrade to Level 4 for 20% discount" (deferred)
 
 **Affordability Indicators**:
@@ -1134,8 +1134,8 @@ Note: Performance excellent for current 47 weapons, optimization deferred until 
 ├──────────────────────────────────────────────┤
 │ Cost Analysis:                               │
 │   Base Cost: ₡175,000                        │
-│   Workshop Discount: -15% (-₡25,000)        │
-│   Final Cost: ₡150,000                       │
+│   Workshop Discount: -30% (-₡52,500)        │
+│   Final Cost: ₡122,500                       │
 ├──────────────────────────────────────────────┤
 │ [Purchase ₡150,000]  [Close]                 │
 └──────────────────────────────────────────────┘
@@ -2212,7 +2212,7 @@ const processedWeapons = useMemo(() => {
 - **Storage Capacity**: Maximum number of weapons a stable can own (5 base + 5 per Storage Facility level, max 55)
 - **Value Score**: Composite metric indicating weapon cost-effectiveness
 - **Weapon Type**: Damage category (Melee, Ballistic, Energy, Shield) - currently cosmetic
-- **Weapons Workshop**: Facility providing purchase discounts (5% per level, max 50% at level 10)
+- **Weapons Workshop**: Facility providing purchase discounts (10% per level, max 100% at level 10)
 
 ### E. Known Issues & Bug Fixes
 

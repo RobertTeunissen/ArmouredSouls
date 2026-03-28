@@ -20,9 +20,10 @@ import FacilityBenefitCards from '../FacilityBenefitCards';
 
 interface Step3_FacilityTimingProps {
   onNext?: () => void;
+  onPrevious?: () => void;
 }
 
-const Step3_FacilityTiming = ({ onNext }: Step3_FacilityTimingProps) => {
+const Step3_FacilityTiming = ({ onNext, onPrevious }: Step3_FacilityTimingProps) => {
   const { tutorialState, advanceStep } = useOnboarding();
   const navigate = useNavigate();
   const [showDetailedExamples, setShowDetailedExamples] = useState(false);
@@ -118,15 +119,15 @@ const Step3_FacilityTiming = ({ onNext }: Step3_FacilityTimingProps) => {
                 <ol className="list-decimal list-inside space-y-1 text-sm">
                   <li>Buy weapon for ₡275,000 (full price)</li>
                   <li>Buy Weapons Workshop Level 1 for ₡75,000</li>
-                  <li>Result: Paid ₡350,000 total, missed ₡13,750 in savings</li>
+                  <li>Result: Paid ₡350,000 total, missed ₡27,500 in savings</li>
                 </ol>
               </div>
               <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 mt-3">
                 <p className="font-semibold text-success mb-2">✓ Correct Order (Maximizes Value):</p>
                 <ol className="list-decimal list-inside space-y-1 text-sm">
                   <li>Buy Weapons Workshop Level 1 for ₡75,000</li>
-                  <li>Buy weapon for ₡261,250 (5% discount)</li>
-                  <li>Result: Paid ₡336,250 total, saved ₡13,750</li>
+                  <li>Buy weapon for ₡247,500 (10% discount)</li>
+                  <li>Result: Paid ₡322,500 total, saved ₡27,500</li>
                 </ol>
               </div>
               <p className="text-yellow-300 font-semibold mt-4">
@@ -140,7 +141,7 @@ const Step3_FacilityTiming = ({ onNext }: Step3_FacilityTimingProps) => {
 
       {/* Facility Priority List */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 text-center">
+        <h2 className="text-2xl font-bold mb-4 text-center text-gray-100">
           Facility Purchase Order for {getStrategyName()}
         </h2>
         <FacilityPriorityList strategy={strategy} />
@@ -172,7 +173,7 @@ const Step3_FacilityTiming = ({ onNext }: Step3_FacilityTimingProps) => {
 
       {/* Detailed Facility Benefit Cards */}
       <div className={`mb-8 transition-all duration-300 ${showDetailedExamples ? 'block' : 'hidden'}`}>
-        <h2 className="text-2xl font-bold mb-4 text-center">
+        <h2 className="text-2xl font-bold mb-4 text-center text-gray-100">
           Detailed Facility Benefits & Savings
         </h2>
         <FacilityBenefitCards />
@@ -228,13 +229,24 @@ const Step3_FacilityTiming = ({ onNext }: Step3_FacilityTimingProps) => {
           Buy your discount facilities now to save credits on future purchases. You can return to the tutorial afterwards.
         </p>
 
-        <button
-          onClick={handleNext}
-          disabled={isSubmitting}
-          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-        >
-          {isSubmitting ? 'Loading...' : 'Next: Budget Allocation'}
-        </button>
+        <div className="flex gap-4">
+          {onPrevious && (
+            <button
+              onClick={onPrevious}
+              className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+              aria-label="Previous step"
+            >
+              Previous
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            disabled={isSubmitting}
+            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+          >
+            {isSubmitting ? 'Loading...' : 'Next: Budget Allocation'}
+          </button>
+        </div>
 
         <p className="text-sm text-tertiary text-center max-w-md">
           Understanding facility timing will help you make the most of your ₡3,000,000 starting budget

@@ -1,4 +1,4 @@
-import { Robot, Prisma } from '@prisma/client';
+import { Robot, Prisma } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { checkTeamSchedulingReadiness, calculateCombinedELO, TagTeamWithRobots } from './tagTeamService';

@@ -12,7 +12,7 @@ import BracketView from '../components/tournament/BracketView';
  *
  * Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6
  */
-function TournamentDetailPage(): JSX.Element {
+function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
@@ -206,7 +206,7 @@ function TournamentDetailPage(): JSX.Element {
 }
 
 /** Status badge for tournament status */
-function StatusBadge({ status }: { status: string }): JSX.Element {
+function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     pending: 'bg-surface-elevated text-secondary',
     active: 'bg-green-700 text-green-200',

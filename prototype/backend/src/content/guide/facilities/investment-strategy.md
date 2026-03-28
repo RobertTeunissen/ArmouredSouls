@@ -34,7 +34,7 @@ Your priority is stretching your starting budget and building a foundation for g
 
 ### Priority 2: Repair Bay (Level 1–2)
 
-- **Cost**: ₡100,000 (Level 1)
+- **Cost**: ₡50,000 (Level 1)
 - **Why second**: Repair costs are your biggest variable expense. Even a small discount saves meaningful Credits every cycle.
 - **Target**: Level 2 (₡300,000 total) by cycle 20
 
@@ -45,7 +45,7 @@ Your priority is stretching your starting budget and building a foundation for g
 - **Which one**: Match your primary robot's build. Combat Academy for damage dealers, Defense Academy for tanks.
 
 ```callout-tip
-In the early game, resist the urge to buy everything. Three facilities at low levels (Training Facility, Repair Bay, one Academy) cost about ₡450,000 in upgrades plus ~₡750/day in operating costs. That's manageable on Bronze/Silver income. Adding more facilities too early can drain your budget.
+In the early game, resist the urge to buy everything. Three facilities at low levels (Training Facility, Repair Bay, one Academy) cost about ₡350,000 in upgrades plus ~₡500/day in operating costs. That's manageable on Bronze/Silver income. Adding more facilities too early can drain your budget.
 ```
 
 ### Early Game Budget Allocation
@@ -93,7 +93,7 @@ Mid game is when your facility portfolio starts generating real returns. The Str
 | Facility | Target Level | Total Investment | Daily Operating Cost |
 |----------|-------------|-----------------|---------------------|
 | Training Facility | Level 5 | ₡2,250,000 | ₡1,250 |
-| Repair Bay | Level 4 | ₡1,000,000 | ₡2,500 |
+| Repair Bay | Level 4 | ₡500,000 | ₡400 |
 | Primary Academy | Level 4–5 | ₡1,000,000–₡1,500,000 | ₡1,000–₡1,250 |
 | Secondary Academy | Level 2–3 | ₡300,000–₡600,000 | ₡500–₡750 |
 | Streaming Studio | Level 3 | ₡600,000 | ₡300 |
@@ -122,7 +122,7 @@ Income is no longer a constraint. Focus on maximizing power and unlocking endgam
 
 ### Priority 11: Weapons Workshop (Level 5+)
 
-- **Why**: Weapon modifications and custom designs unlock at higher levels. The 25%+ discount also saves significant Credits when equipping a large roster.
+- **Why**: Weapon modifications and custom designs unlock at higher levels. The 50%+ discount also saves significant Credits when equipping a large roster.
 
 ### Priority 12: Booking Office
 

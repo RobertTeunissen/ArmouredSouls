@@ -30,10 +30,10 @@ import prisma from '../src/lib/prisma';
 export async function cleanupTestData() {
   try {
     // Delete in dependency order
-    await prisma.scheduledMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.scheduledTagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
     await prisma.tournamentMatch.deleteMany({});
     await prisma.tournament.deleteMany({});
@@ -64,7 +64,7 @@ export async function cleanupUserTestData(userId: number) {
 
     // Delete in dependency order
     if (robotIds.length > 0) {
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -86,7 +86,7 @@ export async function cleanupUserTestData(userId: number) {
         },
       });
 
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1: { activeRobotId: { in: robotIds } } },

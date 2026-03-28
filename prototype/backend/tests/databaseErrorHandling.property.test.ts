@@ -4,7 +4,7 @@ import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import authRoutes from '../src/routes/auth';
 import * as userService from '../src/services/userService';
 

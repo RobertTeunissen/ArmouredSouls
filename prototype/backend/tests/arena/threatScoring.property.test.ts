@@ -26,6 +26,7 @@ function makeWeapon(overrides: Record<string, unknown> = {}): Record<string, unk
     handsRequired: 'one',
     baseDamage: 10,
     cooldown: 2,
+    rangeBand: 'mid',
     ...overrides,
   };
 }
@@ -70,6 +71,7 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
     isUnderPressure: false,
     teamIndex: 0,
     isAlive: true,
+    targetLockTimer: 0,
     ...overrides,
   };
 }

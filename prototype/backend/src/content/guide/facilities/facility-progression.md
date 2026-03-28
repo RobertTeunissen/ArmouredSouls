@@ -47,33 +47,33 @@ Training Facility Level 1 is profitable from day one if you're upgrading regular
 
 | Level | Cost | Prestige Required | Discount | Special Unlock | Operating Cost/Day |
 |-------|------|-------------------|----------|---------------|-------------------|
-| 1 | ₡125,000 | — | 5% | — | ₡1,000 |
-| 2 | ₡250,000 | — | 10% | — | ₡1,500 |
-| 3 | ₡375,000 | — | 15% | Weapon modifications | ₡2,000 |
-| 4 | ₡500,000 | 1,500 | 20% | — | ₡2,500 |
-| 5 | ₡650,000 | — | 25% | — | ₡3,000 |
-| 6 | ₡800,000 | — | 30% | Custom weapon design | ₡3,500 |
-| 7 | ₡1,000,000 | 5,000 | 35% | — | ₡4,000 |
-| 8 | ₡1,250,000 | — | 40% | — | ₡4,500 |
-| 9 | ₡1,500,000 | 10,000 | 45% | — | ₡5,000 |
-| 10 | ₡2,000,000 | — | 50% | Legendary weapon crafting | ₡5,500 |
+| 1 | ₡75,000 | — | 10% | — | ₡100 |
+| 2 | ₡150,000 | — | 20% | — | ₡200 |
+| 3 | ₡225,000 | — | 30% | Weapon modifications | ₡300 |
+| 4 | ₡300,000 | 1,500 | 40% | — | ₡400 |
+| 5 | ₡375,000 | — | 50% | — | ₡500 |
+| 6 | ₡450,000 | — | 60% | Custom weapon design | ₡600 |
+| 7 | ₡525,000 | 5,000 | 70% | — | ₡700 |
+| 8 | ₡600,000 | — | 80% | — | ₡800 |
+| 9 | ₡675,000 | 10,000 | 90% | — | ₡900 |
+| 10 | ₡750,000 | — | 100% | Free weapons | ₡1,000 |
 
-**ROI Analysis**: Weapons are one-time purchases, so the Workshop's value depends on how often you buy weapons. If you're equipping multiple robots or experimenting with loadouts, the discount adds up. The special unlocks at Levels 3, 6, and 10 provide additional strategic value beyond the discount.
+**ROI Analysis**: Weapons are typically one-time purchases made early in the game. The Workshop is most valuable when bought before your first weapon purchase. At Level 1, you save 10% on every weapon — a significant discount on premium weapons costing ₡400K+.
 
 ### Repair Bay Progression
 
 | Level | Cost | Prestige Required | Base Discount (1 robot) | Operating Cost/Day |
 |-------|------|-------------------|------------------------|-------------------|
-| 1 | ₡100,000 | — | 6% | ₡1,000 |
-| 2 | ₡200,000 | — | 12% | ₡1,500 |
-| 3 | ₡300,000 | — | 18% | ₡2,000 |
-| 4 | ₡400,000 | 1,000 | 24% | ₡2,500 |
-| 5 | ₡500,000 | — | 30% | ₡3,000 |
-| 6 | ₡600,000 | — | 36% | ₡3,500 |
-| 7 | ₡750,000 | 5,000 | 42% | ₡4,000 |
-| 8 | ₡1,000,000 | — | 48% | ₡4,500 |
-| 9 | ₡1,250,000 | 10,000 | 54% | ₡5,000 |
-| 10 | ₡1,500,000 | — | 60% + auto minor repairs | ₡5,500 |
+| 1 | ₡50,000 | — | 6% | ₡100 |
+| 2 | ₡100,000 | — | 12% | ₡200 |
+| 3 | ₡150,000 | — | 18% | ₡300 |
+| 4 | ₡200,000 | 1,000 | 24% | ₡400 |
+| 5 | ₡250,000 | — | 30% | ₡500 |
+| 6 | ₡300,000 | — | 36% | ₡600 |
+| 7 | ₡350,000 | 5,000 | 42% | ₡700 |
+| 8 | ₡400,000 | — | 48% | ₡800 |
+| 9 | ₡450,000 | 10,000 | 54% | ₡900 |
+| 10 | ₡500,000 | — | 60% + auto minor repairs | ₡1,000 |
 
 Remember: the actual discount scales with your robot count using the formula **Level × (5 + Active Robots)**, capped at 90%. Here's how that plays out:
 

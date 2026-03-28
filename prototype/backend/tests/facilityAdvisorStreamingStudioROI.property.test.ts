@@ -12,7 +12,7 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import { facilityRecommendationService } from '../src/services/facilityRecommendationService';
 import prisma from '../src/lib/prisma';
 

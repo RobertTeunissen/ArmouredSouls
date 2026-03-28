@@ -60,7 +60,9 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
   const [eloProgression, setEloProgression] = useState<MetricProgression | null>(null);
   const [damageProgression, setDamageProgression] = useState<MetricProgression | null>(null);
   const [creditsProgression, setCreditsProgression] = useState<MetricProgression | null>(null);
-  const [kothStats, setKothStats] = useState<KothRobotPerformance | null>(null);  useEffect(() => {
+  const [kothStats, setKothStats] = useState<KothRobotPerformance | null>(null);
+
+  useEffect(() => {
     fetchAnalytics();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [robotId, lastNCycles]);
@@ -164,7 +166,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
           <div className="bg-surface-elevated p-4 rounded">
             <div className="text-secondary text-sm mb-1">Win Rate</div>
             <div className="text-2xl font-bold text-success">
-              {summary.winRate.toFixed(1)}%
+              {(summary.winRate ?? 0).toFixed(1)}%
             </div>
           </div>
           <div className="bg-surface-elevated p-4 rounded">
@@ -187,19 +189,19 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
           <div className="bg-surface-elevated p-4 rounded">
             <div className="text-secondary text-sm mb-1">Damage Dealt</div>
             <div className="text-xl font-bold text-orange-400">
-              {summary.damageDealt.toLocaleString()}
+              {(summary.damageDealt ?? 0).toLocaleString()}
             </div>
           </div>
           <div className="bg-surface-elevated p-4 rounded">
             <div className="text-secondary text-sm mb-1">Damage Received</div>
             <div className="text-xl font-bold text-error">
-              {summary.damageReceived.toLocaleString()}
+              {(summary.damageReceived ?? 0).toLocaleString()}
             </div>
           </div>
           <div className="bg-surface-elevated p-4 rounded">
             <div className="text-secondary text-sm mb-1">Credits Earned</div>
             <div className="text-xl font-bold text-warning">
-              ₡{summary.totalCreditsEarned.toLocaleString()}
+              ₡{(summary.totalCreditsEarned ?? 0).toLocaleString()}
             </div>
           </div>
           <div className="bg-surface-elevated p-4 rounded">
@@ -211,7 +213,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
           <div className="bg-surface-elevated p-4 rounded">
             <div className="text-secondary text-sm mb-1">Fame Earned</div>
             <div className="text-xl font-bold text-purple-400">
-              {summary.totalFameEarned.toLocaleString()}
+              {(summary.totalFameEarned ?? 0).toLocaleString()}
             </div>
           </div>
           <div className="bg-surface-elevated p-4 rounded">
@@ -243,15 +245,15 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
               <div className="text-xs text-secondary">1st Place Finishes</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.podiumRate.toFixed(1)}%</div>
+              <div className="text-2xl font-bold font-mono text-orange-500">{(kothStats.podiumRate ?? 0).toFixed(1)}%</div>
               <div className="text-xs text-secondary">Podium Rate</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.avgZoneScore.toFixed(1)}</div>
+              <div className="text-2xl font-bold font-mono text-orange-500">{(kothStats.avgZoneScore ?? 0).toFixed(1)}</div>
               <div className="text-xs text-secondary">Avg Zone Score</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.kothTotalZoneTime.toFixed(0)}s</div>
+              <div className="text-2xl font-bold font-mono text-orange-500">{(kothStats.kothTotalZoneTime ?? 0).toFixed(0)}s</div>
               <div className="text-xs text-secondary">Total Zone Time</div>
             </div>
             <div className="text-center">
@@ -326,7 +328,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
                 }`}
               >
                 {eloProgression.averageChange >= 0 ? '+' : ''}
-                {eloProgression.averageChange.toFixed(1)}
+                {(eloProgression.averageChange ?? 0).toFixed(1)}
               </span>
             </div>
           </div>
@@ -400,7 +402,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
                   borderRadius: '0.5rem',
                 }}
                 labelStyle={{ color: '#F3F4F6' }}
-                formatter={(value: number | undefined) => `₡${(value ?? 0).toLocaleString()}`}
+                formatter={(value) => `₡${(Number(value) || 0).toLocaleString()}`}
               />
               <Legend />
               <Line

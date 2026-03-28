@@ -100,10 +100,10 @@ describe('Step4_BudgetAllocation', () => {
       });
     });
 
-    it('should render the facility discount compounding section', async () => {
+    it('should render the discount facilities section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('Facility Discounts Compound Over Time')).toBeInTheDocument();
+        expect(screen.getByText('Why Buy Discount Facilities Early?')).toBeInTheDocument();
       });
     });
 
@@ -171,7 +171,7 @@ describe('Step4_BudgetAllocation', () => {
     it('should show storage note for 3_flimsy strategy', async () => {
       renderComponent('3_flimsy');
       await waitFor(() => {
-        expect(screen.getByText(/Storage Facility is essential/)).toBeInTheDocument();
+        expect(screen.getByText(/Storage Facility is useful/)).toBeInTheDocument();
       });
     });
   });
@@ -408,14 +408,6 @@ describe('Step4_BudgetAllocation', () => {
   });
 
   describe('Educational Content', () => {
-    it('should explain Weapons Workshop discount', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/Weapons Workshop:/)).toBeInTheDocument();
-        expect(screen.getByText(/Saves 5-50% on every weapon purchase/)).toBeInTheDocument();
-      });
-    });
-
     it('should explain Training Facility discount', async () => {
       renderComponent();
       await waitFor(() => {
@@ -424,17 +416,27 @@ describe('Step4_BudgetAllocation', () => {
       });
     });
 
-    it('should emphasize combined savings', async () => {
+    it('should explain Repair Bay benefit', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/Combined, these two facilities can save you hundreds of thousands/)).toBeInTheDocument();
+        expect(screen.getByText(/Repair Bay:/)).toBeInTheDocument();
+        expect(screen.getByText(/Reduces repair costs after every battle/)).toBeInTheDocument();
       });
     });
 
-    it('should display strategy highlights for each strategy', async () => {
+    it('should explain income facilities', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Merchandising Hub & Streaming Studio:/)).toBeInTheDocument();
+        expect(screen.getByText(/Generate passive income/)).toBeInTheDocument();
+      });
+    });
+
+    it('should display strategy highlights for 1_mighty', async () => {
       renderComponent('1_mighty');
       await waitFor(() => {
-        expect(screen.getByText(/Lower facility costs since Roster Expansion is not needed/)).toBeInTheDocument();
+        expect(screen.getByText(/Heavy investment in attribute upgrades/)).toBeInTheDocument();
+        expect(screen.getByText(/no Roster Expansion needed/)).toBeInTheDocument();
       });
     });
 

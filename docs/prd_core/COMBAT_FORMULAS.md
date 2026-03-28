@@ -907,6 +907,14 @@ Melee closing bonus (exempt from strain):
   closingBonus = 1.15 + speedGap × 0.01   // +15% base + 1% per speed diff
   effectiveSpeed = baseSpeed × stanceModifier × closingBonus
   // Closing bonus does NOT accumulate servo strain
+
+Ranged kiting bonus (exempt from strain):
+  Activates when: hasRangedWeapon AND distance < weaponOptimalRangeMidpoint AND opponentHasMeleeWeapon
+  speedGap = max(0, opponentSpeed - baseSpeed)
+  kitingBonus = 1.10 + speedGap × 0.008   // +10% base + 0.8% per speed diff
+  effectiveSpeed = baseSpeed × stanceModifier × kitingBonus
+  // Kiting bonus does NOT accumulate servo strain
+  // Weaker than closing bonus (10% vs 15%) because ranged can still deal damage while kiting
 ```
 
 ### Servo_Strain
@@ -956,15 +964,16 @@ Special: Melee weapons cannot attack beyond 2 units (emits out_of_range event).
 Proximity-based damage bonus from hydraulic systems:
 
 ```
-Melee range:
-  bonus = 1 + hydraulicSystems × 0.03
-  // Range: 1.03 (hydro=1) to 2.5 (hydro=50)
+Melee range (0–2 units):
+  bonus = 1 + hydraulicSystems × 0.02
+  // Range: 1.02 (hydro=1) to 2.0 (hydro=50)
+  // Reduced from 0.03 coefficient (was up to 2.5×) in March 2026 rebalance
 
-Short range:
+Short range (3–6 units):
   bonus = 1 + hydraulicSystems × 0.015
   // Range: 1.015 (hydro=1) to 1.75 (hydro=50)
 
-Mid/Long range:
+Mid/Long range (7+ units):
   bonus = 1.0   // No bonus
 ```
 
@@ -1066,6 +1075,18 @@ score = combatPowerThreat × hpFactor × weaponThreat × proximityDecay
 proximityDecay = 1 / (1 + normalizedDistance × 5)
 normalizedDistance = distance / (arenaRadius × 2)
 ```
+
+### Target_Stickiness
+
+Robots lock onto their selected target for a minimum duration before re-evaluating:
+
+```
+targetLockDuration = 1.5 seconds
+Lock breaks early if: target is destroyed or yields
+After lock expires: re-run target selection, lock onto result for another 1.5s
+```
+
+This prevents erratic target switching in multi-robot battles where opponents have similar threat scores.
 
 ### Turn_Speed
 
@@ -1176,6 +1197,7 @@ If uncontestedScore / totalScore > 0.75:
 
 ## Version History
 
+- **2026-03-25:** Added Target Stickiness formula (1.5s lock duration, early break on target death/yield)
 - **2026-03-18:** Added King of the Hill Zone Scoring Formulas (zone scoring, kill bonus, anti-passive penalties, zone dominance bonus)
 - **2026-03-16:** Added 2D Arena Spatial Formulas section (Movement, Range, Hydraulic, Backstab, Flanking, Patience, Adaptation, Pressure, Threat Score, Turn Speed, Counter Range)
 - **2026-02-03:** Initial documentation

@@ -19,7 +19,6 @@
 import { useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
-import GuidedUIOverlay from '../GuidedUIOverlay';
 
 interface Step8_BattleReadinessProps {
   onNext?: () => void;
@@ -75,13 +74,11 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
   const { tutorialState, advanceStep } = useOnboarding();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
 
   const strategy = tutorialState?.strategy || '1_mighty';
   const multiRobotInfo = MULTI_ROBOT_REPAIR_GUIDANCE[strategy];
 
   const handleNavigateToRobots = () => {
-    setShowOverlay(false);
     navigate('/robots?onboarding=true');
   };
 
@@ -169,13 +166,13 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
           {/* Shield Card */}
           <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
             <h3 className="font-bold text-primary mb-2 flex items-center gap-2">
-              <span>🛡️</span> Shields
+              <span>🛡️</span> Energy Shields
             </h3>
             <p className="text-gray-200 text-sm mb-2">
-              Shields <strong className="text-primary">DO</strong> regenerate between battles.
+              Energy shields <strong className="text-primary">DO</strong> regenerate between battles.
             </p>
             <p className="text-secondary text-sm">
-              Shield points fully restore after each battle at no cost.
+              Energy shield points fully restore after each battle at no cost.
               Investing in shield attributes can reduce your long-term repair expenses.
             </p>
           </div>
@@ -337,12 +334,11 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
       {/* Action Buttons */}
       <div className="flex flex-col items-center gap-4">
         <button
-          id="go-to-robot-detail-button"
-          onClick={() => setShowOverlay(true)}
+          onClick={handleNavigateToRobots}
           className="px-8 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 min-h-[44px]"
-          aria-label="Go to Robot Detail"
+          aria-label="Go to Robots Page"
         >
-          Go to Robot Detail
+          Go to Robots Page
         </button>
 
         <div className="flex gap-4 mt-2">
@@ -368,30 +364,6 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
         </p>
       </div>
 
-      {/* Guided UI Overlay */}
-      {showOverlay && (
-        <GuidedUIOverlay
-          targetSelector="#go-to-robot-detail-button"
-          tooltipContent={
-            <div>
-              <p className="font-semibold text-primary mb-2">Visit Robot Detail Page</p>
-              <p className="mb-2 text-gray-200">
-                Go to your robot's detail page to equip your weapon and check battle readiness status.
-                Look for the loadout section to assign your weapon.
-              </p>
-              <p className="text-sm text-secondary">
-                After equipping your weapon, your robot's stats will update with weapon bonuses.
-              </p>
-            </div>
-          }
-          position="top"
-          onNext={handleNavigateToRobots}
-          showNext={true}
-          showPrevious={false}
-          onClose={() => setShowOverlay(false)}
-        />
-      )}
-
       {/* Educational Note */}
       <div className="mt-8 max-w-3xl mx-auto bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">
         <div className="flex items-start gap-3">
@@ -399,8 +371,8 @@ const Step8_BattleReadiness = ({ onNext, onPrevious }: Step8_BattleReadinessProp
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
           <div className="text-sm text-gray-200">
-            <strong className="text-primary">Tip:</strong> Shields are your best friend for reducing
-            repair costs. Since shields regenerate for free, investing in shield attributes means
+            <strong className="text-primary">Tip:</strong> Energy shields are your best friend for reducing
+            repair costs. Since energy shields regenerate for free, investing in shield attributes means
             less HP damage and lower repair bills over time. Combine this with smart yielding and
             the 50% manual repair discount (use the Repair All button between cycles) for
             maximum cost efficiency.

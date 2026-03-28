@@ -1,4 +1,4 @@
-import { Robot } from '@prisma/client';
+import { Robot } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import * as fc from 'fast-check';
 import { createTeam, getTeamById } from '../src/services/tagTeamService';

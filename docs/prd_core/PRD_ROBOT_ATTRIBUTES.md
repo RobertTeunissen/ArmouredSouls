@@ -137,7 +137,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - Higher gyro = harder to exploit positionally
 15. **Hydraulic Systems** - Physical force for melee impact and carry capacity
     - **2D Arena Role**: Proximity-based damage bonus in the arena
-    - Melee range damage bonus: `1 + hydraulicSystems × 0.03` (up to 2.5×)
+    - Melee range damage bonus: `1 + hydraulicSystems × 0.02` (up to 2.0×)
     - Short range damage bonus: `1 + hydraulicSystems × 0.015` (up to 1.75×)
     - No bonus at mid/long range
     - Also applies to melee counter-attacks

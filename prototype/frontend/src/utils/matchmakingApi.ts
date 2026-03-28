@@ -392,6 +392,7 @@ export interface BattleLogResponse {
     id: number;
     name: string;
     owner: string;
+    ownerId?: number;
     maxHP?: number;
     maxShield?: number;
     eloBefore: number;
@@ -416,6 +417,7 @@ export interface BattleLogResponse {
     id: number;
     name: string;
     owner: string;
+    ownerId?: number;
     maxHP?: number;
     maxShield?: number;
     eloBefore: number;
@@ -533,6 +535,7 @@ export interface BattleLogResponse {
     robotId: number;
     robotName: string;
     owner: string;
+    ownerId?: number;
     placement: number;
     zoneScore: number;
     zoneTime: number;

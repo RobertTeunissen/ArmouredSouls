@@ -19,6 +19,7 @@ import BudgetComparisonTable from '../BudgetComparisonTable';
 
 interface Step4_BudgetAllocationProps {
   onNext?: () => void;
+  onPrevious?: () => void;
 }
 
 /** Strategy-specific budget breakdowns from requirements 6.2-6.4 */
@@ -90,7 +91,7 @@ const BUDGET_RECOMMENDATIONS: Record<string, {
   },
 };
 
-const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
+const Step4_BudgetAllocation = ({ onNext, onPrevious }: Step4_BudgetAllocationProps) => {
   const { tutorialState, advanceStep } = useOnboarding();
   const [showComparison, setShowComparison] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,6 +99,16 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
   const strategy = tutorialState?.strategy || '1_mighty';
   const details = STRATEGY_DETAILS[strategy] || STRATEGY_DETAILS['1_mighty'];
   const recommendations = BUDGET_RECOMMENDATIONS[strategy] || BUDGET_RECOMMENDATIONS['1_mighty'];
+  
+  // Get spending data from onboarding choices
+  const budgetSpent = tutorialState?.choices?.budgetSpent || {
+    facilities: 0,
+    robots: 0,
+    weapons: 0,
+    attributes: 0,
+  };
+  const hasSpendingData = budgetSpent.facilities > 0 || budgetSpent.robots > 0 || 
+                          budgetSpent.weapons > 0 || budgetSpent.attributes > 0;
 
   const handleNext = async () => {
     try {
@@ -229,23 +240,39 @@ const Step4_BudgetAllocation = ({ onNext }: Step4_BudgetAllocationProps) => {
       {/* Budget Comparison Table */}
       {showComparison && (
         <div className="mb-8 max-w-4xl mx-auto bg-surface rounded-lg p-6">
-          <h2 className="text-xl font-bold mb-4 text-center text-gray-100">Budget Comparison</h2>
+          <h2 className="text-xl font-bold mb-2 text-center text-gray-100">Budget Reference</h2>
+          <p className="text-sm text-secondary text-center mb-4">
+            Recommended spending targets for your strategy. Use the Budget Tracker in the header to monitor your actual spending.
+          </p>
+          
           <BudgetComparisonTable
             recommendations={recommendations}
-            currentSpending={{ facilities: 0, robots: 0, weapons: 0, attributes: 0 }}
+            currentSpending={budgetSpent}
+            referenceOnly={!hasSpendingData}
           />
         </div>
       )}
 
       {/* Action Buttons */}
       <div className="flex flex-col items-center gap-4">
-        <button
-          onClick={handleNext}
-          disabled={isSubmitting}
-          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-        >
-          {isSubmitting ? 'Loading...' : 'Next: Create Your Robot'}
-        </button>
+        <div className="flex gap-4">
+          {onPrevious && (
+            <button
+              onClick={onPrevious}
+              className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+              aria-label="Previous step"
+            >
+              Previous
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            disabled={isSubmitting}
+            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+          >
+            {isSubmitting ? 'Loading...' : 'Next: Create Your Robot'}
+          </button>
+        </div>
 
         <p className="text-sm text-tertiary text-center max-w-md">
           These budget guidelines will help you make informed spending decisions throughout the game

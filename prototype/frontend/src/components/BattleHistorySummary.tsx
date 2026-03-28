@@ -116,7 +116,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
   return (
     <div className="bg-[#252b38] border border-white/10 rounded-lg p-4 mb-4">
       {/* View Toggle */}
-      <div className="flex gap-2 mb-4 pb-3 border-b border-white/10">
+      <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-white/10">
         <button
           onClick={() => onViewChange('overall')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${

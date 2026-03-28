@@ -57,7 +57,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     }
 
     if (testTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTeamIds } },
@@ -71,7 +71,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     }
 
     if (testRobotIds.length > 0) {
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           robot1Id: { in: testRobotIds },
         },
@@ -172,7 +172,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     // Step 2: Schedule a 1v1 match for one of the robots
     console.log('[Test] Step 2: Scheduling 1v1 match...');
     
-    const scheduledMatch = await prisma.scheduledMatch.create({
+    const scheduledMatch = await prisma.scheduledLeagueMatch.create({
       data: {
         robot1Id: testRobots[0].id,
         robot2Id: testRobots[2].id,
@@ -203,7 +203,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     });
 
     // Mark 1v1 match as completed
-    await prisma.scheduledMatch.update({
+    await prisma.scheduledLeagueMatch.update({
       where: { id: scheduledMatch.id },
       data: { status: 'completed' },
     });
@@ -334,7 +334,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
         robot1Id: { in: robots.map(r => r.id) },
       },
     });
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [{ team1Id: team1.team!.id }, { team1Id: team2.team!.id }],
       },
@@ -407,7 +407,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     }
 
     // Schedule 1v1 match
-    const oneVOneMatch = await prisma.scheduledMatch.create({
+    const oneVOneMatch = await prisma.scheduledLeagueMatch.create({
       data: {
         robot1Id: robots[0].id,
         robot2Id: robots[2].id,
@@ -422,7 +422,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
 
     // In a real cycle, 1v1 matches would be processed first
     // We verify this by checking that the system design supports it
-    const scheduledTagTeamMatches = await prisma.tagTeamMatch.findMany({
+    const scheduledTagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
       where: {
         status: 'scheduled',
         OR: [
@@ -440,12 +440,12 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     console.log('[Test] ✓ Match processing order verified');
 
     // Clean up
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: teams.map(t => ({ team1Id: t.id })),
       },
     });
-    await prisma.scheduledMatch.deleteMany({ where: { id: oneVOneMatch.id } });
+    await prisma.scheduledLeagueMatch.deleteMany({ where: { id: oneVOneMatch.id } });
     await prisma.tagTeam.deleteMany({
       where: { id: { in: teams.map(t => t.id) } },
     });

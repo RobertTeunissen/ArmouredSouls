@@ -30,8 +30,8 @@ These facilities reduce your operating costs or generate passive income. They te
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
 | Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | 10%–90% discount on attribute upgrades |
-| Weapons Workshop | Weapon purchase discounts | ₡125,000 | ₡1,000 + ₡500/level beyond first | 5%–50% discount on weapon purchases |
-| Repair Bay | Repair cost discounts | ₡100,000 | ₡1,000 + ₡500/level beyond first | Scales with level and robot count (up to 90% discount) |
+| Weapons Workshop | Weapon purchase discounts | ₡75,000 | level × ₡100/day | 10%–100% discount on weapon purchases |
+| Repair Bay | Repair cost discounts | ₡50,000 | level × ₡100/day | Scales with level and robot count (up to 90% discount) |
 | Merchandising Hub | Passive merchandising income | ₡150,000 | level × ₡200/day | ₡5,000–₡50,000/day base income, scales with Prestige |
 | Streaming Studio | Streaming revenue multiplier | ₡100,000 | level × ₡100/day | 2×–11× streaming revenue per battle |
 
@@ -43,9 +43,9 @@ The Training Facility provides a percentage discount on all attribute upgrade co
 
 ### Weapons Workshop
 
-Reduces the purchase price of weapons from the shop. Higher levels also unlock weapon modifications (Level 3) and custom weapon design (Level 6). At Level 10, you unlock legendary weapon crafting and enjoy a 50% discount on all weapon purchases.
+Reduces the purchase price of weapons from the shop. Higher levels also unlock weapon modifications (Level 3) and custom weapon design (Level 6). At Level 10, weapons are free.
 
-**Discount formula**: Level × 5%
+**Discount formula**: Level × 10%
 
 ### Repair Bay
 
@@ -143,8 +143,8 @@ Here's what you'll pay daily for each facility at various levels:
 | Facility | Level 1 | Level 5 | Level 10 |
 |----------|---------|---------|----------|
 | Training Facility | ₡250 | ₡1,250 | N/A (max L9) |
-| Weapons Workshop | ₡1,000 | ₡3,000 | ₡5,500 |
-| Repair Bay | ₡1,000 | ₡3,000 | ₡5,500 |
+| Weapons Workshop | ₡100 | ₡500 | ₡1,000 |
+| Repair Bay | ₡100 | ₡500 | ₡1,000 |
 | Merchandising Hub | ₡200 | ₡1,000 | ₡2,000 |
 | Streaming Studio | ₡100 | ₡500 | ₡1,000 |
 | Roster Expansion | ₡500 | ₡2,500 | ₡4,500 |

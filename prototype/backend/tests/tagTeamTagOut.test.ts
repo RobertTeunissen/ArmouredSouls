@@ -1,4 +1,4 @@
-import { Robot } from '@prisma/client';
+import { Robot } from '../generated/prisma';
 import { shouldTagOut } from '../src/services/tagTeamBattleOrchestrator';
 
 /**

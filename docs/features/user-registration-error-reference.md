@@ -44,7 +44,11 @@ Returned when one or more fields fail format or length validation. The `error` f
 | Email has invalid characters     | Email can only contain letters, numbers, underscores, and hyphens              |
 | Password shorter than 8 chars    | Password must be at least 8 characters long                                    |
 | Password longer than 128 chars   | Password must not exceed 128 characters                                        |
-| Missing required fields          | Username, email, and password are required                                     |
+| Stable name shorter than 3 chars | Stable name must be at least 3 characters                          |
+| Stable name longer than 30 chars | Stable name must be 30 characters or less                          |
+| Stable name has invalid characters | Stable name can only contain letters, numbers, spaces, hyphens, and underscores |
+| Stable name contains profanity   | Stable name contains inappropriate content                          |
+| Missing required fields          | Username, email, password, and stable name are required             |
 
 Multiple validation errors are joined with `, ` in a single `error` string. For example:
 
@@ -82,6 +86,27 @@ Returned when the submitted username already exists in the database.
 **Recommended client handling:**
 - Display the message next to the username field.
 - Prompt the user to choose a different username.
+
+---
+
+#### `DUPLICATE_STABLE_NAME`
+
+Returned when the submitted stable name already exists in the database.
+
+| Condition                  | Error Message                  |
+|----------------------------|--------------------------------|
+| Stable name already taken  | Stable name is already taken   |
+
+```json
+{
+  "error": "Stable name is already taken",
+  "code": "DUPLICATE_STABLE_NAME"
+}
+```
+
+**Recommended client handling:**
+- Display the message next to the stable name field.
+- Prompt the user to choose a different stable name.
 
 ---
 
@@ -221,6 +246,7 @@ When the API request fails without a response (network timeout, DNS failure, ser
 |----------------------|------|--------------------|--------------------------------------------------------------------------------|
 | `VALIDATION_ERROR`   | 400  | Register           | Field-specific validation message(s)                                           |
 | `DUPLICATE_USERNAME` | 400  | Register           | Username is already taken                                                      |
+| `DUPLICATE_STABLE_NAME` | 400 | Register          | Stable name is already taken                                                   |
 | `DUPLICATE_EMAIL`    | 400  | Register           | Email is already registered                                                    |
 | `INVALID_CREDENTIALS`| 401  | Login              | Invalid credentials                                                            |
 | *(none)*             | 429  | Register, Login    | Too many requests. Please try again later.                                     |
@@ -240,9 +266,17 @@ The username may have been claimed by another user or created during database se
 
 Similar to usernames — the email may already exist from seed data or a previous migration that assigned placeholder emails (`{username}@legacy.local`). Try a different email value.
 
-### "Username, email, and password are required"
+### "Username, email, password, and stable name are required"
 
-The request body is missing one or more fields, or a field is an empty string. Ensure all three fields are present and non-empty in the JSON body.
+The request body is missing one or more fields, or a field is an empty string. Ensure all four fields are present and non-empty in the JSON body.
+
+### "Stable name is already taken"
+
+The stable name you chose is already in use by another player. Choose a different stable name. Note that stable names are your public identity in the game — other players will see this name instead of your username.
+
+### "Stable name contains inappropriate content"
+
+The stable name contains words that are not allowed. Choose a different name that doesn't include profanity or inappropriate language.
 
 ### Multiple validation errors in one response
 

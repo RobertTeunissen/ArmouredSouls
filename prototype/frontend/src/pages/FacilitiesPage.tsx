@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../utils/apiClient';
 import Navigation from '../components/Navigation';
@@ -92,6 +93,7 @@ const FACILITY_CATEGORIES: CategoryInfo[] = [
 
 function FacilitiesPage() {
   const { user, refreshUser } = useAuth();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('facilities');
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [userPrestige, setUserPrestige] = useState(0);
@@ -101,6 +103,7 @@ function FacilitiesPage() {
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
     new Set(['advanced']) // Advanced Features collapsed by default
   );
+  const facilityRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
   // Advisor tab state
   const [lastNCycles, setLastNCycles] = useState(10);
@@ -108,6 +111,36 @@ function FacilitiesPage() {
   const [recommendations, setRecommendations] = useState<FacilityRecommendation[]>([]);
   const [advisorLoading, setAdvisorLoading] = useState(false);
   const [currentCycle, setCurrentCycle] = useState<number>(0);
+
+  // Handle hash-based scrolling to specific facility
+  useEffect(() => {
+    if (loading || !location.hash) return;
+    
+    const facilityType = location.hash.slice(1); // Remove the '#'
+    
+    // Find which category contains this facility and expand it if collapsed
+    const category = FACILITY_CATEGORIES.find(cat => cat.facilityTypes.includes(facilityType));
+    if (category && collapsedCategories.has(category.id)) {
+      setCollapsedCategories(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(category.id);
+        return newSet;
+      });
+    }
+    
+    // Scroll to the facility after a short delay to allow DOM update
+    setTimeout(() => {
+      const element = facilityRefs.current[facilityType];
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Add a highlight effect
+        element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-background');
+        setTimeout(() => {
+          element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-background');
+        }, 3000);
+      }
+    }, 100);
+  }, [loading, location.hash, collapsedCategories]);
 
   useEffect(() => {
     fetchFacilities();
@@ -347,8 +380,10 @@ function FacilitiesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {categoryFacilities.map((facility) => (
                         <div 
-                          key={facility.type} 
-                          className={`bg-surface p-6 rounded-lg relative ${
+                          key={facility.type}
+                          ref={(el) => { facilityRefs.current[facility.type] = el; }}
+                          id={`facility-${facility.type}`}
+                          className={`bg-surface p-6 rounded-lg relative transition-all duration-300 ${
                             facility.implemented 
                               ? 'border border-green-700/30' 
                               : 'border border-yellow-600/50 opacity-90'

@@ -1,4 +1,4 @@
-import { Robot } from '@prisma/client';
+import { Robot } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 

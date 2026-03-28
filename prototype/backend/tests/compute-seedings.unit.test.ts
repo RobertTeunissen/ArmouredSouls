@@ -14,7 +14,7 @@ import {
   Round1Match,
   CompletedMatch,
 } from '../src/services/tournamentService';
-import type { Robot } from '@prisma/client';
+import type { Robot } from '../generated/prisma';
 
 function makeRobot(id: number, name: string, elo: number): Robot {
   return { id, name, elo } as Robot;

@@ -25,6 +25,7 @@ export interface UserProfile {
   id: string;
   username: string;
   email: string;
+  stableName: string;
   currency: number;
   prestige: number;
   role: string;
@@ -40,6 +41,7 @@ export interface RegistrationFormProps {
 /** Per-field error state for inline validation messages. */
 interface FieldErrors {
   username?: string;
+  stableName?: string;
   email?: string;
   password?: string;
   passwordConfirmation?: string;
@@ -70,6 +72,14 @@ function validatePassword(password: string): string | undefined {
   return undefined;
 }
 
+function validateStableName(stableName: string): string | undefined {
+  if (stableName.length < 3) return 'Stable name must be at least 3 characters';
+  if (stableName.length > 30) return 'Stable name must be 30 characters or less';
+  if (!/^[a-zA-Z0-9 _-]+$/.test(stableName))
+    return 'Stable name can only contain letters, numbers, spaces, hyphens, and underscores';
+  return undefined;
+}
+
 /**
  * Maps a server error code to the field it belongs to, so we can show the
  * message inline next to the right input instead of in a generic banner.
@@ -83,16 +93,20 @@ function mapServerErrorToField(
       return { field: 'username', message };
     case 'DUPLICATE_EMAIL':
       return { field: 'email', message };
+    case 'DUPLICATE_STABLE_NAME':
+      return { field: 'stableName', message };
     case 'VALIDATION_ERROR': {
       // The backend joins multiple errors with ", ". Try to map to a field
       // by keyword. If it spans multiple fields, fall back to general.
       const lower = message.toLowerCase();
-      if (lower.includes('username') && !lower.includes('email') && !lower.includes('password'))
+      if (lower.includes('username') && !lower.includes('email') && !lower.includes('password') && !lower.includes('stable'))
         return { field: 'username', message };
-      if (lower.includes('email') && !lower.includes('username') && !lower.includes('password'))
+      if (lower.includes('email') && !lower.includes('username') && !lower.includes('password') && !lower.includes('stable'))
         return { field: 'email', message };
-      if (lower.includes('password') && !lower.includes('username') && !lower.includes('email'))
+      if (lower.includes('password') && !lower.includes('username') && !lower.includes('email') && !lower.includes('stable'))
         return { field: 'password', message };
+      if (lower.includes('stable') && !lower.includes('username') && !lower.includes('email') && !lower.includes('password'))
+        return { field: 'stableName', message };
       return { field: null, message };
     }
     default:
@@ -120,6 +134,7 @@ function FieldError({ message, id }: { message?: string; id: string }) {
  */
 function RegistrationForm({ onSuccess }: RegistrationFormProps) {
   const [username, setUsername] = useState('');
+  const [stableName, setStableName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
@@ -142,6 +157,11 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value);
     clearFieldError('username');
+  };
+
+  const handleStableNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStableName(e.target.value);
+    clearFieldError('stableName');
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,6 +188,9 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
 
     const usernameErr = validateUsername(username);
     if (usernameErr) errors.username = usernameErr;
+
+    const stableNameErr = validateStableName(stableName);
+    if (stableNameErr) errors.stableName = stableNameErr;
 
     const emailErr = validateEmail(email);
     if (emailErr) errors.email = emailErr;
@@ -196,6 +219,7 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
     try {
       const response = await apiClient.post('/api/auth/register', {
         username,
+        stableName,
         email,
         password,
       });
@@ -250,7 +274,7 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             value={username}
             onChange={handleUsernameChange}
             className={fieldErrors.username ? INPUT_ERROR_CLASS : INPUT_CLASS}
-            placeholder="Choose a username"
+            placeholder="Choose a username (private, for login only)"
             required
             aria-required="true"
             aria-invalid={!!fieldErrors.username}
@@ -258,6 +282,33 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             disabled={isSubmitting}
           />
           <FieldError message={fieldErrors.username} id="reg-username-error" />
+        </div>
+
+        <div className="mb-4">
+          <label
+            htmlFor="reg-stable-name"
+            className="block text-sm font-medium text-secondary mb-2"
+          >
+            Stable Name
+          </label>
+          <input
+            type="text"
+            id="reg-stable-name"
+            name="stableName"
+            value={stableName}
+            onChange={handleStableNameChange}
+            className={fieldErrors.stableName ? INPUT_ERROR_CLASS : INPUT_CLASS}
+            placeholder="Your public name shown in-game"
+            required
+            aria-required="true"
+            aria-invalid={!!fieldErrors.stableName}
+            aria-describedby={fieldErrors.stableName ? 'reg-stable-name-error' : undefined}
+            disabled={isSubmitting}
+          />
+          <FieldError message={fieldErrors.stableName} id="reg-stable-name-error" />
+          <p className="mt-1 text-xs text-tertiary">
+            This is how other players will see you. Your username stays private.
+          </p>
         </div>
 
         <div className="mb-4">
@@ -362,6 +413,7 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
  */
 export interface RegistrationFormState {
   username: string;
+  stableName: string;
   email: string;
   password: string;
   passwordConfirmation: string;

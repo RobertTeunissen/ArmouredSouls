@@ -5,9 +5,54 @@
  */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Inter+Tight:wght@700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Custom colors */
+  --color-background: #0a0e14;
+  --color-surface: #1a1f29;
+  --color-surface-elevated: #252b38;
+  --color-primary: #58a6ff;
+  --color-primary-light: #79b8ff;
+  --color-primary-dark: #388bfd;
+  --color-secondary: #8b949e;
+  --color-tertiary: #57606a;
+  --color-success: #3fb950;
+  --color-warning: #d29922;
+  --color-error: #f85149;
+  --color-info: #a371f7;
+
+  /* Custom font families */
+  --font-header: 'Inter Tight', 'DIN Next', 'Roboto Condensed', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Custom animations */
+  --animate-fade-in: fade-in 300ms linear;
+  --animate-fade-in-delayed: fade-in 300ms linear 100ms backwards;
+  --animate-error-slide-in: error-slide-in 200ms ease-out;
+  --animate-slide-in-right: slide-in-right 300ms ease-out;
+  --animate-scale-in: scale-in 250ms ease-out;
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes error-slide-in {
+  0% { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
 
 body {
   margin: 0;
@@ -19,30 +64,28 @@ body {
 }
 
 /* Custom scrollbar styling for match sections */
-@layer utilities {
-  .scrollbar-thin::-webkit-scrollbar {
+@utility scrollbar-thin {
+  &::-webkit-scrollbar {
     width: 6px;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-track {
+  &::-webkit-scrollbar-track {
     background: #1a1f29;
     border-radius: 3px;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-thumb {
+  &::-webkit-scrollbar-thumb {
     background: #4b5563;
     border-radius: 3px;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  &::-webkit-scrollbar-thumb:hover {
     background: #6b7280;
   }
   
   /* Firefox scrollbar */
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: #4b5563 #1a1f29;
-  }
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1a1f29;
 }
 
 /* Reduced motion support for accessibility (WCAG 2.1 compliance) */

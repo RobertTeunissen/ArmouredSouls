@@ -233,8 +233,8 @@ describe('Environment Config Loading - Property Tests', () => {
      * For any non-placeholder secret, startup should succeed.
      */
 
-    let mockExit: jest.SpyInstance;
-    let mockConsoleError: jest.SpyInstance;
+    let mockExit: jest.Spied<typeof process.exit>;
+    let mockConsoleError: jest.Spied<typeof console.error>;
 
     beforeEach(() => {
       mockExit = jest.spyOn(process, 'exit').mockImplementation((() => {

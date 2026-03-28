@@ -13,14 +13,15 @@
  * Requirements: 9.1-9.10
  */
 
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import GuidedUIOverlay from '../GuidedUIOverlay';
+import apiClient from '../../../utils/apiClient';
 
 interface Step5_RobotCreationProps {
   onNext?: () => void;
+  onPrevious?: () => void;
 }
 
 const ROBOT_COST = 500000;
@@ -57,46 +58,40 @@ const STRATEGY_ROBOT_INFO: Record<string, {
   },
 };
 
-const Step5_RobotCreation = ({ onNext }: Step5_RobotCreationProps) => {
+const Step5_RobotCreation = ({ onNext, onPrevious }: Step5_RobotCreationProps) => {
   const { tutorialState, advanceStep } = useOnboarding();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [robotCreated, setRobotCreated] = useState(false);
+  const [actualRobotCount, setActualRobotCount] = useState<number | null>(null);
 
   const strategy = tutorialState?.strategy || '1_mighty';
   const info = STRATEGY_ROBOT_INFO[strategy] || STRATEGY_ROBOT_INFO['1_mighty'];
   const credits = user?.currency ?? STARTING_BUDGET;
   const remainingAfterCreation = credits - ROBOT_COST;
 
-  // Check if a robot was already created during onboarding
-  const robotsCreatedDuringOnboarding = tutorialState?.choices?.robotsCreated ?? [];
-  const hasCreatedRobot = robotsCreatedDuringOnboarding.length > 0;
-  const robotsCreated = robotsCreatedDuringOnboarding.length;
+  // Fetch actual robot count from API (accounts for robots created outside onboarding)
+  useEffect(() => {
+    const fetchRobotCount = async () => {
+      try {
+        const response = await apiClient.get('/api/robots');
+        const robots = response.data;
+        setActualRobotCount(Array.isArray(robots) ? robots.length : 0);
+      } catch {
+        // Fall back to onboarding state if API fails
+        setActualRobotCount(tutorialState?.choices?.robotsCreated?.length ?? 0);
+      }
+    };
+    fetchRobotCount();
+  }, [tutorialState?.choices?.robotsCreated]);
+
+  // Use actual robot count (from API) for accurate tracking
+  const robotsCreated = actualRobotCount ?? (tutorialState?.choices?.robotsCreated?.length ?? 0);
+  const hasCreatedRobot = robotsCreated > 0;
   const robotsNeeded = info.totalRobots;
   const needsMoreRobots = robotsCreated < robotsNeeded;
 
-  // Detect when user returns from robot creation page with a new robot
-  const checkForNewRobot = useCallback(async () => {
-    if (robotCreated) return;
-
-    try {
-      // We rely on the onboarding choices being updated by the robot creation flow
-      if (robotsCreatedDuringOnboarding.length > 0 && robotsCreatedDuringOnboarding.length !== robotsCreated) {
-        setRobotCreated(true);
-      }
-    } catch {
-      // Silently handle - user may not have created a robot yet
-    }
-  }, [robotCreated, robotsCreatedDuringOnboarding.length, robotsCreated]);
-
-  useEffect(() => {
-    checkForNewRobot();
-  }, [checkForNewRobot, tutorialState]);
-
   const handleNavigateToCreate = () => {
-    setShowOverlay(false);
     navigate('/robots/create?onboarding=true');
   };
 
@@ -117,15 +112,24 @@ const Step5_RobotCreation = ({ onNext }: Step5_RobotCreationProps) => {
     await handleNext();
   };
 
+  // Dynamic header based on robot count
+  const headerTitle = hasCreatedRobot 
+    ? (needsMoreRobots ? 'Create More Robots' : 'Robot Creation Complete')
+    : 'Create Your First Robot';
+  
+  const headerDescription = hasCreatedRobot
+    ? (needsMoreRobots 
+        ? `You have ${robotsCreated} robot${robotsCreated > 1 ? 's' : ''}. Create ${robotsNeeded - robotsCreated} more to complete your strategy.`
+        : `You have all ${robotsNeeded} robot${robotsNeeded > 1 ? 's' : ''} for your strategy. Ready to continue!`)
+    : `Time to build your first combat robot! Each robot costs ₡${ROBOT_COST.toLocaleString()} and starts with all 23 attributes at Level 1.`;
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-3 text-gray-100">Create Your First Robot</h1>
+        <h1 className="text-3xl font-bold mb-3 text-gray-100">{headerTitle}</h1>
         <p className="text-lg text-secondary max-w-3xl mx-auto">
-          Time to build your first combat robot! Each robot costs{' '}
-          <strong className="text-warning">₡{ROBOT_COST.toLocaleString()}</strong> and starts
-          with all 23 attributes at Level 1.
+          {headerDescription}
         </p>
       </div>
 
@@ -266,9 +270,9 @@ const Step5_RobotCreation = ({ onNext }: Step5_RobotCreationProps) => {
           <>
             <button
               id="create-robot-button"
-              onClick={() => setShowOverlay(true)}
+              onClick={handleNavigateToCreate}
               disabled={credits < ROBOT_COST}
-              className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed animate-pulse min-h-[44px]"
+              className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               Create Robot #{robotsCreated + 1} (₡{ROBOT_COST.toLocaleString()})
             </button>
@@ -277,24 +281,32 @@ const Step5_RobotCreation = ({ onNext }: Step5_RobotCreationProps) => {
                 Insufficient credits. You need ₡{(ROBOT_COST - credits).toLocaleString()} more.
               </p>
             )}
-            <button
-              onClick={handleSkipCreation}
-              disabled={isSubmitting}
-              className="text-sm text-tertiary hover:text-secondary transition-colors min-h-[44px]"
-            >
-              Skip for now — I'll create robots later
-            </button>
+            <div className="flex gap-4">
+              {onPrevious && (
+                <button
+                  onClick={onPrevious}
+                  className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+                  aria-label="Previous step"
+                >
+                  Previous
+                </button>
+              )}
+              <button
+                onClick={handleSkipCreation}
+                disabled={isSubmitting}
+                className="text-sm text-tertiary hover:text-secondary transition-colors min-h-[44px]"
+              >
+                Skip for now — I'll create robots later
+              </button>
+            </div>
           </>
         ) : needsMoreRobots ? (
           <>
             <button
               id="create-robot-button"
-              onClick={() => {
-                setRobotCreated(false);
-                setShowOverlay(true);
-              }}
+              onClick={handleNavigateToCreate}
               disabled={credits < ROBOT_COST}
-              className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed animate-pulse min-h-[44px]"
+              className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               Create Robot #{robotsCreated + 1} (₡{ROBOT_COST.toLocaleString()})
             </button>
@@ -303,22 +315,44 @@ const Step5_RobotCreation = ({ onNext }: Step5_RobotCreationProps) => {
                 Insufficient credits. You need ₡{(ROBOT_COST - credits).toLocaleString()} more.
               </p>
             )}
+            <div className="flex gap-4">
+              {onPrevious && (
+                <button
+                  onClick={onPrevious}
+                  className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+                  aria-label="Previous step"
+                >
+                  Previous
+                </button>
+              )}
+              <button
+                onClick={handleNext}
+                disabled={isSubmitting}
+                className="text-sm text-tertiary hover:text-secondary transition-colors min-h-[44px]"
+              >
+                Continue with {robotsCreated} robot{robotsCreated > 1 ? 's' : ''} — I'll create more later
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex gap-4">
+            {onPrevious && (
+              <button
+                onClick={onPrevious}
+                className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+                aria-label="Previous step"
+              >
+                Previous
+              </button>
+            )}
             <button
               onClick={handleNext}
               disabled={isSubmitting}
-              className="text-sm text-tertiary hover:text-secondary transition-colors min-h-[44px]"
+              className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
-              Continue with {robotsCreated} robot{robotsCreated > 1 ? 's' : ''} — I'll create more later
+              {isSubmitting ? 'Loading...' : 'Next: Weapon Types & Loadouts'}
             </button>
-          </>
-        ) : (
-          <button
-            onClick={handleNext}
-            disabled={isSubmitting}
-            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-          >
-            {isSubmitting ? 'Loading...' : 'Next: Weapon Types & Loadouts'}
-          </button>
+          </div>
         )}
 
         <p className="text-sm text-tertiary text-center max-w-md">
@@ -329,31 +363,6 @@ const Step5_RobotCreation = ({ onNext }: Step5_RobotCreationProps) => {
             : 'All robots created. Let\'s learn about weapons next.'}
         </p>
       </div>
-
-      {/* Guided UI Overlay for Create Robot button */}
-      {showOverlay && (
-        <GuidedUIOverlay
-          targetSelector="#create-robot-button"
-          tooltipContent={
-            <div>
-              <p className="font-semibold text-primary mb-2">Create Your Robot</p>
-              <p className="mb-2">
-                Click this button to go to the robot creation page. You'll choose a name
-                for your robot and confirm the ₡{ROBOT_COST.toLocaleString()} purchase.
-              </p>
-              <p className="text-sm text-secondary">
-                Your robot will start with all attributes at Level 1 — don't worry,
-                you'll upgrade them later after getting the Training Facility discount.
-              </p>
-            </div>
-          }
-          position="top"
-          onNext={handleNavigateToCreate}
-          showNext={true}
-          showPrevious={false}
-          onClose={() => setShowOverlay(false)}
-        />
-      )}
 
       {/* Educational Note */}
       <div className="mt-8 max-w-3xl mx-auto bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">

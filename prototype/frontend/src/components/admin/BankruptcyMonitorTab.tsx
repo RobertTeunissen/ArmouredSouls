@@ -9,11 +9,11 @@
  *
  * Requirements: 2.2
  */
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import apiClient from '../../utils/apiClient';
 import type { AtRiskUser, AtRiskUsersResponse } from './types';
 
-export function BankruptcyMonitorTab(): JSX.Element {
+export function BankruptcyMonitorTab(): React.JSX.Element {
   const [data, setData] = useState<AtRiskUsersResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,7 +152,7 @@ export function BankruptcyMonitorTab(): JSX.Element {
 /*  UserRow — single at-risk user table row                            */
 /* ------------------------------------------------------------------ */
 
-function UserRow({ user }: { user: AtRiskUser }): JSX.Element {
+function UserRow({ user }: { user: AtRiskUser }): React.JSX.Element {
   return (
     <tr className="border-t border-white/10 hover:bg-surface-elevated">
       <td className="p-2 lg:p-3">

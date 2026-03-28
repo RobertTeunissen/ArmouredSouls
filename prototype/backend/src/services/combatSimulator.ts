@@ -1,4 +1,4 @@
-import { Robot, Weapon, WeaponInventory } from '@prisma/client';
+import { Robot, Weapon, WeaponInventory } from '../../generated/prisma';
 
 // Spatial subsystem imports
 import { Position, euclideanDistance, angleBetween } from './arena/vector2d';
@@ -9,7 +9,7 @@ import { checkBackstab, updateFacing, calculateTurnSpeed } from './arena/positio
 import { updateAdaptation, getEffectiveAdaptation } from './arena/adaptationTracker';
 import { calculatePressureEffects } from './arena/pressureSystem';
 import { calculateBaseSpeed, calculateEffectiveSpeed, updateServoStrain } from './arena/servoStrain';
-import { calculateMovementIntent, applyMovement, getPatienceLimit } from './arena/movementAI';
+import { calculateMovementIntent, applyMovement, getPatienceLimit, RANGE_BAND_MIDPOINTS } from './arena/movementAI';
 import { checkSyncVolley, getSupportShieldBoost, getFormationDefenseBonus } from './arena/teamCoordination';
 import { resolveCounter } from './arena/counterAttack';
 import { selectTarget } from './arena/threatScoring';
@@ -997,6 +997,7 @@ function initializeCombatState(
       stanceSpeedModifier: 0,
     },
     currentTarget: null,
+    targetLockTimer: 0,
     patienceTimer: 0,
     combatAlgorithmScore: Math.min(combatAlgorithms / 50, 1.0),
     // Adaptation
@@ -1183,25 +1184,24 @@ export function simulateBattleMulti(
   let winnerId: number | null = null;
   let winReason: string | undefined;
 
-  // For N>2 battles, create a proxy that auto-injects robotHP/robotShield maps
-  // on every event push, so all events (including those from performAttack) get enriched.
-  const events: SpatialCombatEvent[] = n > 2
-    ? new Proxy(rawEvents, {
-        get(target, prop, receiver) {
-          if (prop === 'push') {
-            return (...args: SpatialCombatEvent[]): number => {
-              const snapshot = buildHPShieldSnapshot(states);
-              for (const evt of args) {
-                evt.robotHP = snapshot.robotHP;
-                evt.robotShield = snapshot.robotShield;
-              }
-              return target.push(...args);
-            };
+  // Create a proxy that auto-injects robotHP/robotShield maps on every event push.
+  // This ensures all events (including those from performAttack) have consistent HP/shield
+  // values keyed by robot name, avoiding the attacker/defender swap issue in 1v1 battles.
+  const events: SpatialCombatEvent[] = new Proxy(rawEvents, {
+    get(target, prop, receiver) {
+      if (prop === 'push') {
+        return (...args: SpatialCombatEvent[]): number => {
+          const snapshot = buildHPShieldSnapshot(states);
+          for (const evt of args) {
+            evt.robotHP = snapshot.robotHP;
+            evt.robotShield = snapshot.robotShield;
           }
-          return Reflect.get(target, prop, receiver);
-        },
-      })
-    : rawEvents;
+          return target.push(...args);
+        };
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
 
   // Movement event throttling per robot
   const lastMoveEventTime: number[] = states.map(() => 0);
@@ -1254,22 +1254,43 @@ export function simulateBattleMulti(
       // (e.g. KotH last-standing phase needs the robot to move toward the zone)
       if (opponents.length === 0 && !gameModeConfig?.movementModifier) continue;
 
-      // Select target via game mode strategy or default threat scoring
+      // Select target via game mode strategy or default threat scoring.
+      // Target stickiness: keep current target for at least 1.5s unless it's dead
+      // or a new target has significantly higher priority (50%+ more weight).
       let target: SpatialRobotCombatState | null = null;
       if (opponents.length > 0) {
-        let targetIdx: number | null = null;
+        // Decay target lock timer
+        state.targetLockTimer = Math.max(0, state.targetLockTimer - SIMULATION_TICK);
+
+        // Check if current target is still alive
+        const currentTargetAlive = state.currentTarget !== null &&
+          states.some(s => s.teamIndex === state.currentTarget && s.isAlive);
+
+        let newTargetIdx: number | null = null;
         if (gameModeConfig?.targetPriority) {
           const priorities = gameModeConfig.targetPriority.selectTargets(
             state, opponents, arena, gameModeState,
           );
-          targetIdx = priorities.length > 0 ? priorities[0] : null;
+          newTargetIdx = priorities.length > 0 ? priorities[0] : null;
         }
-        if (targetIdx === null) {
+        if (newTargetIdx === null) {
           const threat = selectTarget(state, opponents, arena.radius);
-          targetIdx = threat?.robotIndex ?? opponents[0].teamIndex;
+          newTargetIdx = threat?.robotIndex ?? opponents[0].teamIndex;
         }
-        state.currentTarget = targetIdx;
-        target = states.find(s => s.teamIndex === targetIdx) ?? opponents[0];
+
+        // Apply target stickiness: only switch if lock expired or current target dead
+        if (!currentTargetAlive || state.currentTarget === null) {
+          // Must switch — current target is gone
+          state.currentTarget = newTargetIdx;
+          state.targetLockTimer = 1.5; // Lock onto new target for 1.5s
+        } else if (state.targetLockTimer <= 0 && newTargetIdx !== state.currentTarget) {
+          // Lock expired and a different target is preferred — switch
+          state.currentTarget = newTargetIdx;
+          state.targetLockTimer = 1.5;
+        }
+        // else: keep current target (lock still active or same target selected)
+
+        target = states.find(s => s.teamIndex === state.currentTarget) ?? opponents[0];
       } else {
         state.currentTarget = null;
       }
@@ -1279,7 +1300,15 @@ export function simulateBattleMulti(
       const hasRangedOpponent = opponentMainWeapon
         ? opponentMainWeapon.weaponType !== 'melee' && opponentMainWeapon.weaponType !== 'shield'
         : false;
+      const hasMeleeOpponent = opponentMainWeapon
+        ? opponentMainWeapon.weaponType === 'melee'
+        : false;
       const hasMeleeWeapon = state.robot.mainWeapon?.weapon?.weaponType === 'melee';
+      const hasRangedWeapon = state.robot.mainWeapon?.weapon
+        ? state.robot.mainWeapon.weapon.weaponType !== 'melee' && state.robot.mainWeapon.weapon.weaponType !== 'shield'
+        : false;
+      const weaponRangeBand = state.robot.mainWeapon?.weapon?.rangeBand ?? 'short';
+      const weaponOptimalRangeMidpoint = RANGE_BAND_MIDPOINTS[weaponRangeBand as RangeBand] ?? 4.5;
       const distToTarget = target ? euclideanDistance(state.position, target.position) : 0;
       const servoState = {
         servoMotors: Number(state.robot.servoMotors ?? 1),
@@ -1288,11 +1317,13 @@ export function simulateBattleMulti(
         isUsingClosingBonus: state.isUsingClosingBonus,
         stance: (state.robot.stance ?? 'balanced') as 'defensive' | 'offensive' | 'balanced',
         hasMeleeWeapon,
+        hasRangedWeapon,
+        weaponOptimalRangeMidpoint,
         distanceToTarget: distToTarget,
         currentSpeedRatio: 0,
       };
       const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(
-        servoState, target?.effectiveMovementSpeed ?? 0, hasRangedOpponent,
+        servoState, target?.effectiveMovementSpeed ?? 0, hasRangedOpponent, hasMeleeOpponent,
       );
       state.effectiveMovementSpeed = effectiveSpeed;
       state.isUsingClosingBonus = isClosingBonus;

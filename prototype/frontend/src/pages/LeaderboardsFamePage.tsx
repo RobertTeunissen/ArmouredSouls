@@ -95,10 +95,10 @@ function LeaderboardsFamePage() {
   return (
     <div className="min-h-screen bg-background text-primary">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8 max-w-7xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary mb-2 font-header">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2 font-header">
           🏆 Fame Leaderboard
         </h1>
         <p className="text-secondary">
@@ -174,105 +174,73 @@ function LeaderboardsFamePage() {
       {/* Leaderboard Table */}
       {!loading && !error && (
         <div className="bg-surface-elevated border border-white/10 rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-surface border-b border-white/10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    Rank
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    Robot
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    Fame
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    Tier
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    Stable
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    League
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    ELO
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    Record
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">
-                    Win %
-                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Robot</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Fame</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Tier</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Stable</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">League</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">ELO</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Record</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Win %</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {leaderboard.map((entry) => {
                   const isOwnRobot = user && entry.stableId === user.id;
-                  
                   return (
-                    <tr
-                      key={entry.robotId}
-                      className={`hover:bg-white/5 transition-colors ${
-                        isOwnRobot ? 'bg-primary/10' : ''
-                      }`}
-                    >
-                      <td className="px-4 py-3 text-primary font-medium">
-                        #{entry.rank}
-                      </td>
+                    <tr key={entry.robotId} className={`hover:bg-white/5 transition-colors ${isOwnRobot ? 'bg-primary/10' : ''}`}>
+                      <td className="px-4 py-3 text-primary font-medium">#{entry.rank}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-primary font-medium">
-                            {entry.robotName}
-                          </span>
-                          {isOwnRobot && (
-                            <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded">
-                              YOURS
-                            </span>
-                          )}
+                          <span className="text-primary font-medium">{entry.robotName}</span>
+                          {isOwnRobot && <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded">YOURS</span>}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-primary font-semibold">
-                        {entry.fame.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`font-medium ${getTierColor(entry.fameTier)}`}>
-                          {entry.fameTier}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-secondary">
-                        {entry.stableName}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`capitalize ${getLeagueColor(entry.currentLeague)}`}>
-                          {entry.currentLeague}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-primary">
-                        {entry.elo}
-                      </td>
-                      <td className="px-4 py-3 text-secondary text-sm">
-                        {entry.wins}W-{entry.losses}L-{entry.draws}D
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`font-medium ${
-                            entry.winRate >= 60
-                              ? 'text-success'
-                              : entry.winRate >= 50
-                              ? 'text-warning'
-                              : 'text-orange-400'
-                          }`}
-                        >
-                          {entry.winRate}%
-                        </span>
-                      </td>
+                      <td className="px-4 py-3 text-primary font-semibold">{entry.fame.toLocaleString()}</td>
+                      <td className="px-4 py-3"><span className={`font-medium ${getTierColor(entry.fameTier)}`}>{entry.fameTier}</span></td>
+                      <td className="px-4 py-3 text-secondary">{entry.stableName}</td>
+                      <td className="px-4 py-3"><span className={`capitalize ${getLeagueColor(entry.currentLeague)}`}>{entry.currentLeague}</span></td>
+                      <td className="px-4 py-3 text-primary">{entry.elo}</td>
+                      <td className="px-4 py-3 text-secondary text-sm">{entry.wins}W-{entry.losses}L-{entry.draws}D</td>
+                      <td className="px-4 py-3"><span className={`font-medium ${entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}`}>{entry.winRate}%</span></td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden divide-y divide-white/5">
+            {leaderboard.map((entry) => {
+              const isOwnRobot = user && entry.stableId === user.id;
+              return (
+                <div key={entry.robotId} className={`p-4 ${isOwnRobot ? 'bg-primary/10' : ''}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="text-secondary text-sm">#{entry.rank}</span>
+                      <span className="text-primary font-medium ml-2">{entry.robotName}</span>
+                      {isOwnRobot && <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded ml-2">YOURS</span>}
+                    </div>
+                    <span className="text-primary font-semibold">{entry.fame.toLocaleString()}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <div className="flex justify-between"><span className="text-secondary">Tier</span><span className={getTierColor(entry.fameTier)}>{entry.fameTier}</span></div>
+                    <div className="flex justify-between"><span className="text-secondary">League</span><span className={`capitalize ${getLeagueColor(entry.currentLeague)}`}>{entry.currentLeague}</span></div>
+                    <div className="flex justify-between"><span className="text-secondary">ELO</span><span className="text-primary">{entry.elo}</span></div>
+                    <div className="flex justify-between"><span className="text-secondary">Win %</span><span className={entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}>{entry.winRate}%</span></div>
+                    <div className="flex justify-between"><span className="text-secondary">Record</span><span className="text-secondary">{entry.wins}W-{entry.losses}L-{entry.draws}D</span></div>
+                    <div className="flex justify-between"><span className="text-secondary">Stable</span><span className="text-secondary truncate ml-2">{entry.stableName}</span></div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {leaderboard.length === 0 && (

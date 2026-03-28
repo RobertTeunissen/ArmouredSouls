@@ -82,9 +82,9 @@ const ProgressIndicator = ({ current, total }: ProgressIndicatorProps) => {
         </div>
       </div>
 
-      {/* Mobile-friendly step list (hidden on desktop) - more compact */}
-      <div className="mt-2 lg:hidden" role="list" aria-label="Tutorial steps">
-        <div className="flex flex-wrap gap-1">
+      {/* Mobile-friendly step list (hidden on desktop) - compact single line */}
+      <div className="mt-1.5 lg:hidden" role="list" aria-label="Tutorial steps">
+        <div className="flex justify-between">
           {steps.map((step) => {
             const isCompleted = step < current;
             const isCurrent = step === current;
@@ -96,7 +96,7 @@ const ProgressIndicator = ({ current, total }: ProgressIndicatorProps) => {
                 aria-label={`Step ${step}${isCompleted ? ', completed' : isCurrent ? ', current' : ', upcoming'}`}
                 aria-current={isCurrent ? 'step' : undefined}
                 className={`
-                  px-1.5 py-0.5 rounded text-xs font-medium transition-colors
+                  w-6 h-6 flex items-center justify-center rounded text-xs font-medium transition-colors
                   ${isCompleted ? 'bg-primary text-white' : ''}
                   ${isCurrent ? 'bg-primary-dark text-white ring-1 ring-blue-400' : ''}
                   ${!isCompleted && !isCurrent ? 'bg-surface-elevated text-secondary' : ''}

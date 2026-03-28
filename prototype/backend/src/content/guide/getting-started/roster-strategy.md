@@ -26,7 +26,7 @@ Put all your resources into a single powerhouse.
 
 | Category | Amount | Details |
 |----------|--------|---------|
-| Facilities | ₡350,000 | Weapons Workshop, Training Facility, Repair Bay |
+| Facilities | ₡300,000 | Weapons Workshop, Training Facility, Repair Bay |
 | Robots | ₡500,000 | 1 robot frame |
 | Weapons | ₡550,000 | 1–2 quality weapons for your chosen loadout |
 | Attributes | ₡1,550,000 | Heavy investment in key attributes |

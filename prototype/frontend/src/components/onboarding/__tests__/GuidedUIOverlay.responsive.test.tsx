@@ -525,7 +525,7 @@ describe('GuidedUIOverlay - Responsive Design', () => {
   });
 
   describe('Tablet Viewport (768px-1024px)', () => {
-    it('should use desktop layout at exactly 768px', async () => {
+    it('should use mobile layout at exactly 768px', async () => {
       setViewport(768);
 
       render(
@@ -537,8 +537,9 @@ describe('GuidedUIOverlay - Responsive Design', () => {
 
       await waitFor(() => {
         const tooltip = screen.getByRole('dialog');
-        expect(tooltip).toHaveClass('max-w-md');
-        expect(tooltip).not.toHaveClass('max-w-none');
+        // 768px is below the 1024px breakpoint, so it uses mobile layout
+        expect(tooltip).toHaveClass('max-w-none');
+        expect(tooltip).not.toHaveClass('max-w-md');
       });
     });
 

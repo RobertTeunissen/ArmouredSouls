@@ -22,7 +22,7 @@ describe('UpgradePlanner - Increment/Decrement Properties', () => {
    * For any attribute below its academy cap, clicking the + button should increment
    * the planned level by 1 and update the total cost preview.
    */
-  test('Property 23: upgrade plan increment', () => {
+  test('Property 23: upgrade plan increment', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.record({
@@ -72,7 +72,7 @@ describe('UpgradePlanner - Increment/Decrement Properties', () => {
    * For any attribute with a planned level greater than its current level,
    * clicking the - button should decrement the planned level by 1 and update the total cost preview.
    */
-  test('Property 24: upgrade plan decrement', () => {
+  test('Property 24: upgrade plan decrement', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.record({

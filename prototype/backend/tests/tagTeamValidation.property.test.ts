@@ -1,4 +1,4 @@
-import { Robot } from '@prisma/client';
+import { Robot } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import * as fc from 'fast-check';
 import { validateTeam, createTeam, getTeamById, disbandTeam, checkTeamReadiness, calculateCombinedELO } from '../src/services/tagTeamService';
@@ -47,7 +47,7 @@ describe('Tag Team Validation Property Tests', () => {
 
   afterAll(async () => {
     // Clean up test data - delete tagTeamMatch before tagTeam to respect FK constraints
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId } },
@@ -82,7 +82,7 @@ describe('Tag Team Validation Property Tests', () => {
 
   afterEach(async () => {
     // Clean up teams and robots after each test - delete tagTeamMatch before tagTeam
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId } },
@@ -1231,7 +1231,7 @@ describe('Tag Team Matchmaking Eligible Teams Property Tests', () => {
 
   afterAll(async () => {
     // Clean up test data - delete tagTeamMatch before tagTeam to respect FK constraints
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId } },
@@ -1256,7 +1256,7 @@ describe('Tag Team Matchmaking Eligible Teams Property Tests', () => {
 
   afterEach(async () => {
     // Clean up teams and robots after each test
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId } },
@@ -1538,7 +1538,7 @@ describe('Tag Team Matchmaking ELO Matching Property Tests', () => {
 
   afterAll(async () => {
     // Clean up test data - delete tagTeamMatch before tagTeam to respect FK constraints
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId } },
@@ -1563,7 +1563,7 @@ describe('Tag Team Matchmaking ELO Matching Property Tests', () => {
 
   afterEach(async () => {
     // Clean up teams and robots after each test
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId } },
@@ -1740,7 +1740,7 @@ describe('Tag Team Matchmaking Same-Stable Exclusion Property Tests', () => {
 
   afterAll(async () => {
     // Clean up test data - delete tagTeamMatch before tagTeam to respect FK constraints
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId1 } },
@@ -1773,7 +1773,7 @@ describe('Tag Team Matchmaking Same-Stable Exclusion Property Tests', () => {
 
   afterEach(async () => {
     // Clean up teams and robots after each test
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId1 } },
@@ -2010,7 +2010,7 @@ describe('Tag Team Matchmaking Recent Opponent Deprioritization Property Tests',
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId } },
@@ -2035,7 +2035,7 @@ describe('Tag Team Matchmaking Recent Opponent Deprioritization Property Tests',
 
   afterEach(async () => {
     // Clean up after each test
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testUserId } },
@@ -2185,7 +2185,7 @@ describe('Tag Team Matchmaking Recent Opponent Deprioritization Property Tests',
     });
 
     // Create a completed match between mainTeam and recentOpponentTeam
-    await prisma.tagTeamMatch.create({
+    await prisma.scheduledTagTeamMatch.create({
       data: {
         team1Id: mainTeam.id,
         team2Id: recentOpponentTeam.id,
@@ -2276,7 +2276,7 @@ describe('Tag Team Matchmaking Recent Opponent Deprioritization Property Tests',
     }
 
     // Clean up
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1Id: mainTeam.id },

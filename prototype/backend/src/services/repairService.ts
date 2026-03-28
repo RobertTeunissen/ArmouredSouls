@@ -140,6 +140,9 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
           currentShield: robot.maxShield,
           repairCost: 0,
           battleReadiness: 100,
+          totalRepairsPaid: {
+            increment: repairCost,
+          },
         },
       });
 

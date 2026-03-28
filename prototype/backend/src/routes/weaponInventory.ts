@@ -3,11 +3,12 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
 import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
+import { trackSpending } from '../services/spendingTracker';
 import logger from '../config/logger';
 
 // Discount helpers (local until shared/utils/discounts is available)
 const calculateWeaponWorkshopDiscount = (level: number): number => {
-  return level * 5; // 5% per level
+  return level * 10; // 10% per level
 };
 
 const applyDiscount = (cost: number, discountPercent: number): number => {
@@ -162,6 +163,9 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
       // Console log for cycle logs
       const discountInfo = discountPercent > 0 ? ` | Discount: ${discountPercent}% (base: ₡${weapon.cost.toLocaleString()})` : '';
       logger.info(`[Weapon] User ${userId} | Purchased: ${weapon.name} | Cost: ₡${finalCost.toLocaleString()}${discountInfo} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+
+      // Track spending for onboarding budget comparison
+      await trackSpending(userId, 'weapons', finalCost);
     } catch (logError) {
       logger.error('Failed to log weapon purchase event:', logError);
       // Don't fail the request if logging fails
@@ -182,7 +186,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 router.get('/:id/available', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const inventoryId = parseInt(req.params.id);
+    const inventoryId = parseInt(String(req.params.id));
 
     if (isNaN(inventoryId)) {
       return res.status(400).json({ error: 'Invalid weapon inventory ID' });

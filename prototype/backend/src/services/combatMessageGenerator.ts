@@ -8,6 +8,7 @@
  */
 
 import { CombatEvent } from './combatSimulator';
+import { compressEventsForStorage } from './eventCompression';
 
 export interface BattleStartEvent {
   robot1Name: string;
@@ -1085,11 +1086,26 @@ export class CombatMessageGenerator {
           const isRobot1Yielding = robot1HpPct <= robot2HpPct;
           const yieldingRobot = isRobot1Yielding ? context.robot1Name : context.robot2Name;
           const winnerRobot = isRobot1Yielding ? context.robot2Name : context.robot1Name;
+          const winnerHP = isRobot1Yielding ? (event.robot2HP || 0) : (event.robot1HP || 0);
+          const winnerMaxHP = isRobot1Yielding ? context.robot2MaxHP : context.robot1MaxHP;
 
           narrativeEvents.push({
             timestamp: ts,
             type: 'yield',
             message: this.generateYield(yieldingRobot, winnerRobot),
+          });
+
+          // Victory message after yield (same as destruction path)
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'battle_end',
+            message: this.generateBattleEnd({
+              winnerName: winnerRobot,
+              loserName: yieldingRobot,
+              winnerHP,
+              winnerMaxHP,
+              reason: 'yield',
+            }),
           });
         }
 
@@ -1603,12 +1619,99 @@ export class CombatMessageGenerator {
   }
 
   /**
+   * Sample events to reduce storage size while preserving important moments.
+   * Keeps all combat events (attacks, counters, etc.) and samples periodic events.
+   * 
+   * @param events Full event array from simulation
+   * @param sampleInterval Sample score_tick events every N seconds (default 5)
+   * @returns Filtered event array
+   */
+  static sampleEventsForStorage(
+    events: CombatEvent[],
+    sampleInterval: number = 5,
+  ): CombatEvent[] {
+    // Event types that should always be kept (combat-relevant)
+    const alwaysKeep = new Set([
+      'attack', 'miss', 'critical', 'counter', 'shield_break', 'yield', 'destroyed',
+      'malfunction', 'backstab', 'flanking', 'zone_enter', 'zone_exit', 'kill_bonus',
+      'robot_eliminated', 'passive_warning', 'passive_penalty', 'last_standing', 'match_end',
+      'zone_defined', 'zone_moving', 'zone_active',
+    ]);
+
+    // Track last emitted time for sampled event types
+    const lastEmittedTime: Record<string, number> = {};
+
+    return events.filter(event => {
+      // Always keep combat-relevant events
+      if (alwaysKeep.has(event.type)) {
+        return true;
+      }
+
+      // Sample score_tick events (every sampleInterval seconds)
+      if (event.type === 'score_tick') {
+        const lastTime = lastEmittedTime['score_tick'] ?? -sampleInterval;
+        if (event.timestamp - lastTime >= sampleInterval) {
+          lastEmittedTime['score_tick'] = event.timestamp;
+          return true;
+        }
+        return false;
+      }
+
+      // Sample movement events (every 2 seconds)
+      if (event.type === 'movement') {
+        const key = `movement_${event.attacker}`;
+        const lastTime = lastEmittedTime[key] ?? -2;
+        if (event.timestamp - lastTime >= 2) {
+          lastEmittedTime[key] = event.timestamp;
+          return true;
+        }
+        return false;
+      }
+
+      // Sample range_transition events (every 3 seconds per robot pair)
+      if (event.type === 'range_transition') {
+        const key = `range_${event.attacker}_${event.defender}`;
+        const lastTime = lastEmittedTime[key] ?? -3;
+        if (event.timestamp - lastTime >= 3) {
+          lastEmittedTime[key] = event.timestamp;
+          return true;
+        }
+        return false;
+      }
+
+      // Sample shield_regen events (every 5 seconds per robot)
+      if (event.type === 'shield_regen') {
+        const key = `shield_${event.attacker}`;
+        const lastTime = lastEmittedTime[key] ?? -5;
+        if (event.timestamp - lastTime >= 5) {
+          lastEmittedTime[key] = event.timestamp;
+          return true;
+        }
+        return false;
+      }
+
+      // Filter out out_of_range events entirely (noise)
+      if (event.type === 'out_of_range' || event.type === 'counter_out_of_range') {
+        return false;
+      }
+
+      // Keep any other event types
+      return true;
+    });
+  }
+
+  /**
    * Build the battle log JSON for a KotH battle.
    *
    * Combat events (attack, counter, destroyed, etc.) are converted to narrative
    * messages using the same generators as 1v1 battles. KotH-specific events
    * (zone_enter, score_tick, etc.) already have narrative messages from the
    * simulation and are passed through unchanged.
+   * 
+   * PERFORMANCE OPTIMIZATIONS:
+   * - Events are sampled to reduce count (score_tick every 5s, movement every 2s)
+   * - Debug fields (formulaBreakdown) stripped to reduce size per event
+   * - Position snapshots removed from non-movement events
    */
   static buildKothBattleLog(data: {
     events: CombatEvent[];
@@ -1629,15 +1732,21 @@ export class CombatMessageGenerator {
     }>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): Record<string, any> {
+    // 1. Sample events to reduce count
+    const sampledEvents = this.sampleEventsForStorage(data.events);
+    
+    // 2. Compress events to reduce size (strip debug fields)
+    const compressedEvents = compressEventsForStorage(sampledEvents, false);
+    
     // Convert combat events to narrative messages (attack, counter, etc.)
     // while passing through KotH-specific events (zone_enter, score_tick) unchanged
     const narrativeEvents = this.convertKothSimulatorEvents(
-      data.events.filter(e => e.type !== 'movement' && e.type !== 'out_of_range')
+      compressedEvents.filter(e => e.type !== 'movement' && e.type !== 'out_of_range')
     );
 
     return {
       events: narrativeEvents,
-      detailedCombatEvents: data.events,
+      detailedCombatEvents: compressedEvents,
       isKothMatch: true,
       participantCount: data.participantCount,
       arenaRadius: data.arenaRadius,

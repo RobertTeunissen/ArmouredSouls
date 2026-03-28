@@ -12,12 +12,12 @@
  */
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma';
 import logger from '../config/logger';
 import { validateRegistrationRequest } from '../utils/validation';
 import { hashPassword } from '../services/passwordService';
 import { generateToken } from '../services/jwtService';
-import { createUser, findUserByUsername, findUserByEmail, findUserByIdentifier } from '../services/userService';
+import { createUser, findUserByUsername, findUserByEmail, findUserByIdentifier, findUserByStableName } from '../services/userService';
 import { initializeTutorialState } from '../services/onboardingService';
 
 const router = express.Router();
@@ -25,34 +25,35 @@ const router = express.Router();
 /**
  * POST /api/auth/register
  *
- * Creates a new user account with the provided username, email, and password.
+ * Creates a new user account with the provided username, email, password, and stable name.
  * On success, returns a JWT token and the user profile.
  *
  * **Request body:**
  * - `username` (string) — 3–20 alphanumeric / underscore / hyphen characters
  * - `email` (string) — 3–50 alphanumeric / underscore / hyphen characters
  * - `password` (string) — 8–128 characters, no character restrictions
+ * - `stableName` (string) — 3–30 characters, public display name (no usernames shown in-game)
  *
  * **Responses:**
  * - `201 Created` — `{ token, user }` on successful registration
- * - `400 Bad Request` — validation error or duplicate username/email (codes: `VALIDATION_ERROR`, `DUPLICATE_USERNAME`, `DUPLICATE_EMAIL`)
+ * - `400 Bad Request` — validation error or duplicate username/email/stableName (codes: `VALIDATION_ERROR`, `DUPLICATE_USERNAME`, `DUPLICATE_EMAIL`, `DUPLICATE_STABLE_NAME`)
  * - `500 Internal Server Error` — database or unexpected error (codes: `DATABASE_ERROR`, `INTERNAL_ERROR`)
  *
  * @example
  * // Successful registration
  * POST /api/auth/register
- * { "username": "player1", "email": "player1_mail", "password": "securePass1" }
- * // → 201 { token: "eyJ...", user: { id, username, email, currency, prestige, role } }
+ * { "username": "player1", "email": "player1_mail", "password": "securePass1", "stableName": "Iron Warriors" }
+ * // → 201 { token: "eyJ...", user: { id, username, email, stableName, currency, prestige, role } }
  *
- * @throws {400} When validation fails, username is taken, or email is already registered
+ * @throws {400} When validation fails, username is taken, email is already registered, or stable name is taken
  * @throws {500} When a database error or unexpected error occurs
  */
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, stableName } = req.body;
 
     // Validate registration request — returns specific 400 for validation failures
-    const validation = validateRegistrationRequest({ username, email, password });
+    const validation = validateRegistrationRequest({ username, email, password, stableName });
     if (!validation.isValid) {
       logger.warn('Registration validation failed', {
         errors: validation.errors,
@@ -75,11 +76,18 @@ router.post('/register', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email is already registered', code: 'DUPLICATE_EMAIL' });
     }
 
+    // Check for duplicate stable name
+    const existingStableName = await findUserByStableName(stableName);
+    if (existingStableName) {
+      logger.warn('Registration rejected: duplicate stable name', { stableName });
+      return res.status(400).json({ error: 'Stable name is already taken', code: 'DUPLICATE_STABLE_NAME' });
+    }
+
     // Hash password
     const passwordHash = await hashPassword(password);
 
     // Create user
-    const user = await createUser({ username, email, passwordHash });
+    const user = await createUser({ username, email, passwordHash, stableName });
 
     // Initialize onboarding state for the new user.
     // Non-blocking: registration succeeds even if onboarding init fails.
@@ -99,7 +107,7 @@ router.post('/register', async (req: Request, res: Response) => {
       role: user.role,
     });
 
-    logger.info('User registered successfully', { userId: user.id, username: user.username });
+    logger.info('User registered successfully', { userId: user.id, username: user.username, stableName: user.stableName });
 
     // Return 201 with token and user profile
     res.status(201).json({
@@ -108,29 +116,46 @@ router.post('/register', async (req: Request, res: Response) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        stableName: user.stableName,
         currency: user.currency,
         prestige: user.prestige,
         role: user.role,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     // Race condition guard: even though we check for duplicates above, a concurrent
-    // request could insert the same username/email between our check and the INSERT.
+    // request could insert the same username/email/stableName between our check and the INSERT.
     // Prisma surfaces this as a P2002 unique constraint violation, which we handle
     // identically to the pre-check duplicate rejection.
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      const target = (error.meta?.target as string[]) || [];
-      // Determine which field caused the conflict from the constraint metadata
-      const field = target.includes('email') ? 'Email' : 'Username';
-      logger.warn('Registration rejected: duplicate key constraint', {
-        code: error.code,
-        target,
-        message: error.message,
-      });
-      return res.status(400).json({
-        error: field === 'Email' ? 'Email is already registered' : 'Username is already taken',
-        code: field === 'Email' ? 'DUPLICATE_EMAIL' : 'DUPLICATE_USERNAME',
-      });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      const knownError = error as Prisma.PrismaClientKnownRequestError;
+      if (knownError.code === 'P2002') {
+        const target = (knownError.meta?.target as string[]) || [];
+        // Determine which field caused the conflict from the constraint metadata
+        let field = 'Username';
+        let code = 'DUPLICATE_USERNAME';
+        let message = 'Username is already taken';
+        if (target.includes('email')) {
+          field = 'Email';
+          code = 'DUPLICATE_EMAIL';
+          message = 'Email is already registered';
+        } else if (target.includes('stable_name')) {
+          field = 'Stable name';
+          code = 'DUPLICATE_STABLE_NAME';
+          message = 'Stable name is already taken';
+        }
+        logger.warn('Registration rejected: duplicate key constraint', {
+          code: knownError.code,
+          target,
+          field,
+          message: knownError.message,
+        });
+        return res.status(400).json({
+          error: message,
+          code,
+        });
+      }
+      // Other known Prisma errors fall through to the database error handler below
     }
 
     // Database errors: log full details server-side for debugging, but return a
@@ -138,10 +163,11 @@ router.post('/register', async (req: Request, res: Response) => {
     if (error instanceof Prisma.PrismaClientKnownRequestError ||
         error instanceof Prisma.PrismaClientUnknownRequestError ||
         error instanceof Prisma.PrismaClientInitializationError) {
+      const dbError = error as Error;
       logger.error('Registration database error', {
-        errorType: error.constructor.name,
-        message: error.message,
-        stack: error.stack,
+        errorType: dbError.constructor.name,
+        message: dbError.message,
+        stack: dbError.stack,
       });
       return res.status(500).json({ error: 'Registration is temporarily unavailable. Please try again in a few minutes.', code: 'DATABASE_ERROR' });
     }

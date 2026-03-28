@@ -14,6 +14,7 @@ import {
   renderRobot,
   renderAttackIndicator,
   renderRangeBandIndicator,
+  renderTargetLine,
   arenaToPixel,
   renderKothZone,
   renderKothScoreboard,
@@ -29,6 +30,8 @@ interface ArenaCanvasProps {
   focusedRangeBand?: RangeBand;
   /** Names of the two currently fighting robots (for range band indicator) */
   activeRobotNames?: [string, string];
+  /** Map of robot name → target robot name (for drawing target lines) */
+  robotTargets?: Record<string, string>;
   /** KotH zone state (only present for KotH battles) */
   kothZone?: KothZoneState;
   /** KotH scores for scoreboard */
@@ -55,6 +58,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   currentTime,
   focusedRangeBand,
   activeRobotNames,
+  robotTargets,
   kothZone,
   kothScores,
   kothScoreThreshold,
@@ -70,6 +74,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   const currentTimeRef = useRef(currentTime);
   const focusedRangeBandRef = useRef(focusedRangeBand);
   const activeRobotNamesRef = useRef(activeRobotNames);
+  const robotTargetsRef = useRef(robotTargets);
   const kothZoneRef = useRef(kothZone);
   const kothScoresRef = useRef(kothScores);
   const kothScoreThresholdRef = useRef(kothScoreThreshold);
@@ -80,6 +85,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   useEffect(() => { currentTimeRef.current = currentTime; }, [currentTime]);
   useEffect(() => { focusedRangeBandRef.current = focusedRangeBand; }, [focusedRangeBand]);
   useEffect(() => { activeRobotNamesRef.current = activeRobotNames; }, [activeRobotNames]);
+  useEffect(() => { robotTargetsRef.current = robotTargets; }, [robotTargets]);
   useEffect(() => { kothZoneRef.current = kothZone; }, [kothZone]);
   useEffect(() => { kothScoresRef.current = kothScores; }, [kothScores]);
   useEffect(() => { kothScoreThresholdRef.current = kothScoreThreshold; }, [kothScoreThreshold]);
@@ -105,6 +111,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     const time = currentTimeRef.current;
     const rangeBand = focusedRangeBandRef.current;
     const activePair = activeRobotNamesRef.current;
+    const targets = robotTargetsRef.current;
     const zone = kothZoneRef.current;
     const scores = kothScoresRef.current;
     const threshold = kothScoreThresholdRef.current;
@@ -152,6 +159,21 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       }
       if (pos1 && pos2) {
         renderRangeBandIndicator(ctx, toPixel(pos1), toPixel(pos2), rangeBand);
+      }
+    }
+
+    // Target lines: draw a line from each robot to its current target
+    if (targets) {
+      for (const robot of robs) {
+        const targetName = targets[robot.name];
+        if (!targetName) continue;
+        const fromPos = f.positions[robot.name];
+        const toPos = f.positions[targetName];
+        if (!fromPos || !toPos) continue;
+        // Skip if HP is 0 (destroyed)
+        const hp = f.hpValues[robot.name];
+        if (hp !== undefined && hp <= 0) continue;
+        renderTargetLine(ctx, toPixel(fromPos), toPixel(toPos), robot.teamIndex);
       }
     }
 

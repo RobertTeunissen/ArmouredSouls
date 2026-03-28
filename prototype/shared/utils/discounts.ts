@@ -5,23 +5,23 @@
 
 /**
  * Calculate discount percentage based on Weapon Workshop level
- * Formula: Discount % = Level × 5
+ * Formula: Discount % = Level × 10
  * Level 0: 0%
- * Level 1: 5%
- * Level 2: 10%
- * Level 3: 15%
- * Level 10: 50%
+ * Level 1: 10%
+ * Level 5: 50%
+ * Level 10: 100%
  */
 export function calculateWeaponWorkshopDiscount(level: number): number {
-  return level * 5;
+  return level * 10;
 }
 
 /**
  * Calculate discount percentage based on Training Facility level
- * 5% per level
+ * 10% per level, capped at 90% (Level 9 max)
+ * See docs/prd_core/STABLE_SYSTEM.md for authoritative specification
  */
 export function calculateTrainingFacilityDiscount(level: number): number {
-  return level * 5;
+  return Math.min(level * 10, 90);
 }
 
 /**

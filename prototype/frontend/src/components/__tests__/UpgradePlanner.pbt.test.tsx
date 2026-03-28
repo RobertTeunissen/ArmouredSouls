@@ -57,7 +57,7 @@ describe('UpgradePlanner - Cost Transparency Properties', () => {
           // Check if training discount is displayed when trainingLevel > 0
           // Note: Component only shows Training Facility Discount, not Workshop Discount
           if (trainingLevel > 0) {
-            const trainingDiscountText = `${trainingLevel * 10}%`;
+            const trainingDiscountText = `${Math.min(trainingLevel * 10, 90)}%`;
             const trainingElements = container.querySelectorAll('*');
             let foundTrainingDiscount = false;
             trainingElements.forEach(el => {

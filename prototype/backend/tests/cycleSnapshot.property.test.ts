@@ -90,7 +90,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
     await prisma.cycleSnapshot.deleteMany({});
     await prisma.auditLog.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.scheduledMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});

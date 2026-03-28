@@ -39,7 +39,7 @@ interface WeaponWithDPS extends WeaponLike {
 // ─── Constants ──────────────────────────────────────────────────────
 
 /** Range band midpoints for positioning targets (grid units) */
-const RANGE_BAND_MIDPOINTS: Record<RangeBand, number> = {
+export const RANGE_BAND_MIDPOINTS: Record<RangeBand, number> = {
   melee: 1,
   short: 4.5,
   mid: 9.5,

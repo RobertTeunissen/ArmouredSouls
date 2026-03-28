@@ -3,7 +3,7 @@
  * Validates: Requirements 14.1, 14.2, 14.3, 14.6, 14.7, 14.8, 14.9
  */
 import { simulateBattle, RobotWithWeapons, CombatResult, CombatEvent } from '../src/services/combatSimulator';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 
 // ─── Mock Factories ─────────────────────────────────────────────────
 
@@ -104,6 +104,7 @@ function createMeleeWeaponInventory(weaponId: number = 1) {
       handsRequired: 'one',
       damageType: 'melee',
       loadoutType: 'any',
+      rangeBand: 'melee',
       specialProperty: null,
       description: null,
       combatPowerBonus: 3,
@@ -151,6 +152,7 @@ function createRangedWeaponInventory(weaponId: number = 2) {
       handsRequired: 'one',
       damageType: 'energy',
       loadoutType: 'any',
+      rangeBand: 'short',
       specialProperty: null,
       description: null,
       combatPowerBonus: 2,

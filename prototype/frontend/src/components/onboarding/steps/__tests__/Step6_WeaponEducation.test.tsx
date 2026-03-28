@@ -3,7 +3,7 @@
  * Tests for Step6_WeaponEducation component
  *
  * Test coverage:
- * - Component rendering with weapon types and loadout diagrams
+ * - Component rendering with loadout configurations
  * - Strategy-specific content (multi-robot guidance)
  * - Loadout expand/collapse interaction
  * - Weapon slot explanation
@@ -29,15 +29,6 @@ import apiClient from '../../../../utils/apiClient';
 
 // Mock apiClient
 vi.mock('../../../../utils/apiClient');
-
-// Mock LoadoutDiagram
-vi.mock('../../LoadoutDiagram', () => ({
-  default: ({ loadoutType, showDetails, compact }: any) => (
-    <div data-testid={`loadout-diagram-${loadoutType}`} data-show-details={showDetails} data-compact={compact}>
-      LoadoutDiagram: {loadoutType}
-    </div>
-  ),
-}));
 
 describe('Step6_WeaponEducation', () => {
   const mockOnNext = vi.fn();
@@ -101,31 +92,34 @@ describe('Step6_WeaponEducation', () => {
     });
   });
 
-  describe('Weapon Types Section', () => {
-    it('should display all four weapon types', async () => {
+  describe('Understanding Weapons Section', () => {
+    it('should display understanding weapons section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('Energy')).toBeInTheDocument();
-        expect(screen.getByText('Ballistic')).toBeInTheDocument();
-        expect(screen.getByText('Melee')).toBeInTheDocument();
-        expect(screen.getByText('Shield')).toBeInTheDocument();
+        expect(screen.getByText('Understanding Weapons')).toBeInTheDocument();
       });
     });
 
-    it('should explain weapon type does not directly affect gameplay', async () => {
+    it('should explain weapon flexibility', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/weapon type does not directly affect/)).toBeInTheDocument();
+        expect(screen.getByText('Weapon Flexibility')).toBeInTheDocument();
       });
     });
 
-    it('should display weapon type descriptions', async () => {
+    it('should explain that only one robot can wield a weapon at a time', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/Laser rifles, plasma cannons/)).toBeInTheDocument();
-        expect(screen.getByText(/Machine guns, shotguns/)).toBeInTheDocument();
-        expect(screen.getByText(/Combat knives, swords/)).toBeInTheDocument();
-        expect(screen.getByText(/Defensive equipment for the offhand/)).toBeInTheDocument();
+        expect(screen.getByText(/only one robot can wield a weapon at any given time/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention loadout configuration and attribute bonuses', async () => {
+      renderComponent();
+      await waitFor(() => {
+        // Use getAllByText since these phrases appear multiple times
+        expect(screen.getAllByText(/loadout configuration/i).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/attribute bonuses/i).length).toBeGreaterThan(0);
       });
     });
   });
@@ -150,44 +144,56 @@ describe('Step6_WeaponEducation', () => {
   });
 
   describe('Loadout Configurations', () => {
-    it('should render LoadoutDiagram for all four loadout types', async () => {
+    it('should display loadout configurations section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByTestId('loadout-diagram-single')).toBeInTheDocument();
-        expect(screen.getByTestId('loadout-diagram-weapon_shield')).toBeInTheDocument();
-        expect(screen.getByTestId('loadout-diagram-two_handed')).toBeInTheDocument();
-        expect(screen.getByTestId('loadout-diagram-dual_wield')).toBeInTheDocument();
+        expect(screen.getByText('Loadout Configurations')).toBeInTheDocument();
       });
     });
 
-    it('should render loadout diagrams in compact mode by default', async () => {
+    it('should display all four loadout types', async () => {
       renderComponent();
       await waitFor(() => {
-        const singleDiagram = screen.getByTestId('loadout-diagram-single');
-        expect(singleDiagram.getAttribute('data-compact')).toBe('true');
-        expect(singleDiagram.getAttribute('data-show-details')).toBe('false');
+        expect(screen.getByText('Single Weapon')).toBeInTheDocument();
+        expect(screen.getByText('Weapon + Shield')).toBeInTheDocument();
+        expect(screen.getByText('Two-Handed')).toBeInTheDocument();
+        expect(screen.getByText('Dual Wield')).toBeInTheDocument();
       });
     });
 
-    it('should expand a loadout diagram when clicked', async () => {
+    it('should have clickable loadout cards', async () => {
+      renderComponent();
+      await waitFor(() => {
+        const buttons = screen.getAllByRole('button');
+        const loadoutButtons = buttons.filter(btn => btn.getAttribute('aria-expanded') !== null);
+        expect(loadoutButtons.length).toBe(4);
+      });
+    });
+
+    it('should expand a loadout card when clicked', async () => {
       const user = userEvent.setup();
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByTestId('loadout-diagram-single')).toBeInTheDocument();
+        expect(screen.getByText('Single Weapon')).toBeInTheDocument();
       });
 
-      // Click the single loadout button
+      // Find the Single loadout button
       const buttons = screen.getAllByRole('button');
-      const singleButton = buttons.find(btn => btn.querySelector('[data-testid="loadout-diagram-single"]'));
+      const singleButton = buttons.find(btn => 
+        btn.getAttribute('aria-expanded') !== null && 
+        btn.textContent?.includes('Single Weapon')
+      );
+      
+      expect(singleButton).toBeDefined();
+      expect(singleButton?.getAttribute('aria-expanded')).toBe('false');
+
       if (singleButton) {
         await user.click(singleButton);
       }
 
       await waitFor(() => {
-        const singleDiagram = screen.getByTestId('loadout-diagram-single');
-        expect(singleDiagram.getAttribute('data-show-details')).toBe('true');
-        expect(singleDiagram.getAttribute('data-compact')).toBe('false');
+        expect(singleButton?.getAttribute('aria-expanded')).toBe('true');
       });
     });
 
@@ -196,11 +202,14 @@ describe('Step6_WeaponEducation', () => {
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByTestId('loadout-diagram-single')).toBeInTheDocument();
+        expect(screen.getByText('Single Weapon')).toBeInTheDocument();
       });
 
       const buttons = screen.getAllByRole('button');
-      const singleButton = buttons.find(btn => btn.querySelector('[data-testid="loadout-diagram-single"]'));
+      const singleButton = buttons.find(btn => 
+        btn.getAttribute('aria-expanded') !== null && 
+        btn.textContent?.includes('Single Weapon')
+      );
 
       // Click to expand
       if (singleButton) {
@@ -208,7 +217,7 @@ describe('Step6_WeaponEducation', () => {
       }
 
       await waitFor(() => {
-        expect(screen.getByTestId('loadout-diagram-single').getAttribute('data-show-details')).toBe('true');
+        expect(singleButton?.getAttribute('aria-expanded')).toBe('true');
       });
 
       // Click again to collapse
@@ -217,7 +226,31 @@ describe('Step6_WeaponEducation', () => {
       }
 
       await waitFor(() => {
-        expect(screen.getByTestId('loadout-diagram-single').getAttribute('data-show-details')).toBe('false');
+        expect(singleButton?.getAttribute('aria-expanded')).toBe('false');
+      });
+    });
+
+    it('should show expanded details with slot info', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText('Single Weapon')).toBeInTheDocument();
+      });
+
+      const buttons = screen.getAllByRole('button');
+      const singleButton = buttons.find(btn => 
+        btn.getAttribute('aria-expanded') !== null && 
+        btn.textContent?.includes('Single Weapon')
+      );
+
+      if (singleButton) {
+        await user.click(singleButton);
+      }
+
+      await waitFor(() => {
+        expect(screen.getByText('Main Hand:')).toBeInTheDocument();
+        expect(screen.getByText('Off Hand:')).toBeInTheDocument();
       });
     });
   });
@@ -275,12 +308,10 @@ describe('Step6_WeaponEducation', () => {
       });
     });
 
-    it('should display the attribute bonus stacking image', async () => {
+    it('should explain complementary weapons and loadouts', async () => {
       renderComponent();
       await waitFor(() => {
-        const img = screen.getByAltText(/Diagram showing how weapon attribute bonuses stack/);
-        expect(img).toBeInTheDocument();
-        expect(img.getAttribute('src')).toBe('/assets/onboarding/loadouts/attribute-bonus-stacking.svg');
+        expect(screen.getByText(/complementary weapons and loadouts/)).toBeInTheDocument();
       });
     });
   });
@@ -322,7 +353,7 @@ describe('Step6_WeaponEducation', () => {
     it('should render the Next button', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i })).toBeInTheDocument();
       });
     });
 
@@ -336,10 +367,10 @@ describe('Step6_WeaponEducation', () => {
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i }));
+      await user.click(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i }));
 
       await waitFor(() => {
         expect(apiClient.post).toHaveBeenCalled();
@@ -356,10 +387,10 @@ describe('Step6_WeaponEducation', () => {
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i }));
+      await user.click(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i }));
 
       await waitFor(() => {
         expect(mockOnNext).toHaveBeenCalled();
@@ -377,10 +408,10 @@ describe('Step6_WeaponEducation', () => {
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i }));
+      await user.click(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -403,10 +434,10 @@ describe('Step6_WeaponEducation', () => {
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i })).toBeEnabled();
+        expect(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i })).toBeEnabled();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i }));
+      await user.click(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i }));
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /Loading/i })).toBeDisabled();
@@ -424,13 +455,13 @@ describe('Step6_WeaponEducation', () => {
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i }));
+      await user.click(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i }));
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i })).toBeEnabled();
+        expect(screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i })).toBeEnabled();
       });
 
       consoleSpy.mockRestore();
@@ -442,7 +473,7 @@ describe('Step6_WeaponEducation', () => {
       renderComponent();
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: /Weapon Types & Loadouts/i })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: /Weapon Types$/i })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /Understanding Weapons/i })).toBeInTheDocument();
       });
     });
 
@@ -458,9 +489,34 @@ describe('Step6_WeaponEducation', () => {
     it('should have accessible Next button', async () => {
       renderComponent();
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Next: Purchase Your First Weapon/i });
+        const button = screen.getByRole('button', { name: /Next: Facility & Weapon Planning/i });
         expect(button).toBeInTheDocument();
         expect(button).toBeEnabled();
+      });
+    });
+  });
+
+  describe('Educational Tip', () => {
+    it('should display educational tip', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/You don't need to memorize all loadout details/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention ability to change loadout from robot detail page', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/change your loadout at any time from the robot detail page/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Facilities Reminder', () => {
+    it('should remind to buy discount facilities before weapons', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Buy discount facilities/)).toBeInTheDocument();
       });
     });
   });

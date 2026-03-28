@@ -41,7 +41,7 @@ function isValidTab(value: string): value is TabType {
   return VALID_TABS.includes(value as TabType);
 }
 
-function AdminPage(): JSX.Element {
+function AdminPage() {
   /* ---------- Tab state with URL hash + localStorage persistence ---------- */
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     const hash = window.location.hash.replace('#', '');

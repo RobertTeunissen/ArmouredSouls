@@ -14,7 +14,7 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import { processBattle } from '../src/services/leagueBattleOrchestrator';
 
@@ -49,7 +49,7 @@ async function createTestRobot(
 }
 
 async function createScheduledMatch(robot1Id: number, robot2Id: number, leagueType: string = 'bronze') {
-  return await prisma.scheduledMatch.create({
+  return await prisma.scheduledLeagueMatch.create({
     data: { robot1Id, robot2Id, leagueType, scheduledFor: new Date(), status: 'scheduled' },
   });
 }
@@ -85,7 +85,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
         ],
       },
     });
-    await prisma.scheduledMatch.deleteMany({
+    await prisma.scheduledLeagueMatch.deleteMany({
       where: {
         OR: [
           { robot1: { userId: testUser1Id } }, { robot2: { userId: testUser1Id } },
@@ -212,7 +212,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.battle.deleteMany({
             where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
           });
-          await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
+          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
@@ -250,7 +250,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.battle.deleteMany({
             where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
           });
-          await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
+          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
@@ -304,7 +304,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.battle.deleteMany({
             where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
           });
-          await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
+          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
@@ -365,7 +365,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.battle.deleteMany({
             where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
           });
-          await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
+          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }

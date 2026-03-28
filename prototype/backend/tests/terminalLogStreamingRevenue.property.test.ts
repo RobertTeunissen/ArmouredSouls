@@ -13,7 +13,7 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
 import { clearSequenceCache } from '../src/services/eventLogger';
 import prisma from '../src/lib/prisma';
@@ -115,7 +115,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
         ],
       },
     });
-    await prisma.scheduledMatch.deleteMany({
+    await prisma.scheduledLeagueMatch.deleteMany({
       where: {
         OR: [
           { robot1: { userId: testUserId1 } }, { robot2: { userId: testUserId1 } },
@@ -173,7 +173,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
 
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
+          const match = await prisma.scheduledLeagueMatch.create({
             data: {
               robot1Id: robot1.id, robot2Id: robot2.id,
               scheduledFor, status: 'scheduled', leagueType: 'bronze',
@@ -218,7 +218,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
             expect(loggedRevenue1).toBeGreaterThanOrEqual(1000);
 
             await prisma.battle.deleteMany({ where: { id: battle!.id } });
-            await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+            await prisma.scheduledLeagueMatch.deleteMany({ where: { id: match.id } });
             await prisma.robot.deleteMany({ where: { id: robot1.id } });
             await prisma.robot.deleteMany({ where: { id: robot2.id } });
           } finally {
@@ -260,7 +260,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           });
 
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
+          const match = await prisma.scheduledLeagueMatch.create({
             data: {
               robot1Id: robot1.id, robot2Id: robot2.id,
               scheduledFor, status: 'scheduled', leagueType: 'bronze',
@@ -291,7 +291,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
             expect(robot2Logged).toBe(true);
 
             await prisma.battle.deleteMany({ where: { id: battle!.id } });
-            await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+            await prisma.scheduledLeagueMatch.deleteMany({ where: { id: match.id } });
             await prisma.robot.deleteMany({ where: { id: robot1.id } });
             await prisma.robot.deleteMany({ where: { id: robot2.id } });
           } finally {
@@ -333,7 +333,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
 
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
+          const match = await prisma.scheduledLeagueMatch.create({
             data: {
               robot1Id: robot.id, robot2Id: byeRobot.id,
               scheduledFor, status: 'scheduled', leagueType: 'bronze',
@@ -359,7 +359,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
             expect(streamingLogs.length).toBe(0);
 
             await prisma.battle.deleteMany({ where: { id: battle!.id } });
-            await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+            await prisma.scheduledLeagueMatch.deleteMany({ where: { id: match.id } });
             await prisma.robot.deleteMany({ where: { id: robot.id } });
             await prisma.robot.deleteMany({ where: { id: byeRobot.id } });
           } finally {
@@ -406,7 +406,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
 
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
+          const match = await prisma.scheduledLeagueMatch.create({
             data: {
               robot1Id: robot1.id, robot2Id: robot2.id,
               scheduledFor, status: 'scheduled', leagueType: 'bronze',
@@ -440,7 +440,7 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
             });
 
             await prisma.battle.deleteMany({ where: { id: battle!.id } });
-            await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+            await prisma.scheduledLeagueMatch.deleteMany({ where: { id: match.id } });
             await prisma.robot.deleteMany({ where: { id: robot1.id } });
             await prisma.robot.deleteMany({ where: { id: robot2.id } });
           } finally {

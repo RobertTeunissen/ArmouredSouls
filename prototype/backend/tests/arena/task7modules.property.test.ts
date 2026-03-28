@@ -17,6 +17,7 @@ function makeWeapon(overrides: Record<string, unknown> = {}): Record<string, unk
     handsRequired: 'one',
     baseDamage: 10,
     cooldown: 2,
+    rangeBand: 'mid',
     ...overrides,
   };
 }
@@ -74,6 +75,7 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
     isUnderPressure: false,
     teamIndex: 0,
     isAlive: true,
+    targetLockTimer: 0,
     ...overrides,
   };
 }
@@ -112,6 +114,27 @@ describe('hydraulicBonus property tests', () => {
       );
     });
   });
+
+  /**
+   * Property 27b: Hydraulic bonus at melee range is capped at 2.0× (March 2026 rebalance).
+   * **Validates: Balance change - reduced from 2.5× to 2.0×**
+   */
+  describe('Property 27b: Melee bonus capped at 2.0×', () => {
+    it('should return exactly 2.0 for melee range at max hydraulicSystems (50)', () => {
+      const maxBonus = calculateHydraulicBonus(50, 'melee');
+      expect(maxBonus).toBeCloseTo(2.0, 10);
+    });
+
+    it('should never exceed 2.0 for any hydraulicSystems value', () => {
+      fc.assert(
+        fc.property(arbHydro(), (hydro) => {
+          const meleeBonus = calculateHydraulicBonus(hydro, 'melee');
+          expect(meleeBonus).toBeLessThanOrEqual(2.0);
+        }),
+        { numRuns: 500 },
+      );
+    });
+  });
 });
 
 describe('counterAttack property tests', () => {
@@ -134,6 +157,7 @@ describe('counterAttack property tests', () => {
                   weapon: makeWeapon({
                     weaponType: 'melee',
                     name: 'Combat Knife',
+                    rangeBand: 'melee',
                   }),
                 } as any,
                 offhandWeapon: null,
@@ -166,6 +190,7 @@ describe('counterAttack property tests', () => {
                   weapon: makeWeapon({
                     weaponType: 'melee',
                     name: 'Combat Knife',
+                    rangeBand: 'melee',
                   }),
                 } as any,
                 offhandWeapon: null,
@@ -193,6 +218,7 @@ describe('counterAttack property tests', () => {
             weapon: makeWeapon({
               weaponType: 'melee',
               name: 'Combat Knife',
+              rangeBand: 'melee',
             }),
           } as any,
           offhandWeapon: {
@@ -200,6 +226,7 @@ describe('counterAttack property tests', () => {
               weaponType: 'energy',
               handsRequired: 'one',
               name: 'Laser Pistol',
+              rangeBand: 'mid',
             }),
           } as any,
           hydraulicSystems: 25,

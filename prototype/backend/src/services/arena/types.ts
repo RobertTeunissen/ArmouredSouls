@@ -115,6 +115,8 @@ export interface RobotCombatState {
   // === AI state (Req 5.1–5.7) ===
   movementIntent: MovementIntent;
   currentTarget: number | null;
+  /** Time remaining before the robot can switch targets (seconds). Prevents erratic flip-flopping. */
+  targetLockTimer: number;
   patienceTimer: number;
   combatAlgorithmScore: number;
 

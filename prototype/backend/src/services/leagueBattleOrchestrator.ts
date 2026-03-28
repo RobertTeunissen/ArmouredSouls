@@ -1,4 +1,4 @@
-import { Robot, ScheduledLeagueMatch, Battle } from '@prisma/client';
+import { Robot, ScheduledLeagueMatch, Battle } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { CombatMessageGenerator } from './combatMessageGenerator';

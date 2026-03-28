@@ -144,7 +144,7 @@ describe('Step3_FacilityTiming', () => {
         expect(screen.getByText(/❌ Wrong Order \(Wastes Credits\):/)).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/missed ₡13,750 in savings/)).toBeInTheDocument();
+      expect(screen.getByText(/missed ₡27,500 in savings/)).toBeInTheDocument();
     });
 
     it('should render correct order example', async () => {
@@ -154,7 +154,7 @@ describe('Step3_FacilityTiming', () => {
         expect(screen.getByText(/✓ Correct Order \(Maximizes Value\):/)).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/saved ₡13,750/)).toBeInTheDocument();
+      expect(screen.getByText(/saved ₡27,500/)).toBeInTheDocument();
     });
 
     it('should render key takeaways section', async () => {
@@ -557,7 +557,7 @@ describe('Step3_FacilityTiming', () => {
         expect(screen.getByText(/Buy weapon for ₡275,000/)).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/Buy weapon for ₡261,250/)).toBeInTheDocument();
+      expect(screen.getByText(/Buy weapon for ₡247,500/)).toBeInTheDocument();
     });
 
     it('should emphasize buying discount facilities first', async () => {

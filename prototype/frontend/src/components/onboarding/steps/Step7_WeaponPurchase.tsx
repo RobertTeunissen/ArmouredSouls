@@ -5,21 +5,21 @@
  * Features:
  * - Explain robots require weapons to battle
  * - Explain weapon stats (damage, speed, DPS)
- * - Explain shields vs 2H weapons
  * - Warn against expensive weapons (>₡250K) during onboarding
- * - Navigate to weapon shop with guided overlay
+ * - Navigate to weapon shop
  * - Return to onboarding after weapon purchased
  *
  * Requirements: 10.1-10.14
  */
 
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
-import GuidedUIOverlay from '../GuidedUIOverlay';
+import apiClient from '../../../utils/apiClient';
 
 interface Step7_WeaponPurchaseProps {
   onNext?: () => void;
+  onPrevious?: () => void;
 }
 
 const EXPENSIVE_THRESHOLD = 250_000;
@@ -49,36 +49,33 @@ const MULTI_ROBOT_WEAPON_GUIDANCE: Record<string, {
   },
 };
 
-const Step7_WeaponPurchase = ({ onNext }: Step7_WeaponPurchaseProps) => {
+const Step7_WeaponPurchase = ({ onNext, onPrevious }: Step7_WeaponPurchaseProps) => {
   const { tutorialState, advanceStep } = useOnboarding();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [weaponPurchased, setWeaponPurchased] = useState(false);
+  const [actualWeaponCount, setActualWeaponCount] = useState<number | null>(null);
 
   const strategy = tutorialState?.strategy || '1_mighty';
   const multiRobotInfo = MULTI_ROBOT_WEAPON_GUIDANCE[strategy];
 
-  // Check if a weapon was already purchased during onboarding
-  const weaponsPurchasedDuringOnboarding = tutorialState?.choices?.weaponsPurchased ?? [];
-  const hasWeapon = weaponsPurchasedDuringOnboarding.length > 0;
-
-  // Detect when user returns from weapon shop with a new weapon
-  const checkForNewWeapon = useCallback(() => {
-    if (hasWeapon || weaponPurchased) return;
-    if (weaponsPurchasedDuringOnboarding.length > 0) {
-      setWeaponPurchased(true);
-    }
-  }, [hasWeapon, weaponPurchased, weaponsPurchasedDuringOnboarding.length]);
-
+  // Fetch actual weapon count from API (accounts for weapons bought outside onboarding)
   useEffect(() => {
-    checkForNewWeapon();
-  }, [checkForNewWeapon, tutorialState]);
+    const fetchWeaponCount = async () => {
+      try {
+        const response = await apiClient.get('/api/weapon-inventory');
+        const weapons = response.data;
+        setActualWeaponCount(Array.isArray(weapons) ? weapons.length : 0);
+      } catch {
+        // Fall back to onboarding state if API fails
+        setActualWeaponCount(tutorialState?.choices?.weaponsPurchased?.length ?? 0);
+      }
+    };
+    fetchWeaponCount();
+  }, [tutorialState?.choices?.weaponsPurchased]);
 
-  const handleNavigateToShop = () => {
-    setShowOverlay(false);
-    navigate('/weapon-shop?onboarding=true');
-  };
+  // Use actual weapon count for accurate tracking
+  const weaponCount = actualWeaponCount ?? (tutorialState?.choices?.weaponsPurchased?.length ?? 0);
+  const hasWeapon = weaponCount > 0;
 
   const handleNext = async () => {
     try {
@@ -92,18 +89,19 @@ const Step7_WeaponPurchase = ({ onNext }: Step7_WeaponPurchaseProps) => {
     }
   };
 
-  const handleSkipPurchase = async () => {
-    await handleNext();
-  };
+  // Dynamic header based on weapon ownership
+  const headerTitle = hasWeapon ? 'Weapons Acquired!' : 'Purchase Your First Weapon';
+  const headerDescription = hasWeapon
+    ? `You have ${weaponCount} weapon${weaponCount > 1 ? 's' : ''} in your inventory. You're ready to continue!`
+    : 'Your robot needs a weapon to enter battles. Choose wisely — your loadout type and budget should guide your decision.';
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-3 text-gray-100">Purchase Your First Weapon</h1>
+        <h1 className="text-3xl font-bold mb-3 text-gray-100">{headerTitle}</h1>
         <p className="text-lg text-secondary max-w-3xl mx-auto">
-          Your robot needs a weapon to enter battles. Choose wisely — your loadout type
-          and budget should guide your decision.
+          {headerDescription}
         </p>
       </div>
 
@@ -186,99 +184,27 @@ const Step7_WeaponPurchase = ({ onNext }: Step7_WeaponPurchaseProps) => {
         </div>
       </div>
 
-      {/* Loadout Types & Weapon Compatibility */}
-      <div className="mb-8 max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold mb-4 text-gray-100 flex items-center gap-2">
-          <span className="text-2xl">⚔️</span> Loadout Types & Weapon Compatibility
+      {/* Quick Loadout Reminder */}
+      <div className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto">
+        <h2 className="text-lg font-bold text-gray-100 mb-3 flex items-center gap-2">
+          <span className="text-2xl">⚔️</span> Quick Loadout Reminder
         </h2>
-        <p className="text-secondary mb-6 text-sm">
-          Your loadout choice determines which weapons you can use and what bonuses you get.
-          We recommend starting with <strong className="text-success">Single</strong> or{' '}
-          <strong className="text-success">Weapon+Shield</strong> for your first robot.
+        <p className="text-secondary text-sm mb-4">
+          You learned about loadouts in the previous step. For your first weapon, we recommend:
         </p>
-        
-        <div className="space-y-4">
-          {/* Single Loadout */}
-          <div className="bg-surface border border-white/10 rounded-lg p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-gray-100 text-lg">Single</h3>
-              <span className="text-xs bg-green-700 px-3 py-1 rounded text-white font-semibold">
-                Recommended
-              </span>
-            </div>
-            <p className="text-sm text-secondary mb-3">
-              One weapon, balanced bonuses. Great for beginners.
-            </p>
-            <div className="bg-surface-elevated/50 rounded p-3 mb-3">
-              <p className="text-xs text-warning font-mono mb-2">Bonuses: +10% Gyro, +5% Servo</p>
-              <p className="text-xs text-secondary">Compatible weapons: Any one-handed weapon (not shields)</p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
+            <h3 className="font-bold text-success mb-1">Single Loadout</h3>
+            <p className="text-xs text-secondary">One weapon, balanced bonuses. Buy any one-handed weapon.</p>
           </div>
-
-          {/* Weapon+Shield Loadout */}
-          <div className="bg-surface border border-white/10 rounded-lg p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-gray-100 text-lg">Weapon+Shield</h3>
-              <span className="text-xs bg-green-700 px-3 py-1 rounded text-white font-semibold">
-                Recommended
-              </span>
-            </div>
-            <p className="text-sm text-secondary mb-3">
-              Defensive setup with a shield in the off hand.
-            </p>
-            <div className="bg-surface-elevated/50 rounded p-3 mb-3">
-              <p className="text-xs text-warning font-mono mb-2">Bonuses: +20% Shield, +15% Armor, -15% Attack Speed</p>
-              <p className="text-xs text-secondary mb-2">Main hand: Any one-handed weapon (not shields)</p>
-              <p className="text-xs text-secondary">Off hand: Shield only</p>
-            </div>
-            <div className="bg-cyan-900/30 border border-cyan-700 rounded p-3">
-              <p className="text-xs text-cyan-300">
-                <strong>Note:</strong> Shields <strong>do not deal damage</strong> — they only provide defensive bonuses.
-                You can only use shields in this loadout type.
-              </p>
-            </div>
-          </div>
-
-          {/* Two-Handed Loadout */}
-          <div className="bg-surface border border-white/10 rounded-lg p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-gray-100 text-lg">Two-Handed</h3>
-              <span className="text-xs bg-purple-700 px-3 py-1 rounded text-white">
-                High Damage
-              </span>
-            </div>
-            <p className="text-sm text-secondary mb-3">
-              Maximum damage output with a large weapon.
-            </p>
-            <div className="bg-surface-elevated/50 rounded p-3 mb-3">
-              <p className="text-xs text-warning font-mono mb-2">Bonuses: +10% Power, +20% Crit, -10% Evasion, 1.10× damage</p>
-              <p className="text-xs text-secondary">Compatible weapons: Two-handed weapons only</p>
-            </div>
-            <div className="bg-purple-900/30 border border-purple-700 rounded p-3">
-              <p className="text-xs text-purple-300">
-                <strong>Note:</strong> Two-handed weapons require both hands — you cannot use shields or dual-wield with them.
-                Best for aggressive, high-damage strategies.
-              </p>
-            </div>
-          </div>
-
-          {/* Dual-Wield Loadout */}
-          <div className="bg-surface border border-white/10 rounded-lg p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-gray-100 text-lg">Dual-Wield</h3>
-              <span className="text-xs bg-orange-700 px-3 py-1 rounded text-white">
-                Fast Attacks
-              </span>
-            </div>
-            <p className="text-sm text-secondary mb-3">
-              Two one-handed weapons for rapid strikes.
-            </p>
-            <div className="bg-surface-elevated/50 rounded p-3 mb-3">
-              <p className="text-xs text-warning font-mono mb-2">Bonuses: +30% Attack Speed, +15% Control, -20% Penetration, -10% Power</p>
-              <p className="text-xs text-secondary">Compatible weapons: Two one-handed weapons (not shields)</p>
-            </div>
+          <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
+            <h3 className="font-bold text-success mb-1">Weapon+Shield</h3>
+            <p className="text-xs text-secondary">Defensive setup. Buy a one-handed weapon + a shield.</p>
           </div>
         </div>
+        <p className="text-xs text-tertiary mt-3 text-center">
+          Two-Handed and Dual-Wield are also options — see Step 6 for full details.
+        </p>
       </div>
 
       {/* Expensive Weapon Warning */}
@@ -325,15 +251,17 @@ const Step7_WeaponPurchase = ({ onNext }: Step7_WeaponPurchaseProps) => {
         </div>
       )}
 
-      {/* Weapon Purchased Success */}
-      {(hasWeapon || weaponPurchased) && (
+      {/* Weapon Owned Success */}
+      {hasWeapon && (
         <div className="bg-green-900/20 border border-green-600 rounded-lg p-6 mb-8 max-w-4xl mx-auto">
           <div className="flex items-start gap-4">
             <span className="text-3xl flex-shrink-0">✅</span>
             <div className="flex-1">
-              <h2 className="text-lg font-bold text-success mb-2">Weapon Purchased!</h2>
+              <h2 className="text-lg font-bold text-success mb-2">
+                {weaponCount} Weapon{weaponCount > 1 ? 's' : ''} in Inventory!
+              </h2>
               <p className="text-gray-200">
-                You've purchased a weapon. Next, you'll learn how to equip it on your robot
+                You have weapons ready. Next, you'll learn how to equip them on your robot
                 and understand battle readiness requirements.
               </p>
             </div>
@@ -343,14 +271,14 @@ const Step7_WeaponPurchase = ({ onNext }: Step7_WeaponPurchaseProps) => {
 
       {/* Action Buttons */}
       <div className="flex flex-col items-center gap-4">
-        {!(hasWeapon || weaponPurchased) ? (
+        {!hasWeapon ? (
           <>
             <div className="bg-yellow-900/20 border border-yellow-600 rounded-lg p-4 mb-4 max-w-2xl">
               <p className="text-yellow-300 text-center font-semibold mb-2">
                 💡 Remember: Buy discount facilities BEFORE weapons!
               </p>
               <p className="text-secondary text-sm text-center">
-                Visit the Facilities page first to purchase Weapons Workshop (5% discount) and other facilities.
+                Visit the Facilities page first to purchase Weapons Workshop (10% discount) and other facilities.
                 Then come back here to buy weapons at a discounted price.
               </p>
             </div>
@@ -365,60 +293,65 @@ const Step7_WeaponPurchase = ({ onNext }: Step7_WeaponPurchaseProps) => {
             <div className="text-tertiary text-sm">— or —</div>
             
             <button
-              id="visit-weapon-shop-button"
-              onClick={() => setShowOverlay(true)}
+              onClick={() => navigate('/weapon-shop?onboarding=true')}
               className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 min-h-[44px]"
             >
-              Skip to Weapon Shop
+              Go to Weapon Shop
             </button>
-            <button
-              onClick={handleSkipPurchase}
-              disabled={isSubmitting}
-              className="text-sm text-secondary hover:text-gray-200 transition-colors min-h-[44px]"
-            >
-              Skip for now — I'll buy facilities and weapons later
-            </button>
+            <div className="flex gap-4">
+              {onPrevious && (
+                <button
+                  onClick={onPrevious}
+                  className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+                  aria-label="Previous step"
+                >
+                  Previous
+                </button>
+              )}
+              <button
+                onClick={handleNext}
+                disabled={isSubmitting}
+                className="text-sm text-tertiary hover:text-secondary transition-colors min-h-[44px]"
+              >
+                Skip for now — I'll buy weapons later
+              </button>
+            </div>
           </>
         ) : (
-          <button
-            onClick={handleNext}
-            disabled={isSubmitting}
-            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-          >
-            {isSubmitting ? 'Loading...' : 'Next: Battle Readiness & Repair Costs'}
-          </button>
+          <>
+            <div className="flex gap-4">
+              {onPrevious && (
+                <button
+                  onClick={onPrevious}
+                  className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+                  aria-label="Previous step"
+                >
+                  Previous
+                </button>
+              )}
+              <button
+                onClick={handleNext}
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+              >
+                {isSubmitting ? 'Loading...' : 'Continue to Next Step'}
+              </button>
+            </div>
+            <button
+              onClick={() => navigate('/weapon-shop?onboarding=true')}
+              className="text-sm text-secondary hover:text-gray-200 transition-colors min-h-[44px]"
+            >
+              Buy more weapons first
+            </button>
+          </>
         )}
 
-        <p className="text-sm text-secondary text-center max-w-md">
-          {hasWeapon || weaponPurchased
-            ? 'Your weapon is ready. Let\'s learn about equipping it and battle readiness.'
+        <p className="text-sm text-tertiary text-center max-w-md">
+          {hasWeapon
+            ? 'Ready to continue! You can always buy more weapons later.'
             : 'Buy facilities first for discounts, then purchase weapons.'}
         </p>
       </div>
-
-      {/* Guided UI Overlay for Visit Weapon Shop button */}
-      {showOverlay && (
-        <GuidedUIOverlay
-          targetSelector="#visit-weapon-shop-button"
-          tooltipContent={
-            <div>
-              <p className="font-semibold text-primary mb-2">Visit the Weapon Shop</p>
-              <p className="mb-2 text-gray-200">
-                Click to go to the weapon shop where you can browse and purchase weapons.
-                Look for budget-friendly options under ₡{EXPENSIVE_THRESHOLD.toLocaleString()}.
-              </p>
-              <p className="text-sm text-secondary">
-                After purchasing a weapon, you'll return here to continue the tutorial.
-              </p>
-            </div>
-          }
-          position="top"
-          onNext={handleNavigateToShop}
-          showNext={true}
-          showPrevious={false}
-          onClose={() => setShowOverlay(false)}
-        />
-      )}
 
       {/* Educational Note */}
       <div className="mt-8 max-w-3xl mx-auto bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">

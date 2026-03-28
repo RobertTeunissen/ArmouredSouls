@@ -223,7 +223,7 @@ function TournamentsPage() {
                         <div className="text-xl font-bold">{tournament.winner.name}</div>
                         <div className="text-sm text-secondary">
                           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          Owned by {(tournament.winner as any).user?.username || 'Unknown'}
+                          Owned by {(tournament.winner as any).user?.stableName || (tournament.winner as any).user?.username || 'Unknown'}
                         </div>
                       </div>
                     </div>

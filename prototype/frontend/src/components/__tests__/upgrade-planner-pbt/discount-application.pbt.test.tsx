@@ -32,7 +32,8 @@ describe('UpgradePlanner - Discount Application Properties', () => {
             workshopLevel,
           });
 
-          const trainingDiscount = trainingLevel * 0.10;
+          // Training Facility: 10% per level, capped at 90%
+          const trainingDiscount = Math.min(trainingLevel * 0.10, 0.90);
           const trainingDiscountText = `${(trainingDiscount * 100).toFixed(0)}%`;
 
           if (trainingLevel > 0) {

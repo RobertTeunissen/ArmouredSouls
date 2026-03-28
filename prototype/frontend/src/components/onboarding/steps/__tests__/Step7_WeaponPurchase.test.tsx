@@ -3,15 +3,13 @@
  * Tests for Step7_WeaponPurchase component
  *
  * Test coverage:
- * - Component rendering with weapon recommendations
+ * - Component rendering with weapon guidance
  * - Strategy-specific content (multi-robot guidance)
- * - Weapon recommendation cards display
- * - Loadout type bonuses reference
+ * - Weapon stats explanation
+ * - Loadout reminder
  * - Expensive weapon warning
- * - Weapons Workshop discount explanation
- * - Remaining credits display
- * - Navigate to weapon shop with overlay
- * - Weapon purchased success state
+ * - Navigate to weapon shop
+ * - Weapon owned success state
  * - Next button and advanceStep integration
  * - Loading/submitting states
  * - Error handling
@@ -43,17 +41,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock GuidedUIOverlay
-vi.mock('../../GuidedUIOverlay', () => ({
-  default: ({ tooltipContent, onNext, onClose }: any) => (
-    <div data-testid="guided-overlay">
-      <div data-testid="overlay-content">{tooltipContent}</div>
-      <button data-testid="overlay-next" onClick={onNext}>Next</button>
-      <button data-testid="overlay-close" onClick={onClose}>Close</button>
-    </div>
-  ),
-}));
-
 describe('Step7_WeaponPurchase', () => {
   const mockOnNext = vi.fn();
 
@@ -77,6 +64,11 @@ describe('Step7_WeaponPurchase', () => {
             currency,
             prestige: 0,
           },
+        });
+      }
+      if (url === '/api/weapon-inventory') {
+        return Promise.resolve({
+          data: choices.weaponsPurchased || [],
         });
       }
       return Promise.resolve({
@@ -127,110 +119,19 @@ describe('Step7_WeaponPurchase', () => {
     });
   });
 
-  describe('Weapon Recommendations', () => {
-    it('should display all three recommended starter weapons', async () => {
+  describe('Why Weapons Are Essential', () => {
+    it('should display why weapons are essential section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('Laser Rifle')).toBeInTheDocument();
-        expect(screen.getByText('Machine Gun')).toBeInTheDocument();
-        expect(screen.getByText('Combat Knife')).toBeInTheDocument();
+        expect(screen.getByText('Why Weapons Are Essential')).toBeInTheDocument();
       });
     });
 
-    it('should show weapon costs', async () => {
+    it('should mention loadout configuration and attribute bonuses', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('₡244,000')).toBeInTheDocument();
-        expect(screen.getByText('₡150,000')).toBeInTheDocument();
-        expect(screen.getByText('₡100,000')).toBeInTheDocument();
-      });
-    });
-
-    it('should show weapon attribute bonuses', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('+Combat Power, +Targeting Systems')).toBeInTheDocument();
-        expect(screen.getByText('+Attack Speed, +Weapon Control')).toBeInTheDocument();
-        expect(screen.getByText('+Critical Systems, +Evasion Thrusters')).toBeInTheDocument();
-      });
-    });
-
-    it('should highlight the recommended weapon with a tag', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('Best Value')).toBeInTheDocument();
-        expect(screen.getByText('Budget Friendly')).toBeInTheDocument();
-        expect(screen.getByText('Most Affordable')).toBeInTheDocument();
-      });
-    });
-
-    it('should show remaining credits after each weapon purchase', async () => {
-      renderComponent('1_mighty', {}, 2_000_000);
-      await waitFor(() => {
-        // Each weapon card shows "After purchase:" with remaining credits
-        const afterPurchaseLabels = screen.getAllByText(/After purchase:/);
-        expect(afterPurchaseLabels.length).toBe(3);
-      });
-    });
-  });
-
-  describe('Loadout Type Bonuses', () => {
-    it('should display loadout type bonuses reference', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('Loadout Type Bonuses')).toBeInTheDocument();
-      });
-    });
-
-    it('should show all four loadout types', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('Balanced')).toBeInTheDocument();
-        expect(screen.getByText('Defensive')).toBeInTheDocument();
-        expect(screen.getByText('High Damage')).toBeInTheDocument();
-        expect(screen.getByText('Fast Attacks')).toBeInTheDocument();
-      });
-    });
-
-    it('should recommend Single or Weapon+Shield for beginners', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/recommend starting with/)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Expensive Weapon Warning', () => {
-    it('should warn against expensive weapons during onboarding', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/Avoid Expensive Weapons During Onboarding/)).toBeInTheDocument();
-      });
-    });
-
-    it('should mention the ₡300,000 threshold', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('₡300,000')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Weapons Workshop Discount', () => {
-    it('should explain Weapons Workshop discount savings', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('Weapons Workshop Discount')).toBeInTheDocument();
-      });
-    });
-
-    it('should show a concrete savings example', async () => {
-      renderComponent();
-      await waitFor(() => {
-        // Workshop Level 5 = 25% discount
-        // Laser Rifle ₡244,000 → ₡183,000 (saves ₡61,000)
-        expect(screen.getByText(/25% discount/)).toBeInTheDocument();
-        expect(screen.getByText(/saves ₡61,000/)).toBeInTheDocument();
+        expect(screen.getByText(/loadout configuration/)).toBeInTheDocument();
+        expect(screen.getByText(/attribute bonuses/)).toBeInTheDocument();
       });
     });
   });
@@ -243,22 +144,100 @@ describe('Step7_WeaponPurchase', () => {
       });
     });
 
-    it('should mention loadout type, attribute bonuses, and stacking', async () => {
+    it('should mention loadout type, attribute bonuses, and weapon stats', async () => {
       renderComponent();
       await waitFor(() => {
-        // These are the bold labels in the "What Actually Matters" section
-        const section = screen.getByText(/What Actually Matters for Weapons/);
-        expect(section).toBeInTheDocument();
-        expect(screen.getByText(/Determines combat bonuses/)).toBeInTheDocument();
-        expect(screen.getByText(/effective stats beyond base limits/)).toBeInTheDocument();
-        expect(screen.getByText(/stack with robot base attributes/)).toBeInTheDocument();
+        expect(screen.getByText(/Loadout Type/)).toBeInTheDocument();
+        expect(screen.getByText(/Attribute Bonuses/)).toBeInTheDocument();
+        // Use getAllByText since "Weapon Stats" appears in both the list and the section heading
+        expect(screen.getAllByText(/Weapon Stats/).length).toBeGreaterThan(0);
       });
     });
 
-    it('should remind about weapon type not affecting gameplay', async () => {
+    it('should explain loadout type determines combat bonuses', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/doesn't directly affect gameplay/i)).toBeInTheDocument();
+        expect(screen.getByText(/Determines combat bonuses/)).toBeInTheDocument();
+      });
+    });
+
+    it('should explain attribute bonuses increase effective stats', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/effective stats beyond base limits/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Weapon Stats Explained', () => {
+    it('should display weapon stats section', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Understanding Weapon Stats')).toBeInTheDocument();
+      });
+    });
+
+    it('should explain damage stat', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Damage')).toBeInTheDocument();
+        expect(screen.getByText(/base damage dealt per hit/)).toBeInTheDocument();
+      });
+    });
+
+    it('should explain speed/cooldown stat', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Speed (Cooldown)')).toBeInTheDocument();
+        expect(screen.getByText(/seconds between attacks/)).toBeInTheDocument();
+      });
+    });
+
+    it('should explain DPS stat', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('DPS (Damage Per Second)')).toBeInTheDocument();
+        expect(screen.getByText(/most important stat for comparing weapons/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Quick Loadout Reminder', () => {
+    it('should display loadout reminder section', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Quick Loadout Reminder')).toBeInTheDocument();
+      });
+    });
+
+    it('should recommend Single and Weapon+Shield loadouts', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Single Loadout')).toBeInTheDocument();
+        expect(screen.getByText('Weapon+Shield')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Expensive Weapon Warning', () => {
+    it('should warn against expensive weapons during onboarding', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Avoid Expensive Weapons During Onboarding/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention the ₡250,000 threshold', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('₡250,000')).toBeInTheDocument();
+      });
+    });
+
+    it('should advise to start affordable and upgrade later', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Start affordable, upgrade later/)).toBeInTheDocument();
       });
     });
   });
@@ -297,97 +276,90 @@ describe('Step7_WeaponPurchase', () => {
   });
 
   describe('Navigation to Weapon Shop', () => {
-    it('should render the Visit Weapon Shop button when no weapon purchased', async () => {
+    it('should render the Go to Weapon Shop button when no weapon purchased', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Visit Weapon Shop/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Go to Weapon Shop/i })).toBeInTheDocument();
       });
     });
 
-    it('should show guided overlay when Visit Weapon Shop is clicked', async () => {
+    it('should render the Go to Facilities Page First button', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Go to Facilities Page First/i })).toBeInTheDocument();
+      });
+    });
+
+    it('should navigate to weapon shop when button is clicked', async () => {
       const user = userEvent.setup();
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Visit Weapon Shop/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Go to Weapon Shop/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Visit Weapon Shop/i }));
+      await user.click(screen.getByRole('button', { name: /Go to Weapon Shop/i }));
 
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
+      expect(mockNavigate).toHaveBeenCalledWith('/weapon-shop?onboarding=true');
     });
 
-    it('should navigate to weapon shop when overlay Next is clicked', async () => {
+    it('should navigate to facilities when button is clicked', async () => {
       const user = userEvent.setup();
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Visit Weapon Shop/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Go to Facilities Page First/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Visit Weapon Shop/i }));
+      await user.click(screen.getByRole('button', { name: /Go to Facilities Page First/i }));
 
-      await waitFor(() => {
-        expect(screen.getByTestId('overlay-next')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-next'));
-
-      expect(mockNavigate).toHaveBeenCalledWith('/weapons?onboarding=true');
-    });
-
-    it('should close overlay when Close is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Visit Weapon Shop/i })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Visit Weapon Shop/i }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-close'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-      });
+      expect(mockNavigate).toHaveBeenCalledWith('/facilities?onboarding=true');
     });
   });
 
-  describe('Weapon Purchased State', () => {
+  describe('Weapon Owned State', () => {
     it('should show success message when weapon was purchased', async () => {
       renderComponent('1_mighty', { weaponsPurchased: [42] });
       await waitFor(() => {
-        expect(screen.getByText('Weapon Purchased!')).toBeInTheDocument();
+        expect(screen.getByText('Weapons Acquired!')).toBeInTheDocument();
       });
     });
 
-    it('should show Next button when weapon was purchased', async () => {
+    it('should show weapon count in inventory', async () => {
+      renderComponent('1_mighty', { weaponsPurchased: [42] });
+      await waitFor(() => {
+        expect(screen.getByText(/1 Weapon in Inventory/)).toBeInTheDocument();
+      });
+    });
+
+    it('should show Continue button when weapon was purchased', async () => {
       renderComponent('1_mighty', { weaponsPurchased: [42] });
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Next: Battle Readiness/i }),
+          screen.getByRole('button', { name: /Continue to Next Step/i }),
         ).toBeInTheDocument();
       });
     });
 
-    it('should NOT show Visit Weapon Shop button when weapon was purchased', async () => {
+    it('should NOT show Go to Weapon Shop as primary button when weapon was purchased', async () => {
       renderComponent('1_mighty', { weaponsPurchased: [42] });
       await waitFor(() => {
-        expect(screen.getByText('Weapon Purchased!')).toBeInTheDocument();
+        expect(screen.getByText('Weapons Acquired!')).toBeInTheDocument();
       });
-      expect(screen.queryByRole('button', { name: /Visit Weapon Shop/i })).not.toBeInTheDocument();
+      // The primary button should be Continue, not Go to Weapon Shop
+      expect(screen.queryByRole('button', { name: /Go to Facilities Page First/i })).not.toBeInTheDocument();
+    });
+
+    it('should show Buy more weapons link when weapon was purchased', async () => {
+      renderComponent('1_mighty', { weaponsPurchased: [42] });
+      await waitFor(() => {
+        expect(screen.getByText(/Buy more weapons first/)).toBeInTheDocument();
+      });
     });
   });
 
   describe('Next Button and Navigation', () => {
-    it('should call advanceStep when Next is clicked', async () => {
+    it('should call advanceStep when Continue is clicked', async () => {
       const user = userEvent.setup();
 
       vi.mocked(apiClient.post).mockResolvedValue({
@@ -398,11 +370,11 @@ describe('Step7_WeaponPurchase', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Next: Battle Readiness/i }),
+          screen.getByRole('button', { name: /Continue to Next Step/i }),
         ).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Battle Readiness/i }));
+      await user.click(screen.getByRole('button', { name: /Continue to Next Step/i }));
 
       await waitFor(() => {
         expect(apiClient.post).toHaveBeenCalled();
@@ -420,11 +392,11 @@ describe('Step7_WeaponPurchase', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Next: Battle Readiness/i }),
+          screen.getByRole('button', { name: /Continue to Next Step/i }),
         ).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Battle Readiness/i }));
+      await user.click(screen.getByRole('button', { name: /Continue to Next Step/i }));
 
       await waitFor(() => {
         expect(mockOnNext).toHaveBeenCalled();
@@ -443,11 +415,11 @@ describe('Step7_WeaponPurchase', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Next: Battle Readiness/i }),
+          screen.getByRole('button', { name: /Continue to Next Step/i }),
         ).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Battle Readiness/i }));
+      await user.click(screen.getByRole('button', { name: /Continue to Next Step/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -460,7 +432,7 @@ describe('Step7_WeaponPurchase', () => {
       });
     });
 
-    it('should disable Next button while submitting', async () => {
+    it('should disable Continue button while submitting', async () => {
       const user = userEvent.setup();
 
       vi.mocked(apiClient.post).mockImplementation(
@@ -471,11 +443,11 @@ describe('Step7_WeaponPurchase', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Next: Battle Readiness/i }),
+          screen.getByRole('button', { name: /Continue to Next Step/i }),
         ).toBeEnabled();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Battle Readiness/i }));
+      await user.click(screen.getByRole('button', { name: /Continue to Next Step/i }));
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /Loading/i })).toBeDisabled();
@@ -523,15 +495,15 @@ describe('Step7_WeaponPurchase', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Next: Battle Readiness/i }),
+          screen.getByRole('button', { name: /Continue to Next Step/i }),
         ).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Next: Battle Readiness/i }));
+      await user.click(screen.getByRole('button', { name: /Continue to Next Step/i }));
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /Next: Battle Readiness/i }),
+          screen.getByRole('button', { name: /Continue to Next Step/i }),
         ).toBeEnabled();
       });
 
@@ -552,18 +524,50 @@ describe('Step7_WeaponPurchase', () => {
     it('should have accessible action buttons', async () => {
       renderComponent();
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Visit Weapon Shop/i });
+        const button = screen.getByRole('button', { name: /Go to Weapon Shop/i });
         expect(button).toBeInTheDocument();
         expect(button).toBeEnabled();
       });
     });
 
-    it('should have accessible Next button when weapon purchased', async () => {
+    it('should have accessible Continue button when weapon purchased', async () => {
       renderComponent('1_mighty', { weaponsPurchased: [42] });
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Next: Battle Readiness/i });
+        const button = screen.getByRole('button', { name: /Continue to Next Step/i });
         expect(button).toBeInTheDocument();
         expect(button).toBeEnabled();
+      });
+    });
+  });
+
+  describe('Facilities Reminder', () => {
+    it('should remind to buy facilities before weapons', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Buy discount facilities BEFORE weapons/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention Weapons Workshop discount', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Weapons Workshop/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Educational Tip', () => {
+    it('should display educational tip about weapon selection', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Don't stress about picking the "perfect" weapon/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention ability to change loadout later', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/change your loadout at any time/)).toBeInTheDocument();
       });
     });
   });
@@ -582,6 +586,9 @@ describe('Step7_WeaponPurchase', () => {
               prestige: 0,
             },
           });
+        }
+        if (url === '/api/weapon-inventory') {
+          return Promise.resolve({ data: [] });
         }
         return Promise.resolve({
           data: {

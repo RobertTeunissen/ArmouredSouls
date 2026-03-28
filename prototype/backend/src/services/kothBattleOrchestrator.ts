@@ -1,19 +1,22 @@
 // ─── KotH Battle Orchestration ──────────────────────────────────────
 
 import prisma from '../lib/prisma';
+import { Prisma } from '../../generated/prisma';
 import logger from '../config/logger';
 
 /** Yield the event loop so Express can serve requests between heavy DB work */
 const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
-/** Delay between processing each KotH match (ms) */
-const MATCH_THROTTLE_MS = 2000;
-/** Delay between processing each participant's post-combat DB writes (ms) */
-const PARTICIPANT_THROTTLE_MS = 200;
+/** Delay between processing each KotH match (ms) - reduced from 2000ms */
+const MATCH_THROTTLE_MS = 500;
 /** Number of matches to process before a longer cooldown pause */
 const BATCH_SIZE = 10;
 /** Cooldown pause between batches to allow GC and free memory (ms) */
-const BATCH_COOLDOWN_MS = 10000;
+const BATCH_COOLDOWN_MS = 5000;
+/** Number of matches before a super-batch pause for heavy GC (memory safety) */
+const SUPER_BATCH_SIZE = 20;
+/** Long pause between super-batches to ensure memory is reclaimed (ms) */
+const SUPER_BATCH_COOLDOWN_MS = 30000;
 import { simulateBattleMulti, RobotWithWeapons, BattleConfig } from './combatSimulator';
 import {
   buildKothGameModeConfig,
@@ -34,6 +37,23 @@ import {
   awardFameToRobot,
 } from './battlePostCombat';
 import { CombatMessageGenerator } from './combatMessageGenerator';
+import { calculateStreamingRevenue, awardStreamingRevenue } from './streamingRevenueService';
+import { getCurrentCycleNumber } from './leagueBattleOrchestrator';
+
+/** Prepared participant data for batched DB operations */
+interface PreparedParticipant {
+  robot: RobotWithWeapons;
+  placement: number;
+  zoneScore: number;
+  zoneTime: number;
+  uncontestedScore: number;
+  kills: number;
+  damageDealt: number;
+  finalHP: number;
+  destroyed: boolean;
+  isWinner: boolean;
+  rewards: { credits: number; prestige: number; fame: number; zoneDominanceBonus: boolean };
+}
 
 /** Summary of a KotH battle execution run */
 export interface KothBattleExecutionSummary {
@@ -106,48 +126,68 @@ export function calculateKothRewards(
 }
 
 /**
- * Update cumulative KotH stats on a robot record.
+ * Batch update cumulative KotH stats for all robots in a match.
+ * Uses a single transaction with raw SQL for optimal performance.
  */
-async function updateKothRobotStats(
-  robotId: number,
-  placement: number,
-  zoneScore: number,
-  zoneTime: number,
-  kills: number,
-  isWinner: boolean,
+async function batchUpdateKothRobotStats(
+  participants: PreparedParticipant[],
 ): Promise<void> {
-  const robot = await prisma.robot.findUnique({ where: { id: robotId } });
-  if (!robot) return;
-
-  const currentBest = (robot as Record<string, unknown>).kothBestPlacement as number | null;
-  const newBestPlacement = currentBest === null || currentBest === 0
-    ? placement
-    : Math.min(currentBest, placement);
-
-  const currentStreak = ((robot as Record<string, unknown>).kothCurrentWinStreak as number) ?? 0;
-  const currentBestStreak = ((robot as Record<string, unknown>).kothBestWinStreak as number) ?? 0;
-  const newWinStreak = isWinner ? currentStreak + 1 : 0;
-  const newBestStreak = Math.max(currentBestStreak, newWinStreak);
-
-  await prisma.robot.update({
-    where: { id: robotId },
-    data: {
-      kothMatches: { increment: 1 },
-      kothWins: isWinner ? { increment: 1 } : undefined,
-      kothTotalZoneScore: { increment: zoneScore },
-      kothTotalZoneTime: { increment: zoneTime },
-      kothKills: { increment: kills },
-      kothBestPlacement: newBestPlacement,
-      kothCurrentWinStreak: newWinStreak,
-      kothBestWinStreak: newBestStreak,
+  // Pre-fetch all robots in a single query to get current streak values
+  const robotIds = participants.map(p => p.robot.id);
+  const robots = await prisma.robot.findMany({
+    where: { id: { in: robotIds } },
+    select: {
+      id: true,
+      kothBestPlacement: true,
+      kothCurrentWinStreak: true,
+      kothBestWinStreak: true,
     },
   });
+  const robotMap = new Map(robots.map(r => [r.id, r]));
+
+  // Build all updates and execute in a single transaction
+  const updates = participants.map(p => {
+    const robot = robotMap.get(p.robot.id);
+    const currentBest = robot?.kothBestPlacement ?? null;
+    const newBestPlacement = currentBest === null || currentBest === 0
+      ? p.placement
+      : Math.min(currentBest, p.placement);
+
+    const currentStreak = robot?.kothCurrentWinStreak ?? 0;
+    const currentBestStreak = robot?.kothBestWinStreak ?? 0;
+    const newWinStreak = p.isWinner ? currentStreak + 1 : 0;
+    const newBestStreak = Math.max(currentBestStreak, newWinStreak);
+
+    return prisma.robot.update({
+      where: { id: p.robot.id },
+      data: {
+        kothMatches: { increment: 1 },
+        kothWins: p.isWinner ? { increment: 1 } : undefined,
+        kothTotalZoneScore: { increment: p.zoneScore },
+        kothTotalZoneTime: { increment: p.zoneTime },
+        kothKills: { increment: p.kills },
+        kothBestPlacement: newBestPlacement,
+        kothCurrentWinStreak: newWinStreak,
+        kothBestWinStreak: newBestStreak,
+      },
+    });
+  });
+
+  await prisma.$transaction(updates);
 }
 
 /**
  * Process a single KotH match using the unified N-robot simulator.
  * Builds KotH game mode config + state + tick hook, calls simulateBattleMulti(),
  * then maps the result to DB records.
+ * 
+ * PERFORMANCE OPTIMIZATIONS:
+ * - Batched BattleParticipant creation via createMany
+ * - Batched user/robot currency updates via transaction
+ * - Batched KotH stats updates via transaction
+ * - Streaming revenue calculated in parallel
+ * - Audit events batched via transaction
+ * 
  * Requirement 13: KotH Battle Playback Integration.
  */
 async function processKothBattle(
@@ -276,10 +316,8 @@ async function processKothBattle(
     },
   });
 
-  // 8. Create BattleParticipant records + calculate rewards
-  for (const p of enrichedPlacements) {
-    // Yield event loop between participants so Express stays responsive
-    await throttle(PARTICIPANT_THROTTLE_MS);
+  // 8. Prepare all participant data for batched operations
+  const preparedParticipants: PreparedParticipant[] = enrichedPlacements.map(p => {
     const robot = robots.find(r => r.id === p.robotId)!;
     const isWinner = robot.id === winnerId;
     const hpPercent = robot.maxHP > 0 ? (p.finalHP / robot.maxHP) * 100 : 0;
@@ -287,72 +325,163 @@ async function processKothBattle(
       p.placement, p.zoneScore, p.uncontestedScore,
       isWinner ? hpPercent : undefined,
     );
+    return {
+      robot: robot as RobotWithWeapons,
+      placement: p.placement,
+      zoneScore: p.zoneScore,
+      zoneTime: p.zoneTime,
+      uncontestedScore: p.uncontestedScore,
+      kills: p.kills,
+      damageDealt: p.damageDealt,
+      finalHP: p.finalHP,
+      destroyed: p.destroyed,
+      isWinner,
+      rewards,
+    };
+  });
 
-    await prisma.battleParticipant.create({
-      data: {
-        battleId: battle.id,
-        robotId: robot.id,
-        team: 1, // KotH is free-for-all, no team affiliation
-        placement: p.placement, // 1-6 final placement
-        role: null,
-        credits: rewards.credits,
-        streamingRevenue: 0,
-        eloBefore: robot.elo,
-        eloAfter: robot.elo,
-        prestigeAwarded: rewards.prestige,
-        fameAwarded: rewards.fame,
-        damageDealt: p.damageDealt,
-        finalHP: p.finalHP,
-        yielded: false,
-        destroyed: p.destroyed,
-      },
-    });
+  // 9. BATCHED: Create all BattleParticipant records in one operation
+  await prisma.battleParticipant.createMany({
+    data: preparedParticipants.map(p => ({
+      battleId: battle.id,
+      robotId: p.robot.id,
+      team: 1,
+      placement: p.placement,
+      role: null,
+      credits: p.rewards.credits,
+      streamingRevenue: 0, // Updated below
+      eloBefore: p.robot.elo,
+      eloAfter: p.robot.elo,
+      prestigeAwarded: p.rewards.prestige,
+      fameAwarded: p.rewards.fame,
+      damageDealt: p.damageDealt,
+      finalHP: p.finalHP,
+      yielded: false,
+      destroyed: p.destroyed,
+    })),
+  });
 
-    if (rewards.credits > 0) {
-      await awardCreditsToUser(robot.userId, rewards.credits);
+  // 10. BATCHED: Calculate streaming revenue in parallel, then batch update
+  const cycleNumber = await getCurrentCycleNumber();
+  const streamingCalcs = await Promise.all(
+    preparedParticipants.map(p => calculateStreamingRevenue(p.robot.id, p.robot.userId, false))
+  );
+
+  // 11. BATCHED: All currency/prestige/fame updates in a single transaction
+  const currencyUpdates: Prisma.PrismaPromise<unknown>[] = [];
+  
+  // Group credits by userId to combine multiple robots from same user
+  const creditsByUser = new Map<number, number>();
+  const prestigeByUser = new Map<number, number>();
+  const fameByRobot = new Map<number, number>();
+  const streamingByUser = new Map<number, number>();
+
+  preparedParticipants.forEach((p, i) => {
+    if (p.rewards.credits > 0) {
+      creditsByUser.set(p.robot.userId, (creditsByUser.get(p.robot.userId) ?? 0) + p.rewards.credits);
     }
-    if (rewards.fame > 0) {
-      await awardFameToRobot(robot.id, rewards.fame);
+    if (p.rewards.prestige > 0) {
+      prestigeByUser.set(p.robot.userId, (prestigeByUser.get(p.robot.userId) ?? 0) + p.rewards.prestige);
     }
-    if (rewards.prestige > 0) {
-      await awardPrestigeToUser(robot.userId, rewards.prestige);
+    if (p.rewards.fame > 0) {
+      fameByRobot.set(p.robot.id, (fameByRobot.get(p.robot.id) ?? 0) + p.rewards.fame);
     }
+    const streamingCalc = streamingCalcs[i];
+    if (streamingCalc) {
+      streamingByUser.set(p.robot.userId, (streamingByUser.get(p.robot.userId) ?? 0) + streamingCalc.totalRevenue);
+    }
+  });
 
-    const streamingCalc = await awardStreamingRevenueForParticipant(robot.id, robot.userId, battle.id, false);
-
-    await updateKothRobotStats(robot.id, p.placement, p.zoneScore, p.zoneTime, p.kills, isWinner);
-
-    await logBattleAuditEvent(
-      {
-        robotId: robot.id,
-        userId: robot.userId,
-        isWinner,
-        isDraw: false,
-        damageDealt: p.damageDealt,
-        finalHP: p.finalHP,
-        yielded: false,
-        destroyed: p.destroyed,
-        credits: rewards.credits,
-        prestige: rewards.prestige,
-        fame: rewards.fame,
-        eloBefore: robot.elo,
-        eloAfter: robot.elo,
-      },
-      { id: battle.id, battleType: 'koth', leagueType: 'koth', durationSeconds: simResult.durationSeconds, eloChange: 0 },
-      null, // KotH has no single opponent
-      streamingCalc?.totalRevenue || 0,
-      false,
-      {
-        kothPlacement: p.placement,
-        kothZoneScore: p.zoneScore,
-        kothZoneTime: p.zoneTime,
-        kothKills: p.kills,
-        kothZoneDominanceBonus: rewards.zoneDominanceBonus,
-      },
+  // Build transaction operations
+  for (const [userId, credits] of creditsByUser) {
+    const streaming = streamingByUser.get(userId) ?? 0;
+    const prestige = prestigeByUser.get(userId) ?? 0;
+    currencyUpdates.push(
+      prisma.user.update({
+        where: { id: userId },
+        data: {
+          currency: { increment: credits + streaming },
+          prestige: prestige > 0 ? { increment: prestige } : undefined,
+        },
+      })
     );
   }
 
-  // 9. Mark match completed
+  for (const [robotId, fame] of fameByRobot) {
+    currencyUpdates.push(
+      prisma.robot.update({
+        where: { id: robotId },
+        data: { fame: { increment: fame } },
+      })
+    );
+  }
+
+  // Execute all currency updates in a single transaction
+  if (currencyUpdates.length > 0) {
+    await prisma.$transaction(currencyUpdates);
+  }
+
+  // 12. BATCHED: Update streaming revenue on BattleParticipant records
+  const streamingUpdates = preparedParticipants
+    .map((p, i) => {
+      const calc = streamingCalcs[i];
+      if (!calc) return null;
+      return prisma.battleParticipant.update({
+        where: { battleId_robotId: { battleId: battle.id, robotId: p.robot.id } },
+        data: { streamingRevenue: calc.totalRevenue },
+      });
+    })
+    .filter((u): u is NonNullable<typeof u> => u !== null);
+
+  if (streamingUpdates.length > 0) {
+    await prisma.$transaction(streamingUpdates);
+  }
+
+  // 13. BATCHED: Update KotH robot stats
+  await batchUpdateKothRobotStats(preparedParticipants);
+
+  // 14. BATCHED: Log audit events (fire-and-forget for performance)
+  // Audit logging is non-critical and can be done asynchronously
+  setImmediate(async () => {
+    try {
+      for (let i = 0; i < preparedParticipants.length; i++) {
+        const p = preparedParticipants[i];
+        const streamingCalc = streamingCalcs[i];
+        await logBattleAuditEvent(
+          {
+            robotId: p.robot.id,
+            userId: p.robot.userId,
+            isWinner: p.isWinner,
+            isDraw: false,
+            damageDealt: p.damageDealt,
+            finalHP: p.finalHP,
+            yielded: false,
+            destroyed: p.destroyed,
+            credits: p.rewards.credits,
+            prestige: p.rewards.prestige,
+            fame: p.rewards.fame,
+            eloBefore: p.robot.elo,
+            eloAfter: p.robot.elo,
+          },
+          { id: battle.id, battleType: 'koth', leagueType: 'koth', durationSeconds: simResult.durationSeconds, eloChange: 0 },
+          null,
+          streamingCalc?.totalRevenue || 0,
+          false,
+          {
+            kothPlacement: p.placement,
+            kothZoneScore: p.zoneScore,
+            kothZoneTime: p.zoneTime,
+            kothKills: p.kills,
+            kothZoneDominanceBonus: p.rewards.zoneDominanceBonus,
+          },
+        );
+      }
+    } catch (err) {
+      logger.error('[KotH] Audit logging failed (non-critical):', err);
+    }
+  });
+
+  // 15. Mark match completed
   await prisma.scheduledKothMatch.update({
     where: { id: match.id },
     data: { status: 'completed', battleId: battle.id },
@@ -370,6 +499,17 @@ async function processKothBattle(
  * Execute all scheduled KotH battles.
  * Queries ScheduledKothMatch with status 'scheduled', processes each,
  * and returns a summary of results.
+ * 
+ * MEMORY OPTIMIZATION STRATEGY:
+ * - Process matches one at a time (no batch loading)
+ * - Short pause (500ms) between each match for event loop
+ * - Medium pause (5s) every 10 matches for GC opportunity  
+ * - Long pause (30s) every 20 matches to force memory reclamation
+ * 
+ * For 200 matches on 2GB RAM VPS:
+ * - 10 super-batches of 20 matches each
+ * - ~5 minutes of GC pauses total
+ * - Peak memory should stay under 500MB
  */
 export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise<KothBattleExecutionSummary> {
   logger.info('[KotH Orchestrator] Executing scheduled KotH battles');
@@ -393,7 +533,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
   // This prevents accumulating all match data in memory simultaneously
   while (processed < totalCount) {
     // Fetch the next single scheduled match
-    const match = await prisma.scheduledKothMatch.findFirst({
+    let match = await prisma.scheduledKothMatch.findFirst({
       where: { status: 'scheduled' },
       include: { participants: true },
       orderBy: { createdAt: 'asc' },
@@ -401,34 +541,76 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
 
     if (!match) break; // No more scheduled matches
 
-    // Throttle: longer cooldown at batch boundaries, short yield otherwise
-    if (processed > 0 && processed % BATCH_SIZE === 0) {
+    // SUPER-BATCH: Every 20 matches, take a long pause for memory reclamation
+    // This is critical for 200+ match runs on limited RAM
+    if (processed > 0 && processed % SUPER_BATCH_SIZE === 0) {
+      const memBefore = process.memoryUsage().heapUsed;
+      logger.info(`[KotH Orchestrator] Super-batch cooldown after ${processed} matches (mem: ${Math.round(memBefore / 1024 / 1024)}MB) - waiting ${SUPER_BATCH_COOLDOWN_MS / 1000}s for GC`);
+      
+      // Clear any references we can
+      match = null as unknown as typeof match;
+      
+      // Force GC if available (run with --expose-gc flag)
+      if (global.gc) {
+        global.gc();
+      }
+      
+      // Long pause to let GC complete and memory be returned to OS
+      await throttle(SUPER_BATCH_COOLDOWN_MS);
+      
+      // Try GC again after pause
+      if (global.gc) {
+        global.gc();
+      }
+      
+      const memAfter = process.memoryUsage().heapUsed;
+      logger.info(`[KotH Orchestrator] Super-batch resumed (mem: ${Math.round(memAfter / 1024 / 1024)}MB, freed: ${Math.round((memBefore - memAfter) / 1024 / 1024)}MB)`);
+      
+      // Re-fetch the match since we nullified it
+      match = await prisma.scheduledKothMatch.findFirst({
+        where: { status: 'scheduled' },
+        include: { participants: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (!match) break;
+    }
+    // REGULAR BATCH: Every 10 matches, short pause for GC opportunity
+    else if (processed > 0 && processed % BATCH_SIZE === 0) {
       logger.info(`[KotH Orchestrator] Batch cooldown after ${processed} matches (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
       await throttle(BATCH_COOLDOWN_MS);
-    } else if (processed > 0) {
+      if (global.gc) {
+        global.gc();
+      }
+    } 
+    // MATCH THROTTLE: Brief pause between each match
+    else if (processed > 0) {
       await throttle(MATCH_THROTTLE_MS);
     }
+
+    const matchId = match.id;
+    const participantCount = match.participants.length;
 
     try {
       const result = await processKothBattle(match);
       summary.successfulMatches++;
-      summary.totalRobotsInvolved += match.participants.length;
+      summary.totalRobotsInvolved += participantCount;
       // Only store lightweight placement data, not the full result
-      summary.matchResults.push({ matchId: match.id, ...result });
+      summary.matchResults.push({ matchId, ...result });
     } catch (error) {
       summary.failedMatches++;
       const errorMsg = error instanceof Error ? error.message : String(error);
-      summary.errors.push(`KotH Match ${match.id}: ${errorMsg}`);
-      logger.error(`[KotH Orchestrator] Failed to process match ${match.id}:`, error);
+      summary.errors.push(`KotH Match ${matchId}: ${errorMsg}`);
+      logger.error(`[KotH Orchestrator] Failed to process match ${matchId}:`, error);
 
-      // Skip this match for now — it stays 'scheduled' and will be retried next cycle.
-      // Mark it so the while loop doesn't re-fetch it in this run.
+      // Mark as error so the while loop doesn't re-fetch it in this run
       await prisma.scheduledKothMatch.update({
-        where: { id: match.id },
+        where: { id: matchId },
         data: { status: 'error' },
       }).catch(() => {});
     }
 
+    // Clear match reference to help GC
+    match = null as unknown as typeof match;
     processed++;
   }
 

@@ -50,7 +50,8 @@ function CompactUpgradeSection({
     const currentLevel = Math.floor(robot[attributeKey] as number);
     const weaponBonus = calculateAttributeBonus(attributeKey, robot.mainWeapon, robot.offhandWeapon);
     const baseCost = (currentLevel + 1) * 1500;
-    const discountPercent = trainingLevel * 10;
+    // Training Facility: 10% per level, capped at 90% (see docs/prd_core/STABLE_SYSTEM.md)
+    const discountPercent = Math.min(trainingLevel * 10, 90);
     const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
     return {

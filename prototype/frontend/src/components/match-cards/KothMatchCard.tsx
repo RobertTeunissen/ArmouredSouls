@@ -35,6 +35,7 @@ function KothMatchCard({ match }: KothMatchCardProps) {
         <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
           {formatDateTime(match.scheduledFor)}
         </div>
+        <div className="flex-shrink-0 w-20"></div>
         <div className="flex-shrink-0 w-6 text-center text-[#58a6ff] text-sm">→</div>
       </div>
 

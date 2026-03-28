@@ -135,7 +135,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
     robot: TeamRobot,
     role: 'Active' | 'Reserve',
     colorClass: string
-  ): JSX.Element => {
+  ) => {
     const p = getParticipant(robot.id);
     return (
       <div className="bg-surface rounded p-3">
@@ -169,7 +169,7 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
   };
 
   /** Render the tag team (2v2) battle summary */
-  const renderTagTeamSummary = (): JSX.Element => (
+  const renderTagTeamSummary = () => (
     <div className="bg-surface-elevated rounded-lg p-4">
       <div className="flex items-center gap-3 mb-4">
         <h3 className="text-xl font-bold">Tag Team Battle Summary</h3>

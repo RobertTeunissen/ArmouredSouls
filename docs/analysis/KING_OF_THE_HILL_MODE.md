@@ -48,6 +48,8 @@ The 2D arena's extensibility (Requirement 16, AC 5) supports a pluggable Target_
 - If the zone is contested (multiple robots inside): prioritize the weakest contester for fastest elimination
 - If you're outside the zone: prioritize getting in over fighting perimeter opponents
 
+**Target stickiness**: Robots lock onto their selected target for 1.5 seconds before re-evaluating. This prevents erratic flip-flopping between opponents with similar priority weights, which was especially problematic in KotH where 5-6 robots create many near-equal threat scores. The lock breaks immediately if the target is destroyed or yields.
+
 ### Movement Intent (Pluggable Modifier)
 
 The 2D arena's extensibility (Requirement 16, AC 6) supports a pluggable Movement_Intent modifier:

@@ -14,7 +14,7 @@
  * Requirements: 13.1-13.15, 15.1-15.11
  */
 
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useRef, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 
@@ -110,22 +110,21 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
   const strategyName = STRATEGY_NAMES[strategy] || STRATEGY_NAMES['1_mighty'];
   const strategySummary = STRATEGY_SUMMARIES[strategy] || STRATEGY_SUMMARIES['1_mighty'];
 
-  // Navigate to dashboard after successful completion
-  useEffect(() => {
-    if (completionAttempted.current && tutorialState?.hasCompletedOnboarding) {
-      navigate('/dashboard');
-      onNext();
-    }
-  }, [tutorialState?.hasCompletedOnboarding, navigate, onNext]);
-
   // Derive completion error from context error when a completion was attempted
   const completionError = completionAttempted.current && contextError ? contextError : null;
 
   const handleCompleteTutorial = async () => {
     setIsCompleting(true);
     completionAttempted.current = true;
-    await completeTutorial();
-    setIsCompleting(false);
+    try {
+      await completeTutorial();
+      // Navigate immediately after successful completion
+      navigate('/dashboard');
+      onNext();
+    } catch {
+      // Error is handled by context, just reset loading state
+      setIsCompleting(false);
+    }
   };
 
   const handleReplayTutorial = async () => {
@@ -170,32 +169,23 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
         </div>
       </section>
 
-      {/* Daily Cycle System with Diagram */}
+      {/* Daily Cycle System */}
       <section
         className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
         aria-label="Daily Cycle System"
       >
         <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
-          <span className="text-2xl">🔄</span> Daily Cycle System
+          <span className="text-2xl">🔄</span> Game Cycle System
         </h2>
         <p className="text-gray-200 mb-4">
-          Armoured Souls runs on an <strong className="text-primary">automated daily cycle</strong>.
-          Each day at specific times, the game processes battles, updates standings, and distributes rewards.
+          Armoured Souls runs on an <strong className="text-primary">automated cycle system</strong>.
+          Multiple times per day, the game processes battles, updates standings, and distributes rewards.
         </p>
-        
-        {/* Cycle Schedule Diagram */}
-        <div className="bg-background/50 rounded-lg p-4 mb-4">
-          <img 
-            src="/assets/onboarding/diagrams/cycle-schedule.svg" 
-            alt="Daily cycle schedule showing league battles at 8 PM, tournaments at 8 AM, tag team at 12 PM, and settlement at 11 PM"
-            className="w-full max-w-2xl mx-auto"
-          />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="bg-background/50 rounded-lg p-4">
             <h3 className="font-semibold text-gray-100 mb-2 flex items-center gap-2">
-              <span>⚔️</span> League Battles (8 PM UTC)
+              <span>⚔️</span> League Battles
             </h3>
             <p className="text-sm text-gray-200">
               Your battle-ready robots automatically fight in their leagues.
@@ -204,13 +194,47 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
           </div>
           <div className="bg-background/50 rounded-lg p-4">
             <h3 className="font-semibold text-gray-100 mb-2 flex items-center gap-2">
-              <span>🏆</span> Tournaments (8 AM UTC)
+              <span>🏆</span> Tournaments
             </h3>
             <p className="text-sm text-gray-200">
               Special competitive events with bracket-style elimination.
               Higher rewards but more challenging opponents.
             </p>
           </div>
+          <div className="bg-background/50 rounded-lg p-4">
+            <h3 className="font-semibold text-gray-100 mb-2 flex items-center gap-2">
+              <span>👥</span> Tag Team Battles
+            </h3>
+            <p className="text-sm text-gray-200">
+              Team-based battles where multiple robots fight together.
+              Coordinate with allies for victory.
+            </p>
+          </div>
+          <div className="bg-background/50 rounded-lg p-4">
+            <h3 className="font-semibold text-gray-100 mb-2 flex items-center gap-2">
+              <span>👑</span> King of the Hill
+            </h3>
+            <p className="text-sm text-gray-200">
+              Challenge the reigning champion for glory and rewards.
+              Runs on select days throughout the week.
+            </p>
+          </div>
+          <div className="bg-background/50 rounded-lg p-4 md:col-span-2">
+            <h3 className="font-semibold text-gray-100 mb-2 flex items-center gap-2">
+              <span>💰</span> Settlement
+            </h3>
+            <p className="text-sm text-gray-200">
+              Daily processing of income, operating costs, repairs,
+              and league promotions/demotions.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
+          <p className="text-sm text-gray-200">
+            <strong className="text-primary">Tip:</strong> Check the Dashboard regularly to see
+            upcoming cycle times and ensure your robots are battle-ready before each cycle.
+          </p>
         </div>
       </section>
 
@@ -340,6 +364,46 @@ const Step9_Completion = ({ onNext, onPrevious }: Step9_CompletionProps) => {
           className="w-full px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors min-h-[44px]"
         >
           Go to Robots Page
+        </button>
+      </section>
+
+      {/* In-Game Guide */}
+      <section
+        className="bg-surface border border-white/10 rounded-lg p-6 mb-8 max-w-4xl mx-auto"
+        aria-label="In-Game Guide"
+      >
+        <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
+          <span className="text-2xl">📖</span> In-Game Guide
+        </h2>
+        <p className="text-gray-200 mb-4">
+          Need help later? The <strong className="text-primary">Game Guide</strong> contains
+          detailed information about all game mechanics, strategies, and features.
+        </p>
+        
+        <ul className="space-y-2 mb-4">
+          <li className="flex items-start gap-2 text-gray-200">
+            <span className="text-success">•</span>
+            <span>Combat mechanics and damage formulas</span>
+          </li>
+          <li className="flex items-start gap-2 text-gray-200">
+            <span className="text-success">•</span>
+            <span>Detailed facility and attribute guides</span>
+          </li>
+          <li className="flex items-start gap-2 text-gray-200">
+            <span className="text-success">•</span>
+            <span>League system and progression tips</span>
+          </li>
+          <li className="flex items-start gap-2 text-gray-200">
+            <span className="text-success">•</span>
+            <span>Economy management strategies</span>
+          </li>
+        </ul>
+
+        <button
+          onClick={() => navigate('/guide')}
+          className="w-full px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors min-h-[44px]"
+        >
+          Open Game Guide
         </button>
       </section>
 

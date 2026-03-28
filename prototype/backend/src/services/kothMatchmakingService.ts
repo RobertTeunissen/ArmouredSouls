@@ -56,10 +56,11 @@ export async function getEligibleRobots(): Promise<EligibleRobot[]> {
   });
   const alreadyScheduledIds = new Set(scheduledParticipants.map((p) => p.robotId));
 
-  // Fetch all weapon-ready robots
+  // Fetch all weapon-ready robots (exclude system Bye Robot)
   const robots = await prisma.robot.findMany({
     where: {
       mainWeaponId: { not: null },
+      name: { not: 'Bye Robot' },
     },
     select: {
       id: true,

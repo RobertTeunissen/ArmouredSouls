@@ -82,9 +82,12 @@ describe('Registration Error Handling', () => {
       const email2 = `em2_${uniqueSuffix}`.substring(0, 20);
 
       // Register first user
+      const stableName1 = `s1_${uniqueSuffix}`.substring(0, 30);
+      const stableName2 = `s2_${uniqueSuffix}`.substring(0, 30);
+
       const first = await request(app)
         .post('/api/auth/register')
-        .send({ username, email: email1, password: 'password123' });
+        .send({ username, email: email1, password: 'password123', stableName: stableName1 });
 
       expect(first.status).toBe(201);
       testUserIds.push(first.body.user.id);
@@ -92,7 +95,7 @@ describe('Registration Error Handling', () => {
       // Attempt duplicate username
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username, email: email2, password: 'password123' });
+        .send({ username, email: email2, password: 'password123', stableName: stableName2 });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Username is already taken');
@@ -106,9 +109,11 @@ describe('Registration Error Handling', () => {
       const email = `eml_${uniqueSuffix}`.substring(0, 20);
 
       // Register first user
+      const stableName1 = `s1_${uniqueSuffix}`.substring(0, 30);
+
       const first = await request(app)
         .post('/api/auth/register')
-        .send({ username: username1, email, password: 'password123' });
+        .send({ username: username1, email, password: 'password123', stableName: stableName1 });
 
       expect(first.status).toBe(201);
       testUserIds.push(first.body.user.id);
@@ -116,7 +121,7 @@ describe('Registration Error Handling', () => {
       // Attempt duplicate email
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: username2, email, password: 'password123' });
+        .send({ username: username2, email, password: 'password123', stableName: `s2_${uniqueSuffix}`.substring(0, 30) });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Email is already registered');

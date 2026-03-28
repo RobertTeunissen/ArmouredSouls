@@ -86,7 +86,7 @@ router.get('/cycle/current', async (req: Request, res: Response) => {
  */
 router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(String(req.params.userId));
     const lastNCyclesParam = req.query.lastNCycles as string;
     const lastNCycles = lastNCyclesParam ? parseInt(lastNCyclesParam) : 10;
 
@@ -294,7 +294,7 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
  */
 router.get('/robot/:robotId/performance', async (req: Request, res: Response) => {
   try {
-    const robotId = parseInt(req.params.robotId);
+    const robotId = parseInt(String(req.params.robotId));
     const cycleRangeParam = req.query.cycleRange as string;
     const includeELOProgressionParam = req.query.includeELOProgression as string | undefined;
     const includeMetricProgressionParam = req.query.includeMetricProgression as string | undefined;
@@ -461,7 +461,7 @@ router.get('/robot/:robotId/performance', async (req: Request, res: Response) =>
  */
 router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
   try {
-    const robotId = parseInt(req.params.robotId);
+    const robotId = parseInt(String(req.params.robotId));
     const cycleRangeParam = req.query.cycleRange as string;
     const includeMovingAverageParam = req.query.includeMovingAverage as string | undefined;
     const includeTrendLineParam = req.query.includeTrendLine as string | undefined;
@@ -643,8 +643,8 @@ router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
  */
 router.get('/robot/:robotId/metric/:metricName', async (req: Request, res: Response) => {
   try {
-    const robotId = parseInt(req.params.robotId);
-    const metricName = req.params.metricName as RobotMetric;
+    const robotId = parseInt(String(req.params.robotId));
+    const metricName = String(req.params.metricName) as RobotMetric;
     const cycleRangeParam = req.query.cycleRange as string;
     const includeMovingAverageParam = req.query.includeMovingAverage as string | undefined;
     const includeTrendLineParam = req.query.includeTrendLine as string | undefined;
@@ -916,7 +916,7 @@ router.get('/robot/:robotId/stats', async (req: Request, res: Response) => {
   try {
     const { robotStatsViewService } = await import('../services/robotStatsViewService');
     
-    const robotId = parseInt(req.params.robotId);
+    const robotId = parseInt(String(req.params.robotId));
 
     if (isNaN(robotId)) {
       return res.status(400).json({
@@ -1010,7 +1010,7 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
   try {
     const { roiCalculatorService } = await import('../services/roiCalculatorService');
     
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(String(req.params.userId));
     const facilityType = req.query.facilityType as string;
 
     // Validate userId
@@ -1121,7 +1121,7 @@ router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
   try {
     const { roiCalculatorService } = await import('../services/roiCalculatorService');
     
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(String(req.params.userId));
 
     // Validate userId
     if (isNaN(userId)) {
@@ -1209,7 +1209,7 @@ router.get('/facility/:userId/recommendations', async (req: Request, res: Respon
   try {
     const { facilityRecommendationService } = await import('../services/facilityRecommendationService');
     
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(String(req.params.userId));
     const lastNCyclesParam = req.query.lastNCycles as string;
     const lastNCycles = lastNCyclesParam ? parseInt(lastNCyclesParam) : 10;
 
@@ -1264,7 +1264,7 @@ router.get('/facility/:userId/recommendations', async (req: Request, res: Respon
  */
 router.get('/robot/:id/koth-performance', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const robot = await prisma.robot.findUnique({
       where: { id: robotId },
       select: {
@@ -1287,11 +1287,11 @@ router.get('/robot/:id/koth-performance', authenticateToken, async (req: AuthReq
       kothWins: robot.kothWins,
       podiumRate: robot.kothMatches > 0 ? Number(((robot.kothWins) / robot.kothMatches * 100).toFixed(1)) : 0,
       avgZoneScore: robot.kothMatches > 0 ? Number((robot.kothTotalZoneScore / robot.kothMatches).toFixed(1)) : 0,
-      totalZoneTime: robot.kothTotalZoneTime,
+      kothTotalZoneTime: robot.kothTotalZoneTime,
       kothKills: robot.kothKills,
-      bestPlacement: robot.kothBestPlacement,
-      currentWinStreak: robot.kothCurrentWinStreak,
-      bestWinStreak: robot.kothBestWinStreak,
+      kothBestPlacement: robot.kothBestPlacement,
+      kothCurrentWinStreak: robot.kothCurrentWinStreak,
+      kothBestWinStreak: robot.kothBestWinStreak,
     });
   } catch (error) {
     logger.error('[Analytics API] Error fetching KotH performance:', error);

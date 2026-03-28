@@ -12,7 +12,7 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import request from 'supertest';
 import express from 'express';

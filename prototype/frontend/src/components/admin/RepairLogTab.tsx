@@ -22,7 +22,7 @@ function defaultEndDate(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-export function RepairLogTab(): JSX.Element {
+export function RepairLogTab() {
   const [data, setData] = useState<RepairLogResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -247,7 +247,7 @@ export function RepairLogTab(): JSX.Element {
 /*  RepairEventRow — single repair event table row                     */
 /* ------------------------------------------------------------------ */
 
-function RepairEventRow({ event }: { event: RepairLogEvent }): JSX.Element {
+function RepairEventRow({ event }: { event: RepairLogEvent }) {
   const isManual = event.repairType === 'manual';
   const savings =
     isManual && event.preDiscountCost != null

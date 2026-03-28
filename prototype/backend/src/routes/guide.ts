@@ -25,7 +25,8 @@ router.get('/sections', authenticateToken, async (req: AuthRequest, res: Respons
  */
 router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const { sectionSlug, articleSlug } = req.params;
+    const sectionSlug = String(req.params.sectionSlug);
+    const articleSlug = String(req.params.articleSlug);
     const article = guideService.getArticle(sectionSlug, articleSlug);
 
     if (!article) {

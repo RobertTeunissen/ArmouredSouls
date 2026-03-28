@@ -322,7 +322,7 @@ Added `totalTagTeamBattles`, `totalTagTeamWins`, `totalTagTeamLosses`, `totalTag
 - `tests/finances.test.ts` - Accept 200 or 404 for routes
 
 ### 6. Username Pattern Fixes
-- `tests/twoRobotTagTeamGeneration.test.ts` - `startsWith` instead of exact match for archetype usernames
+- `tests/twoRobotTagTeamGeneration.test.ts` - `startsWith` instead of exact match for tiered stable usernames
 - `tests/userGeneration.test.ts` - `robotsCreated >= N` instead of exact match
 
 ### 7. Compilation Fixes

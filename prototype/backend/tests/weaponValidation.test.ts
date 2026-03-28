@@ -6,7 +6,7 @@ import {
   canChangeLoadout,
   isSlotAvailable,
 } from '../src/utils/weaponValidation';
-import { Weapon } from '@prisma/client';
+import { Weapon } from '../generated/prisma';
 
 const createMockWeapon = (overrides?: Partial<Weapon>): Weapon => ({
   id: 1,

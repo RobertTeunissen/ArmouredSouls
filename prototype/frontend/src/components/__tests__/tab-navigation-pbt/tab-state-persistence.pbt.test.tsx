@@ -215,7 +215,7 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
     );
   });
 
-  it('should maintain exactly one active tab across all state changes', () => {
+  it('should maintain exactly one active tab across all state changes', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.array(

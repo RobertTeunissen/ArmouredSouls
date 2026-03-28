@@ -5,7 +5,7 @@
  *
  * Features:
  * - Explain 4 weapon types (Energy, Ballistic, Melee, Shield)
- * - Display LoadoutDiagram for each loadout type
+ * - Display loadout cards similar to battle-config tab
  * - Explain loadout bonuses and penalties
  * - Show weapon slot configuration (main + offhand)
  * - Explain loadout restrictions (shields, two-handed, dual-wield)
@@ -16,15 +16,33 @@
 
 import { useState, memo } from 'react';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
-import LoadoutDiagram from '../LoadoutDiagram';
-import type { LoadoutType } from '../LoadoutDiagram';
+import { LOADOUT_BONUSES, formatLoadoutName, getLoadoutDescription } from '../../../utils/robotStats';
 
 interface Step6_WeaponEducationProps {
   onNext?: () => void;
+  onPrevious?: () => void;
 }
+
+type LoadoutType = 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield';
 
 /** All four loadout types */
 const LOADOUT_TYPES: LoadoutType[] = ['single', 'weapon_shield', 'two_handed', 'dual_wield'];
+
+/** Loadout type icons */
+const LOADOUT_ICONS: Record<LoadoutType, string> = {
+  single: '⚔️',
+  weapon_shield: '🛡️',
+  two_handed: '🗡️',
+  dual_wield: '⚔️⚔️',
+};
+
+/** Slot configuration info for each loadout */
+const SLOT_INFO: Record<LoadoutType, { main: string; offhand: string }> = {
+  single: { main: 'One-handed weapon', offhand: 'Empty' },
+  weapon_shield: { main: 'One-handed weapon', offhand: 'Shield' },
+  two_handed: { main: 'Two-handed weapon', offhand: '(occupied)' },
+  dual_wield: { main: 'One-handed weapon', offhand: 'One-handed weapon' },
+};
 
 /** Strategy-specific weapon/storage guidance */
 const MULTI_ROBOT_GUIDANCE: Record<string, {
@@ -51,7 +69,7 @@ const MULTI_ROBOT_GUIDANCE: Record<string, {
   },
 };
 
-const Step6_WeaponEducation = ({ onNext }: Step6_WeaponEducationProps) => {
+const Step6_WeaponEducation = ({ onNext, onPrevious }: Step6_WeaponEducationProps) => {
   const { tutorialState, advanceStep } = useOnboarding();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedLoadout, setExpandedLoadout] = useState<LoadoutType | null>(null);
@@ -150,31 +168,89 @@ const Step6_WeaponEducation = ({ onNext }: Step6_WeaponEducationProps) => {
         <h2 className="text-2xl font-bold mb-2 text-gray-100">Loadout Configurations</h2>
         <p className="text-secondary mb-6">
           Your loadout type determines combat bonuses and penalties. Each has trade-offs —
-          choose based on your preferred playstyle.
+          choose based on your preferred playstyle. Click any card to see more details.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {LOADOUT_TYPES.map((loadout) => (
-            <div key={loadout}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {LOADOUT_TYPES.map((loadoutType) => {
+            const bonuses = LOADOUT_BONUSES[loadoutType];
+            const isExpanded = expandedLoadout === loadoutType;
+            const icon = LOADOUT_ICONS[loadoutType];
+            const slots = SLOT_INFO[loadoutType];
+
+            const formatBonus = (value: number): { text: string; isPositive: boolean } => {
+              const percent = Math.round(value * 100);
+              return {
+                text: `${percent > 0 ? '+' : ''}${percent}%`,
+                isPositive: value > 0,
+              };
+            };
+
+            return (
               <button
-                onClick={() => toggleLoadout(loadout)}
-                className="w-full text-left mb-2"
-                aria-expanded={expandedLoadout === loadout}
-                aria-controls={`loadout-details-${loadout}`}
+                key={loadoutType}
+                onClick={() => toggleLoadout(loadoutType)}
+                className={`border rounded-lg p-3 text-left transition-all duration-150 hover:-translate-y-0.5 ${
+                  isExpanded
+                    ? 'border-blue-500 bg-blue-900 bg-opacity-30 ring-2 ring-blue-500 shadow-lg'
+                    : 'border-gray-600 bg-gradient-to-br from-gray-700 to-gray-750 hover:border-gray-500 hover:shadow-md'
+                }`}
+                aria-expanded={isExpanded}
               >
-                <LoadoutDiagram
-                  loadoutType={loadout}
-                  showDetails={expandedLoadout === loadout}
-                  compact={expandedLoadout !== loadout}
-                />
-              </button>
-            </div>
-          ))}
-        </div>
+                {/* Loadout Icon */}
+                <div className="text-center mb-2">
+                  <span className="text-4xl">{icon}</span>
+                </div>
+                
+                <div className="mb-2">
+                  <h4 className="font-bold text-base text-center">
+                    {formatLoadoutName(loadoutType)}
+                  </h4>
+                  {isExpanded && (
+                    <span className="text-xs text-primary block text-center">▼ Details</span>
+                  )}
+                </div>
 
-        <p className="text-sm text-tertiary mt-4 text-center">
-          Click any loadout card to expand or collapse its details.
-        </p>
+                <p className="text-xs text-secondary mb-2 text-center">
+                  {getLoadoutDescription(loadoutType)}
+                </p>
+
+                {/* Combat Bonuses */}
+                {bonuses && Object.keys(bonuses).length > 0 && (
+                  <div className="space-y-1 border-t border-gray-600 pt-2 mt-2">
+                    {Object.entries(bonuses).map(([attr, value]) => {
+                      const bonus = formatBonus(value);
+                      return (
+                        <div key={attr} className="flex justify-between text-xs">
+                          <span className="text-secondary capitalize">
+                            {attr.replace(/([A-Z])/g, ' $1').trim()}:
+                          </span>
+                          <span className={bonus.isPositive ? 'text-success' : 'text-error'}>
+                            {bonus.text}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Expanded Details */}
+                {isExpanded && (
+                  <div className="border-t border-gray-600 pt-2 mt-2 space-y-2">
+                    <div className="text-xs">
+                      <span className="text-secondary">Main Hand:</span>
+                      <span className="text-primary ml-1">{slots.main}</span>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-secondary">Off Hand:</span>
+                      <span className="text-primary ml-1">{slots.offhand}</span>
+                    </div>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Loadout Restrictions Summary */}
@@ -231,12 +307,6 @@ const Step6_WeaponEducation = ({ onNext }: Step6_WeaponEducationProps) => {
                 Choosing complementary weapons and loadouts maximizes your robot's total attribute scores.
               </p>
             </div>
-            <img
-              src="/assets/onboarding/loadouts/attribute-bonus-stacking.svg"
-              alt="Diagram showing how weapon attribute bonuses stack with robot base attributes and loadout multipliers"
-              className="mt-4 w-full max-w-[500px] mx-auto rounded-lg"
-              loading="lazy"
-            />
           </div>
         </div>
       </div>
@@ -265,13 +335,24 @@ const Step6_WeaponEducation = ({ onNext }: Step6_WeaponEducationProps) => {
 
       {/* Action Buttons */}
       <div className="flex flex-col items-center gap-4">
-        <button
-          onClick={handleNext}
-          disabled={isSubmitting}
-          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-        >
-          {isSubmitting ? 'Loading...' : 'Next: Facility & Weapon Planning'}
-        </button>
+        <div className="flex gap-4">
+          {onPrevious && (
+            <button
+              onClick={onPrevious}
+              className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+              aria-label="Previous step"
+            >
+              Previous
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            disabled={isSubmitting}
+            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+          >
+            {isSubmitting ? 'Loading...' : 'Next: Facility & Weapon Planning'}
+          </button>
+        </div>
 
         <p className="text-sm text-tertiary text-center max-w-md">
           Remember: Buy discount facilities (Weapons Workshop, Training Facility) BEFORE purchasing weapons and upgrading attributes.

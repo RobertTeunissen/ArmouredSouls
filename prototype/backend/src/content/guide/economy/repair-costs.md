@@ -25,9 +25,9 @@ For the complete facility-by-facility breakdown of operating costs at every leve
 
 | Facility | Level 1 Cost | Level 10 Cost | Status |
 |----------|-------------|---------------|--------|
-| Repair Bay | ₡1,000/day | ₡5,500/day | Implemented |
+| Repair Bay | ₡100/day | ₡1,000/day | Implemented |
 | Training Facility | ₡250/day | N/A (max L9) | Implemented |
-| Weapons Workshop | ₡1,000/day | ₡5,500/day | Implemented |
+| Weapons Workshop | ₡100/day | ₡1,000/day | Implemented |
 | Merchandising Hub | ₡200/day | ₡2,000/day | Implemented |
 | Streaming Studio | ₡100/day | ₡1,000/day | Implemented |
 | Storage Facility | ₡500/day | ₡2,750/day | Implemented |

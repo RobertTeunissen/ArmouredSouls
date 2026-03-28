@@ -258,6 +258,28 @@ export function renderRangeBandIndicator(
   ctx.restore();
 }
 
+/** Render a target line from a robot to its current target, colored by the attacker's team */
+export function renderTargetLine(
+  ctx: CanvasRenderingContext2D,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  teamIndex: number
+): void {
+  const color = TEAM_COLORS[teamIndex] ?? TEAM_COLORS[0];
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.setLineDash([3, 5]);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.6;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
 /** Convert arena coordinates to pixel coordinates */
 export function arenaToPixel(
   arenaPos: Position,

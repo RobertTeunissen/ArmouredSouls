@@ -68,7 +68,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
         },
       });
     }
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: { in: userIds } } },
@@ -205,7 +205,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.tagTeamMatch.create({
+          const match = await prisma.scheduledTagTeamMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
@@ -239,7 +239,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.tagTeamMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
           await prisma.tagTeam.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
@@ -355,7 +355,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.tagTeamMatch.create({
+          const match = await prisma.scheduledTagTeamMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
@@ -395,7 +395,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.tagTeamMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
           await prisma.tagTeam.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
@@ -510,7 +510,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.tagTeamMatch.create({
+          const match = await prisma.scheduledTagTeamMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
@@ -551,7 +551,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.tagTeamMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
           await prisma.tagTeam.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
@@ -666,7 +666,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.tagTeamMatch.create({
+          const match = await prisma.scheduledTagTeamMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
@@ -706,7 +706,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.tagTeamMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
           await prisma.tagTeam.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
@@ -821,7 +821,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.tagTeamMatch.create({
+          const match = await prisma.scheduledTagTeamMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
@@ -863,7 +863,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.tagTeamMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
           await prisma.tagTeam.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });

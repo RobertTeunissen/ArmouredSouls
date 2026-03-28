@@ -4,6 +4,7 @@ import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable } from '../ut
 import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
 import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
+import { trackSpending } from '../services/spendingTracker';
 import { getConfig } from '../config/env';
 import { getNextCronOccurrence } from '../utils/scheduleUtils';
 import logger from '../config/logger';
@@ -250,6 +251,9 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 
       // Console log for cycle logs
       logger.info(`[Robot] | User ${userId}${stableInfo} | Created: "${name}" | Cost: ₡${ROBOT_CREATION_COST.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+
+      // Track spending for onboarding budget comparison
+      await trackSpending(userId, 'robots', ROBOT_CREATION_COST);
     } catch (logError) {
       logger.error('Failed to log robot creation event:', logError);
       // Don't fail the request if logging fails
@@ -275,7 +279,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 // Get a specific robot by ID (any logged-in user can view any robot)
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -322,7 +326,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
 router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const { weaponInventoryId } = req.body;
 
     if (isNaN(robotId)) {
@@ -423,7 +427,7 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
 router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const { weaponInventoryId } = req.body;
 
     if (isNaN(robotId)) {
@@ -543,7 +547,7 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
 router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -609,7 +613,7 @@ router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthReq
 router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -675,7 +679,7 @@ router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: Auth
 router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const { loadoutType } = req.body;
 
     if (isNaN(robotId)) {
@@ -761,7 +765,7 @@ router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res:
 // Update robot stance (offensive, defensive, balanced)
 router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const { stance } = req.body;
 
     // Validate stance value
@@ -813,7 +817,7 @@ router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Res
 // Update robot yield threshold (0-50)
 router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const { yieldThreshold } = req.body;
 
     // Validate yield threshold
@@ -875,7 +879,7 @@ router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest,
  */
 router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 20));
 
@@ -1003,7 +1007,7 @@ router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Resp
  */
 router.get('/:id/upcoming', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -1166,19 +1170,24 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
         data: { currency: user.currency - finalCost },
       });
 
-      // Repair all robots (restore HP to max, clear repairCost)
+      // Repair all robots (restore HP to max, clear repairCost, track lifetime cost)
       const updatedRobots = await Promise.all(
-        robotsNeedingRepair.map(robot =>
-          tx.robot.update({
+        robotsNeedingRepair.map(robot => {
+          const perRobotCostAfterRepairBay = Math.floor(robot.calculatedRepairCost * (1 - discount / 100));
+          const perRobotFinalCost = Math.floor(perRobotCostAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
+          return tx.robot.update({
             where: { id: robot.id },
             data: {
               currentHP: robot.maxHP,
               currentShield: robot.maxShield,
               repairCost: 0,
               battleReadiness: 100,
+              totalRepairsPaid: {
+                increment: perRobotFinalCost,
+              },
             },
-          })
-        )
+          });
+        })
       );
 
       return { user: updatedUser, robots: updatedRobots };
@@ -1229,7 +1238,7 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
 // Get robot rankings
 router.get('/:id/rankings', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -1400,7 +1409,7 @@ router.get('/:id/rankings', authenticateToken, async (req: AuthRequest, res: Res
 // Get robot performance by context (leagues, tournaments, tag teams)
 router.get('/:id/performance-context', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -1669,7 +1678,7 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
 router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const { imageUrl } = req.body;
 
     logger.info('Appearance update request:', { userId, robotId, imageUrl });
@@ -1744,7 +1753,7 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
 // Get upcoming matches for a robot
 router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
 
     if (isNaN(robotId)) {
       return res.status(400).json({ error: 'Invalid robot ID' });
@@ -1990,7 +1999,7 @@ router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, 
 router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const robotId = parseInt(req.params.id);
+    const robotId = parseInt(String(req.params.id));
     const { upgrades } = req.body;
 
     if (isNaN(robotId)) {
@@ -2095,7 +2104,8 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       }
 
       // Calculate cost for this attribute
-      const discountPercent = trainingLevel * 10; // 10% per level, capped at 90%
+      // Training Facility: 10% per level, capped at 90% (see docs/prd_core/STABLE_SYSTEM.md)
+      const discountPercent = Math.min(trainingLevel * 10, 90);
       let attributeCost = 0;
 
       for (let level = Math.floor(currentLevel); level < plannedLevel; level++) {
@@ -2208,6 +2218,9 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
 
       logger.info(`[AttributeUpgrade] User ${userId} | Robot ${robotId} (${robot.name}) | Attributes: ${upgradeOperations.length} | Total Cost: ₡${totalCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+
+      // Track spending for onboarding budget comparison
+      await trackSpending(userId, 'attributes', totalCost);
 
       // Log each attribute upgrade
       for (const op of upgradeOperations) {

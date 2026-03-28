@@ -50,7 +50,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     }
 
     if (testTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTeamIds } },
@@ -170,7 +170,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     console.log(`[Test] Created ${matchmakingResult} matches`);
 
     // Verify matches were created
-    const scheduledMatches = await prisma.tagTeamMatch.findMany({
+    const scheduledMatches = await prisma.scheduledTagTeamMatch.findMany({
       where: {
         status: 'scheduled',
         team1Id: { in: testTeams.map(t => t.id) },

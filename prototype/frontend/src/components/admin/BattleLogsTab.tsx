@@ -18,7 +18,7 @@ import type { Battle, BattleListResponse } from './types';
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function BattleLogsTab(): JSX.Element {
+export function BattleLogsTab() {
   /* ---------- Local state ---------- */
   const [battles, setBattles] = useState<Battle[]>([]);
   const [battlesPagination, setBattlesPagination] = useState<BattleListResponse['pagination'] | null>(null);

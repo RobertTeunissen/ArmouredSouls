@@ -3,11 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -375,12 +375,12 @@ model Battle {
   createdAt DateTime @default(now()) @map("created_at")
 
   // ===== RELATIONS =====
-  robot1             Robot                @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2             Robot                @relation("Robot2", fields: [robot2Id], references: [id])
-  tournament         Tournament?          @relation("TournamentBattles", fields: [tournamentId], references: [id])
+  robot1             Robot                      @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2             Robot                      @relation("Robot2", fields: [robot2Id], references: [id])
+  tournament         Tournament?                @relation("TournamentBattles", fields: [tournamentId], references: [id])
   scheduledMatch     ScheduledLeagueMatch[]
   tournamentMatches  ScheduledTournamentMatch[]
-  tagTeamMatches     ScheduledTagTeamMatch[]  @relation("TagTeamBattle")
+  tagTeamMatches     ScheduledTagTeamMatch[]    @relation("TagTeamBattle")
   participants       BattleParticipant[] // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
   scheduledKothMatch ScheduledKothMatch[] // KotH match that produced this battle
 
@@ -510,9 +510,9 @@ model Tournament {
   completedAt DateTime? @map("completed_at") // When tournament finished
 
   // Relations
-  winner  Robot?            @relation("TournamentWinner", fields: [winnerId], references: [id])
+  winner  Robot?                     @relation("TournamentWinner", fields: [winnerId], references: [id])
   matches ScheduledTournamentMatch[]
-  battles Battle[]          @relation("TournamentBattles")
+  battles Battle[]                   @relation("TournamentBattles")
 
   @@index([status])
   @@index([winnerId])
@@ -577,9 +577,9 @@ model TagTeam {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  stable         User           @relation(fields: [stableId], references: [id], onDelete: Cascade)
-  activeRobot    Robot          @relation("TagTeamActiveRobot", fields: [activeRobotId], references: [id])
-  reserveRobot   Robot          @relation("TagTeamReserveRobot", fields: [reserveRobotId], references: [id])
+  stable         User                    @relation(fields: [stableId], references: [id], onDelete: Cascade)
+  activeRobot    Robot                   @relation("TagTeamActiveRobot", fields: [activeRobotId], references: [id])
+  reserveRobot   Robot                   @relation("TagTeamReserveRobot", fields: [reserveRobotId], references: [id])
   matchesAsTeam1 ScheduledTagTeamMatch[] @relation("Team1")
   matchesAsTeam2 ScheduledTagTeamMatch[] @relation("Team2")
 

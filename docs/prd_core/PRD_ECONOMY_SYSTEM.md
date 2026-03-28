@@ -797,7 +797,7 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 
 | Facility | Operating Cost/Day |
 |----------|-------------------|
-| 1. Repair Bay | ₡1,000 |
+| 1. Repair Bay | ₡100 |
 | 2. Training Facility | ₡250/level |
 | 3. Weapons Workshop | ₡1,000 |
 | 4. Research Lab | ₡2,000 |
@@ -1175,7 +1175,7 @@ Each facility has daily operating cost that scales with level.
 operating_cost = base_cost + (additional_cost × level)
 
 // Examples:
-Repair Bay: ₡1,000 + (₡500 × level)
+Repair Bay: ₡100 × level
 Training Facility: ₡1,500 + (₡750 × level)
 Research Lab: ₡2,000 + (₡1,000 × level)
 ```
@@ -1209,7 +1209,7 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 **Minimum Viable Stable** (₡1,950,000 spent, ₡50K buffer):
 - 1 Robot: ₡500,000
 - 1 Budget weapon (e.g., Practice Sword or Machine Gun): ₡50,000-₡100,000
-- Repair Bay Level 1: ₡100,000
+- Repair Bay Level 1: ₡50,000
 - Basic attribute upgrades (100 levels @ avg ₡550): ~₡55,000
 - One Academy Level 1 (e.g., Combat Training): ₡100,000
 - Additional attribute upgrades (100 levels): ~₡650,000
@@ -1226,14 +1226,14 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 **Aggressive Startup** (₡1,985,000 spent, ₡15K buffer - risky):
 - 2 Robots: ₡1,000,000
 - 2 Budget weapons (e.g., 2× Machine Guns): ₡200,000
-- Repair Bay Level 1: ₡100,000
+- Repair Bay Level 1: ₡50,000
 - Split attribute upgrades (100 levels total): ~₡585,000
 - **Buffer**: ₡15,000 (emergency only)
 
 **Power Maximizer** (₡1,925,000 spent, ₡75K buffer - very risky):
 - 1 Robot: ₡500,000
 - 1 Premium weapon (e.g., Plasma Cannon): ₡408,000
-- Repair Bay Level 1: ₡100,000
+- Repair Bay Level 1: ₡50,000
 - Heavy attribute investment (200 levels): ~₡895,000
 - **Buffer**: ₡75,000 (forced to win first battle or bankrupt)
 
@@ -1889,7 +1889,7 @@ Recommendations:
 - **Total weekly income**: ₡35,000/week (₡5,000/day)
 
 **Operating Costs**:
-- Repair Bay Level 1: ₡1,000/day
+- Repair Bay Level 1: ₡100/day
 - Repairs (7 battles at avg ₡3,500): ₡24,500/week (₡3,500/day)
 - **Daily total**: ~₡4,500/day
 
@@ -1959,7 +1959,7 @@ Recommendations:
 
 **Payback Period Examples** (Revised with correct battle frequency):
 
-1. **Repair Bay Level 1** (₡100,000):
+1. **Repair Bay Level 1** (₡50,000):
    > **For complete repair cost formulas, facility discounts, and ROI analysis**: See **Section 5 "Repair Costs"** in the Cost Centers section above. Includes detailed payback calculations for single and multi-robot scenarios, Medical Bay integration, and worked examples.
   
 2. **Training Facility Level 1**: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for pricing
@@ -1990,9 +1990,9 @@ Recommendations:
    - **Better with**: Multiple robots (more battles/week) or active play
    - **Recommendation**: Excellent early investment for active players with 2-3 robots
    
-5. **Weapons Workshop Level 1** (₡125,000):
-   - Saves 5% on weapons (₡5K-₡20K per weapon)
-   - Average weapon cost: ₡200K → saves ₡10K per purchase
+5. **Weapons Workshop Level 1** (₡75,000):
+   - Saves 10% on weapons (₡10K-₡40K per weapon)
+   - Average weapon cost: ₡200K → saves ₡20K per purchase
    - Payback: **12-13 weapon purchases**
    - **Multi-robot context**: 3 robots × 2 weapons = 6 weapons minimum
    - With loadout changes/testing: 10-15 weapons over time

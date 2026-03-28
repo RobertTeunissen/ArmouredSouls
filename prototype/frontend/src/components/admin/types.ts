@@ -20,6 +20,12 @@ export interface SystemStats {
   matches: {
     scheduled: number;
     completed: number;
+    byType?: {
+      league: { scheduled: number; completed: number };
+      tournament: { scheduled: number; completed: number };
+      tagTeam: { scheduled: number; completed: number };
+      koth: { scheduled: number; completed: number };
+    };
   };
   battles: {
     last24Hours: number;

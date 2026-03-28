@@ -58,6 +58,9 @@ dist/
 build/
 *.tsbuildinfo
 
+# Prisma 7 generated client
+prototype/backend/generated/
+
 # Package managers
 # package-lock.json should be committed for CI/CD
 yarn.lock

@@ -14,11 +14,9 @@ describe('League Rebalancing Service', () => {
 
   beforeAll(async () => {
     // Clean up in correct order
-    await prisma.scheduledMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({});
-    await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});
@@ -44,6 +42,7 @@ describe('League Rebalancing Service', () => {
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
+        rangeBand: 'melee',
       },
     });
   });
@@ -51,9 +50,7 @@ describe('League Rebalancing Service', () => {
   afterEach(async () => {
     // Clean up after each test to prevent pollution
     // Only delete robots and their dependencies, keep testUser and practiceSword
-    await prisma.scheduledMatch.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({});
-    await prisma.tagTeam.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.weaponInventory.deleteMany({});

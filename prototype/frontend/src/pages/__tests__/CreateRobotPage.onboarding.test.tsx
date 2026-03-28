@@ -5,7 +5,6 @@
  * Test coverage:
  * - Onboarding mode detection via URL param
  * - Onboarding banner display
- * - Guided overlay on form fields
  * - Navigation back to onboarding after robot creation
  * - Cancel button navigates to onboarding in onboarding mode
  * - Normal mode behavior preserved
@@ -36,17 +35,6 @@ vi.mock('react-router-dom', async () => {
     useSearchParams: () => [mockSearchParams],
   };
 });
-
-// Mock GuidedUIOverlay
-vi.mock('../../components/onboarding/GuidedUIOverlay', () => ({
-  default: ({ tooltipContent, onNext, onClose }: any) => (
-    <div data-testid="guided-overlay">
-      <div data-testid="overlay-content">{tooltipContent}</div>
-      {onNext && <button data-testid="overlay-next" onClick={onNext}>Next</button>}
-      {onClose && <button data-testid="overlay-close" onClick={onClose}>Close</button>}
-    </div>
-  ),
-}));
 
 // Mock Navigation component
 vi.mock('../../components/Navigation', () => ({
@@ -135,54 +123,6 @@ describe('CreateRobotPage - Onboarding Integration', () => {
     });
   });
 
-  describe('Guided Overlays', () => {
-    it('should show guided overlay on name field in onboarding mode', async () => {
-      renderInOnboardingMode();
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-      expect(screen.getByText('Name Your Robot')).toBeInTheDocument();
-    });
-
-    it('should not show guided overlay in normal mode', async () => {
-      renderInNormalMode();
-      await waitFor(() => {
-        expect(screen.getByText('Create New Robot')).toBeInTheDocument();
-      });
-      expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-    });
-
-    it('should advance overlay to submit button when Next is clicked', async () => {
-      const user = userEvent.setup();
-      renderInOnboardingMode();
-
-      await waitFor(() => {
-        expect(screen.getByTestId('overlay-next')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-next'));
-
-      await waitFor(() => {
-        expect(screen.getByText('Confirm Creation')).toBeInTheDocument();
-      });
-    });
-
-    it('should dismiss overlay when Close is clicked', async () => {
-      const user = userEvent.setup();
-      renderInOnboardingMode();
-
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-close'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-      });
-    });
-  });
-
   describe('Navigation After Robot Creation', () => {
     it('should navigate to /onboarding after robot creation in onboarding mode', async () => {
       const user = userEvent.setup();
@@ -198,11 +138,6 @@ describe('CreateRobotPage - Onboarding Integration', () => {
         const submitBtn = screen.getByRole('button', { name: /Create Robot/i });
         expect(submitBtn).not.toBeDisabled();
       });
-
-      // Dismiss overlay first
-      if (screen.queryByTestId('overlay-close')) {
-        await user.click(screen.getByTestId('overlay-close'));
-      }
 
       await user.type(screen.getByLabelText('Robot Name'), 'TestBot');
       await user.click(screen.getByRole('button', { name: /Create Robot/i }));
@@ -250,11 +185,6 @@ describe('CreateRobotPage - Onboarding Integration', () => {
         expect(submitBtn).not.toBeDisabled();
       });
 
-      // Dismiss overlay
-      if (screen.queryByTestId('overlay-close')) {
-        await user.click(screen.getByTestId('overlay-close'));
-      }
-
       await user.type(screen.getByLabelText('Robot Name'), 'TestBot');
       await user.click(screen.getByRole('button', { name: /Create Robot/i }));
 
@@ -289,11 +219,6 @@ describe('CreateRobotPage - Onboarding Integration', () => {
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /Back to Tutorial/i })).toBeInTheDocument();
       });
-
-      // Dismiss overlay first
-      if (screen.queryByTestId('overlay-close')) {
-        await user.click(screen.getByTestId('overlay-close'));
-      }
 
       await user.click(screen.getByRole('button', { name: /Back to Tutorial/i }));
 

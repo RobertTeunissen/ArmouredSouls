@@ -124,7 +124,7 @@ function BattleDetailPage() {
     winnerId: battleLog.winner === 'robot1' ? 1 : battleLog.winner === 'robot2' ? 2 : null,
     robot1FinalHP: battleLog.robot1?.finalHP ?? 0,
     robot2FinalHP: battleLog.robot2?.finalHP ?? 0,
-    durationSeconds: battleLog.duration + 0.5, // Add buffer so playback reaches final events at exactly durationSeconds
+    durationSeconds: battleLog.duration + 1.0, // Add buffer so playback reaches final events
     isDraw: !battleLog.winner,
     events: spatialEvents.map((e: BattleLogEvent) => ({
       timestamp: e.timestamp,
@@ -295,10 +295,10 @@ function BattleDetailPage() {
         {/* Battle Result Banner */}
         <div className={`mb-3 p-3 rounded-lg text-center ${
           !battleLog.winner ? 'bg-yellow-900/20 border-2 border-yellow-600' :
-          battleLog.battleType === 'koth' && battleLog.kothParticipants?.some(p => p.placement === 1 && p.owner === user?.username) ? 'bg-green-900/20 border-2 border-green-600' :
+          battleLog.battleType === 'koth' && battleLog.kothParticipants?.some(p => p.placement === 1 && p.ownerId === user?.id) ? 'bg-green-900/20 border-2 border-green-600' :
           battleLog.battleType === 'koth' ? 'bg-orange-900/20 border-2 border-orange-600' :
-          battleLog.winner === 'robot1' && battleLog.robot1?.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
-          battleLog.winner === 'robot2' && battleLog.robot2?.owner === user?.username ? 'bg-green-900/20 border-2 border-green-600' :
+          battleLog.winner === 'robot1' && battleLog.robot1?.ownerId === user?.id ? 'bg-green-900/20 border-2 border-green-600' :
+          battleLog.winner === 'robot2' && battleLog.robot2?.ownerId === user?.id ? 'bg-green-900/20 border-2 border-green-600' :
           'bg-red-900/20 border-2 border-red-600'
         }`}>
           <div className={`text-3xl font-bold mb-1 ${getWinnerColor()}`}>
@@ -376,7 +376,7 @@ function BattleDetailPage() {
             <h3 className="text-lg font-bold text-orange-400 mb-3">⛰️ King of the Hill Results</h3>
             <div className="space-y-2">
               {battleLog.kothParticipants.map((p) => {
-                const isCurrentUser = p.owner === user?.username;
+                const isCurrentUser = p.ownerId === user?.id;
                 const placementEmoji = p.placement === 1 ? '🥇' : p.placement === 2 ? '🥈' : p.placement === 3 ? '🥉' : `#${p.placement}`;
                 const bgColor = isCurrentUser ? 'bg-orange-900/30 border border-orange-500/50' : 'bg-background';
                 
@@ -391,7 +391,7 @@ function BattleDetailPage() {
                       </div>
                       <div className="flex gap-3 text-xs text-secondary mt-1">
                         <span>Zone Score: <span className="text-orange-400 font-medium">{p.zoneScore}</span></span>
-                        <span>Zone Time: <span className="text-cyan-400 font-medium">{p.zoneTime}s</span></span>
+                        <span>Zone Time: <span className="text-cyan-400 font-medium">{Number(p.zoneTime).toFixed(1)}s</span></span>
                         <span>Kills: <span className="text-red-400 font-medium">{p.kills}</span></span>
                         <span>Damage: <span className="text-yellow-400 font-medium">{p.damageDealt}</span></span>
                       </div>

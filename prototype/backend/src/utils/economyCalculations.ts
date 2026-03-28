@@ -3,7 +3,7 @@
  * Based on PRD_ECONOMY_SYSTEM.md specifications
  */
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import { getFacilityConfig } from '../config/facilities';
 import logger from '../config/logger';
@@ -33,7 +33,7 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
       return 250 * level;
     
     case 'weapons_workshop':
-      return 1000 + (level - 1) * 500;
+      return 100 * level;
     
     case 'research_lab':
       return 2000 + (level - 1) * 1000;

@@ -7,7 +7,7 @@ import {
   calculateAttributeSum,
   STANCE_MODIFIERS,
 } from '../src/utils/robotCalculations';
-import { Robot, WeaponInventory, Weapon, Prisma } from '@prisma/client';
+import { Robot, WeaponInventory, Weapon, Prisma } from '../generated/prisma';
 
 // Mock robot data
 const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
@@ -73,6 +73,15 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   totalTagTeamDraws: 0,
   timesTaggedIn: 0,
   timesTaggedOut: 0,
+  // KOTH fields
+  kothWins: 0,
+  kothMatches: 0,
+  kothTotalZoneScore: 0,
+  kothTotalZoneTime: 0,
+  kothKills: 0,
+  kothBestPlacement: null,
+  kothCurrentWinStreak: 0,
+  kothBestWinStreak: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,

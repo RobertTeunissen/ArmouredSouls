@@ -1,6 +1,6 @@
 // Robot stat calculations including weapon bonuses, loadout modifiers, and stance modifiers
 
-import { Robot, WeaponInventory, Weapon, Prisma } from '@prisma/client';
+import { Robot, WeaponInventory, Weapon, Prisma } from '../../generated/prisma';
 
 /**
  * Convert Prisma Decimal to JavaScript number for calculations

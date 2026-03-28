@@ -10,7 +10,7 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
 import { exportCycleBattlesToCSV } from '../src/services/cycleCsvExportService';
 import { clearSequenceCache } from '../src/services/eventLogger';
@@ -156,7 +156,7 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
       },
     });
 
-    await prisma.scheduledMatch.deleteMany({
+    await prisma.scheduledLeagueMatch.deleteMany({
       where: {
         OR: [
           { robot1: { userId: testUserId1 } },
@@ -255,7 +255,7 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
 
           // Schedule battle
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
+          const match = await prisma.scheduledLeagueMatch.create({
             data: {
               robot1Id: robot1.id,
               robot2Id: robot2.id,
@@ -298,7 +298,7 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
                 id: { in: battles.map(b => b.id) },
               },
             });
-            await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+            await prisma.scheduledLeagueMatch.deleteMany({ where: { id: match.id } });
             await prisma.robot.deleteMany({ where: { id: robot1.id } });
             await prisma.robot.deleteMany({ where: { id: robot2.id } });
             return;
@@ -350,7 +350,7 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
               id: { in: battles.map(b => b.id) },
             },
           });
-          await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: match.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
@@ -418,7 +418,7 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
 
     // Schedule battle with test cycle number
     const scheduledFor = new Date();
-    const match = await prisma.scheduledMatch.create({
+    const match = await prisma.scheduledLeagueMatch.create({
       data: {
         robot1Id: robot1.id,
         robot2Id: robot2.id,
@@ -523,7 +523,7 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
         id: { in: battles.map(b => b.id) },
       },
     });
-    await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+    await prisma.scheduledLeagueMatch.deleteMany({ where: { id: match.id } });
     await prisma.robot.deleteMany({ where: { id: robot1.id } });
     await prisma.robot.deleteMany({ where: { id: robot2.id } });
   });

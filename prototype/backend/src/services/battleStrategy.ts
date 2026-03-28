@@ -29,7 +29,7 @@
  * └─────────────────────────────────────────────────────────────┘
  */
 
-import { Robot, Battle } from '@prisma/client';
+import { Robot, Battle } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { calculateELOChange } from '../utils/battleMath';

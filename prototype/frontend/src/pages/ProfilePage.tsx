@@ -66,18 +66,6 @@ function ProfilePage() {
     if (editedProfile.stableName !== undefined && editedProfile.stableName !== profile?.stableName) {
       updates.stableName = editedProfile.stableName ?? undefined;
     }
-    if (editedProfile.profileVisibility !== undefined && editedProfile.profileVisibility !== profile?.profileVisibility) {
-      updates.profileVisibility = editedProfile.profileVisibility;
-    }
-    if (editedProfile.notificationsBattle !== undefined && editedProfile.notificationsBattle !== profile?.notificationsBattle) {
-      updates.notificationsBattle = editedProfile.notificationsBattle;
-    }
-    if (editedProfile.notificationsLeague !== undefined && editedProfile.notificationsLeague !== profile?.notificationsLeague) {
-      updates.notificationsLeague = editedProfile.notificationsLeague;
-    }
-    if (editedProfile.themePreference !== undefined && editedProfile.themePreference !== profile?.themePreference) {
-      updates.themePreference = editedProfile.themePreference;
-    }
     
     // Add password change if provided
     if (passwordData.new) {
@@ -236,7 +224,7 @@ function ProfilePage() {
     <div className="min-h-screen bg-background text-white">
       <Navigation />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
           <h1 className="text-3xl font-bold text-white">My Profile</h1>
@@ -268,7 +256,7 @@ function ProfilePage() {
             <h2 className="text-xl font-semibold mb-4">Account Information</h2>
             <div className="border-t border-white/10 mb-4"></div>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="text-sm text-secondary">Username</div>
                 <div className="text-base">{profile.username}</div>
@@ -330,113 +318,6 @@ function ProfilePage() {
                 <div className="text-base">
                   {editedProfile.stableName ?? profile.stableName ?? profile.username}
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Statistics Section (Read-only) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
-            <h2 className="text-xl font-semibold mb-4">Statistics</h2>
-            <div className="border-t border-white/10 mb-4"></div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm text-secondary">Currency</div>
-                <div className="text-base">₡{profile.currency.toLocaleString()}</div>
-              </div>
-              <div>
-                <div className="text-sm text-secondary">Prestige</div>
-                <div className="text-base">{profile.prestige.toLocaleString()}</div>
-              </div>
-              <div>
-                <div className="text-sm text-secondary">Total Battles</div>
-                <div className="text-base">{profile.totalBattles}</div>
-              </div>
-              <div>
-                <div className="text-sm text-secondary">Total Wins</div>
-                <div className="text-base">{profile.totalWins}</div>
-              </div>
-              <div>
-                <div className="text-sm text-secondary">Highest ELO</div>
-                <div className="text-base">{profile.highestELO}</div>
-              </div>
-              <div>
-                <div className="text-sm text-secondary">Championship Titles</div>
-                <div className="text-base">{profile.championshipTitles}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Privacy Settings Section (Editable) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
-            <h2 className="text-xl font-semibold mb-4">Privacy Settings</h2>
-            <div className="border-t border-white/10 mb-4"></div>
-            
-            <div className="space-y-4">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 text-primary bg-surface border-gray-600 rounded focus:ring-primary"
-                  checked={(editedProfile.profileVisibility ?? profile.profileVisibility) === 'public'}
-                  onChange={(e) => setEditedProfile({ 
-                    ...editedProfile, 
-                    profileVisibility: e.target.checked ? 'public' : 'private' 
-                  })}
-                />
-                <span className="ml-3">Show my statistics on public leaderboards</span>
-              </label>
-              <div className="text-xs text-secondary">
-                When disabled, your statistics will be hidden from public leaderboards
-              </div>
-            </div>
-          </div>
-
-          {/* Display Preferences Section (Editable) */}
-          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10">
-            <h2 className="text-xl font-semibold mb-4">Display Preferences</h2>
-            <div className="border-t border-white/10 mb-4"></div>
-            
-            <div className="space-y-4">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 text-primary bg-surface border-gray-600 rounded focus:ring-primary"
-                  checked={editedProfile.notificationsBattle ?? profile.notificationsBattle}
-                  onChange={(e) => setEditedProfile({ 
-                    ...editedProfile, 
-                    notificationsBattle: e.target.checked 
-                  })}
-                />
-                <span className="ml-3">Battle Notifications</span>
-              </label>
-              
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 text-primary bg-surface border-gray-600 rounded focus:ring-primary"
-                  checked={editedProfile.notificationsLeague ?? profile.notificationsLeague}
-                  onChange={(e) => setEditedProfile({ 
-                    ...editedProfile, 
-                    notificationsLeague: e.target.checked 
-                  })}
-                />
-                <span className="ml-3">League Notifications</span>
-              </label>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Theme Preference</label>
-                <select
-                  className="w-full px-3 py-2 bg-surface border border-gray-600 rounded focus:outline-none focus:border-primary min-h-[44px]"
-                  value={editedProfile.themePreference ?? profile.themePreference}
-                  onChange={(e) => setEditedProfile({ 
-                    ...editedProfile, 
-                    themePreference: e.target.value as 'dark' | 'light' | 'auto' 
-                  })}
-                >
-                  <option value="dark">Dark</option>
-                  <option value="light">Light</option>
-                  <option value="auto">Auto</option>
-                </select>
               </div>
             </div>
           </div>

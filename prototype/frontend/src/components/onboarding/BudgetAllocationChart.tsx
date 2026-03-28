@@ -7,7 +7,7 @@
  * Requirements: 6.5, 19.1-19.9
  */
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { formatCurrency } from '../../utils/financialApi';
 
@@ -84,7 +84,7 @@ const BudgetAllocationChart: React.FC<BudgetAllocationChartProps> = ({
     : 0, [currentSpending]);
 
   // Get status badge for a category
-  const getStatusBadge = (spent: number, category: BudgetCategory): JSX.Element => {
+  const getStatusBadge = (spent: number, category: BudgetCategory): React.JSX.Element => {
     if (spent === 0) {
       return <span className="px-2 py-1 text-xs rounded bg-surface-elevated text-secondary">Not Started</span>;
     }

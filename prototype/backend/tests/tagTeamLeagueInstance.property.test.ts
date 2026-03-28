@@ -33,7 +33,7 @@ describe('Tag Team League Instance - Property Tests', () => {
   afterAll(async () => {
     // Clean up test data in correct order
     if (testTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTeamIds } },
@@ -67,7 +67,7 @@ describe('Tag Team League Instance - Property Tests', () => {
     // Clean up ALL tag teams in ALL tiers to ensure test isolation
     // This is necessary because getInstancesForTier counts ALL teams globally
     // Delete matches first to avoid foreign key constraint violations
-    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.scheduledTagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
   });
 
@@ -75,7 +75,7 @@ describe('Tag Team League Instance - Property Tests', () => {
     // Clean up ALL teams and robots for this test stable (not just tracked ones)
     // This ensures we start fresh even if previous tests failed
     // Delete in correct order to avoid foreign key violations
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: {
         OR: [
           { team1: { stableId: testStableId } },
@@ -265,7 +265,7 @@ describe('Tag Team League Instance - Property Tests', () => {
           fc.constantFrom(...TAG_TEAM_LEAGUE_TIERS),
           async (numTeams, tier) => {
             // Clean up ALL teams in this tier before this iteration
-            await prisma.tagTeamMatch.deleteMany({});
+            await prisma.scheduledTagTeamMatch.deleteMany({});
             await prisma.tagTeam.deleteMany({
               where: { tagTeamLeague: tier },
             });
@@ -315,7 +315,7 @@ describe('Tag Team League Instance - Property Tests', () => {
           ),
           async (tierConfigs) => {
             // Clean up ALL teams before this iteration
-            await prisma.tagTeamMatch.deleteMany({});
+            await prisma.scheduledTagTeamMatch.deleteMany({});
             await prisma.tagTeam.deleteMany({});
 
             // Aggregate duplicate tiers (sum numTeams for same tier)

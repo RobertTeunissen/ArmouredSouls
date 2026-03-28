@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { Robot, Prisma } from '@prisma/client';
+import { Robot, Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import { createTeam } from '../src/services/tagTeamService';
 import { runMatchmaking } from '../src/services/matchmakingService';
@@ -133,8 +133,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
     // Clean up database in correct order (respecting foreign keys)
     await prisma.battleParticipant.deleteMany();
     await prisma.battle.deleteMany();
-    await prisma.tagTeamMatch.deleteMany();
-    await prisma.scheduledMatch.deleteMany();
+    await prisma.scheduledTagTeamMatch.deleteMany();
+    await prisma.scheduledLeagueMatch.deleteMany();
     await prisma.tagTeam.deleteMany();
     await prisma.weaponInventory.deleteMany();
     await prisma.robot.deleteMany();
@@ -201,11 +201,11 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             const tagTeamMatches = await runTagTeamMatchmaking(scheduledFor);
 
             // Check scheduled matches
-            const scheduledOneVOne = await prisma.scheduledMatch.findMany({
+            const scheduledOneVOne = await prisma.scheduledLeagueMatch.findMany({
               where: { status: 'scheduled' },
             });
 
-            const scheduledTagTeam = await prisma.tagTeamMatch.findMany({
+            const scheduledTagTeam = await prisma.scheduledTagTeamMatch.findMany({
               where: { status: 'scheduled' },
             });
 
@@ -587,7 +587,7 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
 
             // Schedule tag team matches
             const scheduledFor = new Date(Date.now() + 1000);
-            await prisma.tagTeamMatch.create({
+            await prisma.scheduledTagTeamMatch.create({
               data: {
                 team1Id: team1.id,
                 team2Id: team2.id,
@@ -601,7 +601,7 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             const result = await executeScheduledTagTeamBattles(scheduledFor);
 
             // Check if match was executed
-            const match = await prisma.tagTeamMatch.findFirst({
+            const match = await prisma.scheduledTagTeamMatch.findFirst({
               where: {
                 team1Id: team1.id,
                 team2Id: team2.id,

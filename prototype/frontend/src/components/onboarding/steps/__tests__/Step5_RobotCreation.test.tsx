@@ -101,6 +101,13 @@ describe('Step5_RobotCreation', () => {
           },
         });
       }
+      if (url === '/api/robots') {
+        // Return array of robots based on robotsCreated in choices
+        const robotsCreated = choices.robotsCreated || [];
+        return Promise.resolve({
+          data: robotsCreated.map((id: number) => ({ id, name: `Robot ${id}` })),
+        });
+      }
       return Promise.resolve({
         data: {
           success: true,
@@ -245,63 +252,21 @@ describe('Step5_RobotCreation', () => {
     it('should render the Create Robot button', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Create New Robot/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Create Robot #1/i })).toBeInTheDocument();
       });
     });
 
-    it('should show GuidedUIOverlay when Create Robot button is clicked', async () => {
+    it('should navigate directly to robot creation page when Create Robot button is clicked', async () => {
       const user = userEvent.setup();
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Create New Robot/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Create Robot #1/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /Create New Robot/i }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-    });
-
-    it('should navigate to robot creation page when overlay Next is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Create New Robot/i })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Create New Robot/i }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('overlay-next')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-next'));
+      await user.click(screen.getByRole('button', { name: /Create Robot #1/i }));
 
       expect(mockNavigate).toHaveBeenCalledWith('/robots/create?onboarding=true');
-    });
-
-    it('should close overlay when Close button is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Create New Robot/i })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Create New Robot/i }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-close'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-      });
     });
 
     it('should show skip option for creating robot later', async () => {
@@ -316,7 +281,7 @@ describe('Step5_RobotCreation', () => {
     it('should show success message when robot was already created', async () => {
       renderComponent('1_mighty', { robotsCreated: [1] });
       await waitFor(() => {
-        expect(screen.getByText('Robot Created!')).toBeInTheDocument();
+        expect(screen.getByText('All 1 Robot Created!')).toBeInTheDocument();
       });
     });
 
@@ -327,12 +292,13 @@ describe('Step5_RobotCreation', () => {
       });
     });
 
-    it('should not show Create Robot button when robot was already created', async () => {
+    it('should not show Create Robot #1 button when robot was already created', async () => {
       renderComponent('1_mighty', { robotsCreated: [1] });
       await waitFor(() => {
-        expect(screen.getByText('Robot Created!')).toBeInTheDocument();
+        expect(screen.getByText('All 1 Robot Created!')).toBeInTheDocument();
       });
-      expect(screen.queryByRole('button', { name: /Create New Robot/i })).not.toBeInTheDocument();
+      // For 1_mighty strategy with 1 robot created, the button should not show Create Robot #1
+      expect(screen.queryByRole('button', { name: /Create Robot #1/i })).not.toBeInTheDocument();
     });
   });
 
@@ -483,7 +449,7 @@ describe('Step5_RobotCreation', () => {
     it('should have accessible Create Robot button', async () => {
       renderComponent();
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Create New Robot/i });
+        const button = screen.getByRole('button', { name: /Create Robot #1/i });
         expect(button).toBeInTheDocument();
         expect(button).toBeEnabled();
       });

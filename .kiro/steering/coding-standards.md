@@ -26,6 +26,40 @@ inclusion: always
 - Keep functions focused and single-purpose
 - Maximum function length: ~50 lines (guideline, not strict rule)
 
+## Framework-Specific Standards
+
+### Prisma 7
+- Import Prisma client from the project-local `generated/prisma` directory, NOT from `@prisma/client`
+- Example: `import { PrismaClient } from '../generated/prisma'`
+- The generated client lives at `prototype/backend/generated/prisma/`
+- Run `npx prisma generate` after schema changes to regenerate the client
+- **Driver Adapter Required**: Prisma 7 uses the `client` engine type by default, which requires a driver adapter. Always pass an adapter to the PrismaClient constructor:
+  ```typescript
+  import { PrismaClient } from '../generated/prisma';
+  import { PrismaPg } from '@prisma/adapter-pg';
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  const prisma = new PrismaClient({ adapter, log: ['error'] });
+  ```
+- The main app singleton in `src/lib/prisma.ts` handles this automatically — import from there for application code
+- Standalone scripts and integration tests must create their own adapter instance
+
+### Express 5
+- Async errors in route handlers are caught automatically — no need for manual try-catch wrappers around async route handlers for promise rejections
+- Express 5 forwards rejected promises to the error-handling middleware automatically
+- `req.param()` is removed — use `req.params`, `req.body`, or `req.query` instead
+- Path patterns use stricter matching (updated path-to-regexp)
+
+### React 19
+- Use `ref` as a regular prop — `forwardRef` is no longer needed
+- Use JS default parameters instead of `defaultProps` on function components
+- Use `@testing-library/react` for component testing — `react-dom/test-utils` is removed
+- New hooks available: `use()`, `useActionState`, `useOptimistic`
+
+### Testing Frameworks
+- Backend: Jest 30 with ts-jest for TypeScript support
+- Frontend: Vitest 4 with `@vitest/coverage-v8` for coverage
+- Both: fast-check for property-based testing
+
 ## Backend Standards
 
 ### API Design

@@ -8,7 +8,7 @@
 import { RefObject } from 'react';
 
 interface SkipConfirmationModalProps {
-  modalRef: RefObject<HTMLDivElement>;
+  modalRef: RefObject<HTMLDivElement | null>;
   onCancel: () => void;
   onConfirm: () => void;
   loading?: boolean;

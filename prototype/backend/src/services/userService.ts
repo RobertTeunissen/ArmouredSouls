@@ -16,6 +16,7 @@ export interface CreateUserData {
   username: string;
   email: string;
   passwordHash: string;
+  stableName: string;
 }
 
 /**
@@ -26,6 +27,7 @@ export interface User {
   username: string;
   email: string | null;
   passwordHash: string;
+  stableName: string | null;
   currency: number;
   prestige: number;
   role: string;
@@ -65,7 +67,24 @@ export async function createUser(userData: CreateUserData): Promise<User> {
       username: userData.username,
       email: userData.email,
       passwordHash: userData.passwordHash,
+      stableName: userData.stableName,
     },
+  });
+
+  return user;
+}
+
+/**
+ * Find a user by their stable name.
+ *
+ * Queries the database for a user with the given stable name.
+ *
+ * @param stableName - The stable name to search for (case-sensitive)
+ * @returns The User object if found, or null if no user exists with that stable name
+ */
+export async function findUserByStableName(stableName: string): Promise<User | null> {
+  const user = await prisma.user.findUnique({
+    where: { stableName },
   });
 
   return user;

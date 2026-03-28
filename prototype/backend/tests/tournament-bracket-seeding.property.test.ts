@@ -13,7 +13,7 @@ import {
   computeSeedings,
   Round1Match,
 } from '../src/services/tournamentService';
-import type { Robot } from '@prisma/client';
+import type { Robot } from '../generated/prisma';
 
 const NUM_RUNS = 10;
 

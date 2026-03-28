@@ -37,7 +37,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
   afterEach(async () => {
     // Clean up in correct order
     if (testTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTeamIds } },
@@ -171,7 +171,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // Step 3: Verify bye-team match was created
     console.log('[Test] Step 3: Verifying bye-team match...');
     
-    const byeMatches = await prisma.tagTeamMatch.findMany({
+    const byeMatches = await prisma.scheduledTagTeamMatch.findMany({
       where: {
         status: 'scheduled',
         OR: [

@@ -155,7 +155,7 @@ model Robot {
   currentHP           Int                       // Current health (max = 50 + hullIntegrity × 5)
   maxHP               Int                       // Max HP (calculated: 50 + hullIntegrity × 5)
   currentShield       Int                       // Current energy shield HP
-  maxShield           Int                       // Max shield (calculated: shieldCapacity × 2)
+  maxShield           Int                       // Max shield (calculated: shieldCapacity × 4)
   damageTaken         Int  @default(0)          // Damage since last repair
   
   // ===== PERFORMANCE TRACKING =====
@@ -258,7 +258,7 @@ Example: Level 1→2 = ₡3,000, Level 49→50 = ₡75,000
 **HP Calculation**:
 ```
 maxHP = 50 + (hullIntegrity × 5)
-maxShield = shieldCapacity × 2
+maxShield = shieldCapacity × 4
 
 Examples:
 - Hull Integrity 1.00: HP = 50 + 5 = 55
@@ -437,7 +437,7 @@ model Facility {
 
 1. **repair_bay** - Reduces repair costs (5%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 50%)
 2. **training_facility** - Reduces attribute upgrade costs (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%)
-3. **weapons_workshop** - Weapon purchase discounts (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%)
+3. **weapons_workshop** - Weapon purchase discounts (10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%, 100%)
 4. **research_lab** - Battle analytics, loadout presets (3→8 presets)
 5. **medical_bay** - Critical damage cost reduction (15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95%, 100%)
 6. **roster_expansion** - Robot roster slots (1→10 robots, Level 0-9)

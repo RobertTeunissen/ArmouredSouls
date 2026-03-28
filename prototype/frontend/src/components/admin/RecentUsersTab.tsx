@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import apiClient from '../../utils/apiClient';
 import type { RecentUser, RecentUsersResponse, RecentUserRobot } from './types';
 
-export function RecentUsersTab(): JSX.Element {
+export function RecentUsersTab() {
   const [data, setData] = useState<RecentUsersResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [cyclesBack, setCyclesBack] = useState(10);
@@ -140,7 +140,7 @@ export function RecentUsersTab(): JSX.Element {
 /*  UserCard — single recent user card with robots table               */
 /* ------------------------------------------------------------------ */
 
-function UserCard({ user }: { user: RecentUser }): JSX.Element {
+function UserCard({ user }: { user: RecentUser }) {
   return (
     <div
       className={`bg-surface rounded-lg p-5 ${
@@ -230,7 +230,7 @@ function UserCard({ user }: { user: RecentUser }): JSX.Element {
 /*  RobotTable — per-user robot details table                          */
 /* ------------------------------------------------------------------ */
 
-function RobotTable({ robots }: { robots: RecentUserRobot[] }): JSX.Element {
+function RobotTable({ robots }: { robots: RecentUserRobot[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">

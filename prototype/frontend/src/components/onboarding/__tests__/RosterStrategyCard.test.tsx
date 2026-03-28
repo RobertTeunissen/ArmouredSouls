@@ -34,7 +34,7 @@ describe('RosterStrategyCard', () => {
       />
     );
 
-    expect(screen.getByText('~3.6')).toBeInTheDocument(); // Battles per day
+    expect(screen.getByText('~3.2')).toBeInTheDocument(); // Battles per day
     const moderateElements = screen.getAllByText('Moderate');
     expect(moderateElements.length).toBeGreaterThan(0); // Power level (appears in multiple stats)
   });
