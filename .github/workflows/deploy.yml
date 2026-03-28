@@ -271,6 +271,7 @@ jobs:
           script: |
             cd /opt/armouredsouls/backend
             npm ci
+            npx prisma generate
             npm run build
 
       - name: Create pre-migration database backup
@@ -283,8 +284,12 @@ jobs:
             BACKUP_DIR="/opt/armouredsouls/backups"
             mkdir -p "$BACKUP_DIR"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            pg_dump -Fc "$DATABASE_URL" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
-            echo "Backup created: pre_deploy_${TIMESTAMP}.dump"
+            if command -v pg_dump &> /dev/null; then
+              pg_dump -Fc "$DATABASE_URL" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
+              echo "Backup created: pre_deploy_${TIMESTAMP}.dump"
+            else
+              echo "pg_dump not available, skipping backup (use docker exec for manual backups)"
+            fi
 
       - name: Run database migrations
         uses: appleboy/ssh-action@v1
@@ -429,6 +434,7 @@ jobs:
           script: |
             cd /opt/armouredsouls/backend
             npm ci
+            npx prisma generate
             npm run build
 
       - name: Create pre-migration database backup
@@ -441,8 +447,12 @@ jobs:
             BACKUP_DIR="/opt/armouredsouls/backups"
             mkdir -p "$BACKUP_DIR"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            pg_dump -Fc "$DATABASE_URL" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
-            echo "Backup created: pre_deploy_${TIMESTAMP}.dump"
+            if command -v pg_dump &> /dev/null; then
+              pg_dump -Fc "$DATABASE_URL" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
+              echo "Backup created: pre_deploy_${TIMESTAMP}.dump"
+            else
+              echo "pg_dump not available, skipping backup (use docker exec for manual backups)"
+            fi
 
       - name: Run database migrations
         uses: appleboy/ssh-action@v1
