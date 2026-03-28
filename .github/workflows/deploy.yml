@@ -272,7 +272,6 @@ jobs:
             cd /opt/armouredsouls/backend
             npm ci
             npm run build
-            npm prune --production
 
       - name: Create pre-migration database backup
         uses: appleboy/ssh-action@v1
@@ -306,6 +305,16 @@ jobs:
           script: |
             cd /opt/armouredsouls/backend
             NODE_ENV=acceptance npx prisma db seed
+
+      - name: Prune dev dependencies
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/backend
+            npm prune --production
 
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
@@ -421,7 +430,6 @@ jobs:
             cd /opt/armouredsouls/backend
             npm ci
             npm run build
-            npm prune --production
 
       - name: Create pre-migration database backup
         uses: appleboy/ssh-action@v1
@@ -445,6 +453,16 @@ jobs:
           script: |
             cd /opt/armouredsouls/backend
             npx prisma migrate deploy
+
+      - name: Prune dev dependencies
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/backend
+            npm prune --production
 
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
