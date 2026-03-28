@@ -37,7 +37,7 @@ const prisma = new Proxy({} as PrismaClient, {
         global.prisma = _prisma;
       }
     }
-    return (_prisma as Record<string | symbol, unknown>)[prop];
+    return (_prisma as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
 
