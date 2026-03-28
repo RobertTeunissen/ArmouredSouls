@@ -79,10 +79,12 @@ export async function getLeagueInstanceStats(tier: LeagueTier): Promise<LeagueIn
   const averagePerInstance = instances.length > 0 ? totalRobots / instances.length : 0;
 
   // Check if rebalancing is needed:
-  // 1. Any instance exceeds the maximum robot limit (overflow)
-  // 2. Significant imbalance between instances (deviation > 10 from target)
+  // 1. Any instance significantly exceeds the maximum robot limit (overflow with buffer)
+  // 2. Significant imbalance between instances (deviation > threshold from target)
+  // A small overflow (up to 10% over cap) is tolerated to avoid unnecessary instance splits
+  const OVERFLOW_BUFFER = Math.ceil(MAX_ROBOTS_PER_INSTANCE * 0.1); // 10% buffer = 10 robots
   const hasOverflow = instances.some((inst) => 
-    inst.currentRobots > MAX_ROBOTS_PER_INSTANCE
+    inst.currentRobots > MAX_ROBOTS_PER_INSTANCE + OVERFLOW_BUFFER
   );
   const targetPerInstance = instances.length > 0 ? Math.ceil(totalRobots / instances.length) : 0;
   const hasImbalance = instances.length >= 2 && instances.some((inst) =>
@@ -114,13 +116,8 @@ export async function assignLeagueInstance(tier: LeagueTier): Promise<string> {
   // Find instance with most free spots
   const leastFull = instances.sort((a, b) => a.currentRobots - b.currentRobots)[0];
 
-  if (leastFull.currentRobots > MAX_ROBOTS_PER_INSTANCE) {
-    // All instances are over capacity, create new one as fallback
-    // (This should rarely happen - rebalancing should handle splits)
-    const nextInstanceNumber = Math.max(...instances.map((i) => i.instanceNumber)) + 1;
-    return `${tier}_${nextInstanceNumber}`;
-  }
-
+  // Always assign to the least-full instance.
+  // New instances are only created through rebalancing, not here.
   return leastFull.leagueId;
 }
 
