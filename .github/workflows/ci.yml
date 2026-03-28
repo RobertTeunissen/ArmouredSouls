@@ -95,6 +95,8 @@ jobs:
       
       - name: Generate Prisma Client
         working-directory: ./prototype/backend
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: npm run prisma:generate
       
       - name: Run database migrations
