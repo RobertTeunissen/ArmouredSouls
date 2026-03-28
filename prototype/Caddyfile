@@ -27,8 +27,25 @@
 		header @assets Cache-Control "public, max-age=31536000, immutable"
 
 		# No cache for index.html (ensures users get latest version)
-		@html path /index.html
+		@html {
+			path /index.html
+			file {path}
+			header !Accept-Ranges
+		}
 		header @html Cache-Control "no-cache"
+
+		# Also prevent caching on SPA fallback routes (/, /login, etc.)
+		@notAsset {
+			not path /assets/*
+			not path *.js
+			not path *.css
+			not path *.png
+			not path *.jpg
+			not path *.svg
+			not path *.ico
+			not path *.woff2
+		}
+		header @notAsset Cache-Control "no-cache"
 
 		# SPA fallback — serve index.html for client-side routes
 		try_files {path} /index.html
