@@ -1,6 +1,6 @@
 // Weapon compatibility and validation logic
 
-import { Weapon } from '@prisma/client';
+import { Weapon } from '../../generated/prisma';
 
 /**
  * Check if a weapon is compatible with a specific loadout type

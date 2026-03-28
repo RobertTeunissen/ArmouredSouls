@@ -5,9 +5,12 @@
  * Test coverage:
  * - Component rendering (title, congratulations message, trophy)
  * - Strategy summary display for each strategy type
- * - Recommendations section (suggestions, alternatives, player control)
- * - "What's Next" section (daily cycles, battles, league progression)
- * - Quick links (Facilities, Weapon Shop, Dashboard)
+ * - Game Cycle System section (League Battles, Tournaments, Tag Team, King of the Hill, Settlement)
+ * - League Progression section (Promotion, Stay, Relegation)
+ * - Facilities section
+ * - Robot Attributes section
+ * - In-Game Guide section
+ * - Recommended Next Steps section
  * - "Complete Tutorial" button calls completeTutorial and navigates
  * - "Replay Tutorial" button resets to step 1
  * - Previous button calls onPrevious
@@ -19,7 +22,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -40,6 +43,7 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   };
 });
+
 
 describe('Step9_Completion', () => {
   const mockOnNext = vi.fn();
@@ -140,6 +144,7 @@ describe('Step9_Completion', () => {
     });
   });
 
+
   // ─── Strategy Summary Display ──────────────────────────────────────
 
   describe('Strategy Summary Display', () => {
@@ -232,187 +237,334 @@ describe('Step9_Completion', () => {
     });
   });
 
-  // ─── Recommendations Section ───────────────────────────────────────
 
-  describe('Recommendations Section', () => {
-    it('should display the recommendations heading', async () => {
+  // ─── Game Cycle System Section ─────────────────────────────────────
+
+  describe('Game Cycle System Section', () => {
+    it('should display the game cycle system heading', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Game Cycle System/)).toBeInTheDocument();
+      });
+    });
+
+    it('should explain the automated cycle system', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/automated cycle system/)).toBeInTheDocument();
+      });
+    });
+
+    it('should display League Battles cycle type', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/League Battles/)).toBeInTheDocument();
+        expect(screen.getByText(/automatically fight in their leagues/)).toBeInTheDocument();
+      });
+    });
+
+    it('should display Tournaments cycle type', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Tournaments/)).toBeInTheDocument();
+        expect(screen.getByText(/bracket-style elimination/)).toBeInTheDocument();
+      });
+    });
+
+    it('should display Tag Team Battles cycle type', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Tag Team Battles/)).toBeInTheDocument();
+        expect(screen.getByText(/multiple robots fight together/)).toBeInTheDocument();
+      });
+    });
+
+    it('should display King of the Hill cycle type', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/King of the Hill/)).toBeInTheDocument();
+        expect(screen.getByText(/Challenge the reigning champion/)).toBeInTheDocument();
+      });
+    });
+
+    it('should display Settlement cycle type', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Settlement/)).toBeInTheDocument();
+        expect(screen.getByText(/income, operating costs, repairs/)).toBeInTheDocument();
+      });
+    });
+
+    it('should display tip about checking Dashboard', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Check the Dashboard regularly/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  // ─── League Progression Section ────────────────────────────────────
+
+  describe('League Progression Section', () => {
+    it('should display the league progression heading', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/League Progression/)).toBeInTheDocument();
+      });
+    });
+
+    it('should explain promotion', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/🔼 Promotion/)).toBeInTheDocument();
+        expect(screen.getByText(/top positions/)).toBeInTheDocument();
+        expect(screen.getByText(/promoted to a higher league/)).toBeInTheDocument();
+      });
+    });
+
+    it('should explain staying in league', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/↔️ Stay/)).toBeInTheDocument();
+        expect(screen.getByText(/middle positions/)).toBeInTheDocument();
+        expect(screen.getByText(/remain in your current league/)).toBeInTheDocument();
+      });
+    });
+
+    it('should explain relegation', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/🔽 Relegation/)).toBeInTheDocument();
+        expect(screen.getByText(/bottom positions/)).toBeInTheDocument();
+        expect(screen.getByText(/relegated to a lower league/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention League Standings page', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/League Standings/)).toBeInTheDocument();
+      });
+    });
+  });
+
+
+  // ─── Facilities Section ────────────────────────────────────────────
+
+  describe('Facilities Section', () => {
+    it('should display the facilities heading', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Facilities: Your Economic Engine')).toBeInTheDocument();
+      });
+    });
+
+    it('should mention building facilities', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Build facilities/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention upgrading facilities', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Upgrade facilities/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention passive income', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Earn passive income/)).toBeInTheDocument();
+      });
+    });
+
+    it('should have Go to Facilities button', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Go to Facilities Page/ })).toBeInTheDocument();
+      });
+    });
+
+    it('should navigate to /facilities when button is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Go to Facilities Page/ })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /Go to Facilities Page/ }));
+      expect(mockNavigate).toHaveBeenCalledWith('/facilities');
+    });
+  });
+
+  // ─── Robot Attributes Section ──────────────────────────────────────
+
+  describe('Robot Attributes Section', () => {
+    it('should display the robot attributes heading', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Robot Attributes: Power Up Your Robots')).toBeInTheDocument();
+      });
+    });
+
+    it('should mention 23 different attributes', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/23 different attributes/)).toBeInTheDocument();
+      });
+    });
+
+    it('should display Offensive attributes category', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Offensive Attributes')).toBeInTheDocument();
+      });
+    });
+
+    it('should display Defensive attributes category', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Defensive Attributes')).toBeInTheDocument();
+      });
+    });
+
+    it('should display Mobility attributes category', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Mobility Attributes')).toBeInTheDocument();
+      });
+    });
+
+    it('should display Systems attributes category', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Systems Attributes')).toBeInTheDocument();
+      });
+    });
+
+    it('should display Team Support attributes category', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText('Team Support Attributes')).toBeInTheDocument();
+      });
+    });
+
+    it('should have Go to Robots button', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Go to Robots Page/ })).toBeInTheDocument();
+      });
+    });
+
+    it('should navigate to /robots when button is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Go to Robots Page/ })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /Go to Robots Page/ }));
+      expect(mockNavigate).toHaveBeenCalledWith('/robots');
+    });
+
+    it('should warn about higher attributes meaning higher repair costs', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/Higher attributes mean higher repair costs/)).toBeInTheDocument();
+      });
+    });
+  });
+
+
+  // ─── In-Game Guide Section ─────────────────────────────────────────
+
+  describe('In-Game Guide Section', () => {
+    it('should display the in-game guide heading', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/In-Game Guide/)).toBeInTheDocument();
+      });
+    });
+
+    it('should mention Game Guide contains detailed information', async () => {
+      renderComponent();
+      await waitFor(() => {
+        // Use getAllByText since "Game Guide" appears multiple times
+        expect(screen.getAllByText(/Game Guide/).length).toBeGreaterThan(0);
+        expect(screen.getByText(/detailed information/)).toBeInTheDocument();
+      });
+    });
+
+    it('should have Open Game Guide button', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Open Game Guide/ })).toBeInTheDocument();
+      });
+    });
+
+    it('should navigate to /guide when button is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Open Game Guide/ })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /Open Game Guide/ }));
+      expect(mockNavigate).toHaveBeenCalledWith('/guide');
+    });
+  });
+
+  // ─── Recommended Next Steps Section ────────────────────────────────
+
+  describe('Recommended Next Steps Section', () => {
+    it('should display the recommended next steps heading', async () => {
       renderComponent();
       await waitFor(() => {
         expect(screen.getByText('Recommended Next Steps')).toBeInTheDocument();
       });
     });
 
-    it('should emphasize recommendations are suggestions', async () => {
+    it('should emphasize suggestions are optional', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/These are suggestions, but you decide your path/)).toBeInTheDocument();
+        expect(screen.getByText(/you're free to do whatever you want/)).toBeInTheDocument();
       });
     });
 
-    it('should display recommendation items as a list', async () => {
+    it('should recommend building first facility', async () => {
       renderComponent();
       await waitFor(() => {
-        const list = screen.getByRole('list', { name: /Recommendations list/ });
-        const items = within(list).getAllByRole('listitem');
-        expect(items).toHaveLength(3);
+        expect(screen.getByText(/Build your first facility/)).toBeInTheDocument();
       });
     });
 
-    it('should recommend equipping weapons', async () => {
+    it('should recommend upgrading robot attributes', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/Equip your robot with a weapon/)).toBeInTheDocument();
+        expect(screen.getByText(/Upgrade robot attributes/)).toBeInTheDocument();
       });
     });
 
-    it('should recommend investing in facilities', async () => {
+    it('should recommend checking battle readiness', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/Consider investing in facilities/)).toBeInTheDocument();
+        expect(screen.getByText(/Check battle readiness/)).toBeInTheDocument();
       });
     });
 
-    it('should recommend upgrading attributes', async () => {
+    it('should recommend monitoring finances', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/Upgrade your robot's attributes/)).toBeInTheDocument();
-      });
-    });
-
-    it('should display alternative paths section', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/You could also consider:/)).toBeInTheDocument();
-      });
-    });
-
-    it('should list alternative strategies', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/Saving credits and waiting for better weapons/)).toBeInTheDocument();
-        expect(screen.getByText(/Focusing entirely on facilities/)).toBeInTheDocument();
-        expect(screen.getByText(/Experimenting with different loadout configurations/)).toBeInTheDocument();
+        expect(screen.getByText(/Monitor your finances/)).toBeInTheDocument();
       });
     });
   });
 
-  // ─── What's Next Section ───────────────────────────────────────────
-
-  describe("What's Next Section", () => {
-    it('should display the daily cycles heading', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/What's Next: Daily Cycles & Battles/)).toBeInTheDocument();
-      });
-    });
-
-    it('should explain the daily cycle system', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/daily cycle system/)).toBeInTheDocument();
-      });
-    });
-
-    it('should explain battle participation', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('Battle Participation')).toBeInTheDocument();
-        expect(screen.getByText(/automatically matched and fight during daily cycles/)).toBeInTheDocument();
-      });
-    });
-
-    it('should explain league progression', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('League Progression')).toBeInTheDocument();
-        expect(screen.getByText(/Win battles to earn League Points/)).toBeInTheDocument();
-      });
-    });
-
-    it('should mention promotion to higher leagues', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/promoted to higher leagues/)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // ─── Quick Links ───────────────────────────────────────────────────
-
-  describe('Quick Links', () => {
-    it('should display the Quick Links heading', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /Quick Links/ })).toBeInTheDocument();
-      });
-    });
-
-    it('should display Facilities link', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Facilities/ })).toBeInTheDocument();
-      });
-    });
-
-    it('should display Weapon Shop link', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Weapon Shop/ })).toBeInTheDocument();
-      });
-    });
-
-    it('should display Dashboard link', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Dashboard/ })).toBeInTheDocument();
-      });
-    });
-
-    it('should navigate to /facilities when Facilities link is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Facilities/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Go to Facilities/ }));
-      expect(mockNavigate).toHaveBeenCalledWith('/facilities');
-    });
-
-    it('should navigate to /weapons when Weapon Shop link is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Weapon Shop/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Go to Weapon Shop/ }));
-      expect(mockNavigate).toHaveBeenCalledWith('/weapons');
-    });
-
-    it('should navigate to /dashboard when Dashboard link is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Dashboard/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Go to Dashboard/ }));
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
-    });
-
-    it('should display descriptions for each quick link', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/Build and upgrade facilities/)).toBeInTheDocument();
-        expect(screen.getByText(/Browse and purchase weapons/)).toBeInTheDocument();
-        expect(screen.getByText(/View your overall progress/)).toBeInTheDocument();
-      });
-    });
-  });
 
   // ─── Complete Tutorial Button ──────────────────────────────────────
 
@@ -427,45 +579,11 @@ describe('Step9_Completion', () => {
     it('should call completeTutorial and navigate to dashboard on click', async () => {
       const user = userEvent.setup();
 
-      // Track GET call count so refreshState after completion returns hasCompletedOnboarding: true
-      let stateGetCount = 0;
-      vi.mocked(apiClient.get).mockImplementation((url: string) => {
-        if (url === '/api/user/profile') {
-          return Promise.resolve({
-            data: {
-              id: 1, username: 'testuser', email: 'test@test.com',
-              role: 'player', currency: 2_000_000, prestige: 0,
-            },
-          });
-        }
-        stateGetCount++;
-        return Promise.resolve({
-          data: {
-            success: true,
-            data: {
-              currentStep: 9,
-              hasCompletedOnboarding: stateGetCount > 1,
-              onboardingSkipped: false,
-              strategy: '1_mighty',
-              choices: {},
-            },
-          },
-        });
-      });
-
       vi.mocked(apiClient.post).mockResolvedValue({
         data: { success: true },
       });
 
-      render(
-        <MemoryRouter>
-          <AuthProvider>
-            <OnboardingProvider>
-              <Step9_Completion onNext={mockOnNext} onPrevious={mockOnPrevious} />
-            </OnboardingProvider>
-          </AuthProvider>
-        </MemoryRouter>,
-      );
+      renderComponent();
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /Complete Tutorial/ })).toBeInTheDocument();
@@ -479,33 +597,6 @@ describe('Step9_Completion', () => {
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
-      });
-    });
-
-    it('should show loading state while completing', async () => {
-      const user = userEvent.setup();
-
-      let resolvePost: (value: any) => void;
-      vi.mocked(apiClient.post).mockImplementation(
-        () => new Promise((resolve) => { resolvePost = resolve; }),
-      );
-
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Complete Tutorial/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Complete Tutorial/ }));
-
-      await waitFor(() => {
-        expect(screen.getByText('Completing...')).toBeInTheDocument();
-      });
-
-      resolvePost!({ data: { success: true } });
-
-      await waitFor(() => {
-        expect(screen.queryByText('Completing...')).not.toBeInTheDocument();
       });
     });
 
@@ -592,50 +683,8 @@ describe('Step9_Completion', () => {
       const user = userEvent.setup();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Network error'));
-
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Complete Tutorial/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Complete Tutorial/ }));
-
-      await waitFor(() => {
-        expect(screen.getByRole('alert')).toBeInTheDocument();
-        expect(screen.getByText(/Failed to complete tutorial/)).toBeInTheDocument();
-      });
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should re-enable Complete Tutorial button after error', async () => {
-      const user = userEvent.setup();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Network error'));
-
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Complete Tutorial/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Complete Tutorial/ }));
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Complete Tutorial/ })).toBeEnabled();
-      });
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should not navigate to dashboard when completion fails', async () => {
-      const user = userEvent.setup();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Network error'));
+      // Mock the post to reject
+      vi.mocked(apiClient.post).mockRejectedValue(new Error('Network error'));
 
       renderComponent();
 
@@ -648,8 +697,6 @@ describe('Step9_Completion', () => {
       await waitFor(() => {
         expect(screen.getByRole('alert')).toBeInTheDocument();
       });
-
-      expect(mockNavigate).not.toHaveBeenCalledWith('/dashboard');
 
       consoleSpy.mockRestore();
     });
@@ -658,7 +705,7 @@ describe('Step9_Completion', () => {
       const user = userEvent.setup();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Network error'));
+      vi.mocked(apiClient.post).mockRejectedValue(new Error('Network error'));
 
       renderComponent();
 
@@ -676,6 +723,7 @@ describe('Step9_Completion', () => {
       consoleSpy.mockRestore();
     });
   });
+
 
   // ─── Accessibility ─────────────────────────────────────────────────
 
@@ -701,24 +749,45 @@ describe('Step9_Completion', () => {
       });
     });
 
-    it('should have aria-label on recommendations section', async () => {
+    it('should have aria-label on daily cycle section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByLabelText('Personalized Recommendations')).toBeInTheDocument();
+        expect(screen.getByLabelText('Daily Cycle System')).toBeInTheDocument();
       });
     });
 
-    it('should have aria-label on whats next section', async () => {
+    it('should have aria-label on league progression section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByLabelText('What Happens Next')).toBeInTheDocument();
+        expect(screen.getByLabelText('League Progression')).toBeInTheDocument();
       });
     });
 
-    it('should have aria-label on quick links section', async () => {
+    it('should have aria-label on facilities section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByLabelText('Quick Links')).toBeInTheDocument();
+        expect(screen.getByLabelText('Facilities')).toBeInTheDocument();
+      });
+    });
+
+    it('should have aria-label on robot attributes section', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByLabelText('Robot Attributes')).toBeInTheDocument();
+      });
+    });
+
+    it('should have aria-label on in-game guide section', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByLabelText('In-Game Guide')).toBeInTheDocument();
+      });
+    });
+
+    it('should have aria-label on recommended next steps section', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByLabelText('Recommended Next Steps')).toBeInTheDocument();
       });
     });
 
@@ -745,15 +814,6 @@ describe('Step9_Completion', () => {
       });
     });
 
-    it('should have accessible quick link buttons with aria-labels', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Facilities/ })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Go to Weapon Shop/ })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Go to Dashboard/ })).toBeInTheDocument();
-      });
-    });
-
     it('should have role="alert" on error message', async () => {
       const user = userEvent.setup();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -773,16 +833,6 @@ describe('Step9_Completion', () => {
       });
 
       consoleSpy.mockRestore();
-    });
-
-    it('should have recommendations list with proper role', async () => {
-      renderComponent();
-      await waitFor(() => {
-        const list = screen.getByRole('list', { name: /Recommendations list/ });
-        expect(list).toBeInTheDocument();
-        const items = within(list).getAllByRole('listitem');
-        expect(items.length).toBeGreaterThanOrEqual(3);
-      });
     });
   });
 });

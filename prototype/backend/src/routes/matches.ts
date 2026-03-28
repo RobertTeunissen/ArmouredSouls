@@ -449,8 +449,14 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       })),
     }));
 
-    // Combine all types of matches
-    const allMatches = [...formattedLeagueMatches, ...formattedTournamentMatches, ...formattedByeMatches, ...formattedTagTeamMatches, ...formattedKothMatches];
+    // Combine all types of matches and sort by scheduledFor (soonest first)
+    const allMatches = [
+      ...formattedLeagueMatches,
+      ...formattedTournamentMatches,
+      ...formattedByeMatches,
+      ...formattedTagTeamMatches,
+      ...formattedKothMatches,
+    ].sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
 
     res.json({
       matches: allMatches,
@@ -544,6 +550,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
               select: {
                 id: true,
                 username: true,
+                stableName: true,
               },
             },
           },
@@ -554,6 +561,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
               select: {
                 id: true,
                 username: true,
+                stableName: true,
               },
             },
           },
@@ -607,7 +615,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
           currentLeague: battle.robot1.currentLeague,
           leagueId: battle.robot1.leagueId,
           user: {
-            username: battle.robot1.user.username,
+            username: battle.robot1.user.stableName || battle.robot1.user.username,
           },
         },
         robot2: {
@@ -617,7 +625,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
           currentLeague: battle.robot2.currentLeague,
           leagueId: battle.robot2.leagueId,
           user: {
-            username: battle.robot2.user.username,
+            username: battle.robot2.user.stableName || battle.robot2.user.username,
           },
         },
       };
@@ -656,7 +664,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
           // User's robot placed 3rd-6th — look up their robot data
           const userRobot = await prisma.robot.findUnique({
             where: { id: userParticipant.robotId },
-            include: { user: { select: { id: true, username: true } } },
+            include: { user: { select: { id: true, username: true, stableName: true } } },
           });
           if (userRobot) {
             kothData.robot1Id = userRobot.id;
@@ -666,7 +674,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
               userId: userRobot.userId,
               currentLeague: userRobot.currentLeague,
               leagueId: userRobot.leagueId,
-              user: { username: userRobot.user.username },
+              user: { username: userRobot.user.stableName || userRobot.user.username },
             };
           }
         }
@@ -756,7 +764,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const battleId = parseInt(req.params.id);
+    const battleId = parseInt(String(req.params.id));
 
     // Get battle with full details
     const battle = await prisma.battle.findUnique({
@@ -765,14 +773,14 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         robot1: {
           include: {
             user: {
-              select: { id: true, username: true },
+              select: { id: true, username: true, stableName: true },
             },
           },
         },
         robot2: {
           include: {
             user: {
-              select: { id: true, username: true },
+              select: { id: true, username: true, stableName: true },
             },
           },
         },
@@ -827,22 +835,23 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
     // Add tag team specific fields if it's a tag team battle
     if (battleData.battleType === 'tag_team' && battleData.team1ActiveRobotId && battleData.team2ActiveRobotId) {
       // Fetch tag team robots separately since they're scalar fields
+      const tagTeamUserSelect = { select: { id: true, username: true, stableName: true } };
       const [team1Active, team1Reserve, team2Active, team2Reserve] = await Promise.all([
         battleData.team1ActiveRobotId ? prisma.robot.findUnique({
           where: { id: battleData.team1ActiveRobotId },
-          include: { user: { select: { id: true, username: true } } },
+          include: { user: tagTeamUserSelect },
         }) : null,
         battleData.team1ReserveRobotId ? prisma.robot.findUnique({
           where: { id: battleData.team1ReserveRobotId },
-          include: { user: { select: { id: true, username: true } } },
+          include: { user: tagTeamUserSelect },
         }) : null,
         battleData.team2ActiveRobotId ? prisma.robot.findUnique({
           where: { id: battleData.team2ActiveRobotId },
-          include: { user: { select: { id: true, username: true } } },
+          include: { user: tagTeamUserSelect },
         }) : null,
         battleData.team2ReserveRobotId ? prisma.robot.findUnique({
           where: { id: battleData.team2ReserveRobotId },
-          include: { user: { select: { id: true, username: true } } },
+          include: { user: tagTeamUserSelect },
         }) : null,
       ]);
 
@@ -879,7 +888,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
           activeRobot: team1Active ? {
             id: team1Active.id,
             name: team1Active.name,
-            owner: team1Active.user.username,
+            owner: team1Active.user.stableName || team1Active.user.username,
             maxHP: team1Active.maxHP,
             maxShield: team1Active.maxShield,
             damageDealt: battleData.team1ActiveDamageDealt,
@@ -888,7 +897,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
           reserveRobot: team1Reserve ? {
             id: team1Reserve.id,
             name: team1Reserve.name,
-            owner: team1Reserve.user.username,
+            owner: team1Reserve.user.stableName || team1Reserve.user.username,
             maxHP: team1Reserve.maxHP,
             maxShield: team1Reserve.maxShield,
             damageDealt: battleData.team1ReserveDamageDealt,
@@ -902,7 +911,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
           activeRobot: team2Active ? {
             id: team2Active.id,
             name: team2Active.name,
-            owner: team2Active.user.username,
+            owner: team2Active.user.stableName || team2Active.user.username,
             maxHP: team2Active.maxHP,
             maxShield: team2Active.maxShield,
             damageDealt: battleData.team2ActiveDamageDealt,
@@ -911,7 +920,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
           reserveRobot: team2Reserve ? {
             id: team2Reserve.id,
             name: team2Reserve.name,
-            owner: team2Reserve.user.username,
+            owner: team2Reserve.user.stableName || team2Reserve.user.username,
             maxHP: team2Reserve.maxHP,
             maxShield: team2Reserve.maxShield,
             damageDealt: battleData.team2ReserveDamageDealt,
@@ -970,7 +979,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         include: {
           robot: {
             include: {
-              user: { select: { id: true, username: true } },
+              user: { select: { id: true, username: true, stableName: true } },
             },
           },
         },
@@ -985,7 +994,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
         return {
           robotId: p.robot.id,
           robotName: p.robot.name,
-          owner: p.robot.user.username,
+          owner: p.robot.user.stableName || p.robot.user.username,
+          ownerId: p.robot.user.id,
           placement: p.placement ?? p.team, // prefer placement column, fall back to team for old records
           zoneScore: logEntry?.zoneScore ?? 0,
           zoneTime: logEntry?.zoneTime ?? 0,
@@ -1013,7 +1023,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       baseResponse.robot1 = {
         id: battleData.robot1.id,
         name: battleData.robot1.name,
-        owner: battleData.robot1.user.username,
+        owner: battleData.robot1.user.stableName || battleData.robot1.user.username,
+        ownerId: battleData.robot1.user.id,
         maxHP: battleData.robot1.maxHP,
         maxShield: battleData.robot1.maxShield,
         eloBefore: robot1Participant?.eloBefore || 0,
@@ -1029,7 +1040,8 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
       baseResponse.robot2 = {
         id: battleData.robot2.id,
         name: battleData.robot2.name,
-        owner: battleData.robot2.user.username,
+        owner: battleData.robot2.user.stableName || battleData.robot2.user.username,
+        ownerId: battleData.robot2.user.id,
         maxHP: battleData.robot2.maxHP,
         maxShield: battleData.robot2.maxShield,
         eloBefore: robot2Participant?.eloBefore || 0,

@@ -1165,14 +1165,38 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
       },
     });
 
-    // Scheduled matches
-    const scheduledMatches = await prisma.scheduledLeagueMatch.count({
+    // Scheduled matches by type
+    const leagueMatchesScheduled = await prisma.scheduledLeagueMatch.count({
       where: { status: 'scheduled' },
     });
-
-    const completedMatches = await prisma.scheduledLeagueMatch.count({
+    const leagueMatchesCompleted = await prisma.scheduledLeagueMatch.count({
       where: { status: 'completed' },
     });
+
+    const tournamentMatchesScheduled = await prisma.scheduledTournamentMatch.count({
+      where: { status: { in: ['pending', 'scheduled'] } },
+    });
+    const tournamentMatchesCompleted = await prisma.scheduledTournamentMatch.count({
+      where: { status: 'completed' },
+    });
+
+    const tagTeamMatchesScheduled = await prisma.scheduledTagTeamMatch.count({
+      where: { status: 'scheduled' },
+    });
+    const tagTeamMatchesCompleted = await prisma.scheduledTagTeamMatch.count({
+      where: { status: 'completed' },
+    });
+
+    const kothMatchesScheduled = await prisma.scheduledKothMatch.count({
+      where: { status: 'scheduled' },
+    });
+    const kothMatchesCompleted = await prisma.scheduledKothMatch.count({
+      where: { status: 'completed' },
+    });
+
+    // Total scheduled/completed across all types
+    const scheduledMatches = leagueMatchesScheduled + tournamentMatchesScheduled + tagTeamMatchesScheduled + kothMatchesScheduled;
+    const completedMatches = leagueMatchesCompleted + tournamentMatchesCompleted + tagTeamMatchesCompleted + kothMatchesCompleted;
 
     // Recent battles
     const recentBattles = await prisma.battle.count({
@@ -1266,6 +1290,12 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
       matches: {
         scheduled: scheduledMatches,
         completed: completedMatches,
+        byType: {
+          league: { scheduled: leagueMatchesScheduled, completed: leagueMatchesCompleted },
+          tournament: { scheduled: tournamentMatchesScheduled, completed: tournamentMatchesCompleted },
+          tagTeam: { scheduled: tagTeamMatchesScheduled, completed: tagTeamMatchesCompleted },
+          koth: { scheduled: kothMatchesScheduled, completed: kothMatchesCompleted },
+        },
       },
       battles: {
         last24Hours: recentBattles,
@@ -1928,7 +1958,7 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
  */
 router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const battleId = parseInt(req.params.id);
+    const battleId = parseInt(String(req.params.id));
 
     if (isNaN(battleId)) {
       return res.status(400).json({ error: 'Invalid battle ID' });

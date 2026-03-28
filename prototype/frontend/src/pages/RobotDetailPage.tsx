@@ -492,7 +492,7 @@ function RobotDetailPage() {
     <div className="min-h-screen bg-background text-white">
       <Navigation />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Onboarding banner */}
         {isOnboarding && (
           <div
@@ -534,8 +534,8 @@ function RobotDetailPage() {
           </div>
           
           {/* Robot Header Card */}
-          <div className="bg-surface p-6 rounded-lg">
-            <div className="flex items-start gap-6">
+          <div className="bg-surface p-4 sm:p-6 rounded-lg">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
               {/* Robot Image with Edit Button */}
               <RobotImage
                 imageUrl={robot.imageUrl}
@@ -546,11 +546,11 @@ function RobotDetailPage() {
               />
               
               {/* Robot Info - Compact Layout */}
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-3">
-                  <h1 className="text-3xl font-bold">{robot.name}</h1>
+              <div className="flex-1 w-full min-w-0">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-between mb-3 gap-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">{robot.name}</h1>
                   {robot.user && (
-                    <div className="text-right text-sm">
+                    <div className="text-center sm:text-right text-sm">
                       <div className="text-secondary">Owner</div>
                       <div className="text-white font-semibold">
                         {robot.user.stableName || robot.user.username}
@@ -558,7 +558,7 @@ function RobotDetailPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm mb-4">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 text-sm mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-secondary">ELO:</span>
                     <span className="text-white font-semibold">{robot.elo}</span>
@@ -590,7 +590,7 @@ function RobotDetailPage() {
                 </div>
 
                 {/* Performance Stats - Compact Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div className="bg-surface-elevated p-2 rounded">
                     <div className="text-secondary mb-1">League Points</div>
                     <div className="text-white font-semibold">

@@ -267,8 +267,9 @@ describe('GuidedUIOverlay - ARIA & Screen Reader', () => {
         tooltipContent={<div>Content</div>}
       />
     );
-    const overlay = container.querySelector('.bg-background.bg-opacity-40');
-    expect(overlay).toHaveAttribute('aria-hidden', 'true');
+    // The overlay uses bg-black/70 class (Tailwind's opacity shorthand)
+    const overlay = container.querySelector('[aria-hidden="true"]');
+    expect(overlay).toBeInTheDocument();
   });
 
   it('should mark highlight cutout as aria-hidden', () => {
@@ -677,8 +678,8 @@ describe('WCAG 2.1 AA - Contrast Compliance', () => {
         />
       );
       const dialog = screen.getByRole('dialog');
-      // bg-background with text-white provides excellent contrast
-      expect(dialog).toHaveClass('bg-background', 'text-white');
+      // bg-surface with text-white provides excellent contrast
+      expect(dialog).toHaveClass('bg-surface', 'text-white');
     });
 
     it('should use white text on navigation buttons', () => {

@@ -37,6 +37,19 @@ All factors are scaled by the robot's `threatAnalysis` attribute: `(0.5 + threat
 
 When the top two threat scores are within 10% of each other, the closer opponent is selected. This prevents erratic target switching between similarly threatening opponents and rewards positional play.
 
+### Target Stickiness (March 25, 2026)
+
+Robots now lock onto their selected target for a minimum of 1.5 seconds before re-evaluating. This prevents erratic target flip-flopping in multi-robot battles (especially KotH) where multiple opponents have similar threat scores.
+
+| Behavior | Detail |
+|----------|--------|
+| Lock duration | 1.5 seconds (15 simulation ticks) |
+| Lock breaks early if | Current target is destroyed or yields |
+| Re-evaluation | After lock expires, the robot runs target selection again and locks onto the new (or same) target |
+| Applies to | All battle types (1v1, tag team, KotH) |
+
+Without stickiness, robots in KotH would switch targets every tick (0.1s) when two opponents had similar priority weights. This caused robots to constantly rotate between targets without completing attacks, effectively wasting turns. The 1.5s lock ensures robots commit to engagements and complete attack sequences before reconsidering.
+
 ---
 
 ## Why It Changed

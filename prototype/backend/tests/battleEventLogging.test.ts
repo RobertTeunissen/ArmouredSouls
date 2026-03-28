@@ -83,7 +83,7 @@ describe('Battle Event Logging Integration', () => {
     testRobotIds.push(testRobot2.id);
 
     // Create scheduled match
-    scheduledMatch = await prisma.scheduledMatch.create({
+    scheduledMatch = await prisma.scheduledLeagueMatch.create({
       data: {
         robot1Id: testRobot1.id,
         robot2Id: testRobot2.id,
@@ -107,7 +107,7 @@ describe('Battle Event Logging Integration', () => {
     await prisma.auditLog.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.scheduledMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.user.deleteMany({});
 

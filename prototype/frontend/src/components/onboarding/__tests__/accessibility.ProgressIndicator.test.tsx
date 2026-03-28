@@ -53,7 +53,7 @@ describe('ProgressIndicator Accessibility', () => {
     const { container } = render(<ProgressIndicator current={3} total={9} />);
     const percentText = container.querySelector('[aria-hidden="true"]');
     expect(percentText).toBeInTheDocument();
-    expect(percentText).toHaveTextContent('33% Complete');
+    expect(percentText).toHaveTextContent('33%');
   });
 
   it('should mark step dots as aria-hidden', () => {

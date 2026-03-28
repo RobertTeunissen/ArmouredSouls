@@ -72,7 +72,7 @@ describe('Tag Team Streaming Revenue Integration', () => {
     }
 
     if (testTagTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTagTeamIds } },
@@ -108,17 +108,17 @@ describe('Tag Team Streaming Revenue Integration', () => {
 
   beforeEach(async () => {
     // Clean up any existing scheduled matches and battles to ensure test isolation
-    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.scheduledTagTeamMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
   });
 
   afterEach(async () => {
     // Clean up test data between tests (keep users and weapons from beforeAll)
-    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.scheduledTagTeamMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.scheduledTagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({
       where: { userId: { in: testUserIds } },
@@ -260,7 +260,7 @@ describe('Tag Team Streaming Revenue Integration', () => {
     testTagTeamIds.push(team1.id, team2.id);
 
     // Create a match
-    const match = await prisma.tagTeamMatch.create({
+    const match = await prisma.scheduledTagTeamMatch.create({
       data: {
         team1Id: team1.id,
         team2Id: team2.id,

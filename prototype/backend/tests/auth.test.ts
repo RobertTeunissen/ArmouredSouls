@@ -68,7 +68,7 @@ describe('Authentication Endpoints', () => {
             ],
           },
         });
-        await prisma.scheduledMatch.deleteMany({
+        await prisma.scheduledLeagueMatch.deleteMany({
           where: {
             OR: [
               { robot1Id: { in: robotIds } },
@@ -193,12 +193,12 @@ describe('Authentication Endpoints', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return 403 with invalid token', async () => {
+    it('should return 401 with invalid token', async () => {
       const response = await request(app)
         .get('/api/user/profile')
         .set('Authorization', 'Bearer invalid-token');
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(401);
     });
   });
 

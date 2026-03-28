@@ -103,7 +103,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 **Implemented (10 facilities):**
 1. ✅ **Training Facility** - Discount on attribute upgrades (5%-50%)
-2. ✅ **Weapons Workshop** - Discount on weapon purchases (5%-50%)
+2. ✅ **Weapons Workshop** - Discount on weapon purchases (10%-100%)
 3. ✅ **Repair Bay** - Discount on repair costs (10%-55%)
 4. ✅ **Roster Expansion** - Increase robot slots (1→10 robots)
 5. ✅ **Storage Facility** - Increase weapon storage (5→55 weapons)
@@ -1203,7 +1203,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Type**: `weapons_workshop`
 - **Max Level**: 10
 - **Cost Range**: ₡250K - ₡4M (total: ₡15.05M)
-- **Benefits**: 5% - 50% discount on weapon purchases
+- **Benefits**: 10% - 100% discount on weapon purchases
 - **Strategic Value**: Essential - Critical for economy-focused players, saves credits on weapon acquisitions
 - **Implementation Status**: Fully implemented, discount applies at weapon shop
 
@@ -1565,7 +1565,7 @@ During the new player onboarding tutorial, the Facilities Page has special behav
 During onboarding Step 3, the tutorial teaches facility timing and priority through the `FacilityPriorityList` component. This step:
 - Explains the concept of "you can spend your money only once"
 - Shows facility categories: Mandatory First, Recommended Early, Strategy-Dependent, Optional/Later
-- Displays concrete savings examples (e.g., Weapons Workshop Level 1 saves 5% on all weapon purchases)
+- Displays concrete savings examples (e.g., Weapons Workshop Level 1 saves 10% on all weapon purchases)
 - Uses existing `FacilityIcon` components for visual consistency with the Facilities Page
 
 After completing Step 3, the player has context for why certain facilities are highlighted when they visit the Facilities Page.

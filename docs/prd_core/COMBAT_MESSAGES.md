@@ -26,7 +26,7 @@
 - v2.1 - 2D Arena Spatial Messages (March 16, 2026)
   - Added spatial combat event message templates: movement, range_transition, out_of_range, counter_out_of_range, backstab, flanking
 - v2.2 - King of the Hill Events (March 18, 2026)
-  - Added 12 KotH event types: zone_enter, zone_exit, score_tick, kill_bonus, robot_eliminated, passive_warning, passive_penalty, zone_moving, zone_active, last_standing, match_end, zone_defined
+  - Added 12 KotH event types: zone_enter, zone_exit, score_tick, kill_bonus, robot_eliminated, passive_warning, passive_penalty, zone_moving, zone_active, last_standing, battle_end, zone_defined
   - Added KotH events to Frontend Display table with orange (#F97316) color coding
 
 ---
@@ -551,7 +551,7 @@ The `BattleDetailPage.tsx` component renders combat messages with color-coded bo
 | zone_moving | Orange (#F97316) | Orange tint |
 | zone_active | Orange (#F97316) | Orange tint |
 | last_standing | Orange (#F97316) | Orange tint |
-| match_end | Orange (#F97316) | Orange tint |
+| battle_end | Orange (#F97316) | Orange tint |
 | zone_defined | Orange (#F97316) | Orange tint |
 
 Financial/reward messages are filtered from the combat log (shown in the battle summary section instead).

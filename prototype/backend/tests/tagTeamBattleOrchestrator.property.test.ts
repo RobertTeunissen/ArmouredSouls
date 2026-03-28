@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { Robot, Prisma } from '@prisma/client';
+import { Robot, Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 
 

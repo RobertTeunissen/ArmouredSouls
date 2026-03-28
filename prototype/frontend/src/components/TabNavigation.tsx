@@ -48,14 +48,18 @@ function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) 
 
   return (
     <div className="border-b border-white/10 mb-6">
-      <nav className="flex overflow-x-auto scrollbar-hide space-x-1 flex-nowrap" role="tablist" aria-label="Robot detail tabs">
+      <nav
+        className="flex flex-wrap gap-1"
+        role="tablist"
+        aria-label="Robot detail tabs"
+      >
         {visibleTabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
           
           return (
             <button
               key={tab.id}
-              ref={el => tabRefs.current[index] = el}
+              ref={el => { tabRefs.current[index] = el; }}
               role="tab"
               aria-selected={isActive}
               aria-controls={`${tab.id}-panel`}
@@ -63,7 +67,7 @@ function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) 
               tabIndex={isActive ? 0 : -1}
               onClick={() => onTabChange(tab.id)}
               className={`
-                px-4 lg:px-6 py-3 min-h-[44px] font-medium text-sm rounded-t-lg whitespace-nowrap flex-shrink-0
+                px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 min-h-[44px] font-medium text-sm rounded-t-lg
                 transition-all duration-150 ease-out
                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background
                 ${isActive 
@@ -72,7 +76,7 @@ function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) 
                 }
               `}
             >
-              <span className="mr-2" aria-hidden="true">{tab.icon}</span>
+              <span className="mr-1.5 sm:mr-2" aria-hidden="true">{tab.icon}</span>
               {tab.label}
             </button>
           );

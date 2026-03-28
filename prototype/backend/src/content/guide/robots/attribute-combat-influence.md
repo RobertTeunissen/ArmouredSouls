@@ -148,11 +148,11 @@ All five Chassis & Mobility attributes are active in combat:
 - **Hull Integrity** directly determines your maximum HP
 - **Servo Motors** controls movement speed in the 2D arena — faster robots can close distance to reach melee range or kite to maintain long-range advantage
 - **Gyro Stabilizers** has a triple role: reduces the opponent's hit chance, increases turn speed (harder to backstab), and reduces backstab/flanking damage bonuses
-- **Hydraulic Systems** provides a proximity-scaled damage bonus — massive at melee range (up to +150% at level 50), moderate at short range (up to +75%), and no effect at mid/long range
+- **Hydraulic Systems** provides a proximity-scaled damage bonus — significant at melee range (up to +100% at level 50), moderate at short range (up to +75%), and no effect at mid/long range
 - **Power Core** drives energy shield regeneration during battle
 
 ```callout-tip
-Hydraulic Systems is the sleeper attribute for melee builds. At level 50 in melee range, it more than doubles your damage output. Pair it with Servo Motors to close the gap quickly and Gyro Stabilizers to stay facing your opponent.
+Hydraulic Systems is a strong attribute for melee builds. At level 50 in melee range, it doubles your damage output. Pair it with Servo Motors to close the gap quickly and Gyro Stabilizers to stay facing your opponent.
 ```
 
 ### 🟡 AI Processing → Smart Decision-Making and Adaptation
@@ -160,7 +160,8 @@ Hydraulic Systems is the sleeper attribute for melee builds. At level 50 in mele
 All four AI Processing attributes actively influence combat:
 
 - **Combat Algorithms** improves hit chance (bonus when algorithm score > 0.5) and controls the patience timer — how long your robot waits for optimal range before forcing an attack
-- **Threat Analysis** enhances facing/turning speed with predictive bias. At high levels (25+), your robot anticipates opponents moving behind it and turns faster. Also reduces backstab and flanking damage taken.
+- **Threat Analysis** enhances facing/turning speed with predictive bias. At high levels (25+), your robot anticipates opponents moving behind it and turns faster. Also reduces backstab and flanking damage taken. In multi-robot battles (KotH), Threat Analysis scales the effectiveness of zone-aware target priority weights.
+- **Target Stickiness**: Robots commit to their chosen target for 1.5 seconds before reconsidering. This prevents wasted time switching between similarly-threatening opponents and ensures attacks are completed. The lock breaks immediately if the target is destroyed or yields.
 - **Adaptive AI** accumulates hit and damage bonuses throughout the battle as your robot misses or takes damage. Higher values mean faster adaptation. Bonuses are halved when HP > 70% to prevent snowballing.
 - **Logic Cores** sets the pressure threshold — the HP percentage below which your robot gains accuracy and damage bonuses. Higher Logic Cores activates this bonus earlier (threshold: 15% + logicCores × 0.6%).
 

@@ -17,7 +17,7 @@ describe('UpgradePlanner - Control Properties', () => {
    * For any upgrade plan with planned changes, clicking the "Reset Plan" button
    * should clear all planned upgrades and reset the total cost to zero.
    */
-  test('Property 28: reset plan functionality', () => {
+  test('Property 28: reset plan functionality', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.record({
@@ -123,7 +123,7 @@ describe('UpgradePlanner - Control Properties', () => {
    * For any attribute at its academy cap, the + button should be disabled
    * and not respond to clicks.
    */
-  test('Property 29: academy cap button disabling', () => {
+  test('Property 29: academy cap button disabling', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.record({
@@ -221,7 +221,7 @@ describe('UpgradePlanner - Control Properties', () => {
    * For any upgrade plan where total cost exceeds current credits,
    * the "Commit Upgrades" button should be disabled.
    */
-  test('Property 30: insufficient credits button disabling', () => {
+  test('Property 30: insufficient credits button disabling', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.record({

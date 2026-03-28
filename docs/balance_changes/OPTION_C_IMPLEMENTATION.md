@@ -168,9 +168,9 @@ Implemented **Option C (Hybrid approach)** to fix severe imbalance where facilit
 **Without Weapons Workshop:**
 - Cost: 10 × ₡250K = ₡2,500,000
 
-**With Weapons Workshop Level 5 (25% discount):**
+**With Weapons Workshop Level 5 (50% discount):**
 - Facility Cost: ₡1,900,000
-- Weapon Cost: ₡2,500,000 × 0.75 = ₡1,875,000
+- Weapon Cost: ₡2,500,000 × 0.50 = ₡1,250,000
 - Savings: ₡625,000
 
 **Break-even**: ₡1,900,000 / ₡62,500 (savings per weapon) = **30 weapons**

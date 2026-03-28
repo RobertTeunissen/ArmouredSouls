@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
-import GuidedUIOverlay from '../components/onboarding/GuidedUIOverlay';
 import apiClient from '../utils/apiClient';
 
 function CreateRobotPage() {
@@ -15,7 +14,6 @@ function CreateRobotPage() {
   const [searchParams] = useSearchParams();
 
   const isOnboarding = searchParams.get('onboarding') === 'true';
-  const [onboardingGuideStep, setOnboardingGuideStep] = useState(isOnboarding ? 0 : -1);
 
   const ROBOT_CREATION_COST = 500000;
 
@@ -144,6 +142,21 @@ function CreateRobotPage() {
             {error && (
               <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-6">
                 {error}
+                {error.toLowerCase().includes('robot limit') && (
+                  <div className="mt-3 pt-3 border-t border-red-700">
+                    <p className="text-sm mb-2">
+                      You need to upgrade your <strong>Roster Expansion</strong> facility to create more robots.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/facilities#roster_expansion')}
+                      className="inline-flex items-center gap-2 bg-red-800 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold transition-colors"
+                    >
+                      <span>🏭</span>
+                      Go to Facilities
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -197,38 +210,6 @@ function CreateRobotPage() {
           </div>
         </div>
       </div>
-
-      {/* Onboarding guided overlays */}
-      {isOnboarding && onboardingGuideStep === 0 && (
-        <GuidedUIOverlay
-          targetSelector="#name"
-          tooltipContent={
-            <div>
-              <p className="font-semibold text-primary mb-2">Name Your Robot</p>
-              <p>Choose a unique name for your robot (1-50 characters). This is how your robot will be known in battles and leaderboards.</p>
-            </div>
-          }
-          position="bottom"
-          onNext={() => setOnboardingGuideStep(1)}
-          showNext={true}
-          onClose={() => setOnboardingGuideStep(-1)}
-        />
-      )}
-
-      {isOnboarding && onboardingGuideStep === 1 && (
-        <GuidedUIOverlay
-          targetSelector="button[type='submit']"
-          tooltipContent={
-            <div>
-              <p className="font-semibold text-primary mb-2">Confirm Creation</p>
-              <p>Once you've entered a name, click this button to create your robot for ₡{ROBOT_CREATION_COST.toLocaleString()}. You'll be returned to the tutorial afterward.</p>
-            </div>
-          }
-          position="top"
-          showNext={false}
-          onClose={() => setOnboardingGuideStep(-1)}
-        />
-      )}
     </div>
   );
 }

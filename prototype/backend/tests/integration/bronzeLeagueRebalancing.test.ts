@@ -17,7 +17,7 @@ import {
 describe('Bronze League Rebalancing - Integration Test', () => {
   beforeAll(async () => {
     // Clean up test data
-    await prisma.scheduledMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});

@@ -210,9 +210,9 @@ node scripts/testAdminAPI.js
 
 Install these once:
 
-1. **Node.js 20+** - [Download](https://nodejs.org/)
+1. **Node.js 24+** - [Download](https://nodejs.org/)
    ```bash
-   node --version  # Should show v20.x or higher
+   node --version  # Should show v24.x or higher
    ```
 
 2. **Docker Desktop** - [Download](https://www.docker.com/products/docker-desktop)
@@ -303,7 +303,7 @@ git pull
 
 # Reset database
 cd backend
-npx prisma migrate reset --force
+npm run db:reset
 
 # Restart servers
 npm run dev  # In terminal 1
@@ -335,7 +335,7 @@ cd prototype/backend
 # - Drop the database
 # - Run all migrations (including new ones)
 # - Run the seed script
-npx prisma migrate reset --force
+npm run db:reset
 
 # Step 6: Start backend server (Terminal 1)
 npm run dev
@@ -349,11 +349,13 @@ npm run dev
 # Login as player1 / password123
 ```
 
-**What happens during `npx prisma migrate reset --force`:**
+**What happens during `npm run db:reset`:**
 1. Drops the entire database
 2. Recreates the database
 3. Runs ALL migrations in order (including the new `20260127000000_add_loadout_type_to_weapons`)
 4. Runs `prisma/seed.ts` to populate with test data
+
+**Note:** Prisma 7 no longer auto-seeds on `prisma migrate reset`. Use `npm run db:reset` which chains both commands.
 
 **No need to:**
 - ❌ Stop Docker database (`docker compose down`)
@@ -361,7 +363,7 @@ npm run dev
 - ❌ Manually run `prisma:migrate`  
 - ❌ Manually run seed script
 
-**The `migrate reset` command does it all automatically!**
+**The `db:reset` command does it all automatically!**
 
 ### Full Clean Reset (If Having Issues)
 ```bash
@@ -410,7 +412,7 @@ cd backend
 npm run prisma:studio
 
 # Reset database (WARNING: deletes all data)
-npx prisma migrate reset
+npm run db:reset
 
 # Create new migration (after schema changes)
 npm run prisma:migrate
@@ -793,7 +795,7 @@ VS Code launch.json for debugging:
 ```bash
 cd ArmouredSouls/prototype
 docker compose down -v
-cd backend && npx prisma migrate reset --force
+cd backend && npm run db:reset
 ```
 
 **Check everything is running:**

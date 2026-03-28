@@ -7,7 +7,7 @@
  * Requirements: 1.1-1.8, 2.1-2.10, 9.3
  */
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 
 /**

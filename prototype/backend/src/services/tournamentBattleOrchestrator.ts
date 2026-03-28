@@ -7,7 +7,7 @@
  * and DO create battles with participation rewards.
  */
 
-import { Robot, ScheduledTournamentMatch, Battle } from '@prisma/client';
+import { Robot, ScheduledTournamentMatch, Battle } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { simulateBattle } from './combatSimulator';

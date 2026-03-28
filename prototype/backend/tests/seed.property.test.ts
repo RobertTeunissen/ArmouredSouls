@@ -115,24 +115,19 @@ function createMockPrisma() {
 }
 
 const WEAPON_NAMES = [
-  'Practice Sword', 'Machine Pistol', 'Laser Pistol', 'Combat Knife',
-  'Light Shield', 'Combat Shield', 'Reactive Shield', 'Machine Gun',
-  'Burst Rifle', 'Assault Rifle', 'Energy Blade', 'Laser Rifle',
-  'Plasma Blade', 'Plasma Rifle', 'Power Sword', 'Shotgun',
-  'Grenade Launcher', 'Sniper Rifle', 'Battle Axe', 'Plasma Cannon',
-  'Heavy Hammer', 'Railgun', 'Ion Beam',
+  'Practice Sword', 'Practice Blaster', 'Training Rifle', 'Training Beam',
+  'Machine Pistol', 'Laser Pistol', 'Combat Knife', 'Light Shield',
+  'Combat Shield', 'Reactive Shield', 'Machine Gun', 'Burst Rifle',
+  'Assault Rifle', 'Energy Blade', 'Laser Rifle', 'Plasma Blade',
+  'Plasma Rifle', 'Power Sword', 'Shotgun', 'Grenade Launcher',
+  'Sniper Rifle', 'Battle Axe', 'Plasma Cannon', 'Heavy Hammer',
+  'Railgun', 'Ion Beam', 'Vibro Mace', 'War Club', 'Shock Maul',
+  'Thermal Lance', 'Volt Sabre', 'Scatter Cannon', 'Pulse Accelerator',
+  'Arc Projector', 'Bolt Carbine', 'Flux Repeater', 'Disruptor Cannon',
+  'Nova Caster', 'Mortar System', 'Beam Pistol', 'Photon Marksman',
+  'Gauss Pistol', 'Particle Lance', 'Siege Cannon', 'Barrier Shield',
+  'Fortress Shield', 'Aegis Bulwark',
 ];
-
-const ATTRIBUTE_LABELS: Record<string, string> = {
-  combatPower: 'CombatPwr', targetingSystems: 'Targeting', criticalSystems: 'CritSys',
-  penetration: 'Penetratn', weaponControl: 'WeaponCtl', attackSpeed: 'AtkSpeed',
-  armorPlating: 'ArmorPlat', shieldCapacity: 'ShieldCap', evasionThrusters: 'Evasion',
-  damageDampeners: 'DmgDampen', counterProtocols: 'CounterPr', hullIntegrity: 'HullInteg',
-  servoMotors: 'ServoMtr', gyroStabilizers: 'GyroStab', hydraulicSystems: 'Hydraulic',
-  powerCore: 'PowerCore', combatAlgorithms: 'CombatAlg', threatAnalysis: 'ThreatAnl',
-  adaptiveAI: 'AdaptAI', logicCores: 'LogicCore', syncProtocols: 'SyncProto',
-  supportSystems: 'SupportSy', formationTactics: 'FormTacti',
-};
 
 /**
  * Simulate the seed main() logic using the mock prisma, following the exact
@@ -146,7 +141,7 @@ async function simulateSeed(mockPrisma: ReturnType<typeof createMockPrisma>, mod
     create: { id: 1, totalCycles: 0 },
   });
 
-  // Seed weapons (ALL environments) — mirrors upsertWeapon pattern
+  // Seed weapons (ALL environments) — 47 weapons
   for (const name of WEAPON_NAMES) {
     const existing = await mockPrisma.weapon.findFirst({ where: { name } });
     if (existing) {
@@ -163,45 +158,21 @@ async function simulateSeed(mockPrisma: ReturnType<typeof createMockPrisma>, mod
     create: { username: 'bye_robot_user', passwordHash: 'hash', currency: 0, prestige: 0 },
   });
 
-  // Acceptance + Development: core test users
+  // Acceptance + Development: admin + 200 WimpBots
   if (mode === 'acceptance' || mode === 'development') {
     await mockPrisma.user.upsert({
       where: { username: 'admin' },
-      update: { passwordHash: 'hash', role: 'admin', currency: 10000000, prestige: 50000 },
-      create: { username: 'admin', passwordHash: 'hash', role: 'admin', currency: 10000000, prestige: 50000 },
+      update: { passwordHash: 'hash', role: 'admin', currency: 3000000, prestige: 0 },
+      create: { username: 'admin', passwordHash: 'hash', role: 'admin', currency: 3000000, prestige: 0, stableName: 'Admin Stable' },
     });
-    for (let i = 1; i <= 5; i++) {
-      await mockPrisma.user.upsert({
-        where: { username: `player${i}` },
-        update: { passwordHash: 'hash', role: 'user', currency: 3000000, prestige: 0 },
-        create: { username: `player${i}`, passwordHash: 'hash', currency: 3000000 },
-      });
-    }
-  }
 
-  // Development + Acceptance: WimpBot users (200 total, 50 per weapon)
-  if (mode === 'development' || mode === 'acceptance') {
     for (let i = 1; i <= 200; i++) {
       const username = `test_user_${String(i).padStart(3, '0')}`;
       await mockPrisma.user.upsert({
         where: { username },
         update: { passwordHash: 'hash', role: 'user', currency: 100000, prestige: 0 },
-        create: { username, passwordHash: 'hash', currency: 100000 },
+        create: { username, passwordHash: 'hash', currency: 100000, stableName: `Stable ${i}` },
       });
-    }
-  }
-
-  // Development only: attribute test users
-  if (mode === 'development') {
-    for (const label of Object.values(ATTRIBUTE_LABELS)) {
-      for (let i = 1; i <= 10; i++) {
-        const username = `attr_${label}_${String(i).padStart(2, '0')}`.toLowerCase();
-        await mockPrisma.user.upsert({
-          where: { username },
-          update: { passwordHash: 'hash', role: 'user', currency: 100000, prestige: 0 },
-          create: { username, passwordHash: 'hash', currency: 100000 },
-        });
-      }
     }
   }
 }
@@ -389,7 +360,7 @@ describe('Seed Script - Property Tests', () => {
             for (let i = 0; i < runCount; i++) {
               await simulateSeed(mockPrisma, 'production');
             }
-            expect(mockPrisma._stores.weapon.size).toBe(23);
+            expect(mockPrisma._stores.weapon.size).toBe(47);
             expect(mockPrisma._stores.cycleMetadata.size).toBe(1);
             expect(mockPrisma._stores.user.has('bye_robot_user')).toBe(true);
           }
@@ -398,7 +369,7 @@ describe('Seed Script - Property Tests', () => {
       );
     });
 
-    test('acceptance mode seeds admin, players, and WimpBot users but not attribute users', async () => {
+    test('acceptance mode seeds admin and WimpBot users', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.integer({ min: 1, max: 3 }),
@@ -409,23 +380,24 @@ describe('Seed Script - Property Tests', () => {
             }
             const usernames = [...mockPrisma._stores.user.keys()];
             expect(usernames).toContain('admin');
-            expect(usernames).toContain('player1');
-            expect(usernames).toContain('player5');
             expect(usernames).toContain('test_user_001');
             expect(usernames).toContain('test_user_200');
             const wimpBots = usernames.filter(u => u.startsWith('test_user_'));
             expect(wimpBots.length).toBe(200);
+            // No player1-5 or attribute users
+            const playerUsers = usernames.filter(u => u.startsWith('player'));
+            expect(playerUsers).toEqual([]);
             const attrUsers = usernames.filter(u => u.startsWith('attr_'));
             expect(attrUsers).toEqual([]);
-            // bye_robot_user + admin + player1-5 + WimpBot(200) = 207
-            expect(usernames.length).toBe(207);
+            // bye_robot_user + admin + WimpBot(200) = 202
+            expect(usernames.length).toBe(202);
           }
         ),
         { numRuns: NUM_RUNS }
       );
     });
 
-    test('development mode seeds all user types', async () => {
+    test('development mode seeds same as acceptance (admin + WimpBots)', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.constant(1),
@@ -435,19 +407,22 @@ describe('Seed Script - Property Tests', () => {
             const usernames = [...mockPrisma._stores.user.keys()];
             expect(usernames).toContain('bye_robot_user');
             expect(usernames).toContain('admin');
-            expect(usernames).toContain('player1');
             expect(usernames).toContain('test_user_001');
             expect(usernames).toContain('test_user_200');
-            expect(usernames.some(u => u.startsWith('attr_'))).toBe(true);
-            // bye_robot_user(1) + admin(1) + player1-5(5) + WimpBot(200) + attr(230) = 437
-            expect(usernames.length).toBe(437);
+            // No player1-5 or attribute users
+            const playerUsers = usernames.filter(u => u.startsWith('player'));
+            expect(playerUsers).toEqual([]);
+            const attrUsers = usernames.filter(u => u.startsWith('attr_'));
+            expect(attrUsers).toEqual([]);
+            // bye_robot_user(1) + admin(1) + WimpBot(200) = 202
+            expect(usernames.length).toBe(202);
           }
         ),
         { numRuns: NUM_RUNS }
       );
     });
 
-    test('for any seed mode, user sets form a strict superset chain: prod ⊂ acc ⊂ dev', async () => {
+    test('for any seed mode, user sets form superset chain: prod ⊂ acc = dev', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.constant(1),
@@ -464,18 +439,223 @@ describe('Seed Script - Property Tests', () => {
             await simulateSeed(devPrisma, 'development');
             const devUsers = new Set(devPrisma._stores.user.keys());
 
-            // Production users ⊆ Acceptance users ⊆ Development users
+            // Production users ⊂ Acceptance users
             for (const user of prodUsers) {
               expect(accUsers.has(user)).toBe(true);
               expect(devUsers.has(user)).toBe(true);
             }
+            expect(prodUsers.size).toBeLessThan(accUsers.size);
+
+            // Acceptance = Development (identical user sets)
+            expect(accUsers.size).toBe(devUsers.size);
             for (const user of accUsers) {
               expect(devUsers.has(user)).toBe(true);
             }
+            for (const user of devUsers) {
+              expect(accUsers.has(user)).toBe(true);
+            }
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+  });
 
-            // Strict ordering: prod < acc < dev
-            expect(prodUsers.size).toBeLessThan(accUsers.size);
-            expect(accUsers.size).toBeLessThan(devUsers.size);
+  describe('Design Property 13: Seed loadout type matches weapon hand requirement', () => {
+    /**
+     * **Validates: Requirements 5.6**
+     * For any seeded WimpBot robot, if its equipped weapon has handsRequired = 'one'
+     * then loadoutType should be "single", and if handsRequired = 'two' then
+     * loadoutType should be "two_handed".
+     */
+
+    // Practice weapons with their hand requirements per design doc
+    const PRACTICE_WEAPONS = {
+      'Practice Sword': { handsRequired: 'one', expectedLoadout: 'single', codename: 'Rusty' },
+      'Practice Blaster': { handsRequired: 'one', expectedLoadout: 'single', codename: 'Spark' },
+      'Training Rifle': { handsRequired: 'two', expectedLoadout: 'two_handed', codename: 'Cadet' },
+      'Training Beam': { handsRequired: 'two', expectedLoadout: 'two_handed', codename: 'Drill' },
+    } as const;
+
+    // Loadout title mapping from design doc
+    const LOADOUT_TITLES: Record<string, string> = {
+      single: 'Lone',
+      two_handed: 'Heavy',
+    };
+
+    /**
+     * Simulates seed WimpBot robot creation with loadout assignment.
+     * Returns array of robot records with weapon and loadout info.
+     */
+    function simulateSeedWimpBotRobots(robotCount: number): Array<{
+      robotNumber: number;
+      weaponName: string;
+      handsRequired: 'one' | 'two';
+      loadoutType: 'single' | 'two_handed';
+      robotName: string;
+    }> {
+      const robots: Array<{
+        robotNumber: number;
+        weaponName: string;
+        handsRequired: 'one' | 'two';
+        loadoutType: 'single' | 'two_handed';
+        robotName: string;
+      }> = [];
+
+      const weaponNames = Object.keys(PRACTICE_WEAPONS) as Array<keyof typeof PRACTICE_WEAPONS>;
+
+      for (let i = 1; i <= robotCount; i++) {
+        // Distribute evenly: 50 each for 200 robots
+        const weaponIndex = Math.floor((i - 1) / 50) % 4;
+        const weaponName = weaponNames[weaponIndex];
+        const weaponConfig = PRACTICE_WEAPONS[weaponName];
+
+        // Loadout type is determined by weapon's handsRequired
+        const loadoutType = weaponConfig.handsRequired === 'one' ? 'single' : 'two_handed';
+        const loadoutTitle = LOADOUT_TITLES[loadoutType];
+
+        // Robot name format: {Tier} {LoadoutTitle} {WeaponCodename} {Number}
+        const robotName = `WimpBot ${loadoutTitle} ${weaponConfig.codename} ${i}`;
+
+        robots.push({
+          robotNumber: i,
+          weaponName,
+          handsRequired: weaponConfig.handsRequired,
+          loadoutType,
+          robotName,
+        });
+      }
+
+      return robots;
+    }
+
+    test('one-handed weapons always produce "single" loadout type', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 100 }), // Robot index within one-handed weapon range (1-100)
+          (robotIndex) => {
+            const robots = simulateSeedWimpBotRobots(200);
+            // First 100 robots have one-handed weapons (Practice Sword: 1-50, Practice Blaster: 51-100)
+            const robot = robots[robotIndex - 1];
+
+            if (robot.handsRequired === 'one') {
+              expect(robot.loadoutType).toBe('single');
+            }
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('two-handed weapons always produce "two_handed" loadout type', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 101, max: 200 }), // Robot index within two-handed weapon range (101-200)
+          (robotIndex) => {
+            const robots = simulateSeedWimpBotRobots(200);
+            // Robots 101-200 have two-handed weapons (Training Rifle: 101-150, Training Beam: 151-200)
+            const robot = robots[robotIndex - 1];
+
+            if (robot.handsRequired === 'two') {
+              expect(robot.loadoutType).toBe('two_handed');
+            }
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('loadout type is always consistent with weapon hand requirement for any robot', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 200 }), // Any robot index
+          (robotIndex) => {
+            const robots = simulateSeedWimpBotRobots(200);
+            const robot = robots[robotIndex - 1];
+
+            // Core property: handsRequired determines loadoutType
+            if (robot.handsRequired === 'one') {
+              expect(robot.loadoutType).toBe('single');
+            } else if (robot.handsRequired === 'two') {
+              expect(robot.loadoutType).toBe('two_handed');
+            }
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('robot names encode correct loadout title based on weapon hand requirement', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 200 }),
+          (robotIndex) => {
+            const robots = simulateSeedWimpBotRobots(200);
+            const robot = robots[robotIndex - 1];
+
+            // One-handed weapons should have "Lone" in name
+            if (robot.handsRequired === 'one') {
+              expect(robot.robotName).toContain('Lone');
+              expect(robot.robotName).not.toContain('Heavy');
+            }
+            // Two-handed weapons should have "Heavy" in name
+            else if (robot.handsRequired === 'two') {
+              expect(robot.robotName).toContain('Heavy');
+              expect(robot.robotName).not.toContain('Lone');
+            }
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('all 4 practice weapons are correctly mapped to loadout types', () => {
+      fc.assert(
+        fc.property(
+          fc.constantFrom(
+            'Practice Sword' as const,
+            'Practice Blaster' as const,
+            'Training Rifle' as const,
+            'Training Beam' as const
+          ),
+          (weaponName) => {
+            const weaponConfig = PRACTICE_WEAPONS[weaponName];
+
+            // Verify the mapping is correct per design doc
+            if (weaponName === 'Practice Sword' || weaponName === 'Practice Blaster') {
+              expect(weaponConfig.handsRequired).toBe('one');
+              expect(weaponConfig.expectedLoadout).toBe('single');
+            } else {
+              expect(weaponConfig.handsRequired).toBe('two');
+              expect(weaponConfig.expectedLoadout).toBe('two_handed');
+            }
+          }
+        ),
+        { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('weapon distribution assigns correct loadout across all 200 seed robots', () => {
+      fc.assert(
+        fc.property(
+          fc.constant(200), // Always test with full 200 robots
+          (totalRobots) => {
+            const robots = simulateSeedWimpBotRobots(totalRobots);
+
+            // Count robots by loadout type
+            const singleLoadoutCount = robots.filter(r => r.loadoutType === 'single').length;
+            const twoHandedLoadoutCount = robots.filter(r => r.loadoutType === 'two_handed').length;
+
+            // 50 Practice Sword + 50 Practice Blaster = 100 single loadout
+            expect(singleLoadoutCount).toBe(100);
+            // 50 Training Rifle + 50 Training Beam = 100 two_handed loadout
+            expect(twoHandedLoadoutCount).toBe(100);
+
+            // Verify each robot's loadout matches its weapon
+            for (const robot of robots) {
+              const expectedLoadout = robot.handsRequired === 'one' ? 'single' : 'two_handed';
+              expect(robot.loadoutType).toBe(expectedLoadout);
+            }
           }
         ),
         { numRuns: NUM_RUNS }

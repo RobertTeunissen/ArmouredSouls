@@ -79,8 +79,8 @@ describe('ResetService', () => {
 
   afterEach(async () => {
     // Clean up in reverse order of foreign key dependencies
-    await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: testRobotId }] } });
-    await prisma.tournamentMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: testRobotId }] } });
+    await prisma.scheduledLeagueMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: testRobotId }] } });
+    await prisma.scheduledTournamentMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: testRobotId }] } });
     await prisma.resetLog.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
     await prisma.weaponInventory.deleteMany({ where: { userId: testUserId } });
@@ -120,7 +120,7 @@ describe('ResetService', () => {
       });
 
       // Create scheduled match
-      await prisma.scheduledMatch.create({
+      await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: testRobotId,
           robot2Id: opponent.id,
@@ -138,7 +138,7 @@ describe('ResetService', () => {
       expect(eligibility.blockers[0].message).toContain('scheduled battles');
 
       // Cleanup - delete scheduled match first, then robot
-      await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
+      await prisma.scheduledLeagueMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
 
@@ -167,7 +167,7 @@ describe('ResetService', () => {
       });
 
       // Create tournament match
-      await prisma.tournamentMatch.create({
+      await prisma.scheduledTournamentMatch.create({
         data: {
           tournamentId: tournament.id,
           round: 1,
@@ -186,7 +186,7 @@ describe('ResetService', () => {
       expect(eligibility.blockers[0].message).toContain('tournament participation');
 
       // Cleanup
-      await prisma.tournamentMatch.deleteMany({ where: { tournamentId: tournament.id } });
+      await prisma.scheduledTournamentMatch.deleteMany({ where: { tournamentId: tournament.id } });
       await prisma.tournament.delete({ where: { id: tournament.id } });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
@@ -289,7 +289,7 @@ describe('ResetService', () => {
       });
 
       // Create scheduled match
-      await prisma.scheduledMatch.create({
+      await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: testRobotId,
           robot2Id: opponent.id,
@@ -311,7 +311,7 @@ describe('ResetService', () => {
       });
 
       // Create tournament match
-      await prisma.tournamentMatch.create({
+      await prisma.scheduledTournamentMatch.create({
         data: {
           tournamentId: tournament.id,
           round: 1,
@@ -330,8 +330,8 @@ describe('ResetService', () => {
       expect(eligibility.blockers.some((b) => b.type === 'tournament')).toBe(true);
 
       // Cleanup - delete in correct order
-      await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
-      await prisma.tournamentMatch.deleteMany({ where: { tournamentId: tournament.id } });
+      await prisma.scheduledLeagueMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
+      await prisma.scheduledTournamentMatch.deleteMany({ where: { tournamentId: tournament.id } });
       await prisma.tournament.delete({ where: { id: tournament.id } });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
@@ -400,7 +400,7 @@ describe('ResetService', () => {
       });
 
       // Create scheduled match to block reset
-      await prisma.scheduledMatch.create({
+      await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: testRobotId,
           robot2Id: opponent.id,
@@ -417,7 +417,7 @@ describe('ResetService', () => {
       expect(robots.length).toBeGreaterThan(0);
 
       // Cleanup - delete scheduled match first, then robot
-      await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
+      await prisma.scheduledLeagueMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
 
@@ -505,7 +505,7 @@ describe('ResetService', () => {
         },
       });
 
-      await prisma.scheduledMatch.create({
+      await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: testRobotId,
           robot2Id: opponent.id,
@@ -535,7 +535,7 @@ describe('ResetService', () => {
       expect(facilitiesAfterAttempt).toBe(facilitiesBeforeAttempt);
 
       // Cleanup - delete scheduled match first, then robot
-      await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
+      await prisma.scheduledLeagueMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
   });

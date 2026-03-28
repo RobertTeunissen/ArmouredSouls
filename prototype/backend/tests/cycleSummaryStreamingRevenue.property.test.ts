@@ -10,7 +10,7 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
 import { executeScheduledTagTeamBattles } from '../src/services/tagTeamBattleOrchestrator';
 import { clearSequenceCache } from '../src/services/eventLogger';
@@ -138,7 +138,7 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
       },
     });
 
-    await prisma.scheduledMatch.deleteMany({
+    await prisma.scheduledLeagueMatch.deleteMany({
       where: {
         OR: [
           { robot1: { userId: testUserId1 } },
@@ -237,7 +237,7 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
 
           // Schedule battle
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
+          const match = await prisma.scheduledLeagueMatch.create({
             data: {
               robot1Id: robot1.id,
               robot2Id: robot2.id,
@@ -271,7 +271,7 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
               id: { in: battles.map(b => b.id) },
             },
           });
-          await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: match.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }

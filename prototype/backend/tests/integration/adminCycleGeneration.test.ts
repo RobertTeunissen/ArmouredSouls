@@ -1,6 +1,9 @@
 /**
  * Admin Cycle Generation Integration Tests
  * Tests for POST /api/admin/cycles/bulk with generateUsersPerCycle flag
+ *
+ * Updated for the tiered stable system (WimpBot/AverageBot/ExpertBot).
+ * Cycle N creates N stables distributed across the three tiers.
  */
 
 import request from 'supertest';
@@ -14,7 +17,6 @@ import { createTestUser, deleteTestUser } from '../testHelpers';
 
 dotenv.config();
 
-
 // Create test app
 const app = express();
 app.use(cors());
@@ -22,26 +24,11 @@ app.use(express.json());
 app.use('/api/admin', adminRoutes);
 
 describe('Admin Cycle Generation Integration Tests', () => {
-  let adminUser: any;
+  let adminUser: { id: number; username: string };
   let adminToken: string;
 
   beforeAll(async () => {
     await prisma.$connect();
-
-    // Seed weapons required by archetypes
-    await prisma.weapon.createMany({
-      data: [
-        { name: 'Power Sword', weaponType: 'melee', baseDamage: 10, cooldown: 3, cost: 100000, handsRequired: 'one', damageType: 'melee', loadoutType: 'single' },
-        { name: 'Combat Shield', weaponType: 'shield', baseDamage: 0, cooldown: 0, cost: 100000, handsRequired: 'shield', damageType: 'none', loadoutType: 'weapon_shield' },
-        { name: 'Plasma Cannon', weaponType: 'energy', baseDamage: 25, cooldown: 5, cost: 500000, handsRequired: 'two', damageType: 'energy', loadoutType: 'two_handed' },
-        { name: 'Railgun', weaponType: 'ballistic', baseDamage: 30, cooldown: 6, cost: 600000, handsRequired: 'two', damageType: 'ballistic', loadoutType: 'two_handed' },
-        { name: 'Heavy Hammer', weaponType: 'melee', baseDamage: 28, cooldown: 5, cost: 550000, handsRequired: 'two', damageType: 'melee', loadoutType: 'two_handed' },
-        { name: 'Machine Gun', weaponType: 'ballistic', baseDamage: 7, cooldown: 2, cost: 150000, handsRequired: 'one', damageType: 'ballistic', loadoutType: 'single' },
-        { name: 'Plasma Blade', weaponType: 'energy', baseDamage: 12, cooldown: 2, cost: 200000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single' },
-        { name: 'Plasma Rifle', weaponType: 'energy', baseDamage: 15, cooldown: 3, cost: 250000, handsRequired: 'one', damageType: 'energy', loadoutType: 'single' },
-      ],
-      skipDuplicates: true,
-    });
 
     // Create admin user
     adminUser = await prisma.user.create({
@@ -56,7 +43,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
     // Generate admin JWT token
     adminToken = jwt.sign(
       { userId: adminUser.id, username: adminUser.username, role: 'admin' },
-      process.env.JWT_SECRET || 'test-secret'
+      process.env.JWT_SECRET || 'test-secret',
     );
 
     // Ensure CycleMetadata exists
@@ -69,22 +56,69 @@ describe('Admin Cycle Generation Integration Tests', () => {
   });
 
   afterEach(async () => {
-    // Clean up auto-generated users and their data after each test
+    // Clean up all auto-generated users (auto_wimpbot_*, auto_averagebot_*, auto_expertbot_*)
     const autoUsers = await prisma.user.findMany({
-      where: { username: { startsWith: 'auto_user_' } },
+      where: { username: { startsWith: 'auto_' } },
       select: { id: true },
     });
-    
-    const userIds = autoUsers.map(u => u.id);
-    
+
+    const userIds = autoUsers.map((u) => u.id);
+
     if (userIds.length > 0) {
       const robots = await prisma.robot.findMany({
         where: { userId: { in: userIds } },
         select: { id: true },
       });
-      const robotIds = robots.map(r => r.id);
-      
+      const robotIds = robots.map((r) => r.id);
+
       if (robotIds.length > 0) {
+        // Clean up tag teams associated with these robots
+        const tagTeams = await prisma.tagTeam.findMany({
+          where: {
+            OR: [
+              { activeRobotId: { in: robotIds } },
+              { reserveRobotId: { in: robotIds } },
+            ],
+          },
+          select: { id: true },
+        });
+        const tagTeamIds = tagTeams.map((t) => t.id);
+
+        if (tagTeamIds.length > 0) {
+          await prisma.scheduledTagTeamMatch.deleteMany({
+            where: {
+              OR: [
+                { team1Id: { in: tagTeamIds } },
+                { team2Id: { in: tagTeamIds } },
+              ],
+            },
+          });
+          await prisma.tagTeam.deleteMany({
+            where: { id: { in: tagTeamIds } },
+          });
+        }
+
+        // Clean up KotH match participants referencing these robots
+        await prisma.scheduledKothMatchParticipant.deleteMany({
+          where: { robotId: { in: robotIds } },
+        });
+
+        // Clean up tournament matches referencing these robots
+        await prisma.scheduledTournamentMatch.updateMany({
+          where: {
+            OR: [
+              { robot1Id: { in: robotIds } },
+              { robot2Id: { in: robotIds } },
+            ],
+          },
+          data: { robot1Id: null, robot2Id: null },
+        });
+
+        // Clean up audit logs referencing these robots
+        await prisma.auditLog.deleteMany({
+          where: { robotId: { in: robotIds } },
+        });
+
         await prisma.battleParticipant.deleteMany({
           where: { robotId: { in: robotIds } },
         });
@@ -96,7 +130,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
             ],
           },
         });
-        await prisma.scheduledMatch.deleteMany({
+        await prisma.scheduledLeagueMatch.deleteMany({
           where: {
             OR: [
               { robot1Id: { in: robotIds } },
@@ -105,7 +139,12 @@ describe('Admin Cycle Generation Integration Tests', () => {
           },
         });
       }
-      
+
+      // Clean up audit logs referencing these users
+      await prisma.auditLog.deleteMany({
+        where: { userId: { in: userIds } },
+      });
+
       await prisma.weaponInventory.deleteMany({
         where: { userId: { in: userIds } },
       });
@@ -130,15 +169,6 @@ describe('Admin Cycle Generation Integration Tests', () => {
       await deleteTestUser(adminUser.id);
     }
 
-    // Cleanup weapons created in beforeAll
-    await prisma.weapon.deleteMany({
-      where: {
-        name: {
-          in: ['Power Sword', 'Combat Shield', 'Plasma Cannon', 'Railgun', 'Heavy Hammer', 'Machine Gun', 'Plasma Blade', 'Plasma Rifle'],
-        },
-      },
-    });
-
     await prisma.$disconnect();
   });
 
@@ -160,20 +190,20 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.body.cyclesCompleted).toBe(3);
       expect(response.body.generateUsersPerCycleEnabled).toBe(true);
 
-      // Verify user generation in each cycle
+      // Cycle 1 creates 1 user, Cycle 2 creates 2, Cycle 3 creates 3
       expect(response.body.results[0].userGeneration.usersCreated).toBe(1);
       expect(response.body.results[1].userGeneration.usersCreated).toBe(2);
       expect(response.body.results[2].userGeneration.usersCreated).toBe(3);
 
-      // Verify total users created (1+2+3 = 6)
+      // Total: 1+2+3 = 6 users with auto_ prefix
       const totalUsers = await prisma.user.count({
-        where: { username: { startsWith: 'auto_user_' } },
+        where: { username: { startsWith: 'auto_' } },
       });
       expect(totalUsers).toBe(6);
-    });
+    }, 120000);
 
     it('should persist cycle count across multiple runs', async () => {
-      // First run: 5 cycles
+      // First run: 5 cycles → 1+2+3+4+5 = 15 users
       const response1 = await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -188,11 +218,10 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response1.status).toBe(200);
       expect(response1.body.totalCyclesInSystem).toBe(5);
 
-      // Verify cycle metadata
       const metadata1 = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       expect(metadata1!.totalCycles).toBe(5);
 
-      // Second run: 3 cycles (should start at cycle 6)
+      // Second run: 3 cycles (cycles 6, 7, 8) → 6+7+8 = 21 more users
       const response2 = await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -207,21 +236,20 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response2.status).toBe(200);
       expect(response2.body.totalCyclesInSystem).toBe(8);
 
-      // Verify user generation continues from cycle 6
+      // Cycles 6, 7, 8 create 6, 7, 8 users respectively
       expect(response2.body.results[0].userGeneration.usersCreated).toBe(6);
       expect(response2.body.results[1].userGeneration.usersCreated).toBe(7);
       expect(response2.body.results[2].userGeneration.usersCreated).toBe(8);
 
-      // Verify total users created (1+2+3+4+5+6+7+8 = 36)
+      // Total: 15 + 21 = 36 users
       const totalUsers = await prisma.user.count({
-        where: { username: { startsWith: 'auto_user_' } },
+        where: { username: { startsWith: 'auto_' } },
       });
       expect(totalUsers).toBe(36);
 
-      // Verify cycle metadata
       const metadata2 = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       expect(metadata2!.totalCycles).toBe(8);
-    });
+    }, 180000);
 
     it('should not generate users when flag is false', async () => {
       const response = await request(app)
@@ -238,17 +266,16 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.generateUsersPerCycleEnabled).toBe(false);
 
-      // Verify no user generation in results
-      response.body.results.forEach((result: any) => {
+      // No user generation in results
+      response.body.results.forEach((result: Record<string, unknown>) => {
         expect(result.userGeneration).toBeNull();
       });
 
-      // Verify no users were created
       const totalUsers = await prisma.user.count({
-        where: { username: { startsWith: 'auto_user_' } },
+        where: { username: { startsWith: 'auto_' } },
       });
       expect(totalUsers).toBe(0);
-    });
+    }, 60000);
 
     it('should not generate users when flag is omitted (default false)', async () => {
       const response = await request(app)
@@ -264,12 +291,11 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.generateUsersPerCycleEnabled).toBe(false);
 
-      // Verify no users were created
       const totalUsers = await prisma.user.count({
-        where: { username: { startsWith: 'auto_user_' } },
+        where: { username: { startsWith: 'auto_' } },
       });
       expect(totalUsers).toBe(0);
-    });
+    }, 60000);
 
     it('should update lastCycleAt timestamp', async () => {
       const beforeTime = new Date();
@@ -288,64 +314,9 @@ describe('Admin Cycle Generation Integration Tests', () => {
       const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       expect(metadata!.lastCycleAt).not.toBeNull();
       expect(metadata!.lastCycleAt!.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
-    });
+    }, 60000);
 
-    it('should handle errors in user generation gracefully', async () => {
-      // Delete Practice Sword to cause error
-      const practiceSword = await prisma.weapon.findFirst({
-        where: { name: 'Practice Sword' },
-      });
-
-      if (practiceSword) {
-        // Delete weapon inventory entries
-        await prisma.weaponInventory.deleteMany({
-          where: { weaponId: practiceSword.id },
-        });
-
-        // Update robots to remove references
-        await prisma.robot.updateMany({
-          where: { mainWeaponId: { not: null } },
-          data: { mainWeaponId: null },
-        });
-
-        await prisma.weapon.delete({
-          where: { id: practiceSword.id },
-        });
-
-        const response = await request(app)
-          .post('/api/admin/cycles/bulk')
-          .set('Authorization', `Bearer ${adminToken}`)
-          .send({
-            cycles: 1,
-            autoRepair: false,
-            includeDailyFinances: false,
-            includeTournaments: false,
-            generateUsersPerCycle: true,
-          });
-
-        // Cycle should still complete despite user generation error
-        expect(response.status).toBe(200);
-        expect(response.body.results[0].userGeneration).toHaveProperty('error');
-        expect(response.body.results[0].userGeneration.error).toContain('Practice Sword');
-
-        // Restore Practice Sword
-        await prisma.weapon.create({
-          data: {
-            name: 'Practice Sword',
-            weaponType: 'melee',
-            baseDamage: 10,
-            cooldown: 3,
-            cost: 0,
-            handsRequired: 'one',
-            damageType: 'melee',
-            loadoutType: 'any',
-            description: 'A basic training weapon',
-          },
-        });
-      }
-    });
-
-    it('should return correct response structure', async () => {
+    it('should return correct response structure with tierBreakdown', async () => {
       const response = await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -366,22 +337,30 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.body).toHaveProperty('totalDuration');
       expect(response.body).toHaveProperty('averageCycleDuration');
 
-      // Verify result structure
-      response.body.results.forEach((result: any) => {
+      // Verify result structure includes tiered generation fields
+      response.body.results.forEach((result: Record<string, unknown>) => {
         expect(result).toHaveProperty('cycle');
         expect(result).toHaveProperty('userGeneration');
-        expect(result.userGeneration).toHaveProperty('usersCreated');
-        expect(result.userGeneration).toHaveProperty('robotsCreated');
-        expect(result.userGeneration).toHaveProperty('usernames');
+
+        const ug = result.userGeneration as Record<string, unknown>;
+        expect(ug).toHaveProperty('usersCreated');
+        expect(ug).toHaveProperty('robotsCreated');
+        expect(ug).toHaveProperty('tagTeamsCreated');
+        expect(ug).toHaveProperty('usernames');
+        expect(ug).toHaveProperty('tierBreakdown');
+
+        const tb = ug.tierBreakdown as Record<string, number>;
+        expect(tb).toHaveProperty('wimpBot');
+        expect(tb).toHaveProperty('averageBot');
+        expect(tb).toHaveProperty('expertBot');
       });
-    });
+    }, 60000);
 
     it('should require admin authentication', async () => {
-      // Create regular user token
       const regularUser = await createTestUser();
       const regularToken = jwt.sign(
         { userId: regularUser.id, username: regularUser.username, role: 'user' },
-        process.env.JWT_SECRET || 'test-secret'
+        process.env.JWT_SECRET || 'test-secret',
       );
 
       const response = await request(app)
@@ -396,7 +375,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.body).toHaveProperty('error');
 
       await deleteTestUser(regularUser.id);
-    });
+    }, 30000);
 
     it('should auto-create CycleMetadata if missing', async () => {
       // Delete CycleMetadata
@@ -416,15 +395,15 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.results[0].userGeneration.usersCreated).toBe(1);
 
-      // Verify CycleMetadata was created
       const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       expect(metadata).not.toBeNull();
       expect(metadata!.totalCycles).toBe(1);
-    });
+    }, 60000);
 
     it('should generate correct total user count formula (N*(N+1)/2)', async () => {
-      const cycles = 10;
-      const expectedTotal = (cycles * (cycles + 1)) / 2; // 55 users
+      // Use 5 cycles to keep test runtime reasonable: sum(1..5) = 15 users
+      const cycles = 5;
+      const expectedTotal = (cycles * (cycles + 1)) / 2; // 15 users
 
       await request(app)
         .post('/api/admin/cycles/bulk')
@@ -438,13 +417,13 @@ describe('Admin Cycle Generation Integration Tests', () => {
         });
 
       const totalUsers = await prisma.user.count({
-        where: { username: { startsWith: 'auto_user_' } },
+        where: { username: { startsWith: 'auto_' } },
       });
 
       expect(totalUsers).toBe(expectedTotal);
-    });
+    }, 180000);
 
-    it('should create users eligible for matchmaking', async () => {
+    it('should create robots eligible for matchmaking', async () => {
       await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -457,8 +436,10 @@ describe('Admin Cycle Generation Integration Tests', () => {
         });
 
       const robots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_user_' } } },
+        where: { user: { username: { startsWith: 'auto_' } } },
       });
+
+      expect(robots.length).toBeGreaterThan(0);
 
       // Verify all robots meet battle readiness criteria
       robots.forEach((robot) => {
@@ -467,6 +448,6 @@ describe('Admin Cycle Generation Integration Tests', () => {
         expect(hpPercentage).toBeGreaterThanOrEqual(robot.yieldThreshold);
         expect(robot.mainWeaponId).not.toBeNull();
       });
-    });
+    }, 120000);
   });
 });

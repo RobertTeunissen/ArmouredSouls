@@ -133,6 +133,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
   }, [targetSelector, targetRect]);
 
   if (!targetRect) {
+    // Don't render anything if target element not found
     return null;
   }
 
@@ -141,7 +142,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
       {/* Semi-transparent overlay */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-background bg-opacity-40 z-[9998]"
+        className="fixed inset-0 bg-black/70 z-[9998]"
         style={{ pointerEvents: 'none' }}
         aria-hidden="true"
       />
@@ -165,7 +166,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
       {/* Tooltip */}
       <div
         ref={tooltipRef}
-        className={`fixed z-[10000] bg-background text-white rounded-lg shadow-2xl ${
+        className={`fixed z-[10000] bg-surface border border-white/20 text-white rounded-lg shadow-2xl ${
           isMobile ? 'left-4 right-4 max-w-none' : 'max-w-md'
         }`}
         style={
@@ -198,7 +199,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
                 transform: 'translateX(-50%)',
                 borderLeft: '12px solid transparent',
                 borderRight: '12px solid transparent',
-                borderBottom: '12px solid #1F2937'
+                borderBottom: '12px solid #1a1f29'
               }),
               ...(tooltipPosition.arrowPosition === 'bottom' && {
                 bottom: -12,
@@ -206,7 +207,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
                 transform: 'translateX(-50%)',
                 borderLeft: '12px solid transparent',
                 borderRight: '12px solid transparent',
-                borderTop: '12px solid #1F2937'
+                borderTop: '12px solid #1a1f29'
               }),
               ...(tooltipPosition.arrowPosition === 'left' && {
                 left: -12,
@@ -214,7 +215,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
                 transform: 'translateY(-50%)',
                 borderTop: '12px solid transparent',
                 borderBottom: '12px solid transparent',
-                borderRight: '12px solid #1F2937'
+                borderRight: '12px solid #1a1f29'
               }),
               ...(tooltipPosition.arrowPosition === 'right' && {
                 right: -12,
@@ -222,7 +223,7 @@ const GuidedUIOverlay: React.FC<GuidedUIOverlayProps> = ({
                 transform: 'translateY(-50%)',
                 borderTop: '12px solid transparent',
                 borderBottom: '12px solid transparent',
-                borderLeft: '12px solid #1F2937'
+                borderLeft: '12px solid #1a1f29'
               })
             }}
             aria-hidden="true"

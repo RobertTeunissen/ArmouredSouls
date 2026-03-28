@@ -101,7 +101,7 @@ Net effect: cheap weapons got cheaper, expensive weapons stayed relatively simil
 - `prototype/backend/src/utils/robotCalculations.ts` — `shieldCapacity * 4`
 - `prototype/frontend/src/utils/robotStats.ts` — `shieldCapacity * 4`
 - `prototype/backend/src/routes/robots.ts` — new robot shield calc
-- `prototype/backend/src/utils/userGeneration.ts` — archetype shield values
+- `prototype/backend/src/utils/userGeneration.ts` — tiered stable shield values
 
 ---
 
@@ -214,7 +214,7 @@ The DPS Cost multiplier was increased from 2.0 to 2.67 to partially offset the l
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Current weapon catalog and loadout system
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: 23 attributes that weapons modify
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Weapon model structure
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Weapons Workshop discount system (5% per level)
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Weapons Workshop discount system (10% per level)
 
 ### Why This Matters
 

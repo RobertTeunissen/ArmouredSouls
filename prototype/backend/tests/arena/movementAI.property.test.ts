@@ -67,6 +67,7 @@ function makeWeapon(overrides: Record<string, unknown> = {}): Record<string, unk
     handsRequired: 'one',
     baseDamage: 10,
     cooldown: 2,
+    rangeBand: 'mid',
     ...overrides,
   };
 }
@@ -112,6 +113,7 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
     isUnderPressure: false,
     teamIndex: 0,
     isAlive: true,
+    targetLockTimer: 0,
     ...overrides,
   };
 }
@@ -219,9 +221,9 @@ describe('movementAI property tests', () => {
 
     it('should return a valid RangeBand for dual_wield loadouts with mixed weapons', () => {
       const weaponConfigs = [
-        { weaponType: 'melee', handsRequired: 'one', name: 'Combat Knife', baseDamage: 15, cooldown: 1 },
-        { weaponType: 'energy', handsRequired: 'one', name: 'Laser Pistol', baseDamage: 10, cooldown: 2 },
-        { weaponType: 'ballistic', handsRequired: 'one', name: 'Machine Pistol', baseDamage: 8, cooldown: 1 },
+        { weaponType: 'melee', handsRequired: 'one', name: 'Combat Knife', baseDamage: 15, cooldown: 1, rangeBand: 'melee' },
+        { weaponType: 'energy', handsRequired: 'one', name: 'Laser Pistol', baseDamage: 10, cooldown: 2, rangeBand: 'mid' },
+        { weaponType: 'ballistic', handsRequired: 'one', name: 'Machine Pistol', baseDamage: 8, cooldown: 1, rangeBand: 'short' },
       ];
 
       fc.assert(

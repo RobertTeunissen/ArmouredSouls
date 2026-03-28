@@ -92,9 +92,9 @@ sequenceDiagram
 
     User->>FP: Selects "Register"
     FP->>RF: Renders registration form
-    User->>RF: Fills username, email, password, confirm password
+    User->>RF: Fills username, stable name, email, password, confirm password
     RF->>RF: Validates password confirmation match
-    RF->>API: POST { username, email, password }
+    RF->>API: POST { username, stableName, email, password }
     API->>RL: Check rate limit
     RL-->>API: OK / 429
 
@@ -122,11 +122,19 @@ sequenceDiagram
         API-->>RF: 400 { error, code: "DUPLICATE_EMAIL" }
     end
 
+    API->>US: findUserByStableName(stableName)
+    US->>DB: SELECT by stableName
+    DB-->>US: User | null
+
+    alt Stable name taken
+        API-->>RF: 400 { error, code: "DUPLICATE_STABLE_NAME" }
+    end
+
     API->>PS: hashPassword(password)
     PS-->>API: bcrypt hash
 
-    API->>US: createUser({ username, email, passwordHash })
-    US->>DB: INSERT user (defaults: currency=1000, prestige=0, role=player)
+    API->>US: createUser({ username, stableName, email, passwordHash })
+    US->>DB: INSERT user (defaults: currency=3000000, prestige=0, role=user)
     DB-->>US: Created user
 
     API->>JWT: generateToken({ id, username, role })
@@ -222,7 +230,11 @@ flowchart TD
 
     DupCheck --> Dup{Duplicate?}
     Dup -->|Yes| R400Dup[400 Duplicate Error]
-    Dup -->|No| Hash[Hash password with bcrypt]
+    Dup -->|No| StableCheck[Check stable name duplicate]
+
+    StableCheck --> StableDup{Stable name taken?}
+    StableDup -->|Yes| R400Dup
+    StableDup -->|No| Hash[Hash password with bcrypt]
 
     Hash --> CreateUser[Insert user into DB]
     CreateUser --> GenToken1[Generate JWT]
@@ -365,7 +377,7 @@ This section shows how to call the registration and login APIs, integrate with t
 
 ### Calling the Registration API
 
-Register a new user by sending a `POST` request to `/api/auth/register` with a JSON body containing `username`, `email`, and `password`.
+Register a new user by sending a `POST` request to `/api/auth/register` with a JSON body containing `username`, `stableName`, `email`, and `password`.
 
 **cURL example:**
 
@@ -374,7 +386,8 @@ curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "username": "new_player",
-    "email": "player_email",
+    "stableName": "Iron Warriors",
+    "email": "player@email.com",
     "password": "securepass123"
   }'
 ```
@@ -387,7 +400,8 @@ curl -X POST http://localhost:3000/api/auth/register \
   "user": {
     "id": 42,
     "username": "new_player",
-    "email": "player_email",
+    "stableName": "Iron Warriors",
+    "email": "player@email.com",
     "currency": 3000000,
     "prestige": 0,
     "role": "user"
@@ -398,11 +412,11 @@ curl -X POST http://localhost:3000/api/auth/register \
 **TypeScript / fetch example:**
 
 ```typescript
-async function registerUser(username: string, email: string, password: string) {
+async function registerUser(username: string, stableName: string, email: string, password: string) {
   const response = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ username, stableName, email, password }),
   });
 
   if (!response.ok) {
@@ -504,6 +518,7 @@ Validation functions live in `prototype/backend/src/utils/validation.ts`. Each f
 | Field | Rule | Function |
 |-------|------|----------|
 | Username | 3–20 chars, alphanumeric + `_` + `-` | `validateUsername()` |
+| Stable Name | 3–30 chars, alphanumeric + space + `_` + `-`, no profanity | `validateStableName()` |
 | Email | 3–50 chars, alphanumeric + `_` + `-` | `validateEmail()` |
 | Password | 8–128 chars, no character restrictions | `validateRegistrationPassword()` |
 
@@ -634,6 +649,7 @@ These rules run before the form submits, preventing unnecessary server round-tri
 | Field                 | Rule                                                                 |
 |-----------------------|----------------------------------------------------------------------|
 | Username              | 3–20 chars, alphanumeric + `_` + `-`                                |
+| Stable Name           | 3–30 chars, alphanumeric + space + `_` + `-`                        |
 | Email                 | 3–50 chars, valid characters, must contain exactly one `@`          |
 | Password              | 8–128 chars                                                          |
 | Password Confirmation | Must match password field                                            |
@@ -648,6 +664,7 @@ The form uses per-field inline errors instead of a single banner:
 |-----------------------|----------------------------------------------------------------------|
 | Client-side validation| Inline below the specific field, with red border highlight           |
 | `DUPLICATE_USERNAME`  | Inline below the username field                                      |
+| `DUPLICATE_STABLE_NAME` | Inline below the stable name field                                 |
 | `DUPLICATE_EMAIL`     | Inline below the email field                                         |
 | `VALIDATION_ERROR` (single field) | Inline below the matched field                          |
 | `VALIDATION_ERROR` (multi-field)  | General banner above the form                           |

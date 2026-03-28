@@ -10,23 +10,24 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 ## Technology Stack
 
 ### Backend
-- **Runtime**: Node.js 20 LTS
-- **Language**: TypeScript (strict mode)
-- **Framework**: Express.js
-- **ORM**: Prisma (PostgreSQL)
+- **Runtime**: Node.js 24 LTS
+- **Language**: TypeScript 5.8 (strict mode)
+- **Framework**: Express 5
+- **ORM**: Prisma 7 (PostgreSQL)
 - **Authentication**: JWT with bcrypt password hashing
 - **Process Manager**: PM2 (production)
-- **Testing**: Jest with property-based testing (fast-check)
+- **Testing**: Jest 30 with property-based testing (fast-check)
 
 ### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite 6
+- **Styling**: Tailwind CSS 4
+- **Testing**: Vitest 4 with property-based testing (fast-check)
 - **State Management**: React Context + hooks
 - **HTTP Client**: Fetch API / Axios
 
 ### Database
-- **DBMS**: PostgreSQL 15
+- **DBMS**: PostgreSQL 17
 - **Containerization**: Docker Compose
 - **Migrations**: Prisma Migrate
 - **Connection Pooling**: Prisma connection limits

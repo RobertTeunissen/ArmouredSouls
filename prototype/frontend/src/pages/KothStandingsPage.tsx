@@ -184,7 +184,7 @@ function KothStandingsPage() {
                                 {robot.ownerName}
                               </span>
                               {isMyBot && (
-                                <span className="shrink-0 text-xs bg-primary px-1.5 py-0.5 rounded">
+                                <span className="shrink-0 text-xs bg-primary text-white px-1.5 py-0.5 rounded font-semibold">
                                   YOU
                                 </span>
                               )}
@@ -200,7 +200,7 @@ function KothStandingsPage() {
                             {robot.winRate.toFixed(1)}%
                           </td>
                           <td className="px-1.5 lg:px-4 py-3 text-center font-mono text-sm lg:text-base text-orange-500">
-                            {robot.totalZoneScore}
+                            {Number(robot.totalZoneScore).toFixed(1)}
                           </td>
                           <td className="hidden lg:table-cell px-4 py-3 text-center font-mono text-orange-500">
                             {robot.avgZoneScore.toFixed(1)}

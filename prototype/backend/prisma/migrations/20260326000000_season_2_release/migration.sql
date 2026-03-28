@@ -1,7 +1,13 @@
--- CreateTable
+-- Season 2 Release Migration
+-- Consolidated migration combining all schema changes for Season 2
+
+-- ============================================================================
+-- USERS TABLE
+-- ============================================================================
 CREATE TABLE "users" (
     "id" SERIAL NOT NULL,
     "username" VARCHAR(50) NOT NULL,
+    "email" VARCHAR(50),
     "password_hash" VARCHAR(255) NOT NULL,
     "role" VARCHAR(20) NOT NULL DEFAULT 'user',
     "currency" INTEGER NOT NULL DEFAULT 3000000,
@@ -12,13 +18,26 @@ CREATE TABLE "users" (
     "notifications_battle" BOOLEAN NOT NULL DEFAULT true,
     "notifications_league" BOOLEAN NOT NULL DEFAULT true,
     "theme_preference" VARCHAR(20) NOT NULL DEFAULT 'dark',
+    "has_completed_onboarding" BOOLEAN NOT NULL DEFAULT false,
+    "onboarding_skipped" BOOLEAN NOT NULL DEFAULT false,
+    "onboarding_step" INTEGER NOT NULL DEFAULT 1,
+    "onboarding_strategy" VARCHAR(20),
+    "onboarding_choices" JSONB NOT NULL DEFAULT '{}',
+    "onboarding_started_at" TIMESTAMP(3),
+    "onboarding_completed_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+CREATE UNIQUE INDEX "users_stable_name_key" ON "users"("stable_name");
+
+-- ============================================================================
+-- FACILITIES TABLE
+-- ============================================================================
 CREATE TABLE "facilities" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
@@ -32,7 +51,12 @@ CREATE TABLE "facilities" (
     CONSTRAINT "facilities_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE INDEX "facilities_user_id_idx" ON "facilities"("user_id");
+CREATE UNIQUE INDEX "facilities_user_id_facility_type_key" ON "facilities"("user_id", "facility_type");
+
+-- ============================================================================
+-- ROBOTS TABLE
+-- ============================================================================
 CREATE TABLE "robots" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
@@ -87,6 +111,14 @@ CREATE TABLE "robots" (
     "total_tag_team_draws" INTEGER NOT NULL DEFAULT 0,
     "times_tagged_in" INTEGER NOT NULL DEFAULT 0,
     "times_tagged_out" INTEGER NOT NULL DEFAULT 0,
+    "koth_wins" INTEGER NOT NULL DEFAULT 0,
+    "koth_matches" INTEGER NOT NULL DEFAULT 0,
+    "koth_total_zone_score" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "koth_total_zone_time" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "koth_kills" INTEGER NOT NULL DEFAULT 0,
+    "koth_best_placement" INTEGER,
+    "koth_current_win_streak" INTEGER NOT NULL DEFAULT 0,
+    "koth_best_win_streak" INTEGER NOT NULL DEFAULT 0,
     "repair_cost" INTEGER NOT NULL DEFAULT 0,
     "battle_readiness" INTEGER NOT NULL DEFAULT 100,
     "total_repairs_paid" INTEGER NOT NULL DEFAULT 0,
@@ -102,18 +134,15 @@ CREATE TABLE "robots" (
     CONSTRAINT "robots_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "weapon_inventory" (
-    "id" SERIAL NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "weapon_id" INTEGER NOT NULL,
-    "custom_name" VARCHAR(100),
-    "purchased_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+CREATE INDEX "robots_user_id_idx" ON "robots"("user_id");
+CREATE INDEX "robots_elo_idx" ON "robots"("elo");
+CREATE INDEX "robots_current_league_idx" ON "robots"("current_league");
+CREATE INDEX "robots_current_league_league_id_idx" ON "robots"("current_league", "league_id");
+CREATE UNIQUE INDEX "robots_user_id_name_key" ON "robots"("user_id", "name");
 
-    CONSTRAINT "weapon_inventory_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
+-- ============================================================================
+-- WEAPONS TABLE
+-- ============================================================================
 CREATE TABLE "weapons" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(100) NOT NULL,
@@ -126,6 +155,7 @@ CREATE TABLE "weapons" (
     "loadout_type" VARCHAR(20) NOT NULL,
     "special_property" TEXT,
     "description" TEXT,
+    "range_band" VARCHAR(10) NOT NULL DEFAULT 'short',
     "combat_power_bonus" INTEGER NOT NULL DEFAULT 0,
     "targeting_systems_bonus" INTEGER NOT NULL DEFAULT 0,
     "critical_systems_bonus" INTEGER NOT NULL DEFAULT 0,
@@ -154,13 +184,32 @@ CREATE TABLE "weapons" (
     CONSTRAINT "weapons_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- ============================================================================
+-- WEAPON INVENTORY TABLE
+-- ============================================================================
+CREATE TABLE "weapon_inventory" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "weapon_id" INTEGER NOT NULL,
+    "custom_name" VARCHAR(100),
+    "purchased_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "weapon_inventory_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX "weapon_inventory_user_id_idx" ON "weapon_inventory"("user_id");
+CREATE INDEX "weapon_inventory_weapon_id_idx" ON "weapon_inventory"("weapon_id");
+
+-- ============================================================================
+-- BATTLE PARTICIPANTS TABLE
+-- ============================================================================
 CREATE TABLE "battle_participants" (
     "id" SERIAL NOT NULL,
     "battle_id" INTEGER NOT NULL,
     "robot_id" INTEGER NOT NULL,
     "team" INTEGER NOT NULL,
     "role" VARCHAR(20),
+    "placement" INTEGER,
     "credits" INTEGER NOT NULL,
     "streaming_revenue" INTEGER NOT NULL DEFAULT 0,
     "elo_before" INTEGER NOT NULL,
@@ -176,7 +225,14 @@ CREATE TABLE "battle_participants" (
     CONSTRAINT "battle_participants_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE INDEX "battle_participants_battle_id_idx" ON "battle_participants"("battle_id");
+CREATE INDEX "battle_participants_robot_id_idx" ON "battle_participants"("robot_id");
+CREATE INDEX "battle_participants_battle_id_team_idx" ON "battle_participants"("battle_id", "team");
+CREATE UNIQUE INDEX "battle_participants_battle_id_robot_id_key" ON "battle_participants"("battle_id", "robot_id");
+
+-- ============================================================================
+-- BATTLES TABLE
+-- ============================================================================
 CREATE TABLE "battles" (
     "id" SERIAL NOT NULL,
     "robot1_id" INTEGER NOT NULL,
@@ -214,7 +270,15 @@ CREATE TABLE "battles" (
     CONSTRAINT "battles_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE INDEX "battles_robot1_id_idx" ON "battles"("robot1_id");
+CREATE INDEX "battles_robot2_id_idx" ON "battles"("robot2_id");
+CREATE INDEX "battles_created_at_idx" ON "battles"("created_at");
+CREATE INDEX "battles_tournament_id_idx" ON "battles"("tournament_id");
+CREATE INDEX "battles_battle_type_idx" ON "battles"("battle_type");
+
+-- ============================================================================
+-- SCHEDULED MATCHES TABLE
+-- ============================================================================
 CREATE TABLE "scheduled_matches" (
     "id" SERIAL NOT NULL,
     "robot1_id" INTEGER NOT NULL,
@@ -228,7 +292,14 @@ CREATE TABLE "scheduled_matches" (
     CONSTRAINT "scheduled_matches_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE INDEX "scheduled_matches_robot1_id_idx" ON "scheduled_matches"("robot1_id");
+CREATE INDEX "scheduled_matches_robot2_id_idx" ON "scheduled_matches"("robot2_id");
+CREATE INDEX "scheduled_matches_scheduled_for_status_idx" ON "scheduled_matches"("scheduled_for", "status");
+CREATE INDEX "scheduled_matches_status_idx" ON "scheduled_matches"("status");
+
+-- ============================================================================
+-- CYCLE METADATA TABLE
+-- ============================================================================
 CREATE TABLE "cycle_metadata" (
     "id" INTEGER NOT NULL DEFAULT 1,
     "total_cycles" INTEGER NOT NULL DEFAULT 0,
@@ -239,7 +310,9 @@ CREATE TABLE "cycle_metadata" (
     CONSTRAINT "cycle_metadata_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- ============================================================================
+-- AUDIT LOGS TABLE
+-- ============================================================================
 CREATE TABLE "audit_logs" (
     "id" BIGSERIAL NOT NULL,
     "cycle_number" INTEGER NOT NULL,
@@ -255,7 +328,21 @@ CREATE TABLE "audit_logs" (
     CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE INDEX "audit_logs_cycle_number_idx" ON "audit_logs"("cycle_number");
+CREATE INDEX "audit_logs_user_id_idx" ON "audit_logs"("user_id");
+CREATE INDEX "audit_logs_robot_id_idx" ON "audit_logs"("robot_id");
+CREATE INDEX "audit_logs_battle_id_idx" ON "audit_logs"("battle_id");
+CREATE INDEX "audit_logs_event_type_idx" ON "audit_logs"("event_type");
+CREATE INDEX "audit_logs_event_timestamp_idx" ON "audit_logs"("event_timestamp");
+CREATE INDEX "audit_logs_cycle_number_user_id_idx" ON "audit_logs"("cycle_number", "user_id");
+CREATE INDEX "audit_logs_cycle_number_robot_id_idx" ON "audit_logs"("cycle_number", "robot_id");
+CREATE INDEX "audit_logs_cycle_number_battle_id_idx" ON "audit_logs"("cycle_number", "battle_id");
+CREATE INDEX "audit_logs_cycle_number_event_type_idx" ON "audit_logs"("cycle_number", "event_type");
+CREATE UNIQUE INDEX "audit_logs_cycle_number_sequence_number_key" ON "audit_logs"("cycle_number", "sequence_number");
+
+-- ============================================================================
+-- CYCLE SNAPSHOTS TABLE
+-- ============================================================================
 CREATE TABLE "cycle_snapshots" (
     "id" SERIAL NOT NULL,
     "cycle_number" INTEGER NOT NULL,
@@ -274,7 +361,13 @@ CREATE TABLE "cycle_snapshots" (
     CONSTRAINT "cycle_snapshots_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE UNIQUE INDEX "cycle_snapshots_cycle_number_key" ON "cycle_snapshots"("cycle_number");
+CREATE INDEX "cycle_snapshots_cycle_number_idx" ON "cycle_snapshots"("cycle_number");
+CREATE INDEX "cycle_snapshots_start_time_idx" ON "cycle_snapshots"("start_time");
+
+-- ============================================================================
+-- TOURNAMENTS TABLE
+-- ============================================================================
 CREATE TABLE "tournaments" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(100) NOT NULL,
@@ -291,7 +384,12 @@ CREATE TABLE "tournaments" (
     CONSTRAINT "tournaments_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE INDEX "tournaments_status_idx" ON "tournaments"("status");
+CREATE INDEX "tournaments_winner_id_idx" ON "tournaments"("winner_id");
+
+-- ============================================================================
+-- TOURNAMENT MATCHES TABLE
+-- ============================================================================
 CREATE TABLE "tournament_matches" (
     "id" SERIAL NOT NULL,
     "tournament_id" INTEGER NOT NULL,
@@ -309,7 +407,15 @@ CREATE TABLE "tournament_matches" (
     CONSTRAINT "tournament_matches_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE UNIQUE INDEX "tournament_matches_battle_id_key" ON "tournament_matches"("battle_id");
+CREATE INDEX "tournament_matches_tournament_id_round_idx" ON "tournament_matches"("tournament_id", "round");
+CREATE INDEX "tournament_matches_status_idx" ON "tournament_matches"("status");
+CREATE INDEX "tournament_matches_robot1_id_idx" ON "tournament_matches"("robot1_id");
+CREATE INDEX "tournament_matches_robot2_id_idx" ON "tournament_matches"("robot2_id");
+
+-- ============================================================================
+-- TAG TEAMS TABLE
+-- ============================================================================
 CREATE TABLE "tag_teams" (
     "id" SERIAL NOT NULL,
     "stable_id" INTEGER NOT NULL,
@@ -328,7 +434,15 @@ CREATE TABLE "tag_teams" (
     CONSTRAINT "tag_teams_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+CREATE INDEX "tag_teams_stable_id_idx" ON "tag_teams"("stable_id");
+CREATE INDEX "tag_teams_tag_team_league_tag_team_league_id_idx" ON "tag_teams"("tag_team_league", "tag_team_league_id");
+CREATE INDEX "tag_teams_active_robot_id_idx" ON "tag_teams"("active_robot_id");
+CREATE INDEX "tag_teams_reserve_robot_id_idx" ON "tag_teams"("reserve_robot_id");
+CREATE UNIQUE INDEX "tag_teams_active_robot_id_reserve_robot_id_key" ON "tag_teams"("active_robot_id", "reserve_robot_id");
+
+-- ============================================================================
+-- TAG TEAM MATCHES TABLE
+-- ============================================================================
 CREATE TABLE "tag_team_matches" (
     "id" SERIAL NOT NULL,
     "team1_id" INTEGER NOT NULL,
@@ -342,242 +456,119 @@ CREATE TABLE "tag_team_matches" (
     CONSTRAINT "tag_team_matches_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_stable_name_key" ON "users"("stable_name");
-
--- CreateIndex
-CREATE INDEX "facilities_user_id_idx" ON "facilities"("user_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "facilities_user_id_facility_type_key" ON "facilities"("user_id", "facility_type");
-
--- CreateIndex
-CREATE INDEX "robots_user_id_idx" ON "robots"("user_id");
-
--- CreateIndex
-CREATE INDEX "robots_elo_idx" ON "robots"("elo");
-
--- CreateIndex
-CREATE INDEX "robots_current_league_idx" ON "robots"("current_league");
-
--- CreateIndex
-CREATE INDEX "robots_current_league_league_id_idx" ON "robots"("current_league", "league_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "robots_user_id_name_key" ON "robots"("user_id", "name");
-
--- CreateIndex
-CREATE INDEX "weapon_inventory_user_id_idx" ON "weapon_inventory"("user_id");
-
--- CreateIndex
-CREATE INDEX "weapon_inventory_weapon_id_idx" ON "weapon_inventory"("weapon_id");
-
--- CreateIndex
-CREATE INDEX "battle_participants_battle_id_idx" ON "battle_participants"("battle_id");
-
--- CreateIndex
-CREATE INDEX "battle_participants_robot_id_idx" ON "battle_participants"("robot_id");
-
--- CreateIndex
-CREATE INDEX "battle_participants_battle_id_team_idx" ON "battle_participants"("battle_id", "team");
-
--- CreateIndex
-CREATE UNIQUE INDEX "battle_participants_battle_id_robot_id_key" ON "battle_participants"("battle_id", "robot_id");
-
--- CreateIndex
-CREATE INDEX "battles_robot1_id_idx" ON "battles"("robot1_id");
-
--- CreateIndex
-CREATE INDEX "battles_robot2_id_idx" ON "battles"("robot2_id");
-
--- CreateIndex
-CREATE INDEX "battles_created_at_idx" ON "battles"("created_at");
-
--- CreateIndex
-CREATE INDEX "battles_tournament_id_idx" ON "battles"("tournament_id");
-
--- CreateIndex
-CREATE INDEX "battles_battle_type_idx" ON "battles"("battle_type");
-
--- CreateIndex
-CREATE INDEX "scheduled_matches_robot1_id_idx" ON "scheduled_matches"("robot1_id");
-
--- CreateIndex
-CREATE INDEX "scheduled_matches_robot2_id_idx" ON "scheduled_matches"("robot2_id");
-
--- CreateIndex
-CREATE INDEX "scheduled_matches_scheduled_for_status_idx" ON "scheduled_matches"("scheduled_for", "status");
-
--- CreateIndex
-CREATE INDEX "scheduled_matches_status_idx" ON "scheduled_matches"("status");
-
--- CreateIndex
-CREATE INDEX "audit_logs_cycle_number_idx" ON "audit_logs"("cycle_number");
-
--- CreateIndex
-CREATE INDEX "audit_logs_user_id_idx" ON "audit_logs"("user_id");
-
--- CreateIndex
-CREATE INDEX "audit_logs_robot_id_idx" ON "audit_logs"("robot_id");
-
--- CreateIndex
-CREATE INDEX "audit_logs_battle_id_idx" ON "audit_logs"("battle_id");
-
--- CreateIndex
-CREATE INDEX "audit_logs_event_type_idx" ON "audit_logs"("event_type");
-
--- CreateIndex
-CREATE INDEX "audit_logs_event_timestamp_idx" ON "audit_logs"("event_timestamp");
-
--- CreateIndex
-CREATE INDEX "audit_logs_cycle_number_user_id_idx" ON "audit_logs"("cycle_number", "user_id");
-
--- CreateIndex
-CREATE INDEX "audit_logs_cycle_number_robot_id_idx" ON "audit_logs"("cycle_number", "robot_id");
-
--- CreateIndex
-CREATE INDEX "audit_logs_cycle_number_battle_id_idx" ON "audit_logs"("cycle_number", "battle_id");
-
--- CreateIndex
-CREATE INDEX "audit_logs_cycle_number_event_type_idx" ON "audit_logs"("cycle_number", "event_type");
-
--- CreateIndex
-CREATE UNIQUE INDEX "audit_logs_cycle_number_sequence_number_key" ON "audit_logs"("cycle_number", "sequence_number");
-
--- CreateIndex
-CREATE UNIQUE INDEX "cycle_snapshots_cycle_number_key" ON "cycle_snapshots"("cycle_number");
-
--- CreateIndex
-CREATE INDEX "cycle_snapshots_cycle_number_idx" ON "cycle_snapshots"("cycle_number");
-
--- CreateIndex
-CREATE INDEX "cycle_snapshots_start_time_idx" ON "cycle_snapshots"("start_time");
-
--- CreateIndex
-CREATE INDEX "tournaments_status_idx" ON "tournaments"("status");
-
--- CreateIndex
-CREATE INDEX "tournaments_winner_id_idx" ON "tournaments"("winner_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "tournament_matches_battle_id_key" ON "tournament_matches"("battle_id");
-
--- CreateIndex
-CREATE INDEX "tournament_matches_tournament_id_round_idx" ON "tournament_matches"("tournament_id", "round");
-
--- CreateIndex
-CREATE INDEX "tournament_matches_status_idx" ON "tournament_matches"("status");
-
--- CreateIndex
-CREATE INDEX "tournament_matches_robot1_id_idx" ON "tournament_matches"("robot1_id");
-
--- CreateIndex
-CREATE INDEX "tournament_matches_robot2_id_idx" ON "tournament_matches"("robot2_id");
-
--- CreateIndex
-CREATE INDEX "tag_teams_stable_id_idx" ON "tag_teams"("stable_id");
-
--- CreateIndex
-CREATE INDEX "tag_teams_tag_team_league_tag_team_league_id_idx" ON "tag_teams"("tag_team_league", "tag_team_league_id");
-
--- CreateIndex
-CREATE INDEX "tag_teams_active_robot_id_idx" ON "tag_teams"("active_robot_id");
-
--- CreateIndex
-CREATE INDEX "tag_teams_reserve_robot_id_idx" ON "tag_teams"("reserve_robot_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "tag_teams_active_robot_id_reserve_robot_id_key" ON "tag_teams"("active_robot_id", "reserve_robot_id");
-
--- CreateIndex
 CREATE INDEX "tag_team_matches_team1_id_idx" ON "tag_team_matches"("team1_id");
-
--- CreateIndex
 CREATE INDEX "tag_team_matches_team2_id_idx" ON "tag_team_matches"("team2_id");
-
--- CreateIndex
 CREATE INDEX "tag_team_matches_scheduled_for_status_idx" ON "tag_team_matches"("scheduled_for", "status");
-
--- CreateIndex
 CREATE INDEX "tag_team_matches_status_idx" ON "tag_team_matches"("status");
 
--- AddForeignKey
+-- ============================================================================
+-- RESET LOGS TABLE (Onboarding Feature)
+-- ============================================================================
+CREATE TABLE "reset_logs" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "robots_deleted" INTEGER NOT NULL,
+    "weapons_deleted" INTEGER NOT NULL,
+    "facilities_deleted" INTEGER NOT NULL,
+    "credits_before_reset" DECIMAL(15,2) NOT NULL,
+    "reason" TEXT,
+    "reset_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "reset_logs_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX "reset_logs_user_id_idx" ON "reset_logs"("user_id");
+CREATE INDEX "reset_logs_reset_at_idx" ON "reset_logs"("reset_at");
+
+-- ============================================================================
+-- SCHEDULED KOTH MATCHES TABLE (King of the Hill)
+-- ============================================================================
+CREATE TABLE "scheduled_koth_matches" (
+    "id" SERIAL NOT NULL,
+    "scheduled_for" TIMESTAMP(3) NOT NULL,
+    "status" VARCHAR(20) NOT NULL DEFAULT 'scheduled',
+    "battle_id" INTEGER,
+    "rotating_zone" BOOLEAN NOT NULL DEFAULT false,
+    "score_threshold" INTEGER,
+    "time_limit" INTEGER,
+    "zone_radius" INTEGER,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "scheduled_koth_matches_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX "scheduled_koth_matches_scheduled_for_status_idx" ON "scheduled_koth_matches"("scheduled_for", "status");
+CREATE INDEX "scheduled_koth_matches_status_idx" ON "scheduled_koth_matches"("status");
+
+-- ============================================================================
+-- SCHEDULED KOTH MATCH PARTICIPANTS TABLE
+-- ============================================================================
+CREATE TABLE "scheduled_koth_match_participants" (
+    "id" SERIAL NOT NULL,
+    "match_id" INTEGER NOT NULL,
+    "robot_id" INTEGER NOT NULL,
+
+    CONSTRAINT "scheduled_koth_match_participants_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX "scheduled_koth_match_participants_match_id_idx" ON "scheduled_koth_match_participants"("match_id");
+CREATE INDEX "scheduled_koth_match_participants_robot_id_idx" ON "scheduled_koth_match_participants"("robot_id");
+CREATE UNIQUE INDEX "scheduled_koth_match_participants_match_id_robot_id_key" ON "scheduled_koth_match_participants"("match_id", "robot_id");
+
+
+-- ============================================================================
+-- FOREIGN KEY CONSTRAINTS
+-- ============================================================================
+
+-- Facilities
 ALTER TABLE "facilities" ADD CONSTRAINT "facilities_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Robots
 ALTER TABLE "robots" ADD CONSTRAINT "robots_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "robots" ADD CONSTRAINT "robots_main_weapon_id_fkey" FOREIGN KEY ("main_weapon_id") REFERENCES "weapon_inventory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "robots" ADD CONSTRAINT "robots_offhand_weapon_id_fkey" FOREIGN KEY ("offhand_weapon_id") REFERENCES "weapon_inventory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Weapon Inventory
 ALTER TABLE "weapon_inventory" ADD CONSTRAINT "weapon_inventory_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "weapon_inventory" ADD CONSTRAINT "weapon_inventory_weapon_id_fkey" FOREIGN KEY ("weapon_id") REFERENCES "weapons"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Battle Participants
 ALTER TABLE "battle_participants" ADD CONSTRAINT "battle_participants_battle_id_fkey" FOREIGN KEY ("battle_id") REFERENCES "battles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "battle_participants" ADD CONSTRAINT "battle_participants_robot_id_fkey" FOREIGN KEY ("robot_id") REFERENCES "robots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Battles
 ALTER TABLE "battles" ADD CONSTRAINT "battles_robot1_id_fkey" FOREIGN KEY ("robot1_id") REFERENCES "robots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "battles" ADD CONSTRAINT "battles_robot2_id_fkey" FOREIGN KEY ("robot2_id") REFERENCES "robots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "battles" ADD CONSTRAINT "battles_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Scheduled Matches
 ALTER TABLE "scheduled_matches" ADD CONSTRAINT "scheduled_matches_robot1_id_fkey" FOREIGN KEY ("robot1_id") REFERENCES "robots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "scheduled_matches" ADD CONSTRAINT "scheduled_matches_robot2_id_fkey" FOREIGN KEY ("robot2_id") REFERENCES "robots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "scheduled_matches" ADD CONSTRAINT "scheduled_matches_battle_id_fkey" FOREIGN KEY ("battle_id") REFERENCES "battles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Tournaments
 ALTER TABLE "tournaments" ADD CONSTRAINT "tournaments_winner_id_fkey" FOREIGN KEY ("winner_id") REFERENCES "robots"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Tournament Matches
 ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_robot1_id_fkey" FOREIGN KEY ("robot1_id") REFERENCES "robots"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_robot2_id_fkey" FOREIGN KEY ("robot2_id") REFERENCES "robots"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_winner_id_fkey" FOREIGN KEY ("winner_id") REFERENCES "robots"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_battle_id_fkey" FOREIGN KEY ("battle_id") REFERENCES "battles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Tag Teams
 ALTER TABLE "tag_teams" ADD CONSTRAINT "tag_teams_stable_id_fkey" FOREIGN KEY ("stable_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tag_teams" ADD CONSTRAINT "tag_teams_active_robot_id_fkey" FOREIGN KEY ("active_robot_id") REFERENCES "robots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tag_teams" ADD CONSTRAINT "tag_teams_reserve_robot_id_fkey" FOREIGN KEY ("reserve_robot_id") REFERENCES "robots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
+-- Tag Team Matches
 ALTER TABLE "tag_team_matches" ADD CONSTRAINT "tag_team_matches_team1_id_fkey" FOREIGN KEY ("team1_id") REFERENCES "tag_teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tag_team_matches" ADD CONSTRAINT "tag_team_matches_team2_id_fkey" FOREIGN KEY ("team2_id") REFERENCES "tag_teams"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "tag_team_matches" ADD CONSTRAINT "tag_team_matches_battle_id_fkey" FOREIGN KEY ("battle_id") REFERENCES "battles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Scheduled KotH Matches
+ALTER TABLE "scheduled_koth_matches" ADD CONSTRAINT "scheduled_koth_matches_battle_id_fkey" FOREIGN KEY ("battle_id") REFERENCES "battles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Scheduled KotH Match Participants
+ALTER TABLE "scheduled_koth_match_participants" ADD CONSTRAINT "scheduled_koth_match_participants_match_id_fkey" FOREIGN KEY ("match_id") REFERENCES "scheduled_koth_matches"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "scheduled_koth_match_participants" ADD CONSTRAINT "scheduled_koth_match_participants_robot_id_fkey" FOREIGN KEY ("robot_id") REFERENCES "robots"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

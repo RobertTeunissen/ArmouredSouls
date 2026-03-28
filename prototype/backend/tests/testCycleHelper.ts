@@ -5,7 +5,7 @@
  */
 
 import { clearSequenceCache } from '../src/services/eventLogger';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
 
 // Counter for generating unique cycle numbers within INT4 range
 let cycleCounter = 100000;

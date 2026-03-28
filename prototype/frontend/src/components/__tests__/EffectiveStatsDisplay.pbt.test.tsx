@@ -214,7 +214,7 @@ describe('Property 21: Expandable Details Functionality (Property-Based Test)', 
     );
   }, 20000); // Test timeout
 
-  it('should show calculation formula in expanded details', async () => {
+  it('should show calculation formula in expanded details', { timeout: 15000 }, async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 10, max: 50 }),

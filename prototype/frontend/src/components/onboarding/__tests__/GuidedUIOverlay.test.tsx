@@ -58,7 +58,7 @@ describe('GuidedUIOverlay', () => {
         />
       );
 
-      const overlay = container.querySelector('.bg-black.bg-opacity-60');
+      const overlay = container.querySelector('.bg-black\\/70');
       expect(overlay).toBeInTheDocument();
       expect(overlay).toHaveClass('fixed', 'inset-0', 'z-[9998]');
     });
@@ -487,7 +487,7 @@ describe('GuidedUIOverlay', () => {
         />
       );
 
-      const overlay = container.querySelector('.bg-black.bg-opacity-60');
+      const overlay = container.querySelector('.bg-black\\/70');
       expect(overlay).toHaveAttribute('aria-hidden', 'true');
     });
 
@@ -554,21 +554,19 @@ describe('GuidedUIOverlay', () => {
   });
 
   describe('Error Handling', () => {
-    it('should log warning when target element not found', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation();
-
-      render(
+    it('should render nothing when target element not found', () => {
+      const { container } = render(
         <GuidedUIOverlay
           targetSelector="#non-existent"
           tooltipContent={<div>Test content</div>}
         />
       );
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Target element not found')
-      );
-
-      consoleWarnSpy.mockRestore();
+      // Should not render overlay or tooltip when target not found
+      const overlay = container.querySelector('.bg-black\\/70');
+      const tooltip = container.querySelector('[role="dialog"]');
+      expect(overlay).not.toBeInTheDocument();
+      expect(tooltip).not.toBeInTheDocument();
     });
   });
 });

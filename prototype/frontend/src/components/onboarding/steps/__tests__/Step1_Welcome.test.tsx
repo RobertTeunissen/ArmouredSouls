@@ -375,8 +375,9 @@ describe('Step1_Welcome', () => {
       const mockOnNext = vi.fn();
       const { container } = render(<Step1_Welcome onNext={mockOnNext} />);
       
-      const mainContainer = container.querySelector('.space-y-8');
-      expect(mainContainer).toBeInTheDocument();
+      // Check for mb-8 spacing pattern used consistently across steps
+      const sectionsWithSpacing = container.querySelectorAll('.mb-8');
+      expect(sectionsWithSpacing.length).toBeGreaterThan(0);
     });
 
     it('should have colored step indicators', () => {

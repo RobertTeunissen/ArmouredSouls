@@ -247,7 +247,7 @@ pm2 monit                  # Real-time monitoring
 ### Local Database Reset
 ```bash
 cd prototype/backend
-npx prisma migrate reset --force  # Drops, recreates, seeds
+npm run db:reset  # Drops, recreates, applies migrations, seeds
 ```
 
 ### VPS Database Backup
@@ -362,7 +362,7 @@ cd backend && npm run dev  # Terminal 1
 cd frontend && npm run dev # Terminal 2
 
 # Reset database
-cd backend && npx prisma migrate reset --force
+cd backend && npm run db:reset
 
 # Run tests
 cd backend && npm test

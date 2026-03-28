@@ -665,8 +665,9 @@ async function findBestInstance(tier: string): Promise<string> {
   // Find instance with most free spots
   const leastFull = instances.sort((a, b) => a.currentRobots - b.currentRobots)[0];
 
-  if (leastFull.currentRobots >= MAX_ROBOTS_PER_INSTANCE) {
-    // All instances full, create new one
+  if (leastFull.currentRobots > MAX_ROBOTS_PER_INSTANCE) {
+    // All instances are over capacity, create new one as fallback
+    // (This should rarely happen - rebalancing should handle splits)
     const nextInstanceNumber = Math.max(...instances.map((i) => i.instanceNumber)) + 1;
     return `${tier}_${nextInstanceNumber}`;
   }

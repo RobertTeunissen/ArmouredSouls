@@ -1,4 +1,4 @@
-import { Robot } from '@prisma/client';
+import { Robot } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import {
   checkBattleReadiness,
@@ -38,6 +38,7 @@ describe('Matchmaking Service', () => {
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
+        rangeBand: 'melee',
       },
     });
     testWeaponIds.push(practiceSword.id);
@@ -46,7 +47,7 @@ describe('Matchmaking Service', () => {
   afterEach(async () => {
     // Cleanup in correct order after each test
     if (testRobotIds.length > 0) {
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: testRobotIds } },
@@ -97,7 +98,7 @@ describe('Matchmaking Service', () => {
       const robotIds = robots.map(r => r.id);
 
       if (robotIds.length > 0) {
-        await prisma.scheduledMatch.deleteMany({
+        await prisma.scheduledLeagueMatch.deleteMany({
           where: {
             OR: [
               { robot1Id: { in: robotIds } },
@@ -492,7 +493,7 @@ describe('Matchmaking Service', () => {
 
       // Verify our robots got scheduled
       const robotIds = robots.map(r => r.id);
-      const scheduledMatches = await prisma.scheduledMatch.findMany({
+      const scheduledMatches = await prisma.scheduledLeagueMatch.findMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -504,7 +505,7 @@ describe('Matchmaking Service', () => {
       expect(scheduledMatches.length).toBeGreaterThanOrEqual(2);
 
       // Clean up
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -595,7 +596,7 @@ describe('Matchmaking Service', () => {
 
       // Check if any of our robots got a bye-match (matched against the bye robot)
       const robotIds = robots.map(r => r.id);
-      const ourMatches = await prisma.scheduledMatch.findMany({
+      const ourMatches = await prisma.scheduledLeagueMatch.findMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -608,7 +609,7 @@ describe('Matchmaking Service', () => {
       expect(ourMatches.length).toBeGreaterThanOrEqual(1);
 
       // Clean up
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robots.map(r => r.id) } },
@@ -664,7 +665,7 @@ describe('Matchmaking Service', () => {
       await runMatchmakingForTier('bronze', scheduledFor);
 
       const robotIds = robots.map(r => r.id);
-      const firstMatchCount = await prisma.scheduledMatch.count({
+      const firstMatchCount = await prisma.scheduledLeagueMatch.count({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -677,7 +678,7 @@ describe('Matchmaking Service', () => {
       // Run matchmaking again - should not create duplicates
       await runMatchmakingForTier('bronze', scheduledFor);
 
-      const secondMatchCount = await prisma.scheduledMatch.count({
+      const secondMatchCount = await prisma.scheduledLeagueMatch.count({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -688,7 +689,7 @@ describe('Matchmaking Service', () => {
       expect(secondMatchCount).toBe(firstMatchCount); // Same count, no duplicates
 
       // Clean up
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -750,7 +751,7 @@ describe('Matchmaking Service', () => {
       expect(matchCount).toBe(0);
 
       // Clean up
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: readyRobot.id },
@@ -802,7 +803,7 @@ describe('Matchmaking Service', () => {
 
       // Verify our robots got scheduled
       const robotIds = robots.map(r => r.id);
-      const scheduledMatches = await prisma.scheduledMatch.findMany({
+      const scheduledMatches = await prisma.scheduledLeagueMatch.findMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -813,7 +814,7 @@ describe('Matchmaking Service', () => {
       expect(scheduledMatches.length).toBeGreaterThanOrEqual(1);
 
       // Clean up
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -871,7 +872,7 @@ describe('Matchmaking Service', () => {
 
       // Clean up
       const allRobotIds = allRobots.map(r => r.id);
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: allRobotIds } },

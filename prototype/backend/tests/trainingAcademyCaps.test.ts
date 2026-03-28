@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import jwt from 'jsonwebtoken';
 import app from './testApp';

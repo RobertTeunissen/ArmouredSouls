@@ -3,15 +3,12 @@
  * Tests end-to-end functionality of prestige gates and income multipliers
  */
 
-import { PrismaClient } from '@prisma/client';
 import {
   getPrestigeMultiplier,
   calculateMerchandisingIncome,
   getNextPrestigeTier,
-} from '../../utils/economyCalculations';
-import { getFacilityConfig } from '../../config/facilities';
-
-const _prisma = new PrismaClient();
+} from '../src/utils/economyCalculations';
+import { getFacilityConfig } from '../src/config/facilities';
 
 describe('Prestige Features Integration', () => {
   describe('Prestige Gates End-to-End', () => {

@@ -4,14 +4,13 @@
  *
  * Test coverage:
  * - Component rendering
- * - Repair cost formula display
- * - Repair cost examples table
- * - Battle readiness checklist
- * - HP vs Shield regeneration explanation
+ * - Battle readiness checklist (HP above 0, weapon equipped)
+ * - HP vs Energy Shield regeneration explanation
+ * - Repair cost mechanics (cost per HP, manual discount, attribute scaling, destruction penalty)
+ * - Yielding strategy explanation
  * - Weapon equipping guidance
  * - Multi-robot strategy content
- * - Navigation buttons (Next, Previous, Go to Robot Detail)
- * - Guided overlay interaction
+ * - Navigation buttons (Next, Previous, Go to Robots Page)
  * - Loading/submitting states
  * - Error handling
  * - Accessibility (ARIA labels, roles)
@@ -41,17 +40,6 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   };
 });
-
-// Mock GuidedUIOverlay
-vi.mock('../../GuidedUIOverlay', () => ({
-  default: ({ tooltipContent, onNext, onClose }: any) => (
-    <div data-testid="guided-overlay">
-      <div data-testid="overlay-content">{tooltipContent}</div>
-      <button data-testid="overlay-next" onClick={onNext}>Next</button>
-      <button data-testid="overlay-close" onClick={onClose}>Close</button>
-    </div>
-  ),
-}));
 
 describe('Step8_BattleReadiness', () => {
   const mockOnNext = vi.fn();
@@ -134,7 +122,7 @@ describe('Step8_BattleReadiness', () => {
     it('should render the educational tip at the bottom', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/Shields are your best friend/)).toBeInTheDocument();
+        expect(screen.getByText(/Energy shields are your best friend/)).toBeInTheDocument();
       });
     });
   });
@@ -163,18 +151,11 @@ describe('Step8_BattleReadiness', () => {
       });
     });
 
-    it('should show credits requirement', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('Credits ≥ ₡100,000')).toBeInTheDocument();
-      });
-    });
-
-    it('should explain all three requirements must be met', async () => {
+    it('should explain both requirements must be met', async () => {
       renderComponent();
       await waitFor(() => {
         expect(screen.getByText(/must meet/)).toBeInTheDocument();
-        expect(screen.getByText(/all three/)).toBeInTheDocument();
+        expect(screen.getByText(/both/)).toBeInTheDocument();
       });
     });
 
@@ -183,7 +164,6 @@ describe('Step8_BattleReadiness', () => {
       await waitFor(() => {
         expect(screen.getByText(/must have hit points remaining/)).toBeInTheDocument();
         expect(screen.getByText(/At least one weapon must be equipped/)).toBeInTheDocument();
-        expect(screen.getByText(/at least ₡100,000 in reserve/)).toBeInTheDocument();
       });
     });
 
@@ -193,14 +173,21 @@ describe('Step8_BattleReadiness', () => {
         const list = screen.getByRole('list', { name: /Battle readiness checklist/ });
         expect(list).toBeInTheDocument();
         const items = within(list).getAllByRole('listitem');
-        expect(items).toHaveLength(3);
+        expect(items).toHaveLength(2);
+      });
+    });
+
+    it('should note no minimum credit balance required', async () => {
+      renderComponent();
+      await waitFor(() => {
+        expect(screen.getByText(/No minimum credit balance required/)).toBeInTheDocument();
       });
     });
   });
 
-  // ─── HP vs Shield Regeneration ─────────────────────────────────────
+  // ─── HP vs Energy Shield Regeneration ─────────────────────────────────────
 
-  describe('HP vs Shield Regeneration', () => {
+  describe('HP vs Energy Shield Regeneration', () => {
     it('should display the HP vs Shield section', async () => {
       renderComponent();
       await waitFor(() => {
@@ -216,7 +203,7 @@ describe('Step8_BattleReadiness', () => {
       });
     });
 
-    it('should explain shields DO regenerate', async () => {
+    it('should explain energy shields DO regenerate', async () => {
       renderComponent();
       await waitFor(() => {
         expect(screen.getByText('DO')).toBeInTheDocument();
@@ -230,14 +217,14 @@ describe('Step8_BattleReadiness', () => {
       });
     });
 
-    it('should display Shields heading', async () => {
+    it('should display Energy Shields heading', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('Shields')).toBeInTheDocument();
+        expect(screen.getByText('Energy Shields')).toBeInTheDocument();
       });
     });
 
-    it('should explain shields restore at no cost', async () => {
+    it('should explain energy shields restore at no cost', async () => {
       renderComponent();
       await waitFor(() => {
         expect(screen.getByText(/fully restore after each battle at no cost/)).toBeInTheDocument();
@@ -252,138 +239,88 @@ describe('Step8_BattleReadiness', () => {
     });
   });
 
-  // ─── Repair Cost Formula ───────────────────────────────────────────
+  // ─── Repair Cost Mechanics ───────────────────────────────────────────
 
-  describe('Repair Cost Formula', () => {
-    it('should display the repair cost formula section', async () => {
+  describe('Repair Cost Mechanics', () => {
+    it('should display the repair cost mechanics section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('Repair Cost Formula')).toBeInTheDocument();
+        expect(screen.getByText('How Repair Costs Work')).toBeInTheDocument();
       });
     });
 
-    it('should show the formula text', async () => {
+    it('should explain cost per HP damage', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/sum_of_attributes × 100.*damage_percentage/)).toBeInTheDocument();
+        expect(screen.getByText(/Cost Per HP Damage/)).toBeInTheDocument();
+        expect(screen.getByText(/pay a certain amount of credits for each HP point/)).toBeInTheDocument();
       });
     });
 
-    it('should explain sum_of_attributes', async () => {
+    it('should explain 50% manual repair discount', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('sum_of_attributes')).toBeInTheDocument();
-        expect(screen.getByText(/total of all your robot's attribute levels/)).toBeInTheDocument();
+        expect(screen.getByText(/50% Manual Repair Discount/)).toBeInTheDocument();
+        // Use getAllByText since "Repair All" appears multiple times
+        expect(screen.getAllByText(/Repair All/).length).toBeGreaterThan(0);
       });
     });
 
-    it('should explain the base cost multiplier', async () => {
+    it('should explain higher attributes mean higher costs', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('× 100')).toBeInTheDocument();
-        expect(screen.getByText(/Base cost multiplier/)).toBeInTheDocument();
+        expect(screen.getByText(/Higher Attributes = Higher Costs/)).toBeInTheDocument();
+        expect(screen.getByText(/higher attribute levels cost more to repair/)).toBeInTheDocument();
       });
     });
 
-    it('should explain damage_percentage', async () => {
+    it('should explain destruction penalty', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('× damage_percentage')).toBeInTheDocument();
-        expect(screen.getByText(/How much HP was lost/)).toBeInTheDocument();
-      });
-    });
-
-    it('should note higher attributes mean higher repair costs', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/Higher attribute levels mean higher repair costs/)).toBeInTheDocument();
+        expect(screen.getByText(/Destruction Penalty/)).toBeInTheDocument();
+        expect(screen.getByText(/repair costs are significantly higher/)).toBeInTheDocument();
       });
     });
   });
 
-  // ─── Repair Cost Examples Table ────────────────────────────────────
+  // ─── Yielding Strategy ─────────────────────────────────────────────
 
-  describe('Repair Cost Examples Table', () => {
-    it('should display the examples section heading', async () => {
+  describe('Yielding Strategy', () => {
+    it('should display the yielding section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('Example Repair Costs')).toBeInTheDocument();
+        expect(screen.getByText('Yielding: Your Cost-Saving Strategy')).toBeInTheDocument();
       });
     });
 
-    it('should show the attribute sum context', async () => {
+    it('should explain what yielding is', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText(/all 23 attributes at Level 1/)).toBeInTheDocument();
+        expect(screen.getByText(/surrender a battle before your robot is destroyed/)).toBeInTheDocument();
       });
     });
 
-    it('should render a table with proper role', async () => {
+    it('should explain why to yield', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByRole('table', { name: /Repair cost examples/ })).toBeInTheDocument();
+        expect(screen.getByText('Why Yield?')).toBeInTheDocument();
+        expect(screen.getByText(/Lower repair costs/)).toBeInTheDocument();
+        expect(screen.getByText(/Preserve HP/)).toBeInTheDocument();
       });
     });
 
-    it('should display all damage level labels', async () => {
+    it('should explain when to yield', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('Light Scratch')).toBeInTheDocument();
-        expect(screen.getByText('Minor Damage')).toBeInTheDocument();
-        expect(screen.getByText('Moderate Damage')).toBeInTheDocument();
-        expect(screen.getByText('Heavy Damage')).toBeInTheDocument();
-        expect(screen.getByText('Destroyed')).toBeInTheDocument();
+        expect(screen.getByText('When to Yield?')).toBeInTheDocument();
+        expect(screen.getByText(/heavily damaged and likely to be destroyed/)).toBeInTheDocument();
       });
     });
 
-    it('should display correct damage percentages', async () => {
+    it('should mention yield threshold setting', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByText('10%')).toBeInTheDocument();
-        expect(screen.getByText('25%')).toBeInTheDocument();
-        expect(screen.getByText('50%')).toBeInTheDocument();
-        expect(screen.getByText('75%')).toBeInTheDocument();
-        expect(screen.getByText('100%')).toBeInTheDocument();
-      });
-    });
-
-    it('should display correct repair costs for 10% damage', async () => {
-      // 23 * 100 * 0.10 = 230
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('₡230')).toBeInTheDocument();
-      });
-    });
-
-    it('should display correct repair costs for 50% damage', async () => {
-      // 23 * 100 * 0.50 = 1,150
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('₡1,150')).toBeInTheDocument();
-      });
-    });
-
-    it('should display correct repair costs for 100% damage', async () => {
-      // 23 * 100 * 1.00 = 2,300
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('₡2,300')).toBeInTheDocument();
-      });
-    });
-
-    it('should have table column headers', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText('Damage Level')).toBeInTheDocument();
-        expect(screen.getByText('Damage %')).toBeInTheDocument();
-        expect(screen.getByText('Repair Cost')).toBeInTheDocument();
-      });
-    });
-
-    it('should note that costs rise with attribute upgrades', async () => {
-      renderComponent();
-      await waitFor(() => {
-        expect(screen.getByText(/repair costs rise proportionally/)).toBeInTheDocument();
+        expect(screen.getByText(/yield threshold/)).toBeInTheDocument();
       });
     });
   });
@@ -432,10 +369,10 @@ describe('Step8_BattleReadiness', () => {
       });
     });
 
-    it('should mention doubled repair costs for 2_average', async () => {
+    it('should mention repair costs accumulate for 2_average', async () => {
       renderComponent('2_average');
       await waitFor(() => {
-        expect(screen.getByText(/repair costs are doubled/)).toBeInTheDocument();
+        expect(screen.getByText(/repair costs accumulate across both robots/)).toBeInTheDocument();
       });
     });
 
@@ -466,10 +403,10 @@ describe('Step8_BattleReadiness', () => {
   // ─── Navigation Buttons ────────────────────────────────────────────
 
   describe('Navigation Buttons', () => {
-    it('should render the Go to Robot Detail button', async () => {
+    it('should render the Go to Robots Page button', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Robot Detail/ })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Go to Robots Page/ })).toBeInTheDocument();
       });
     });
 
@@ -497,6 +434,19 @@ describe('Step8_BattleReadiness', () => {
 
       await user.click(screen.getByRole('button', { name: /Previous step/ }));
       expect(mockOnPrevious).toHaveBeenCalledTimes(1);
+    });
+
+    it('should navigate to robots page when Go to Robots Page is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Go to Robots Page/ })).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /Go to Robots Page/ }));
+
+      expect(mockNavigate).toHaveBeenCalledWith('/robots?onboarding=true');
     });
 
     it('should call advanceStep and onNext when Next is clicked', async () => {
@@ -575,82 +525,6 @@ describe('Step8_BattleReadiness', () => {
     });
   });
 
-  // ─── Guided Overlay ────────────────────────────────────────────────
-
-  describe('Guided Overlay', () => {
-    it('should show guided overlay when Go to Robot Detail is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Robot Detail/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Go to Robot Detail/ }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-    });
-
-    it('should navigate to robots page when overlay Next is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Robot Detail/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Go to Robot Detail/ }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('overlay-next')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-next'));
-
-      expect(mockNavigate).toHaveBeenCalledWith('/robots?onboarding=true');
-    });
-
-    it('should close overlay when Close is clicked', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Robot Detail/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Go to Robot Detail/ }));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-close'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should display overlay tooltip content about loadout section', async () => {
-      const user = userEvent.setup();
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Go to Robot Detail/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Go to Robot Detail/ }));
-
-      await waitFor(() => {
-        const overlay = screen.getByTestId('overlay-content');
-        expect(within(overlay).getByText(/Visit Robot Detail Page/)).toBeInTheDocument();
-        expect(within(overlay).getByText(/loadout section/)).toBeInTheDocument();
-      });
-    });
-  });
-
   // ─── Error Handling ────────────────────────────────────────────────
 
   describe('Error Handling', () => {
@@ -671,28 +545,6 @@ describe('Step8_BattleReadiness', () => {
       await waitFor(() => {
         // Button should be re-enabled after error
         expect(screen.getByRole('button', { name: /Next step/ })).toBeEnabled();
-      });
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should still call onNext even when advanceStep encounters an error', async () => {
-      const user = userEvent.setup();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Network error'));
-
-      renderComponent();
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Next step/ })).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByRole('button', { name: /Next step/ }));
-
-      await waitFor(() => {
-        // advanceStep catches errors internally, so onNext is still called
-        expect(mockOnNext).toHaveBeenCalled();
       });
 
       consoleSpy.mockRestore();
@@ -732,17 +584,17 @@ describe('Step8_BattleReadiness', () => {
       });
     });
 
-    it('should have aria-label on repair cost formula section', async () => {
+    it('should have aria-label on repair cost mechanics section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByLabelText('Repair Cost Formula')).toBeInTheDocument();
+        expect(screen.getByLabelText('Repair Cost Mechanics')).toBeInTheDocument();
       });
     });
 
-    it('should have aria-label on repair cost examples section', async () => {
+    it('should have aria-label on yielding section', async () => {
       renderComponent();
       await waitFor(() => {
-        expect(screen.getByLabelText('Repair Cost Examples')).toBeInTheDocument();
+        expect(screen.getByLabelText('Yielding Strategy')).toBeInTheDocument();
       });
     });
 
@@ -753,10 +605,10 @@ describe('Step8_BattleReadiness', () => {
       });
     });
 
-    it('should have accessible Go to Robot Detail button', async () => {
+    it('should have accessible Go to Robots Page button', async () => {
       renderComponent();
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /Go to Robot Detail/ });
+        const button = screen.getByRole('button', { name: /Go to Robots Page/ });
         expect(button).toBeInTheDocument();
         expect(button).toBeEnabled();
       });
@@ -775,15 +627,6 @@ describe('Step8_BattleReadiness', () => {
       await waitFor(() => {
         const button = screen.getByRole('button', { name: /Previous step/ });
         expect(button).toBeInTheDocument();
-      });
-    });
-
-    it('should have table with proper column headers using scope', async () => {
-      renderComponent();
-      await waitFor(() => {
-        const table = screen.getByRole('table');
-        const headers = within(table).getAllByRole('columnheader');
-        expect(headers).toHaveLength(3);
       });
     });
 

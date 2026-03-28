@@ -19,9 +19,10 @@ import { trackStrategySelected } from '../../../utils/onboardingAnalytics';
 
 interface Step2_RosterStrategyProps {
   onNext?: () => void;
+  onPrevious?: () => void;
 }
 
-const Step2_RosterStrategy = ({ onNext }: Step2_RosterStrategyProps) => {
+const Step2_RosterStrategy = ({ onNext, onPrevious }: Step2_RosterStrategyProps) => {
   const { tutorialState, updateStrategy, advanceStep } = useOnboarding();
   
   // Local state for selection before confirmation
@@ -133,6 +134,17 @@ const Step2_RosterStrategy = ({ onNext }: Step2_RosterStrategyProps) => {
               {isSubmitting ? 'Confirming...' : 'Confirm Strategy'}
             </button>
             
+            {/* Previous Button */}
+            {onPrevious && (
+              <button
+                onClick={onPrevious}
+                className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+                aria-label="Previous step"
+              >
+                Previous
+              </button>
+            )}
+            
             {/* Helper text */}
             {!selectedStrategy && (
               <p className="text-sm text-secondary">
@@ -142,15 +154,26 @@ const Step2_RosterStrategy = ({ onNext }: Step2_RosterStrategyProps) => {
           </>
         ) : (
           <>
-            {/* Next Button */}
-            <button
-              onClick={handleNext}
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-              aria-label="Next step: Facility Planning"
-            >
-              {isSubmitting ? 'Loading...' : 'Next: Facility Planning'}
-            </button>
+            {/* Navigation Buttons */}
+            <div className="flex gap-4">
+              {onPrevious && (
+                <button
+                  onClick={onPrevious}
+                  className="px-6 py-2 bg-surface-elevated hover:bg-gray-600 text-secondary rounded-lg font-medium transition-colors min-h-[44px]"
+                  aria-label="Previous step"
+                >
+                  Previous
+                </button>
+              )}
+              <button
+                onClick={handleNext}
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                aria-label="Next step: Facility Planning"
+              >
+                {isSubmitting ? 'Loading...' : 'Next: Facility Planning'}
+              </button>
+            </div>
 
             {/* Change Selection Button */}
             <button

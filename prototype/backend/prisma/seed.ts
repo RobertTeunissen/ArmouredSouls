@@ -1,11 +1,18 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
+import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
+import { generateStableName } from '../src/utils/stableNameGenerator';
+import { LOADOUT_TITLES, WEAPON_CODENAMES } from '../src/utils/tierConfig';
 
 // Load environment variables
 dotenv.config();
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({
+  adapter,
+  log: ['error', 'warn'],
+});
 
 const ROBOT_CREATION_COST = 500000;
 
@@ -833,8 +840,9 @@ export async function upsertWeapon(data: Record<string, unknown>) {
 
 /**
  * Upsert a user by username (unique constraint exists).
+ * Note: stableName is only set on CREATE, not on UPDATE, to avoid unique constraint violations.
  */
-export async function upsertUser(data: { username: string; passwordHash: string; role?: string; currency?: number; prestige?: number; hasCompletedOnboarding?: boolean }) {
+export async function upsertUser(data: { username: string; passwordHash: string; role?: string; currency?: number; prestige?: number; hasCompletedOnboarding?: boolean; stableName?: string }) {
   return prisma.user.upsert({
     where: { username: data.username },
     update: {
@@ -843,6 +851,7 @@ export async function upsertUser(data: { username: string; passwordHash: string;
       currency: data.currency ?? 0,
       prestige: data.prestige ?? 0,
       hasCompletedOnboarding: data.hasCompletedOnboarding ?? false,
+      // Don't update stableName - it's unique and the user may already have one
     },
     create: data,
   });
@@ -919,10 +928,10 @@ async function seedCycleMetadata() {
   console.log('Initializing cycle metadata...');
   await prisma.cycleMetadata.upsert({
     where: { id: 1 },
-    update: {}, // Don't overwrite existing cycle counts
+    update: { totalCycles: 0 }, // Reset cycle count on reseed
     create: { id: 1, totalCycles: 0 },
   });
-  console.log('✅ Cycle metadata initialized (idempotent)\n');
+  console.log('✅ Cycle metadata initialized (reset to cycle 0)\n');
 }
 
 /** Seeds the bye-robot user and robot — required in ALL environments */
@@ -961,34 +970,33 @@ async function seedByeRobot(practiceSword: { id: number }) {
   return { byeUser, byeRobot };
 }
 
-/** Seeds admin + player1-5 test users — acceptance & development only */
-async function seedCoreTestUsers(practiceSword: { id: number }) {
-  console.log('Creating test users (admin + player1-5)...');
-  const hashedPassword = await bcrypt.hash('password123', 10);
+/** Seeds admin account — acceptance & development only */
+async function seedAdminAccount() {
+  console.log('Creating admin account...');
+
+  // Gather existing stable names to ensure uniqueness
+  const existingStableNames = await prisma.user.findMany({
+    where: { stableName: { not: null } },
+    select: { stableName: true },
+  });
+  const existingNames = new Set<string>(
+    existingStableNames.map((u) => u.stableName).filter((n): n is string => n !== null)
+  );
+
+  const stableName = generateStableName(existingNames);
 
   const adminUser = await upsertUser({
     username: 'admin',
     passwordHash: await bcrypt.hash('admin123', 10),
     role: 'admin',
-    currency: 10000000,
+    currency: 3000000,
     prestige: 0,
     hasCompletedOnboarding: true,
+    stableName,
   });
-  console.log('✅ Admin user upserted');
+  console.log(`✅ Admin user upserted (currency: ₡3,000,000, stableName: "${stableName}")`);
 
-  const playerUsers = [];
-  for (let i = 1; i <= 5; i++) {
-    const user = await upsertUser({
-      username: `player${i}`,
-      passwordHash: hashedPassword,
-      currency: 3000000,
-      hasCompletedOnboarding: true,
-    });
-    playerUsers.push(user);
-  }
-  console.log('✅ Player1-5 users upserted (password: password123)');
-
-  return { adminUser, playerUsers };
+  return { adminUser };
 }
 
 /** Seeds 200 WimpBot test users — development & acceptance */
@@ -996,134 +1004,95 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
   console.log('Creating 200 test users with WimpBot robots...');
   const testHashedPassword = await bcrypt.hash('testpass123', 10);
 
-  const weaponGroups: { weapon: { id: number; name: string }; tag: string }[] = [
-    { weapon: weapons.find((w) => w.name === 'Practice Sword')!, tag: 'Sword' },
-    { weapon: weapons.find((w) => w.name === 'Training Beam')!, tag: 'Beam' },
-    { weapon: weapons.find((w) => w.name === 'Training Rifle')!, tag: 'Rifle' },
-    { weapon: weapons.find((w) => w.name === 'Practice Blaster')!, tag: 'Blaster' },
+  const weaponGroups = [
+    { weapon: weapons.find((w) => w.name === 'Practice Sword')!, loadoutType: 'single' as const },
+    { weapon: weapons.find((w) => w.name === 'Practice Blaster')!, loadoutType: 'single' as const },
+    { weapon: weapons.find((w) => w.name === 'Training Rifle')!, loadoutType: 'two_handed' as const },
+    { weapon: weapons.find((w) => w.name === 'Training Beam')!, loadoutType: 'two_handed' as const },
   ];
 
   for (const group of weaponGroups) {
     if (!group.weapon) {
-      throw new Error(`Weapon "${group.tag}" not found in seeded weapons array`);
+      throw new Error(`Weapon "${group.weapon}" not found in seeded weapons array`);
     }
   }
 
-  for (let i = 1; i <= 200; i++) {
-    const username = `test_user_${String(i).padStart(3, '0')}`;
-    const groupIndex = Math.ceil(i / 50) - 1; // 1-50 → 0, 51-100 → 1, 101-150 → 2, 151-200 → 3
-    const { weapon, tag } = weaponGroups[groupIndex];
-    const robotName = `WimpBot-${tag} ${i}`;
+  // Pre-populate with existing stable names from database to avoid collisions
+  const existingStableNames = await prisma.user.findMany({
+    where: { stableName: { not: null } },
+    select: { stableName: true },
+  });
+  const existingNames = new Set<string>(
+    existingStableNames.map((u) => u.stableName).filter((n): n is string => n !== null)
+  );
 
-    const user = await upsertUser({
-      username,
-      passwordHash: testHashedPassword,
-      currency: 100000,
-    });
+  // 200 robots → 2 league instances (max 100 per instance)
+  // Each league gets 100 robots with 25 of each weapon type for variety
+  const MAX_ROBOTS_PER_LEAGUE = 100;
+  const TOTAL_ROBOTS = 200;
+  const LEAGUES_COUNT = Math.ceil(TOTAL_ROBOTS / MAX_ROBOTS_PER_LEAGUE); // 2
 
-    const weaponInv = await ensureWeaponInventory(user.id, weapon.id);
-
-    await upsertRobot({
-      userId: user.id,
-      name: robotName,
-      frameId: 1,
-      ...DEFAULT_ROBOT_ATTRIBUTES,
-      currentHP: 55,
-      maxHP: 55,
-      currentShield: 4,
-      maxShield: 4,
-      elo: 1200,
-      currentLeague: 'bronze',
-      leagueId: 'bronze_1',
-      leaguePoints: 0,
-      loadoutType: 'single',
-      mainWeaponId: weaponInv.id,
-      stance: 'balanced',
-      battleReadiness: 100,
-      yieldThreshold: 10,
-    });
-
-    if (i % 50 === 0) {
-      console.log(`   Created ${i}/200 WimpBot robots (${tag} group done)`);
-    }
+  // Track per-weapon counters for naming (1-50 per weapon type)
+  const weaponCounters = new Map<string, number>();
+  for (const group of weaponGroups) {
+    weaponCounters.set(group.weapon.name, 0);
   }
 
-  console.log('✅ 200 WimpBot test users upserted (50 per weapon type)');
-}
+  let userIndex = 0;
+  for (let leagueNum = 1; leagueNum <= LEAGUES_COUNT; leagueNum++) {
+    // Distribute weapons evenly within each league using round-robin
+    for (let robotInLeague = 0; robotInLeague < MAX_ROBOTS_PER_LEAGUE; robotInLeague++) {
+      userIndex++;
+      const username = `test_user_${String(userIndex).padStart(3, '0')}`;
 
-/** Seeds 230 attribute test users — development only */
-async function seedAttributeTestUsers(practiceSword: { id: number }) {
-  console.log('Creating 230 attribute test users (10 per attribute × 23 attributes)...');
-  const testHashedPassword = await bcrypt.hash('testpass123', 10);
+      // Round-robin weapon assignment for variety within each league
+      const weaponSlot = robotInLeague % weaponGroups.length;
+      const { weapon, loadoutType } = weaponGroups[weaponSlot];
 
-  const ATTRIBUTE_NAMES = [
-    'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
-    'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
-    'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
-    'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
-    'syncProtocols', 'supportSystems', 'formationTactics',
-  ] as const;
+      // Increment weapon-specific counter for naming
+      const weaponNum = weaponCounters.get(weapon.name)! + 1;
+      weaponCounters.set(weapon.name, weaponNum);
 
-  const ATTRIBUTE_LABELS: Record<string, string> = {
-    combatPower: 'CombatPwr', targetingSystems: 'Targeting', criticalSystems: 'CritSys',
-    penetration: 'Penetratn', weaponControl: 'WeaponCtl', attackSpeed: 'AtkSpeed',
-    armorPlating: 'ArmorPlat', shieldCapacity: 'ShieldCap', evasionThrusters: 'Evasion',
-    damageDampeners: 'DmgDampen', counterProtocols: 'CounterPr', hullIntegrity: 'HullInteg',
-    servoMotors: 'ServoMtr', gyroStabilizers: 'GyroStab', hydraulicSystems: 'Hydraulic',
-    powerCore: 'PowerCore', combatAlgorithms: 'CombatAlg', threatAnalysis: 'ThreatAnl',
-    adaptiveAI: 'AdaptAI', logicCores: 'LogicCore', syncProtocols: 'SyncProto',
-    supportSystems: 'SupportSy', formationTactics: 'FormTacti',
-  };
+      const loadoutTitle = LOADOUT_TITLES[loadoutType];
+      const weaponCodename = WEAPON_CODENAMES[weapon.name];
+      const robotName = `WimpBot ${loadoutTitle} ${weaponCodename} ${weaponNum}`;
 
-  let count = 0;
-  for (const attr of ATTRIBUTE_NAMES) {
-    const label = ATTRIBUTE_LABELS[attr];
-
-    for (let i = 1; i <= 10; i++) {
-      const username = `attr_${label}_${String(i).padStart(2, '0')}`.toLowerCase();
-      const robotName = `${label}-Bot-${String(i).padStart(2, '0')}`;
+      const stableName = generateStableName(existingNames);
+      existingNames.add(stableName);
 
       const user = await upsertUser({
         username,
         passwordHash: testHashedPassword,
         currency: 100000,
+        stableName,
       });
 
-      const weaponInv = await ensureWeaponInventory(user.id, practiceSword.id);
-
-      const robotAttrs = { ...DEFAULT_ROBOT_ATTRIBUTES, [attr]: 25.0 };
-      const hullVal = attr === 'hullIntegrity' ? 25.0 : 1.0;
-      const shieldVal = attr === 'shieldCapacity' ? 25.0 : 1.0;
-      const maxHP = 50 + Math.floor(hullVal * 5);
-      const maxShield = Math.floor(shieldVal * 4);
+      const weaponInv = await ensureWeaponInventory(user.id, weapon.id);
 
       await upsertRobot({
         userId: user.id,
         name: robotName,
         frameId: 1,
-        ...robotAttrs,
-        currentHP: maxHP,
-        maxHP,
-        currentShield: maxShield,
-        maxShield,
+        ...DEFAULT_ROBOT_ATTRIBUTES,
+        currentHP: 55,
+        maxHP: 55,
+        currentShield: 4,
+        maxShield: 4,
         elo: 1200,
         currentLeague: 'bronze',
-        leagueId: 'bronze_1',
+        leagueId: `bronze_${leagueNum}`,
         leaguePoints: 0,
-        loadoutType: 'single',
+        loadoutType,
         mainWeaponId: weaponInv.id,
         stance: 'balanced',
         battleReadiness: 100,
         yieldThreshold: 10,
       });
-
-      count++;
     }
-
-    console.log(`   ✅ Upserted 10 ${label} test users (attr: ${attr} = 25)`);
+    console.log(`   Created league bronze_${leagueNum} (${MAX_ROBOTS_PER_LEAGUE} robots, mixed weapons)`);
   }
 
-  console.log(`✅ ${count} attribute test users upserted`);
+  console.log('✅ 200 WimpBot test users upserted (2 leagues × 100 robots, 25 per weapon type per league)');
 }
 
 // ===== MAIN =====
@@ -1145,19 +1114,10 @@ async function main() {
   // Bye-Robot is essential game data (needed for odd-number matchmaking)
   await seedByeRobot(practiceSword);
 
-  // --- Acceptance data (acceptance + development) ---
+  // --- Acceptance + development data ---
   if (seedMode === 'acceptance' || seedMode === 'development') {
-    await seedCoreTestUsers(practiceSword);
-  }
-
-  // --- Full test data (development + acceptance) ---
-  if (seedMode === 'development' || seedMode === 'acceptance') {
+    await seedAdminAccount();
     await seedWimpBotUsers(weapons);
-  }
-
-  // --- Attribute test users (development only) ---
-  if (seedMode === 'development') {
-    await seedAttributeTestUsers(practiceSword);
   }
 
   // --- Summary ---
@@ -1171,35 +1131,20 @@ async function main() {
     console.log('   🔄 Cycle metadata initialized');
     console.log('   🤖 Bye-Robot for matchmaking');
     console.log('   ❌ No test users seeded');
-  } else if (seedMode === 'acceptance') {
-    console.log('📊 Acceptance seed summary:');
-    console.log(`   ⚔️  ${weapons.length} weapons`);
-    console.log('   🔄 Cycle metadata initialized');
-    console.log('   🤖 Bye-Robot for matchmaking');
-    console.log('   👤 Admin + player1-5 test accounts');
-    console.log('   👤 200 WimpBot test users (50 per weapon type)');
-    console.log('   ❌ No attribute test users');
   } else {
-    console.log('📊 Development seed summary:');
+    console.log(`📊 ${seedMode === 'acceptance' ? 'Acceptance' : 'Development'} seed summary:`);
     console.log(`   ⚔️  ${weapons.length} weapons`);
     console.log('   🔄 Cycle metadata initialized');
     console.log('   🤖 Bye-Robot for matchmaking');
-    console.log('   👤 Admin + player1-5 test accounts');
+    console.log('   👤 Admin account (₡3,000,000)');
     console.log('   👤 200 WimpBot test users (50 per weapon type)');
-    console.log('   👤 230 attribute test users');
   }
 
   console.log('');
   console.log('🔐 Login Credentials (if seeded):');
   if (seedMode !== 'production') {
     console.log('   - Admin: admin / admin123');
-    console.log('   - Players: player1-5 / password123');
-  }
-  if (seedMode === 'development' || seedMode === 'acceptance') {
-    console.log('   - Test users: test_user_001-100 / testpass123');
-  }
-  if (seedMode === 'development') {
-    console.log('   - Attribute test: attr_combatpwr_01, etc. / testpass123');
+    console.log('   - Test users: test_user_001-200 / testpass123');
   }
   console.log('');
 }

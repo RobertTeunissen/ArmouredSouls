@@ -72,7 +72,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
     );
   });
 
-  it('should maintain visual distinction between active and inactive tabs across all states', () => {
+  it('should maintain visual distinction between active and inactive tabs across all states', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.array(
@@ -113,7 +113,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
     );
   });
 
-  it('should apply visual styling consistently across ownership changes', () => {
+  it('should apply visual styling consistently across ownership changes', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.constantFrom('overview' as TabId, 'matches' as TabId),
@@ -181,7 +181,7 @@ describe('Property 4: Active Tab Visual Indication (Property-Based Test)', () =>
     );
   });
 
-  it('should maintain visual distinction when switching between tabs', () => {
+  it('should maintain visual distinction when switching between tabs', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.boolean(),

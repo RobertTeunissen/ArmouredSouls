@@ -91,12 +91,12 @@ Two-handed melee weapons like Battle Axe and Heavy Hammer are classified as two-
 
 | Range Band | Bonus per Point | At Level 50 |
 |-----------|----------------|-------------|
-| Melee (0–2) | +3% per point | +150% (2.5× multiplier) |
+| Melee (0–2) | +2% per point | +100% (2.0× multiplier) |
 | Short (3–6) | +1.5% per point | +75% (1.75× multiplier) |
 | Mid (7–12) | No bonus | 1.0× |
 | Long (13+) | No bonus | 1.0× |
 
-This makes Hydraulic Systems the highest-impact damage attribute for melee builds. At level 50 in melee range, it more than doubles your damage output — stacking multiplicatively with Combat Power, Weapon Control, and the optimal range bonus.
+This makes Hydraulic Systems a high-impact damage attribute for melee builds. At level 50 in melee range, it doubles your damage output — stacking multiplicatively with Combat Power, Weapon Control, and the optimal range bonus.
 
 ## Backstab Mechanics
 

@@ -3,6 +3,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
 import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
+import { trackSpending } from '../services/spendingTracker';
 import logger from '../config/logger';
 
 const router = express.Router();
@@ -74,11 +75,11 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
         currentOperatingCost = currentLevel * 250;
         nextOperatingCost = nextLevel * 250;
       } else if (config.type === 'repair_bay') {
-        currentOperatingCost = currentLevel > 0 ? 1000 + (currentLevel - 1) * 500 : 0;
-        nextOperatingCost = nextLevel > 0 ? 1000 + (nextLevel - 1) * 500 : 0;
+        currentOperatingCost = currentLevel > 0 ? 100 * currentLevel : 0;
+        nextOperatingCost = nextLevel > 0 ? 100 * nextLevel : 0;
       } else if (config.type === 'weapons_workshop') {
-        currentOperatingCost = currentLevel > 0 ? 1000 + (currentLevel - 1) * 500 : 0;
-        nextOperatingCost = nextLevel > 0 ? 1000 + (nextLevel - 1) * 500 : 0;
+        currentOperatingCost = currentLevel > 0 ? 100 * currentLevel : 0;
+        nextOperatingCost = nextLevel > 0 ? 100 * nextLevel : 0;
       } else if (config.type === 'merchandising_hub') {
         currentOperatingCost = currentLevel * 200;
         nextOperatingCost = nextLevel * 200;
@@ -94,6 +95,12 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       } else if (config.type === 'research_lab' || config.type === 'medical_bay') {
         currentOperatingCost = currentLevel > 0 ? 2000 + (currentLevel - 1) * 1000 : 0;
         nextOperatingCost = nextLevel > 0 ? 2000 + (nextLevel - 1) * 1000 : 0;
+      } else if (config.type === 'roster_expansion') {
+        // Roster Expansion costs ₡500/day per robot slot beyond the first.
+        // robotCount is already fetched above.
+        currentOperatingCost = Math.max(0, (robotCount - 1)) * 500;
+        // Next level adds one more slot — show cost assuming the slot is filled
+        nextOperatingCost = robotCount * 500;
       }
 
       return {
@@ -243,6 +250,9 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
       // Console log for cycle logs
       const action = currentLevel === 0 ? 'Purchased' : 'Upgraded';
       logger.info(`[Facility] User ${userId} | ${action}: ${config.name} | Level: ${targetLevel} | Cost: ₡${upgradeCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+
+      // Track spending for onboarding budget comparison
+      await trackSpending(userId, 'facilities', upgradeCost);
     } catch (logError) {
       logger.error('Failed to log facility transaction event:', logError);
       // Don't fail the request if logging fails

@@ -7,22 +7,24 @@ info:
 
     ## Validation Rules
 
-    | Field    | Min Length | Max Length | Allowed Characters                          |
-    |----------|-----------|-----------|---------------------------------------------|
-    | username | 3         | 20        | Alphanumeric, underscore (`_`), hyphen (`-`) |
-    | email    | 3         | 50        | Alphanumeric, underscore (`_`), hyphen (`-`) |
-    | password | 8         | 128       | Any characters                               |
+    | Field      | Min Length | Max Length | Allowed Characters                                    |
+    |------------|-----------|-----------|-------------------------------------------------------|
+    | username   | 3         | 20        | Alphanumeric, underscore (`_`), hyphen (`-`)          |
+    | stableName | 3         | 30        | Alphanumeric, space, underscore (`_`), hyphen (`-`)   |
+    | email      | 3         | 50        | Alphanumeric, underscore (`_`), hyphen (`-`), `@`, `.`|
+    | password   | 8         | 128       | Any characters                                         |
 
     ## Error Codes
 
-    | Code               | HTTP Status | Description                        |
-    |--------------------|-------------|------------------------------------|
-    | VALIDATION_ERROR   | 400         | Input failed validation rules      |
-    | DUPLICATE_USERNAME | 400         | Username is already taken          |
-    | DUPLICATE_EMAIL    | 400         | Email is already registered        |
-    | DATABASE_ERROR     | 500         | A database error occurred          |
-    | INTERNAL_ERROR     | 500         | An unexpected server error occurred|
-    | INVALID_CREDENTIALS| 401         | Invalid login credentials           |
+    | Code                | HTTP Status | Description                        |
+    |---------------------|-------------|------------------------------------|
+    | VALIDATION_ERROR    | 400         | Input failed validation rules      |
+    | DUPLICATE_USERNAME  | 400         | Username is already taken          |
+    | DUPLICATE_STABLE_NAME | 400       | Stable name is already taken       |
+    | DUPLICATE_EMAIL     | 400         | Email is already registered        |
+    | DATABASE_ERROR      | 500         | A database error occurred          |
+    | INTERNAL_ERROR      | 500         | An unexpected server error occurred|
+    | INVALID_CREDENTIALS | 401         | Invalid login credentials          |
   version: 1.0.0
   contact:
     name: Armoured Souls Dev Team
@@ -37,11 +39,14 @@ paths:
       operationId: registerUser
       summary: Register a new user account
       description: |
-        Creates a new user account with the provided username, email, and password.
+        Creates a new user account with the provided username, stable name, email, and password.
         On success the server returns a JWT token and the created user profile.
 
+        The stable name is the player's public display name shown throughout the game.
+        Usernames are kept private and used only for login.
+
         The password is hashed with bcrypt before storage. New accounts receive
-        default values: currency 1000, prestige 0, role "player".
+        default values: currency 3000000, prestige 0, role "user".
 
         This endpoint is rate-limited (shared limits with the login endpoint).
       tags:
@@ -57,13 +62,15 @@ paths:
                 summary: Valid registration request
                 value:
                   username: knight_42
-                  email: knight-mail
+                  stableName: Iron Warriors
+                  email: knight@mail.com
                   password: s3cureP@ss!
               minimal:
                 summary: Minimum-length fields
                 value:
                   username: abc
-                  email: xyz
+                  stableName: ABC
+                  email: a@b
                   password: "12345678"
       responses:
         '201':
@@ -80,13 +87,14 @@ paths:
                     user:
                       id: 1
                       username: knight_42
-                      email: knight-mail
-                      currency: 1000
+                      stableName: Iron Warriors
+                      email: knight@mail.com
+                      currency: 3000000
                       prestige: 0
-                      role: player
+                      role: user
         '400':
           description: |
-            Bad request — validation failure, duplicate username, or duplicate email.
+            Bad request — validation failure, duplicate username, duplicate stable name, or duplicate email.
           content:
             application/json:
               schema:
@@ -102,6 +110,11 @@ paths:
                   value:
                     error: "Username is already taken"
                     code: DUPLICATE_USERNAME
+                duplicateStableName:
+                  summary: Stable name already taken
+                  value:
+                    error: "Stable name is already taken"
+                    code: DUPLICATE_STABLE_NAME
                 duplicateEmail:
                   summary: Email already registered
                   value:
@@ -264,6 +277,7 @@ components:
       type: object
       required:
         - username
+        - stableName
         - email
         - password
       properties:
@@ -273,17 +287,26 @@ components:
           maxLength: 20
           pattern: '^[a-zA-Z0-9_-]+$'
           description: |
-            Unique username. Only alphanumeric characters, underscores, and hyphens are allowed.
+            Unique username for login. Only alphanumeric characters, underscores, and hyphens are allowed.
+            This is kept private and not shown to other players.
           example: knight_42
+        stableName:
+          type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9 _-]+$'
+          description: |
+            Public display name shown throughout the game. Other players will see this name
+            instead of your username. Alphanumeric characters, spaces, underscores, and hyphens are allowed.
+          example: Iron Warriors
         email:
           type: string
           minLength: 3
           maxLength: 50
-          pattern: '^[a-zA-Z0-9_-]+$'
+          pattern: '^[a-zA-Z0-9._@-]+$'
           description: |
-            Unique email identifier. Only alphanumeric characters, underscores, and hyphens are allowed.
-            This is a simplified format for the game system (not standard RFC 5322).
-          example: knight-mail
+            Unique email address. Standard email format with @ symbol required.
+          example: knight@mail.com
         password:
           type: string
           minLength: 8
@@ -309,6 +332,7 @@ components:
       required:
         - id
         - username
+        - stableName
         - email
         - currency
         - prestige
@@ -320,22 +344,27 @@ components:
           example: 1
         username:
           type: string
+          description: Private username used for login
           example: knight_42
+        stableName:
+          type: string
+          description: Public display name shown to other players
+          example: Iron Warriors
         email:
           type: string
-          example: knight-mail
+          example: knight@mail.com
         currency:
           type: integer
-          description: Starting currency (default 1000 for new accounts)
-          example: 1000
+          description: Starting currency (default 3000000 for new accounts)
+          example: 3000000
         prestige:
           type: integer
           description: Starting prestige (default 0 for new accounts)
           example: 0
         role:
           type: string
-          description: User role (default "player" for new accounts)
-          example: player
+          description: User role (default "user" for new accounts)
+          example: user
 
     ErrorResponse:
       type: object
@@ -352,6 +381,7 @@ components:
           enum:
             - VALIDATION_ERROR
             - DUPLICATE_USERNAME
+            - DUPLICATE_STABLE_NAME
             - DUPLICATE_EMAIL
             - INVALID_CREDENTIALS
             - DATABASE_ERROR

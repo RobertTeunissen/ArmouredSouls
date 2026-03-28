@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { Robot, TagTeam, Prisma } from '@prisma/client';
+import { Robot, TagTeam, Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import {
   calculateTagTeamRewards,
@@ -76,6 +76,15 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     totalTagTeamDraws: 0,
     timesTaggedIn: 0,
     timesTaggedOut: 0,
+    // KOTH Statistics
+    kothWins: 0,
+    kothMatches: 0,
+    kothTotalZoneScore: 0,
+    kothTotalZoneTime: 0,
+    kothKills: 0,
+    kothBestPlacement: 0,
+    kothCurrentWinStreak: 0,
+    kothBestWinStreak: 0,
     // Economic
     repairCost: 0,
     battleReadiness: 100,

@@ -27,6 +27,7 @@ describe('RegistrationForm', () => {
     renderForm();
 
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/stable name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
@@ -51,16 +52,19 @@ describe('RegistrationForm', () => {
     renderForm();
 
     const usernameInput = screen.getByLabelText(/username/i);
+    const stableNameInput = screen.getByLabelText(/stable name/i);
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmInput = screen.getByLabelText(/confirm password/i);
 
     await user.type(usernameInput, 'testuser');
+    await user.type(stableNameInput, 'Iron Warriors');
     await user.type(emailInput, 'test@email');
     await user.type(passwordInput, 'password123');
     await user.type(confirmInput, 'password123');
 
     expect(usernameInput).toHaveValue('testuser');
+    expect(stableNameInput).toHaveValue('Iron Warriors');
     expect(emailInput).toHaveValue('test@email');
     expect(passwordInput).toHaveValue('password123');
     expect(confirmInput).toHaveValue('password123');
@@ -70,6 +74,7 @@ describe('RegistrationForm', () => {
     renderForm();
 
     expect(screen.getByLabelText(/username/i)).toBeRequired();
+    expect(screen.getByLabelText(/stable name/i)).toBeRequired();
     expect(screen.getByLabelText(/email/i)).toBeRequired();
     expect(screen.getByLabelText(/^password$/i)).toBeRequired();
     expect(screen.getByLabelText(/confirm password/i)).toBeRequired();
@@ -87,6 +92,7 @@ describe('RegistrationForm', () => {
     renderForm();
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/stable name/i), 'Iron Warriors');
     await user.type(screen.getByLabelText(/email/i), 'test@email');
     await user.type(screen.getByLabelText(/^password$/i), 'password123');
     await user.type(screen.getByLabelText(/confirm password/i), 'different456');
@@ -100,7 +106,7 @@ describe('RegistrationForm', () => {
     const mockResponse = {
       data: {
         token: 'test-token',
-        user: { id: '1', username: 'testuser', email: 'test@email', currency: 1000, prestige: 0, role: 'player' },
+        user: { id: '1', username: 'testuser', email: 'test@email', stableName: 'Iron Warriors', currency: 1000, prestige: 0, role: 'player' },
       },
     };
     mockedApiClient.post.mockResolvedValueOnce(mockResponse);
@@ -109,6 +115,7 @@ describe('RegistrationForm', () => {
     renderForm();
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/stable name/i), 'Iron Warriors');
     await user.type(screen.getByLabelText(/email/i), 'test@email');
     await user.type(screen.getByLabelText(/^password$/i), 'password123');
     await user.type(screen.getByLabelText(/confirm password/i), 'password123');
@@ -125,6 +132,7 @@ describe('RegistrationForm', () => {
 
     // Fill all required fields, with mismatched passwords
     await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/stable name/i), 'Iron Warriors');
     await user.type(screen.getByLabelText(/email/i), 'test@email');
     await user.type(screen.getByLabelText(/^password$/i), 'password123');
     await user.type(screen.getByLabelText(/confirm password/i), 'different456');
@@ -134,5 +142,59 @@ describe('RegistrationForm', () => {
     // Typing in any field should clear the error
     await user.type(screen.getByLabelText(/confirm password/i), '7');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows error for stable name that is too short', async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/stable name/i), 'AB');
+    await user.type(screen.getByLabelText(/email/i), 'test@email');
+    await user.type(screen.getByLabelText(/^password$/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /create account/i }));
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText(/stable name must be at least 3 characters/i)).toBeInTheDocument();
+  });
+
+  it('shows error for stable name with invalid characters', async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/stable name/i), 'Iron@Warriors!');
+    await user.type(screen.getByLabelText(/email/i), 'test@email');
+    await user.type(screen.getByLabelText(/^password$/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /create account/i }));
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText(/stable name can only contain/i)).toBeInTheDocument();
+  });
+
+  it('displays duplicate stable name error from server', async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    mockedApiClient.post.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        data: { error: 'Stable name is already taken', code: 'DUPLICATE_STABLE_NAME' },
+      },
+    });
+
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/stable name/i), 'Iron Warriors');
+    await user.type(screen.getByLabelText(/email/i), 'test@email');
+    await user.type(screen.getByLabelText(/^password$/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /create account/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByText(/stable name is already taken/i)).toBeInTheDocument();
+    });
   });
 });

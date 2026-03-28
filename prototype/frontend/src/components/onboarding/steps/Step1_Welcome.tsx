@@ -14,9 +14,9 @@ interface Step1_WelcomeProps {
  */
 const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Hero Section */}
-      <div className="text-center space-y-4">
+      <div className="text-center mb-8">
         <div className="flex justify-center mb-6">
           <img 
             src="/assets/onboarding/game-logo.png" 
@@ -29,18 +29,18 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
           />
         </div>
         
-        <h1 className="text-4xl font-bold text-gray-100">
+        <h1 className="text-3xl font-bold mb-3 text-gray-100">
           Welcome to Armoured Souls
         </h1>
         
-        <p className="text-xl text-gray-200">
+        <p className="text-lg text-secondary max-w-3xl mx-auto">
           Build, battle, and dominate in the ultimate robot combat strategy game
         </p>
       </div>
 
       {/* Game Goal */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 rounded-lg p-8 border-2 border-purple-700">
-        <div className="flex items-start space-x-4">
+      <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 rounded-lg p-8 border-2 border-purple-700 mb-8 max-w-4xl mx-auto">
+        <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
             <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,16 +50,16 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
           </div>
           
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-100 mb-3">
+            <h2 className="text-xl font-bold text-gray-100 mb-3">
               What's the Goal?
             </h2>
-            <p className="text-gray-200 leading-relaxed mb-4">
+            <p className="text-secondary leading-relaxed mb-4">
               Your goal is to build and manage a stable of combat robots that compete in leagues and tournaments. 
               Success means climbing the league rankings, earning credits through battles, and building prestige 
               through victories. You'll need to balance robot power, battle frequency, facility investments, and 
               economic sustainability.
             </p>
-            <p className="text-gray-200 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               There's no single "right" way to play—some managers focus on one powerful robot, others spread their 
               resources across multiple fighters. Your strategy determines your path to success.
             </p>
@@ -68,8 +68,8 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
       </div>
 
       {/* Strategic Overview */}
-      <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-lg p-8 border-2 border-blue-700">
-        <div className="flex items-start space-x-4">
+      <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-lg p-8 border-2 border-blue-700 mb-8 max-w-4xl mx-auto">
+        <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
             <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,13 +79,13 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
           </div>
           
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-100 mb-3">
+            <h2 className="text-xl font-bold text-gray-100 mb-3">
               How do you want to be the most successful manager?
             </h2>
-            <p className="text-lg text-gray-200 font-semibold mb-4">
+            <p className="text-lg text-secondary font-semibold mb-4">
               "How many robots should I build?"
             </p>
-            <p className="text-gray-200 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               This single decision shapes your entire strategy. It affects which facilities you need, 
               how you allocate your budget, what weapons you buy, and how you progress through the game. 
               This tutorial will guide you through understanding these strategic implications before you 
@@ -96,7 +96,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
       </div>
 
       {/* Strategic Overview Illustration */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mb-8">
         <img 
           src="/assets/onboarding/strategic-overview.png" 
           alt="Strategic overview showing how roster size affects facility priorities, budget allocation, and battle strategy"
@@ -110,13 +110,13 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
       </div>
 
       {/* What You'll Learn */}
-      <div className="bg-surface rounded-lg p-6 shadow-md border border-white/10">
+      <div className="bg-surface rounded-lg p-6 shadow-md border border-white/10 mb-8 max-w-4xl mx-auto">
         <h3 className="text-xl font-bold text-gray-100 mb-4">
           What You'll Learn in This Tutorial
         </h3>
         
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-green-600 dark:text-green-300 font-bold">
               1
             </div>
@@ -126,7 +126,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold">
               2
             </div>
@@ -136,7 +136,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold">
               3
             </div>
@@ -146,7 +146,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center text-yellow-600 dark:text-yellow-300 font-bold">
               4
             </div>
@@ -156,7 +156,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center text-red-600 dark:text-red-300 font-bold">
               5
             </div>
@@ -166,7 +166,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold">
               6
             </div>
@@ -176,7 +176,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-pink-100 dark:bg-pink-900 rounded-full flex items-center justify-center text-pink-600 dark:text-pink-300 font-bold">
               7
             </div>
@@ -186,7 +186,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-teal-100 dark:bg-teal-900 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-300 font-bold">
               8
             </div>
@@ -196,7 +196,7 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3 md:col-span-2">
+          <div className="flex items-start gap-3 md:col-span-2">
             <div className="flex-shrink-0 w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-300 font-bold">
               9
             </div>
@@ -209,8 +209,8 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
       </div>
 
       {/* Key Principles */}
-      <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-6 rounded-r-lg">
-        <div className="flex items-start space-x-3">
+      <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-6 rounded-r-lg mb-8 max-w-4xl mx-auto">
+        <div className="flex items-start gap-3">
           <svg className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
@@ -229,14 +229,10 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-white/10">
-        <div className="text-sm text-gray-600 dark:text-secondary">
-          Step 1 of 9
-        </div>
-        
+      <div className="flex flex-col items-center gap-4 max-w-4xl mx-auto">
         <button
           onClick={onNext}
-          className="px-8 py-3 bg-primary hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center space-x-2 min-h-[44px]"
+          className="px-8 py-3 bg-primary hover:bg-blue-700 text-white font-semibold text-lg rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2 min-h-[44px]"
           aria-label="Next step: Roster Strategy Selection"
         >
           <span>Let's Get Started</span>
@@ -244,6 +240,10 @@ const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </button>
+        
+        <p className="text-sm text-secondary">
+          Step 1 of 9
+        </p>
       </div>
     </div>
   );

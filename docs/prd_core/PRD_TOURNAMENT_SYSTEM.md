@@ -2223,7 +2223,7 @@ npm run dev
 psql -U username -d database_name < backup_YYYYMMDD.sql
 
 # 2. Reset Prisma migrations
-npx prisma migrate reset
+npm run db:reset
 
 # 3. Apply migrations up to previous version
 npx prisma migrate deploy

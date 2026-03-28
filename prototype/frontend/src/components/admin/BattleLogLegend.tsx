@@ -3,7 +3,7 @@
  * Extracted from BattleLogsTab to reduce component size.
  */
 
-export function BattleLogLegend(): JSX.Element {
+export function BattleLogLegend() {
   return (
     <div className="mb-4 p-4 bg-surface-elevated rounded-lg">
       <h3 className="text-sm font-semibold mb-2 text-secondary">Visual Indicators:</h3>

@@ -88,7 +88,7 @@ describe('Property 1: Default Tab Selection (Property-Based Test)', () => {
     );
   });
 
-  it('should maintain Overview as default across multiple render cycles', () => {
+  it('should maintain Overview as default across multiple render cycles', { timeout: 15000 }, () => {
     fc.assert(
       fc.property(
         fc.array(fc.boolean(), { minLength: 1, maxLength: 10 }),

@@ -238,34 +238,37 @@ export function validateRegistrationPassword(password: string): ValidationResult
  * @property username - The desired username
  * @property email    - The desired email
  * @property password - The desired password
+ * @property stableName - The desired stable name (public display name)
  */
 export interface RegistrationRequest {
   username: string;
   email: string;
   password: string;
+  stableName: string;
 }
 
 /**
  * Validate a complete registration request.
  *
  * Orchestrates all validation checks for a registration request:
- * 1. Checks that all required fields (`username`, `email`, `password`) are present.
+ * 1. Checks that all required fields (`username`, `email`, `password`, `stableName`) are present.
  *    If any are missing, returns immediately with a single error.
  * 2. Validates username via {@link validateUsername}
  * 3. Validates email via {@link validateEmail}
  * 4. Validates password via {@link validateRegistrationPassword}
+ * 5. Validates stable name via {@link validateStableName}
  *
  * All validation errors are aggregated into a single {@link ValidationResult}.
  *
- * @param request - The registration request containing username, email, and password
+ * @param request - The registration request containing username, email, password, and stableName
  * @returns A {@link ValidationResult} with `isValid` flag and all collected error messages
  *
  * @example
- * validateRegistrationRequest({ username: '', email: 'ok_email', password: 'longEnough1' });
- * // → { isValid: false, errors: ['Username, email, and password are required'] }
+ * validateRegistrationRequest({ username: '', email: 'ok_email', password: 'longEnough1', stableName: 'My Stable' });
+ * // → { isValid: false, errors: ['Username, email, password, and stable name are required'] }
  *
  * @example
- * validateRegistrationRequest({ username: 'ab', email: 'ok_email', password: 'short' });
+ * validateRegistrationRequest({ username: 'ab', email: 'ok_email', password: 'short', stableName: 'My Stable' });
  * // → { isValid: false, errors: [
  * //     'Username must be at least 3 characters long',
  * //     'Password must be at least 8 characters long'
@@ -278,15 +281,15 @@ export function validateRegistrationRequest(request: RegistrationRequest): Valid
 
   // Early return on missing fields: if any required field is absent, skip
   // individual validation to avoid confusing "too short" errors on empty strings.
-  if (!request.username || !request.email || !request.password) {
-    errors.push('Username, email, and password are required');
+  if (!request.username || !request.email || !request.password || !request.stableName) {
+    errors.push('Username, email, password, and stable name are required');
     return {
       isValid: false,
       errors,
     };
   }
 
-  // Run all three validators and aggregate errors so the user sees every
+  // Run all validators and aggregate errors so the user sees every
   // problem at once, rather than fixing them one at a time.
   const usernameResult = validateUsername(request.username);
   if (!usernameResult.isValid) {
@@ -301,6 +304,11 @@ export function validateRegistrationRequest(request: RegistrationRequest): Valid
   const passwordResult = validateRegistrationPassword(request.password);
   if (!passwordResult.isValid) {
     errors.push(...passwordResult.errors);
+  }
+
+  const stableNameResult = validateStableName(request.stableName);
+  if (!stableNameResult.valid) {
+    errors.push(stableNameResult.error!);
   }
 
   return {

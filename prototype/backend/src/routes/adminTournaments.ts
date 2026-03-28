@@ -125,7 +125,7 @@ router.get('/eligible-robots', authenticateToken, requireAdmin, async (req: Requ
  */
 router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const tournamentId = parseInt(req.params.id);
+    const tournamentId = parseInt(String(req.params.id));
 
     if (isNaN(tournamentId)) {
       return res.status(400).json({ error: 'Invalid tournament ID' });
@@ -161,7 +161,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Re
  */
 router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const tournamentId = parseInt(req.params.id);
+    const tournamentId = parseInt(String(req.params.id));
 
     if (isNaN(tournamentId)) {
       return res.status(400).json({ error: 'Invalid tournament ID' });

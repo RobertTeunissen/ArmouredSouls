@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import ProfilePage from '../ProfilePage';
 import * as userApi from '../../utils/userApi';
@@ -93,9 +94,6 @@ describe('ProfilePage', () => {
       // Check all section headers are present
       expect(screen.getByText('Account Information')).toBeInTheDocument();
       expect(screen.getByText('Stable Identity')).toBeInTheDocument();
-      expect(screen.getByText('Statistics')).toBeInTheDocument();
-      expect(screen.getByText('Privacy Settings')).toBeInTheDocument();
-      expect(screen.getByText('Display Preferences')).toBeInTheDocument();
       expect(screen.getByText('Security')).toBeInTheDocument();
     });
 
@@ -108,8 +106,6 @@ describe('ProfilePage', () => {
 
       expect(screen.getByText('player')).toBeInTheDocument();
       expect(screen.getByText('#1')).toBeInTheDocument();
-      expect(screen.getByText('₡1,000')).toBeInTheDocument();
-      expect(screen.getByText('50')).toBeInTheDocument();
     });
   });
 
@@ -221,25 +217,35 @@ describe('ProfilePage', () => {
   });
 
   describe('Form Submission', () => {
+    /** Helper: change stable name and wait for Save button to become enabled */
+    async function changeStableNameAndWaitForButton(newName: string): Promise<HTMLElement> {
+      const stableNameInput = screen.getByPlaceholderText('testuser');
+      // Use native value setter to ensure React picks up the change
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype, 'value'
+      )!.set!;
+      await act(async () => {
+        nativeInputValueSetter.call(stableNameInput, newName);
+        stableNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+        stableNameInput.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Save Changes/i })).not.toBeDisabled();
+      });
+      return screen.getByRole('button', { name: /Save Changes/i });
+    }
+
     it('should show success message on successful save', async () => {
       const updatedProfile = { ...mockProfileData, stableName: 'New Stable Name' };
       vi.mocked(userApi.updateProfile).mockResolvedValue(updatedProfile);
 
       renderProfilePage();
-
       await waitFor(() => {
         expect(screen.getByText('My Profile')).toBeInTheDocument();
       });
 
-      const stableNameInput = screen.getByPlaceholderText('testuser');
-      fireEvent.change(stableNameInput, { target: { value: 'New Stable Name' } });
-
-      // Wait for button to become available after state update
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Save Changes/i })).toBeInTheDocument();
-      });
-      
-      fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+      const saveButton = await changeStableNameAndWaitForButton('New Stable Name');
+      fireEvent.click(saveButton);
 
       await waitFor(() => {
         expect(screen.getByText('Profile updated successfully!')).toBeInTheDocument();
@@ -247,26 +253,16 @@ describe('ProfilePage', () => {
     });
 
     it('should display API error messages', async () => {
-      const apiError = {
-        response: {
-          status: 409,
-          data: {
-            error: 'This stable name is already taken',
-          },
-        },
-      };
-      vi.mocked(userApi.updateProfile).mockRejectedValue(apiError);
+      vi.mocked(userApi.updateProfile).mockRejectedValue({
+        response: { status: 409, data: { error: 'This stable name is already taken' } },
+      });
 
       renderProfilePage();
-
       await waitFor(() => {
         expect(screen.getByText('My Profile')).toBeInTheDocument();
       });
 
-      const stableNameInput = screen.getByPlaceholderText('testuser');
-      fireEvent.change(stableNameInput, { target: { value: 'Taken Name' } });
-
-      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      const saveButton = await changeStableNameAndWaitForButton('Taken Name');
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -275,29 +271,19 @@ describe('ProfilePage', () => {
     });
 
     it('should display validation errors from API', async () => {
-      const apiError = {
+      vi.mocked(userApi.updateProfile).mockRejectedValue({
         response: {
           status: 400,
-          data: {
-            error: 'Validation failed',
-            details: {
-              stableName: 'Stable name contains inappropriate content',
-            },
-          },
+          data: { error: 'Validation failed', details: { stableName: 'Stable name contains inappropriate content' } },
         },
-      };
-      vi.mocked(userApi.updateProfile).mockRejectedValue(apiError);
+      });
 
       renderProfilePage();
-
       await waitFor(() => {
         expect(screen.getByText('My Profile')).toBeInTheDocument();
       });
 
-      const stableNameInput = screen.getByPlaceholderText('testuser');
-      fireEvent.change(stableNameInput, { target: { value: 'BadWord' } });
-
-      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      const saveButton = await changeStableNameAndWaitForButton('BadWord');
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -306,21 +292,14 @@ describe('ProfilePage', () => {
     });
 
     it('should display network error message', async () => {
-      const networkError = {
-        request: {},
-      };
-      vi.mocked(userApi.updateProfile).mockRejectedValue(networkError);
+      vi.mocked(userApi.updateProfile).mockRejectedValue({ request: {} });
 
       renderProfilePage();
-
       await waitFor(() => {
         expect(screen.getByText('My Profile')).toBeInTheDocument();
       });
 
-      const stableNameInput = screen.getByPlaceholderText('testuser');
-      fireEvent.change(stableNameInput, { target: { value: 'New Name' } });
-
-      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      const saveButton = await changeStableNameAndWaitForButton('New Name');
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -333,16 +312,11 @@ describe('ProfilePage', () => {
       vi.mocked(userApi.updateProfile).mockResolvedValue(updatedProfile);
 
       renderProfilePage();
-
       await waitFor(() => {
         expect(screen.getByText('My Profile')).toBeInTheDocument();
       });
 
-      const stableNameInput = screen.getByPlaceholderText('testuser');
-      fireEvent.change(stableNameInput, { target: { value: 'New Stable Name' } });
-
-      // Get button before it changes to "Saving..."
-      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      const saveButton = await changeStableNameAndWaitForButton('New Stable Name');
       fireEvent.click(saveButton);
 
       await waitFor(() => {

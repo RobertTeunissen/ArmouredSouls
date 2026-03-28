@@ -203,8 +203,11 @@ function extractText(children: React.ReactNode): string {
   if (typeof children === 'string') return children;
   if (typeof children === 'number') return String(children);
   if (Array.isArray(children)) return children.map(extractText).join('');
-  if (React.isValidElement(children) && children.props?.children) {
-    return extractText(children.props.children);
+  if (React.isValidElement(children)) {
+    const props = children.props as Record<string, unknown>;
+    if (props?.children) {
+      return extractText(props.children as React.ReactNode);
+    }
   }
   return '';
 }

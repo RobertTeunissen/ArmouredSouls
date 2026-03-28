@@ -278,7 +278,7 @@ function LeagueStandingsPage() {
                                 {robot.user.stableName || robot.user.username}
                               </span>
                               {isMyBot && (
-                                <span className="shrink-0 text-xs bg-primary px-1.5 py-0.5 rounded">
+                                <span className="shrink-0 text-xs bg-primary text-white px-1.5 py-0.5 rounded font-semibold">
                                   YOU
                                 </span>
                               )}

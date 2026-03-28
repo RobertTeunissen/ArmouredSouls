@@ -3,7 +3,7 @@
  * Handles tournament creation, bracket generation, and progression logic
  */
 
-import { Robot, Tournament, ScheduledTournamentMatch } from '@prisma/client';
+import { Robot, Tournament, ScheduledTournamentMatch } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { checkSchedulingReadiness } from './matchmakingService';

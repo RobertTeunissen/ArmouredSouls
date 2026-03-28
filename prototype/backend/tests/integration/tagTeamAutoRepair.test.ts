@@ -49,7 +49,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     }
 
     if (testTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTeamIds } },
@@ -212,7 +212,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     console.log('[Test] Step 4: Scheduling tag team match...');
     
-    const match = await prisma.tagTeamMatch.create({
+    const match = await prisma.scheduledTagTeamMatch.create({
       data: {
         team1Id: team1Result.team!.id,
         team2Id: team2Result.team!.id,
@@ -332,7 +332,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     console.log('[Test] Step 2: Scheduling match with insufficient funds...');
     
-    const match = await prisma.tagTeamMatch.create({
+    const match = await prisma.scheduledTagTeamMatch.create({
       data: {
         team1Id: poorTeam1Result.team!.id,
         team2Id: poorTeam2Result.team!.id,
@@ -372,7 +372,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
         robot1Id: { in: poorRobots.map(r => r.id) },
       },
     });
-    await prisma.tagTeamMatch.deleteMany({
+    await prisma.scheduledTagTeamMatch.deleteMany({
       where: { id: match.id },
     });
     await prisma.tagTeam.deleteMany({

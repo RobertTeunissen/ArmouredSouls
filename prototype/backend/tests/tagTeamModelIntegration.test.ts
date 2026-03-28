@@ -54,7 +54,7 @@ describe('Tag Team Model Integration Tests', () => {
   afterEach(async () => {
     // Clean up teams created in tests
     if (testTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTeamIds } },
@@ -91,7 +91,7 @@ describe('Tag Team Model Integration Tests', () => {
           ],
         },
       });
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: testRobotIds } },
@@ -288,7 +288,7 @@ describe('Tag Team Model Integration Tests', () => {
     afterEach(async () => {
       // Clean up matches created in tests
       if (matchIds.length > 0) {
-        await prisma.tagTeamMatch.deleteMany({
+        await prisma.scheduledTagTeamMatch.deleteMany({
           where: { id: { in: matchIds } },
         });
         matchIds = [];
@@ -297,7 +297,7 @@ describe('Tag Team Model Integration Tests', () => {
 
     afterAll(async () => {
       // Clean up - delete matches first, then teams
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [{ team1Id: tagTeam1Id }, { team2Id: tagTeam2Id }],
         },
@@ -314,7 +314,7 @@ describe('Tag Team Model Integration Tests', () => {
     });
 
     it('should create a tag team match', async () => {
-      const match = await prisma.tagTeamMatch.create({
+      const match = await prisma.scheduledTagTeamMatch.create({
         data: {
           team1Id: tagTeam1Id,
           team2Id: tagTeam2Id,
@@ -335,7 +335,7 @@ describe('Tag Team Model Integration Tests', () => {
 
     it('should retrieve match with team relations', async () => {
       // Create a match for this test
-      const createdMatch = await prisma.tagTeamMatch.create({
+      const createdMatch = await prisma.scheduledTagTeamMatch.create({
         data: {
           team1Id: tagTeam1Id,
           team2Id: tagTeam2Id,
@@ -345,7 +345,7 @@ describe('Tag Team Model Integration Tests', () => {
       });
       matchIds.push(createdMatch.id);
 
-      const match = await prisma.tagTeamMatch.findFirst({
+      const match = await prisma.scheduledTagTeamMatch.findFirst({
         where: { id: createdMatch.id },
         include: {
           team1: {
@@ -372,7 +372,7 @@ describe('Tag Team Model Integration Tests', () => {
 
     it('should update match status', async () => {
       // Create a match for this test
-      const match = await prisma.tagTeamMatch.create({
+      const match = await prisma.scheduledTagTeamMatch.create({
         data: {
           team1Id: tagTeam1Id,
           team2Id: tagTeam2Id,
@@ -382,7 +382,7 @@ describe('Tag Team Model Integration Tests', () => {
       });
       matchIds.push(match.id);
 
-      const updated = await prisma.tagTeamMatch.update({
+      const updated = await prisma.scheduledTagTeamMatch.update({
         where: { id: match.id },
         data: { status: 'completed' },
       });

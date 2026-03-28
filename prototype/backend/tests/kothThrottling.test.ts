@@ -3,11 +3,20 @@
  *
  * Verifies that:
  * 1. Throttle delays are applied between matches in executeScheduledKothBattles
- * 2. Throttle delays are applied between participants in processKothBattle
+ * 2. Batched DB operations are used (no per-participant throttling needed)
  * 3. The redundant auto-repair loop (step 1b) has been removed — no facility
  *    queries or repair cost calculations happen inside processKothBattle
  * 4. Matches are fetched one at a time (not all at once) to limit memory usage
  * 5. Failed matches are marked as 'failed' so they don't re-enter the loop
+ * 
+ * PERFORMANCE OPTIMIZATIONS (March 2026):
+ * - Match throttle reduced from 2000ms to 500ms
+ * - Batch cooldown reduced from 10000ms to 5000ms
+ * - Per-participant throttling removed (batched DB operations instead)
+ * - BattleParticipant records created via createMany
+ * - Currency/prestige/fame updates batched in single transaction
+ * - Streaming revenue calculated in parallel
+ * - Audit logging moved to setImmediate (non-blocking)
  */
 
 // ─── Mocks (must be before imports) ──────────────────────────────────
@@ -35,11 +44,13 @@ const mockPrisma = {
   },
   battleParticipant: {
     create: jest.fn().mockResolvedValue({}),
+    createMany: jest.fn().mockResolvedValue({ count: 5 }),
     update: jest.fn().mockResolvedValue({}),
   },
   cycleMetadata: {
-    findUnique: jest.fn().mockResolvedValue({ id: 1, currentCycle: 1 }),
+    findUnique: jest.fn().mockResolvedValue({ id: 1, currentCycle: 1, totalCycles: 1 }),
   },
+  $transaction: jest.fn().mockImplementation((ops) => Promise.resolve(ops.map(() => ({})))),
 };
 
 jest.mock('../src/lib/prisma', () => ({
@@ -116,6 +127,15 @@ jest.mock('../src/services/battlePostCombat', () => ({
   awardCreditsToUser: jest.fn().mockResolvedValue(undefined),
   awardPrestigeToUser: jest.fn().mockResolvedValue(undefined),
   awardFameToRobot: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('../src/services/streamingRevenueService', () => ({
+  calculateStreamingRevenue: jest.fn().mockResolvedValue({ totalRevenue: 100 }),
+  awardStreamingRevenue: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('../src/services/leagueBattleOrchestrator', () => ({
+  getCurrentCycleNumber: jest.fn().mockResolvedValue(1),
 }));
 
 // ─── Import after mocks ─────────────────────────────────────────────
@@ -198,7 +218,8 @@ describe('KotH Orchestrator Throttling', () => {
     expect(summary.successfulMatches).toBe(2);
     expect(summary.failedMatches).toBe(0);
     expect(timestamps).toHaveLength(2);
-    expect(timestamps[1] - timestamps[0]).toBeGreaterThanOrEqual(2000);
+    // Optimized: 500ms between matches (was 2000ms)
+    expect(timestamps[1] - timestamps[0]).toBeGreaterThanOrEqual(500);
   });
 
   it('should not throttle before the first match', async () => {
@@ -215,27 +236,21 @@ describe('KotH Orchestrator Throttling', () => {
     await jest.runAllTimersAsync();
     await promise;
 
-    expect(battleCreateTime - startTime).toBeLessThan(2000);
+    // Should start immediately without throttle
+    expect(battleCreateTime - startTime).toBeLessThan(500);
   });
 
-  it('should apply throttle delay between participants within a match', async () => {
+  it('should use batched createMany for BattleParticipant records', async () => {
     setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
-
-    const participantTimestamps: number[] = [];
-    mockPrisma.battleParticipant.create.mockImplementation(() => {
-      participantTimestamps.push(Date.now());
-      return Promise.resolve({});
-    });
     mockPrisma.battle.create.mockResolvedValue({ id: 100 });
 
     const promise = executeScheduledKothBattles();
     await jest.runAllTimersAsync();
     await promise;
 
-    expect(participantTimestamps).toHaveLength(5);
-    for (let i = 1; i < participantTimestamps.length; i++) {
-      expect(participantTimestamps[i] - participantTimestamps[i - 1]).toBeGreaterThanOrEqual(200);
-    }
+    // Should use createMany (batched) instead of individual create calls
+    expect(mockPrisma.battleParticipant.createMany).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.battleParticipant.create).not.toHaveBeenCalled();
   });
 
   it('should not query facilities or calculate repair costs (redundant repair removed)', async () => {
@@ -247,7 +262,18 @@ describe('KotH Orchestrator Throttling', () => {
     await promise;
 
     expect(mockPrisma.facility.findMany).not.toHaveBeenCalled();
-    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('should use batched transactions for currency updates', async () => {
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
+    mockPrisma.battle.create.mockResolvedValue({ id: 100 });
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    await promise;
+
+    // Should use $transaction for batched updates
+    expect(mockPrisma.$transaction).toHaveBeenCalled();
   });
 
   it('should mark failed matches as error during run and reset to scheduled after', async () => {
@@ -314,11 +340,32 @@ describe('KotH Orchestrator Throttling', () => {
     expect(summary.successfulMatches).toBe(12);
     expect(timestamps).toHaveLength(12);
 
-    // After 10th match (index 10, processed % 10 === 0): 10s batch cooldown
-    expect(timestamps[10] - timestamps[9]).toBeGreaterThanOrEqual(10000);
+    // After 10th match (index 10, processed % 10 === 0): 5s batch cooldown
+    expect(timestamps[10] - timestamps[9]).toBeGreaterThanOrEqual(5000);
 
-    // Normal throttle between non-batch-boundary matches
-    expect(timestamps[1] - timestamps[0]).toBeGreaterThanOrEqual(2000);
-    expect(timestamps[1] - timestamps[0]).toBeLessThan(10000);
+    // Normal throttle between non-batch-boundary matches: 500ms
+    expect(timestamps[1] - timestamps[0]).toBeGreaterThanOrEqual(500);
+    expect(timestamps[1] - timestamps[0]).toBeLessThan(5000);
+  });
+
+  it('should apply super-batch cooldown after every 20 matches for memory safety', async () => {
+    const matches = Array.from({ length: 22 }, (_, i) => makeMatch(i + 1, [1, 2, 3, 4, 5]));
+    setupMatchQueue(matches);
+
+    const timestamps: number[] = [];
+    mockPrisma.battle.create.mockImplementation(() => {
+      timestamps.push(Date.now());
+      return Promise.resolve({ id: 100 + timestamps.length });
+    });
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    const summary = await promise;
+
+    expect(summary.successfulMatches).toBe(22);
+    expect(timestamps).toHaveLength(22);
+
+    // After 20th match: 30s super-batch cooldown for memory reclamation
+    expect(timestamps[20] - timestamps[19]).toBeGreaterThanOrEqual(30000);
   });
 });

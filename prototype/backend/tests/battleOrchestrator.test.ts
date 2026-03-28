@@ -19,8 +19,8 @@ describe('Battle Orchestrator', () => {
     // Clean up in correct order to respect foreign key constraints
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
-    await prisma.scheduledMatch.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({}); // Delete tag team matches before tag teams
+    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledTagTeamMatch.deleteMany({}); // Delete tag team matches before tag teams
     await prisma.battle.deleteMany({});
     await prisma.tagTeam.deleteMany({}); // Delete tag teams before robots
     await prisma.robot.deleteMany({});
@@ -61,8 +61,8 @@ describe('Battle Orchestrator', () => {
     await prisma.battle.deleteMany({});
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
-    await prisma.scheduledMatch.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledTagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({
       where: { userId: testUser.id },
@@ -84,8 +84,8 @@ describe('Battle Orchestrator', () => {
     await prisma.battle.deleteMany({});
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
-    await prisma.scheduledMatch.deleteMany({});
-    await prisma.tagTeamMatch.deleteMany({});
+    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledTagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
@@ -166,7 +166,7 @@ describe('Battle Orchestrator', () => {
       });
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
+      const scheduledMatch = await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: robot1.id,
           robot2Id: robot2.id,
@@ -192,7 +192,7 @@ describe('Battle Orchestrator', () => {
       expect(battle?.robot2Id).toBe(robot2.id);
 
       // Verify scheduled match was marked completed
-      const updatedMatch = await prisma.scheduledMatch.findUnique({
+      const updatedMatch = await prisma.scheduledLeagueMatch.findUnique({
         where: { id: scheduledMatch.id },
       });
       expect(updatedMatch?.status).toBe('completed');
@@ -261,7 +261,7 @@ describe('Battle Orchestrator', () => {
       });
 
       // Create scheduled bye-match
-      const scheduledMatch = await prisma.scheduledMatch.create({
+      const scheduledMatch = await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: playerRobot.id,
           robot2Id: byeRobot.id,
@@ -334,7 +334,7 @@ describe('Battle Orchestrator', () => {
       });
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
+      const scheduledMatch = await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: robot1.id,
           robot2Id: robot2.id,
@@ -409,7 +409,7 @@ describe('Battle Orchestrator', () => {
 
       // Create 2 scheduled matches
       const scheduledTime = new Date();
-      await prisma.scheduledMatch.createMany({
+      await prisma.scheduledLeagueMatch.createMany({
         data: [
           {
             robot1Id: robots[0].id,
@@ -440,7 +440,7 @@ describe('Battle Orchestrator', () => {
       expect(battles.length).toBe(2);
 
       // Verify all matches marked as completed
-      const completedMatches = await prisma.scheduledMatch.findMany({
+      const completedMatches = await prisma.scheduledLeagueMatch.findMany({
         where: { status: 'completed' },
       });
       expect(completedMatches.length).toBe(2);
@@ -498,7 +498,7 @@ describe('Battle Orchestrator', () => {
       const initialBalance = userBefore!.currency;
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
+      const scheduledMatch = await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: robot1.id,
           robot2Id: robot2.id,
@@ -583,7 +583,7 @@ describe('Battle Orchestrator', () => {
       const byeUserBefore = await prisma.user.findUnique({ where: { id: byeUser.id } });
 
       // Create scheduled bye-match
-      const scheduledMatch = await prisma.scheduledMatch.create({
+      const scheduledMatch = await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: playerRobot.id,
           robot2Id: byeRobot.id,
@@ -664,7 +664,7 @@ describe('Battle Orchestrator', () => {
       });
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
+      const scheduledMatch = await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: robot1.id,
           robot2Id: robot2.id,
@@ -742,7 +742,7 @@ describe('Battle Orchestrator', () => {
       });
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
+      const scheduledMatch = await prisma.scheduledLeagueMatch.create({
         data: {
           robot1Id: robot1.id,
           robot2Id: robot2.id,

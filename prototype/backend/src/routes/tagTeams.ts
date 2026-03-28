@@ -134,7 +134,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const teamId = parseInt(req.params.id);
+    const teamId = parseInt(String(req.params.id));
 
     if (isNaN(teamId)) {
       return res.status(400).json({ error: 'Invalid team ID' });
@@ -180,7 +180,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const teamId = parseInt(req.params.id);
+    const teamId = parseInt(String(req.params.id));
 
     if (isNaN(teamId)) {
       return res.status(400).json({ error: 'Invalid team ID' });
@@ -218,7 +218,7 @@ router.get('/leagues/:tier/standings', authenticateToken, async (req: AuthReques
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const tier = req.params.tier as TagTeamLeagueTier;
+    const tier = String(req.params.tier) as TagTeamLeagueTier;
 
     // Validate tier
     if (!TAG_TEAM_LEAGUE_TIERS.includes(tier)) {

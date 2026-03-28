@@ -14,7 +14,7 @@ jest.mock('../src/config/logger', () => ({
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/test/token';
 
 describe('DiscordIntegration', () => {
-  let fetchSpy: jest.SpyInstance;
+  let fetchSpy: jest.Spied<typeof global.fetch>;
 
   afterEach(() => {
     if (fetchSpy) {
@@ -51,10 +51,10 @@ describe('DiscordIntegration', () => {
 
       const [url, options] = fetchSpy.mock.calls[0];
       expect(url).toBe(WEBHOOK_URL);
-      expect(options.method).toBe('POST');
-      expect(options.headers).toEqual({ 'Content-Type': 'application/json' });
-      expect(JSON.parse(options.body)).toEqual({ content: message });
-      expect(options.signal).toBeInstanceOf(AbortSignal);
+      expect(options!.method).toBe('POST');
+      expect(options!.headers).toEqual({ 'Content-Type': 'application/json' });
+      expect(JSON.parse(options!.body as string)).toEqual({ content: message });
+      expect(options!.signal).toBeInstanceOf(AbortSignal);
     });
   });
 

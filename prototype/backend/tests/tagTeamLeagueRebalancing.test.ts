@@ -34,7 +34,7 @@ describe('Tag Team League Rebalancing', () => {
     // Only clean up teams and robots created by this test (tracked in arrays)
     if (testTeamIds.length > 0) {
       // Delete tag team matches first (foreign key constraint)
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTeamIds } },
@@ -51,7 +51,7 @@ describe('Tag Team League Rebalancing', () => {
       await prisma.weaponInventory.deleteMany({
         where: { userId: testStableId },
       });
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: testRobotIds } },
@@ -82,7 +82,7 @@ describe('Tag Team League Rebalancing', () => {
     const teamIds = teams.map(t => t.id);
     
     if (teamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: teamIds } },
@@ -394,7 +394,7 @@ describe('Tag Team League Rebalancing', () => {
   describe('rebalanceTagTeamLeagues', () => {
     beforeEach(async () => {
       // Clean up ALL teams before these tests since they count total teams
-      await prisma.tagTeamMatch.deleteMany({});
+      await prisma.scheduledTagTeamMatch.deleteMany({});
       await prisma.tagTeam.deleteMany({});
     });
 

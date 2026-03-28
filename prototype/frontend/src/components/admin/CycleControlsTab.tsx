@@ -111,7 +111,7 @@ export function CycleControlsTab({
   sessionLog,
   clearSessionLog,
   exportSessionLog,
-}: CycleControlsTabProps): JSX.Element {
+}: CycleControlsTabProps) {
   const { refreshUser } = useAuth();
 
   /* ---------- Local state ---------- */
@@ -122,7 +122,7 @@ export function CycleControlsTab({
   const [includeTournaments, setIncludeTournaments] = useState(true);
   const [includeKoth, setIncludeKoth] = useState(true);
   const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
-  const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(false);
+  const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [bulkResults, setBulkResults] = useState<any>(null);
 
@@ -323,9 +323,9 @@ export function CycleControlsTab({
         });
       }
 
-      const completionMsg = `Bulk cycle run completed: ${response.data.cyclesCompleted} cycle(s) in ${response.data.totalDuration?.toFixed(2) || 0}s`;
+      const completionMsg = `Bulk cycle run completed: ${response.data.cyclesCompleted} cycle(s) in ${(response.data.totalDuration / 1000)?.toFixed(2) || 0}s`;
       addSessionLog('success', completionMsg);
-      showMessage('success', `Completed ${response.data.cyclesCompleted} cycles in ${response.data.totalDuration?.toFixed(2) || 0}s`);
+      showMessage('success', `Completed ${response.data.cyclesCompleted} cycles in ${(response.data.totalDuration / 1000)?.toFixed(2) || 0}s`);
       await refreshUser();
     } catch (error: unknown) {
       const errData = (error as { response?: { data?: { error?: string } } })?.response?.data;
@@ -478,8 +478,8 @@ export function CycleControlsTab({
               {bulkResults.totalCyclesInSystem && (
                 <p className="text-success">Total Cycles in System: {bulkResults.totalCyclesInSystem}</p>
               )}
-              <p>Total Duration: {bulkResults.totalDuration?.toFixed(2) || 0}s</p>
-              <p>Average Cycle Duration: {bulkResults.averageCycleDuration?.toFixed(2) || 0}s</p>
+              <p>Total Duration: {(bulkResults.totalDuration / 1000)?.toFixed(2) || 0}s</p>
+              <p>Average Cycle Duration: {(bulkResults.averageCycleDuration / 1000)?.toFixed(2) || 0}s</p>
 
               {bulkResults.results && bulkResults.results.length > 0 && (
                 <div className="mt-4 max-h-96 overflow-y-auto">
@@ -512,7 +512,7 @@ export function CycleControlsTab({
                           )}
                         </div>
                       )}
-                      {result.rebalancing && (
+                      {result.rebalancing?.summary && (
                         <p>
                           - Rebalancing: {result.rebalancing.summary.totalPromoted} promoted,{' '}
                           {result.rebalancing.summary.totalDemoted} demoted

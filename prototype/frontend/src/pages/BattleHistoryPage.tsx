@@ -167,7 +167,7 @@ function BattleHistoryPage() {
     <div className="min-h-screen bg-[#0a0e14] text-[#e6edf3]">
       <Navigation />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <h1 className="text-4xl font-bold mb-6">Battle History</h1>
 
         {loading && (

@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install backend dependencies
         working-directory: ./prototype/backend
@@ -39,6 +39,8 @@ jobs:
 
       - name: Generate Prisma Client
         working-directory: ./prototype/backend
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: npm run prisma:generate
 
       - name: Lint backend code
@@ -62,7 +64,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:17
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -83,7 +85,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install backend dependencies
         working-directory: ./prototype/backend
@@ -91,6 +93,8 @@ jobs:
 
       - name: Generate Prisma Client
         working-directory: ./prototype/backend
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: npm run prisma:generate
 
       - name: Run database migrations
@@ -118,7 +122,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install frontend dependencies
         working-directory: ./prototype/frontend
@@ -150,7 +154,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:17
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -170,7 +174,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install frontend dependencies
         working-directory: ./prototype/frontend
@@ -353,7 +357,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Setup SSH key
         run: |

@@ -151,7 +151,13 @@ export const BattlePlaybackViewer: React.FC<BattlePlaybackViewerProps> = ({
 
   // Determine the two currently active (fighting) robots from the most recent position event.
   // In tag team battles the active pair changes between phases.
+  // For 1v1 battles, always use the canonical robot1/robot2 names to avoid
+  // JSONB key-order instability causing visual swaps.
   const activeRobotNames = useMemo((): [string, string] | undefined => {
+    if (!isTagTeam && !kothData) {
+      // 1v1: canonical order, never changes
+      return [robot1Info.name, robot2Info.name];
+    }
     for (let i = Math.min(currentEventIndex, battleResult.events.length - 1); i >= 0; i--) {
       const pos = battleResult.events[i].positions;
       if (pos) {
@@ -160,20 +166,65 @@ export const BattlePlaybackViewer: React.FC<BattlePlaybackViewerProps> = ({
       }
     }
     return undefined;
-  }, [currentEventIndex, battleResult.events]);
+  }, [currentEventIndex, battleResult.events, isTagTeam, kothData, robot1Info.name, robot2Info.name]);
 
   // Derive KotH zone state and scores from events up to currentEventIndex
   const kothState = useKothPlaybackState(kothData, currentEventIndex, battleResult.events);
 
+  // Build a map of each robot's most recent target from attack events.
+  // For KotH: uses kothState.scores isEliminated flags (tracks yield/destroyed via robot_eliminated events).
+  // For 1v1/tag team: uses frame HP values (destroyed = HP 0).
+  const robotTargets = useMemo((): Record<string, string> => {
+    const targets: Record<string, string> = {};
+    const eliminated = new Set<string>();
+
+    // KotH: use the authoritative eliminated set from kothState
+    if (kothState?.scores) {
+      for (const entry of kothState.scores) {
+        if (entry.isEliminated) {
+          eliminated.add(entry.robotName);
+        }
+      }
+    }
+
+    // Also check frame HP for destroyed robots (works for all battle types)
+    for (const robot of robots) {
+      const hp = frame.hpValues[robot.name];
+      if (hp !== undefined && hp <= 0) {
+        eliminated.add(robot.name);
+      }
+    }
+
+    // Backward pass to find most recent target per robot
+    for (let i = Math.min(currentEventIndex, battleResult.events.length - 1); i >= 0; i--) {
+      const evt = battleResult.events[i];
+      if (evt.attacker && evt.defender && !targets[evt.attacker]) {
+        targets[evt.attacker] = evt.defender;
+      }
+    }
+
+    // Remove eliminated robots and targets pointing to eliminated robots
+    for (const name of eliminated) {
+      delete targets[name];
+    }
+    for (const [attacker, defender] of Object.entries(targets)) {
+      if (eliminated.has(defender)) {
+        delete targets[attacker];
+      }
+    }
+
+    return targets;
+  }, [currentEventIndex, battleResult.events, robots, frame.hpValues, kothState]);
+
   // Compute the current log event index from playback time against the logEvents array,
   // since logEvents and battleResult.events are different arrays (narrative vs spatial).
+  // Scan all events to find the last one at or before currentTime (don't break early
+  // in case events aren't perfectly sorted by timestamp).
   const currentLogEventIndex = useMemo((): number => {
     let result = -1;
     for (let i = 0; i < logEvents.length; i++) {
       if (logEvents[i].timestamp <= state.currentTime) {
         result = i;
-      } else {
-        break;
       }
     }
     return result;
@@ -222,6 +273,7 @@ export const BattlePlaybackViewer: React.FC<BattlePlaybackViewerProps> = ({
           currentTime={state.currentTime}
           focusedRangeBand={focusedRangeBand}
           activeRobotNames={activeRobotNames}
+          robotTargets={robotTargets}
           kothZone={kothState?.zone}
           kothScores={kothState?.scores}
           kothScoreThreshold={kothData?.scoreThreshold}

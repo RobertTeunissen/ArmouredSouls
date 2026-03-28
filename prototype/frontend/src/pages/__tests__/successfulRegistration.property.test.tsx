@@ -44,11 +44,18 @@ import FrontPage from '../FrontPage';
 const NUM_RUNS = 50;
 
 const VALID_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-';
+const STABLE_NAME_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 _-';
 
 const validUsernameArbitrary = () =>
   fc
     .array(fc.constantFrom(...VALID_CHARS.split('')), { minLength: 3, maxLength: 20 })
     .map((chars) => chars.join(''));
+
+const validStableNameArbitrary = () =>
+  fc
+    .array(fc.constantFrom(...STABLE_NAME_CHARS.split('')), { minLength: 3, maxLength: 30 })
+    .map((chars) => chars.join(''))
+    .filter((name) => name.trim().length >= 3); // Ensure not just spaces
 
 const validEmailArbitrary = () =>
   fc.tuple(
@@ -84,16 +91,18 @@ describe('Property 13: Successful Registration Flow', () => {
     await fc.assert(
       fc.asyncProperty(
         validUsernameArbitrary(),
+        validStableNameArbitrary(),
         validEmailArbitrary(),
         validPasswordArbitrary(),
         jwtTokenArbitrary(),
         userIdArbitrary(),
-        async (username, email, password, token, userId) => {
+        async (username, stableName, email, password, token, userId) => {
           cleanup();
 
           const mockUser = {
             id: userId,
             username,
+            stableName,
             email,
             currency: 1000,
             prestige: 0,
@@ -115,6 +124,9 @@ describe('Property 13: Successful Registration Flow', () => {
           // Fill in the registration form
           fireEvent.change(screen.getByLabelText(/username/i), {
             target: { value: username },
+          });
+          fireEvent.change(screen.getByLabelText(/stable name/i), {
+            target: { value: stableName },
           });
           fireEvent.change(screen.getByLabelText(/email/i), {
             target: { value: email },

@@ -25,13 +25,15 @@ interface BudgetComparisonTableProps {
     attributes: BudgetCategory;
     reserve: BudgetCategory;
   };
-  currentSpending: {
+  currentSpending?: {
     facilities: number;
     robots: number;
     weapons: number;
     attributes: number;
   };
   startingBudget?: number;
+  /** When true, shows only recommendations without spending/status columns */
+  referenceOnly?: boolean;
 }
 
 type StatusType = 'not_started' | 'under' | 'on_track' | 'over';
@@ -67,12 +69,16 @@ const STATUS_CONFIGS: Record<StatusType, StatusConfig> = {
 
 const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
   recommendations,
-  currentSpending,
-  startingBudget = 3000000
+  currentSpending = { facilities: 0, robots: 0, weapons: 0, attributes: 0 },
+  startingBudget = 3000000,
+  referenceOnly = false
 }) => {
   // Calculate total spent
   const totalSpent = Object.values(currentSpending).reduce((sum, val) => sum + val, 0);
   const remaining = startingBudget - totalSpent;
+
+  // Check if we have any actual spending data
+  const hasSpendingData = !referenceOnly && totalSpent > 0;
 
   // Determine status for a category
   const getStatus = (spent: number, category: BudgetCategory): StatusType => {
@@ -110,17 +116,21 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                 Category
               </th>
               <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">
-                Recommended Range
+                Recommended Budget
               </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">
-                Your Spending
-              </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">
-                % of Target
-              </th>
-              <th className="text-center py-3 px-4 text-sm font-semibold text-secondary">
-                Status
-              </th>
+              {hasSpendingData && (
+                <>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">
+                    Your Spending
+                  </th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-secondary">
+                    % of Target
+                  </th>
+                  <th className="text-center py-3 px-4 text-sm font-semibold text-secondary">
+                    Status
+                  </th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -140,18 +150,22 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {formatCurrency(recommendations.facilities.min)} - {formatCurrency(recommendations.facilities.max)}
-              </td>
               <td className="text-right py-3 px-4 text-white font-medium">
-                {formatCurrency(currentSpending.facilities)}
+                {formatCurrency(recommendations.facilities.min)}
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {getPercentageOfRange(currentSpending.facilities, recommendations.facilities).toFixed(0)}%
-              </td>
-              <td className="text-center py-3 px-4">
-                <StatusBadge status={getStatus(currentSpending.facilities, recommendations.facilities)} />
-              </td>
+              {hasSpendingData && (
+                <>
+                  <td className="text-right py-3 px-4 text-white font-medium">
+                    {formatCurrency(currentSpending.facilities)}
+                  </td>
+                  <td className="text-right py-3 px-4 text-secondary text-sm">
+                    {getPercentageOfRange(currentSpending.facilities, recommendations.facilities).toFixed(0)}%
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    <StatusBadge status={getStatus(currentSpending.facilities, recommendations.facilities)} />
+                  </td>
+                </>
+              )}
             </tr>
 
             {/* Robots Row */}
@@ -170,18 +184,22 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {formatCurrency(recommendations.robots.min)} - {formatCurrency(recommendations.robots.max)}
-              </td>
               <td className="text-right py-3 px-4 text-white font-medium">
-                {formatCurrency(currentSpending.robots)}
+                {formatCurrency(recommendations.robots.min)}
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {getPercentageOfRange(currentSpending.robots, recommendations.robots).toFixed(0)}%
-              </td>
-              <td className="text-center py-3 px-4">
-                <StatusBadge status={getStatus(currentSpending.robots, recommendations.robots)} />
-              </td>
+              {hasSpendingData && (
+                <>
+                  <td className="text-right py-3 px-4 text-white font-medium">
+                    {formatCurrency(currentSpending.robots)}
+                  </td>
+                  <td className="text-right py-3 px-4 text-secondary text-sm">
+                    {getPercentageOfRange(currentSpending.robots, recommendations.robots).toFixed(0)}%
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    <StatusBadge status={getStatus(currentSpending.robots, recommendations.robots)} />
+                  </td>
+                </>
+              )}
             </tr>
 
             {/* Weapons Row */}
@@ -200,18 +218,22 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {formatCurrency(recommendations.weapons.min)} - {formatCurrency(recommendations.weapons.max)}
-              </td>
               <td className="text-right py-3 px-4 text-white font-medium">
-                {formatCurrency(currentSpending.weapons)}
+                {formatCurrency(recommendations.weapons.min)}
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {getPercentageOfRange(currentSpending.weapons, recommendations.weapons).toFixed(0)}%
-              </td>
-              <td className="text-center py-3 px-4">
-                <StatusBadge status={getStatus(currentSpending.weapons, recommendations.weapons)} />
-              </td>
+              {hasSpendingData && (
+                <>
+                  <td className="text-right py-3 px-4 text-white font-medium">
+                    {formatCurrency(currentSpending.weapons)}
+                  </td>
+                  <td className="text-right py-3 px-4 text-secondary text-sm">
+                    {getPercentageOfRange(currentSpending.weapons, recommendations.weapons).toFixed(0)}%
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    <StatusBadge status={getStatus(currentSpending.weapons, recommendations.weapons)} />
+                  </td>
+                </>
+              )}
             </tr>
 
             {/* Attributes Row */}
@@ -230,18 +252,22 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {formatCurrency(recommendations.attributes.min)} - {formatCurrency(recommendations.attributes.max)}
-              </td>
               <td className="text-right py-3 px-4 text-white font-medium">
-                {formatCurrency(currentSpending.attributes)}
+                {formatCurrency(recommendations.attributes.min)}
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {getPercentageOfRange(currentSpending.attributes, recommendations.attributes).toFixed(0)}%
-              </td>
-              <td className="text-center py-3 px-4">
-                <StatusBadge status={getStatus(currentSpending.attributes, recommendations.attributes)} />
-              </td>
+              {hasSpendingData && (
+                <>
+                  <td className="text-right py-3 px-4 text-white font-medium">
+                    {formatCurrency(currentSpending.attributes)}
+                  </td>
+                  <td className="text-right py-3 px-4 text-secondary text-sm">
+                    {getPercentageOfRange(currentSpending.attributes, recommendations.attributes).toFixed(0)}%
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    <StatusBadge status={getStatus(currentSpending.attributes, recommendations.attributes)} />
+                  </td>
+                </>
+              )}
             </tr>
 
             {/* Reserve Row */}
@@ -260,38 +286,44 @@ const BudgetComparisonTable: React.FC<BudgetComparisonTableProps> = ({
                   </div>
                 </div>
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {formatCurrency(recommendations.reserve.min)} - {formatCurrency(recommendations.reserve.max)}
-              </td>
               <td className="text-right py-3 px-4 text-white font-medium">
-                {formatCurrency(remaining)}
+                {formatCurrency(recommendations.reserve.min)}
               </td>
-              <td className="text-right py-3 px-4 text-secondary text-sm">
-                {getPercentageOfRange(remaining, recommendations.reserve).toFixed(0)}%
-              </td>
-              <td className="text-center py-3 px-4">
-                <StatusBadge status={getStatus(remaining, recommendations.reserve)} />
-              </td>
+              {hasSpendingData && (
+                <>
+                  <td className="text-right py-3 px-4 text-white font-medium">
+                    {formatCurrency(remaining)}
+                  </td>
+                  <td className="text-right py-3 px-4 text-secondary text-sm">
+                    {getPercentageOfRange(remaining, recommendations.reserve).toFixed(0)}%
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    <StatusBadge status={getStatus(remaining, recommendations.reserve)} />
+                  </td>
+                </>
+              )}
             </tr>
           </tbody>
         </table>
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-xs text-secondary">
-        <div className="flex items-center gap-2">
-          <span className="text-success">✅</span>
-          <span>On Track: Within recommended range</span>
+      {/* Legend - only show when we have spending data */}
+      {hasSpendingData && (
+        <div className="mt-4 flex flex-wrap gap-4 text-xs text-secondary">
+          <div className="flex items-center gap-2">
+            <span className="text-success">✅</span>
+            <span>On Track: Within recommended range</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-warning">⚠️</span>
+            <span>Under Budget: Below minimum recommendation</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-error">❌</span>
+            <span>Over Budget: Exceeds maximum recommendation</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-warning">⚠️</span>
-          <span>Under Budget: Below minimum recommendation</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-error">❌</span>
-          <span>Over Budget: Exceeds maximum recommendation</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

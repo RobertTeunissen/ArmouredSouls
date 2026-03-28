@@ -394,6 +394,7 @@ describe('Validation Service - Unit Tests', () => {
     test('should accept valid registration request', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
+        stableName: 'Valid Stable',
         email: 'me@test.co',
         password: 'password123',
       };
@@ -405,50 +406,55 @@ describe('Validation Service - Unit Tests', () => {
     test('should reject request with missing username', () => {
       const request: RegistrationRequest = {
         username: '',
+        stableName: '',
         email: 'me@test.co',
         password: 'password123',
       };
       const result = validateRegistrationRequest(request);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Username, email, and password are required');
+      expect(result.errors).toContain('Username, email, password, and stable name are required');
     });
 
     test('should reject request with missing email', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
+        stableName: 'Valid Stable',
         email: '',
         password: 'password123',
       };
       const result = validateRegistrationRequest(request);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Username, email, and password are required');
+      expect(result.errors).toContain('Username, email, password, and stable name are required');
     });
 
     test('should reject request with missing password', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
+        stableName: 'Valid Stable',
         email: 'me@test.co',
         password: '',
       };
       const result = validateRegistrationRequest(request);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Username, email, and password are required');
+      expect(result.errors).toContain('Username, email, password, and stable name are required');
     });
 
     test('should reject request with all fields missing', () => {
       const request: RegistrationRequest = {
         username: '',
+        stableName: '',
         email: '',
         password: '',
       };
       const result = validateRegistrationRequest(request);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Username, email, and password are required');
+      expect(result.errors).toContain('Username, email, password, and stable name are required');
     });
 
     test('should aggregate multiple validation errors', () => {
       const request: RegistrationRequest = {
         username: 'ab', // Too short
+        stableName: 'Valid Stable',
         email: 'x', // Too short
         password: '1234567', // Too short
       };
@@ -463,6 +469,7 @@ describe('Validation Service - Unit Tests', () => {
     test('should aggregate errors for invalid characters', () => {
       const request: RegistrationRequest = {
         username: 'user@name', // Invalid character
+        stableName: 'Valid Stable',
         email: 'email#test', // Invalid character
         password: 'password123', // Valid
       };
@@ -476,6 +483,7 @@ describe('Validation Service - Unit Tests', () => {
     test('should accept request with boundary values', () => {
       const request: RegistrationRequest = {
         username: 'abc', // Exactly 3 characters
+        stableName: 'Valid Stable',
         email: 'a@b', // Exactly 3 characters, valid email format
         password: '12345678', // Exactly 8 characters
       };
@@ -487,6 +495,7 @@ describe('Validation Service - Unit Tests', () => {
     test('should accept request with maximum valid lengths', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(20), // Exactly 20 characters
+        stableName: 'Valid Stable',
         email: 'b'.repeat(44) + '@c.com', // Exactly 50 characters
         password: 'c'.repeat(128), // Exactly 128 characters
       };
@@ -498,6 +507,7 @@ describe('Validation Service - Unit Tests', () => {
     test('should reject request with values exceeding maximum lengths', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(21), // 21 characters
+        stableName: 'Valid Stable',
         email: 'b'.repeat(45) + '@c.com', // 51 characters
         password: 'c'.repeat(129), // 129 characters
       };
@@ -710,17 +720,19 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for missing fields', () => {
       const request: RegistrationRequest = {
         username: '',
+        stableName: '',
         email: '',
         password: '',
       };
       const result = validateRegistrationRequest(request);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Username, email, and password are required');
+      expect(result.errors).toContain('Username, email, password, and stable name are required');
     });
 
     test('should return specific error message for short username', () => {
       const request: RegistrationRequest = {
         username: 'ab',
+        stableName: 'Valid Stable',
         email: 'me@test.co',
         password: 'validpass',
       };
@@ -732,6 +744,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for long username', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(21),
+        stableName: 'Valid Stable',
         email: 'me@test.co',
         password: 'validpass',
       };
@@ -743,6 +756,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for invalid username characters', () => {
       const request: RegistrationRequest = {
         username: 'user@name',
+        stableName: 'Valid Stable',
         email: 'me@test.co',
         password: 'validpass',
       };
@@ -754,6 +768,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for short email', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
+        stableName: 'Valid Stable',
         email: 'ab',
         password: 'validpass',
       };
@@ -765,6 +780,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for long email', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
+        stableName: 'Valid Stable',
         email: 'a'.repeat(51),
         password: 'validpass',
       };
@@ -776,6 +792,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for invalid email characters', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
+        stableName: 'Valid Stable',
         email: 'email#test',
         password: 'validpass',
       };
@@ -787,6 +804,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for short password', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
+        stableName: 'Valid Stable',
         email: 'me@test.co',
         password: '1234567',
       };
@@ -798,6 +816,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should return specific error message for long password', () => {
       const request: RegistrationRequest = {
         username: 'validuser',
+        stableName: 'Valid Stable',
         email: 'me@test.co',
         password: 'a'.repeat(129),
       };
@@ -809,6 +828,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should aggregate multiple error messages', () => {
       const request: RegistrationRequest = {
         username: 'ab',
+        stableName: 'Valid Stable',
         email: 'x',
         password: '1234567',
       };
@@ -825,6 +845,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should accept request with all fields at minimum boundaries', () => {
       const request: RegistrationRequest = {
         username: 'abc',
+        stableName: 'Valid Stable',
         email: 'a@b',
         password: '12345678',
       };
@@ -836,6 +857,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should accept request with all fields at maximum boundaries', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(20),
+        stableName: 'Valid Stable',
         email: 'b'.repeat(44) + '@c.com',
         password: 'c'.repeat(128),
       };
@@ -847,6 +869,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should reject request with all fields below minimum boundaries', () => {
       const request: RegistrationRequest = {
         username: 'ab',
+        stableName: 'Valid Stable',
         email: 'xy',
         password: '1234567',
       };
@@ -858,6 +881,7 @@ describe('Registration Validation Service - Unit Tests', () => {
     test('should reject request with all fields above maximum boundaries', () => {
       const request: RegistrationRequest = {
         username: 'a'.repeat(21),
+        stableName: 'Valid Stable',
         email: 'b'.repeat(45) + '@c.com',
         password: 'c'.repeat(129),
       };
@@ -955,11 +979,12 @@ describe('Validation Service - Property-Based Tests', () => {
       // Create an arbitrary that generates registration requests with at least one missing field
       const registrationRequestWithMissingFieldsArbitrary = fc.record({
         username: fc.option(fc.string(), { nil: '' }),
+        stableName: fc.option(fc.string(), { nil: '' }),
         email: fc.option(fc.string(), { nil: '' }),
         password: fc.option(fc.string(), { nil: '' }),
       }).filter(req => {
         // Ensure at least one field is missing (empty string)
-        return req.username === '' || req.email === '' || req.password === '';
+        return req.username === '' || req.stableName === '' || req.email === '' || req.password === '';
       });
 
       fc.assert(
@@ -970,7 +995,7 @@ describe('Validation Service - Property-Based Tests', () => {
           expect(result.isValid).toBe(false);
           
           // Should contain the descriptive error message about required fields
-          expect(result.errors).toContain('Username, email, and password are required');
+          expect(result.errors).toContain('Username, email, password, and stable name are required');
         }),
         { numRuns: 100 }
       );

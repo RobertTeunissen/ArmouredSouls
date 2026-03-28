@@ -84,7 +84,7 @@ The Weapon & Loadout System enables players to purchase weapons, manage inventor
 - ✅ Backend API: POST /api/weapon-inventory/purchase (purchase weapon)
 - ✅ Backend API: GET /api/weapon-inventory (get user's weapon inventory)
 - ✅ Frontend: WeaponShopPage (displays and allows purchasing weapons)
-- ✅ Weapon Workshop discount system (5% per level, up to 50%)
+- ✅ Weapon Workshop discount system (10% per level, up to 100%)
 - ✅ Weapon equipping/unequipping functionality (backend + frontend)
 - ✅ Loadout type selection and validation
 - ✅ Weapon slot management (main weapon vs offhand weapon)
@@ -667,8 +667,8 @@ The **Weapons Workshop** facility provides purchase discounts:
 
 **Example Cost Calculation:**
 - Plasma Cannon base cost: ₡408,000
-- With Workshop Level 5 (25% discount): ₡306,000
-- With Workshop Level 10 (50% discount): ₡204,000
+- With Workshop Level 5 (50% discount): ₡204,000
+- With Workshop Level 10 (100% discount): ₡0 (free)
 
 ### Investment Strategy (₡3M Starting Budget)
 
@@ -1271,7 +1271,7 @@ maxHP = effective_hull_integrity × 10
 
 **Max Shield Calculation:**
 ```
-maxShield = effective_shield_capacity × 2
+maxShield = effective_shield_capacity × 4
 ```
 
 **Loadout Bonuses:**
@@ -1495,7 +1495,7 @@ Power Sword Bonus: 0
 Weapon+Shield Loadout: +20%
 Effective Shield Capacity: (20 + 5) * 1.20 = 30
 
-Max Shield HP: 30 * 2 = 60
+Max Shield HP: 30 * 4 = 120
 ```
 
 **Example 3: Robot with Dual Machine Guns, Dual-Wield Loadout**

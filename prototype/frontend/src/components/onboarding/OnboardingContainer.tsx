@@ -237,12 +237,12 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
 
     switch (currentStep) {
       case 1: return <Step1_Welcome onNext={handleNext} />;
-      case 2: return <Step2_RosterStrategy onNext={handleNext} />;
-      case 3: return <Step3_FacilityTiming onNext={handleNext} />;
-      case 4: return <Step4_BudgetAllocation onNext={handleNext} />;
-      case 5: return <Step5_RobotCreation onNext={handleNext} />;
-      case 6: return <Step6_WeaponEducation onNext={handleNext} />;
-      case 7: return <Step7_WeaponPurchase onNext={handleNext} />;
+      case 2: return <Step2_RosterStrategy {...stepProps} />;
+      case 3: return <Step3_FacilityTiming {...stepProps} />;
+      case 4: return <Step4_BudgetAllocation {...stepProps} />;
+      case 5: return <Step5_RobotCreation {...stepProps} />;
+      case 6: return <Step6_WeaponEducation {...stepProps} />;
+      case 7: return <Step7_WeaponPurchase {...stepProps} />;
       case 8: return <Step8_BattleReadiness {...stepProps} />;
       case 9: return <Step9_Completion onNext={handleNext} onPrevious={handlePrevious} />;
       default: return <Step1_Welcome onNext={handleNext} />;
@@ -277,20 +277,21 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
       {/* Header with progress and budget */}
       <div className="bg-surface border-b border-white/10 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex-1 min-w-0">
               <ProgressIndicator current={currentStep} total={9} />
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 hidden sm:block">
               <BudgetTracker />
             </div>
             <button
               onClick={() => setShowSkipConfirmation(true)}
-              className="flex-shrink-0 px-4 py-2 text-sm text-secondary hover:text-white hover:bg-surface-elevated border border-gray-600 hover:border-gray-400 rounded transition-colors cursor-pointer min-h-[44px]"
+              className="flex-shrink-0 px-2 py-2 sm:px-4 text-sm text-secondary hover:text-white hover:bg-surface-elevated border border-gray-600 hover:border-gray-400 rounded transition-colors cursor-pointer min-h-[44px]"
               aria-label="Skip Tutorial"
               type="button"
             >
-              Skip Tutorial
+              <span className="hidden sm:inline">Skip Tutorial</span>
+              <span className="sm:hidden" aria-hidden="true">Skip</span>
             </button>
           </div>
         </div>

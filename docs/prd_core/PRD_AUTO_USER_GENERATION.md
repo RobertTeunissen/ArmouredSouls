@@ -2,14 +2,15 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.3
-**Date**: February 9, 2026  
+**Version**: v2.0
+**Date**: March 26, 2026  
 **Status**: ✅ Implemented & Tested (Unit Tests Complete)
-**Testing Status**: ✅ Unit Tests Complete | ⚠️ Integration Tests Pending
+**Testing Status**: ✅ Unit Tests Complete | ✅ Integration Tests Complete
 
 ---
 
 ## Version History
+- v2.0 - Replaced archetype system with tiered stable system (WimpBot/AverageBot/ExpertBot) (March 26, 2026)
 - v1.3 - Unit tests added and documentation updated (February 9, 2026)
 - v1.2 - Implementation review and status update (February 9, 2026)
 - v1.1 - Review and consolidation (February 9, 2026)
@@ -22,42 +23,31 @@
 ### ✅ Completed Features
 - **Database Schema**: `CycleMetadata` model with migration `20260204134733_add_cycle_metadata`
 - **User Generation Utility**: `generateBattleReadyUsers()` in `prototype/backend/src/utils/userGeneration.ts`
+- **Tiered Stable System**: WimpBot/AverageBot/ExpertBot tiers with varying robot counts (3/2/1)
 - **Backend API**: `POST /api/admin/cycles/bulk` with `generateUsersPerCycle` flag
 - **Frontend UI**: Admin dashboard checkbox with help text and result display
 - **Cycle Persistence**: Global cycle counter persists across bulk runs
 - **Error Handling**: Graceful error handling with logging and user feedback
 
 ### ⚠️ Pending Items
-- **Integration Tests**: No tests for cycle counter persistence across runs (admin endpoint integration)
-- **Manual Testing Documentation**: No documented verification of user generation counts
-- **Code Review**: No review artifacts found in codebase
+- None - all features implemented and tested
 
 ### ✅ Testing Complete
-- **Unit Tests**: 15 tests passing with 100% coverage of `generateBattleReadyUsers()` function
+- **Unit Tests**: Comprehensive tests for `generateBattleReadyUsers()` function
   - Test file: `prototype/backend/tests/userGeneration.test.ts`
-  - Coverage: Username generation, robot creation, weapon inventory, attributes, battle readiness, error handling, performance
-- **Test Results**: All tests passing (15/15)
-  - User creation with unique usernames ✓
-  - Correct starting currency (₡100,000) ✓
-  - Battle-ready robots with correct stats ✓
-  - Practice Sword equipment ✓
-  - All 23 attributes set to 1.00 ✓
-  - Weapon inventory entries ✓
-  - Unique robot names ✓
-  - Sequential username numbering ✓
-  - Atomic transactions ✓
-  - Error handling (missing Practice Sword) ✓
-  - Large batch creation (50 users < 5s) ✓
-  - Battle readiness checks ✓
-  - Correct summary object ✓
-  - Zero count handling ✓
-  - Dummy password hash ✓
+  - Coverage: Tiered generation, robot creation, weapon inventory, attributes, battle readiness, error handling, performance
+- **Integration Tests**: `prototype/backend/tests/integration/adminCycleGeneration.test.ts`
+- **Property Tests**: Tier distribution, weapon selection, robot naming validation
 
 ### 📝 Implementation Notes
 - Auto-generated users use a dummy password hash (not production-ready for authentication)
 - User generation runs in Step 0 (before matchmaking) in each cycle
 - Frontend displays user generation results in both session log and cycle summary
 - Error in user generation does not halt cycle execution (logged and continues)
+- **Tiered Stable System**: Users are created as stables with multiple robots based on tier:
+  - WimpBot: 3 robots per stable, budget weapons, tag team from first 2 robots
+  - AverageBot: 2 robots per stable, mid-tier weapons, tag team from both robots
+  - ExpertBot: 1 robot per stable, premium weapons, no tag team
 
 ---
 
@@ -66,8 +56,9 @@
 This PRD defines the requirements for an automated user and robot generation system that progressively adds new battle-ready players to the Armoured Souls system during each cycle. This feature simulates organic user growth and ensures a healthy, growing player base for matchmaking as the game progresses through multiple cycles.
 
 ### Key Objectives
-- Add 1 user in cycle 1, 2 users in cycle 2, 3 users in cycle 3, etc.
-- Generate fully functional, battle-ready robots for each new user
+- Create N stables in cycle N (Cycle 1 = 1 stable, Cycle 2 = 2 stables, etc.)
+- Distribute stables across three tiers: WimpBot (3 robots), AverageBot (2 robots), ExpertBot (1 robot)
+- Generate fully functional, battle-ready robots with tier-appropriate weapons
 - Support continuous cycle generation (works across multiple bulk cycle runs)
 - Provide admin control via UI flag in `/admin` dashboard
 
@@ -102,11 +93,12 @@ This PRD defines the requirements for an automated user and robot generation sys
 
 ### Current State
 - The admin dashboard allows triggering cycles via `POST /api/admin/cycles/bulk`
-- User base is static (100 test users + manual users created during seeding)
-- No mechanism for simulating user growth over time
+- User base includes 200 WimpBot seed users + admin + bye-robot
+- Tiered stable system creates diverse user population during cycles
 
 ### Desired State
-- Each cycle automatically generates N new users (where N = cycle number)
+- Each cycle automatically generates N stables (where N = cycle number)
+- Stables are distributed across WimpBot/AverageBot/ExpertBot tiers
 - New users are immediately eligible for matchmaking in the next cycle
 - Growth persists across multiple bulk cycle runs (e.g., 5 cycles now, 5 cycles later)
 - Admin can enable/disable this feature via a simple flag
@@ -149,29 +141,44 @@ model CycleMetadata {
 
 #### FR-2: Automated User Generation Function
 **Priority**: High  
-**Description**: A reusable utility function creates battle-ready users with equipped robots.
+**Description**: A reusable utility function creates battle-ready stables with tiered robot configurations.
 
 **Acceptance Criteria**:
-- Function generates N users in a single call
-- Each user receives a unique username (format: `auto_user_NNNN`)
+- Function generates N stables in a single call, distributed across tiers
+- Tier distribution uses `distributeTiers(n)`: integer division by 3, remainder allocated WimpBot-first
+- Each user receives a unique username (format: `auto_wimpbot_N`, `auto_averagebot_N`, `auto_expertbot_N`)
 - Each user starts with ₡100,000 currency (standard test user amount)
-- Each user receives 1 robot with:
-  - Randomized name from existing `generateRobotName()` function
-  - All 23 attributes set to 1.00 (baseline)
-  - HP: 55 (calculated: 50 + hullIntegrity × 5)
-  - Shield: 2 (calculated: shieldCapacity × 2)
+- Each user receives a unique stable name via `generateStableName()`
+- Robots per stable vary by tier:
+  - WimpBot: 3 robots, all attributes at 1.00, budget weapons (₡50K-₡150K)
+  - AverageBot: 2 robots, all attributes at 5.00, mid-tier weapons (₡150K-₡300K)
+  - ExpertBot: 1 robot, all attributes at 10.00, premium weapons (₡300K+)
+- Robot configuration:
+  - Random loadoutType (25% each: single, weapon_shield, dual_wield, two_handed)
+  - Random rangeBand (25% each: melee, short, mid, long)
+  - Random stance (33% each: balanced, offensive, defensive)
+  - Random yieldThreshold (integer 0-20)
+  - HP = 50 + (attributeLevel × 5), Shield = attributeLevel × 4
   - ELO: 1200 (starting rank)
-  - League: bronze_1 (entry tier)
-  - Loadout: single-handed with Practice Sword equipped
-  - Battle readiness: 100%
+  - League: Bronze (via `assignLeagueInstance('bronze')`)
+- Tag teams created for multi-robot stables (WimpBot: first 2 robots, AverageBot: both robots)
+- Robot naming format: `{Tier} {LoadoutTitle} {WeaponCodename} {Number}`
 
 **Function Signature**:
 ```typescript
-async function generateBattleReadyUsers(count: number): Promise<{
+async function generateBattleReadyUsers(cycleNumber: number): Promise<TieredGenerationResult>
+
+interface TieredGenerationResult {
   usersCreated: number;
   robotsCreated: number;
+  tagTeamsCreated: number;
+  tierBreakdown: {
+    wimpBot: number;
+    averageBot: number;
+    expertBot: number;
+  };
   usernames: string[];
-}>
+}
 ```
 
 ---
@@ -192,7 +199,7 @@ async function generateBattleReadyUsers(count: number): Promise<{
   "cycles": 5,
   "autoRepair": true,
   "includeDailyFinances": true,
-  "generateUsersPerCycle": true  // NEW FLAG
+  "generateUsersPerCycle": true
 }
 ```
 
@@ -205,8 +212,10 @@ async function generateBattleReadyUsers(count: number): Promise<{
       "cycle": 1,
       "userGeneration": {
         "usersCreated": 1,
-        "robotsCreated": 1,
-        "usernames": ["auto_user_0001"]
+        "robotsCreated": 3,
+        "tagTeamsCreated": 1,
+        "tierBreakdown": { "wimpBot": 1, "averageBot": 0, "expertBot": 0 },
+        "usernames": ["auto_wimpbot_1"]
       },
       "matchmaking": { "matchesCreated": 51 },
       ...
@@ -231,8 +240,8 @@ async function generateBattleReadyUsers(count: number): Promise<{
 ```
 [ ] Auto-Repair Robots
 [ ] Include Daily Finances
-[✓] Generate Users Per Cycle  // NEW CHECKBOX
-    ℹ️ Adds N users each cycle (cycle 1 → 1 user, cycle 2 → 2 users, etc.)
+[✓] Generate Users Per Cycle
+    ℹ️ Adds N stables each cycle distributed across WimpBot/AverageBot/ExpertBot tiers
 ```
 
 ---

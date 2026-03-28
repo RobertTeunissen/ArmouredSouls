@@ -4,12 +4,8 @@
  *
  * Test coverage:
  * - Onboarding mode detection via URL param
- * - Onboarding banner display
- * - Budget-friendly filters auto-applied in onboarding mode
- * - Guided overlay on first load
- * - Navigation back to onboarding after weapon purchase
- * - Back to Tutorial button
  * - Normal mode behavior preserved
+ * - Filters not auto-applied in onboarding mode (let players decide)
  *
  * Requirements: 10.1-10.14
  */
@@ -17,7 +13,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import WeaponShopPage from '../WeaponShopPage';
 import { AuthProvider } from '../../contexts/AuthContext';
@@ -39,16 +34,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock GuidedUIOverlay
-vi.mock('../../components/onboarding/GuidedUIOverlay', () => ({
-  default: ({ tooltipContent, onClose }: any) => (
-    <div data-testid="guided-overlay">
-      <div data-testid="overlay-content">{tooltipContent}</div>
-      {onClose && <button data-testid="overlay-close" onClick={onClose}>Close</button>}
-    </div>
-  ),
-}));
-
 // Mock Navigation component
 vi.mock('../../components/Navigation', () => ({
   default: () => <nav data-testid="navigation">Navigation</nav>,
@@ -65,8 +50,8 @@ vi.mock('../../components/FilterPanel', () => ({
       FilterPanel
     </div>
   ),
-  // Re-export the WeaponFilters type
 }));
+
 
 vi.mock('../../components/ActiveFiltersDisplay', () => ({
   default: () => <div data-testid="active-filters">ActiveFilters</div>,
@@ -246,112 +231,38 @@ describe('WeaponShopPage - Onboarding Integration', () => {
   };
 
   describe('Onboarding Mode Detection', () => {
-    it('should show onboarding banner when onboarding=true param is present', async () => {
+    it('should detect onboarding mode from URL param', async () => {
       renderInOnboardingMode();
       await waitFor(() => {
-        expect(screen.getByText('Tutorial Step 7: Weapon Purchase')).toBeInTheDocument();
+        // Page should load successfully in onboarding mode
+        expect(screen.getByText('Weapon Shop')).toBeInTheDocument();
       });
     });
 
-    it('should not show onboarding banner in normal mode', async () => {
+    it('should render weapon shop in normal mode', async () => {
       renderInNormalMode();
       await waitFor(() => {
         expect(screen.getByText('Weapon Shop')).toBeInTheDocument();
       });
-      expect(screen.queryByText('Tutorial Step 7: Weapon Purchase')).not.toBeInTheDocument();
     });
   });
 
-  describe('Onboarding Banner Content', () => {
-    it('should display tutorial guidance text', async () => {
-      renderInOnboardingMode();
-      await waitFor(() => {
-        expect(screen.getByText(/Browse the weapons below and purchase one/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show Return to Tutorial button', async () => {
-      renderInOnboardingMode();
-      await waitFor(() => {
-        expect(screen.getByText('Return to Tutorial')).toBeInTheDocument();
-      });
-    });
-
-    it('should navigate to /onboarding when Return to Tutorial is clicked', async () => {
-      const user = userEvent.setup();
-      renderInOnboardingMode();
-
-      await waitFor(() => {
-        expect(screen.getByText('Return to Tutorial')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByText('Return to Tutorial'));
-
-      expect(mockNavigate).toHaveBeenCalledWith('/onboarding');
-    });
-  });
-
-  describe('Budget Filters in Onboarding Mode', () => {
-    it('should auto-apply canAffordOnly filter in onboarding mode', async () => {
+  describe('Filters in Onboarding Mode', () => {
+    it('should NOT auto-apply canAffordOnly filter in onboarding mode', async () => {
       renderInOnboardingMode();
       await waitFor(() => {
         const filterPanel = screen.getByTestId('filter-panel');
-        expect(filterPanel.getAttribute('data-can-afford')).toBe('true');
-      });
-    });
-
-    it('should auto-apply price range max of 250000 in onboarding mode', async () => {
-      renderInOnboardingMode();
-      await waitFor(() => {
-        const filterPanel = screen.getByTestId('filter-panel');
-        expect(filterPanel.getAttribute('data-price-max')).toBe('250000');
-      });
-    });
-
-    it('should NOT auto-apply filters in normal mode', async () => {
-      renderInNormalMode();
-      await waitFor(() => {
-        const filterPanel = screen.getByTestId('filter-panel');
+        // Filters should NOT be auto-applied - let players decide
         expect(filterPanel.getAttribute('data-can-afford')).toBe('false');
       });
     });
-  });
 
-  describe('Guided Overlay', () => {
-    it('should show guided overlay in onboarding mode after loading', async () => {
+    it('should NOT auto-apply price range filter in onboarding mode', async () => {
       renderInOnboardingMode();
       await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-    });
-
-    it('should not show guided overlay in normal mode', async () => {
-      renderInNormalMode();
-      await waitFor(() => {
-        expect(screen.getByText('Weapon Shop')).toBeInTheDocument();
-      });
-      expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-    });
-
-    it('should dismiss overlay when Close is clicked', async () => {
-      const user = userEvent.setup();
-      renderInOnboardingMode();
-
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-close'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should display guidance about choosing a weapon', async () => {
-      renderInOnboardingMode();
-      await waitFor(() => {
-        expect(screen.getByText('Choose a Weapon')).toBeInTheDocument();
+        const filterPanel = screen.getByTestId('filter-panel');
+        // No auto price filter
+        expect(filterPanel.getAttribute('data-price-max')).toBeNull();
       });
     });
   });
@@ -368,6 +279,14 @@ describe('WeaponShopPage - Onboarding Integration', () => {
       renderInNormalMode();
       await waitFor(() => {
         expect(screen.getByTestId('filter-panel')).toBeInTheDocument();
+      });
+    });
+
+    it('should display weapons in normal mode', async () => {
+      renderInNormalMode();
+      await waitFor(() => {
+        expect(screen.getByText('Laser Rifle')).toBeInTheDocument();
+        expect(screen.getByText('Machine Gun')).toBeInTheDocument();
       });
     });
   });

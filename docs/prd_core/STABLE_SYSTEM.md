@@ -86,18 +86,18 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 
 ### Facility Upgrades
 
-**1. Repair Bay** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
+**1. Repair Bay** (Operating Cost: ₡100/day per level)
 - **Level 0**: No discount
-- **Level 1** (₡100,000): 6% discount on repair costs (1 robot)
-- **Level 2** (₡200,000): 12% discount on repair costs (1 robot)
-- **Level 3** (₡300,000): 18% discount on repair costs (1 robot)
-- **Level 4** (₡400,000, requires 1,000 prestige): 24% discount on repair costs (1 robot)
-- **Level 5** (₡500,000): 30% discount on repair costs (1 robot)
-- **Level 6** (₡600,000): 36% discount on repair costs (1 robot)
-- **Level 7** (₡750,000, requires 5,000 prestige): 42% discount on repair costs (1 robot)
-- **Level 8** (₡1,000,000): 48% discount on repair costs (1 robot)
-- **Level 9** (₡1,250,000, requires 10,000 prestige): 54% discount on repair costs (1 robot)
-- **Level 10** (₡1,500,000): 60% discount on repair costs (1 robot), automatic minor repairs
+- **Level 1** (₡50,000): 6% discount on repair costs (1 robot)
+- **Level 2** (₡100,000): 12% discount on repair costs (1 robot)
+- **Level 3** (₡150,000): 18% discount on repair costs (1 robot)
+- **Level 4** (₡200,000, requires 1,000 prestige): 24% discount on repair costs (1 robot)
+- **Level 5** (₡250,000): 30% discount on repair costs (1 robot)
+- **Level 6** (₡300,000): 36% discount on repair costs (1 robot)
+- **Level 7** (₡350,000, requires 5,000 prestige): 42% discount on repair costs (1 robot)
+- **Level 8** (₡400,000): 48% discount on repair costs (1 robot)
+- **Level 9** (₡450,000, requires 10,000 prestige): 54% discount on repair costs (1 robot)
+- **Level 10** (₡500,000): 60% discount on repair costs (1 robot), automatic minor repairs
 
 **Discount Formula**: Discount % = Repair Bay Level × (5 + Active Robot Count), capped at 90%
 
@@ -138,20 +138,20 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - Mid game (2 robots): Highly profitable, essential for competitive progression
 - Late game: Maximum 90% discount dramatically reduces upgrade costs for level 20-50 progression
 
-**3. Weapons Workshop** (Operating Cost: ₡1,000/day at Level 1, +₡500/day per level)
+**3. Weapons Workshop** (Operating Cost: ₡100/day per level)
 - **Level 0**: No discount
-- **Level 1** (₡125,000): 5% discount on weapon purchases
-- **Level 2** (₡250,000): 10% discount on weapon purchases
-- **Level 3** (₡375,000): 15% discount on weapon purchases, unlock weapon modifications
-- **Level 4** (₡500,000, requires 1,500 prestige): 20% discount on weapon purchases
-- **Level 5** (₡650,000): 25% discount on weapon purchases
-- **Level 6** (₡800,000): 30% discount on weapon purchases, unlock custom weapon design
-- **Level 7** (₡1,000,000, requires 5,000 prestige): 35% discount on weapon purchases
-- **Level 8** (₡1,250,000): 40% discount on weapon purchases
-- **Level 9** (₡1,500,000, requires 10,000 prestige): 45% discount on weapon purchases
-- **Level 10** (₡2,000,000): 50% discount on weapon purchases, unlock legendary weapon crafting
+- **Level 1** (₡75,000): 10% discount on weapon purchases
+- **Level 2** (₡150,000): 20% discount on weapon purchases
+- **Level 3** (₡225,000): 30% discount on weapon purchases, unlock weapon modifications
+- **Level 4** (₡300,000, requires 1,500 prestige): 40% discount on weapon purchases
+- **Level 5** (₡375,000): 50% discount on weapon purchases
+- **Level 6** (₡450,000): 60% discount on weapon purchases, unlock custom weapon design
+- **Level 7** (₡525,000, requires 5,000 prestige): 70% discount on weapon purchases
+- **Level 8** (₡600,000): 80% discount on weapon purchases
+- **Level 9** (₡675,000, requires 10,000 prestige): 90% discount on weapon purchases
+- **Level 10** (₡750,000): 100% discount on weapon purchases (free weapons)
 
-**Discount Formula**: Discount % = Weapons Workshop Level × 5
+**Discount Formula**: Discount % = Weapons Workshop Level × 10
 
 **For complete weapon details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 

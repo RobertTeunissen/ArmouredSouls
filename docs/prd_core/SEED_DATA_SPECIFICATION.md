@@ -31,6 +31,7 @@ This document specifies the complete seed data loaded into the database during i
 - **v1.3** (Feb 11, 2026): Added 10 player archetype test users, removed attribute-focused and loadout test users, renamed test user robots to "WimpBot", added dynamic user generation system for cycles
 - **v1.4** (Mar 21, 2026): Weapon damage reduction (~25%), shield capacity formula doubled (×2 → ×4), weapon pricing updated with M=3.0 baseline DPS=2.0
 - **v1.5** (Mar 21, 2026): Weapon roster expansion from 26 to 47 weapons — added 21 new weapons filling all empty grid slots, reclassified Laser Rifle (now 2H Short Mid) and Assault Rifle (now 1H Short Premium), acknowledged Battle Axe tier correction to Luxury, added `rangeBand` field to all weapons, simplified range classification logic
+- **v1.6** (Mar 26, 2026): Replaced archetype-based user generation with tiered stable system (WimpBot/AverageBot/ExpertBot), removed player1-5 accounts, updated admin to ₡3M/prestige 0, expanded WimpBot population to 200 users with new naming format
 
 ---
 
@@ -441,38 +442,48 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 **Username**: admin  
 **Password**: admin123  
 **Role**: admin  
-**Currency**: ₡10,000,000  
-**Prestige**: 50,000
+**Currency**: ₡3,000,000  
+**Prestige**: 0  
+**Stable Name**: Auto-generated unique name (e.g., "Swift Thunder")
 
-### Player Accounts (5)
+### WimpBot Test User Accounts (200)
 
-Manual testing accounts with full starting resources:
-
-- **player1** / password123 - ₡3,000,000
-- **player2** / password123 - ₡3,000,000
-- **player3** / password123 - ₡3,000,000
-- **player4** / password123 - ₡3,000,000
-- **player5** / password123 - ₡3,000,000
-
-### Test User Accounts (100)
-
-**Username Format**: test_user_001 to test_user_100  
+**Username Format**: test_user_001 to test_user_200  
 **Password**: testpass123  
 **Currency**: ₡100,000 each  
-**Purpose**: Matchmaking and league testing - "easily defeated mob" for tournaments
+**Stable Name**: Auto-generated unique name per user  
+**Purpose**: Matchmaking and league testing - baseline "mob" for tournaments and testing
 
-**Each test user has:**
-- 1 robot with Practice Sword equipped
-- Robot name: "WimpBot 1" through "WimpBot 100" (sequential numbering)
+**Weapon Distribution** (50 users per weapon type):
+- Users 001-050: Practice Sword (melee, one-handed) → loadout: single
+- Users 051-100: Practice Blaster (ballistic, one-handed) → loadout: single
+- Users 101-150: Training Rifle (ballistic, two-handed) → loadout: two_handed
+- Users 151-200: Training Beam (energy, two-handed) → loadout: two_handed
+
+**Robot Naming Format**: `WimpBot {LoadoutTitle} {WeaponCodename} {Number}`
+
+**Loadout Titles**:
+- single → "Lone"
+- weapon_shield → "Guardian"
+- dual_wield → "Twin"
+- two_handed → "Heavy"
+
+**Example Robot Names**:
+- "WimpBot Lone Blade 1" (Practice Sword user)
+- "WimpBot Lone Blaster 51" (Practice Blaster user)
+- "WimpBot Heavy Rifle 101" (Training Rifle user)
+- "WimpBot Heavy Beam 151" (Training Beam user)
+
+**Robot Specifications**:
 - All attributes at 1.00
 - HP: 55 (50 + 1.00 × 5)
 - Shield: 4 (1.00 × 4)
 - ELO: 1200
-- League: Bronze (bronze_1)
-- Loadout: Single
+- League: Bronze (distributed across bronze_1 through bronze_10)
 - Stance: Balanced
+- Yield Threshold: 10
 
-**Purpose**: These weak robots serve as the baseline "mob" that stronger archetype robots can defeat, enabling tournament functionality and providing a consistent baseline for testing.
+**League Distribution**: Users are distributed evenly across 10 bronze league instances (bronze_1 through bronze_10), with 20 users per instance.
 
 ### Special User: Bye-Robot
 
@@ -486,7 +497,7 @@ Manual testing accounts with full starting resources:
 - Name: "Bye Robot"
 - All attributes at 1.00
 - HP: 55, Shield: 4
-- ELO: 1200
+- ELO: 1000 (lower than standard to ensure losses)
 - League: Bronze (bronze_bye - special league ID)
 - Equipped with Practice Sword
 - Yield Threshold: 0 (never yields)
@@ -494,652 +505,103 @@ Manual testing accounts with full starting resources:
 
 ---
 
-### Player Archetype Test Users (10)
+## Dynamic User Generation (Tiered Stable System)
 
-**Purpose**: Test and validate the 10 player archetypes defined in the Player Archetypes Guide. Each user represents a specific playstyle with robots configured according to the archetype's budget allocation and strategy.
+When cycles are run, the system creates new users following a tiered stable system. The number of stables created per cycle equals the cycle number (Cycle 1 = 1 stable, Cycle 2 = 2 stables, etc.).
 
-**Username Format**: archetype_<archetype_name>  
-**Password**: testpass123  
-**Creation Time**: All created at database seed time (cycle 0, before any battles)
+### Tier Distribution
 
-**Dynamic User Generation**: When cycles are run, the system creates users following the archetype patterns. The number of users created per cycle equals the cycle number (Cycle 1 = 1 user, Cycle 2 = 2 users, Cycle 3 = 3 users, etc.). The system cycles through all archetype variations in order, ensuring all variations are represented as the population grows.
+Users are distributed across three tiers using the `distributeTiers(n)` function:
+- **WimpBot**: Lowest tier, 3 robots per stable, budget weapons
+- **AverageBot**: Middle tier, 2 robots per stable, mid-tier weapons
+- **ExpertBot**: Highest tier, 1 robot per stable, premium weapons
 
-**Archetype Cycle Order** (14 variations total, cycles continuously):
-1. Tank Fortress
-2. Glass Cannon (Option A - Plasma Cannon)
-3. Glass Cannon (Option B - Railgun)
-4. Glass Cannon (Option C - Heavy Hammer)
-5. Speed Demon (Option A - Dual Machine Guns)
-6. Speed Demon (Option B - Dual Plasma Blades)
-7. Speed Demon (Option C - Mixed Loadout)
-8. Balanced Brawler
-9. Facility Investor
-10. Two-Robot Specialist
-11. Melee Specialist
-12. Ranged Sniper
-13. AI Tactician
-14. Prestige Rusher
-... (continues cycling through all 14 variations)
+Distribution formula: Integer division by 3 with remainder allocated WimpBot-first, then AverageBot, then ExpertBot.
 
-**User Generation Pattern**:
-- **Cycle 1**: Create 1 user → Tank Fortress
-- **Cycle 2**: Create 2 users → Glass Cannon A, Glass Cannon B
-- **Cycle 3**: Create 3 users → Glass Cannon C, Speed Demon A, Speed Demon B
-- **Cycle 4**: Create 4 users → Speed Demon C, Balanced Brawler, Facility Investor, Two-Robot Specialist
-- **Cycle 5**: Create 5 users → Melee Specialist, Ranged Sniper, AI Tactician, Prestige Rusher, Tank Fortress (cycle repeats)
-- **Cycle 6**: Create 6 users → Glass Cannon A, Glass Cannon B, Glass Cannon C, Speed Demon A, Speed Demon B, Speed Demon C
-- ... (continues with increasing numbers)
+**Examples**:
+- Cycle 1 (1 stable): 1 WimpBot, 0 AverageBot, 0 ExpertBot
+- Cycle 3 (3 stables): 1 WimpBot, 1 AverageBot, 1 ExpertBot
+- Cycle 10 (10 stables): 4 WimpBot, 3 AverageBot, 3 ExpertBot
 
-**Naming Convention for Dynamically Generated Users**:
-- Format: `archetype_<archetype_name>_<cycle_number>`
-- Example: `archetype_tank_fortress_1`, `archetype_glass_cannon_a_2`, `archetype_glass_cannon_b_2`
-- Robot names: Follow the pattern with cycle number (e.g., "Fortress Prime C001", "C002 - Glass Cannon A", "C002 - Glass Cannon B")
+### Tier Specifications
 
----#### Archetype 1: Tank Fortress
+#### WimpBot Tier
+- **Robots per stable**: 3
+- **Attribute level**: 1.00 (all attributes)
+- **Weapon price tier**: Budget (₡50K-₡150K)
+- **Tag team**: Yes (first 2 robots)
+- **HP**: 55, Shield: 4
 
-**Username**: archetype_tank_fortress  
-**Currency**: ₡756,000 (remaining after purchases)  
-**Prestige**: 0  
-**Creation Cycle**: 0
+#### AverageBot Tier
+- **Robots per stable**: 2
+- **Attribute level**: 5.00 (all attributes)
+- **Weapon price tier**: Mid (₡150K-₡300K)
+- **Tag team**: Yes (both robots)
+- **HP**: 75, Shield: 20
 
-**Facilities**:
-- Defense Training Academy Level 1
-- Combat Training Academy Level 1
+#### ExpertBot Tier
+- **Robots per stable**: 1
+- **Attribute level**: 10.00 (all attributes)
+- **Weapon price tier**: Premium (₡300K+)
+- **Tag team**: No (single robot)
+- **HP**: 100, Shield: 40
 
-**Robot**: "Fortress Prime"
-- **Attributes**:
-  - Hull Integrity: 15.00
-  - Armor Plating: 14.00
-  - Shield Capacity: 14.00
-  - Counter Protocols: 12.00
-  - Combat Power: 12.00
-  - Damage Control: 10.00
-  - Weapon Control: 10.00
-  - All others: 1.00
-- **HP**: 125 (50 + 15×5)
-- **Shield**: 56 (14×4)
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Weapon+Shield
-- **Stance**: Defensive
-- **Weapons**: Power Sword (₡350,000) + Combat Shield (₡100,000)
+### Robot Configuration
 
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡400,000 (Defense + Combat Training Academies)
-- Attributes: ₡894,000
-- Weapons: ₡450,000
-- Reserve: ₡756,000
+Each robot is configured with:
+- **Loadout Type**: Random (25% each: single, weapon_shield, dual_wield, two_handed)
+- **Range Band**: Random (25% each: melee, short, mid, long)
+- **Stance**: Random (33% each: balanced, offensive, defensive)
+- **Yield Threshold**: Random integer 0-20
+- **League**: Bronze (assigned via `assignLeagueInstance('bronze')`)
 
-#### Archetype 2: Glass Cannon (3 Options)
+### Robot Naming Convention
 
-**Option A: Glass Cannon with Plasma Cannon**
+Format: `{Tier} {LoadoutTitle} {WeaponCodename} {Number}`
 
-**Username**: archetype_glass_cannon_a  
-**Currency**: ₡946,500  
-**Prestige**: 0  
-**Creation Cycle**: 0
+**Examples**:
+- "WimpBot Lone Blade 1"
+- "AverageBot Guardian Rifle 5"
+- "ExpertBot Heavy Cannon 3"
 
-**Facilities**:
-- Combat Training Academy Level 1
+### Username Format
 
-**Robot**: "C000 - Glass Cannon A"
-- **Attributes**:
-  - Combat Power: 15.00
-  - Critical Systems: 15.00
-  - Penetration: 14.00
-  - Weapon Control: 13.00
-  - Targeting Systems: 12.00
-  - Hull Integrity: 10.00
-  - All others: 1.00
-- **HP**: 100 (50 + 10×5)
-- **Shield**: 4 (1×4)
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Two-Handed
-- **Stance**: Aggressive
-- **Weapons**: Plasma Cannon (₡500,000)
+Format: `auto_{tier}_{sequential_number}`
 
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡200,000
-- Attributes: ₡853,500
-- Weapons: ₡500,000
-- Reserve: ₡946,500
+**Examples**:
+- `auto_wimpbot_1`, `auto_wimpbot_2`, ...
+- `auto_averagebot_1`, `auto_averagebot_2`, ...
+- `auto_expertbot_1`, `auto_expertbot_2`, ...
 
-**Option B: Glass Cannon with Railgun**
+### Weapon Selection
 
-**Username**: archetype_glass_cannon_b  
-**Currency**: ₡996,500  
-**Prestige**: 0  
-**Creation Cycle**: 0
+Weapons are selected using a 3-level fallback chain:
+1. **Primary**: Match loadout + range + price tier
+2. **Fallback 1**: Match loadout + price tier (any range)
+3. **Fallback 2**: Any weapon in price tier
 
-**Facilities**:
-- Combat Training Academy Level 1
+Shields are selected for weapon_shield loadouts from the appropriate price tier.
 
-**Robot**: "C000 - Glass Cannon B"
-- **Attributes**: Same as Option A
-- **HP**: 100
-- **Shield**: 4
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Two-Handed
-- **Stance**: Aggressive
-- **Weapons**: Railgun (₡450,000)
+### Growth Projections
 
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡200,000
-- Attributes: ₡853,500
-- Weapons: ₡450,000
-- Reserve: ₡996,500
+**Total Stables After N Cycles**: Sum of 1 to N = N × (N + 1) / 2
+- After 5 cycles: 15 stables
+- After 10 cycles: 55 stables
+- After 20 cycles: 210 stables
+- After 50 cycles: 1,275 stables
 
-**Option C: Glass Cannon with Heavy Hammer**
+**Total Robots After N Cycles** (varies by tier distribution):
+- WimpBot stables contribute 3 robots each
+- AverageBot stables contribute 2 robots each
+- ExpertBot stables contribute 1 robot each
 
-**Username**: archetype_glass_cannon_c  
-**Currency**: ₡1,046,500  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Combat Training Academy Level 1
-
-**Robot**: "C000 - Glass Cannon C"
-- **Attributes**: Same as Option A
-- **HP**: 100
-- **Shield**: 4
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Two-Handed
-- **Stance**: Aggressive
-- **Weapons**: Heavy Hammer (₡400,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡200,000
-- Attributes: ₡853,500
-- Weapons: ₡400,000
-- Reserve: ₡1,046,500
-
-#### Archetype 3: Speed Demon (3 Options)
-
-**Option A: Speed Demon with Dual Machine Guns**
-
-**Username**: archetype_speed_demon_a  
-**Currency**: ₡66,500  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Mobility Training Academy Level 1
-- Combat Training Academy Level 1
-
-**Robot**: "Velocity Alpha"
-- **Attributes**:
-  - Attack Speed: 15.00
-  - Servo Motors: 15.00
-  - Weapon Control: 15.00
-  - Combat Power: 15.00
-  - Gyro Stabilizers: 14.00
-  - Hull Integrity: 14.00
-  - Reaction Time: 13.00
-  - Armor Plating: 13.00
-  - Evasion Systems: 12.00
-  - Targeting Systems: 12.00
-  - Penetration: 11.00
-  - Shield Capacity: 10.00
-  - All others: 1.00
-- **HP**: 120 (50 + 14×5)
-- **Shield**: 40 (10×4)
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Dual-Wield
-- **Stance**: Aggressive
-- **Weapons**: Machine Gun (₡150,000) + Machine Gun (₡150,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡400,000
-- Attributes: ₡1,723,500
-- Weapons: ₡300,000
-- Reserve: ₡66,500
-
-**Option B: Speed Demon with Dual Plasma Blades**
-
-**Username**: archetype_speed_demon_b  
-**Currency**: ₡0 (spent all budget)  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Mobility Training Academy Level 1
-- Combat Training Academy Level 1
-
-**Robot**: "Velocity Beta"
-- **Attributes**: Same as Option A
-- **HP**: 120
-- **Shield**: 40
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Dual-Wield
-- **Stance**: Aggressive
-- **Weapons**: Plasma Blade (₡269,000) + Plasma Blade (₡269,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡400,000
-- Attributes: ₡1,462,000 (reduced to afford weapons)
-- Weapons: ₡538,000
-- Reserve: ₡100,000
-
-**Option C: Speed Demon with Mixed Loadout**
-
-**Username**: archetype_speed_demon_c  
-**Currency**: ₡31,000  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Mobility Training Academy Level 1
-- Combat Training Academy Level 1
-
-**Robot**: "Velocity Gamma"
-- **Attributes**: Same as Option A
-- **HP**: 120
-- **Shield**: 40
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Dual-Wield
-- **Stance**: Balanced
-- **Weapons**: Machine Gun (₡150,000) + Plasma Blade (₡269,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡400,000
-- Attributes: ₡1,650,000
-- Weapons: ₡419,000
-- Reserve: ₡31,000
-
-#### Archetype 4: Balanced Brawler
-
-**Username**: archetype_balanced_brawler  
-**Currency**: ₡500,000  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**: None (no Training Academies)
-
-**Robot**: "Equilibrium"
-- **Attributes** (all capped at 10 without academies):
-  - Combat Power: 10.00
-  - Hull Integrity: 10.00
-  - Attack Speed: 10.00
-  - Armor Plating: 10.00
-  - Weapon Control: 10.00
-  - Servo Motors: 10.00
-  - Damage Control: 10.00
-  - All others: 1.00
-- **HP**: 100 (50 + 10×5)
-- **Shield**: 4 (1×4)
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Single
-- **Stance**: Balanced
-- **Weapons**: Power Sword (₡350,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡0
-- Attributes: ₡577,500 (7 attributes at level 10)
-- Weapons: ₡350,000
-- Reserve: ₡1,572,500 (note: guide shows ₡500K, but calculation shows more)
-
-**Note**: Budget allocation in guide may need revision. Using ₡500,000 reserve as specified.
-
-#### Archetype 5: Facility Investor
-
-**Username**: archetype_facility_investor  
-**Currency**: ₡250,000  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Merchandising Hub Level 1: See [STABLE_SYSTEM.md](../STABLE_SYSTEM.md) - Generates passive income
-- Repair Bay Level 1: See [STABLE_SYSTEM.md](../STABLE_SYSTEM.md)
-- Training Facility Level 1: See [STABLE_SYSTEM.md](../STABLE_SYSTEM.md)
-
-**Robot**: "Investor One"
-- **Attributes** (minimal investment):
-  - Combat Power: 6.00
-  - Hull Integrity: 6.00
-  - Attack Speed: 5.00
-  - Armor Plating: 5.00
-  - Weapon Control: 5.00
-  - All others: 1.00
-- **HP**: 80 (50 + 6×5)
-- **Shield**: 4 (1×4)
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Single
-- **Stance**: Defensive
-- **Weapons**: Machine Gun (₡150,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡1,300,000
-- Attributes: ₡600,000 (estimated)
-- Weapons: ₡150,000
-- Reserve: ₡250,000
-
-#### Archetype 6: Two-Robot Specialist
-
-**Username**: archetype_two_robot  
-**Currency**: ₡200,000  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Roster Expansion Level 1 (₡150,000)
-
-**Robot 1**: "Specialist Alpha"
-- **Attributes**:
-  - Combat Power: 10.00
-  - Hull Integrity: 10.00
-  - Attack Speed: 8.00
-  - Armor Plating: 8.00
-  - Weapon Control: 8.00
-  - All others: 1.00
-- **HP**: 100 (50 + 10×5)
-- **Shield**: 4
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Single
-- **Stance**: Aggressive
-- **Weapons**: Plasma Rifle (₡275,000)
-
-**Robot 2**: "Specialist Beta"
-- **Attributes**: Same as Robot 1
-- **HP**: 100
-- **Shield**: 4
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Weapon+Shield
-- **Stance**: Defensive
-- **Weapons**: Power Sword (₡350,000) + Combat Shield (₡100,000)
-
-**Tag Team**: "Specialist Team"
-- **Members**: Robot 1 (Specialist Alpha - Active) + Robot 2 (Specialist Beta - Reserve)
-- **League**: Bronze (bronze_1)
-- **Status**: Active
-- **Note**: Automatically created during seed for Two-Robot Specialist archetype
-
-**Budget Breakdown**:
-- Robots: ₡1,000,000 (2×₡500,000)
-- Facilities: ₡300,000
-- Attributes: ₡800,000 (split between 2 robots)
-- Weapons: ₡725,000
-- Reserve: ₡175,000
-
-**Note**: Adjusted to ₡200,000 reserve as per guide. Tag team automatically created with both robots.
-
-#### Archetype 7: Melee Specialist
-
-**Username**: archetype_melee_specialist  
-**Currency**: ₡350,000  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Combat Training Academy Level 1 (₡100,000)
-
-**Robot**: "Brawler Prime"
-- **Attributes**:
-  - Combat Power: 15.00
-  - Hydraulic Systems: 15.00
-  - Hull Integrity: 14.00
-  - Armor Plating: 13.00
-  - Weapon Control: 12.00
-  - Critical Systems: 12.00
-  - Gyro Stabilizers: 11.00
-  - Servo Motors: 10.00
-  - All others: 1.00
-- **HP**: 120 (50 + 14×5)
-- **Shield**: 4
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Two-Handed
-- **Stance**: Aggressive
-- **Weapons**: Heavy Hammer (₡400,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡200,000
-- Attributes: ₡1,000,000 (estimated)
-- Weapons: ₡400,000
-- Reserve: ₡900,000
-
-**Note**: Adjusted to ₡350,000 reserve as per guide.
-
-#### Archetype 8: Ranged Sniper
-
-**Username**: archetype_ranged_sniper  
-**Currency**: ₡350,000  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Combat Training Academy Level 1 (₡100,000)
-
-**Robot**: "Longshot"
-- **Attributes**:
-  - Combat Power: 15.00
-  - Targeting Systems: 15.00
-  - Penetration: 14.00
-  - Critical Systems: 13.00
-  - Weapon Control: 12.00
-  - Hull Integrity: 12.00
-  - Armor Plating: 10.00
-  - All others: 1.00
-- **HP**: 110 (50 + 12×5)
-- **Shield**: 4
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Two-Handed
-- **Stance**: Defensive
-- **Weapons**: Railgun (₡450,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡200,000
-- Attributes: ₡1,000,000 (estimated)
-- Weapons: ₡450,000
-- Reserve: ₡850,000
-
-**Note**: Adjusted to ₡350,000 reserve as per guide.
-
-#### Archetype 9: AI Tactician
-
-**Username**: archetype_ai_tactician  
-**Currency**: ₡504,500  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- AI Training Academy Level 1 (₡100,000)
-
-**Robot**: "Strategist"
-- **Attributes**:
-  - Combat Algorithms: 15.00
-  - Threat Analysis: 15.00
-  - Adaptive AI: 15.00
-  - Logic Cores: 15.00
-  - Combat Power: 12.00
-  - Hull Integrity: 12.00
-  - Attack Speed: 10.00
-  - Armor Plating: 10.00
-  - Weapon Control: 10.00
-  - All others: 1.00
-- **HP**: 110 (50 + 12×5)
-- **Shield**: 4
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Single
-- **Stance**: Balanced
-- **Weapons**: Plasma Rifle (₡275,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡250,000
-- Attributes: ₡1,495,500
-- Weapons: ₡250,000
-- Reserve: ₡504,500
-
-#### Archetype 10: Prestige Rusher
-
-**Username**: archetype_prestige_rusher  
-**Currency**: ₡300,500  
-**Prestige**: 0  
-**Creation Cycle**: 0
-
-**Facilities**:
-- Combat Training Academy Level 1 (₡100,000)
-- Defense Training Academy Level 1 (₡100,000)
-- Mobility Training Academy Level 1 (₡100,000)
-
-**Robot**: "Prestige Hunter"
-- **Attributes**:
-  - Combat Power: 15.00
-  - Hull Integrity: 15.00
-  - Attack Speed: 15.00
-  - Armor Plating: 15.00
-  - Weapon Control: 15.00
-  - Critical Systems: 12.00
-  - Penetration: 10.00
-  - All others: 1.00
-- **HP**: 125 (50 + 15×5)
-- **Shield**: 4
-- **ELO**: 1200
-- **League**: Bronze (bronze_1)
-- **Loadout**: Two-Handed
-- **Stance**: Aggressive
-- **Weapons**: Plasma Cannon (₡500,000)
-
-**Budget Breakdown**:
-- Robot: ₡500,000
-- Facilities: ₡600,000
-- Attributes: ₡1,099,500
-- Weapons: ₡500,000
-- Reserve: ₡300,500
-
----
-
-## System Metadata
-
-### Cycle Metadata
-
-**Table**: CycleMetadata  
-**ID**: 1 (singleton)  
-**Initial Values**:
-- totalCycles: 0
-- lastCycleAt: null
-- Purpose: Tracks global cycle state for admin operations
-
-### Dynamic User Generation
-
-**Purpose**: When cycles are run and the system needs to add new users, it should create users following the archetype patterns to maintain a diverse and balanced testing environment. The number of users created per cycle increases with each cycle.
-
-**Generation Strategy**:
-1. **Cycle N creates N users** (Cycle 1 = 1 user, Cycle 2 = 2 users, Cycle 3 = 3 users, etc.)
-2. Track the current position in the archetype cycle (which variation to create next)
-3. For each user to create, select the next archetype variation in the cycle order
-4. Create a user with the archetype's specifications (attributes, weapons, facilities, remaining currency)
-5. Increment the archetype position counter (wraps around after 17 variations)
-
-**Archetype Cycle Order** (14 variations, repeats indefinitely):
-1. Tank Fortress
-2. Glass Cannon (Option A - Plasma Cannon)
-3. Glass Cannon (Option B - Railgun)
-4. Glass Cannon (Option C - Heavy Hammer)
-5. Speed Demon (Option A - Dual Machine Guns)
-6. Speed Demon (Option B - Dual Plasma Blades)
-7. Speed Demon (Option C - Mixed Loadout)
-8. Balanced Brawler
-9. Facility Investor
-10. Two-Robot Specialist
-11. Melee Specialist
-12. Ranged Sniper
-13. AI Tactician
-14. Prestige Rusher
-... (continues cycling through all 14 variations)
-
-**Naming Convention**:
-- Username: `archetype_<archetype_name>_<cycle_number>`
-- Robot name: Include cycle number (e.g., "Fortress Prime C001", "C002 - Glass Cannon A", "C002 - Glass Cannon B")
-- Password: testpass123 (consistent with other test users)
-- Currency: Set to the archetype's specified remaining amount
-- Creation cycle: Set to the cycle number when created
-
-**Example Sequence**:
-
-**Cycle 1** (creates 1 user):
-- Position 0: `archetype_tank_fortress_1` → "Fortress Prime C001"
-
-**Cycle 2** (creates 2 users):
-- Position 1: `archetype_glass_cannon_a_2` → "C002 - Glass Cannon A"
-- Position 2: `archetype_glass_cannon_b_2` → "C002 - Glass Cannon B"
-
-**Cycle 3** (creates 3 users):
-- Position 3: `archetype_glass_cannon_c_3` → "C003 - Glass Cannon C"
-- Position 4: `archetype_speed_demon_a_3` → "Velocity Alpha C003"
-- Position 5: `archetype_speed_demon_b_3` → "Velocity Beta C003"
-
-**Cycle 4** (creates 4 users):
-- Position 6: `archetype_speed_demon_c_4` → "Velocity Gamma C004"
-- Position 7: `archetype_balanced_brawler_4` → "Equilibrium C004"
-- Position 8: `archetype_facility_investor_4` → "Investor One C004"
-- Position 9: `archetype_two_robot_4` → "Specialist Alpha C004" + "Specialist Beta C004"
-
-**Cycle 5** (creates 5 users):
-- Position 10: `archetype_melee_specialist_5` → "Brawler Prime C005"
-- Position 11: `archetype_ranged_sniper_5` → "Longshot C005"
-- Position 12: `archetype_ai_tactician_5` → "Strategist C005"
-- Position 13: `archetype_prestige_rusher_5` → "Prestige Hunter C005"
-- Position 14 (wraps to 0): `archetype_tank_fortress_5` → "Fortress Prime C005"
-
-**Cycle 6** (creates 6 users):
-- Position 15 (wraps to 1): `archetype_glass_cannon_a_6` → "C006 - Glass Cannon A"
-- Position 16 (wraps to 2): `archetype_glass_cannon_b_6` → "C006 - Glass Cannon B"
-- Position 17 (wraps to 3): `archetype_glass_cannon_c_6` → "C006 - Glass Cannon C"
-- Position 18 (wraps to 4): `archetype_speed_demon_a_6` → "Velocity Alpha C006"
-- Position 19 (wraps to 5): `archetype_speed_demon_b_6` → "Velocity Beta C006"
-- Position 20 (wraps to 6): `archetype_speed_demon_c_6` → "Velocity Gamma C006"
-
-**Benefits**:
-- **Exponential growth**: User population grows rapidly (1+2+3+4+5+6 = 21 users after 6 cycles)
-- **Even distribution**: All 14 variations are represented proportionally
-- **Testing diversity**: Early cycles test individual archetypes, later cycles test multiple simultaneously
-- **Realistic scaling**: Simulates a growing player base with diverse strategies
-- **Performance testing**: Tests system behavior with increasing user counts
-
-**Total Users After N Cycles**: Sum of 1 to N = N × (N + 1) / 2
-- After 5 cycles: 15 users
-- After 10 cycles: 55 users
-- After 14 cycles: 105 users (one complete cycle through all archetypes)
-- After 20 cycles: 210 users
-- After 50 cycles: 1,275 users
-
-**Tag Team Creation for Two-Robot Specialist**:
-- When creating a Two-Robot Specialist archetype user (either at seed time or during dynamic generation), automatically create a tag team with both robots
-- Active robot: First robot (offensive build - Plasma Rifle)
-- Reserve robot: Second robot (defensive build - Power Sword + Combat Shield)
-- Tag team starts in same league as the robots (bronze_1)
-- This ensures Two-Robot Specialist users can immediately participate in tag team matches
+**Tag Teams Created**: One per WimpBot stable (3 robots, first 2 form team) and one per AverageBot stable (2 robots form team). ExpertBot stables have no tag teams.
 
 ---
 
 ## Robot Attribute Defaults
 
-All test robots start with these default attribute values:
+All seed robots (WimpBot population) start with these default attribute values:
 
 ```typescript
 {
@@ -1169,6 +631,11 @@ All test robots start with these default attribute values:
 }
 ```
 
+Dynamically generated robots use tier-specific attribute levels:
+- WimpBot: All attributes at 1.0
+- AverageBot: All attributes at 5.0
+- ExpertBot: All attributes at 10.0
+
 ---
 
 ## HP and Shield Calculations
@@ -1191,29 +658,24 @@ Examples:
 
 ## Total Seed Data Summary
 
-**Users**: 124 total (at initial seed)
-- 1 admin
-- 5 player accounts
-- 100 test users (WimpBot mob)
+**Users**: 202 total (at initial seed in dev/acceptance mode)
+- 1 admin (₡3,000,000, prestige 0)
+- 200 WimpBot test users (₡100,000 each)
 - 1 bye-robot user
-- 17 player archetype test users (10 archetypes with some having multiple options = 14 unique variations)
 
-**Note**: Additional archetype users will be dynamically generated during cycles, cycling through the 14 archetype variations to ensure even distribution over time. Two-Robot Specialist users automatically get tag teams created.
+**Production mode**: Only bye-robot user is seeded (weapons and cycle metadata are always seeded).
 
-**Robots**: 119 total (at initial seed)
-- 100 WimpBot robots (1 per test user)
+**Robots**: 201 total (at initial seed)
+- 200 WimpBot robots (1 per test user, distributed across 4 practice weapons)
 - 1 bye-robot
-- 18 archetype robots (16 single-robot archetypes + 2 robots for Two-Robot Specialist)
 
-**Tag Teams**: 1 total (at initial seed)
-- 1 tag team for Two-Robot Specialist archetype user
-- Additional tag teams created automatically during cycles for Two-Robot Specialist users
+**Tag Teams**: 0 at initial seed (created dynamically during cycles for WimpBot and AverageBot stables)
 
 **Weapons**: 47 in catalog
 
-**Weapon Inventory Entries**: Varies by user type
+**Weapon Inventory Entries**: 201 (one per robot)
 
-**Facilities**: Created on-demand for archetype users (various Training Academies, Merchandising Hub, Repair Bay, Roster Expansion, etc.)
+**Facilities**: None at initial seed (created on-demand by users)
 
 ---
 
@@ -1240,4 +702,4 @@ npx prisma db seed
 - **[WEAPONS_AND_LOADOUT.md](../WEAPONS_AND_LOADOUT.md)** - Weapon system design
 - **[PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Weapon pricing methodology
 - **[ROBOT_ATTRIBUTES.md](../ROBOT_ATTRIBUTES.md)** - Robot attribute system
-- **[PLAYER_ARCHETYPES_GUIDE.md](../PLAYER_ARCHETYPES_GUIDE.md)** - Player archetype definitions and budget allocations
+- **[PLAYER_ARCHETYPES_GUIDE.md](../PLAYER_ARCHETYPES_GUIDE.md)** - Player archetype definitions (strategy guide, not seed data)

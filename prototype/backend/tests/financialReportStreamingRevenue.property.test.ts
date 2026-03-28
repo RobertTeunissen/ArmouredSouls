@@ -11,7 +11,7 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import { generateFinancialReport } from '../src/utils/economyCalculations';
 import { eventLogger, EventType } from '../src/services/eventLogger';
 import prisma from '../src/lib/prisma';

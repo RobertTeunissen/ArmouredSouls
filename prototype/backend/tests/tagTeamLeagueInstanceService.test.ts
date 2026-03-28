@@ -71,7 +71,7 @@ describe('TagTeamLeagueInstanceService', () => {
   afterEach(async () => {
     // Clean up test data in correct order (foreign key constraints)
     if (testTagTeamIds.length > 0) {
-      await prisma.tagTeamMatch.deleteMany({
+      await prisma.scheduledTagTeamMatch.deleteMany({
         where: {
           OR: [
             { team1Id: { in: testTagTeamIds } },
@@ -96,7 +96,7 @@ describe('TagTeamLeagueInstanceService', () => {
           ],
         },
       });
-      await prisma.scheduledMatch.deleteMany({
+      await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: testRobotIds } },

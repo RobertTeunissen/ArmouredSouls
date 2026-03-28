@@ -20,6 +20,8 @@ function makeState(overrides: Partial<ServoStrainState> = {}): ServoStrainState 
     isUsingClosingBonus: false,
     stance: 'balanced',
     hasMeleeWeapon: false,
+    hasRangedWeapon: false,
+    weaponOptimalRangeMidpoint: 4.5,
     distanceToTarget: 10,
     currentSpeedRatio: 0,
     ...overrides,
@@ -179,6 +181,168 @@ describe('servoStrain property tests', () => {
               // strain-reduced speed, since it's exempt from strain (Req 2.7)
               expect(effectiveSpeed).toBeGreaterThanOrEqual(normalSpeed);
             }
+          }
+        ),
+        { numRuns: 500 }
+      );
+    });
+  });
+
+  describe('Property 13: Ranged kiting bonus never reduces speed', () => {
+    it('should produce effectiveSpeed >= normal (non-bonus) speed when kiting bonus is active', () => {
+      fc.assert(
+        fc.property(
+          arbServoMotors(),
+          fc.double({ min: 0, max: 30, noNaN: true, noDefaultInfinity: true }),
+          arbStance(),
+          arbServoStrain(),
+          (servoMotors, opponentSpeed, stance, strain) => {
+            const state = makeState({
+              servoMotors,
+              hasRangedWeapon: true,
+              weaponOptimalRangeMidpoint: 9.5, // mid range
+              distanceToTarget: 3, // < optimal range to trigger kiting bonus
+              stance,
+              servoStrain: strain,
+            });
+
+            const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(
+              state,
+              opponentSpeed,
+              false, // hasRangedOpponent
+              true,  // hasMeleeOpponent
+            );
+
+            if (isClosingBonus) {
+              // Calculate what the speed would be without the kiting bonus
+              const nonBonusState = makeState({
+                servoMotors,
+                hasRangedWeapon: false, // disable kiting bonus path
+                stance,
+                servoStrain: strain,
+              });
+              const { effectiveSpeed: normalSpeed } = calculateEffectiveSpeed(
+                nonBonusState,
+                opponentSpeed,
+                false,
+                false,
+              );
+
+              // Kiting bonus should always produce speed >= the normal
+              // strain-reduced speed, since it's exempt from strain
+              expect(effectiveSpeed).toBeGreaterThanOrEqual(normalSpeed);
+            }
+          }
+        ),
+        { numRuns: 500 }
+      );
+    });
+  });
+
+  describe('Property 14: Kiting bonus is weaker than closing bonus', () => {
+    it('should produce lower speed bonus for kiting than closing at same conditions', () => {
+      fc.assert(
+        fc.property(
+          arbServoMotors(),
+          fc.double({ min: 5, max: 30, noNaN: true, noDefaultInfinity: true }),
+          arbStance(),
+          (servoMotors, opponentSpeed, stance) => {
+            // Melee closing state
+            const meleeState = makeState({
+              servoMotors,
+              hasMeleeWeapon: true,
+              distanceToTarget: 10, // > 2 to trigger closing bonus
+              stance,
+              servoStrain: 0,
+            });
+
+            // Ranged kiting state
+            const rangedState = makeState({
+              servoMotors,
+              hasRangedWeapon: true,
+              weaponOptimalRangeMidpoint: 16, // long range
+              distanceToTarget: 3, // < optimal range to trigger kiting bonus
+              stance,
+              servoStrain: 0,
+            });
+
+            const { effectiveSpeed: meleeSpeed, isClosingBonus: meleeBonus } = calculateEffectiveSpeed(
+              meleeState,
+              opponentSpeed,
+              true, // hasRangedOpponent
+              false,
+            );
+
+            const { effectiveSpeed: rangedSpeed, isClosingBonus: rangedBonus } = calculateEffectiveSpeed(
+              rangedState,
+              opponentSpeed,
+              false, // hasRangedOpponent
+              true,  // hasMeleeOpponent
+            );
+
+            // Both should have their bonuses active
+            expect(meleeBonus).toBe(true);
+            expect(rangedBonus).toBe(true);
+
+            // Melee closing bonus (15% + 1%/diff) should be stronger than
+            // kiting bonus (10% + 0.8%/diff)
+            expect(meleeSpeed).toBeGreaterThan(rangedSpeed);
+          }
+        ),
+        { numRuns: 500 }
+      );
+    });
+  });
+
+  describe('Property 15: Melee closing takes priority over kiting', () => {
+    it('should use melee closing bonus when both could apply', () => {
+      fc.assert(
+        fc.property(
+          arbServoMotors(),
+          fc.double({ min: 5, max: 30, noNaN: true, noDefaultInfinity: true }),
+          arbStance(),
+          (servoMotors, opponentSpeed, stance) => {
+            // Robot with both melee and ranged weapons (dual wield edge case)
+            const dualState = makeState({
+              servoMotors,
+              hasMeleeWeapon: true,
+              hasRangedWeapon: true,
+              weaponOptimalRangeMidpoint: 9.5,
+              distanceToTarget: 5, // > 2 (melee closing) and < 9.5 (kiting)
+              stance,
+              servoStrain: 0,
+            });
+
+            // Pure melee state for comparison
+            const meleeOnlyState = makeState({
+              servoMotors,
+              hasMeleeWeapon: true,
+              hasRangedWeapon: false,
+              distanceToTarget: 5,
+              stance,
+              servoStrain: 0,
+            });
+
+            const { effectiveSpeed: dualSpeed, isClosingBonus: dualBonus } = calculateEffectiveSpeed(
+              dualState,
+              opponentSpeed,
+              true, // hasRangedOpponent (triggers melee closing)
+              true, // hasMeleeOpponent (would trigger kiting)
+            );
+
+            const { effectiveSpeed: meleeSpeed, isClosingBonus: meleeBonus } = calculateEffectiveSpeed(
+              meleeOnlyState,
+              opponentSpeed,
+              true,
+              false,
+            );
+
+            // Both should have bonus active
+            expect(dualBonus).toBe(true);
+            expect(meleeBonus).toBe(true);
+
+            // Dual state should use melee closing (checked first), so speeds should match
+            expect(dualSpeed).toBeCloseTo(meleeSpeed, 10);
           }
         ),
         { numRuns: 500 }

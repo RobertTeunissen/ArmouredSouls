@@ -1,4 +1,4 @@
-import { Robot, TagTeam, ScheduledTagTeamMatch, Battle, Prisma } from '@prisma/client';
+import { Robot, TagTeam, ScheduledTagTeamMatch, Battle, Prisma } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { simulateBattle } from './combatSimulator';

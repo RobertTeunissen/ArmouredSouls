@@ -15,6 +15,8 @@ function makeState(overrides: Partial<ServoStrainState> = {}): ServoStrainState 
     isUsingClosingBonus: false,
     stance: 'balanced',
     hasMeleeWeapon: false,
+    hasRangedWeapon: false,
+    weaponOptimalRangeMidpoint: 4.5, // short range default
     distanceToTarget: 10,
     currentSpeedRatio: 0,
     ...overrides,
@@ -176,6 +178,126 @@ describe('calculateEffectiveSpeed', () => {
       // Opponent slower than us — speedGap = 0, bonus = 1.15
       const { effectiveSpeed } = calculateEffectiveSpeed(state, 5, true);
       expect(effectiveSpeed).toBeGreaterThanOrEqual(baseSpeed);
+    });
+  });
+
+  describe('ranged kiting bonus', () => {
+    it('should apply kiting bonus when ranged vs melee at distance < optimal range', () => {
+      const state = makeState({
+        hasRangedWeapon: true,
+        weaponOptimalRangeMidpoint: 9.5, // mid range
+        distanceToTarget: 3, // inside optimal range
+        servoMotors: 10,
+      });
+      const opponentSpeed = 15;
+      const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, opponentSpeed, false, true);
+      expect(isClosingBonus).toBe(true); // reused flag means "exempt from strain"
+
+      const baseSpeed = calculateBaseSpeed(10); // 9.0
+      const speedGap = Math.max(0, opponentSpeed - baseSpeed); // 6.0
+      const bonus = 1.10 + speedGap * 0.008; // 1.148
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.0 * bonus, 10);
+    });
+
+    it('should NOT apply kiting bonus when distance >= optimal range', () => {
+      const state = makeState({
+        hasRangedWeapon: true,
+        weaponOptimalRangeMidpoint: 4.5, // short range
+        distanceToTarget: 5, // at or beyond optimal range
+      });
+      const { isClosingBonus } = calculateEffectiveSpeed(state, 15, false, true);
+      expect(isClosingBonus).toBe(false);
+    });
+
+    it('should NOT apply kiting bonus when opponent has no melee weapon', () => {
+      const state = makeState({
+        hasRangedWeapon: true,
+        weaponOptimalRangeMidpoint: 9.5,
+        distanceToTarget: 3,
+      });
+      const { isClosingBonus } = calculateEffectiveSpeed(state, 15, false, false);
+      expect(isClosingBonus).toBe(false);
+    });
+
+    it('should NOT apply kiting bonus when robot has no ranged weapon', () => {
+      const state = makeState({
+        hasRangedWeapon: false,
+        weaponOptimalRangeMidpoint: 9.5,
+        distanceToTarget: 3,
+      });
+      const { isClosingBonus } = calculateEffectiveSpeed(state, 15, false, true);
+      expect(isClosingBonus).toBe(false);
+    });
+
+    it('should use base +10% when opponent speed equals base speed (no gap)', () => {
+      const state = makeState({
+        hasRangedWeapon: true,
+        weaponOptimalRangeMidpoint: 9.5,
+        distanceToTarget: 3,
+        servoMotors: 25,
+      });
+      const baseSpeed = calculateBaseSpeed(25); // 12.0
+      const { effectiveSpeed } = calculateEffectiveSpeed(state, baseSpeed, false, true);
+      // speedGap = 0, kitingBonus = 1.10
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.10, 10);
+    });
+
+    it('should NOT apply strain reduction when kiting bonus is active', () => {
+      const state = makeState({
+        hasRangedWeapon: true,
+        weaponOptimalRangeMidpoint: 9.5,
+        distanceToTarget: 3,
+        servoMotors: 10,
+        servoStrain: 20, // Would reduce speed if applied
+      });
+      const opponentSpeed = 15;
+      const { effectiveSpeed } = calculateEffectiveSpeed(state, opponentSpeed, false, true);
+
+      const baseSpeed = calculateBaseSpeed(10);
+      const speedGap = Math.max(0, opponentSpeed - baseSpeed);
+      const bonus = 1.10 + speedGap * 0.008;
+      // Strain should NOT be applied — kiting bonus is exempt
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.0 * bonus, 10);
+    });
+
+    it('should be weaker than closing bonus (10% vs 15% base)', () => {
+      const meleeState = makeState({
+        hasMeleeWeapon: true,
+        distanceToTarget: 10,
+        servoMotors: 25,
+      });
+      const rangedState = makeState({
+        hasRangedWeapon: true,
+        weaponOptimalRangeMidpoint: 16, // long range
+        distanceToTarget: 3,
+        servoMotors: 25,
+      });
+      const baseSpeed = calculateBaseSpeed(25);
+      const { effectiveSpeed: meleeSpeed } = calculateEffectiveSpeed(meleeState, baseSpeed, true);
+      const { effectiveSpeed: rangedSpeed } = calculateEffectiveSpeed(rangedState, baseSpeed, false, true);
+      
+      // Melee closing: 1.15, Ranged kiting: 1.10
+      expect(meleeSpeed).toBeCloseTo(baseSpeed * 1.15, 10);
+      expect(rangedSpeed).toBeCloseTo(baseSpeed * 1.10, 10);
+      expect(meleeSpeed).toBeGreaterThan(rangedSpeed);
+    });
+
+    it('should prioritize melee closing bonus over kiting bonus if both could apply', () => {
+      // Edge case: robot has both melee and ranged weapons (dual wield)
+      const state = makeState({
+        hasMeleeWeapon: true,
+        hasRangedWeapon: true,
+        weaponOptimalRangeMidpoint: 9.5,
+        distanceToTarget: 5, // > 2 (melee closing) and < 9.5 (kiting)
+        servoMotors: 25,
+      });
+      const baseSpeed = calculateBaseSpeed(25);
+      // hasRangedOpponent=true triggers melee closing, hasMeleeOpponent=true would trigger kiting
+      // Melee closing is checked first, so it should win
+      const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, baseSpeed, true, true);
+      expect(isClosingBonus).toBe(true);
+      // Should use melee closing bonus (1.15), not kiting (1.10)
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.15, 10);
     });
   });
 

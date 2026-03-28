@@ -142,7 +142,7 @@ describe('Tag Team Battle Log', () => {
     });
 
     // Create the TagTeamMatch linking teams to the battle
-    tagTeamMatch = await prisma.tagTeamMatch.create({
+    tagTeamMatch = await prisma.scheduledTagTeamMatch.create({
       data: {
         team1Id: tagTeam1.id,
         team2Id: tagTeam2.id,
@@ -157,7 +157,7 @@ describe('Tag Team Battle Log', () => {
   afterAll(async () => {
     // Cleanup in reverse dependency order
     if (tagTeamMatch) {
-      await prisma.tagTeamMatch.deleteMany({ where: { id: tagTeamMatch.id } });
+      await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: tagTeamMatch.id } });
     }
     if (tagTeamBattle) {
       await prisma.battleParticipant.deleteMany({ where: { battleId: tagTeamBattle.id } });

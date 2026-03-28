@@ -5,7 +5,6 @@ import Navigation from '../components/Navigation';
 import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
-import GuidedUIOverlay from '../components/onboarding/GuidedUIOverlay';
 import apiClient from '../utils/apiClient';
 import { fetchMyRobots, Robot } from '../utils/robotApi';
 
@@ -132,7 +131,7 @@ function RobotsPage() {
   const [searchParams] = useSearchParams();
 
   const isOnboarding = searchParams.get('onboarding') === 'true';
-  const [onboardingGuideStep, setOnboardingGuideStep] = useState(isOnboarding ? 0 : -1);  useEffect(() => {
+  useEffect(() => {
     fetchRobots();
     fetchFacilities();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -791,29 +790,6 @@ function RobotsPage() {
           </>
         )}
       </div>
-
-      {/* Onboarding Guided Overlay */}
-      {isOnboarding && onboardingGuideStep === 0 && robots.length > 0 && !loading && (
-        <GuidedUIOverlay
-          targetSelector=".robot-card-first"
-          tooltipContent={
-            <div>
-              <p className="font-semibold text-primary mb-2">Select Your Robot</p>
-              <p className="mb-2">
-                Click on your robot to visit its detail page. From there, navigate to the
-                Battle Config tab to equip your weapon.
-              </p>
-              <p className="text-sm text-secondary">
-                Once your weapon is equipped, your robot's stats will update with weapon bonuses
-                and it will be battle-ready!
-              </p>
-            </div>
-          }
-          position="bottom"
-          showNext={false}
-          onClose={() => setOnboardingGuideStep(-1)}
-        />
-      )}
 
       {/* Repair Confirmation Modal */}
       {showRepairConfirmation && (

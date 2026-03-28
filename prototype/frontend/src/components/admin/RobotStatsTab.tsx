@@ -36,7 +36,7 @@ const formatAttributeName = (attr: string): string =>
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function RobotStatsTab(): JSX.Element {
+export function RobotStatsTab() {
   /* ---------- Local state ---------- */
   const [robotStats, setRobotStats] = useState<RobotStats | null>(null);
   const [loading, setLoading] = useState(false);

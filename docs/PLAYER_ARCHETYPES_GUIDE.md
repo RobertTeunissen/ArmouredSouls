@@ -122,14 +122,14 @@ Each loadout type provides different bonuses. For example, Weapon+Shield provide
 
 - **Training Facility** - 10% discount on attribute upgrades at Level 1 (₡250/day operating cost)
 - **Repair Bay** - Repair cost discount (scales with robot count)
-- **Weapons Workshop** - 5% discount on weapon purchases at Level 1
+- **Weapons Workshop** - 10% discount on weapon purchases at Level 1
 - **Income Generator** - Generates passive income daily
 - **Roster Expansion** - **REQUIRED** to own more than 1 robot
 - **Storage Facility** - Increases weapon storage capacity from 5 to 10
 
 **Operating Costs**: All facilities have daily operating costs. For example:
 - Training Facility Level 1: ₡250/day (₡1,750/week)
-- Repair Bay Level 1: ₡1,000/day (₡7,000/week)
+- Repair Bay Level 1: ₡100/day (₡700/week)
 - Roster Expansion: ₡500/day per additional robot slot
 
 **ROI Consideration**: Facilities with discount benefits only pay for themselves if you spend enough in that category. For example, Training Facility Level 1 saves 10% on upgrades but costs ₡1,750/week to operate. You'd need to spend ₡17,500/week on upgrades just to break even on operating costs (10% of ₡17.5K = ₡1.75K). This is achievable in Bronze league with regular upgrades (₡2,500/day), making Training Facility a solid early-game investment for 1-2 robot strategies.
@@ -859,7 +859,7 @@ Facility Investor is characterized by exponential growth rather than linear grow
 - Training Facility saves 5% on all future attribute upgrades - the more you upgrade, the more you save
 - Repair Bay saves 5% on all future repairs - the more you battle, the more you save
 - Income Generator provides daily passive income that scales with prestige - the higher your prestige, the more you earn
-- Weapons Workshop saves 5% on all future weapon purchases - the more weapons you buy, the more you save
+- Weapons Workshop saves 10% on all future weapon purchases - the more weapons you buy, the more you save
 - These benefits stack and multiply over time, creating exponential returns
 
 **The Compounding Timeline**:
@@ -940,7 +940,7 @@ The Facility Investor strategy revolves around long-term economic optimization:
 3. **Compound Growth**: Leverage facility benefits that multiply over time - every upgrade saves more, every battle generates more passive income.
 4. **Patience**: Accept that weeks 1-4 will be slow while your facilities establish themselves. The payoff comes in weeks 8-16 when your infrastructure starts generating exponential returns.
 5. **Passive Income Maximization**: Prioritize Income Generator and prestige accumulation to grow your passive income stream.
-6. **Cost Reduction**: Use Training Facility, Repair Bay, and Weapons Workshop to reduce all future costs by 5-25%, creating permanent efficiency gains.
+6. **Cost Reduction**: Use Training Facility, Repair Bay, and Weapons Workshop to reduce all future costs by 10-25%, creating permanent efficiency gains.
 
 **Long-Term Economic Strategy and Passive Income**:
 
@@ -2813,7 +2813,7 @@ This section provides exact spending breakdowns for each archetype's ₡3,000,00
 **Strategic Rationale**:
 - **Hull Integrity at 15** provides **125 HP** (50 base + 15×5), making you very durable
 - **Armor Plating at 14** provides significant damage reduction (~40%), lowering repair costs
-- **Shield Capacity at 14** gives **28 shield points** (14×2), strong defensive buffer
+- **Shield Capacity at 14** gives **56 shield points** (14×4), strong defensive buffer
 - **Counter Protocols at 12** deals counter-attack damage (~30-35% of incoming damage)
 - **Combat Power at 12** ensures your Power Sword strikes deal meaningful damage (~110-120 per hit)
 - **Damage Control at 10** reduces critical hit damage by ~30%
@@ -3648,7 +3648,7 @@ Training Facility's value comes from long-term compounding:
 3. **Scales with Activity**: As you upgrade more, savings increase while operating costs stay fixed
 4. **Multi-Robot Value**: When you expand to 2-3 robots, upgrade costs multiply but discount applies to all
 
-**Repair Bay Level 1** - ₡100,000
+**Repair Bay Level 1** - ₡50,000
 
 **Facility Details**:
 - **Purchase Cost**: ₡100,000
@@ -5051,7 +5051,7 @@ W = 0.336 = **33.6% win rate**
 
 **Facility Operating Costs**:
 - Income Generator Level 1: ₡1,000/day = ₡7,000/week
-- Repair Bay Level 1: ₡1,000/day = ₡7,000/week
+- Repair Bay Level 1: ₡100/day = ₡700/week
 - Training Facility Level 1: ₡1,500/day = ₡10,500/week
 - **Total facility costs**: **₡24,500/week**
 
@@ -5107,7 +5107,7 @@ W = 0.336 = **33.6% win rate**
 - Payback period: Never (at Level 1)
 - **Assessment**: Income Generator Level 1 is a poor investment - it generates exactly what it costs to operate. Only becomes profitable at higher levels or with prestige multipliers.
 
-**Repair Bay Level 1** (₡100,000 purchase, ₡7,000/week operating):
+**Repair Bay Level 1** (₡50,000 purchase, ₡700/week operating):
 - Saves: 5% on repairs = ₡10,973 × 0.05 = ₡549/week
 - Net benefit: ₡549 - ₡7,000 = -₡6,451/week (NEGATIVE)
 - **Assessment**: Repair Bay Level 1 loses money. You'd need ₡140,000/week in repair costs for it to break even.
@@ -9028,9 +9028,9 @@ This section provides summary tables and cheat sheets for quick lookup. Use thes
 
 | Facility | Level 1 Cost | Operating Cost (Daily) | Operating Cost (Weekly) | Benefit | When to Buy |
 |----------|--------------|------------------------|-------------------------|---------|-------------|
-| Repair Bay | ₡100,000 | ₡1,000 | ₡7,000 | 5% repair discount | Multi-robot stables, Month 6+ |
+| Repair Bay | ₡50,000 | ₡100 | ₡700 | 5% repair discount | Multi-robot stables, Month 6+ |
 | Training Facility | ₡150,000 | ₡250 | ₡1,750 | 10% attribute upgrade discount | Late-game (Month 6+), high-level upgrades |
-| Weapons Workshop | ₡125,000 | ₡1,000 | ₡7,000 | 5% weapon purchase discount | Rarely (weapons are one-time purchases) |
+| Weapons Workshop | ₡75,000 | ₡100 | ₡700 | 10% weapon purchase discount | Rarely (weapons are one-time purchases) |
 | Income Generator | ₡800,000 | ₡1,000 | ₡7,000 | Passive income (prestige-dependent) | High prestige (5,000+), Month 6+ |
 | Roster Expansion | ₡150,000 | ₡500/robot | ₡3,500 (2nd robot) | Allows owning 2+ robots | When you have ₡1.5M+ for full 2-robot setup |
 | Storage Facility | ₡75,000 | ₡500 | ₡3,500 | 10 weapon capacity (default 5) | When you own 6+ weapons |
@@ -9390,9 +9390,9 @@ This appendix lists all 14 facilities with costs, benefits, operating costs, and
 | Facility | Level 1 Cost | Operating Cost (Daily) | Benefit | ROI Timeline | Best For |
 |----------|--------------|------------------------|---------|--------------|----------|
 | Income Generator | ₡800,000 | ₡1,000 | Passive income (prestige-dependent) | 18 weeks at 5,000 prestige | Facility Investor, late-game (Month 6+) |
-| Repair Bay | ₡100,000 | ₡1,000 | 5% repair discount | Never (early), 30 weeks (multi-robot) | Multi-robot stables, Month 6+ |
+| Repair Bay | ₡50,000 | ₡100 | 5% repair discount | Never (early), 30 weeks (multi-robot) | Multi-robot stables, Month 6+ |
 | Training Facility | ₡150,000 | ₡250 | 10% attribute upgrade discount | 40 weeks (early), 20 weeks (late) | Late-game (Month 6+), high-level upgrades |
-| Weapons Workshop | ₡125,000 | ₡1,000 | 5% weapon purchase discount | Never (weapons are one-time) | Rarely recommended |
+| Weapons Workshop | ₡75,000 | ₡100 | 10% weapon purchase discount | Never (weapons are one-time) | Rarely recommended |
 
 ---
 

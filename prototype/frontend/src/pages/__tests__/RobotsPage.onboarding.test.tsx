@@ -7,7 +7,6 @@
  * - Onboarding banner display with tutorial guidance
  * - "Return to Tutorial" button navigation
  * - Robot card navigation passes onboarding param
- * - Guided overlay display in onboarding mode
  * - Normal mode behavior preserved (no onboarding elements)
  * - RobotDetailPage onboarding banner
  * - Accessibility attributes
@@ -34,7 +33,6 @@ vi.mock('../../utils/apiClient', () => ({
 }));
 
 import apiClient from '../../utils/apiClient';
-const mockedApiClient = vi.mocked(apiClient);
 
 // Mock navigate and searchParams
 const mockNavigate = vi.fn();
@@ -61,20 +59,6 @@ vi.mock('../../contexts/AuthContext', () => ({
 // Mock Navigation component
 vi.mock('../../components/Navigation', () => ({
   default: () => <nav data-testid="navigation">Navigation</nav>,
-}));
-
-// Mock GuidedUIOverlay
-vi.mock('../../components/onboarding/GuidedUIOverlay', () => ({
-  default: ({ tooltipContent, onClose }: any) => (
-    <div data-testid="guided-overlay">
-      <div data-testid="overlay-content">{tooltipContent}</div>
-      {onClose && (
-        <button data-testid="overlay-close" onClick={onClose}>
-          Close
-        </button>
-      )}
-    </div>
-  ),
 }));
 
 // Mock ViewModeToggle
@@ -205,7 +189,7 @@ const mockFacilities = [
 ];
 
 function setupMocks(robots = mockRobots, facilities = mockFacilities) {
-  mockedApiClient.get.mockImplementation((url: string) => {
+  vi.mocked(apiClient.get).mockImplementation((url: string) => {
     if (url.includes('/api/robots')) {
       return Promise.resolve({ data: robots });
     }
@@ -347,62 +331,6 @@ describe('RobotsPage - Onboarding Integration', () => {
     });
   });
 
-  describe('Guided Overlay', () => {
-    it('should show guided overlay in onboarding mode after robots load', async () => {
-      renderInOnboardingMode();
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-    });
-
-    it('should display guidance about selecting a robot', async () => {
-      renderInOnboardingMode();
-      await waitFor(() => {
-        expect(screen.getByText('Select Your Robot')).toBeInTheDocument();
-      });
-    });
-
-    it('should dismiss overlay when Close is clicked', async () => {
-      const user = userEvent.setup();
-      renderInOnboardingMode();
-
-      await waitFor(() => {
-        expect(screen.getByTestId('guided-overlay')).toBeInTheDocument();
-      });
-
-      await user.click(screen.getByTestId('overlay-close'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should not show guided overlay in normal mode', async () => {
-      renderInNormalMode();
-      await waitFor(() => {
-        expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
-      });
-      expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-    });
-
-    it('should not show guided overlay when no robots exist', async () => {
-      setupMocks([]);
-      mockSearchParams = new URLSearchParams('onboarding=true');
-      render(
-        <MemoryRouter initialEntries={['/robots?onboarding=true']}>
-          <RobotsPage />
-        </MemoryRouter>,
-      );
-
-      await waitFor(() => {
-        expect(
-          screen.getByText("You don't have any robots yet."),
-        ).toBeInTheDocument();
-      });
-      expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
-    });
-  });
-
   describe('Normal Mode Preserved', () => {
     it('should render robots list title in normal mode', async () => {
       renderInNormalMode();
@@ -419,8 +347,6 @@ describe('RobotsPage - Onboarding Integration', () => {
       });
       // No onboarding banner
       expect(screen.queryByText('Tutorial Step 8: Equip Your Weapon')).not.toBeInTheDocument();
-      // No guided overlay
-      expect(screen.queryByTestId('guided-overlay')).not.toBeInTheDocument();
     });
   });
 });

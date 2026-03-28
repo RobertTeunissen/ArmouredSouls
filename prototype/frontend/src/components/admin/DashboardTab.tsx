@@ -60,7 +60,7 @@ interface DashboardTabProps {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function DashboardTab({ stats, loading }: DashboardTabProps): JSX.Element {
+export function DashboardTab({ stats, loading }: DashboardTabProps) {
   /* ---------- System Health local state ---------- */
   const [cycleRange, setCycleRange] = useState<[number, number]>([1, 10]);
   const [performanceMetrics, setPerformanceMetrics] = useState<CyclePerformanceMetrics[]>([]);
@@ -177,6 +177,15 @@ export function DashboardTab({ stats, loading }: DashboardTabProps): JSX.Element
               <h3 className="text-xl font-semibold mb-2 text-success">Matches</h3>
               <p>Scheduled: {stats.matches.scheduled}</p>
               <p>Completed: {stats.matches.completed}</p>
+              {stats.matches.byType && (
+                <div className="mt-2">
+                  <p className="text-sm text-secondary">By Type:</p>
+                  <p className="text-sm ml-2">League: {stats.matches.byType.league.scheduled} / {stats.matches.byType.league.completed}</p>
+                  <p className="text-sm ml-2">Tournament: {stats.matches.byType.tournament.scheduled} / {stats.matches.byType.tournament.completed}</p>
+                  <p className="text-sm ml-2">Tag Team: {stats.matches.byType.tagTeam.scheduled} / {stats.matches.byType.tagTeam.completed}</p>
+                  <p className="text-sm ml-2">KotH: {stats.matches.byType.koth.scheduled} / {stats.matches.byType.koth.completed}</p>
+                </div>
+              )}
             </div>
 
             {/* Battles Section */}

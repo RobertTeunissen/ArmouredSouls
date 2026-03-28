@@ -978,7 +978,7 @@ These properties will be validated using property-based testing with fast-check.
 | Pricing formula produces cost outside target tier | Adjust weapon stats until cost aligns. Document the iteration. |
 | Weapon has wrong rangeBand value | Property test P7 catches the mismatch. Fix the rangeBand value in seed data. |
 | New weapon image missing | `getWeaponImagePath()` returns fallback. Create image before release. |
-| Seed data migration fails | Seed uses upsert-by-name. Run `npx prisma migrate reset` to clean up. |
+| Seed data migration fails | Seed uses upsert-by-name. Run `npm run db:reset` to clean up. |
 | Attribute bonus exceeds +/-15 range | Property test P5 catches this. Reduce bonus and recalculate cost. |
 | DPS gap between adjacent tiers exceeds 1.5 | Property test P9 flags this. Adjust stats or add bridge weapon. |
 

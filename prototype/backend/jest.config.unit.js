@@ -8,7 +8,10 @@ const unitTestFiles = [
   'compute-seedings\\.unit\\.test\\.ts',
   'cors\\.property\\.test\\.ts',
   'damageDampeners\\.test\\.ts',
+  'distributeTiers\\.test\\.ts',
   'economyCalculations\\.test\\.ts',
+  'stableNameGenerator\\.test\\.ts',
+  'weaponSelection\\.test\\.ts',
   'envConfig\\.property\\.test\\.ts',
   'jwtService\\.test\\.ts',
   'notifications\\.property\\.test\\.ts',
@@ -34,6 +37,7 @@ const unitTestFiles = [
   'weaponProperties\\.test\\.ts',
   'weaponStatValidation\\.property\\.test\\.ts',
   'rangeBands\\.test\\.ts',
+  'dependency-upgrade-invariants\\.property\\.test\\.ts',
 ];
 
 module.exports = {

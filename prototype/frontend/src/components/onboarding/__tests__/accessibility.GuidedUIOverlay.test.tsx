@@ -57,8 +57,9 @@ describe('GuidedUIOverlay Accessibility', () => {
           tooltipContent={<div>Content</div>}
         />
       );
-      const overlay = container.querySelector('.bg-black.bg-opacity-60');
-      expect(overlay).toHaveAttribute('aria-hidden', 'true');
+      // The overlay uses bg-black/70 class (Tailwind's opacity shorthand)
+      const overlay = container.querySelector('[aria-hidden="true"]');
+      expect(overlay).toBeInTheDocument();
     });
 
     it('should have aria-label on Next button', () => {

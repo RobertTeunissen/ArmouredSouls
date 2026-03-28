@@ -55,15 +55,10 @@ const allPages = {
       { path: '/battle-history', label: 'Battle History' },
       { path: '/league-standings', label: 'League Standings' },
       { path: '/koth-standings', label: 'King of the Hill Standings' },
-      { path: '/tag-teams', label: 'Tag Team Management' },
       { path: '/tag-teams/standings', label: 'Tag Team Standings' },
       { path: '/practice', label: 'Practice Arena' },
       { path: '/tournaments', label: 'Tournament Hub' },
       { path: '/events', label: 'Events Calendar' },
-      { path: '/challenges', label: 'Daily Challenges' },
-      { path: '/battle-royale', label: 'Battle Royale' },
-      { path: '/guild-wars', label: 'Guild Wars' },
-      { path: '/story', label: 'Story Mode' },
     ]
   },
   stable: {
@@ -71,6 +66,7 @@ const allPages = {
     items: [
       { path: '/facilities', label: 'Facilities' },
       { path: '/weapon-shop', label: 'Weapon Shop' },
+      { path: '/tag-teams', label: 'Tag Team Management' },
       { path: '/marketplace', label: 'Marketplace' },
       { path: '/marketplace/my-listings', label: 'My Listings' },
       { path: '/marketplace/history', label: 'Transaction History' },
@@ -95,8 +91,6 @@ const allPages = {
       { path: '/leaderboards/losses', label: 'Total Losses Leaderboard' },
       { path: '/hall-of-records', label: 'Hall of Records' },
       { path: '/chat', label: 'Chat' },
-      { path: '/replays', label: 'Battle Replays' },
-      { path: '/spectate', label: 'Spectator Mode' },
     ]
   },
   customize: {

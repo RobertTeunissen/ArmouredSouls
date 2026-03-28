@@ -12,6 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "db:reset": "prisma migrate reset --force && prisma db seed",
     "test": "jest --config jest.config.unit.js --forceExit; jest --config jest.config.integration.js --forceExit",
     "test:unit": "jest --config jest.config.unit.js --forceExit",
     "test:integration": "jest --config jest.config.integration.js --forceExit",
@@ -27,41 +28,51 @@
   ],
   "author": "Robert Teunissen",
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "overrides": {
+    "express": "^5.1.0",
+    "prisma": "^7.0.0"
+  },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
-    "axios": "^1.6.2",
-    "bcrypt": "^5.1.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-rate-limit": "^8.2.1",
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.0.0",
+    "axios": "^1.13.6",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.3.1",
     "gray-matter": "^4.0.3",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "node-cron": "^4.2.1",
+    "pg": "^8.20.0",
     "winston": "^3.19.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.3",
-    "@types/bcrypt": "^5.0.2",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/jest": "^29.5.14",
-    "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "^20.10.6",
+    "@eslint/js": "^9.39.4",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.0.0",
     "@types/node-cron": "^3.0.11",
-    "@types/supertest": "^6.0.3",
-    "eslint": "^9.39.3",
-    "fast-check": "^4.5.3",
+    "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.0",
+    "eslint": "^9.39.4",
+    "fast-check": "^4.6.0",
     "globals": "^17.4.0",
-    "jest": "^29.7.0",
-    "prisma": "^5.22.0",
+    "jest": "^30.0.0",
+    "prisma": "^7.0.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3",
-    "typescript-eslint": "^8.56.1"
-  },
-  "prisma": {
-    "seed": "npx tsx prisma/seed.ts || node dist/prisma/seed.js"
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.57.1"
   }
 }

@@ -45,6 +45,15 @@ const validEmailArbitrary = () =>
 const validPasswordArbitrary = () =>
   fc.string({ minLength: 8, maxLength: 64 }).filter((s) => s.trim().length >= 8);
 
+/**
+ * Generates a valid stable name (3-30 alphanumeric/space/underscore/hyphen chars).
+ */
+const validStableNameArbitrary = () =>
+  fc
+    .array(fc.constantFrom(...(VALID_CHARS + ' ').split('')), { minLength: 3, maxLength: 20 })
+    .map((chars) => chars.join('').trim())
+    .filter((s) => s.length >= 3);
+
 describe('Property 12: Loading State During Submission', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -54,9 +63,10 @@ describe('Property 12: Loading State During Submission', () => {
     await fc.assert(
       fc.asyncProperty(
         validUsernameArbitrary(),
+        validStableNameArbitrary(),
         validEmailArbitrary(),
         validPasswordArbitrary(),
-        async (username, email, password) => {
+        async (username, stableName, email, password) => {
           cleanup();
 
           // Create a deferred promise so we control when the API call resolves
@@ -75,6 +85,7 @@ describe('Property 12: Loading State During Submission', () => {
 
           // Fill in all form fields with valid data and matching passwords
           fireEvent.change(screen.getByLabelText(/username/i), { target: { value: username } });
+          fireEvent.change(screen.getByLabelText(/stable name/i), { target: { value: stableName } });
           fireEvent.change(screen.getByLabelText(/email/i), { target: { value: email } });
           fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: password } });
           fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: password } });
@@ -93,6 +104,7 @@ describe('Property 12: Loading State During Submission', () => {
 
           // All form fields should be disabled
           expect(screen.getByLabelText(/username/i)).toBeDisabled();
+          expect(screen.getByLabelText(/stable name/i)).toBeDisabled();
           expect(screen.getByLabelText(/email/i)).toBeDisabled();
           expect(screen.getByLabelText(/^password$/i)).toBeDisabled();
           expect(screen.getByLabelText(/confirm password/i)).toBeDisabled();
@@ -105,6 +117,7 @@ describe('Property 12: Loading State During Submission', () => {
                 user: {
                   id: '1',
                   username,
+                  stableName,
                   email,
                   currency: 1000,
                   prestige: 0,
