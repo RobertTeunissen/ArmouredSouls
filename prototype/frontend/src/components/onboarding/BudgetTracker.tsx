@@ -46,7 +46,7 @@ const BudgetTracker = () => {
       {/* Balance + progress bar */}
       <div className="flex items-center gap-2 mb-1">
         <span className={`text-sm font-bold whitespace-nowrap ${color}`} aria-live="polite">{formatCurrency(credits)}</span>
-        <div className="flex-1 h-1.5 bg-surface-elevated rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+        <div className="flex-1 h-1.5 bg-surface-elevated rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label={`Budget: ${Math.round(pct)}% remaining`}>
           <div className={`h-full transition-all duration-300 ${barColor}`} style={{ width: `${pct}%` }} />
         </div>
       </div>

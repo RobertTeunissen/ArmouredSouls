@@ -5,14 +5,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-// Mock dependencies
 vi.mock('../../../../contexts/OnboardingContext', () => ({
   useOnboarding: () => ({
     tutorialState: { currentStep: 1, strategy: null, choices: {} },
-    updateStrategy: vi.fn(),
-    setStep: vi.fn(),
-    updateChoices: vi.fn(),
-    refreshState: vi.fn(),
+    updateStrategy: vi.fn().mockResolvedValue(undefined),
+    setStep: vi.fn().mockResolvedValue(undefined),
+    updateChoices: vi.fn().mockResolvedValue(undefined),
+    refreshState: vi.fn().mockResolvedValue(undefined),
   }),
 }));
 
@@ -26,7 +25,7 @@ vi.mock('../../../../utils/apiClient', () => ({
   },
 }));
 
-vi.mock('../../../RosterStrategyCard', () => ({
+vi.mock('../../RosterStrategyCard', () => ({
   default: ({ strategy, selected, onSelect }: { strategy: string; selected: boolean; onSelect: (s: string) => void }) => (
     <button data-testid={`strategy-${strategy}`} data-selected={selected} onClick={() => onSelect(strategy)}>
       {strategy}
@@ -34,7 +33,7 @@ vi.mock('../../../RosterStrategyCard', () => ({
   ),
 }));
 
-vi.mock('../../../RobotNamingModal', () => ({
+vi.mock('../../RobotNamingModal', () => ({
   default: ({ robotCount, onConfirm, onCancel }: { robotCount: number; onConfirm: (names: string[]) => void; onCancel: () => void }) => (
     <div data-testid="naming-modal">
       <span>Name {robotCount} robot(s)</span>
