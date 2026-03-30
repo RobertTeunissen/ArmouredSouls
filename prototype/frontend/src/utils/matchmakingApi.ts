@@ -198,8 +198,9 @@ export interface PaginatedResponse<T> {
 }
 
 // API Functions
-export const getUpcomingMatches = async (): Promise<ScheduledMatch[]> => {
-  const response = await apiClient.get('/api/matches/upcoming');
+export const getUpcomingMatches = async (robotId?: number): Promise<ScheduledMatch[]> => {
+  const params = robotId ? `?robotId=${robotId}` : '';
+  const response = await apiClient.get(`/api/matches/upcoming${params}`);
   return response.data.matches || [];  // Extract matches array from response
 };
 

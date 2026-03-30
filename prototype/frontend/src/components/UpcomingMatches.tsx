@@ -25,7 +25,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
   useEffect(() => {
     fetchMatches();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [robotId]);
 
   const fetchMatches = async () => {
     try {
@@ -41,7 +41,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
       }
 
       console.log('[UpcomingMatches] Fetching upcoming matches...');
-      const data = await getUpcomingMatches();
+      const data = await getUpcomingMatches(robotId);
       console.log('[UpcomingMatches] Received matches:', {
         total: data.length,
         leagueMatches: data.filter(m => m.matchType === 'league').length,
@@ -49,24 +49,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
         matches: data,
       });
 
-      // Filter by robotId if provided
-      let filteredMatches = data;
-      if (robotId) {
-        filteredMatches = data.filter((match) => {
-          if (match.matchType === 'tag_team') {
-            return (
-              match.team1?.activeRobot?.id === robotId ||
-              match.team1?.reserveRobot?.id === robotId ||
-              match.team2?.activeRobot?.id === robotId ||
-              match.team2?.reserveRobot?.id === robotId
-            );
-          } else {
-            return match.robot1?.id === robotId || match.robot2?.id === robotId;
-          }
-        });
-      }
-
-      setMatches(filteredMatches);
+      setMatches(data);
       setError(null);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (axios.isAxiosError(err) && err.response?.status === 401) {
