@@ -1,252 +1,239 @@
-import React from 'react';
+/**
+ * Step 1: Welcome + Roster Strategy Selection + Robot Creation (merged)
+ *
+ * Streamlined first page: brief welcome, strategy selection, then a naming
+ * modal that auto-purchases roster expansions and creates robots in one go.
+ *
+ * Requirements: 2.2, 4.1-4.8, 8.1-8.9, 9.1-9.10
+ */
+
+import { useState, useEffect, memo } from 'react';
+import { useOnboarding } from '../../../contexts/OnboardingContext';
+import RosterStrategyCard, { RosterStrategy } from '../RosterStrategyCard';
+import RobotNamingModal from '../RobotNamingModal';
+import { trackStrategySelected } from '../../../utils/onboardingAnalytics';
+import apiClient from '../../../utils/apiClient';
 
 interface Step1_WelcomeProps {
   onNext: () => void;
 }
 
-/**
- * Step 1: Welcome and Strategic Overview
- * 
- * Introduces new players to the game and the fundamental strategic question:
- * "How many robots should I build?"
- * 
- * Requirements: 2.2
- */
-const Step1_Welcome: React.FC<Step1_WelcomeProps> = ({ onNext }) => {
+/** How many robots each strategy creates */
+const STRATEGY_ROBOT_COUNT: Record<RosterStrategy, number> = {
+  '1_mighty': 1,
+  '2_average': 2,
+  '3_flimsy': 3,
+};
+
+const Step1_Welcome = ({ onNext: _onNext }: Step1_WelcomeProps) => {
+  const { tutorialState, updateStrategy, updateChoices, refreshState } = useOnboarding();
+
+  const [selectedStrategy, setSelectedStrategy] = useState<RosterStrategy | null>(
+    tutorialState?.strategy || null,
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNamingModal, setShowNamingModal] = useState(false);
+  const [creationError, setCreationError] = useState<string | null>(null);
+  /** Tracks how many roster expansions were purchased so we can record them later */
+  const [expansionsPurchased, setExpansionsPurchased] = useState(0);
+
+  useEffect(() => {
+    if (tutorialState?.strategy) {
+      setSelectedStrategy(tutorialState.strategy);
+    }
+  }, [tutorialState?.strategy]);
+
+  const handleStrategySelect = (strategy: RosterStrategy) => {
+    if (!isSubmitting) {
+      setSelectedStrategy(strategy);
+    }
+  };
+
+  /**
+   * When the user clicks "Create My Robot(s)":
+   * 1. Save strategy to backend
+   * 2. Purchase required Roster Expansions
+   * 3. Then show the naming modal
+   */
+  const handleCreateClick = async () => {
+    if (!selectedStrategy) return;
+
+    try {
+      setIsSubmitting(true);
+      setCreationError(null);
+
+      // Save strategy
+      await updateStrategy(selectedStrategy);
+      trackStrategySelected(selectedStrategy, 1);
+
+      // Buy Roster Expansion(s) before showing the naming modal
+      const robotCount = STRATEGY_ROBOT_COUNT[selectedStrategy];
+      const expansionsNeeded = robotCount - 1;
+      for (let i = 0; i < expansionsNeeded; i++) {
+        await apiClient.post('/api/facilities/upgrade', {
+          facilityType: 'roster_expansion',
+        });
+      }
+      setExpansionsPurchased(expansionsNeeded);
+
+      setShowNamingModal(true);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        || 'Something went wrong. Please try again.';
+      setCreationError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /**
+   * After the user confirms names in the modal:
+   * 1. Create each robot
+   * 2. Track onboarding choices
+   * 3. Advance to step 3
+   */
+  const handleConfirmNames = async (names: string[]) => {
+    if (!selectedStrategy) return;
+
+    try {
+      setIsSubmitting(true);
+      setCreationError(null);
+
+      // Create robots
+      const createdIds: number[] = [];
+      for (const name of names) {
+        const res = await apiClient.post('/api/robots', { name });
+        createdIds.push(res.data.robot.id);
+      }
+
+      // Track onboarding choices
+      await updateChoices({
+        rosterStrategy: selectedStrategy,
+        robotsCreated: createdIds,
+        facilitiesPurchased: expansionsPurchased > 0
+          ? Array(expansionsPurchased).fill('roster_expansion')
+          : [],
+      });
+
+      // Advance backend step 1 → 2 → 3 via direct API calls
+      // (context helpers swallow errors, so we call the API directly)
+      await apiClient.post('/api/onboarding/state', { step: 2 });
+      await apiClient.post('/api/onboarding/state', { step: 3 });
+
+      // Sync context with the new backend state so the container re-renders
+      await refreshState();
+
+      setShowNamingModal(false);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        || 'Something went wrong. Please try again.';
+      setCreationError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const robotCount = selectedStrategy ? STRATEGY_ROBOT_COUNT[selectedStrategy] : 0;
+  const strategies: RosterStrategy[] = ['1_mighty', '2_average', '3_flimsy'];
+
+  const buttonLabel = selectedStrategy
+    ? `Create My Robot${robotCount > 1 ? 's' : ''}`
+    : 'Select a strategy';
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Hero Section */}
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-6">
-          <img 
-            src="/assets/onboarding/game-logo.png" 
-            alt="Armoured Souls" 
-            className="h-24 w-auto"
+      <div className="text-center mb-6">
+        <div className="flex justify-center mb-4">
+          <img
+            src="/assets/onboarding/game-logo.png"
+            alt="Armoured Souls"
+            className="h-20 w-auto"
             onError={(e) => {
-              // Fallback if image doesn't exist yet
               e.currentTarget.style.display = 'none';
             }}
           />
         </div>
-        
-        <h1 className="text-3xl font-bold mb-3 text-gray-100">
-          Welcome to Armoured Souls
+
+        <h1 className="text-3xl font-bold mb-2 text-gray-100">
+          Welcome to Armoured Souls, Commander
         </h1>
-        
-        <p className="text-lg text-secondary max-w-3xl mx-auto">
-          Build, battle, and dominate in the ultimate robot combat strategy game
+
+        <p className="text-lg text-secondary max-w-3xl mx-auto mb-1">
+          Build and manage combat robots that fight in leagues and tournaments.
+          Your starting budget is{' '}
+          <span className="font-semibold text-primary">₡3,000,000</span> — how
+          you spend it starts with one question:
+        </p>
+        <p className="text-xl font-semibold text-gray-100">
+          How many robots should I build?
         </p>
       </div>
 
-      {/* Game Goal */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 rounded-lg p-8 border-2 border-purple-700 mb-8 max-w-4xl mx-auto">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
-            <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-              </svg>
-            </div>
-          </div>
-          
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-100 mb-3">
-              What's the Goal?
-            </h2>
-            <p className="text-secondary leading-relaxed mb-4">
-              Your goal is to build and manage a stable of combat robots that compete in leagues and tournaments. 
-              Success means climbing the league rankings, earning credits through battles, and building prestige 
-              through victories. You'll need to balance robot power, battle frequency, facility investments, and 
-              economic sustainability.
-            </p>
-            <p className="text-secondary leading-relaxed">
-              There's no single "right" way to play—some managers focus on one powerful robot, others spread their 
-              resources across multiple fighters. Your strategy determines your path to success.
-            </p>
-          </div>
-        </div>
+      {/* Strategy Cards Grid */}
+      <div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+        role="radiogroup"
+        aria-label="Roster strategy options"
+      >
+        {strategies.map((strategy) => (
+          <RosterStrategyCard
+            key={strategy}
+            strategy={strategy}
+            selected={selectedStrategy === strategy}
+            onSelect={handleStrategySelect}
+          />
+        ))}
       </div>
 
-      {/* Strategic Overview */}
-      <div className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-lg p-8 border-2 border-blue-700 mb-8 max-w-4xl mx-auto">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
-            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            </div>
-          </div>
-          
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-100 mb-3">
-              How do you want to be the most successful manager?
-            </h2>
-            <p className="text-lg text-secondary font-semibold mb-4">
-              "How many robots should I build?"
-            </p>
-            <p className="text-secondary leading-relaxed">
-              This single decision shapes your entire strategy. It affects which facilities you need, 
-              how you allocate your budget, what weapons you buy, and how you progress through the game. 
-              This tutorial will guide you through understanding these strategic implications before you 
-              commit your starting budget of <span className="font-semibold text-primary">₡3,000,000</span>.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Strategic Overview Illustration */}
-      <div className="flex justify-center mb-8">
-        <img 
-          src="/assets/onboarding/strategic-overview.png" 
-          alt="Strategic overview showing how roster size affects facility priorities, budget allocation, and battle strategy"
-          className="max-w-2xl w-full rounded-lg shadow-lg"
-          loading="lazy"
-          onError={(e) => {
-            // Fallback if image doesn't exist yet
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-      </div>
-
-      {/* What You'll Learn */}
-      <div className="bg-surface rounded-lg p-6 shadow-md border border-white/10 mb-8 max-w-4xl mx-auto">
-        <h3 className="text-xl font-bold text-gray-100 mb-4">
-          What You'll Learn in This Tutorial
-        </h3>
-        
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-green-600 dark:text-green-300 font-bold">
-              1
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Welcome & Overview</h4>
-              <p className="text-sm text-secondary">Understanding the strategic landscape</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold">
-              2
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Roster Strategy</h4>
-              <p className="text-sm text-secondary">Choose 1, 2, or 3 robots</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold">
-              3
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Facility Planning</h4>
-              <p className="text-sm text-secondary">Which facilities to buy and when</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center text-yellow-600 dark:text-yellow-300 font-bold">
-              4
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Budget Allocation</h4>
-              <p className="text-sm text-secondary">How to spend your ₡3,000,000</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center text-red-600 dark:text-red-300 font-bold">
-              5
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Create Your Robot</h4>
-              <p className="text-sm text-secondary">Build your first combat robot</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold">
-              6
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Weapon & Loadout</h4>
-              <p className="text-sm text-secondary">Understanding weapon configurations</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-pink-100 dark:bg-pink-900 rounded-full flex items-center justify-center text-pink-600 dark:text-pink-300 font-bold">
-              7
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Purchase Weapons</h4>
-              <p className="text-sm text-secondary">Equip your robot for battle</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-teal-100 dark:bg-teal-900 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-300 font-bold">
-              8
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Battle Readiness</h4>
-              <p className="text-sm text-secondary">Repair costs and preparation</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 md:col-span-2">
-            <div className="flex-shrink-0 w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-300 font-bold">
-              9
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-100">Complete Setup</h4>
-              <p className="text-sm text-secondary">Review your strategy and get personalized recommendations</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Key Principles */}
-      <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-6 rounded-r-lg mb-8 max-w-4xl mx-auto">
-        <div className="flex items-start gap-3">
-          <svg className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-          <div>
-            <h3 className="font-bold text-amber-900 dark:text-amber-200 mb-2">
-              Remember: You Can Only Spend Your Money Once
-            </h3>
-            <p className="text-amber-800 dark:text-amber-300 text-sm leading-relaxed">
-              Every credit you spend on one thing is a credit you can't spend on something else. 
-              This tutorial will help you understand the trade-offs and make informed decisions 
-              that align with your chosen strategy. Don't worry—if you make mistakes, you can 
-              reset your account and start over!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col items-center gap-4 max-w-4xl mx-auto">
+      {/* Action Button */}
+      <div className="flex flex-col items-center gap-4">
         <button
-          onClick={onNext}
-          className="px-8 py-3 bg-primary hover:bg-blue-700 text-white font-semibold text-lg rounded-lg shadow-md transition-colors duration-200 flex items-center gap-2 min-h-[44px]"
-          aria-label="Next step: Roster Strategy Selection"
+          onClick={handleCreateClick}
+          disabled={!selectedStrategy || isSubmitting}
+          className={`
+            px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200 min-h-[44px]
+            ${selectedStrategy && !isSubmitting
+              ? 'bg-primary hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+              : 'bg-surface-elevated text-secondary cursor-not-allowed'
+            }
+          `}
+          aria-label={
+            selectedStrategy
+              ? `${buttonLabel} for the ${selectedStrategy === '1_mighty' ? '1 Mighty Robot' : selectedStrategy === '2_average' ? '2 Average Robots' : '3 Flimsy Robots'} strategy`
+              : 'Select a strategy first'
+          }
         >
-          <span>Let's Get Started</span>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
+          {buttonLabel}
         </button>
-        
-        <p className="text-sm text-secondary">
-          Step 1 of 9
-        </p>
+
+        {!selectedStrategy && (
+          <p className="text-sm text-secondary">
+            Select a strategy above to continue
+          </p>
+        )}
+
+        {creationError && !showNamingModal && (
+          <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 max-w-lg">
+            <p className="text-error text-sm">{creationError}</p>
+          </div>
+        )}
       </div>
+
+      {/* Robot Naming Modal */}
+      {showNamingModal && selectedStrategy && (
+        <RobotNamingModal
+          robotCount={robotCount}
+          onConfirm={handleConfirmNames}
+          onCancel={() => setShowNamingModal(false)}
+          isSubmitting={isSubmitting}
+          error={creationError}
+        />
+      )}
     </div>
   );
 };
 
-export default React.memo(Step1_Welcome);
+export default memo(Step1_Welcome);

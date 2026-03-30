@@ -2307,11 +2307,11 @@ The Weapon Shop is **production-ready** with all 4 core phases complete. The imp
 
 **Reference**: See [PRD_ONBOARDING_SYSTEM.md](PRD_ONBOARDING_SYSTEM.md) for complete onboarding system specification.
 
-During onboarding Step 7 (Weapon Purchase Guidance), the Weapon Shop integrates with the onboarding system to help new players make informed first weapon purchases.
+During onboarding Step 3 (Battle-Ready Setup), the Weapon Shop integrates with the onboarding system to help new players make informed first weapon purchases.
 
 ### Weapon Recommendation Highlighting
 
-**Condition**: When the user's `hasCompletedOnboarding = false` and `onboardingStep = 7`
+**Condition**: When the user's `hasCompletedOnboarding = false` and the user is on the Battle-Ready Setup step
 
 **Behavior**:
 - Recommended starter weapons are highlighted with a green "Recommended" badge on their cards
@@ -2326,7 +2326,7 @@ During onboarding Step 7 (Weapon Purchase Guidance), the Weapon Shop integrates 
 | Combat Knife | Melee | Single/Dual-Wield | Budget-friendly | Low cost, decent melee bonuses, good for budget builds |
 | Bolt Carbine | Ballistic | Single/Dual-Wield | Budget-friendly | Compact mid-range carbine, good all-rounder |
 
-- Recommendations are adjusted based on the player's chosen loadout type from onboarding Step 6
+- Recommendations are adjusted based on the player's chosen loadout type from earlier in the Battle-Ready Setup step
 - For Weapon+Shield loadouts, shields (Light Shield, Combat Shield) are also highlighted
 - For Two-Handed loadouts, budget-friendly two-handed weapons are highlighted instead
 
@@ -2353,14 +2353,14 @@ During onboarding Step 7 (Weapon Purchase Guidance), the Weapon Shop integrates 
 └─────────────────────────────────────────────────────────────
 ```
 
-### Integration with Onboarding Step 7
+### Integration with Onboarding Step 3 (Battle-Ready Setup)
 
-The onboarding Step 7 component (`Step7_WeaponPurchase`) works alongside the Weapon Shop:
+The onboarding Battle-Ready Setup step works alongside the Weapon Shop:
 1. Explains that robots require weapons to participate in battles
 2. Displays weapon recommendation cards with costs and attribute bonuses
 3. Navigates the player to the Weapon Shop with the GuidedUIOverlay active
 4. The overlay highlights the recommended weapons and guides the purchase flow
-5. After a weapon is purchased, the onboarding advances to Step 8 (Battle Readiness)
+5. After a weapon is purchased, the onboarding advances to Step 4 (Attribute Upgrades)
 6. Shows a "savings missed" note: "A Weapons Workshop would have saved you ₡X on this purchase"
 
 ### Removal of Onboarding UI

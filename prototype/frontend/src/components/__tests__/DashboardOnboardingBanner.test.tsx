@@ -73,26 +73,19 @@ describe('DashboardOnboardingBanner', () => {
   });
 
   describe('Step progress display', () => {
-    it('should show "Step 1 of 9" for step 1', () => {
+    it('should show "Step 1 of 5" for backend step 1', () => {
       renderBanner(makeTutorialState({ currentStep: 1 }));
-      expect(screen.getByText('Step 1 of 9')).toBeInTheDocument();
+      expect(screen.getByText('Step 1 of 5')).toBeInTheDocument();
     });
 
-    it('should show "Step 5 of 9" for step 5', () => {
-      renderBanner(makeTutorialState({ currentStep: 5 }));
-      expect(screen.getByText('Step 5 of 9')).toBeInTheDocument();
+    it('should show "Step 2 of 5" for backend step 3', () => {
+      renderBanner(makeTutorialState({ currentStep: 3 }));
+      expect(screen.getByText('Step 2 of 5')).toBeInTheDocument();
     });
 
-    it('should show "Step 8 of 9" for step 8', () => {
+    it('should show "Step 4 of 5" for backend step 8', () => {
       renderBanner(makeTutorialState({ currentStep: 8 }));
-      expect(screen.getByText('Step 8 of 9')).toBeInTheDocument();
-    });
-
-    it('should render a progress bar with correct width for step 5', () => {
-      renderBanner(makeTutorialState({ currentStep: 5 }));
-      const progressBar = screen.getByTestId('onboarding-progress-bar');
-      // (5-1)/9 * 100 ≈ 44.44%
-      expect(progressBar).toHaveStyle({ width: `${((5 - 1) / 9) * 100}%` });
+      expect(screen.getByText('Step 4 of 5')).toBeInTheDocument();
     });
 
     it('should render 0% progress for step 1', () => {

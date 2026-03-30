@@ -64,12 +64,17 @@ function DashboardWelcome({ onboardingState, currency }: DashboardWelcomeProps) 
           <>
             <h2 className="text-3xl font-bold mb-4">Welcome Back!</h2>
             <p className="text-lg text-secondary mb-4">
-              Continue from Step {onboardingState!.currentStep} of 9
+              Continue from Step {
+                onboardingState!.currentStep <= 2 ? 1
+                : onboardingState!.currentStep <= 5 ? 2
+                : onboardingState!.currentStep <= 7 ? 3
+                : onboardingState!.currentStep - 4
+              } of 5
             </p>
             <div className="w-full bg-surface-elevated rounded-full h-2 mb-6 max-w-md mx-auto">
               <div
                 className="bg-primary h-2 rounded-full transition-all"
-                style={{ width: `${((onboardingState!.currentStep - 1) / 9) * 100}%` }}
+                style={{ width: `${(((onboardingState!.currentStep <= 2 ? 1 : onboardingState!.currentStep <= 5 ? 2 : onboardingState!.currentStep <= 7 ? 3 : onboardingState!.currentStep - 4) - 1) / 5) * 100}%` }}
               />
             </div>
             <button

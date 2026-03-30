@@ -247,7 +247,7 @@ describe('RobotsPage - Onboarding Integration', () => {
       renderInOnboardingMode();
       await waitFor(() => {
         expect(
-          screen.getByText('Tutorial Step 8: Equip Your Weapon'),
+          screen.getByText('Tutorial: Equip Your Weapon'),
         ).toBeInTheDocument();
       });
     });
@@ -346,7 +346,7 @@ describe('RobotsPage - Onboarding Integration', () => {
         expect(screen.getAllByText('Steel Thunder').length).toBeGreaterThan(0);
       });
       // No onboarding banner
-      expect(screen.queryByText('Tutorial Step 8: Equip Your Weapon')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tutorial: Equip Your Weapon')).not.toBeInTheDocument();
     });
   });
 });

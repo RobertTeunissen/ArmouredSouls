@@ -504,7 +504,7 @@ function RobotDetailPage() {
             <div className="flex items-start gap-3">
               <span className="text-xl flex-shrink-0" aria-hidden="true">🎓</span>
               <div className="flex-1">
-                <p className="text-primary font-semibold mb-1">Tutorial Step 8: Equip Your Weapon</p>
+                <p className="text-primary font-semibold mb-1">Tutorial: Equip Your Weapon</p>
                 <p className="text-secondary text-sm">
                   Navigate to the Battle Config tab below to equip the weapon you purchased.
                   Once equipped, your robot will gain weapon attribute bonuses and be battle-ready!

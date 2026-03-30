@@ -2,7 +2,7 @@
 
 ## Overview
 
-Quick reference for diagnosing and fixing issues with the New Player Onboarding System (9-step interactive tutorial). Covers stuck states, display issues, reset problems, and manual database fixes.
+Quick reference for diagnosing and fixing issues with the New Player Onboarding System (5-step interactive tutorial; backend internally uses steps 1-9). Covers stuck states, display issues, reset problems, and manual database fixes.
 
 **Key files**:
 - Backend service: `prototype/backend/src/services/onboardingService.ts`
@@ -24,10 +24,10 @@ Quick reference for diagnosing and fixing issues with the New Player Onboarding 
 
 **Symptom**: Player clicks "Next" but nothing happens, or the button is disabled.
 
-**Cause**: Steps 5, 7, and 8 require real actions before advancing:
-- **Step 5**: Must create the required number of robots (1, 2, or 3 depending on strategy)
-- **Step 7**: Must purchase at least one weapon
-- **Step 8**: Must equip a weapon to a robot
+**Cause**: Steps 5, 7, and 8 (backend internal steps) require real actions before advancing:
+- **Step 5 (internal)**: Must create the required number of robots (1, 2, or 3 depending on strategy)
+- **Step 7 (internal)**: Must purchase at least one weapon
+- **Step 8 (internal)**: Must equip a weapon to a robot
 
 **Solution**: Check what the step requires and guide the player to complete the action. The "Continue" button enables only after the required API call succeeds.
 
@@ -95,7 +95,7 @@ WHERE id IN (SELECT DISTINCT "userId" FROM robots)
 
 ### 4. Budget Tracker Shows Wrong Amount
 
-**Symptom**: The budget sidebar (visible during Steps 5–8) shows a credit balance that doesn't match the player's actual credits.
+**Symptom**: The budget sidebar (visible during the Facilities and Battle-Ready steps) shows a credit balance that doesn't match the player's actual credits.
 
 **Cause**: Frontend `BudgetTracker` state is out of sync with the backend. This can happen if the player made purchases in another tab or if an API call succeeded but the local state update failed.
 
@@ -271,7 +271,7 @@ WHERE id = <userId>;
 UPDATE users SET onboarding_step = <stepNumber> WHERE id = <userId>;
 ```
 
-⚠️ **Warning**: This bypasses step validation. Steps 5, 7, and 8 expect the player to have completed real actions (robot creation, weapon purchase, weapon equipping). Skipping to these steps without the prerequisite data may cause errors.
+⚠️ **Warning**: This bypasses step validation. Internal steps 5, 7, and 8 expect the player to have completed real actions (robot creation, weapon purchase, weapon equipping). Skipping to these steps without the prerequisite data may cause errors.
 
 ### Clear Reset Rate Limit (Admin Only)
 

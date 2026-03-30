@@ -160,7 +160,7 @@ describe('TutorialSettings', () => {
         expect(screen.getByTestId('tutorial-status')).toBeInTheDocument();
       });
       expect(screen.getByText(/Tutorial In Progress/)).toBeInTheDocument();
-      expect(screen.getByText(/Step 5 of 9/)).toBeInTheDocument();
+      expect(screen.getByText(/Step 2 of 5/)).toBeInTheDocument();
     });
 
     it('should display step 1 for brand new users', async () => {
@@ -168,16 +168,16 @@ describe('TutorialSettings', () => {
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByText(/Step 1 of 9/)).toBeInTheDocument();
+        expect(screen.getByText(/Step 1 of 5/)).toBeInTheDocument();
       });
     });
 
-    it('should display step 9 for users on the last step', async () => {
+    it('should display step 5 for users on the last step', async () => {
       mockGetTutorialState.mockResolvedValue(makeTutorialState({ currentStep: 9 }));
       renderComponent();
 
       await waitFor(() => {
-        expect(screen.getByText(/Step 9 of 9/)).toBeInTheDocument();
+        expect(screen.getByText(/Step 5 of 5/)).toBeInTheDocument();
       });
     });
   });

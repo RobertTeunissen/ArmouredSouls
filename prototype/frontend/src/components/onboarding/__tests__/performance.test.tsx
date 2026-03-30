@@ -122,18 +122,15 @@ describe('Lazy Loading', () => {
       </MemoryRouter>,
     );
 
-    // Step 2 content should load
+    // Backend step 2 maps to display step 1 (Welcome), so welcome content should load
     await waitFor(
       () => {
         expect(
-          screen.getByText(/Choose Your Roster Strategy/i),
+          screen.getByText(/Welcome to Armoured Souls/i),
         ).toBeInTheDocument();
       },
       { timeout: 5000 },
     );
-
-    // Step 1 content should NOT be in the DOM (it wasn't loaded)
-    expect(screen.queryByText(/Welcome to Armoured Souls/i)).not.toBeInTheDocument();
   });
 });
 

@@ -87,7 +87,12 @@ function TutorialSettings() {
             clipRule="evenodd"
           />
         </svg>
-        Tutorial In Progress – Step {tutorialState.currentStep} of 9
+        Tutorial In Progress – Step {
+          tutorialState.currentStep <= 2 ? 1
+          : tutorialState.currentStep <= 5 ? 2
+          : tutorialState.currentStep <= 7 ? 3
+          : tutorialState.currentStep - 4
+        } of 5
       </div>
     );
   };

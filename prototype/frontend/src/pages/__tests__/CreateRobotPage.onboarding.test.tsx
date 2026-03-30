@@ -110,7 +110,7 @@ describe('CreateRobotPage - Onboarding Integration', () => {
     it('should show onboarding banner when onboarding=true param is present', async () => {
       renderInOnboardingMode();
       await waitFor(() => {
-        expect(screen.getByText('Tutorial Step 5: Robot Creation')).toBeInTheDocument();
+        expect(screen.getByText('Tutorial: Robot Creation')).toBeInTheDocument();
       });
     });
 
@@ -119,7 +119,7 @@ describe('CreateRobotPage - Onboarding Integration', () => {
       await waitFor(() => {
         expect(screen.getByText('Create New Robot')).toBeInTheDocument();
       });
-      expect(screen.queryByText('Tutorial Step 5: Robot Creation')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tutorial: Robot Creation')).not.toBeInTheDocument();
     });
   });
 

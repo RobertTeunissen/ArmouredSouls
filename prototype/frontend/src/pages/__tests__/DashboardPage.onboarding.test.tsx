@@ -205,10 +205,10 @@ describe('DashboardPage - Onboarding Welcome Section', () => {
       });
     });
 
-    it('should display "Continue from Step 5 of 9"', async () => {
+    it('should display "Continue from Step 2 of 5"', async () => {
       renderDashboard();
       await waitFor(() => {
-        expect(screen.getByText('Continue from Step 5 of 9')).toBeInTheDocument();
+        expect(screen.getByText('Continue from Step 2 of 5')).toBeInTheDocument();
       });
     });
 
@@ -372,7 +372,7 @@ describe('DashboardPage - Onboarding Welcome Section', () => {
 
       renderDashboard();
       await waitFor(() => {
-        expect(screen.getByText('Continue from Step 8 of 9')).toBeInTheDocument();
+        expect(screen.getByText('Continue from Step 4 of 5')).toBeInTheDocument();
       });
     });
   });

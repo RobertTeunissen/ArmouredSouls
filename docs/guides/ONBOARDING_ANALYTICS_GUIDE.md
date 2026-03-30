@@ -2,7 +2,7 @@
 
 ## Overview
 
-The onboarding system tracks player behavior through a 9-step interactive tutorial to measure engagement, identify drop-off points, and correlate onboarding completion with long-term retention. Analytics data flows from the frontend (`onboardingAnalytics.ts`) through `POST /api/onboarding/analytics` to the backend (`onboardingAnalyticsService.ts`), where events are stored for aggregation queries.
+The onboarding system tracks player behavior through a 5-step interactive tutorial (the backend internally uses steps 1–9 for granularity) to measure engagement, identify drop-off points, and correlate onboarding completion with long-term retention. Analytics data flows from the frontend (`onboardingAnalytics.ts`) through `POST /api/onboarding/analytics` to the backend (`onboardingAnalyticsService.ts`), where events are stored for aggregation queries.
 
 This guide explains what data is collected, how to interpret it, and what actions to take based on the numbers.
 
@@ -16,7 +16,7 @@ This guide explains what data is collected, how to interpret it, and what action
 |--------|-------------|--------|--------|
 | Tutorial start rate | % of new registrations that enter Step 1 | ≥ 90% | `onboarding_started` events / new user registrations |
 | Step-by-step completion | Conversion from Step N to Step N+1 | > 95% per step | `onboarding_step_completed` events |
-| Overall completion rate | Players who reach Step 9 / players who start Step 1 | ≥ 70% | `onboarding_completed` / `onboarding_started` |
+| Overall completion rate | Players who reach Step 5 / players who start Step 1 | ≥ 70% | `onboarding_completed` / `onboarding_started` |
 | Skip rate | % of players who skip the tutorial | ≤ 30% | `onboarding_skipped` events |
 | Skip-from-step distribution | Which step players skip from most often | Even spread | `onboarding_skipped.skippedAtStep` |
 
@@ -25,7 +25,7 @@ This guide explains what data is collected, how to interpret it, and what action
 | Metric | Description | Target | Concern Threshold |
 |--------|-------------|--------|-------------------|
 | Average time per step | Seconds spent on each step | 30s–90s | > 120s (too complex) or < 10s (skimming) |
-| Total completion time | Time from Step 1 start to Step 9 completion | 5–10 min | > 10 min (too long) or < 3 min (rushing) |
+| Total completion time | Time from Step 1 start to Step 5 completion | 5–10 min | > 10 min (too long) or < 3 min (rushing) |
 
 ### Choice Metrics
 
@@ -73,21 +73,17 @@ This guide explains what data is collected, how to interpret it, and what action
 A healthy funnel looks like this:
 
 ```
-Step 1 (Welcome)          ████████████████████████████████ 100%
-Step 2 (Strategy)         ██████████████████████████████   95%
-Step 3 (Facilities)       ████████████████████████████     88%
-Step 4 (Budget)           ██████████████████████████       82%
-Step 5 (Robot Creation)   ████████████████████████         78%
-Step 6 (Weapon Education) ██████████████████████           75%
-Step 7 (Weapon Purchase)  ████████████████████             72%
-Step 8 (Battle Readiness) ██████████████████               70%
-Step 9 (Completion)       ██████████████████               70%
+Step 1 (Welcome & Setup)   ████████████████████████████████ 100%
+Step 2 (Facilities)        ██████████████████████████████   92%
+Step 3 (Battle-Ready)      ████████████████████████████     82%
+Step 4 (Upgrades)          ██████████████████████████       76%
+Step 5 (Completion)        ████████████████████████         70%
 ```
 
 Expected benchmarks:
-- Step 1 → Step 2: > 95% (welcome screen is low friction)
-- Each subsequent step: < 5% drop-off per step
-- Overall Step 1 → Step 9: ≥ 70%
+- Step 1 → Step 2: > 92% (welcome + setup is low friction)
+- Each subsequent step: < 10% drop-off per step
+- Overall Step 1 → Step 5: ≥ 70%
 
 ### Identifying Problematic Steps
 
@@ -122,7 +118,7 @@ Compare three cohorts to measure onboarding impact:
 
 | Cohort | Definition | Expected Day-7 Retention |
 |--------|-----------|--------------------------|
-| Completed | Finished all 9 steps | ≥ 50% (target) |
+| Completed | Finished all 5 steps | ≥ 50% (target) |
 | Skipped | Started but skipped tutorial | Baseline (lower) |
 | Never started | Registered but never entered Step 1 | Lowest |
 
@@ -202,7 +198,7 @@ const completionRate = started > 0 ? (completed / started) * 100 : 0;
 ```typescript
 // Find the step with the largest decrease in users
 const stepCounts = await Promise.all(
-  [1, 2, 3, 4, 5, 6, 7, 8, 9].map(async (step) => ({
+  [1, 2, 3, 4, 5].map(async (step) => ({
     step,
     count: await prisma.user.count({
       where: {
@@ -287,15 +283,15 @@ const skipDistribution = await prisma.user.groupBy({
 | Condition | Diagnosis | Action |
 |-----------|-----------|--------|
 | Completion rate < 70% | Tutorial is losing players | Identify the worst drop-off step and simplify its content. Check timing data — if steps are too long, split them. |
-| Skip rate > 30% | Players don't see value in the tutorial | Investigate which step they skip from. If early (Steps 1-3), the intro isn't compelling. If late (Steps 6-8), the tutorial feels too long. |
+| Skip rate > 30% | Players don't see value in the tutorial | Investigate which step they skip from. If early (Steps 1-2), the intro isn't compelling. If late (Steps 3-4), the tutorial feels too long. |
 | One strategy > 60% | Presentation is biased | Rebalance the strategy cards — check if the "Recommended" badge, card ordering, or descriptions favor one option. |
 | Average total time > 10 min | Tutorial is too long | Reduce content per step. Move detailed information to tooltips or "Learn more" expandable sections. |
 | Average total time < 3 min | Players are rushing through | Content isn't engaging enough. Add interactive elements, quizzes, or visual demonstrations. |
-| Budget red warning > 15% | Players overspend during tutorial | Make budget guidance more prominent in Steps 5 and 7. Consider adding spending confirmation dialogs. |
+| Budget red warning > 15% | Players overspend during tutorial | Make budget guidance more prominent in Steps 2 and 3. Consider adding spending confirmation dialogs. |
 | Reset rate > 10% within 30 days | Players regret their onboarding choices | Improve strategy education in Step 2. Consider allowing strategy changes without full reset. |
 | Day-7 retention (completed) ≤ Day-7 retention (skipped) | Tutorial isn't providing value | Major content review needed — the tutorial may be teaching the wrong things or setting wrong expectations. |
 | Back-navigation > 15% on a step | Step is confusing | Review the step's content for clarity. Check if it assumes knowledge from a previous step that players didn't absorb. |
-| First battle > 24h for > 20% of completers | Post-onboarding transition is weak | Improve Step 9 next-steps guidance. Add a "Fight your first battle" CTA on the dashboard after completion. |
+| First battle > 24h for > 20% of completers | Post-onboarding transition is weak | Improve Step 5 next-steps guidance. Add a "Fight your first battle" CTA on the dashboard after completion. |
 
 ### Regular Review Cadence
 

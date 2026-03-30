@@ -79,7 +79,7 @@ DROP TABLE IF EXISTS reset_logs;
 - [ ] Health check: `curl https://acc.armouredsouls.com/api/health`
 - [ ] Verify existing users have `hasCompletedOnboarding = true`
 - [ ] Register a new test user → onboarding triggers on dashboard
-- [ ] Complete full 9-step tutorial flow
+- [ ] Complete full 5-step tutorial flow
 - [ ] Test skip functionality
 - [ ] Test resume after logout/login
 - [ ] Test reset account functionality

@@ -4,7 +4,7 @@
  * when the user has incomplete onboarding (not completed and not skipped).
  *
  * Shows:
- * - Progress bar with step X of 9
+ * - Progress bar with step X of 5
  * - "Resume Tutorial" button navigating to /onboarding
  *
  * Hidden when:
@@ -34,8 +34,13 @@ function DashboardOnboardingBanner({ onboardingState }: DashboardOnboardingBanne
     return null;
   }
 
-  const completedSteps = onboardingState.currentStep - 1;
-  const totalSteps = 9;
+  const totalSteps = 5;
+  // Map backend step (1-9) to display step (1-5)
+  const displayStep = onboardingState.currentStep <= 2 ? 1
+    : onboardingState.currentStep <= 5 ? 2
+    : onboardingState.currentStep <= 7 ? 3
+    : onboardingState.currentStep - 4;
+  const completedSteps = displayStep - 1;
   const progressPercent = (completedSteps / totalSteps) * 100;
 
   return (
@@ -51,7 +56,7 @@ function DashboardOnboardingBanner({ onboardingState }: DashboardOnboardingBanne
               Setup Progress
             </span>
             <span className="text-xs text-secondary">
-              Step {onboardingState.currentStep} of {totalSteps}
+              Step {displayStep} of {totalSteps}
             </span>
           </div>
           <div className="w-full bg-surface-elevated rounded-full h-1.5">
