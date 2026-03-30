@@ -9,7 +9,9 @@ const router = express.Router();
 
 /**
  * GET /api/matches/upcoming
- * Get upcoming scheduled matches and tournament matches for the current user's robots
+ * Get upcoming scheduled matches and tournament matches.
+ * If ?robotId=X is provided, returns matches for that specific robot (public).
+ * Otherwise returns matches for the current user's robots.
  */
 router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -17,21 +19,40 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Get user's robots
-    const userRobots = await prisma.robot.findMany({
-      where: { userId: req.user.userId },
-      select: { id: true },
-    });
+    const queryRobotId = req.query.robotId ? parseInt(req.query.robotId as string) : undefined;
 
-    const robotIds = userRobots.map(r => r.id);
+    let robotIds: number[];
+    let teamIds: number[];
 
-    // Get user's tag teams
-    const userTeams = await prisma.tagTeam.findMany({
-      where: { stableId: req.user.userId },
-      select: { id: true },
-    });
+    if (queryRobotId && !isNaN(queryRobotId)) {
+      // Specific robot requested — return its matches regardless of ownership
+      robotIds = [queryRobotId];
 
-    const teamIds = userTeams.map(t => t.id);
+      // Find tag teams that include this robot
+      const teamsWithRobot = await prisma.tagTeam.findMany({
+        where: {
+          OR: [
+            { activeRobotId: queryRobotId },
+            { reserveRobotId: queryRobotId },
+          ],
+        },
+        select: { id: true },
+      });
+      teamIds = teamsWithRobot.map(t => t.id);
+    } else {
+      // Default: current user's robots
+      const userRobots = await prisma.robot.findMany({
+        where: { userId: req.user.userId },
+        select: { id: true },
+      });
+      robotIds = userRobots.map(r => r.id);
+
+      const userTeams = await prisma.tagTeam.findMany({
+        where: { stableId: req.user.userId },
+        select: { id: true },
+      });
+      teamIds = userTeams.map(t => t.id);
+    }
 
     // Get scheduled league matches involving user's robots
     const leagueMatches = await prisma.scheduledLeagueMatch.findMany({
