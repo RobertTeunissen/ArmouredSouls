@@ -73,7 +73,7 @@ model User {
   // ===== ONBOARDING TRACKING =====
   hasCompletedOnboarding Boolean  @default(false)  // Whether user completed the tutorial
   onboardingSkipped      Boolean  @default(false)  // Whether user skipped the tutorial
-  onboardingStep         Int      @default(1)      // Current step (1-9) in tutorial
+  onboardingStep         Int      @default(1)      // Current step (1-9 internally; UI displays 5 consolidated steps)
   onboardingStrategy     String?  @db.VarChar(20)  // Chosen roster strategy: "1_mighty", "2_average", "3_flimsy"
   onboardingChoices      Json     @default("{}")   // Player choices during onboarding (JSON object)
   onboardingStartedAt    DateTime?                 // When user started the tutorial
@@ -98,8 +98,8 @@ model User {
 - Statistics are aggregated from all robots for stable-level tracking
 - No stable-level league - leagues are per robot
 - Onboarding tracking: New users start with `hasCompletedOnboarding = false` and `onboardingStep = 1`
-- Onboarding strategy: Chosen during Step 2 of tutorial ("1_mighty", "2_average", or "3_flimsy")
-- Onboarding choices: JSON object storing player decisions throughout the 9-step tutorial
+- Onboarding strategy: Chosen during Step 1 of tutorial ("1_mighty", "2_average", or "3_flimsy")
+- Onboarding choices: JSON object storing player decisions throughout the tutorial (backend uses steps 1-9 internally; UI shows 5 consolidated steps)
 - Existing users: Marked with `hasCompletedOnboarding = true` during migration to skip tutorial
 
 ---
@@ -950,14 +950,14 @@ These are calculated in application code:
 
 ## Onboarding Tracking Fields (User Model)
 
-The following columns were added to the User model to support the 9-step new player onboarding tutorial system. These fields track tutorial progress, player choices, and completion status.
+The following columns were added to the User model to support the new player onboarding tutorial system. The UI presents 5 consolidated steps, while the backend internally tracks progress using steps 1-9 for granularity. These fields track tutorial progress, player choices, and completion status.
 
 | Column | Type | Default | Description |
 |--------|------|---------|-------------|
 | `hasCompletedOnboarding` | `Boolean` | `false` | Whether the user has completed the onboarding tutorial. Existing users were migrated with `true`. |
 | `onboardingSkipped` | `Boolean` | `false` | Whether the user chose to skip the tutorial instead of completing it. |
-| `onboardingStep` | `Int` | `1` | Current step in the 9-step tutorial (range: 1-9). Advances as the player progresses. |
-| `onboardingStrategy` | `String?` (VarChar 20) | `null` | Roster strategy chosen during Step 2. Values: `"1_mighty"`, `"2_average"`, `"3_flimsy"`. Null until Step 2 is completed. |
+| `onboardingStep` | `Int` | `1` | Current internal step in the tutorial (range: 1-9). The UI maps these to 5 display steps. Advances as the player progresses. |
+| `onboardingStrategy` | `String?` (VarChar 20) | `null` | Roster strategy chosen during Step 1 (Welcome & Setup). Values: `"1_mighty"`, `"2_average"`, `"3_flimsy"`. Null until strategy is selected. |
 | `onboardingChoices` | `Json` | `"{}"` | JSON object storing all player decisions made throughout the tutorial (loadout preferences, facility choices, weapon selections, etc.). |
 | `onboardingStartedAt` | `DateTime?` | `null` | Timestamp when the user first started the tutorial. Set during registration or when tutorial is initiated. |
 | `onboardingCompletedAt` | `DateTime?` | `null` | Timestamp when the user completed (or skipped) the tutorial. Null while tutorial is in progress. |

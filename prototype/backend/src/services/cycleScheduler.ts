@@ -185,6 +185,13 @@ async function executeTournamentCycle(): Promise<JobContext> {
   const nextTournament = await autoCreateNextTournament();
   if (nextTournament) {
     logger.info(`Tournament Cycle: Auto-created tournament "${nextTournament.name}"`);
+    if (!lastTournament) {
+      return {
+        jobName: 'tournament',
+        tournamentName: nextTournament.name,
+        tournamentScheduled: true,
+      };
+    }
   } else {
     logger.info('Tournament Cycle: No new tournament needed (active tournament exists or not enough participants)');
   }

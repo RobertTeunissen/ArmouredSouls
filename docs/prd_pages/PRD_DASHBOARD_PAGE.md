@@ -922,12 +922,12 @@ The dashboard conditionally renders onboarding content based on the user's `hasC
 **New Users (`hasCompletedOnboarding = false`, `onboardingStep = 1`)**:
 - The existing 4-step "Welcome to Your Stable" getting started guide is replaced
 - Displays a "Start Your Journey" section with a prominent "Begin Interactive Tutorial" button (primary CTA)
-- Shows brief description: "Learn strategic decisions in 9 guided steps"
+- Shows brief description: "Learn strategic decisions in 5 guided steps"
 - The tutorial covers roster strategy, facility timing, budget allocation, robot creation, weapon education, and battle readiness
 
 **Incomplete Onboarding (`hasCompletedOnboarding = false`, `onboardingStep > 1`)**:
 - Displays a "Resume Tutorial" button instead of "Begin Interactive Tutorial"
-- Shows a progress indicator: "Continue from Step X of 9"
+- Shows a progress indicator: "Continue from Step X of 5"
 - Includes a brief reminder of the last completed step to re-orient the player
 - A compact progress indicator also appears in the dashboard header as a "Complete Setup" call-to-action badge
 
@@ -956,7 +956,7 @@ The dashboard conditionally renders onboarding content based on the user's `hasC
 │  shape your stable's future.                                   │
 │                                                                 │
 │  Learn about roster strategies, facility investments,          │
-│  weapon loadouts, and budget allocation in 9 guided steps.     │
+│  weapon loadouts, and budget allocation in 5 guided steps.     │
 │                                                                 │
 │              [Begin Interactive Tutorial]                        │
 │                                                                 │
@@ -967,7 +967,7 @@ The dashboard conditionally renders onboarding content based on the user's `hasC
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Command Center                [Complete Setup ▓▓▓░░░░░░ 3/9]   │
+│ Command Center                [Complete Setup ▓▓▓░░░░░░ 2/5]   │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -975,8 +975,8 @@ The dashboard conditionally renders onboarding content based on the user's `hasC
 │                                                                 │
 │  You're making progress! Pick up where you left off.           │
 │                                                                 │
-│  Continue from Step 4 of 9: Budget Allocation Guidance         │
-│  ▓▓▓░░░░░░ 33% complete                                       │
+│  Continue from Step 2 of 5: Facility Investment                │
+│  ▓▓▓░░░░░░ 20% complete                                       │
 │                                                                 │
 │              [Resume Tutorial]                                   │
 │                                                                 │

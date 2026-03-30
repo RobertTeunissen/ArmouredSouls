@@ -1,9 +1,11 @@
 # Product Requirements Document: New Player Onboarding System
 
-**Last Updated**: March 2, 2026  
-**Status**: 📋 PLANNED  
+**Last Updated**: March 29, 2026  
+**Status**: ✅ IMPLEMENTED (Streamlined to 5 display steps)  
 **Owner**: Robert Teunissen  
 **Epic**: New Player Onboarding
+
+> **Note**: The original 9-step tutorial has been streamlined to 5 display steps with automated purchases. The backend still uses steps 1-9 internally. See `docs/implementation_notes/ONBOARDING_IMPLEMENTATION_NOTES.md` for the current implementation details.
 
 ---
 

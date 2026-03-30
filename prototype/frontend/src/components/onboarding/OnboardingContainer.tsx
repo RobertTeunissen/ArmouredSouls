@@ -13,6 +13,7 @@ import ProgressIndicator from './ProgressIndicator';
 import BudgetTracker from './BudgetTracker';
 import SkipConfirmationModal from './SkipConfirmationModal';
 import OnboardingErrorBoundary from './OnboardingErrorBoundary';
+import { LoadingScreen, ErrorScreen, CompletedScreen, NoStateScreen } from './OnboardingStatusScreens';
 import { useStepFocusManagement } from './hooks/useStepFocusManagement';
 import {
   trackStepStarted,
@@ -23,28 +24,48 @@ import {
 } from '../../utils/onboardingAnalytics';
 
 // Lazy-loaded step components for code splitting
+// Display steps (5 total):
+// Step 1: Welcome + Strategy + Robot Creation
+// Step 2: Facility Investment
+// Step 3: Battle-Ready (Loadout + Stance + Range + Weapons + Portrait)
+// Step 4: Attribute Upgrades + Tag Team
+// Step 5: Completion
+// Backend still uses steps 1-9; the UI maps backend steps to display steps.
 const Step1_Welcome = lazy(() => import('./steps/Step1_Welcome'));
-const Step2_RosterStrategy = lazy(() => import('./steps/Step2_RosterStrategy'));
-const Step3_FacilityTiming = lazy(() => import('./steps/Step3_FacilityTiming'));
-const Step4_BudgetAllocation = lazy(() => import('./steps/Step4_BudgetAllocation'));
-const Step5_RobotCreation = lazy(() => import('./steps/Step5_RobotCreation'));
-const Step6_WeaponEducation = lazy(() => import('./steps/Step6_WeaponEducation'));
-const Step7_WeaponPurchase = lazy(() => import('./steps/Step7_WeaponPurchase'));
-const Step8_BattleReadiness = lazy(() => import('./steps/Step8_BattleReadiness'));
-const Step9_Completion = lazy(() => import('./steps/Step9_Completion'));
+const Step2_Facilities = lazy(() => import('./steps/Step2_Facilities'));
+const Step3_BattleReady = lazy(() => import('./steps/Step3_BattleReady'));
+const Step4_Upgrades = lazy(() => import('./steps/Step4_Upgrades'));
+const Step5_Completion = lazy(() => import('./steps/Step5_Completion'));
 
-/** Map of step number to lazy component import function for preloading */
+/** Map of backend step number to lazy component import function for preloading */
 const stepImports: Record<number, () => Promise<unknown>> = {
   1: () => import('./steps/Step1_Welcome'),
-  2: () => import('./steps/Step2_RosterStrategy'),
-  3: () => import('./steps/Step3_FacilityTiming'),
-  4: () => import('./steps/Step4_BudgetAllocation'),
-  5: () => import('./steps/Step5_RobotCreation'),
-  6: () => import('./steps/Step6_WeaponEducation'),
-  7: () => import('./steps/Step7_WeaponPurchase'),
-  8: () => import('./steps/Step8_BattleReadiness'),
-  9: () => import('./steps/Step9_Completion'),
+  2: () => import('./steps/Step1_Welcome'),
+  3: () => import('./steps/Step2_Facilities'),
+  4: () => import('./steps/Step2_Facilities'),
+  5: () => import('./steps/Step2_Facilities'),
+  6: () => import('./steps/Step3_BattleReady'),
+  7: () => import('./steps/Step3_BattleReady'),
+  8: () => import('./steps/Step4_Upgrades'),
+  9: () => import('./steps/Step5_Completion'),
 };
+
+/**
+ * Convert backend step (1-9) to display step (1-5).
+ * Backend 1-2 → display 1 (welcome + strategy + robots)
+ * Backend 3-5 → display 2 (facility investment)
+ * Backend 6-7 → display 3 (battle-ready: loadout + stance + weapons)
+ * Backend 8   → display 4 (battle readiness)
+ * Backend 9   → display 5 (completion)
+ */
+const toDisplayStep = (backendStep: number): number => {
+  if (backendStep <= 2) return 1;
+  if (backendStep <= 5) return 2;
+  if (backendStep <= 7) return 3;
+  return backendStep - 4;
+};
+
+const TOTAL_DISPLAY_STEPS = 5;
 
 /** Loading fallback shown while a step component is being loaded */
 const StepLoadingFallback = () => (
@@ -93,7 +114,9 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
     setShowSkipConfirmation,
   });
 
-  const currentStep = tutorialState?.currentStep ?? 1;
+  const backendStep = tutorialState?.currentStep ?? 1;
+  const currentStep = backendStep; // keep for backend interactions
+  const displayStep = toDisplayStep(backendStep);
 
   // Track step_started whenever the current step changes
   const prevStepRef = useRef<number | null>(null);
@@ -115,79 +138,18 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
   }, [currentStep]);
 
   // Handle loading state
-  if (loading && !tutorialState) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl text-secondary">Loading tutorial...</div>
-        </div>
-      </div>
-    );
-  }
+  if (loading && !tutorialState) return <LoadingScreen />;
 
   // Handle error state
   if (error && !tutorialState) {
-    const isNetwork = errorInfo?.isNetworkError ?? false;
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center" role="alert">
-        <div className="text-center max-w-md mx-auto p-6">
-          <h2 className="text-xl font-bold text-error mb-2">
-            {isNetwork ? 'Connection Problem' : 'Failed to Load Tutorial'}
-          </h2>
-          <p className="text-secondary mb-4">
-            {isNetwork
-              ? 'Unable to reach the server. Please check your internet connection.'
-              : error}
-          </p>
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={() => retry()}
-              className="px-6 py-2 bg-primary hover:bg-primary-dark rounded transition-colors text-white min-h-[44px]"
-            >
-              Retry
-            </button>
-            <button
-              onClick={() => { window.location.href = '/dashboard'; }}
-              className="px-6 py-2 border border-gray-600 hover:border-gray-400 rounded transition-colors text-secondary min-h-[44px]"
-            >
-              Go to Dashboard
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <ErrorScreen error={error} isNetwork={errorInfo?.isNetworkError ?? false} onRetry={retry} />;
   }
 
   // Handle no tutorial state (shouldn't happen, but defensive)
-  if (!tutorialState) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl text-secondary">No tutorial state found</div>
-        </div>
-      </div>
-    );
-  }
+  if (!tutorialState) return <NoStateScreen />;
 
   // Handle tutorial already completed
-  if (tutorialState.hasCompletedOnboarding) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4 text-gray-100">Tutorial Already Completed</h2>
-          <p className="text-secondary mb-6">
-            You've already completed the onboarding tutorial.
-          </p>
-          <button
-            onClick={() => window.location.href = '/dashboard'}
-            className="px-6 py-2 bg-primary hover:bg-primary-dark rounded transition-colors min-h-[44px]"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (tutorialState.hasCompletedOnboarding) return <CompletedScreen />;
 
   const handleNext = async () => {
     trackStepCompleted(currentStep);
@@ -232,34 +194,37 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
   const renderStep = () => {
     const stepProps = {
       onNext: handleNext,
-      onPrevious: currentStep > 1 ? handlePrevious : undefined,
+      onPrevious: currentStep > 2 ? handlePrevious : undefined,
     };
 
     switch (currentStep) {
-      case 1: return <Step1_Welcome onNext={handleNext} />;
-      case 2: return <Step2_RosterStrategy {...stepProps} />;
-      case 3: return <Step3_FacilityTiming {...stepProps} />;
-      case 4: return <Step4_BudgetAllocation {...stepProps} />;
-      case 5: return <Step5_RobotCreation {...stepProps} />;
-      case 6: return <Step6_WeaponEducation {...stepProps} />;
-      case 7: return <Step7_WeaponPurchase {...stepProps} />;
-      case 8: return <Step8_BattleReadiness {...stepProps} />;
-      case 9: return <Step9_Completion onNext={handleNext} onPrevious={handlePrevious} />;
+      case 1:
+      case 2:
+        return <Step1_Welcome onNext={handleNext} />;
+      case 3:
+      case 4:
+      case 5:
+        return <Step2_Facilities {...stepProps} />;
+      case 6:
+      case 7:
+        return <Step3_BattleReady {...stepProps} />;
+      case 8: return <Step4_Upgrades {...stepProps} />;
+      case 9: return <Step5_Completion onNext={handleNext} onPrevious={handlePrevious} />;
       default: return <Step1_Welcome onNext={handleNext} />;
     }
   };
 
   // Step names for screen reader announcements
   const stepNames: Record<number, string> = {
-    1: 'Welcome and Strategic Overview',
-    2: 'Roster Strategy Selection',
-    3: 'Facility Timing and Priority',
-    4: 'Budget Allocation Guidance',
-    5: 'Robot Creation',
-    6: 'Weapon and Loadout Education',
-    7: 'Weapon Purchase',
-    8: 'Battle Readiness',
-    9: 'Completion and Recommendations',
+    1: 'Welcome and Strategy Selection',
+    2: 'Welcome and Strategy Selection',
+    3: 'Facility Investment',
+    4: 'Facility Investment',
+    5: 'Facility Investment',
+    6: 'Battle-Ready Setup',
+    7: 'Battle-Ready Setup',
+    8: 'Attribute Upgrades',
+    9: 'Completion',
   };
 
   return (
@@ -271,7 +236,7 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
         className="sr-only"
         role="status"
       >
-        {`Step ${currentStep} of 9: ${stepNames[currentStep] || ''}`}
+        {`Step ${displayStep} of ${TOTAL_DISPLAY_STEPS}: ${stepNames[currentStep] || ''}`}
       </div>
 
       {/* Header with progress and budget */}
@@ -279,7 +244,7 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <ProgressIndicator current={currentStep} total={9} />
+              <ProgressIndicator current={displayStep} total={TOTAL_DISPLAY_STEPS} />
             </div>
             <div className="flex-shrink-0 hidden sm:block">
               <BudgetTracker />
@@ -298,7 +263,7 @@ const OnboardingContainer = ({ onComplete }: OnboardingContainerProps) => {
       </div>
 
       {/* Main content area with error boundary and Suspense for lazy-loaded steps */}
-      <main className="container mx-auto px-4 py-8" aria-label={`Tutorial step ${currentStep}: ${stepNames[currentStep] || ''}`}>
+      <main className="container mx-auto px-4 py-8" aria-label={`Tutorial step ${displayStep}: ${stepNames[currentStep] || ''}`}>
         <OnboardingErrorBoundary onRetry={() => retry()}>
           <Suspense fallback={<StepLoadingFallback />}>
             {renderStep()}

@@ -101,7 +101,7 @@ function CreateRobotPage() {
                 <div className="flex items-start gap-3">
                   <span className="text-xl flex-shrink-0">🎓</span>
                   <div>
-                    <p className="text-primary font-semibold">Tutorial Step 5: Robot Creation</p>
+                    <p className="text-primary font-semibold">Tutorial: Robot Creation</p>
                     <p className="text-sm text-secondary">
                       Choose a name for your robot and confirm the purchase. Your robot will start with all attributes at Level 1.
                     </p>

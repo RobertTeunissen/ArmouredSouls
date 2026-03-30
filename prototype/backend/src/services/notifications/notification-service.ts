@@ -9,6 +9,9 @@ export function buildSuccessMessage(context: JobContext, appBaseUrl: string): st
     case 'league':
       return `League battles have been completed! 🏆 Click here to see the results! ${link}`;
     case 'tournament':
+      if (context.tournamentScheduled) {
+        return `${context.tournamentName} has been scheduled! ⚔️ Click here to see the results! ${link}`;
+      }
       return `${context.tournamentName} Round ${context.tournamentRound}/${context.tournamentMaxRounds} has been completed! ⚔️ Click here to see the results! ${link}`;
     case 'tag-team':
       if (context.isEvenCycle) return null;

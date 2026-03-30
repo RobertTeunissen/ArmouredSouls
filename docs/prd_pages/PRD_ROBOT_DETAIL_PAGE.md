@@ -1271,19 +1271,19 @@ RobotDetailPage
 
 ---
 
-## Onboarding: GuidedUIOverlay Integration (Step 8 - Battle Readiness)
+## Onboarding: GuidedUIOverlay Integration (Battle-Ready Setup)
 
 **Status**: ✅ **IMPLEMENTED**
 
 **Reference**: See [PRD_ONBOARDING_SYSTEM.md](PRD_ONBOARDING_SYSTEM.md) for complete onboarding system specification.
 
-During onboarding Step 8 (Battle Readiness), the Robot Detail Page integrates with the `GuidedUIOverlay` component to guide new players through weapon equipping and battle readiness concepts.
+During onboarding Step 3 (Battle-Ready Setup), the Robot Detail Page integrates with the `GuidedUIOverlay` component to guide new players through weapon equipping and battle readiness concepts.
 
 ### When the Overlay Appears
 
 The overlay only appears when all of the following conditions are met:
 - User's `hasCompletedOnboarding = false`
-- User's `onboardingStep = 8` (Battle Readiness step)
+- User is on the Battle-Ready Setup step of onboarding
 - The onboarding system navigates the player to their robot's detail page
 
 The overlay is never shown for users who have completed or skipped onboarding.
@@ -1353,7 +1353,7 @@ The overlay is never shown for users who have completed or skipped onboarding.
 |---------|------|--------|---------|
 | 1.0 | 2026-01-30 | Robert Teunissen | Initial draft |
 | 1.1 | 2026-02-10 | Robert Teunissen | Implementation complete |
-| 1.2 | 2026-03-05 | GitHub Copilot | Added onboarding GuidedUIOverlay integration (Step 8) |
+| 1.2 | 2026-03-05 | GitHub Copilot | Added onboarding GuidedUIOverlay integration (Battle-Ready Setup) |
 
 ---
 

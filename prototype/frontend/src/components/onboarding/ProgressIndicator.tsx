@@ -3,7 +3,7 @@
  * Displays current step and progress through the onboarding tutorial.
  * 
  * Features:
- * - Display current step and total steps (e.g., "Step 3 of 9")
+ * - Display current step and total steps (e.g., "Step 2 of 5")
  * - Show visual progress bar
  * - Highlight completed steps
  * 
