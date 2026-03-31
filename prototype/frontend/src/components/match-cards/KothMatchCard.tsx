@@ -2,11 +2,16 @@ import { ScheduledMatch, formatDateTime } from '../../utils/matchmakingApi';
 
 interface KothMatchCardProps {
   match: ScheduledMatch;
+  myUserId?: number;
 }
 
-function KothMatchCard({ match }: KothMatchCardProps) {
+function KothMatchCard({ match, myUserId }: KothMatchCardProps) {
   const kothLabel = match.kothRotatingZone ? 'KotH — Rotating Zone' : 'King of the Hill';
-  const participantText = match.kothParticipantCount ? `${match.kothParticipantCount} robots` : '';
+  const participants = match.kothParticipants || [];
+  const participantCount = match.kothParticipantCount ?? participants.length;
+
+  // Find the current user's robot among participants
+  const myRobot = myUserId ? participants.find(p => p.userId === myUserId) : undefined;
 
   return (
     <div
@@ -27,10 +32,24 @@ function KothMatchCard({ match }: KothMatchCardProps) {
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs text-orange-500 mb-0.5">{kothLabel}</div>
-          {participantText && (
-            <div className="text-xs text-[#8b949e]">{participantText}</div>
-          )}
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 rounded text-orange-400 font-semibold">
+              FFA
+            </span>
+            <div className="text-xs text-[#8b949e]">
+              {kothLabel}
+            </div>
+          </div>
+          <div className="font-medium text-xs truncate">
+            {myRobot ? (
+              <>
+                <span className="text-[#58a6ff]">{myRobot.name}</span>
+                <span className="text-[#8b949e] mx-1.5">• {participantCount} robots</span>
+              </>
+            ) : participantCount > 0 ? (
+              <span className="text-[#8b949e]">{participantCount} robots</span>
+            ) : null}
+          </div>
         </div>
         <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
           {formatDateTime(match.scheduledFor)}
@@ -47,15 +66,25 @@ function KothMatchCard({ match }: KothMatchCardProps) {
             <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-primary-dark/20 text-primary">
               PENDING
             </div>
+            <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 rounded text-orange-400 font-semibold">
+              FFA
+            </span>
           </div>
           <div className="text-xs text-[#8b949e]">
             {formatDateTime(match.scheduledFor)}
           </div>
         </div>
-        <div className="text-xs text-orange-500 mb-1.5">{kothLabel}</div>
-        {participantText && (
-          <div className="text-xs text-[#8b949e]">{participantText}</div>
-        )}
+        <div className="text-xs text-[#8b949e] mb-1.5">{kothLabel}</div>
+        <div className="mb-1.5">
+          {myRobot ? (
+            <div className="text-sm font-medium">
+              <span className="text-[#58a6ff]">{myRobot.name}</span>
+              <span className="text-[#8b949e] mx-1.5">• {participantCount} robots</span>
+            </div>
+          ) : participantCount > 0 ? (
+            <div className="text-sm font-medium text-[#8b949e]">{participantCount} robots</div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

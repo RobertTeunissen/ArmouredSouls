@@ -337,12 +337,10 @@ describe('TagTeamLeagueInstanceService', () => {
       expect(instance2Teams).toBe(10);
     });
 
-    it('should rebalance when deviation exceeds threshold', async () => {
+    it('should always rebalance instances evenly', async () => {
       const robots = await createTestRobots(90);
 
-      // Create 43 teams in instance 1, 2 teams in instance 2
-      // System doesn't rebalance based on deviation anymore
-      // It only rebalances when an instance exceeds MAX_TEAMS_PER_INSTANCE (50)
+      // Create 43 teams in instance 1, 2 teams in instance 2 (uneven)
       for (let i = 0; i < 43; i++) {
         await createTrackedTagTeam({
           data: {
@@ -371,18 +369,12 @@ describe('TagTeamLeagueInstanceService', () => {
 
       await rebalanceTagTeamInstances('champion');
 
-      // Verify no rebalancing occurred (neither instance exceeds 50)
+      // 45 teams across ceil(45/50) = 1 instance after round-robin
       const instance1Teams = await prisma.tagTeam.count({
         where: { tagTeamLeagueId: 'champion_1' },
       });
-      const instance2Teams = await prisma.tagTeam.count({
-        where: { tagTeamLeagueId: 'champion_2' },
-      });
 
-      // Teams remain in original instances
-      expect(instance1Teams).toBe(43);
-      expect(instance2Teams).toBe(2);
-      expect(instance1Teams + instance2Teams).toBe(45);
+      expect(instance1Teams).toBe(45);
     });
   });
 

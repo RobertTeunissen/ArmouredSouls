@@ -93,7 +93,7 @@ function FinancialReportPage() {
     <div className="min-h-screen bg-background text-white">
       <Navigation />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold">Income Dashboard</h1>

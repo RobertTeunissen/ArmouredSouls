@@ -458,11 +458,12 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       matchType: 'koth',
       scheduledFor: match.scheduledFor,
       status: match.status,
-      zoneVariant: match.rotatingZone ? 'rotating' : 'fixed',
-      participantCount: match.participants.length,
-      participants: match.participants.map(p => ({
-        robotId: p.robot.id,
-        robotName: p.robot.name,
+      kothRotatingZone: match.rotatingZone,
+      kothParticipantCount: match.participants.length,
+      kothParticipants: match.participants.map(p => ({
+        id: p.robot.id,
+        name: p.robot.name,
+        elo: 0,
         userId: p.robot.userId,
         user: {
           username: p.robot.user.username,

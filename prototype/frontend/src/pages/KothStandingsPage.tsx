@@ -71,7 +71,7 @@ function KothStandingsPage() {
     <div className="min-h-screen bg-background text-white">
       <Navigation />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <h1 className="text-4xl font-bold mb-6">👑 King of the Hill Standings</h1>
 
         {/* Summary Header */}

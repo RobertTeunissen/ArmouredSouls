@@ -69,7 +69,7 @@ This PRD defines the league instance rebalancing system that maintains balanced 
 The League Instance Rebalancing System maintains balanced populations across league instances by redistributing robots when instances become overcrowded (>100 robots). The system uses a simple trigger: rebalancing only occurs when any instance exceeds MAX_ROBOTS_PER_INSTANCE (100 robots).
 
 **Core Mechanics**:
-- **Trigger**: Rebalancing occurs when any instance exceeds 100 robots
+- **Trigger**: Rebalancing occurs when any instance exceeds 100 robots or significant imbalance exists
 - **Method**: Sort robots by LP+ELO, then distribute ROUND-ROBIN to maintain competitive balance in each instance
 - **Target**: Balanced instances (calculated based on total robots / 100)
 - **Frequency**: After each promotion/demotion cycle (if needed)

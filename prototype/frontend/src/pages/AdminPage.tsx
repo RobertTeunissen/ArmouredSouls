@@ -128,7 +128,7 @@ function AdminPage() {
   return (
     <div className="min-h-screen bg-background text-white">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">Admin Portal</h1>
         </div>
