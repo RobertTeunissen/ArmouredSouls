@@ -95,7 +95,7 @@ export interface ScheduledMatch {
   // KotH specific fields
   kothParticipantCount?: number;
   kothRotatingZone?: boolean;
-  kothParticipants?: Array<{ id: number; name: string; elo: number }>;
+  kothParticipants?: Array<{ id: number; name: string; elo: number; userId?: number; user?: { username: string } }>;
 }
 
 export interface BattleHistory {

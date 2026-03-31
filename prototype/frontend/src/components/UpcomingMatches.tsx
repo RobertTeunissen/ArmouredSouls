@@ -160,7 +160,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
   const renderMatchCard = (match: ScheduledMatch) => {
     // KotH matches
     if (match.matchType === 'koth') {
-      return <KothMatchCard key={match.id} match={match} />;
+      return <KothMatchCard key={match.id} match={match} myUserId={user?.id} />;
     }
 
     const matchResult = getMatchResult(match);
