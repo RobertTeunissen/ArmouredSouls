@@ -17,7 +17,6 @@ describe('User Service - createUser', () => {
     createdUserIds.length = 0;
   });
 
-  // Short IDs to fit VarChar(20) for email column
   let counter = 0;
   function uid() {
     return `${++counter}${Math.random().toString(36).substring(2, 6)}`;
@@ -30,6 +29,7 @@ describe('User Service - createUser', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash,
+      stableName: `s${id}`,
     };
 
     const user = await createUser(userData);
@@ -46,9 +46,9 @@ describe('User Service - createUser', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
-
     expect(user.currency).toBe(3000000);
   });
 
@@ -58,9 +58,9 @@ describe('User Service - createUser', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
-
     expect(user.prestige).toBe(0);
   });
 
@@ -70,9 +70,9 @@ describe('User Service - createUser', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
-
     expect(user.role).toBe('user');
   });
 
@@ -82,9 +82,9 @@ describe('User Service - createUser', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
-
     expect(user.id).toBeDefined();
     expect(typeof user.id).toBe('number');
     expect(user.createdAt).toBeInstanceOf(Date);
@@ -97,6 +97,7 @@ describe('User Service - createUser', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     };
 
     const user = await createUser(userData);
@@ -114,14 +115,17 @@ describe('User Service - createUser', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
 
+    const id2 = uid();
     await expect(
       createUser({
         username: `u${id}`,
-        email: `e${uid()}`,
+        email: `e${id2}`,
         passwordHash: await bcrypt.hash('testpass456', 10),
+        stableName: `s${id2}`,
       })
     ).rejects.toThrow();
   });
@@ -133,14 +137,17 @@ describe('User Service - createUser', () => {
       username: `u${id}`,
       email,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
 
+    const id2 = uid();
     await expect(
       createUser({
-        username: `u${uid()}`,
+        username: `u${id2}`,
         email,
         passwordHash: await bcrypt.hash('testpass456', 10),
+        stableName: `s${id2}`,
       })
     ).rejects.toThrow();
   });
@@ -149,7 +156,6 @@ describe('User Service - createUser', () => {
 
 describe('User Service - findUserByUsername', () => {
   const createdUserIds: number[] = [];
-
   let counter = 100;
   function uid() {
     return `${++counter}${Math.random().toString(36).substring(2, 6)}`;
@@ -160,9 +166,7 @@ describe('User Service - findUserByUsername', () => {
       try {
         await prisma.robot.deleteMany({ where: { userId: id } });
         await prisma.user.delete({ where: { id } });
-      } catch {
-        // Ignore if already deleted
-      }
+      } catch { /* ignore */ }
     }
     createdUserIds.length = 0;
   });
@@ -173,6 +177,7 @@ describe('User Service - findUserByUsername', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
 
@@ -191,7 +196,6 @@ describe('User Service - findUserByUsername', () => {
 
 describe('User Service - findUserByEmail', () => {
   const createdUserIds: number[] = [];
-
   let counter = 200;
   function uid() {
     return `${++counter}${Math.random().toString(36).substring(2, 6)}`;
@@ -202,9 +206,7 @@ describe('User Service - findUserByEmail', () => {
       try {
         await prisma.robot.deleteMany({ where: { userId: id } });
         await prisma.user.delete({ where: { id } });
-      } catch {
-        // Ignore if already deleted
-      }
+      } catch { /* ignore */ }
     }
     createdUserIds.length = 0;
   });
@@ -215,6 +217,7 @@ describe('User Service - findUserByEmail', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
 
@@ -233,7 +236,6 @@ describe('User Service - findUserByEmail', () => {
 
 describe('User Service - findUserByIdentifier', () => {
   const createdUserIds: number[] = [];
-
   let counter = 300;
   function uid() {
     return `${++counter}${Math.random().toString(36).substring(2, 6)}`;
@@ -244,9 +246,7 @@ describe('User Service - findUserByIdentifier', () => {
       try {
         await prisma.robot.deleteMany({ where: { userId: id } });
         await prisma.user.delete({ where: { id } });
-      } catch {
-        // Ignore if already deleted
-      }
+      } catch { /* ignore */ }
     }
     createdUserIds.length = 0;
   });
@@ -257,6 +257,7 @@ describe('User Service - findUserByIdentifier', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
 
@@ -272,6 +273,7 @@ describe('User Service - findUserByIdentifier', () => {
       username: `u${id}`,
       email: `e${id}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `s${id}`,
     });
     createdUserIds.push(user.id);
 
@@ -287,23 +289,25 @@ describe('User Service - findUserByIdentifier', () => {
   });
 
   it('should prefer username match over email match', async () => {
-    // Create two users where user1's username equals user2's email
     const shared = uid();
+    const id2 = uid();
     const user1 = await createUser({
       username: `s${shared}`,
-      email: `x${uid()}`,
+      email: `x${id2}`,
       passwordHash: await bcrypt.hash('testpass123', 10),
+      stableName: `st1_${shared}`,
     });
     createdUserIds.push(user1.id);
 
+    const id3 = uid();
     const user2 = await createUser({
-      username: `y${uid()}`,
+      username: `y${id3}`,
       email: `s${shared}`,
       passwordHash: await bcrypt.hash('testpass456', 10),
+      stableName: `st2_${id3}`,
     });
     createdUserIds.push(user2.id);
 
-    // findUserByIdentifier should find user1 (by username) not user2 (by email)
     const found = await findUserByIdentifier(`s${shared}`);
     expect(found).not.toBeNull();
     expect(found!.id).toBe(user1.id);

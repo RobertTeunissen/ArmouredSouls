@@ -41,7 +41,7 @@ describe('CombatMessageGenerator — Spatial Messages', () => {
     const spatialTypes = [
       { type: 'movement' as const, attacker: 'IronBot', defender: 'SteelCrusher', distance: 5 },
       { type: 'range_transition' as const, attacker: 'IronBot', defender: 'SteelCrusher', rangeBand: 'short' as const },
-      { type: 'out_of_range' as const, attacker: 'IronBot', defender: 'SteelCrusher', weapon: 'Power Fist', distance: 12 },
+      // out_of_range events are now filtered out of narrative output (noise reduction)
       { type: 'counter_out_of_range' as const, attacker: 'IronBot', defender: 'SteelCrusher', weapon: 'Power Fist' },
       { type: 'backstab' as const, attacker: 'IronBot', defender: 'SteelCrusher' },
       { type: 'flanking' as const, attacker: 'IronBot', defender: 'SteelCrusher' },

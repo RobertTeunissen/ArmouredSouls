@@ -73,6 +73,7 @@ describe('Duplicate Email Rejection - Property Tests', () => {
                 username: uniqueUsername1,
                 email: uniqueEmail,
                 password: password1,
+                stableName: `s1_${suffix}`.slice(0, 30),
               });
 
             expect(firstResponse.status).toBe(201);
@@ -89,6 +90,7 @@ describe('Duplicate Email Rejection - Property Tests', () => {
                 username: uniqueUsername2,
                 email: uniqueEmail,
                 password: password2,
+                stableName: `s2_${suffix}`.slice(0, 30),
               });
 
             // Should be rejected with 400

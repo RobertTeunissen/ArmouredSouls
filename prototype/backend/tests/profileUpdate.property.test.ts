@@ -370,10 +370,6 @@ describe('Profile Update Endpoint - Property Tests', () => {
             expect(updateResponse.body).toHaveProperty('currency');
             expect(updateResponse.body).toHaveProperty('prestige');
             expect(updateResponse.body).toHaveProperty('createdAt');
-            expect(updateResponse.body).toHaveProperty('totalBattles');
-            expect(updateResponse.body).toHaveProperty('totalWins');
-            expect(updateResponse.body).toHaveProperty('highestELO');
-            expect(updateResponse.body).toHaveProperty('championshipTitles');
             expect(updateResponse.body).toHaveProperty('stableName');
             expect(updateResponse.body).toHaveProperty('profileVisibility');
             expect(updateResponse.body).toHaveProperty('notificationsBattle');

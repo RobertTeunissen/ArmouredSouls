@@ -61,15 +61,15 @@ const STRAIN_DECAY_THRESHOLD = 0.50;
 const STRAIN_DECAY_RATE = 5.0;
 
 /** Melee closing bonus base multiplier */
-const CLOSING_BONUS_BASE = 1.15;
+const CLOSING_BONUS_BASE = 1.30;
 
 /** Melee closing bonus per-speed-diff multiplier */
-const CLOSING_BONUS_PER_DIFF = 0.01;
+const CLOSING_BONUS_PER_DIFF = 0.02;
 
-/** Ranged kiting bonus base multiplier (weaker than closing: 10% vs 15%) */
+/** Ranged kiting bonus base multiplier (weaker than closing: 10% vs 30%) */
 const KITING_BONUS_BASE = 1.10;
 
-/** Ranged kiting bonus per-speed-diff multiplier (weaker than closing: 0.8% vs 1%) */
+/** Ranged kiting bonus per-speed-diff multiplier (weaker than closing: 0.8% vs 2%) */
 const KITING_BONUS_PER_DIFF = 0.008;
 
 /** Melee range band max distance */
@@ -111,10 +111,18 @@ export function calculateEffectiveSpeed(
 
   // Melee closing bonus (Req 2.5) — exempt from strain (Req 2.7)
   if (state.hasMeleeWeapon && state.distanceToTarget > MELEE_RANGE_MAX && hasRangedOpponent) {
-    const speedGap = Math.max(0, opponentSpeed - baseSpeed);
+    // Use opponent's effective speed (which may include kiting bonus) so the
+    // closing bonus actually compensates for the speed advantage kiting gives.
+    // During closing, the stance speed penalty is relaxed — defensive robots
+    // still need to reach melee range to fight at all. The stance benefits
+    // (shield regen, counter chance, damage reduction) apply once in combat.
+    const closingStanceModifier = stanceModifier < 1.0
+      ? Math.max(stanceModifier, 0.95) // Defensive: cap penalty at 5% while closing (was 20%)
+      : stanceModifier;
+    const speedGap = Math.max(0, opponentSpeed - baseSpeed * closingStanceModifier);
     const closingBonus = CLOSING_BONUS_BASE + speedGap * CLOSING_BONUS_PER_DIFF;
     return {
-      effectiveSpeed: baseSpeed * stanceModifier * closingBonus,
+      effectiveSpeed: baseSpeed * closingStanceModifier * closingBonus,
       isClosingBonus: true,
     };
   }

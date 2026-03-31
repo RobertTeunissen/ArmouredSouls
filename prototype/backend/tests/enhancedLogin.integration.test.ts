@@ -28,7 +28,7 @@ app.use('/api/auth', authRoutes);
 describe('Enhanced Login Endpoint Integration', () => {
   const suffix = `${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
   const testUsername = `login_${suffix}`.substring(0, 20);
-  const testEmail = `loge_${suffix}`.substring(0, 20);
+  const testEmail = `log_${suffix.substring(0, 6)}@t.co`;
   const testPassword = 'securePass1';
   let testUserId: number;
 
@@ -38,7 +38,7 @@ describe('Enhanced Login Endpoint Integration', () => {
     // Register a user to test login against
     const response = await request(app)
       .post('/api/auth/register')
-      .send({ username: testUsername, email: testEmail, password: testPassword });
+      .send({ username: testUsername, email: testEmail, password: testPassword, stableName: `Stb_${suffix}`.substring(0, 30) });
 
     expect(response.status).toBe(201);
     testUserId = response.body.user.id;

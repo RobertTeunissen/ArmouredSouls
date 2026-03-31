@@ -69,6 +69,7 @@ describe('Dual Login Support - Property Tests', () => {
                 username: uniqueUsername,
                 email: uniqueEmail,
                 password,
+                stableName: `s_${uniqueUsername}`.slice(0, 30),
               });
 
             expect(registerResponse.status).toBe(201);

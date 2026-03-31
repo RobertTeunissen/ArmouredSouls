@@ -378,7 +378,7 @@ describe('Profile Update Endpoint', () => {
         .set('Authorization', 'Bearer invalid-token')
         .send({ stableName: 'TestName' });
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(401);
       expect(response.body.error).toBe('Invalid or expired token');
     });
 

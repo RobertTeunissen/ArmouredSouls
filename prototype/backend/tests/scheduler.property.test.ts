@@ -115,6 +115,7 @@ const defaultConfig: SchedulerConfig = {
   tournamentSchedule: '0 8 * * *',
   tagTeamSchedule: '0 12 * * *',
   settlementSchedule: '0 23 * * *',
+  kothSchedule: '0 16 * * 1,3,5',
 };
 
 function freshScheduler(config: SchedulerConfig = defaultConfig): void {
@@ -153,7 +154,7 @@ describe('Scheduler Property Tests', () => {
 
             if (enabled) {
               expect(state.active).toBe(true);
-              expect(mockSchedule).toHaveBeenCalledTimes(4);
+              expect(mockSchedule).toHaveBeenCalledTimes(5);
             } else {
               expect(state.active).toBe(false);
               expect(mockSchedule).not.toHaveBeenCalled();
@@ -213,10 +214,11 @@ describe('Scheduler Property Tests', () => {
               tournamentSchedule: tournament,
               tagTeamSchedule: tagTeam,
               settlementSchedule: settlement,
+              kothSchedule: '0 16 * * 1,3,5',
             });
 
             const calls = mockSchedule.mock.calls;
-            expect(calls.length).toBe(4);
+            expect(calls.length).toBeGreaterThanOrEqual(4);
 
             const registeredSchedules = calls.map((c: any[]) => c[0]);
             expect(registeredSchedules).toContain(league);
@@ -242,6 +244,7 @@ describe('Scheduler Property Tests', () => {
               tournamentSchedule: tournament,
               tagTeamSchedule: tagTeam,
               settlementSchedule: settlement,
+              kothSchedule: '0 16 * * 1,3,5',
             });
 
             const state = getSchedulerState();

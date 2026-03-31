@@ -387,11 +387,15 @@ export function calculateMovementIntent(
   // Stance bias (Req 10.6, 10.7)
   const stance = state.robot.stance ?? 'balanced';
   if (stance === 'defensive') {
-    // Bias toward maintaining current distance
+    // Bias toward maintaining current distance — but NOT when a melee robot
+    // is outside its weapon range. A defensive melee robot still needs to
+    // close to melee range (≤2 units) to attack at all.
     const currentDist = euclideanDistance(state.position, target.position);
     const targetDist = euclideanDistance(targetPos, target.position);
-    if (targetDist < currentDist) {
-      // Reduce closing tendency
+    const hasMeleeWeapon = state.robot.mainWeapon?.weapon?.weaponType === 'melee';
+    const outsideMeleeRange = currentDist > 2;
+    if (targetDist < currentDist && !(hasMeleeWeapon && outsideMeleeRange)) {
+      // Reduce closing tendency (only when already in weapon range or ranged)
       targetPos = lerp(targetPos, state.position, 0.3);
     }
   } else if (stance === 'offensive') {
