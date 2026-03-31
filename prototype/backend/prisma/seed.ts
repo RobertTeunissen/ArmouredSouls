@@ -928,10 +928,11 @@ async function seedCycleMetadata() {
   console.log('Initializing cycle metadata...');
   await prisma.cycleMetadata.upsert({
     where: { id: 1 },
-    update: { totalCycles: 0 }, // Reset cycle count on reseed
+    update: {}, // Preserve existing cycle count on reseed
     create: { id: 1, totalCycles: 0 },
   });
-  console.log('✅ Cycle metadata initialized (reset to cycle 0)\n');
+  const meta = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+  console.log(`✅ Cycle metadata initialized (current cycle: ${meta?.totalCycles ?? 0})\n`);
 }
 
 /** Seeds the bye-robot user and robot — required in ALL environments */
