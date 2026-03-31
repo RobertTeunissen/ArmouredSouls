@@ -25,6 +25,8 @@ app.use('/api/auth', authRoutes);
 describe('Registration Endpoint Integration', () => {
   const testUserIds: number[] = [];
   const suffix = `${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  // Helper to generate valid emails with @ symbol
+  const email = (prefix: string) => `${prefix}@t.co`;
 
   beforeAll(async () => {
     await prisma.$connect();
@@ -46,11 +48,12 @@ describe('Registration Endpoint Integration', () => {
   describe('Complete registration flow with valid data', () => {
     it('should return 201 with token and user profile for valid registration', async () => {
       const username = `intg_${suffix}`.substring(0, 20);
-      const email = `eig_${suffix}`.substring(0, 20);
+      const testEmail = email(`eig_${suffix}`.substring(0, 10));
+      const stableName = `Stable_${suffix}`.substring(0, 30);
 
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username, email, password: 'securePass1' });
+        .send({ username, email: testEmail, password: 'securePass1', stableName });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('token');
@@ -61,7 +64,7 @@ describe('Registration Endpoint Integration', () => {
       expect(user).toBeDefined();
       expect(user.id).toBeDefined();
       expect(user.username).toBe(username);
-      expect(user.email).toBe(email);
+      expect(user.email).toBe(testEmail);
       expect(typeof user.currency).toBe('number');
       expect(typeof user.prestige).toBe('number');
       expect(typeof user.role).toBe('string');
@@ -71,11 +74,12 @@ describe('Registration Endpoint Integration', () => {
 
     it('should set correct default values for new accounts', async () => {
       const username = `def_${suffix}`.substring(0, 20);
-      const email = `def_e_${suffix}`.substring(0, 20);
+      const testEmail = email(`def_${suffix}`.substring(0, 10));
+      const stableName = `DefStb_${suffix}`.substring(0, 30);
 
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username, email, password: 'securePass1' });
+        .send({ username, email: testEmail, password: 'securePass1', stableName });
 
       expect(response.status).toBe(201);
       const user = response.body.user;
@@ -88,11 +92,12 @@ describe('Registration Endpoint Integration', () => {
 
     it('should persist the user in the database', async () => {
       const username = `per_${suffix}`.substring(0, 20);
-      const email = `per_e_${suffix}`.substring(0, 20);
+      const testEmail = email(`per_${suffix}`.substring(0, 10));
+      const stableName = `PerStb_${suffix}`.substring(0, 30);
 
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username, email, password: 'securePass1' });
+        .send({ username, email: testEmail, password: 'securePass1', stableName });
 
       expect(response.status).toBe(201);
       testUserIds.push(response.body.user.id);
@@ -100,7 +105,7 @@ describe('Registration Endpoint Integration', () => {
       const dbUser = await prisma.user.findUnique({ where: { username } });
       expect(dbUser).not.toBeNull();
       expect(dbUser!.username).toBe(username);
-      expect(dbUser!.email).toBe(email);
+      expect(dbUser!.email).toBe(testEmail);
     });
   });
 
@@ -118,7 +123,7 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 when username is missing', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ email: 'valid_email', password: 'securePass1' });
+        .send({ email: 'valid_email', password: 'securePass1', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.code).toBe('VALIDATION_ERROR');
@@ -127,7 +132,7 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 when password is missing', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'validuser', email: 'valid_email' });
+        .send({ username: 'validuser', email: 'valid_email', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.code).toBe('VALIDATION_ERROR');
@@ -138,7 +143,7 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 for username shorter than 3 characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'ab', email: 'valid_email', password: 'securePass1' });
+        .send({ username: 'ab', email: 'valid_email', password: 'securePass1', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Username must be at least 3 characters');
@@ -148,7 +153,7 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 for username longer than 20 characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'a'.repeat(21), email: 'valid_email', password: 'securePass1' });
+        .send({ username: 'a'.repeat(21), email: 'valid_email', password: 'securePass1', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Username must not exceed 20 characters');
@@ -158,7 +163,7 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 for username with invalid characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'user name!', email: 'valid_email', password: 'securePass1' });
+        .send({ username: 'user name!', email: 'valid_email', password: 'securePass1', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Username can only contain');
@@ -170,30 +175,30 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 for email shorter than 3 characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'validuser', email: 'ab', password: 'securePass1' });
+        .send({ username: 'validuser', email: 'ab', password: 'securePass1', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Email must be at least 3 characters');
       expect(response.body.code).toBe('VALIDATION_ERROR');
     });
 
-    it('should return 400 for email longer than 20 characters', async () => {
+    it('should return 400 for email longer than 50 characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'validuser', email: 'a'.repeat(21), password: 'securePass1' });
+        .send({ username: 'validuser', email: 'a'.repeat(51), password: 'securePass1', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('Email must not exceed 20 characters');
+      expect(response.body.error).toContain('Email must not exceed 50 characters');
       expect(response.body.code).toBe('VALIDATION_ERROR');
     });
 
     it('should return 400 for email with invalid characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'validuser', email: 'bad email!', password: 'securePass1' });
+        .send({ username: 'validuser', email: 'bad email!', password: 'securePass1', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('Email can only contain');
+      expect(response.body.error).toContain('Email');
       expect(response.body.code).toBe('VALIDATION_ERROR');
     });
   });
@@ -202,7 +207,7 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 for password shorter than 8 characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'validuser', email: 'valid_email', password: 'short' });
+        .send({ username: 'validuser', email: 'valid_email', password: 'short', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Password must be at least 8 characters');
@@ -212,7 +217,7 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 for password longer than 128 characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'validuser', email: 'valid_email', password: 'a'.repeat(129) });
+        .send({ username: 'validuser', email: 'valid_email', password: 'a'.repeat(129), stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Password must not exceed 128 characters');
@@ -223,19 +228,21 @@ describe('Registration Endpoint Integration', () => {
   describe('Duplicate username and email', () => {
     it('should return 400 with "Username is already taken" for duplicate username', async () => {
       const username = `dup_u_${suffix}`.substring(0, 20);
-      const email1 = `du1_${suffix}`.substring(0, 20);
-      const email2 = `du2_${suffix}`.substring(0, 20);
+      const email1 = email(`du1_${suffix}`.substring(0, 10));
+      const email2 = email(`du2_${suffix}`.substring(0, 10));
+      const stableName1 = `DupS1_${suffix}`.substring(0, 30);
+      const stableName2 = `DupS2_${suffix}`.substring(0, 30);
 
       const first = await request(app)
         .post('/api/auth/register')
-        .send({ username, email: email1, password: 'securePass1' });
+        .send({ username, email: email1, password: 'securePass1', stableName: stableName1 });
 
       expect(first.status).toBe(201);
       testUserIds.push(first.body.user.id);
 
       const second = await request(app)
         .post('/api/auth/register')
-        .send({ username, email: email2, password: 'securePass1' });
+        .send({ username, email: email2, password: 'securePass1', stableName: stableName2 });
 
       expect(second.status).toBe(400);
       expect(second.body.error).toBe('Username is already taken');
@@ -245,18 +252,20 @@ describe('Registration Endpoint Integration', () => {
     it('should return 400 with "Email is already registered" for duplicate email', async () => {
       const username1 = `de1_${suffix}`.substring(0, 20);
       const username2 = `de2_${suffix}`.substring(0, 20);
-      const email = `dup_e_${suffix}`.substring(0, 20);
+      const testEmail = email(`dup_${suffix}`.substring(0, 10));
+      const stableName1 = `DeS1_${suffix}`.substring(0, 30);
+      const stableName2 = `DeS2_${suffix}`.substring(0, 30);
 
       const first = await request(app)
         .post('/api/auth/register')
-        .send({ username: username1, email, password: 'securePass1' });
+        .send({ username: username1, email: testEmail, password: 'securePass1', stableName: stableName1 });
 
       expect(first.status).toBe(201);
       testUserIds.push(first.body.user.id);
 
       const second = await request(app)
         .post('/api/auth/register')
-        .send({ username: username2, email, password: 'securePass1' });
+        .send({ username: username2, email: testEmail, password: 'securePass1', stableName: stableName2 });
 
       expect(second.status).toBe(400);
       expect(second.body.error).toBe('Email is already registered');
@@ -269,7 +278,7 @@ describe('Registration Endpoint Integration', () => {
       // Validation error
       const valRes = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'ab', email: 'valid_email', password: 'securePass1' });
+        .send({ username: 'ab', email: 'valid_email', password: 'securePass1', stableName: 'MyStable' });
 
       expect(valRes.status).toBe(400);
       expect(typeof valRes.body.error).toBe('string');
@@ -280,11 +289,12 @@ describe('Registration Endpoint Integration', () => {
 
     it('should include token and user fields on success response', async () => {
       const username = `fmt_${suffix}`.substring(0, 20);
-      const email = `fmt_e_${suffix}`.substring(0, 20);
+      const testEmail = email(`fmt_${suffix}`.substring(0, 10));
+      const stableName = `FmtStb_${suffix}`.substring(0, 30);
 
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username, email, password: 'securePass1' });
+        .send({ username, email: testEmail, password: 'securePass1', stableName });
 
       expect(response.status).toBe(201);
       expect(typeof response.body.token).toBe('string');
@@ -304,7 +314,7 @@ describe('Registration Endpoint Integration', () => {
     it('should not expose internal details in error messages', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'ab', email: 'valid_email', password: 'securePass1' });
+        .send({ username: 'ab', email: 'valid_email', password: 'securePass1', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).not.toMatch(/at .+\.\w+:\d+/);

@@ -46,7 +46,7 @@ describe('Registration Error Handling', () => {
     it('should return specific error for short username', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'ab', email: 'valid_email', password: 'password123' });
+        .send({ username: 'ab', email: 'v@t.co', password: 'password123', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Username must be at least 3 characters');
@@ -56,7 +56,7 @@ describe('Registration Error Handling', () => {
     it('should return specific error for invalid username characters', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'user name!', email: 'valid_email', password: 'password123' });
+        .send({ username: 'user name!', email: 'v@t.co', password: 'password123', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Username can only contain');
@@ -66,7 +66,7 @@ describe('Registration Error Handling', () => {
     it('should return specific error for short password', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'validuser', email: 'valid_email', password: 'short' });
+        .send({ username: 'validuser', email: 'v@t.co', password: 'short', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Password must be at least 8 characters');
@@ -78,10 +78,8 @@ describe('Registration Error Handling', () => {
     it('should return 400 with DUPLICATE_USERNAME code for existing username', async () => {
       const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       const username = `dup_${uniqueSuffix}`.substring(0, 20);
-      const email1 = `em1_${uniqueSuffix}`.substring(0, 20);
-      const email2 = `em2_${uniqueSuffix}`.substring(0, 20);
-
-      // Register first user
+      const email1 = `e1_${uniqueSuffix.substring(0, 6)}@t.co`;
+      const email2 = `e2_${uniqueSuffix.substring(0, 6)}@t.co`;
       const stableName1 = `s1_${uniqueSuffix}`.substring(0, 30);
       const stableName2 = `s2_${uniqueSuffix}`.substring(0, 30);
 
@@ -106,9 +104,7 @@ describe('Registration Error Handling', () => {
       const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       const username1 = `us1_${uniqueSuffix}`.substring(0, 20);
       const username2 = `us2_${uniqueSuffix}`.substring(0, 20);
-      const email = `eml_${uniqueSuffix}`.substring(0, 20);
-
-      // Register first user
+      const email = `em_${uniqueSuffix.substring(0, 6)}@t.co`;
       const stableName1 = `s1_${uniqueSuffix}`.substring(0, 30);
 
       const first = await request(app)
@@ -145,7 +141,7 @@ describe('Registration Error Handling', () => {
     it('should not expose internal details in error messages for validation errors', async () => {
       const response = await request(app)
         .post('/api/auth/register')
-        .send({ username: 'ab', email: 'valid_email', password: 'password123' });
+        .send({ username: 'ab', email: 'v@t.co', password: 'password123', stableName: 'MyStable' });
 
       expect(response.status).toBe(400);
       // Should not contain stack traces or internal info

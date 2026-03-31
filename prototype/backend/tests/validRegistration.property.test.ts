@@ -68,6 +68,7 @@ describe('Valid Registration Creates Account - Property Tests', () => {
                 username: uniqueUsername,
                 email: uniqueEmail,
                 password,
+                stableName: `stb_${suffix}`.slice(0, 30),
               });
 
             // Registration should succeed with 201

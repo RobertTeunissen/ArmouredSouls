@@ -108,6 +108,7 @@ describe('Invalid Login Credentials - Property Tests', () => {
                 username: uniqueUsername,
                 email: uniqueEmail,
                 password: correctPassword,
+                stableName: `s_${uniqueUsername}`.slice(0, 30),
               });
 
             expect(registerResponse.status).toBe(201);

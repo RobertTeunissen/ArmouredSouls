@@ -46,6 +46,15 @@ function validPasswordArbitrary(): fc.Arbitrary<string> {
     .map((chars) => chars.join(''));
 }
 
+function validStableNameArbitrary(): fc.Arbitrary<string> {
+  return fc
+    .array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789 '.split('')), {
+      minLength: 3,
+      maxLength: 20,
+    })
+    .map((chars) => chars.join('').trim() || 'DefaultStable');
+}
+
 describe('Validation Error Specificity - Property Tests', () => {
   describe('Property 22: Validation Error Specificity', () => {
     /**
@@ -60,17 +69,17 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('too-short username returns error mentioning "Username" and "at least 3 characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate usernames of length 1-2 using valid chars (non-empty to avoid "required" check)
           fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('')), {
             minLength: 1,
             maxLength: 2,
           }).map((chars) => chars.join('')),
           validEmailArbitrary(),
           validPasswordArbitrary(),
-          async (shortUsername, email, password) => {
+          validStableNameArbitrary(),
+          async (shortUsername, email, password, stableName) => {
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username: shortUsername, email, password });
+              .send({ username: shortUsername, email, password, stableName });
 
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
@@ -85,17 +94,17 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('too-long username returns error mentioning "Username" and "20 characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate usernames of length 21-40 using valid chars only
           fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('')), {
             minLength: 21,
             maxLength: 40,
           }).map((chars) => chars.join('')),
           validEmailArbitrary(),
           validPasswordArbitrary(),
-          async (longUsername, email, password) => {
+          validStableNameArbitrary(),
+          async (longUsername, email, password, stableName) => {
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username: longUsername, email, password });
+              .send({ username: longUsername, email, password, stableName });
 
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
@@ -110,7 +119,6 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('invalid username characters returns error mentioning "Username" and "can only contain"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate strings of valid length (3-20) that contain at least one invalid char
           fc.tuple(
             fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('')), {
               minLength: 2,
@@ -118,7 +126,6 @@ describe('Validation Error Specificity - Property Tests', () => {
             }),
             fc.constantFrom(...'!@#$%^&*()+=[]{}|;:,.<>?/~ '.split('')),
           ).map(([validChars, invalidChar]) => {
-            // Insert invalid char in the middle
             const pos = Math.floor(validChars.length / 2);
             const arr = [...validChars];
             arr.splice(pos, 0, invalidChar);
@@ -126,10 +133,11 @@ describe('Validation Error Specificity - Property Tests', () => {
           }),
           validEmailArbitrary(),
           validPasswordArbitrary(),
-          async (invalidUsername, email, password) => {
+          validStableNameArbitrary(),
+          async (invalidUsername, email, password, stableName) => {
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username: invalidUsername, email, password });
+              .send({ username: invalidUsername, email, password, stableName });
 
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
@@ -146,17 +154,17 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('too-short email returns error mentioning "Email" and "at least 3 characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate emails of length 1-2 using valid chars (non-empty to avoid "required" check)
           fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('')), {
             minLength: 1,
             maxLength: 2,
           }).map((chars) => chars.join('')),
           validUsernameArbitrary(),
           validPasswordArbitrary(),
-          async (shortEmail, username, password) => {
+          validStableNameArbitrary(),
+          async (shortEmail, username, password, stableName) => {
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email: shortEmail, password });
+              .send({ username, email: shortEmail, password, stableName });
 
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
@@ -171,17 +179,17 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('too-long email returns error mentioning "Email" and "50 characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate emails of length 51-70 using valid chars only
           fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('')), {
             minLength: 51,
             maxLength: 70,
           }).map((chars) => chars.join('')),
           validUsernameArbitrary(),
           validPasswordArbitrary(),
-          async (longEmail, username, password) => {
+          validStableNameArbitrary(),
+          async (longEmail, username, password, stableName) => {
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email: longEmail, password });
+              .send({ username, email: longEmail, password, stableName });
 
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
@@ -196,8 +204,6 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('invalid email characters returns error mentioning "Email" and "invalid characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate strings of valid length (3-50) that contain at least one invalid char
-          // Note: @ and . are now valid email characters, so exclude them from invalid set
           fc.tuple(
             fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('')), {
               minLength: 2,
@@ -212,10 +218,11 @@ describe('Validation Error Specificity - Property Tests', () => {
           }),
           validUsernameArbitrary(),
           validPasswordArbitrary(),
-          async (invalidEmail, username, password) => {
+          validStableNameArbitrary(),
+          async (invalidEmail, username, password, stableName) => {
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email: invalidEmail, password });
+              .send({ username, email: invalidEmail, password, stableName });
 
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
@@ -232,17 +239,17 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('too-short password returns error mentioning "Password" and "at least 8 characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate passwords of length 1-7
           fc.array(
             fc.constantFrom(...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')),
             { minLength: 1, maxLength: 7 },
           ).map((chars) => chars.join('')),
           validUsernameArbitrary(),
           validEmailArbitrary(),
-          async (shortPassword, username, email) => {
+          validStableNameArbitrary(),
+          async (shortPassword, username, email, stableName) => {
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password: shortPassword });
+              .send({ username, email, password: shortPassword, stableName });
 
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
@@ -257,17 +264,17 @@ describe('Validation Error Specificity - Property Tests', () => {
     test('too-long password returns error mentioning "Password" and "128 characters"', async () => {
       await fc.assert(
         fc.asyncProperty(
-          // Generate passwords of length 129-160
           fc.array(
             fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split('')),
             { minLength: 129, maxLength: 160 },
           ).map((chars) => chars.join('')),
           validUsernameArbitrary(),
           validEmailArbitrary(),
-          async (longPassword, username, email) => {
+          validStableNameArbitrary(),
+          async (longPassword, username, email, stableName) => {
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password: longPassword });
+              .send({ username, email, password: longPassword, stableName });
 
             expect(res.status).toBe(400);
             expect(res.body).toHaveProperty('error');
@@ -282,7 +289,6 @@ describe('Validation Error Specificity - Property Tests', () => {
     // ---- Missing fields ----
 
     test('missing fields returns error mentioning "required"', async () => {
-      // Generate request bodies with at least one missing field
       const missingFieldArbitrary = fc.oneof(
         // Missing username
         fc.record({

@@ -1181,18 +1181,12 @@ export class CombatMessageGenerator {
         });
 
       } else if (event.type === 'out_of_range') {
-        narrativeEvents.push({
-          timestamp: ts,
-          type: 'out_of_range',
-          message: this.generateOutOfRange(
-            event.attacker || '',
-            event.weapon || 'Fists',
-            event.defender || '',
-            event.distance || 0,
-          ),
-        });
+        // Filtered out — these are noise in the narrative log.
+        // The spatial playback viewer shows range visually instead.
+        continue;
 
       } else if (event.type === 'counter_out_of_range') {
+        // Keep counter out-of-range as they're less frequent and tactically relevant
         narrativeEvents.push({
           timestamp: ts,
           type: 'counter_out_of_range',
@@ -1353,6 +1347,8 @@ export class CombatMessageGenerator {
       team1Name: string;
       team2Name: string;
       battleType: 'tag_team';
+      robot3Name?: string; // team1 reserve
+      robot4Name?: string; // team2 reserve
       // Phase robot mappings - which robots fought in which phase
       phases: Array<{
         robot1Name: string;
@@ -1390,6 +1386,8 @@ export class CombatMessageGenerator {
             battleType: 'tag_team',
             team1Name: context.team1Name,
             team2Name: context.team2Name,
+            robot3Name: context.robot3Name,
+            robot4Name: context.robot4Name,
           });
           narrativeEvents.push(...converted);
           phaseEvents = [];
@@ -1421,6 +1419,8 @@ export class CombatMessageGenerator {
         battleType: 'tag_team',
         team1Name: context.team1Name,
         team2Name: context.team2Name,
+        robot3Name: context.robot3Name,
+        robot4Name: context.robot4Name,
       });
       narrativeEvents.push(...converted);
     }

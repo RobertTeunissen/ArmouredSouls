@@ -74,6 +74,8 @@ interface TagTeamBattleResult {
   }>; // Phase robot mappings for narrative conversion
   team1Name: string;
   team2Name: string;
+  team1ReserveName: string;
+  team2ReserveName: string;
 }
 
 interface TagOutEvent {
@@ -347,6 +349,7 @@ async function simulateTagTeamBattle(
   let team1ReserveSurvivalTime = 0;
   let team2ActiveSurvivalTime = 0;
   let team2ReserveSurvivalTime = 0;
+  let lastPhaseWasDraw = false; // Track if the final phase ended in a time-expired draw
 
   // Phase 1: Active robots fight
   const phase1Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
@@ -373,6 +376,7 @@ async function simulateTagTeamBattle(
   const arenaRadius = phase1Result.arenaRadius;
   const startingPositions = phase1Result.startingPositions;
   let endingPositions = phase1Result.endingPositions;
+  lastPhaseWasDraw = phase1Result.isDraw;
 
   // Check for tag-outs (Requirement 3.3: HP ≤ yield threshold OR HP ≤ 0)
   // Also check phase1 winnerId as a fallback: if the simulator ended the battle
@@ -518,6 +522,7 @@ async function simulateTagTeamBattle(
       team2ReserveDamageDealt += phase2Result.robot2DamageDealt;
       team1ReserveSurvivalTime += phase2Duration;
       team2ReserveSurvivalTime += phase2Duration;
+      lastPhaseWasDraw = phase2Result.isDraw;
       
       // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
       if (phase2Result.events && Array.isArray(phase2Result.events)) {
@@ -597,6 +602,7 @@ async function simulateTagTeamBattle(
       team2ActiveDamageDealt += phase2Result.robot2DamageDealt;
       team1ReserveSurvivalTime += phase2Duration;
       team2ActiveSurvivalTime += phase2Duration;
+      lastPhaseWasDraw = phase2Result.isDraw;
       
       // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
       if (phase2Result.events && Array.isArray(phase2Result.events)) {
@@ -676,6 +682,7 @@ async function simulateTagTeamBattle(
           team2ReserveDamageDealt += phase3Result.robot2DamageDealt;
           team1ReserveSurvivalTime += phase3Duration;
           team2ReserveSurvivalTime += phase3Duration;
+          lastPhaseWasDraw = phase3Result.isDraw;
           
           // Collect combat events from phase 3 with timestamp offset (Requirement 7.1)
           if (phase3Result.events && Array.isArray(phase3Result.events)) {
@@ -757,6 +764,7 @@ async function simulateTagTeamBattle(
       team2ReserveDamageDealt += phase2Result.robot2DamageDealt;
       team1ActiveSurvivalTime += phase2Duration;
       team2ReserveSurvivalTime += phase2Duration;
+      lastPhaseWasDraw = phase2Result.isDraw;
       
       // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
       if (phase2Result.events && Array.isArray(phase2Result.events)) {
@@ -836,6 +844,7 @@ async function simulateTagTeamBattle(
           team2ReserveDamageDealt += phase3Result.robot2DamageDealt;
           team1ReserveSurvivalTime += phase3Duration;
           team2ReserveSurvivalTime += phase3Duration;
+          lastPhaseWasDraw = phase3Result.isDraw;
           
           // Collect combat events from phase 3 with timestamp offset (Requirement 7.1)
           if (phase3Result.events && Array.isArray(phase3Result.events)) {
@@ -868,7 +877,11 @@ async function simulateTagTeamBattle(
   const team2CurrentFighterId = team2ReserveUsed ? team2.reserveRobotId : team2.activeRobotId;
 
   // Requirement 3.8: Battle timeout draw
-  if (currentTime >= maxTime) {
+  // This triggers when the overall tag team time limit is reached, OR when
+  // the inner phase(s) all ended in draws (time expired without a decisive result).
+  // The inner simulateBattle has its own 120s max duration — if it times out
+  // with both robots alive, that's a draw even though currentTime < maxTime.
+  if (currentTime >= maxTime || lastPhaseWasDraw) {
     isDraw = true;
   }
   // Requirement 3.7: Simultaneous destruction/yield draw (both at 0 HP)
@@ -998,6 +1011,8 @@ async function simulateTagTeamBattle(
     })(),
     team1Name: `Team ${team1.id}`,
     team2Name: `Team ${team2.id}`,
+    team1ReserveName: team1.reserveRobot.name,
+    team2ReserveName: team2.reserveRobot.name,
   };
 }
 /**
@@ -1061,6 +1076,8 @@ async function createTagTeamBattleRecord(
           team2Name: result.team2Name,
           battleType: 'tag_team',
           phases: result.phases,
+          robot3Name: result.team1ReserveName,
+          robot4Name: result.team2ReserveName,
         }),
         detailedCombatEvents: result.battleLog, // Keep raw events for admin debugging
         tagTeamBattle: true,

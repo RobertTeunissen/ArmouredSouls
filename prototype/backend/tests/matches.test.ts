@@ -71,12 +71,12 @@ describe('Matches Routes', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return 403 with invalid token', async () => {
+    it('should return 401 with invalid token', async () => {
       const response = await request(app)
         .get('/api/matches/upcoming')
         .set('Authorization', 'Bearer invalid_token');
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(401);
     });
   });
 
@@ -136,12 +136,12 @@ describe('Matches Routes', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return 403 with invalid token', async () => {
+    it('should return 401 with invalid token', async () => {
       const response = await request(app)
         .get('/api/matches/battles/test-battle-id/log')
         .set('Authorization', 'Bearer invalid_token');
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(401);
     });
 
     it('should handle non-existent battle ID with auth', async () => {

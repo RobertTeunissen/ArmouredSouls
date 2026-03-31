@@ -42,6 +42,7 @@ describe('Registration - Onboarding Initialization', () => {
         username: `u${id}`,
         email: `e${id}@test.com`,
         password: 'testpass123',
+        stableName: `stb${id}`,
       });
 
     expect(response.status).toBe(201);
@@ -73,6 +74,7 @@ describe('Registration - Onboarding Initialization', () => {
         username: `u${id}`,
         email: `e${id}@test.com`,
         password: 'testpass123',
+        stableName: `stb${id}`,
       });
 
     const after = new Date();
@@ -95,6 +97,7 @@ describe('Registration - Onboarding Initialization', () => {
         username: `u${id}`,
         email: `e${id}@test.com`,
         password: 'testpass123',
+        stableName: `stb${id}`,
       });
 
     expect(response.status).toBe(201);
@@ -116,6 +119,7 @@ describe('Registration - Onboarding Initialization', () => {
       username: `u${id}`,
       email: `e${id}@test.com`,
       password: 'testpass123',
+      stableName: `stb${id}`,
     };
 
     const first = await request(app).post('/api/auth/register').send(registerData);
@@ -124,7 +128,7 @@ describe('Registration - Onboarding Initialization', () => {
 
     const second = await request(app)
       .post('/api/auth/register')
-      .send({ ...registerData, email: `e2${id}@test.com` });
+      .send({ ...registerData, email: `e2${id}@test.com`, stableName: `stb2${id}` });
     expect(second.status).toBe(400);
     expect(second.body.code).toBe('DUPLICATE_USERNAME');
   });
@@ -136,6 +140,7 @@ describe('Registration - Onboarding Initialization', () => {
         username: 'ab', // too short
         email: 'e_test',
         password: 'testpass123',
+        stableName: 'MyStable',
       });
 
     expect(response.status).toBe(400);

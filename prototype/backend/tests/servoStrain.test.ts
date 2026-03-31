@@ -107,9 +107,10 @@ describe('calculateEffectiveSpeed', () => {
       expect(isClosingBonus).toBe(true);
 
       const baseSpeed = calculateBaseSpeed(10); // 9.0
-      const speedGap = Math.max(0, opponentSpeed - baseSpeed); // 6.0
-      const bonus = 1.15 + speedGap * 0.01; // 1.21
-      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.0 * bonus, 10);
+      const stanceModifier = 1.0; // balanced
+      const speedGap = Math.max(0, opponentSpeed - baseSpeed * stanceModifier); // 6.0
+      const bonus = 1.30 + speedGap * 0.02; // 1.42
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * stanceModifier * bonus, 10);
     });
 
     it('should NOT apply closing bonus when distance <= 2', () => {
@@ -139,7 +140,7 @@ describe('calculateEffectiveSpeed', () => {
       expect(isClosingBonus).toBe(false);
     });
 
-    it('should use base +15% when opponent speed equals base speed (no gap)', () => {
+    it('should use base +25% when opponent speed equals base speed (no gap)', () => {
       const state = makeState({
         hasMeleeWeapon: true,
         distanceToTarget: 10,
@@ -147,8 +148,8 @@ describe('calculateEffectiveSpeed', () => {
       });
       const baseSpeed = calculateBaseSpeed(25); // 12.0
       const { effectiveSpeed } = calculateEffectiveSpeed(state, baseSpeed, true);
-      // speedGap = 0, closingBonus = 1.15
-      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.15, 10);
+      // speedGap = max(0, 12 - 12*1.0) = 0, closingBonus = 1.30
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.30, 10);
     });
 
     it('should NOT apply strain reduction when closing bonus is active', () => {
@@ -162,10 +163,11 @@ describe('calculateEffectiveSpeed', () => {
       const { effectiveSpeed } = calculateEffectiveSpeed(state, opponentSpeed, true);
 
       const baseSpeed = calculateBaseSpeed(10);
-      const speedGap = Math.max(0, opponentSpeed - baseSpeed);
-      const bonus = 1.15 + speedGap * 0.01;
+      const stanceModifier = 1.0; // balanced
+      const speedGap = Math.max(0, opponentSpeed - baseSpeed * stanceModifier);
+      const bonus = 1.30 + speedGap * 0.02;
       // Strain should NOT be applied — closing bonus is exempt
-      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.0 * bonus, 10);
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * stanceModifier * bonus, 10);
     });
 
     it('should produce speed >= base speed (closing bonus never reduces)', () => {
@@ -178,6 +180,26 @@ describe('calculateEffectiveSpeed', () => {
       // Opponent slower than us — speedGap = 0, bonus = 1.15
       const { effectiveSpeed } = calculateEffectiveSpeed(state, 5, true);
       expect(effectiveSpeed).toBeGreaterThanOrEqual(baseSpeed);
+    });
+
+    it('should relax defensive stance penalty to 5% while closing', () => {
+      const state = makeState({
+        hasMeleeWeapon: true,
+        distanceToTarget: 10,
+        servoMotors: 10,
+        stance: 'defensive',
+      });
+      const baseSpeed = calculateBaseSpeed(10); // 9.0
+      const closingStanceModifier = 0.95; // Relaxed from 0.80 during closing
+      const opponentSpeed = 10;
+      const speedGap = Math.max(0, opponentSpeed - baseSpeed * closingStanceModifier); // 1.45
+      const bonus = 1.30 + speedGap * 0.02;
+      const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, opponentSpeed, true);
+      expect(isClosingBonus).toBe(true);
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * closingStanceModifier * bonus, 10);
+      // Should be much faster than full defensive penalty would give
+      const fullPenaltySpeed = baseSpeed * 0.80 * bonus;
+      expect(effectiveSpeed).toBeGreaterThan(fullPenaltySpeed);
     });
   });
 
@@ -276,8 +298,8 @@ describe('calculateEffectiveSpeed', () => {
       const { effectiveSpeed: meleeSpeed } = calculateEffectiveSpeed(meleeState, baseSpeed, true);
       const { effectiveSpeed: rangedSpeed } = calculateEffectiveSpeed(rangedState, baseSpeed, false, true);
       
-      // Melee closing: 1.15, Ranged kiting: 1.10
-      expect(meleeSpeed).toBeCloseTo(baseSpeed * 1.15, 10);
+      // Melee closing: 1.30, Ranged kiting: 1.10
+      expect(meleeSpeed).toBeCloseTo(baseSpeed * 1.30, 10);
       expect(rangedSpeed).toBeCloseTo(baseSpeed * 1.10, 10);
       expect(meleeSpeed).toBeGreaterThan(rangedSpeed);
     });
@@ -296,8 +318,8 @@ describe('calculateEffectiveSpeed', () => {
       // Melee closing is checked first, so it should win
       const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, baseSpeed, true, true);
       expect(isClosingBonus).toBe(true);
-      // Should use melee closing bonus (1.15), not kiting (1.10)
-      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.15, 10);
+      // Should use melee closing bonus (1.30), not kiting (1.10)
+      expect(effectiveSpeed).toBeCloseTo(baseSpeed * 1.30, 10);
     });
   });
 

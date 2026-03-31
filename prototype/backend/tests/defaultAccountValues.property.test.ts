@@ -52,6 +52,7 @@ describe('Default Account Values - Property Tests', () => {
               username: uniqueUsername,
               email: uniqueEmail,
               passwordHash,
+              stableName: `stb_${suffix}`.slice(0, 30),
             };
 
             const user = await createUser(userData);
@@ -89,6 +90,7 @@ describe('Default Account Values - Property Tests', () => {
               username: uniqueUsername,
               email: uniqueEmail,
               passwordHash,
+              stableName: `stb_${suffix}`.slice(0, 30),
             });
             createdUserIds.push(user.id);
 
