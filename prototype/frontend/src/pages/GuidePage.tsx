@@ -231,7 +231,7 @@ function GuidePage(): React.ReactElement {
         />
 
         {/* Main content */}
-        <main className="flex-1 w-full px-4 sm:px-6 md:px-8 py-6 max-w-4xl min-w-0">
+        <main className="flex-1 w-full px-4 sm:px-6 md:px-8 py-6 pb-24 lg:pb-6 max-w-4xl min-w-0">
           {/* Offline indicator */}
           {isOffline && (
             <div className="mb-4 px-3 py-2 rounded-lg bg-warning/10 border border-warning/30 text-warning text-sm flex items-center gap-2">
