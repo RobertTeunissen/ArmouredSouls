@@ -375,12 +375,6 @@ export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
   logger.info('\n[Rebalancing] Checking instances for rebalancing...');
   for (const tier of LEAGUE_TIERS) {
     try {
-      const instances = await getInstancesForTier(tier);
-      if (instances.length < 2) {
-        logger.info(`[Rebalancing] ${tier}: Single instance, skipping`);
-        continue;
-      }
-
       await rebalanceInstances(tier);
     } catch (error) {
       logger.error(`[Rebalancing] Error checking ${tier} instances:`, error);

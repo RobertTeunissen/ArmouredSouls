@@ -79,12 +79,10 @@ export async function getLeagueInstanceStats(tier: LeagueTier): Promise<LeagueIn
   const averagePerInstance = instances.length > 0 ? totalRobots / instances.length : 0;
 
   // Check if rebalancing is needed:
-  // 1. Any instance significantly exceeds the maximum robot limit (overflow with buffer)
+  // 1. Any instance exceeds the maximum robot limit
   // 2. Significant imbalance between instances (deviation > threshold from target)
-  // A small overflow (up to 10% over cap) is tolerated to avoid unnecessary instance splits
-  const OVERFLOW_BUFFER = Math.ceil(MAX_ROBOTS_PER_INSTANCE * 0.1); // 10% buffer = 10 robots
   const hasOverflow = instances.some((inst) => 
-    inst.currentRobots > MAX_ROBOTS_PER_INSTANCE + OVERFLOW_BUFFER
+    inst.currentRobots > MAX_ROBOTS_PER_INSTANCE
   );
   const targetPerInstance = instances.length > 0 ? Math.ceil(totalRobots / instances.length) : 0;
   const hasImbalance = instances.length >= 2 && instances.some((inst) =>
@@ -122,22 +120,11 @@ export async function assignLeagueInstance(tier: LeagueTier): Promise<string> {
 }
 
 /**
- * Rebalance robots across instances in a tier
- * Redistributes robots when deviation exceeds threshold
+ * Rebalance robots across instances in a tier.
+ * Always redistributes robots evenly using round-robin.
+ * Called after promotions/demotions during league rebalancing.
  */
 export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
-  const stats = await getLeagueInstanceStats(tier);
-
-  if (!stats.needsRebalancing) {
-    logger.info(`[LeagueInstance] ${tier} instances balanced, no action needed`);
-    return;
-  }
-
-  logger.info(`[LeagueInstance] Rebalancing ${tier} instances...`);
-  logger.info(`  Total robots: ${stats.totalRobots}`);
-  logger.info(`  Instances: ${stats.instances.length}`);
-  logger.info(`  Average per instance: ${stats.averagePerInstance.toFixed(1)}`);
-
   // Get all robots in this tier (excluding bye-robot)
   const allRobots = await prisma.robot.findMany({
     where: {
@@ -152,10 +139,15 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
     ],
   });
 
-  // Calculate how many instances we need
-  const targetInstanceCount = Math.ceil(stats.totalRobots / MAX_ROBOTS_PER_INSTANCE);
+  if (allRobots.length === 0) {
+    logger.info(`[LeagueInstance] ${tier}: No robots, skipping`);
+    return;
+  }
 
-  logger.info(`  Target instances: ${targetInstanceCount}`);
+  // Calculate how many instances we need
+  const targetInstanceCount = Math.ceil(allRobots.length / MAX_ROBOTS_PER_INSTANCE);
+
+  logger.info(`[LeagueInstance] Rebalancing ${tier}: ${allRobots.length} robots across ${targetInstanceCount} instances`);
 
   // Redistribute robots ROUND-ROBIN to maintain competitive balance
   // This ensures each instance has a mix of high, medium, and low LP robots
@@ -164,7 +156,6 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
   
   for (let i = 0; i < allRobots.length; i++) {
     const robot = allRobots[i];
-    // Round-robin: robot 0→instance 1, robot 1→instance 2, ..., robot N→instance 1, ...
     const targetInstanceNumber = (i % targetInstanceCount) + 1;
     const targetLeagueId = `${tier}_${targetInstanceNumber}`;
 
@@ -178,8 +169,12 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
     }
   }
 
-  await Promise.all(updates);
-  logger.info(`[LeagueInstance] Rebalanced ${updates.length} robots across ${targetInstanceCount} instances`);
+  if (updates.length > 0) {
+    await Promise.all(updates);
+    logger.info(`[LeagueInstance] ${tier}: Moved ${updates.length} robots`);
+  } else {
+    logger.info(`[LeagueInstance] ${tier}: Already balanced`);
+  }
 }
 
 /**

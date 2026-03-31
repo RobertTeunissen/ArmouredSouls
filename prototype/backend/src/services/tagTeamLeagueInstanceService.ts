@@ -248,23 +248,11 @@ export async function createTagTeamWithInstanceAssignment(
 }
 
 /**
- * Rebalance tag teams across instances in a tier
- * Requirement 6.8: Balance teams across instances when deviation >20
- * Redistributes teams when deviation exceeds threshold
+ * Rebalance tag teams across instances in a tier.
+ * Always redistributes teams evenly using round-robin.
+ * Called after promotions/demotions during tag team league rebalancing.
  */
 export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promise<void> {
-  const stats = await getTagTeamLeagueInstanceStats(tier);
-
-  if (!stats.needsRebalancing) {
-    logger.info(`[TagTeamLeagueInstance] ${tier} instances balanced, no action needed`);
-    return;
-  }
-
-  logger.info(`[TagTeamLeagueInstance] Rebalancing ${tier} instances...`);
-  logger.info(`  Total teams: ${stats.totalTeams}`);
-  logger.info(`  Instances: ${stats.instances.length}`);
-  logger.info(`  Average per instance: ${stats.averagePerInstance.toFixed(1)}`);
-
   // Get all teams in this tier
   const allTeams = await prisma.tagTeam.findMany({
     where: {
@@ -272,25 +260,26 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
     },
     orderBy: [
       { tagTeamLeaguePoints: 'desc' },
-      { id: 'asc' }, // Use ID as tiebreaker for consistency
+      { id: 'asc' },
     ],
   });
 
-  // Calculate how many instances we need
-  // Use at least the current number of instances to avoid consolidation during rebalancing
-  const minInstanceCount = Math.ceil(stats.totalTeams / MAX_TEAMS_PER_INSTANCE);
-  const targetInstanceCount = Math.max(minInstanceCount, stats.instances.length);
+  if (allTeams.length === 0) {
+    logger.info(`[TagTeamLeagueInstance] ${tier}: No teams, skipping`);
+    return;
+  }
 
-  logger.info(`  Target instances: ${targetInstanceCount}`);
+  // Calculate how many instances we need
+  const targetInstanceCount = Math.ceil(allTeams.length / MAX_TEAMS_PER_INSTANCE);
+
+  logger.info(`[TagTeamLeagueInstance] Rebalancing ${tier}: ${allTeams.length} teams across ${targetInstanceCount} instances`);
 
   // Redistribute teams ROUND-ROBIN to maintain competitive balance
-  // This ensures each instance has a mix of high, medium, and low LP teams
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updates: Promise<any>[] = [];
   
   for (let i = 0; i < allTeams.length; i++) {
     const team = allTeams[i];
-    // Round-robin distribution: team 0→instance 1, team 1→instance 2, ..., team N→instance 1, ...
     const targetInstanceNumber = (i % targetInstanceCount) + 1;
     const targetLeagueId = `${tier}_${targetInstanceNumber}`;
 
@@ -304,8 +293,12 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
     }
   }
 
-  await Promise.all(updates);
-  logger.info(`[TagTeamLeagueInstance] Rebalanced ${updates.length} teams across ${targetInstanceCount} instances`);
+  if (updates.length > 0) {
+    await Promise.all(updates);
+    logger.info(`[TagTeamLeagueInstance] ${tier}: Moved ${updates.length} teams`);
+  } else {
+    logger.info(`[TagTeamLeagueInstance] ${tier}: Already balanced`);
+  }
 }
 
 /**

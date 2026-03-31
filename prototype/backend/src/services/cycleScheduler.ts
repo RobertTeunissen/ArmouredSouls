@@ -433,22 +433,6 @@ async function executeSettlement(): Promise<JobContext> {
     logger.error(`Daily Settlement: Failed to auto-generate users — ${userGenError instanceof Error ? userGenError.message : String(userGenError)}`);
   }
 
-  // Step 7: Rebalance league instances after user generation
-  // New robots from Step 6 may overflow instances or create uneven distributions
-  // (e.g., bronze_1: 98, bronze_2: 98, bronze_3: 21). Without this step,
-  // rebalanceLeagues() in the league cycle only runs hours earlier, before
-  // new users are generated, leaving new instances permanently unbalanced.
-  logger.info('Daily Settlement: Step 7 — Rebalancing league instances post-generation');
-  try {
-    const { LEAGUE_TIERS, rebalanceInstances } = await import('./leagueInstanceService');
-
-    for (const tier of LEAGUE_TIERS) {
-      await rebalanceInstances(tier);
-    }
-  } catch (rebalanceError) {
-    logger.error(`Daily Settlement: Failed to rebalance instances — ${rebalanceError instanceof Error ? rebalanceError.message : String(rebalanceError)}`);
-  }
-
   logger.info(`Daily Settlement: Completed — passive income ₡${totalPassiveIncome.toLocaleString()}, operating costs ₡${totalOperatingCosts.toLocaleString()}, ${endOfCycleUsers.length} users processed`);
 
   return { jobName: 'settlement' };

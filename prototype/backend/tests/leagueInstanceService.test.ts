@@ -327,7 +327,7 @@ describe('League Instance Service', () => {
       await prisma.user.delete({ where: { id: user.id } });
     });
 
-    it('should rebalance when imbalance exceeds threshold', async () => {
+    it('should redistribute imbalanced instances evenly', async () => {
       const user = await prisma.user.create({
         data: {
           username: 'test_rebal_user',
@@ -335,16 +335,16 @@ describe('League Instance Service', () => {
         },
       });
 
-      // Create imbalanced instances (80 vs 20)
+      // Create imbalanced instances: 150 in instance 1, 10 in instance 2
       const robots = [];
-      for (let i = 0; i < 100; i++) {
-        const instanceNum = i < 80 ? 1 : 2;
+      for (let i = 0; i < 160; i++) {
+        const instanceNum = i < 150 ? 1 : 2;
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
           leagueId: `champion_${instanceNum}`,
           currentLeague: 'champion' as const,
-          leaguePoints: 100 - i, // Different points for ordering
+          leaguePoints: 160 - i,
           elo: 1200 + i,
           currentHP: 10,
           maxHP: 10,
@@ -356,19 +356,11 @@ describe('League Instance Service', () => {
 
       await rebalanceInstances('champion');
 
-      // Deviation of 30 exceeds REBALANCE_THRESHOLD (20), so rebalancing triggers
-      // Round-robin redistribution should produce 50/50 split
+      // 160 robots → ceil(160/100) = 2 instances, 80 each
       const instances = await getInstancesForTier('champion');
-      const totalRobots = instances.reduce(
-        (sum, instance) => sum + instance.currentRobots,
-        0,
-      );
-      expect(totalRobots).toBe(100);
       expect(instances).toHaveLength(2);
-
-      // Each instance should have 50 robots after round-robin redistribution
-      expect(instances[0].currentRobots).toBe(50);
-      expect(instances[1].currentRobots).toBe(50);
+      expect(instances[0].currentRobots).toBe(80);
+      expect(instances[1].currentRobots).toBe(80);
 
       // Clean up
       await prisma.robot.deleteMany({ where: { userId: user.id } });
