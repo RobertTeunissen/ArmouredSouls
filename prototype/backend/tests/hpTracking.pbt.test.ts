@@ -333,7 +333,7 @@ describe('Property 1: HP values in robotHP map match robot identity', () => {
       }
       if (wimpbotHP > 95) {
         // WimpBot's HP is > 95, which would indicate a swap
-        fail(`WimpBot HP (${wimpbotHP}) exceeds its max (80) - values may be swapped`);
+        throw new Error(`WimpBot HP (${wimpbotHP}) exceeds its max (80) - values may be swapped`);
       }
     }
   });

@@ -46,7 +46,7 @@ function getEventHP(
   robot2Name: string
 ): { hp: number | undefined; shield: number | undefined } {
   // Prefer robotHP/robotShield maps (correct source of truth, keyed by robot name)
-  if (event.robotHP && robotName in event.robotHP) {
+  if (event.robotHP && Object.prototype.hasOwnProperty.call(event.robotHP, robotName)) {
     return {
       hp: event.robotHP[robotName],
       shield: event.robotShield?.[robotName],
@@ -267,13 +267,14 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
       <div className="mt-4 text-center">
         <div className="text-2xl font-bold">
           {/* For tag team battles, winnerId should be team ID (after Task 3 fix) */}
-          {teams?.team1 && battle.winnerId === teams.team1.id && (
+          {/* Also check robot IDs as fallback for legacy data where winnerId might still be robot ID */}
+          {(teams?.team1 && (battle.winnerId === teams.team1.id || battle.winnerId === teams.team1.activeRobot.id || battle.winnerId === teams.team1.reserveRobot.id)) && (
             <span className="text-primary">🏆 Team 1 Wins!</span>
           )}
-          {teams?.team2 && battle.winnerId === teams.team2.id && (
+          {(teams?.team2 && (battle.winnerId === teams.team2.id || battle.winnerId === teams.team2.activeRobot.id || battle.winnerId === teams.team2.reserveRobot.id)) && (
             <span className="text-purple-400">🏆 Team 2 Wins!</span>
           )}
-          {/* Fallback for legacy data where winnerId might still be robot ID */}
+          {/* Fallback when no teams data available */}
           {!teams?.team1 && battle.winnerId === battle.robot1.id && (
             <span className="text-primary">🏆 Team 1 Wins!</span>
           )}
@@ -292,8 +293,8 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
         <div className="mt-4 bg-surface rounded-lg p-4">
           <h4 className="text-lg font-semibold mb-3 text-warning">💰 Battle Rewards</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            {/* Team 1 Rewards - highlight if team1 won (winnerId === team1.id) */}
-            <div className={`p-3 rounded ${(teams?.team1 && battle.winnerId === teams.team1.id) || (!teams?.team1 && battle.winnerId === battle.robot1.id) ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
+            {/* Team 1 Rewards - highlight if team1 won (winnerId === team1.id or any team1 robot ID for legacy data) */}
+            <div className={`p-3 rounded ${(teams?.team1 && (battle.winnerId === teams.team1.id || battle.winnerId === teams.team1.activeRobot.id || battle.winnerId === teams.team1.reserveRobot.id)) || (!teams?.team1 && battle.winnerId === battle.robot1.id) ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
               <div className="font-semibold text-primary mb-2">Team 1</div>
               <div className="space-y-1">
                 {participants.filter((p: BattleParticipant) => p.team === 1).map((p: BattleParticipant) => (
@@ -304,8 +305,8 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                 ))}
               </div>
             </div>
-            {/* Team 2 Rewards - highlight if team2 won (winnerId === team2.id) */}
-            <div className={`p-3 rounded ${(teams?.team2 && battle.winnerId === teams.team2.id) || (!teams?.team2 && battle.winnerId === battle.robot2.id) ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
+            {/* Team 2 Rewards - highlight if team2 won (winnerId === team2.id or any team2 robot ID for legacy data) */}
+            <div className={`p-3 rounded ${(teams?.team2 && (battle.winnerId === teams.team2.id || battle.winnerId === teams.team2.activeRobot.id || battle.winnerId === teams.team2.reserveRobot.id)) || (!teams?.team2 && battle.winnerId === battle.robot2.id) ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
               <div className="font-semibold text-purple-400 mb-2">Team 2</div>
               <div className="space-y-1">
                 {participants.filter((p: BattleParticipant) => p.team === 2).map((p: BattleParticipant) => (

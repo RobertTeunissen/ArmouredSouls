@@ -198,7 +198,7 @@ export function BattleLogsTab() {
                           <div>
                             <div className="text-primary font-semibold">Team 1</div>
                             <div className="text-xs text-secondary">
-                              {battle.team1ActiveName} + {battle.team1ReserveName}
+                              {battle.team1ActiveName}{battle.team1ReserveName ? ` + ${battle.team1ReserveName}` : ''}
                             </div>
                             <div className="text-xs text-secondary mt-1">
                               ELO: {battle.robot1ELOBefore} → {battle.robot1ELOAfter}
@@ -226,7 +226,7 @@ export function BattleLogsTab() {
                           <div>
                             <div className="text-purple-400 font-semibold">Team 2</div>
                             <div className="text-xs text-secondary">
-                              {battle.team2ActiveName} + {battle.team2ReserveName}
+                              {battle.team2ActiveName}{battle.team2ReserveName ? ` + ${battle.team2ReserveName}` : ''}
                             </div>
                             <div className="text-xs text-secondary mt-1">
                               ELO: {battle.robot2ELOBefore} → {battle.robot2ELOAfter}
