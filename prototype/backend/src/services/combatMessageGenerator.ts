@@ -128,6 +128,43 @@ export class CombatMessageGenerator {
     ],
   };
 
+  // ── HP/Shield Extraction Helper ─────────────────────────────────────────
+  /**
+   * Extract HP and Shield values for a robot from a combat event.
+   * Prefers the robotHP/robotShield maps (correct, keyed by name) over
+   * the legacy robot1HP/robot2HP fields (which swap based on attacker/defender).
+   * 
+   * @param event - The combat event to extract values from
+   * @param robotName - The name of the robot to get values for
+   * @param context - Context with robot1Name and robot2Name for legacy fallback
+   * @returns Object with hp and shield values (may be undefined if not present)
+   */
+  private static getHPFromEvent(
+    event: CombatEvent,
+    robotName: string,
+    context: { robot1Name: string; robot2Name: string }
+  ): { hp: number | undefined; shield: number | undefined } {
+    // Prefer robotHP/robotShield maps (correct source of truth, keyed by robot name)
+    if (event.robotHP && robotName in event.robotHP) {
+      return {
+        hp: event.robotHP[robotName],
+        shield: event.robotShield?.[robotName],
+      };
+    }
+    
+    // Legacy fallback for old battle data stored before this fix
+    // Note: These values may be incorrect for events where robot2 attacked,
+    // as the legacy fields swap based on attacker/defender roles
+    if (robotName === context.robot1Name) {
+      return { hp: event.robot1HP, shield: event.robot1Shield };
+    }
+    if (robotName === context.robot2Name) {
+      return { hp: event.robot2HP, shield: event.robot2Shield };
+    }
+    
+    return { hp: undefined, shield: undefined };
+  }
+
   // ── Damage Descriptors ─────────────────────────────────────────────────
   private static getDamageDescriptor(damage: number, maxHP: number = 100): string {
     const percentage = (damage / maxHP) * 100;

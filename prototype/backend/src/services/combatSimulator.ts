@@ -1,4 +1,5 @@
 import { Robot, Weapon, WeaponInventory } from '../../generated/prisma';
+import { BattleError, BattleErrorCode } from '../errors/battleErrors';
 
 // Spatial subsystem imports
 import { Position, euclideanDistance, angleBetween } from './arena/vector2d';
@@ -58,6 +59,9 @@ export interface CombatEvent {
   robot2HP?: number;
   robot1Shield?: number;
   robot2Shield?: number;
+  // Per-robot HP/shield maps for N-robot modes (KotH/FFA) and consistent name-keyed access
+  robotHP?: Record<string, number>;
+  robotShield?: Record<string, number>;
   message: string;
   formulaBreakdown?: FormulaBreakdown;
   // Optional spatial fields
@@ -1134,7 +1138,14 @@ export function simulateBattleMulti(
   config: BattleConfig = { allowDraws: true },
 ): SpatialCombatResult {
   const n = robots.length;
-  if (n < 2) throw new Error('simulateBattleMulti requires at least 2 robots');
+  if (n < 2) {
+    throw new BattleError(
+      BattleErrorCode.BATTLE_SIMULATION_FAILED,
+      'simulateBattleMulti requires at least 2 robots',
+      400,
+      { robotCount: n }
+    );
+  }
 
   const maxDuration = config.gameModeConfig?.maxDuration ?? config.maxDuration ?? MAX_BATTLE_DURATION;
   const gameModeConfig = config.gameModeConfig;

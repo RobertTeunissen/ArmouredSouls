@@ -3,6 +3,7 @@
 import prisma from '../lib/prisma';
 import { Prisma } from '../../generated/prisma';
 import logger from '../config/logger';
+import { KothError, KothErrorCode } from '../errors/kothErrors';
 
 /** Yield the event loop so Express can serve requests between heavy DB work */
 const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -208,7 +209,12 @@ async function processKothBattle(
   });
 
   if (robots.length < 5) {
-    throw new Error(`KotH match ${match.id}: expected at least 5 robots, found ${robots.length}`);
+    throw new KothError(
+      KothErrorCode.INSUFFICIENT_KOTH_PARTICIPANTS,
+      `KotH match ${match.id}: expected at least 5 robots, found ${robots.length}`,
+      400,
+      { matchId: match.id, expected: 5, found: robots.length }
+    );
   }
 
   // 1b. Ensure in-memory HP/shield is at max for simulation

@@ -1,6 +1,7 @@
 import { TagTeam } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { LeagueError, LeagueErrorCode } from '../errors/leagueErrors';
 
 // NOTE: This service mirrors leagueRebalancingService.ts for 1v1 leagues.
 // Both share identical promotion/demotion logic but operate on different Prisma models
@@ -217,8 +218,11 @@ export async function promoteTeam(team: TagTeam): Promise<void> {
   const nextTier = getNextTierUp(team.tagTeamLeague as TagTeamLeagueTier);
 
   if (!nextTier) {
-    throw new Error(
-      `Cannot promote team ${team.id} from ${team.tagTeamLeague} - already at top tier`
+    throw new LeagueError(
+      LeagueErrorCode.PROMOTION_BLOCKED,
+      `Cannot promote team ${team.id} from ${team.tagTeamLeague} - already at top tier`,
+      400,
+      { teamId: team.id, currentLeague: team.tagTeamLeague }
     );
   }
 
@@ -251,8 +255,11 @@ export async function demoteTeam(team: TagTeam): Promise<void> {
   const previousTier = getNextTierDown(team.tagTeamLeague as TagTeamLeagueTier);
 
   if (!previousTier) {
-    throw new Error(
-      `Cannot demote team ${team.id} from ${team.tagTeamLeague} - already at bottom tier`
+    throw new LeagueError(
+      LeagueErrorCode.RELEGATION_BLOCKED,
+      `Cannot demote team ${team.id} from ${team.tagTeamLeague} - already at bottom tier`,
+      400,
+      { teamId: team.id, currentLeague: team.tagTeamLeague }
     );
   }
 

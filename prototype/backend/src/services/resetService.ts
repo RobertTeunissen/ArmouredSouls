@@ -1,4 +1,6 @@
 import prisma from '../lib/prisma';
+import { OnboardingError, OnboardingErrorCode } from '../errors/onboardingErrors';
+import { AuthError, AuthErrorCode } from '../errors/authErrors';
 
 /**
  * Reset Service
@@ -169,7 +171,12 @@ export async function performAccountReset(userId: number, reason?: string): Prom
   const eligibility = await validateResetEligibility(userId);
   if (!eligibility.eligible) {
     const blockerMessages = eligibility.blockers.map((b) => b.message).join('; ');
-    throw new Error(`Reset not allowed: ${blockerMessages}`);
+    throw new OnboardingError(
+      OnboardingErrorCode.RESET_BLOCKED,
+      `Reset not allowed: ${blockerMessages}`,
+      400,
+      { blockers: eligibility.blockers }
+    );
   }
 
   // Get current state before reset for logging
@@ -179,7 +186,7 @@ export async function performAccountReset(userId: number, reason?: string): Prom
   });
 
   if (!user) {
-    throw new Error('User not found');
+    throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404);
   }
 
   const robotsCount = await prisma.robot.count({ where: { userId } });

@@ -5,6 +5,7 @@ import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
 import { trackSpending } from '../services/spendingTracker';
 import logger from '../config/logger';
+import { AppError, EconomyError, EconomyErrorCode, AuthError, AuthErrorCode } from '../errors';
 
 // Discount helpers (local until shared/utils/discounts is available)
 const calculateWeaponWorkshopDiscount = (level: number): number => {
@@ -56,7 +57,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
     const { weaponId } = req.body;
 
     if (!weaponId || isNaN(parseInt(weaponId))) {
-      return res.status(400).json({ error: 'Valid weapon ID is required' });
+      throw new AppError('INVALID_WEAPON_ID', 'Valid weapon ID is required', 400);
     }
 
     const weaponIdNum = parseInt(weaponId);
@@ -67,7 +68,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
     });
 
     if (!weapon) {
-      return res.status(404).json({ error: 'Weapon not found' });
+      throw new EconomyError(EconomyErrorCode.WEAPON_NOT_FOUND, 'Weapon not found', 404);
     }
 
     // Get user's current currency, Weapon Workshop level, and Storage Facility level
@@ -85,7 +86,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404);
     }
 
     // Get Storage Facility level
@@ -101,8 +102,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 
     if (currentWeaponCount >= maxCapacity) {
       const storageStatus = getStorageStatus(currentWeaponCount, storageFacilityLevel);
-      return res.status(400).json({ 
-        error: 'Storage capacity full',
+      throw new EconomyError(EconomyErrorCode.FACILITY_MAX_LEVEL, 'Storage capacity full', 400, {
         currentWeapons: storageStatus.currentWeapons,
         maxCapacity: storageStatus.maxCapacity,
         message: 'Upgrade Storage Facility to increase capacity',
@@ -117,8 +117,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 
     // Check if user has enough currency
     if (user.currency < finalCost) {
-      return res.status(400).json({ 
-        error: 'Insufficient credits',
+      throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Insufficient credits', 400, {
         required: finalCost,
         available: user.currency,
       });
@@ -189,7 +188,7 @@ router.get('/:id/available', authenticateToken, async (req: AuthRequest, res: Re
     const inventoryId = parseInt(String(req.params.id));
 
     if (isNaN(inventoryId)) {
-      return res.status(400).json({ error: 'Invalid weapon inventory ID' });
+      throw new AppError('INVALID_INVENTORY_ID', 'Invalid weapon inventory ID', 400);
     }
 
     // Verify weapon inventory belongs to user
@@ -204,7 +203,7 @@ router.get('/:id/available', authenticateToken, async (req: AuthRequest, res: Re
     });
 
     if (!weaponInv) {
-      return res.status(404).json({ error: 'Weapon not found in your inventory' });
+      throw new EconomyError(EconomyErrorCode.WEAPON_NOT_FOUND, 'Weapon not found in your inventory', 404);
     }
 
     // Get all user's robots

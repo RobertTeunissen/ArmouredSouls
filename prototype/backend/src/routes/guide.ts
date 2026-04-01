@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import guideService from '../services/guide-service';
 import logger from '../config/logger';
+import { AppError } from '../errors';
 
 const router = express.Router();
 
@@ -30,13 +31,13 @@ router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, async (req:
     const article = guideService.getArticle(sectionSlug, articleSlug);
 
     if (!article) {
-      return res.status(404).json({ error: 'Article not found' });
+      throw new AppError('ARTICLE_NOT_FOUND', 'Article not found', 404);
     }
 
     res.json(article);
   } catch (error) {
     logger.error('[Guide] Failed to fetch article:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    throw error;
   }
 });
 

@@ -25,6 +25,7 @@ import { createGeneralLimiter, createAuthLimiter } from './middleware/rateLimite
 import { requestLogger } from './middleware/requestLogger';
 import logger from './config/logger';
 import prisma from './lib/prisma';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -90,22 +91,8 @@ app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/guide', guideRoutes);
 app.use('/api/koth', kothRoutes);
 
-// Error handling middleware — logs stack traces, redacts them from production responses
-app.use((_err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error('Unhandled error', {
-    message: _err.message,
-    stack: _err.stack,
-    method: req.method,
-    path: req.originalUrl,
-  });
-
-  const isProduction = config.nodeEnv === 'production' || config.nodeEnv === 'acceptance';
-
-  res.status(500).json({
-    error: 'Internal Server Error',
-    ...(isProduction ? {} : { message: _err.message, stack: _err.stack }),
-  });
-});
+// Error handling middleware
+app.use(errorHandler);
 
 const host = (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance')
   ? '127.0.0.1'

@@ -12,13 +12,14 @@
  */
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { Prisma } from '../../generated/prisma';
 import logger from '../config/logger';
 import { validateRegistrationRequest } from '../utils/validation';
 import { hashPassword } from '../services/passwordService';
 import { generateToken } from '../services/jwtService';
 import { createUser, findUserByUsername, findUserByEmail, findUserByIdentifier, findUserByStableName } from '../services/userService';
 import { initializeTutorialState } from '../services/onboardingService';
+import { AuthError, AuthErrorCode } from '../errors/authErrors';
+import { AppError } from '../errors/AppError';
 
 const router = express.Router();
 
@@ -49,138 +50,79 @@ const router = express.Router();
  * @throws {500} When a database error or unexpected error occurs
  */
 router.post('/register', async (req: Request, res: Response) => {
-  try {
-    const { username, email, password, stableName } = req.body;
+  const { username, email, password, stableName } = req.body;
 
-    // Validate registration request — returns specific 400 for validation failures
-    const validation = validateRegistrationRequest({ username, email, password, stableName });
-    if (!validation.isValid) {
-      logger.warn('Registration validation failed', {
-        errors: validation.errors,
-        username: username || '<missing>',
-      });
-      return res.status(400).json({ error: validation.errors.join(', '), code: 'VALIDATION_ERROR' });
-    }
-
-    // Check for duplicate username
-    const existingUsername = await findUserByUsername(username);
-    if (existingUsername) {
-      logger.warn('Registration rejected: duplicate username', { username });
-      return res.status(400).json({ error: 'Username is already taken', code: 'DUPLICATE_USERNAME' });
-    }
-
-    // Check for duplicate email
-    const existingEmail = await findUserByEmail(email);
-    if (existingEmail) {
-      logger.warn('Registration rejected: duplicate email', { email });
-      return res.status(400).json({ error: 'Email is already registered', code: 'DUPLICATE_EMAIL' });
-    }
-
-    // Check for duplicate stable name
-    const existingStableName = await findUserByStableName(stableName);
-    if (existingStableName) {
-      logger.warn('Registration rejected: duplicate stable name', { stableName });
-      return res.status(400).json({ error: 'Stable name is already taken', code: 'DUPLICATE_STABLE_NAME' });
-    }
-
-    // Hash password
-    const passwordHash = await hashPassword(password);
-
-    // Create user
-    const user = await createUser({ username, email, passwordHash, stableName });
-
-    // Initialize onboarding state for the new user.
-    // Non-blocking: registration succeeds even if onboarding init fails.
-    try {
-      await initializeTutorialState(user.id);
-    } catch (onboardingError) {
-      logger.error('Failed to initialize onboarding state', {
-        userId: user.id,
-        error: onboardingError instanceof Error ? onboardingError.message : String(onboardingError),
-      });
-    }
-
-    // Generate JWT token
-    const token = generateToken({
-      id: String(user.id),
-      username: user.username,
-      role: user.role,
+  // Validate registration request — throws AppError for validation failures
+  const validation = validateRegistrationRequest({ username, email, password, stableName });
+  if (!validation.isValid) {
+    logger.warn('Registration validation failed', {
+      errors: validation.errors,
+      username: username || '<missing>',
     });
-
-    logger.info('User registered successfully', { userId: user.id, username: user.username, stableName: user.stableName });
-
-    // Return 201 with token and user profile
-    res.status(201).json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        stableName: user.stableName,
-        currency: user.currency,
-        prestige: user.prestige,
-        role: user.role,
-      },
-    });
-  } catch (error: unknown) {
-    // Race condition guard: even though we check for duplicates above, a concurrent
-    // request could insert the same username/email/stableName between our check and the INSERT.
-    // Prisma surfaces this as a P2002 unique constraint violation, which we handle
-    // identically to the pre-check duplicate rejection.
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      const knownError = error as Prisma.PrismaClientKnownRequestError;
-      if (knownError.code === 'P2002') {
-        const target = (knownError.meta?.target as string[]) || [];
-        // Determine which field caused the conflict from the constraint metadata
-        let field = 'Username';
-        let code = 'DUPLICATE_USERNAME';
-        let message = 'Username is already taken';
-        if (target.includes('email')) {
-          field = 'Email';
-          code = 'DUPLICATE_EMAIL';
-          message = 'Email is already registered';
-        } else if (target.includes('stable_name')) {
-          field = 'Stable name';
-          code = 'DUPLICATE_STABLE_NAME';
-          message = 'Stable name is already taken';
-        }
-        logger.warn('Registration rejected: duplicate key constraint', {
-          code: knownError.code,
-          target,
-          field,
-          message: knownError.message,
-        });
-        return res.status(400).json({
-          error: message,
-          code,
-        });
-      }
-      // Other known Prisma errors fall through to the database error handler below
-    }
-
-    // Database errors: log full details server-side for debugging, but return a
-    // generic message to the client to avoid leaking internal schema or connection info.
-    if (error instanceof Prisma.PrismaClientKnownRequestError ||
-        error instanceof Prisma.PrismaClientUnknownRequestError ||
-        error instanceof Prisma.PrismaClientInitializationError) {
-      const dbError = error as Error;
-      logger.error('Registration database error', {
-        errorType: dbError.constructor.name,
-        message: dbError.message,
-        stack: dbError.stack,
-      });
-      return res.status(500).json({ error: 'Registration is temporarily unavailable. Please try again in a few minutes.', code: 'DATABASE_ERROR' });
-    }
-
-    // Catch-all for truly unexpected errors (e.g. programming bugs, third-party
-    // library failures). Same strategy: log everything, reveal nothing to the client.
-    logger.error('Registration unexpected error', {
-      errorType: error instanceof Error ? error.constructor.name : typeof error,
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    res.status(500).json({ error: 'Something went wrong on our end. Please try again later or contact support if the issue persists.', code: 'INTERNAL_ERROR' });
+    throw new AppError('VALIDATION_ERROR', validation.errors.join(', '), 400, { errors: validation.errors });
   }
+
+  // Check for duplicate username
+  const existingUsername = await findUserByUsername(username);
+  if (existingUsername) {
+    logger.warn('Registration rejected: duplicate username', { username });
+    throw new AuthError(AuthErrorCode.USER_ALREADY_EXISTS, 'Username is already taken', 400);
+  }
+
+  // Check for duplicate email
+  const existingEmail = await findUserByEmail(email);
+  if (existingEmail) {
+    logger.warn('Registration rejected: duplicate email', { email });
+    throw new AuthError(AuthErrorCode.EMAIL_ALREADY_EXISTS, 'Email is already registered', 400);
+  }
+
+  // Check for duplicate stable name
+  const existingStableName = await findUserByStableName(stableName);
+  if (existingStableName) {
+    logger.warn('Registration rejected: duplicate stable name', { stableName });
+    throw new AppError('DUPLICATE_STABLE_NAME', 'Stable name is already taken', 400);
+  }
+
+  // Hash password
+  const passwordHash = await hashPassword(password);
+
+  // Create user - Prisma P2002 errors (race condition duplicates) will propagate
+  // to the errorHandler middleware which maps them to 409 DATABASE_UNIQUE_VIOLATION
+  const user = await createUser({ username, email, passwordHash, stableName });
+
+  // Initialize onboarding state for the new user.
+  // Non-blocking: registration succeeds even if onboarding init fails.
+  try {
+    await initializeTutorialState(user.id);
+  } catch (onboardingError) {
+    logger.error('Failed to initialize onboarding state', {
+      userId: user.id,
+      error: onboardingError instanceof Error ? onboardingError.message : String(onboardingError),
+    });
+  }
+
+  // Generate JWT token
+  const token = generateToken({
+    id: String(user.id),
+    username: user.username,
+    role: user.role,
+  });
+
+  logger.info('User registered successfully', { userId: user.id, username: user.username, stableName: user.stableName });
+
+  // Return 201 with token and user profile
+  res.status(201).json({
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      stableName: user.stableName,
+      currency: user.currency,
+      prestige: user.prestige,
+      role: user.role,
+    },
+  });
 });
 
 /**
@@ -218,55 +160,50 @@ router.post('/register', async (req: Request, res: Response) => {
  * @throws {500} When an unexpected error occurs
  */
 router.post('/login', async (req: Request, res: Response) => {
-  try {
-    const { identifier, username, password } = req.body;
+  const { identifier, username, password } = req.body;
 
-    // Accept 'identifier' (new) or 'username' (legacy) for backward compatibility
-    // with existing clients that haven't migrated to the identifier-based login.
-    const loginIdentifier = identifier || username;
+  // Accept 'identifier' (new) or 'username' (legacy) for backward compatibility
+  // with existing clients that haven't migrated to the identifier-based login.
+  const loginIdentifier = identifier || username;
 
-    if (!loginIdentifier || !password) {
-      return res.status(400).json({ error: 'Identifier and password are required' });
-    }
-
-    // Dual-lookup: tries username first, then email (see findUserByIdentifier)
-    const user = await findUserByIdentifier(loginIdentifier);
-
-    // Security: use the same generic "Invalid credentials" message for both
-    // "user not found" and "wrong password" to prevent user enumeration attacks.
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const validPassword = await bcrypt.compare(password, user.passwordHash);
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // Generate JWT with the same payload shape used by the registration endpoint
-    // to ensure authentication equivalence (Requirement 8.4).
-    const token = generateToken({
-      id: String(user.id),
-      username: user.username,
-      role: user.role,
-    });
-
-    // Return user profile without passwordHash — never expose hashes to clients
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        currency: user.currency,
-        prestige: user.prestige,
-      },
-    });
-  } catch (error) {
-    logger.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+  if (!loginIdentifier || !password) {
+    throw new AppError('VALIDATION_ERROR', 'Identifier and password are required', 400);
   }
+
+  // Dual-lookup: tries username first, then email (see findUserByIdentifier)
+  const user = await findUserByIdentifier(loginIdentifier);
+
+  // Security: use the same generic "Invalid credentials" message for both
+  // "user not found" and "wrong password" to prevent user enumeration attacks.
+  if (!user) {
+    throw new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Invalid credentials', 401);
+  }
+
+  const validPassword = await bcrypt.compare(password, user.passwordHash);
+  if (!validPassword) {
+    throw new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Invalid credentials', 401);
+  }
+
+  // Generate JWT with the same payload shape used by the registration endpoint
+  // to ensure authentication equivalence (Requirement 8.4).
+  const token = generateToken({
+    id: String(user.id),
+    username: user.username,
+    role: user.role,
+  });
+
+  // Return user profile without passwordHash — never expose hashes to clients
+  res.json({
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      currency: user.currency,
+      prestige: user.prestige,
+    },
+  });
 });
 
 /**

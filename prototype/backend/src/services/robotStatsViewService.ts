@@ -17,6 +17,7 @@
 
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { RobotError, RobotErrorCode } from '../errors/robotErrors';
 
 export interface RobotStats {
   robotId: number;
@@ -53,7 +54,11 @@ export class RobotStatsViewService {
       logger.info('[RobotStatsView] Materialized view refreshed successfully');
     } catch (error) {
       logger.error('[RobotStatsView] Error refreshing materialized view:', error);
-      throw error;
+      throw new RobotError(
+        RobotErrorCode.ROBOT_NOT_FOUND,
+        'Failed to refresh robot statistics view',
+        500
+      );
     }
   }
 

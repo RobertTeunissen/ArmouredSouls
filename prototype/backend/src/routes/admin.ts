@@ -25,6 +25,7 @@ import { processTournamentBattle } from '../services/tournamentBattleOrchestrato
 import { advanceWinnersToNextRound } from '../services/tournamentService';
 import { EventLogger } from '../services/eventLogger';
 import { getSchedulerState } from '../services/cycleScheduler';
+import { AppError, BattleError, BattleErrorCode } from '../errors';
 
 const router = express.Router();
 const eventLogger = new EventLogger();
@@ -1961,7 +1962,7 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
     const battleId = parseInt(String(req.params.id));
 
     if (isNaN(battleId)) {
-      return res.status(400).json({ error: 'Invalid battle ID' });
+      throw new AppError('INVALID_BATTLE_ID', 'Invalid battle ID', 400);
     }
 
     const battle = await prisma.battle.findUnique({
@@ -1973,7 +1974,7 @@ router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request,
     });
 
     if (!battle) {
-      return res.status(404).json({ error: 'Battle not found' });
+      throw new BattleError(BattleErrorCode.BATTLE_NOT_FOUND, 'Battle not found', 404);
     }
 
     // Check if this battle has an associated TagTeamMatch record
@@ -2697,9 +2698,7 @@ router.get('/audit-log/repairs', authenticateToken, requireAdmin, async (req: Re
 
     // Validate repairType if provided
     if (repairType && repairType !== 'manual' && repairType !== 'automatic') {
-      return res.status(400).json({
-        error: "Invalid repairType. Must be 'manual' or 'automatic'",
-      });
+      throw new AppError('INVALID_REPAIR_TYPE', "Invalid repairType. Must be 'manual' or 'automatic'", 400);
     }
 
     // Build where clause for audit log query

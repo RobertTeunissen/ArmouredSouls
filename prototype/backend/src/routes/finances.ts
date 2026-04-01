@@ -12,6 +12,8 @@ import {
   getNextPrestigeTier,
   getMerchandisingBaseRate,
 } from '../utils/economyCalculations';
+import { AuthError, AuthErrorCode } from '../errors/authErrors';
+import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 
 const router = express.Router();
 
@@ -20,7 +22,6 @@ const router = express.Router();
  * Get comprehensive daily financial report
  */
 router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
 
     // Get user for prestige
@@ -30,7 +31,7 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
     }
 
     // Calculate recent battle winnings from last 7 days
@@ -146,10 +147,6 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
       ...report,
       multiplierBreakdown,
     });
-  } catch (error) {
-    logger.error('Daily financial report error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 /**
@@ -157,7 +154,6 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
  * Get quick financial summary for dashboard
  */
 router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
 
     const user = await prisma.user.findUnique({
@@ -165,7 +161,7 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
     }
 
     const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
@@ -181,10 +177,6 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
       netPassiveIncome: netIncome,
       prestigeMultiplier: getPrestigeMultiplier(user.prestige),
     });
-  } catch (error) {
-    logger.error('Financial summary error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 /**
@@ -192,16 +184,11 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
  * Get detailed operating costs breakdown
  */
 router.get('/operating-costs', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
 
     const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
 
     res.json(operatingCosts);
-  } catch (error) {
-    logger.error('Operating costs error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 /**
@@ -209,7 +196,6 @@ router.get('/operating-costs', authenticateToken, async (req: AuthRequest, res: 
  * Get detailed revenue streams breakdown
  */
 router.get('/revenue-streams', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
 
     const user = await prisma.user.findUnique({
@@ -217,7 +203,7 @@ router.get('/revenue-streams', authenticateToken, async (req: AuthRequest, res: 
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
     }
 
     const passiveIncome = await calculateDailyPassiveIncome(userId);
@@ -243,10 +229,6 @@ router.get('/revenue-streams', authenticateToken, async (req: AuthRequest, res: 
       robotCount: robots.length,
       prestige: user.prestige,
     });
-  } catch (error) {
-    logger.error('Revenue streams error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 /**
@@ -254,7 +236,6 @@ router.get('/revenue-streams', authenticateToken, async (req: AuthRequest, res: 
  * Get financial projections and recommendations
  */
 router.get('/projections', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
 
     const user = await prisma.user.findUnique({
@@ -262,7 +243,7 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
     }
 
     const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
@@ -328,10 +309,6 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
       },
       recommendations,
     });
-  } catch (error) {
-    logger.error('Financial projections error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 /**
@@ -339,16 +316,11 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
  * Get per-robot financial breakdown with profitability analysis
  */
 router.get('/per-robot', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
 
     const report = await generatePerRobotFinancialReport(userId);
 
     res.json(report);
-  } catch (error) {
-    logger.error('Per-robot financial report error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 /**
@@ -356,25 +328,20 @@ router.get('/per-robot', authenticateToken, async (req: AuthRequest, res: Respon
  * Calculate ROI for facility upgrade
  */
 router.post('/roi-calculator', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
     const { facilityType, targetLevel } = req.body;
 
     if (!facilityType || !targetLevel) {
-      return res.status(400).json({ error: 'Facility type and target level are required' });
+      throw new EconomyError(
+        EconomyErrorCode.INVALID_TRANSACTION,
+        'Facility type and target level are required',
+        400
+      );
     }
 
     const roiData = await calculateFacilityROI(userId, facilityType, targetLevel);
 
     res.json(roiData);
-  } catch (error) {
-    logger.error('ROI calculator error:', error);
-    if (error instanceof Error) {
-      res.status(400).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
 });
 
 export default router;

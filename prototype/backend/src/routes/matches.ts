@@ -4,6 +4,8 @@ import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { getConfig } from '../config/env';
 import { getNextCronOccurrence } from '../utils/scheduleUtils';
+import { AuthError, AuthErrorCode } from '../errors/authErrors';
+import { BattleError, BattleErrorCode } from '../errors/battleErrors';
 
 const router = express.Router();
 
@@ -14,9 +16,8 @@ const router = express.Router();
  * Otherwise returns matches for the current user's robots.
  */
 router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
     const queryRobotId = req.query.robotId ? parseInt(req.query.robotId as string) : undefined;
@@ -488,13 +489,6 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
       tagTeamMatches: formattedTagTeamMatches.length,
       kothMatches: formattedKothMatches.length,
     });
-  } catch (error) {
-    logger.error('[Matches API] Error fetching upcoming matches:', error);
-    res.status(500).json({
-      error: 'Failed to fetch upcoming matches',
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
 });
 
 /**
@@ -502,9 +496,8 @@ router.get('/upcoming', authenticateToken, async (req: AuthRequest, res: Respons
  * Get paginated battle history for the current user's robots
  */
 router.get('/history', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
     // Parse pagination parameters
@@ -767,13 +760,6 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
         totalPages: Math.ceil(total / perPage),
       },
     });
-  } catch (error) {
-    logger.error('[Matches API] Error fetching battle history:', error);
-    res.status(500).json({
-      error: 'Failed to fetch battle history',
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
 });
 
 /**
@@ -781,9 +767,8 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
  * Get detailed battle log with combat messages for a specific battle
  */
 router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
     const battleId = parseInt(String(req.params.id));
@@ -810,7 +795,7 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
     });
 
     if (!battle) {
-      return res.status(404).json({ error: 'Battle not found' });
+      throw new BattleError(BattleErrorCode.BATTLE_NOT_FOUND, 'Battle not found', 404, { battleId });
     }
 
     // Convert BigInt fields to numbers immediately after fetching
@@ -1095,13 +1080,6 @@ router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: 
 
     // Format battle log response
     res.json(baseResponse);
-  } catch (error) {
-    logger.error('[Matches API] Error fetching battle log:', error);
-    res.status(500).json({
-      error: 'Failed to fetch battle log',
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
 });
 
 export default router;

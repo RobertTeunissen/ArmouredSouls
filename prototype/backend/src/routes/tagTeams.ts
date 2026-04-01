@@ -14,6 +14,7 @@ import {
   TagTeamLeagueTier,
 } from '../services/tagTeamLeagueInstanceService';
 import logger from '../config/logger';
+import { AuthError, AuthErrorCode, TagTeamError, TagTeamErrorCode, RobotError, RobotErrorCode, AppError } from '../errors';
 
 const router = express.Router();
 
@@ -25,22 +26,22 @@ const router = express.Router();
 router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
     const { activeRobotId, reserveRobotId } = req.body;
 
     // Validate input
     if (!activeRobotId || !reserveRobotId) {
-      return res.status(400).json({ error: 'Both activeRobotId and reserveRobotId are required' });
+      throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, 'Both activeRobotId and reserveRobotId are required', 400);
     }
 
     if (typeof activeRobotId !== 'number' || typeof reserveRobotId !== 'number') {
-      return res.status(400).json({ error: 'Robot IDs must be numbers' });
+      throw new AppError('INVALID_PARAMETER', 'Robot IDs must be numbers', 400);
     }
 
     if (activeRobotId === reserveRobotId) {
-      return res.status(400).json({ error: 'Active and reserve robots must be different' });
+      throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, 'Active and reserve robots must be different', 400);
     }
 
     // Verify both robots belong to the user
@@ -50,21 +51,18 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     ]);
 
     if (!activeRobot || activeRobot.userId !== req.user.userId) {
-      return res.status(403).json({ error: 'You do not own the active robot' });
+      throw new RobotError(RobotErrorCode.ROBOT_NOT_OWNED, 'You do not own the active robot', 403);
     }
 
     if (!reserveRobot || reserveRobot.userId !== req.user.userId) {
-      return res.status(403).json({ error: 'You do not own the reserve robot' });
+      throw new RobotError(RobotErrorCode.ROBOT_NOT_OWNED, 'You do not own the reserve robot', 403);
     }
 
     // Create the team
     const result = await createTeam(req.user.userId, activeRobotId, reserveRobotId);
 
     if (!result.success) {
-      return res.status(400).json({ 
-        error: 'Failed to create team',
-        details: result.errors,
-      });
+      throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, 'Failed to create team', 400, result.errors);
     }
 
     // Get team with robot details
@@ -79,10 +77,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     logger.error('[TagTeams API] Error creating team:', error);
-    res.status(500).json({
-      error: 'Failed to create team',
-      message: error instanceof Error ? error.message : String(error),
-    });
+    throw error;
   }
 });
 
@@ -94,7 +89,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
     const teams = await getTeamsByStable(req.user.userId);
@@ -116,10 +111,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     logger.error('[TagTeams API] Error fetching teams:', error);
-    res.status(500).json({
-      error: 'Failed to fetch teams',
-      message: error instanceof Error ? error.message : String(error),
-    });
+    throw error;
   }
 });
 
@@ -131,24 +123,24 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
     const teamId = parseInt(String(req.params.id));
 
     if (isNaN(teamId)) {
-      return res.status(400).json({ error: 'Invalid team ID' });
+      throw new AppError('INVALID_TEAM_ID', 'Invalid team ID', 400);
     }
 
     const team = await getTeamById(teamId);
 
     if (!team) {
-      return res.status(404).json({ error: 'Team not found' });
+      throw new TagTeamError(TagTeamErrorCode.TAG_TEAM_NOT_FOUND, 'Team not found', 404);
     }
 
     // Verify ownership
     if (team.stableId !== req.user.userId) {
-      return res.status(403).json({ error: 'You do not own this team' });
+      throw new AuthError(AuthErrorCode.FORBIDDEN, 'You do not own this team', 403);
     }
 
     // Add readiness status
@@ -162,10 +154,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     });
   } catch (error) {
     logger.error('[TagTeams API] Error fetching team:', error);
-    res.status(500).json({
-      error: 'Failed to fetch team',
-      message: error instanceof Error ? error.message : String(error),
-    });
+    throw error;
   }
 });
 
@@ -177,19 +166,19 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
 router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
     const teamId = parseInt(String(req.params.id));
 
     if (isNaN(teamId)) {
-      return res.status(400).json({ error: 'Invalid team ID' });
+      throw new AppError('INVALID_TEAM_ID', 'Invalid team ID', 400);
     }
 
     const success = await disbandTeam(teamId, req.user.userId);
 
     if (!success) {
-      return res.status(404).json({ error: 'Team not found or you do not own this team' });
+      throw new TagTeamError(TagTeamErrorCode.TAG_TEAM_NOT_FOUND, 'Team not found or you do not own this team', 404);
     }
 
     // Console log for cycle logs
@@ -200,10 +189,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
     });
   } catch (error) {
     logger.error('[TagTeams API] Error disbanding team:', error);
-    res.status(500).json({
-      error: 'Failed to disband team',
-      message: error instanceof Error ? error.message : String(error),
-    });
+    throw error;
   }
 });
 
@@ -215,17 +201,14 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
 router.get('/leagues/:tier/standings', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
     const tier = String(req.params.tier) as TagTeamLeagueTier;
 
     // Validate tier
     if (!TAG_TEAM_LEAGUE_TIERS.includes(tier)) {
-      return res.status(400).json({ 
-        error: 'Invalid league tier',
-        validTiers: TAG_TEAM_LEAGUE_TIERS,
-      });
+      throw new TagTeamError(TagTeamErrorCode.TAG_TEAM_LEAGUE_NOT_FOUND, 'Invalid league tier', 400, { validTiers: TAG_TEAM_LEAGUE_TIERS });
     }
 
     // Parse pagination parameters
@@ -280,10 +263,7 @@ router.get('/leagues/:tier/standings', authenticateToken, async (req: AuthReques
     });
   } catch (error) {
     logger.error('[TagTeams API] Error fetching standings:', error);
-    res.status(500).json({
-      error: 'Failed to fetch standings',
-      message: error instanceof Error ? error.message : String(error),
-    });
+    throw error;
   }
 });
 

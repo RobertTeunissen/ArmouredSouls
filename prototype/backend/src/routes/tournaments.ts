@@ -3,6 +3,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { getActiveTournaments, computeSeedings } from '../services/tournamentService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { AppError, TournamentError, TournamentErrorCode } from '../errors';
 
 const router = express.Router();
 
@@ -60,7 +61,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     const tournamentId = parseInt(String(req.params.id));
 
     if (isNaN(tournamentId)) {
-      return res.status(400).json({ error: 'Invalid tournament ID' });
+      throw new AppError('INVALID_TOURNAMENT_ID', 'Invalid tournament ID', 400);
     }
 
     const robotSelect = { id: true, name: true, elo: true, user: { select: { id: true, username: true, stableName: true } } };
@@ -81,7 +82,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     });
 
     if (!tournament) {
-      return res.status(404).json({ error: 'Tournament not found' });
+      throw new TournamentError(TournamentErrorCode.TOURNAMENT_NOT_FOUND, 'Tournament not found', 404);
     }
 
     // Compute seedings with graceful degradation

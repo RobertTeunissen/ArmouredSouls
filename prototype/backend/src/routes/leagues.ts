@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/leagueInstanceService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { LeagueError, LeagueErrorCode } from '../errors';
 
 const router = express.Router();
 
@@ -18,10 +19,7 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
 
     // Validate tier
     if (!LEAGUE_TIERS.includes(tier)) {
-      return res.status(400).json({
-        error: 'Invalid tier',
-        validTiers: LEAGUE_TIERS,
-      });
+      throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });
     }
 
     // Determine which league IDs to query
@@ -114,10 +112,7 @@ router.get('/:tier/instances', async (req: Request, res: Response) => {
 
     // Validate tier
     if (!LEAGUE_TIERS.includes(tier)) {
-      return res.status(400).json({
-        error: 'Invalid tier',
-        validTiers: LEAGUE_TIERS,
-      });
+      throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });
     }
 
     // Get all instances for this tier

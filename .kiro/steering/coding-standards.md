@@ -76,10 +76,14 @@ inclusion: always
 - Include proper indexes for performance
 
 ### Error Handling
-- Use try-catch blocks for async operations
-- Log errors with context
-- Return user-friendly error messages
-- Don't expose internal implementation details in errors
+- Use the `AppError` hierarchy for all business logic errors in services
+- Import domain-specific error classes from `src/errors/` (e.g., `AuthError`, `RobotError`, `BattleError`)
+- Throw errors with appropriate error codes from the domain's enum (e.g., `AuthErrorCode.INVALID_CREDENTIALS`)
+- Let errors propagate to the `errorHandler` middleware — do not catch and re-format in route handlers
+- Express 5 automatically forwards rejected promises to error middleware
+- See `docs/guides/ERROR_CODES.md` for the complete error code reference
+- Standard error response shape: `{ error: string, code: string, details?: unknown }`
+- Log errors with context but don't expose internal implementation details to clients
 
 ## Frontend Standards
 
