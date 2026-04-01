@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma';
 import { getFacilityConfig } from '../config/facilities';
+import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 
 export interface FacilityROI {
   facilityType: string;
@@ -49,7 +50,12 @@ export class ROICalculatorService {
     // Get facility config to calculate total investment
     const config = getFacilityConfig(facilityType);
     if (!config) {
-      throw new Error(`Unknown facility type: ${facilityType}`);
+      throw new EconomyError(
+        EconomyErrorCode.INVALID_FACILITY_TYPE,
+        `Unknown facility type: ${facilityType}`,
+        400,
+        { facilityType }
+      );
     }
 
     // Calculate total investment (sum of all upgrade costs up to current level)

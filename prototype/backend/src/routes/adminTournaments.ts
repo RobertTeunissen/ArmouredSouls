@@ -17,6 +17,7 @@ import {
   getEligibleRobotsForTournament,
 } from '../services/tournamentService';
 import { processTournamentBattle } from '../services/tournamentBattleOrchestrator';
+import { AppError, TournamentError, TournamentErrorCode } from '../errors';
 
 const router = express.Router();
 
@@ -29,10 +30,7 @@ router.post('/create', authenticateToken, requireAdmin, async (req: Request, res
     const { tournamentType = 'single_elimination' } = req.body;
 
     if (tournamentType !== 'single_elimination') {
-      return res.status(400).json({
-        error: 'Invalid tournament type',
-        message: 'Only single_elimination is supported currently',
-      });
+      throw new TournamentError(TournamentErrorCode.INVALID_TOURNAMENT_STATE, 'Only single_elimination is supported currently', 400);
     }
 
     logger.info('[Admin] Creating tournament...');
@@ -47,10 +45,7 @@ router.post('/create', authenticateToken, requireAdmin, async (req: Request, res
     });
   } catch (error) {
     logger.error('[Admin] Tournament creation error:', error);
-    res.status(500).json({
-      error: 'Failed to create tournament',
-      message: error instanceof Error ? error.message : String(error),
-    });
+    throw error;
   }
 });
 
@@ -128,13 +123,13 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Re
     const tournamentId = parseInt(String(req.params.id));
 
     if (isNaN(tournamentId)) {
-      return res.status(400).json({ error: 'Invalid tournament ID' });
+      throw new AppError('INVALID_TOURNAMENT_ID', 'Invalid tournament ID', 400);
     }
 
     const tournament = await getTournamentById(tournamentId);
 
     if (!tournament) {
-      return res.status(404).json({ error: 'Tournament not found' });
+      throw new TournamentError(TournamentErrorCode.TOURNAMENT_NOT_FOUND, 'Tournament not found', 404);
     }
 
     // Get current round matches separately for better structure
@@ -148,10 +143,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Re
     });
   } catch (error) {
     logger.error('[Admin] Tournament fetch error:', error);
-    res.status(500).json({
-      error: 'Failed to fetch tournament',
-      message: error instanceof Error ? error.message : String(error),
-    });
+    throw error;
   }
 });
 
@@ -164,7 +156,7 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
     const tournamentId = parseInt(String(req.params.id));
 
     if (isNaN(tournamentId)) {
-      return res.status(400).json({ error: 'Invalid tournament ID' });
+      throw new AppError('INVALID_TOURNAMENT_ID', 'Invalid tournament ID', 400);
     }
 
     logger.info(`[Admin] Executing tournament ${tournamentId} round...`);
@@ -174,11 +166,11 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: R
     });
 
     if (!tournament) {
-      return res.status(404).json({ error: 'Tournament not found' });
+      throw new TournamentError(TournamentErrorCode.TOURNAMENT_NOT_FOUND, 'Tournament not found', 404);
     }
 
     if (tournament.status === 'completed') {
-      return res.status(400).json({ error: 'Tournament already completed' });
+      throw new TournamentError(TournamentErrorCode.TOURNAMENT_ALREADY_COMPLETED, 'Tournament already completed', 400);
     }
 
     // Get current round matches that need execution

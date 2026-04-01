@@ -7,6 +7,7 @@ import { Robot, Tournament, ScheduledTournamentMatch } from '../../generated/pri
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { checkSchedulingReadiness } from './matchmakingService';
+import { TournamentError, TournamentErrorCode } from '../errors/tournamentErrors';
 
 // Tournament configuration constants
 const MIN_TOURNAMENT_PARTICIPANTS = 4; // Minimum robots needed to start a tournament
@@ -405,8 +406,11 @@ export async function createSingleEliminationTournament(): Promise<TournamentCre
   const eligibleRobots = await getEligibleRobotsForTournament();
 
   if (eligibleRobots.length < MIN_TOURNAMENT_PARTICIPANTS) {
-    throw new Error(
-      `Insufficient participants for tournament. Need at least ${MIN_TOURNAMENT_PARTICIPANTS}, found ${eligibleRobots.length}`
+    throw new TournamentError(
+      TournamentErrorCode.INSUFFICIENT_PARTICIPANTS,
+      `Insufficient participants for tournament. Need at least ${MIN_TOURNAMENT_PARTICIPANTS}, found ${eligibleRobots.length}`,
+      400,
+      { required: MIN_TOURNAMENT_PARTICIPANTS, found: eligibleRobots.length }
     );
   }
 
@@ -539,7 +543,12 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Sche
   });
 
   if (!tournament) {
-    throw new Error(`Tournament ${tournamentId} not found`);
+    throw new TournamentError(
+      TournamentErrorCode.TOURNAMENT_NOT_FOUND,
+      `Tournament ${tournamentId} not found`,
+      404,
+      { tournamentId }
+    );
   }
 
   return prisma.scheduledTournamentMatch.findMany({
@@ -583,7 +592,12 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   });
 
   if (!tournament) {
-    throw new Error(`Tournament ${tournamentId} not found`);
+    throw new TournamentError(
+      TournamentErrorCode.TOURNAMENT_NOT_FOUND,
+      `Tournament ${tournamentId} not found`,
+      404,
+      { tournamentId }
+    );
   }
 
   // Get completed matches from current round
@@ -616,7 +630,12 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
     .map(match => match.winnerId as number);
 
   if (winners.length === 0) {
-    throw new Error(`No winners found in round ${tournament.currentRound}`);
+    throw new TournamentError(
+      TournamentErrorCode.ROUND_NOT_READY,
+      `No winners found in round ${tournament.currentRound}`,
+      400,
+      { tournamentId, round: tournament.currentRound }
+    );
   }
 
   // If only one winner, tournament is complete

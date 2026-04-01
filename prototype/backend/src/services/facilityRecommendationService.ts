@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma';
 import { getFacilityConfig, FACILITY_TYPES } from '../config/facilities';
 import { roiCalculatorService, FacilityROI } from './roiCalculatorService';
+import { AuthError, AuthErrorCode } from '../errors/authErrors';
 
 export interface FacilityRecommendation {
   facilityType: string;
@@ -40,7 +41,7 @@ export class FacilityRecommendationService {
     });
 
     if (!user) {
-      throw new Error(`User ${userId} not found`);
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, `User ${userId} not found`, 404, { userId });
     }
 
     // Get current cycle number

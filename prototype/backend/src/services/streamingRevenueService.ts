@@ -10,6 +10,7 @@
  */
 
 import prisma from '../lib/prisma';
+import { RobotError, RobotErrorCode } from '../errors/robotErrors';
 
 /**
  * Streaming revenue calculation result for a single robot
@@ -77,7 +78,7 @@ export async function calculateStreamingRevenue(
   });
 
   if (!robot) {
-    throw new Error(`Robot ${robotId} not found`);
+    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, `Robot ${robotId} not found`, 404, { robotId });
   }
 
   // Get Streaming Studio level

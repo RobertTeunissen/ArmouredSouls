@@ -28,45 +28,104 @@ fileMatchPattern: "**/backend/src/**,**/middleware/**,**/services/**,**/*error*,
 **Standard API Error Response**:
 ```typescript
 {
-  success: false,
-  error: {
-    message: "User-friendly error message",
-    code: "ERROR_CODE",
-    details?: any, // Optional, only in development
-    timestamp: "2026-03-02T10:30:00Z"
-  }
+  error: string;       // Human-readable message
+  code: string;        // Machine-readable error code
+  details?: unknown;   // Optional structured data
 }
 ```
 
-**Error Codes Convention**:
-- `AUTH_*` - Authentication/authorization errors
-- `VALIDATION_*` - Input validation errors
-- `NOT_FOUND_*` - Resource not found errors
-- `CONFLICT_*` - Business rule conflicts
-- `DATABASE_*` - Database operation errors
-- `EXTERNAL_*` - External service errors
-- `INTERNAL_*` - Unexpected system errors
+**Error Class Hierarchy**:
+All service errors extend the base `AppError` class in `src/errors/AppError.ts`:
+```
+Error
+└── AppError (code, statusCode, details)
+    ├── AuthError
+    ├── RobotError
+    ├── BattleError
+    ├── EconomyError
+    ├── LeagueError
+    ├── TournamentError
+    ├── TagTeamError
+    ├── KothError
+    └── OnboardingError
+```
+
+**Error Codes by Domain**:
+- `INVALID_CREDENTIALS`, `UNAUTHORIZED`, `FORBIDDEN`, etc. - Auth errors
+- `ROBOT_NOT_FOUND`, `ROBOT_NOT_OWNED`, etc. - Robot errors
+- `BATTLE_NOT_FOUND`, `BATTLE_SIMULATION_FAILED`, etc. - Battle errors
+- `INSUFFICIENT_CREDITS`, `FACILITY_MAX_LEVEL`, etc. - Economy errors
+- `LEAGUE_NOT_FOUND`, `PROMOTION_BLOCKED`, etc. - League errors
+- `TOURNAMENT_NOT_FOUND`, `INSUFFICIENT_PARTICIPANTS`, etc. - Tournament errors
+- `TAG_TEAM_NOT_FOUND`, `INVALID_TEAM_COMPOSITION`, etc. - Tag team errors
+- `KOTH_NOT_FOUND`, `INSUFFICIENT_KOTH_PARTICIPANTS`, etc. - KotH errors
+
+See `docs/guides/ERROR_CODES.md` for the complete error code reference.
 
 ### Error Handling Implementation
 
-**Backend Service Layer**:
+**Backend Service Layer** - Throw domain-specific errors:
 ```typescript
-try {
-  const result = await performOperation();
-  return { success: true, data: result };
-} catch (error) {
-  logger.error('Operation failed', {
-    operation: 'performOperation',
-    error: error.message,
-    stack: error.stack,
-    context: { userId, robotId }
-  });
+import { RobotError, RobotErrorCode } from '../errors/robotErrors';
+
+async function getRobot(robotId: number, userId: number) {
+  const robot = await prisma.robot.findUnique({ where: { id: robotId } });
   
-  if (error instanceof ValidationError) {
-    throw new ApiError(400, 'VALIDATION_FAILED', error.message);
+  if (!robot) {
+    throw new RobotError(
+      RobotErrorCode.ROBOT_NOT_FOUND,
+      `Robot ${robotId} not found`,
+      404,
+      { robotId }
+    );
   }
   
-  throw new ApiError(500, 'INTERNAL_ERROR', 'Operation failed');
+  if (robot.userId !== userId) {
+    throw new RobotError(
+      RobotErrorCode.ROBOT_NOT_OWNED,
+      'Robot belongs to another user',
+      403,
+      { robotId, ownerId: robot.userId }
+    );
+  }
+  
+  return robot;
+}
+```
+
+**Route Handlers** - Let errors propagate to middleware (Express 5):
+```typescript
+// Express 5 automatically catches rejected promises - no try-catch needed
+router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
+  }
+  
+  const robot = await getRobot(parseInt(req.params.id), req.user.userId);
+  res.json(robot);
+});
+```
+
+**Error Handler Middleware** (`src/middleware/errorHandler.ts`):
+```typescript
+export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
+  // Structured app errors
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json({
+      error: err.message,
+      code: err.code,
+      ...(err.details ? { details: err.details } : {}),
+    });
+    return;
+  }
+
+  // Prisma known errors (P2002, P2025, etc.)
+  if (err.constructor?.name === 'PrismaClientKnownRequestError') {
+    // Map to appropriate HTTP status and code
+  }
+
+  // Unknown errors → 500 INTERNAL_ERROR
+  res.status(500).json({ error: 'Internal Server Error', code: 'INTERNAL_ERROR' });
 }
 ```
 
@@ -76,17 +135,20 @@ try {
   const response = await api.performAction();
   // Handle success
 } catch (error) {
-  if (error.response?.status === 401) {
-    // Redirect to login
-  } else if (error.response?.status === 400) {
-    // Show validation errors to user
-  } else {
-    // Show generic error message
-    showErrorToast('An unexpected error occurred');
+  // Switch on error code for specific handling
+  switch (error.code) {
+    case 'INSUFFICIENT_CREDITS':
+      showToast('Not enough credits for this purchase');
+      break;
+    case 'ROBOT_NOT_FOUND':
+      showToast('Robot no longer exists');
+      break;
+    case 'UNAUTHORIZED':
+      redirectToLogin();
+      break;
+    default:
+      showToast(error.error || 'An unexpected error occurred');
   }
-  
-  // Log error for debugging
-  console.error('Action failed:', error);
 }
 ```
 

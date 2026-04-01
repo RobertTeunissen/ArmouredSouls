@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import logger from '../config/logger';
+import { AuthError, AuthErrorCode } from '../errors/authErrors';
 
 /**
  * @module services/jwtService
@@ -83,7 +84,11 @@ function getJwtExpiration(): string | number {
  */
 export function generateToken(user: UserForToken): string {
   if (!user || !user.id || !user.username || !user.role) {
-    throw new Error('Invalid user data: id, username, and role are required');
+    throw new AuthError(
+      AuthErrorCode.INVALID_CREDENTIALS,
+      'Invalid user data: id, username, and role are required',
+      400
+    );
   }
 
   const secret = getJwtSecret();

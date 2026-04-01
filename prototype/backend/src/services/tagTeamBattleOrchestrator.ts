@@ -13,6 +13,7 @@ import {
   awardPrestigeToUser,
   awardStreamingRevenueForParticipant,
 } from './battlePostCombat';
+import { TagTeamError, TagTeamErrorCode } from '../errors/tagTeamErrors';
 
 // Battle constants
 const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
@@ -273,7 +274,12 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatch): Promis
   }
 
   if (!team1 || !team2) {
-    throw new Error(`Teams not found for match ${match.id}`);
+    throw new TagTeamError(
+      TagTeamErrorCode.TAG_TEAM_NOT_FOUND,
+      `Teams not found for match ${match.id}`,
+      404,
+      { matchId: match.id, team1Id: match.team1Id, team2Id: match.team2Id }
+    );
   }
 
   // Start battle with active robots at full HP
@@ -1525,7 +1531,12 @@ async function updateTagTeamBattleResults(
   if (isByeMatch) {
     const realTeam = team1 || team2;
     if (!realTeam || !realTeam.activeRobot || !realTeam.reserveRobot) {
-      throw new Error(`Real team or robots not found for bye-match ${match.id}`);
+      throw new TagTeamError(
+        TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
+        `Real team or robots not found for bye-match ${match.id}`,
+        400,
+        { matchId: match.id }
+      );
     }
 
     const realTeamWon = result.winnerId === realTeam.id;
@@ -1720,7 +1731,12 @@ async function updateTagTeamBattleResults(
 
   // Normal match (both teams are real)
   if (!team1 || !team2) {
-    throw new Error(`Teams not found for match ${match.id}`);
+    throw new TagTeamError(
+      TagTeamErrorCode.TAG_TEAM_NOT_FOUND,
+      `Teams not found for match ${match.id}`,
+      404,
+      { matchId: match.id }
+    );
   }
 
   const team1Won = result.winnerId === team1.id;
@@ -1729,7 +1745,12 @@ async function updateTagTeamBattleResults(
 
   // Validate teams have robots loaded
   if (!team1.activeRobot || !team1.reserveRobot || !team2.activeRobot || !team2.reserveRobot) {
-    throw new Error(`Teams missing robot data for match ${match.id}`);
+    throw new TagTeamError(
+      TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
+      `Teams missing robot data for match ${match.id}`,
+      400,
+      { matchId: match.id, team1Id: team1.id, team2Id: team2.id }
+    );
   }
 
   // Calculate ELO changes (Requirements 5.1, 5.2)

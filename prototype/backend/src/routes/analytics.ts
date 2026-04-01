@@ -14,6 +14,7 @@ import type { RobotMetric } from '../services/robotPerformanceService';
 import type { LeaderboardOptions } from '../services/robotStatsViewService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { AppError, RobotError, RobotErrorCode, AuthError, AuthErrorCode, EconomyError, EconomyErrorCode, KothError, KothErrorCode } from '../errors';
 
 const router = express.Router();
 
@@ -91,11 +92,11 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
     const lastNCycles = lastNCyclesParam ? parseInt(lastNCyclesParam) : 10;
 
     if (isNaN(userId)) {
-      return res.status(400).json({ error: 'Invalid userId' });
+      throw new AppError('INVALID_USER_ID', 'Invalid userId', 400);
     }
 
     if (lastNCyclesParam && (isNaN(lastNCycles) || lastNCycles < 1)) {
-      return res.status(400).json({ error: 'Invalid lastNCycles parameter' });
+      throw new AppError('INVALID_PARAMETER', 'Invalid lastNCycles parameter', 400);
     }
 
     // Get the latest cycle number
@@ -302,44 +303,29 @@ router.get('/robot/:robotId/performance', async (req: Request, res: Response) =>
 
     // Validate robotId
     if (isNaN(robotId)) {
-      return res.status(400).json({ 
-        error: 'Invalid robotId',
-        message: 'robotId must be a valid integer'
-      });
+      throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
     }
 
     // Validate cycleRange parameter
     if (!cycleRangeParam) {
-      return res.status(400).json({ 
-        error: 'Missing required parameter',
-        message: 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])'
-      });
+      throw new AppError('MISSING_PARAMETER', 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])', 400);
     }
 
     // Parse cycleRange [A,B]
     const cycleRangeMatch = cycleRangeParam.match(/^\[(-?\d+),(-?\d+)\]$/);
     if (!cycleRangeMatch) {
-      return res.status(400).json({ 
-        error: 'Invalid cycleRange format',
-        message: 'cycleRange must be in format [startCycle,endCycle], e.g., [1,10]'
-      });
+      throw new AppError('INVALID_CYCLE_RANGE_FORMAT', 'cycleRange must be in format [startCycle,endCycle], e.g., [1,10]', 400);
     }
 
     const startCycle = parseInt(cycleRangeMatch[1]);
     const endCycle = parseInt(cycleRangeMatch[2]);
 
     if (startCycle < 1 || endCycle < 1) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle numbers',
-        message: 'Cycle numbers must be positive integers'
-      });
+      throw new AppError('INVALID_CYCLE_NUMBERS', 'Cycle numbers must be positive integers', 400);
     }
 
     if (startCycle > endCycle) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle range',
-        message: 'startCycle must be less than or equal to endCycle'
-      });
+      throw new AppError('INVALID_CYCLE_RANGE', 'startCycle must be less than or equal to endCycle', 400);
     }
 
     // Verify robot exists
@@ -348,10 +334,7 @@ router.get('/robot/:robotId/performance', async (req: Request, res: Response) =>
     });
 
     if (!robot) {
-      return res.status(404).json({ 
-        error: 'Robot not found',
-        message: `Robot with ID ${robotId} does not exist`
-      });
+      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, `Robot with ID ${robotId} does not exist`, 404);
     }
 
     // Parse includeELOProgression flag (deprecated, but kept for backward compatibility)
@@ -366,10 +349,7 @@ router.get('/robot/:robotId/performance', async (req: Request, res: Response) =>
     // Validate progressionMetric
     const validMetrics = ['elo', 'fame', 'damageDealt', 'damageReceived', 'wins', 'losses', 'creditsEarned'];
     if (!validMetrics.includes(progressionMetric)) {
-      return res.status(400).json({ 
-        error: 'Invalid progressionMetric',
-        message: `progressionMetric must be one of: ${validMetrics.join(', ')}`
-      });
+      throw new AppError('INVALID_METRIC', `progressionMetric must be one of: ${validMetrics.join(', ')}`, 400);
     }
 
     // Get robot performance summary
@@ -468,44 +448,29 @@ router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
 
     // Validate robotId
     if (isNaN(robotId)) {
-      return res.status(400).json({ 
-        error: 'Invalid robotId',
-        message: 'robotId must be a valid integer'
-      });
+      throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
     }
 
     // Validate cycleRange parameter
     if (!cycleRangeParam) {
-      return res.status(400).json({ 
-        error: 'Missing required parameter',
-        message: 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])'
-      });
+      throw new AppError('MISSING_PARAMETER', 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])', 400);
     }
 
     // Parse cycleRange [A,B]
     const cycleRangeMatch = cycleRangeParam.match(/^\[(-?\d+),(-?\d+)\]$/);
     if (!cycleRangeMatch) {
-      return res.status(400).json({ 
-        error: 'Invalid cycleRange format',
-        message: 'cycleRange must be in format [startCycle,endCycle], e.g., [1,10]'
-      });
+      throw new AppError('INVALID_CYCLE_RANGE_FORMAT', 'cycleRange must be in format [startCycle,endCycle], e.g., [1,10]', 400);
     }
 
     const startCycle = parseInt(cycleRangeMatch[1]);
     const endCycle = parseInt(cycleRangeMatch[2]);
 
     if (startCycle < 1 || endCycle < 1) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle numbers',
-        message: 'Cycle numbers must be positive integers'
-      });
+      throw new AppError('INVALID_CYCLE_NUMBERS', 'Cycle numbers must be positive integers', 400);
     }
 
     if (startCycle > endCycle) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle range',
-        message: 'startCycle must be less than or equal to endCycle'
-      });
+      throw new AppError('INVALID_CYCLE_RANGE', 'startCycle must be less than or equal to endCycle', 400);
     }
 
     // Verify robot exists
@@ -514,10 +479,7 @@ router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
     });
 
     if (!robot) {
-      return res.status(404).json({ 
-        error: 'Robot not found',
-        message: `Robot with ID ${robotId} does not exist`
-      });
+      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, `Robot with ID ${robotId} does not exist`, 404);
     }
 
     // Parse boolean flags
@@ -651,53 +613,35 @@ router.get('/robot/:robotId/metric/:metricName', async (req: Request, res: Respo
 
     // Validate robotId
     if (isNaN(robotId)) {
-      return res.status(400).json({ 
-        error: 'Invalid robotId',
-        message: 'robotId must be a valid integer'
-      });
+      throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
     }
 
     // Validate metric name
     const validMetrics = ['elo', 'fame', 'damageDealt', 'damageReceived', 'wins', 'losses', 'draws', 'kills', 'creditsEarned'];
     if (!validMetrics.includes(metricName)) {
-      return res.status(400).json({ 
-        error: 'Invalid metric',
-        message: `Metric must be one of: ${validMetrics.join(', ')}`
-      });
+      throw new AppError('INVALID_METRIC', `Metric must be one of: ${validMetrics.join(', ')}`, 400);
     }
 
     // Validate cycleRange parameter
     if (!cycleRangeParam) {
-      return res.status(400).json({ 
-        error: 'Missing required parameter',
-        message: 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])'
-      });
+      throw new AppError('MISSING_PARAMETER', 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])', 400);
     }
 
     // Parse cycleRange [A,B]
     const cycleRangeMatch = cycleRangeParam.match(/^\[(-?\d+),(-?\d+)\]$/);
     if (!cycleRangeMatch) {
-      return res.status(400).json({ 
-        error: 'Invalid cycleRange format',
-        message: 'cycleRange must be in format [startCycle,endCycle], e.g., [1,10]'
-      });
+      throw new AppError('INVALID_CYCLE_RANGE_FORMAT', 'cycleRange must be in format [startCycle,endCycle], e.g., [1,10]', 400);
     }
 
     const startCycle = parseInt(cycleRangeMatch[1]);
     const endCycle = parseInt(cycleRangeMatch[2]);
 
     if (startCycle < 1 || endCycle < 1) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle numbers',
-        message: 'Cycle numbers must be positive integers'
-      });
+      throw new AppError('INVALID_CYCLE_NUMBERS', 'Cycle numbers must be positive integers', 400);
     }
 
     if (startCycle > endCycle) {
-      return res.status(400).json({ 
-        error: 'Invalid cycle range',
-        message: 'startCycle must be less than or equal to endCycle'
-      });
+      throw new AppError('INVALID_CYCLE_RANGE', 'startCycle must be less than or equal to endCycle', 400);
     }
 
     // Verify robot exists
@@ -706,10 +650,7 @@ router.get('/robot/:robotId/metric/:metricName', async (req: Request, res: Respo
     });
 
     if (!robot) {
-      return res.status(404).json({ 
-        error: 'Robot not found',
-        message: `Robot with ID ${robotId} does not exist`
-      });
+      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, `Robot with ID ${robotId} does not exist`, 404);
     }
 
     // Parse boolean flags
@@ -834,10 +775,7 @@ router.get('/leaderboard', async (req: Request, res: Response) => {
     if (limitParam) {
       const parsedLimit = parseInt(limitParam);
       if (isNaN(parsedLimit) || parsedLimit < 1) {
-        return res.status(400).json({
-          error: 'Invalid limit',
-          message: 'limit must be a positive integer'
-        });
+        throw new AppError('INVALID_LIMIT', 'limit must be a positive integer', 400);
       }
       limit = Math.min(parsedLimit, 1000); // Cap at 1000
     }
@@ -847,10 +785,7 @@ router.get('/leaderboard', async (req: Request, res: Response) => {
     if (offsetParam) {
       const parsedOffset = parseInt(offsetParam);
       if (isNaN(parsedOffset) || parsedOffset < 0) {
-        return res.status(400).json({
-          error: 'Invalid offset',
-          message: 'offset must be a non-negative integer'
-        });
+        throw new AppError('INVALID_OFFSET', 'offset must be a non-negative integer', 400);
       }
       offset = parsedOffset;
     }
@@ -919,19 +854,13 @@ router.get('/robot/:robotId/stats', async (req: Request, res: Response) => {
     const robotId = parseInt(String(req.params.robotId));
 
     if (isNaN(robotId)) {
-      return res.status(400).json({
-        error: 'Invalid robotId',
-        message: 'robotId must be a valid integer'
-      });
+      throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
     }
 
     const stats = await robotStatsViewService.getRobotStats(robotId);
 
     if (!stats) {
-      return res.status(404).json({
-        error: 'Robot not found',
-        message: `No stats found for robot with ID ${robotId}`
-      });
+      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, `No stats found for robot with ID ${robotId}`, 404);
     }
 
     return res.json(stats);
@@ -1015,18 +944,12 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
 
     // Validate userId
     if (isNaN(userId)) {
-      return res.status(400).json({
-        error: 'Invalid userId',
-        message: 'userId must be a valid integer'
-      });
+      throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
     }
 
     // Validate facilityType parameter
     if (!facilityType) {
-      return res.status(400).json({
-        error: 'Missing required parameter',
-        message: 'The "facilityType" query parameter is required'
-      });
+      throw new AppError('MISSING_PARAMETER', 'The "facilityType" query parameter is required', 400);
     }
 
     // Validate facilityType value
@@ -1050,10 +973,7 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
     ];
 
     if (!validFacilityTypes.includes(facilityType)) {
-      return res.status(400).json({
-        error: 'Invalid facilityType',
-        message: `facilityType must be one of: ${validFacilityTypes.join(', ')}`
-      });
+      throw new EconomyError(EconomyErrorCode.INVALID_FACILITY_TYPE, `facilityType must be one of: ${validFacilityTypes.join(', ')}`, 400);
     }
 
     // Verify user exists
@@ -1062,30 +982,20 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({
-        error: 'User not found',
-        message: `User with ID ${userId} does not exist`
-      });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, `User with ID ${userId} does not exist`, 404);
     }
 
     // Calculate facility ROI
     const roi = await roiCalculatorService.calculateFacilityROI(userId, facilityType);
 
     if (!roi) {
-      return res.status(404).json({
-        error: 'Facility not purchased',
-        message: `User ${userId} has not purchased ${facilityType} or no purchase event found`
-      });
+      throw new EconomyError(EconomyErrorCode.FACILITY_NOT_FOUND, `User ${userId} has not purchased ${facilityType} or no purchase event found`, 404);
     }
 
     return res.json(roi);
   } catch (error) {
     logger.error('[Analytics] Error calculating facility ROI:', error);
-    
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
+    throw error;
   }
 });
 
@@ -1125,10 +1035,7 @@ router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
 
     // Validate userId
     if (isNaN(userId)) {
-      return res.status(400).json({
-        error: 'Invalid userId',
-        message: 'userId must be a valid integer'
-      });
+      throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
     }
 
     // Verify user exists
@@ -1137,10 +1044,7 @@ router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({
-        error: 'User not found',
-        message: `User with ID ${userId} does not exist`
-      });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, `User with ID ${userId} does not exist`, 404);
     }
 
     // Calculate ROI for all facilities
@@ -1164,11 +1068,7 @@ router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('[Analytics] Error calculating all facility ROIs:', error);
-    
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
+    throw error;
   }
 });
 
@@ -1215,18 +1115,12 @@ router.get('/facility/:userId/recommendations', async (req: Request, res: Respon
 
     // Validate userId
     if (isNaN(userId)) {
-      return res.status(400).json({
-        error: 'Invalid userId',
-        message: 'userId must be a valid number'
-      });
+      throw new AppError('INVALID_USER_ID', 'userId must be a valid number', 400);
     }
 
     // Validate lastNCycles
     if (lastNCyclesParam && (isNaN(lastNCycles) || lastNCycles < 1)) {
-      return res.status(400).json({
-        error: 'Invalid lastNCycles parameter',
-        message: 'lastNCycles must be a positive number'
-      });
+      throw new AppError('INVALID_PARAMETER', 'lastNCycles must be a positive number', 400);
     }
 
     // Check if user exists
@@ -1235,10 +1129,7 @@ router.get('/facility/:userId/recommendations', async (req: Request, res: Respon
     });
 
     if (!user) {
-      return res.status(404).json({
-        error: 'User not found',
-        message: `User with ID ${userId} does not exist`
-      });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, `User with ID ${userId} does not exist`, 404);
     }
 
     // Generate recommendations
@@ -1250,11 +1141,7 @@ router.get('/facility/:userId/recommendations', async (req: Request, res: Respon
     return res.json(recommendations);
   } catch (error) {
     logger.error('[Analytics] Error generating facility recommendations:', error);
-    
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
+    throw error;
   }
 });
 
@@ -1277,7 +1164,7 @@ router.get('/robot/:id/koth-performance', authenticateToken, async (req: AuthReq
     });
 
     if (!robot || robot.kothMatches === 0) {
-      return res.status(404).json({ error: 'No KotH data for this robot' });
+      throw new KothError(KothErrorCode.KOTH_NOT_FOUND, 'No KotH data for this robot', 404);
     }
 
     res.json({
@@ -1295,7 +1182,7 @@ router.get('/robot/:id/koth-performance', authenticateToken, async (req: AuthReq
     });
   } catch (error) {
     logger.error('[Analytics API] Error fetching KotH performance:', error);
-    res.status(500).json({ error: 'Failed to fetch KotH performance' });
+    throw error;
   }
 });
 

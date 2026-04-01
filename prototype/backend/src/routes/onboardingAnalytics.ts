@@ -11,6 +11,7 @@ import express, { Response } from 'express';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { recordEvents, OnboardingAnalyticsEvent } from '../services/onboardingAnalyticsService';
 import logger from '../config/logger';
+import { AppError } from '../errors';
 
 const router = express.Router();
 
@@ -38,10 +39,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     const { events } = req.body;
 
     if (!Array.isArray(events) || events.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Request body must contain a non-empty "events" array',
-      });
+      throw new AppError('INVALID_EVENTS', 'Request body must contain a non-empty "events" array', 400);
     }
 
     // Basic validation: each event must have eventType and timestamp

@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import logger from '../config/logger';
+import { AuthError, AuthErrorCode } from '../errors/authErrors';
 
 /**
  * @module services/passwordService
@@ -52,7 +53,11 @@ export async function hashPassword(password: string): Promise<string> {
   // Guard against empty passwords early — bcrypt would hash an empty string
   // successfully, which could create accounts with no real password protection.
   if (!password || password.length === 0) {
-    throw new Error('Password cannot be empty');
+    throw new AuthError(
+      AuthErrorCode.INVALID_CREDENTIALS,
+      'Password cannot be empty',
+      400
+    );
   }
 
   const saltRounds = getSaltRounds();

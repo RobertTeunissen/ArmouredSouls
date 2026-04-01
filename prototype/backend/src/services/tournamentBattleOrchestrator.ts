@@ -24,6 +24,7 @@ import {
   awardCreditsToUser,
   awardPrestigeToUser,
 } from './battlePostCombat';
+import { TournamentError, TournamentErrorCode } from '../errors/tournamentErrors';
 
 // Economic constants
 const _REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
@@ -52,11 +53,21 @@ export async function processTournamentBattle(
   tournamentMatch: ScheduledTournamentMatch
 ): Promise<TournamentBattleResult> {
   if (!tournamentMatch.robot1Id || !tournamentMatch.robot2Id) {
-    throw new Error(`Tournament match ${tournamentMatch.id} missing robots`);
+    throw new TournamentError(
+      TournamentErrorCode.MATCH_MISSING_ROBOTS,
+      `Tournament match ${tournamentMatch.id} missing robots`,
+      400,
+      { matchId: tournamentMatch.id }
+    );
   }
 
   if (tournamentMatch.isByeMatch) {
-    throw new Error(`Bye match ${tournamentMatch.id} should not be processed as a battle`);
+    throw new TournamentError(
+      TournamentErrorCode.INVALID_MATCH_STATE,
+      `Bye match ${tournamentMatch.id} should not be processed as a battle`,
+      400,
+      { matchId: tournamentMatch.id, isByeMatch: true }
+    );
   }
 
   // Load both robots with weapons
@@ -77,7 +88,12 @@ export async function processTournamentBattle(
   });
 
   if (!robot1 || !robot2) {
-    throw new Error(`Robots not found for tournament match ${tournamentMatch.id}`);
+    throw new TournamentError(
+      TournamentErrorCode.MATCH_MISSING_ROBOTS,
+      `Robots not found for tournament match ${tournamentMatch.id}`,
+      404,
+      { matchId: tournamentMatch.id, robot1Id: tournamentMatch.robot1Id, robot2Id: tournamentMatch.robot2Id }
+    );
   }
 
   // Robots enter battles fully repaired
@@ -95,7 +111,12 @@ export async function processTournamentBattle(
   });
 
   if (!tournament) {
-    throw new Error(`Tournament ${tournamentMatch.tournamentId} not found`);
+    throw new TournamentError(
+      TournamentErrorCode.TOURNAMENT_NOT_FOUND,
+      `Tournament ${tournamentMatch.tournamentId} not found`,
+      404,
+      { tournamentId: tournamentMatch.tournamentId }
+    );
   }
 
   // Count robots remaining in current round (including bye robots)
@@ -162,7 +183,12 @@ export async function processTournamentBattle(
   });
   
   if (!robot1Participant || !robot2Participant) {
-    throw new Error(`BattleParticipant records not found for battle ${battle.id}`);
+    throw new TournamentError(
+      TournamentErrorCode.BATTLE_RECORD_FAILED,
+      `BattleParticipant records not found for battle ${battle.id}`,
+      500,
+      { battleId: battle.id }
+    );
   }
   
   // Determine results for each robot
@@ -452,7 +478,12 @@ async function updateRobotStatsForTournament(
   });
   
   if (!participant) {
-    throw new Error(`BattleParticipant not found for battle ${battle.id}, robot ${robot.id}`);
+    throw new TournamentError(
+      TournamentErrorCode.BATTLE_RECORD_FAILED,
+      `BattleParticipant not found for battle ${battle.id}, robot ${robot.id}`,
+      500,
+      { battleId: battle.id, robotId: robot.id }
+    );
   }
   
   const prestigeAwarded = participant.prestigeAwarded;

@@ -5,12 +5,13 @@ import prisma from '../lib/prisma';
 import { eventLogger } from '../services/eventLogger';
 import { trackSpending } from '../services/spendingTracker';
 import logger from '../config/logger';
+import { AuthError, AuthErrorCode } from '../errors/authErrors';
+import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 
 const router = express.Router();
 
 // Get all facility types and user's current levels
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
 
     // Get user's current facilities and prestige
@@ -20,7 +21,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
     }
 
     const userFacilities = await prisma.facility.findMany({
@@ -124,26 +125,21 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       userCurrency: user.currency,
       robotCount, // Include for frontend display
     });
-  } catch (error) {
-    logger.error('Facility list error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 // Upgrade a facility
 router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
     const userId = req.user!.userId;
     const { facilityType } = req.body;
 
     if (!facilityType) {
-      return res.status(400).json({ error: 'Facility type is required' });
+      throw new EconomyError(EconomyErrorCode.INVALID_FACILITY_TYPE, 'Facility type is required', 400);
     }
 
     // Get facility config
     const config = getFacilityConfig(facilityType);
     if (!config) {
-      return res.status(400).json({ error: 'Invalid facility type' });
+      throw new EconomyError(EconomyErrorCode.INVALID_FACILITY_TYPE, 'Invalid facility type', 400, { facilityType });
     }
 
     // Get user's current currency, prestige, and facility level
@@ -152,7 +148,7 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
     }
 
     // Get or create facility
@@ -170,19 +166,24 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
 
     // Check if already at max level
     if (currentLevel >= config.maxLevel) {
-      return res.status(400).json({ error: 'Facility is already at maximum level' });
+      throw new EconomyError(
+        EconomyErrorCode.FACILITY_MAX_LEVEL,
+        'Facility is already at maximum level',
+        400,
+        { facilityType, currentLevel, maxLevel: config.maxLevel }
+      );
     }
 
     // Validate prestige requirement
     if (config.prestigeRequirements && config.prestigeRequirements[targetLevel - 1]) {
       const requiredPrestige = config.prestigeRequirements[targetLevel - 1];
       if (user.prestige < requiredPrestige) {
-        return res.status(403).json({
-          error: 'Insufficient prestige',
-          required: requiredPrestige,
-          current: user.prestige,
-          message: `${config.name} Level ${targetLevel} requires ${requiredPrestige.toLocaleString()} prestige`,
-        });
+        throw new AuthError(
+          AuthErrorCode.FORBIDDEN,
+          `${config.name} Level ${targetLevel} requires ${requiredPrestige.toLocaleString()} prestige`,
+          403,
+          { required: requiredPrestige, current: user.prestige }
+        );
       }
     }
 
@@ -190,12 +191,22 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
     const upgradeCost = getFacilityUpgradeCost(facilityType, currentLevel);
 
     if (upgradeCost === 0) {
-      return res.status(400).json({ error: 'Facility is already at maximum level' });
+      throw new EconomyError(
+        EconomyErrorCode.FACILITY_MAX_LEVEL,
+        'Facility is already at maximum level',
+        400,
+        { facilityType, currentLevel }
+      );
     }
 
     // Check if user has enough currency
     if (user.currency < upgradeCost) {
-      return res.status(400).json({ error: 'Insufficient credits' });
+      throw new EconomyError(
+        EconomyErrorCode.INSUFFICIENT_CREDITS,
+        'Insufficient credits',
+        400,
+        { required: upgradeCost, current: user.currency }
+      );
     }
 
     // Perform upgrade in a transaction
@@ -263,10 +274,6 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
       currency: result.user.currency,
       message: 'Facility upgraded successfully',
     });
-  } catch (error) {
-    logger.error('Facility upgrade error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 export default router;

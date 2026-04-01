@@ -20,6 +20,7 @@ import {
   awardCreditsToUser,
   awardPrestigeToUser,
 } from './battlePostCombat';
+import { BattleError, BattleErrorCode } from '../errors/battleErrors';
 
 // League points
 const LEAGUE_POINTS_WIN = 3;
@@ -490,7 +491,12 @@ async function updateRobotStats(
   });
   
   if (!participant) {
-    throw new Error(`BattleParticipant not found for battle ${battle.id}, robot ${robot.id}`);
+    throw new BattleError(
+      BattleErrorCode.INVALID_BATTLE_STATE,
+      `BattleParticipant not found for battle ${battle.id}, robot ${robot.id}`,
+      500,
+      { battleId: battle.id, robotId: robot.id }
+    );
   }
   
   const finalHP = participant.finalHP;
@@ -585,7 +591,12 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   });
   
   if (!robot1 || !robot2) {
-    throw new Error(`Robots not found for match ${scheduledMatch.id}`);
+    throw new BattleError(
+      BattleErrorCode.ROBOT_NOT_ELIGIBLE,
+      `Robots not found for match ${scheduledMatch.id}`,
+      404,
+      { matchId: scheduledMatch.id, robot1Id: scheduledMatch.robot1Id, robot2Id: scheduledMatch.robot2Id }
+    );
   }
   
   // Robots enter battles fully repaired (battle-ready state)
@@ -655,7 +666,12 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   });
   
   if (!robot1Participant || !robot2Participant) {
-    throw new Error(`BattleParticipant records not found for battle ${battle.id}`);
+    throw new BattleError(
+      BattleErrorCode.INVALID_BATTLE_STATE,
+      `BattleParticipant records not found for battle ${battle.id}`,
+      500,
+      { battleId: battle.id, robot1Id: robot1.id, robot2Id: robot2.id }
+    );
   }
   
   // Determine results for each robot

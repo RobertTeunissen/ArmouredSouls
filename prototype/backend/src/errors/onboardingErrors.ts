@@ -8,6 +8,8 @@
  * @module errors/onboardingErrors
  */
 
+import { AppError } from './AppError';
+
 /** All onboarding error codes. */
 export const OnboardingErrorCode = {
   TUTORIAL_STATE_NOT_FOUND: 'TUTORIAL_STATE_NOT_FOUND',
@@ -25,24 +27,18 @@ export type OnboardingErrorCodeType = typeof OnboardingErrorCode[keyof typeof On
 
 /**
  * Structured error thrown by onboarding service/route layer.
+ * Extends AppError to integrate with the centralized error handling middleware.
  * Carries an HTTP status and machine-readable code so the route handler
  * can produce a consistent JSON response without ad-hoc formatting.
  */
-export class OnboardingError extends Error {
-  public readonly code: OnboardingErrorCodeType;
-  public readonly statusCode: number;
-  public readonly details?: unknown;
-
+export class OnboardingError extends AppError {
   constructor(
     code: OnboardingErrorCodeType,
     message: string,
     statusCode = 400,
     details?: unknown,
   ) {
-    super(message);
+    super(code, message, statusCode, details);
     this.name = 'OnboardingError';
-    this.code = code;
-    this.statusCode = statusCode;
-    this.details = details;
   }
 }

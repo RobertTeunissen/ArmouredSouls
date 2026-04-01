@@ -1,6 +1,7 @@
 import { Robot } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { LeagueError, LeagueErrorCode } from '../errors/leagueErrors';
 
 // NOTE: This service mirrors tagTeamLeagueRebalancingService.ts for tag team leagues.
 // Both share identical promotion/demotion logic but operate on different Prisma models
@@ -195,7 +196,12 @@ export async function promoteRobot(robot: Robot): Promise<void> {
   const nextTier = getNextTierUp(robot.currentLeague as LeagueTier);
   
   if (!nextTier) {
-    throw new Error(`Cannot promote robot ${robot.id} from ${robot.currentLeague} - already at top tier`);
+    throw new LeagueError(
+      LeagueErrorCode.PROMOTION_BLOCKED,
+      `Cannot promote robot ${robot.id} from ${robot.currentLeague} - already at top tier`,
+      400,
+      { robotId: robot.id, currentLeague: robot.currentLeague }
+    );
   }
 
   // Assign to new instance
@@ -223,7 +229,12 @@ export async function demoteRobot(robot: Robot): Promise<void> {
   const previousTier = getNextTierDown(robot.currentLeague as LeagueTier);
   
   if (!previousTier) {
-    throw new Error(`Cannot demote robot ${robot.id} from ${robot.currentLeague} - already at bottom tier`);
+    throw new LeagueError(
+      LeagueErrorCode.RELEGATION_BLOCKED,
+      `Cannot demote robot ${robot.id} from ${robot.currentLeague} - already at bottom tier`,
+      400,
+      { robotId: robot.id, currentLeague: robot.currentLeague }
+    );
   }
 
   // Assign to new instance

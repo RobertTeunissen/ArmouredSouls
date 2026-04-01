@@ -3,6 +3,7 @@ import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { checkBattleReadiness, checkSchedulingReadiness } from './matchmakingService';
 import { assignTagTeamLeagueInstance } from './tagTeamLeagueInstanceService';
+import { TagTeamError, TagTeamErrorCode } from '../errors/tagTeamErrors';
 
 
 export interface ValidationResult {
@@ -350,7 +351,12 @@ export async function calculateCombinedELO(teamId: number): Promise<number> {
   });
 
   if (!team) {
-    throw new Error(`Team ${teamId} not found`);
+    throw new TagTeamError(
+      TagTeamErrorCode.TAG_TEAM_NOT_FOUND,
+      `Team ${teamId} not found`,
+      404,
+      { teamId }
+    );
   }
 
   return team.activeRobot.elo + team.reserveRobot.elo;
