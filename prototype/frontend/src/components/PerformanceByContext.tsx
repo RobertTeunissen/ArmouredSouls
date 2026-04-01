@@ -108,6 +108,17 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
     <div className="bg-surface rounded-lg p-4">
       <h3 className="text-base font-semibold mb-3">Battle Performance</h3>
 
+      <div className="flex items-center gap-3 mb-2 text-[10px] text-tertiary">
+        <div className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5 bg-green-500 rounded"></span>
+          <span>Damage Dealt</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5 bg-red-500 rounded"></span>
+          <span>Damage Taken</span>
+        </div>
+      </div>
+
       <div className="space-y-2">
         {/* Leagues Section */}
         <div>

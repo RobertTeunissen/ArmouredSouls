@@ -90,7 +90,7 @@ describe('Content Validation — sections.json (Req 2.1, 15.1)', () => {
   });
 
   it('should have exactly 11 sections', () => {
-    expect(sections).toHaveLength(11);
+    expect(sections).toHaveLength(12);
   });
 
   it.each(

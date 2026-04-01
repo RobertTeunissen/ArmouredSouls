@@ -8,11 +8,15 @@
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { robotPerformanceService } from '../src/services/robotPerformanceService';
+import { cleanupTestData } from './cleanupHelper';
 
 
 describe('ELO Progression Property-Based Tests', () => {
   afterEach(async () => {
     // Clean up test data after each test in correct dependency order
+    await prisma.scheduledKothMatchParticipant.deleteMany({});
+    await prisma.scheduledKothMatch.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.user.deleteMany({});
@@ -34,13 +38,18 @@ describe('ELO Progression Property-Based Tests', () => {
    * "after" value.
    */
   describe('Property 6: ELO Progression Continuity', () => {
+    /** Clean up data for a specific robot/user/cycle range before each property iteration */
+    async function cleanupIteration(_robotId: number, _userId: number, _startCycle: number, _endCycle: number) {
+      await cleanupTestData();
+    }
+
     it('should maintain ELO continuity across consecutive battles for a single robot', async () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate robot ID
-          fc.integer({ min: 1, max: 1000 }),
+          fc.integer({ min: 900000, max: 999000 }),
           // Generate user ID
-          fc.integer({ min: 1, max: 10000 }),
+          fc.integer({ min: 900000, max: 999000 }),
           // Generate starting ELO
           fc.integer({ min: 800, max: 2000 }),
           // Generate array of ELO changes (wins/losses)
@@ -49,8 +58,11 @@ describe('ELO Progression Property-Based Tests', () => {
             { minLength: 2, maxLength: 20 }
           ),
           // Generate cycle range
-          fc.integer({ min: 1, max: 10 }),
+          fc.integer({ min: 100, max: 110 }),
           async (robotId, userId, startingELO, eloChanges, startCycle) => {
+            const endCycle = startCycle + Math.ceil(eloChanges.length / 5);
+            await cleanupIteration(robotId, userId, startCycle, endCycle);
+
             // Setup: Create test user and robot
             await prisma.user.create({
               data: {
@@ -97,7 +109,6 @@ describe('ELO Progression Property-Based Tests', () => {
             });
 
             // Create cycle snapshots for the cycle range
-            const endCycle = startCycle + Math.ceil(eloChanges.length / 5);
             for (let cycle = startCycle; cycle <= endCycle; cycle++) {
               const cycleStart = new Date(2024, 0, cycle, 0, 0, 0);
               const cycleEnd = new Date(2024, 0, cycle, 23, 59, 59);
@@ -172,6 +183,12 @@ describe('ELO Progression Property-Based Tests', () => {
                   robot2ELOAfter: 1500 - eloChange,
                   eloChange: Math.abs(eloChange),
                   createdAt: battleTime,
+                  participants: {
+                    create: [
+                      { robotId, team: 1, eloBefore, eloAfter, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                      { robotId: opponentId, team: 2, eloBefore: 1500, eloAfter: 1500 - eloChange, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                    ],
+                  },
                 },
               });
 
@@ -221,15 +238,18 @@ describe('ELO Progression Property-Based Tests', () => {
     it('should maintain ELO continuity when robot is robot2 in battles', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.integer({ min: 1, max: 1000 }),
-          fc.integer({ min: 1, max: 10000 }),
+          fc.integer({ min: 900000, max: 999000 }),
+          fc.integer({ min: 900000, max: 999000 }),
           fc.integer({ min: 800, max: 2000 }),
           fc.array(
             fc.integer({ min: -50, max: 50 }),
             { minLength: 2, maxLength: 15 }
           ),
-          fc.integer({ min: 1, max: 10 }),
+          fc.integer({ min: 100, max: 110 }),
           async (robotId, userId, startingELO, eloChanges, startCycle) => {
+            const endCycle = startCycle + Math.ceil(eloChanges.length / 5);
+            await cleanupIteration(robotId, userId, startCycle, endCycle);
+
             // Setup: Create test user and robot
             await prisma.user.create({
               data: {
@@ -276,7 +296,6 @@ describe('ELO Progression Property-Based Tests', () => {
             });
 
             // Create cycle snapshots
-            const endCycle = startCycle + Math.ceil(eloChanges.length / 5);
             for (let cycle = startCycle; cycle <= endCycle; cycle++) {
               const cycleStart = new Date(2024, 0, cycle, 0, 0, 0);
               const cycleEnd = new Date(2024, 0, cycle, 23, 59, 59);
@@ -383,12 +402,12 @@ describe('ELO Progression Property-Based Tests', () => {
     it('should maintain ELO continuity across multiple cycles', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.integer({ min: 1, max: 1000 }),
-          fc.integer({ min: 1, max: 10000 }),
+          fc.integer({ min: 900000, max: 999000 }),
+          fc.integer({ min: 900000, max: 999000 }),
           fc.integer({ min: 800, max: 2000 }),
           fc.array(
             fc.record({
-              cycleNumber: fc.integer({ min: 1, max: 5 }),
+              cycleNumber: fc.integer({ min: 100, max: 105 }),
               eloChange: fc.integer({ min: -50, max: 50 }),
             }),
             { minLength: 3, maxLength: 15 }
@@ -396,6 +415,10 @@ describe('ELO Progression Property-Based Tests', () => {
           async (robotId, userId, startingELO, battleData) => {
             // Sort battles by cycle number to ensure chronological order
             const sortedBattles = [...battleData].sort((a, b) => a.cycleNumber - b.cycleNumber);
+            const uniqueCycles = [...new Set(sortedBattles.map(b => b.cycleNumber))];
+            const minCycle = Math.min(...uniqueCycles);
+            const maxCycle = Math.max(...uniqueCycles);
+            await cleanupIteration(robotId, userId, minCycle, maxCycle);
 
             // Setup: Create test user and robot
             await prisma.user.create({
@@ -442,7 +465,6 @@ describe('ELO Progression Property-Based Tests', () => {
             });
 
             // Create cycle snapshots for all cycles
-            const uniqueCycles = [...new Set(sortedBattles.map(b => b.cycleNumber))];
             for (const cycle of uniqueCycles) {
               const cycleStart = new Date(2024, 0, cycle, 0, 0, 0);
               const cycleEnd = new Date(2024, 0, cycle, 23, 59, 59);
@@ -545,12 +567,14 @@ describe('ELO Progression Property-Based Tests', () => {
     it('should handle single battle case (trivially continuous)', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.integer({ min: 1, max: 1000 }),
-          fc.integer({ min: 1, max: 10000 }),
+          fc.integer({ min: 900000, max: 999000 }),
+          fc.integer({ min: 900000, max: 999000 }),
           fc.integer({ min: 800, max: 2000 }),
           fc.integer({ min: -50, max: 50 }),
-          fc.integer({ min: 1, max: 10 }),
+          fc.integer({ min: 100, max: 110 }),
           async (robotId, userId, startingELO, eloChange, cycleNumber) => {
+            await cleanupIteration(robotId, userId, cycleNumber, cycleNumber);
+
             // Setup: Create test user and robot
             await prisma.user.create({
               data: {

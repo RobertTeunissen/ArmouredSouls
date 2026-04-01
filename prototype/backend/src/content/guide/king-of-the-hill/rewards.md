@@ -6,7 +6,7 @@ lastUpdated: "2026-03-18"
 relatedArticles:
   - king-of-the-hill/scoring-and-win-conditions
   - king-of-the-hill/entry-requirements
-  - economy/income-sources
+  - economy/credits-and-income
   - prestige-fame/prestige-system
 ---
 

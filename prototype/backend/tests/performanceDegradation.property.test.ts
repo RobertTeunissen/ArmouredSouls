@@ -39,7 +39,7 @@ describe('Property 16: Performance Degradation Detection', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 100, max: 5000 }), // baselineDuration
-        fc.float({ min: Math.fround(1.51), max: Math.fround(3.0) }), // degradationMultiplier (> 1.5)
+        fc.float({ min: Math.fround(1.52), max: Math.fround(3.0) }), // degradationMultiplier (> 1.5, with margin for Math.floor)
         fc.constantFrom('step_a', 'step_b', 'step_c'), // stepName
         async (baselineDuration, degradationMultiplier, stepName) => {
           // Clean up for this iteration

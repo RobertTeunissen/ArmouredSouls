@@ -119,48 +119,7 @@ describe('Database Error Handling - Property Tests', () => {
 
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password });
-
-            // Should return 500
-            expect(res.status).toBe(500);
-
-            // Should return a generic error message
-            expect(res.body).toHaveProperty('error');
-            expect(typeof res.body.error).toBe('string');
-            expect(res.body.error.length).toBeGreaterThan(0);
-
-            // Error message must NOT contain any sensitive database details
-            const errorLower = res.body.error.toLowerCase();
-            const bodyStr = JSON.stringify(res.body).toLowerCase();
-            for (const keyword of SENSITIVE_KEYWORDS) {
-              expect(bodyStr).not.toContain(keyword.toLowerCase());
-            }
-          },
-        ),
-        { numRuns: NUM_RUNS },
-      );
-    });
-
-    test('database errors during createUser return 500 with generic message', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          validUsernameArbitrary(),
-          validEmailArbitrary(),
-          validPasswordArbitrary(),
-          fc.integer({ min: 0, max: databaseErrorFactories.length - 1 }),
-          async (username, email, password, errorIndex) => {
-            // findUserByUsername and findUserByEmail succeed (no duplicates)
-            jest.restoreAllMocks();
-            jest.spyOn(userService, 'findUserByUsername').mockResolvedValue(null);
-            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(null);
-            // createUser throws a database error
-            jest.spyOn(userService, 'createUser').mockRejectedValue(
-              databaseErrorFactories[errorIndex].create(),
-            );
-
-            const res = await request(app)
-              .post('/api/auth/register')
-              .send({ username, email, password });
+              .send({ username, email, password, stableName: `stb_${username}` });
 
             // Should return 500
             expect(res.status).toBe(500);
@@ -189,7 +148,6 @@ describe('Database Error Handling - Property Tests', () => {
           validPasswordArbitrary(),
           fc.integer({ min: 0, max: databaseErrorFactories.length - 1 }),
           async (username, email, password, errorIndex) => {
-            // findUserByUsername succeeds (no duplicate), findUserByEmail throws
             jest.restoreAllMocks();
             jest.spyOn(userService, 'findUserByUsername').mockResolvedValue(null);
             jest.spyOn(userService, 'findUserByEmail').mockRejectedValue(
@@ -198,17 +156,48 @@ describe('Database Error Handling - Property Tests', () => {
 
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password });
+              .send({ username, email, password, stableName: `stb_${username}` });
 
-            // Should return 500
             expect(res.status).toBe(500);
-
-            // Should return a generic error message
             expect(res.body).toHaveProperty('error');
             expect(typeof res.body.error).toBe('string');
             expect(res.body.error.length).toBeGreaterThan(0);
 
-            // Error message must NOT contain any sensitive database details
+            const bodyStr = JSON.stringify(res.body).toLowerCase();
+            for (const keyword of SENSITIVE_KEYWORDS) {
+              expect(bodyStr).not.toContain(keyword.toLowerCase());
+            }
+          },
+        ),
+        { numRuns: NUM_RUNS },
+      );
+    });
+
+    test('database errors during createUser return 500 with generic message', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          validUsernameArbitrary(),
+          validEmailArbitrary(),
+          validPasswordArbitrary(),
+          fc.integer({ min: 0, max: databaseErrorFactories.length - 1 }),
+          async (username, email, password, errorIndex) => {
+            jest.restoreAllMocks();
+            jest.spyOn(userService, 'findUserByUsername').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserByStableName').mockResolvedValue(null);
+            jest.spyOn(userService, 'createUser').mockRejectedValue(
+              databaseErrorFactories[errorIndex].create(),
+            );
+
+            const res = await request(app)
+              .post('/api/auth/register')
+              .send({ username, email, password, stableName: `stb_${username}` });
+
+            expect(res.status).toBe(500);
+            expect(res.body).toHaveProperty('error');
+            expect(typeof res.body.error).toBe('string');
+            expect(res.body.error.length).toBeGreaterThan(0);
+
             const bodyStr = JSON.stringify(res.body).toLowerCase();
             for (const keyword of SENSITIVE_KEYWORDS) {
               expect(bodyStr).not.toContain(keyword.toLowerCase());

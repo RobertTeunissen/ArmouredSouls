@@ -9,6 +9,11 @@ describe('FacilityRecommendationService', () => {
   beforeEach(async () => {
     testUserIds = [];
     
+    // Clean up any stale audit logs from previous test runs to avoid unique constraint violations
+    await prisma.auditLog.deleteMany({
+      where: { cycleNumber: { gte: 1, lte: 20 } },
+    });
+    
     // Ensure cycle metadata exists
     await prisma.cycleMetadata.upsert({
       where: { id: 1 },

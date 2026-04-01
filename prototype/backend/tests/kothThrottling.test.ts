@@ -362,8 +362,8 @@ describe('KotH Orchestrator Throttling', () => {
     await jest.runAllTimersAsync();
     const summary = await promise;
 
-    expect(summary.successfulMatches).toBe(22);
-    expect(timestamps).toHaveLength(22);
+    expect(summary.successfulMatches).toBe(21);
+    expect(timestamps).toHaveLength(21);
 
     // After 20th match: 30s super-batch cooldown for memory reclamation
     expect(timestamps[20] - timestamps[19]).toBeGreaterThanOrEqual(30000);

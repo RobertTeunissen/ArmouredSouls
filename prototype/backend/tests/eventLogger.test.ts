@@ -18,12 +18,13 @@ describe('EventLogger Service', () => {
   });
 
   afterEach(async () => {
-    // Clean up audit logs for this test's cycle number
+    // Clean up audit logs for this test's cycle numbers (including +1 used by sequence test)
     await prisma.auditLog.deleteMany({
-      where: { cycleNumber: testCycleNumber },
+      where: { cycleNumber: { in: [testCycleNumber, testCycleNumber + 1] } },
     });
     // Clear sequence cache
     clearSequenceCache(testCycleNumber);
+    clearSequenceCache(testCycleNumber + 1);
   });
 
   afterAll(async () => {
@@ -463,21 +464,24 @@ describe('EventLogger Service', () => {
 
   describe('Sequence Number Management', () => {
     it('should maintain separate sequence numbers per cycle', async () => {
+      const cycle1 = testCycleNumber;
+      const cycle2 = testCycleNumber + 1;
+
       // Log events in cycle 1
-      await eventLogger.logEvent(1, EventType.CYCLE_START, { cycle: 1 });
-      await eventLogger.logEvent(1, EventType.CYCLE_COMPLETE, { cycle: 1 });
+      await eventLogger.logEvent(cycle1, EventType.CYCLE_START, { cycle: cycle1 });
+      await eventLogger.logEvent(cycle1, EventType.CYCLE_COMPLETE, { cycle: cycle1 });
 
       // Log events in cycle 2
-      await eventLogger.logEvent(2, EventType.CYCLE_START, { cycle: 2 });
-      await eventLogger.logEvent(2, EventType.CYCLE_COMPLETE, { cycle: 2 });
+      await eventLogger.logEvent(cycle2, EventType.CYCLE_START, { cycle: cycle2 });
+      await eventLogger.logEvent(cycle2, EventType.CYCLE_COMPLETE, { cycle: cycle2 });
 
       const cycle1Events = await prisma.auditLog.findMany({
-        where: { cycleNumber: 1 },
+        where: { cycleNumber: cycle1 },
         orderBy: { sequenceNumber: 'asc' },
       });
 
       const cycle2Events = await prisma.auditLog.findMany({
-        where: { cycleNumber: 2 },
+        where: { cycleNumber: cycle2 },
         orderBy: { sequenceNumber: 'asc' },
       });
 
