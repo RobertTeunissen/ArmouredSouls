@@ -25,7 +25,6 @@ import {
   awardPrestigeToUser,
 } from './battlePostCombat';
 import { TournamentError, TournamentErrorCode } from '../errors/tournamentErrors';
-import { BattleError, BattleErrorCode } from '../errors/battleErrors';
 
 // Economic constants
 const _REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP

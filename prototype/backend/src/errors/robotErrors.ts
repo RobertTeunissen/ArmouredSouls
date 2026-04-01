@@ -18,6 +18,7 @@ export const RobotErrorCode = {
   ROBOT_NAME_TAKEN: 'ROBOT_NAME_TAKEN',
   INVALID_ROBOT_ATTRIBUTES: 'INVALID_ROBOT_ATTRIBUTES',
   MAX_ROBOTS_REACHED: 'MAX_ROBOTS_REACHED',
+  ROBOT_STATS_REFRESH_FAILED: 'ROBOT_STATS_REFRESH_FAILED',
 } as const;
 
 export type RobotErrorCodeType = typeof RobotErrorCode[keyof typeof RobotErrorCode];

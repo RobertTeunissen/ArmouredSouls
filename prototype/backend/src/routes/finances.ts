@@ -1,7 +1,6 @@
 import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
-import logger from '../config/logger';
 import {
   generateFinancialReport,
   calculateTotalDailyOperatingCosts,

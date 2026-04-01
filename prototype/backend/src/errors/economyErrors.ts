@@ -19,6 +19,7 @@ export const EconomyErrorCode = {
   WEAPON_NOT_FOUND: 'WEAPON_NOT_FOUND',
   WEAPON_NOT_AFFORDABLE: 'WEAPON_NOT_AFFORDABLE',
   INVALID_TRANSACTION: 'INVALID_TRANSACTION',
+  STORAGE_CAPACITY_FULL: 'STORAGE_CAPACITY_FULL',
 } as const;
 
 export type EconomyErrorCodeType = typeof EconomyErrorCode[keyof typeof EconomyErrorCode];

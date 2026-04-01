@@ -55,7 +55,7 @@ export class RobotStatsViewService {
     } catch (error) {
       logger.error('[RobotStatsView] Error refreshing materialized view:', error);
       throw new RobotError(
-        RobotErrorCode.ROBOT_NOT_FOUND,
+        RobotErrorCode.ROBOT_STATS_REFRESH_FAILED,
         'Failed to refresh robot statistics view',
         500
       );

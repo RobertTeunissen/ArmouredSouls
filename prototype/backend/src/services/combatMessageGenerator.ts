@@ -145,7 +145,7 @@ export class CombatMessageGenerator {
     context: { robot1Name: string; robot2Name: string }
   ): { hp: number | undefined; shield: number | undefined } {
     // Prefer robotHP/robotShield maps (correct source of truth, keyed by robot name)
-    if (event.robotHP && robotName in event.robotHP) {
+    if (event.robotHP && Object.prototype.hasOwnProperty.call(event.robotHP, robotName)) {
       return {
         hp: event.robotHP[robotName],
         shield: event.robotShield?.[robotName],

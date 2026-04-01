@@ -39,7 +39,7 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     res.status(err.statusCode).json({
       error: err.message,
       code: err.code,
-      ...(err.details ? { details: err.details } : {}),
+      ...(err.details !== undefined ? { details: err.details } : {}),
     });
     return;
   }
@@ -49,8 +49,9 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     const prismaCode = (err as any).code as string;
     const mapping = PRISMA_ERROR_MAP[prismaCode];
     if (mapping) {
-      logger.warn('Prisma error', { prismaCode, mapped: mapping.code, method: req.method, path: req.originalUrl });
-      res.status(mapping.statusCode).json({ error: err.message, code: mapping.code });
+      // Log full Prisma message for debugging, but return generic message to client
+      logger.warn('Prisma error', { prismaCode, mapped: mapping.code, prismaMessage: err.message, method: req.method, path: req.originalUrl });
+      res.status(mapping.statusCode).json({ error: mapping.code.replace(/_/g, ' ').toLowerCase(), code: mapping.code });
       return;
     }
   }

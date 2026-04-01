@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { validateStableName, isStableNameUnique, validatePassword } from '../utils/validation';
 import prisma from '../lib/prisma';
-import logger from '../config/logger';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { AppError } from '../errors/AppError';
 

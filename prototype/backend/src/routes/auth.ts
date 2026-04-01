@@ -66,21 +66,21 @@ router.post('/register', async (req: Request, res: Response) => {
   const existingUsername = await findUserByUsername(username);
   if (existingUsername) {
     logger.warn('Registration rejected: duplicate username', { username });
-    throw new AuthError(AuthErrorCode.USER_ALREADY_EXISTS, 'Username is already taken', 400);
+    throw new AuthError(AuthErrorCode.USER_ALREADY_EXISTS, 'Username is already taken', 409);
   }
 
   // Check for duplicate email
   const existingEmail = await findUserByEmail(email);
   if (existingEmail) {
     logger.warn('Registration rejected: duplicate email', { email });
-    throw new AuthError(AuthErrorCode.EMAIL_ALREADY_EXISTS, 'Email is already registered', 400);
+    throw new AuthError(AuthErrorCode.EMAIL_ALREADY_EXISTS, 'Email is already registered', 409);
   }
 
   // Check for duplicate stable name
   const existingStableName = await findUserByStableName(stableName);
   if (existingStableName) {
     logger.warn('Registration rejected: duplicate stable name', { stableName });
-    throw new AppError('DUPLICATE_STABLE_NAME', 'Stable name is already taken', 400);
+    throw new AppError('DUPLICATE_STABLE_NAME', 'Stable name is already taken', 409);
   }
 
   // Hash password

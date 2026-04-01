@@ -102,7 +102,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 
     if (currentWeaponCount >= maxCapacity) {
       const storageStatus = getStorageStatus(currentWeaponCount, storageFacilityLevel);
-      throw new EconomyError(EconomyErrorCode.FACILITY_MAX_LEVEL, 'Storage capacity full', 400, {
+      throw new EconomyError(EconomyErrorCode.STORAGE_CAPACITY_FULL, 'Storage capacity full', 400, {
         currentWeapons: storageStatus.currentWeapons,
         maxCapacity: storageStatus.maxCapacity,
         message: 'Upgrade Storage Facility to increase capacity',

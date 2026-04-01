@@ -70,6 +70,7 @@ Example with details:
 | `ROBOT_NAME_TAKEN` | 409 | Robot name is already in use |
 | `INVALID_ROBOT_ATTRIBUTES` | 400 | Robot attributes are invalid |
 | `MAX_ROBOTS_REACHED` | 400 | User has reached maximum robot limit |
+| `ROBOT_STATS_REFRESH_FAILED` | 500 | Failed to refresh robot statistics view |
 
 ### Battle Errors
 
@@ -92,6 +93,7 @@ Example with details:
 | `WEAPON_NOT_FOUND` | 404 | Weapon does not exist |
 | `WEAPON_NOT_AFFORDABLE` | 400 | User cannot afford the weapon |
 | `INVALID_TRANSACTION` | 400 | Transaction is invalid |
+| `STORAGE_CAPACITY_FULL` | 400 | Weapon storage capacity is full |
 
 ### League Errors
 

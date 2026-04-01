@@ -1,7 +1,6 @@
 import express, { Response } from 'express';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import prisma from '../lib/prisma';
-import logger from '../config/logger';
 import { getConfig } from '../config/env';
 import { getNextCronOccurrence } from '../utils/scheduleUtils';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
