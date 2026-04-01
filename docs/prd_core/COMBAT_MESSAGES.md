@@ -558,6 +558,79 @@ Financial/reward messages are filtered from the combat log (shown in the battle 
 
 ---
 
+## HP/Shield Tracking Data Model
+
+### Overview
+
+Combat events contain HP and Shield values for all participating robots. The data model supports both legacy 1v1 battles and N-robot modes (KotH, future FFA/Battle Royale).
+
+### Data Fields
+
+Each `CombatEvent` contains two sets of HP/Shield fields:
+
+1. **`robotHP` / `robotShield` Maps (Canonical Source)**
+   - Type: `Record<string, number>`
+   - Keyed by robot NAME (e.g., `{ "Gobbo": 95, "WimpBot": 46 }`)
+   - Always correct regardless of attacker/defender roles
+   - Scales to any number of robots (1v1, 2v2, KotH 4-8 robots, future modes)
+   - Injected by the combat simulator via a proxy on every event push
+
+2. **`robot1HP` / `robot2HP` / `robot1Shield` / `robot2Shield` (Legacy)**
+   - Type: `number | undefined`
+   - Positional fields that swap based on attacker/defender roles
+   - **DEPRECATED**: Only kept for backward compatibility with old battle data
+   - Do NOT use these fields in new code — use `robotHP[name]` instead
+
+### Why Maps?
+
+The legacy `robot1HP`/`robot2HP` fields were assigned based on attacker/defender position in `performAttack()`:
+```typescript
+// BUG: When robot2 attacks, these values swap!
+robot1HP: attackerState.currentHP,  // Actually robot2's HP when robot2 attacks
+robot2HP: defenderState.currentHP,  // Actually robot1's HP when robot2 attacks
+```
+
+The `robotHP` map is always correct because it's keyed by robot name:
+```typescript
+// CORRECT: Always keyed by robot name, never swaps
+robotHP: { "Gobbo": 95, "WimpBot": 46 }
+```
+
+### Consumer Guidelines
+
+When reading HP/Shield values from combat events:
+
+1. **Prefer `robotHP[name]`** when the map is present
+2. **Fall back to legacy fields** only for old battle data that lacks the map
+3. **Never assume robot count** — iterate over `Object.keys(event.robotHP)` for N-robot support
+
+Example helper function:
+```typescript
+function getEventHP(event, robotName, robot1Name, robot2Name) {
+  // Prefer robotHP map (correct source)
+  if (event.robotHP && robotName in event.robotHP) {
+    return { hp: event.robotHP[robotName], shield: event.robotShield?.[robotName] };
+  }
+  // Legacy fallback (may be incorrect for robot2 attacks)
+  if (robotName === robot1Name) return { hp: event.robot1HP, shield: event.robot1Shield };
+  if (robotName === robot2Name) return { hp: event.robot2HP, shield: event.robot2Shield };
+  return { hp: undefined, shield: undefined };
+}
+```
+
+### N-Robot Scalability
+
+The `robotHP`/`robotShield` maps scale to any battle format:
+
+| Battle Type | Robot Count | Example Map |
+|-------------|-------------|-------------|
+| 1v1 League | 2 | `{ "Gobbo": 95, "WimpBot": 46 }` |
+| 2v2 Tag Team | 4 | `{ "Gobbo": 95, "WimpBot": 46, "IronCrusher": 80, "DeathBot": 0 }` |
+| KotH | 4-8 | `{ "Bot1": 90, "Bot2": 45, "Bot3": 60, "Bot4": 0, "Bot5": 75, ... }` |
+| Future FFA | N | Same pattern — scales automatically |
+
+---
+
 **Status**: v2.2 - All core combat message categories implemented including 2D arena spatial events and King of the Hill events  
 **Implementation**: `combatMessageGenerator.ts` converts real simulator events into narrative messages  
 **All orchestrators**: League, Tournament, Tag Team, and KotH use the narrative conversion pipeline

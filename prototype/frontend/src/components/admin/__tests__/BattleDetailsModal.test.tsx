@@ -292,4 +292,120 @@ describe('BattleDetailsModal', () => {
     // Draw indicator
     expect(screen.getByText(/Draw/)).toBeInTheDocument();
   });
+
+  /* ------------------------------------------------------------------ */
+  /*  Tag Team Winner Display Tests (Requirements 2.6, 2.8, 3.10)       */
+  /* ------------------------------------------------------------------ */
+
+  describe('Tag Team Winner Display', () => {
+    it('should show Team 1 Wins when winnerId matches team1.id', async () => {
+      /**
+       * Validates: Requirements 2.6, 2.8
+       * BattleDetailsModal winner display should match the winnerId (team ID).
+       */
+      const team1WinsBattle = {
+        ...mock2v2Battle,
+        winnerId: 1, // Team 1 ID
+        teams: {
+          team1: { id: 1, activeRobot: { id: 10, name: 'Alpha' }, reserveRobot: { id: 11, name: 'Beta' }, stableId: 1, league: 'gold' },
+          team2: { id: 2, activeRobot: { id: 20, name: 'Gamma' }, reserveRobot: { id: 21, name: 'Delta' }, stableId: 2, league: 'gold' },
+        },
+      };
+      mockedAxios.get.mockResolvedValue({ data: team1WinsBattle });
+      renderModal({ battleId: 99 });
+
+      await waitFor(() => {
+        expect(screen.getByText('Tag Team Battle Summary')).toBeInTheDocument();
+      });
+
+      // Winner display should show "Team 1 Wins!"
+      expect(screen.getByText(/🏆 Team 1 Wins!/)).toBeInTheDocument();
+    });
+
+    it('should show Team 2 Wins when winnerId matches team2.id', async () => {
+      /**
+       * Validates: Requirements 2.6, 2.8
+       * BattleDetailsModal winner display should match the winnerId (team ID).
+       */
+      const team2WinsBattle = {
+        ...mock2v2Battle,
+        winnerId: 2, // Team 2 ID
+        teams: {
+          team1: { id: 1, activeRobot: { id: 10, name: 'Alpha' }, reserveRobot: { id: 11, name: 'Beta' }, stableId: 1, league: 'gold' },
+          team2: { id: 2, activeRobot: { id: 20, name: 'Gamma' }, reserveRobot: { id: 21, name: 'Delta' }, stableId: 2, league: 'gold' },
+        },
+      };
+      mockedAxios.get.mockResolvedValue({ data: team2WinsBattle });
+      renderModal({ battleId: 99 });
+
+      await waitFor(() => {
+        expect(screen.getByText('Tag Team Battle Summary')).toBeInTheDocument();
+      });
+
+      // Winner display should show "Team 2 Wins!"
+      expect(screen.getByText(/🏆 Team 2 Wins!/)).toBeInTheDocument();
+    });
+
+    it('should show Draw when winnerId is null for tag team battles', async () => {
+      /**
+       * Validates: Requirements 2.8
+       * BattleDetailsModal should show Draw when winnerId is null.
+       */
+      const drawBattle = {
+        ...mock2v2Battle,
+        winnerId: null,
+        teams: {
+          team1: { id: 1, activeRobot: { id: 10, name: 'Alpha' }, reserveRobot: { id: 11, name: 'Beta' }, stableId: 1, league: 'gold' },
+          team2: { id: 2, activeRobot: { id: 20, name: 'Gamma' }, reserveRobot: { id: 21, name: 'Delta' }, stableId: 2, league: 'gold' },
+        },
+      };
+      mockedAxios.get.mockResolvedValue({ data: drawBattle });
+      renderModal({ battleId: 99 });
+
+      await waitFor(() => {
+        expect(screen.getByText('Tag Team Battle Summary')).toBeInTheDocument();
+      });
+
+      // Winner display should show "Draw"
+      expect(screen.getByText(/⚖️ Draw/)).toBeInTheDocument();
+    });
+
+    it('should highlight winning team rewards section', async () => {
+      /**
+       * Validates: Requirements 2.6, 2.8
+       * The winning team's rewards section should be highlighted.
+       */
+      const team1WinsBattle = {
+        ...mock2v2Battle,
+        winnerId: 1, // Team 1 ID
+        teams: {
+          team1: { id: 1, activeRobot: { id: 10, name: 'Alpha' }, reserveRobot: { id: 11, name: 'Beta' }, stableId: 1, league: 'gold' },
+          team2: { id: 2, activeRobot: { id: 20, name: 'Gamma' }, reserveRobot: { id: 21, name: 'Delta' }, stableId: 2, league: 'gold' },
+        },
+        participants: [
+          { robotId: 10, team: 1, role: 'active', credits: 300, eloBefore: 1200, eloAfter: 1225, damageDealt: 80, finalHP: 30, yielded: false, destroyed: false },
+          { robotId: 11, team: 1, role: 'reserve', credits: 150, eloBefore: 1100, eloAfter: 1115, damageDealt: 40, finalHP: 50, yielded: false, destroyed: false },
+          { robotId: 20, team: 2, role: 'active', credits: 100, eloBefore: 1150, eloAfter: 1125, damageDealt: 60, finalHP: 0, yielded: false, destroyed: true },
+          { robotId: 21, team: 2, role: 'reserve', credits: 50, eloBefore: 1050, eloAfter: 1035, damageDealt: 20, finalHP: 10, yielded: false, destroyed: false },
+        ],
+      };
+      mockedAxios.get.mockResolvedValue({ data: team1WinsBattle });
+      renderModal({ battleId: 99 });
+
+      await waitFor(() => {
+        expect(screen.getByText('💰 Battle Rewards')).toBeInTheDocument();
+      });
+
+      // The Team 1 rewards section should have the winner highlight class
+      // We can verify this by checking the DOM structure
+      const rewardsSection = screen.getByText('💰 Battle Rewards').closest('div');
+      expect(rewardsSection).toBeInTheDocument();
+      
+      // Find the Team 1 rewards div - it should have the green border class
+      const team1RewardsLabel = screen.getAllByText('Team 1').find(el => 
+        el.closest('.p-3')?.classList.contains('bg-green-900/30')
+      );
+      expect(team1RewardsLabel).toBeInTheDocument();
+    });
+  });
 });

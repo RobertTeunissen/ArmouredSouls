@@ -939,18 +939,24 @@ export class CombatMessageGenerator {
       team2Name?: string;
       robot3Name?: string; // team1 reserve
       robot4Name?: string; // team2 reserve
+      // Phase 2+ flag - skip battle_start emission for subsequent phases
+      skipBattleStart?: boolean;
     }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any[] {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const narrativeEvents: any[] = [];
 
-    // Track shield state to detect shield breaks
-    let robot1PrevShield = -1; // -1 = not yet initialized
-    let robot2PrevShield = -1;
+    // Track shield state to detect shield breaks (Map keyed by robot name for N-robot support)
+    const prevShields = new Map<string, number>();
+    prevShields.set(context.robot1Name, -1); // -1 = not yet initialized
+    prevShields.set(context.robot2Name, -1);
+    
     // Track HP thresholds crossed to emit damage status messages (only once per threshold)
-    const robot1ThresholdsCrossed = new Set<number>();
-    const robot2ThresholdsCrossed = new Set<number>();
+    const thresholds = new Map<string, Set<number>>();
+    thresholds.set(context.robot1Name, new Set<number>());
+    thresholds.set(context.robot2Name, new Set<number>());
+    
     // Track if we've already emitted the battle start + stance intro
     let battleStartEmitted = false;
     // Track if we've already emitted a destruction/battle_end to avoid duplicates
@@ -962,52 +968,64 @@ export class CombatMessageGenerator {
       if (!battleStartEmitted) {
         battleStartEmitted = true;
 
-        // Battle start message
-        narrativeEvents.push({
-          timestamp: 0,
-          type: 'battle_start',
-          message: this.generateBattleStart({
-            robot1Name: context.robot1Name,
-            robot2Name: context.robot2Name,
-            robot1ELO: context.robot1ELO,
-            robot2ELO: context.robot2ELO,
-            leagueType: context.leagueType,
-            battleType: context.battleType,
-            team1Name: context.team1Name,
-            team2Name: context.team2Name,
-            robot3Name: context.robot3Name,
-            robot4Name: context.robot4Name,
-          }),
-        });
+        // Battle start message - skip for phase 2+ in tag team battles
+        if (!context.skipBattleStart) {
+          narrativeEvents.push({
+            timestamp: 0,
+            type: 'battle_start',
+            message: this.generateBattleStart({
+              robot1Name: context.robot1Name,
+              robot2Name: context.robot2Name,
+              robot1ELO: context.robot1ELO,
+              robot2ELO: context.robot2ELO,
+              leagueType: context.leagueType,
+              battleType: context.battleType,
+              team1Name: context.team1Name,
+              team2Name: context.team2Name,
+              robot3Name: context.robot3Name,
+              robot4Name: context.robot4Name,
+            }),
+          });
 
-        // Stance announcements
-        narrativeEvents.push({
-          timestamp: 0.1,
-          type: 'stance',
-          message: this.generateStance(context.robot1Name, context.robot1Stance),
-        });
-        narrativeEvents.push({
-          timestamp: 0.2,
-          type: 'stance',
-          message: this.generateStance(context.robot2Name, context.robot2Stance),
-        });
+          // Stance announcements (only for phase 1)
+          narrativeEvents.push({
+            timestamp: 0.1,
+            type: 'stance',
+            message: this.generateStance(context.robot1Name, context.robot1Stance),
+          });
+          narrativeEvents.push({
+            timestamp: 0.2,
+            type: 'stance',
+            message: this.generateStance(context.robot2Name, context.robot2Stance),
+          });
+        }
 
-        // Initialize shield tracking from first event
-        if (event.robot1Shield !== undefined) robot1PrevShield = event.robot1Shield;
-        if (event.robot2Shield !== undefined) robot2PrevShield = event.robot2Shield;
+        // Initialize shield tracking from first event using robotShield map (correct source)
+        const r1Shield = this.getHPFromEvent(event, context.robot1Name, context);
+        const r2Shield = this.getHPFromEvent(event, context.robot2Name, context);
+        if (r1Shield.shield !== undefined) prevShields.set(context.robot1Name, r1Shield.shield);
+        if (r2Shield.shield !== undefined) prevShields.set(context.robot2Name, r2Shield.shield);
       }
 
       // ── Convert each simulator event type ──
       const ts = event.timestamp;
 
+      // Helper to get attacker/defender names with fallback to context robot names
+      // This ensures attack messages always have valid robot names, even in phase 2+
+      // where the context robot names may have changed after tag-in
+      const getAttackerName = () => event.attacker || context.robot1Name;
+      const getDefenderName = () => event.defender || context.robot2Name;
+
       if (event.type === 'malfunction') {
+        const attackerName = getAttackerName();
+        const defenderName = getDefenderName();
         narrativeEvents.push({
           timestamp: ts,
           type: 'malfunction',
-          attacker: event.attacker,
+          attacker: attackerName,
           message: this.generateAttack({
-            attackerName: event.attacker || '',
-            defenderName: event.defender || '',
+            attackerName,
+            defenderName,
             weaponName: event.weapon || 'Fists',
             damage: 0,
             hit: false,
@@ -1016,14 +1034,16 @@ export class CombatMessageGenerator {
           }),
         });
       } else if (event.type === 'miss') {
+        const attackerName = getAttackerName();
+        const defenderName = getDefenderName();
         narrativeEvents.push({
           timestamp: ts,
           type: 'miss',
-          attacker: event.attacker,
-          defender: event.defender,
+          attacker: attackerName,
+          defender: defenderName,
           message: this.generateAttack({
-            attackerName: event.attacker || '',
-            defenderName: event.defender || '',
+            attackerName,
+            defenderName,
             weaponName: event.weapon || 'Fists',
             damage: 0,
             hit: false,
@@ -1034,18 +1054,20 @@ export class CombatMessageGenerator {
         // Skip the simulator's battle-start event (timestamp 0, no weapon)
         if (ts === 0 && !event.weapon) continue;
 
-        const _defenderMaxHP = event.defender === context.robot1Name
+        const attackerName = getAttackerName();
+        const defenderName = getDefenderName();
+        const _defenderMaxHP = defenderName === context.robot1Name
           ? context.robot1MaxHP : context.robot2MaxHP;
 
         narrativeEvents.push({
           timestamp: ts,
           type: event.type === 'critical' ? 'critical' : 'attack',
-          attacker: event.attacker,
-          defender: event.defender,
+          attacker: attackerName,
+          defender: defenderName,
           weapon: event.weapon,
           message: this.generateAttack({
-            attackerName: event.attacker || '',
-            defenderName: event.defender || '',
+            attackerName,
+            defenderName,
             weaponName: event.weapon || 'Fists',
             damage: event.damage || 0,
             hit: true,
@@ -1056,14 +1078,17 @@ export class CombatMessageGenerator {
         });
 
         // ── Shield break detection ──
-        this.checkShieldBreak(event, context, robot1PrevShield, robot2PrevShield, narrativeEvents, ts);
+        this.checkShieldBreak(event, context, prevShields, narrativeEvents, ts);
 
         // ── Damage status thresholds ──
-        this.checkDamageStatus(event, context, robot1ThresholdsCrossed, robot2ThresholdsCrossed, narrativeEvents, ts);
+        this.checkDamageStatus(event, context, thresholds, narrativeEvents, ts);
 
       } else if (event.type === 'counter') {
         const counterWeapon = event.weapon || 'Fists';
-        const attackerMaxHP = event.defender === context.robot1Name
+        // Use helper functions for consistent name resolution with fallback
+        const attackerName = getAttackerName();
+        const defenderName = getDefenderName();
+        const attackerMaxHP = defenderName === context.robot1Name
           ? context.robot1MaxHP : context.robot2MaxHP;
 
         if (event.hit === false) {
@@ -1071,11 +1096,11 @@ export class CombatMessageGenerator {
           narrativeEvents.push({
             timestamp: ts,
             type: 'counter',
-            attacker: event.attacker,
-            defender: event.defender,
+            attacker: attackerName,
+            defender: defenderName,
             message: this.generateCounterMiss(
-              event.attacker || '',
-              event.defender || '',
+              attackerName,
+              defenderName,
               counterWeapon,
             ),
           });
@@ -1084,11 +1109,11 @@ export class CombatMessageGenerator {
           narrativeEvents.push({
             timestamp: ts,
             type: 'counter',
-            attacker: event.attacker,
-            defender: event.defender,
+            attacker: attackerName,
+            defender: defenderName,
             message: this.generateCounter(
-              event.attacker || '',
-              event.defender || '',
+              attackerName,
+              defenderName,
               counterWeapon,
               event.damage || 0,
               attackerMaxHP
@@ -1096,8 +1121,8 @@ export class CombatMessageGenerator {
           });
 
           // Check shield break and damage status after counter hit
-          this.checkShieldBreak(event, context, robot1PrevShield, robot2PrevShield, narrativeEvents, ts);
-          this.checkDamageStatus(event, context, robot1ThresholdsCrossed, robot2ThresholdsCrossed, narrativeEvents, ts);
+          this.checkShieldBreak(event, context, prevShields, narrativeEvents, ts);
+          this.checkDamageStatus(event, context, thresholds, narrativeEvents, ts);
         }
 
       } else if (event.type === 'yield') {
@@ -1123,14 +1148,15 @@ export class CombatMessageGenerator {
         } else {
           battleEndEmitted = true;
 
-          // Determine who yielded using HP percentages (not message parsing, which is fragile
-          // because both robot names appear in the yield message)
-          const robot1HpPct = (event.robot1HP || 0) / context.robot1MaxHP;
-          const robot2HpPct = (event.robot2HP || 0) / context.robot2MaxHP;
+          // Determine who yielded using robotHP map (correct source, not legacy fields)
+          const r1HP = this.getHPFromEvent(event, context.robot1Name, context);
+          const r2HP = this.getHPFromEvent(event, context.robot2Name, context);
+          const robot1HpPct = (r1HP.hp || 0) / context.robot1MaxHP;
+          const robot2HpPct = (r2HP.hp || 0) / context.robot2MaxHP;
           const isRobot1Yielding = robot1HpPct <= robot2HpPct;
           const yieldingRobot = isRobot1Yielding ? context.robot1Name : context.robot2Name;
           const winnerRobot = isRobot1Yielding ? context.robot2Name : context.robot1Name;
-          const winnerHP = isRobot1Yielding ? (event.robot2HP || 0) : (event.robot1HP || 0);
+          const winnerHP = isRobot1Yielding ? (r2HP.hp || 0) : (r1HP.hp || 0);
           const winnerMaxHP = isRobot1Yielding ? context.robot2MaxHP : context.robot1MaxHP;
 
           narrativeEvents.push({
@@ -1159,10 +1185,13 @@ export class CombatMessageGenerator {
         if (battleEndEmitted) continue;
         battleEndEmitted = true;
 
-        const isRobot1Destroyed = event.robot1HP === 0;
+        // Determine who was destroyed using robotHP map (correct source)
+        const r1HP = this.getHPFromEvent(event, context.robot1Name, context);
+        const r2HP = this.getHPFromEvent(event, context.robot2Name, context);
+        const isRobot1Destroyed = (r1HP.hp || 0) === 0;
         const destroyedRobot = isRobot1Destroyed ? context.robot1Name : context.robot2Name;
         const winnerRobot = isRobot1Destroyed ? context.robot2Name : context.robot1Name;
-        const winnerHP = isRobot1Destroyed ? (event.robot2HP || 0) : (event.robot1HP || 0);
+        const winnerHP = isRobot1Destroyed ? (r2HP.hp || 0) : (r1HP.hp || 0);
         const winnerMaxHP = isRobot1Destroyed ? context.robot2MaxHP : context.robot1MaxHP;
 
         // Destruction message
@@ -1262,9 +1291,11 @@ export class CombatMessageGenerator {
         });
       }
 
-      // Update shield tracking
-      if (event.robot1Shield !== undefined) robot1PrevShield = event.robot1Shield;
-      if (event.robot2Shield !== undefined) robot2PrevShield = event.robot2Shield;
+      // Update shield tracking using robotShield map (correct source)
+      const r1Shield = this.getHPFromEvent(event, context.robot1Name, context);
+      const r2Shield = this.getHPFromEvent(event, context.robot2Name, context);
+      if (r1Shield.shield !== undefined) prevShields.set(context.robot1Name, r1Shield.shield);
+      if (r2Shield.shield !== undefined) prevShields.set(context.robot2Name, r2Shield.shield);
     }
 
     // If the last simulator event was a yield, add a victory message
@@ -1272,13 +1303,15 @@ export class CombatMessageGenerator {
     const lastNarrative = narrativeEvents[narrativeEvents.length - 1];
     if (lastEvent && lastEvent.type === 'yield' && lastNarrative && lastNarrative.type === 'yield' && !battleEndEmitted) {
       battleEndEmitted = true;
-      // Use HP percentages to determine who yielded (not message parsing)
-      const robot1HpPct = (lastEvent.robot1HP || 0) / context.robot1MaxHP;
-      const robot2HpPct = (lastEvent.robot2HP || 0) / context.robot2MaxHP;
+      // Use robotHP map to determine who yielded (correct source, not legacy fields)
+      const r1HP = this.getHPFromEvent(lastEvent, context.robot1Name, context);
+      const r2HP = this.getHPFromEvent(lastEvent, context.robot2Name, context);
+      const robot1HpPct = (r1HP.hp || 0) / context.robot1MaxHP;
+      const robot2HpPct = (r2HP.hp || 0) / context.robot2MaxHP;
       const isRobot1Yielding = robot1HpPct <= robot2HpPct;
       const winnerName = isRobot1Yielding ? context.robot2Name : context.robot1Name;
       const loserName = isRobot1Yielding ? context.robot1Name : context.robot2Name;
-      const winnerHP = isRobot1Yielding ? (lastEvent.robot2HP || 0) : (lastEvent.robot1HP || 0);
+      const winnerHP = isRobot1Yielding ? (r2HP.hp || 0) : (r1HP.hp || 0);
       const winnerMaxHP = isRobot1Yielding ? context.robot2MaxHP : context.robot1MaxHP;
 
       narrativeEvents.push({
@@ -1301,31 +1334,25 @@ export class CombatMessageGenerator {
   private static checkShieldBreak(
     event: CombatEvent,
     context: { robot1Name: string; robot2Name: string },
-    robot1PrevShield: number,
-    robot2PrevShield: number,
+    prevShields: Map<string, number>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     narrativeEvents: any[],
     ts: number
   ): void {
-    // Defender's shield went to 0
-    if (event.defender === context.robot1Name && robot1PrevShield > 0 && event.robot1Shield === 0) {
+    // Only check the defender's shield
+    if (!event.defender) return;
+    
+    const defenderName = event.defender;
+    const prevShield = prevShields.get(defenderName) ?? -1;
+    const { shield: currentShield } = this.getHPFromEvent(event, defenderName, context);
+    
+    // Shield broke if it was > 0 and is now 0
+    if (prevShield > 0 && currentShield === 0) {
       narrativeEvents.push({
         timestamp: ts,
         type: 'shield_break',
-        message: this.generateShieldBreak(context.robot1Name),
+        message: this.generateShieldBreak(defenderName),
       });
-    }
-    if (event.defender === context.robot2Name && robot2PrevShield > 0 && event.robot2Shield === 0) {
-      narrativeEvents.push({
-        timestamp: ts,
-        type: 'shield_break',
-        message: this.generateShieldBreak(context.robot2Name),
-      });
-    }
-    // Also check attacker (for counter-attacks)
-    if (event.defender === context.robot1Name && event.type === 'counter') {
-      // In counter events, the "attacker" field is the counter-attacker (defender of original)
-      // and "defender" is the one taking counter damage
     }
   }
 
@@ -1333,39 +1360,38 @@ export class CombatMessageGenerator {
   private static checkDamageStatus(
     event: CombatEvent,
     context: { robot1Name: string; robot2Name: string; robot1MaxHP: number; robot2MaxHP: number },
-    robot1Thresholds: Set<number>,
-    robot2Thresholds: Set<number>,
+    thresholds: Map<string, Set<number>>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     narrativeEvents: any[],
     ts: number
   ): void {
-    const thresholds = [75, 50, 25]; // Light, Moderate, Heavy
+    const damageThresholds = [75, 50, 25]; // Light, Moderate, Heavy
 
-    // Check defender HP (suppress when HP=0 — the destruction message handles that)
-    if (event.defender === context.robot1Name && event.robot1HP !== undefined && event.robot1HP > 0) {
-      const pct = (event.robot1HP / context.robot1MaxHP) * 100;
-      for (const t of thresholds) {
-        if (pct <= t && !robot1Thresholds.has(t)) {
-          robot1Thresholds.add(t);
-          const msg = this.getDamageStatusMessage(context.robot1Name, event.robot1HP, context.robot1MaxHP);
-          if (msg) {
-            narrativeEvents.push({ timestamp: ts, type: 'damage_status', message: msg });
-          }
-          break; // Only emit the most severe new threshold
+    // Only check the defender's HP
+    if (!event.defender) return;
+    
+    const defenderName = event.defender;
+    const { hp: currentHP } = this.getHPFromEvent(event, defenderName, context);
+    
+    // Skip if HP is undefined or 0 (destruction message handles HP=0)
+    if (currentHP === undefined || currentHP <= 0) return;
+    
+    const maxHP = defenderName === context.robot1Name 
+      ? context.robot1MaxHP 
+      : context.robot2MaxHP;
+    
+    const robotThresholds = thresholds.get(defenderName) ?? new Set<number>();
+    const pct = (currentHP / maxHP) * 100;
+    
+    for (const t of damageThresholds) {
+      if (pct <= t && !robotThresholds.has(t)) {
+        robotThresholds.add(t);
+        thresholds.set(defenderName, robotThresholds);
+        const msg = this.getDamageStatusMessage(defenderName, currentHP, maxHP);
+        if (msg) {
+          narrativeEvents.push({ timestamp: ts, type: 'damage_status', message: msg });
         }
-      }
-    }
-    if (event.defender === context.robot2Name && event.robot2HP !== undefined && event.robot2HP > 0) {
-      const pct = (event.robot2HP / context.robot2MaxHP) * 100;
-      for (const t of thresholds) {
-        if (pct <= t && !robot2Thresholds.has(t)) {
-          robot2Thresholds.add(t);
-          const msg = this.getDamageStatusMessage(context.robot2Name, event.robot2HP, context.robot2MaxHP);
-          if (msg) {
-            narrativeEvents.push({ timestamp: ts, type: 'damage_status', message: msg });
-          }
-          break;
-        }
+        break; // Only emit the most severe new threshold
       }
     }
   }
@@ -1432,6 +1458,7 @@ export class CombatMessageGenerator {
             team2Name: context.team2Name,
             robot3Name: context.robot3Name,
             robot4Name: context.robot4Name,
+            skipBattleStart: currentPhase > 0, // Skip battle_start for phase 2+
           });
           narrativeEvents.push(...converted);
           phaseEvents = [];
@@ -1465,6 +1492,7 @@ export class CombatMessageGenerator {
         team2Name: context.team2Name,
         robot3Name: context.robot3Name,
         robot4Name: context.robot4Name,
+        skipBattleStart: currentPhase > 0, // Skip battle_start for phase 2+
       });
       narrativeEvents.push(...converted);
     }

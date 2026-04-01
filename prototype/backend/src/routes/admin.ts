@@ -1675,14 +1675,35 @@ function mapBattleRecord(battle: any, battleFormat: '1v1' | '2v2') {
 
 /**
  * Map a TagTeamMatch (with included battle and team data) to the API response shape.
+ * Includes team robot names for display in admin portal (Requirements 2.6, 3.8).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapTagTeamRecord(match: any) {
   const battle = match.battle;
   const base = mapBattleRecord(battle, '2v2');
 
+  // Determine winner name for tag team battles (should be team name, not robot name)
+  // winnerId in tag team battles should be team1.id or team2.id (after fix in Task 3)
+  let winnerName = base.winnerName;
+  if (battle.winnerId === match.team1.id) {
+    winnerName = 'Team 1';
+  } else if (match.team2 && battle.winnerId === match.team2.id) {
+    winnerName = 'Team 2';
+  } else if (battle.winnerId === null) {
+    winnerName = 'Draw';
+  }
+
   return {
     ...base,
+    winnerName,
+    // Include team robot names for display (Requirements 2.6)
+    team1ActiveName: match.team1.activeRobot?.name,
+    team1ReserveName: match.team1.reserveRobot?.name,
+    team2ActiveName: match.team2?.activeRobot?.name,
+    team2ReserveName: match.team2?.reserveRobot?.name,
+    // Include team IDs for winner determination
+    team1Id: match.team1.id,
+    team2Id: match.team2?.id,
     teams: {
       team1: {
         id: match.team1.id,

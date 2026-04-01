@@ -363,6 +363,10 @@ async function simulateTagTeamBattle(
   currentTime = phase1Duration;
   team1CurrentRobot.currentHP = phase1Result.robot1FinalHP;
   team2CurrentRobot.currentHP = phase1Result.robot2FinalHP;
+  // FIX: Capture shield state after phase 1 (Requirement 2.4)
+  // This ensures surviving robot keeps depleted shields into phase 2
+  team1CurrentRobot.currentShield = phase1Result.robot1FinalShield;
+  team2CurrentRobot.currentShield = phase1Result.robot2FinalShield;
   
   // Track phase 1 damage and survival time
   team1ActiveDamageDealt += phase1Result.robot1DamageDealt;
@@ -522,6 +526,9 @@ async function simulateTagTeamBattle(
       currentTime += phase2Duration;
       team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
       team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
+      // FIX: Capture shield state after phase 2 (Requirement 2.4)
+      team1CurrentRobot.currentShield = phase2Result.robot1FinalShield;
+      team2CurrentRobot.currentShield = phase2Result.robot2FinalShield;
       
       // Track phase 2 damage and survival time
       team1ReserveDamageDealt += phase2Result.robot1DamageDealt;
@@ -602,6 +609,9 @@ async function simulateTagTeamBattle(
       currentTime += phase2Duration;
       team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
       team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
+      // FIX: Capture shield state after phase 2 (Requirement 2.4)
+      team1CurrentRobot.currentShield = phase2Result.robot1FinalShield;
+      team2CurrentRobot.currentShield = phase2Result.robot2FinalShield;
       
       // Track phase 2 damage and survival time
       team1ReserveDamageDealt += phase2Result.robot1DamageDealt;
@@ -682,6 +692,9 @@ async function simulateTagTeamBattle(
           currentTime += phase3Duration;
           team1CurrentRobot.currentHP = phase3Result.robot1FinalHP;
           team2CurrentRobot.currentHP = phase3Result.robot2FinalHP;
+          // FIX: Capture shield state after phase 3 (Requirement 2.4)
+          team1CurrentRobot.currentShield = phase3Result.robot1FinalShield;
+          team2CurrentRobot.currentShield = phase3Result.robot2FinalShield;
           
           // Track phase 3 damage and survival time
           team1ReserveDamageDealt += phase3Result.robot1DamageDealt;
@@ -764,6 +777,9 @@ async function simulateTagTeamBattle(
       currentTime += phase2Duration;
       team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
       team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
+      // FIX: Capture shield state after phase 2 (Requirement 2.4)
+      team1CurrentRobot.currentShield = phase2Result.robot1FinalShield;
+      team2CurrentRobot.currentShield = phase2Result.robot2FinalShield;
       
       // Track phase 2 damage and survival time
       team1ActiveDamageDealt += phase2Result.robot1DamageDealt;
@@ -844,6 +860,9 @@ async function simulateTagTeamBattle(
           currentTime += phase3Duration;
           team1CurrentRobot.currentHP = phase3Result.robot1FinalHP;
           team2CurrentRobot.currentHP = phase3Result.robot2FinalHP;
+          // FIX: Capture shield state after phase 3 (Requirement 2.4)
+          team1CurrentRobot.currentShield = phase3Result.robot1FinalShield;
+          team2CurrentRobot.currentShield = phase3Result.robot2FinalShield;
           
           // Track phase 3 damage and survival time
           team1ReserveDamageDealt += phase3Result.robot1DamageDealt;
@@ -882,6 +901,11 @@ async function simulateTagTeamBattle(
   const team1CurrentFighterId = team1ReserveUsed ? team1.reserveRobotId : team1.activeRobotId;
   const team2CurrentFighterId = team2ReserveUsed ? team2.reserveRobotId : team2.activeRobotId;
 
+  // Calculate total remaining HP for each team (active + reserve)
+  // This is used for draw detection - a team is only exhausted when ALL robots are destroyed
+  const team1TotalHP = team1ActiveFinalHP + (team1ReserveUsed ? team1ReserveFinalHP : team1.reserveRobot.maxHP);
+  const team2TotalHP = team2ActiveFinalHP + (team2ReserveUsed ? team2ReserveFinalHP : team2.reserveRobot.maxHP);
+
   // Requirement 3.8: Battle timeout draw
   // This triggers when the overall tag team time limit is reached, OR when
   // the inner phase(s) all ended in draws (time expired without a decisive result).
@@ -890,21 +914,30 @@ async function simulateTagTeamBattle(
   if (currentTime >= maxTime || lastPhaseWasDraw) {
     isDraw = true;
   }
-  // Requirement 3.7: Simultaneous destruction/yield draw (both at 0 HP)
-  else if (team1CurrentFighterHP <= 0 && team2CurrentFighterHP <= 0) {
+  // Requirement 3.7: Both teams exhausted (all robots destroyed/yielded)
+  // Only declare draw when BOTH teams have 0 total HP (active + reserve)
+  else if (team1TotalHP <= 0 && team2TotalHP <= 0) {
     isDraw = true;
   }
-  // Requirement 3.6: Team defeat - winner is the team whose fighter has more HP
+  // Team 1 exhausted - all robots destroyed
+  else if (team1TotalHP <= 0) {
+    winnerId = team2.id;  // FIXED: Use team ID, not robot ID (Requirement 2.1)
+  }
+  // Team 2 exhausted - all robots destroyed
+  else if (team2TotalHP <= 0) {
+    winnerId = team1.id;  // FIXED: Use team ID, not robot ID (Requirement 2.1)
+  }
+  // Requirement 3.6: Team defeat - winner is the team whose current fighter has more HP
   // This covers both destruction (HP = 0) and yield (HP > 0 but yielded)
   else if (team1CurrentFighterHP <= 0) {
-    winnerId = team2CurrentFighterId;
+    winnerId = team2.id;  // FIXED: Use team ID, not robot ID (Requirement 2.1)
   } else if (team2CurrentFighterHP <= 0) {
-    winnerId = team1CurrentFighterId;
+    winnerId = team1.id;  // FIXED: Use team ID, not robot ID (Requirement 2.1)
   } else if (team1CurrentFighterHP > team2CurrentFighterHP) {
     // Both robots still have HP, winner is the one with more HP (yield case)
-    winnerId = team1CurrentFighterId;
+    winnerId = team1.id;  // FIXED: Use team ID, not robot ID (Requirement 2.1)
   } else if (team2CurrentFighterHP > team1CurrentFighterHP) {
-    winnerId = team2CurrentFighterId;
+    winnerId = team2.id;  // FIXED: Use team ID, not robot ID (Requirement 2.1)
   } else {
     // Equal HP - draw
     isDraw = true;

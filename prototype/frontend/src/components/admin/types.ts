@@ -92,6 +92,18 @@ export interface Battle {
   battleFormat?: '1v1' | '2v2';
   /** Battle type: league, tournament, tagteam, or koth */
   battleType?: 'league' | 'tournament' | 'tagteam' | 'koth';
+  /** Team 1 active robot name (for 2v2 tag team battles) */
+  team1ActiveName?: string;
+  /** Team 1 reserve robot name (for 2v2 tag team battles) */
+  team1ReserveName?: string;
+  /** Team 2 active robot name (for 2v2 tag team battles) */
+  team2ActiveName?: string;
+  /** Team 2 reserve robot name (for 2v2 tag team battles) */
+  team2ReserveName?: string;
+  /** Team 1 ID (for 2v2 tag team battles) */
+  team1Id?: number;
+  /** Team 2 ID (for 2v2 tag team battles) */
+  team2Id?: number;
 }
 
 export interface BattleListResponse {
