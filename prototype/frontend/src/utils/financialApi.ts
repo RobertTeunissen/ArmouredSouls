@@ -3,7 +3,7 @@
  * Provides functions to interact with the economy/financial endpoints
  */
 
-import apiClient from './apiClient';
+import { api } from './api';
 
 /**
  * Financial Summary for Dashboard
@@ -18,8 +18,7 @@ export interface FinancialSummary {
 }
 
 export const getFinancialSummary = async (): Promise<FinancialSummary> => {
-  const response = await apiClient.get('/api/finances/summary');
-  return response.data;
+  return api.get<FinancialSummary>('/api/finances/summary');
 };
 
 /**
@@ -77,8 +76,7 @@ export interface FinancialReport {
 export const getDailyFinancialReport = async (
   battleWinnings: number = 0
 ): Promise<FinancialReport> => {
-  const response = await apiClient.get(`/api/finances/daily?battleWinnings=${battleWinnings}`);
-  return response.data;
+  return api.get<FinancialReport>(`/api/finances/daily?battleWinnings=${battleWinnings}`);
 };
 
 /**
@@ -94,8 +92,7 @@ export interface OperatingCosts {
 }
 
 export const getOperatingCosts = async (): Promise<OperatingCosts> => {
-  const response = await apiClient.get('/api/finances/operating-costs');
-  return response.data;
+  return api.get<OperatingCosts>('/api/finances/operating-costs');
 };
 
 /**
@@ -116,8 +113,7 @@ export interface RevenueStreams {
 }
 
 export const getRevenueStreams = async (): Promise<RevenueStreams> => {
-  const response = await apiClient.get('/api/finances/revenue-streams');
-  return response.data;
+  return api.get<RevenueStreams>('/api/finances/revenue-streams');
 };
 
 /**
@@ -140,8 +136,7 @@ export interface FinancialProjections {
 }
 
 export const getFinancialProjections = async (): Promise<FinancialProjections> => {
-  const response = await apiClient.get('/api/finances/projections');
-  return response.data;
+  return api.get<FinancialProjections>('/api/finances/projections');
 };
 
 /**
@@ -244,8 +239,7 @@ export interface PerRobotFinancialReport {
 }
 
 export const getPerRobotFinancialReport = async (): Promise<PerRobotFinancialReport> => {
-  const response = await apiClient.get('/api/finances/per-robot');
-  return response.data;
+  return api.get<PerRobotFinancialReport>('/api/finances/per-robot');
 };
 
 /**
@@ -271,6 +265,5 @@ export const calculateFacilityROI = async (
   facilityType: string,
   targetLevel: number
 ): Promise<FacilityROIData> => {
-  const response = await apiClient.post('/api/finances/roi-calculator', { facilityType, targetLevel });
-  return response.data;
+  return api.post<FacilityROIData>('/api/finances/roi-calculator', { facilityType, targetLevel });
 };

@@ -130,26 +130,50 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
 ```
 
 **Frontend Error Handling**:
+
+All API errors are normalized into `ApiError` instances by the `api` helper. Use the `code` property to switch on machine-readable error codes:
+
 ```typescript
+import { ApiError } from '../utils/ApiError';
+
 try {
   const response = await api.performAction();
   // Handle success
-} catch (error) {
-  // Switch on error code for specific handling
-  switch (error.code) {
-    case 'INSUFFICIENT_CREDITS':
-      showToast('Not enough credits for this purchase');
-      break;
-    case 'ROBOT_NOT_FOUND':
-      showToast('Robot no longer exists');
-      break;
-    case 'UNAUTHORIZED':
-      redirectToLogin();
-      break;
-    default:
-      showToast(error.error || 'An unexpected error occurred');
+} catch (err) {
+  if (err instanceof ApiError) {
+    // Switch on machine-readable error code
+    switch (err.code) {
+      case 'INSUFFICIENT_CREDITS':
+        showToast('Not enough credits for this purchase');
+        break;
+      case 'ROBOT_NOT_FOUND':
+        showToast('Robot no longer exists');
+        navigate('/robots');
+        break;
+      case 'UNAUTHORIZED':
+        redirectToLogin();
+        break;
+      case 'NETWORK_ERROR':
+        showToast('Network error - please check your connection');
+        break;
+      default:
+        showToast(err.message || 'An unexpected error occurred');
+    }
   }
 }
+```
+
+**ApiError Properties**:
+- `message` - Human-readable error message
+- `code` - Machine-readable error code (e.g., `ROBOT_NOT_FOUND`, `INSUFFICIENT_CREDITS`)
+- `statusCode` - HTTP status code (0 for network errors)
+- `details` - Optional structured data from backend (e.g., `{ blockers: [...] }`)
+
+**Special Error Codes**:
+- `NETWORK_ERROR` - Request failed before reaching server (statusCode: 0)
+- `UNKNOWN_ERROR` - Server returned non-structured error response
+
+See `docs/guides/ERROR_CODES.md` for the complete list of backend error codes.
 ```
 
 ### Error Boundaries (React)

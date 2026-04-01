@@ -1,9 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { AxiosError, AxiosHeaders } from 'axios';
 import apiClient from '../apiClient';
 import { getProfile, updateProfile, getStableStatistics } from '../userApi';
 import type { ProfileData, ProfileUpdateRequest, StableStatistics } from '../userApi';
 
-// Mock apiClient
+// Mock apiClient (used by the api helper internally)
 vi.mock('../apiClient', () => ({
   default: {
     get: vi.fn(),
@@ -14,7 +15,33 @@ vi.mock('../apiClient', () => ({
   },
 }));
 
-const mockedApiClient = vi.mocked(apiClient);
+const mockedGet = apiClient.get as Mock;
+const mockedPut = apiClient.put as Mock;
+
+// Helper to create AxiosError with proper structure
+function createAxiosError(
+  status: number | null,
+  data?: unknown,
+  message = 'Request failed'
+): AxiosError {
+  const config = { headers: new AxiosHeaders() };
+  const error = new AxiosError(
+    message,
+    status !== null ? 'ERR_BAD_REQUEST' : 'ERR_NETWORK',
+    config,
+    undefined,
+    status !== null
+      ? {
+          status,
+          statusText: 'Error',
+          headers: {},
+          config,
+          data,
+        }
+      : undefined
+  );
+  return error;
+}
 
 describe('userApi', () => {
   beforeEach(() => {
@@ -41,19 +68,22 @@ describe('userApi', () => {
         themePreference: 'dark',
       };
 
-      mockedApiClient.get.mockResolvedValueOnce({ data: mockProfileData });
+      mockedGet.mockResolvedValueOnce({ data: mockProfileData });
 
       const result = await getProfile();
 
-      expect(mockedApiClient.get).toHaveBeenCalledWith('/api/user/profile');
+      expect(mockedGet).toHaveBeenCalledWith('/api/user/profile', { params: undefined });
       expect(result).toEqual(mockProfileData);
     });
 
     it('should handle network failures', async () => {
-      const networkError = new Error('Network error');
-      mockedApiClient.get.mockRejectedValueOnce(networkError);
+      const networkError = createAxiosError(null);
+      mockedGet.mockRejectedValueOnce(networkError);
 
-      await expect(getProfile()).rejects.toThrow('Network error');
+      await expect(getProfile()).rejects.toMatchObject({
+        code: 'NETWORK_ERROR',
+        message: 'Network error',
+      });
     });
   });
 
@@ -81,14 +111,11 @@ describe('userApi', () => {
         themePreference: 'dark',
       };
 
-      mockedApiClient.put.mockResolvedValueOnce({ data: mockResponse });
+      mockedPut.mockResolvedValueOnce({ data: mockResponse });
 
       const result = await updateProfile(updateRequest);
 
-      expect(mockedApiClient.put).toHaveBeenCalledWith(
-        '/api/user/profile',
-        updateRequest
-      );
+      expect(mockedPut).toHaveBeenCalledWith('/api/user/profile', updateRequest);
       expect(result).toEqual(mockResponse);
     });
 
@@ -98,54 +125,57 @@ describe('userApi', () => {
         newPassword: 'newpass456',
       };
 
-      mockedApiClient.put.mockResolvedValueOnce({ data: {} });
+      mockedPut.mockResolvedValueOnce({ data: {} });
 
       await updateProfile(updateRequest);
 
-      expect(mockedApiClient.put).toHaveBeenCalledWith(
-        '/api/user/profile',
-        updateRequest
-      );
+      expect(mockedPut).toHaveBeenCalledWith('/api/user/profile', updateRequest);
     });
 
     it('should handle validation errors from API', async () => {
-      const validationError = {
-        response: {
-          status: 400,
-          data: {
-            error: 'Validation failed',
-            details: {
-              stableName: 'Stable name must be between 3 and 30 characters',
-            },
-          },
+      const validationError = createAxiosError(400, {
+        code: 'VALIDATION_ERROR',
+        error: 'Validation failed',
+        details: {
+          stableName: 'Stable name must be between 3 and 30 characters',
         },
-      };
+      });
 
-      mockedApiClient.put.mockRejectedValueOnce(validationError);
+      mockedPut.mockRejectedValueOnce(validationError);
 
-      await expect(updateProfile({ stableName: 'ab' })).rejects.toEqual(validationError);
+      await expect(updateProfile({ stableName: 'ab' })).rejects.toMatchObject({
+        code: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        statusCode: 400,
+        details: {
+          stableName: 'Stable name must be between 3 and 30 characters',
+        },
+      });
     });
 
     it('should handle network failures', async () => {
-      const networkError = new Error('Network error');
-      mockedApiClient.put.mockRejectedValueOnce(networkError);
+      const networkError = createAxiosError(null);
+      mockedPut.mockRejectedValueOnce(networkError);
 
-      await expect(updateProfile({ stableName: 'Test' })).rejects.toThrow('Network error');
+      await expect(updateProfile({ stableName: 'Test' })).rejects.toMatchObject({
+        code: 'NETWORK_ERROR',
+        message: 'Network error',
+      });
     });
 
     it('should handle 401 unauthorized errors', async () => {
-      const authError = {
-        response: {
-          status: 401,
-          data: {
-            error: 'Invalid or expired token',
-          },
-        },
-      };
+      const authError = createAxiosError(401, {
+        code: 'AUTH_INVALID_TOKEN',
+        error: 'Invalid or expired token',
+      });
 
-      mockedApiClient.put.mockRejectedValueOnce(authError);
+      mockedPut.mockRejectedValueOnce(authError);
 
-      await expect(updateProfile({ stableName: 'Test' })).rejects.toEqual(authError);
+      await expect(updateProfile({ stableName: 'Test' })).rejects.toMatchObject({
+        code: 'AUTH_INVALID_TOKEN',
+        message: 'Invalid or expired token',
+        statusCode: 401,
+      });
     });
   });
 
@@ -166,19 +196,22 @@ describe('userApi', () => {
         cycleChanges: null,
       };
 
-      mockedApiClient.get.mockResolvedValueOnce({ data: mockStats });
+      mockedGet.mockResolvedValueOnce({ data: mockStats });
 
       const result = await getStableStatistics();
 
-      expect(mockedApiClient.get).toHaveBeenCalledWith('/api/user/stats');
+      expect(mockedGet).toHaveBeenCalledWith('/api/user/stats', { params: undefined });
       expect(result).toEqual(mockStats);
     });
 
     it('should handle network failures', async () => {
-      const networkError = new Error('Network error');
-      mockedApiClient.get.mockRejectedValueOnce(networkError);
+      const networkError = createAxiosError(null);
+      mockedGet.mockRejectedValueOnce(networkError);
 
-      await expect(getStableStatistics()).rejects.toThrow('Network error');
+      await expect(getStableStatistics()).rejects.toMatchObject({
+        code: 'NETWORK_ERROR',
+        message: 'Network error',
+      });
     });
   });
 });

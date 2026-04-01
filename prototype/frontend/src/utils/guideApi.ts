@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { api } from './api';
 
 export interface GuideArticleLink {
   slug: string;
@@ -56,19 +56,16 @@ export interface SearchIndexEntry {
 }
 
 export async function fetchGuideSections(): Promise<GuideSection[]> {
-  const response = await apiClient.get('/api/guide/sections');
-  return response.data;
+  return api.get<GuideSection[]>('/api/guide/sections');
 }
 
 export async function fetchGuideArticle(
   sectionSlug: string,
   articleSlug: string
 ): Promise<GuideArticle> {
-  const response = await apiClient.get(`/api/guide/articles/${sectionSlug}/${articleSlug}`);
-  return response.data;
+  return api.get<GuideArticle>(`/api/guide/articles/${sectionSlug}/${articleSlug}`);
 }
 
 export async function fetchSearchIndex(): Promise<SearchIndexEntry[]> {
-  const response = await apiClient.get('/api/guide/search-index');
-  return response.data;
+  return api.get<SearchIndexEntry[]>('/api/guide/search-index');
 }

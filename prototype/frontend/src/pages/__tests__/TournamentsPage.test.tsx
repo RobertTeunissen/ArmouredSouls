@@ -89,7 +89,7 @@ describe('TournamentsPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(mockedListTournaments).toHaveBeenCalledWith('test-token');
+      expect(mockedListTournaments).toHaveBeenCalled();
     });
   });
 

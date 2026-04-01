@@ -3,7 +3,7 @@
  * Provides functions to interact with user-related endpoints
  */
 
-import apiClient from './apiClient';
+import { api } from './api';
 
 /**
  * Stable Statistics (aggregate across all robots)
@@ -29,8 +29,7 @@ export interface StableStatistics {
 }
 
 export const getStableStatistics = async (): Promise<StableStatistics> => {
-  const response = await apiClient.get('/api/user/stats');
-  return response.data;
+  return api.get<StableStatistics>('/api/user/stats');
 };
 
 /**
@@ -71,8 +70,7 @@ export interface ProfileUpdateRequest {
  * Get current user's profile information
  */
 export const getProfile = async (): Promise<ProfileData> => {
-  const response = await apiClient.get('/api/user/profile');
-  return response.data;
+  return api.get<ProfileData>('/api/user/profile');
 };
 
 /**
@@ -81,6 +79,5 @@ export const getProfile = async (): Promise<ProfileData> => {
 export const updateProfile = async (
   updates: ProfileUpdateRequest
 ): Promise<ProfileData> => {
-  const response = await apiClient.put('/api/user/profile', updates);
-  return response.data;
+  return api.put<ProfileData>('/api/user/profile', updates);
 };

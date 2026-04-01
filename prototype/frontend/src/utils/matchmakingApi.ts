@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { api } from './api';
 
 // Types
 export interface ScheduledMatch {
@@ -199,9 +199,9 @@ export interface PaginatedResponse<T> {
 
 // API Functions
 export const getUpcomingMatches = async (robotId?: number): Promise<ScheduledMatch[]> => {
-  const params = robotId ? `?robotId=${robotId}` : '';
-  const response = await apiClient.get(`/api/matches/upcoming${params}`);
-  return response.data.matches || [];  // Extract matches array from response
+  const params = robotId ? { robotId } : undefined;
+  const response = await api.get<{ matches: ScheduledMatch[] }>('/api/matches/upcoming', params);
+  return response.matches || [];  // Extract matches array from response
 };
 
 export const getMatchHistory = async (
@@ -225,10 +225,7 @@ export const getMatchHistory = async (
   
   console.log('[API] getMatchHistory params:', params);
   
-  const response = await apiClient.get('/api/matches/history', {
-    params,
-  });
-  return response.data;
+  return api.get<PaginatedResponse<BattleHistory>>('/api/matches/history', params);
 };
 
 export const getLeagueStandings = async (
@@ -237,15 +234,15 @@ export const getLeagueStandings = async (
   pageSize: number = 50,
   instance?: string
 ): Promise<PaginatedResponse<LeagueRobot>> => {
-  const response = await apiClient.get(`/api/leagues/${tier}/standings`, {
-    params: { page, pageSize, ...(instance && { instance }) },
+  return api.get<PaginatedResponse<LeagueRobot>>(`/api/leagues/${tier}/standings`, {
+    page,
+    pageSize,
+    ...(instance && { instance }),
   });
-  return response.data;
 };
 
 export const getLeagueInstances = async (tier: string): Promise<LeagueInstance[]> => {
-  const response = await apiClient.get(`/api/leagues/${tier}/instances`);
-  return response.data;
+  return api.get<LeagueInstance[]>(`/api/leagues/${tier}/instances`);
 };
 
 export const getRobotMatches = async (
@@ -253,15 +250,14 @@ export const getRobotMatches = async (
   page: number = 1,
   pageSize: number = 10
 ): Promise<PaginatedResponse<BattleHistory>> => {
-  const response = await apiClient.get(`/api/robots/${robotId}/matches`, {
-    params: { page, perPage: pageSize },
+  return api.get<PaginatedResponse<BattleHistory>>(`/api/robots/${robotId}/matches`, {
+    page,
+    perPage: pageSize,
   });
-  return response.data;
 };
 
 export const getRobotUpcomingMatches = async (robotId: number): Promise<ScheduledMatch[]> => {
-  const response = await apiClient.get(`/api/robots/${robotId}/upcoming`);
-  return response.data;
+  return api.get<ScheduledMatch[]>(`/api/robots/${robotId}/upcoming`);
 };
 
 // Helper Functions
@@ -560,6 +556,5 @@ export interface BattleLogResponse {
 }
 
 export const getBattleLog = async (battleId: number): Promise<BattleLogResponse> => {
-  const response = await apiClient.get(`/api/matches/battles/${battleId}/log`);
-  return response.data;
+  return api.get<BattleLogResponse>(`/api/matches/battles/${battleId}/log`);
 };

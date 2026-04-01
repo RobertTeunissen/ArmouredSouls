@@ -39,7 +39,7 @@ function TournamentDetailPage() {
       setError(null);
       setNotFound(false);
 
-      const data = await getTournamentDetails(currentToken, parseInt(id, 10));
+      const data = await getTournamentDetails(parseInt(id, 10));
       setTournament(data.tournament);
       setSeedings(data.seedings);
     } catch (err: unknown) {

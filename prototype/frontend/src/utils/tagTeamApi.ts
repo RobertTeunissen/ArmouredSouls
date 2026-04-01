@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { api } from './api';
 
 // Types
 export interface TagTeamRobot {
@@ -85,22 +85,22 @@ export interface PaginatedStandings {
 
 // API Functions
 export const getMyTagTeams = async (): Promise<TagTeam[]> => {
-  const response = await apiClient.get('/api/tag-teams');
-  return response.data.teams || [];
+  const data = await api.get<{ teams: TagTeam[] }>('/api/tag-teams');
+  return data.teams || [];
 };
 
 export const getTagTeamById = async (teamId: number): Promise<TagTeam> => {
-  const response = await apiClient.get(`/api/tag-teams/${teamId}`);
-  return response.data.team;
+  const data = await api.get<{ team: TagTeam }>(`/api/tag-teams/${teamId}`);
+  return data.team;
 };
 
 export const createTagTeam = async (activeRobotId: number, reserveRobotId: number): Promise<TagTeam> => {
-  const response = await apiClient.post('/api/tag-teams', { activeRobotId, reserveRobotId });
-  return response.data.team;
+  const data = await api.post<{ team: TagTeam }>('/api/tag-teams', { activeRobotId, reserveRobotId });
+  return data.team;
 };
 
 export const disbandTagTeam = async (teamId: number): Promise<void> => {
-  await apiClient.delete(`/api/tag-teams/${teamId}`);
+  await api.delete<void>(`/api/tag-teams/${teamId}`);
 };
 
 export const getTagTeamStandings = async (
@@ -108,10 +108,7 @@ export const getTagTeamStandings = async (
   page: number = 1,
   perPage: number = 50
 ): Promise<PaginatedStandings> => {
-  const response = await apiClient.get(`/api/tag-teams/leagues/${tier}/standings`, {
-    params: { page, perPage },
-  });
-  return response.data;
+  return api.get<PaginatedStandings>(`/api/tag-teams/leagues/${tier}/standings`, { page, perPage });
 };
 
 // Helper Functions

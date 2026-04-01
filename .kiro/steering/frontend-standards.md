@@ -148,55 +148,84 @@ export function useAuth() {
 
 ## API Integration
 
-### API Service Layer
+### Typed API Helper
 
-**Centralized API Client**:
+All API calls use the typed `api` helper from `src/utils/api.ts`. This helper:
+- Wraps the underlying Axios client with JWT interceptors
+- Returns unwrapped, typed response data (no `.data` access needed)
+- Normalizes all errors into `ApiError` instances with machine-readable codes
+
+**Standard Pattern** (use this for all new API functions):
 ```typescript
-// services/api.ts
-import axios from 'axios';
+import { api } from './api';
+import { ApiError } from './ApiError';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
-  timeout: 10000,
-});
+// GET request - returns typed data directly
+export async function getRobots(): Promise<Robot[]> {
+  return api.get<Robot[]>('/api/robots');
+}
 
-// Request interceptor (add auth token)
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// POST request with body
+export async function createRobot(data: CreateRobotDto): Promise<Robot> {
+  return api.post<Robot>('/api/robots', data);
+}
 
-// Response interceptor (handle errors)
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Redirect to login
-      window.location.href = '/login';
+// PUT request
+export async function updateRobot(id: number, data: UpdateRobotDto): Promise<Robot> {
+  return api.put<Robot>(`/api/robots/${id}`, data);
+}
+
+// DELETE request
+export async function deleteRobot(id: number): Promise<void> {
+  return api.delete<void>(`/api/robots/${id}`);
+}
+```
+
+**ApiError Class** (`src/utils/ApiError.ts`):
+```typescript
+class ApiError extends Error {
+  code: string;       // Machine-readable error code (e.g., 'ROBOT_NOT_FOUND')
+  statusCode: number; // HTTP status code
+  details?: unknown;  // Optional structured data from backend
+}
+```
+
+**Error Handling in Components**:
+```typescript
+try {
+  const robot = await getRobot(robotId);
+  // Handle success
+} catch (err) {
+  if (err instanceof ApiError) {
+    switch (err.code) {
+      case 'ROBOT_NOT_FOUND':
+        showToast('Robot no longer exists');
+        break;
+      case 'UNAUTHORIZED':
+        redirectToLogin();
+        break;
+      default:
+        showToast(err.message);
     }
-    return Promise.reject(error);
   }
-);
-
-export default api;
+}
 ```
 
-**API Methods**:
-```typescript
-// services/robotService.ts
-import api from './api';
+### Domain API Modules
 
-export const robotService = {
-  getAll: () => api.get<Robot[]>('/robots'),
-  getById: (id: number) => api.get<Robot>(`/robots/${id}`),
-  create: (data: CreateRobotDto) => api.post<Robot>('/robots', data),
-  update: (id: number, data: UpdateRobotDto) => api.put<Robot>(`/robots/${id}`, data),
-  delete: (id: number) => api.delete(`/robots/${id}`),
-};
-```
+API functions are organized by domain in `src/utils/`:
+- `robotApi.ts` - Robot CRUD and attributes
+- `userApi.ts` - User profile and settings
+- `matchmakingApi.ts` - League standings and matchmaking
+- `financialApi.ts` - Credits, facilities, investments
+- `tournamentApi.ts` - Tournament operations
+- `tagTeamApi.ts` - Tag team battles
+- `kothApi.ts` - King of the Hill mode
+- `onboardingApi.ts` - Tutorial and account reset
+- `guideApi.ts` - In-game guides
+- `onboardingAnalytics.ts` - Onboarding metrics
+
+Each module keeps its TypeScript interfaces and helper functions (formatters, color mappers) alongside the API functions.
 
 ### Custom Hooks for Data Fetching
 
@@ -208,8 +237,8 @@ function useRobots() {
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    robotService.getAll()
-      .then(response => setRobots(response.data))
+    getRobots()
+      .then(setRobots)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);

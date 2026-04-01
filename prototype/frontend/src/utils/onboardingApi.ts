@@ -4,14 +4,13 @@
  * API client functions for onboarding/tutorial endpoints.
  * Provides functions to manage tutorial state and reset accounts.
  *
- * All functions use the shared apiClient with automatic JWT authentication.
+ * All functions use the shared api helper with automatic JWT authentication.
  *
- * @see {@link ./apiClient} for base API client configuration
+ * @see {@link ./api} for typed API helper
  */
-import apiClient from './apiClient';
+import { api } from './api';
+import { ApiError } from './ApiError';
 
-/** Shape of Axios-like errors thrown by apiClient */
-type ApiError = { response?: { status: number; data?: { error?: string; blockers?: string[] } }; message?: string };
 /**
  * Tutorial state data structure
  */
@@ -64,6 +63,7 @@ interface ApiResponse<T> {
   blockers?: string[];
 }
 
+
 /**
  * Get the current tutorial state for the authenticated user.
  *
@@ -78,17 +78,16 @@ interface ApiResponse<T> {
  */
 export async function getTutorialState(): Promise<TutorialState> {
   try {
-    const response = await apiClient.get<ApiResponse<TutorialState>>('/api/onboarding/state');
+    const response = await api.get<ApiResponse<TutorialState>>('/api/onboarding/state');
 
-    if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.error || 'Failed to get tutorial state');
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Failed to get tutorial state');
     }
 
-    return response.data.data;
+    return response.data;
   } catch (error: unknown) {
     // Handle 404 as "no tutorial state yet" - return default state
-    const err = error as ApiError;
-    if (err.response?.status === 404) {
+    if (error instanceof ApiError && error.statusCode === 404) {
       return {
         currentStep: 1,
         hasCompletedOnboarding: false,
@@ -100,10 +99,11 @@ export async function getTutorialState(): Promise<TutorialState> {
       };
     }
 
-    // Re-throw other errors
-    throw new Error(
-      err.response?.data?.error || err.message || 'Failed to get tutorial state'
-    );
+    // Re-throw ApiError as-is, wrap others
+    if (error instanceof ApiError) {
+      throw new Error(error.message || 'Failed to get tutorial state');
+    }
+    throw new Error('Failed to get tutorial state');
   }
 }
 
@@ -138,21 +138,24 @@ export async function updateTutorialState(updates: {
   choices?: Partial<OnboardingChoices>;
 }): Promise<TutorialState> {
   try {
-    const response = await apiClient.post<ApiResponse<TutorialState>>(
+    const response = await api.post<ApiResponse<TutorialState>>(
       '/api/onboarding/state',
       updates
     );
 
-    if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.error || 'Failed to update tutorial state');
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Failed to update tutorial state');
     }
 
-    return response.data.data;
+    return response.data;
   } catch (error: unknown) {
-    const err = error as ApiError;
-    throw new Error(
-      err.response?.data?.error || err.message || 'Failed to update tutorial state'
-    );
+    if (error instanceof ApiError) {
+      throw new Error(error.message || 'Failed to update tutorial state');
+    }
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to update tutorial state');
   }
 }
 
@@ -170,18 +173,21 @@ export async function updateTutorialState(updates: {
  */
 export async function completeTutorial(): Promise<void> {
   try {
-    const response = await apiClient.post<ApiResponse<{ message: string }>>(
+    const response = await api.post<ApiResponse<{ message: string }>>(
       '/api/onboarding/complete'
     );
 
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to complete tutorial');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to complete tutorial');
     }
   } catch (error: unknown) {
-    const err = error as ApiError;
-    throw new Error(
-      err.response?.data?.error || err.message || 'Failed to complete tutorial'
-    );
+    if (error instanceof ApiError) {
+      throw new Error(error.message || 'Failed to complete tutorial');
+    }
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to complete tutorial');
   }
 }
 
@@ -199,20 +205,25 @@ export async function completeTutorial(): Promise<void> {
  */
 export async function skipTutorial(): Promise<void> {
   try {
-    const response = await apiClient.post<ApiResponse<{ message: string }>>(
+    const response = await api.post<ApiResponse<{ message: string }>>(
       '/api/onboarding/skip'
     );
 
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to skip tutorial');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to skip tutorial');
     }
   } catch (error: unknown) {
-    const err = error as ApiError;
-    throw new Error(
-      err.response?.data?.error || err.message || 'Failed to skip tutorial'
-    );
+    if (error instanceof ApiError) {
+      throw new Error(error.message || 'Failed to skip tutorial');
+    }
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to skip tutorial');
   }
 }
+
+
 /**
  * Replay the tutorial from the beginning without affecting actual game state.
  * Resets the tutorial step to 1 and sets isReplay flag in choices to prevent
@@ -225,7 +236,7 @@ export async function skipTutorial(): Promise<void> {
  */
 export async function replayTutorial(): Promise<TutorialState> {
   try {
-    const response = await apiClient.post<ApiResponse<TutorialState>>(
+    const response = await api.post<ApiResponse<TutorialState>>(
       '/api/onboarding/state',
       {
         step: 1,
@@ -233,16 +244,19 @@ export async function replayTutorial(): Promise<TutorialState> {
       }
     );
 
-    if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.error || 'Failed to replay tutorial');
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Failed to replay tutorial');
     }
 
-    return response.data.data;
+    return response.data;
   } catch (error: unknown) {
-    const err = error as ApiError;
-    throw new Error(
-      err.response?.data?.error || err.message || 'Failed to replay tutorial'
-    );
+    if (error instanceof ApiError) {
+      throw new Error(error.message || 'Failed to replay tutorial');
+    }
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to replay tutorial');
   }
 }
 
@@ -273,25 +287,30 @@ export async function replayTutorial(): Promise<TutorialState> {
  */
 export async function resetAccount(confirmation: string, reason?: string): Promise<void> {
   try {
-    const response = await apiClient.post<ApiResponse<{ message: string }>>(
+    const response = await api.post<ApiResponse<{ message: string }>>(
       '/api/onboarding/reset-account',
       { confirmation, reason }
     );
 
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to reset account');
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to reset account');
     }
   } catch (error: unknown) {
-    const err = error as ApiError;
-    // Include blockers in error message if available
-    const errorMessage = err.response?.data?.error || err.message || 'Failed to reset account';
-    const blockers = err.response?.data?.blockers;
+    if (error instanceof ApiError) {
+      // Include blockers in error message if available from details
+      const details = error.details as { blockers?: string[] } | undefined;
+      const blockers = details?.blockers;
 
-    if (blockers && blockers.length > 0) {
-      throw new Error(`${errorMessage} (Blockers: ${blockers.join(', ')})`);
+      if (blockers && blockers.length > 0) {
+        throw new Error(`${error.message} (Blockers: ${blockers.join(', ')})`);
+      }
+
+      throw new Error(error.message || 'Failed to reset account');
     }
-
-    throw new Error(errorMessage);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to reset account');
   }
 }
 
@@ -314,20 +333,23 @@ export async function resetAccount(confirmation: string, reason?: string): Promi
  */
 export async function checkResetEligibility(): Promise<ResetEligibility> {
   try {
-    const response = await apiClient.get<ApiResponse<ResetEligibility>>(
+    const response = await api.get<ApiResponse<ResetEligibility>>(
       '/api/onboarding/reset-eligibility'
     );
 
-    if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.error || 'Failed to check reset eligibility');
+    if (!response.success || !response.data) {
+      throw new Error(response.error || 'Failed to check reset eligibility');
     }
 
-    return response.data.data;
+    return response.data;
   } catch (error: unknown) {
-    const err = error as ApiError;
-    throw new Error(
-      err.response?.data?.error || err.message || 'Failed to check reset eligibility'
-    );
+    if (error instanceof ApiError) {
+      throw new Error(error.message || 'Failed to check reset eligibility');
+    }
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to check reset eligibility');
   }
 }
 
@@ -350,11 +372,13 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries: number = 3): Promi
       return await fn();
     } catch (error: unknown) {
       lastError = error as Error;
-      const err = error as ApiError;
 
       // Don't retry on client errors (4xx) except 429 (rate limit)
-      if (err.response?.status && err.response.status >= 400 && err.response.status < 500 && err.response.status !== 429) {
-        throw error;
+      if (error instanceof ApiError) {
+        const status = error.statusCode;
+        if (status >= 400 && status < 500 && status !== 429) {
+          throw error;
+        }
       }
 
       // Don't retry on last attempt
@@ -395,4 +419,3 @@ export async function updateTutorialStateWithRetry(updates: {
 }): Promise<TutorialState> {
   return withRetry(() => updateTutorialState(updates));
 }
-

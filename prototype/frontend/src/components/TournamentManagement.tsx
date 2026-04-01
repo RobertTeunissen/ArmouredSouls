@@ -28,13 +28,13 @@ const TournamentManagement = () => {
     if (!token) return;
     
     try {
-      const data = await listTournaments(token);
+      const data = await listTournaments();
       setTournaments(data.tournaments);
       
       // Load details for active tournament
       const active = data.tournaments.find(t => t.status === 'active');
       if (active) {
-        const details = await getTournamentDetails(token, active.id);
+        const details = await getTournamentDetails(active.id);
         setActiveTournament(details.tournament);
       } else {
         setActiveTournament(null);
@@ -49,7 +49,7 @@ const TournamentManagement = () => {
     if (!token) return;
     
     try {
-      const data = await getEligibleRobots(token);
+      const data = await getEligibleRobots();
       setEligibleRobots(data);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to load eligible robots:', err);
@@ -64,7 +64,7 @@ const TournamentManagement = () => {
     setSuccessMessage(null);
     
     try {
-      const result = await createTournament(token);
+      const result = await createTournament();
       setSuccessMessage(result.message);
       await loadTournaments();
       await loadEligibleRobots();
@@ -83,7 +83,7 @@ const TournamentManagement = () => {
     setSuccessMessage(null);
     
     try {
-      const result = await executeRound(token, tournamentId);
+      const result = await executeRound(tournamentId);
       setSuccessMessage(result.message);
       await loadTournaments();
       await loadEligibleRobots();
