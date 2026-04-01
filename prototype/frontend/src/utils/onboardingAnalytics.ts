@@ -10,7 +10,7 @@
  * @see {@link ../contexts/OnboardingContext} for integration points
  * Requirements: 26.1-26.12
  */
-import apiClient from './apiClient';
+import { api } from './api';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -95,7 +95,7 @@ export async function flushEvents(): Promise<void> {
   }
 
   try {
-    await apiClient.post('/api/onboarding/analytics', { events: batch });
+    await api.post<void>('/api/onboarding/analytics', { events: batch });
   } catch {
     // Silently drop – analytics should never break the app
   }

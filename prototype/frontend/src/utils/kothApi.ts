@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { api } from './api';
 
 export interface KothStandingRobot {
   rank: number;
@@ -43,15 +43,29 @@ export interface KothRobotPerformance {
   avgZoneScore: number;
 }
 
+// Backend response shape (differs from frontend KothStandingsResponse)
+interface KothStandingsBackendResponse {
+  standings: Record<string, unknown>[];
+  summary?: {
+    totalEvents?: number;
+    uniqueParticipants?: number;
+    topRobot?: string | { name?: string };
+  };
+  pagination?: {
+    page?: number;
+    limit?: number;
+    pageSize?: number;
+    total?: number;
+    totalPages?: number;
+  };
+}
+
 export const getKothStandings = async (
   view: 'all_time' | 'last_10' = 'all_time',
   page: number = 1,
   limit: number = 50,
 ): Promise<KothStandingsResponse> => {
-  const response = await apiClient.get('/api/koth/standings', {
-    params: { view, page, limit },
-  });
-  const raw = response.data;
+  const raw = await api.get<KothStandingsBackendResponse>('/api/koth/standings', { view, page, limit });
 
   // Map backend shape to frontend interface
   return {
@@ -68,7 +82,7 @@ export const getKothStandings = async (
       avgZoneScore: r.avgZoneScore,
       kothKills: r.kothKills,
       bestWinStreak: r.bestStreak ?? r.bestWinStreak,
-    })),
+    })) as KothStandingRobot[],
     summary: {
       totalEvents: raw.summary?.totalEvents ?? 0,
       uniqueParticipants: raw.summary?.uniqueParticipants ?? 0,
@@ -88,6 +102,5 @@ export const getKothStandings = async (
 export const getKothRobotPerformance = async (
   robotId: number,
 ): Promise<KothRobotPerformance> => {
-  const response = await apiClient.get(`/api/analytics/robot/${robotId}/koth-performance`);
-  return response.data;
+  return api.get<KothRobotPerformance>(`/api/analytics/robot/${robotId}/koth-performance`);
 };

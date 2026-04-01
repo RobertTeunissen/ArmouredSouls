@@ -28,7 +28,7 @@ function TournamentsPage() {
         return;
       }
 
-      const data = await listTournaments(token);
+      const data = await listTournaments();
       setTournaments(data.tournaments || []);
       setError(null);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any

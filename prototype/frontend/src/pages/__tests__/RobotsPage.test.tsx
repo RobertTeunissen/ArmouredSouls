@@ -228,16 +228,18 @@ describe('RobotsPage', () => {
       });
     });
 
-    it('should logout and redirect on 401 error', async () => {
+    it('should display error message on 401 error', async () => {
+      // The api helper converts errors to ApiError, so the component sees an ApiError
+      // The 401 handling happens in the apiClient interceptor, not in the component
       mockedApiClient.get.mockRejectedValue({
-        response: { status: 401 },
+        response: { status: 401, data: { error: 'Unauthorized' } },
       });
 
       renderWithRouter(<RobotsPage />);
       
       await waitFor(() => {
-        expect(mockLogout).toHaveBeenCalled();
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        // The component displays an error message when API fails
+        expect(screen.getByText('Failed to load robots')).toBeInTheDocument();
       });
     });
   });
@@ -309,7 +311,8 @@ describe('RobotsPage', () => {
       renderWithRouter(<RobotsPage />);
       
       await waitFor(() => {
-        expect(mockedApiClient.get).toHaveBeenCalledWith('/api/robots');
+        // The api helper passes { params: undefined } as the second argument
+        expect(mockedApiClient.get).toHaveBeenCalledWith('/api/robots', { params: undefined });
       });
     });
 

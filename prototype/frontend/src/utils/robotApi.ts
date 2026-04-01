@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { api } from './api';
 
 export interface Robot {
   id: number;
@@ -58,14 +58,12 @@ export interface Robot {
  * This is the single source of truth — use this instead of calling GET /api/robots directly.
  */
 export const fetchMyRobots = async (): Promise<Robot[]> => {
-  const response = await apiClient.get('/api/robots');
-  return response.data;
+  return api.get<Robot[]>('/api/robots');
 };
 
 /**
  * Fetch all robots across all users (admin/public listing).
  */
 export const fetchAllRobots = async (): Promise<Robot[]> => {
-  const response = await apiClient.get('/api/robots/all/robots');
-  return response.data;
+  return api.get<Robot[]>('/api/robots/all/robots');
 };
