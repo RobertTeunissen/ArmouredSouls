@@ -460,7 +460,7 @@ function getNextKothScheduledDate(): Date {
 }
 
 async function executeKothCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots
+  // Step 1: Repair all robots (always first - players can do manual repair with discount beforehand)
   logger.info('KotH Cycle: Step 1 — Repairing all robots');
   await repairAllRobots(true);
 
