@@ -92,7 +92,7 @@ describe('Bug Condition Exploration — Project Quality Audit', () => {
       fc.property(
         fc.constantFrom(...versions),
         (version: string) => {
-          expect(version).toBe('20');
+          expect(version).toBe('24');
         },
       ),
       { numRuns: versions.length },

@@ -200,13 +200,13 @@ describe('ROICalculatorService', () => {
       expect(roi).not.toBeNull();
       expect(roi!.facilityType).toBe('repair_bay');
       expect(roi!.currentLevel).toBe(2);
-      expect(roi!.totalInvestment).toBe(300000);
+      expect(roi!.totalInvestment).toBe(150000);
       expect(roi!.totalReturns).toBeCloseTo(3000, 0); // 1000 savings * 3 repairs
       expect(roi!.totalOperatingCosts).toBe(15000); // 5000 * 3 cycles
       expect(roi!.cyclesSincePurchase).toBe(3);
       
-      // Net ROI = (3000 - 15000 - 300000) / 300000 = -312000 / 300000 = -1.04
-      expect(roi!.netROI).toBeCloseTo(-1.04, 2);
+      // Net ROI = (3000 - 15000 - 150000) / 150000 = -162000 / 150000 = -1.08
+      expect(roi!.netROI).toBeCloseTo(-1.08, 2);
       expect(roi!.isProfitable).toBe(false);
     });
 

@@ -1064,8 +1064,12 @@ export class CombatMessageGenerator {
         }
 
       } else if (event.type === 'yield') {
+        // Skip if we already emitted a battle end (e.g. from a prior destroyed event)
+        if (battleEndEmitted) continue;
+
         // Check if this is actually a draw (time limit)
         if (event.message.includes('Draw') || event.message.includes('Time limit reached')) {
+          battleEndEmitted = true;
           narrativeEvents.push({
             timestamp: ts,
             type: 'draw',
@@ -1073,12 +1077,15 @@ export class CombatMessageGenerator {
           });
         } else if (event.message.includes('Time limit')) {
           // Tournament time limit with HP tiebreaker
+          battleEndEmitted = true;
           narrativeEvents.push({
             timestamp: ts,
             type: 'battle_end',
             message: event.message, // Keep the original since it has HP percentages
           });
         } else {
+          battleEndEmitted = true;
+
           // Determine who yielded using HP percentages (not message parsing, which is fragile
           // because both robot names appear in the yield message)
           const robot1HpPct = (event.robot1HP || 0) / context.robot1MaxHP;

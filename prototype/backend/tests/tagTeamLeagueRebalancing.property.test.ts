@@ -152,8 +152,8 @@ describe('Tag Team League Rebalancing - Property Tests', () => {
               where: { id: team.id },
             });
 
-            // Property: League points must be reset to 0
-            expect(updatedTeam!.tagTeamLeaguePoints).toBe(0);
+            // Property: League points must be retained (v1.2 behavior)
+            expect(updatedTeam!.tagTeamLeaguePoints).toBe(initialPoints);
 
             // Property: Cycles counter must be reset to 0
             expect(updatedTeam!.cyclesInTagTeamLeague).toBe(0);
@@ -193,8 +193,8 @@ describe('Tag Team League Rebalancing - Property Tests', () => {
               where: { id: team.id },
             });
 
-            // Property: League points must be reset to 0
-            expect(updatedTeam!.tagTeamLeaguePoints).toBe(0);
+            // Property: League points must be retained (v1.2 behavior)
+            expect(updatedTeam!.tagTeamLeaguePoints).toBe(initialPoints);
 
             // Property: Cycles counter must be reset to 0
             expect(updatedTeam!.cyclesInTagTeamLeague).toBe(0);
@@ -244,8 +244,8 @@ describe('Tag Team League Rebalancing - Property Tests', () => {
               where: { id: team.id },
             });
 
-            // Property: Both league points and cycles must be 0 after any tier change
-            expect(updatedTeam!.tagTeamLeaguePoints).toBe(0);
+            // Property: Both cycles must be 0 and LP retained after any tier change
+            expect(updatedTeam!.tagTeamLeaguePoints).toBe(leaguePoints);
             expect(updatedTeam!.cyclesInTagTeamLeague).toBe(0);
 
             // Property: Team should have moved to a different tier
@@ -276,7 +276,7 @@ describe('Tag Team League Rebalancing - Property Tests', () => {
             });
 
             // Property: Reset should work regardless of how large the initial values were
-            expect(updatedTeam!.tagTeamLeaguePoints).toBe(0);
+            expect(updatedTeam!.tagTeamLeaguePoints).toBe(points);
             expect(updatedTeam!.cyclesInTagTeamLeague).toBe(0);
           }
         ),
@@ -300,7 +300,7 @@ describe('Tag Team League Rebalancing - Property Tests', () => {
               where: { id: team.id },
             });
 
-            // Property: Reset should still set values to 0 (idempotent)
+            // Property: Reset should still set cycles to 0, LP retained (idempotent)
             expect(updatedTeam!.tagTeamLeaguePoints).toBe(0);
             expect(updatedTeam!.cyclesInTagTeamLeague).toBe(0);
           }

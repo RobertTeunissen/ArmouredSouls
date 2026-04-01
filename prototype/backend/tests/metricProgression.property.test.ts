@@ -10,11 +10,15 @@
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { robotPerformanceService, RobotMetric } from '../src/services/robotPerformanceService';
+import { cleanupTestData } from './cleanupHelper';
 
 
 describe('Metric Progression Property-Based Tests', () => {
   afterEach(async () => {
     // Clean up test data after each test in correct dependency order
+    await prisma.scheduledKothMatchParticipant.deleteMany({});
+    await prisma.scheduledKothMatch.deleteMany({});
+    await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.user.deleteMany({});
@@ -354,6 +358,12 @@ describe('Metric Progression Property-Based Tests', () => {
                 robot2ELOAfter: 1500 - eloChange,
                 eloChange: Math.abs(eloChange),
                 createdAt: new Date(cycleStart.getTime() + 60000),
+                participants: {
+                  create: [
+                    { robotId, team: 1, eloBefore, eloAfter, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                    { robotId: robotId + 10000, team: 2, eloBefore: 1500, eloAfter: 1500 - eloChange, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                  ],
+                },
               },
             });
 
@@ -418,28 +428,8 @@ async function setupTestData(
   startCycle: number,
   numBattles: number
 ) {
-  // Clean up any existing data first (for property test iterations)
-  await prisma.battle.deleteMany({
-    where: {
-      OR: [
-        { robot1Id: robotId },
-        { robot2Id: robotId },
-        { robot1Id: robotId + 10000 },
-        { robot2Id: robotId + 10000 },
-      ],
-    },
-  });
-  await prisma.robot.deleteMany({
-    where: {
-      OR: [
-        { id: robotId },
-        { id: robotId + 10000 },
-      ],
-    },
-  });
-  await prisma.user.deleteMany({
-    where: { id: userId },
-  });
+  // Clean up all test data first (for property test iterations)
+  await cleanupTestData();
 
   // Create user
   await prisma.user.create({
@@ -588,6 +578,12 @@ async function createBattlesWithELOChanges(
         robot2ELOAfter: 1500 - eloChange,
         eloChange: Math.abs(eloChange),
         createdAt: battleTime,
+        participants: {
+          create: [
+            { robotId, team: 1, eloBefore, eloAfter, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+            { robotId: opponentId, team: 2, eloBefore: 1500, eloAfter: 1500 - eloChange, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+          ],
+        },
       },
     });
 
@@ -629,6 +625,12 @@ async function createBattlesWithFameAwards(
         robot2ELOAfter: 1480,
         eloChange: 20,
         createdAt: battleTime,
+        participants: {
+          create: [
+            { robotId, team: 1, eloBefore: 1500, eloAfter: 1520, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+            { robotId: opponentId, team: 2, eloBefore: 1500, eloAfter: 1480, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+          ],
+        },
       },
     });
 
@@ -670,6 +672,12 @@ async function createBattlesWithDamage(
         robot2ELOAfter: 1480,
         eloChange: 20,
         createdAt: battleTime,
+        participants: {
+          create: [
+            { robotId, team: 1, eloBefore: 1500, eloAfter: 1520, credits: 0, damageDealt, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+            { robotId: opponentId, team: 2, eloBefore: 1500, eloAfter: 1480, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+          ],
+        },
       },
     });
 
@@ -711,6 +719,12 @@ async function createBattlesWithOutcomes(
         robot2ELOAfter: isWin ? 1480 : 1520,
         eloChange: 20,
         createdAt: battleTime,
+        participants: {
+          create: [
+            { robotId, team: 1, eloBefore: 1500, eloAfter: isWin ? 1520 : 1480, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+            { robotId: opponentId, team: 2, eloBefore: 1500, eloAfter: isWin ? 1480 : 1520, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+          ],
+        },
       },
     });
 
@@ -752,6 +766,12 @@ async function createBattlesWithCredits(
         robot2ELOAfter: 1480,
         eloChange: 20,
         createdAt: battleTime,
+        participants: {
+          create: [
+            { robotId, team: 1, eloBefore: 1500, eloAfter: 1520, credits, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+            { robotId: opponentId, team: 2, eloBefore: 1500, eloAfter: 1480, credits: Math.floor(credits / 2), damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+          ],
+        },
       },
     });
 

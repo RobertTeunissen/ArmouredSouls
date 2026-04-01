@@ -96,7 +96,7 @@ describe('Unexpected Error Handling - Property Tests', () => {
 
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password });
+              .send({ username, email, password, stableName: `stb_${username}` });
 
             // Should return 500
             expect(res.status).toBe(500);
@@ -140,7 +140,7 @@ describe('Unexpected Error Handling - Property Tests', () => {
 
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password });
+              .send({ username, email, password, stableName: `stb_${username}` });
 
             // Should return 500
             expect(res.status).toBe(500);
@@ -179,13 +179,14 @@ describe('Unexpected Error Handling - Property Tests', () => {
             jest.restoreAllMocks();
             jest.spyOn(userService, 'findUserByUsername').mockResolvedValue(null);
             jest.spyOn(userService, 'findUserByEmail').mockResolvedValue(null);
+            jest.spyOn(userService, 'findUserByStableName').mockResolvedValue(null);
             jest.spyOn(userService, 'createUser').mockRejectedValue(
               unexpectedErrorFactories[errorIndex].create(errorMessage),
             );
 
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password });
+              .send({ username, email, password, stableName: `stb_${username}` });
 
             // Should return 500
             expect(res.status).toBe(500);

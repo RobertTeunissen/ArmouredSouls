@@ -38,7 +38,6 @@ export async function cleanupTestData() {
     await prisma.battle.deleteMany({});
     await prisma.scheduledTagTeamMatch.deleteMany({});
     await prisma.tagTeam.deleteMany({});
-    await prisma.tournamentMatch.deleteMany({});
     await prisma.tournament.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.robot.deleteMany({});

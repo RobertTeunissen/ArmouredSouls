@@ -61,12 +61,13 @@ describe('Prestige Features Integration', () => {
       const nextTier = getNextPrestigeTier(userPrestige);
       
       // Verify calculations
+      // baseRate for level 4 = 20000, multiplier = 1 + 15000/10000 = 2.5
       expect(prestigeMultiplier).toBe(1.30); // 30% bonus
-      expect(merchandising).toBe(30000); // 12000 * 2.5
+      expect(merchandising).toBe(50000); // 20000 * 2.5
       expect(nextTier).toEqual({ threshold: 25000, bonus: '+40%' });
       
       const totalPassiveIncome = merchandising;
-      expect(totalPassiveIncome).toBe(30000);
+      expect(totalPassiveIncome).toBe(50000);
     });
 
     test('should show progression through prestige tiers', () => {
@@ -97,11 +98,11 @@ describe('Prestige Features Integration', () => {
       
       const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige);
       
-      // Expected: 12000 * (1 + 7500/10000) = 12000 * 1.75 = 21000
-      expect(merchandising).toBe(21000);
+      // Expected: baseRate(5) = 25000, multiplier = 1 + 7500/10000 = 1.75 → 25000 * 1.75 = 43750
+      expect(merchandising).toBe(43750);
       
       const totalIncome = merchandising;
-      expect(totalIncome).toBe(21000);
+      expect(totalIncome).toBe(43750);
     });
   });
 
@@ -123,11 +124,11 @@ describe('Prestige Features Integration', () => {
       const incomeBefore = calculateMerchandisingIncome(currentIncomeGenLevel, userPrestige);
       const incomeAfter = calculateMerchandisingIncome(targetIncomeGenLevel, userPrestige);
       
-      expect(incomeBefore).toBe(10400); // 8000 * 1.3
-      expect(incomeAfter).toBe(15600); // 12000 * 1.3
+      expect(incomeBefore).toBe(19500); // 15000 * 1.3
+      expect(incomeAfter).toBe(26000); // 20000 * 1.3
       
       const incomeIncrease = incomeAfter - incomeBefore;
-      expect(incomeIncrease).toBe(5200);
+      expect(incomeIncrease).toBe(6500);
     });
 
     test('should handle user at max prestige tier', () => {

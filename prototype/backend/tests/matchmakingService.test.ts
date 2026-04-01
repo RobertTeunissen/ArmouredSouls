@@ -442,11 +442,12 @@ describe('Matchmaking Service', () => {
       const battleReadiness = checkBattleReadiness(robot);
       const schedulingReadiness = checkSchedulingReadiness(robot);
 
-      // Battle readiness should fail (HP too low)
-      expect(battleReadiness.isReady).toBe(false);
-      expect(battleReadiness.hpCheck).toBe(false);
+      // Both readiness checks are now identical (repairs run before battles)
+      // HP is no longer checked in either - only weapons matter
+      expect(battleReadiness.isReady).toBe(true);
+      expect(battleReadiness.hpCheck).toBe(true);
 
-      // Scheduling readiness should pass (only checks weapons)
+      // Scheduling readiness should also pass (same as battle readiness)
       expect(schedulingReadiness.isReady).toBe(true);
       expect(schedulingReadiness.weaponCheck).toBe(true);
 

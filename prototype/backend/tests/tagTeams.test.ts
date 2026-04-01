@@ -46,6 +46,7 @@ describe('Tag Teams API Endpoints', () => {
           handsRequired: 'one',
           damageType: 'melee',
           loadoutType: 'any',
+          rangeBand: 'melee',
         },
       });
     }

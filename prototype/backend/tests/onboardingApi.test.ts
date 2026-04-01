@@ -344,15 +344,16 @@ describe('Onboarding API Integration Tests', () => {
 
   describe('Resume After Logout', () => {
     it('should resume from last completed step after logout', async () => {
-      // Progress to step 5
-      await request(app)
-        .post('/api/onboarding/state')
-        .set('Authorization', `Bearer ${testToken}`)
-        .send({
-          step: 5,
-          strategy: '1_mighty',
-          choices: { rosterStrategy: '1_mighty' },
-        });
+      // Progress to step 5 one step at a time (service validates step transitions)
+      for (let step = 2; step <= 5; step++) {
+        await request(app)
+          .post('/api/onboarding/state')
+          .set('Authorization', `Bearer ${testToken}`)
+          .send({
+            step,
+            ...(step === 5 ? { strategy: '1_mighty', choices: { rosterStrategy: '1_mighty' } } : {}),
+          });
+      }
 
       // Simulate logout by creating new token (same user)
       const newToken = jwt.sign(

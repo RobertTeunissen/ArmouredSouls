@@ -170,7 +170,7 @@ describe('Logging - Property Tests', () => {
               next();
             });
 
-            app.all('*', (req: Request, res: Response) => {
+            app.use((req: Request, res: Response) => {
               res.status(statusCode).json({ ok: true });
             });
 
