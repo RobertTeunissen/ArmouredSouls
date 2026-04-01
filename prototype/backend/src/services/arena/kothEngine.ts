@@ -587,6 +587,9 @@ export function processZoneRotation(
         timestamp: now,
         type: 'zone_active' as KothCombatEvent['type'],
         message: 'The control zone has moved to a new position!',
+        positions: {
+          zone_center: newCenter,
+        },
         kpiData: {
           center: newCenter,
           radius: zoneState.radius,

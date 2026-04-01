@@ -158,6 +158,8 @@ async function batchUpdateKothRobotStats(
     return prisma.robot.update({
       where: { id: p.robot.id },
       data: {
+        // Persist battle damage to database (HP only - shields recharge between battles)
+        currentHP: Math.max(0, p.finalHP),
         kothMatches: { increment: 1 },
         kothWins: p.isWinner ? { increment: 1 } : undefined,
         kothTotalZoneScore: { increment: p.zoneScore },
@@ -218,7 +220,7 @@ async function processKothBattle(
   }
 
   // 1b. Ensure in-memory HP/shield is at max for simulation
-  // (Actual repair + cost deduction already happened in executeKothCycle Step 1 via repairAllRobots)
+  // Robots enter KotH battles at full HP (simulation uses maxHP, damage persisted after battle)
   for (const robot of robots) {
     robot.currentHP = robot.maxHP;
     robot.currentShield = robot.maxShield;
