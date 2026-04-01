@@ -55,12 +55,28 @@ export interface CombatEvent {
   critical?: boolean;
   counter?: boolean;
   malfunction?: boolean;
+  /**
+   * @deprecated Use robotHP[name] instead. These legacy fields swap based on attacker/defender
+   * roles in performAttack(), causing incorrect values when robot2 attacks. Kept only for
+   * backward compatibility with old battle data.
+   */
   robot1HP?: number;
+  /** @deprecated Use robotHP[name] instead. See robot1HP deprecation notice. */
   robot2HP?: number;
+  /** @deprecated Use robotShield[name] instead. See robot1HP deprecation notice. */
   robot1Shield?: number;
+  /** @deprecated Use robotShield[name] instead. See robot1HP deprecation notice. */
   robot2Shield?: number;
-  // Per-robot HP/shield maps for N-robot modes (KotH/FFA) and consistent name-keyed access
+  /**
+   * Per-robot HP map keyed by robot name. This is the canonical source of truth for HP values.
+   * Always use this instead of robot1HP/robot2HP. Scales to N-robot modes (KotH, FFA, etc.).
+   * Injected by the combat simulator via a proxy on every event push.
+   */
   robotHP?: Record<string, number>;
+  /**
+   * Per-robot shield map keyed by robot name. This is the canonical source of truth for shield values.
+   * Always use this instead of robot1Shield/robot2Shield. Scales to N-robot modes.
+   */
   robotShield?: Record<string, number>;
   message: string;
   formulaBreakdown?: FormulaBreakdown;

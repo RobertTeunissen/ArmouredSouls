@@ -1,6 +1,6 @@
 # Battle Simulation Architecture
 
-**Last Updated**: March 19, 2026
+**Last Updated**: April 2, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 **Epic**: Battle System - Simulation & Orchestration
@@ -728,6 +728,259 @@ UTC   Job
 |---|---|
 | `src/services/arena/kothEngine.ts` | KotH game mode config, zone scoring, anti-passive, AI strategies |
 | `src/services/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
+
+---
+
+## HP/Shield Tracking Data Model
+
+**Last Updated**: April 1, 2026  
+**Status**: ✅ Implemented
+
+### Overview
+
+Combat events contain HP and Shield values for all participating robots. The data model uses name-keyed maps that scale to any number of robots, supporting 1v1, 2v2 tag team, KotH (4-8 robots), and future modes (FFA, Battle Royale).
+
+### Data Flow
+
+```
+  Combat Simulator (combatSimulator.ts)
+           │
+           │  Every event.push() is intercepted by a Proxy
+           │  that injects robotHP/robotShield maps
+           │
+           ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  CombatEvent                                                 │
+  │                                                              │
+  │  robotHP: Record<string, number>     ← CANONICAL SOURCE      │
+  │    { "Gobbo": 95, "WimpBot": 46 }      (keyed by robot name) │
+  │                                                              │
+  │  robotShield: Record<string, number> ← CANONICAL SOURCE      │
+  │    { "Gobbo": 100, "WimpBot": 0 }      (keyed by robot name) │
+  │                                                              │
+  │  robot1HP, robot2HP                  ← DEPRECATED (legacy)   │
+  │  robot1Shield, robot2Shield            (swap based on role)  │
+  └─────────────────────────────────────────────────────────────┘
+           │
+           ▼
+  ┌─────────────────────────────────────────────────────────────┐
+  │  CONSUMERS                                                   │
+  │                                                              │
+  │  CombatMessageGenerator.ts                                   │
+  │    └─ getHPFromEvent() helper prefers robotHP map            │
+  │    └─ Falls back to legacy fields for old battle data        │
+  │                                                              │
+  │  BattleDetailsModal.tsx (Admin Portal)                       │
+  │    └─ getEventHP() helper prefers robotHP map                │
+  │    └─ Iterates Object.entries(robotHP) for N-robot display   │
+  │                                                              │
+  │  BattlePlaybackViewer (Player View)                          │
+  │    └─ Already uses robotHP maps correctly                    │
+  └─────────────────────────────────────────────────────────────┘
+```
+
+### Why Name-Keyed Maps?
+
+The legacy `robot1HP`/`robot2HP` fields were assigned based on attacker/defender position in `performAttack()`:
+
+```typescript
+// BUG: When robot2 attacks, these values swap!
+robot1HP: attackerState.currentHP,  // Actually robot2's HP when robot2 attacks
+robot2HP: defenderState.currentHP,  // Actually robot1's HP when robot2 attacks
+```
+
+The `robotHP` map is always correct because it's keyed by robot name, not position:
+
+```typescript
+// CORRECT: Always keyed by robot name, never swaps
+robotHP: { "Gobbo": 95, "WimpBot": 46 }
+```
+
+### N-Robot Scalability
+
+The map-based design scales to any battle format without code changes:
+
+| Battle Type | Robot Count | Example Map |
+|---|---|---|
+| 1v1 League | 2 | `{ "Gobbo": 95, "WimpBot": 46 }` |
+| 2v2 Tag Team | 4 | `{ "Gobbo": 95, "WimpBot": 46, "IronCrusher": 80, "DeathBot": 0 }` |
+| KotH | 4-8 | `{ "Bot1": 90, "Bot2": 45, "Bot3": 60, "Bot4": 0, "Bot5": 75, ... }` |
+| Future FFA | N | Same pattern — scales automatically |
+
+### Consumer Implementation Pattern
+
+All consumers should use this pattern:
+
+```typescript
+function getEventHP(event, robotName, robot1Name, robot2Name) {
+  // Prefer robotHP map (correct source)
+  if (event.robotHP && robotName in event.robotHP) {
+    return { hp: event.robotHP[robotName], shield: event.robotShield?.[robotName] };
+  }
+  // Legacy fallback (may be incorrect for robot2 attacks)
+  if (robotName === robot1Name) return { hp: event.robot1HP, shield: event.robot1Shield };
+  if (robotName === robot2Name) return { hp: event.robot2HP, shield: event.robot2Shield };
+  return { hp: undefined, shield: undefined };
+}
+```
+
+### Deprecation Notice
+
+The `robot1HP`/`robot2HP`/`robot1Shield`/`robot2Shield` fields are **deprecated**. They are retained only for backward compatibility with old battle data stored before this fix. New code must:
+
+1. Always use `robotHP[name]` and `robotShield[name]` when available
+2. Only fall back to legacy fields for old battle data
+3. Never assume robot count — iterate over `Object.keys(event.robotHP)` for N-robot support
+
+---
+
+## Tag Team Phase Transitions
+
+**Last Updated**: April 2, 2026  
+**Status**: ✅ Implemented
+
+### Overview
+
+Tag team battles are multi-phase encounters where each team has an active robot and a reserve robot. When the active robot yields or is destroyed, the reserve robot "tags in" to continue the fight. This section documents the phase transition mechanics, timestamp handling, and shield state preservation rules.
+
+### Phase Structure
+
+A tag team battle can have 1-3 phases depending on how many tag-outs occur:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     TAG TEAM BATTLE PHASES                               │
+│                                                                          │
+│  Phase 1: team1.activeRobot vs team2.activeRobot                        │
+│     └─ Timestamps: 0.0s → T1                                            │
+│     └─ Ends when: one/both actives yield/destroyed, or time limit       │
+│                                                                          │
+│  [Tag-out event(s) at timestamp T1]                                     │
+│                                                                          │
+│  Phase 2: team1Current vs team2Current                                  │
+│     └─ team1Current = reserve if team1 tagged out, else active          │
+│     └─ team2Current = reserve if team2 tagged out, else active          │
+│     └─ Timestamps: T1 → T1+T2 (CONTINUOUS, not reset to 0)              │
+│     └─ Ends when: one/both current fighters yield/destroyed, or time    │
+│                                                                          │
+│  [Tag-out event(s) at timestamp T1+T2, if applicable]                   │
+│                                                                          │
+│  Phase 3 (if needed): team1.reserveRobot vs team2.reserveRobot          │
+│     └─ Only occurs if one team tagged out in phase 1, other in phase 2  │
+│     └─ Timestamps: T1+T2 → T1+T2+T3 (CONTINUOUS)                        │
+│     └─ Ends when: one/both reserves yield/destroyed, or time limit      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Timestamp Handling Across Phases
+
+**Critical Rule**: Timestamps are continuous across all phases. Phase 2 events do NOT reset to timestamp 0.
+
+```
+  Phase 1 Events                    Phase 2 Events
+  ┌──────────────────┐              ┌──────────────────┐
+  │ timestamp: 0.0   │              │ timestamp: 45.3  │  ← Continues from T1
+  │ type: battle_start│              │ type: attack     │
+  ├──────────────────┤              ├──────────────────┤
+  │ timestamp: 2.3   │              │ timestamp: 47.1  │
+  │ type: attack     │              │ type: critical   │
+  ├──────────────────┤              ├──────────────────┤
+  │ timestamp: 45.0  │              │ timestamp: 52.8  │
+  │ type: yield      │              │ type: destroyed  │
+  └──────────────────┘              └──────────────────┘
+         │                                   │
+         └─── T1 = 45.0 ─────────────────────┘
+```
+
+**Implementation Details**:
+- The orchestrator applies a timestamp offset to all phase 2+ events
+- `convertTagTeamEvents()` tracks cumulative timestamp from phase end times
+- `convertSimulatorEvents()` accepts a `timestampOffset` parameter for phase 2+
+
+### Battle Start Event Rules
+
+**Critical Rule**: Only ONE `battle_start` event per battle, emitted at timestamp 0 in phase 1.
+
+| Phase | battle_start Event |
+|-------|-------------------|
+| Phase 1 | ✅ Emitted at timestamp 0 |
+| Phase 2 | ❌ Skipped (skipBattleStart flag) |
+| Phase 3 | ❌ Skipped (skipBattleStart flag) |
+
+**Implementation**: `convertSimulatorEvents()` accepts a `skipBattleStart?: boolean` flag. For phase 2+, this flag is set to `true` to prevent duplicate battle_start events.
+
+### Shield State Preservation Rules
+
+When a phase ends and a new phase begins, shield states are handled differently for surviving robots vs. reserve robots:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     SHIELD STATE RULES                                   │
+│                                                                          │
+│  SURVIVING ROBOT (did not tag out):                                     │
+│     └─ KEEPS depleted shield state from previous phase                  │
+│     └─ currentShield = phase N final shield value                       │
+│     └─ Example: Robot had 30% shields at phase 1 end → starts phase 2   │
+│        with 30% shields (NOT reset to 100%)                             │
+│                                                                          │
+│  RESERVE ROBOT (tagging in):                                            │
+│     └─ Gets FULL shields (fresh fighter)                                │
+│     └─ currentShield = maxShield                                        │
+│     └─ currentHP = maxHP                                                │
+│     └─ This is handled by activateReserveRobot()                        │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Implementation Details**:
+1. After each phase completes, the orchestrator extracts final shield values from the `robotShield` map in the last combat event
+2. The surviving robot's `currentShield` is updated to match their phase-end shield value
+3. When `activateReserveRobot()` is called, the reserve robot gets full HP and shields
+
+### Winner Determination
+
+**Critical Rule**: For tag team battles, `winnerId` is the TEAM ID, not a robot ID.
+
+```typescript
+// CORRECT: Winner is team ID
+if (team1TotalHP <= 0) {
+  winnerId = team2.id;  // Team 2 wins
+} else if (team2TotalHP <= 0) {
+  winnerId = team1.id;  // Team 1 wins
+}
+
+// The reward allocation code expects team IDs:
+const team1Won = result.winnerId === team1.id;  // Works correctly
+const team2Won = result.winnerId === team2.id;  // Works correctly
+```
+
+This differs from 1v1 battles where `winnerId` is the robot ID.
+
+### Draw Detection
+
+A draw is declared only when:
+1. Both teams have exhausted ALL robots (active AND reserve HP ≤ 0), OR
+2. Time limit reached with both teams still having robots alive
+
+**NOT a draw**: When both active robots are destroyed but reserves are available — the battle continues with reserves.
+
+### Robot Name Display in Attack Messages
+
+Attack messages use `event.attacker` and `event.defender` directly from the combat event, which contain the correct robot names for the current phase. This ensures:
+- Phase 1 messages show the active robots' names
+- Phase 2 messages show the correct fighters (surviving active or tagged-in reserve)
+- Phase 3 messages show the reserve robots' names
+
+**Fallback**: If event names are missing, the message generator falls back to phase context names.
+
+### Phase-to-Robot Mapping Reference
+
+| Phase | robot1 (Team 1) | robot2 (Team 2) | Scenario |
+|-------|-----------------|-----------------|----------|
+| 1 | team1.activeRobot | team2.activeRobot | Always |
+| 2 | team1.reserveRobot | team2.activeRobot | Team 1 tagged out |
+| 2 | team1.activeRobot | team2.reserveRobot | Team 2 tagged out |
+| 2 | team1.reserveRobot | team2.reserveRobot | Both tagged out |
+| 3 | team1.reserveRobot | team2.reserveRobot | Both eventually tagged out |
 
 ---
 

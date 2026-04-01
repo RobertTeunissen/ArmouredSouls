@@ -194,37 +194,71 @@ export function BattleLogsTab() {
                         </span>
                       </td>
                       <td className="p-3">
-                        <Link
-                          to={`/robots/${battle.robot1.id}`}
-                          className="text-primary hover:underline"
-                          aria-label={`View robot details for ${battle.robot1.name}`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {battle.robot1.name}
-                        </Link>
-                        <div className="text-xs text-secondary">
-                          HP: {battle.robot1FinalHP} | ELO: {battle.robot1ELOBefore} →{' '}
-                          {battle.robot1ELOAfter}
-                        </div>
+                        {format === '2v2' && battle.team1ActiveName ? (
+                          <div>
+                            <div className="text-primary font-semibold">Team 1</div>
+                            <div className="text-xs text-secondary">
+                              {battle.team1ActiveName} + {battle.team1ReserveName}
+                            </div>
+                            <div className="text-xs text-secondary mt-1">
+                              ELO: {battle.robot1ELOBefore} → {battle.robot1ELOAfter}
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <Link
+                              to={`/robots/${battle.robot1.id}`}
+                              className="text-primary hover:underline"
+                              aria-label={`View robot details for ${battle.robot1.name}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {battle.robot1.name}
+                            </Link>
+                            <div className="text-xs text-secondary">
+                              HP: {battle.robot1FinalHP} | ELO: {battle.robot1ELOBefore} →{' '}
+                              {battle.robot1ELOAfter}
+                            </div>
+                          </>
+                        )}
                       </td>
                       <td className="p-3">
-                        <Link
-                          to={`/robots/${battle.robot2.id}`}
-                          className="text-purple-400 hover:underline"
-                          aria-label={`View robot details for ${battle.robot2.name}`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {battle.robot2.name}
-                        </Link>
-                        <div className="text-xs text-secondary">
-                          HP: {battle.robot2FinalHP} | ELO: {battle.robot2ELOBefore} →{' '}
-                          {battle.robot2ELOAfter}
-                        </div>
+                        {format === '2v2' && battle.team2ActiveName ? (
+                          <div>
+                            <div className="text-purple-400 font-semibold">Team 2</div>
+                            <div className="text-xs text-secondary">
+                              {battle.team2ActiveName} + {battle.team2ReserveName}
+                            </div>
+                            <div className="text-xs text-secondary mt-1">
+                              ELO: {battle.robot2ELOBefore} → {battle.robot2ELOAfter}
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <Link
+                              to={`/robots/${battle.robot2.id}`}
+                              className="text-purple-400 hover:underline"
+                              aria-label={`View robot details for ${battle.robot2.name}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {battle.robot2.name}
+                            </Link>
+                            <div className="text-xs text-secondary">
+                              HP: {battle.robot2FinalHP} | ELO: {battle.robot2ELOBefore} →{' '}
+                              {battle.robot2ELOAfter}
+                            </div>
+                          </>
+                        )}
                       </td>
                       <td className="p-3">
                         <div className="flex flex-col">
                           <span className={outcome.color}>
-                            {outcome.icon} {battle.winnerName}
+                            {outcome.icon} {format === '2v2' && battle.team1Id && battle.team2Id
+                              ? (battle.winnerId === battle.team1Id
+                                  ? 'Team 1'
+                                  : battle.winnerId === battle.team2Id
+                                  ? 'Team 2'
+                                  : battle.winnerName)
+                              : battle.winnerName}
                           </span>
                           <span className="text-xs text-secondary mt-1">{outcome.label}</span>
                         </div>

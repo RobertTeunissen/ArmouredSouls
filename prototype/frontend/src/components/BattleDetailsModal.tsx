@@ -22,12 +22,48 @@ interface CombatEvent {
   robot2HP?: number;
   robot1Shield?: number;
   robot2Shield?: number;
+  /** Per-robot HP map for N-robot modes (KotH/FFA) and consistent name-keyed access */
+  robotHP?: Record<string, number>;
+  /** Per-robot shield map for N-robot modes (KotH/FFA) and consistent name-keyed access */
+  robotShield?: Record<string, number>;
   message: string;
   formulaBreakdown?: {
     calculation: string;
     components: Record<string, number>;
     result: number;
   };
+}
+
+/**
+ * Extract HP and Shield values for a robot from a combat event.
+ * Prefers the robotHP/robotShield maps (correct, keyed by name) over
+ * the legacy robot1HP/robot2HP fields (which swap based on attacker/defender).
+ */
+function getEventHP(
+  event: CombatEvent,
+  robotName: string,
+  robot1Name: string,
+  robot2Name: string
+): { hp: number | undefined; shield: number | undefined } {
+  // Prefer robotHP/robotShield maps (correct source of truth, keyed by robot name)
+  if (event.robotHP && robotName in event.robotHP) {
+    return {
+      hp: event.robotHP[robotName],
+      shield: event.robotShield?.[robotName],
+    };
+  }
+  
+  // Legacy fallback for old battle data stored before this fix
+  // Note: These values may be incorrect for events where robot2 attacked,
+  // as the legacy fields swap based on attacker/defender roles
+  if (robotName === robot1Name) {
+    return { hp: event.robot1HP, shield: event.robot1Shield };
+  }
+  if (robotName === robot2Name) {
+    return { hp: event.robot2HP, shield: event.robot2Shield };
+  }
+  
+  return { hp: undefined, shield: undefined };
 }
 
 interface TeamRobot {
@@ -227,13 +263,21 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
         </div>
       </div>
 
-      {/* Winner / Draw */}
+      {/* Winner / Draw - compare with team IDs for tag team battles (Requirements 2.6, 2.8) */}
       <div className="mt-4 text-center">
         <div className="text-2xl font-bold">
-          {battle.winnerId === battle.robot1.id && (
+          {/* For tag team battles, winnerId should be team ID (after Task 3 fix) */}
+          {teams?.team1 && battle.winnerId === teams.team1.id && (
             <span className="text-primary">🏆 Team 1 Wins!</span>
           )}
-          {battle.winnerId === battle.robot2.id && (
+          {teams?.team2 && battle.winnerId === teams.team2.id && (
+            <span className="text-purple-400">🏆 Team 2 Wins!</span>
+          )}
+          {/* Fallback for legacy data where winnerId might still be robot ID */}
+          {!teams?.team1 && battle.winnerId === battle.robot1.id && (
+            <span className="text-primary">🏆 Team 1 Wins!</span>
+          )}
+          {!teams?.team2 && battle.winnerId === battle.robot2.id && (
             <span className="text-purple-400">🏆 Team 2 Wins!</span>
           )}
           {!battle.winnerId && <span className="text-secondary">⚖️ Draw</span>}
@@ -243,13 +287,13 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
         </div>
       </div>
 
-      {/* Team Rewards from participants */}
+      {/* Team Rewards from participants - use team IDs for winner highlighting (Requirements 2.6, 2.8) */}
       {participants.length > 0 && (
         <div className="mt-4 bg-surface rounded-lg p-4">
           <h4 className="text-lg font-semibold mb-3 text-warning">💰 Battle Rewards</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            {/* Team 1 Rewards */}
-            <div className={`p-3 rounded ${battle.winnerId === battle.robot1.id ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
+            {/* Team 1 Rewards - highlight if team1 won (winnerId === team1.id) */}
+            <div className={`p-3 rounded ${(teams?.team1 && battle.winnerId === teams.team1.id) || (!teams?.team1 && battle.winnerId === battle.robot1.id) ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
               <div className="font-semibold text-primary mb-2">Team 1</div>
               <div className="space-y-1">
                 {participants.filter((p: BattleParticipant) => p.team === 1).map((p: BattleParticipant) => (
@@ -260,8 +304,8 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                 ))}
               </div>
             </div>
-            {/* Team 2 Rewards */}
-            <div className={`p-3 rounded ${battle.winnerId === battle.robot2.id ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
+            {/* Team 2 Rewards - highlight if team2 won (winnerId === team2.id) */}
+            <div className={`p-3 rounded ${(teams?.team2 && battle.winnerId === teams.team2.id) || (!teams?.team2 && battle.winnerId === battle.robot2.id) ? 'bg-green-900/30 border border-green-700' : 'bg-surface-elevated'}`}>
               <div className="font-semibold text-purple-400 mb-2">Team 2</div>
               <div className="space-y-1">
                 {participants.filter((p: BattleParticipant) => p.team === 2).map((p: BattleParticipant) => (
@@ -533,22 +577,38 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
                               )}
                             </div>
 
-                            {/* HP/Shield State */}
-                            {(event.robot1HP !== undefined ||
+                            {/* HP/Shield State — uses robotHP map for correct values */}
+                            {(event.robotHP || event.robot1HP !== undefined ||
                               event.robot2HP !== undefined) && (
-                              <div className="text-xs text-secondary mt-1 flex gap-4">
-                                {event.robot1HP !== undefined && (
-                                  <span>
-                                    {battle.robot1.name}: {event.robot1HP}HP /{' '}
-                                    {event.robot1Shield}S
-                                  </span>
-                                )}
-                                {event.robot2HP !== undefined && (
-                                  <span>
-                                    {battle.robot2.name}: {event.robot2HP}HP /{' '}
-                                    {event.robot2Shield}S
-                                  </span>
-                                )}
+                              <div className="text-xs text-secondary mt-1 flex gap-4 flex-wrap">
+                                {(() => {
+                                  // For N-robot battles (KotH, future modes), iterate over all robots in the map
+                                  if (event.robotHP && Object.keys(event.robotHP).length > 0) {
+                                    return Object.entries(event.robotHP).map(([name, hp]) => (
+                                      <span key={name}>
+                                        {name}: {hp}HP / {event.robotShield?.[name] ?? 0}S
+                                      </span>
+                                    ));
+                                  }
+                                  
+                                  // Legacy fallback for old 1v1 battle data only
+                                  const r1 = getEventHP(event, battle.robot1.name, battle.robot1.name, battle.robot2.name);
+                                  const r2 = getEventHP(event, battle.robot2.name, battle.robot1.name, battle.robot2.name);
+                                  return (
+                                    <>
+                                      {r1.hp !== undefined && (
+                                        <span>
+                                          {battle.robot1.name}: {r1.hp}HP / {r1.shield ?? 0}S
+                                        </span>
+                                      )}
+                                      {r2.hp !== undefined && (
+                                        <span>
+                                          {battle.robot2.name}: {r2.hp}HP / {r2.shield ?? 0}S
+                                        </span>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             )}
 

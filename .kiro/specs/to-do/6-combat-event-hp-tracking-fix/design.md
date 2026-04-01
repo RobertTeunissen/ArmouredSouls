@@ -11,9 +11,11 @@ This design addresses the HP/Shield tracking inconsistency in combat events wher
 | 2.1 Consistent robot identity via robotHP/robotShield maps | Component 1: Combat Simulator (already correct) |
 | 2.2 Message generator uses robotHP map | Component 2: Combat Message Generator |
 | 2.3 Shield break detection uses robotShield map | Component 2: Combat Message Generator |
-| 2.4 Admin portal uses robotHP/robotShield maps | Component 3: BattleDetailsModal |
-| 2.5 N-robot compatible data model | Component 1 & 2 (maps scale to any robot count) |
-| 3.1-3.5 Backward compatibility | Component 4: Legacy Fallback Helper |
+| 2.4 Admin portal uses robotHP/robotShield maps | Component 4: BattleDetailsModal |
+| 2.5 N-robot compatible data model | Component 1, 2, 3 (maps scale to any robot count) |
+| 3.1-3.5 Backward compatibility | Component 2, 3, 4: Legacy Fallback Helpers |
+
+**Note**: Component 3 (BattlePlaybackViewer) is already correctly implemented and requires no changes.
 
 ## Architecture
 
@@ -40,30 +42,69 @@ This design addresses the HP/Shield tracking inconsistency in combat events wher
 └─────────────────────┘     └─────────────────────┘
 ```
 
-### Target State (Fixed)
+### Target State (Fixed) — N-Robot Compatible
 
 ```
-┌─────────────────────┐
-│  Combat Simulator   │
-│  ─────────────────  │
-│  Sets robotHP/      │  ← Single source of truth
-│  robotShield maps   │
-│  keyed by name      │
-│                     │
-│  robot1HP/robot2HP  │  ← Deprecated, kept for legacy
-│  still set for      │
-│  backward compat    │
-└─────────────────────┘
-          │
-          ▼
-┌─────────────────────┐     ┌─────────────────────┐
-│ CombatMessageGen    │     │ BattleDetailsModal  │
-│ ─────────────────   │     │ ─────────────────   │
-│ Uses robotHP/       │     │ Uses robotHP/       │
-│ robotShield maps    │     │ robotShield maps    │
-│ with legacy fallback│     │ with legacy fallback│
-└─────────────────────┘     └─────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      Combat Simulator                        │
+│  ─────────────────────────────────────────────────────────  │
+│                                                              │
+│  PRIMARY: robotHP / robotShield maps (keyed by robot NAME)  │
+│  ─────────────────────────────────────────────────────────  │
+│  Works for ANY number of robots:                            │
+│                                                              │
+│  1v1:    { "Gobbo": 95, "WimpBot": 46 }                     │
+│  2v2:    { "Gobbo": 95, "WimpBot": 46, "Iron": 80, "Rex": 0 }│
+│  KotH:   { "Bot1": 90, "Bot2": 45, "Bot3": 60, "Bot4": 0,   │
+│           "Bot5": 75, "Bot6": 30, "Bot7": 55, "Bot8": 20 }  │
+│  Future: Scales to any N robots                              │
+│                                                              │
+│  DEPRECATED: robot1HP/robot2HP (kept for legacy data only)  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    All Consumers                             │
+│  ─────────────────────────────────────────────────────────  │
+│                                                              │
+│  1. Look up HP by robot NAME in robotHP map                 │
+│  2. Fall back to robot1HP/robot2HP ONLY for legacy data     │
+│  3. Never assume robot count — iterate over map keys        │
+│                                                              │
+│  ┌─────────────────────┐     ┌─────────────────────┐        │
+│  │ CombatMessageGen    │     │ BattleDetailsModal  │        │
+│  │ ─────────────────   │     │ ─────────────────   │        │
+│  │ getHPFromEvent()    │     │ getEventHP()        │        │
+│  │ uses robotHP[name]  │     │ uses robotHP[name]  │        │
+│  └─────────────────────┘     └─────────────────────┘        │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ BattlePlaybackViewer (usePlaybackEngine.ts)         │    │
+│  │ ─────────────────────────────────────────────────   │    │
+│  │ getLatestHPShield() — ALREADY CORRECT               │    │
+│  │ Prefers robotHP/robotShield maps, legacy fallback   │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+### N-Robot Scalability Design
+
+The fix uses **name-keyed maps** as the single source of truth, which inherently scales to any battle format:
+
+| Battle Type | Robot Count | robotHP Map Example |
+|-------------|-------------|---------------------|
+| 1v1 League | 2 | `{ "Gobbo": 95, "WimpBot": 46 }` |
+| 2v2 Tag Team | 4 | `{ "Gobbo": 95, "WimpBot": 46, "IronCrusher": 80, "DeathBot": 0 }` |
+| KotH | 4-8 | `{ "Bot1": 90, "Bot2": 45, "Bot3": 60, "Bot4": 0, "Bot5": 75, ... }` |
+| Future FFA | N | `{ [robot.name]: hp for each robot }` |
+| Future Battle Royale | N | Same pattern — scales automatically |
+
+**Key design principles:**
+
+1. **No hardcoded robot count**: Consumers iterate over `Object.keys(event.robotHP)` or look up by name, never assume exactly 2 robots
+2. **Name-based identity**: Robot identity is determined by `robot.name`, not array position or attacker/defender role
+3. **Attacker/defender are roles, not identity**: `event.attacker` and `event.defender` tell you WHO did WHAT, but HP lookup is always by name from the map
+4. **Legacy fallback is 1v1 only**: The `robot1HP`/`robot2HP` fallback only works for old 1v1 battle data; new battles always use maps
 
 ## Component Design
 
@@ -174,31 +215,69 @@ private static checkDamageStatus(
 }
 ```
 
-#### 2.4 Update `convertSimulatorEvents()` Call Sites
+#### 2.4 Update `convertSimulatorEvents()` — N-Robot Compatible Tracking
 
-Update the main conversion loop to use Map-based tracking instead of separate variables:
+Update the main conversion loop to use Map-based tracking that scales to any number of robots:
 
 ```typescript
-// Before
+// Before (hardcoded for 2 robots)
 let robot1PrevShield = robot1MaxHP; // Wrong: using HP as shield
 let robot2PrevShield = robot2MaxHP;
 const robot1Thresholds = new Set<number>();
 const robot2Thresholds = new Set<number>();
 
-// After
-const prevShields = new Map<string, number>([
-  [context.robot1Name, robot1MaxShield],
-  [context.robot2Name, robot2MaxShield],
-]);
-const thresholds = new Map<string, Set<number>>([
-  [context.robot1Name, new Set()],
-  [context.robot2Name, new Set()],
-]);
+// After (N-robot compatible using Maps keyed by robot name)
+const prevShields = new Map<string, number>();
+const thresholds = new Map<string, Set<number>>();
+
+// Initialize from context (works for 2 robots in 1v1/tournament)
+prevShields.set(context.robot1Name, context.robot1MaxShield ?? 0);
+prevShields.set(context.robot2Name, context.robot2MaxShield ?? 0);
+thresholds.set(context.robot1Name, new Set());
+thresholds.set(context.robot2Name, new Set());
+
+// For N-robot modes (KotH, FFA), initialize from first event's robotShield map
+// This allows the same code path to work for any robot count
 ```
 
-### Component 3: BattleDetailsModal Updates
+**Why Maps instead of separate variables:**
+- Maps scale to any number of robots without code changes
+- Robot identity is by name, not hardcoded position
+- Same code works for 1v1, 2v2, KotH (4-8 robots), and future modes
+- Adding a new battle mode doesn't require changes to tracking logic
 
-#### 3.1 Update CombatEvent Interface
+### Component 3: BattlePlaybackViewer (No Changes Required)
+
+The `usePlaybackEngine.ts` hook in `BattlePlaybackViewer` **already correctly implements** the pattern this fix applies to other components. The `getLatestHPShield()` function (lines 113-168):
+
+1. **Checks for robotHP map first** (lines 117-127):
+   ```typescript
+   const hasRobotHPMap = events.some(e => e.robotHP);
+   if (hasRobotHPMap) {
+     for (let i = 0; i <= eventIndex && i < events.length; i++) {
+       const evt = events[i];
+       if (evt.robotHP) {
+         for (const [name, hpVal] of Object.entries(evt.robotHP)) {
+           hp[name] = hpVal;
+         }
+       }
+       // ... same for robotShield
+     }
+     return { hp, shield };
+   }
+   ```
+
+2. **Falls back to legacy fields only for old data** (lines 145-168):
+   - Uses `robot1HP`/`robot2HP` with phase tracking for tag team battles
+   - This fallback is only reached when `robotHP` maps are not present
+
+**Verification**: The BattlePlaybackViewer will automatically display correct HP values once the combat simulator's `robotHP` maps are properly populated. No code changes needed in this component.
+
+**Why this was already correct**: The BattlePlaybackViewer was built more recently (for the spatial playback feature) and was designed with N-robot KotH support in mind from the start.
+
+### Component 4: BattleDetailsModal Updates
+
+#### 4.1 Update CombatEvent Interface
 
 Add the `robotHP` and `robotShield` map types:
 
@@ -216,7 +295,7 @@ interface CombatEvent {
 }
 ```
 
-#### 3.2 Create HP Display Helper
+#### 4.2 Create HP Display Helper
 
 ```typescript
 function getEventHP(
@@ -243,15 +322,25 @@ function getEventHP(
 }
 ```
 
-#### 3.3 Update HP/Shield Display JSX
+#### 4.3 Update HP/Shield Display JSX — N-Robot Compatible
 
-Replace the current display logic:
+Replace the current display logic with a dynamic approach that works for any number of robots:
 
 ```tsx
-{/* HP/Shield State */}
+{/* HP/Shield State — N-Robot Compatible */}
 {(event.robotHP || event.robot1HP !== undefined || event.robot2HP !== undefined) && (
-  <div className="text-xs text-secondary mt-1 flex gap-4">
+  <div className="text-xs text-secondary mt-1 flex gap-4 flex-wrap">
     {(() => {
+      // For N-robot battles (KotH, future modes), iterate over all robots in the map
+      if (event.robotHP && Object.keys(event.robotHP).length > 0) {
+        return Object.entries(event.robotHP).map(([name, hp]) => (
+          <span key={name}>
+            {name}: {hp}HP / {event.robotShield?.[name] ?? 0}S
+          </span>
+        ));
+      }
+      
+      // Legacy fallback for old 1v1 battle data only
       const r1 = getEventHP(event, battle.robot1.name, battle.robot1.name, battle.robot2.name);
       const r2 = getEventHP(event, battle.robot2.name, battle.robot1.name, battle.robot2.name);
       return (
@@ -269,7 +358,12 @@ Replace the current display logic:
 )}
 ```
 
-### Component 4: Property-Based Test for HP Consistency
+This approach:
+- **Prefers the robotHP map** when available (all new battles)
+- **Iterates dynamically** over all robots in the map — works for 2, 4, 8, or any N robots
+- **Falls back to legacy** only for old 1v1 data that lacks the robotHP map
+
+### Component 5: Property-Based Test for HP Consistency
 
 Create a new PBT file `hpTracking.pbt.test.ts` that verifies:
 
