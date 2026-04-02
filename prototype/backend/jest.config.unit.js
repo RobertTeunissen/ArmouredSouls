@@ -37,6 +37,7 @@ const unitTestFiles = [
   'weaponProperties\\.test\\.ts',
   'weaponStatValidation\\.property\\.test\\.ts',
   'rangeBands\\.test\\.ts',
+  'weaponEquipValidation\\.test\\.ts',
   'dependency-upgrade-invariants\\.property\\.test\\.ts',
 ];
 

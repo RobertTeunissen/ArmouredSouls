@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable } from '../utils/weaponValidation';
+import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable, validateNoDuplicateEquip } from '../utils/weaponValidation';
 import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
 import prisma from '../lib/prisma';
 import { eventLogger } from '../services/common/eventLogger';
@@ -342,16 +342,22 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Weapon not found in your inventory', 404);
   }
 
-  // Check if weapon is equipped to another robot
-  const equippedToOther = weaponInv.robotsMain.concat(weaponInv.robotsOffhand)
-    .find(r => r.id !== robotId);
-  
+  // Check if weapon is already equipped anywhere
+  const allEquipped = weaponInv.robotsMain.concat(weaponInv.robotsOffhand);
+
+  const equippedToOther = allEquipped.find(r => r.id !== robotId);
   if (equippedToOther) {
     throw new RobotError(
       RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
       `Weapon is already equipped to ${equippedToOther.name}`,
       400
     );
+  }
+
+  // Check if weapon is already equipped to this robot in the offhand slot
+  const dupCheck = validateNoDuplicateEquip(weaponInvIdNum, 'main', robot);
+  if (!dupCheck.valid) {
+    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, dupCheck.reason!, 400);
   }
 
   // Validate weapon can be equipped in main slot
@@ -447,16 +453,22 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Weapon not found in your inventory', 404);
   }
 
-  // Check if weapon is equipped to another robot
-  const equippedToOther = weaponInv.robotsMain.concat(weaponInv.robotsOffhand)
-    .find(r => r.id !== robotId);
-  
+  // Check if weapon is already equipped anywhere
+  const allEquipped = weaponInv.robotsMain.concat(weaponInv.robotsOffhand);
+
+  const equippedToOther = allEquipped.find(r => r.id !== robotId);
   if (equippedToOther) {
     throw new RobotError(
       RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
       `Weapon is already equipped to ${equippedToOther.name}`,
       400
     );
+  }
+
+  // Check if weapon is already equipped to this robot in the main slot
+  const dupCheck = validateNoDuplicateEquip(weaponInvIdNum, 'offhand', robot);
+  if (!dupCheck.valid) {
+    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, dupCheck.reason!, 400);
   }
 
   // Validate weapon can be equipped in offhand slot
