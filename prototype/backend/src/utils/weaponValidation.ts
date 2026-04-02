@@ -164,3 +164,21 @@ export function isSlotAvailable(slot: 'main' | 'offhand', loadoutType: string): 
 
   return false;
 }
+
+/**
+ * Validate that a weapon is not already equipped in the other slot on the same robot.
+ * Prevents the same weapon inventory item from being used as both main and offhand.
+ */
+export function validateNoDuplicateEquip(
+  weaponInventoryId: number,
+  targetSlot: 'main' | 'offhand',
+  robot: { mainWeaponId: number | null; offhandWeaponId: number | null }
+): { valid: boolean; reason?: string } {
+  if (targetSlot === 'main' && robot.offhandWeaponId === weaponInventoryId) {
+    return { valid: false, reason: 'This weapon is already equipped as your offhand weapon' };
+  }
+  if (targetSlot === 'offhand' && robot.mainWeaponId === weaponInventoryId) {
+    return { valid: false, reason: 'This weapon is already equipped as your main weapon' };
+  }
+  return { valid: true };
+}
