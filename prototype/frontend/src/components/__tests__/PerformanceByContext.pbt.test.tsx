@@ -103,7 +103,7 @@ describe('PerformanceByContext - Property-Based Tests', () => {
             tournamentId: fc.nat(1000),
             tournamentName: fc.string({ minLength: 5, maxLength: 30 })
               .filter(s => s.trim().length >= 5), // Ensure non-whitespace content
-            tournamentDate: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-01-01') }).map(d => d.toISOString()),
+            tournamentDate: fc.integer({ min: new Date('2020-01-01').getTime(), max: new Date('2030-01-01').getTime() }).map(ts => new Date(ts).toISOString()),
             placement: fc.nat({ min: 1, max: 64 }),
             totalParticipants: fc.nat({ min: 4, max: 64 }),
             wins: fc.nat(10),
