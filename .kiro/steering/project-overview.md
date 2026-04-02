@@ -23,7 +23,7 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 - **Build Tool**: Vite 6
 - **Styling**: Tailwind CSS 4
 - **Testing**: Vitest 4 with property-based testing (fast-check)
-- **State Management**: React Context + hooks
+- **State Management**: Zustand + React Context + hooks
 - **HTTP Client**: Fetch API / Axios
 
 ### Database

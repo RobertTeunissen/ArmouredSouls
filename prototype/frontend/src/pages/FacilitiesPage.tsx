@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../utils/apiClient';
 import Navigation from '../components/Navigation';
 import FacilityIcon from '../components/FacilityIcon';
+import { useStableStore } from '../stores';
 
 type TabType = 'facilities' | 'investments' | 'advisor';
 
@@ -94,6 +95,9 @@ const FACILITY_CATEGORIES: CategoryInfo[] = [
 function FacilitiesPage() {
   const { user, refreshUser } = useAuth();
   const location = useLocation();
+  const currency = useStableStore(state => state.currency);
+  const refreshCurrency = useStableStore(state => state.refreshCurrency);
+  const fetchStableData = useStableStore(state => state.fetchStableData);
   const [activeTab, setActiveTab] = useState<TabType>('facilities');
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [userPrestige, setUserPrestige] = useState(0);
@@ -144,6 +148,9 @@ function FacilitiesPage() {
 
   useEffect(() => {
     fetchFacilities();
+    // Ensure the stable store is populated for currency data
+    fetchStableData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);  useEffect(() => {
     if ((activeTab === 'advisor' || activeTab === 'investments') && user) {
       fetchAdvisorData();
@@ -250,8 +257,8 @@ function FacilitiesPage() {
         facilityType,
       });
 
-      // Refresh facilities and user data
-      await Promise.all([fetchFacilities(), refreshUser()]);
+      // Refresh facilities, user data, and store currency
+      await Promise.all([fetchFacilities(), refreshUser(), refreshCurrency()]);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (err.response?.status === 403) {
         const { current, message } = err.response.data;
@@ -499,7 +506,7 @@ function FacilitiesPage() {
                                   onClick={() => handleUpgrade(facility.type)}
                                   disabled={
                                     upgrading !== null || 
-                                    (user.currency < facility.upgradeCost) ||
+                                    (currency < facility.upgradeCost) ||
                                     !!(facility.nextLevelPrestigeRequired && !facility.hasPrestige)
                                   }
                                   className="bg-primary hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-6 py-2 rounded transition-colors"
@@ -513,7 +520,7 @@ function FacilitiesPage() {
                                 </button>
                               </div>
 
-                              {user.currency < facility.upgradeCost && (
+                              {currency < facility.upgradeCost && (
                                 <div className="mt-2 text-sm text-error">
                                   Insufficient credits
                                 </div>

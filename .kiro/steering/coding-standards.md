@@ -95,7 +95,9 @@ inclusion: always
 
 ### State Management
 - Local state for component-specific data
-- Context for shared application state
+- Zustand stores for data shared across 3+ pages (see `.kiro/steering/frontend-state-management.md`)
+- Context for truly global, rarely-changing state (auth, onboarding, theme)
+- Always use store selectors — never subscribe to the entire Zustand store
 - Avoid prop drilling
 
 ### Styling
