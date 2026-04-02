@@ -73,14 +73,15 @@ export class RobotStatsViewService {
       offset = 0,
     } = options;
 
-    // Map orderBy to SQL column names
-    const orderByColumn = {
+    // Map orderBy to SQL column names — allowlist prevents SQL injection
+    const ORDER_BY_MAP: Record<string, string> = {
       elo: 'current_elo',
       winRate: 'win_rate',
       battles: 'total_battles',
       kills: 'total_kills',
       damageDealt: 'total_damage_dealt',
-    }[orderBy];
+    };
+    const orderByColumn = ORDER_BY_MAP[orderBy] || 'current_elo';
 
     const query = `
       SELECT 
