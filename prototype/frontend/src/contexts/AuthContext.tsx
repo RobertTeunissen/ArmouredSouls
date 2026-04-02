@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { isAxiosError } from 'axios';
 import apiClient from '../utils/apiClient';
+import { useRobotStore } from '../stores/robotStore';
+import { useStableStore } from '../stores/stableStore';
 
 /**
  * Represents an authenticated user's profile data.
@@ -111,6 +113,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
+    // Clear Zustand stores to prevent stale data from previous session
+    useRobotStore.getState().clear();
+    useStableStore.getState().clear();
   };
 
   /**

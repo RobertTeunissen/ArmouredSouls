@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createTagTeam } from '../utils/tagTeamApi';
-import { fetchMyRobots, Robot } from '../utils/robotApi';
+import { Robot } from '../utils/robotApi';
+import { useRobotStore } from '../stores';
 
 interface TeamCreationModalProps {
   onClose: () => void;
@@ -10,6 +11,9 @@ interface TeamCreationModalProps {
 
 function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
   useAuth(); // Ensure auth context is available
+  const storeRobots = useRobotStore(state => state.robots);
+  const fetchStoreRobots = useRobotStore(state => state.fetchRobots);
+  const storeLoading = useRobotStore(state => state.loading);
   const [robots, setRobots] = useState<Robot[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -18,21 +22,14 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
   const [reserveRobotId, setReserveRobotId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchRobots();
-  }, []);
+    fetchStoreRobots();
+  }, [fetchStoreRobots]);
 
-  const fetchRobots = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchMyRobots();
-      setRobots(data);
-    } catch (err) {
-      console.error('Failed to fetch robots:', err);
-      setError('Failed to load robots');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Sync local robots state from store
+  useEffect(() => {
+    setRobots(storeRobots);
+    setLoading(storeLoading && storeRobots.length === 0);
+  }, [storeRobots, storeLoading]);
 
   const isRobotReady = (robot: Robot): boolean => {
     const hpPercentage = (robot.currentHP / robot.maxHP) * 100;

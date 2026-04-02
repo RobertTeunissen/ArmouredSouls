@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
@@ -6,7 +6,8 @@ import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import apiClient from '../utils/apiClient';
-import { fetchMyRobots, Robot } from '../utils/robotApi';
+import { Robot } from '../utils/robotApi';
+import { useRobotStore } from '../stores';
 
 // Utility functions
 const getHPColor = (currentHP: number, maxHP: number): string => {
@@ -112,9 +113,10 @@ const getReadinessStatus = (
 };
 
 function RobotsPage() {
-  const [robots, setRobots] = useState<Robot[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const storeRobots = useRobotStore(state => state.robots);
+  const storeLoading = useRobotStore(state => state.loading);
+  const storeError = useRobotStore(state => state.error);
+  const fetchRobots = useRobotStore(state => state.fetchRobots);
   const [repairBayLevel, setRepairBayLevel] = useState(0);
   const [rosterLevel, setRosterLevel] = useState(0);
   const [showRepairConfirmation, setShowRepairConfirmation] = useState(false);
@@ -129,6 +131,14 @@ function RobotsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+
+  // Sort robots by ELO (highest first) as default
+  const robots = useMemo(() => {
+    return [...storeRobots].sort((a, b) => b.elo - a.elo);
+  }, [storeRobots]);
+
+  const loading = storeLoading;
+  const error = storeError;
 
   const isOnboarding = searchParams.get('onboarding') === 'true';
   useEffect(() => {
@@ -146,26 +156,6 @@ function RobotsPage() {
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
-
-  const fetchRobots = async () => {
-    try {
-      const data = await fetchMyRobots();
-      
-      // Sort robots by ELO (highest first)
-      const sortedData = data.sort((a, b) => b.elo - a.elo);
-      setRobots(sortedData);
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { status?: number } };
-      if (axiosErr.response?.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-      setError('Failed to load robots');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchFacilities = async () => {
     try {

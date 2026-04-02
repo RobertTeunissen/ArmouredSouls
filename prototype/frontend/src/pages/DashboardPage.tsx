@@ -1,8 +1,6 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { fetchMyRobots } from '../utils/robotApi';
 import { getTutorialState, TutorialState } from '../utils/onboardingApi';
 import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
@@ -13,34 +11,7 @@ import StableStatistics from '../components/StableStatistics';
 import TagTeamReadinessWarning from '../components/TagTeamReadinessWarning';
 import DashboardWelcome from '../components/DashboardWelcome';
 import DashboardOnboardingBanner from '../components/DashboardOnboardingBanner';
-
-interface Robot {
-  id: number;
-  name: string;
-  imageUrl?: string | null;
-  elo: number;
-  currentHP: number;
-  maxHP: number;
-  currentShield?: number;
-  maxShield?: number;
-  currentLeague?: string;
-  leaguePoints?: number;
-  wins?: number;
-  losses?: number;
-  draws?: number;
-  totalBattles?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mainWeapon?: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  offhandWeapon?: any;
-  loadoutType?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  battlesWon?: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  battlesAsRobot1?: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  battlesAsRobot2?: any[];
-}
+import { useRobotStore, useStableStore } from '../stores';
 
 interface Notification {
   type: 'warning' | 'danger' | 'info';
@@ -50,16 +21,19 @@ interface Notification {
 }
 
 function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [robots, setRobots] = useState<Robot[]>([]);
+  const robots = useRobotStore(state => state.robots);
+  const fetchRobots = useRobotStore(state => state.fetchRobots);
+  const currency = useStableStore(state => state.currency);
+  const fetchStableData = useStableStore(state => state.fetchStableData);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [onboardingState, setOnboardingState] = useState<TutorialState | null>(null);
-  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchRobots();
+      fetchStableData();
       getTutorialState()
         .then(setOnboardingState)
         .catch(() => setOnboardingState(null));
@@ -72,7 +46,7 @@ function DashboardPage() {
       generateNotifications();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [robots, user]);
+  }, [robots, user, currency]);
 
   const generateNotifications = () => {
     const alerts: Notification[] = [];
@@ -96,42 +70,16 @@ function DashboardPage() {
     }
     
     // Check for low balance (bankruptcy warning)
-    if (user && user.currency < 50000) {
+    if (user && currency < 50000) {
       alerts.push({
         type: 'danger',
-        message: `Low balance warning: ₡${user.currency.toLocaleString()} remaining`,
+        message: `Low balance warning: ₡${currency.toLocaleString()} remaining`,
         action: () => navigate('/finances'),
         actionLabel: 'View Finances'
       });
     }
     
     setNotifications(alerts);
-  };
-
-  const fetchRobots = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // If no token, redirect to login
-      if (!token) {
-        logout();
-        navigate('/login');
-        return;
-      }
-      
-      const data = await fetchMyRobots();
-      setRobots(data);
-    } catch (error) {
-      // Handle 401 Unauthorized errors
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-    }
-    // finally {
-    //   setLoading(false);
-    // }
   };
 
   if (!user) {

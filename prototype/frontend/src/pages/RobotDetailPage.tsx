@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
-import { fetchMyRobots } from '../utils/robotApi';
+import { useRobotStore } from '../stores';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import TabNavigation from '../components/TabNavigation';
@@ -294,11 +294,15 @@ function RobotDetailPage() {
         console.log('Academy Levels:', newAcademyLevels);
         setAcademyLevels(newAcademyLevels);
 
-        // Fetch active robot count for repair cost calculation
+        // Fetch active robot count for repair cost calculation via store
         try {
-          const robotsData = await fetchMyRobots();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const activeCount = robotsData.filter((r: any) => r.name !== 'Bye Robot').length;
+          const storeState = useRobotStore.getState();
+          // Ensure robots are loaded
+          if (storeState.robots.length === 0) {
+            await storeState.fetchRobots();
+          }
+          const robotsData = useRobotStore.getState().robots;
+          const activeCount = robotsData.filter((r) => r.name !== 'Bye Robot').length;
           setActiveRobotCount(activeCount);
         } catch (err) {
           console.error('Failed to fetch robots count:', err);

@@ -1,37 +1,25 @@
 /**
  * FinancialSummary component
  * Displays financial overview on the dashboard
+ * Reads data from the stable Zustand store instead of fetching independently.
  */
 
-import { useEffect, useState } from 'react';
-import { 
-  getFinancialSummary, 
-  FinancialSummary as FinancialSummaryType,
-  formatCurrency
-} from '../utils/financialApi';
+import { useEffect } from 'react';
+import { formatCurrency } from '../utils/financialApi';
+import { useStableStore } from '../stores';
 
 function FinancialSummary() {
-  const [summary, setSummary] = useState<FinancialSummaryType | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const financialSummary = useStableStore(state => state.financialSummary);
+  const loading = useStableStore(state => state.loading);
+  const error = useStableStore(state => state.error);
+  const fetchStableData = useStableStore(state => state.fetchStableData);
 
   useEffect(() => {
-    fetchSummary();
-  }, []);
-
-  const fetchSummary = async () => {
-    try {
-      setLoading(true);
-      const data = await getFinancialSummary();
-      setSummary(data);
-      setError(null);
-    } catch (err) {
-      console.error('Failed to fetch financial summary:', err);
-      setError('Failed to load financial data');
-    } finally {
-      setLoading(false);
+    // Only fetch if we don't already have data (avoids redundant calls when store is shared)
+    if (!financialSummary) {
+      fetchStableData();
     }
-  };
+  }, [financialSummary, fetchStableData]);
 
   if (loading) {
     return (
@@ -42,7 +30,7 @@ function FinancialSummary() {
     );
   }
 
-  if (error || !summary) {
+  if (error || !financialSummary) {
     return (
       <div className="bg-surface p-6 rounded-lg border border-white/10">
         <h2 className="text-2xl font-semibold mb-4">Financial Overview</h2>
@@ -51,7 +39,7 @@ function FinancialSummary() {
     );
   }
 
-  const isPositive = summary.netPassiveIncome >= 0;
+  const isPositive = financialSummary.netPassiveIncome >= 0;
 
   return (
     <div className="bg-surface p-4 rounded-lg border border-white/10">
@@ -70,7 +58,7 @@ function FinancialSummary() {
         <div className="pb-3 border-b border-white/10">
           <div className="text-xs text-secondary mb-1">Current Balance</div>
           <div className="text-xl font-bold text-success">
-            {formatCurrency(summary.currentBalance)}
+            {formatCurrency(financialSummary.currentBalance)}
           </div>
         </div>
 
@@ -78,11 +66,11 @@ function FinancialSummary() {
         <div className="pb-3">
           <div className="text-xs text-secondary mb-1">Daily Passive Net</div>
           <div className={`text-lg font-bold ${isPositive ? 'text-success' : 'text-error'}`}>
-            {isPositive ? '+' : ''}{formatCurrency(summary.netPassiveIncome)}
+            {isPositive ? '+' : ''}{formatCurrency(financialSummary.netPassiveIncome)}
           </div>
           <div className="text-xs text-tertiary mt-1">
-            Income: {formatCurrency(summary.dailyPassiveIncome)} | 
-            Costs: {formatCurrency(summary.dailyOperatingCosts)}
+            Income: {formatCurrency(financialSummary.dailyPassiveIncome)} | 
+            Costs: {formatCurrency(financialSummary.dailyOperatingCosts)}
           </div>
         </div>
       </div>
