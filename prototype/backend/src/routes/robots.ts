@@ -440,41 +440,6 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
     // Recalculate max HP and Shield
     const maxHP = calculateMaxHP(updatedRobot);
     const maxShield = calculateMaxShield(updatedRobot);
-  // Atomically update only if offhand slot doesn't have the same weapon (prevents race condition)
-  const updateResult = await prisma.robot.updateMany({
-    where: {
-      id: robotId,
-      OR: [
-        { offhandWeaponId: null },
-        { offhandWeaponId: { not: weaponInvIdNum } },
-      ],
-    },
-    data: { mainWeaponId: weaponInvIdNum },
-  });
-
-  if (updateResult.count === 0) {
-    throw new RobotError(
-      RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
-      'Cannot equip the same weapon in both main and offhand slots',
-      400
-    );
-  }
-
-  const updatedRobot = await prisma.robot.findFirst({
-    where: { id: robotId },
-    include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
-    },
-  });
-
-  if (!updatedRobot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  // Recalculate max HP and Shield
-  const maxHP = calculateMaxHP(updatedRobot);
-  const maxShield = calculateMaxShield(updatedRobot);
 
     // Update HP and Shield if they increased (don't decrease current values)
     return tx.robot.update({
@@ -599,41 +564,6 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
     // Recalculate max HP and Shield
     const maxHP = calculateMaxHP(updatedRobot);
     const maxShield = calculateMaxShield(updatedRobot);
-  // Atomically update only if main slot doesn't have the same weapon (prevents race condition)
-  const updateResult = await prisma.robot.updateMany({
-    where: {
-      id: robotId,
-      OR: [
-        { mainWeaponId: null },
-        { mainWeaponId: { not: weaponInvIdNum } },
-      ],
-    },
-    data: { offhandWeaponId: weaponInvIdNum },
-  });
-
-  if (updateResult.count === 0) {
-    throw new RobotError(
-      RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
-      'Cannot equip the same weapon in both main and offhand slots',
-      400
-    );
-  }
-
-  const updatedRobot = await prisma.robot.findFirst({
-    where: { id: robotId },
-    include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
-    },
-  });
-
-  if (!updatedRobot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  // Recalculate max HP and Shield
-  const maxHP = calculateMaxHP(updatedRobot);
-  const maxShield = calculateMaxShield(updatedRobot);
 
     // Update HP and Shield
     return tx.robot.update({
