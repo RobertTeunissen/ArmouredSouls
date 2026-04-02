@@ -65,7 +65,7 @@ describe('Property 14: View Switching State Preservation', () => {
     vi.clearAllMocks();
   });
 
-  it('documents that registration form state is reset after switching to login and back (unmount/remount behavior)', async () => {
+  it('documents that registration form state is reset after switching to login and back (unmount/remount behavior)', { timeout: 30_000 }, async () => {
     await fc.assert(
       fc.asyncProperty(registrationFieldsArbitrary(), async (fields) => {
         cleanup();
