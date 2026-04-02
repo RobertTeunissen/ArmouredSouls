@@ -8,36 +8,22 @@ import { Weapon } from '../generated/prisma';
 
 // ─── Helper factories ───────────────────────────────────────────────
 
-function makeWeapon(overrides: Partial<Weapon> = {}): Weapon {
+type TestWeapon = Pick<
+  Weapon,
+  'handsRequired' | 'weaponType' | 'loadoutType' | 'rangeBand' | 'name' | 'id' | 'createdAt'
+>;
+
+function makeWeapon(overrides: Partial<TestWeapon> = {}): TestWeapon {
   return {
     id: 1,
     name: 'Laser Pistol',
-    description: 'A basic laser pistol',
     weaponType: 'ranged',
     handsRequired: 'one',
     loadoutType: 'any',
-    tier: 1,
-    baseDamage: 10,
-    accuracy: 80,
-    armorPenetration: 5,
-    shieldDamageBonus: 0,
-    critChance: 5,
-    critMultiplier: 1.5,
-    weight: 2,
-    hpBonus: 0,
-    shieldBonus: 0,
-    speedBonus: 0,
-    evasionBonus: 0,
-    blockChance: 0,
-    blockReduction: 0,
-    counterAttackChance: 0,
     rangeBand: 'short',
-    price: 1000,
-    minLevel: 1,
     createdAt: new Date(),
-    updatedAt: new Date(),
     ...overrides,
-  } as Weapon;
+  };
 }
 
 function makeRobot(mainWeaponId: number | null, offhandWeaponId: number | null) {
