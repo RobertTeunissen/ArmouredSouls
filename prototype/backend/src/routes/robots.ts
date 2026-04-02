@@ -374,9 +374,7 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
 
   const weaponInvIdNum = parseInt(weaponInventoryId);
 
-  // All reads and writes inside a transaction to prevent concurrent equip exploit
   const finalRobot = await prisma.$transaction(async (tx) => {
-    // Get robot with current weapons
     const robot = await tx.robot.findFirst({
       where: { id: robotId, userId },
       include: {
@@ -389,10 +387,9 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
       throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
     }
 
-    // Get weapon to equip
     const weaponInv = await tx.weaponInventory.findFirst({
       where: { id: weaponInvIdNum, userId },
-      include: { 
+      include: {
         weapon: true,
         robotsMain: { select: { id: true, name: true } },
         robotsOffhand: { select: { id: true, name: true } },
@@ -403,62 +400,23 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
       throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Weapon not found in your inventory', 404);
     }
 
-    // Check if weapon is already equipped anywhere
     const allEquipped = weaponInv.robotsMain.concat(weaponInv.robotsOffhand);
-
     const equippedToOther = allEquipped.find(r => r.id !== robotId);
     if (equippedToOther) {
-      throw new RobotError(
-        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
-        `Weapon is already equipped to ${equippedToOther.name}`,
-        400
-      );
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, `Weapon is already equipped to ${equippedToOther.name}`, 400);
     }
 
-    if (!robot) {
-      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-    }
-
-    // Get weapon to equip
-    const weaponInv = await tx.weaponInventory.findFirst({
-      where: { id: weaponInvIdNum, userId },
-      include: { 
-        weapon: true,
-        robotsMain: { select: { id: true, name: true } },
-        robotsOffhand: { select: { id: true, name: true } },
-      },
-    });
-
-    if (!weaponInv) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Weapon not found in your inventory', 404);
-    }
-
-    // Check if weapon is already equipped anywhere
-    const allEquipped = weaponInv.robotsMain.concat(weaponInv.robotsOffhand);
-
-    const equippedToOther = allEquipped.find(r => r.id !== robotId);
-    if (equippedToOther) {
-      throw new RobotError(
-        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
-        `Weapon is already equipped to ${equippedToOther.name}`,
-        400
-      );
-    }
-
-    // Check if weapon is already equipped to this robot in the offhand slot
     const dupCheck = validateNoDuplicateEquip(weaponInvIdNum, 'main', robot);
     if (!dupCheck.valid) {
       throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, dupCheck.reason!, 400);
     }
 
-    // Validate weapon can be equipped in main slot
-    const validation = canEquipToSlot(weaponInv.weapon, 'main', robot.loadoutType);
-    if (!validation.canEquip) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, validation.reason!, 400);
+    const slotCheck = canEquipToSlot(weaponInv.weapon, 'main', robot.loadoutType);
+    if (!slotCheck.canEquip) {
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, slotCheck.reason!, 400);
     }
 
-    // Update robot with new weapon and recalculate stats
-    const updatedRobot = await tx.robot.update({
+    const equipped = await tx.robot.update({
       where: { id: robotId },
       data: { mainWeaponId: weaponInvIdNum },
       include: {
@@ -467,55 +425,16 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
       },
     });
 
-    // Recalculate max HP and Shield
-    const maxHP = calculateMaxHP(updatedRobot);
-    const maxShield = calculateMaxShield(updatedRobot);
-  // Atomically update only if offhand slot doesn't have the same weapon (prevents race condition)
-  const updateResult = await prisma.robot.updateMany({
-    where: {
-      id: robotId,
-      OR: [
-        { offhandWeaponId: null },
-        { offhandWeaponId: { not: weaponInvIdNum } },
-      ],
-    },
-    data: { mainWeaponId: weaponInvIdNum },
-  });
+    const hp = calculateMaxHP(equipped);
+    const shield = calculateMaxShield(equipped);
 
-    // Check if weapon is already equipped to this robot in the offhand slot
-    const dupCheck = validateNoDuplicateEquip(weaponInvIdNum, 'main', robot);
-    if (!dupCheck.valid) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, dupCheck.reason!, 400);
-    }
-
-    // Validate weapon can be equipped in main slot
-    const validation = canEquipToSlot(weaponInv.weapon, 'main', robot.loadoutType);
-    if (!validation.canEquip) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, validation.reason!, 400);
-    }
-
-    // Update robot with new weapon and recalculate stats
-    const updatedRobot = await tx.robot.update({
-      where: { id: robotId },
-      data: { mainWeaponId: weaponInvIdNum },
-      include: {
-        mainWeapon: { include: { weapon: true } },
-        offhandWeapon: { include: { weapon: true } },
-      },
-    });
-
-    // Recalculate max HP and Shield
-    const maxHP = calculateMaxHP(updatedRobot);
-    const maxShield = calculateMaxShield(updatedRobot);
-
-    // Update HP and Shield if they increased (don't decrease current values)
     return tx.robot.update({
       where: { id: robotId },
       data: {
-        maxHP,
-        maxShield,
-        currentHP: Math.min(updatedRobot.currentHP, maxHP),
-        currentShield: Math.min(updatedRobot.currentShield, maxShield),
+        maxHP: hp,
+        maxShield: shield,
+        currentHP: Math.min(equipped.currentHP, hp),
+        currentShield: Math.min(equipped.currentShield, shield),
       },
       include: {
         mainWeapon: { include: { weapon: true } },
@@ -524,10 +443,7 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
     });
   });
 
-  res.json({
-    robot: finalRobot,
-    message: 'Main weapon equipped successfully',
-  });
+  res.json({ robot: finalRobot, message: 'Main weapon equipped successfully' });
 });
 
 // Equip offhand weapon
@@ -546,9 +462,7 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
 
   const weaponInvIdNum = parseInt(weaponInventoryId);
 
-  // All reads and writes inside a transaction to prevent concurrent equip exploit
   const finalRobot = await prisma.$transaction(async (tx) => {
-    // Get robot with current weapons
     const robot = await tx.robot.findFirst({
       where: { id: robotId, userId },
       include: {
@@ -561,19 +475,13 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
       throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
     }
 
-    // Check if offhand slot is available for this loadout
     if (!isSlotAvailable('offhand', robot.loadoutType)) {
-      throw new RobotError(
-        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
-        `Offhand slot not available for ${robot.loadoutType} loadout`,
-        400
-      );
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, `Offhand slot not available for ${robot.loadoutType} loadout`, 400);
     }
 
-    // Get weapon to equip
     const weaponInv = await tx.weaponInventory.findFirst({
       where: { id: weaponInvIdNum, userId },
-      include: { 
+      include: {
         weapon: true,
         robotsMain: { select: { id: true, name: true } },
         robotsOffhand: { select: { id: true, name: true } },
@@ -584,93 +492,28 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
       throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Weapon not found in your inventory', 404);
     }
 
-    // Check if weapon is already equipped anywhere
     const allEquipped = weaponInv.robotsMain.concat(weaponInv.robotsOffhand);
-
     const equippedToOther = allEquipped.find(r => r.id !== robotId);
     if (equippedToOther) {
-      throw new RobotError(
-        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
-        `Weapon is already equipped to ${equippedToOther.name}`,
-        400
-      );
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, `Weapon is already equipped to ${equippedToOther.name}`, 400);
     }
 
-    // Check if weapon is already equipped to this robot in the main slot
     const dupCheck = validateNoDuplicateEquip(weaponInvIdNum, 'offhand', robot);
     if (!dupCheck.valid) {
       throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, dupCheck.reason!, 400);
     }
 
-    // Validate weapon can be equipped in offhand slot
-    const slotValidation = canEquipToSlot(weaponInv.weapon, 'offhand', robot.loadoutType);
-    if (!slotValidation.canEquip) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, slotValidation.reason!, 400);
+    const slotCheck = canEquipToSlot(weaponInv.weapon, 'offhand', robot.loadoutType);
+    if (!slotCheck.canEquip) {
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, slotCheck.reason!, 400);
     }
 
-    if (!robot) {
-      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
+    const offhandCheck = validateOffhandEquipment(weaponInv.weapon, robot.mainWeaponId !== null, robot.loadoutType);
+    if (!offhandCheck.valid) {
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, offhandCheck.reason!, 400);
     }
 
-    // Check if offhand slot is available for this loadout
-    if (!isSlotAvailable('offhand', robot.loadoutType)) {
-      throw new RobotError(
-        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
-        `Offhand slot not available for ${robot.loadoutType} loadout`,
-        400
-      );
-    }
-
-    // Get weapon to equip
-    const weaponInv = await tx.weaponInventory.findFirst({
-      where: { id: weaponInvIdNum, userId },
-      include: { 
-        weapon: true,
-        robotsMain: { select: { id: true, name: true } },
-        robotsOffhand: { select: { id: true, name: true } },
-      },
-    });
-
-    if (!weaponInv) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Weapon not found in your inventory', 404);
-    }
-
-    // Check if weapon is already equipped anywhere
-    const allEquipped = weaponInv.robotsMain.concat(weaponInv.robotsOffhand);
-
-    const equippedToOther = allEquipped.find(r => r.id !== robotId);
-    if (equippedToOther) {
-      throw new RobotError(
-        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
-        `Weapon is already equipped to ${equippedToOther.name}`,
-        400
-      );
-    }
-
-    // Check if weapon is already equipped to this robot in the main slot
-    const dupCheck = validateNoDuplicateEquip(weaponInvIdNum, 'offhand', robot);
-    if (!dupCheck.valid) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, dupCheck.reason!, 400);
-    }
-
-    // Validate weapon can be equipped in offhand slot
-    const slotValidation = canEquipToSlot(weaponInv.weapon, 'offhand', robot.loadoutType);
-    if (!slotValidation.canEquip) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, slotValidation.reason!, 400);
-    }
-
-    // Validate offhand equipment requirements
-    const offhandValidation = validateOffhandEquipment(
-      weaponInv.weapon,
-      robot.mainWeaponId !== null,
-      robot.loadoutType
-    );
-    if (!offhandValidation.valid) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, offhandValidation.reason!, 400);
-    }
-
-    // Update robot with new weapon and recalculate stats
-    const updatedRobot = await tx.robot.update({
+    const equipped = await tx.robot.update({
       where: { id: robotId },
       data: { offhandWeaponId: weaponInvIdNum },
       include: {
@@ -679,53 +522,16 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
       },
     });
 
-    // Recalculate max HP and Shield
-    const maxHP = calculateMaxHP(updatedRobot);
-    const maxShield = calculateMaxShield(updatedRobot);
-  // Atomically update only if main slot doesn't have the same weapon (prevents race condition)
-  const updateResult = await prisma.robot.updateMany({
-    where: {
-      id: robotId,
-      OR: [
-        { mainWeaponId: null },
-        { mainWeaponId: { not: weaponInvIdNum } },
-      ],
-    },
-    data: { offhandWeaponId: weaponInvIdNum },
-  });
+    const hp = calculateMaxHP(equipped);
+    const shield = calculateMaxShield(equipped);
 
-    // Validate offhand equipment requirements
-    const offhandValidation = validateOffhandEquipment(
-      weaponInv.weapon,
-      robot.mainWeaponId !== null,
-      robot.loadoutType
-    );
-    if (!offhandValidation.valid) {
-      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, offhandValidation.reason!, 400);
-    }
-
-    // Update robot with new weapon and recalculate stats
-    const updatedRobot = await tx.robot.update({
-      where: { id: robotId },
-      data: { offhandWeaponId: weaponInvIdNum },
-      include: {
-        mainWeapon: { include: { weapon: true } },
-        offhandWeapon: { include: { weapon: true } },
-      },
-    });
-
-    // Recalculate max HP and Shield
-    const maxHP = calculateMaxHP(updatedRobot);
-    const maxShield = calculateMaxShield(updatedRobot);
-
-    // Update HP and Shield
     return tx.robot.update({
       where: { id: robotId },
       data: {
-        maxHP,
-        maxShield,
-        currentHP: Math.min(updatedRobot.currentHP, maxHP),
-        currentShield: Math.min(updatedRobot.currentShield, maxShield),
+        maxHP: hp,
+        maxShield: shield,
+        currentHP: Math.min(equipped.currentHP, hp),
+        currentShield: Math.min(equipped.currentShield, shield),
       },
       include: {
         mainWeapon: { include: { weapon: true } },
@@ -734,10 +540,7 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
     });
   });
 
-  res.json({
-    robot: finalRobot,
-    message: 'Offhand weapon equipped successfully',
-  });
+  res.json({ robot: finalRobot, message: 'Offhand weapon equipped successfully' });
 });
 
 // Unequip main weapon
