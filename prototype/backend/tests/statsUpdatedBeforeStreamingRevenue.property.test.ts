@@ -16,7 +16,7 @@
 import fc from 'fast-check';
 import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
-import { processBattle } from '../src/services/leagueBattleOrchestrator';
+import { processBattle } from '../src/services/league/leagueBattleOrchestrator';
 
 // Helper function to create a minimal test robot
 async function createTestRobot(

@@ -10,8 +10,8 @@
  */
 
 import fc from 'fast-check';
-import { CyclePerformanceMonitoringService } from '../src/services/cyclePerformanceMonitoringService';
-import { EventLogger } from '../src/services/eventLogger';
+import { CyclePerformanceMonitoringService } from '../src/services/cycle/cyclePerformanceMonitoringService';
+import { EventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 describe('Property 16: Performance Degradation Detection', () => {

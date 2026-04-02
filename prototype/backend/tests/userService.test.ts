@@ -1,4 +1,4 @@
-import { createUser, CreateUserData, findUserByUsername, findUserByEmail, findUserByIdentifier } from '../src/services/userService';
+import { createUser, CreateUserData, findUserByUsername, findUserByEmail, findUserByIdentifier } from '../src/services/auth/userService';
 import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 

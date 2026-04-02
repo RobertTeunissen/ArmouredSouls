@@ -4,8 +4,8 @@
  * Validates Requirement 15.4
  */
 
-import { CyclePerformanceMonitoringService } from '../src/services/cyclePerformanceMonitoringService';
-import { EventLogger } from '../src/services/eventLogger';
+import { CyclePerformanceMonitoringService } from '../src/services/cycle/cyclePerformanceMonitoringService';
+import { EventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 describe('Cycle Performance Monitoring Service', () => {

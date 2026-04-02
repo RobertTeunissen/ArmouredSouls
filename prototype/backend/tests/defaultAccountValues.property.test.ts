@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { createUser, CreateUserData } from '../src/services/userService';
+import { createUser, CreateUserData } from '../src/services/auth/userService';
 import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 

@@ -1,6 +1,6 @@
 # Armoured Souls - Module Structure
 
-**Last Updated**: January 25, 2026
+**Last Updated**: April 2, 2026
 
 ## Overview
 
@@ -10,402 +10,294 @@ This document breaks down the Armoured Souls system into logical modules, each w
 
 ## Module Hierarchy
 
+The project has two structural layers: the aspirational `modules/` directory (placeholder READMEs for future extraction) and the working `prototype/` directory where all implementation lives.
+
 ```
 ArmouredSouls/
-├── modules/
-│   ├── auth/              # Authentication & Authorization
-│   ├── game-engine/       # Core Game Logic
-│   ├── player/            # Player Management
-│   ├── robot/             # Robot/Unit Management
-│   ├── battle/            # Battle Simulation
-│   ├── stable/            # Stable Management
-│   ├── database/          # Data Persistence Layer
-│   ├── api/               # API Gateway & Routes
-│   ├── ui/                # User Interface Components
-│   ├── notifications/     # Notification System
-│   ├── matchmaking/       # Player Matchmaking
-│   └── admin/             # Admin Tools
+├── modules/                    # Future modular extraction targets (READMEs only)
+│   ├── api/
+│   ├── auth/
+│   ├── database/
+│   ├── game-engine/
+│   └── ui/
+├── prototype/
+│   ├── backend/               # Express 5 + TypeScript backend
+│   │   ├── src/
+│   │   │   ├── config/        # Logger, app config
+│   │   │   ├── errors/        # AppError hierarchy (domain-specific error classes)
+│   │   │   ├── lib/           # Prisma client singleton
+│   │   │   ├── middleware/     # Auth, error handling, validation
+│   │   │   ├── routes/        # Express route handlers
+│   │   │   ├── services/      # Domain-organized service layer (see below)
+│   │   │   └── utils/         # Shared utilities (battleMath, etc.)
+│   │   ├── generated/prisma/  # Prisma 7 generated client
+│   │   ├── prisma/            # Schema and migrations
+│   │   └── tests/             # Jest test files
+│   └── frontend/              # React 19 + Vite + Tailwind CSS
+│       └── src/
+│           ├── components/    # React components
+│           ├── contexts/      # React Context providers
+│           ├── hooks/         # Custom hooks
+│           ├── pages/         # Page components
+│           ├── services/      # API client layer
+│           └── types/         # TypeScript type definitions
 ```
+
+### Backend Services (Domain-Organized)
+
+All 41+ backend services are organized into 13 domain subdirectories under `prototype/backend/src/services/`. Each domain has an `index.ts` barrel file that defines its public API.
+
+```
+prototype/backend/src/services/
+├── auth/           # JWT, password hashing, user management
+├── battle/         # Combat simulation, strategy, post-combat, base orchestrator
+├── league/         # League instances, rebalancing, league battle orchestration
+├── tournament/     # Tournament service, tournament battle orchestration
+├── tag-team/       # Tag-team service, matchmaking, league management, battle orchestration
+├── koth/           # King of the Hill matchmaking and battle orchestration
+├── economy/        # Facilities, ROI, spending, streaming revenue, repairs
+├── cycle/          # Cycle scheduling, snapshots, performance monitoring, CSV export
+├── common/         # Event logging, compression, data integrity, query service, reset, guide
+├── analytics/      # Matchmaking, robot performance, robot stats, onboarding analytics
+├── onboarding/     # Onboarding service
+├── arena/          # Arena layout, movement, position tracking
+└── notifications/  # Notification system
+```
+
+The battle orchestrators (league, tournament, tag-team, KotH) share a common `battle/baseOrchestrator.ts` that encapsulates the shared battle execution pipeline: pre-battle validation → combat simulation → post-combat processing → result recording. Mode-specific orchestrators live in their respective domain directories and compose the base orchestrator for shared logic.
 
 ---
 
 ## Module Specifications
 
-### 1. Authentication Module (`auth`)
+### 1. Auth Domain (`services/auth/`)
 
 **Purpose**: Handle user authentication, authorization, and session management.
 
-**Responsibilities**:
-- User registration and login
-- Password hashing and validation
-- JWT token generation and validation
-- OAuth 2.0 integration (Google, Facebook, etc.)
-- Two-factor authentication (2FA)
-- Session management
-- Role and permission management
+**Services**:
+- `jwtService.ts` — JWT token generation (`generateToken`) and validation (`verifyToken`)
+- `passwordService.ts` — Bcrypt password hashing (`hashPassword`) and verification (`verifyPassword`)
+- `userService.ts` — User CRUD operations (`createUser`, `findUserByUsername`, `findUserByEmail`, `findUserByIdentifier`, `findUserByStableName`)
 
-**Key Entities**:
-- User
-- Session
-- Role
-- Permission
+**Key Entities**: User, Session, Role
 
 **APIs**:
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - User login
-- `POST /auth/logout` - User logout
-- `POST /auth/refresh` - Refresh JWT token
-- `GET /auth/verify` - Verify token validity
+- `POST /auth/register` — Register new user
+- `POST /auth/login` — User login
+- `GET /auth/verify` — Verify token validity
 
-**Dependencies**:
-- Database module (user data)
-- Notification module (email verification)
+**Dependencies**: Database (user data), Onboarding (tutorial init)
 
 ---
 
-### 2. Game Engine Module (`game-engine`)
+### 2. Battle Domain (`services/battle/`)
 
-**Purpose**: Core game logic, rules, and mechanics.
+**Purpose**: Core combat simulation engine and shared orchestration pipeline used by all battle modes.
 
-**Responsibilities**:
-- Game rule enforcement
-- Turn processing
-- Resource management
-- Experience and leveling system
-- Game state validation
-- Event generation
+**Services**:
+- `baseOrchestrator.ts` — Shared battle pipeline utilities: `getCurrentCycleNumber()`, common `BattleContext` and `BattleRecordRef` types. Mode-specific orchestrators compose these building blocks.
+- `combatSimulator.ts` — Time-based combat simulation with 2D spatial arena. Exports `simulateBattle()` (1v1) and `simulateBattleMulti()` (N-robot). Handles hit chance, critical hits, energy shields, penetration, yield thresholds, cooldowns, and AI decision-making.
+- `battleStrategy.ts` — Strategy/processor pattern (`BattleProcessor`) for plugging in new battle modes with custom participant loading, simulation, reward calculation, and DB recording.
+- `battlePostCombat.ts` — Post-combat processing: `calculateELOChange`, `awardStreamingRevenueForParticipant`, `logBattleAuditEvent`, `updateRobotCombatStats`, `awardCreditsToUser`, `awardPrestigeToUser`, `awardFameToRobot`.
+- `combatMessageGenerator.ts` — Generates structured battle logs from combat events: `convertBattleEvents()`, `buildKothBattleLog()`, `generateTagOut()`, `generateTagIn()`.
 
-**Key Entities**:
-- Game (match instance)
-- GameState
-- GameRules
-- GameEvent
+**Key Entities**: Battle, BattleParticipant, BattleAction, BattleLog, BattleOutcome, CombatEvent, CombatResult
+
+**Dependencies**: Arena (spatial mechanics), Economy (streaming revenue), Database (battle records)
+
+---
+
+### 3. League Domain (`services/league/`)
+
+**Purpose**: Competitive league system with tiered instances, promotion/relegation, and league battle orchestration.
+
+**Services**:
+- `leagueInstanceService.ts` — League tier management: `getInstancesForTier()`, `assignLeagueInstance()`, `rebalanceInstances()`, `getRobotsInInstance()`, `moveRobotToInstance()`. Constants: `LEAGUE_TIERS`, `MAX_ROBOTS_PER_INSTANCE`.
+- `leagueRebalancingService.ts` — Promotion/demotion logic: `determinePromotions()`, `determineDemotions()`, `promoteRobot()`, `demoteRobot()`, `rebalanceLeagues()`.
+- `leagueBattleOrchestrator.ts` — League-specific battle execution: `processBattle()`, `executeScheduledBattles()`. Handles LP updates, ELO changes, prestige/fame awards, bye matches.
+
+**Key Entities**: LeagueInstance, LeagueTier (bronze/silver/gold/platinum/diamond), ScheduledLeagueMatch
 
 **APIs**:
-- `POST /game/create` - Create new game
-- `GET /game/{id}` - Get game state
-- `POST /game/{id}/action` - Submit player action
-- `GET /game/{id}/events` - Get game events
+- `GET /leagues/:tier` — Get league standings
+- `POST /admin/cycle/battles` — Execute scheduled league battles
 
-**Dependencies**:
-- Battle module
-- Robot module
-- Player module
+**Dependencies**: Battle (combat simulation), Economy (rewards), Database
 
 ---
 
-### 3. Player Module (`player`)
+### 4. Tournament Domain (`services/tournament/`)
 
-**Purpose**: Manage player profiles, progression, and statistics.
+**Purpose**: Single-elimination tournament system with seeding, bracket advancement, and auto-creation.
 
-**Responsibilities**:
-- Player profile management
-- Player statistics tracking
-- Ranking and leaderboards
-- Achievement system
-- Player inventory
-- Currency management
+**Services**:
+- `tournamentService.ts` — Tournament lifecycle: `createSingleEliminationTournament()`, `getActiveTournaments()`, `getCurrentRoundMatches()`, `advanceWinnersToNextRound()`, `autoCreateNextTournament()`, `computeSeedings()`, `getEligibleRobotsForTournament()`.
+- `tournamentBattleOrchestrator.ts` — Tournament-specific battle execution: `processTournamentBattle()`. Handles bracket advancement, round completion, HP tiebreakers for draws.
 
-**Key Entities**:
-- Player
-- PlayerStats
-- Achievement
-- Inventory
-- Currency
+**Key Entities**: Tournament, TournamentMatch, TournamentRound, SeedEntry
 
 **APIs**:
-- `GET /player/{id}` - Get player profile
-- `PUT /player/{id}` - Update player profile
-- `GET /player/{id}/stats` - Get player statistics
-- `GET /player/{id}/achievements` - Get achievements
-- `GET /leaderboard` - Get global leaderboard
+- `GET /tournaments` — Get active tournaments
+- `POST /admin/tournaments/:id/round` — Execute tournament round
 
-**Dependencies**:
-- Auth module (user linkage)
-- Database module
+**Dependencies**: Battle (combat simulation), League (ELO data), Database
 
 ---
 
-### 4. Robot Module (`robot`)
+### 5. Tag-Team Domain (`services/tag-team/`)
 
-**Purpose**: Robot creation, customization, and state management.
+**Purpose**: Two-robot team battles with tag-out mechanics, team-specific leagues, and matchmaking.
 
-**Responsibilities**:
-- Robot creation with 23 weapon-neutral attributes (Combat, Defensive, Mobility, AI, Team)
-- Robot configuration (loadout, stance, yield threshold)
-- Attribute upgrade system (level 1-50)
-- Equipment management (weapon, secondWeapon for dual-wield, shield)
-- Robot state tracking (currentHP, currentShield, ELO, wins, losses, fame)
-- Per-robot league management (currentLeague, leagueId)
+**Services**:
+- `tagTeamService.ts` — Team management: creation, validation, roster management.
+- `tagTeamMatchmakingService.ts` — Tag-team specific matchmaking: `runTagTeamMatchmaking()`, `shouldRunTagTeamMatchmaking()`.
+- `tagTeamLeagueInstanceService.ts` — Tag-team league tier management (mirrors league domain pattern).
+- `tagTeamLeagueRebalancingService.ts` — Tag-team promotion/demotion: `rebalanceTagTeamLeagues()`.
+- `tagTeamBattleOrchestrator.ts` — Multi-phase battle execution: `executeTagTeamBattle()`, `executeScheduledTagTeamBattles()`. Handles tag-out/tag-in mechanics, reserve robot activation, multi-phase combat, team scoring.
 
-**Key Entities**:
-- Robot (with 23 attributes + state + configuration)
-- Weapon (20 weapons + 3 shields with cooldown, damage type, attribute bonuses)
-- Loadout (weapon_shield, two_handed, dual_wield, single)
-- BattleStance (offensive, defensive, balanced)
+**Key Entities**: TagTeam, TagTeamWithRobots, ScheduledTagTeamMatch, TagOutEvent, TagInEvent
 
 **APIs**:
-- `POST /robot/create` - Create new robot
-- `GET /robot/{id}` - Get robot details
-- `PUT /robot/{id}` - Update robot configuration
-- `POST /robot/{id}/upgrade` - Upgrade robot
-- `DELETE /robot/{id}` - Delete robot
+- `GET /tag-teams` — Get user's tag teams
+- `POST /admin/cycle/tag-team-battles` — Execute scheduled tag-team battles
 
-**Dependencies**:
-- Player module (ownership)
-- Database module
+**Dependencies**: Battle (combat simulation), League (shared patterns), Database
 
 ---
 
-### 5. Battle Module (`battle`)
+### 6. KotH Domain (`services/koth/`)
 
-**Purpose**: Time-based battle simulation and combat mechanics.
+**Purpose**: King of the Hill multi-robot battle mode with zone scoring and placement calculation.
 
-**Responsibilities**:
-- Battle initialization with loadout and stance configuration
-- Time-based combat simulation (attack cooldowns, AI decision-making)
-- Damage calculation with formulas (hit chance, critical hits, energy shields, penetration)
-- Yield threshold detection (player-configurable surrender points)
-- Battle outcome determination with repair cost multipliers (1.0x/1.5x/2.0x)
-- Battle log generation with timestamped events
-- Robot state updates (HP, shield, damage taken, ELO, wins/losses)
+**Services**:
+- `kothMatchmakingService.ts` — KotH-specific matchmaking: `runKothMatchmaking()`.
+- `kothBattleOrchestrator.ts` — N-robot battle execution: `executeScheduledKothBattles()`, `processKothBattle()`, `calculateKothRewards()`. Uses `simulateBattleMulti()` for multi-participant combat. Handles zone scoring, placement calculation, batched DB updates with throttling.
 
-**Key Entities**:
-- Battle (with comprehensive tracking)
-- BattleParticipant (robot state at battle start)
-- BattleAction (timestamped events in time-based system)
-- BattleLog (JSON with full simulation)
-- BattleOutcome (winnerReward, loserReward, repair costs, multipliers, yield flags)
+**Key Entities**: KothMatch, PreparedParticipant, KothBattleExecutionSummary
 
 **APIs**:
-- `POST /battle/start` - Start new battle
-- `GET /battle/{id}` - Get battle state
-- `POST /battle/{id}/action` - Submit battle action
-- `GET /battle/{id}/log` - Get battle log
-- `GET /battle/{id}/replay` - Get battle replay
+- `POST /admin/cycle/koth-battles` — Execute scheduled KotH battles
 
-**Dependencies**:
-- Robot module (battle units)
-- Player module (participants)
-- Game engine (rules)
+**Dependencies**: Battle (multi-robot simulation), Economy (streaming revenue), Database
 
 ---
 
-### 6. Stable Module (`stable`)
+### 7. Economy Domain (`services/economy/`)
 
-**Purpose**: Manage player's stable with 14 facility types and progression systems.
+**Purpose**: Financial systems including facilities, ROI calculations, spending tracking, streaming revenue, and repairs.
 
-**Responsibilities**:
-- Stable management (prestige, totalBattles, totalWins, highestELO)
-- Robot roster management (1 free slot, expandable to 10 via Roster Expansion facility)
-- Facility upgrades (14 types, 10 levels each, prestige-gated)
-- Daily income and expense tracking (revenue streams + facility maintenance)
-- Coach system (Offensive, Defensive, Tactical, Team coaches provide stable-wide bonuses)
-- Weapon storage (expandable via Storage Facility)
-- Prestige milestones and unlocks
+**Services**:
+- `facilityRecommendationService.ts` — AI-driven facility upgrade recommendations based on player state and ROI analysis.
+- `roiCalculatorService.ts` — Return-on-investment calculations for facility upgrades, considering payback periods and income projections.
+- `spendingTracker.ts` — Tracks player spending across categories: `trackSpending()`.
+- `streamingRevenueService.ts` — Calculates streaming studio revenue: `calculateStreamingRevenue()` based on facility level, robot fame, and battle participation.
+- `repairService.ts` — Robot repair cost calculations and batch repair: `repairAllRobots()`. Repair costs scale with damage taken and facility discounts.
 
-**Key Entities**:
-- User (stable-level: prestige, currency, totalBattles, totalWins)
-- Facility (14 types including 4 Training Academies)
-- Coach (provides stable-wide attribute bonuses)
-- Revenue Streams (merchandising, streaming, sponsorships)
-
-**14 Facility Types**:
-1. Repair Bay (repair discounts)
-2. Training Facility (upgrade discounts)
-3. Weapons Workshop (weapon discounts, crafting)
-4. Research Lab (analytics, loadout presets)
-5. Medical Bay (critical damage reduction)
-6. Roster Expansion (robot slots 1→10)
-7. Storage Facility (weapon storage 10→100)
-8. Coaching Staff (hire coaches)
-9. Booking Office (tournament unlocks)
-10. Combat Training Academy (Combat Systems caps)
-11. Defense Training Academy (Defensive Systems caps)
-12. Mobility Training Academy (Chassis & Mobility caps)
-13. AI Training Academy (AI + Team caps)
-14. Merchandising Hub (passive income from merchandise sales)
+**Key Entities**: Facility (14 types, 10 levels each), Revenue Streams (merchandising, streaming, sponsorships)
 
 **APIs**:
-- `GET /stable/{playerId}` - Get stable details with facilities
-- `POST /stable/{playerId}/facility/upgrade` - Upgrade facility
-- `POST /stable/{playerId}/coach/hire` - Hire coach
-- `GET /stable/{playerId}/economics` - Get daily income/expense report
+- `POST /facility/upgrade` — Upgrade a facility
+- `GET /finances/report` — Get financial report
 
-**Dependencies**:
-- Robot module (roster)
-- Player module (currency, prestige)
-- Database module (Facility model)
+**Dependencies**: Database, Config (facility definitions)
 
 ---
 
-### 7. Database Module (`database`)
+### 8. Cycle Domain (`services/cycle/`)
 
-**Purpose**: Data persistence, schema management, and database operations.
+**Purpose**: Automated daily game cycle management — scheduling, execution monitoring, snapshots, and data export.
 
-**Responsibilities**:
-- Database connection management
-- Schema migrations
-- Query optimization
-- Data validation
-- Backup and recovery
-- Connection pooling
+**Services**:
+- `cycleScheduler.ts` — Cron-based cycle scheduling: `initScheduler()`, `getSchedulerState()`, `resetScheduler()`. Orchestrates the daily cycle pipeline (matchmaking → battles → settlements → rebalancing).
+- `cycleSnapshotService.ts` — Captures cycle state snapshots for analytics: `CycleSnapshotService` class with robot metrics, stable metrics, step durations.
+- `cyclePerformanceMonitoringService.ts` — Monitors cycle execution performance: `CyclePerformanceMonitoringService` with degradation alerts and performance metrics.
+- `cycleCsvExportService.ts` — Exports cycle battle data to CSV: `exportCycleBattlesToCSV()`, `exportCycleBattlesToFile()`.
 
-**Key Components**:
-- ORM/Query Builder
-- Migration system
-- Connection pool
-- Data models
+**Key Entities**: CycleMetadata, CycleSnapshot, PerformanceDegradationAlert
 
-**Technologies**:
-- PostgreSQL (primary database)
-- Redis (caching layer)
-- Prisma (TypeScript ORM with schema migrations)
-
-**Dependencies**:
-- None (foundational module)
+**Dependencies**: League, Tournament, Tag-Team, KotH (all battle modes), Analytics, Database
 
 ---
 
-### 8. API Module (`api`)
+### 9. Common Domain (`services/common/`)
 
-**Purpose**: API gateway, routing, and request handling.
+**Purpose**: Cross-cutting utilities used by multiple domains. No domain-specific business logic.
 
-**Responsibilities**:
-- Route definition and management
-- Request validation
-- Response formatting
-- Rate limiting
-- API versioning
-- CORS handling
-- Error handling and logging
+**Services**:
+- `eventLogger.ts` — Structured event logging: `EventLogger` class with `EventType` enum, sequence tracking, `clearSequenceCache()`.
+- `eventCompression.ts` — Battle event compression for storage: `compressEventsForStorage()`, `stripDebugFields()`, `estimateEventSize()`.
+- `dataIntegrityService.ts` — Data consistency checks: `DataIntegrityService` with `IntegrityReport` and `IntegrityIssue` types.
+- `queryService.ts` — Generic query builder: `QueryService` with event filtering, audit log queries.
+- `resetService.ts` — Account reset functionality: `validateResetEligibility()`, `performAccountReset()`, `getResetHistory()`.
+- `markdown-parser.ts` — Markdown processing: `parseMarkdown()`, `extractHeadings()`, `stripMarkdown()`, `validateFrontmatter()`.
+- `guide-service.ts` — In-game guide system: `GuideService` class serving articles, sections, search index.
 
-**Key Components**:
-- Router
-- Middleware
-- Request validators
-- Response formatters
+**Dependencies**: Database (for query/reset/integrity services)
+
+---
+
+### 10. Analytics Domain (`services/analytics/`)
+
+**Purpose**: Matchmaking analytics, robot performance tracking, and stats aggregation.
+
+**Services**:
+- `matchmakingService.ts` — Skill-based matchmaking: `runMatchmaking()`. Pairs robots by ELO within league tiers.
+- `robotPerformanceService.ts` — Robot performance metrics: `robotPerformanceService` with per-robot win rates, ELO history, battle statistics.
+- `robotStatsViewService.ts` — Aggregated robot stats views for leaderboards and comparisons.
+- `onboardingAnalyticsService.ts` — Tracks onboarding funnel events: `recordEvents()` with `OnboardingAnalyticsEvent` type.
 
 **APIs**:
-- All public-facing endpoints
-- Internal service communication
+- `GET /analytics/robots/:id/performance` — Robot performance data
+- `GET /leaderboards` — Global leaderboards
+- `POST /onboarding-analytics/events` — Record onboarding events
 
-**Dependencies**:
-- All other modules (routes to them)
-- Auth module (authentication middleware)
-
----
-
-### 9. UI Module (`ui`)
-
-**Purpose**: User interface components and client-side logic.
-
-**Responsibilities**:
-- Component library
-- State management
-- Routing (client-side)
-- API client
-- Asset management
-- Responsive design
-
-**Key Components**:
-- React components (Web)
-- React Native components (Mobile)
-- Redux/Zustand store
-- API service layer
-
-**Submodules**:
-- `ui/web` - Web application
-- `ui/mobile` - Mobile applications
-- `ui/common` - Shared components
-
-**Dependencies**:
-- API module (backend communication)
+**Dependencies**: Database, League (tier data)
 
 ---
 
-### 10. Notifications Module (`notifications`)
+### 11. Onboarding Domain (`services/onboarding/`)
 
-**Purpose**: Handle all user notifications and communications.
+**Purpose**: New player onboarding flow — tutorial state management and guided first steps.
 
-**Responsibilities**:
-- Email notifications
-- Push notifications (mobile)
-- In-app notifications
-- Notification preferences
-- Notification templates
-- Notification queue management
+**Services**:
+- `onboardingService.ts` — Tutorial lifecycle: `initializeTutorialState()`, step completion tracking, onboarding status queries.
 
-**Key Entities**:
-- Notification
-- NotificationPreference
-- NotificationTemplate
+**Key Entities**: OnboardingState, TutorialStep
 
 **APIs**:
-- `GET /notifications` - Get user notifications
-- `PUT /notifications/{id}/read` - Mark as read
-- `POST /notifications/preferences` - Update preferences
+- `GET /onboarding/status` — Get onboarding progress
+- `POST /onboarding/complete-step` — Mark step complete
 
-**Dependencies**:
-- Player module (user preferences)
-- Third-party services (SendGrid, Firebase)
+**Dependencies**: Auth (user creation triggers), Database
 
 ---
 
-### 11. Matchmaking Module (`matchmaking`)
+### 12. Arena Domain (`services/arena/`) — Pre-existing
 
-**Purpose**: Match players for battles based on skill and preferences.
+**Purpose**: 2D spatial arena mechanics for combat simulation.
 
 **Responsibilities**:
-- Queue management
-- Skill-based matching
-- Match creation
-- Wait time optimization
-- Bot opponent assignment
+- Arena layout generation (`arenaLayout.ts`)
+- Movement AI with patience-based engagement (`movementAI.ts`)
+- Position tracking and facing/backstab detection (`positionTracker.ts`)
+- Range band classification and penalties (`rangeBands.ts`)
+- Threat scoring and target selection (`threatScoring.ts`)
+- Counter-attack resolution (`counterAttack.ts`)
+- Team coordination (sync volleys, shield support, formation defense) (`teamCoordination.ts`)
+- Servo strain and movement speed (`servoStrain.ts`)
+- Adaptation tracking (`adaptationTracker.ts`)
+- Pressure system (`pressureSystem.ts`)
+- 2D vector math (`vector2d.ts`)
 
-**Key Entities**:
-- MatchmakingQueue
-- MatchRequest
-- Match
-
-**APIs**:
-- `POST /matchmaking/join` - Join matchmaking queue
-- `DELETE /matchmaking/leave` - Leave queue
-- `GET /matchmaking/status` - Get queue status
-
-**Dependencies**:
-- Player module (stats, ranking)
-- Battle module (match creation)
+**Dependencies**: None (pure computation, consumed by Battle domain)
 
 ---
 
-### 12. Admin Module (`admin`)
+### 13. Notifications Domain (`services/notifications/`) — Pre-existing
 
-**Purpose**: Administrative tools and back-office functionality.
+**Purpose**: In-app notification system for battle results, cycle events, and system messages.
 
-**Responsibilities**:
-- User management (ban, suspend)
-- Content moderation
-- System monitoring dashboard
-- Game balance configuration
-- Analytics and reports
-- Database administration tools
-
-**Key Components**:
-- Admin dashboard UI
-- Reporting tools
-- Configuration management
-- User management tools
-
-**APIs**:
-- `GET /admin/users` - List users
-- `POST /admin/users/{id}/ban` - Ban user
-- `GET /admin/stats` - System statistics
-- `PUT /admin/config` - Update configuration
-
-**Dependencies**:
-- All modules (administration access)
-- Auth module (admin permissions)
+**Dependencies**: Database, Auth (user targeting)
 
 ---
 

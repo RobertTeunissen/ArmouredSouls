@@ -14,10 +14,10 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import logger from '../config/logger';
 import { validateRegistrationRequest } from '../utils/validation';
-import { hashPassword } from '../services/passwordService';
-import { generateToken } from '../services/jwtService';
-import { createUser, findUserByUsername, findUserByEmail, findUserByIdentifier, findUserByStableName } from '../services/userService';
-import { initializeTutorialState } from '../services/onboardingService';
+import { hashPassword } from '../services/auth/passwordService';
+import { generateToken } from '../services/auth/jwtService';
+import { createUser, findUserByUsername, findUserByEmail, findUserByIdentifier, findUserByStableName } from '../services/auth/userService';
+import { initializeTutorialState } from '../services/onboarding/onboardingService';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { AppError } from '../errors/AppError';
 

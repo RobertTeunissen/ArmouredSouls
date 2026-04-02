@@ -28,7 +28,7 @@ jest.mock('../../config/logger', () => ({
 }));
 
 // Mock GuideService so tests don't depend on actual content files
-jest.mock('../../services/guide-service', () => ({
+jest.mock('../../services/common/guide-service', () => ({
   __esModule: true,
   default: {
     getSections: jest.fn(),
@@ -37,7 +37,7 @@ jest.mock('../../services/guide-service', () => ({
   },
 }));
 
-import guideService from '../../services/guide-service';
+import guideService from '../../services/common/guide-service';
 
 const mockedGuideService = guideService as jest.Mocked<typeof guideService>;
 

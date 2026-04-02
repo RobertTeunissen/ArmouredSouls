@@ -1,9 +1,9 @@
 import prisma from '../src/lib/prisma';
 import {
-  calculateELOChange,
   processBattle,
   executeScheduledBattles,
-} from '../src/services/leagueBattleOrchestrator';
+} from '../src/services/league/leagueBattleOrchestrator';
+import { calculateELOChange } from '../src/utils/battleMath';
 
 
 describe('Battle Orchestrator', () => {

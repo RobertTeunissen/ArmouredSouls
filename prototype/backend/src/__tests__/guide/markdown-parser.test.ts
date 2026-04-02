@@ -9,7 +9,7 @@ import {
   extractHeadings,
   stripMarkdown,
   slugify,
-} from '../../services/markdown-parser';
+} from '../../services/common/markdown-parser';
 import logger from '../../config/logger';
 
 // Mock the logger to verify warning calls

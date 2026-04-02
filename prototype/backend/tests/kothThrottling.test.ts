@@ -63,7 +63,7 @@ jest.mock('../src/config/logger', () => ({
   default: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
 }));
 
-jest.mock('../src/services/combatSimulator', () => ({
+jest.mock('../src/services/battle/combatSimulator', () => ({
   simulateBattleMulti: jest.fn().mockReturnValue({
     winnerId: 1,
     events: [],
@@ -115,13 +115,13 @@ jest.mock('../src/services/arena/kothEngine', () => ({
   },
 }));
 
-jest.mock('../src/services/combatMessageGenerator', () => ({
+jest.mock('../src/services/battle/combatMessageGenerator', () => ({
   CombatMessageGenerator: {
     buildKothBattleLog: jest.fn().mockReturnValue({ events: [] }),
   },
 }));
 
-jest.mock('../src/services/battlePostCombat', () => ({
+jest.mock('../src/services/battle/battlePostCombat', () => ({
   awardStreamingRevenueForParticipant: jest.fn().mockResolvedValue({ totalRevenue: 100 }),
   logBattleAuditEvent: jest.fn().mockResolvedValue(undefined),
   awardCreditsToUser: jest.fn().mockResolvedValue(undefined),
@@ -129,18 +129,18 @@ jest.mock('../src/services/battlePostCombat', () => ({
   awardFameToRobot: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../src/services/streamingRevenueService', () => ({
+jest.mock('../src/services/economy/streamingRevenueService', () => ({
   calculateStreamingRevenue: jest.fn().mockResolvedValue({ totalRevenue: 100 }),
   awardStreamingRevenue: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../src/services/leagueBattleOrchestrator', () => ({
+jest.mock('../src/services/battle/baseOrchestrator', () => ({
   getCurrentCycleNumber: jest.fn().mockResolvedValue(1),
 }));
 
 // ─── Import after mocks ─────────────────────────────────────────────
 
-import { executeScheduledKothBattles } from '../src/services/kothBattleOrchestrator';
+import { executeScheduledKothBattles } from '../src/services/koth/kothBattleOrchestrator';
 
 // ─── Test helpers ────────────────────────────────────────────────────
 

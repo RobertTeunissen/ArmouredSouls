@@ -6,7 +6,7 @@
  * Requirements: 1.6, 5.1
  */
 
-import { eventLogger } from '../src/services/eventLogger';
+import { eventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 describe('Facility Transaction Logging', () => {

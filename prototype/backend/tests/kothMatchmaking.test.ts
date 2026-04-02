@@ -6,7 +6,7 @@
  * Groups target 5-6 robots each (KotH supports 4-8).
  */
 
-import { distributeIntoGroups, EligibleRobot } from '../src/services/kothMatchmakingService';
+import { distributeIntoGroups, EligibleRobot } from '../src/services/koth/kothMatchmakingService';
 
 function makeRobots(count: number): EligibleRobot[] {
   return Array.from({ length: count }, (_, i) => ({

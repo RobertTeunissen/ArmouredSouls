@@ -5,7 +5,7 @@
  * edge cases, and applyKothStatsUpdate for stat tracking correctness.
  */
 
-import { calculateKothRewards } from '../src/services/kothBattleOrchestrator';
+import { calculateKothRewards } from '../src/services/koth/kothBattleOrchestrator';
 
 // ─── Pure helper replicating updateKothRobotStats logic ─────────────
 

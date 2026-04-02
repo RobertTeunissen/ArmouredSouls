@@ -5,7 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from '../src/routes/auth';
-import * as userService from '../src/services/userService';
+import * as userService from '../src/services/auth/userService';
 
 dotenv.config();
 

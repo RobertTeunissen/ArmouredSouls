@@ -1,4 +1,4 @@
-import { CombatMessageGenerator } from '../src/services/combatMessageGenerator';
+import { CombatMessageGenerator } from '../src/services/battle/combatMessageGenerator';
 
 describe('CombatMessageGenerator', () => {
   afterAll(() => {

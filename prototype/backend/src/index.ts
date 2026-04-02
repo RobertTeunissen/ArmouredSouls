@@ -20,7 +20,7 @@ import onboardingRoutes from './routes/onboarding';
 import guideRoutes from './routes/guide';
 import kothRoutes from './routes/koth';
 import { loadEnvConfig } from './config/env';
-import { initScheduler } from './services/cycleScheduler';
+import { initScheduler } from './services/cycle/cycleScheduler';
 import { createGeneralLimiter, createAuthLimiter } from './middleware/rateLimiter';
 import { requestLogger } from './middleware/requestLogger';
 import logger from './config/logger';

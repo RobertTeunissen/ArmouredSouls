@@ -14,6 +14,102 @@ Reorganize the 41 backend services from a flat `services/` directory into domain
 - Auth-adjacent services (`jwtService`, `passwordService`, `userService`) are a natural group.
 - Utility services (`eventLogger`, `eventCompression`, `dataIntegrityService`, `queryService`, `markdown-parser`, `guide-service`) are cross-cutting.
 
+## Visual Overview
+
+### Domain Map and Dependency Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Express Routes                                │
+│  auth  admin  leagues  tournaments  koth  tagTeams  facility  robots …  │
+└──┬───────┬───────┬─────────┬────────┬───────┬─────────┬────────┬───────┘
+   │       │       │         │        │       │         │        │
+   ▼       ▼       ▼         ▼        ▼       ▼         ▼        ▼
+┌──────┐ ┌─────────────────────────────────────────┐  ┌──────────────────┐
+│ auth/│ │          Mode-Specific Orchestrators     │  │    economy/      │
+│      │ │  ┌──────────┐ ┌────────────┐            │  │                  │
+│ jwt  │ │  │ league/  │ │tournament/ │            │  │ facilityRec…     │
+│ pass │ │  │ Battle   │ │ Battle     │            │  │ roiCalculator    │
+│ user │ │  │ Orch.    │ │ Orch.      │            │  │ spendingTracker  │
+│      │ │  └────┬─────┘ └─────┬──────┘            │  │ streamingRev…    │
+└──────┘ │       │              │                   │  │ repairService    │
+         │  ┌────┴──────┐ ┌────┴──────┐            │  └──────────────────┘
+         │  │ tag-team/  │ │  koth/    │            │
+         │  │ Battle     │ │  Battle   │            │  ┌──────────────────┐
+         │  │ Orch.      │ │  Orch.    │            │  │   analytics/     │
+         │  └────┬───────┘ └────┬──────┘            │  │                  │
+         │       │              │                   │  │ robotPerf…       │
+         │       ▼              ▼                   │  │ robotStatsView   │
+         │  ┌───────────────────────────────────┐   │  │ onboardingAna…   │
+         │  │     battle/baseOrchestrator (NEW)  │   │  │ matchmaking      │
+         │  │                                    │   │  └──────────────────┘
+         │  │  validate → simulate → postCombat  │   │
+         │  │              → record              │   │
+         │  └──────────────┬─────────────────────┘   │
+         │                 │                         │
+         │                 ▼                         │
+         │  ┌────────────────────────────────────┐   │
+         │  │     battle/ (core services)        │   │
+         │  │                                    │   │
+         │  │  combatSimulator                   │   │
+         │  │  battleStrategy                    │   │
+         │  │  battlePostCombat                  │   │
+         │  │  combatMessageGenerator            │   │
+         │  └────────────────────────────────────┘   │
+         └───────────────────────────────────────────┘
+
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│    cycle/        │  │   onboarding/    │  │    common/       │
+│                  │  │                  │  │                  │
+│ cycleScheduler   │  │ onboarding       │  │ eventLogger      │
+│ cycleSnapshot    │  │ Service          │  │ eventCompression │
+│ cyclePerfMon…    │  │                  │  │ dataIntegrity    │
+│ cycleCsvExport   │  └──────────────────┘  │ queryService     │
+└──────────────────┘                        │ resetService     │
+                                            │ markdown-parser  │
+┌──────────────────┐  ┌──────────────────┐  │ guide-service    │
+│ arena/ (exists)  │  │notifications/    │  └──────────────────┘
+│   (unchanged)    │  │   (unchanged)    │
+└──────────────────┘  └──────────────────┘
+```
+
+### Key Relationships
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │        Shared Dependencies              │
+                    │                                         │
+                    │  All 4 orchestrators currently import:  │
+                    │  • combatSimulator (simulateBattle)     │
+                    │  • combatMessageGenerator               │
+                    │  • battlePostCombat (ELO, rewards,      │
+                    │    prestige, streaming revenue)          │
+                    │                                         │
+                    │  This duplicated pipeline becomes       │
+                    │  baseOrchestrator.executeBattlePipeline │
+                    └─────────────────────────────────────────┘
+
+  Before (flat):                    After (domain-organized):
+
+  services/                         services/
+  ├── leagueBattle…    ─┐           ├── battle/
+  ├── tournamentBattle… │ shared    │   ├── baseOrchestrator.ts (NEW)
+  ├── tagTeamBattle…    │ pipeline  │   ├── combatSimulator.ts
+  ├── kothBattle…      ─┘           │   ├── battlePostCombat.ts
+  ├── combatSimulator.ts            │   ├── battleStrategy.ts
+  ├── battlePostCombat.ts           │   └── combatMessageGenerator.ts
+  ├── battleStrategy.ts             ├── league/
+  ├── combatMessage…                │   ├── leagueService.ts (merged)
+  ├── leagueInstance…               │   └── leagueBattleOrchestrator.ts
+  ├── leagueRebalancing…            ├── tournament/
+  ├── tagTeamService.ts             │   └── tournamentBattleOrchestrator.ts
+  ├── tagTeamMatchmaking…           ├── tag-team/
+  ├── tagTeamLeagueInstance…        │   └── tagTeamBattleOrchestrator.ts
+  ├── tagTeamLeagueRebalancing…     ├── koth/
+  ├── kothMatchmaking…              │   └── kothBattleOrchestrator.ts
+  └── ... (41 files total)          └── ... (11 domains)
+```
+
 ## Architecture
 
 ### Target Directory Structure

@@ -14,7 +14,7 @@ import { Prisma } from '../generated/prisma';
 import { 
   calculateStreamingRevenue, 
   awardStreamingRevenue 
-} from '../src/services/streamingRevenueService';
+} from '../src/services/economy/streamingRevenueService';
 import prisma from '../src/lib/prisma';
 
 // Helper function to create a minimal test robot

@@ -1,7 +1,7 @@
 import prisma from '../src/lib/prisma';
 import * as fc from 'fast-check';
-import { createTeam } from '../src/services/tagTeamService';
-import { executeTagTeamBattle } from '../src/services/tagTeamBattleOrchestrator';
+import { createTeam } from '../src/services/tag-team/tagTeamService';
+import { executeTagTeamBattle } from '../src/services/tag-team/tagTeamBattleOrchestrator';
 
 
 /**

@@ -14,8 +14,8 @@
 
 import fc from 'fast-check';
 import { Prisma } from '../generated/prisma';
-import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
-import { clearSequenceCache } from '../src/services/eventLogger';
+import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
+import { clearSequenceCache } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 import logger from '../src/config/logger';
 import Transport from 'winston-transport';

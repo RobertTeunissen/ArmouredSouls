@@ -4,7 +4,7 @@ import {
   getSummary,
   clearEvents,
   OnboardingAnalyticsEvent,
-} from '../src/services/onboardingAnalyticsService';
+} from '../src/services/analytics/onboardingAnalyticsService';
 
 // Silence logger output during tests
 jest.mock('../src/config/logger', () => ({

@@ -2,7 +2,7 @@
  * Unit tests for the refactored simulateBattle with 2D spatial mechanics.
  * Validates: Requirements 14.1, 14.2, 14.3, 14.6, 14.7, 14.8, 14.9
  */
-import { simulateBattle, RobotWithWeapons, CombatResult, CombatEvent } from '../src/services/combatSimulator';
+import { simulateBattle, RobotWithWeapons, CombatResult, CombatEvent } from '../src/services/battle/combatSimulator';
 import { Prisma } from '../generated/prisma';
 
 // ─── Mock Factories ─────────────────────────────────────────────────

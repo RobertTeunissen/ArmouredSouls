@@ -19,7 +19,7 @@
  */
 
 import * as fc from 'fast-check';
-import { simulateBattle, RobotWithWeapons, CombatEvent } from '../src/services/combatSimulator';
+import { simulateBattle, RobotWithWeapons, CombatEvent } from '../src/services/battle/combatSimulator';
 import { Prisma } from '../generated/prisma';
 
 // ─── Mock Factories ─────────────────────────────────────────────────

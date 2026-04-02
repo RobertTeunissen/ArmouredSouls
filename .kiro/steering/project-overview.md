@@ -40,7 +40,7 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 - **Backups**: Automated daily PostgreSQL dumps
 
 ## Project Structure
-- `/prototype/backend` - Main backend application
+- `/prototype/backend` - Main backend application (services organized into 13 domain subdirectories under src/services/)
 - `/prototype/frontend` - React frontend application  
 - `/docs` - Comprehensive documentation organized by category
 - `/modules` - Modular architecture (api, auth, database, game-engine, ui)

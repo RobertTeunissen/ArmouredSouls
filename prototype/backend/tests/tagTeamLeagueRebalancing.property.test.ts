@@ -5,7 +5,7 @@ import {
   demoteTeam,
   TAG_TEAM_LEAGUE_TIERS,
   TagTeamLeagueTier,
-} from '../src/services/tagTeamLeagueRebalancingService';
+} from '../src/services/tag-team/tagTeamLeagueRebalancingService';
 
 
 // Test configuration

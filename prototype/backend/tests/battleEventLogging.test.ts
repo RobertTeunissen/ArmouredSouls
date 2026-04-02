@@ -5,8 +5,8 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { processBattle } from '../src/services/leagueBattleOrchestrator';
-import { EventType, clearSequenceCache } from '../src/services/eventLogger';
+import { processBattle } from '../src/services/league/leagueBattleOrchestrator';
+import { EventType, clearSequenceCache } from '../src/services/common/eventLogger';
 
 
 describe('Battle Event Logging Integration', () => {

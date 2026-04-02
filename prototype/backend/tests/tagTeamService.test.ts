@@ -5,7 +5,7 @@ import {
   getTeamById,
   getTeamsByStable,
   disbandTeam,
-} from '../src/services/tagTeamService';
+} from '../src/services/tag-team/tagTeamService';
 
 
 describe('TagTeamService', () => {

@@ -9,8 +9,8 @@
 import request from 'supertest';
 import express from 'express';
 import analyticsRoutes from '../src/routes/analytics';
-import { cycleSnapshotService } from '../src/services/cycleSnapshotService';
-import { eventLogger } from '../src/services/eventLogger';
+import { cycleSnapshotService } from '../src/services/cycle/cycleSnapshotService';
+import { eventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 // Create test app

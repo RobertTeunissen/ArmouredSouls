@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { hashPassword } from '../src/services/passwordService';
+import { hashPassword } from '../src/services/auth/passwordService';
 import bcrypt from 'bcrypt';
 
 // Test configuration

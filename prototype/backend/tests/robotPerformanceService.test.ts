@@ -7,8 +7,8 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import prisma from '../src/lib/prisma';
-import { robotPerformanceService } from '../src/services/robotPerformanceService';
-import { eventLogger } from '../src/services/eventLogger';
+import { robotPerformanceService } from '../src/services/analytics/robotPerformanceService';
+import { eventLogger } from '../src/services/common/eventLogger';
 
 /**
  * Helper to create a battle with BattleParticipant records.

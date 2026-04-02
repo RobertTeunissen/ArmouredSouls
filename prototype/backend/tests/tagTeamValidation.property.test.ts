@@ -1,7 +1,7 @@
 import { Robot } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import * as fc from 'fast-check';
-import { validateTeam, createTeam, getTeamById, disbandTeam, checkTeamReadiness, calculateCombinedELO } from '../src/services/tagTeamService';
+import { validateTeam, createTeam, getTeamById, disbandTeam, checkTeamReadiness, calculateCombinedELO } from '../src/services/tag-team/tagTeamService';
 
 
 /**
@@ -1076,7 +1076,7 @@ describe('Tag Team Matchmaking Cycle Scheduling Property Tests', () => {
    * Property: Tag team matchmaking should run on odd cycles and skip on even cycles.
    */
   it('should run matchmaking only on odd cycles', async () => {
-    const { shouldRunTagTeamMatchmaking } = await import('../src/services/tagTeamMatchmakingService');
+    const { shouldRunTagTeamMatchmaking } = await import('../src/services/tag-team/tagTeamMatchmakingService');
 
     await fc.assert(
       fc.asyncProperty(
@@ -1118,7 +1118,7 @@ describe('Tag Team Matchmaking Cycle Scheduling Property Tests', () => {
    * Property: Consecutive cycles should alternate between running and not running.
    */
   it('should alternate matchmaking between consecutive cycles', async () => {
-    const { shouldRunTagTeamMatchmaking } = await import('../src/services/tagTeamMatchmakingService');
+    const { shouldRunTagTeamMatchmaking } = await import('../src/services/tag-team/tagTeamMatchmakingService');
 
     await fc.assert(
       fc.asyncProperty(
@@ -1163,7 +1163,7 @@ describe('Tag Team Matchmaking Cycle Scheduling Property Tests', () => {
    * Property: Specific known odd cycles should always run matchmaking.
    */
   it('should run matchmaking on known odd cycles', async () => {
-    const { shouldRunTagTeamMatchmaking } = await import('../src/services/tagTeamMatchmakingService');
+    const { shouldRunTagTeamMatchmaking } = await import('../src/services/tag-team/tagTeamMatchmakingService');
 
     const oddCycles = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39];
 
@@ -1184,7 +1184,7 @@ describe('Tag Team Matchmaking Cycle Scheduling Property Tests', () => {
    * Property: Specific known even cycles should never run matchmaking.
    */
   it('should skip matchmaking on known even cycles', async () => {
-    const { shouldRunTagTeamMatchmaking } = await import('../src/services/tagTeamMatchmakingService');
+    const { shouldRunTagTeamMatchmaking } = await import('../src/services/tag-team/tagTeamMatchmakingService');
 
     const evenCycles = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
 
@@ -1281,7 +1281,7 @@ describe('Tag Team Matchmaking Eligible Teams Property Tests', () => {
    * Property: Unready teams should not appear in eligible teams list.
    */
   it('should exclude teams with unready robots from eligible teams', async () => {
-    const { getEligibleTeams } = await import('../src/services/tagTeamMatchmakingService');
+    const { getEligibleTeams } = await import('../src/services/tag-team/tagTeamMatchmakingService');
 
     await fc.assert(
       fc.asyncProperty(
@@ -1422,7 +1422,7 @@ describe('Tag Team Matchmaking Eligible Teams Property Tests', () => {
    * Property: Teams with low HP robots should be excluded.
    */
   it('should exclude teams where any robot has HP below 75%', async () => {
-    const { getEligibleTeams } = await import('../src/services/tagTeamMatchmakingService');
+    const { getEligibleTeams } = await import('../src/services/tag-team/tagTeamMatchmakingService');
 
     await fc.assert(
       fc.asyncProperty(
@@ -1588,8 +1588,8 @@ describe('Tag Team Matchmaking ELO Matching Property Tests', () => {
    * Property: Matched teams should prefer smaller ELO differences.
    */
   it('should prefer matching teams with smaller ELO differences', async () => {
-    const { pairTeams } = await import('../src/services/tagTeamMatchmakingService');
-    const { calculateCombinedELO } = await import('../src/services/tagTeamService');
+    const { pairTeams } = await import('../src/services/tag-team/tagTeamMatchmakingService');
+    const { calculateCombinedELO } = await import('../src/services/tag-team/tagTeamService');
 
     await fc.assert(
       fc.asyncProperty(
@@ -1806,7 +1806,7 @@ describe('Tag Team Matchmaking Same-Stable Exclusion Property Tests', () => {
    * Property: No match should pair teams from the same stable when alternatives exist.
    */
   it('should strongly deprioritize same-stable matches', async () => {
-    const { pairTeams } = await import('../src/services/tagTeamMatchmakingService');
+    const { pairTeams } = await import('../src/services/tag-team/tagTeamMatchmakingService');
 
     await fc.assert(
       fc.asyncProperty(
@@ -2064,7 +2064,7 @@ describe('Tag Team Matchmaking Recent Opponent Deprioritization Property Tests',
    * preferred over recent opponents.
    */
   it('should deprioritize recent opponents when multiple options exist', async () => {
-    const { pairTeams } = await import('../src/services/tagTeamMatchmakingService');
+    const { pairTeams } = await import('../src/services/tag-team/tagTeamMatchmakingService');
 
     // Create a team that will have recent match history
     const weapon1Inv = await prisma.weaponInventory.create({

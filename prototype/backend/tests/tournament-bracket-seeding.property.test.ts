@@ -12,7 +12,7 @@ import {
   generateStandardSeedOrder,
   computeSeedings,
   Round1Match,
-} from '../src/services/tournamentService';
+} from '../src/services/tournament/tournamentService';
 import type { Robot } from '../generated/prisma';
 
 const NUM_RUNS = 10;

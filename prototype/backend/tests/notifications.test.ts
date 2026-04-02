@@ -109,46 +109,46 @@ jest.mock('../src/lib/prisma', () => ({
   },
 }));
 
-jest.mock('../src/services/repairService', () => ({
+jest.mock('../src/services/economy/repairService', () => ({
   repairAllRobots: jest.fn(),
 }));
 
-jest.mock('../src/services/leagueBattleOrchestrator', () => ({
+jest.mock('../src/services/league/leagueBattleOrchestrator', () => ({
   executeScheduledBattles: jest.fn(),
 }));
 
-jest.mock('../src/services/leagueRebalancingService', () => ({
+jest.mock('../src/services/league/leagueRebalancingService', () => ({
   rebalanceLeagues: jest.fn(),
 }));
 
-jest.mock('../src/services/matchmakingService', () => ({
+jest.mock('../src/services/analytics/matchmakingService', () => ({
   runMatchmaking: jest.fn(),
 }));
 
-jest.mock('../src/services/tournamentService', () => ({
+jest.mock('../src/services/tournament/tournamentService', () => ({
   getActiveTournaments: jest.fn(),
   getCurrentRoundMatches: jest.fn(),
   advanceWinnersToNextRound: jest.fn(),
   autoCreateNextTournament: jest.fn(),
 }));
 
-jest.mock('../src/services/tournamentBattleOrchestrator', () => ({
+jest.mock('../src/services/tournament/tournamentBattleOrchestrator', () => ({
   processTournamentBattle: jest.fn(),
 }));
 
-jest.mock('../src/services/tagTeamBattleOrchestrator', () => ({
+jest.mock('../src/services/tag-team/tagTeamBattleOrchestrator', () => ({
   executeScheduledTagTeamBattles: jest.fn(),
 }));
 
-jest.mock('../src/services/tagTeamLeagueRebalancingService', () => ({
+jest.mock('../src/services/tag-team/tagTeamLeagueRebalancingService', () => ({
   rebalanceTagTeamLeagues: jest.fn(),
 }));
 
-jest.mock('../src/services/tagTeamMatchmakingService', () => ({
+jest.mock('../src/services/tag-team/tagTeamMatchmakingService', () => ({
   runTagTeamMatchmaking: jest.fn(),
 }));
 
-jest.mock('../src/services/eventLogger', () => ({
+jest.mock('../src/services/common/eventLogger', () => ({
   EventLogger: jest.fn().mockImplementation(() => ({
     logSettlement: jest.fn(),
   })),
@@ -161,7 +161,7 @@ jest.mock('../src/services/notifications/notification-service', () => ({
   dispatchNotification: jest.fn(),
 }));
 
-import { runJob, resetScheduler } from '../src/services/cycleScheduler';
+import { runJob, resetScheduler } from '../src/services/cycle/cycleScheduler';
 import { JobContext } from '../src/services/notifications/integration';
 import {
   buildSuccessMessage,

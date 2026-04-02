@@ -17,12 +17,12 @@ import {
   skipTutorial,
   updatePlayerChoices,
   OnboardingChoices,
-} from '../services/onboardingService';
+} from '../services/onboarding/onboardingService';
 import { OnboardingError, OnboardingErrorCode } from '../errors/onboardingErrors';
 import {
   validateResetEligibility,
   performAccountReset,
-} from '../services/resetService';
+} from '../services/common/resetService';
 import onboardingAnalyticsRouter from './onboardingAnalytics';
 import logger from '../config/logger';
 

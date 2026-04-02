@@ -5,7 +5,7 @@ import {
   runJob,
   resetScheduler,
   SchedulerConfig,
-} from '../src/services/cycleScheduler';
+} from '../src/services/cycle/cycleScheduler';
 
 // --- Mocks ---
 
@@ -38,40 +38,40 @@ jest.mock('../src/config/logger', () => ({
 }));
 
 // Mock all service imports to avoid database calls
-jest.mock('../src/services/repairService', () => ({
+jest.mock('../src/services/economy/repairService', () => ({
   repairAllRobots: jest.fn().mockResolvedValue(undefined),
 }));
-jest.mock('../src/services/leagueBattleOrchestrator', () => ({
+jest.mock('../src/services/league/leagueBattleOrchestrator', () => ({
   executeScheduledBattles: jest.fn().mockResolvedValue({ totalBattles: 0 }),
 }));
-jest.mock('../src/services/kothBattleOrchestrator', () => ({
+jest.mock('../src/services/koth/kothBattleOrchestrator', () => ({
   executeScheduledKothBattles: jest.fn().mockResolvedValue({ totalMatches: 0, successfulMatches: 0, failedMatches: 0 }),
 }));
-jest.mock('../src/services/leagueRebalancingService', () => ({
+jest.mock('../src/services/league/leagueRebalancingService', () => ({
   rebalanceLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),
 }));
-jest.mock('../src/services/matchmakingService', () => ({
+jest.mock('../src/services/analytics/matchmakingService', () => ({
   runMatchmaking: jest.fn().mockResolvedValue(0),
 }));
-jest.mock('../src/services/tournamentService', () => ({
+jest.mock('../src/services/tournament/tournamentService', () => ({
   getActiveTournaments: jest.fn().mockResolvedValue([]),
   getCurrentRoundMatches: jest.fn().mockResolvedValue([]),
   advanceWinnersToNextRound: jest.fn().mockResolvedValue(undefined),
   autoCreateNextTournament: jest.fn().mockResolvedValue(null),
 }));
-jest.mock('../src/services/tournamentBattleOrchestrator', () => ({
+jest.mock('../src/services/tournament/tournamentBattleOrchestrator', () => ({
   processTournamentBattle: jest.fn().mockResolvedValue(undefined),
 }));
-jest.mock('../src/services/tagTeamBattleOrchestrator', () => ({
+jest.mock('../src/services/tag-team/tagTeamBattleOrchestrator', () => ({
   executeScheduledTagTeamBattles: jest.fn().mockResolvedValue({ totalBattles: 0 }),
 }));
-jest.mock('../src/services/tagTeamLeagueRebalancingService', () => ({
+jest.mock('../src/services/tag-team/tagTeamLeagueRebalancingService', () => ({
   rebalanceTagTeamLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),
 }));
-jest.mock('../src/services/tagTeamMatchmakingService', () => ({
+jest.mock('../src/services/tag-team/tagTeamMatchmakingService', () => ({
   runTagTeamMatchmaking: jest.fn().mockResolvedValue(0),
 }));
-jest.mock('../src/services/eventLogger', () => ({
+jest.mock('../src/services/common/eventLogger', () => ({
   EventLogger: jest.fn().mockImplementation(() => ({
     logPassiveIncome: jest.fn().mockResolvedValue(undefined),
     logOperatingCosts: jest.fn().mockResolvedValue(undefined),
@@ -287,7 +287,7 @@ describe('Scheduler Property Tests', () => {
 
             await runJob(jobName, async () => {
               logEntries.push({ level: 'info', message: `${name}: Step 1 — Repairing all robots` });
-              await require('../src/services/repairService').repairAllRobots(true);
+              await require('../src/services/economy/repairService').repairAllRobots(true);
               logEntries.push({ level: 'info', message: `${name}: Step 2 — Executing battles` });
             });
 

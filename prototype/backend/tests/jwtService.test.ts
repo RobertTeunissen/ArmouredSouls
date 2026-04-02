@@ -1,4 +1,4 @@
-import { generateToken, verifyToken, UserForToken, TokenPayload } from '../src/services/jwtService';
+import { generateToken, verifyToken, UserForToken, TokenPayload } from '../src/services/auth/jwtService';
 import jwt from 'jsonwebtoken';
 
 /**

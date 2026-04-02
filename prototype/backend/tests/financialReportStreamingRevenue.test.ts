@@ -10,7 +10,7 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import prisma from '../src/lib/prisma';
 import { generateFinancialReport } from '../src/utils/economyCalculations';
-import { eventLogger, EventType } from '../src/services/eventLogger';
+import { eventLogger, EventType } from '../src/services/common/eventLogger';
 
 describe('Financial Report - Streaming Revenue Integration', () => {
   let testUserIds: number[] = [];

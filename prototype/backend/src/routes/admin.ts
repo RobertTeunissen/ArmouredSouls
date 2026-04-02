@@ -1,18 +1,18 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
-import { executeScheduledBattles } from '../services/leagueBattleOrchestrator';
-import { executeScheduledKothBattles } from '../services/kothBattleOrchestrator';
-import { runMatchmaking } from '../services/matchmakingService';
-import { runKothMatchmaking } from '../services/kothMatchmakingService';
-import { rebalanceLeagues } from '../services/leagueRebalancingService';
+import { executeScheduledBattles } from '../services/league/leagueBattleOrchestrator';
+import { executeScheduledKothBattles } from '../services/koth/kothBattleOrchestrator';
+import { runMatchmaking } from '../services/analytics/matchmakingService';
+import { runKothMatchmaking } from '../services/koth/kothMatchmakingService';
+import { rebalanceLeagues } from '../services/league/leagueRebalancingService';
 import logger from '../config/logger';
-import { rebalanceTagTeamLeagues } from '../services/tagTeamLeagueRebalancingService';
-import { shouldRunTagTeamMatchmaking as _shouldRunTagTeamMatchmaking, runTagTeamMatchmaking } from '../services/tagTeamMatchmakingService';
-import { executeScheduledTagTeamBattles } from '../services/tagTeamBattleOrchestrator';
+import { rebalanceTagTeamLeagues } from '../services/tag-team/tagTeamLeagueRebalancingService';
+import { shouldRunTagTeamMatchmaking as _shouldRunTagTeamMatchmaking, runTagTeamMatchmaking } from '../services/tag-team/tagTeamMatchmakingService';
+import { executeScheduledTagTeamBattles } from '../services/tag-team/tagTeamBattleOrchestrator';
 import { processAllDailyFinances } from '../utils/economyCalculations';
 import { generateBattleReadyUsers } from '../utils/userGeneration';
 import { calculateMaxHP, calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
-import { repairAllRobots } from '../services/repairService';
+import { repairAllRobots } from '../services/economy/repairService';
 import { cycleLogger } from '../utils/cycleLogger';
 import prisma from '../lib/prisma';
 import tournamentRoutes from './adminTournaments';
@@ -20,11 +20,11 @@ import {
   getActiveTournaments, 
   getCurrentRoundMatches,
   autoCreateNextTournament 
-} from '../services/tournamentService';
-import { processTournamentBattle } from '../services/tournamentBattleOrchestrator';
-import { advanceWinnersToNextRound } from '../services/tournamentService';
-import { EventLogger } from '../services/eventLogger';
-import { getSchedulerState } from '../services/cycleScheduler';
+} from '../services/tournament/tournamentService';
+import { processTournamentBattle } from '../services/tournament/tournamentBattleOrchestrator';
+import { advanceWinnersToNextRound } from '../services/tournament/tournamentService';
+import { EventLogger } from '../services/common/eventLogger';
+import { getSchedulerState } from '../services/cycle/cycleScheduler';
 import { AppError, BattleError, BattleErrorCode } from '../errors';
 
 const router = express.Router();
@@ -982,7 +982,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
         logger.info(`[Admin] Step 14: Create Cycle Snapshot`);
         const step14Start = Date.now();
         try {
-          const { cycleSnapshotService } = await import('../services/cycleSnapshotService');
+          const { cycleSnapshotService } = await import('../services/cycle/cycleSnapshotService');
           await cycleSnapshotService.createSnapshot(currentCycleNumber);
           logger.info(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
           await eventLogger.logCycleStepComplete(
@@ -1075,7 +1075,7 @@ router.post('/snapshots/backfill', authenticateToken, requireAdmin, async (req: 
   try {
     logger.info('[Admin] Backfilling cycle snapshots...');
     
-    const { cycleSnapshotService } = await import('../services/cycleSnapshotService');
+    const { cycleSnapshotService } = await import('../services/cycle/cycleSnapshotService');
     
     // Get current cycle number
     const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
@@ -2869,9 +2869,9 @@ router.get('/scheduler/status', authenticateToken, requireAdmin, (_req: Request,
  */
 router.post('/koth/trigger', authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
   try {
-    const { runJob } = await import('../services/cycleScheduler');
-    const { executeScheduledKothBattles } = await import('../services/kothBattleOrchestrator');
-    const { runKothMatchmaking } = await import('../services/kothMatchmakingService');
+    const { runJob } = await import('../services/cycle/cycleScheduler');
+    const { executeScheduledKothBattles } = await import('../services/koth/kothBattleOrchestrator');
+    const { runKothMatchmaking } = await import('../services/koth/kothMatchmakingService');
 
     logger.info('[Admin] Manually triggering KotH cycle...');
 

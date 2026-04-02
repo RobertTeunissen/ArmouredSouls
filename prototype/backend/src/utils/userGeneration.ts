@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
-import { assignLeagueInstance } from '../services/leagueInstanceService';
-import { assignTagTeamLeagueInstance } from '../services/tagTeamLeagueInstanceService';
+import { assignLeagueInstance } from '../services/league/leagueInstanceService';
+import { assignTagTeamLeagueInstance } from '../services/tag-team/tagTeamLeagueInstanceService';
 import {
   TIER_CONFIGS,
   TierConfig,

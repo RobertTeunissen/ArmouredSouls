@@ -6,7 +6,7 @@
  * Requirements: 10.3
  */
 
-import { robotStatsViewService } from '../src/services/robotStatsViewService';
+import { robotStatsViewService } from '../src/services/analytics/robotStatsViewService';
 import prisma from '../src/lib/prisma';
 
 describe('RobotStatsViewService', () => {
