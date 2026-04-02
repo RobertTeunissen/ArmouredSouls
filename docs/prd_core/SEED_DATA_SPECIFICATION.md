@@ -440,7 +440,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 ### Admin Account (1)
 
 **Username**: admin  
-**Password**: admin123  
+**Password**: See `prisma/seed.ts`  
 **Role**: admin  
 **Currency**: ₡3,000,000  
 **Prestige**: 0  
@@ -449,7 +449,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 ### WimpBot Test User Accounts (200)
 
 **Username Format**: test_user_001 to test_user_200  
-**Password**: testpass123  
+**Password**: See `prisma/seed.ts`  
 **Currency**: ₡100,000 each  
 **Stable Name**: Auto-generated unique name per user  
 **Purpose**: Matchmaking and league testing - baseline "mob" for tournaments and testing
@@ -488,7 +488,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 ### Special User: Bye-Robot
 
 **Username**: bye_robot_user  
-**Password**: testpass123  
+**Password**: See `prisma/seed.ts`  
 **Currency**: ₡0  
 **Prestige**: 0  
 **Purpose**: Matchmaking placeholder for odd-number leagues

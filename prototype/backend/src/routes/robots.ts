@@ -1663,14 +1663,12 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid imageUrl', 400);
   }
 
-  // Basic validation - must be a path to our assets (either source path or built asset path)
-  const isValidPath = imageUrl.startsWith('/src/assets/robots/') || 
-                      imageUrl.startsWith('/assets/') ||
-                      imageUrl.match(/^\/assets\/robot.*\.webp$/);
-  
-  if (!isValidPath) {
+  // Strict validation — must be a safe path to our robot asset images only.
+  // Blocks path traversal (../), protocol injection (javascript:), and XSS via img src.
+  const safeImagePattern = /^\/(?:src\/)?assets\/robots?[\w/-]*\.webp$/;
+  if (!safeImagePattern.test(imageUrl)) {
     logger.info('Invalid image path:', imageUrl);
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid image path', 400);
+    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid image path. Must be a .webp file in the robots assets directory.', 400);
   }
 
   // Check robot ownership

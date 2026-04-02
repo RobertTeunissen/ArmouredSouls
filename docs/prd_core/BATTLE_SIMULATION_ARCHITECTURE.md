@@ -15,6 +15,8 @@ This document provides a unified architectural overview of the battle simulation
 
 ## System Overview
 
+> **Note:** As of April 2026, all services are organized into domain subdirectories (e.g., `services/battle/`, `services/league/`, `services/koth/`) with barrel `index.ts` files. See the [File Reference](#file-reference) for current paths.
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                     CYCLE SCHEDULER (cycleScheduler.ts)                 │
@@ -55,45 +57,55 @@ This document provides a unified architectural overview of the battle simulation
 │  Also triggered via:    POST /api/admin/cycles/bulk (manual/dev)         │
 └─────────────┼────────────────────────────────────────────────────────────┘
               │
-  ┌───────────▼────────────────────────────────────────┐
-  │                                                     │
-  │  ┌──────────────────┐ ┌──────────────┐ ┌────────────┐  │
-  │  │ League            │ │ Tournament   │ │ Tag Team   │  │
-  │  │ Orchestrator      │ │ Orchestrator │ │ Orchestrator│  │
-  │  │ leagueBattle      │ │ tournament   │ │ tagTeamBattle│ │
-  │  │ Orchestrator.ts   │ │ Battle       │ │ Orchestrator│  │
-  │  │                   │ │ Orchestrator │ │ .ts         │  │
-  │  │                   │ │ .ts          │ │             │  │
-  │  └────────┬──────────┘ └──────┬──────┘ └──────┬──────┘  │
-  │           │                   │               │          │
-  │  ┌────────┴──────────┐                                   │
-  │  │ KotH Orchestrator │                                   │
-  │  │ kothBattle        │                                   │
-  │  │ Orchestrator.ts   │                                   │
-  │  └────────┬──────────┘                                   │
-  │           │                                              │
-  └───────────┼───────────────────┼───────────────┼──────────┘
-              │                   │               │
-        ┌─────▼───────────────────▼───────────────▼────────┐
-        │              COMBAT SIMULATOR                     │
-        │            (combatSimulator.ts)                    │
-        │                                                    │
-        │  simulateBattleMulti(robots[], config)             │
-        │    └─ N-robot unified entry point                  │
-        │                                                    │
-        │  simulateBattle(robot1, robot2, isTournament?)     │
-        │    └─ Backward-compatible 1v1 wrapper              │
-        │       delegates to simulateBattleMulti()           │
-        │                                                    │
-        │  Returns: CombatResult / SpatialCombatResult       │
-        │    ├─ winnerId                                     │
-        │    ├─ robot1FinalHP / robot2FinalHP                │
-        │    ├─ robot1Damage / robot2Damage                  │
-        │    ├─ durationSeconds                              │
-        │    ├─ isDraw                                       │
-        │    ├─ events: CombatEvent[]                        │
-        │    └─ kothMetadata (optional, zone control only)   │
-        └──────────────────────┬───────────────────────────┘
+  ┌───────────▼──────────────────────────────────────────────────────────┐
+  │                    MODE-SPECIFIC ORCHESTRATORS                       │
+  │                    (one per domain subdirectory)                     │
+  │                                                                      │
+  │  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐     │
+  │  │ league/           │ │ tournament/      │ │ tag-team/        │     │
+  │  │ leagueBattle      │ │ tournamentBattle │ │ tagTeamBattle    │     │
+  │  │ Orchestrator.ts   │ │ Orchestrator.ts  │ │ Orchestrator.ts  │     │
+  │  └────────┬──────────┘ └──────┬───────────┘ └──────┬───────────┘    │
+  │           │                   │                     │               │
+  │  ┌────────┴──────────┐                                              │
+  │  │ koth/             │                                              │
+  │  │ kothBattle        │                                              │
+  │  │ Orchestrator.ts   │                                              │
+  │  └────────┬──────────┘                                              │
+  │           │                                                         │
+  └───────────┼───────────────────┼─────────────────────┼───────────────┘
+              │                   │                     │
+        ┌─────▼───────────────────▼─────────────────────▼──────────────┐
+        │              battle/ DOMAIN (shared core)                     │
+        │                                                               │
+        │  baseOrchestrator.ts                                          │
+        │    ├─ BattleContext, BattleRecordRef (shared types)           │
+        │    └─ getCurrentCycleNumber()                                 │
+        │                                                               │
+        │  combatSimulator.ts                                           │
+        │    ├─ simulateBattleMulti(robots[], config)                   │
+        │    │    └─ N-robot unified entry point                        │
+        │    ├─ simulateBattle(robot1, robot2, isTournament?)           │
+        │    │    └─ Backward-compatible 1v1 wrapper                    │
+        │    └─ Returns: CombatResult / SpatialCombatResult             │
+        │         ├─ winnerId, durationSeconds, isDraw                  │
+        │         ├─ robot1FinalHP / robot2FinalHP                      │
+        │         ├─ robot1Damage / robot2Damage                        │
+        │         ├─ events: CombatEvent[]                              │
+        │         └─ kothMetadata (optional, zone control only)         │
+        │                                                               │
+        │  battlePostCombat.ts                                          │
+        │    ├─ updateRobotCombatStats()                                │
+        │    ├─ awardCreditsToUser(), awardPrestigeToUser()             │
+        │    ├─ awardFameToRobot()                                      │
+        │    ├─ awardStreamingRevenueForParticipant()                   │
+        │    └─ logBattleAuditEvent()                                   │
+        │                                                               │
+        │  battleStrategy.ts                                            │
+        │    ├─ BattleStrategy<TMatch> interface                        │
+        │    └─ BattleProcessor (11-step pipeline for new match types)  │
+        │                                                               │
+        └──────────────────────┬───────────────────────────────────────┘
                                │
         ┌──────────────────────▼───────────────────────────┐
         │          COMBAT MESSAGE GENERATOR                 │
@@ -409,39 +421,39 @@ All orchestrators emit the unified `battle_complete` event type via the shared `
 | Tag Team | `battle_complete` | 4 (one per robot) |
 | KotH | `battle_complete` | 5-6 (one per robot) |
 
-> **Note:** The `EventType` enum in `eventLogger.ts` still contains `TOURNAMENT_MATCH` and `TAG_TEAM_BATTLE` for backward compatibility with old audit log records in the database. New code should never emit these event types.
+> **Note:** The `EventType` enum in `common/eventLogger.ts` still contains `TOURNAMENT_MATCH` and `TAG_TEAM_BATTLE` for backward compatibility with old audit log records in the database. New code should never emit these event types.
 
 ---
 
 ## Shared Utilities
 
-The orchestrators share several utility modules:
+The orchestrators share several utility modules. Since the backend service consolidation (spec 3), these live in domain subdirectories:
 
 ```
   ┌─────────────────────────────────────────────────────────────┐
   │                    SHARED UTILITIES                          │
   │                                                              │
-  │  battleMath.ts                                               │
+  │  utils/battleMath.ts                                         │
   │    ├─ calculateExpectedScore()    ELO expected outcome       │
   │    ├─ calculateELOChange()        ELO delta (K=32 hardcoded) │
   │    └─ ELO_K_FACTOR               K-factor constant (32)     │
   │                                                              │
-  │  economyCalculations.ts                                      │
+  │  utils/economyCalculations.ts                                │
   │    ├─ getLeagueWinReward()        Credits by league tier     │
   │    ├─ getParticipationReward()    Loser/draw credits         │
   │    ├─ calculateBattleWinnings()   Total credit calculation   │
   │    └─ getPrestigeMultiplier()     Prestige bonus %           │
   │                                                              │
-  │  tournamentRewards.ts                                        │
+  │  utils/tournamentRewards.ts                                  │
   │    ├─ calculateTournamentBattleRewards()                     │
   │    └─ getTournamentRewardBreakdown()                         │
   │                                                              │
-  │  streamingRevenueService.ts                                  │
+  │  services/economy/streamingRevenueService.ts                 │
   │    ├─ calculateStreamingRevenue()       (per-robot)          │
   │    ├─ getStreamingStudioLevel()         (facility query)     │
   │    └─ awardStreamingRevenue()           (DB write)           │
   │                                                              │
-  │  eventLogger.ts                                              │
+  │  services/common/eventLogger.ts                              │
   │    └─ EventLogger class (singleton)                          │
   │       ├─ logEvent()                                          │
   │       └─ logEventBatch()                                     │
@@ -452,13 +464,14 @@ The orchestrators share several utility modules:
 
 ## Shared Post-Combat Layer
 
-**Added**: March 18, 2026
+**Added**: March 18, 2026  
+**Moved**: April 2026 — relocated to `services/battle/` domain during backend service consolidation (spec 3)
 
-All four orchestrators previously duplicated the same 6-step post-combat pipeline. This has been extracted into two shared modules:
+All four orchestrators previously duplicated the same 6-step post-combat pipeline. This has been extracted into two shared modules in the `battle/` domain:
 
 ### `battlePostCombat.ts` — Shared Post-Combat Helpers
 
-Reusable functions that eliminate copy-paste across orchestrators. Each orchestrator still owns its own `processBattle()` flow and reward formulas — these helpers just handle the repetitive DB writes:
+Located at `services/battle/battlePostCombat.ts`. Reusable functions that eliminate copy-paste across orchestrators. Each orchestrator still owns its own `processBattle()` flow and reward formulas — these helpers just handle the repetitive DB writes:
 
 ```
   ┌─────────────────────────────────────────────────────────────┐
@@ -496,7 +509,7 @@ Reusable functions that eliminate copy-paste across orchestrators. Each orchestr
 
 ### `battleStrategy.ts` — Strategy Pattern for New Match Types
 
-Defines the `BattleStrategy<TMatch>` interface and `BattleProcessor` class. New match types implement the strategy (~100-150 lines of unique logic) and plug into the shared 11-step pipeline:
+Located at `services/battle/battleStrategy.ts`. Defines the `BattleStrategy<TMatch>` interface and `BattleProcessor` class. New match types implement the strategy (~100-150 lines of unique logic) and plug into the shared 11-step pipeline:
 
 ```
   ┌─────────────────────────────────────────────────────────────┐
@@ -524,21 +537,25 @@ Defines the `BattleStrategy<TMatch>` interface and `BattleProcessor` class. New 
 
 ### How Existing Orchestrators Use the Shared Layer
 
-The four existing orchestrators have been refactored to use `battlePostCombat.ts` helpers directly within their existing `processBattle()` flows. They do NOT use `BattleProcessor` — their battle-tested flows are preserved:
+The four existing orchestrators have been refactored to use `battle/battlePostCombat.ts` helpers directly within their existing `processBattle()` flows. They do NOT use `BattleProcessor` — their battle-tested flows are preserved. Each orchestrator lives in its own domain directory and imports shared helpers from the `battle/` domain:
 
-| Orchestrator | Shared Helpers Used |
-|---|---|
-| League | `updateRobotCombatStats()`, `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
-| Tournament | `updateRobotCombatStats()`, `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
-| Tag Team | `awardCreditsToUser()`, `awardPrestigeToUser()`, `logBattleAuditEvent()` |
-| KotH | `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardFameToRobot()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+| Orchestrator | Location | Shared Helpers Used |
+|---|---|---|
+| League | `services/league/` | `updateRobotCombatStats()`, `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+| Tournament | `services/tournament/` | `updateRobotCombatStats()`, `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+| Tag Team | `services/tag-team/` | `awardCreditsToUser()`, `awardPrestigeToUser()`, `logBattleAuditEvent()` |
+| KotH | `services/koth/` | `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardFameToRobot()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
 
 ### How to Add a New Match Type
 
-New match types should use `BattleProcessor` instead of writing a full orchestrator from scratch. Here's the pattern:
+New match types should use `BattleProcessor` (from `services/battle/battleStrategy.ts`) instead of writing a full orchestrator from scratch. Here's the pattern:
 
 ```typescript
 // 1. Implement BattleStrategy (~100-150 lines)
+// Import from the battle domain barrel file
+import { BattleStrategy, BattleProcessor } from '../battle';
+import { simulateBattle, simulateBattleMulti } from '../battle';
+
 class MyNewBattleStrategy implements BattleStrategy<MyMatchRecord> {
   readonly battleType = 'my_new_type';
   readonly leagueType = 'my_league';
@@ -572,7 +589,7 @@ The `BattleProcessor` handles all 11 pipeline steps. You only write the parts th
 
 ## How It All Connects: Scheduling Model
 
-The battle system is driven by `cycleScheduler.ts`, which registers 4 independent cron jobs via `node-cron`. Each job runs on its own schedule, acquires a lock (only one job at a time), and executes its own self-contained cycle. There is no monolithic "8-step cycle" — each job owns its own repair → battle → rebalance → matchmaking flow.
+The battle system is driven by `cycle/cycleScheduler.ts`, which registers 5 independent cron jobs via `node-cron`. Each job runs on its own schedule, acquires a lock (only one job at a time), and executes its own self-contained cycle. There is no monolithic "8-step cycle" — each job owns its own repair → battle → rebalance → matchmaking flow.
 
 ```
   ┌─────────────────────────────────────────────────────────────────┐
@@ -656,19 +673,23 @@ The acc/production environment uses individual cron triggers rather than a monol
 
 ## File Reference
 
+> **Note:** As of the backend service consolidation (April 2026), all services are organized into domain subdirectories under `src/services/`. Each domain has a barrel `index.ts` that defines its public API.
+
 | File | Purpose |
 |---|---|
-| `src/services/cycleScheduler.ts` | 5 independent cron jobs (league, tournament, tag team, KotH, settlement) |
-| `src/services/combatSimulator.ts` | Shared combat engine — tick-based simulation using all 23 attributes |
-| `src/services/battlePostCombat.ts` | Shared post-combat helpers (streaming revenue, audit logging, robot stats, credits/prestige/fame) |
-| `src/services/battleStrategy.ts` | Strategy Pattern interface (`BattleStrategy`) + `BattleProcessor` for new match types |
-| `src/services/leagueBattleOrchestrator.ts` | League 1v1 battle orchestration, ELO, rewards, audit logging |
-| `src/services/kothBattleOrchestrator.ts` | KotH battle orchestration, placement rewards, zone scoring |
-| `src/services/tournamentBattleOrchestrator.ts` | Tournament bracket battles, round-based rewards |
-| `src/services/tagTeamBattleOrchestrator.ts` | 2v2 tag team battles, tag-out mechanics, 4-robot participation |
-| `src/services/combatMessageGenerator.ts` | Raw events → narrative battle log conversion |
-| `src/services/eventLogger.ts` | Audit log writer (one event per robot pattern) |
-| `src/services/streamingRevenueService.ts` | Streaming revenue calculation and awarding |
+| `src/services/cycle/cycleScheduler.ts` | 5 independent cron jobs (league, tournament, tag team, KotH, settlement) |
+| `src/services/battle/combatSimulator.ts` | Shared combat engine — tick-based simulation using all 23 attributes |
+| `src/services/battle/baseOrchestrator.ts` | Shared types (`BattleContext`, `BattleRecordRef`) and helpers (`getCurrentCycleNumber`) |
+| `src/services/battle/battlePostCombat.ts` | Shared post-combat helpers (streaming revenue, audit logging, robot stats, credits/prestige/fame) |
+| `src/services/battle/battleStrategy.ts` | Strategy Pattern interface (`BattleStrategy`) + `BattleProcessor` for new match types |
+| `src/services/battle/combatMessageGenerator.ts` | Raw events → narrative battle log conversion |
+| `src/services/league/leagueBattleOrchestrator.ts` | League 1v1 battle orchestration, ELO, rewards, audit logging |
+| `src/services/tournament/tournamentBattleOrchestrator.ts` | Tournament bracket battles, round-based rewards |
+| `src/services/tag-team/tagTeamBattleOrchestrator.ts` | 2v2 tag team battles, tag-out mechanics, 4-robot participation |
+| `src/services/koth/kothBattleOrchestrator.ts` | KotH battle orchestration, placement rewards, zone scoring |
+| `src/services/koth/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
+| `src/services/common/eventLogger.ts` | Audit log writer (one event per robot pattern) |
+| `src/services/economy/streamingRevenueService.ts` | Streaming revenue calculation and awarding |
 | `src/utils/battleMath.ts` | ELO calculations (K-factor, expected score, delta) |
 | `src/utils/economyCalculations.ts` | Credit rewards, prestige multipliers, participation rewards |
 | `src/utils/tournamentRewards.ts` | Tournament-specific reward scaling |
@@ -679,7 +700,7 @@ All paths relative to `prototype/backend/`.
 
 ## King of the Hill Integration
 
-**Last Updated**: March 18, 2026  
+**Last Updated**: April 2, 2026  
 **Status**: ✅ Implemented
 
 ### Architecture Approach
@@ -698,18 +719,18 @@ KotH plugs into the existing battle simulation architecture via the `GameModeCon
 | File | Purpose |
 |---|---|
 | `src/services/arena/kothEngine.ts` | Pure functions + strategy classes: zone scoring, anti-passive mechanics, spawn positions, rotating zone generation, `buildKothGameModeConfig()` |
-| `src/services/kothMatchmakingService.ts` | ELO-balanced snake-draft group matchmaking, one-per-stable filtering, zone variant by day of week |
+| `src/services/koth/kothMatchmakingService.ts` | ELO-balanced snake-draft group matchmaking, one-per-stable filtering, zone variant by day of week |
 
 ### Extended Files
 
 | File | Change |
 |---|---|
-| `src/services/battleOrchestrator.ts` → `src/services/leagueBattleOrchestrator.ts` | Renamed for consistency. League-only orchestration. KotH code extracted to `kothBattleOrchestrator.ts`. |
-| `src/services/kothBattleOrchestrator.ts` | Extracted from `battleOrchestrator.ts` — `executeScheduledKothBattles()`, `processKothBattle()`, `calculateKothRewards()`, `updateKothRobotStats()`. Imports `getCurrentCycleNumber` from `leagueBattleOrchestrator.ts`. |
-| `src/services/battlePostCombat.ts` | Shared post-combat helpers extracted from all 4 orchestrators. Used by league, tournament, tag team, and KotH. |
-| `src/services/battleStrategy.ts` | Strategy Pattern interface (`BattleStrategy<TMatch>`) + `BattleProcessor` class for new match types. |
-| `src/services/cycleScheduler.ts` | Added 5th cron job (`koth`, `0 16 * * 1,3,5`) with `executeKothCycle()` handler |
-| `src/services/combatSimulator.ts` | **Unchanged** — KotH plugs in via `GameModeConfig` |
+| `src/services/league/leagueBattleOrchestrator.ts` | League-only orchestration (originally `battleOrchestrator.ts`, renamed, then moved to `league/` domain). |
+| `src/services/koth/kothBattleOrchestrator.ts` | Extracted from original `battleOrchestrator.ts` — `executeScheduledKothBattles()`, `processKothBattle()`, `calculateKothRewards()`, `updateKothRobotStats()`. Imports `getCurrentCycleNumber` from `battle/baseOrchestrator.ts`. |
+| `src/services/battle/battlePostCombat.ts` | Shared post-combat helpers extracted from all 4 orchestrators. Used by league, tournament, tag team, and KotH. |
+| `src/services/battle/battleStrategy.ts` | Strategy Pattern interface (`BattleStrategy<TMatch>`) + `BattleProcessor` class for new match types. |
+| `src/services/cycle/cycleScheduler.ts` | Added 5th cron job (`koth`, `0 16 * * 1,3,5`) with `executeKothCycle()` handler |
+| `src/services/battle/combatSimulator.ts` | **Unchanged** — KotH plugs in via `GameModeConfig` |
 
 ### Daily Timeline with KotH
 
@@ -727,7 +748,7 @@ UTC   Job
 | File | Purpose |
 |---|---|
 | `src/services/arena/kothEngine.ts` | KotH game mode config, zone scoring, anti-passive, AI strategies |
-| `src/services/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
+| `src/services/koth/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
 
 ---
 

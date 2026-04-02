@@ -28,6 +28,13 @@ router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, async (req:
   try {
     const sectionSlug = String(req.params.sectionSlug);
     const articleSlug = String(req.params.articleSlug);
+
+    // Prevent path traversal — slugs must be simple alphanumeric/hyphen/underscore tokens
+    const safeSlugPattern = /^[a-zA-Z0-9_-]+$/;
+    if (!safeSlugPattern.test(sectionSlug) || !safeSlugPattern.test(articleSlug)) {
+      throw new AppError('INVALID_SLUG', 'Invalid section or article slug', 400);
+    }
+
     const article = guideService.getArticle(sectionSlug, articleSlug);
 
     if (!article) {

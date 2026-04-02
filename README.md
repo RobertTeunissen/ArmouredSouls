@@ -1,12 +1,10 @@
 # Armoured Souls
 
-A next-generation strategy simulation game where thousands of players manage their own "stable" of battle robots in a persistent online world.
+A strategy simulation game where players manage a stable of battle robots, competing in automated leagues, tournaments, tag team matches, and King of the Hill events. Inspired by Football Manager — you configure, the engine simulates.
 
-## 🚀 Quick Start
+## Quick Start
 
-**→ See [Complete Setup Guide](docs/guides/SETUP.md) for detailed instructions**
-
-To run the Phase 1 prototype locally:
+See [docs/guides/SETUP.md](docs/guides/SETUP.md) for the full setup guide and troubleshooting.
 
 ```bash
 # Clone and navigate
@@ -16,7 +14,7 @@ cd ArmouredSouls/prototype
 # Start database
 docker compose up -d
 
-# Setup backend
+# Backend
 cd backend
 cp .env.example .env
 npm install
@@ -25,123 +23,99 @@ npm run prisma:migrate
 npx tsx prisma/seed.ts
 npm run dev  # Terminal 1
 
-# Setup frontend (in new terminal)
+# Frontend (new terminal)
 cd ../frontend
 npm install
 npm run dev  # Terminal 2
 ```
 
-Open http://localhost:3000 - Login with `player1` / `password123`
+Open http://localhost:3000 — test credentials are in [SETUP.md](docs/guides/SETUP.md).
 
-📖 **For testing new versions and database reset:** See [SETUP.md](docs/guides/SETUP.md)
-🔧 **Having installation issues?** → See the "🐛 Troubleshooting" section in [SETUP.md](docs/guides/SETUP.md)
+If you see "Environment variable not found: DATABASE_URL", you forgot to create the `.env` file — run `cp .env.example .env` in `prototype/backend/`.
 
-⚠️ **If you see "Environment variable not found: DATABASE_URL"**: You forgot to create the `.env` file. Run: `cd prototype/backend && cp .env.example .env` — See the troubleshooting section in [SETUP.md](docs/guides/SETUP.md) for details.
+## What's Built
 
-⚠️ **If `prisma generate` fails**: Your local `schema.prisma` may be corrupted. Run: `git restore prototype/backend/prisma/schema.prisma` then try again. See the troubleshooting section in [SETUP.md](docs/guides/SETUP.md) for details.
+Armoured Souls is a fully functional prototype deployed to a production VPS. The core game loop is complete: create robots, configure loadouts, compete in automated daily cycles, view battle replays, and progress through leagues.
 
-## 🎮 Project Vision
+### Game Systems
+- 4 battle modes: League (1v1), Tournament (bracket), Tag Team (2v2), King of the Hill (5-6 robot FFA)
+- 23 robot attributes across 5 categories, all upgradeable
+- 47 weapons (41 weapons + 6 shields) across 4 range bands
+- 14 stable facilities with 10 levels each
+- 6-tier league system (Bronze → Champion) with ELO-based matchmaking
+- Economy: credits, prestige (stable-level), fame (robot-level), streaming revenue
+- 5-step new player onboarding tutorial
+- Deterministic tick-based combat engine with battle replay viewer
+- In-game guide system
+- Admin portal with cycle management, battle viewer, and analytics
 
-Armoured Souls is designed to be a highly scalable, secure, and portable multiplayer strategy game. Players will build, customize, and manage teams of battle robots, competing in various game modes and tournaments.
+### Tech Stack
+- Backend: Node.js 24, TypeScript 5.8, Express 5, Prisma 7, PostgreSQL 17
+- Frontend: React 19, Vite 6, Tailwind CSS 4, Zustand 5, React Router 6
+- Testing: Jest 30 (backend), Vitest 4 (frontend), Playwright (E2E), fast-check (property-based)
+- Infrastructure: Scaleway VPS, Caddy (auto HTTPS), PM2, GitHub Actions CI/CD
 
-## 🎯 Core Principles
-
-- **Fully Automated Testing**: Comprehensive test coverage at all levels
-- **Ultra Secure**: Security-first design with robust authentication and data protection
-- **Portable**: Web-based initially, with iOS and Android support in future phases
-- **Scalable**: Built to support thousands of concurrent players
-
-## 📋 Project Status
-
-**Current Phase**: Phase 1 - Local Prototype  
-**Status**: Basic setup complete, ready for feature development
-
-> ✅ **Progress**: The prototype foundation is in place with backend (Express + Prisma), frontend (React + Tailwind), and database (PostgreSQL) configured and ready to use.
-
-## 📚 Documentation
-
-### Getting Started
-- [**Setup Guide**](docs/guides/SETUP.md) - Complete setup, quick testing reference, and troubleshooting
-- [**Robot Attributes System**](docs/prd_core/PRD_ROBOT_ATTRIBUTES.md) - Complete attribute system, currency, weapons, and economy
-
-### Testing & Admin Access
-- **Admin Login**: Username `admin`, Password `admin123`
-- **Quick Testing**: See the "Quick Testing Reference" section in [SETUP.md](docs/guides/SETUP.md)
-
-### Core Game Systems
-- [**PRD: Matchmaking**](docs/prd_core/PRD_MATCHMAKING.md) - Product requirements and specifications
-- [**PRD: Weapon Loadout**](docs/prd_core/PRD_WEAPONS_LOADOUT.md) - Product requirements and specifications
-- [**PRD: Economy System**](docs/prd_core/PRD_ECONOMY_SYSTEM.md) - Complete economic system documentation
-- [**PRD: Prestige and Fame**](docs/prd_core/PRD_PRESTIGE_AND_FAME.md) - ⭐ **Authoritative** - Dual reputation systems (stable prestige + robot fame)
-- [**Stable System**](docs/prd_core/STABLE_SYSTEM.md) - Facility costs, prestige formulas, and income/expense details
-
-### Pages
-- [**PRD: My Robots List Page**](docs/prd_pages/PRD_ROBOTS_LIST_PAGE.md) - ⭐ Comprehensive PRD (v1.8.1 - Complete)
-
-### General Documentation
-- [Game Design Document](docs/prd_core/GAME_DESIGN.md) - High-level game design and vision
-- [Architecture Overview](docs/prd_core/ARCHITECTURE.md) - System design and technical architecture
-- [Module Structure](docs/guides/MODULE_STRUCTURE.md) - Breakdown of system modules and components
-- [Security Strategy](docs/guides/SECURITY.md) - Security requirements and implementation approach
-- [Portability Strategy](docs/guides/PORTABILITY.md) - Cross-platform development strategy
-
-## 🗂️ Repository Structure
+## Repository Structure
 
 ```
 ArmouredSouls/
-├── docs/               # Project documentation
-├── prototype/          # Phase 1 local prototype (ACTIVE)
-│   ├── backend/        # Express + Prisma backend
-│   ├── frontend/       # React + Tailwind frontend
-│   └── docker-compose.yml
-└── modules/            # Future production codebase (Phase 2+)
-    ├── auth/           # Authentication & authorization
-    ├── game-engine/    # Core game logic
-    ├── database/       # Data persistence layer
-    ├── api/            # RESTful API layer
-    └── ui/             # User interface components
+├── docs/                    # Documentation (organized by category)
+│   ├── prd_core/            # Core game design, architecture, schema, combat
+│   ├── prd_pages/           # Page-specific requirements
+│   ├── guides/              # Setup, deployment, maintenance, security
+│   ├── design_ux/           # Design system and brand guidelines
+│   ├── balance_changes/     # Game balance modifications
+│   ├── analysis/            # Feature analysis and planning
+│   ├── implementation_notes/# Technical implementation details
+│   ├── migrations/          # Database migration notes
+│   └── troubleshooting/     # Debugging guides
+├── prototype/
+│   ├── backend/             # Express 5 API (13 domain service directories)
+│   ├── frontend/            # React 19 SPA (27 pages)
+│   ├── docker-compose.yml   # PostgreSQL for local dev
+│   ├── Caddyfile            # Reverse proxy config (production)
+│   └── ecosystem.config.js  # PM2 config (production)
+└── .kiro/
+    ├── specs/               # Feature specs (done + to-do)
+    ├── steering/            # AI assistant context files
+    └── hooks/               # Automated agent hooks
 ```
 
-## 🚀 Development Phases
+## Documentation
 
-### Phase 1: Local Prototype (Current - In Progress)
-- ✅ Basic project structure and configuration
-- ✅ Database schema (Users, Robots, Components, Battles)
-- ✅ Development environment setup
-- ✅ Authentication system
-- ✅ Robot creation and management
-- ✅ Battle simulation engine
-- 🚧 Basic UI pages
+### Getting Started
+- [Setup Guide](docs/guides/SETUP.md) — Local development setup, testing, troubleshooting
+- [Architecture](docs/prd_core/ARCHITECTURE.md) — System architecture and deployment
+- [Game Design](docs/prd_core/GAME_DESIGN.md) — Core game concept and mechanics
 
-### Phase 2: Foundation (Upcoming)
-- Core infrastructure setup
-- Authentication system
-- Database schema
-- API framework
+### Core Systems
+- [Database Schema](docs/prd_core/DATABASE_SCHEMA.md) — Complete schema reference (18 models)
+- [Battle Simulation](docs/prd_core/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine, orchestrators, cycle scheduler
+- [Combat Formulas](docs/prd_core/COMBAT_FORMULAS.md) — Hit chance, damage, crits, counters
+- [Economy System](docs/prd_core/PRD_ECONOMY_SYSTEM.md) — Credits, facilities, rewards
+- [Prestige & Fame](docs/prd_core/PRD_PRESTIGE_AND_FAME.md) — Dual reputation systems
+- [Matchmaking](docs/prd_core/PRD_MATCHMAKING.md) — LP-primary matching algorithm
+- [Weapons & Loadout](docs/prd_core/PRD_WEAPONS_LOADOUT.md) — 47 weapons, 4 loadout types
+- [Onboarding](docs/prd_core/PRD_ONBOARDING_SYSTEM.md) — 5-step tutorial system
 
-### Phase 3: Game Core
-- Robot management system
-- Battle simulation engine
-- Player progression system
+### Operations
+- [Deployment Guide](docs/guides/DEPLOYMENT.md) — VPS deployment and maintenance
+- [Security](docs/guides/SECURITY.md) — Security strategy and practices
+- [Error Codes](docs/guides/ERROR_CODES.md) — Domain-specific error reference
+- [Module Structure](docs/guides/MODULE_STRUCTURE.md) — Backend service organization
 
-### Phase 4: Multiplayer
-- Real-time battle system
-- Matchmaking
-- Tournaments
+### Development
+- [Roadmap](docs/ROADMAP.md) — Development phases and completed specs
+- [Contributing](CONTRIBUTING.md) — Development guidelines
 
-### Phase 5: Mobile
-- iOS port
-- Android port
-- Cross-platform synchronization
+## Project Status
 
-## 🤝 Contributing
+The prototype is feature-complete and deployed to production. See the [Roadmap](docs/ROADMAP.md) for what's been shipped and what's planned next.
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and best practices.
+## License
 
-## 📄 License
+Unlicensed — proprietary.
 
-[License details to be determined]
+## Contact
 
-## 📧 Contact
-
-Project Owner: Robert Teunissen
+Robert Teunissen — Project Owner

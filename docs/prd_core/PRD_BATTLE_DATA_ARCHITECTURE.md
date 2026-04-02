@@ -1,576 +1,187 @@
 # Product Requirements Document: Battle Data Architecture
 
-**Last Updated**: February 23, 2026  
+**Last Updated**: April 2, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
-**Epic**: Battle System - Data Architecture
+**Epic**: Battle System — Data Architecture  
+**Version**: 2.0
+
+---
+
+## Version History
+- v2.0 (April 2, 2026) — Full audit against Prisma schema. Fixed BattleParticipant model (removed non-existent `userId` field/relation/index, added `createdAt`, added table mapping). Corrected Battle model documentation (it still has robot1Id/robot2Id, tag team fields, ELO tracking — not the "simplified" version the old doc claimed). Fixed battleType values (`"league"` not `"1v1"`). Updated file paths for backend service consolidation. Removed incorrect "26+ columns removed" claim.
+- v1.0 (February 23, 2026) — Initial document
 
 ---
 
 ## Executive Summary
 
-This PRD documents the BattleParticipant table architecture, which provides a normalized, scalable approach to storing per-robot battle data. This architecture replaces the previous denormalized Battle table structure that stored robot1/robot2 data in separate columns.
+The BattleParticipant table provides a normalized, scalable approach to storing per-robot battle data. Each robot in a battle gets one BattleParticipant record containing its economic rewards, stat changes, and combat outcome. This replaces the need for per-robot columns on the Battle table (e.g., `robot1DamageDealt`, `robot2PrestigeAwarded`) and scales to any number of participants.
 
-**Key Achievement**: The BattleParticipant table enables consistent data structure across all battle types (1v1, tournament, tag team) and scales infinitely to support future N-player battle modes.
-
----
-
-## Background & Context
-
-### Problem Statement
-
-The original Battle table stored per-robot data in denormalized columns:
-- `robot1Id`, `robot2Id` (robot identification)
-- `robot1ELOBefore`, `robot2ELOBefore`, `robot1ELOAfter`, `robot2ELOAfter` (ELO tracking)
-- `robot1DamageDealt`, `robot2DamageDealt` (battle stats)
-- `robot1FinalHP`, `robot2FinalHP` (outcome data)
-- `robot1PrestigeAwarded`, `robot2PrestigeAwarded` (rewards)
-- `robot1FameAwarded`, `robot2FameAwarded` (reputation)
-- Plus additional fields for tag team battles (team1ActiveRobotId, team1ReserveRobotId, etc.)
-
-**Problems with this approach:**
-- ❌ Queries required OR conditions: `WHERE robotId = X OR robot2Id = X`
-- ❌ Different structure for different battle types (1v1 vs tag team)
-- ❌ Cannot scale beyond 2v2 without adding more columns
-- ❌ Complex conditional logic to determine if robot is "robot1" or "robot2"
-- ❌ Duplicate code for handling robot1 vs robot2 data
-- ❌ 26+ redundant columns in Battle table
-
-### Solution: BattleParticipant Table
-
-Create a separate table with **one record per robot per battle**, normalizing the data structure and enabling consistent queries across all battle types.
+The Battle table still exists and retains core battle metadata, robot references, tag team composition fields, and ELO tracking for backward compatibility. BattleParticipant is the canonical source for per-robot data.
 
 ---
 
-## Architecture Design
+## BattleParticipant Model
 
-### Database Schema
-
-#### BattleParticipant Table
+One record per robot per battle. This is the canonical source for per-robot combat stats, rewards, and ELO changes.
 
 ```prisma
 model BattleParticipant {
-  id                Int      @id @default(autoincrement())
-  battleId          Int
-  robotId           Int
-  userId            Int      // Denormalized for query performance
-  team              Int      // 1 or 2
-  role              String?  // "active" or "reserve" for tag team, null for 1v1
-  
+  id       Int     @id @default(autoincrement())
+  battleId Int     @map("battle_id")
+  robotId  Int     @map("robot_id")
+  team     Int                          // 1 or 2 (team affiliation)
+  role     String? @db.VarChar(20)      // "active"/"reserve" for tag team, null for 1v1
+
   // KotH placement (null for non-KotH battles)
-  placement         Int?     // 1-6 final placement for KotH battles
-  
+  placement Int?                        // 1-6 final placement
+
   // Economic effects
-  credits           Int
-  streamingRevenue  Int
-  
+  credits          Int
+  streamingRevenue Int @default(0) @map("streaming_revenue")
+
   // Stat changes
-  eloBefore         Int
-  eloAfter          Int
-  prestigeAwarded   Int
-  fameAwarded       Int
-  
+  eloBefore       Int @map("elo_before")
+  eloAfter        Int @map("elo_after")
+  prestigeAwarded Int @default(0) @map("prestige_awarded")
+  fameAwarded     Int @default(0) @map("fame_awarded")
+
   // Battle stats
-  damageDealt       Int
-  finalHP           Int
-  yielded           Boolean
-  destroyed         Boolean
-  
-  // Relationships
-  battle  Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
-  robot   Robot  @relation(fields: [robotId], references: [id])
-  user    User   @relation(fields: [userId], references: [id])
-  
-  // Indexes
+  damageDealt Int     @default(0) @map("damage_dealt")
+  finalHP     Int     @map("final_hp")
+  yielded     Boolean @default(false)
+  destroyed   Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  battle Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  robot  Robot  @relation(fields: [robotId], references: [id])
+
+  @@unique([battleId, robotId])
   @@index([battleId])
   @@index([robotId])
-  @@index([userId])
   @@index([battleId, team])
-  @@unique([battleId, robotId]) // Each robot appears once per battle
+  @@map("battle_participants")
 }
 ```
 
-#### Simplified Battle Table
+### Records Per Battle Type
 
-After migration, the Battle table contains only core battle information:
-
-```prisma
-model Battle {
-  id            Int      @id @default(autoincrement())
-  battleType    String   // "1v1", "tournament", "tag_team"
-  winnerId      Int?     // Team number (1 or 2) or null for draw
-  
-  // Timing
-  startTime     DateTime
-  endTime       DateTime
-  duration      Int
-  
-  // Context
-  cycleNumber   Int
-  leagueType    String?  // null for tournaments
-  
-  // Battle log (combat narrative)
-  battleLog     String?
-  
-  // Relations
-  participants  BattleParticipant[]
-  
-  @@index([cycleNumber])
-  @@index([battleType])
-}
-```
-
-### Data Structure by Battle Type
-
-#### 1v1 Battles
-- **2 BattleParticipant records** (one per robot)
-- `team`: 1 or 2
-- `role`: null
-- Winner determined by `Battle.winnerId` matching participant's `team`
-
-#### Tournament Battles
-- **2 BattleParticipant records** (one per robot)
-- Same structure as 1v1
-- `Battle.battleType = "tournament"`
-
-#### Tag Team Battles
-- **4 BattleParticipant records** (2 per team)
-- `team`: 1 or 2
-- `role`: "active" or "reserve"
-- `placement`: null
-- Credits split evenly between team members
-- ELO changes only for active robots
-
-#### KotH Battles
-- **5-6 BattleParticipant records** (one per robot)
-- `team`: 1 (free-for-all, no team affiliation)
-- `role`: null
-- `placement`: 1-6 (final placement in the match)
-- `Battle.battleType = "koth"`
-- No ELO changes
-- Placement-based rewards (1st through 6th)
+| Battle Type | `battleType` | Participants | `team` | `role` | `placement` |
+|---|---|---|---|---|---|
+| League (1v1) | `"league"` | 2 | 1 or 2 | null | null |
+| Tournament | `"tournament"` | 2 | 1 or 2 | null | null |
+| Tag Team (2v2) | `"tag_team"` | 4 | 1 or 2 | `"active"` or `"reserve"` | null |
+| King of the Hill | `"koth"` | 5-6 | 1 (FFA) | null | 1-6 |
 
 ---
 
-## Benefits
+## Battle Model (Current State)
 
-### 1. Consistent Query Structure
+The Battle table retains core battle metadata. Some legacy per-robot columns were removed (see Migration History), but it still contains robot references, tag team fields, and ELO tracking for backward compatibility.
 
-**Before (Battle table):**
+Key fields on Battle:
+- `robot1Id`, `robot2Id` — combatant references (still present)
+- `winnerId` — winner's robot ID (null for draws; team ID for tag team)
+- `battleType` — `"league"`, `"tournament"`, `"tag_team"`, `"koth"`
+- `leagueType` — tier name (e.g., `"bronze"`, `"silver"`)
+- `battleLog` — JSON combat event log
+- `durationSeconds` — battle length
+- `winnerReward`, `loserReward` — aggregate credit awards
+- Tag team fields: `team1ActiveRobotId`, `team1ReserveRobotId`, etc.
+- Tag team per-robot stats: `team1ActiveDamageDealt`, `team1ActiveFameAwarded`, etc.
+- ELO tracking: `robot1ELOBefore`, `robot1ELOAfter`, `robot2ELOBefore`, `robot2ELOAfter`, `eloChange`
+
+For the complete Battle schema, see [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md).
+
+---
+
+## What Moved to BattleParticipant
+
+The following per-robot data is now stored exclusively in BattleParticipant (removed from Battle):
+
+| Data | Old Battle Columns | New Location |
+|---|---|---|
+| Final HP | `robot1FinalHP`, `robot2FinalHP` | `BattleParticipant.finalHP` |
+| Yielded | `robot1Yielded`, `robot2Yielded` | `BattleParticipant.yielded` |
+| Destroyed | `robot1Destroyed`, `robot2Destroyed` | `BattleParticipant.destroyed` |
+| Damage dealt | `robot1DamageDealt`, `robot2DamageDealt` | `BattleParticipant.damageDealt` |
+| Prestige awarded | `robot1PrestigeAwarded`, `robot2PrestigeAwarded` | `BattleParticipant.prestigeAwarded` |
+| Fame awarded | `robot1FameAwarded`, `robot2FameAwarded` | `BattleParticipant.fameAwarded` |
+
+### What Stayed on Battle
+
+These fields remain on the Battle table for backward compatibility, aggregate queries, or because they're battle-level (not per-robot) data:
+
+- `robot1Id`, `robot2Id` — still used for quick combatant lookup
+- ELO columns — kept for aggregate queries and backward compat
+- `winnerReward`, `loserReward` — battle-level economic summary
+- Tag team composition fields — needed for replay reconstruction
+- Tag team per-robot damage/fame — legacy, also in BattleParticipant
+
+---
+
+## Query Patterns
+
+### Before (Battle table, robot1/robot2 conditionals)
+
 ```typescript
-// Complex OR condition
 const battles = await prisma.battle.findMany({
-  where: {
-    OR: [
-      { robot1Id: robotId },
-      { robot2Id: robotId }
-    ]
-  }
+  where: { OR: [{ robot1Id: robotId }, { robot2Id: robotId }] }
 });
-
-// Conditional logic to extract data
-battles.forEach(battle => {
-  const isRobot1 = battle.robot1Id === robotId;
-  const credits = isRobot1 ? battle.winnerReward : battle.loserReward;
-  const elo = isRobot1 ? battle.robot1ELOAfter : battle.robot2ELOAfter;
-  // ... more conditionals
+battles.forEach(b => {
+  const isRobot1 = b.robot1Id === robotId;
+  const elo = isRobot1 ? b.robot1ELOAfter : b.robot2ELOAfter;
 });
 ```
 
-**After (BattleParticipant table):**
+### After (BattleParticipant, direct lookup)
+
 ```typescript
-// Simple direct query
-const participants = await prisma.battleParticipant.findMany({
+const participations = await prisma.battleParticipant.findMany({
   where: { robotId },
   include: { battle: true }
 });
-
-// Direct data access
-participants.forEach(participant => {
-  const credits = participant.credits;
-  const elo = participant.eloAfter;
-  // No conditionals needed!
+participations.forEach(p => {
+  const elo = p.eloAfter;       // No conditionals
+  const credits = p.credits;    // Direct access
 });
 ```
 
-### 2. Scalability
+---
 
-**Current support:**
-- 1v1: 2 participants
-- Tag team (2v2): 4 participants
-- KotH (free-for-all): 5-6 participants
+## Scalability
 
-**Future support (no schema changes needed):**
-- 3v3: 6 participants
-- 5v5: 10 participants
-- Battle royale: N participants
+The BattleParticipant model scales to any number of robots per battle without schema changes:
 
-### 3. Complete Data Capture
-
-Every participant record includes:
-- Economic data (credits, streaming revenue)
-- Performance data (ELO changes, prestige, fame)
-- Battle stats (damage dealt, final HP)
-- Outcome data (yielded, destroyed)
-
-### 4. Simplified Code
-
-**Removed complexity:**
-- No robot1/robot2 conditional logic
-- No different code paths for different battle types
-- No duplicate field handling
-- Consistent API responses
+| Format | Participants | Supported |
+|---|---|---|
+| 1v1 League | 2 | ✅ Current |
+| 1v1 Tournament | 2 | ✅ Current |
+| 2v2 Tag Team | 4 | ✅ Current |
+| KotH (FFA) | 5-6 | ✅ Current |
+| 3v3 | 6 | ✅ No schema change needed |
+| Battle Royale | N | ✅ No schema change needed |
 
 ---
 
-## Migration Strategy
+## Implementation Files
 
-### Implementation Phases
+All paths relative to `prototype/backend/src/`.
 
-The migration was executed in 7 stages to ensure zero downtime:
-
-#### Stage 1: Create Table ✅
-- Added BattleParticipant table to schema
-- Created indexes for performance
-- Risk: None (empty table)
-
-#### Stage 2: Backfill Data ✅
-- Populated BattleParticipant from existing Battle records
-- Converted robot1/robot2 columns to participant records
-- Risk: Low (read-only operation)
-
-#### Stage 3: Dual-Read ✅
-- Updated code to read from BattleParticipant
-- Added fallback to Battle table for old data
-- Risk: Low (graceful degradation)
-
-#### Stage 4: Dual-Write ✅
-- Battle orchestrators write to BOTH tables
-- Ensures consistency during transition
-- Risk: Medium (requires transaction consistency)
-
-#### Stage 5: Single-Write ✅
-- Write ONLY to BattleParticipant
-- Stop writing redundant Battle columns
-- Risk: Medium (Battle columns become stale)
-
-#### Stage 6: Remove Columns ✅
-- Dropped 26+ redundant columns from Battle table
-- Irreversible change (requires backup)
-- Risk: High (data loss if rollback needed)
-
-#### Stage 7: Update Documentation ✅
-- Updated all markdown files
-- Updated API documentation
-- Updated code examples
-
-### Columns Removed from Battle Table
-
-**26+ columns removed:**
-- Robot identification (6): robot1Id, robot2Id, team1ActiveRobotId, team2ActiveRobotId, team1ReserveRobotId, team2ReserveRobotId
-- ELO tracking (4): robot1ELOBefore, robot1ELOAfter, robot2ELOBefore, robot2ELOAfter
-- Prestige & Fame (4): robot1PrestigeAwarded, robot2PrestigeAwarded, robot1FameAwarded, robot2FameAwarded
-- Battle stats (4): robot1DamageDealt, robot2DamageDealt, robot1FinalHP, robot2FinalHP
-- Battle outcome (4): robot1Yielded, robot2Yielded, robot1Destroyed, robot2Destroyed
-- Economic data (2+): winnerReward, loserReward
-- Tag team specific (2+): team1ActiveDamageDealt, team2ActiveDamageDealt, etc.
-
----
-
-## API Impact
-
-### Battle Creation
-
-**Battle Orchestrators Updated:**
-- `leagueBattleOrchestrator.ts` - 1v1 and league battles
-- `tournamentBattleOrchestrator.ts` - Tournament battles
-- `tagTeamBattleOrchestrator.ts` - Tag team battles
-- `kothBattleOrchestrator.ts` - King of the Hill battles
-
-**New pattern:**
-```typescript
-// Create battle record
-const battle = await prisma.battle.create({
-  data: {
-    battleType: '1v1',
-    winnerId: winner.team,
-    startTime, endTime, duration,
-    cycleNumber, leagueType,
-    battleLog
-  }
-});
-
-// Create participant records
-await prisma.battleParticipant.createMany({
-  data: [
-    {
-      battleId: battle.id,
-      robotId: robot1.id,
-      userId: robot1.userId,
-      team: 1,
-      role: null,
-      credits: winnerCredits,
-      streamingRevenue: robot1Streaming,
-      eloBefore: robot1.elo,
-      eloAfter: newElo1,
-      prestigeAwarded: prestige1,
-      fameAwarded: fame1,
-      damageDealt: damage1,
-      finalHP: hp1,
-      yielded: false,
-      destroyed: hp1 === 0
-    },
-    {
-      battleId: battle.id,
-      robotId: robot2.id,
-      userId: robot2.userId,
-      team: 2,
-      role: null,
-      credits: loserCredits,
-      streamingRevenue: robot2Streaming,
-      eloBefore: robot2.elo,
-      eloAfter: newElo2,
-      prestigeAwarded: prestige2,
-      fameAwarded: fame2,
-      damageDealt: damage2,
-      finalHP: hp2,
-      yielded: false,
-      destroyed: hp2 === 0
-    }
-  ]
-});
-```
-
-### Battle Queries
-
-**API Endpoints Updated:**
-- `GET /api/matches/battles/:id/log` - Battle detail
-- `GET /api/records` - Hall of Records
-- `GET /api/analytics/robot/:robotId/performance` - Robot analytics
-- `GET /api/admin/battles/:id` - Admin battle details
-
-**New response format:**
-```typescript
-{
-  id: 102,
-  battleType: "1v1",
-  winnerId: 2,
-  startTime: "2026-02-20T10:00:00Z",
-  endTime: "2026-02-20T10:00:45Z",
-  duration: 45,
-  cycleNumber: 2,
-  leagueType: "bronze",
-  participants: [
-    {
-      id: 1,
-      robotId: 54,
-      userId: 60,
-      team: 1,
-      role: null,
-      credits: 1315,
-      streamingRevenue: 1002,
-      eloBefore: 1200,
-      eloAfter: 1195,
-      prestigeAwarded: 3,
-      fameAwarded: 13,
-      damageDealt: 450,
-      finalHP: 0,
-      yielded: false,
-      destroyed: true
-    },
-    {
-      id: 2,
-      robotId: 75,
-      userId: 61,
-      team: 2,
-      role: null,
-      credits: 4383,
-      streamingRevenue: 1004,
-      eloBefore: 1210,
-      eloAfter: 1215,
-      prestigeAwarded: 3,
-      fameAwarded: 13,
-      damageDealt: 500,
-      finalHP: 850,
-      yielded: false,
-      destroyed: false
-    }
-  ]
-}
-```
-
----
-
-## Performance Considerations
-
-### Indexes
-
-**Critical indexes for query performance:**
-```sql
-CREATE INDEX "BattleParticipant_battleId_idx" ON "BattleParticipant"("battleId");
-CREATE INDEX "BattleParticipant_robotId_idx" ON "BattleParticipant"("robotId");
-CREATE INDEX "BattleParticipant_userId_idx" ON "BattleParticipant"("userId");
-CREATE INDEX "BattleParticipant_battleId_team_idx" ON "BattleParticipant"("battleId", "team");
-CREATE UNIQUE INDEX "BattleParticipant_battleId_robotId_key" ON "BattleParticipant"("battleId", "robotId");
-```
-
-### Query Patterns
-
-**Efficient queries:**
-- Get all battles for a robot: `WHERE robotId = X` (uses robotId index)
-- Get all battles for a user: `WHERE userId = X` (uses userId index)
-- Get participants for a battle: `WHERE battleId = X` (uses battleId index)
-- Get team members: `WHERE battleId = X AND team = 1` (uses composite index)
-
-**Query performance:**
-- Battle list: < 100ms
-- Battle details: < 50ms
-- Robot battle history: < 100ms
-- Leaderboard queries: < 200ms
-
----
-
-## Data Integrity
-
-### Constraints
-
-**Unique constraint:**
-- Each robot can appear only once per battle
-- `@@unique([battleId, robotId])`
-
-**Cascade delete:**
-- Deleting a battle deletes all participants
-- `onDelete: Cascade`
-
-**Validation rules:**
-- `team` must be 1 or 2 (for 1v1/tournament/tag team) or 1 (for KotH free-for-all)
-- `role` must be null, "active", or "reserve"
-- `placement` must be null (non-KotH) or 1-6 (KotH)
-- `credits` must be non-negative
-- `eloBefore` and `eloAfter` must be valid ELO values (800-2500)
-
-### Consistency Checks
-
-**Participant count validation:**
-- 1v1 battles: exactly 2 participants
-- Tournament battles: exactly 2 participants
-- Tag team battles: exactly 4 participants
-- KotH battles: 5-6 participants
-
-**Team balance validation:**
-- Each team must have at least 1 participant
-- Tag team: each team must have 1 active and 1 reserve
-
-**Economic validation:**
-- Sum of participant credits should match battle rewards
-- Streaming revenue should be non-negative
-
----
-
-## Testing
-
-### Unit Tests
-
-**BattleParticipant CRUD:**
-- ✅ Create participant
-- ✅ Read participant
-- ✅ Query by battle
-- ✅ Query by robot
-- ✅ Query by user
-
-**Data integrity:**
-- ✅ Unique constraint (battleId + robotId)
-- ✅ Cascade delete
-- ✅ Valid team values
-- ✅ Valid role values
-
-### Integration Tests
-
-**Battle creation:**
-- ✅ 1v1 battle creates 2 participants
-- ✅ Tournament battle creates 2 participants
-- ✅ Tag team battle creates 4 participants
-- ✅ All fields populated correctly
-
-**Battle queries:**
-- ✅ Get battle with participants
-- ✅ Get all battles for robot
-- ✅ Get all battles for user
-- ✅ Filter by battle type
-- ✅ Filter by cycle
-
-**Data consistency:**
-- ✅ Participant count matches battle type
-- ✅ Team assignments correct
-- ✅ Role assignments correct (tag team)
-- ✅ Credits sum correctly
-- ✅ ELO changes tracked
-
-### Performance Tests
-
-**Query performance:**
-- ✅ Battle list query < 100ms
-- ✅ Battle details query < 50ms
-- ✅ Robot battles query < 100ms
-- ✅ Leaderboard query < 200ms
-
-**Large dataset:**
-- ✅ Tested with 10,000+ battles
-- ✅ Tested with 100+ robots
-- ✅ Tested with 50+ users
-- ✅ Indexes used correctly
+| File | Responsibility |
+|---|---|
+| `services/league/leagueBattleOrchestrator.ts` | Creates Battle + 2 BattleParticipant records for league 1v1 |
+| `services/tournament/tournamentBattleOrchestrator.ts` | Creates Battle + 2 BattleParticipant records for tournaments |
+| `services/tag-team/tagTeamBattleOrchestrator.ts` | Creates Battle + 4 BattleParticipant records for tag team |
+| `services/koth/kothBattleOrchestrator.ts` | Creates Battle + 5-6 BattleParticipant records for KotH |
+| `services/battle/battlePostCombat.ts` | Shared helpers: `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()`, `updateRobotCombatStats()` |
 
 ---
 
 ## Related Documentation
 
-### Core Documents
-- [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
-- [PRD_AUDIT_SYSTEM.md](PRD_AUDIT_SYSTEM.md) - Audit log architecture (related)
-
-### Implementation Files
-- `prototype/backend/prisma/schema.prisma` - Schema definition
-- `prototype/backend/src/services/leagueBattleOrchestrator.ts` - 1v1 league battle creation
-- `prototype/backend/src/services/tournamentBattleOrchestrator.ts` - Tournament battles
-- `prototype/backend/src/services/tagTeamBattleOrchestrator.ts` - Tag team battles
-- `prototype/backend/src/services/kothBattleOrchestrator.ts` - KotH battles
-- `prototype/backend/src/services/battlePostCombat.ts` - Shared post-combat helpers
-
-### Migration Documents
-- `BATTLEPARTICIPANT_IMPLEMENTATION.md` - Implementation guide
-- `BATTLEPARTICIPANT_MIGRATION_COMPLETE.md` - Migration completion notes
-- `BATTLE_TABLE_CLEANUP_COMPLETE.md` - Column removal completion
-
----
-
-## Future Enhancements
-
-### Potential Extensions
-
-**Multi-team battles:**
-- 3-team battles (team 1, 2, 3)
-- Free-for-all (each robot is own team)
-- No schema changes needed!
-
-**Additional participant data:**
-- Ability usage tracking
-- Damage breakdown by type
-- Healing/support stats
-- Positioning data
-
-**Performance optimizations:**
-- Materialized views for common queries
-- Denormalized summary fields
-- Caching strategies
-
----
-
-## Status: ✅ COMPLETE
-
-**Implementation:** Fully implemented and tested  
-**Migration:** Successfully completed  
-**Documentation:** Updated  
-**Status:** Production-ready
-
-All battle data now uses the BattleParticipant table architecture. The system supports 1v1, tournament, and tag team battles with a consistent, scalable data structure.
+- [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) — Complete schema including Battle and BattleParticipant models
+- [BATTLE_SIMULATION_ARCHITECTURE.md](BATTLE_SIMULATION_ARCHITECTURE.md) — Battle engine, orchestrators, data flow diagrams
+- [PRD_AUDIT_SYSTEM.md](PRD_AUDIT_SYSTEM.md) — Audit log architecture (one event per robot per battle)

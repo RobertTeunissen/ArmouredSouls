@@ -2,9 +2,9 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: March 18, 2026  
+**Last Updated**: April 2, 2026  
 **Status**: Current Implementation  
-**Version**: v1.4
+**Version**: v2.0
 
 ---
 
@@ -14,6 +14,7 @@
 - v1.2 - Updated to match current implementation (Decimal attributes, HP formula, tournament system, v1.2 weapon pricing)
 - v1.3 - Added onboarding tracking fields to User model (7 new columns for tutorial system) and ResetLog table for account reset tracking
 - v1.4 - Added King of the Hill (KotH) tables: ScheduledKothMatch, ScheduledKothMatchParticipant. Extended Robot model with 8 KotH cumulative stat fields. Added KotH relation on Battle model.
+- v2.0 - Full schema audit against Prisma schema. Added BattleParticipant, AuditLog, CycleSnapshot, TagTeam, ScheduledTagTeamMatch models. Updated Battle model (removed per-robot columns migrated to BattleParticipant, added tag team fields). Updated User model (removed stale stats fields, added email and profile fields). Renamed ScheduledMatch → ScheduledLeagueMatch, TournamentMatch → ScheduledTournamentMatch. Fixed HP/Shield formulas. Added Weapon.rangeBand, Robot.imageUrl.
 
 ---
 
@@ -22,19 +23,19 @@
 This document defines the **complete database schema** for Armoured Souls, including:
 - ✅ All 23 robot attributes (Decimal type for fractional values)
 - ✅ All 14 facilities with 10 levels
-- ✅ Complete weapon system (47 weapons in catalog)
+- ✅ Complete weapon system (47 weapons in catalog) with range bands
 - ✅ League tracking, damage tracking, repair costs, yield thresholds, stances
 - ✅ All combat state fields (current HP, shields, damage taken)
 - ✅ Loadout system (single, weapon+shield, two-handed, dual-wield)
-- ✅ User stable system with prestige, credits, statistics
-- ✅ Battle system with complete tracking
+- ✅ User stable system with prestige, credits, profile settings
+- ✅ Battle system with BattleParticipant per-robot tracking
 - ✅ Tournament system (single elimination, brackets, matches)
-- ✅ Matchmaking system (scheduled matches, cycle metadata)
+- ✅ Matchmaking system (scheduled league matches, cycle metadata)
 - ✅ King of the Hill system (scheduled KotH matches, participants, cumulative robot stats)
-- ✅ Tag Team system (tag teams, tag team matches, per-robot stats)
-- ✅ Battle Participant system (N-participant battle data)
+- ✅ Tag Team system (tag teams, scheduled tag team matches, per-robot stats)
+- ✅ Audit log and cycle snapshot system for event sourcing and analytics
 
-**This schema represents the CURRENT implementation** as of February 9, 2026.
+**This schema represents the CURRENT implementation** as of April 2, 2026.
 
 ---
 
@@ -43,64 +44,71 @@ This document defines the **complete database schema** for Armoured Souls, inclu
 1. **Database-First Design**: Everything that will be needed goes in the database NOW
 2. **Future-Proof**: Even if frontend/backend don't use it yet, it's in the schema
 3. **Complete Robot State**: Damage tracking, repair costs, league info, fame, titles
-4. **Comprehensive Weapons**: All attribute bonuses, loadout types, special properties
+4. **Comprehensive Weapons**: All attribute bonuses, loadout types, special properties, range bands
 5. **14 Facilities**: All facility types with 10 levels each
 6. **Time-Based Combat**: All fields needed for time-based combat simulation
+7. **N-Participant Battles**: BattleParticipant model supports any number of robots per battle
 
 ---
 
 ## User Model (Stable)
 
-Represents a player's stable (account) with all resources and statistics.
+Represents a player's stable (account) with all resources, profile settings, and onboarding state.
 
 ```prisma
 model User {
-  id              Int      @id @default(autoincrement())
-  username        String   @unique @db.VarChar(50)
-  passwordHash    String   @db.VarChar(255)
-  role            String   @default("user") @db.VarChar(20)  // "user", "admin"
+  id           Int     @id @default(autoincrement())
+  username     String  @unique @db.VarChar(50)
+  email        String? @unique @db.VarChar(50)
+  passwordHash String  @map("password_hash") @db.VarChar(255)
+  role         String  @default("user") @db.VarChar(20)  // "user", "admin"
   
   // ===== RESOURCES =====
-  currency        Int      @default(3000000)    // Credits (₡) - Starting: ₡3,000,000
-  prestige        Int      @default(0)          // Stable reputation (earned, never spent) - See PRD_PRESTIGE_AND_FAME.md
+  currency     Int     @default(3000000)    // Credits (₡) - Starting: ₡3,000,000
+  prestige     Int     @default(0)          // Stable reputation (earned, never spent)
   
   // ===== STABLE STATISTICS (Aggregated from robots) =====
-  totalBattles    Int      @default(0)          // Lifetime battle count across all robots
-  totalWins       Int      @default(0)          // Victory count across all robots
-  highestELO      Int      @default(1200)       // Best ELO achieved by any robot in stable
-  championshipTitles Int   @default(0)          // Tournament victories
+  championshipTitles Int @default(0) @map("championship_titles")  // Tournament victories
+  
+  // ===== PROFILE FIELDS =====
+  stableName          String?  @unique @map("stable_name") @db.VarChar(30)
+  profileVisibility   String   @default("public") @map("profile_visibility") @db.VarChar(10)
+  notificationsBattle Boolean  @default(true) @map("notifications_battle")
+  notificationsLeague Boolean  @default(true) @map("notifications_league")
+  themePreference     String   @default("dark") @map("theme_preference") @db.VarChar(20)
   
   // ===== ONBOARDING TRACKING =====
-  hasCompletedOnboarding Boolean  @default(false)  // Whether user completed the tutorial
-  onboardingSkipped      Boolean  @default(false)  // Whether user skipped the tutorial
-  onboardingStep         Int      @default(1)      // Current step (1-9 internally; UI displays 5 consolidated steps)
-  onboardingStrategy     String?  @db.VarChar(20)  // Chosen roster strategy: "1_mighty", "2_average", "3_flimsy"
-  onboardingChoices      Json     @default("{}")   // Player choices during onboarding (JSON object)
-  onboardingStartedAt    DateTime?                 // When user started the tutorial
-  onboardingCompletedAt  DateTime?                 // When user completed the tutorial
+  hasCompletedOnboarding Boolean   @default(false) @map("has_completed_onboarding")
+  onboardingSkipped      Boolean   @default(false) @map("onboarding_skipped")
+  onboardingStep         Int       @default(1) @map("onboarding_step")
+  onboardingStrategy     String?   @map("onboarding_strategy") @db.VarChar(20)
+  onboardingChoices      Json      @default("{}") @map("onboarding_choices")
+  onboardingStartedAt    DateTime? @map("onboarding_started_at")
+  onboardingCompletedAt  DateTime? @map("onboarding_completed_at")
   
   // ===== TIMESTAMPS =====
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   
   // ===== RELATIONS =====
   robots          Robot[]
   facilities      Facility[]
   weaponInventory WeaponInventory[]
-  battles         Battle[] @relation("UserBattles")
+  tagTeams        TagTeam[]
   
-  @@index([username])
+  @@map("users")
 }
 ```
 
 **Notes**:
-- Prestige: Earned from victories, never spent - used as unlock threshold
-- Statistics are aggregated from all robots for stable-level tracking
-- No stable-level league - leagues are per robot
-- Onboarding tracking: New users start with `hasCompletedOnboarding = false` and `onboardingStep = 1`
-- Onboarding strategy: Chosen during Step 1 of tutorial ("1_mighty", "2_average", or "3_flimsy")
-- Onboarding choices: JSON object storing player decisions throughout the tutorial (backend uses steps 1-9 internally; UI shows 5 consolidated steps)
-- Existing users: Marked with `hasCompletedOnboarding = true` during migration to skip tutorial
+- `email` is optional (nullable) and unique when present
+- Prestige: Earned from victories, never spent — used as unlock threshold
+- `championshipTitles` is the only aggregated stat kept at user level
+- Profile fields: `stableName` (unique display name), visibility, notification preferences, theme
+- No `totalBattles`, `totalWins`, or `highestELO` at user level — these are computed from robot data at query time
+- No `userId` on Battle — battle ownership is derived through robot ownership
+- Onboarding: Backend tracks steps 1–9 internally; UI shows 5 consolidated steps
+- Onboarding strategy values: `"1_mighty"`, `"2_average"`, `"3_flimsy"`
 
 ---
 
@@ -110,176 +118,161 @@ Represents an individual combat robot with all 23 attributes and complete state 
 
 ```prisma
 model Robot {
-  id              Int      @id @default(autoincrement())
-  userId          Int
-  name            String   @db.VarChar(50)
-  frameId         Int      @default(1)          // Chassis appearance ID
-  paintJob        String?  @db.VarChar(100)     // Cosmetic customization
+  id       Int     @id @default(autoincrement())
+  userId   Int     @map("user_id")
+  name     String  @unique @db.VarChar(50)
+  frameId  Int     @default(1) @map("frame_id")
+  paintJob String? @map("paint_job") @db.VarChar(100)
   
   // ===== 23 CORE ATTRIBUTES (Range: 1.00-50.00, precision 2 decimals) =====
   
   // Combat Systems (6 attributes)
-  combatPower         Decimal  @default(1.00) @db.Decimal(5, 2)  // Base damage multiplier (all weapons)
-  targetingSystems    Decimal  @default(1.00) @db.Decimal(5, 2)  // Hit chance, accuracy
-  criticalSystems     Decimal  @default(1.00) @db.Decimal(5, 2)  // Critical hit chance
-  penetration         Decimal  @default(1.00) @db.Decimal(5, 2)  // Bypasses armor/shields
-  weaponControl       Decimal  @default(1.00) @db.Decimal(5, 2)  // Weapon handling, damage multiplier
-  attackSpeed         Decimal  @default(1.00) @db.Decimal(5, 2)  // Cooldown reduction
+  combatPower      Decimal @default(1.00) @map("combat_power") @db.Decimal(5, 2)
+  targetingSystems Decimal @default(1.00) @map("targeting_systems") @db.Decimal(5, 2)
+  criticalSystems  Decimal @default(1.00) @map("critical_systems") @db.Decimal(5, 2)
+  penetration      Decimal @default(1.00) @db.Decimal(5, 2)
+  weaponControl    Decimal @default(1.00) @map("weapon_control") @db.Decimal(5, 2)
+  attackSpeed      Decimal @default(1.00) @map("attack_speed") @db.Decimal(5, 2)
   
   // Defensive Systems (5 attributes)
-  armorPlating        Decimal  @default(1.00) @db.Decimal(5, 2)  // Physical damage reduction
-  shieldCapacity      Decimal  @default(1.00) @db.Decimal(5, 2)  // Max energy shield HP
-  evasionThrusters    Decimal  @default(1.00) @db.Decimal(5, 2)  // Dodge chance
-  damageDampeners     Decimal  @default(1.00) @db.Decimal(5, 2)  // Critical damage reduction
-  counterProtocols    Decimal  @default(1.00) @db.Decimal(5, 2)  // Counter-attack chance
+  armorPlating     Decimal @default(1.00) @map("armor_plating") @db.Decimal(5, 2)
+  shieldCapacity   Decimal @default(1.00) @map("shield_capacity") @db.Decimal(5, 2)
+  evasionThrusters Decimal @default(1.00) @map("evasion_thrusters") @db.Decimal(5, 2)
+  damageDampeners  Decimal @default(1.00) @map("damage_dampeners") @db.Decimal(5, 2)
+  counterProtocols Decimal @default(1.00) @map("counter_protocols") @db.Decimal(5, 2)
   
   // Chassis & Mobility (5 attributes)
-  hullIntegrity       Decimal  @default(1.00) @db.Decimal(5, 2)  // Max HP (50 + hull × 5 formula)
-  servoMotors         Decimal  @default(1.00) @db.Decimal(5, 2)  // Movement speed, positioning
-  gyroStabilizers     Decimal  @default(1.00) @db.Decimal(5, 2)  // Balance, reaction time
-  hydraulicSystems    Decimal  @default(1.00) @db.Decimal(5, 2)  // Melee damage bonus, force
-  powerCore           Decimal  @default(1.00) @db.Decimal(5, 2)  // Energy shield regen rate
+  hullIntegrity    Decimal @default(1.00) @map("hull_integrity") @db.Decimal(5, 2)
+  servoMotors      Decimal @default(1.00) @map("servo_motors") @db.Decimal(5, 2)
+  gyroStabilizers  Decimal @default(1.00) @map("gyro_stabilizers") @db.Decimal(5, 2)
+  hydraulicSystems Decimal @default(1.00) @map("hydraulic_systems") @db.Decimal(5, 2)
+  powerCore        Decimal @default(1.00) @map("power_core") @db.Decimal(5, 2)
   
   // AI Processing (4 attributes)
-  combatAlgorithms    Decimal  @default(1.00) @db.Decimal(5, 2)  // Decision quality
-  threatAnalysis      Decimal  @default(1.00) @db.Decimal(5, 2)  // Target priority, positioning
-  adaptiveAI          Decimal  @default(1.00) @db.Decimal(5, 2)  // Learning over time
-  logicCores          Decimal  @default(1.00) @db.Decimal(5, 2)  // Performance under pressure
+  combatAlgorithms Decimal @default(1.00) @map("combat_algorithms") @db.Decimal(5, 2)
+  threatAnalysis   Decimal @default(1.00) @map("threat_analysis") @db.Decimal(5, 2)
+  adaptiveAI       Decimal @default(1.00) @map("adaptive_ai") @db.Decimal(5, 2)
+  logicCores       Decimal @default(1.00) @map("logic_cores") @db.Decimal(5, 2)
   
-  // Team Coordination (3 attributes) - for 2v2, 3v3+ arena battles
-  syncProtocols       Decimal  @default(1.00) @db.Decimal(5, 2)  // Team damage multipliers
-  supportSystems      Decimal  @default(1.00) @db.Decimal(5, 2)  // Buff adjacent allies
-  formationTactics    Decimal  @default(1.00) @db.Decimal(5, 2)  // Formation bonuses
+  // Team Coordination (3 attributes)
+  syncProtocols    Decimal @default(1.00) @map("sync_protocols") @db.Decimal(5, 2)
+  supportSystems   Decimal @default(1.00) @map("support_systems") @db.Decimal(5, 2)
+  formationTactics Decimal @default(1.00) @map("formation_tactics") @db.Decimal(5, 2)
   
   // ===== COMBAT STATE =====
-  currentHP           Int                       // Current health (max = 50 + hullIntegrity × 5)
-  maxHP               Int                       // Max HP (calculated: 50 + hullIntegrity × 5)
-  currentShield       Int                       // Current energy shield HP
-  maxShield           Int                       // Max shield (calculated: shieldCapacity × 4)
-  damageTaken         Int  @default(0)          // Damage since last repair
+  currentHP     Int @map("current_hp")
+  maxHP         Int @map("max_hp")          // Calculated: hullIntegrity × 10
+  currentShield Int @map("current_shield")
+  maxShield     Int @map("max_shield")      // Calculated: shieldCapacity × 2
+  damageTaken   Int @default(0) @map("damage_taken")
   
   // ===== PERFORMANCE TRACKING =====
-  elo                 Int  @default(1200)       // Individual skill rating
-  totalBattles        Int  @default(0)          // Lifetime battle count
-  wins                Int  @default(0)          // Victory count
-  draws               Int  @default(0)          // Draw count
-  losses              Int  @default(0)          // Defeat count
-  damageDealtLifetime Int  @default(0)          // Total damage output
-  damageTakenLifetime Int  @default(0)          // Total damage received
-  kills               Int  @default(0)          // Opponents destroyed (0 HP)
+  elo                 Int @default(1200)
+  totalBattles        Int @default(0) @map("total_battles")
+  wins                Int @default(0)
+  draws               Int @default(0)
+  losses              Int @default(0)
+  damageDealtLifetime Int @default(0) @map("damage_dealt_lifetime")
+  damageTakenLifetime Int @default(0) @map("damage_taken_lifetime")
+  kills               Int @default(0)
   
   // ===== LEAGUE & FAME =====
-  currentLeague         String  @default("bronze") @db.VarChar(20)     // bronze/silver/gold/platinum/diamond/champion
-  leagueId              String  @default("bronze_1") @db.VarChar(30)   // Specific league instance (supports multiple Bronze leagues)
-  leaguePoints          Int     @default(0)                             // Points for promotion/demotion
-  cyclesInCurrentLeague Int     @default(0)                             // Number of cycles robot has been in current league
-  fame                  Int     @default(0)                             // Individual robot reputation - See PRD_PRESTIGE_AND_FAME.md
-  titles                String? @db.Text                                // Comma-separated achievements
+  currentLeague         String  @default("bronze") @map("current_league") @db.VarChar(20)
+  leagueId              String  @default("bronze_1") @map("league_id") @db.VarChar(30)
+  leaguePoints          Int     @default(0) @map("league_points")
+  cyclesInCurrentLeague Int     @default(0) @map("cycles_in_current_league")
+  fame                  Int     @default(0)
+  titles                String? @db.Text
   
   // ===== TAG TEAM STATISTICS =====
-  totalTagTeamBattles Int  @default(0)          // Lifetime tag team battle count
-  totalTagTeamWins    Int  @default(0)          // Tag team victory count
-  totalTagTeamLosses  Int  @default(0)          // Tag team defeat count
-  totalTagTeamDraws   Int  @default(0)          // Tag team draw count
-  timesTaggedIn       Int  @default(0)          // Number of times robot tagged in as reserve
-  timesTaggedOut      Int  @default(0)          // Number of times robot tagged out (yield or destruction)
+  totalTagTeamBattles Int @default(0) @map("total_tag_team_battles")
+  totalTagTeamWins    Int @default(0) @map("total_tag_team_wins")
+  totalTagTeamLosses  Int @default(0) @map("total_tag_team_losses")
+  totalTagTeamDraws   Int @default(0) @map("total_tag_team_draws")
+  timesTaggedIn       Int @default(0) @map("times_tagged_in")
+  timesTaggedOut      Int @default(0) @map("times_tagged_out")
   
   // ===== KOTH CUMULATIVE STATISTICS =====
-  kothWins              Int    @default(0)      // Total 1st place finishes in KotH
-  kothMatches           Int    @default(0)      // Total KotH matches participated in
-  kothTotalZoneScore    Float  @default(0)      // Cumulative zone score across all KotH matches
-  kothTotalZoneTime     Float  @default(0)      // Total seconds spent in control zone (career)
-  kothKills             Int    @default(0)      // Total kills in KotH matches
-  kothBestPlacement     Int?                    // Best placement achieved (1 = best, null = no matches)
-  kothCurrentWinStreak  Int    @default(0)      // Current consecutive 1st place finishes
-  kothBestWinStreak     Int    @default(0)      // All-time best consecutive win streak (for Hall of Records)
+  kothWins             Int   @default(0) @map("koth_wins")
+  kothMatches          Int   @default(0) @map("koth_matches")
+  kothTotalZoneScore   Float @default(0) @map("koth_total_zone_score")
+  kothTotalZoneTime    Float @default(0) @map("koth_total_zone_time")
+  kothKills            Int   @default(0) @map("koth_kills")
+  kothBestPlacement    Int?  @map("koth_best_placement")
+  kothCurrentWinStreak Int   @default(0) @map("koth_current_win_streak")
+  kothBestWinStreak    Int   @default(0) @map("koth_best_win_streak")
   
   // ===== ECONOMIC STATE =====
-  repairCost          Int  @default(0)          // Cost to fully repair (formula-based)
-  battleReadiness     Int  @default(100)        // Percentage (100% = full HP, 0% = critical)
-  totalRepairsPaid    Int  @default(0)          // Lifetime repair costs
+  repairCost       Int @default(0) @map("repair_cost")
+  battleReadiness  Int @default(100) @map("battle_readiness")
+  totalRepairsPaid Int @default(0) @map("total_repairs_paid")
   
-  // ===== PLAYER CONFIGURATION (Settings, NOT upgradeable attributes) =====
-  yieldThreshold      Int  @default(10)         // HP % where robot surrenders (0-50%)
-  loadoutType         String  @default("single") @db.VarChar(20)  // "single", "weapon_shield", "two_handed", "dual_wield"
-  stance              String  @default("balanced") @db.VarChar(20) // "offensive", "defensive", "balanced"
+  // ===== PLAYER CONFIGURATION =====
+  yieldThreshold Int    @default(10) @map("yield_threshold")
+  loadoutType    String @default("single") @map("loadout_type") @db.VarChar(20)
+  stance         String @default("balanced") @db.VarChar(20)
   
-  // ===== EQUIPMENT (Weapon Inventory System) =====
-  mainWeaponId        Int?                      // Primary weapon (all loadouts)
-  offhandWeaponId     Int?                      // Secondary weapon (dual-wield, weapon+shield)
+  // ===== EQUIPMENT =====
+  mainWeaponId    Int? @map("main_weapon_id")
+  offhandWeaponId Int? @map("offhand_weapon_id")
+  
+  // ===== APPEARANCE =====
+  imageUrl String? @map("image_url") @db.VarChar(255)
   
   // ===== TIMESTAMPS =====
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   
   // ===== RELATIONS =====
-  user                      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mainWeapon                WeaponInventory?  @relation("MainWeapon", fields: [mainWeaponId], references: [id])
-  offhandWeapon             WeaponInventory?  @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
-  battlesAsRobot1           Battle[]          @relation("Robot1")
-  battlesAsRobot2           Battle[]          @relation("Robot2")
-  scheduledMatchesAsRobot1  ScheduledMatch[]  @relation("ScheduledRobot1")
-  scheduledMatchesAsRobot2  ScheduledMatch[]  @relation("ScheduledRobot2")
-  tournamentsWon            Tournament[]      @relation("TournamentWinner")
-  tournamentMatchesAsRobot1 TournamentMatch[] @relation("TournamentRobot1")
-  tournamentMatchesAsRobot2 TournamentMatch[] @relation("TournamentRobot2")
-  tournamentMatchesWon      TournamentMatch[] @relation("TournamentMatchWinner")
-  tagTeamsAsActive          TagTeam[]         @relation("TagTeamActiveRobot")
-  tagTeamsAsReserve         TagTeam[]         @relation("TagTeamReserveRobot")
+  user                      User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mainWeapon                WeaponInventory?                @relation("MainWeapon", fields: [mainWeaponId], references: [id])
+  offhandWeapon             WeaponInventory?                @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
+  battlesAsRobot1           Battle[]                        @relation("Robot1")
+  battlesAsRobot2           Battle[]                        @relation("Robot2")
+  scheduledMatchesAsRobot1  ScheduledLeagueMatch[]          @relation("ScheduledRobot1")
+  scheduledMatchesAsRobot2  ScheduledLeagueMatch[]          @relation("ScheduledRobot2")
+  tournamentsWon            Tournament[]                    @relation("TournamentWinner")
+  tournamentMatchesAsRobot1 ScheduledTournamentMatch[]      @relation("TournamentRobot1")
+  tournamentMatchesAsRobot2 ScheduledTournamentMatch[]      @relation("TournamentRobot2")
+  tournamentMatchesWon      ScheduledTournamentMatch[]      @relation("TournamentMatchWinner")
+  tagTeamsAsActive          TagTeam[]                       @relation("TagTeamActiveRobot")
+  tagTeamsAsReserve         TagTeam[]                       @relation("TagTeamReserveRobot")
   battleParticipations      BattleParticipant[]
   kothMatchParticipations   ScheduledKothMatchParticipant[]
   
-  @@unique([userId, name])
   @@index([userId])
   @@index([elo])
   @@index([currentLeague])
   @@index([currentLeague, leagueId])
+  @@map("robots")
 }
 ```
 
 **Key Schema Features**:
-- All 23 attributes use `Decimal(5,2)` type for fractional values (e.g., 1.50, 10.25)
-- `maxHP` and `maxShield` fields stored for performance (calculated from attributes)
-- `mainWeaponId` and `offhandWeaponId` for loadout system
-- `loadoutType` field for loadout configuration
+- Robot `name` is globally unique (not per-user)
+- All 23 attributes use `Decimal(5,2)` for fractional values (e.g., 1.50, 10.25)
+- `imageUrl` for optional robot portrait image
+- `maxHP` and `maxShield` stored for performance (calculated from attributes)
+- `loadoutType` and weapon ID fields for loadout system
 - `leagueId` for multiple league instances (e.g., bronze_1, bronze_2)
-- `cyclesInCurrentLeague` tracks league tenure for promotion/demotion
-- `draws` field added for draw tracking
-- Unique constraint on `[userId, name]` ensures unique robot names per user
-- Complete combat state tracking (damage, repair costs, battle readiness)
-- League and fame tracking at robot level
-
-**Attribute Upgrade Cost Formula** (Updated Feb 8, 2026):
-```
-cost = (current_level + 1) × 1,500
-Example: Level 1→2 = ₡3,000, Level 49→50 = ₡75,000
-```
+- Complete tag team and KotH cumulative statistics at robot level
 
 **HP Calculation**:
 ```
-maxHP = 50 + (hullIntegrity × 5)
-maxShield = shieldCapacity × 4
+maxHP = hullIntegrity × 10
+maxShield = shieldCapacity × 2
 
 Examples:
-- Hull Integrity 1.00: HP = 50 + 5 = 55
-- Hull Integrity 10.00: HP = 50 + 50 = 100
+- Hull Integrity 1.00: HP = 10
+- Hull Integrity 10.00: HP = 100
 - Shield Capacity 1.00: Shield = 2
 - Shield Capacity 10.00: Shield = 20
 ```
 
-**Repair Cost Formula**:
+**Attribute Upgrade Cost Formula**:
 ```
-base_repair = (sum_of_all_23_attributes × 100)
-damage_percentage = damageTaken / maxHP
-
-if currentHP == 0 (destroyed):
-    multiplier = 2.0
-elif currentHP < (maxHP * 0.10) (heavily damaged):
-    multiplier = 1.5
-else:
-    multiplier = 1.0
-
-repairCost = base_repair × damage_percentage × multiplier
+cost = (current_level + 1) × 1,500
+Example: Level 1→2 = ₡3,000, Level 49→50 = ₡75,000
 ```
 
 ---
@@ -290,119 +283,85 @@ Represents weapon types available for purchase. Players buy weapons into invento
 
 **Current Implementation**: 47 weapons across all loadout types (v1.5 pricing)
 
-**For complete weapon specifications, damage values, and pricing methodology, see:**
-- **[WEAPONS_AND_LOADOUT.md](../WEAPONS_AND_LOADOUT.md)** - Complete weapon catalog with v1.2 pricing
-- **[PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
-- **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)** - Complete seed data including all 47 weapons
-
 ```prisma
 model Weapon {
-  id              Int      @id @default(autoincrement())
-  name            String   @db.VarChar(100)
-  weaponType      String   @db.VarChar(20)    // "energy", "ballistic", "melee", "shield"
-  baseDamage      Int                          // Base damage value
-  cooldown        Int                          // Seconds between attacks (time-based combat)
-  cost            Int                          // Purchase cost in Credits
-  handsRequired   String   @db.VarChar(10)    // "one", "two", "shield"
-  damageType      String   @db.VarChar(20)    // "energy", "ballistic", "melee", "explosive"
-  loadoutType     String   @db.VarChar(20)    // "single", "weapon_shield", "two_handed", "dual_wield", "any"
-  specialProperty String?  @db.Text           // Special effects description
-  description     String?  @db.Text           // Flavor text
+  id              Int     @id @default(autoincrement())
+  name            String  @db.VarChar(100)
+  weaponType      String  @map("weapon_type") @db.VarChar(20)
+  baseDamage      Int     @map("base_damage")
+  cooldown        Int
+  cost            Int
+  handsRequired   String  @map("hands_required") @db.VarChar(10)
+  damageType      String  @map("damage_type") @db.VarChar(20)
+  loadoutType     String  @map("loadout_type") @db.VarChar(20)
+  specialProperty String? @map("special_property") @db.Text
+  description     String? @db.Text
+  rangeBand       String  @map("range_band") @db.VarChar(10)  // "melee", "short", "mid", "long"
   
   // ===== ATTRIBUTE BONUSES (Can be positive or negative) =====
-  // Combat Systems
-  combatPowerBonus        Int  @default(0)
-  targetingSystemsBonus   Int  @default(0)
-  criticalSystemsBonus    Int  @default(0)
-  penetrationBonus        Int  @default(0)
-  weaponControlBonus      Int  @default(0)
-  attackSpeedBonus        Int  @default(0)
+  // All 23 attribute bonuses match Robot attribute names
+  combatPowerBonus      Int @default(0) @map("combat_power_bonus")
+  targetingSystemsBonus Int @default(0) @map("targeting_systems_bonus")
+  criticalSystemsBonus  Int @default(0) @map("critical_systems_bonus")
+  penetrationBonus      Int @default(0) @map("penetration_bonus")
+  weaponControlBonus    Int @default(0) @map("weapon_control_bonus")
+  attackSpeedBonus      Int @default(0) @map("attack_speed_bonus")
+  armorPlatingBonus     Int @default(0) @map("armor_plating_bonus")
+  shieldCapacityBonus   Int @default(0) @map("shield_capacity_bonus")
+  evasionThrustersBonus Int @default(0) @map("evasion_thrusters_bonus")
+  damageDampenersBonus  Int @default(0) @map("damage_dampeners_bonus")
+  counterProtocolsBonus Int @default(0) @map("counter_protocols_bonus")
+  hullIntegrityBonus    Int @default(0) @map("hull_integrity_bonus")
+  servoMotorsBonus      Int @default(0) @map("servo_motors_bonus")
+  gyroStabilizersBonus  Int @default(0) @map("gyro_stabilizers_bonus")
+  hydraulicSystemsBonus Int @default(0) @map("hydraulic_systems_bonus")
+  powerCoreBonus        Int @default(0) @map("power_core_bonus")
+  combatAlgorithmsBonus Int @default(0) @map("combat_algorithms_bonus")
+  threatAnalysisBonus   Int @default(0) @map("threat_analysis_bonus")
+  adaptiveAIBonus       Int @default(0) @map("adaptive_ai_bonus")
+  logicCoresBonus       Int @default(0) @map("logic_cores_bonus")
+  syncProtocolsBonus    Int @default(0) @map("sync_protocols_bonus")
+  supportSystemsBonus   Int @default(0) @map("support_systems_bonus")
+  formationTacticsBonus Int @default(0) @map("formation_tactics_bonus")
   
-  // Defensive Systems
-  armorPlatingBonus       Int  @default(0)
-  shieldCapacityBonus     Int  @default(0)
-  evasionThrustersBonus   Int  @default(0)
-  damageDampenersBonus    Int  @default(0)
-  counterProtocolsBonus   Int  @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
   
-  // Chassis & Mobility
-  hullIntegrityBonus      Int  @default(0)
-  servoMotorsBonus        Int  @default(0)
-  gyroStabilizersBonus    Int  @default(0)
-  hydraulicSystemsBonus   Int  @default(0)
-  powerCoreBonus          Int  @default(0)
-  
-  // AI Processing
-  combatAlgorithmsBonus   Int  @default(0)
-  threatAnalysisBonus     Int  @default(0)
-  adaptiveAIBonus         Int  @default(0)
-  logicCoresBonus         Int  @default(0)
-  
-  // Team Coordination
-  syncProtocolsBonus      Int  @default(0)
-  supportSystemsBonus     Int  @default(0)
-  formationTacticsBonus   Int  @default(0)
-  
-  // ===== TIMESTAMPS =====
-  createdAt       DateTime @default(now())
-  
-  // ===== RELATIONS =====
   weaponInventory WeaponInventory[]
+  
+  @@map("weapons")
 }
 ```
 
 **Notes**:
-- This is the **catalog** of available weapons (47 total in current implementation)
-- Players purchase weapons from this catalog into their inventory
-- `loadoutType` indicates which loadouts can use this weapon
+- `rangeBand` field added for 2D arena combat: `"melee"`, `"short"`, `"mid"`, `"long"`
 - All 23 attribute bonuses match Robot attribute names exactly
 - Bonuses can be negative for weapon trade-offs
 - Weapons are populated during database seeding (see SEED_DATA_SPECIFICATION.md)
-
-**Weapon Distribution by Loadout Type**:
-- **Single Loadout**: 16 one-handed weapons (Practice Sword, Practice Blaster, Machine Pistol, Laser Pistol, Combat Knife, Machine Gun, Burst Rifle, Assault Rifle, Energy Blade, Laser Rifle, Plasma Blade, Plasma Rifle, Power Sword, and others)
-- **Weapon + Shield**: 16 one-handed weapons + 3 shields (Light Shield, Combat Shield, Reactive Shield)
-- **Two-Handed**: 10 weapons (Training Rifle, Training Beam, Shotgun, Grenade Launcher, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam)
-- **Dual-Wield**: 16 one-handed weapons (same as single loadout)
 
 ---
 
 ## WeaponInventory Model
 
-Represents individual weapon instances owned by users. Players buy weapons into inventory, then equip them to robots.
-
-**For weapon ownership rules and inventory management, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+Represents individual weapon instances owned by users.
 
 ```prisma
 model WeaponInventory {
-  id              Int      @id @default(autoincrement())
-  userId          Int
-  weaponId        Int                           // Reference to Weapon catalog
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  weaponId   Int      @map("weapon_id")
+  customName String?  @map("custom_name") @db.VarChar(100)
+  purchasedAt DateTime @default(now()) @map("purchased_at")
   
-  // Custom name (optional, for named weapons)
-  customName      String?  @db.VarChar(100)
-  
-  // ===== TIMESTAMPS =====
-  purchasedAt     DateTime @default(now())
-  
-  // ===== RELATIONS =====
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  weapon          Weapon   @relation(fields: [weaponId], references: [id])
-  robotsMain      Robot[]  @relation("MainWeapon")
-  robotsOffhand   Robot[]  @relation("OffhandWeapon")
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weapon        Weapon  @relation(fields: [weaponId], references: [id])
+  robotsMain    Robot[] @relation("MainWeapon")
+  robotsOffhand Robot[] @relation("OffhandWeapon")
   
   @@index([userId])
   @@index([weaponId])
+  @@map("weapon_inventory")
 }
 ```
-
-**How Weapon System Works**:
-1. User buys weapon from Weapon catalog (costs Credits)
-2. Creates WeaponInventory entry
-3. User equips weapon from inventory to robot via robot detail page
-4. Each weapon instance can only be equipped to ONE robot at a time
-5. To use same weapon on multiple robots, purchase multiple copies
-6. Storage Facility limits how many weapons can be in inventory (5 base + 5 per level)
 
 ---
 
@@ -412,178 +371,191 @@ Represents stable-wide upgrades. All 14 facility types with 10 levels each.
 
 ```prisma
 model Facility {
-  id              Int      @id @default(autoincrement())
-  userId          Int
-  facilityType    String   @db.VarChar(50)     // See facility types below
-  level           Int      @default(0)          // Current level (0-10, where 0 = not purchased)
-  maxLevel        Int      @default(10)         // Maximum level (10 for most, 9 for Roster Expansion)
+  id           Int    @id @default(autoincrement())
+  userId       Int    @map("user_id")
+  facilityType String @map("facility_type") @db.VarChar(50)
+  level        Int    @default(0)       // 0-10, where 0 = not purchased
+  maxLevel     Int    @default(10) @map("max_level")
+  activeCoach  String? @map("active_coach") @db.VarChar(50)
   
-  // ===== COACHING STAFF SPECIFIC =====
-  activeCoach     String?  @db.VarChar(50)     // For coaching_staff: active coach type
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   
-  // ===== TIMESTAMPS =====
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // ===== RELATIONS =====
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@unique([userId, facilityType])
   @@index([userId])
+  @@map("facilities")
 }
 ```
 
 **14 Facility Types** (from STABLE_SYSTEM.md):
 
-1. **repair_bay** - Reduces repair costs (5%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 50%)
-2. **training_facility** - Reduces attribute upgrade costs (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%)
-3. **weapons_workshop** - Weapon purchase discounts (10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%, 100%)
-4. **research_lab** - Battle analytics, loadout presets (3→8 presets)
-5. **medical_bay** - Critical damage cost reduction (15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95%, 100%)
-6. **roster_expansion** - Robot roster slots (1→10 robots, Level 0-9)
-7. **storage_facility** - Weapon storage capacity (10→125 weapons)
-8. **coaching_staff** - Hire coaches for stable-wide bonuses (+3%→+7% various attributes)
-9. **booking_office** - Tournament access (Bronze→World Championship)
-10. **combat_training_academy** - Combat Systems attribute caps (10→50 max)
-11. **defense_training_academy** - Defensive Systems attribute caps (10→50 max)
-12. **mobility_training_academy** - Chassis & Mobility attribute caps (10→50 max)
-13. **ai_training_academy** - AI Processing + Team Coordination attribute caps (10→50 max)
+1. **repair_bay** - Reduces repair costs
+2. **training_facility** - Reduces attribute upgrade costs
+3. **weapons_workshop** - Weapon purchase discounts
+4. **research_lab** - Battle analytics, loadout presets
+5. **medical_bay** - Critical damage cost reduction
+6. **roster_expansion** - Robot roster slots (Level 0-9, maxLevel=9)
+7. **storage_facility** - Weapon storage capacity
+8. **coaching_staff** - Hire coaches for stable-wide bonuses
+9. **booking_office** - Tournament access tiers
+10. **combat_training_academy** - Combat Systems attribute caps
+11. **defense_training_academy** - Defensive Systems attribute caps
+12. **mobility_training_academy** - Chassis & Mobility attribute caps
+13. **ai_training_academy** - AI Processing + Team Coordination attribute caps
 14. **merchandising_hub** - Merchandising revenue (scales with prestige)
-
-**Facility Costs**: See STABLE_SYSTEM.md for complete cost breakdown per level
-**Operating Costs**: Each facility has daily operating cost that scales with level
 
 ---
 
 ## Battle Model
 
-Records battle results with complete state tracking for time-based combat.
+Records battle results. Per-robot combat data (damage, HP, ELO changes, rewards) is stored in BattleParticipant records, not on the Battle itself.
 
 ```prisma
 model Battle {
-  id              Int      @id @default(autoincrement())
-  userId          Int                           // Owner of this battle record
-  robot1Id        Int                           // First combatant
-  robot2Id        Int                           // Second combatant
-  winnerId        Int?                          // Winner's robot ID (null if draw)
-  battleType      String   @db.VarChar(20)     // "league", "tournament", "tag_team", "koth"
-  leagueType      String   @db.VarChar(20)     // "bronze", "silver", "gold", etc.
+  id         Int    @id @default(autoincrement())
+  robot1Id   Int    @map("robot1_id")
+  robot2Id   Int    @map("robot2_id")
+  winnerId   Int?   @map("winner_id")
+  battleType String @map("battle_type") @db.VarChar(20)  // "league", "tournament", "tag_team", "koth"
+  leagueType String @map("league_type") @db.VarChar(20)
   
-  // ===== TOURNAMENT REFERENCE (optional) =====
-  tournamentId    Int?                          // Links to tournament if this is a tournament battle
-  tournamentRound Int?                          // Round number in tournament
+  // ===== TOURNAMENT REFERENCE =====
+  tournamentId    Int? @map("tournament_id")
+  tournamentRound Int? @map("tournament_round")
+  
+  // ===== TAG TEAM FIELDS =====
+  team1ActiveRobotId  Int?    @map("team1_active_robot_id")
+  team1ReserveRobotId Int?    @map("team1_reserve_robot_id")
+  team2ActiveRobotId  Int?    @map("team2_active_robot_id")
+  team2ReserveRobotId Int?    @map("team2_reserve_robot_id")
+  team1TagOutTime     BigInt? @map("team1_tag_out_time")
+  team2TagOutTime     BigInt? @map("team2_tag_out_time")
   
   // ===== TIME-BASED COMBAT DATA =====
-  battleLog       Json                          // Complete time-based combat simulation (events with timestamps)
-  durationSeconds Int                           // Battle length in seconds
+  battleLog       Json @map("battle_log")
+  durationSeconds Int  @map("duration_seconds")
   
   // ===== ECONOMIC DATA =====
-  winnerReward     Int?                         // Credits awarded to winner
-  loserReward      Int?                         // Credits awarded to loser (can earn on loss)
-  robot1RepairCost Int?                         // Repair cost for robot 1
-  robot2RepairCost Int?                         // Repair cost for robot 2
+  winnerReward Int? @map("winner_reward")
+  loserReward  Int? @map("loser_reward")
   
-  // ===== BATTLE REWARDS TRACKING =====
-  robot1PrestigeAwarded Int @default(0)        // Prestige awarded to robot 1's user
-  robot2PrestigeAwarded Int @default(0)        // Prestige awarded to robot 2's user
-  robot1FameAwarded     Int @default(0)        // Fame awarded to robot 1
-  robot2FameAwarded     Int @default(0)        // Fame awarded to robot 2
+  // ===== TAG TEAM PER-ROBOT STATS =====
+  team1ActiveDamageDealt  Int @default(0) @map("team1_active_damage_dealt")
+  team1ReserveDamageDealt Int @default(0) @map("team1_reserve_damage_dealt")
+  team2ActiveDamageDealt  Int @default(0) @map("team2_active_damage_dealt")
+  team2ReserveDamageDealt Int @default(0) @map("team2_reserve_damage_dealt")
+  team1ActiveFameAwarded  Int @default(0) @map("team1_active_fame_awarded")
+  team1ReserveFameAwarded Int @default(0) @map("team1_reserve_fame_awarded")
+  team2ActiveFameAwarded  Int @default(0) @map("team2_active_fame_awarded")
+  team2ReserveFameAwarded Int @default(0) @map("team2_reserve_fame_awarded")
   
-  // ===== FINAL STATE =====
-  robot1FinalHP     Int                         // Ending HP
-  robot2FinalHP     Int                         // Ending HP
-  robot1FinalShield Int                         // Ending energy shield HP
-  robot2FinalShield Int                         // Ending energy shield HP
-  robot1Yielded     Boolean @default(false)     // Did robot 1 surrender?
-  robot2Yielded     Boolean @default(false)     // Did robot 2 surrender?
-  robot1Destroyed   Boolean @default(false)     // Did robot 1 reach 0 HP?
-  robot2Destroyed   Boolean @default(false)     // Did robot 2 reach 0 HP?
+  // ===== ELO TRACKING (kept for backward compat and aggregate queries) =====
+  robot1ELOBefore Int @map("robot1_elo_before")
+  robot2ELOBefore Int @map("robot2_elo_before")
+  robot1ELOAfter  Int @map("robot1_elo_after")
+  robot2ELOAfter  Int @map("robot2_elo_after")
+  eloChange       Int @map("elo_change")
   
-  // ===== DAMAGE TRACKING =====
-  robot1DamageDealt Int                         // Total damage dealt by robot 1
-  robot2DamageDealt Int                         // Total damage dealt by robot 2
-  
-  // ===== ELO TRACKING =====
-  robot1ELOBefore Int                           // ELO before battle
-  robot2ELOBefore Int                           // ELO before battle
-  robot1ELOAfter  Int                           // ELO after battle
-  robot2ELOAfter  Int                           // ELO after battle
-  eloChange       Int                           // ELO delta (winner's perspective)
-  
-  // ===== TIMESTAMPS =====
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
   
   // ===== RELATIONS =====
-  user              User              @relation("UserBattles", fields: [userId], references: [id], onDelete: Cascade)
-  robot1            Robot             @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2            Robot             @relation("Robot2", fields: [robot2Id], references: [id])
-  tournament        Tournament?       @relation("TournamentBattles", fields: [tournamentId], references: [id])
-  scheduledMatch    ScheduledMatch[]
-  tournamentMatches TournamentMatch[]
-  tagTeamMatches    TagTeamMatch[]      @relation("TagTeamBattle")
-  participants      BattleParticipant[]
-  scheduledKothMatch ScheduledKothMatch[] // KotH match that produced this battle
+  robot1             Robot                      @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2             Robot                      @relation("Robot2", fields: [robot2Id], references: [id])
+  tournament         Tournament?                @relation("TournamentBattles", fields: [tournamentId], references: [id])
+  scheduledMatch     ScheduledLeagueMatch[]
+  tournamentMatches  ScheduledTournamentMatch[]
+  tagTeamMatches     ScheduledTagTeamMatch[]    @relation("TagTeamBattle")
+  participants       BattleParticipant[]
+  scheduledKothMatch ScheduledKothMatch[]
   
-  @@index([userId])
   @@index([robot1Id])
   @@index([robot2Id])
   @@index([createdAt])
   @@index([tournamentId])
+  @@index([battleType])
+  @@map("battles")
 }
 ```
 
-**Battle Log Format** (JSON):
-```json
-{
-  "events": [
-    {
-      "timestamp": 0.0,
-      "type": "battle_start",
-      "robot1HP": 250,
-      "robot2HP": 300,
-      "robot1Shield": 40,
-      "robot2Shield": 50
-    },
-    {
-      "timestamp": 2.5,
-      "type": "attack",
-      "attacker": "robot1",
-      "defender": "robot2",
-      "damage": 45,
-      "shieldDamage": 30,
-      "hpDamage": 15,
-      "critical": false,
-      "hit": true
-    },
-    // ... more events
-    {
-      "timestamp": 45.2,
-      "type": "battle_end",
-      "winner": "robot1",
-      "reason": "robot2_yielded"
-    }
-  ]
-}
-```
+**Key differences from earlier schema versions**:
+- No `userId` field — battle ownership is derived through robot ownership
+- No per-robot final state columns (`robot1FinalHP`, `robot1Yielded`, etc.) — migrated to `BattleParticipant`
+- No per-robot reward columns (`robot1PrestigeAwarded`, etc.) — migrated to `BattleParticipant`
+- No per-robot damage columns (`robot1DamageDealt`, etc.) — migrated to `BattleParticipant`
+- ELO columns kept for backward compatibility and aggregate queries; canonical per-robot ELO is in `BattleParticipant`
+- Tag team fields store team composition and tag-out timing for replay reconstruction
 
 ---
 
-## ScheduledMatch Model
+## BattleParticipant Model
 
-Tracks scheduled matchmaking battles for league play.
+Per-robot battle data for N-participant battles. This is the canonical source for per-robot combat stats, rewards, and ELO changes. Supports 1v1, 2v2 tag team, KotH (5-6 robots), and future N-robot modes.
 
 ```prisma
-model ScheduledMatch {
-  id           Int      @id @default(autoincrement())
-  robot1Id     Int                           // First combatant
-  robot2Id     Int                           // Second combatant
-  leagueType   String   @db.VarChar(20)     // "bronze", "silver", "gold", etc.
-  scheduledFor DateTime                      // When the match should be executed
-  status       String   @default("scheduled") @db.VarChar(20)  // "scheduled", "completed", "cancelled"
-  battleId     Int?                          // Links to Battle after completion
-  createdAt    DateTime @default(now())
+model BattleParticipant {
+  id       Int     @id @default(autoincrement())
+  battleId Int     @map("battle_id")
+  robotId  Int     @map("robot_id")
+  team     Int                          // 1 or 2 (team affiliation)
+  role     String? @db.VarChar(20)      // "active"/"reserve" for tag team, null for 1v1
   
-  // ===== RELATIONS =====
+  // KotH placement (null for non-KotH battles)
+  placement Int?                        // 1-6 final placement
+  
+  // Economic effects
+  credits          Int
+  streamingRevenue Int @default(0) @map("streaming_revenue")
+  
+  // Stat changes
+  eloBefore       Int @map("elo_before")
+  eloAfter        Int @map("elo_after")
+  prestigeAwarded Int @default(0) @map("prestige_awarded")
+  fameAwarded     Int @default(0) @map("fame_awarded")
+  
+  // Battle stats
+  damageDealt Int     @default(0) @map("damage_dealt")
+  finalHP     Int     @map("final_hp")
+  yielded     Boolean @default(false)
+  destroyed   Boolean @default(false)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  battle Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  robot  Robot  @relation(fields: [robotId], references: [id])
+  
+  @@unique([battleId, robotId])
+  @@index([battleId])
+  @@index([robotId])
+  @@index([battleId, team])
+  @@map("battle_participants")
+}
+```
+
+**Records per battle type**:
+- League (1v1): 2 participants
+- Tournament (1v1): 2 participants
+- Tag Team (2v2): 4 participants (role = "active" or "reserve")
+- KotH (FFA): 5-6 participants (placement = 1-6)
+
+---
+
+## ScheduledLeagueMatch Model
+
+Tracks scheduled matchmaking battles for league play. Previously named `ScheduledMatch`.
+
+```prisma
+model ScheduledLeagueMatch {
+  id           Int      @id @default(autoincrement())
+  robot1Id     Int      @map("robot1_id")
+  robot2Id     Int      @map("robot2_id")
+  leagueType   String   @map("league_type") @db.VarChar(20)
+  scheduledFor DateTime @map("scheduled_for")
+  status       String   @default("scheduled") @db.VarChar(20)
+  battleId     Int?     @map("battle_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
   robot1 Robot   @relation("ScheduledRobot1", fields: [robot1Id], references: [id])
   robot2 Robot   @relation("ScheduledRobot2", fields: [robot2Id], references: [id])
   battle Battle? @relation(fields: [battleId], references: [id])
@@ -592,153 +564,11 @@ model ScheduledMatch {
   @@index([robot2Id])
   @@index([scheduledFor, status])
   @@index([status])
+  @@map("scheduled_matches")
 }
 ```
 
-**Notes**:
-- Created by matchmaking system during cycle execution
-- Links to Battle record after match is executed
-- Status tracks lifecycle: scheduled → completed/cancelled
-
----
-
-## ScheduledKothMatch Model
-
-Tracks scheduled King of the Hill matches for the KotH cycle (Mon/Wed/Fri at 16:00 UTC). Each match involves 5–6 robots in a free-for-all zone-control battle.
-
-```prisma
-model ScheduledKothMatch {
-  id            Int      @id @default(autoincrement())
-  scheduledFor  DateTime @map("scheduled_for")
-  status        String   @default("scheduled") @db.VarChar(20) // "scheduled", "completed", "failed", "cancelled"
-  battleId      Int?     @map("battle_id")       // Links to Battle after completion
-  rotatingZone  Boolean  @default(false) @map("rotating_zone")
-
-  // Optional config overrides (null = use defaults)
-  scoreThreshold Int?    @map("score_threshold")  // Default 30 (fixed) or 45 (rotating)
-  timeLimit      Int?    @map("time_limit")       // Default 150s (fixed) or 210s (rotating)
-  zoneRadius     Int?    @map("zone_radius")      // Default 5, range [3, 8]
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  // Relations
-  battle       Battle?                        @relation(fields: [battleId], references: [id])
-  participants ScheduledKothMatchParticipant[]
-
-  @@index([scheduledFor, status])
-  @@index([status])
-  @@map("scheduled_koth_matches")
-}
-```
-
-| Column | Type | Default | Description |
-|--------|------|---------|-------------|
-| `id` | `Int` (PK) | Auto-increment | Unique match identifier |
-| `scheduledFor` | `DateTime` | — | When the match is scheduled to execute |
-| `status` | `String` (VarChar 20) | `"scheduled"` | Match lifecycle: `"scheduled"`, `"completed"`, `"failed"`, `"cancelled"` |
-| `battleId` | `Int?` | `null` | Links to Battle record after match execution |
-| `rotatingZone` | `Boolean` | `false` | Whether this match uses the rotating zone variant (Wednesday matches) |
-| `scoreThreshold` | `Int?` | `null` | Override for score threshold (null = use default 30/45) |
-| `timeLimit` | `Int?` | `null` | Override for time limit in seconds (null = use default 150/210) |
-| `zoneRadius` | `Int?` | `null` | Override for zone radius (null = use default 5) |
-| `createdAt` | `DateTime` | `now()` | Record creation timestamp |
-
-**Notes**:
-- Created by `runKothMatchmaking()` during the KotH cycle
-- Zone variant determined by day of week: Mon/Fri = fixed center zone, Wed = rotating zone
-- Config overrides allow admin customization; null values use game defaults
-- Links to Battle record after execution (robot1Id = 1st place, robot2Id = 2nd place, battleType = 'koth')
-- Status lifecycle: scheduled → completed/failed
-
----
-
-## ScheduledKothMatchParticipant Model
-
-Join table linking robots to their scheduled KotH matches. Each match has 5–6 participants.
-
-```prisma
-model ScheduledKothMatchParticipant {
-  id      Int @id @default(autoincrement())
-  matchId Int @map("match_id")
-  robotId Int @map("robot_id")
-
-  // Relations
-  match ScheduledKothMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  robot Robot              @relation(fields: [robotId], references: [id])
-
-  @@unique([matchId, robotId])
-  @@index([matchId])
-  @@index([robotId])
-  @@map("scheduled_koth_match_participants")
-}
-```
-
-| Column | Type | Default | Description |
-|--------|------|---------|-------------|
-| `id` | `Int` (PK) | Auto-increment | Unique participant record identifier |
-| `matchId` | `Int` | — | Reference to the ScheduledKothMatch |
-| `robotId` | `Int` | — | Reference to the participating Robot |
-
-**Constraints**: Unique on `(matchId, robotId)` — a robot can only appear once per match.
-
-**Notes**:
-- Cascade delete: removing a ScheduledKothMatch removes all its participants
-- One robot per stable (user) per match, enforced at application level by matchmaking
-- Robots are distributed into groups via snake-draft ordering by ELO for balanced matches
-
----
-
-## ResetLog Model
-
-Tracks account reset history for the onboarding system. Records what was deleted and why.
-
-```prisma
-model ResetLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  
-  // ===== STATE BEFORE RESET =====
-  robotsDeleted      Int                       // Number of robots deleted
-  weaponsDeleted     Int                       // Number of weapons deleted
-  facilitiesDeleted  Int                       // Number of facilities deleted
-  creditsBeforeReset Decimal @db.Decimal(15, 2)  // Credits before reset
-  
-  // ===== RESET METADATA =====
-  reason    String?  @db.Text                  // Optional reason for reset
-  resetAt   DateTime @default(now())           // When reset occurred
-  
-  @@index([userId])
-  @@index([resetAt])
-}
-```
-
-**Notes**:
-- Part of the onboarding system's "Reset Account" feature
-- Allows players to restart the tutorial with a clean slate
-- Tracks what was deleted for audit purposes
-- Reason field is optional (can be user-provided or system-generated)
-- Multiple resets per user are allowed (no unique constraint on userId)
-
----
-
-## CycleMetadata Model
-
-Singleton table tracking global cycle state for admin operations.
-
-```prisma
-model CycleMetadata {
-  id          Int       @id @default(1)      // Singleton: always ID 1
-  totalCycles Int       @default(0)          // Total cycles executed
-  lastCycleAt DateTime?                      // Timestamp of last cycle
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-```
-
-**Notes**:
-- Singleton table (only one record with id=1)
-- Tracks cycle execution for matchmaking system
-- Created during seed, auto-created if missing in admin routes
+**Note**: The Prisma model is named `ScheduledLeagueMatch` but maps to the `scheduled_matches` table for backward compatibility.
 
 ---
 
@@ -746,64 +576,53 @@ model CycleMetadata {
 
 ### Tournament Model
 
-Tracks competitive elimination tournaments.
-
 ```prisma
 model Tournament {
   id             Int    @id @default(autoincrement())
-  name           String @db.VarChar(100)     // "Tournament #1", "Grand Championship"
-  tournamentType String @db.VarChar(50)      // "single_elimination", "double_elimination", "swiss"
-  status         String @default("pending") @db.VarChar(20)  // "pending", "active", "completed"
+  name           String @db.VarChar(100)
+  tournamentType String @map("tournament_type") @db.VarChar(50)
+  status         String @default("pending") @db.VarChar(20)
   
-  // ===== PROGRESSION TRACKING =====
-  currentRound      Int @default(1)          // Current round number (1-based)
-  maxRounds         Int                      // Total rounds (calculated from participants)
-  totalParticipants Int                      // Number of robots at start
+  currentRound      Int @default(1) @map("current_round")
+  maxRounds         Int @map("max_rounds")
+  totalParticipants Int @map("total_participants")
+  winnerId          Int? @map("winner_id")
   
-  // ===== WINNER TRACKING =====
-  winnerId Int?                              // Winner's robot ID (null until completed)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
   
-  // ===== TIMESTAMPS =====
-  createdAt   DateTime  @default(now())
-  startedAt   DateTime?                      // When first round started
-  completedAt DateTime?                      // When tournament finished
-  
-  // ===== RELATIONS =====
-  winner  Robot?            @relation("TournamentWinner", fields: [winnerId], references: [id])
-  matches TournamentMatch[]
-  battles Battle[]          @relation("TournamentBattles")
+  winner  Robot?                     @relation("TournamentWinner", fields: [winnerId], references: [id])
+  matches ScheduledTournamentMatch[]
+  battles Battle[]                   @relation("TournamentBattles")
   
   @@index([status])
   @@index([winnerId])
+  @@map("tournaments")
 }
 ```
 
-### TournamentMatch Model
+### ScheduledTournamentMatch Model
 
-Tracks individual battles within a tournament bracket.
+Previously named `TournamentMatch`.
 
 ```prisma
-model TournamentMatch {
+model ScheduledTournamentMatch {
   id           Int @id @default(autoincrement())
-  tournamentId Int                           // Parent tournament
-  round        Int                           // Round number (1 = first round, 2 = quarter-finals, etc.)
-  matchNumber  Int                           // Position in round (1, 2, 3, ...)
+  tournamentId Int @map("tournament_id")
+  round        Int
+  matchNumber  Int @map("match_number")
   
-  // ===== PARTICIPANTS =====
-  robot1Id Int?                              // Null for placeholder matches
-  robot2Id Int?                              // Null for bye matches or placeholders
+  robot1Id   Int?    @map("robot1_id")
+  robot2Id   Int?    @map("robot2_id")
+  winnerId   Int?    @map("winner_id")
+  battleId   Int?    @unique @map("battle_id")
+  status     String  @default("pending") @db.VarChar(20)
+  isByeMatch Boolean @default(false) @map("is_bye_match")
   
-  // ===== RESULT =====
-  winnerId   Int?                            // Winner's robot ID (null until completed)
-  battleId   Int?    @unique                 // Links to Battle record
-  status     String  @default("pending") @db.VarChar(20)  // "pending", "scheduled", "completed"
-  isByeMatch Boolean @default(false)         // True if robot advances without battle
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
   
-  // ===== TIMESTAMPS =====
-  createdAt   DateTime  @default(now())
-  completedAt DateTime?
-  
-  // ===== RELATIONS =====
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   robot1     Robot?     @relation("TournamentRobot1", fields: [robot1Id], references: [id])
   robot2     Robot?     @relation("TournamentRobot2", fields: [robot2Id], references: [id])
@@ -814,115 +633,298 @@ model TournamentMatch {
   @@index([status])
   @@index([robot1Id])
   @@index([robot2Id])
+  @@map("tournament_matches")
+}
+```
+
+---
+
+## Tag Team System Models
+
+### TagTeam Model
+
+Represents a 2v2 team composition owned by a stable.
+
+```prisma
+model TagTeam {
+  id             Int @id @default(autoincrement())
+  stableId       Int @map("stable_id")
+  activeRobotId  Int @map("active_robot_id")
+  reserveRobotId Int @map("reserve_robot_id")
+  
+  // League tracking
+  tagTeamLeague         String @default("bronze") @map("tag_team_league") @db.VarChar(20)
+  tagTeamLeagueId       String @default("bronze_1") @map("tag_team_league_id") @db.VarChar(30)
+  tagTeamLeaguePoints   Int    @default(0) @map("tag_team_league_points")
+  cyclesInTagTeamLeague Int    @default(0) @map("cycles_in_tag_team_league")
+  
+  // Performance tracking
+  totalTagTeamWins   Int @default(0) @map("total_tag_team_wins")
+  totalTagTeamLosses Int @default(0) @map("total_tag_team_losses")
+  totalTagTeamDraws  Int @default(0) @map("total_tag_team_draws")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  stable         User                    @relation(fields: [stableId], references: [id], onDelete: Cascade)
+  activeRobot    Robot                   @relation("TagTeamActiveRobot", fields: [activeRobotId], references: [id])
+  reserveRobot   Robot                   @relation("TagTeamReserveRobot", fields: [reserveRobotId], references: [id])
+  matchesAsTeam1 ScheduledTagTeamMatch[] @relation("Team1")
+  matchesAsTeam2 ScheduledTagTeamMatch[] @relation("Team2")
+  
+  @@unique([activeRobotId, reserveRobotId])
+  @@index([stableId])
+  @@index([tagTeamLeague, tagTeamLeagueId])
+  @@index([activeRobotId])
+  @@index([reserveRobotId])
+  @@map("tag_teams")
+}
+```
+
+### ScheduledTagTeamMatch Model
+
+```prisma
+model ScheduledTagTeamMatch {
+  id            Int      @id @default(autoincrement())
+  team1Id       Int      @map("team1_id")
+  team2Id       Int?     @map("team2_id")       // Nullable for bye-matches
+  tagTeamLeague String   @map("tag_team_league") @db.VarChar(20)
+  scheduledFor  DateTime @map("scheduled_for")
+  status        String   @default("scheduled") @db.VarChar(20)
+  battleId      Int?     @map("battle_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  
+  team1  TagTeam  @relation("Team1", fields: [team1Id], references: [id])
+  team2  TagTeam? @relation("Team2", fields: [team2Id], references: [id])
+  battle Battle?  @relation("TagTeamBattle", fields: [battleId], references: [id])
+  
+  @@index([team1Id])
+  @@index([team2Id])
+  @@index([scheduledFor, status])
+  @@index([status])
+  @@map("tag_team_matches")
+}
+```
+
+---
+
+## KotH System Models
+
+### ScheduledKothMatch Model
+
+```prisma
+model ScheduledKothMatch {
+  id           Int      @id @default(autoincrement())
+  scheduledFor DateTime @map("scheduled_for")
+  status       String   @default("scheduled") @db.VarChar(20)
+  battleId     Int?     @map("battle_id")
+  rotatingZone Boolean  @default(false) @map("rotating_zone")
+  
+  scoreThreshold Int? @map("score_threshold")
+  timeLimit      Int? @map("time_limit")
+  zoneRadius     Int? @map("zone_radius")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  battle       Battle?                         @relation(fields: [battleId], references: [id])
+  participants ScheduledKothMatchParticipant[]
+  
+  @@index([scheduledFor, status])
+  @@index([status])
+  @@map("scheduled_koth_matches")
+}
+```
+
+### ScheduledKothMatchParticipant Model
+
+```prisma
+model ScheduledKothMatchParticipant {
+  id      Int @id @default(autoincrement())
+  matchId Int @map("match_id")
+  robotId Int @map("robot_id")
+  
+  match ScheduledKothMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  robot Robot              @relation(fields: [robotId], references: [id])
+  
+  @@unique([matchId, robotId])
+  @@index([matchId])
+  @@index([robotId])
+  @@map("scheduled_koth_match_participants")
+}
+```
+
+---
+
+## Audit & Analytics Models
+
+### AuditLog Model
+
+Event sourcing table for all game events. One event per robot per battle.
+
+```prisma
+model AuditLog {
+  id             BigInt   @id @default(autoincrement())
+  cycleNumber    Int      @map("cycle_number")
+  eventType      String   @map("event_type") @db.VarChar(100)
+  eventTimestamp  DateTime @default(now()) @map("event_timestamp")
+  sequenceNumber Int      @map("sequence_number")
+  
+  userId   Int? @map("user_id")
+  robotId  Int? @map("robot_id")
+  battleId Int? @map("battle_id")
+  
+  payload  Json
+  metadata Json?
+  
+  @@unique([cycleNumber, sequenceNumber], name: "audit_logs_cycle_sequence")
+  @@index([cycleNumber])
+  @@index([userId])
+  @@index([robotId])
+  @@index([battleId])
+  @@index([eventType])
+  @@index([eventTimestamp])
+  @@index([cycleNumber, userId])
+  @@index([cycleNumber, robotId])
+  @@index([cycleNumber, battleId])
+  @@index([cycleNumber, eventType])
+  @@map("audit_logs")
 }
 ```
 
 **Notes**:
-- Tournament system supports single elimination brackets
-- Bye matches handle odd-number participants
-- Each match links to a Battle record for combat details
-- Cascade delete ensures cleanup when tournament is deleted
+- `id` is `BigInt` for high-volume event storage
+- `sequenceNumber` is unique within a cycle for deterministic ordering
+- `payload` is a flexible JSONB field containing event-specific data
+- `metadata` is optional calculation metadata for debugging
+- Heavily indexed for cycle-based, user-based, and robot-based queries
 
----
+### CycleSnapshot Model
 
-## Seed Data
+Pre-aggregated metrics per cycle for fast historical queries.
 
-For complete seed data specifications including all 47 weapons, test users, and initial data, see:
-
-**[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)**
-
-**Summary**:
-- 47 weapons in catalog (v1.5 pricing)
-- 144 user accounts (admin, players, test users, attribute-focused, loadout-focused, bye-robot)
-- 471 robots for testing
-- CycleMetadata singleton initialized
-
----
-
-## API Endpoints Reference
-
-### Authentication
-- POST /api/auth/login - Login
-- POST /api/auth/logout - Logout
-- GET /api/user/profile - Get current user profile
-
-### Robots
-- GET /api/robots - Get current user's robots
-- GET /api/robots/all/robots - Get all robots from all users (leaderboard)
-- POST /api/robots - Create new robot (costs ₡500,000)
-- GET /api/robots/:id - Get specific robot details
-- PUT /api/robots/:id/upgrade - Upgrade robot attribute (costs vary by level)
-- PUT /api/robots/:id/weapon - Equip weapon to robot
-- PUT /api/robots/:id/config - Update robot configuration (yield threshold, stance, loadout)
-- POST /api/robots/:id/repair - Repair robot (costs based on damage)
-
-### Facilities
-- GET /api/facilities - Get user's facilities
-- POST /api/facilities/upgrade - Upgrade a facility (costs vary by type and level)
-
-### Weapons
-- GET /api/weapons - List all weapons from catalog
-- GET /api/weapon-inventory - Get user's weapon inventory
-- POST /api/weapon-inventory/purchase - Purchase weapon (adds to inventory)
-- DELETE /api/weapon-inventory/:id - Sell weapon from inventory
-
-### Battles
-- GET /api/battles - Get user's battle history
-- GET /api/battles/:id - Get specific battle details
-- POST /api/battles/simulate - Simulate battle between two robots
-
----
-
-## Database Migration Strategy
-
-### Phase 1: Create Complete Schema
-1. Drop existing migrations folder
-2. Create new base migration with COMPLETE schema
-3. Run `npx prisma migrate dev --name complete_schema`
-4. Run seed script with all 47 weapons
-
-### Schema Updates (Prisma)
-```bash
-cd prototype/backend
-
-# Delete old migrations
-rm -rf prisma/migrations
-
-# Create new base migration
-npx prisma migrate dev --name complete_future_state_schema
-
-# Seed database
-npx prisma db seed
+```prisma
+model CycleSnapshot {
+  id          Int    @id @default(autoincrement())
+  cycleNumber Int    @unique @map("cycle_number")
+  triggerType String @map("trigger_type") @db.VarChar(20)  // "manual" or "scheduled"
+  
+  startTime  DateTime @map("start_time")
+  endTime    DateTime @map("end_time")
+  durationMs Int      @map("duration_ms")
+  
+  stableMetrics Json @map("stable_metrics")
+  robotMetrics  Json @map("robot_metrics")
+  stepDurations Json @map("step_durations")
+  
+  totalBattles           Int    @default(0) @map("total_battles")
+  totalCreditsTransacted BigInt @default(0) @map("total_credits_transacted")
+  totalPrestigeAwarded   Int    @default(0) @map("total_prestige_awarded")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@index([cycleNumber])
+  @@index([startTime])
+  @@map("cycle_snapshots")
+}
 ```
+
+---
+
+## CycleMetadata Model
+
+Singleton table tracking global cycle state.
+
+```prisma
+model CycleMetadata {
+  id          Int       @id @default(1)
+  totalCycles Int       @default(0) @map("total_cycles")
+  lastCycleAt DateTime? @map("last_cycle_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  @@map("cycle_metadata")
+}
+```
+
+---
+
+## ResetLog Model
+
+Tracks account reset history for the onboarding system.
+
+```prisma
+model ResetLog {
+  id     Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  
+  robotsDeleted      Int     @map("robots_deleted")
+  weaponsDeleted     Int     @map("weapons_deleted")
+  facilitiesDeleted  Int     @map("facilities_deleted")
+  creditsBeforeReset Decimal @map("credits_before_reset") @db.Decimal(15, 2)
+  
+  reason  String?  @db.Text
+  resetAt DateTime @default(now()) @map("reset_at")
+  
+  @@index([userId])
+  @@index([resetAt])
+  @@map("reset_logs")
+}
+```
+
+---
+
+## Complete Model Summary
+
+| Model | Table Name | Purpose |
+|---|---|---|
+| `User` | `users` | Player accounts, resources, profile, onboarding |
+| `Robot` | `robots` | 23 attributes, combat state, league/fame/KotH/tag team stats |
+| `Weapon` | `weapons` | Weapon catalog (47 weapons) with range bands |
+| `WeaponInventory` | `weapon_inventory` | Player weapon ownership |
+| `Facility` | `facilities` | 14 facility types, levels 0-10 |
+| `Battle` | `battles` | Battle records with combat logs |
+| `BattleParticipant` | `battle_participants` | Per-robot battle data (N-participant) |
+| `ScheduledLeagueMatch` | `scheduled_matches` | Scheduled 1v1 league battles |
+| `Tournament` | `tournaments` | Tournament lifecycle |
+| `ScheduledTournamentMatch` | `tournament_matches` | Tournament bracket matches |
+| `TagTeam` | `tag_teams` | 2v2 team compositions |
+| `ScheduledTagTeamMatch` | `tag_team_matches` | Scheduled 2v2 battles |
+| `ScheduledKothMatch` | `scheduled_koth_matches` | KotH match scheduling |
+| `ScheduledKothMatchParticipant` | `scheduled_koth_match_participants` | KotH match participants |
+| `CycleMetadata` | `cycle_metadata` | Global cycle state (singleton) |
+| `AuditLog` | `audit_logs` | Event sourcing for all game events |
+| `CycleSnapshot` | `cycle_snapshots` | Pre-aggregated cycle metrics |
+| `ResetLog` | `reset_logs` | Account reset tracking |
 
 ---
 
 ## Field Constraints & Validation
 
 ### String Enums (Application Layer)
-- User.role: "user", "admin"
-- Robot.currentLeague: "bronze", "silver", "gold", "platinum", "diamond", "champion"
-- Robot.loadoutType: "single", "weapon_shield", "two_handed", "dual_wield"
-- Robot.stance: "offensive", "defensive", "balanced"
-- Weapon.weaponType: "energy", "ballistic", "melee", "shield"
-- Weapon.handsRequired: "one", "two", "shield"
-- Weapon.damageType: "energy", "ballistic", "melee", "explosive", "none"
-- Weapon.loadoutType: "single", "weapon_shield", "two_handed", "dual_wield", "any"
-- Battle.battleType: "league", "tournament", "tag_team", "koth"
-- ScheduledMatch.status: "scheduled", "completed", "cancelled"
-- ScheduledKothMatch.status: "scheduled", "completed", "failed", "cancelled"
-- Tournament.status: "pending", "active", "completed"
-- Tournament.tournamentType: "single_elimination", "double_elimination", "swiss"
-- TournamentMatch.status: "pending", "scheduled", "completed"
-- Facility.facilityType: See 14 facility types above
+- `User.role`: `"user"`, `"admin"`
+- `Robot.currentLeague`: `"bronze"`, `"silver"`, `"gold"`, `"platinum"`, `"diamond"`, `"champion"`
+- `Robot.loadoutType`: `"single"`, `"weapon_shield"`, `"two_handed"`, `"dual_wield"`
+- `Robot.stance`: `"offensive"`, `"defensive"`, `"balanced"`
+- `Weapon.weaponType`: `"energy"`, `"ballistic"`, `"melee"`, `"shield"`
+- `Weapon.handsRequired`: `"one"`, `"two"`, `"shield"`
+- `Weapon.damageType`: `"energy"`, `"ballistic"`, `"melee"`, `"explosive"`, `"none"`
+- `Weapon.loadoutType`: `"single"`, `"weapon_shield"`, `"two_handed"`, `"dual_wield"`, `"any"`
+- `Weapon.rangeBand`: `"melee"`, `"short"`, `"mid"`, `"long"`
+- `Battle.battleType`: `"league"`, `"tournament"`, `"tag_team"`, `"koth"`
+- `ScheduledLeagueMatch.status`: `"scheduled"`, `"completed"`, `"cancelled"`
+- `ScheduledKothMatch.status`: `"scheduled"`, `"completed"`, `"failed"`, `"cancelled"`
+- `Tournament.status`: `"pending"`, `"active"`, `"completed"`
+- `Tournament.tournamentType`: `"single_elimination"`, `"double_elimination"`, `"swiss"`
+- `ScheduledTournamentMatch.status`: `"pending"`, `"scheduled"`, `"completed"`
+- `Facility.facilityType`: See 14 facility types above
 
 ### Numeric Ranges
 - Robot Attributes (all 23): 1.00-50.00 (Decimal with 2 decimal places)
-- Robot.yieldThreshold: 0-50 (percentage, integer)
-- Robot.battleReadiness: 0-100 (percentage, integer)
-- Robot.elo: 800-2500 (typical range, no hard limits, integer)
-- Facility.level: 0-10 (0 = not purchased, 1-10 = upgrade levels, integer)
-- Facility.maxLevel: 10 for most facilities, 9 for roster_expansion (integer)
+- `Robot.yieldThreshold`: 0-50 (percentage)
+- `Robot.battleReadiness`: 0-100 (percentage)
+- `Robot.elo`: 800-2500 (typical range, no hard limits)
+- `Facility.level`: 0-10 (0 = not purchased)
+- `Facility.maxLevel`: 10 for most, 9 for `roster_expansion`
 
 ---
 
@@ -936,97 +938,16 @@ These are calculated in application code:
 - `availableRobotSlots`: Based on roster_expansion facility level
 
 **User**:
-- `winRate`: (totalWins / totalBattles) × 100
+- `winRate`: Computed from robot data
+- `totalBattles`, `totalWins`: Aggregated from robots at query time
 - `activeRobots`: Count of user's robots
-- `weaponStorageLimit`: Based on storage_facility level (10→125)
+- `weaponStorageLimit`: Based on storage_facility level
 
 **Facility**:
 - `upgradeCost`: Based on facility type and current level (see STABLE_SYSTEM.md)
-- `operatingCost`: Based on facility type and level (see STABLE_SYSTEM.md)
+- `operatingCost`: Based on facility type and level
 - `discountPercentage`: For repair_bay, training_facility, weapons_workshop, medical_bay
 - `bonusPercentage`: For coaching_staff bonuses
-
----
-
-## Onboarding Tracking Fields (User Model)
-
-The following columns were added to the User model to support the new player onboarding tutorial system. The UI presents 5 consolidated steps, while the backend internally tracks progress using steps 1-9 for granularity. These fields track tutorial progress, player choices, and completion status.
-
-| Column | Type | Default | Description |
-|--------|------|---------|-------------|
-| `hasCompletedOnboarding` | `Boolean` | `false` | Whether the user has completed the onboarding tutorial. Existing users were migrated with `true`. |
-| `onboardingSkipped` | `Boolean` | `false` | Whether the user chose to skip the tutorial instead of completing it. |
-| `onboardingStep` | `Int` | `1` | Current internal step in the tutorial (range: 1-9). The UI maps these to 5 display steps. Advances as the player progresses. |
-| `onboardingStrategy` | `String?` (VarChar 20) | `null` | Roster strategy chosen during Step 1 (Welcome & Setup). Values: `"1_mighty"`, `"2_average"`, `"3_flimsy"`. Null until strategy is selected. |
-| `onboardingChoices` | `Json` | `"{}"` | JSON object storing all player decisions made throughout the tutorial (loadout preferences, facility choices, weapon selections, etc.). |
-| `onboardingStartedAt` | `DateTime?` | `null` | Timestamp when the user first started the tutorial. Set during registration or when tutorial is initiated. |
-| `onboardingCompletedAt` | `DateTime?` | `null` | Timestamp when the user completed (or skipped) the tutorial. Null while tutorial is in progress. |
-
-**Database Column Mapping**: All columns use `snake_case` mapping (e.g., `has_completed_onboarding`, `onboarding_step`).
-
-**Migration Notes**:
-- All existing users were marked with `hasCompletedOnboarding = true` during the migration to skip the tutorial
-- New users start with `hasCompletedOnboarding = false` and `onboardingStep = 1`
-- The `onboardingChoices` JSON object is progressively populated as the player advances through steps
-
----
-
-## ResetLog Model
-
-Tracks account reset history for the onboarding system's "Reset Account" feature. Records what was deleted and the account state before reset for audit purposes.
-
-```prisma
-model ResetLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-
-  // ===== STATE BEFORE RESET =====
-  robotsDeleted      Int                          // Number of robots deleted during reset
-  weaponsDeleted     Int                          // Number of weapons deleted during reset
-  facilitiesDeleted  Int                          // Number of facilities deleted during reset
-  creditsBeforeReset Decimal @db.Decimal(15, 2)   // Credits balance before reset was performed
-
-  // ===== RESET METADATA =====
-  reason    String?  @db.Text                     // Optional reason for reset (user-provided or system-generated)
-  resetAt   DateTime @default(now()) @map("reset_at")  // When the reset occurred
-
-  @@index([userId])
-  @@index([resetAt])
-  @@map("reset_logs")
-}
-```
-
-| Column | Type | Default | Description |
-|--------|------|---------|-------------|
-| `id` | `Int` (PK) | Auto-increment | Unique identifier for each reset event |
-| `userId` | `Int` | — | Reference to the User who performed the reset |
-| `robotsDeleted` | `Int` | — | Number of robots deleted during the reset |
-| `weaponsDeleted` | `Int` | — | Number of weapon inventory items deleted during the reset |
-| `facilitiesDeleted` | `Int` | — | Number of facility records deleted during the reset |
-| `creditsBeforeReset` | `Decimal(15,2)` | — | User's credit balance immediately before the reset was performed |
-| `reason` | `String?` (Text) | `null` | Optional reason for the reset (e.g., "Restarting tutorial", "Fresh start") |
-| `resetAt` | `DateTime` | `now()` | Timestamp when the reset was executed |
-
-**Indexes**: `userId` (for querying reset history per user), `resetAt` (for chronological queries)
-
-**Notes**:
-- Part of the onboarding system's "Reset Account" feature accessible from settings
-- Allows players to restart the tutorial with a clean slate (credits reset to ₡3,000,000, all robots/weapons/facilities deleted)
-- Multiple resets per user are allowed (no unique constraint on `userId`)
-- Reset is blocked if the user has active scheduled matches, tournament participation, or pending battles
-- The `reason` field is optional and can be user-provided or system-generated
-
----
-
-## Future Enhancements (Not in Current Schema)
-
-These features are planned but not yet implemented:
-
-1. **Achievement System** - Achievement tracking tables
-2. **Daily Income/Expense Report** - Income tracking and reporting
-3. **Custom Weapon Design** - Weapon crafting system
-4. **Double Elimination Tournaments** - Extended tournament bracket support
-5. **Swiss Tournament Format** - Round-robin style tournament support
 
 ---
 
@@ -1036,15 +957,13 @@ These features are planned but not yet implemented:
 - **[COMBAT_FORMULAS.md](COMBAT_FORMULAS.md)** - Combat calculations and damage formulas
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture overview
 - **[SEED_DATA_SPECIFICATION.md](SEED_DATA_SPECIFICATION.md)** - Complete seed data specification
+- **[PRD_BATTLE_DATA_ARCHITECTURE.md](PRD_BATTLE_DATA_ARCHITECTURE.md)** - BattleParticipant design and migration
+- **[PRD_AUDIT_SYSTEM.md](PRD_AUDIT_SYSTEM.md)** - Audit log architecture
 
 ### Feature Specifications
-- **[WEAPONS_AND_LOADOUT.md](../WEAPONS_AND_LOADOUT.md)** - Complete weapon system, loadout configurations
-- **[ROBOT_ATTRIBUTES.md](../ROBOT_ATTRIBUTES.md)** - 23 robot attributes and combat mechanics
-- **[STABLE_SYSTEM.md](../STABLE_SYSTEM.md)** - 14 facilities, prestige formulas, stable management
-- **[PRD_PRESTIGE_AND_FAME.md](../PRD_PRESTIGE_AND_FAME.md)** - Prestige and Fame system specification
-
-### Implementation Details
-- **[PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Weapon pricing methodology
-- **[MATCHMAKING_SYSTEM_GUIDE.md](../MATCHMAKING_SYSTEM_GUIDE.md)** - Matchmaking and cycle system
-- **[ROADMAP.md](../ROADMAP.md)** - Implementation phases and priorities
-
+- **[PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)** - Complete weapon system, loadout configurations
+- **[PRD_ROBOT_ATTRIBUTES.md](PRD_ROBOT_ATTRIBUTES.md)** - 23 robot attributes and combat mechanics
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - 14 facilities, prestige formulas, stable management
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - Prestige and Fame system specification
+- **[PRD_TOURNAMENT_SYSTEM.md](PRD_TOURNAMENT_SYSTEM.md)** - Tournament bracket system
+- **[PRD_MATCHMAKING.md](PRD_MATCHMAKING.md)** - Matchmaking and cycle system

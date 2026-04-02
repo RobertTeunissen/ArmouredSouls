@@ -535,7 +535,7 @@ The scheduled batch model allows:
 **Design Decision**: Separate admin dashboard provides comprehensive testing tools without cluttering main app. Bulk cycle execution enables rapid balance testing with realistic cost simulation.
 
 **Test Data Requirements**:
-- 100 test users (test_user_001 to test_user_100, password: testpass123)
+- 100 test users (test_user_001 to test_user_100, credentials in prisma/seed.ts)
 - 100 test robots (1 per user, creative thematic names)
 - All attributes set to 1
 - Single weapon loadout
@@ -1817,7 +1817,7 @@ node scripts/showDatabaseSummary.js
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin123"}' | \
+  -d '{"username": "<admin_user>", "password": "<admin_password>"}' | \
   jq -r '.token')
 ```
 
@@ -1956,7 +1956,7 @@ curl -X POST http://localhost:3001/api/admin/cycles/bulk \
 
 **Admin Account**:
 - Username: `admin`
-- Password: `admin123`
+- Password: See `prisma/seed.ts`
 - Role: admin
 - Currency: ₡10,000,000
 
