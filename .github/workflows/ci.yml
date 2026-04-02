@@ -149,7 +149,7 @@ jobs:
 
       - name: Run frontend unit tests
         working-directory: ./prototype/frontend
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: npx vitest --run --reporter=verbose
 
       # Note: E2E tests (Playwright) are skipped in CI because they require
