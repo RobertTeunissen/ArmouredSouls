@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { getTournamentDetails, TournamentDetails, SeedEntry } from '../utils/tournamentApi';
-import { fetchMyRobots } from '../utils/robotApi';
+import { useRobotStore } from '../stores';
 import BracketView from '../components/tournament/BracketView';
 
 /**
@@ -19,10 +19,14 @@ function TournamentDetailPage() {
 
   const [tournament, setTournament] = useState<TournamentDetails | null>(null);
   const [seedings, setSeedings] = useState<SeedEntry[]>([]);
-  const [userRobotIds, setUserRobotIds] = useState<Set<number>>(new Set());
+  const storeRobots = useRobotStore(state => state.robots);
+  const fetchStoreRobots = useRobotStore(state => state.fetchRobots);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+
+  // Derive userRobotIds from store
+  const userRobotIds = new Set(storeRobots.map((r) => r.id));
 
   const fetchTournament = useCallback(async () => {
     if (!id) return;
@@ -58,19 +62,10 @@ function TournamentDetailPage() {
     }
   }, [id, token, logout, navigate]);
 
-  const fetchUserRobots = useCallback(async () => {
-    try {
-      const robots = await fetchMyRobots();
-      setUserRobotIds(new Set(robots.map((r) => r.id)));
-    } catch (err) {
-      console.error('Failed to fetch user robots:', err);
-    }
-  }, []);
-
   useEffect(() => {
     fetchTournament();
-    fetchUserRobots();
-  }, [fetchTournament, fetchUserRobots]);
+    fetchStoreRobots();
+  }, [fetchTournament, fetchStoreRobots]);
 
   if (!user) {
     return <></>;

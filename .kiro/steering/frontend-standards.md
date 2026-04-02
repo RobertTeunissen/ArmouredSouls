@@ -98,13 +98,46 @@ function RobotCard({ robot }: { robot: Robot }) {
 }
 ```
 
+### Zustand Stores
+
+**Use for**:
+- Data shared across 3+ pages (robot roster, stable data)
+- Cross-page mutations (e.g., currency changes after purchases)
+- Expensive fetches that benefit from caching
+
+Stores live in `src/stores/` and are re-exported from `src/stores/index.ts`. See `.kiro/steering/frontend-state-management.md` for the full decision framework and the 3-criteria rule.
+
+**Store Selector Pattern** (always use selectors — never subscribe to the entire store):
+```typescript
+// GOOD — only re-renders when `robots` changes
+const robots = useRobotStore(state => state.robots);
+const fetchRobots = useRobotStore(state => state.fetchRobots);
+
+// BAD — re-renders on ANY state change
+const store = useRobotStore();
+```
+
+**Component using a Zustand store**:
+```typescript
+function RobotList() {
+  const robots = useRobotStore(state => state.robots);
+  const loading = useRobotStore(state => state.loading);
+  const fetchRobots = useRobotStore(state => state.fetchRobots);
+
+  useEffect(() => { fetchRobots(); }, [fetchRobots]);
+
+  if (loading) return <LoadingSpinner />;
+  return <div>{robots.map(r => <RobotCard key={r.id} robot={r} />)}</div>;
+}
+```
+
 ### Context API
 
 **Use for**:
-- Global application state
-- User authentication
+- Truly global, rarely-changing state
+- User authentication (AuthContext)
+- Onboarding flow state
 - Theme preferences
-- Shared data across many components
 
 ```typescript
 interface AuthContextType {
@@ -142,9 +175,9 @@ export function useAuth() {
 ### When NOT to Use Context
 
 **Avoid Context for**:
-- Frequently changing data (causes re-renders)
+- Frequently changing data (causes re-renders) — use Zustand stores instead
 - Data needed by only 2-3 components (use props)
-- Performance-critical updates
+- Performance-critical updates — Zustand selectors provide fine-grained subscriptions
 
 ## API Integration
 

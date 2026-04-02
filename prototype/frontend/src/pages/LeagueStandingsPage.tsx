@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import { fetchMyRobots } from '../utils/robotApi';
+import { useRobotStore } from '../stores';
 import {
   getLeagueStandings,
   getLeagueInstances,
@@ -18,6 +18,8 @@ const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 function LeagueStandingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const storeRobots = useRobotStore(state => state.robots);
+  const fetchStoreRobots = useRobotStore(state => state.fetchRobots);
   const [selectedTier, setSelectedTier] = useState('bronze');
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const [robots, setRobots] = useState<LeagueRobot[]>([]);
@@ -37,23 +39,18 @@ function LeagueStandingsPage() {
   useEffect(() => {
     setSelectedInstance(null); // Reset selected instance when tier changes
     fetchLeagueData(selectedTier, 1);
-    fetchUserRobotTiers(); // Fetch user's robot tiers on load
+    fetchStoreRobots(); // Fetch user's robots via store
   }, [selectedTier]);
 
-  const fetchUserRobotTiers = async () => {
-    // Fetch user's robots to determine which tiers and instances they're in
-    try {
-      const robotsData = await fetchMyRobots();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tiers = new Set<string>(robotsData.map((r: any) => r.currentLeague));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const instances = new Set<string>(robotsData.map((r: any) => r.leagueId).filter(Boolean));
+  // Derive user robot tiers/instances from store
+  useEffect(() => {
+    if (storeRobots.length > 0) {
+      const tiers = new Set<string>(storeRobots.map((r) => r.currentLeague));
+      const instanceIds = new Set<string>(storeRobots.map((r) => r.leagueId).filter(Boolean) as string[]);
       setUserRobotTiers(tiers);
-      setUserRobotInstances(instances);
-    } catch (err) {
-      console.error('Failed to fetch user robot tiers:', err);
+      setUserRobotInstances(instanceIds);
     }
-  };
+  }, [storeRobots]);
 
   const fetchLeagueData = async (tier: string, page: number, instance?: string) => {
     try {

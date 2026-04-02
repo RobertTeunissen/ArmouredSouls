@@ -1,33 +1,24 @@
 /**
  * StableStatistics component
  * Displays aggregate performance metrics across all robots in the stable
+ * Reads data from the stable Zustand store instead of fetching independently.
  */
 
-import { useEffect, useState } from 'react';
-import { getStableStatistics, StableStatistics as StableStatsType } from '../utils/userApi';
+import { useEffect } from 'react';
+import { useStableStore } from '../stores';
 
 function StableStatistics() {
-  const [stats, setStats] = useState<StableStatsType | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const stats = useStableStore(state => state.stats);
+  const loading = useStableStore(state => state.loading);
+  const error = useStableStore(state => state.error);
+  const fetchStableData = useStableStore(state => state.fetchStableData);
 
   useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const data = await getStableStatistics();
-      setStats(data);
-      setError(null);
-    } catch (err) {
-      console.error('Failed to fetch stable statistics:', err);
-      setError('Failed to load statistics');
-    } finally {
-      setLoading(false);
+    // Only fetch if we don't already have data (avoids redundant calls when store is shared)
+    if (!stats) {
+      fetchStableData();
     }
-  };
+  }, [stats, fetchStableData]);
 
   // Format league name
   const formatLeague = (league: string | null) => {

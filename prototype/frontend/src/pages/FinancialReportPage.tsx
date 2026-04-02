@@ -20,6 +20,7 @@ import {
   getHealthColor,
   getHealthIcon,
 } from '../utils/financialApi';
+import { useStableStore } from '../stores';
 
 type TabType = 'overview' | 'per-robot';
 
@@ -32,8 +33,16 @@ function FinancialReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const financialSummary = useStableStore(state => state.financialSummary);
+  const fetchStableData = useStableStore(state => state.fetchStableData);
+
   useEffect(() => {
     fetchFinancialData();
+    // Ensure the stable store is populated for shared currency/balance data
+    if (!financialSummary) {
+      fetchStableData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchFinancialData = async () => {
