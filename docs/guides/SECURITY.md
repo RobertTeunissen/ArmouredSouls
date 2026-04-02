@@ -393,6 +393,174 @@ Security considerations are built into the architecture from the start, not adde
 
 ---
 
+## Security Playbook — Known Exploit Patterns
+
+This section documents all known exploit patterns discovered during the security audit (Koen's Exploits), along with detection signatures and prevention patterns. Every new endpoint and feature must be reviewed against this list.
+
+### 1. Race Condition on Balance Checks
+
+**Exploit**: Concurrent requests bypass balance validation by reading stale currency values before the first transaction commits.
+
+**Detection**: The `SecurityMonitor` flags users with >10 HTTP 409 conflict responses in 1 minute (`race_condition_attempt` event).
+
+**Prevention**: All credit-spending operations use `lockUserForSpending` inside a Prisma interactive transaction:
+
+```typescript
+import { lockUserForSpending } from '../lib/creditGuard';
+
+const result = await prisma.$transaction(async (tx) => {
+  const user = await lockUserForSpending(tx, userId);
+  if (user.currency < cost) {
+    throw new AppError('INSUFFICIENT_CREDITS', 'Not enough credits', 400);
+  }
+  // Re-read mutable state INSIDE the transaction
+  const facility = await tx.facility.findUnique({ where: { id: facilityId } });
+  // Validate against re-read state, then mutate
+  await tx.user.update({ where: { id: userId }, data: { currency: { decrement: cost } } });
+});
+```
+
+### 2. Stored XSS via Robot Name Fields
+
+**Exploit**: Injecting `<script>` tags or event handlers into robot/stable name fields that render in other players' browsers.
+
+**Detection**: `SecurityMonitor.logValidationFailure()` logs rejected names with `violationType: 'invalid_body'`.
+
+**Prevention**: Character allowlist enforced at the API boundary via Zod:
+
+```typescript
+import { safeName } from '../utils/securityValidation';
+// Allows only: /^[a-zA-Z0-9 _\-'.!]+$/
+const schema = z.object({ name: safeName });
+```
+
+### 3. Path Traversal via Slug Parameters
+
+**Exploit**: Using `../`, `/`, or `%2e` sequences in URL slug parameters to escape intended directory scope.
+
+**Detection**: Validation failures logged with endpoint and source IP.
+
+**Prevention**: `safeSlug` Zod primitive restricts to `/^[a-zA-Z0-9_-]+$/`:
+
+```typescript
+import { safeSlug } from '../utils/securityValidation';
+const paramsSchema = z.object({ slug: safeSlug });
+```
+
+### 4. Robot Attribute Upgrade Race Condition
+
+**Exploit**: Concurrent attribute upgrade requests read stale attribute levels, allowing upgrades beyond caps.
+
+**Prevention**: Re-read the robot's current attributes inside the transaction after acquiring the user lock. Never trust values read before the transaction boundary.
+
+### 5. Team Creation Race Condition
+
+**Exploit**: Concurrent team creation requests for the same robots bypass roster uniqueness checks.
+
+**Prevention**: Use `pg_advisory_xact_lock` to serialize multi-row operations:
+
+```typescript
+await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockKey})`;
+```
+
+### 6. Duplicate Weapon Equip
+
+**Exploit**: Concurrent equip requests assign the same weapon to multiple robots.
+
+**Prevention**: Use atomic `updateMany` with a WHERE clause that includes the current state, ensuring only one request succeeds. Wrap in a transaction with `lockUserForSpending`.
+
+### 7. Missing HTTP Security Headers
+
+**Exploit**: Absence of CSP, X-Content-Type-Options, X-Frame-Options, and HSTS headers enables clickjacking, MIME sniffing, and protocol downgrade attacks.
+
+**Prevention**: Helmet.js configured with explicit directives:
+
+```typescript
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  hsts: { maxAge: 31536000, includeSubDomains: true },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
+```
+
+### 8. Robot imageUrl Protocol Injection
+
+**Exploit**: Setting `imageUrl` to `javascript:alert(1)`, `data:text/html,...`, or paths with `../` to execute scripts or traverse directories.
+
+**Detection**: Validation failure logged on rejected URLs.
+
+**Prevention**: Strict regex allowing only HTTPS URLs with valid domains, plus a `..` refine check:
+
+```typescript
+import { safeImageUrl } from '../utils/securityValidation';
+// Only matches: /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[a-zA-Z0-9/_.-]+$/
+// Plus: refine rejects any URL containing ".."
+```
+
+### 9. SQL ORDER BY Column Injection
+
+**Exploit**: User-supplied column names in ORDER BY clauses can inject arbitrary SQL when interpolated directly.
+
+**Prevention**: `orderByColumn` factory maps input against a predefined allowlist, falling back to a safe default:
+
+```typescript
+import { orderByColumn } from '../utils/securityValidation';
+const querySchema = z.object({
+  sortBy: orderByColumn(['name', 'createdAt', 'wins'] as const, 'createdAt'),
+});
+```
+
+### 10. .env File Tracked in Git
+
+**Exploit**: Sensitive credentials (DB password, JWT secret) exposed in git history.
+
+**Prevention**: `.env` is in `.gitignore`. Pre-commit hooks should verify sensitive files are ignored. See `docs/guides/SECURITY_ADVISORY.md` for credential rotation steps.
+
+---
+
+### Transaction Integrity Pattern
+
+All economic endpoints must follow this pattern:
+
+1. Enter a Prisma interactive transaction
+2. Call `lockUserForSpending(tx, userId)` to acquire a row-level lock
+3. Re-read all mutable state (facility levels, roster counts, attribute levels) inside the transaction
+4. Validate against the re-read values
+5. Perform the mutation
+6. Commit (automatic on function return)
+
+For multi-row serialization (team creation, multi-robot operations), use `pg_advisory_xact_lock` instead.
+
+### Input Validation Pattern
+
+All routes use the `validateRequest` middleware with Zod schemas:
+
+```typescript
+import { validateRequest } from '../middleware/schemaValidator';
+import { z } from 'zod';
+import { positiveIntParam, safeName } from '../utils/securityValidation';
+
+const paramsSchema = z.object({ id: positiveIntParam });
+const bodySchema = z.object({ name: safeName });
+
+router.put('/:id', authenticateToken, validateRequest({ params: paramsSchema, body: bodySchema }),
+  async (req: AuthRequest, res: Response) => {
+    // req.params.id is a validated positive integer
+    // req.body.name is a validated safe string
+    // Unknown body fields have been stripped
+  }
+);
+```
+
+---
+
 ## Future Security Enhancements
 
 - Blockchain for tamper-proof battle logs

@@ -1,10 +1,20 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import guideService from '../services/common/guide-service';
 import logger from '../config/logger';
 import { AppError } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { safeSlug } from '../utils/securityValidation';
 
 const router = express.Router();
+
+// --- Zod schemas for guide routes ---
+
+const articleParamsSchema = z.object({
+  sectionSlug: safeSlug,
+  articleSlug: safeSlug,
+});
 
 /**
  * GET /api/guide/sections
@@ -24,7 +34,7 @@ router.get('/sections', authenticateToken, async (req: AuthRequest, res: Respons
  * GET /api/guide/articles/:sectionSlug/:articleSlug
  * Returns a single guide article with full content
  */
-router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, validateRequest({ params: articleParamsSchema }), async (req: AuthRequest, res: Response) => {
   try {
     const sectionSlug = String(req.params.sectionSlug);
     const articleSlug = String(req.params.articleSlug);

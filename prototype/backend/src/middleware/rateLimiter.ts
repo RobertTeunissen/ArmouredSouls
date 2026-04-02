@@ -30,7 +30,7 @@ export function createGeneralLimiter(config: EnvConfig) {
 }
 
 /**
- * Create the authentication rate limiter for login and registration endpoints.
+ * Create the authentication rate limiter for registration endpoints.
  *
  * Stricter than the general limiter to protect against brute-force and
  * credential-stuffing attacks.
@@ -39,6 +39,23 @@ export function createAuthLimiter(config: EnvConfig) {
   return rateLimit({
     windowMs: config.rateLimitWindowMs,
     max: config.rateLimitMaxRequests,
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: false,
+    keyGenerator: (req) =>
+      req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
+  });
+}
+
+/**
+ * Create the login rate limiter — tighter than the general auth limiter.
+ *
+ * 10 requests per 15-minute window by default (Req 3.1).
+ */
+export function createLoginLimiter(config: EnvConfig) {
+  return rateLimit({
+    windowMs: config.loginRateLimitWindowMs,
+    max: config.loginRateLimitMax,
     standardHeaders: true,
     legacyHeaders: false,
     validate: false,

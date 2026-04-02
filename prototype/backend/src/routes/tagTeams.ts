@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import {
@@ -15,15 +16,32 @@ import {
 } from '../services/tag-team/tagTeamLeagueInstanceService';
 import logger from '../config/logger';
 import { AuthError, AuthErrorCode, TagTeamError, TagTeamErrorCode, RobotError, RobotErrorCode, AppError } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { positiveIntParam } from '../utils/securityValidation';
 
 const router = express.Router();
+
+// --- Zod schemas for tag team routes ---
+
+const tagTeamIdParamsSchema = z.object({
+  id: positiveIntParam,
+});
+
+const createTagTeamBodySchema = z.object({
+  activeRobotId: z.number().int().positive(),
+  reserveRobotId: z.number().int().positive(),
+});
+
+const tierParamsSchema = z.object({
+  tier: z.string().min(1).max(30),
+});
 
 /**
  * POST /api/tag-teams
  * Create a new tag team
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5
  */
-router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/', authenticateToken, validateRequest({ body: createTagTeamBodySchema }), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
@@ -120,7 +138,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
  * Get team details by ID
  * Requirements: 9.1, 9.2
  */
-router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id', authenticateToken, validateRequest({ params: tagTeamIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
@@ -163,7 +181,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
  * Disband a team
  * Requirements: 9.7
  */
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.delete('/:id', authenticateToken, validateRequest({ params: tagTeamIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
@@ -198,7 +216,7 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response)
  * Get standings for a specific tag team league tier
  * Requirements: 9.3
  */
-router.get('/leagues/:tier/standings', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/leagues/:tier/standings', authenticateToken, validateRequest({ params: tierParamsSchema }), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);

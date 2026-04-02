@@ -4,6 +4,7 @@
  */
 
 import express, { Request, Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
@@ -18,8 +19,16 @@ import {
 } from '../services/tournament/tournamentService';
 import { processTournamentBattle } from '../services/tournament/tournamentBattleOrchestrator';
 import { AppError, TournamentError, TournamentErrorCode } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { positiveIntParam } from '../utils/securityValidation';
 
 const router = express.Router();
+
+// --- Zod schemas for admin tournament routes ---
+
+const tournamentIdParamsSchema = z.object({
+  id: positiveIntParam,
+});
 
 /**
  * POST /api/admin/tournaments/create
@@ -118,7 +127,7 @@ router.get('/eligible-robots', authenticateToken, requireAdmin, async (req: Requ
  * GET /api/admin/tournaments/:id
  * Get detailed tournament information
  */
-router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/:id', authenticateToken, requireAdmin, validateRequest({ params: tournamentIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const tournamentId = parseInt(String(req.params.id));
 
@@ -151,7 +160,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Re
  * POST /api/admin/tournaments/:id/execute-round
  * Execute the current round of a tournament
  */
-router.post('/:id/execute-round', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/:id/execute-round', authenticateToken, requireAdmin, validateRequest({ params: tournamentIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const tournamentId = parseInt(String(req.params.id));
 

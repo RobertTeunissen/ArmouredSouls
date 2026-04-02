@@ -22,7 +22,9 @@ import guideRoutes from './routes/guide';
 import kothRoutes from './routes/koth';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
-import { createGeneralLimiter, createAuthLimiter } from './middleware/rateLimiter';
+import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
+import { createUserEconomicLimiter } from './middleware/userRateLimiter';
+import { authenticateToken } from './middleware/auth';
 import { requestLogger } from './middleware/requestLogger';
 import logger from './config/logger';
 import prisma from './lib/prisma';
@@ -35,9 +37,29 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-// Security headers — mitigates XSS, clickjacking, MIME sniffing, and more
-app.use(helmet());
+// Security headers — mitigates XSS, clickjacking, MIME sniffing, and more (Req 5.5, 10.3, 10.5)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
 
+// CORS — production restricts to explicit allowlist from CORS_ORIGIN env var (Req 10.1);
+// development permits all origins for local convenience (Req 10.2).
+// NOTE (Req 10.4): Currently using JWT in Authorization header, so CSRF is not a concern.
+// If the application transitions to cookie-based token storage in the future, implement
+// CSRF protection using the double-submit cookie pattern or synchronizer token pattern
+// before deploying. See: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
 app.use(cors({
   origin: config.corsOrigins.includes('*')
     ? true
@@ -49,12 +71,20 @@ app.use(express.json({ limit: '1mb' }));
 // Request logging
 app.use(requestLogger);
 
-// Rate limiting — auth limiter applied before general limiter for auth routes
+// Rate limiting — login limiter is tighter (10 req/15min), auth limiter for register, general for everything else
+const loginLimiter = createLoginLimiter(config);
 const authLimiter = createAuthLimiter(config);
 const generalLimiter = createGeneralLimiter(config);
-app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api', generalLimiter);
+
+// Per-user rate limiting on economic endpoints — mounted after auth so userId is available (Req 6.4)
+const userEconomicLimiter = createUserEconomicLimiter();
+const economicPrefixes = ['/api/weapons', '/api/weapon-inventory', '/api/facilities', '/api/robots'];
+for (const prefix of economicPrefixes) {
+  app.use(prefix, authenticateToken, userEconomicLimiter);
+}
 
 app.get('/api/health', async (req, res) => {
   try {

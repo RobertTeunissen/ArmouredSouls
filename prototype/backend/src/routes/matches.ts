@@ -1,12 +1,21 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import { getConfig } from '../config/env';
 import { getNextCronOccurrence } from '../utils/scheduleUtils';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { BattleError, BattleErrorCode } from '../errors/battleErrors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { positiveIntParam } from '../utils/securityValidation';
 
 const router = express.Router();
+
+// --- Zod schemas for matches routes ---
+
+const battleIdParamsSchema = z.object({
+  id: positiveIntParam,
+});
 
 /**
  * GET /api/matches/upcoming
@@ -765,7 +774,7 @@ router.get('/history', authenticateToken, async (req: AuthRequest, res: Response
  * GET /api/matches/battles/:id/log
  * Get detailed battle log with combat messages for a specific battle
  */
-router.get('/battles/:id/log', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/battles/:id/log', authenticateToken, validateRequest({ params: battleIdParamsSchema }), async (req: AuthRequest, res: Response) => {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }

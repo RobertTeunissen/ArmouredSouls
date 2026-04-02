@@ -48,6 +48,14 @@ inclusion: manual
    - Document: Any breaking changes or new features
    - Check: README files current for modified modules
 
+7. **Security Scanning Passes**
+   - Run: `cd prototype/backend && npm audit --audit-level=high`
+   - Verify: No high or critical vulnerabilities (or all are in `.security-audit-allowlist.json` with valid justification)
+   - Run: `cd prototype/backend && npm run lint`
+   - Verify: No ESLint security rule violations (`eslint-plugin-security` errors block CI)
+   - Review: `.security-audit-allowlist.json` — check that all entries have a `nextReviewDate` in the future
+   - Confirm: No new dependencies added without `npm audit` check
+
 ## Pre-Push Command Sequence
 
 **Run these commands in order before pushing to main**:
@@ -57,11 +65,15 @@ inclusion: manual
 cd prototype/backend
 npm test
 
-# 2. Frontend E2E tests  
+# 2. Security scanning
+npm audit --audit-level=high
+npm run lint
+
+# 3. Frontend E2E tests  
 cd ../frontend
 npm run test:e2e
 
-# 3. If both pass, commit and push
+# 4. If all pass, commit and push
 cd ../..
 git add -A
 git commit -m "your commit message"

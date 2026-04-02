@@ -7,6 +7,7 @@
  */
 
 import express, { Request, Response } from 'express';
+import { z } from 'zod';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { cycleSnapshotService } from '../services/cycle/cycleSnapshotService';
 import { robotPerformanceService } from '../services/analytics/robotPerformanceService';
@@ -15,8 +16,29 @@ import type { LeaderboardOptions } from '../services/analytics/robotStatsViewSer
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { AppError, RobotError, RobotErrorCode, AuthError, AuthErrorCode, EconomyError, EconomyErrorCode, KothError, KothErrorCode } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { positiveIntParam } from '../utils/securityValidation';
 
 const router = express.Router();
+
+// --- Zod schemas for analytics routes ---
+
+const userIdParamsSchema = z.object({
+  userId: positiveIntParam,
+});
+
+const robotIdParamsSchema = z.object({
+  robotId: positiveIntParam,
+});
+
+const robotIdByIdParamsSchema = z.object({
+  id: positiveIntParam,
+});
+
+const robotMetricParamsSchema = z.object({
+  robotId: positiveIntParam,
+  metricName: z.string().min(1).max(30),
+});
 
 /**
  * GET /api/analytics/cycle/current
@@ -85,7 +107,7 @@ router.get('/cycle/current', async (req: Request, res: Response) => {
  *   }>
  * }
  */
-router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
+router.get('/stable/:userId/summary', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const userId = parseInt(String(req.params.userId));
     const lastNCyclesParam = req.query.lastNCycles as string;
@@ -293,7 +315,7 @@ router.get('/stable/:userId/summary', async (req: Request, res: Response) => {
  * 
  * Requirements: 12.2, 7.1, 7.2, 7.3, 7.4, 7.5
  */
-router.get('/robot/:robotId/performance', async (req: Request, res: Response) => {
+router.get('/robot/:robotId/performance', validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const robotId = parseInt(String(req.params.robotId));
     const cycleRangeParam = req.query.cycleRange as string;
@@ -439,7 +461,7 @@ router.get('/robot/:robotId/performance', async (req: Request, res: Response) =>
  * 
  * Requirements: 7.1, 7.3, 7.4
  */
-router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
+router.get('/robot/:robotId/elo', validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const robotId = parseInt(String(req.params.robotId));
     const cycleRangeParam = req.query.cycleRange as string;
@@ -603,7 +625,7 @@ router.get('/robot/:robotId/elo', async (req: Request, res: Response) => {
  * 
  * Requirements: 7.1, 7.3, 7.4
  */
-router.get('/robot/:robotId/metric/:metricName', async (req: Request, res: Response) => {
+router.get('/robot/:robotId/metric/:metricName', validateRequest({ params: robotMetricParamsSchema }), async (req: Request, res: Response) => {
   try {
     const robotId = parseInt(String(req.params.robotId));
     const metricName = String(req.params.metricName) as RobotMetric;
@@ -847,7 +869,7 @@ router.get('/leaderboard', async (req: Request, res: Response) => {
  * 
  * Requirements: 10.3
  */
-router.get('/robot/:robotId/stats', async (req: Request, res: Response) => {
+router.get('/robot/:robotId/stats', validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const { robotStatsViewService } = await import('../services/analytics/robotStatsViewService');
     
@@ -935,7 +957,7 @@ router.post('/stats/refresh', async (req: Request, res: Response) => {
  * 
  * Requirements: 12.3, 5.5, 8.2
  */
-router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
+router.get('/facility/:userId/roi', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const { roiCalculatorService } = await import('../services/economy/roiCalculatorService');
     
@@ -1027,7 +1049,7 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
  * 
  * Requirements: 12.3, 5.5, 8.2
  */
-router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
+router.get('/facility/:userId/roi/all', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const { roiCalculatorService } = await import('../services/economy/roiCalculatorService');
     
@@ -1105,7 +1127,7 @@ router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
  * 
  * Requirements: 8.5
  */
-router.get('/facility/:userId/recommendations', async (req: Request, res: Response) => {
+router.get('/facility/:userId/recommendations', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const { facilityRecommendationService } = await import('../services/economy/facilityRecommendationService');
     
@@ -1149,7 +1171,7 @@ router.get('/facility/:userId/recommendations', async (req: Request, res: Respon
  * GET /api/analytics/robot/:id/koth-performance
  * Robot's cumulative KotH stats
  */
-router.get('/robot/:id/koth-performance', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/robot/:id/koth-performance', authenticateToken, validateRequest({ params: robotIdByIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   try {
     const robotId = parseInt(String(req.params.id));
     const robot = await prisma.robot.findUnique({

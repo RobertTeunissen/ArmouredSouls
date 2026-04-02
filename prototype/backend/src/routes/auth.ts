@@ -12,6 +12,7 @@
  */
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
+import { z } from 'zod';
 import logger from '../config/logger';
 import { validateRegistrationRequest } from '../utils/validation';
 import { hashPassword } from '../services/auth/passwordService';
@@ -20,8 +21,25 @@ import { createUser, findUserByUsername, findUserByEmail, findUserByIdentifier, 
 import { initializeTutorialState } from '../services/onboarding/onboardingService';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { AppError } from '../errors/AppError';
+import { validateRequest } from '../middleware/schemaValidator';
+import { stableName as stableNameSchema } from '../utils/securityValidation';
 
 const router = express.Router();
+
+// --- Zod schemas for auth routes ---
+
+const registerBodySchema = z.object({
+  username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
+  email: z.string().min(3).max(50),
+  password: z.string().min(8).max(128),
+  stableName: stableNameSchema,
+});
+
+const loginBodySchema = z.object({
+  identifier: z.string().min(1).max(50).optional(),
+  username: z.string().min(1).max(50).optional(),
+  password: z.string().min(1).max(128),
+});
 
 /**
  * POST /api/auth/register
@@ -49,7 +67,7 @@ const router = express.Router();
  * @throws {400} When validation fails, username is taken, email is already registered, or stable name is taken
  * @throws {500} When a database error or unexpected error occurs
  */
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', validateRequest({ body: registerBodySchema }), async (req: Request, res: Response) => {
   const { username, email, password, stableName } = req.body;
 
   // Validate registration request — throws AppError for validation failures
@@ -106,6 +124,7 @@ router.post('/register', async (req: Request, res: Response) => {
     id: String(user.id),
     username: user.username,
     role: user.role,
+    tokenVersion: user.tokenVersion ?? 0,
   });
 
   logger.info('User registered successfully', { userId: user.id, username: user.username, stableName: user.stableName });
@@ -159,7 +178,7 @@ router.post('/register', async (req: Request, res: Response) => {
  * @throws {401} When credentials are invalid
  * @throws {500} When an unexpected error occurs
  */
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', validateRequest({ body: loginBodySchema }), async (req: Request, res: Response) => {
   const { identifier, username, password } = req.body;
 
   // Accept 'identifier' (new) or 'username' (legacy) for backward compatibility
@@ -190,6 +209,7 @@ router.post('/login', async (req: Request, res: Response) => {
     id: String(user.id),
     username: user.username,
     role: user.role,
+    tokenVersion: user.tokenVersion ?? 0,
   });
 
   // Return user profile without passwordHash — never expose hashes to clients

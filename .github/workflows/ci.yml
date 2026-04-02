@@ -172,11 +172,50 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-      
-      - name: Audit backend dependencies
+
+      - name: Install backend dependencies
         working-directory: ./prototype/backend
-        run: npm audit --audit-level=moderate || true
-      
-      - name: Audit frontend dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
         working-directory: ./prototype/frontend
-        run: npm audit --audit-level=moderate || true
+        run: npm ci
+
+      - name: Generate audit report (backend)
+        working-directory: ./prototype/backend
+        run: npm audit --json > audit-report-backend.json || true
+
+      - name: Generate audit report (frontend)
+        working-directory: ./prototype/frontend
+        run: npm audit --json > audit-report-frontend.json || true
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-reports
+          path: |
+            prototype/backend/audit-report-backend.json
+            prototype/frontend/audit-report-frontend.json
+
+      - name: Check allowlist and audit backend
+        working-directory: ./prototype/backend
+        run: |
+          # Run npm audit at high level — fail on high/critical vulnerabilities
+          # Known accepted vulnerabilities are documented in .security-audit-allowlist.json
+          ALLOWLIST_FILE="../../.security-audit-allowlist.json"
+          if [ -f "$ALLOWLIST_FILE" ]; then
+            echo "Security audit allowlist found — reviewing accepted vulnerabilities"
+            cat "$ALLOWLIST_FILE"
+          fi
+          npm audit --audit-level=high
+
+      - name: Check allowlist and audit frontend
+        working-directory: ./prototype/frontend
+        run: |
+          ALLOWLIST_FILE="../../.security-audit-allowlist.json"
+          if [ -f "$ALLOWLIST_FILE" ]; then
+            echo "Security audit allowlist found — reviewing accepted vulnerabilities"
+            cat "$ALLOWLIST_FILE"
+          fi
+          npm audit --audit-level=high

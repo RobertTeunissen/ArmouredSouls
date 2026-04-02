@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+import { getConfig } from '../config/env';
+import prisma from '../lib/prisma';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -11,7 +11,7 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authenticateToken = (
+export const authenticateToken = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -23,22 +23,38 @@ export const authenticateToken = (
     return res.status(401).json({ error: 'Access token required' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      // Use 401 for expired/invalid tokens so the frontend interceptor can
-      // detect auth failures consistently and redirect to login.
-      // 403 is reserved for authorization failures (e.g. "not admin").
+  const jwtSecret = getConfig().jwtSecret;
+
+  let decoded: { userId: string | number; username: string; role: string; tokenVersion?: number };
+  try {
+    decoded = jwt.verify(token, jwtSecret) as typeof decoded;
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  const userId = typeof decoded.userId === 'string' ? parseInt(decoded.userId, 10) : decoded.userId;
+
+  // Verify tokenVersion against the database to support server-side invalidation
+  const tokenVersion = decoded.tokenVersion ?? 0;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { tokenVersion: true },
+    });
+
+    if (!user || user.tokenVersion !== tokenVersion) {
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
 
-    const payload = decoded as { userId: string | number; username: string; role: string };
-    req.user = {
-      userId: typeof payload.userId === 'string' ? parseInt(payload.userId, 10) : payload.userId,
-      username: payload.username,
-      role: payload.role,
-    };
-    next();
-  });
+  req.user = {
+    userId,
+    username: decoded.username,
+    role: decoded.role,
+  };
+  next();
 };
 
 export const requireAdmin = (

@@ -17,6 +17,7 @@ export interface TokenPayload {
   userId: string;
   username: string;
   role: string;
+  tokenVersion?: number;
   iat?: number;
   exp?: number;
 }
@@ -28,6 +29,7 @@ export interface UserForToken {
   id: string;
   username: string;
   role: string;
+  tokenVersion?: number;
 }
 
 /**
@@ -98,6 +100,7 @@ export function generateToken(user: UserForToken): string {
     userId: user.id,
     username: user.username,
     role: user.role,
+    tokenVersion: user.tokenVersion ?? 0,
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

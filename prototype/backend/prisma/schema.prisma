@@ -31,6 +31,9 @@ model User {
   notificationsLeague Boolean @default(true) @map("notifications_league")
   themePreference     String  @default("dark") @map("theme_preference") @db.VarChar(20)
 
+  // ===== AUTH =====
+  tokenVersion Int @default(0) @map("token_version") // Incremented on password change to invalidate JWTs
+
   // ===== ONBOARDING TRACKING =====
   hasCompletedOnboarding Boolean   @default(false) @map("has_completed_onboarding")
   onboardingSkipped      Boolean   @default(false) @map("onboarding_skipped")

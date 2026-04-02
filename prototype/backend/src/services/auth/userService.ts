@@ -31,6 +31,7 @@ export interface User {
   currency: number;
   prestige: number;
   role: string;
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }

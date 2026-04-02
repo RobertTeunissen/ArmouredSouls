@@ -61,6 +61,34 @@ These must not be vague ("update docs") — they must name the specific files an
 
 The final task group in every spec must include a verification step that runs the Verification Criteria defined in the requirements. This is the "did we actually achieve what we set out to do" gate. It should reference the specific checks from the requirements document.
 
+## Spec Naming and Organization
+
+### Sequential Numbering
+
+Every spec directory must be prefixed with a sequential number. The number is assigned when the spec is created and never changes, even if earlier specs are completed or removed.
+
+- Format: `{number}-{kebab-case-name}` (e.g., `11-security-audit-guardrails`)
+- To find the next number: look at the highest number across `to-do/`, `done-march26/`, and `done-april26/` (or any future done directories), then increment by 1
+- Numbers are global across all directories — no reuse, no gaps to fill
+
+### Directory Placement
+
+- New specs always start in `.kiro/specs/to-do/`
+- When all tasks in a spec are completed, move the spec directory to `.kiro/specs/done-{month}{year}/` (e.g., `done-april26/`)
+- Never leave completed specs in `to-do/`
+- The `done-*` directory name uses the month the spec was finished, not started
+
+### Current Number Registry
+
+Check these directories to determine the next available number:
+- `.kiro/specs/to-do/`
+- `.kiro/specs/done-april26/`
+- `.kiro/specs/done-march26/`
+
+### No Optional Tasks
+
+All tasks in a spec are mandatory. Do not mark tasks as optional with `*` or `\*`. Every task that is written must be executed. If a task isn't worth doing, remove it from the spec entirely — don't mark it optional.
+
 ## Anti-Patterns to Avoid
 
 - Requirements with no Expected Contribution section (why does this spec exist?)
@@ -68,3 +96,4 @@ The final task group in every spec must include a verification step that runs th
 - Design documents that don't mention documentation impact
 - Specs where some acceptance criteria have no corresponding task
 - Verification criteria that just say "all tests pass" without spec-specific checks
+- Tasks marked as optional — if it's in the spec, it gets done

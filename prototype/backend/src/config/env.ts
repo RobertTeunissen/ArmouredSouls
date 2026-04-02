@@ -9,6 +9,8 @@ export interface EnvConfig {
   schedulerEnabled: boolean;
   rateLimitWindowMs: number;
   rateLimitMaxRequests: number;
+  loginRateLimitWindowMs: number;
+  loginRateLimitMax: number;
   leagueSchedule: string;
   tournamentSchedule: string;
   tagTeamSchedule: string;
@@ -28,6 +30,8 @@ export interface EnvConfig {
  * - `BCRYPT_SALT_ROUNDS` — bcrypt cost factor (default: `10`, valid: 4–31)
  * - `RATE_LIMIT_WINDOW_MS` — rate limit window in ms (default: `60000`)
  * - `RATE_LIMIT_MAX_REQUESTS` — max auth requests per window (default: `30`; general API allows 10x this)
+ * - `LOGIN_RATE_LIMIT_WINDOW_MS` — login rate limit window in ms (default: `900000` = 15 minutes)
+ * - `LOGIN_RATE_LIMIT_MAX` — max login attempts per window (default: `10`)
  */
 export function loadEnvConfig(): EnvConfig {
   const nodeEnv = process.env.NODE_ENV || 'development';
@@ -58,6 +62,12 @@ export function loadEnvConfig(): EnvConfig {
   const parsedMaxReqs = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '30', 10);
   const rateLimitMaxRequests = isNaN(parsedMaxReqs) || parsedMaxReqs <= 0 ? 30 : parsedMaxReqs;
 
+  const parsedLoginWindowMs = parseInt(process.env.LOGIN_RATE_LIMIT_WINDOW_MS || '900000', 10);
+  const loginRateLimitWindowMs = isNaN(parsedLoginWindowMs) || parsedLoginWindowMs <= 0 ? 900000 : parsedLoginWindowMs;
+
+  const parsedLoginMax = parseInt(process.env.LOGIN_RATE_LIMIT_MAX || '10', 10);
+  const loginRateLimitMax = isNaN(parsedLoginMax) || parsedLoginMax <= 0 ? 10 : parsedLoginMax;
+
   const corsOriginRaw = process.env.CORS_ORIGIN || '';
   const corsOrigins = nodeEnv === 'development'
     ? ['*']
@@ -74,6 +84,8 @@ export function loadEnvConfig(): EnvConfig {
     schedulerEnabled: process.env.SCHEDULER_ENABLED === 'true',
     rateLimitWindowMs,
     rateLimitMaxRequests,
+    loginRateLimitWindowMs,
+    loginRateLimitMax,
     leagueSchedule: process.env.LEAGUE_SCHEDULE || '0 20 * * *',
     tournamentSchedule: process.env.TOURNAMENT_SCHEDULE || '0 8 * * *',
     tagTeamSchedule: process.env.TAGTEAM_SCHEDULE || '0 12 * * *',

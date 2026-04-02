@@ -183,6 +183,30 @@ See `docs/guides/SECURITY.md` for comprehensive security strategy covering:
 - Using components with known vulnerabilities
 - Insufficient logging and monitoring
 
+### Zod Schema Validation (Required for All Routes)
+- Every new route handler must have a Zod schema defined for its params, query, and/or body
+- Use the `validateRequest` middleware from `src/middleware/schemaValidator.ts`
+- Import reusable primitives from `src/utils/securityValidation.ts` (`safeName`, `safeSlug`, `positiveIntParam`, `safeImageUrl`, `orderByColumn`)
+- Never write inline regex checks in route handlers — use the centralized primitives
+- Zod's default `.strip()` mode removes unknown fields, preventing mass-assignment
+
+### Ownership Verification (Required for All Mutations)
+- Every route that mutates a user-owned resource must verify ownership before the mutation
+- Use helpers from `src/middleware/ownership.ts`: `verifyRobotOwnership`, `verifyWeaponOwnership`, `verifyFacilityOwnership`
+- For transactional operations, call ownership helpers inside the transaction boundary (prevents TOCTOU races)
+- Ownership failures return a generic `403 Access denied` — never reveal whether the resource exists
+
+### lockUserForSpending (Required for Economic Endpoints)
+- Every credit-spending endpoint (weapon purchase, facility upgrade, robot creation, attribute upgrade) must use `lockUserForSpending` from `src/lib/creditGuard.ts` inside a Prisma interactive transaction
+- Re-read all mutable state (facility levels, roster counts, attribute levels) after acquiring the lock
+- For multi-row serialization (team creation), use `pg_advisory_xact_lock` instead
+- See `docs/guides/SECURITY.md` → Security Playbook → Transaction Integrity Pattern for the full pattern
+
+### ESLint Security Rules (`eslint-plugin-security`)
+- The backend ESLint config includes `eslint-plugin-security` with rules that flag `eval()`, dynamic `require()`, timing attacks, unsafe regex, and deprecated Buffer usage
+- `error`-level rules (`detect-eval-with-expression`, `detect-no-csrf-before-method-override`, `detect-buffer-noassert`, `detect-new-buffer`) block CI
+- Run `npm run lint` before committing to catch security anti-patterns
+
 ## Performance Considerations
 - Optimize database queries (use EXPLAIN when needed)
 - Implement pagination for large datasets

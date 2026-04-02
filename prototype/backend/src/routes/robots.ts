@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable, validateNoDuplicateEquip } from '../utils/weaponValidation';
 import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
@@ -11,8 +12,46 @@ import { getNextCronOccurrence } from '../utils/scheduleUtils';
 import logger from '../config/logger';
 import { assignLeagueInstance } from '../services/league/leagueInstanceService';
 import { RobotError, RobotErrorCode } from '../errors/robotErrors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { safeName, positiveIntParam } from '../utils/securityValidation';
+import { verifyRobotOwnership } from '../middleware/ownership';
+import { securityMonitor } from '../services/security/securityMonitor';
 
 const router = express.Router();
+
+// --- Zod schemas for robot routes ---
+
+const robotIdParamsSchema = z.object({
+  id: positiveIntParam,
+});
+
+const createRobotBodySchema = z.object({
+  name: safeName,
+});
+
+const equipWeaponBodySchema = z.object({
+  weaponInventoryId: z.coerce.number().int().positive(),
+});
+
+const loadoutTypeBodySchema = z.object({
+  loadoutType: z.enum(['single', 'weapon_shield', 'two_handed', 'dual_wield']),
+});
+
+const stanceBodySchema = z.object({
+  stance: z.string().min(1).max(20),
+});
+
+const yieldThresholdBodySchema = z.object({
+  yieldThreshold: z.coerce.number().min(0).max(50),
+});
+
+const appearanceBodySchema = z.object({
+  imageUrl: z.string().min(1).max(200),
+});
+
+const upgradesBodySchema = z.object({
+  upgrades: z.record(z.string(), z.number().int().positive()),
+});
 
 const ROBOT_CREATION_COST = 500000;
 const _MAX_ATTRIBUTE_LEVEL = 50;
@@ -59,7 +98,7 @@ const attributeToAcademy: { [key: string]: string } = {
 
 // Fields to strip from robot data when viewed by non-owners
 // These are competitively sensitive: exact attribute levels, battle config, and current combat state
-const SENSITIVE_ROBOT_FIELDS = [
+export const SENSITIVE_ROBOT_FIELDS = [
   // 23 core attributes
   'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
   'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
@@ -75,7 +114,7 @@ const SENSITIVE_ROBOT_FIELDS = [
 ] as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function sanitizeRobotForPublic(robot: any): any {
+export function sanitizeRobotForPublic(robot: any): any {
   if (!robot) return robot;
   const sanitized = { ...robot };
   for (const field of SENSITIVE_ROBOT_FIELDS) {
@@ -142,7 +181,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 });
 
 // Create a new robot
-router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const { name } = req.body;
 
@@ -312,6 +351,10 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 
     // Track spending for onboarding budget comparison
     await trackSpending(userId, 'robots', ROBOT_CREATION_COST);
+
+    // Security monitoring: track robot creation and spending
+    securityMonitor.trackRobotCreation(userId);
+    securityMonitor.trackSpending(userId, ROBOT_CREATION_COST);
   } catch (logError) {
     logger.error('Failed to log robot creation event:', logError);
     // Don't fail the request if logging fails
@@ -325,7 +368,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 });
 
 // Get a specific robot by ID (any logged-in user can view, but sensitive data is owner-only)
-router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
@@ -368,7 +411,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
 
 
 // Equip main weapon
-router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put('/:id/equip-main-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: equipWeaponBodySchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
   const { weaponInventoryId } = req.body;
@@ -456,7 +499,7 @@ router.put('/:id/equip-main-weapon', authenticateToken, async (req: AuthRequest,
 });
 
 // Equip offhand weapon
-router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put('/:id/equip-offhand-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: equipWeaponBodySchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
   const { weaponInventoryId } = req.body;
@@ -553,7 +596,7 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, async (req: AuthReque
 });
 
 // Unequip main weapon
-router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.delete('/:id/unequip-main-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
@@ -615,7 +658,7 @@ router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthReq
 
 
 // Unequip offhand weapon
-router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.delete('/:id/unequip-offhand-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
@@ -676,7 +719,7 @@ router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: Auth
 });
 
 // Change loadout type
-router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put('/:id/loadout-type', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: loadoutTypeBodySchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
   const { loadoutType } = req.body;
@@ -761,7 +804,7 @@ router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res:
 });
 
 // Update robot stance (offensive, defensive, balanced)
-router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.patch('/:id/stance', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: stanceBodySchema }), async (req: AuthRequest, res: Response) => {
   const robotId = parseInt(String(req.params.id));
   const { stance } = req.body;
 
@@ -779,18 +822,8 @@ router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Res
     );
   }
 
-  // Check if robot exists and belongs to user
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  if (robot.userId !== req.user!.userId) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_OWNED, 'Not authorized to modify this robot', 403);
-  }
+  // Verify ownership — returns generic 403 on mismatch or not-found
+  await verifyRobotOwnership(prisma, robotId, req.user!.userId);
 
   // Update stance
   const stanceRobot = await prisma.robot.update({
@@ -809,7 +842,7 @@ router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Res
 });
 
 // Update robot yield threshold (0-50)
-router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.patch('/:id/yield-threshold', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: yieldThresholdBodySchema }), async (req: AuthRequest, res: Response) => {
   const robotId = parseInt(String(req.params.id));
   const { yieldThreshold } = req.body;
 
@@ -827,18 +860,8 @@ router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest,
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Yield threshold must be between 0 and 50', 400);
   }
 
-  // Check if robot exists and belongs to user
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  if (robot.userId !== req.user!.userId) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_OWNED, 'Not authorized to modify this robot', 403);
-  }
+  // Verify ownership — returns generic 403 on mismatch or not-found
+  await verifyRobotOwnership(prisma, robotId, req.user!.userId);
 
   // Update yield threshold
   const thresholdRobot = await prisma.robot.update({
@@ -860,7 +883,7 @@ router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest,
  * GET /api/robots/:id/matches
  * Get paginated match history for a specific robot
  */
-router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id/matches', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const robotId = parseInt(String(req.params.id));
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 20));
@@ -983,7 +1006,7 @@ router.get('/:id/matches', authenticateToken, async (req: AuthRequest, res: Resp
  * GET /api/robots/:id/upcoming
  * Get upcoming scheduled matches for a specific robot
  */
-router.get('/:id/upcoming', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id/upcoming', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const robotId = parseInt(String(req.params.id));
 
   if (isNaN(robotId)) {
@@ -1216,7 +1239,7 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
 });
 
 // Get robot rankings
-router.get('/:id/rankings', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id/rankings', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
@@ -1387,7 +1410,7 @@ router.get('/:id/rankings', authenticateToken, async (req: AuthRequest, res: Res
 });
 
 // Get robot performance by context (leagues, tournaments, tag teams)
-router.get('/:id/performance-context', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id/performance-context', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const robotId = parseInt(String(req.params.id));
 
   if (isNaN(robotId)) {
@@ -1650,7 +1673,7 @@ router.get('/:id/performance-context', authenticateToken, async (req: AuthReques
 });
 
 // Update robot appearance (imageUrl)
-router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put('/:id/appearance', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: appearanceBodySchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
   const { imageUrl } = req.body;
@@ -1671,20 +1694,8 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid image path. Must be a .webp file in the robots assets directory.', 400);
   }
 
-  // Check robot ownership
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-  });
-
-  if (!robot) {
-    logger.info('Robot not found:', robotId);
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  if (robot.userId !== userId) {
-    logger.info('Ownership mismatch:', { robotUserId: robot.userId, requestUserId: userId });
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_OWNED, 'You do not own this robot', 403);
-  }
+  // Verify ownership — returns generic 403 on mismatch or not-found
+  await verifyRobotOwnership(prisma, robotId, userId);
 
   logger.info('Updating robot with imageUrl...');
   
@@ -1719,7 +1730,7 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
 
 // Get recent battles for a robot
 // Get upcoming matches for a robot
-router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id/upcoming-matches', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
@@ -1964,7 +1975,7 @@ router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, 
 });
 
 // Bulk upgrade robot attributes (atomic transaction)
-router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: upgradesBodySchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
   const { upgrades } = req.body;
@@ -2297,6 +2308,9 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
 
     // Track spending for onboarding budget comparison
     await trackSpending(userId, 'attributes', totalCost);
+
+    // Security monitoring: track spending
+    securityMonitor.trackSpending(userId, totalCost);
 
     // Log each attribute upgrade
     for (const op of upgradeOperations) {

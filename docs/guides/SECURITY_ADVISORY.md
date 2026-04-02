@@ -145,6 +145,62 @@ If you discover a security vulnerability:
 
 ---
 
+## Vulnerability Allowlist Process
+
+When `npm audit` reports a vulnerability that cannot be immediately remediated (e.g., a transitive dependency with no available fix), it can be added to the allowlist:
+
+1. Create an entry in `.security-audit-allowlist.json` at the project root:
+   ```json
+   {
+     "allowlist": [
+       {
+         "id": "GHSA-xxxx-xxxx-xxxx",
+         "package": "affected-package",
+         "justification": "Only used in development, not exposed in production API",
+         "reviewDate": "2026-03-01",
+         "nextReviewDate": "2026-06-01"
+       }
+     ]
+   }
+   ```
+2. Each entry requires: advisory ID, package name, written justification, review date, and next review date.
+3. Allowlisted vulnerabilities are checked during CI — the `security-audit` job reads this file and skips matching advisories.
+4. Review all allowlisted entries on their `nextReviewDate`. Remove entries once a fix is available.
+
+---
+
+## Dependency Scanning in CI/CD
+
+The `security-audit` job in `.github/workflows/ci.yml` runs on every push and PR:
+
+- `npm audit --audit-level=high` — fails the build on high or critical vulnerabilities in production dependencies
+- `npm audit --json` — produces a JSON report uploaded as a build artifact
+- Allowlist check — reads `.security-audit-allowlist.json` and skips documented advisories
+- New dependencies added to `package.json` are automatically scanned before merge
+
+---
+
+## ESLint Security Rules (`eslint-plugin-security`)
+
+The backend ESLint configuration (`prototype/backend/eslint.config.mjs`) includes `eslint-plugin-security` with these rules:
+
+| Rule | Level | What It Catches |
+|------|-------|-----------------|
+| `detect-eval-with-expression` | error | `eval()` with dynamic input |
+| `detect-non-literal-require` | warn | Dynamic `require()` calls |
+| `detect-possible-timing-attacks` | warn | Non-constant-time string comparisons |
+| `detect-no-csrf-before-method-override` | error | CSRF middleware ordering issues |
+| `detect-non-literal-regexp` | warn | User input in RegExp constructors |
+| `detect-unsafe-regex` | warn | ReDoS-vulnerable regex patterns |
+| `detect-buffer-noassert` | error | Buffer reads without bounds checking |
+| `detect-child-process` | warn | Child process execution |
+| `detect-new-buffer` | error | Deprecated `new Buffer()` usage |
+| `detect-pseudoRandomBytes` | warn | Non-cryptographic random generation |
+
+Run `npm run lint` to check. All `error`-level rules block CI.
+
+---
+
 ## Security Resources
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
