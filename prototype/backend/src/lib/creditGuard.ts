@@ -31,7 +31,7 @@ export async function lockUserForSpending(
   // FOR UPDATE acquires a row-level exclusive lock in PostgreSQL.
   // Other transactions attempting the same lock will wait until this one completes.
   const rows = await tx.$queryRaw<LockedUser[]>`
-    SELECT id, currency FROM "User" WHERE id = ${userId} FOR UPDATE
+    SELECT id, currency FROM "users" WHERE id = ${userId} FOR UPDATE
   `;
 
   if (!rows || rows.length === 0) {
