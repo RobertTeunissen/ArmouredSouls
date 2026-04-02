@@ -898,8 +898,8 @@ async function simulateTagTeamBattle(
   // Determine which robot is currently fighting for each team (the one that finished the battle)
   const team1CurrentFighterHP = team1ReserveUsed ? team1ReserveFinalHP : team1ActiveFinalHP;
   const team2CurrentFighterHP = team2ReserveUsed ? team2ReserveFinalHP : team2ActiveFinalHP;
-  const team1CurrentFighterId = team1ReserveUsed ? team1.reserveRobotId : team1.activeRobotId;
-  const team2CurrentFighterId = team2ReserveUsed ? team2.reserveRobotId : team2.activeRobotId;
+  const _team1CurrentFighterId = team1ReserveUsed ? team1.reserveRobotId : team1.activeRobotId;
+  const _team2CurrentFighterId = team2ReserveUsed ? team2.reserveRobotId : team2.activeRobotId;
 
   // Calculate total remaining HP for each team (active + reserve)
   // This is used for draw detection - a team is only exhausted when ALL robots are destroyed

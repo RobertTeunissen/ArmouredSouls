@@ -46,7 +46,7 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
 
   // Prisma known errors - detect by constructor name to avoid importing Prisma client
   if (err.constructor?.name === 'PrismaClientKnownRequestError' && 'code' in err) {
-    const prismaCode = (err as any).code as string;
+    const prismaCode = (err as Record<string, unknown>).code as string;
     const mapping = PRISMA_ERROR_MAP[prismaCode];
     if (mapping) {
       // Log full Prisma message for debugging, but return generic message to client
