@@ -56,12 +56,13 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     }
   }
 
-  // Unknown errors - return 500 and hide internals in production
+  // Unknown errors - return 500 and hide internals in all environments.
+  // Never reflect raw error messages — they may contain unsanitized user input (XSS vector).
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'acceptance';
   logger.error('Unhandled error', { message: err.message, stack: err.stack, method: req.method, path: req.originalUrl });
   res.status(500).json({
     error: 'Internal Server Error',
     code: 'INTERNAL_ERROR',
-    ...(isProduction ? {} : { message: err.message, stack: err.stack }),
+    ...(isProduction ? {} : { message: 'An unexpected error occurred. Check server logs for details.' }),
   });
 }

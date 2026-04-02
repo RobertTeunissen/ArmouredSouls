@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
 import prisma from '../lib/prisma';
+import { lockUserForSpending } from '../lib/creditGuard';
 import { eventLogger } from '../services/common/eventLogger';
 import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
@@ -123,31 +124,23 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
       });
     }
 
-    // Purchase weapon in a transaction
+    // Purchase weapon in a transaction with row-level locking
     const result = await prisma.$transaction(async (tx) => {
-      // Re-read user inside transaction to prevent race conditions (stale balance exploit)
-      const freshUser = await tx.user.findUnique({
-        where: { id: userId },
-        include: {
-          facilities: {
-            where: {
-              facilityType: {
-                in: ['weapons_workshop', 'storage_facility']
-              }
-            },
-          },
-        },
-      });
+      // Acquire exclusive row lock — blocks concurrent purchases for this user
+      const lockedUser = await lockUserForSpending(tx, userId);
 
-      if (!freshUser || freshUser.currency < finalCost) {
+      if (lockedUser.currency < finalCost) {
         throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Insufficient credits', 400, {
           required: finalCost,
-          available: freshUser?.currency ?? 0,
+          available: lockedUser.currency,
         });
       }
 
       // Re-verify workshop level hasn't changed (guards against concurrent facility upgrade race)
-      const freshWorkshop = freshUser.facilities.find(f => f.facilityType === 'weapons_workshop');
+      const freshFacilities = await tx.facility.findMany({
+        where: { userId, facilityType: { in: ['weapons_workshop', 'storage_facility'] } },
+      });
+      const freshWorkshop = freshFacilities.find(f => f.facilityType === 'weapons_workshop');
       const freshWorkshopLevel = freshWorkshop?.level || 0;
       if (freshWorkshopLevel !== weaponWorkshopLevel) {
         throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Facility level changed, please retry', 409);
@@ -157,13 +150,13 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
       const freshWeaponCount = await tx.weaponInventory.count({
         where: { userId },
       });
-      const freshStorage = freshUser.facilities.find(f => f.facilityType === 'storage_facility');
+      const freshStorage = freshFacilities.find(f => f.facilityType === 'storage_facility');
       const freshMaxCapacity = calculateStorageCapacity(freshStorage?.level || 0);
       if (freshWeaponCount >= freshMaxCapacity) {
         throw new EconomyError(EconomyErrorCode.STORAGE_CAPACITY_FULL, 'Storage capacity full', 400);
       }
 
-      // Atomic currency decrement to prevent double-spend
+      // Atomic currency decrement — safe because row is locked
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: { currency: { decrement: finalCost } },
