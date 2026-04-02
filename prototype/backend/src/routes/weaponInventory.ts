@@ -125,10 +125,48 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 
     // Purchase weapon in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Deduct currency (with discount applied)
+      // Re-read user inside transaction to prevent race conditions (stale balance exploit)
+      const freshUser = await tx.user.findUnique({
+        where: { id: userId },
+        include: {
+          facilities: {
+            where: {
+              facilityType: {
+                in: ['weapons_workshop', 'storage_facility']
+              }
+            },
+          },
+        },
+      });
+
+      if (!freshUser || freshUser.currency < finalCost) {
+        throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Insufficient credits', 400, {
+          required: finalCost,
+          available: freshUser?.currency ?? 0,
+        });
+      }
+
+      // Re-verify workshop level hasn't changed (guards against concurrent facility upgrade race)
+      const freshWorkshop = freshUser.facilities.find(f => f.facilityType === 'weapons_workshop');
+      const freshWorkshopLevel = freshWorkshop?.level || 0;
+      if (freshWorkshopLevel !== weaponWorkshopLevel) {
+        throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Facility level changed, please retry', 409);
+      }
+
+      // Re-verify storage capacity inside transaction
+      const freshWeaponCount = await tx.weaponInventory.count({
+        where: { userId },
+      });
+      const freshStorage = freshUser.facilities.find(f => f.facilityType === 'storage_facility');
+      const freshMaxCapacity = calculateStorageCapacity(freshStorage?.level || 0);
+      if (freshWeaponCount >= freshMaxCapacity) {
+        throw new EconomyError(EconomyErrorCode.STORAGE_CAPACITY_FULL, 'Storage capacity full', 400);
+      }
+
+      // Atomic currency decrement to prevent double-spend
       const updatedUser = await tx.user.update({
         where: { id: userId },
-        data: { currency: user.currency - finalCost },
+        data: { currency: { decrement: finalCost } },
       });
 
       // Add weapon to inventory
