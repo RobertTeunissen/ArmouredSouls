@@ -95,7 +95,7 @@ interface SectionEntry {
 }
 
 
-const CONTENT_DIR = path.join(__dirname, '..', 'content', 'guide');
+const CONTENT_DIR = path.join(__dirname, '..', '..', 'content', 'guide');
 
 /**
  * Service for reading, parsing, and caching guide content from the filesystem.
