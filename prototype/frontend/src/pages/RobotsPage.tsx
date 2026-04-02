@@ -6,7 +6,6 @@ import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import apiClient from '../utils/apiClient';
-import { Robot } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
 
 // Utility functions
@@ -127,7 +126,7 @@ function RobotsPage() {
   });
   const [sortColumn, setSortColumn] = useState<string>('elo');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const { logout, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
