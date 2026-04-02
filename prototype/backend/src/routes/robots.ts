@@ -56,8 +56,37 @@ const attributeToAcademy: { [key: string]: string } = {
   'formationTactics': 'ai_training_academy',
 };
 
+// Fields to strip from robot data when viewed by non-owners
+// These are competitively sensitive: exact attribute levels, battle config, and current combat state
+const SENSITIVE_ROBOT_FIELDS = [
+  // 23 core attributes
+  'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
+  'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
+  'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
+  'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
+  'syncProtocols', 'supportSystems', 'formationTactics',
+  // Battle configuration
+  'yieldThreshold', 'stance', 'loadoutType',
+  // Current combat state
+  'currentHP', 'currentShield', 'damageTaken',
+  // Equipment details
+  'mainWeaponId', 'offhandWeaponId', 'mainWeapon', 'offhandWeapon',
+] as const;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function sanitizeRobotForPublic(robot: any): any {
+  if (!robot) return robot;
+  const sanitized = { ...robot };
+  for (const field of SENSITIVE_ROBOT_FIELDS) {
+    delete sanitized[field];
+  }
+  return sanitized;
+}
+
 // Get all robots from all users
 router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+
   const robots = await prisma.robot.findMany({
     include: {
       user: {
@@ -79,7 +108,12 @@ router.get('/all/robots', authenticateToken, async (req: AuthRequest, res: Respo
     orderBy: { elo: 'desc' },
   });
 
-  res.json(robots);
+  // Strip sensitive fields from robots the user doesn't own
+  const sanitizedRobots = robots.map(robot =>
+    robot.userId === userId ? robot : sanitizeRobotForPublic(robot)
+  );
+
+  res.json(sanitizedRobots);
 });
 
 // Get all robots for the authenticated user
@@ -167,10 +201,36 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 
   // Create robot in a transaction
   const result = await prisma.$transaction(async (tx) => {
-    // Deduct currency
+    // Re-read user inside transaction to prevent race conditions (stale balance exploit)
+    const freshUser = await tx.user.findUnique({
+      where: { id: userId },
+      include: {
+        facilities: {
+          where: { facilityType: 'roster_expansion' },
+        },
+      },
+    });
+
+    if (!freshUser || freshUser.currency < ROBOT_CREATION_COST) {
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Insufficient credits', 400);
+    }
+
+    // Re-verify roster limit inside transaction
+    const freshRobotCount = await tx.robot.count({ where: { userId } });
+    const freshRosterLevel = freshUser.facilities[0]?.level || 0;
+    const freshMaxRobots = freshRosterLevel + 1;
+    if (freshRobotCount >= freshMaxRobots) {
+      throw new RobotError(
+        RobotErrorCode.MAX_ROBOTS_REACHED,
+        `Robot limit reached. Upgrade Roster Expansion facility to create more robots. Current limit: ${freshMaxRobots}`,
+        400
+      );
+    }
+
+    // Atomic currency decrement to prevent double-spend
     const updatedUser = await tx.user.update({
       where: { id: userId },
-      data: { currency: user.currency - ROBOT_CREATION_COST },
+      data: { currency: { decrement: ROBOT_CREATION_COST } },
     });
 
     // Create robot with all attributes at level 1 (defaults in schema)
@@ -255,8 +315,9 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   });
 });
 
-// Get a specific robot by ID (any logged-in user can view any robot)
+// Get a specific robot by ID (any logged-in user can view, but sensitive data is owner-only)
 router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
   if (isNaN(robotId)) {
@@ -291,7 +352,8 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
   }
 
-  res.json(robot);
+  // Strip sensitive fields if the requesting user doesn't own this robot
+  res.json(robot.userId === userId ? robot : sanitizeRobotForPublic(robot));
 });
 
 
@@ -1102,10 +1164,10 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
 
   // Perform repairs in a transaction
   const result = await prisma.$transaction(async (tx) => {
-    // Deduct cost from user
+    // Atomic currency decrement to prevent double-spend on concurrent requests
     const updatedUser = await tx.user.update({
       where: { id: userId },
-      data: { currency: user.currency - finalCost },
+      data: { currency: { decrement: finalCost } },
     });
 
     // Repair all robots (restore HP to max, clear repairCost, track lifetime cost)
@@ -1171,18 +1233,23 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
 
 // Get robot rankings
 router.get('/:id/rankings', authenticateToken, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
   if (isNaN(robotId)) {
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
   }
 
-  // Verify robot exists
+  // Verify robot exists and belongs to the requesting user
   const robot = await prisma.robot.findUnique({
     where: { id: robotId },
   });
 
   if (!robot) {
+    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
+  }
+
+  if (robot.userId !== userId) {
     throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
   }
 
@@ -1671,13 +1738,14 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
 // Get recent battles for a robot
 // Get upcoming matches for a robot
 router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
   if (isNaN(robotId)) {
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
   }
 
-  // Verify robot exists and get battle readiness info
+  // Verify robot exists and belongs to the requesting user
   const robot = await prisma.robot.findUnique({
     where: { id: robotId },
     include: {
@@ -1687,6 +1755,10 @@ router.get('/:id/upcoming-matches', authenticateToken, async (req: AuthRequest, 
   });
 
   if (!robot) {
+    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
+  }
+
+  if (robot.userId !== userId) {
     throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
   }
 
@@ -2052,10 +2124,24 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
 
   // Perform all upgrades in a single atomic transaction
   const result = await prisma.$transaction(async (tx) => {
-    // Deduct currency
+    // Re-read user inside transaction to prevent race conditions (stale balance exploit)
+    const freshUser = await tx.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!freshUser || freshUser.currency < totalCost) {
+      throw new RobotError(
+        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
+        'Insufficient credits',
+        400,
+        { required: totalCost, current: freshUser?.currency ?? 0 }
+      );
+    }
+
+    // Atomic currency decrement to prevent double-spend
     const updatedUser = await tx.user.update({
       where: { id: userId },
-      data: { currency: user.currency - totalCost },
+      data: { currency: { decrement: totalCost } },
     });
 
     // Build update data object

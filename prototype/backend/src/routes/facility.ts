@@ -209,20 +209,56 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
       );
     }
 
-    // Perform upgrade in a transaction
+    // Perform upgrade in a transaction with atomic currency check
     const result = await prisma.$transaction(async (tx) => {
-      // Deduct currency
+      // Re-read user inside transaction to prevent race conditions
+      const freshUser = await tx.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!freshUser || freshUser.currency < upgradeCost) {
+        throw new EconomyError(
+          EconomyErrorCode.INSUFFICIENT_CREDITS,
+          'Insufficient credits',
+          400,
+          { required: upgradeCost, current: freshUser?.currency ?? 0 }
+        );
+      }
+
+      // Re-read facility inside transaction to prevent concurrent level bumps
+      const freshFacility = await tx.facility.findUnique({
+        where: {
+          userId_facilityType: {
+            userId,
+            facilityType,
+          },
+        },
+      });
+
+      const freshLevel = freshFacility?.level || 0;
+
+      // Verify level hasn't changed since our initial read
+      if (freshLevel !== currentLevel) {
+        throw new EconomyError(
+          EconomyErrorCode.FACILITY_MAX_LEVEL,
+          'Facility level changed, please retry',
+          409,
+          { expected: currentLevel, actual: freshLevel }
+        );
+      }
+
+      // Atomic currency decrement
       const updatedUser = await tx.user.update({
         where: { id: userId },
-        data: { currency: user.currency - upgradeCost },
+        data: { currency: { decrement: upgradeCost } },
       });
 
       // Upgrade or create facility
       let updatedFacility;
-      if (facility) {
+      if (freshFacility) {
         updatedFacility = await tx.facility.update({
-          where: { id: facility.id },
-          data: { level: currentLevel + 1 },
+          where: { id: freshFacility.id },
+          data: { level: freshLevel + 1 },
         });
       } else {
         updatedFacility = await tx.facility.create({

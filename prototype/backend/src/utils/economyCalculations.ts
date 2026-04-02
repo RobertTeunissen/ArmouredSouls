@@ -544,19 +544,25 @@ export async function processDailyFinances(userId: number): Promise<DailyFinanci
   // Total costs to deduct
   const totalCosts = operatingCosts.total;
 
-  // Deduct operating costs from user balance
-  const canAffordCosts = user.currency >= totalCosts;
-  const newBalance = canAffordCosts ? user.currency - totalCosts : 0;
+  // Deduct operating costs atomically to prevent race conditions with concurrent user actions
+  if (totalCosts > 0) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        currency: { decrement: totalCosts },
+      },
+    });
+  }
 
-  // Update user balance
-  await prisma.user.update({
+  // Re-read balance after deduction to get accurate ending balance
+  const updatedUser = await prisma.user.findUnique({
     where: { id: userId },
-    data: {
-      currency: newBalance,
-    },
+    select: { currency: true },
   });
+  const newBalance = updatedUser?.currency ?? 0;
 
   const isBankrupt = newBalance <= 0;
+  const canAffordCosts = startingBalance >= totalCosts;
 
   return {
     userId: user.id,
