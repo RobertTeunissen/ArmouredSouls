@@ -210,9 +210,9 @@ function createRobotWithWeapon(name: string, hp: number, shield: number, damage:
 // For now, we'll use a dynamic import approach
 
 // Import the combat simulator to simulate individual phases
-import { simulateBattle, RobotWithWeapons, CombatResult } from '../src/services/combatSimulator';
-import { CombatMessageGenerator } from '../src/services/combatMessageGenerator';
-import { shouldTagOut } from '../src/services/tagTeamBattleOrchestrator';
+import { simulateBattle, RobotWithWeapons, CombatResult } from '../src/services/battle/combatSimulator';
+import { CombatMessageGenerator } from '../src/services/battle/combatMessageGenerator';
+import { shouldTagOut } from '../src/services/tag-team/tagTeamBattleOrchestrator';
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -1671,7 +1671,7 @@ describe('Task 3: Winner Determination and Draw Detection', () => {
 
     it('should apply positive ELO change to winner and negative to loser', () => {
       // Test the ELO calculation logic
-      const { calculateTagTeamELOChanges } = require('../src/services/tagTeamBattleOrchestrator');
+      const { calculateTagTeamELOChanges } = require('../src/services/tag-team/tagTeamBattleOrchestrator');
 
       fc.assert(
         fc.property(

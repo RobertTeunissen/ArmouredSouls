@@ -11,9 +11,9 @@
  */
 
 import prisma from '../../src/lib/prisma';
-import { createTeam } from '../../src/services/tagTeamService';
-import { runTagTeamMatchmaking } from '../../src/services/tagTeamMatchmakingService';
-import { executeScheduledTagTeamBattles } from '../../src/services/tagTeamBattleOrchestrator';
+import { createTeam } from '../../src/services/tag-team/tagTeamService';
+import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
+import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
 
 
 describe('Tag Team Multi-Match Cycle Integration Test', () => {

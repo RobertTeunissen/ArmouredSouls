@@ -4,7 +4,7 @@
  * to avoid sequence number conflicts in the auditLog table
  */
 
-import { clearSequenceCache } from '../src/services/eventLogger';
+import { clearSequenceCache } from '../src/services/common/eventLogger';
 import { PrismaClient } from '../generated/prisma';
 
 // Counter for generating unique cycle numbers within INT4 range

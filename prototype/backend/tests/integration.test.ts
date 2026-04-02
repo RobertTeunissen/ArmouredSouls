@@ -4,9 +4,9 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
-import { runMatchmaking } from '../src/services/matchmakingService';
-import { rebalanceLeagues } from '../src/services/leagueRebalancingService';
+import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
+import { runMatchmaking } from '../src/services/analytics/matchmakingService';
+import { rebalanceLeagues } from '../src/services/league/leagueRebalancingService';
 
 
 describe('Integration Test: Complete Daily Cycle', () => {

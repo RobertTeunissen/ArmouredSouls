@@ -10,7 +10,7 @@
  */
 
 import { Position, Vector2D } from './vector2d';
-import type { RobotWithWeapons, FormulaBreakdown } from '../combatSimulator';
+import type { RobotWithWeapons, FormulaBreakdown } from '../battle/combatSimulator';
 
 // ─── Range Band Classification (Req 3.1) ────────────────────────────
 

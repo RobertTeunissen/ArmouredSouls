@@ -1047,10 +1047,25 @@ export class KothWinConditionEvaluator implements WinConditionEvaluator {
     const winnerLabel = winnerId != null
       ? (scoreState.nameMap[winnerId] ?? `Robot ${winnerId}`)
       : 'No robot';
+
+    // Determine a human-readable reason for the victory message.
+    // When the match ends via last_standing phase, the winner is whoever has
+    // the highest zone score — which may NOT be the last robot alive.
+    let displayReason: string;
+    if (reason === 'last_standing') {
+      // If the winner IS the survivor, they won as last standing.
+      // If the winner is someone else (e.g. destroyed but higher score), they won by score.
+      displayReason = winnerId != null && winnerId === scoreState.lastStandingRobotId
+        ? 'last standing'
+        : 'highest zone score';
+    } else {
+      displayReason = reason.replace(/_/g, ' ');
+    }
+
     return {
       timestamp: currentTime,
       type: 'match_end' as KothCombatEvent['type'],
-      message: `${winnerLabel} wins the King of the Hill match — ${reason.replace(/_/g, ' ')}`,
+      message: `${winnerLabel} wins the King of the Hill match — ${displayReason}`,
       kpiData: {
         winnerId,
         zoneScores: { ...scoreState.zoneScores },

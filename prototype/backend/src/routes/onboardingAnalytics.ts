@@ -9,7 +9,7 @@
  */
 import express, { Response } from 'express';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
-import { recordEvents, OnboardingAnalyticsEvent } from '../services/onboardingAnalyticsService';
+import { recordEvents, OnboardingAnalyticsEvent } from '../services/analytics/onboardingAnalyticsService';
 import logger from '../config/logger';
 import { AppError } from '../errors';
 
@@ -92,7 +92,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
  */
 router.get('/summary', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const { getSummary } = await import('../services/onboardingAnalyticsService');
+    const { getSummary } = await import('../services/analytics/onboardingAnalyticsService');
     const summary = getSummary();
 
     res.json({

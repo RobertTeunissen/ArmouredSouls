@@ -7,7 +7,7 @@ import * as fc from 'fast-check';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { GuideService } from '../../services/guide-service';
+import { GuideService } from '../../services/common/guide-service';
 
 // Mock the logger to suppress warnings during tests
 jest.mock('../../config/logger', () => ({

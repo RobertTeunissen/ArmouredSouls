@@ -10,7 +10,7 @@
  */
 
 import * as fc from 'fast-check';
-import { calculateKothRewards } from '../src/services/kothBattleOrchestrator';
+import { calculateKothRewards } from '../src/services/koth/kothBattleOrchestrator';
 
 // ─── Expected base reward tiers ─────────────────────────────────────
 

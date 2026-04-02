@@ -7,7 +7,7 @@
 
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
-import { robotPerformanceService } from '../src/services/robotPerformanceService';
+import { robotPerformanceService } from '../src/services/analytics/robotPerformanceService';
 import { cleanupTestData } from './cleanupHelper';
 
 

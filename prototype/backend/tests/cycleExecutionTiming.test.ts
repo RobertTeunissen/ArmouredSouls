@@ -4,7 +4,7 @@
  * Validates Requirements 11.1, 11.2, 15.1, 15.2, 15.3
  */
 
-import { EventLogger } from '../src/services/eventLogger';
+import { EventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 describe('Cycle Execution Timing', () => {

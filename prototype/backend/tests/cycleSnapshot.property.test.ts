@@ -7,8 +7,8 @@
 
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
-import { EventLogger, EventType, clearSequenceCache } from '../src/services/eventLogger';
-import { CycleSnapshotService } from '../src/services/cycleSnapshotService';
+import { EventLogger, EventType, clearSequenceCache } from '../src/services/common/eventLogger';
+import { CycleSnapshotService } from '../src/services/cycle/cycleSnapshotService';
 
 const eventLogger = new EventLogger();
 const cycleSnapshotService = new CycleSnapshotService();

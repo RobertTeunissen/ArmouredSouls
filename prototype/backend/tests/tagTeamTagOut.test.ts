@@ -1,5 +1,5 @@
 import { Robot } from '../generated/prisma';
-import { shouldTagOut } from '../src/services/tagTeamBattleOrchestrator';
+import { shouldTagOut } from '../src/services/tag-team/tagTeamBattleOrchestrator';
 
 /**
  * Tests for the shouldTagOut function fix.

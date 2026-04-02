@@ -8,7 +8,7 @@
  */
 
 import * as fc from 'fast-check';
-import { distributeIntoGroups, EligibleRobot } from '../src/services/kothMatchmakingService';
+import { distributeIntoGroups, EligibleRobot } from '../src/services/koth/kothMatchmakingService';
 
 // ─── Helpers ────────────────────────────────────────────────────────
 

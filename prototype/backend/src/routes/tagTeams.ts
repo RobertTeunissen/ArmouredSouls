@@ -7,12 +7,12 @@ import {
   getTeamsByStable,
   disbandTeam,
   checkTeamReadiness,
-} from '../services/tagTeamService';
+} from '../services/tag-team/tagTeamService';
 import {
   getStandingsForTier,
   TAG_TEAM_LEAGUE_TIERS,
   TagTeamLeagueTier,
-} from '../services/tagTeamLeagueInstanceService';
+} from '../services/tag-team/tagTeamLeagueInstanceService';
 import logger from '../config/logger';
 import { AuthError, AuthErrorCode, TagTeamError, TagTeamErrorCode, RobotError, RobotErrorCode, AppError } from '../errors';
 

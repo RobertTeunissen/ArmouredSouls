@@ -1,4 +1,4 @@
-import { hashPassword, verifyPassword } from '../src/services/passwordService';
+import { hashPassword, verifyPassword } from '../src/services/auth/passwordService';
 import bcrypt from 'bcrypt';
 
 describe('Password Service', () => {

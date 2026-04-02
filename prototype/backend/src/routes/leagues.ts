@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/leagueInstanceService';
+import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { LeagueError, LeagueErrorCode } from '../errors';

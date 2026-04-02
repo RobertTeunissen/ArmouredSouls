@@ -7,7 +7,7 @@ import {
   TAG_TEAM_LEAGUE_TIERS,
   TagTeamLeagueTier,
   createTagTeamWithInstanceAssignment,
-} from '../src/services/tagTeamLeagueInstanceService';
+} from '../src/services/tag-team/tagTeamLeagueInstanceService';
 
 
 // Test configuration

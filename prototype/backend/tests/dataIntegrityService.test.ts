@@ -1,6 +1,6 @@
 import prisma from '../src/lib/prisma';
-import { DataIntegrityService } from '../src/services/dataIntegrityService';
-import { EventLogger } from '../src/services/eventLogger';
+import { DataIntegrityService } from '../src/services/common/dataIntegrityService';
+import { EventLogger } from '../src/services/common/eventLogger';
 
 const integrityService = new DataIntegrityService();
 const eventLogger = new EventLogger();

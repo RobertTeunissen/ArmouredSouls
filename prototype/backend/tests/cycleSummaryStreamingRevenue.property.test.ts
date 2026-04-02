@@ -11,9 +11,9 @@
 
 import fc from 'fast-check';
 import { Prisma } from '../generated/prisma';
-import { executeScheduledBattles } from '../src/services/leagueBattleOrchestrator';
-import { executeScheduledTagTeamBattles } from '../src/services/tagTeamBattleOrchestrator';
-import { clearSequenceCache } from '../src/services/eventLogger';
+import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
+import { executeScheduledTagTeamBattles } from '../src/services/tag-team/tagTeamBattleOrchestrator';
+import { clearSequenceCache } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 // Helper function to create a minimal test robot

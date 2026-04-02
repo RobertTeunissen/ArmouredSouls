@@ -1,6 +1,6 @@
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
-import { facilityRecommendationService } from '../src/services/facilityRecommendationService';
+import { facilityRecommendationService } from '../src/services/economy/facilityRecommendationService';
 import { createTestUser, createTestRobot } from './testHelpers';
 
 

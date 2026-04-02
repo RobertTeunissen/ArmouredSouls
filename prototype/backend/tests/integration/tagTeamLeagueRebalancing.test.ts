@@ -12,7 +12,7 @@
  */
 
 import prisma from '../../src/lib/prisma';
-import { rebalanceTagTeamLeagues } from '../../src/services/tagTeamLeagueRebalancingService';
+import { rebalanceTagTeamLeagues } from '../../src/services/tag-team/tagTeamLeagueRebalancingService';
 
 
 describe('Tag Team League Rebalancing Integration Test', () => {

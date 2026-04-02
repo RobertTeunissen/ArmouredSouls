@@ -27,19 +27,19 @@ jest.mock('../src/lib/prisma', () => ({
 const mockCalculateStreamingRevenue = jest.fn();
 const mockAwardStreamingRevenue = jest.fn();
 
-jest.mock('../src/services/streamingRevenueService', () => ({
+jest.mock('../src/services/economy/streamingRevenueService', () => ({
   calculateStreamingRevenue: (...args: unknown[]) => mockCalculateStreamingRevenue(...args),
   awardStreamingRevenue: (...args: unknown[]) => mockAwardStreamingRevenue(...args),
 }));
 
 const mockLogEvent = jest.fn().mockResolvedValue(undefined);
 
-jest.mock('../src/services/eventLogger', () => ({
+jest.mock('../src/services/common/eventLogger', () => ({
   eventLogger: { logEvent: (...args: unknown[]) => mockLogEvent(...args) },
   EventType: { BATTLE_COMPLETE: 'battle_complete' },
 }));
 
-jest.mock('../src/services/leagueBattleOrchestrator', () => ({
+jest.mock('../src/services/battle/baseOrchestrator', () => ({
   getCurrentCycleNumber: jest.fn().mockResolvedValue(42),
 }));
 
@@ -63,8 +63,8 @@ import {
   awardPrestigeToUser,
   awardFameToRobot,
   ParticipantOutcome,
-} from '../src/services/battlePostCombat';
-import { StreamingRevenueCalculation } from '../src/services/streamingRevenueService';
+} from '../src/services/battle/battlePostCombat';
+import { StreamingRevenueCalculation } from '../src/services/economy/streamingRevenueService';
 
 // ─── Test Data Helpers ───────────────────────────────────────────────
 

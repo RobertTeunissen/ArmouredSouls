@@ -1,6 +1,6 @@
 import prisma from '../src/lib/prisma';
-import { QueryService } from '../src/services/queryService';
-import { EventLogger } from '../src/services/eventLogger';
+import { QueryService } from '../src/services/common/queryService';
+import { EventLogger } from '../src/services/common/eventLogger';
 import fc from 'fast-check';
 
 const queryService = new QueryService();

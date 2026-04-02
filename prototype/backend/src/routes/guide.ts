@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import guideService from '../services/guide-service';
+import guideService from '../services/common/guide-service';
 import logger from '../config/logger';
 import { AppError } from '../errors';
 

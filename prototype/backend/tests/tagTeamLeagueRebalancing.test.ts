@@ -6,7 +6,7 @@ import {
   demoteTeam,
   rebalanceTagTeamLeagues,
   TAG_TEAM_LEAGUE_TIERS,
-} from '../src/services/tagTeamLeagueRebalancingService';
+} from '../src/services/tag-team/tagTeamLeagueRebalancingService';
 
 
 describe('Tag Team League Rebalancing', () => {

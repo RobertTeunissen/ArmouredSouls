@@ -8,10 +8,10 @@
 
 import express, { Request, Response } from 'express';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
-import { cycleSnapshotService } from '../services/cycleSnapshotService';
-import { robotPerformanceService } from '../services/robotPerformanceService';
-import type { RobotMetric } from '../services/robotPerformanceService';
-import type { LeaderboardOptions } from '../services/robotStatsViewService';
+import { cycleSnapshotService } from '../services/cycle/cycleSnapshotService';
+import { robotPerformanceService } from '../services/analytics/robotPerformanceService';
+import type { RobotMetric } from '../services/analytics/robotPerformanceService';
+import type { LeaderboardOptions } from '../services/analytics/robotStatsViewService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { AppError, RobotError, RobotErrorCode, AuthError, AuthErrorCode, EconomyError, EconomyErrorCode, KothError, KothErrorCode } from '../errors';
@@ -758,7 +758,7 @@ router.get('/robot/:robotId/metric/:metricName', async (req: Request, res: Respo
  */
 router.get('/leaderboard', async (req: Request, res: Response) => {
   try {
-    const { robotStatsViewService } = await import('../services/robotStatsViewService');
+    const { robotStatsViewService } = await import('../services/analytics/robotStatsViewService');
     
     const orderByParam = req.query.orderBy as string | undefined;
     const limitParam = req.query.limit as string | undefined;
@@ -849,7 +849,7 @@ router.get('/leaderboard', async (req: Request, res: Response) => {
  */
 router.get('/robot/:robotId/stats', async (req: Request, res: Response) => {
   try {
-    const { robotStatsViewService } = await import('../services/robotStatsViewService');
+    const { robotStatsViewService } = await import('../services/analytics/robotStatsViewService');
     
     const robotId = parseInt(String(req.params.robotId));
 
@@ -890,7 +890,7 @@ router.get('/robot/:robotId/stats', async (req: Request, res: Response) => {
  */
 router.post('/stats/refresh', async (req: Request, res: Response) => {
   try {
-    const { robotStatsViewService } = await import('../services/robotStatsViewService');
+    const { robotStatsViewService } = await import('../services/analytics/robotStatsViewService');
     
     await robotStatsViewService.refreshStats();
 
@@ -937,7 +937,7 @@ router.post('/stats/refresh', async (req: Request, res: Response) => {
  */
 router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
   try {
-    const { roiCalculatorService } = await import('../services/roiCalculatorService');
+    const { roiCalculatorService } = await import('../services/economy/roiCalculatorService');
     
     const userId = parseInt(String(req.params.userId));
     const facilityType = req.query.facilityType as string;
@@ -1029,7 +1029,7 @@ router.get('/facility/:userId/roi', async (req: Request, res: Response) => {
  */
 router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
   try {
-    const { roiCalculatorService } = await import('../services/roiCalculatorService');
+    const { roiCalculatorService } = await import('../services/economy/roiCalculatorService');
     
     const userId = parseInt(String(req.params.userId));
 
@@ -1107,7 +1107,7 @@ router.get('/facility/:userId/roi/all', async (req: Request, res: Response) => {
  */
 router.get('/facility/:userId/recommendations', async (req: Request, res: Response) => {
   try {
-    const { facilityRecommendationService } = await import('../services/facilityRecommendationService');
+    const { facilityRecommendationService } = await import('../services/economy/facilityRecommendationService');
     
     const userId = parseInt(String(req.params.userId));
     const lastNCyclesParam = req.query.lastNCycles as string;
@@ -1203,7 +1203,7 @@ router.get('/performance', async (req: Request, res: Response) => {
     const startCycle = parseInt(req.query.startCycle as string) || 1;
     const endCycle = parseInt(req.query.endCycle as string) || 10;
 
-    const { CyclePerformanceMonitoringService } = await import('../services/cyclePerformanceMonitoringService');
+    const { CyclePerformanceMonitoringService } = await import('../services/cycle/cyclePerformanceMonitoringService');
     const perfService = new CyclePerformanceMonitoringService();
 
     const metrics = [];
@@ -1241,7 +1241,7 @@ router.get('/integrity', async (req: Request, res: Response) => {
     const startCycle = parseInt(req.query.startCycle as string) || 1;
     const endCycle = parseInt(req.query.endCycle as string) || 10;
 
-    const { DataIntegrityService } = await import('../services/dataIntegrityService');
+    const { DataIntegrityService } = await import('../services/common/dataIntegrityService');
     const integrityService = new DataIntegrityService();
 
     const reports = await integrityService.validateCycleRange(startCycle, endCycle);
@@ -1275,7 +1275,7 @@ router.get('/logs/summary', async (req: Request, res: Response) => {
     const startCycle = parseInt(req.query.startCycle as string) || 1;
     const endCycle = parseInt(req.query.endCycle as string) || 10;
 
-    const { queryService } = await import('../services/queryService');
+    const { queryService } = await import('../services/common/queryService');
 
     const stats = await queryService.getEventStatistics([startCycle, endCycle]);
 

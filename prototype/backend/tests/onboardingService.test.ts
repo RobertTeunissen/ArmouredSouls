@@ -7,7 +7,7 @@ import {
   advanceStep,
   updatePlayerChoices,
   OnboardingChoices,
-} from '../src/services/onboardingService';
+} from '../src/services/onboarding/onboardingService';
 import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 

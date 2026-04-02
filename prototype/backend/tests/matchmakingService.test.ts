@@ -5,7 +5,7 @@ import {
   checkSchedulingReadiness,
   runMatchmaking,
   runMatchmakingForTier,
-} from '../src/services/matchmakingService';
+} from '../src/services/analytics/matchmakingService';
 
 
 describe('Matchmaking Service', () => {

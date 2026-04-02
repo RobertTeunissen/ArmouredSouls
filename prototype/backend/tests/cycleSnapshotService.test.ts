@@ -4,9 +4,9 @@
  * Tests snapshot creation, retrieval, and aggregation logic
  */
 
-import { cycleSnapshotService } from '../src/services/cycleSnapshotService';
-import { eventLogger } from '../src/services/eventLogger';
-import { EventType } from '../src/services/eventLogger';
+import { cycleSnapshotService } from '../src/services/cycle/cycleSnapshotService';
+import { eventLogger } from '../src/services/common/eventLogger';
+import { EventType } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 describe('CycleSnapshotService', () => {

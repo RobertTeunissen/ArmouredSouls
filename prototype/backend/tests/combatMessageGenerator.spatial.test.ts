@@ -1,5 +1,5 @@
-import { CombatMessageGenerator } from '../src/services/combatMessageGenerator';
-import { CombatEvent } from '../src/services/combatSimulator';
+import { CombatMessageGenerator } from '../src/services/battle/combatMessageGenerator';
+import { CombatEvent } from '../src/services/battle/combatSimulator';
 
 /**
  * Spatial message generation tests for CombatMessageGenerator.

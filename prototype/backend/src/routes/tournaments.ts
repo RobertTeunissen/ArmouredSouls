@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { getActiveTournaments, computeSeedings } from '../services/tournamentService';
+import { getActiveTournaments, computeSeedings } from '../services/tournament/tournamentService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { AppError, TournamentError, TournamentErrorCode } from '../errors';

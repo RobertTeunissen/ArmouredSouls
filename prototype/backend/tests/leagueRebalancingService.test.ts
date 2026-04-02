@@ -5,7 +5,7 @@ import {
   promoteRobot,
   demoteRobot,
   rebalanceLeagues,
-} from '../src/services/leagueRebalancingService';
+} from '../src/services/league/leagueRebalancingService';
 
 
 describe('League Rebalancing Service', () => {

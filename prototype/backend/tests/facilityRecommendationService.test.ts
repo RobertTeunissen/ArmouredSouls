@@ -1,5 +1,5 @@
 import prisma from '../src/lib/prisma';
-import { facilityRecommendationService } from '../src/services/facilityRecommendationService';
+import { facilityRecommendationService } from '../src/services/economy/facilityRecommendationService';
 import { createTestUser, createTestRobot } from './testHelpers';
 
 

@@ -13,7 +13,7 @@
 
 import fc from 'fast-check';
 import { Prisma } from '../generated/prisma';
-import { facilityRecommendationService } from '../src/services/facilityRecommendationService';
+import { facilityRecommendationService } from '../src/services/economy/facilityRecommendationService';
 import prisma from '../src/lib/prisma';
 
 // Helper function to create a minimal test robot

@@ -9,7 +9,7 @@
 
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
-import { robotPerformanceService, RobotMetric } from '../src/services/robotPerformanceService';
+import { robotPerformanceService, RobotMetric } from '../src/services/analytics/robotPerformanceService';
 import { cleanupTestData } from './cleanupHelper';
 
 

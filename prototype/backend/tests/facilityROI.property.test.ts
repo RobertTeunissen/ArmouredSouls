@@ -11,8 +11,8 @@
 
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
-import { roiCalculatorService } from '../src/services/roiCalculatorService';
-import { eventLogger } from '../src/services/eventLogger';
+import { roiCalculatorService } from '../src/services/economy/roiCalculatorService';
+import { eventLogger } from '../src/services/common/eventLogger';
 import { createTestUser, createTestRobot } from './testHelpers';
 import { getFacilityConfig } from '../src/config/facilities';
 

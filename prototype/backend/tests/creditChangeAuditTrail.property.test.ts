@@ -1,5 +1,5 @@
 import prisma from '../src/lib/prisma';
-import { EventLogger } from '../src/services/eventLogger';
+import { EventLogger } from '../src/services/common/eventLogger';
 import fc from 'fast-check';
 
 const eventLogger = new EventLogger();

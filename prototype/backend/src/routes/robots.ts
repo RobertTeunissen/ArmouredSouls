@@ -3,12 +3,12 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable } from '../utils/weaponValidation';
 import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
 import prisma from '../lib/prisma';
-import { eventLogger } from '../services/eventLogger';
-import { trackSpending } from '../services/spendingTracker';
+import { eventLogger } from '../services/common/eventLogger';
+import { trackSpending } from '../services/economy/spendingTracker';
 import { getConfig } from '../config/env';
 import { getNextCronOccurrence } from '../utils/scheduleUtils';
 import logger from '../config/logger';
-import { assignLeagueInstance } from '../services/leagueInstanceService';
+import { assignLeagueInstance } from '../services/league/leagueInstanceService';
 import { RobotError, RobotErrorCode } from '../errors/robotErrors';
 
 const router = express.Router();

@@ -1,11 +1,11 @@
 import prisma from '../../src/lib/prisma';
 import {
   rebalanceLeagues,
-} from '../../src/services/leagueRebalancingService';
+} from '../../src/services/league/leagueRebalancingService';
 import {
   getLeagueInstanceStats,
   MAX_ROBOTS_PER_INSTANCE,
-} from '../../src/services/leagueInstanceService';
+} from '../../src/services/league/leagueInstanceService';
 
 
 /**

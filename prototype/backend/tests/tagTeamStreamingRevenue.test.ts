@@ -11,8 +11,8 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { createTeam } from '../src/services/tagTeamService';
-import { executeScheduledTagTeamBattles } from '../src/services/tagTeamBattleOrchestrator';
+import { createTeam } from '../src/services/tag-team/tagTeamService';
+import { executeScheduledTagTeamBattles } from '../src/services/tag-team/tagTeamBattleOrchestrator';
 
 
 describe('Tag Team Streaming Revenue Integration', () => {

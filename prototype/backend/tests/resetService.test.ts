@@ -4,7 +4,7 @@ import {
   validateResetEligibility,
   performAccountReset,
   getResetHistory,
-} from '../src/services/resetService';
+} from '../src/services/common/resetService';
 
 /**
  * Reset Service Tests

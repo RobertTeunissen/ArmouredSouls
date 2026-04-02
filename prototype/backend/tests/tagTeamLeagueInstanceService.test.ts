@@ -10,7 +10,7 @@ import {
   getStandingsForTier,
   MAX_TEAMS_PER_INSTANCE,
   REBALANCE_THRESHOLD,
-} from '../src/services/tagTeamLeagueInstanceService';
+} from '../src/services/tag-team/tagTeamLeagueInstanceService';
 
 
 describe('TagTeamLeagueInstanceService', () => {

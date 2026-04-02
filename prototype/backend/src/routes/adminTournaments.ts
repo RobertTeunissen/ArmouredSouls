@@ -15,8 +15,8 @@ import {
   advanceWinnersToNextRound,
   autoCreateNextTournament,
   getEligibleRobotsForTournament,
-} from '../services/tournamentService';
-import { processTournamentBattle } from '../services/tournamentBattleOrchestrator';
+} from '../services/tournament/tournamentService';
+import { processTournamentBattle } from '../services/tournament/tournamentBattleOrchestrator';
 import { AppError, TournamentError, TournamentErrorCode } from '../errors';
 
 const router = express.Router();

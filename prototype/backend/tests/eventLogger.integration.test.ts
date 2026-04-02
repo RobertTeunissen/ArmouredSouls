@@ -5,7 +5,7 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { eventLogger, EventType } from '../src/services/eventLogger';
+import { eventLogger, EventType } from '../src/services/common/eventLogger';
 
 describe('EventLogger Integration', () => {
   let testCycleNumbers: number[] = [];

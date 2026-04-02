@@ -8,7 +8,7 @@ import {
   moveRobotToInstance,
   MAX_ROBOTS_PER_INSTANCE,
   REBALANCE_THRESHOLD,
-} from '../src/services/leagueInstanceService';
+} from '../src/services/league/leagueInstanceService';
 
 
 describe('League Instance Service', () => {

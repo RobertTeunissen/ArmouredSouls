@@ -5,7 +5,7 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { EventLogger, EventType, clearSequenceCache } from '../src/services/eventLogger';
+import { EventLogger, EventType, clearSequenceCache } from '../src/services/common/eventLogger';
 
 const eventLogger = new EventLogger();
 

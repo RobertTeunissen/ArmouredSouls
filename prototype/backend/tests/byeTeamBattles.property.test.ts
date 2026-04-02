@@ -5,7 +5,7 @@ import {
   calculateTagTeamRewards,
   calculateTagTeamELOChanges,
   calculateTagTeamLeaguePoints,
-} from '../src/services/tagTeamBattleOrchestrator';
+} from '../src/services/tag-team/tagTeamBattleOrchestrator';
 
 
 // Test configuration

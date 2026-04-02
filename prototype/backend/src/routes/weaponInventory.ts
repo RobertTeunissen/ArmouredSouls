@@ -2,8 +2,8 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
 import prisma from '../lib/prisma';
-import { eventLogger } from '../services/eventLogger';
-import { trackSpending } from '../services/spendingTracker';
+import { eventLogger } from '../services/common/eventLogger';
+import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
 import { AppError, EconomyError, EconomyErrorCode, AuthError, AuthErrorCode } from '../errors';
 

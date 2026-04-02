@@ -10,7 +10,7 @@
  */
 
 import fc from 'fast-check';
-import { EventLogger } from '../src/services/eventLogger';
+import { EventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 describe('Property 15: Cycle Step Duration Recording', () => {
