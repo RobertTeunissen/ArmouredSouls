@@ -272,30 +272,38 @@ The battle orchestrators (league, tournament, tag-team, KotH) share a common `ba
 
 ---
 
-### 12. Arena Domain (`services/arena/`) — Pre-existing
+### 12. Arena Domain (`services/arena/`)
 
 **Purpose**: 2D spatial arena mechanics for combat simulation.
 
-**Responsibilities**:
-- Arena layout generation (`arenaLayout.ts`)
-- Movement AI with patience-based engagement (`movementAI.ts`)
-- Position tracking and facing/backstab detection (`positionTracker.ts`)
-- Range band classification and penalties (`rangeBands.ts`)
-- Threat scoring and target selection (`threatScoring.ts`)
-- Counter-attack resolution (`counterAttack.ts`)
-- Team coordination (sync volleys, shield support, formation defense) (`teamCoordination.ts`)
-- Servo strain and movement speed (`servoStrain.ts`)
-- Adaptation tracking (`adaptationTracker.ts`)
-- Pressure system (`pressureSystem.ts`)
-- 2D vector math (`vector2d.ts`)
+**Services**:
+- `types.ts` — Shared type definitions: `RangeBand`, `ArenaConfig`, `RobotCombatState`, `CombatEvent`, `CombatResult`, `GameModeConfig`, `GameModeState`, range band boundaries and penalties.
+- `vector2d.ts` — 2D math primitives: `Position`, `Vector2D`, `euclideanDistance()`, `normalizeVector()`, `rotateVector()`, `lerp()`, `clampMagnitude()`, `angleBetween()`, `normalizeAngle()`.
+- `arenaLayout.ts` — Arena generation: `createArena()`, `calculateArenaRadius()`, `calculateSpawnPositions()`, `clampToArena()`.
+- `rangeBands.ts` — Range classification and penalties: `classifyRangeBand()`, `getRangePenalty()`, `getWeaponOptimalRange()`, `canAttack()`.
+- `positionTracker.ts` — Facing and backstab detection: `checkBackstab()`, `updateFacing()`, `calculateTurnSpeed()`.
+- `movementAI.ts` — Movement AI with patience-based engagement: `calculateMovementIntent()`, `applyMovement()`, `getPreferredRange()`, `getPatienceLimit()`, `enforceTeamSeparation()`.
+- `adaptationTracker.ts` — Combat adaptation over time: `updateAdaptation()`, `getEffectiveAdaptation()`.
+- `pressureSystem.ts` — Pressure effects on accuracy/damage: `calculatePressureEffects()`, `calculatePressureThreshold()`.
+- `servoStrain.ts` — Movement speed and fatigue: `calculateBaseSpeed()`, `calculateEffectiveSpeed()`, `updateServoStrain()`.
+- `threatScoring.ts` — Target selection: `selectTarget()`.
+- `counterAttack.ts` — Counter-attack resolution: `resolveCounter()`.
+- `teamCoordination.ts` — Team mechanics: `checkSyncVolley()`, `getSupportShieldBoost()`, `getFormationDefenseBonus()`.
+- `hydraulicBonus.ts` — Hydraulic system bonuses: `calculateHydraulicBonus()`.
+- `kothEngine.ts` — KotH-specific arena logic (zone scoring, placement).
 
 **Dependencies**: None (pure computation, consumed by Battle domain)
 
 ---
 
-### 13. Notifications Domain (`services/notifications/`) — Pre-existing
+### 13. Notifications Domain (`services/notifications/`)
 
-**Purpose**: In-app notification system for battle results, cycle events, and system messages.
+**Purpose**: Notification dispatch system for cycle results and system alerts.
+
+**Services**:
+- `integration.ts` — Shared types: `Integration` interface, `NotificationResult`, `JobName`, `JobContext`.
+- `notification-service.ts` — Core dispatch: `buildSuccessMessage()`, `buildErrorMessage()`, `getActiveIntegrations()`, `dispatchNotification()`.
+- `discord-integration.ts` — Discord webhook integration: `DiscordIntegration` class implementing `Integration`.
 
 **Dependencies**: Database, Auth (user targeting)
 
