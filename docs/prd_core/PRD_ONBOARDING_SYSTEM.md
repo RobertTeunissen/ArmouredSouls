@@ -66,7 +66,7 @@ New players currently receive no guided introduction to the game. After registra
 - **[PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)** - Weapon types, loadout configurations, pricing
 - **[PRD_ROBOT_ATTRIBUTES.md](PRD_ROBOT_ATTRIBUTES.md)** - Robot creation costs, attribute upgrades
 - **[STABLE_SYSTEM.md](../STABLE_SYSTEM.md)** - Facility types, costs, and benefits
-- **[PRD_FAME_SYSTEM.md](PRD_FAME_SYSTEM.md)** - Fame and prestige progression
+- **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - Fame and prestige progression
 - **[COMBAT_FORMULAS.md](COMBAT_FORMULAS.md)** - Battle mechanics and damage calculations
 
 ---
@@ -1688,9 +1688,9 @@ const StepFacilityEducation = lazy(() => import('./StepFacilityEducation'));
 - [PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md) — Weapon types, loadout configurations, pricing
 - [PRD_ROBOT_ATTRIBUTES.md](PRD_ROBOT_ATTRIBUTES.md) — Robot creation costs, attribute upgrades
 - [STABLE_SYSTEM.md](../STABLE_SYSTEM.md) — Facility types, costs, and benefits
-- [PRD_FAME_SYSTEM.md](PRD_FAME_SYSTEM.md) — Fame and prestige progression
+- [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md) — Fame and prestige progression
 - [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) — Battle mechanics and damage calculations
-- [PRD_LEAGUE_PROMOTION.md](PRD_LEAGUE_PROMOTION.md) — League system and progression
+- [PRD_LEAGUE_SYSTEM.md](PRD_LEAGUE_SYSTEM.md) — League system and progression
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) — Current database schema
 
 ### Appendix C: Glossary

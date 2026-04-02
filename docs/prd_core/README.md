@@ -31,12 +31,8 @@ Core PRDs define the fundamental game systems, mechanics, and architecture that 
 ### Progression Systems
 - `PRD_CYCLE_SYSTEM.md` - Time progression and cycle execution
 - `PRD_MATCHMAKING.md` - ELO-based matchmaking system
-- `PRD_MATCHMAKING_LP_UPDATE.md` - League points matchmaking updates
-- `PRD_LEAGUE_PROMOTION.md` - League promotion mechanics
-- `PRD_LEAGUE_REBALANCING.md` - League instance balancing
-- `LEAGUE_SYSTEM_IMPLEMENTATION_GUIDE.md` - Complete league system guide
+- `PRD_LEAGUE_SYSTEM.md` - League promotion, demotion, rebalancing, and LP matchmaking
 - `PRD_PRESTIGE_AND_FAME.md` - Prestige and fame systems
-- `PRD_FAME_SYSTEM.md` - Fame system details
 
 ### Advanced Features
 - `PRD_TOURNAMENT_SYSTEM.md` - Tournament mechanics

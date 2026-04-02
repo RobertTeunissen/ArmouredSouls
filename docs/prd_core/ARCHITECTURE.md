@@ -1,274 +1,346 @@
-# Armoured Souls - Architecture Overview
+# Armoured Souls — Architecture Overview
 
-**Last Updated**: January 24, 2026
+**Last Updated**: April 2, 2026
 
 ## System Architecture
 
 ### High-Level Design
 
-Armoured Souls follows a modular, microservices-inspired architecture designed for scalability, security, and portability.
+Armoured Souls is a monolithic Node.js application with a React SPA frontend, deployed on a single VPS behind Caddy as a reverse proxy. The architecture prioritizes simplicity and rapid iteration over distributed complexity.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     Client Layer                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │  Web Client  │  │  iOS Client  │  │Android Client│     │
-│  │  (React)     │  │  (Swift)     │  │  (Kotlin)    │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              React 19 SPA (Vite 6)                   │   │
+│  │   Zustand stores · React Context · React Router 6    │   │
+│  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
-                            │
+                            │ HTTPS
                    ┌────────▼─────────┐
-                   │   API Gateway    │
-                   │  (Load Balancer) │
+                   │      Caddy       │
+                   │  (Reverse Proxy  │
+                   │   + Auto HTTPS)  │
                    └────────┬─────────┘
                             │
 ┌─────────────────────────────────────────────────────────────┐
 │                   Application Layer                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │   Auth   │  │   Game   │  │  Player  │  │  Battle  │   │
-│  │  Service │  │  Service │  │  Service │  │  Service │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │         Express 5 (Node.js 24 LTS)                   │   │
+│  │                                                       │   │
+│  │  13 Domain Services:                                  │   │
+│  │  analytics · arena · auth · battle · common · cycle   │   │
+│  │  economy · koth · league · notifications              │   │
+│  │  onboarding · tag-team · tournament                   │   │
+│  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                             │
 ┌─────────────────────────────────────────────────────────────┐
 │                     Data Layer                               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │  PostgreSQL  │  │    Redis     │  │   S3/Blob    │     │
-│  │  (Primary)   │  │   (Cache)    │  │   Storage    │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │     PostgreSQL 17 (via Prisma 7 + pg adapter)        │   │
+│  │     Docker Compose (dev) · Native install (prod)     │   │
+│  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ## Core Architectural Principles
 
-### 1. Separation of Concerns
-- **Authentication Layer**: Handles all user authentication and authorization
-- **Game Logic Layer**: Contains core game mechanics and rules
-- **Data Layer**: Manages persistence and caching
-- **Presentation Layer**: Client-specific UI implementations
+### 1. Monolith-First
+- Single Express application with domain-organized services
+- No microservices overhead — all services share one process and one database
+- Clear module boundaries via the 13 service directories allow future extraction if needed
 
-### 2. Stateless Services
-- Services should be stateless to enable horizontal scaling
-- Session state managed in Redis for quick access
-- Persistent state in PostgreSQL for reliability
+### 2. Server-Authoritative Game Logic
+- All battle simulation, economy calculations, and league processing run server-side
+- Clients are display-only for game outcomes — no client-side game state computation
+- Deterministic battle engine ensures reproducible results
 
-### 3. API-First Design
-- RESTful API as the primary interface
-- WebSocket support for real-time notifications and updates (to ensure cross-platform data synchronization)
-- GraphQL consideration for complex data queries (future evaluation)
+### 3. Scheduled Batch Processing
+- Game cycles (leagues, tournaments, tag teams, KotH) run on cron schedules via `node-cron`
+- No real-time WebSocket layer — players configure, then check results after processing
+- Configurable schedules per battle mode (league, tournament, tag-team, KotH, settlement)
 
 ### 4. Security by Design
-- All communication over HTTPS/WSS
-- JWT-based authentication
-- Rate limiting on all endpoints
-- Input validation at all layers
-- Principle of least privilege
-- Regular security audits
+- All communication over HTTPS (Caddy auto-provisions Let's Encrypt certificates)
+- JWT-based authentication with bcrypt password hashing
+- Rate limiting on auth endpoints (dedicated limiter) and general API (global limiter)
+- Input validation at the route layer
+- Domain-specific error classes prevent leaking internal details
 
-### 5. Test-Driven Development
-- Unit tests for all business logic
-- Integration tests for API endpoints
-- End-to-end tests for critical user flows
-- Load testing for scalability validation
+### 5. Comprehensive Testing
+- Backend: Jest 30 with ts-jest (unit, integration, and heavy test configs)
+- Frontend: Vitest 4 with @testing-library/react
+- E2E: Playwright
+- Property-based testing: fast-check on both backend and frontend
 
-## Technology Stack (Finalized)
+## Technology Stack
 
 ### Backend
-- **Language**: Node.js with TypeScript (best for web-to-mobile code sharing)
-- **Framework**: Express (chosen for simplicity, larger ecosystem, and extensive middleware support)
-- **ORM**: Prisma (TypeScript-first ORM with excellent migration tooling)
-- **Database**: PostgreSQL (primary), Redis (cache and sessions)
-- **Authentication**: JWT, OAuth 2.0 (Google, Facebook, Apple)
-- **API Documentation**: OpenAPI/Swagger
-- **Hosting**: AWS with serverless architecture where possible
+- **Runtime**: Node.js 24 LTS
+- **Language**: TypeScript 5.8 (strict mode)
+- **Framework**: Express 5
+- **ORM**: Prisma 7 with `@prisma/adapter-pg` driver adapter
+- **Database**: PostgreSQL 17
+- **Authentication**: JWT (`jsonwebtoken`) + bcrypt 6
+- **Scheduling**: node-cron 4
+- **Logging**: Winston 3
+- **Rate Limiting**: express-rate-limit 8
+- **Process Manager**: PM2 (production)
+- **Testing**: Jest 30, Supertest 7, fast-check 4
 
 ### Frontend
-- **Web**: React + TypeScript
-- **Mobile**: React Native (70-80% code reuse from web)
-- **State Management**: Redux Toolkit or Zustand
-- **UI Library**: Tailwind CSS (utility-first, lightweight, excellent for rapid prototyping)
+- **Framework**: React 19 with TypeScript 5.8
+- **Build Tool**: Vite 6
+- **Styling**: Tailwind CSS 4
+- **Routing**: React Router 6
+- **State Management**: Zustand 5 (robotStore, stableStore) + React Context (AuthContext, OnboardingContext)
+- **Charts**: Recharts 3
+- **Markdown**: react-markdown 10 + remark-gfm
+- **Testing**: Vitest 4, @testing-library/react 16, Playwright 1.58, fast-check 4
 
-### DevOps
-- **CI/CD**: GitHub Actions (with automated testing on every commit)
-- **Container**: Docker
-- **Hosting**: AWS (managed services preferred)
-- **Serverless**: Lambda, API Gateway, DynamoDB where applicable
-- **Monitoring**: AWS CloudWatch, Prometheus + Grafana
-- **Logging**: CloudWatch Logs or ELK Stack
+### Infrastructure
+- **Hosting**: Scaleway DEV1-S VPS (2 vCPU, 2GB RAM, Ubuntu)
+- **Reverse Proxy**: Caddy (automatic HTTPS, gzip/zstd compression, security headers)
+- **Database (dev)**: Docker Compose — PostgreSQL 17-alpine
+- **Database (prod)**: Native PostgreSQL installation
+- **Process Manager**: PM2 (single instance, auto-restart, log rotation)
+- **CI/CD**: GitHub Actions
+- **Firewall**: UFW
+- **Backups**: Automated daily PostgreSQL dumps
 
-### Testing
-- **Unit**: Jest/Vitest
-- **E2E**: Playwright/Cypress
-- **Load**: k6 or Apache JMeter
-- **Security**: OWASP ZAP, Snyk
+## Backend Service Architecture
 
-## Key Design Decisions (Finalized)
+The backend is organized into 13 domain service directories under `src/services/`:
 
-1. **Backend Language**: ✅ Node.js with TypeScript (enables React Native code sharing)
-2. **Backend Framework**: ✅ Express (simplicity, ecosystem, middleware support)
-3. **ORM/Migrations**: ✅ Prisma (TypeScript-first, excellent DX, powerful migrations)
-4. **Database**: ✅ PostgreSQL (relational data) + Redis (caching, sessions)
-5. **Real-time**: ✅ WebSockets/Web Push API for notifications and cross-platform synchronization; batch processing for battle simulation
-6. **Mobile Strategy**: ✅ React Native after web MVP (iOS first, then Android)
-7. **Hosting**: ✅ AWS with serverless architecture, scale-to-zero capability
-8. **Game Engine**: ✅ Custom server-side simulation engine (deterministic, batch processing)
-9. **UI Library**: ✅ Tailwind CSS (utility-first, rapid development)
+| Service | Responsibility |
+|---|---|
+| `analytics` | Game metrics, player analytics, cycle snapshots |
+| `arena` | Arena battle management |
+| `auth` | User registration, login, JWT token management |
+| `battle` | Deterministic combat simulation engine |
+| `common` | Shared utilities and helpers |
+| `cycle` | Cron-based cycle scheduler, batch processing orchestration |
+| `economy` | Credits, facilities (14 types, levels 0–10), weapon shop, finances |
+| `koth` | King of the Hill battle mode |
+| `league` | League standings, promotions/relegations, matchmaking |
+| `notifications` | Event notification generation |
+| `onboarding` | 9-step player onboarding flow |
+| `tag-team` | 2v2 tag team compositions and battles |
+| `tournament` | Tournament brackets and management |
 
-## Development Approach
+### Middleware Stack
+- `auth.ts` — JWT validation for protected routes
+- `errorHandler.ts` — Centralized error handling with `AppError` hierarchy
+- `rateLimiter.ts` — Auth-specific and general rate limiters
+- `requestLogger.ts` — Winston-based request logging
 
-### Local Development First
-- Initial development on local machine (laptop)
-- Test with small group of friends
-- No immediate hosting contract required
-- Docker for local database and services
+### Error Handling
+Domain-specific error classes extend a base `AppError`:
+- `AuthError`, `BattleError`, `EconomyError`, `KothError`, `LeagueError`
+- `OnboardingError`, `RobotError`, `TagTeamError`, `TournamentError`
 
-### Migration Path to Cloud
-1. **Phase 1**: Local development with Docker Compose
-2. **Phase 2**: Deploy to AWS (single region, minimal services)
-3. **Phase 3**: Scale horizontally as user base grows
-4. **Phase 4**: Add redundancy and multi-region support
+Each class carries typed error codes. Express 5 automatically forwards rejected promises to the error middleware — no manual try-catch wrappers needed in route handlers.
 
-## Scalability Considerations
+### API Routes (21 route files)
 
-### Horizontal Scaling
-- Stateless services behind load balancer
-- Database read replicas
-- Caching layer for frequently accessed data
+```
+/api/auth              — Registration, login
+/api/user              — Profile management
+/api/robots            — Robot CRUD, attributes
+/api/weapons           — Weapon catalog
+/api/weapon-inventory  — Player weapon ownership
+/api/facilities        — Facility upgrades
+/api/finances          — Financial reports
+/api/matches           — League match history
+/api/leagues           — League standings
+/api/leaderboards      — Rankings (prestige, fame, losses)
+/api/records           — Hall of Records
+/api/tournaments       — Tournament management
+/api/tag-teams         — Tag team management
+/api/koth              — King of the Hill
+/api/analytics         — Game analytics
+/api/onboarding        — Onboarding flow
+/api/guide             — In-game guide content
+/api/admin             — Admin controls, cycle management
+/api/health            — Health check (DB connectivity)
+```
 
-### Performance Optimization
-- CDN for static assets
-- Database indexing strategy
-- Lazy loading for large datasets
-- Pagination for list endpoints
+## Database Schema
 
-### Data Partitioning
-- Shard by user ID or region
-- Separate read/write databases
-- Archive old data
+18 core models managed by Prisma 7 (PostgreSQL 17):
 
-## Security Architecture
+| Model | Purpose |
+|---|---|
+| `User` | Player accounts — currency, prestige, onboarding state, profile settings |
+| `Robot` | 23 core attributes, combat state, league/fame tracking |
+| `Facility` | 14 facility types with levels 0–10, coaching staff |
+| `Weapon` | Weapon definitions — damage, cooldown, attribute bonuses |
+| `WeaponInventory` | Player weapon ownership |
+| `Battle` | Battle records with time-based combat logs (JSON) |
+| `BattleParticipant` | Per-robot battle statistics |
+| `ScheduledLeagueMatch` | Scheduled 1v1 league battles |
+| `ScheduledTournamentMatch` | Tournament bracket matches |
+| `Tournament` | Tournament lifecycle management |
+| `TagTeam` | 2v2 team compositions |
+| `ScheduledTagTeamMatch` | Scheduled 2v2 battles |
+| `ScheduledKothMatch` | King of the Hill matches |
+| `ScheduledKothMatchParticipant` | KotH participant tracking |
+| `CycleMetadata` | Global cycle state (singleton) |
+| `CycleSnapshot` | Pre-aggregated metrics for historical queries |
+| `AuditLog` | Event sourcing for all game events |
+| `ResetLog` | Account reset tracking |
 
-### Authentication Flow
-1. User credentials → Auth Service
-2. Validate credentials against database
-3. Generate JWT with limited lifetime
-4. Return token + refresh token
-5. Client includes JWT in subsequent requests
-6. Services validate JWT signature and claims
-
-### Authorization
-- Role-Based Access Control (RBAC)
-- Resource-level permissions
-- API key management for third-party integrations
-
-### Data Protection
-- Encryption at rest (database)
-- Encryption in transit (TLS)
-- PII data handling compliance (GDPR, CCPA)
-- Regular backups with encryption
+Prisma 7 uses the `client` engine type with `@prisma/adapter-pg`. The app singleton in `src/lib/prisma.ts` handles adapter setup — standalone scripts and tests create their own adapter instances.
 
 ## Battle Simulation Architecture
 
-### Scheduled Battle Processing
+### Scheduled Batch Processing
 
-Armoured Souls uses a **scheduled batch processing** model for battles, inspired by Football Manager mechanics.
+Battles run on configurable cron schedules via `node-cron`. The cycle scheduler supports independent schedules for each battle mode:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Battle Flow                               │
+│                    Battle Cycle Flow                         │
 │                                                              │
-│  1. Player Configuration Phase (Continuous)                  │
-│     ├─ Players set up robots                                │
-│     ├─ Select weapons and strategies                        │
-│     ├─ Configure conditional triggers                       │
+│  1. Configuration Phase (Continuous)                         │
+│     ├─ Players set up robots, select weapons/strategies     │
 │     └─ Join matchmaking queues                              │
 │                                                              │
-│  2. Battle Scheduling (Automated)                           │
+│  2. Cycle Trigger (node-cron schedule)                      │
 │     ├─ Matchmaking pairs players                            │
-│     ├─ Schedule battles for next processing window          │
-│     └─ Lock configurations before processing                │
+│     └─ Configurations locked for processing                 │
 │                                                              │
-│  3. Batch Processing (Scheduled Times)                      │
-│     ├─ Server processes all scheduled battles               │
-│     ├─ Simulation engine runs deterministically             │
-│     ├─ Generate battle logs and replays                     │
-│     └─ Calculate rewards and stats                          │
+│  3. Batch Processing                                        │
+│     ├─ Deterministic simulation engine runs all matches     │
+│     ├─ Time-based combat logs generated (stored as JSON)    │
+│     ├─ League points, fame, prestige calculated             │
+│     └─ Cycle snapshot captured for analytics                │
 │                                                              │
-│  4. Results Distribution (Immediate after processing)       │
-│     ├─ Update player rankings and stats                     │
-│     ├─ Notify players of results                            │
-│     ├─ Make replays available                               │
-│     └─ Distribute rewards                                   │
+│  4. Results Available                                       │
+│     ├─ Rankings and stats updated                           │
+│     ├─ Battle replays available (canvas-based playback)     │
+│     ├─ Financial settlements processed                      │
+│     └─ Audit log entries created                            │
 │                                                              │
 │  5. Next Cycle Begins                                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Battle Simulation Engine
+### Battle Engine Properties
 
-**Server-Authoritative**:
-- All battle logic runs on server
-- Client never computes battle outcomes
-- Prevents cheating and ensures consistency
+- **Server-Authoritative**: All logic runs server-side. Clients never compute outcomes.
+- **Deterministic**: Same inputs always produce same outputs. Enables replay and debugging.
+- **Batch-Oriented**: Processes all scheduled matches in a single cycle run.
+- **Multi-Mode**: Supports league (1v1), tournament (bracket), tag-team (2v2), and King of the Hill.
 
-**Deterministic**:
-- Same inputs always produce same outputs
-- Enables accurate replay generation
-- Supports debugging and balance testing
+### Cycle Scheduler Features
+- Configurable cron expressions per battle mode (league, tournament, tag-team, KotH, settlement)
+- Distributed lock mechanism for multi-instance safety
+- Performance monitoring and degradation detection
+- CSV export for battle data
+- Cycle snapshots for historical metrics
 
-**Batch Processing**:
-- Process thousands of battles simultaneously
-- Scheduled at fixed times (e.g., daily at 8 PM, multiple times per day)
-- Optimized for throughput over latency
+## Frontend Architecture
 
-**Input Variables**:
-- Robot statistics (attack, defense, speed, armor, health)
-- Weapon configurations
-- Strategic settings
-- Conditional triggers (future feature)
+### Pages (27 implemented)
 
-**Output**:
-- Complete battle log
-- Replay data
-- Winner determination
-- Statistics (damage dealt/received, actions taken)
-- Rewards (currency, prestige for stable, fame for robot) - See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
+- **Auth**: FrontPage, LoginForm, RegistrationForm
+- **Core**: DashboardPage, ProfilePage, RobotsPage, RobotDetailPage, CreateRobotPage
+- **Battles**: BattleHistoryPage, BattleDetailPage, BattlePlaybackViewer
+- **Leagues**: LeagueStandingsPage, LeaderboardsPrestigePage, LeaderboardsFamePage, LeaderboardsLossesPage
+- **Tournaments**: TournamentsPage, TournamentDetailPage
+- **Tag Teams**: TagTeamManagementPage, TagTeamStandingsPage
+- **KotH**: KothStandingsPage
+- **Economy**: FacilitiesPage, WeaponShopPage, FinancialReportPage
+- **Admin**: AdminPage, OnboardingAnalyticsPage
+- **Other**: GuidePage, HallOfRecordsPage, CycleSummaryPage
 
-### Processing Schedule Examples
+### State Management
+- **Zustand stores** (`robotStore`, `stableStore`): Shared data accessed across multiple pages
+- **React Context** (`AuthContext`, `OnboardingContext`): Global, rarely-changing state
+- **Local component state**: UI-specific data
 
-**Casual Schedule** (1-2 times per day):
-- Morning processing: 8:00 AM server time
-- Evening processing: 8:00 PM server time
+## Security Architecture
 
-**Active Schedule** (4-6 times per day):
-- Every 4-6 hours around the clock
-- Allows players in different timezones to participate
+### Authentication Flow
+1. User submits credentials → `/api/auth/login`
+2. bcrypt verifies password hash
+3. JWT generated with user ID and role
+4. Client stores token, includes in `Authorization` header
+5. `auth` middleware validates JWT on protected routes
 
-**Tournament Schedule**:
-- Custom schedules for multi-day tournaments
-- Round progression with defined intervals
+### Protections
+- Rate limiting: Dedicated auth limiter + general API limiter
+- CORS: Configurable origin whitelist
+- Security headers via Caddy: `X-Content-Type-Options`, `X-Frame-Options`, `Strict-Transport-Security`
+- Role-based access control: `user` and `admin` roles
+- Parameterized queries via Prisma (SQL injection prevention)
+- Trust proxy configured for correct client IP behind Caddy
+
+## Deployment Architecture
+
+```
+┌──────────────────────────────────────────────┐
+│          Scaleway DEV1-S VPS                 │
+│          (2 vCPU, 2GB RAM, Ubuntu)           │
+│                                               │
+│  ┌─────────────────────────────────────────┐ │
+│  │  Caddy (ports 80/443)                   │ │
+│  │  ├─ Auto HTTPS (Let's Encrypt)          │ │
+│  │  ├─ /api/* → reverse_proxy :3001        │ │
+│  │  └─ /* → static files (Vite build)      │ │
+│  └─────────────────────────────────────────┘ │
+│                                               │
+│  ┌─────────────────────────────────────────┐ │
+│  │  PM2                                     │ │
+│  │  └─ armouredsouls-backend (Node.js)     │ │
+│  │     ├─ Express 5 API server (:3001)     │ │
+│  │     └─ node-cron cycle scheduler        │ │
+│  └─────────────────────────────────────────┘ │
+│                                               │
+│  ┌─────────────────────────────────────────┐ │
+│  │  PostgreSQL 17                           │ │
+│  │  └─ armouredsouls database              │ │
+│  └─────────────────────────────────────────┘ │
+│                                               │
+│  UFW Firewall · Daily pg_dump backups        │
+└──────────────────────────────────────────────┘
+```
+
+### Local Development
+- Docker Compose for PostgreSQL
+- `tsx watch` for backend hot-reload
+- Vite dev server for frontend
+- Prisma Studio for database inspection
+
+### Production
+- PM2 manages the Node.js process (auto-restart, log rotation, 1500M memory limit)
+- Caddy serves the Vite-built frontend as static files and proxies API requests
+- GitHub Actions for CI/CD
+- Automated daily PostgreSQL backups
 
 ## Monitoring & Observability
 
-### Metrics
-- Request rate, latency, error rate
-- Database query performance
-- Cache hit/miss ratio
-- Active users, concurrent connections
+### Current Implementation
+- **Logging**: Winston (structured JSON logs to files, rotated by PM2)
+- **Health Check**: `/api/health` endpoint (verifies DB connectivity)
+- **Audit Log**: `AuditLog` model captures all game events (event sourcing)
+- **Cycle Snapshots**: `CycleSnapshot` model stores pre-aggregated metrics per cycle
+- **Performance Monitoring**: Cycle scheduler tracks processing times and detects degradation
 
-### Logging
-- Structured logging (JSON)
-- Log aggregation and search
-- Error tracking and alerting
-
-### Tracing
-- Distributed tracing for request flows
-- Performance bottleneck identification
+### Not Yet Implemented
+- External monitoring (Prometheus/Grafana)
+- Distributed tracing
+- Alerting system
+- APM integration
 
 ## Future Considerations
 
-- **Global Distribution**: CDN, regional databases
-- **AI/ML Integration**: Matchmaking, bot opponents
-- **Social Features**: Guilds, chat, leaderboards
-- **Monetization**: In-app purchases, subscriptions
-- **Analytics**: Player behavior, game balance metrics
+- **Real-Time Notifications**: WebSocket layer for live battle results and cycle alerts
+- **Caching Layer**: Redis for frequently accessed data (leaderboards, weapon catalog)
+- **Social Authentication**: OAuth 2.0 providers (Google, etc.)
+- **Mobile Client**: React Native or PWA
+- **Horizontal Scaling**: Stateless backend behind load balancer (requires extracting scheduler to a separate process)
+- **Advanced Monitoring**: Prometheus + Grafana, structured log aggregation
+- **CDN**: Static asset delivery for global performance

@@ -210,10 +210,7 @@ ORDER BY updatedAt DESC LIMIT 20;
    - No changes needed (already supports instance-based logic)
 
 ### Documentation (To be updated)
-- [ ] `docs/prd_core/PRD_LEAGUE_PROMOTION.md`
-- [ ] `docs/prd_core/PRD_LEAGUE_REBALANCING.md`
-- [ ] `docs/prd_core/PRD_MATCHMAKING_LP_UPDATE.md`
-- [ ] `docs/prd_core/LEAGUE_SYSTEM_IMPLEMENTATION_GUIDE.md`
+- [x] Consolidated into `docs/prd_core/PRD_LEAGUE_SYSTEM.md` (April 2, 2026)
 
 ---
 

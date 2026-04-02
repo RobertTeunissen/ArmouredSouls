@@ -3,11 +3,12 @@
 **Project**: Armoured Souls  
 **Document Type**: Design Document  
 **Version**: v1.0  
-**Last Updated**: February 10, 2026  
+**Last Updated**: April 2, 2026  
 **Status**: ✅ Implemented 
 
 ## Version History
 
+- **v1.1** (April 2, 2026): Audit against codebase. Fixed operating cost formulas (Repair Bay, Training Facility). Fixed Training Facility maxLevel (9, not 10). Fixed streaming studio multiplier formula inconsistency. Removed stale User model fields (totalBattles, totalWins, highestELO — computed at query time). Updated facility count to 15 (added Streaming Studio). Updated file path references for backend service consolidation.
 - **v1.0** (Jan 30, 2026): Initial draft
 
 ## Overview
@@ -39,13 +40,12 @@ A **Stable** is the player's collection and management system for their robots. 
 
 Statistics are captured at both stable-level and robot-level for comprehensive tracking:
 
-**Stable-Level Statistics** (Aggregated from all robots):
-- **Total Battles**: Lifetime battle count across all robots
-- **Total Wins**: Victory count across all robots
-- **Win Rate**: Overall stable win percentage (calculated: totalWins / totalBattles × 100)
-- **Championship Titles**: Tournament victories
-- **Active Robots**: Current roster size
-- **Highest ELO**: Best ELO achieved by any robot in the stable
+**Stable-Level Statistics**:
+- **Championship Titles**: Tournament victories (stored on User model)
+- **Win Rate**: Computed from robot data at query time
+- **Total Battles / Total Wins**: Aggregated from robots at query time (not stored on User)
+- **Active Robots**: Current roster size (computed)
+- **Highest ELO**: Best ELO across robots (computed)
 
 **Robot-Level Statistics** (Individual robot performance):
 - See ROBOT_ATTRIBUTES.md for complete list
@@ -67,7 +67,6 @@ Statistics are captured at both stable-level and robot-level for comprehensive t
 Players invest Credits in facility upgrades that provide stable-wide benefits. All facilities have **10 levels** (Level 0 = not purchased, Levels 1-10 = upgrades). Some facility levels require prestige thresholds to unlock.
 
 ### Complete Facility List (15 Total)
-
 1. **Repair Bay** - Repair cost discounts
 2. **Training Facility** - Attribute upgrade discounts
 3. **Weapons Workshop** - Weapon purchase discounts, crafting
@@ -86,7 +85,7 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 
 ### Facility Upgrades
 
-**1. Repair Bay** (Operating Cost: ₡100/day per level)
+**1. Repair Bay** (Operating Cost: ₡1,000 at L1, +₡500/level thereafter)
 - **Level 0**: No discount
 - **Level 1** (₡50,000): 6% discount on repair costs (1 robot)
 - **Level 2** (₡100,000): 12% discount on repair costs (1 robot)
@@ -464,19 +463,21 @@ streaming_revenue = 1000 × battle_multiplier × fame_multiplier × studio_multi
 Where:
   battle_multiplier = 1 + (robot_total_battles / 1000)
   fame_multiplier = 1 + (robot_fame / 5000)
-  studio_multiplier = 1 + (streaming_studio_level × 0.1)
+  studio_multiplier = 1 + (streaming_studio_level × 1.0)
 
+// Each level adds 100%: L1 = 2×, L2 = 3×, L3 = 4×, etc.
 // Awarded per battle (not daily passive income)
 // Both winner and loser receive streaming revenue
 // No revenue for bye matches
+// total_battles includes all modes: 1v1 + tournament + tag team + KotH
 
 Example:
 - Robot with 500 battles, 2500 fame
 - Streaming Studio Level 5
 - battle_multiplier = 1 + (500/1000) = 1.5
 - fame_multiplier = 1 + (2500/5000) = 1.5
-- studio_multiplier = 1 + (5 × 0.1) = 1.5
-- Streaming = ₡1,000 × 1.5 × 1.5 × 1.5 = ₡3,375 per battle
+- studio_multiplier = 1 + (5 × 1.0) = 6.0
+- Streaming = ₡1,000 × 1.5 × 1.5 × 6.0 = ₡13,500 per battle
 ```
 
 ### Operating Costs
@@ -600,7 +601,7 @@ CURRENT BALANCE:           ₡1,847,000
 1. Build 1 robot with basic weapon (₡500K + ₡150K = ₡650K)
 2. Upgrade key attributes (₡300K)
 3. Save for Repair Bay Level 1 (₡100K) - provides 9% discount with 4 robots
-4. Consider Streaming Studio Level 1 (₡100K) - provides 10% boost to per-battle streaming revenue
+4. Consider Streaming Studio Level 1 (₡100K) - doubles per-battle streaming revenue (2× multiplier)
 5. Focus on battles to earn Credits and prestige
 6. Remaining: ~₡750K for additional upgrades or second robot
 
@@ -612,9 +613,9 @@ CURRENT BALANCE:           ₡1,847,000
 
 **Streaming Studio Early Investment**:
 - **Low Cost**: Level 1 costs only ₡100K with ₡100/day operating cost
-- **Immediate ROI**: 10% boost to all streaming revenue from battles
+- **Immediate ROI**: Doubles all streaming revenue from battles (2× multiplier)
 - **Scales with Activity**: More valuable if you battle frequently
-- **Example**: 10 battles/day at ₡1,000 base = ₡100 extra per day (breaks even in ~1000 days on operating cost, but upgrade cost takes longer)
+- **Example**: 10 battles/day at ₡1,000 base = ₡1,000 extra per day (₡10K total vs ₡20K total)
 - **Recommendation**: Invest early if you plan to battle frequently; otherwise prioritize Repair Bay
 
 **Repair Bay ROI with Multiple Robots**:
@@ -627,7 +628,7 @@ CURRENT BALANCE:           ₡1,847,000
 1. Upgrade key facilities (Repair Bay, Training Facility to Level 3-4)
 2. Expand robot roster to 3-4 robots
 3. Unlock Merchandising Hub for passive income (merchandising)
-4. Upgrade Streaming Studio to Level 3-5 for 30-50% streaming boost
+4. Upgrade Streaming Studio to Level 3-5 for 4×-6× streaming multiplier
 5. Specialize robots for different strategies
 6. Invest in better weapons (₡300K-₡400K range)
 7. Participate in Silver/Gold tournaments
@@ -638,14 +639,14 @@ CURRENT BALANCE:           ₡1,847,000
 - Each additional robot increases the discount from all Repair Bay levels
 
 **Streaming Studio Mid-Game Value**:
-- Level 3-5 provides 30-50% boost to streaming revenue
+- Level 3-5 provides 4×-6× multiplier on streaming revenue
 - With veteran robots (500+ battles, 2500+ fame), streaming revenue becomes significant
-- Example: Robot with 500 battles, 2500 fame, Level 5 Studio earns ₡3,375 per battle
+- Example: Robot with 500 battles, 2500 fame, Level 5 Studio earns ₡13,500 per battle
 - Multiple active robots multiply the benefit across all battles
 
 ### Late Game (₡20M+ total earned)
 1. Max out critical facilities (Repair Bay, Medical Bay, all 4 Training Academies)
-2. Upgrade Streaming Studio to Level 10 for 2× streaming revenue multiplier
+2. Upgrade Streaming Studio to Level 10 for 11× streaming revenue multiplier
 3. Build specialized arena teams
 4. Invest in prestige-locked content (high-tier tournaments)
 5. Compete in high-tier tournaments (Diamond/Champion)
@@ -659,8 +660,8 @@ CURRENT BALANCE:           ₡1,847,000
 - **Strategic Insight**: Balance Repair Bay upgrades with Roster Expansion for maximum efficiency
 
 **Streaming Studio Late-Game Impact**:
-- Level 10 provides 2× multiplier (doubles base streaming revenue)
-- Veteran robots (5000+ battles, 25000+ fame) with Level 10 Studio can earn ₡24,000+ per battle
+- Level 10 provides 11× multiplier on base streaming revenue
+- Veteran robots (5000+ battles, 25000+ fame) with Level 10 Studio can earn ₡66,000+ per battle
 - With high prestige (50,000 required for Level 10), streaming becomes a major income source
 - Multiple high-fame robots battling frequently generates substantial daily streaming income
 
