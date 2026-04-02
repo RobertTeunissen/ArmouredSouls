@@ -18,11 +18,34 @@ const prisma = new PrismaClient({ adapter, log: ['error'] });
 async function main(): Promise<void> {
   const dryRun = !process.argv.includes('--fix');
 
-  // Find robots where mainWeaponId === offhandWeaponId (and both are non-null)
-  const corruptRobots = await prisma.robot.findMany({
+  // First, find robots that have both weapon slots filled (lightweight select)
+  const robotsWithBothWeapons = await prisma.robot.findMany({
     where: {
       mainWeaponId: { not: null },
       offhandWeaponId: { not: null },
+    },
+    select: {
+      id: true,
+      name: true,
+      userId: true,
+      mainWeaponId: true,
+      offhandWeaponId: true,
+    },
+  });
+
+  const duplicateBasics = robotsWithBothWeapons.filter(
+    robot => robot.mainWeaponId === robot.offhandWeaponId
+  );
+
+  if (duplicateBasics.length === 0) {
+    console.log('✅ No robots found with duplicate weapon in both slots.');
+    return;
+  }
+
+  // Load full details only for robots that actually have duplicate weapons
+  const duplicates = await prisma.robot.findMany({
+    where: {
+      id: { in: duplicateBasics.map(robot => robot.id) },
     },
     include: {
       user: { select: { id: true, username: true } },
@@ -30,14 +53,6 @@ async function main(): Promise<void> {
       offhandWeapon: { include: { weapon: { select: { name: true } } } },
     },
   });
-
-  const duplicates = corruptRobots.filter(r => r.mainWeaponId === r.offhandWeaponId);
-
-  if (duplicates.length === 0) {
-    console.log('✅ No robots found with duplicate weapon in both slots.');
-    return;
-  }
-
   console.log(`⚠️  Found ${duplicates.length} robot(s) with the same weapon in both slots:\n`);
 
   for (const robot of duplicates) {
