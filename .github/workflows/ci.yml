@@ -201,21 +201,23 @@ jobs:
       - name: Check allowlist and audit backend
         working-directory: ./prototype/backend
         run: |
-          # Run npm audit at high level — fail on high/critical vulnerabilities
+          # Run npm audit at high level — fail on high/critical vulnerabilities in production deps only
+          # Dev dependencies are not deployed and don't affect the production attack surface
           # Known accepted vulnerabilities are documented in .security-audit-allowlist.json
           ALLOWLIST_FILE="../../.security-audit-allowlist.json"
           if [ -f "$ALLOWLIST_FILE" ]; then
             echo "Security audit allowlist found — reviewing accepted vulnerabilities"
             cat "$ALLOWLIST_FILE"
           fi
-          npm audit --audit-level=high
+          npm audit --audit-level=high --omit=dev
 
       - name: Check allowlist and audit frontend
         working-directory: ./prototype/frontend
         run: |
+          # Production deps only — dev tooling (vitest, mermaid, eslint) excluded
           ALLOWLIST_FILE="../../.security-audit-allowlist.json"
           if [ -f "$ALLOWLIST_FILE" ]; then
             echo "Security audit allowlist found — reviewing accepted vulnerabilities"
             cat "$ALLOWLIST_FILE"
           fi
-          npm audit --audit-level=high
+          npm audit --audit-level=high --omit=dev
