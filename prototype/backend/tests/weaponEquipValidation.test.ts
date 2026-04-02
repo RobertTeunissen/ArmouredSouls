@@ -13,8 +13,8 @@ type TestWeapon = Pick<
   'handsRequired' | 'weaponType' | 'loadoutType' | 'rangeBand' | 'name' | 'id' | 'createdAt'
 >;
 
-function makeWeapon(overrides: Partial<TestWeapon> = {}): TestWeapon {
-  return {
+function makeWeapon(overrides: Partial<TestWeapon> = {}): Weapon {
+  const base: TestWeapon = {
     id: 1,
     name: 'Laser Pistol',
     weaponType: 'ranged',
@@ -22,8 +22,8 @@ function makeWeapon(overrides: Partial<TestWeapon> = {}): TestWeapon {
     loadoutType: 'any',
     rangeBand: 'short',
     createdAt: new Date(),
-    ...overrides,
   };
+  return { ...base, ...overrides } as unknown as Weapon;
 }
 
 function makeRobot(mainWeaponId: number | null, offhandWeaponId: number | null) {
