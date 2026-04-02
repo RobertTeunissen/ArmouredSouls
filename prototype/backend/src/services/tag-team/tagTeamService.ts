@@ -144,6 +144,18 @@ export async function createTeam(
   // requests from both passing the "robot not already in a team" check
   try {
     const team = await prisma.$transaction(async (tx) => {
+      // Acquire advisory locks on both robot IDs in sorted order to prevent
+      // deadlocks when two requests try to form teams with overlapping robots.
+      // Namespace 1 is reserved for tag-team robot membership checks.
+      if (!Number.isInteger(activeRobotId) || !Number.isInteger(reserveRobotId) || activeRobotId <= 0 || reserveRobotId <= 0) {
+        throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, 'Invalid robot IDs', 400);
+      }
+      const [firstLockId, secondLockId] = activeRobotId < reserveRobotId
+        ? [activeRobotId, reserveRobotId]
+        : [reserveRobotId, activeRobotId];
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(1, ${firstLockId})`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(1, ${secondLockId})`;
+
       // --- Inline validation inside transaction ---
       const errors: string[] = [];
 
