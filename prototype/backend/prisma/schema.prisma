@@ -78,7 +78,7 @@ model Facility {
 model Robot {
   id       Int     @id @default(autoincrement())
   userId   Int     @map("user_id")
-  name     String  @db.VarChar(50)
+  name     String  @unique @db.VarChar(50)
   frameId  Int     @default(1) @map("frame_id") // Chassis appearance ID
   paintJob String? @map("paint_job") @db.VarChar(100) // Cosmetic customization
 
@@ -198,7 +198,6 @@ model Robot {
   battleParticipations      BattleParticipant[]
   kothMatchParticipations   ScheduledKothMatchParticipant[]
 
-  @@unique([userId, name])
   @@index([userId])
   @@index([elo])
   @@index([currentLeague])

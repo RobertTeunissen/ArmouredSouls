@@ -120,16 +120,13 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Robot name must be between 1 and 50 characters', 400);
   }
 
-  // Check if a robot with this name already exists for the user
+  // Check if a robot with this name already exists (globally unique)
   const existingRobot = await prisma.robot.findFirst({
-    where: {
-      userId,
-      name,
-    },
+    where: { name },
   });
 
   if (existingRobot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NAME_TAKEN, 'You already have a robot with this name', 400);
+    throw new RobotError(RobotErrorCode.ROBOT_NAME_TAKEN, 'A robot with this name already exists. Please choose a different name.', 400);
   }
 
   // Get user's current currency
