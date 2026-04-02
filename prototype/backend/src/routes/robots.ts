@@ -2090,29 +2090,123 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
     // Re-read user inside transaction to prevent race conditions (stale balance exploit)
     const freshUser = await tx.user.findUnique({
       where: { id: userId },
+      include: {
+        facilities: {
+          where: {
+            facilityType: {
+              in: ['training_facility', 'combat_training_academy', 'defense_training_academy', 'mobility_training_academy', 'ai_training_academy']
+            }
+          },
+        },
+      },
     });
 
-    if (!freshUser || freshUser.currency < totalCost) {
+    if (!freshUser) {
+      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'User not found', 404);
+    }
+
+    // Re-read robot inside transaction to prevent concurrent upgrade race
+    const freshRobot = await tx.robot.findFirst({
+      where: { id: robotId, userId },
+    });
+
+    if (!freshRobot) {
+      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
+    }
+
+    // Re-verify facility levels inside transaction
+    const freshTrainingLevel = freshUser.facilities.find(f => f.facilityType === 'training_facility')?.level || 0;
+    const freshAcademyLevels = {
+      combat_training_academy: freshUser.facilities.find(f => f.facilityType === 'combat_training_academy')?.level || 0,
+      defense_training_academy: freshUser.facilities.find(f => f.facilityType === 'defense_training_academy')?.level || 0,
+      mobility_training_academy: freshUser.facilities.find(f => f.facilityType === 'mobility_training_academy')?.level || 0,
+      ai_training_academy: freshUser.facilities.find(f => f.facilityType === 'ai_training_academy')?.level || 0,
+    };
+
+    // Recalculate cost and validate with fresh data
+    let freshTotalCost = 0;
+    const freshUpgradeOperations: Array<{ attribute: string; fromLevel: number; toLevel: number; cost: number }> = [];
+
+    for (const [attribute, upgrade] of Object.entries(upgrades)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { plannedLevel } = upgrade as any;
+
+      // Re-read current level from fresh robot data
+      const freshCurrentLevelValue = freshRobot[attribute as keyof typeof freshRobot];
+      const freshCurrentLevel = typeof freshCurrentLevelValue === 'number'
+        ? freshCurrentLevelValue
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        : (freshCurrentLevelValue as any).toNumber();
+
+      const freshCurrentLevelInt = Math.floor(freshCurrentLevel);
+
+      // If attribute already at or above planned level, skip (concurrent upgrade already applied)
+      if (freshCurrentLevelInt >= plannedLevel) {
+        throw new RobotError(
+          RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
+          `Attribute ${attribute} already at level ${freshCurrentLevelInt}, cannot upgrade to ${plannedLevel}. Please refresh and retry.`,
+          409
+        );
+      }
+
+      // Re-verify academy cap with fresh data
+      const academyType = attributeToAcademy[attribute];
+      const freshAcademyLevel = freshAcademyLevels[academyType as keyof typeof freshAcademyLevels] || 0;
+      const freshCap = getCapForLevel(freshAcademyLevel);
+
+      if (plannedLevel > freshCap) {
+        throw new RobotError(
+          RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
+          `Attribute ${attribute} exceeds cap of ${freshCap}. Upgrade the corresponding academy to increase the cap.`,
+          400
+        );
+      }
+
+      // Recalculate cost with fresh Training Facility discount
+      const freshDiscountPercent = Math.min(freshTrainingLevel * 10, 90);
+      let attributeCost = 0;
+
+      for (let level = freshCurrentLevelInt; level < plannedLevel; level++) {
+        const baseCost = (level + 1) * 1500;
+        const discountedCost = Math.floor(baseCost * (1 - freshDiscountPercent / 100));
+        attributeCost += discountedCost;
+      }
+
+      freshTotalCost += attributeCost;
+      freshUpgradeOperations.push({
+        attribute,
+        fromLevel: freshCurrentLevelInt,
+        toLevel: plannedLevel,
+        cost: attributeCost,
+      });
+    }
+
+    if (freshUser.currency < freshTotalCost) {
       throw new RobotError(
         RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
         'Insufficient credits',
         400,
-        { required: totalCost, current: freshUser?.currency ?? 0 }
+        { required: freshTotalCost, current: freshUser.currency }
       );
     }
 
     // Atomic currency decrement to prevent double-spend
     const updatedUser = await tx.user.update({
       where: { id: userId },
-      data: { currency: { decrement: totalCost } },
+      data: { currency: { decrement: freshTotalCost } },
     });
 
-    // Build update data object
+    // Build update data object from fresh calculations
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
-    for (const op of upgradeOperations) {
+    for (const op of freshUpgradeOperations) {
       updateData[op.attribute] = op.toLevel;
     }
+
+    // Update totalCost and upgradeOperations for logging outside transaction
+    totalCost = freshTotalCost;
+    upgradeOperations.length = 0;
+    upgradeOperations.push(...freshUpgradeOperations);
 
     // Update all attributes at once
     const updatedRobot = await tx.robot.update({
@@ -2140,8 +2234,9 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       const maxShield = calculateMaxShield(updatedRobot);
 
       // Calculate current HP/Shield proportionally to maintain same percentage
-      const hpPercentage = robot.maxHP > 0 ? robot.currentHP / robot.maxHP : 1;
-      const shieldPercentage = robot.maxShield > 0 ? robot.currentShield / robot.maxShield : 1;
+      // Use freshRobot to avoid stale data from concurrent upgrades
+      const hpPercentage = freshRobot.maxHP > 0 ? freshRobot.currentHP / freshRobot.maxHP : 1;
+      const shieldPercentage = freshRobot.maxShield > 0 ? freshRobot.currentShield / freshRobot.maxShield : 1;
 
       const newCurrentHP = Math.round(maxHP * hpPercentage);
       const newCurrentShield = Math.round(maxShield * shieldPercentage);
